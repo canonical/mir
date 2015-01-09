@@ -304,21 +304,24 @@ public:
                 auto const& session_info = this->session_info[focussed_session.get()];
                 auto& surface_info = this->surface_info[focussed_surface];
 
-                if (surface_info.state == SurfaceInfo::restored)
-                {
-                    surface_info.restore_rect =
-                        {focussed_surface->top_left(), focussed_surface->size()};
-
-                    focussed_surface->move_to(session_info.tile.top_left);
-                    focussed_surface->resize(session_info.tile.size);
-                    surface_info.state = SurfaceInfo::maximized;
-                }
-                else
+                if (surface_info.state == SurfaceInfo::maximized)
                 {
                     focussed_surface->move_to(surface_info.restore_rect.top_left);
                     focussed_surface->resize(surface_info.restore_rect.size);
                     surface_info.state = SurfaceInfo::restored;
 
+                }
+                else
+                {
+                    if (surface_info.state == SurfaceInfo::restored)
+                    {
+                        surface_info.restore_rect =
+                            {focussed_surface->top_left(), focussed_surface->size()};
+                    }
+
+                    focussed_surface->move_to(session_info.tile.top_left);
+                    focussed_surface->resize(session_info.tile.size);
+                    surface_info.state = SurfaceInfo::maximized;
                 }
             }
         }
@@ -335,21 +338,23 @@ public:
                 auto const& session_info = this->session_info[focussed_session.get()];
                 auto& surface_info = this->surface_info[focussed_surface];
 
-                if (surface_info.state == SurfaceInfo::restored)
-                {
-                    surface_info.restore_rect =
-                        {focussed_surface->top_left(), focussed_surface->size()};
-
-                    focussed_surface->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
-                    focussed_surface->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
-                    surface_info.state = SurfaceInfo::hmax;
-                }
-                else
+                if (surface_info.state == SurfaceInfo::hmax)
                 {
                     focussed_surface->move_to(surface_info.restore_rect.top_left);
                     focussed_surface->resize(surface_info.restore_rect.size);
                     surface_info.state = SurfaceInfo::restored;
+                }
+                else
+                {
+                    if (surface_info.state == SurfaceInfo::restored)
+                    {
+                        surface_info.restore_rect =
+                            {focussed_surface->top_left(), focussed_surface->size()};
+                    }
 
+                    focussed_surface->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
+                    focussed_surface->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
+                    surface_info.state = SurfaceInfo::hmax;
                 }
             }
         }
@@ -366,21 +371,23 @@ public:
                 auto const& session_info = this->session_info[focussed_session.get()];
                 auto& surface_info = this->surface_info[focussed_surface];
 
-                if (surface_info.state == SurfaceInfo::restored)
-                {
-                    surface_info.restore_rect =
-                        {focussed_surface->top_left(), focussed_surface->size()};
-
-                    focussed_surface->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
-                    focussed_surface->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
-                    surface_info.state = SurfaceInfo::vmax;
-                }
-                else
+                if (surface_info.state == SurfaceInfo::vmax)
                 {
                     focussed_surface->move_to(surface_info.restore_rect.top_left);
                     focussed_surface->resize(surface_info.restore_rect.size);
                     surface_info.state = SurfaceInfo::restored;
+                }
+                else
+                {
+                    if (surface_info.state == SurfaceInfo::restored)
+                    {
+                        surface_info.restore_rect =
+                            {focussed_surface->top_left(), focussed_surface->size()};
+                    }
 
+                    focussed_surface->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
+                    focussed_surface->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
+                    surface_info.state = SurfaceInfo::vmax;
                 }
             }
         }
