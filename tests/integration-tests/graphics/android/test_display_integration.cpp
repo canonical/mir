@@ -33,6 +33,7 @@
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/advanceable_clock.h"
+#include "mir_test/auto_unblock_thread.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -192,18 +193,14 @@ struct AndroidDisplayHotplug : ::testing::Test
     };
 
     AndroidDisplayHotplug() :
-        loop{std::thread([this]{ mainloop.run(); })}
+        loop{
+            [this]{ mainloop.enqueue(this, [this] { mainloop.stop(); }); },
+            [this]{ mainloop.run(); }}
     {
-    }
-
-    ~AndroidDisplayHotplug()
-    {
-        mainloop.enqueue(this, [this] { mainloop.stop(); });
-        loop.join();
     }
 
     mir::GLibMainLoop mainloop{std::make_shared<mir::time::SteadyClock>()};
-    std::thread loop;
+    mir::test::AutoUnblockThread loop;
     std::shared_ptr<StubOutputBuilder> stub_output_builder{std::make_shared<StubOutputBuilder>()};
     mga::Display display{
         stub_output_builder,
