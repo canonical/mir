@@ -296,103 +296,20 @@ public:
     void toggle_maximized() override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-
-        if (auto const focussed_session = focus_controller()->focussed_application().lock())
-        {
-            if (auto const focussed_surface = focussed_session->default_surface())
-            {
-                auto const& session_info = this->session_info[focussed_session.get()];
-                auto& surface_info = this->surface_info[focussed_surface];
-
-                if (surface_info.state == SurfaceInfo::maximized)
-                {
-                    focussed_surface->move_to(surface_info.restore_rect.top_left);
-                    focussed_surface->resize(surface_info.restore_rect.size);
-                    surface_info.state = SurfaceInfo::restored;
-
-                }
-                else
-                {
-                    if (surface_info.state == SurfaceInfo::restored)
-                    {
-                        surface_info.restore_rect =
-                            {focussed_surface->top_left(), focussed_surface->size()};
-                    }
-
-                    focussed_surface->move_to(session_info.tile.top_left);
-                    focussed_surface->resize(session_info.tile.size);
-                    surface_info.state = SurfaceInfo::maximized;
-                }
-            }
-        }
+        toggle(SurfaceInfo::maximized);
     }
 
     void toggle_max_horizontal() override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-
-        if (auto const focussed_session = focus_controller()->focussed_application().lock())
-        {
-            if (auto const focussed_surface = focussed_session->default_surface())
-            {
-                auto const& session_info = this->session_info[focussed_session.get()];
-                auto& surface_info = this->surface_info[focussed_surface];
-
-                if (surface_info.state == SurfaceInfo::hmax)
-                {
-                    focussed_surface->move_to(surface_info.restore_rect.top_left);
-                    focussed_surface->resize(surface_info.restore_rect.size);
-                    surface_info.state = SurfaceInfo::restored;
-                }
-                else
-                {
-                    if (surface_info.state == SurfaceInfo::restored)
-                    {
-                        surface_info.restore_rect =
-                            {focussed_surface->top_left(), focussed_surface->size()};
-                    }
-
-                    focussed_surface->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
-                    focussed_surface->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
-                    surface_info.state = SurfaceInfo::hmax;
-                }
-            }
-        }
+        toggle(SurfaceInfo::hmax);
     }
 
-    void toggle_max_vertical()
+    void toggle_max_vertical() override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-
-        if (auto const focussed_session = focus_controller()->focussed_application().lock())
-        {
-            if (auto const focussed_surface = focussed_session->default_surface())
-            {
-                auto const& session_info = this->session_info[focussed_session.get()];
-                auto& surface_info = this->surface_info[focussed_surface];
-
-                if (surface_info.state == SurfaceInfo::vmax)
-                {
-                    focussed_surface->move_to(surface_info.restore_rect.top_left);
-                    focussed_surface->resize(surface_info.restore_rect.size);
-                    surface_info.state = SurfaceInfo::restored;
-                }
-                else
-                {
-                    if (surface_info.state == SurfaceInfo::restored)
-                    {
-                        surface_info.restore_rect =
-                            {focussed_surface->top_left(), focussed_surface->size()};
-                    }
-
-                    focussed_surface->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
-                    focussed_surface->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
-                    surface_info.state = SurfaceInfo::vmax;
-                }
-            }
-        }
+        toggle(SurfaceInfo::vmax);
     }
-
 
 private:
     void update_tiles()
@@ -533,6 +450,63 @@ private:
         return false;
     }
 
+    struct SurfaceInfo
+    {
+        SurfaceInfo() = default;
+        enum State { restored, maximized, hmax, vmax } state;
+        Rectangle restore_rect;
+    };
+
+    void toggle(SurfaceInfo::State state)
+    {
+        if (auto const focussed_session = focus_controller()->focussed_application().lock())
+        {
+            if (auto const focussed_surface = focussed_session->default_surface())
+            {
+                auto& surface_info = this->surface_info[focussed_surface];
+
+                if (surface_info.state == state)
+                {
+                    focussed_surface->move_to(surface_info.restore_rect.top_left);
+                    focussed_surface->resize(surface_info.restore_rect.size);
+                    surface_info.state = SurfaceInfo::restored;
+                }
+                else
+                {
+                    if (surface_info.state == SurfaceInfo::restored)
+                    {
+                        surface_info.restore_rect =
+                            {focussed_surface->top_left(), focussed_surface->size()};
+                    }
+
+                    auto const& session_info = this->session_info[focussed_session.get()];
+
+                    switch (state)
+                    {
+                    case SurfaceInfo::maximized:
+                        focussed_surface->move_to(session_info.tile.top_left);
+                        focussed_surface->resize(session_info.tile.size);
+                        break;
+
+                    case SurfaceInfo::hmax:
+                        focussed_surface->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
+                        focussed_surface->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
+                        break;
+
+                    case SurfaceInfo::vmax:
+                        focussed_surface->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
+                        focussed_surface->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
+                        break;
+
+                    default:
+                        break;
+                    }
+
+                    surface_info.state = state;
+                }
+            }
+        }
+    }
 
     std::shared_ptr<ms::Session> session_under(Point position)
     {
@@ -559,13 +533,6 @@ private:
         std::weak_ptr<ms::Session> session;
         Rectangle tile;
         std::vector<std::weak_ptr<ms::Surface>> surfaces;
-    };
-
-    struct SurfaceInfo
-    {
-        SurfaceInfo() = default;
-        enum State { restored, maximized, hmax, vmax } state;
-        Rectangle restore_rect;
     };
 
     FocusControllerFactory const focus_controller;
