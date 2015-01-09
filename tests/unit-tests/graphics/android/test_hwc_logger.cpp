@@ -204,13 +204,13 @@ TEST_F(HwcLogger, report_hwc_version)
         << "HWC version 1.1" << std::endl
         << "HWC version 1.2" << std::endl
         << "HWC version 1.3" << std::endl
-        << "HWC version unknown (0x33)" << std::endl;
+        << "HWC version 1.4" << std::endl;
 
     mga::HwcFormattedLogger logger;
-    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_0);
-    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_1);
-    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_2);
-    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_3);
-    logger.report_hwc_version(51);
+    logger.report_hwc_version(mga::HwcVersion::hwc10);
+    logger.report_hwc_version(mga::HwcVersion::hwc11);
+    logger.report_hwc_version(mga::HwcVersion::hwc12);
+    logger.report_hwc_version(mga::HwcVersion::hwc13);
+    logger.report_hwc_version(mga::HwcVersion::hwc14);
     EXPECT_EQ(str.str(), test_stream.str()); 
 }

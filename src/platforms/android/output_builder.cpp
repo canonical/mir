@@ -31,6 +31,8 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
@@ -49,14 +51,13 @@ mga::OutputBuilder::OutputBuilder(
 {
     try
     {
-        hwc_native = res_factory->create_hwc_native_device();
-        hwc_wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native, hwc_report);
+        std::tie(hwc_wrapper, hwc_version) = res_factory->create_hwc_wrapper(hwc_report);
     } catch (...)
     {
         force_backup_display = true;
     }
 
-    if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
+    if (force_backup_display || hwc_version == mga::HwcVersion::hwc10)
     {
         fb_native = res_factory->create_fb_native_device();
         mga::FbControl fb_control{fb_native};
@@ -91,26 +92,31 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
     }
     else
     {
-        switch (hwc_native->common.version)
+        switch (hwc_version)
         {
-            case HWC_DEVICE_API_VERSION_1_0:
+            case mga::HwcVersion::hwc10:
                 device = res_factory->create_hwc_fb_device(hwc_wrapper, fb_native);
             break;
 
-            case HWC_DEVICE_API_VERSION_1_1:
-            case HWC_DEVICE_API_VERSION_1_2:
+            case mga::HwcVersion::hwc11:
+            case mga::HwcVersion::hwc12:
                 device = res_factory->create_hwc_device(
                     hwc_wrapper, std::make_shared<mga::IntegerSourceCrop>());
             break;
 
-            default:
-            case HWC_DEVICE_API_VERSION_1_3:
+            case mga::HwcVersion::hwc13:
                 device = res_factory->create_hwc_device(
                     hwc_wrapper, std::make_shared<mga::FloatSourceCrop>());
             break;
+
+            case mga::HwcVersion::hwc14:
+            case mga::HwcVersion::unknown:
+            default:
+                BOOST_THROW_EXCEPTION(std::runtime_error("unknown or unsupported hwc version"));
+
         }
 
-        hwc_report->report_hwc_version(hwc_native->common.version);
+        hwc_report->report_hwc_version(hwc_version);
     }
 
     auto native_window = res_factory->create_native_window(framebuffers);
@@ -126,7 +132,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
 
 std::unique_ptr<mga::HwcConfiguration> mga::OutputBuilder::create_hwc_configuration()
 {
-    if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
+    if (force_backup_display || hwc_version == mga::HwcVersion::hwc10)
         return std::unique_ptr<mga::HwcConfiguration>(new mga::FbControl(fb_native));
     else
         return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcBlankingControl(hwc_wrapper));

@@ -146,12 +146,11 @@ GLuint generate_frame_corner_texture(float corner_radius,
 } // namespace
 
 DemoRenderer::DemoRenderer(
-    graphics::GLProgramFactory const& program_factory,
     Rectangle const& display_area,
     compositor::DestinationAlpha dest_alpha,
     float const titlebar_height,
     float const shadow_radius) :
-    GLRenderer(program_factory,
+    GLRenderer(
         std::unique_ptr<graphics::GLTextureCache>(new compositor::RecentlyUsedCache()),
         display_area,
         dest_alpha),

@@ -19,7 +19,6 @@
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/destination_alpha.h"
 #include "mir_test_doubles/fake_renderable.h"
-#include "mir_test_doubles/stub_gl_program_factory.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "playground/demo-shell/demo_renderer.h"
 #include <gtest/gtest.h>
@@ -32,16 +31,28 @@ namespace mc = mir::compositor;
 struct DemoRenderer : public testing::Test
 {
     testing::NiceMock<mtd::MockGL> mock_gl;
-    mtd::StubGLProgramFactory stub_factory;
     geom::Rectangle region{{0, 0}, {100, 100}};
     mc::DestinationAlpha dest_alpha{mc::DestinationAlpha::opaque};
     int const shadow_radius{20};
     int const titlebar_height{5};
+
+    void SetUp()
+    {
+        using namespace testing;
+        ON_CALL(mock_gl, glCreateShader(_))
+            .WillByDefault(Return(12));
+        ON_CALL(mock_gl, glCreateProgram())
+            .WillByDefault(Return(34));
+        ON_CALL(mock_gl, glGetShaderiv(_, _, _))
+            .WillByDefault(SetArgPointee<2>(GL_TRUE));
+        ON_CALL(mock_gl, glGetProgramiv(_, _, _))
+            .WillByDefault(SetArgPointee<2>(GL_TRUE));
+    }
 };
 
 TEST_F(DemoRenderer, detects_embellishments_on_renderables)
 {
-    me::DemoRenderer demo_renderer(stub_factory, region, dest_alpha, titlebar_height, shadow_radius);
+    me::DemoRenderer demo_renderer(region, dest_alpha, titlebar_height, shadow_radius);
 
     mtd::FakeRenderable fullscreen_surface(region);
     mtd::FakeRenderable oversized_surface(geom::Rectangle{{-10, -10}, {120, 120}});

@@ -61,8 +61,8 @@ class HwcBlankingControl : public HwcConfiguration
 public:
     HwcBlankingControl(std::shared_ptr<HwcWrapper> const&);
     void power_mode(DisplayName, MirPowerMode) override;
-    DisplayAttribs active_attribs_for(DisplayName);
-    ConfigChangeSubscription subscribe_to_config_changes(std::function<void()> const& cb);
+    DisplayAttribs active_attribs_for(DisplayName) override;
+    ConfigChangeSubscription subscribe_to_config_changes(std::function<void()> const& cb) override;
 
 private:
     std::shared_ptr<HwcWrapper> const hwc_device;

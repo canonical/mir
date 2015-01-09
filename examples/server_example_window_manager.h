@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,32 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_HWC_VSYNC_COORDINATOR_H_
-#define MIR_TEST_DOUBLES_MOCK_HWC_VSYNC_COORDINATOR_H_
-
-#include "src/platforms/android/hwc_vsync_coordinator.h"
-
-#include <gmock/gmock.h>
+#ifndef MIR_EXAMPLES_WINDOW_MANAGER_H_
+#define MIR_EXAMPLES_WINDOW_MANAGER_H_
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
-{
+class Server;
 
-struct MockVsyncCoordinator : public graphics::android::HWCVsyncCoordinator
+namespace examples
 {
-    ~MockVsyncCoordinator() noexcept {}
-    MOCK_METHOD0(wait_for_vsync, void());
-    MOCK_METHOD0(notify_vsync, void());
-};
+void add_window_manager_option_to(Server& server);
+}
+} // namespace mir
 
 
-}
-}
-}
-#endif /* MIR_TEST_DOUBLES_MOCK_HWC_VSYNC_COORDINATOR_H_ */
+#endif // MIR_EXAMPLES_WINDOW_MANAGER_H_

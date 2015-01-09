@@ -54,10 +54,13 @@ double calculate_vrefresh_hz(drmModeModeInfo const& mode)
         return 0.0;
 
     /* mode.clock is in KHz */
-    double vrefresh_hz = mode.clock * 1000.0 / (mode.htotal * mode.vtotal);
+    double hz = (mode.clock * 100000LL /
+                 ((long)mode.htotal * (long)mode.vtotal)
+                ) / 100.0;
 
-    /* Round to first decimal */
-    return round(vrefresh_hz * 10.0) / 10.0;
+    // Actually we don't need floating point at all for this...
+    // TODO: Consider converting our structs to fixed-point ints
+    return hz;
 }
 
 mg::DisplayConfigurationOutputType

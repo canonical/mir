@@ -82,7 +82,8 @@ struct DisplayBuffer : public ::testing::Test
 TEST_F(DisplayBuffer, can_post_update_with_gl_only)
 {
     EXPECT_CALL(*mock_display_device, post_gl(testing::_));
-    db.post_update();
+    db.gl_swap_buffers();
+    db.flip();
 }
 
 TEST_F(DisplayBuffer, posts_overlay_list_returns_display_device_decision)

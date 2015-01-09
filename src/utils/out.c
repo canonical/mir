@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
                            mode->vertical_resolution);
                 }
 
-                printf("%6.1f%c%c",
+                printf("%6.2f%c%c",
                        mode->refresh_rate,
                        (m == out->current_mode) ? '*' : ' ',
                        (m == out->preferred_mode) ? '+' : ' ');

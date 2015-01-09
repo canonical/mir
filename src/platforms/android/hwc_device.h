@@ -21,7 +21,7 @@
 
 #include "mir_toolkit/common.h"
 #include "mir/graphics/android/sync_fence.h"
-#include "hwc_common_device.h"
+#include "display_device.h"
 #include "hwc_layerlist.h"
 #include <memory>
 #include <vector>
@@ -34,17 +34,15 @@ class Buffer;
 
 namespace android
 {
-class HWCVsyncCoordinator;
 class SyncFileOps;
 class HwcWrapper;
 class HwcConfiguration;
 
-class HwcDevice : public HWCCommonDevice
+class HwcDevice : public DisplayDevice
 {
 public:
     HwcDevice(
         std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-        std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
         std::shared_ptr<LayerAdapter> const& layer_adapter);
 
     void post_gl(SwappingGLContext const& context) override;
