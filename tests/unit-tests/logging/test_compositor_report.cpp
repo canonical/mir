@@ -171,3 +171,22 @@ TEST_F(LoggingCompositorReport, reports_bypass_only_when_changed)
 
     report.stopped();
 }
+
+TEST_F(LoggingCompositorReport, bypass_has_no_render_time)
+{  // Regression test for LP: #1408906
+    const void* const id = "My Screen";
+
+    report.started();
+
+    for (int f = 0; f < 3; ++f)
+    {
+        report.began_frame(id);
+        clock->advance_by(chrono::microseconds(1234));
+        report.finished_frame(false, id);
+        clock->advance_by(chrono::microseconds(12345678));
+    }
+    EXPECT_TRUE(recorder->last_message_contains("0.000 ms/frame"))
+        << recorder->last_message();
+
+    report.stopped();
+}
