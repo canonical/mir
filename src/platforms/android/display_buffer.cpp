@@ -128,19 +128,9 @@ mg::DisplayConfigurationOutput mga::DisplayBuffer::configuration() const
 
 void mga::DisplayBuffer::configure(DisplayConfigurationOutput const& new_configuration)
 {
-    //power mode
-    MirPowerMode intended_power_mode = new_configuration.power_mode;
-    if ((intended_power_mode == mir_power_mode_standby) ||
-        (intended_power_mode == mir_power_mode_suspend))
-    {
-        intended_power_mode = mir_power_mode_off;
-    }
-
-    if (intended_power_mode != current_configuration.power_mode)
-    {
-        display_device->mode(intended_power_mode);
-        current_configuration.power_mode = intended_power_mode;
-    }
+    if (new_configuration.power_mode != mir_power_mode_on)
+        display_device->content_cleared();
+    current_configuration.power_mode = new_configuration.power_mode;
 
     //TODO: We don't support rotation yet, so
     //we preserve this orientation change so the compositor can rotate everything in GL 

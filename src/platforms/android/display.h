@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "gl_context.h"
+#include "hwc_configuration.h"
 
 #include <memory>
 #include <mutex>
@@ -47,6 +48,7 @@ public:
                             std::shared_ptr<GLProgramFactory> const& gl_program_factory,
                             std::shared_ptr<GLConfig> const& gl_config,
                             std::shared_ptr<DisplayReport> const& display_report);
+    ~Display() noexcept;
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override;
 
@@ -75,6 +77,7 @@ private:
 
     //we only have a primary display at the moment
     std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;
+    std::unique_ptr<HwcConfiguration> const hwc_config;
 };
 
 }

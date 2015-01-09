@@ -82,10 +82,11 @@ mga::Framebuffers::Framebuffers(
 
 mga::Framebuffers::Framebuffers(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<framebuffer_device_t> const& fb)
-    : format{mga::to_mir_format(fb->format)},
-      size({fb->width, fb->height}),
-      refresh_rate_hz{fb->fps}
+    geom::Size size, double vrefresh_hz,
+    std::shared_ptr<framebuffer_device_t> const& fb) :
+    format{mga::to_mir_format(fb->format)},
+    size{size},
+    refresh_rate_hz{vrefresh_hz}
 {
     //guarantee always 2 fb's allocated
     auto fb_num = static_cast<unsigned int>(fb->numFramebuffers);

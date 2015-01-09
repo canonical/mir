@@ -157,7 +157,7 @@ TEST_F(PostingFBBundleTest, bundle_from_fb)
         .Times(fbnum)
         .WillRepeatedly(Return(nullptr));
 
-    mga::Framebuffers framebuffers(mock_allocator, mock_fb_hal);
+    mga::Framebuffers framebuffers(mock_allocator, display_size, vrefresh_hz, mock_fb_hal);
     EXPECT_EQ(display_size, framebuffers.fb_size());
     EXPECT_EQ(mir_pixel_format_abgr_8888, framebuffers.fb_format());
 }
@@ -171,12 +171,12 @@ TEST_F(PostingFBBundleTest, determine_fbnum_always_reports_2_minimum)
         .Times(2)
         .WillRepeatedly(Return(nullptr));
 
-    mga::Framebuffers framebuffers(mock_allocator, slightly_malformed_fb_hal_mock);
+    mga::Framebuffers framebuffers(mock_allocator, display_size, vrefresh_hz, slightly_malformed_fb_hal_mock);
 }
 
 TEST_F(PostingFBBundleTest, last_rendered_returns_valid)
 {
-    mga::Framebuffers framebuffers(mock_allocator, mock_fb_hal);
+    mga::Framebuffers framebuffers(mock_allocator, display_size, vrefresh_hz, mock_fb_hal);
 
     auto test_buffer = framebuffers.last_rendered_buffer();
     EXPECT_TRUE((test_buffer == buffer1) || (test_buffer == buffer2));
