@@ -322,77 +322,16 @@ public:
 
     void attribute_set(ms::Surface const& surface, MirSurfaceAttrib attrib, int value) override
     {
-        if (attrib != mir_surface_attrib_state) return;
+        std::lock_guard<decltype(mutex)> lock(mutex);
 
-        auto new_state = SurfaceInfo::restored;
-
-        switch (value)
+        switch (attrib)
         {
-        case mir_surface_state_restored:
-            new_state = SurfaceInfo::restored;
-            break;
-
-        case mir_surface_state_maximized:
-            new_state = SurfaceInfo::maximized;
-            break;
-
-        case mir_surface_state_vertmaximized:
-            new_state = SurfaceInfo::vmax;
+        case mir_surface_attrib_state:
+            set_state(surface, value);
             break;
 
         default:
-            return;
-        }
-
-        std::lock_guard<decltype(mutex)> lock(mutex);
-
-        for (auto& i : surface_info)
-        {
-            if (auto const sp = i.first.lock())
-            {
-                if (sp.get() == &surface)
-                {
-                    auto& surface_info = i.second;
-
-                    if (surface_info.state == SurfaceInfo::restored)
-                    {
-                        surface_info.restore_rect = {sp->top_left(), sp->size()};
-                    }
-
-                    if (surface_info.state == new_state)
-                    {
-                        return; // Nothing to do
-                    }
-
-                    auto const& session_info =
-                        this->session_info[surface_info.session.lock().get()];
-
-                    switch (new_state)
-                    {
-                    case SurfaceInfo::restored:
-                        sp->move_to(surface_info.restore_rect.top_left);
-                        sp->resize(surface_info.restore_rect.size);
-                        break;
-
-                    case SurfaceInfo::maximized:
-                        sp->move_to(session_info.tile.top_left);
-                        sp->resize(session_info.tile.size);
-                        break;
-
-                    case SurfaceInfo::hmax:
-                        sp->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
-                        sp->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
-                        break;
-
-                    case SurfaceInfo::vmax:
-                        sp->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
-                        sp->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
-                        break;
-                    }
-
-                    surface_info.state = new_state;
-                }
-            }
+            break;
         }
     }
 
@@ -601,6 +540,78 @@ private:
                     }
 
                     surface_info.state = state;
+                }
+            }
+        }
+    }
+
+    void set_state(ms::Surface const& surface, int value)
+    {
+        auto new_state = SurfaceInfo::restored;
+
+        switch (value)
+        {
+        case mir_surface_state_restored:
+            new_state = SurfaceInfo::restored;
+            break;
+
+        case mir_surface_state_maximized:
+            new_state = SurfaceInfo::maximized;
+            break;
+
+        case mir_surface_state_vertmaximized:
+            new_state = SurfaceInfo::vmax;
+            break;
+
+        default:
+            return;
+        }
+
+        for (auto& i : surface_info)
+        {
+            if (auto const sp = i.first.lock())
+            {
+                if (sp.get() == &surface)
+                {
+                    auto& surface_info = i.second;
+
+                    if (surface_info.state == SurfaceInfo::restored)
+                    {
+                        surface_info.restore_rect = {sp->top_left(), sp->size()};
+                    }
+
+                    if (surface_info.state == new_state)
+                    {
+                        return; // Nothing to do
+                    }
+
+                    auto const& session_info =
+                        this->session_info[surface_info.session.lock().get()];
+
+                    switch (new_state)
+                    {
+                    case SurfaceInfo::restored:
+                        sp->move_to(surface_info.restore_rect.top_left);
+                        sp->resize(surface_info.restore_rect.size);
+                        break;
+
+                    case SurfaceInfo::maximized:
+                        sp->move_to(session_info.tile.top_left);
+                        sp->resize(session_info.tile.size);
+                        break;
+
+                    case SurfaceInfo::hmax:
+                        sp->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
+                        sp->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
+                        break;
+
+                    case SurfaceInfo::vmax:
+                        sp->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
+                        sp->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
+                        break;
+                    }
+
+                    surface_info.state = new_state;
                 }
             }
         }
