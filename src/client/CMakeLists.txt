@@ -79,6 +79,7 @@ add_library(mirclientobjects OBJECT
   probing_client_platform_factory.cpp
   periodic_perf_report.cpp
   mir_platform_message_api.cpp
+  buffer_stream.cpp
 )
 
 add_library(mirclient SHARED

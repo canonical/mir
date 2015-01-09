@@ -19,9 +19,14 @@
 #ifndef MIR_CLIENT_BUFFER_STREAM_H
 #define MIR_CLIENT_BUFFER_STREAM_H
 
-#include "mir_wait_handle.h"
-
 #include "mir_protobuf.pb.h"
+
+#include "mir_wait_handle.h"
+#include "client_buffer_depository.h"
+
+#include "mir_toolkit/client_types.h"
+
+#include <EGL/eglplatform.h>
 
 #include <memory>
 
@@ -30,6 +35,9 @@ namespace mir
 namespace client
 {
 class ClientBufferFactory;
+class ClientBuffer;
+class EGLNativeWindowFactory;
+struct MemoryRegion;
 
 enum BufferStreamMode
 {
@@ -41,26 +49,38 @@ class BufferStream;
 typedef void (*mir_buffer_stream_callback)(
     BufferStream*, void*);
 
+// TODO: Inherits from client surface
 class BufferStream
 {
 public:
-    BufferStream(mir::protobuf::DisplayServer const& server,
+    BufferStream(mir::protobuf::DisplayServer& server,
         BufferStreamMode mode,
         std::shared_ptr<ClientBufferFactory> const& buffer_factory,
+        std::shared_ptr<EGLNativeWindowFactory> const& native_window_factory,
                  protobuf::BufferStream const& protobuf_bs);
-    virtual ~BufferStream() = default;
+    virtual ~BufferStream();
     
     MirWaitHandle* next_buffer(mir_buffer_stream_callback callback, void* context);
+    MirSurfaceParameters get_parameters();
+    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
+
+    EGLNativeWindowType egl_native_window();
+    std::shared_ptr<MemoryRegion> secure_for_cpu_write();
 
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
 
 private:
-    mir::protobuf::DisplayServer &display_server;
+    void process_buffer(protobuf::Buffer const& buffer);
+
+    mir::protobuf::DisplayServer& display_server;
 
     BufferStreamMode const mode;
-    std::shared_ptr<ClientBufferFactory> const buffer_factory;
+    std::shared_ptr<EGLNativeWindowFactory> const native_window_factory;
+    
+    mir::protobuf::BufferStream protobuf_bs;
+    mir::client::ClientBufferDepository buffer_depository;
 };
 
 }
