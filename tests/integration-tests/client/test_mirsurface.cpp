@@ -85,9 +85,19 @@ MATCHER_P(HasParent, parent, "")
 
 MATCHER_P(MatchesAttachment, rect, "")
 {
-    return arg.top_left.x.as_int() == rect.left &&
-           arg.top_left.y.as_int() == rect.top;
+    return arg.attachment_rect.is_set() &&
+           arg.attachment_rect.value().top_left.x.as_int() == rect.left &&
+           arg.attachment_rect.value().top_left.y.as_int() == rect.top &&
+           arg.attachment_rect.value().size.width.as_uint32_t() == rect.width &&
+           arg.attachment_rect.value().size.height.as_uint32_t() == rect.height;
 }
+
+MATCHER_P(MatchesEdge, edge, "")
+{
+    return arg.edge_attachment.is_set() &&
+           arg.edge_attachment.value() == edge;
+}
+
 }
 
 struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
@@ -155,16 +165,19 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
     ASSERT_TRUE(mir_surface_is_valid(parent.get()));
 
     MirRectangle attachment_rect{100, 200, 300, 400};
+    MirEdgeAttachment edge{mir_edge_attachment_horizontal};
+
     auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
     std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> menu_spec{
         mir_connection_create_spec_for_menu_surface(connection, 640, 480,
             mir_pixel_format_abgr_8888, parent.get(), &attachment_rect,
-            mir_edge_attachment_horizontal),
+            edge),
         spec_deleter
     };
 
     ASSERT_TRUE(menu_spec != nullptr);
 
-    EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(IsAMenu(), HasParent(parent.get()), MatchesAttachment(attachment_rect)),_));
+    EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(IsAMenu(),
+        HasParent(parent.get()), MatchesAttachment(attachment_rect), MatchesEdge(edge)),_));
     create_surface(menu_spec.get());
 }
