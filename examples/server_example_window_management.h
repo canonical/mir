@@ -23,6 +23,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/placement_strategy.h"
+#include "mir/scene/surface_configurator.h"
 #include "mir/scene/surface_creation_parameters.h"
 
 #include <memory>
@@ -36,7 +37,9 @@ class Server;
 
 namespace examples
 {
-class WindowManager : public virtual scene::PlacementStrategy
+class WindowManager :
+    public virtual scene::PlacementStrategy,
+    public virtual scene::SurfaceConfigurator
 {
 public:
 

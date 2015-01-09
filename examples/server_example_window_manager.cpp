@@ -156,6 +156,17 @@ void me::add_window_manager_option_to(Server& server)
             return std::make_shared<SceneTracker>(factory->window_manager());
         });
 
+    server.override_the_surface_configurator([factory, &server]()
+        -> std::shared_ptr<ms::SurfaceConfigurator>
+        {
+            auto const options = server.get_options();
+
+            if (!options->is_set(me::wm_option))
+                return std::shared_ptr<ms::SurfaceConfigurator>{};
+
+            return factory->window_manager();
+        });
+
     server.wrap_display_buffer_compositor_factory([factory, &server]
        (std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped)
        -> std::shared_ptr<mc::DisplayBufferCompositorFactory>

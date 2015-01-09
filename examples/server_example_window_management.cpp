@@ -124,6 +124,11 @@ private:
     void toggle_max_horizontal() override {}
 
     void toggle_max_vertical() override {}
+
+    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value) override
+        { return requested_value; }
+
+    void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override {}
 };
 
 // simple tiling algorithm
@@ -310,6 +315,11 @@ public:
         std::lock_guard<decltype(mutex)> lock(mutex);
         toggle(SurfaceInfo::vmax);
     }
+
+    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value) override
+        { return requested_value; }
+
+    void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override {}
 
 private:
     void update_tiles()
