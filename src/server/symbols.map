@@ -787,6 +787,7 @@ MIR_SERVER_28 {
     mir::compositor::GLRenderer::set_viewport*;
     mir::compositor::GLRenderer::suspend*;
     mir::compositor::GLRenderer::tessellate*;
+    mir::compositor::GLProgramFamily::*;
     typeinfo?for?mir::compositor::GLRenderer;
     vtable?for?mir::compositor::GLRenderer;
     vtable?for?mir::compositor::RecentlyUsedCache;

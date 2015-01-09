@@ -85,7 +85,7 @@ mga::Display::Display(
     display_report->report_successful_display_construction();
 }
 
-mga::Display::~Display()
+mga::Display::~Display() noexcept
 {
     if (primary_configuration.power_mode != mir_power_mode_off)
         safe_power_mode(*hwc_config, mir_power_mode_off);
