@@ -17,7 +17,6 @@
  */
 
 #include "real_hwc_wrapper.h"
-#include "hwc_common_device.h"
 #include "hwc_report.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

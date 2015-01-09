@@ -48,10 +48,11 @@ public:
         OverlayOptimization overlay_option,
         std::shared_ptr<HwcReport> const& hwc_report);
 
-    MirPixelFormat display_format();
+    MirPixelFormat display_format() override;
     std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
         GLProgramFactory const& gl_program_factory,
-        GLContext const& gl_context);
+        GLContext const& gl_context) override;
+    std::unique_ptr<HwcConfiguration> create_hwc_configuration() override;
 
 private:
     std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;

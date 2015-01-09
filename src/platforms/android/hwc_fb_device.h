@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_FB_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC_FB_DEVICE_H_
 
-#include "hwc_common_device.h"
+#include "display_device.h"
 #include "hwc_layerlist.h"
 #include "hardware/gralloc.h"
 #include "hardware/fb.h"
@@ -35,14 +35,12 @@ namespace graphics
 namespace android
 {
 class HwcWrapper;
-class HwcConfiguration;
 
-class HwcFbDevice : public HWCCommonDevice
+class HwcFbDevice : public DisplayDevice 
 {
 public:
     HwcFbDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-                std::shared_ptr<framebuffer_device_t> const& fb_device,
-                std::shared_ptr<HwcConfiguration> const& hwc_config);
+                std::shared_ptr<framebuffer_device_t> const& fb_device);
 
     virtual void post_gl(SwappingGLContext const& context);
     virtual bool post_overlays(
@@ -51,6 +49,7 @@ public:
         RenderableListCompositor const& list_compositor);
 
 private:
+    void content_cleared() override;
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<framebuffer_device_t> const fb_device;
     static int const num_displays{1};

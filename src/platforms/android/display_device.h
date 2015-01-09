@@ -49,8 +49,8 @@ public:
         RenderableList const& list,
         RenderableListCompositor const& list_compositor) = 0;
 
-    //TODO: remove the following from this interface
-    virtual void mode(MirPowerMode mode) = 0;
+    //notify the DisplayDevice that the screen content was cleared in a way other than the above fns
+    virtual void content_cleared() = 0;
 
 protected:
     DisplayDevice() = default;

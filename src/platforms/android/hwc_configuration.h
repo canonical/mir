@@ -38,7 +38,7 @@ struct DisplayAttribs
     bool connected;
 };
 
-//interface adapting for the blanking interface differences between HWC 1.0-1.3 and HWC 1.4+
+//interface adapting for the blanking interface differences between fb, HWC 1.0-1.3, and HWC 1.4+
 class HwcConfiguration
 {
 public:
@@ -58,9 +58,10 @@ class HwcBlankingControl : public HwcConfiguration
 public:
     HwcBlankingControl(std::shared_ptr<HwcWrapper> const&);
     void power_mode(DisplayName, MirPowerMode) override;
-    DisplayAttribs active_attribs_for(DisplayName);
+    DisplayAttribs active_attribs_for(DisplayName) override;
 private:
     std::shared_ptr<HwcWrapper> const hwc_device;
+    bool off;
 };
 
 }

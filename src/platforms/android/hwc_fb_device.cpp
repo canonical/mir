@@ -36,9 +36,7 @@ namespace geom = mir::geometry;
 
 mga::HwcFbDevice::HwcFbDevice(
     std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-    std::shared_ptr<framebuffer_device_t> const& fb_device,
-    std::shared_ptr<HwcConfiguration> const& config) :
-    HWCCommonDevice(hwc_wrapper, config),
+    std::shared_ptr<framebuffer_device_t> const& fb_device) :
     hwc_wrapper(hwc_wrapper), 
     fb_device(fb_device),
     layer_list{std::make_shared<IntegerSourceCrop>(), {}, 1},
@@ -105,4 +103,8 @@ bool mga::HwcFbDevice::post_overlays(
     RenderableListCompositor const&)
 {
     return false;
+}
+
+void mga::HwcFbDevice::content_cleared()
+{
 }

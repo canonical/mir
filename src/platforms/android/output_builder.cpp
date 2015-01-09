@@ -16,6 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "fb_device.h"
 #include "device_quirks.h"
 #include "output_builder.h"
 #include "display_resource_factory.h"
@@ -24,6 +25,7 @@
 #include "framebuffers.h"
 #include "real_hwc_wrapper.h"
 #include "hwc_report.h"
+#include "hwc_configuration.h"
 #include "hwc_layers.h"
 #include "hwc_configuration.h"
 
@@ -58,7 +60,9 @@ mga::OutputBuilder::OutputBuilder(
     if (force_backup_display || hwc_version == mga::HwcVersion::hwc10)
     {
         fb_native = res_factory->create_fb_native_device();
-        framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, fb_native);
+        mga::FbControl fb_control{fb_native};
+        auto attribs = fb_control.active_attribs_for(mga::DisplayName::primary);
+        framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, attribs.pixel_size, attribs.vrefresh_hz, fb_native);
     }
     else
     {
@@ -123,4 +127,12 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
         gl_context,
         gl_program_factory,
         overlay_optimization));
+}
+
+std::unique_ptr<mga::HwcConfiguration> mga::OutputBuilder::create_hwc_configuration()
+{
+    if (force_backup_display || hwc_version == mga::HwcVersion::hwc10)
+        return std::unique_ptr<mga::HwcConfiguration>(new mga::FbControl(fb_native));
+    else
+        return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcBlankingControl(hwc_wrapper));
 }

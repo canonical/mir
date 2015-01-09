@@ -18,7 +18,6 @@
 
 #include "src/platforms/android/real_hwc_wrapper.h"
 #include "src/platforms/android/hwc_report.h"
-#include "src/platforms/android/hwc_common_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_report.h"
 #include <gmock/gmock.h>
