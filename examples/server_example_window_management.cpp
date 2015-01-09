@@ -45,10 +45,53 @@ using namespace mir::geometry;
 ///\example server_example_window_management.cpp
 /// Demonstrate simple window management strategies
 
-// TODO these are useful operations that should be part of the library API
-// TODO I'll MP that as a follow-up
+char const* const me::wm_option = "window-manager";
+char const* const me::wm_description = "window management strategy [{tiling|fullscreen}]";
+
 namespace
 {
+char const* const wm_tiling = "tiling";
+char const* const wm_fullscreen = "fullscreen";
+
+// Very simple - make every surface fullscreen
+class FullscreenWindowManager : public me::WindowManager, me::FullscreenPlacementStrategy
+{
+public:
+    using me::FullscreenPlacementStrategy::FullscreenPlacementStrategy;
+
+private:
+    void add_surface(std::shared_ptr<ms::Surface> const&, ms::Session*) override {}
+
+    void remove_surface(std::weak_ptr<ms::Surface> const&, ms::Session*) override {}
+
+    void add_session(std::shared_ptr<ms::Session> const&) override {}
+
+    void remove_session(std::shared_ptr<ms::Session> const&) override {}
+
+    void add_display(Rectangle const&) override {}
+
+    void remove_display(Rectangle const&) override {}
+
+    void click(Point) override {}
+
+    void drag(Point) override {}
+
+    void resize(Point, double) override {}
+
+    void toggle_maximized() override {}
+
+    void toggle_max_horizontal() override {}
+
+    void toggle_max_vertical() override {}
+
+    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value) override
+        { return requested_value; }
+
+    void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override {}
+};
+
+// TODO these are useful operations that should be part of the library API
+// TODO I'll MP that as a follow-up
 inline Width operator*(double scale, Width const& w)
 {
     return Width{scale*w.as_int()};
@@ -88,54 +131,14 @@ inline Size as_size(Displacement const& disp)
 {
     return Size{disp.dx.as_int(), disp.dy.as_int()};
 }
-}
-
-namespace
-{
-// Very simple - make every surface fullscreen
-class FullscreenWindowManager : public me::WindowManager, me::FullscreenPlacementStrategy
-{
-public:
-    using me::FullscreenPlacementStrategy::FullscreenPlacementStrategy;
-
-private:
-    void add_surface(std::shared_ptr<ms::Surface> const&, ms::Session*) override {}
-
-    void remove_surface(std::weak_ptr<ms::Surface> const&, ms::Session*) override {}
-
-    void add_session(std::shared_ptr<ms::Session> const&) override {}
-
-    void remove_session(std::shared_ptr<ms::Session> const&) override {}
-
-    void add_display(Rectangle const&) override {}
-
-    void remove_display(Rectangle const&) override {}
-
-    void click(Point) override {}
-
-    void drag(Point) override {}
-
-    void resize(Point, double) override {}
-
-    void toggle_maximized() override {}
-
-    void toggle_max_horizontal() override {}
-
-    void toggle_max_vertical() override {}
-
-    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value) override
-        { return requested_value; }
-
-    void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override {}
-};
 
 // simple tiling algorithm:
-//  o Click to select a tile
-//  o Alt+drag to move a surface
-//  o Meta+scroll to resize the surface under the cursor
-//  o F11 to toggle focussed surface to full tile
-//  o Shift+F11 to toggle focussed surface to tile height
-//  o Ctrl+F11 to toggle focussed surface to tile width
+//  o Switch apps: tap or click on the corresponding tile
+//  o Move window: Alt-leftmousebutton drag
+//  o Resize window: Meta-mousewheel
+//  o Maximize/restore current window (to tile size): F11
+//  o Maximize/restore current window (to tile height): Shift-F11
+//  o Maximize/restore current window (to tile width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
 class TilingWindowManager : public me::WindowManager
 {
@@ -770,15 +773,6 @@ private:
 
     std::weak_ptr<me::WindowManager> const window_manager;
 };
-
-char const* const me::wm_option = "window-manager";
-char const* const me::wm_description = "window management strategy [{tiling|fullscreen}]";
-
-namespace
-{
-char const* const wm_tiling = "tiling";
-char const* const wm_fullscreen = "fullscreen";
-}
 
 auto me::WindowManagmentFactory::window_manager() -> std::shared_ptr<me::WindowManager>
 {
