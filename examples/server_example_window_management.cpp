@@ -45,10 +45,9 @@ using namespace mir::geometry;
 ///\example server_example_window_management.cpp
 /// Demonstrate simple window management strategies
 
-// TODO these are useful operations that should be part of the library
-namespace mir
-{
-namespace geometry
+// TODO these are useful operations that should be part of the library API
+// TODO I'll MP that as a follow-up
+namespace
 {
 inline Width operator*(double scale, Width const& w)
 {
@@ -88,7 +87,6 @@ inline Displacement as_displacement(Size const& size)
 inline Size as_size(Displacement const& disp)
 {
     return Size{disp.dx.as_int(), disp.dy.as_int()};
-}
 }
 }
 
@@ -131,12 +129,19 @@ private:
     void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override {}
 };
 
-// simple tiling algorithm
+// simple tiling algorithm:
+//  o Click to select a tile
+//  o Alt+drag to move a surface
+//  o Meta+scroll to resize the surface under the cursor
+//  o F11 to toggle focussed surface to full tile
+//  o Shift+F11 to toggle focussed surface to tile height
+//  o Ctrl+F11 to toggle focussed surface to tile width
+//  o client requests to maximize, vertically maximize & restore
 class TilingWindowManager : public me::WindowManager
 {
 public:
-    // TODO we can't take the msh::FocusController directly as we create a WindowManager
-    // TODO in the_session_listener() and that is called when creating the focus controller
+    // We can't take the msh::FocusController directly as we create a WindowManager
+    // in the_session_listener() and that is called when creating the focus controller
     using FocusControllerFactory = std::function<std::shared_ptr<msh::FocusController>()>;
 
     explicit TilingWindowManager(FocusControllerFactory const& focus_controller) :
