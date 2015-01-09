@@ -159,6 +159,12 @@ typedef enum MirOrientationMode
                                mir_orientation_mode_landscape_any
 } MirOrientationMode;
 
+typedef enum MirEdgeAttachment
+{
+    mir_edge_attachment_none = 0,
+    mir_edge_attachment_vertical = 1 << 0,
+    mir_edge_attachment_horizontal = 1 << 1
+} MirEdgeAttachment;
 /**@}*/
 
 #endif

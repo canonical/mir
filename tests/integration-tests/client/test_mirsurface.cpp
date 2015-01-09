@@ -80,10 +80,10 @@ MATCHER(IsAMenu, "")
 
 MATCHER_P(HasParent, parent, "")
 {
-    return arg.has_parent && arg.parent_id.as_value() == parent->id();
+    return arg.parent_id.is_set() && arg.parent_id.value().as_value() == parent->id();
 }
 
-MATCHER_P(MatchesLocation, rect, "")
+MATCHER_P(MatchesAttachment, rect, "")
 {
     return arg.top_left.x.as_int() == rect.left &&
            arg.top_left.y.as_int() == rect.top;
@@ -154,15 +154,17 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
     auto parent = create_surface(&spec);
     ASSERT_TRUE(mir_surface_is_valid(parent.get()));
 
-    MirRectangle rect{100, 200, 300, 400};
+    MirRectangle attachment_rect{100, 200, 300, 400};
     auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
     std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> menu_spec{
-        mir_connection_create_spec_for_menu_surface(connection, parent.get(), &rect, mir_pixel_format_abgr_8888),
+        mir_connection_create_spec_for_menu_surface(connection, 640, 480,
+            mir_pixel_format_abgr_8888, parent.get(), &attachment_rect,
+            mir_edge_attachment_horizontal),
         spec_deleter
     };
 
     ASSERT_TRUE(menu_spec != nullptr);
 
-    EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(IsAMenu(), HasParent(parent.get()), MatchesLocation(rect)),_));
+    EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(IsAMenu(), HasParent(parent.get()), MatchesAttachment(attachment_rect)),_));
     create_surface(menu_spec.get());
 }

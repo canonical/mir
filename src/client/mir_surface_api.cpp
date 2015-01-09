@@ -25,7 +25,6 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "error_connections.h"
-#include "mir/require.h"
 #include "uncaught.h"
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -53,19 +52,21 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_menu_surface(MirConnection* connection,
+                                                            int width,
+                                                            int height,
+                                                            MirPixelFormat format,
                                                             MirSurface* parent,
                                                             MirRectangle* rect,
-                                                            MirPixelFormat format)
+                                                            MirEdgeAttachment edge)
 {
     mir::require(mir_surface_is_valid(parent));
     mir::require(rect != nullptr);
 
-    auto spec = new MirSurfaceSpec;
-    spec->connection = connection;
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
     spec->type = mir_surface_type_menu;
     spec->parent = parent;
-    spec->rect = *rect;
-    spec->pixel_format = format;
+    spec->attachment_rect = *rect;
+    spec->edge_attachment = edge;
     return spec;
 }
 

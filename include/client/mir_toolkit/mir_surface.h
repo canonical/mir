@@ -54,20 +54,29 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
  * Create a surface specification for a menu surface.
  *
  * \param [in] connection   Connection the surface will be created on
- * \param [in] parent       A valid parent surface for this menu.
- * \param [in] rect         The requested relative location (with respect to
- *                          parent) and size for the surface. The server is not
- *                          guaranteed to create a surface of with the
- *                          requested location or size.
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a surface of this height.
  * \param [in] format       Pixel format for the surface.
+ * \param [in] parent       A valid parent surface for this menu.
+ * \param [in] rect         A rectangle that specifies four edges this surface
+ *                          can attach to depending on placement constraints in
+ *                          the server due to screen size or other requirements.
+ *                          The server is not guaranteed to create a surface at
+ *                          the requested location
+ * \param [in] edge         The preferred edge direction to attach to.
  * \return                  A handle that can be passed to mir_surface_create()
  *                          to complete construction.
  */
 MirSurfaceSpec*
 mir_connection_create_spec_for_menu_surface(MirConnection* connection,
+                                            int width,
+                                            int height,
+                                            MirPixelFormat format,
                                             MirSurface* parent,
                                             MirRectangle* rect,
-                                            MirPixelFormat format);
+                                            MirEdgeAttachment edge);
 
 /**
  * Create a surface from a given specification

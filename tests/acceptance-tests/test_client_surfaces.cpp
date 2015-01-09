@@ -214,9 +214,10 @@ INSTANTIATE_TEST_CASE_P(ClientSurfaces,
 TEST_F(ClientSurfaces, can_be_menus)
 {
     auto parent = mtf::make_any_surface(connection);
-    MirRectangle rect{100, 200, 100, 100};
+    MirRectangle attachment_rect{100, 200, 100, 100};
 
-    auto spec = mir_connection_create_spec_for_menu_surface(connection, parent, &rect, mir_pixel_format_abgr_8888);
+    auto spec = mir_connection_create_spec_for_menu_surface(connection, 640, 480,
+        mir_pixel_format_abgr_8888, parent, &attachment_rect, mir_edge_attachment_vertical);
     ASSERT_TRUE(spec != nullptr);
 
     auto menu = mir_surface_create_sync(spec);
