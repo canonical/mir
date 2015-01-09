@@ -322,14 +322,14 @@ public:
 
     void attribute_set(ms::Surface const& surface, MirSurfaceAttrib attrib, int value) override
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-
         switch (attrib)
         {
         case mir_surface_attrib_state:
+        {
+            std::lock_guard<decltype(mutex)> lock(mutex);
             set_state(surface, value);
             break;
-
+        }
         default:
             break;
         }
