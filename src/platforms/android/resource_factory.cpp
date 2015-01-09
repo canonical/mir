@@ -29,7 +29,6 @@
 #include "hwc_fb_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync.h"
-#include "hwc_configuration.h"
 #include "display.h"
 #include "real_hwc_wrapper.h"
 
@@ -95,8 +94,7 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_device(
     std::shared_ptr<LayerAdapter> const& layer_adapter) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
-    auto config = std::make_shared<mga::HwcBlankingControl>(wrapper);
-    return std::make_shared<mga::HwcDevice>(wrapper, config, syncer, layer_adapter);
+    return std::make_shared<mga::HwcDevice>(wrapper, syncer, layer_adapter);
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_fb_device(
@@ -104,6 +102,5 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_fb_device(
     std::shared_ptr<framebuffer_device_t> const& fb_native_device) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
-    auto config = std::make_shared<mga::HwcBlankingControl>(wrapper);
-    return std::make_shared<mga::HwcFbDevice>(wrapper, fb_native_device, config, syncer);
+    return std::make_shared<mga::HwcFbDevice>(wrapper, fb_native_device, syncer);
 }

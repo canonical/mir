@@ -287,15 +287,10 @@ TEST_F(DisplayBuffer, sets_display_power_mode_to_on_at_start)
 
 TEST_F(DisplayBuffer, changes_display_power_mode)
 {
-    using namespace testing;
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
 
-    Sequence seq;
-    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
-        .InSequence(seq);
+    EXPECT_CALL(*mock_display_device, content_cleared());
 
     auto config = db.configuration();
     config.power_mode = mir_power_mode_off;
@@ -306,21 +301,32 @@ TEST_F(DisplayBuffer, changes_display_power_mode)
     db.configure(config); 
 }
 
-TEST_F(DisplayBuffer, disregards_double_display_power_mode_request)
+TEST_F(DisplayBuffer, power_mode_request_stored)
 {
-    using namespace testing;
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
 
-    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
-        .Times(1);
+    EXPECT_CALL(*mock_display_device, content_cleared())
+        .Times(3);
 
     auto config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_on);
     config.power_mode = mir_power_mode_off;
     db.configure(config);
+
+    config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_off);
     config.power_mode = mir_power_mode_suspend;
     db.configure(config);
+
+    config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_suspend);
     config.power_mode = mir_power_mode_standby;
+    db.configure(config);
+
+    config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_standby);
+    config.power_mode = mir_power_mode_on;
     db.configure(config);
 }
 

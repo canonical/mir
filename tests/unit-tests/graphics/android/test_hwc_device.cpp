@@ -50,12 +50,6 @@ namespace mt=mir::test;
 
 namespace
 {
-struct StubConfig : public mga::HwcConfiguration
-{
-    void power_mode(mga::DisplayName, MirPowerMode) override {}
-    mga::DisplayAttribs active_attribs_for(mga::DisplayName) override { return {{}, {}, 0.0, false}; }
-};
-
 struct MockFileOps : public mga::SyncFileOps
 {
     MOCK_METHOD3(ioctl, int(int,int,void*));
@@ -105,8 +99,7 @@ struct HwcDevice : public ::testing::Test
         mock_device(std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>()),
         stub_context{stub_fb_buffer},
         renderlist({stub_renderable1, stub_renderable2}),
-        layer_adapter{std::make_shared<mga::IntegerSourceCrop>()},
-        stub_config{std::make_shared<StubConfig>()}
+        layer_adapter{std::make_shared<mga::IntegerSourceCrop>()}
     {
         fill_hwc_layer(layer, &comp_rect, position1, *stub_buffer1, HWC_FRAMEBUFFER, 0);
         fill_hwc_layer(layer2, &comp2_rect, position2, *stub_buffer2, HWC_FRAMEBUFFER, 0);
@@ -152,7 +145,6 @@ struct HwcDevice : public ::testing::Test
     mtd::StubSwappingGLContext stub_context;
     mg::RenderableList renderlist;
     std::shared_ptr<mga::LayerAdapter> const layer_adapter;
-    std::shared_ptr<mga::HwcConfiguration> const stub_config;
 };
 }
 
@@ -168,7 +160,7 @@ TEST_F(HwcDevice, prepares_a_skip_and_target_layer_by_default)
     EXPECT_CALL(*mock_device, prepare(MatchesPrimaryList(expected_list)))
         .Times(1);
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
     device.post_gl(stub_context);
 }
 
@@ -202,7 +194,7 @@ TEST_F(HwcDevice, calls_backup_compositor_when_overlay_rejected)
     EXPECT_CALL(mock_compositor, render(expected_renderable_list,Ref(stub_context)))
         .InSequence(seq);
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
     EXPECT_TRUE(device.post_overlays(stub_context, renderlist, mock_compositor));
 }
 
@@ -227,7 +219,7 @@ TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
         .InSequence(seq);
     EXPECT_CALL(*mock_device, prepare(MatchesPrimaryList(expected_list2)))
         .InSequence(seq);
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
 
     EXPECT_TRUE(device.post_overlays(stub_context, renderlist, stub_compositor));
     device.post_gl(stub_context);
@@ -260,7 +252,7 @@ TEST_F(HwcDevice, sets_and_updates_fences)
     EXPECT_CALL(*mock_native_buffer3, update_usage(fb_release_fence, mga::BufferAccess::read))
         .InSequence(seq);
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
     device.post_gl(stub_context);
 
     //check that the retire fence is closed
@@ -292,7 +284,7 @@ TEST_F(HwcDevice, commits_correct_list_with_rejected_renderables)
         &target_layer
     };
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
 
     EXPECT_CALL(*mock_native_buffer1, copy_fence())
         .Times(0);
@@ -346,7 +338,7 @@ TEST_F(HwcDevice, commits_correct_list_when_all_accepted_as_overlays)
         &target_layer
     };
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
 
     EXPECT_CALL(*mock_native_buffer3, copy_fence())
         .Times(0);
@@ -384,7 +376,7 @@ TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
     EXPECT_CALL(*mock_device, set(_))
         .Times(1);
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
     EXPECT_TRUE(device.post_overlays(stub_context, renderlist, stub_compositor));
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
@@ -392,7 +384,7 @@ TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
 TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
 {
     using namespace testing;
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
 
     ON_CALL(*mock_device, prepare(_))
         .WillByDefault(Invoke([&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
@@ -415,7 +407,7 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
     using namespace testing;
     mg::RenderableList renderlist({stub_renderable1});
     mg::RenderableList renderlist2({stub_renderable2});
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
 
     std::list<hwc_layer_1_t*> expected_list1 { &layer, &target_layer };
     std::list<hwc_layer_1_t*> expected_list2 { &layer2, &target_layer };
@@ -439,7 +431,7 @@ TEST_F(HwcDevice, owns_overlay_buffers_until_next_set)
         .WillOnce(Invoke(set_all_layers_to_overlay))
         .WillOnce(Return());
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
 
     auto use_count_before = stub_buffer1.use_count();
     EXPECT_TRUE(device.post_overlays(stub_context, {stub_renderable1}, stub_compositor));
@@ -522,7 +514,7 @@ TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_wit
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
     EXPECT_TRUE(device.post_overlays(stub_context, renderlist, stub_compositor));
     //set only the 2nd layer to a new buffer. the first buffer has the same buffer, and would 
     //still be onscreen if this wasn't against a mock
@@ -541,7 +533,7 @@ TEST_F(HwcDevice, does_not_own_framebuffer_buffers_past_set)
             contents[0]->hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
         }));
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
 
     auto use_count_before = stub_buffer1.use_count();
     EXPECT_TRUE(device.post_overlays(stub_context, {stub_renderable1}, stub_compositor));
@@ -550,7 +542,7 @@ TEST_F(HwcDevice, does_not_own_framebuffer_buffers_past_set)
 
 TEST_F(HwcDevice, rejects_empty_list)
 {
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist{};
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
@@ -559,7 +551,7 @@ TEST_F(HwcDevice, rejects_empty_list)
 //TODO: we could accept a 90 degree transform
 TEST_F(HwcDevice, rejects_list_containing_transformed)
 {
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
 
     auto renderable = std::make_shared<mtd::StubTransformedRenderable>();
     mg::RenderableList renderlist{renderable};
@@ -571,7 +563,7 @@ TEST_F(HwcDevice, rejects_list_containing_plane_alpha)
 {
     using namespace testing;
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
 
     mg::RenderableList renderlist{std::make_shared<mtd::PlaneAlphaRenderable>()};
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
@@ -583,13 +575,13 @@ TEST_F(HwcDevice, does_not_own_overlay_buffers_after_screen_off)
     EXPECT_CALL(*mock_device, prepare(_))
         .WillOnce(Invoke(set_all_layers_to_overlay));
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
 
     auto use_count_before = stub_buffer1.use_count();
     EXPECT_TRUE(device.post_overlays(stub_context, {stub_renderable1}, stub_compositor));
     EXPECT_THAT(stub_buffer1.use_count(), Gt(use_count_before));
 
-    device.mode(MirPowerMode::mir_power_mode_off);
+    device.content_cleared();
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
 
@@ -678,7 +670,7 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_even_across_list_changes)
         .InSequence(seq);
     //end second post
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
     EXPECT_TRUE(device.post_overlays(stub_context, renderlist1, stub_compositor));
 
     EXPECT_TRUE(device.post_overlays(stub_context, renderlist2, stub_compositor));
@@ -780,7 +772,7 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
         .InSequence(seq);
     //end second post
 
-    mga::HwcDevice device(mock_device, stub_config, mock_vsync, layer_adapter);
+    mga::HwcDevice device(mock_device, mock_vsync, layer_adapter);
     EXPECT_TRUE(device.post_overlays(stub_context, renderlist, stub_compositor));
     EXPECT_TRUE(device.post_overlays(stub_context, renderlist2, stub_compositor));
 }

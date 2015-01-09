@@ -263,14 +263,60 @@ TEST_F(Display, logs_error_because_of_surface_creation_failure)
     }, std::runtime_error);
 }
 
-TEST_F(Display, configures_display_buffer)
+
+TEST_F(Display, turns_on_db_at_construction_and_off_at_destruction)
 {
-    using namespace testing;
+    stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_off));
+    });
+
     mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report);
+}
+
+TEST_F(Display, first_power_on_is_not_fatal) //lp:1345533
+{
+    stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
+    {
+        ON_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on))
+            .WillByDefault(testing::Throw(std::runtime_error("")));
+    });
+
+    EXPECT_NO_THROW({
+        mga::Display display(stub_db_factory, stub_gl_program_factory, stub_gl_config, null_display_report);});
+}
+
+TEST_F(Display, catches_exceptions_when_turning_off_in_destructor)
+{
+    stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_off))
+            .WillOnce(testing::Throw(std::runtime_error("")));
+    });
+    mga::Display display(stub_db_factory, stub_gl_program_factory, stub_gl_config, null_display_report);
+}
+
+TEST_F(Display, configures_display_buffer)
+{
+    stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_standby));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_off));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_suspend));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_off));
+    });
+
+    mga::Display display(stub_db_factory, stub_gl_program_factory, stub_gl_config, null_display_report);
 
     auto configuration = display.configuration();
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)

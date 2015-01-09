@@ -1,5 +1,6 @@
-mir (0.10.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.10.0+15.04.20150107.2-0ubuntu1) vivid; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.10.0 (https://launchpad.net/mir/+milestone/0.10.0)
     - Enhancements:
       . Added support for Android HWC 1.3 devices.
@@ -89,7 +90,10 @@ mir (0.10.0-0ubuntu1) UNRELEASED; urgency=medium
       . When revealing hidden surfaces wait for them to become exposed before
         sending events which we expect them to receive (LP: #1407783)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 12 Dec 2014 14:33:12 +0800
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 07 Jan 2015 23:50:16 +0000
 
 mir (0.9.0+15.04.20141125-0ubuntu1) vivid; urgency=medium
 
