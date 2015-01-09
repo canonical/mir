@@ -32,20 +32,40 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-mga::Display::Display(std::shared_ptr<mga::DisplayBufferBuilder> const& display_buffer_builder,
-                                    std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
-                                    std::shared_ptr<GLConfig> const& gl_config,
-                                    std::shared_ptr<DisplayReport> const& display_report)
-    : display_buffer_builder{display_buffer_builder},
-      gl_context{display_buffer_builder->display_format(), *gl_config, *display_report},
-      display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)}
+namespace
 {
+void safe_power_mode(mga::HwcConfiguration& config, MirPowerMode mode) noexcept
+try
+{
+    config.power_mode(mga::DisplayName::primary, mode);
+} catch (...) {}
+}
+
+mga::Display::Display(
+    std::shared_ptr<mga::DisplayBufferBuilder> const& display_buffer_builder,
+    std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
+    std::shared_ptr<GLConfig> const& gl_config,
+    std::shared_ptr<DisplayReport> const& display_report) :
+    display_buffer_builder{display_buffer_builder},
+    gl_context{display_buffer_builder->display_format(), *gl_config, *display_report},
+    display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)},
+    hwc_config{display_buffer_builder->create_hwc_configuration()}
+{
+    //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
+    safe_power_mode(*hwc_config, mir_power_mode_on);
+
     display_report->report_successful_setup_of_native_resources();
 
     gl_context.make_current();
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();
+}
+
+mga::Display::~Display() noexcept
+{
+    if (display_buffer->configuration().power_mode != mir_power_mode_off)
+        safe_power_mode(*hwc_config, mir_power_mode_off);
 }
 
 void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
@@ -67,16 +87,17 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
 void mga::Display::configure(mg::DisplayConfiguration const& configuration)
 {
     if (!configuration.valid())
-    {
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("Invalid or inconsistent display configuration"));
-    }
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
 
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
-        display_buffer->configure(output);
+        if (display_buffer->configuration().power_mode != output.power_mode)
+        {
+            hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
+            display_buffer->configure(output);
+        }
     });
 }
 

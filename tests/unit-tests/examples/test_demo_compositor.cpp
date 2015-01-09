@@ -27,7 +27,6 @@
 
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/stub_gl_program_factory.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/null_surface_configurator.h"
@@ -65,7 +64,6 @@ struct DemoCompositor : testing::Test
     testing::NiceMock<mtd::MockGL> mock_gl;
     mtd::StubDisplayBuffer stub_display_buffer{
         geom::Rectangle{{0,0}, {1000,1000}}};
-    mtd::StubGLProgramFactory stub_factory;
     ms::BasicSurface stub_surface{
         std::string("stub"),
         geom::Rectangle{{0,0},{100,100}},
@@ -77,13 +75,21 @@ struct DemoCompositor : testing::Test
         std::shared_ptr<mir::graphics::CursorImage>(),
         mir::report::null_scene_report()};
 
-    me::DemoCompositor demo_compositor{
-        stub_display_buffer,
-        stub_factory,
-        mir::report::null_compositor_report()};
-
     testing::NiceMock<MockSceneElement> element;
     mc::SceneElementSequence scene_elements{mt::fake_shared(element)};
+
+    void SetUp()
+    {
+        using namespace testing;
+        ON_CALL(mock_gl, glCreateShader(_))
+            .WillByDefault(Return(12));
+        ON_CALL(mock_gl, glCreateProgram())
+            .WillByDefault(Return(34));
+        ON_CALL(mock_gl, glGetShaderiv(_, _, _))
+            .WillByDefault(SetArgPointee<2>(GL_TRUE));
+        ON_CALL(mock_gl, glGetProgramiv(_, _, _))
+            .WillByDefault(SetArgPointee<2>(GL_TRUE));
+    }
 };
 
 }
@@ -92,6 +98,10 @@ struct DemoCompositor : testing::Test
 TEST_F(DemoCompositor, sets_surface_visibility)
 {
     using namespace testing;
+
+    me::DemoCompositor demo_compositor{
+        stub_display_buffer,
+        mir::report::null_compositor_report()};
 
     EXPECT_CALL(element, renderable())
         .Times(2)

@@ -31,7 +31,9 @@ class GLProgramFactory;
 namespace android
 {
 class GLContext;
+class HwcConfiguration;
 
+//TODO: this name needs improvement.
 class DisplayBufferBuilder
 {
 public:
@@ -40,6 +42,7 @@ public:
     virtual MirPixelFormat display_format() = 0;
     virtual std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
         GLProgramFactory const& gl_program_factory, GLContext const& gl_context) = 0;
+    virtual std::unique_ptr<HwcConfiguration> create_hwc_configuration() = 0;
 
 protected:
     DisplayBufferBuilder() = default;

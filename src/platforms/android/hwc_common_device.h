@@ -48,23 +48,16 @@ public:
     virtual ~HWCCommonDevice() noexcept;
 
     void notify_vsync();
-    void mode(MirPowerMode mode);
 
 protected:
     HWCCommonDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-                    std::shared_ptr<HwcConfiguration> const& configuration,
                     std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     std::shared_ptr<HWCVsyncCoordinator> const coordinator;
 
 private:
-    virtual void turned_screen_off();
-
     std::shared_ptr<HWCCallbacks> const callbacks;
     std::shared_ptr<HwcWrapper> const hwc_device;
-    std::shared_ptr<HwcConfiguration> const hwc_config;
-
-    MirPowerMode current_mode;
 };
 
 }
