@@ -22,6 +22,7 @@
 #include <system/window.h>
 #include <hardware/hwcomposer.h>
 #include <memory>
+#include <tuple>
 
 namespace mir
 {
@@ -36,13 +37,25 @@ class DisplayDevice;
 class FramebufferBundle;
 class HwcWrapper;
 class LayerAdapter;
+class HwcReport;
+
+enum HwcVersion
+{
+    hwc10,
+    hwc11,
+    hwc12,
+    hwc13,
+    hwc14,
+    unknown
+};
 
 class DisplayResourceFactory
 {
 public:
     virtual ~DisplayResourceFactory() = default;
 
-    virtual std::shared_ptr<hwc_composer_device_1> create_hwc_native_device() const = 0;
+    virtual std::tuple<std::shared_ptr<HwcWrapper>, HwcVersion> create_hwc_wrapper(
+        std::shared_ptr<HwcReport> const&) const = 0;
     virtual std::shared_ptr<framebuffer_device_t> create_fb_native_device() const = 0;
 
     virtual std::shared_ptr<ANativeWindow> create_native_window(
