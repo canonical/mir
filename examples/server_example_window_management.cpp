@@ -168,6 +168,7 @@ public:
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session].surfaces.push_back(surface);
+        surface_info[surface].session = session_info[session].session;
         surface_info[surface].state = SurfaceInfo::restored;
     }
 
@@ -319,7 +320,76 @@ public:
     int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value) override
         { return requested_value; }
 
-    void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override {}
+    void attribute_set(ms::Surface const& surface, MirSurfaceAttrib attrib, int value) override
+    {
+        if (attrib != mir_surface_attrib_state) return;
+
+        auto new_state = SurfaceInfo::restored;
+
+        switch (value)
+        {
+        case mir_surface_state_restored:
+            new_state = SurfaceInfo::restored;
+            break;
+
+        case mir_surface_state_maximized:
+            new_state = SurfaceInfo::maximized;
+            break;
+
+        case mir_surface_state_vertmaximized:
+            new_state = SurfaceInfo::vmax;
+            break;
+
+        default:
+            return;
+        }
+
+        std::lock_guard<decltype(mutex)> lock(mutex);
+
+        for (auto& i : surface_info)
+        {
+            if (auto const sp = i.first.lock())
+            {
+                if (sp.get() == &surface)
+                {
+                    auto& surface_info = i.second;
+
+                    if (surface_info.state == new_state)
+                    {
+                        return; // Nothing to do
+                    }
+
+                    auto const& session_info =
+                        this->session_info[surface_info.session.lock().get()];
+
+                    switch (new_state)
+                    {
+                    case SurfaceInfo::restored:
+                        sp->move_to(surface_info.restore_rect.top_left);
+                        sp->resize(surface_info.restore_rect.size);
+                        break;
+
+                    case SurfaceInfo::maximized:
+                        sp->move_to(session_info.tile.top_left);
+                        sp->resize(session_info.tile.size);
+                        break;
+
+                    case SurfaceInfo::hmax:
+                        sp->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
+                        sp->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
+                        break;
+
+                    case SurfaceInfo::vmax:
+                        sp->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
+                        sp->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
+                        break;
+                    }
+
+                    surface_info.state = new_state;
+                }
+            }
+        }
+    }
 
 private:
     void update_tiles()
@@ -463,6 +533,7 @@ private:
     struct SurfaceInfo
     {
         SurfaceInfo() = default;
+        std::weak_ptr<ms::Session> session;
         enum State { restored, maximized, hmax, vmax } state;
         Rectangle restore_rect;
     };
