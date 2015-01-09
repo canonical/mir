@@ -61,6 +61,13 @@ void mrl::CompositorReport::began_frame(SubCompositorId id)
     inst.latency_sum += t - last_scheduled;
 }
 
+void mrl::CompositorReport::rendered_frame(SubCompositorId id)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    auto& inst = instance[id];
+    inst.render_time_sum += now() - inst.start_of_frame;
+}
+
 void mrl::CompositorReport::Instance::log(ml::Logger& logger, SubCompositorId id)
 {
     // The first report is a valid sample, but don't log anything because
@@ -127,7 +134,6 @@ void mrl::CompositorReport::finished_frame(bool bypassed,
 
     auto t = now();
     inst.total_time_sum += t - inst.end_of_frame;
-    inst.render_time_sum += t - inst.start_of_frame;
     inst.end_of_frame = t;
     inst.nframes++;
     if (bypassed)

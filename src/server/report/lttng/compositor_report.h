@@ -37,6 +37,7 @@ public:
     virtual ~CompositorReport() = default;
     void added_display(int width, int height, int x, int y, SubCompositorId id = 0) override;
     void began_frame(SubCompositorId id = 0) override;
+    void rendered_frame(SubCompositorId id = 0) override;
     void finished_frame(bool bypassed, SubCompositorId id = 0) override;
     void started() override;
     void stopped() override;

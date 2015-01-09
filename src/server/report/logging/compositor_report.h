@@ -44,6 +44,7 @@ public:
                      std::shared_ptr<time::Clock> const& clock);
     void added_display(int width, int height, int x, int y, SubCompositorId id) override;
     void began_frame(SubCompositorId id) override;
+    void rendered_frame(SubCompositorId id) override;
     void finished_frame(bool bypassed, SubCompositorId id) override;
     void started() override;
     void stopped() override;

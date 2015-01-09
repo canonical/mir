@@ -82,6 +82,7 @@ TEST_F(LoggingCompositorReport, calculates_accurate_stats)
     {
         report.began_frame(display_id);
         clock->advance_by(chrono::microseconds(1000000 / target_fps));
+        report.rendered_frame(display_id);
         report.finished_frame(false, display_id);
     }
 
@@ -100,6 +101,7 @@ TEST_F(LoggingCompositorReport, calculates_accurate_stats)
     {
         report.began_frame(display_id);
         clock->advance_by(chrono::microseconds(1000000 / target_fps));
+        report.rendered_frame(display_id);
         report.finished_frame(false, display_id);
     }
     ASSERT_TRUE(recorder->scrape(measured_fps, measured_frame_time))
@@ -117,6 +119,7 @@ TEST_F(LoggingCompositorReport, survives_pause_resume)
 
     report.began_frame(before);
     clock->advance_by(chrono::microseconds(12345));
+    report.rendered_frame(before);
     report.finished_frame(false, before);
 
     report.stopped();
@@ -125,12 +128,14 @@ TEST_F(LoggingCompositorReport, survives_pause_resume)
 
     report.began_frame(after);
     clock->advance_by(chrono::microseconds(12345));
+    report.rendered_frame(after);
     report.finished_frame(false, after);
 
     clock->advance_by(chrono::microseconds(12345678));
 
     report.began_frame(after);
     clock->advance_by(chrono::microseconds(12345));
+    report.rendered_frame(after);
     report.finished_frame(false, after);
 
     report.stopped();
@@ -143,6 +148,7 @@ TEST_F(LoggingCompositorReport, reports_bypass_only_when_changed)
     report.started();
 
     report.began_frame(id);
+    report.rendered_frame(id);
     report.finished_frame(false, id);
     EXPECT_TRUE(recorder->last_message_contains("bypass OFF"))
         << recorder->last_message();
@@ -150,6 +156,7 @@ TEST_F(LoggingCompositorReport, reports_bypass_only_when_changed)
     for (int f = 0; f < 3; ++f)
     {
         report.began_frame(id);
+        report.rendered_frame(id);
         report.finished_frame(false, id);
         clock->advance_by(chrono::microseconds(12345678));
     }
@@ -157,6 +164,7 @@ TEST_F(LoggingCompositorReport, reports_bypass_only_when_changed)
         << recorder->last_message();
 
     report.began_frame(id);
+    report.rendered_frame(id);
     report.finished_frame(true, id);
     EXPECT_TRUE(recorder->last_message_contains("bypass ON"))
         << recorder->last_message();
