@@ -354,6 +354,11 @@ public:
                 {
                     auto& surface_info = i.second;
 
+                    if (surface_info.state == SurfaceInfo::restored)
+                    {
+                        surface_info.restore_rect = {sp->top_left(), sp->size()};
+                    }
+
                     if (surface_info.state == new_state)
                     {
                         return; // Nothing to do
