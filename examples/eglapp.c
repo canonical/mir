@@ -441,3 +441,26 @@ struct MirSurface* mir_eglapp_native_surface()
 {
     return surface;
 }
+
+void mir_eglapp_toggle_surface_state(void)
+{
+    switch (mir_surface_get_state(surface))
+    {
+    case mir_surface_state_unknown:
+    case mir_surface_state_restored:
+    case mir_surface_state_minimized:
+    case mir_surface_state_fullscreen:
+    case mir_surface_states:
+        mir_surface_set_state(surface, mir_surface_state_maximized);
+        break;
+
+    case mir_surface_state_maximized:
+        mir_surface_set_state(surface, mir_surface_state_vertmaximized);
+        break;
+
+    case mir_surface_state_vertmaximized:
+        mir_surface_set_state(surface, mir_surface_state_restored);
+        break;
+    }
+}
+

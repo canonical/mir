@@ -57,6 +57,8 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT);
         mir_eglapp_swap_buffers();
         sleep(1);
+
+        mir_eglapp_toggle_surface_state();
     }
 
     mir_eglapp_shutdown();

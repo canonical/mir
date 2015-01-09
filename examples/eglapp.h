@@ -37,6 +37,8 @@ void            mir_eglapp_shutdown(void);
 
 struct MirConnection* mir_eglapp_native_connection();
 struct MirSurface*    mir_eglapp_native_surface();
+void            mir_eglapp_toggle_surface_state(void);
+
 #ifdef __cplusplus
 }
 #endif
