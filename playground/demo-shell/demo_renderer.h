@@ -40,9 +40,16 @@ public:
 
     void begin(std::unordered_set<graphics::Renderable::ID> renderables_not_to_decorate) const;
     
+    bool would_embellish(
+        graphics::Renderable const& renderable,
+        geometry::Rectangle const&) const;
+
+protected:
     void tessellate(
         std::vector<graphics::GLPrimitive>& primitives,
         graphics::Renderable const& renderable) const override;
+
+private:
     void tessellate_shadow(
         std::vector<graphics::GLPrimitive>& primitives,
         graphics::Renderable const& renderable,
@@ -51,11 +58,7 @@ public:
         std::vector<graphics::GLPrimitive>& primitives,
         graphics::Renderable const& renderable,
         float titlebar_height) const;
-    bool would_embellish(
-        graphics::Renderable const& renderable,
-        geometry::Rectangle const&) const;
 
-private:
     float const titlebar_height;
     float const shadow_radius;
     float const corner_radius;
