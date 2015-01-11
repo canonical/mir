@@ -158,7 +158,7 @@ DemoRenderer::DemoRenderer(
     titlebar_height{titlebar_height},
     shadow_radius{shadow_radius},
     corner_radius{0.5f},
-    colour_effect{ColourEffect::none},
+    colour_effect{none},
     inverse_program_index{-1}
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
@@ -176,12 +176,35 @@ DemoRenderer::DemoRenderer(
         "uniform float alpha;\n"
         "varying vec2 v_texcoord;\n"
         "void main() {\n"
-        "   vec4 f = texture2D(tex, v_texcoord);\n"
-        "   gl_FragColor = alpha*vec4(1.0-f.r, 1.0-f.g, 1.0-f.b, f.a);\n"
+        "    vec4 f = texture2D(tex, v_texcoord);\n"
+        "    gl_FragColor = alpha*vec4(1.0-f.r, 1.0-f.g, 1.0-f.b, f.a);\n"
         "}\n"
     };
     inverse_program_index = programs.size();
     programs.push_back(family.add_program(vshader, inverse_fshader));
+
+    static const GLchar contrast_fshader[] =
+    {
+        "precision mediump float;\n"
+        "uniform sampler2D tex;\n"
+        "uniform float alpha;\n"
+        "varying vec2 v_texcoord;\n"
+        "\n"
+        "float bend(float x)\n"
+        "{\n"
+        "    return (1.0 - cos(x * 3.141592654)) / 2.0;\n"
+        "}\n"
+        "\n"
+        "void main() {\n"
+        "    vec4 f = texture2D(tex, v_texcoord);\n"
+        "    gl_FragColor = alpha*vec4(bend(f.r),\n"
+        "                              bend(f.g),\n"
+        "                              bend(f.b),\n"
+        "                              bend(f.a));\n"
+        "}\n"
+    };
+    contrast_program_index = programs.size();
+    programs.push_back(family.add_program(vshader, contrast_fshader));
 }
 
 DemoRenderer::~DemoRenderer()
@@ -364,8 +387,20 @@ void DemoRenderer::set_colour_effect(ColourEffect e)
 void DemoRenderer::draw(graphics::Renderable const& renderable,
                         GLRenderer::Program const& prog) const
 {
-    if (colour_effect == inverse)
-        GLRenderer::draw(renderable, programs[inverse_program_index]);
-    else
+    if (colour_effect == none)
+    {
         GLRenderer::draw(renderable, prog);
+    }
+    else
+    {
+        int idx = 0;
+        switch (colour_effect)
+        {
+            case inverse:  idx = inverse_program_index; break;
+            case contrast: idx = contrast_program_index; break;
+            default: break;
+        };
+
+        GLRenderer::draw(renderable, programs[idx]);
+    }
 }

@@ -31,7 +31,8 @@ namespace examples
 enum ColourEffect
 {
     none,
-    inverse
+    inverse,
+    contrast
 };
 
 class DemoRenderer : public compositor::GLRenderer
@@ -76,7 +77,7 @@ private:
     GLuint titlebar_corner_tex;
 
     ColourEffect colour_effect;
-    int inverse_program_index;
+    int inverse_program_index, contrast_program_index;
     
     mutable std::unordered_set<graphics::Renderable::ID> decoration_skip_list;
 };

@@ -279,14 +279,21 @@ bool me::WindowManager::handle(MirEvent const& event)
         else if (event.key.modifiers & mir_key_modifier_meta &&
                  event.key.scan_code == KEY_N)
         {
-            colour_effect = (colour_effect == ColourEffect::inverse) ?
-                ColourEffect::none : ColourEffect::inverse;
-               
+            colour_effect = (colour_effect == inverse) ? none : inverse;
             me::DemoCompositor::for_each([this](me::DemoCompositor& c)
             {
                 c.set_colour_effect(colour_effect);
             });
-
+            force_redraw();
+        }
+        else if (event.key.modifiers & mir_key_modifier_meta &&
+                 event.key.scan_code == KEY_C)
+        {
+            colour_effect = (colour_effect == contrast) ? none : contrast;
+            me::DemoCompositor::for_each([this](me::DemoCompositor& c)
+            {
+                c.set_colour_effect(colour_effect);
+            });
             force_redraw();
         }
     }
