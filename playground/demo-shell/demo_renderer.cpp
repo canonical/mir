@@ -158,8 +158,7 @@ DemoRenderer::DemoRenderer(
     titlebar_height{titlebar_height},
     shadow_radius{shadow_radius},
     corner_radius{0.5f},
-    colour_effect{none},
-    inverse_program_index{-1}
+    colour_effect{none}
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
