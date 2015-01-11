@@ -99,8 +99,8 @@ protected:
     static const GLchar* const default_fshader;
     static const GLchar* const alpha_fshader;
 
-    virtual void render(graphics::Renderable const& renderable,
-                        GLRenderer::Program const& prog) const;
+    virtual void draw(graphics::Renderable const& renderable,
+                      GLRenderer::Program const& prog) const;
 
 private:
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;

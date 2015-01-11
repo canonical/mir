@@ -45,9 +45,11 @@ public:
         geometry::Rectangle const&) const;
 
 protected:
-    void tessellate(
-        std::vector<graphics::GLPrimitive>& primitives,
-        graphics::Renderable const& renderable) const override;
+    void tessellate(std::vector<graphics::GLPrimitive>& primitives,
+                    graphics::Renderable const& renderable) const override;
+
+    void draw(graphics::Renderable const& renderable,
+              GLRenderer::Program const& prog) const override;
 
 private:
     void tessellate_shadow(

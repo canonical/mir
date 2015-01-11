@@ -162,14 +162,14 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
     for (auto const& r : renderables)
     {
         int p = r->alpha() < 1.0f ? alpha_program_index : default_program_index;
-        render(*r, programs[p]);
+        draw(*r, programs[p]);
     }
 
     texture_cache->drop_unused();
 }
 
-void mc::GLRenderer::render(mg::Renderable const& renderable,
-                            GLRenderer::Program const& prog) const
+void mc::GLRenderer::draw(mg::Renderable const& renderable,
+                          GLRenderer::Program const& prog) const
 {
     if (renderable.alpha() < 1.0f || renderable.shaped())
     {

@@ -25,6 +25,7 @@
 using namespace mir;
 using namespace mir::examples;
 using namespace mir::geometry;
+using namespace mir::compositor;
 
 namespace
 {
@@ -337,4 +338,10 @@ bool DemoRenderer::would_embellish(
             display_area.overlaps(right) ||
             display_area.overlaps(top) ||
             display_area.overlaps(bottom));
+}
+
+void DemoRenderer::draw(graphics::Renderable const& renderable,
+                          GLRenderer::Program const& prog) const
+{
+    GLRenderer::draw(renderable, prog);
 }
