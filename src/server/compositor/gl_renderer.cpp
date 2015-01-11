@@ -47,7 +47,9 @@ enum
     alpha_program_index = 1
 };
 
-const GLchar vshader[] =
+}
+
+const GLchar* const mc::GLRenderer::vshader =
 {
     "attribute vec3 position;\n"
     "attribute vec2 texcoord;\n"
@@ -64,7 +66,7 @@ const GLchar vshader[] =
     "}\n"
 };
 
-const GLchar alpha_fshader[] =
+const GLchar* const mc::GLRenderer::alpha_fshader =
 {
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
@@ -76,8 +78,8 @@ const GLchar alpha_fshader[] =
     "}\n"
 };
 
-const GLchar default_fshader[] =  // Should be faster than blending in theory
-{
+const GLchar* const mc::GLRenderer::default_fshader =
+{   // This is the fastest fragment shader. Use it when you can.
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
     "varying vec2 v_texcoord;\n"
@@ -85,8 +87,6 @@ const GLchar default_fshader[] =  // Should be faster than blending in theory
     "   gl_FragColor = texture2D(tex, v_texcoord);\n"
     "}\n"
 };
-
-}
 
 mc::GLRenderer::Program::Program(GLuint program_id)
 {

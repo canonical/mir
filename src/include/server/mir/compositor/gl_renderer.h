@@ -97,6 +97,10 @@ protected:
     };
     std::vector<Program> programs;
 
+    static const GLchar* const vshader;
+    static const GLchar* const default_fshader;
+    static const GLchar* const alpha_fshader;
+
 private:
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
     float rotation;
