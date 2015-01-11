@@ -160,22 +160,18 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 
     for (auto const& r : renderables)
-        render(*r);
+    {
+        int p = r->alpha() < 1.0f ? alpha_program_index : default_program_index;
+        render(*r, programs[p]);
+    }
 
     texture_cache->drop_unused();
 }
 
-void mc::GLRenderer::render(mg::Renderable const& renderable) const
+void mc::GLRenderer::render(mg::Renderable const& renderable,
+                            GLRenderer::Program const& prog) const
 {
-    const Program* prog = &programs[default_program_index];
-
-    if (renderable.alpha() < 1.0f)
-    {
-        prog = &programs[alpha_program_index];
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    }
-    else if (renderable.shaped())
+    if (renderable.alpha() < 1.0f || renderable.shaped())
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -185,7 +181,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
         glDisable(GL_BLEND);
     }
 
-    glUseProgram(prog->id);
+    glUseProgram(prog.id);
     glActiveTexture(GL_TEXTURE0);
 
     auto const& rect = renderable.screen_position();
@@ -193,17 +189,17 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
                       rect.size.width.as_int() / 2.0f;
     GLfloat centrey = rect.top_left.y.as_int() +
                       rect.size.height.as_int() / 2.0f;
-    glUniform2f(prog->centre_uniform, centrex, centrey);
+    glUniform2f(prog.centre_uniform, centrex, centrey);
 
-    glUniformMatrix4fv(prog->transform_uniform, 1, GL_FALSE,
+    glUniformMatrix4fv(prog.transform_uniform, 1, GL_FALSE,
                        glm::value_ptr(renderable.transformation()));
 
-    if (prog->alpha_uniform >= 0)
-        glUniform1f(prog->alpha_uniform, renderable.alpha());
+    if (prog.alpha_uniform >= 0)
+        glUniform1f(prog.alpha_uniform, renderable.alpha());
 
     /* Draw */
-    glEnableVertexAttribArray(prog->position_attr);
-    glEnableVertexAttribArray(prog->texcoord_attr);
+    glEnableVertexAttribArray(prog.position_attr);
+    glEnableVertexAttribArray(prog.texcoord_attr);
 
     primitives.clear();
     tessellate(primitives, renderable);
@@ -220,18 +216,18 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
         else
             surface_tex->bind();
 
-        glVertexAttribPointer(prog->position_attr, 3, GL_FLOAT,
+        glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
                               GL_FALSE, sizeof(mg::GLVertex),
                               &p.vertices[0].position);
-        glVertexAttribPointer(prog->texcoord_attr, 2, GL_FLOAT,
+        glVertexAttribPointer(prog.texcoord_attr, 2, GL_FLOAT,
                               GL_FALSE, sizeof(mg::GLVertex),
                               &p.vertices[0].texcoord);
 
         glDrawArrays(p.type, 0, p.nvertices);
     }
 
-    glDisableVertexAttribArray(prog->texcoord_attr);
-    glDisableVertexAttribArray(prog->position_attr);
+    glDisableVertexAttribArray(prog.texcoord_attr);
+    glDisableVertexAttribArray(prog.position_attr);
 }
 
 void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)

@@ -74,8 +74,6 @@ protected:
     virtual void tessellate(std::vector<graphics::GLPrimitive>& primitives,
                             graphics::Renderable const& renderable) const;
 
-    virtual void render(graphics::Renderable const& renderable) const;
-
     DestinationAlpha destination_alpha() const;
 
     GLfloat clear_color[4];
@@ -100,6 +98,9 @@ protected:
     static const GLchar* const vshader;
     static const GLchar* const default_fshader;
     static const GLchar* const alpha_fshader;
+
+    virtual void render(graphics::Renderable const& renderable,
+                        GLRenderer::Program const& prog) const;
 
 private:
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
