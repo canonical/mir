@@ -157,7 +157,9 @@ DemoRenderer::DemoRenderer(
         dest_alpha),
     titlebar_height{titlebar_height},
     shadow_radius{shadow_radius},
-    corner_radius{0.5f}
+    corner_radius{0.5f},
+    colour_effect{ColourEffect::none},
+    inverse_program_index{-1}
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
@@ -367,9 +369,16 @@ bool DemoRenderer::would_embellish(
             display_area.overlaps(bottom));
 }
 
+void DemoRenderer::set_colour_effect(ColourEffect e)
+{
+    colour_effect = e;
+}
+
 void DemoRenderer::draw(graphics::Renderable const& renderable,
                         GLRenderer::Program const& prog) const
 {
-    (void)prog; // TODO
-    GLRenderer::draw(renderable, programs[inverse_program_index]);
+    if (colour_effect == inverse)
+        GLRenderer::draw(renderable, programs[inverse_program_index]);
+    else
+        GLRenderer::draw(renderable, prog);
 }

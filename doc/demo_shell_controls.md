@@ -36,6 +36,7 @@ touch alternatives for phones/tablets:
  - Switch apps: *Alt-Tab* or *4-finger swipe left/right*
  - Move window: *Alt-leftmousebutton* or *3-finger drag*
  - Resize window: *Alt-middlemousebutton* or *3-finger pinch/zoom*
+ - Toggle negative rendering: *Super-N*
  - Sleep/wake all displays: *Alt-P* or *Android power button*
  - Rotate the focussed monitor: *Ctrl-Alt-(Left/Right/Up/Down)* or
    *Volume up/down while touching the screen*

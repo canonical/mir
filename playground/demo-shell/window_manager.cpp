@@ -276,6 +276,19 @@ bool me::WindowManager::handle(MirEvent const& event)
             compositor->start();
             return true;
         }
+        else if (event.key.modifiers & mir_key_modifier_meta &&
+                 event.key.scan_code == KEY_N)
+        {
+            colour_effect = (colour_effect == ColourEffect::inverse) ?
+                ColourEffect::none : ColourEffect::inverse;
+               
+            me::DemoCompositor::for_each([this](me::DemoCompositor& c)
+            {
+                c.set_colour_effect(colour_effect);
+            });
+
+            force_redraw();
+        }
     }
     else if (event.type == mir_event_type_motion &&
              focus_controller)

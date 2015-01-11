@@ -28,6 +28,12 @@ namespace mir
 namespace examples
 {
 
+enum ColourEffect
+{
+    none,
+    inverse
+};
+
 class DemoRenderer : public compositor::GLRenderer
 {
 public:
@@ -43,6 +49,8 @@ public:
     bool would_embellish(
         graphics::Renderable const& renderable,
         geometry::Rectangle const&) const;
+
+    void set_colour_effect(ColourEffect);
 
 protected:
     void tessellate(std::vector<graphics::GLPrimitive>& primitives,
@@ -67,7 +75,8 @@ private:
     GLuint shadow_corner_tex;
     GLuint titlebar_corner_tex;
 
-    int inverse_program_index = -1;
+    ColourEffect colour_effect;
+    int inverse_program_index;
     
     mutable std::unordered_set<graphics::Renderable::ID> decoration_skip_list;
 };
