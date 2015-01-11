@@ -182,19 +182,6 @@ DemoRenderer::DemoRenderer(
     };
     inverse_program_index = programs.size();
     programs.push_back(family.add_program(vshader, inverse_fshader));
-
-    for (auto& p : programs)
-    {
-        glUseProgram(p.id);
-        glUniform1i(p.tex_uniform, 0);
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glUseProgram(0);
-
-    set_viewport(display_area);
-    set_rotation(0.0f);
-
 }
 
 DemoRenderer::~DemoRenderer()
