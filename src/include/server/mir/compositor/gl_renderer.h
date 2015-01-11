@@ -78,6 +78,8 @@ protected:
 
     GLfloat clear_color[4];
 
+    mutable long long frameno = 0;
+
     GLProgramFamily family;
     struct Program
     {
@@ -90,10 +92,11 @@ protected:
        GLint transform_uniform = -1;
        GLint screen_to_gl_coords_uniform = -1;
        GLint alpha_uniform = -1;
+       mutable long long last_used_frameno = 0;
 
        Program(GLuint program_id);
     };
-    std::vector<Program> programs;
+    Program default_program, alpha_program;
 
     static const GLchar* const vshader;
     static const GLchar* const default_fshader;

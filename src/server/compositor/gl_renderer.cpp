@@ -38,17 +38,6 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-namespace
-{
-
-enum
-{
-    default_program_index = 0,
-    alpha_program_index = 1
-};
-
-}
-
 const GLchar* const mc::GLRenderer::vshader =
 {
     "attribute vec3 position;\n"
@@ -106,8 +95,8 @@ mc::GLRenderer::GLRenderer(
     geom::Rectangle const& display_area,
     DestinationAlpha dest_alpha)
     : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
-      programs{family.add_program(vshader, default_fshader),
-               family.add_program(vshader, alpha_fshader)},
+      default_program(family.add_program(vshader, default_fshader)),
+      alpha_program(family.add_program(vshader, alpha_fshader)),
       texture_cache(std::move(texture_cache)),
       rotation(NAN), // ensure the first set_rotation succeeds
       dest_alpha(dest_alpha)
@@ -127,14 +116,7 @@ mc::GLRenderer::GLRenderer(
         mir::log_info("%s: %s", s.label, val);
     }
 
-    for (auto& p : programs)
-    {
-        glUseProgram(p.id);
-        glUniform1i(p.tex_uniform, 0);
-    }
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glUseProgram(0);
 
     set_viewport(display_area);
     set_rotation(0.0f);
@@ -152,17 +134,6 @@ void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
 
 void mc::GLRenderer::render(mg::RenderableList const& renderables) const
 {
-    // Other shells might have added more programs, so we reload on each frame
-    for (auto& p : programs)
-    {
-        glUseProgram(p.id);
-        glUniformMatrix4fv(p.display_transform_uniform, 1, GL_FALSE,
-                           glm::value_ptr(screen_rotation));
-        glUniformMatrix4fv(p.screen_to_gl_coords_uniform, 1, GL_FALSE,
-                           glm::value_ptr(screen_to_gl_coords));
-    }
-    glUseProgram(0);
-
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -170,11 +141,9 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
     if (dest_alpha == DestinationAlpha::opaque)
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 
+    ++frameno;
     for (auto const& r : renderables)
-    {
-        int p = r->alpha() < 1.0f ? alpha_program_index : default_program_index;
-        draw(*r, programs[p]);
-    }
+        draw(*r, r->alpha() < 1.0f ? alpha_program : default_program);
 
     texture_cache->drop_unused();
 }
@@ -193,6 +162,16 @@ void mc::GLRenderer::draw(mg::Renderable const& renderable,
     }
 
     glUseProgram(prog.id);
+    if (prog.last_used_frameno != frameno)
+    {   // Avoid reloading the screen-global uniforms on every renderable
+        prog.last_used_frameno = frameno;
+        glUniform1i(prog.tex_uniform, 0);
+        glUniformMatrix4fv(prog.display_transform_uniform, 1, GL_FALSE,
+                           glm::value_ptr(screen_rotation));
+        glUniformMatrix4fv(prog.screen_to_gl_coords_uniform, 1, GL_FALSE,
+                           glm::value_ptr(screen_to_gl_coords));
+    }
+
     glActiveTexture(GL_TEXTURE0);
 
     auto const& rect = renderable.screen_position();

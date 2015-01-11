@@ -144,6 +144,31 @@ GLuint generate_frame_corner_texture(float corner_radius,
     return corner;
 }
 
+static const GLchar inverse_fshader[] =
+{
+    "precision mediump float;\n"
+    "uniform sampler2D tex;\n"
+    "uniform float alpha;\n"
+    "varying vec2 v_texcoord;\n"
+    "void main() {\n"
+    "    vec4 f = texture2D(tex, v_texcoord);\n"
+    "    vec3 inverted = (vec3(1.0) - (f.rgb / f.a)) * f.a;\n"
+    "    gl_FragColor = alpha*vec4(inverted, f.a);\n"
+    "}\n"
+};
+static const GLchar contrast_fshader[] =
+{
+    "precision mediump float;\n"
+    "uniform sampler2D tex;\n"
+    "uniform float alpha;\n"
+    "varying vec2 v_texcoord;\n"
+    "void main() {\n"
+    "    vec4 raw = texture2D(tex, v_texcoord);\n"
+    "    vec4 bent = (1.0 - cos(raw * 3.141592654)) / 2.0;\n"
+    "    gl_FragColor = alpha * bent;\n"
+    "}\n"
+};
+
 } // namespace
 
 DemoRenderer::DemoRenderer(
@@ -158,7 +183,9 @@ DemoRenderer::DemoRenderer(
     titlebar_height{titlebar_height},
     shadow_radius{shadow_radius},
     corner_radius{0.5f},
-    colour_effect{none}
+    colour_effect{none},
+    inverse_program(family.add_program(vshader, inverse_fshader)),
+    contrast_program(family.add_program(vshader, contrast_fshader))
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
@@ -167,36 +194,6 @@ DemoRenderer::DemoRenderer(
 
     clear_color[0] = clear_color[1] = clear_color[2] = 0.2f;
     clear_color[3] = 1.0f;
-
-    static const GLchar inverse_fshader[] =
-    {
-        "precision mediump float;\n"
-        "uniform sampler2D tex;\n"
-        "uniform float alpha;\n"
-        "varying vec2 v_texcoord;\n"
-        "void main() {\n"
-        "    vec4 f = texture2D(tex, v_texcoord);\n"
-        "    vec3 inverted = (vec3(1.0) - (f.rgb / f.a)) * f.a;\n"
-        "    gl_FragColor = alpha*vec4(inverted, f.a);\n"
-        "}\n"
-    };
-    inverse_program_index = programs.size();
-    programs.push_back(family.add_program(vshader, inverse_fshader));
-
-    static const GLchar contrast_fshader[] =
-    {
-        "precision mediump float;\n"
-        "uniform sampler2D tex;\n"
-        "uniform float alpha;\n"
-        "varying vec2 v_texcoord;\n"
-        "void main() {\n"
-        "    vec4 raw = texture2D(tex, v_texcoord);\n"
-        "    vec4 bent = (1.0 - cos(raw * 3.141592654)) / 2.0;\n"
-        "    gl_FragColor = alpha * bent;\n"
-        "}\n"
-    };
-    contrast_program_index = programs.size();
-    programs.push_back(family.add_program(vshader, contrast_fshader));
 }
 
 DemoRenderer::~DemoRenderer()
@@ -377,22 +374,14 @@ void DemoRenderer::set_colour_effect(ColourEffect e)
 }
 
 void DemoRenderer::draw(graphics::Renderable const& renderable,
-                        GLRenderer::Program const& prog) const
+                        GLRenderer::Program const& current_program) const
 {
-    if (colour_effect == none)
+    const GLRenderer::Program* const programs[ColourEffect::neffects] =
     {
-        GLRenderer::draw(renderable, prog);
-    }
-    else
-    {
-        int idx = 0;
-        switch (colour_effect)
-        {
-            case inverse:  idx = inverse_program_index; break;
-            case contrast: idx = contrast_program_index; break;
-            default: break;
-        };
+        &current_program,
+        &inverse_program,
+        &contrast_program
+    };
 
-        GLRenderer::draw(renderable, programs[idx]);
-    }
+    GLRenderer::draw(renderable, *programs[colour_effect]);
 }
