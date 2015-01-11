@@ -176,7 +176,8 @@ DemoRenderer::DemoRenderer(
         "varying vec2 v_texcoord;\n"
         "void main() {\n"
         "    vec4 f = texture2D(tex, v_texcoord);\n"
-        "    gl_FragColor = alpha*vec4(1.0-f.r, 1.0-f.g, 1.0-f.b, f.a);\n"
+        "    vec3 inverted = (vec3(1.0) - (f.rgb / f.a)) * f.a;\n"
+        "    gl_FragColor = alpha*vec4(inverted, f.a);\n"
         "}\n"
     };
     inverse_program_index = programs.size();
