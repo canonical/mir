@@ -66,6 +66,8 @@ private:
     float const corner_radius;
     GLuint shadow_corner_tex;
     GLuint titlebar_corner_tex;
+
+    int inverse_program_index = -1;
     
     mutable std::unordered_set<graphics::Renderable::ID> decoration_skip_list;
 };

@@ -107,6 +107,7 @@ private:
     float rotation;
     DestinationAlpha const dest_alpha;
     geometry::Rectangle viewport;
+    glm::mat4 screen_to_gl_coords, screen_rotation;
 
     std::vector<graphics::GLPrimitive> mutable primitives;
 };

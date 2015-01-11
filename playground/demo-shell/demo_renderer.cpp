@@ -166,6 +166,33 @@ DemoRenderer::DemoRenderer(
 
     clear_color[0] = clear_color[1] = clear_color[2] = 0.2f;
     clear_color[3] = 1.0f;
+
+    static const GLchar inverse_fshader[] =
+    {
+        "precision mediump float;\n"
+        "uniform sampler2D tex;\n"
+        "uniform float alpha;\n"
+        "varying vec2 v_texcoord;\n"
+        "void main() {\n"
+        "   vec4 f = texture2D(tex, v_texcoord);\n"
+        "   gl_FragColor = alpha*vec4(1.0-f.r, 1.0-f.g, 1.0-f.b, f.a);\n"
+        "}\n"
+    };
+    inverse_program_index = programs.size();
+    programs.push_back(family.add_program(vshader, inverse_fshader));
+
+    for (auto& p : programs)
+    {
+        glUseProgram(p.id);
+        glUniform1i(p.tex_uniform, 0);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glUseProgram(0);
+
+    set_viewport(display_area);
+    set_rotation(0.0f);
+
 }
 
 DemoRenderer::~DemoRenderer()
@@ -341,7 +368,8 @@ bool DemoRenderer::would_embellish(
 }
 
 void DemoRenderer::draw(graphics::Renderable const& renderable,
-                          GLRenderer::Program const& prog) const
+                        GLRenderer::Program const& prog) const
 {
-    GLRenderer::draw(renderable, prog);
+    (void)prog; // TODO
+    GLRenderer::draw(renderable, programs[inverse_program_index]);
 }

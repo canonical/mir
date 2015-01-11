@@ -152,6 +152,17 @@ void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
 
 void mc::GLRenderer::render(mg::RenderableList const& renderables) const
 {
+    // Other shells might have added more programs, so we reload on each frame
+    for (auto& p : programs)
+    {
+        glUseProgram(p.id);
+        glUniformMatrix4fv(p.display_transform_uniform, 1, GL_FALSE,
+                           glm::value_ptr(screen_rotation));
+        glUniformMatrix4fv(p.screen_to_gl_coords_uniform, 1, GL_FALSE,
+                           glm::value_ptr(screen_to_gl_coords));
+    }
+    glUseProgram(0);
+
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -241,7 +252,7 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
      * (top-left is (0,0), bottom-right is (W,H)) to the normalized GL coordinate system
      * (top-left is (-1,1), bottom-right is (1,-1))
      */
-    glm::mat4 screen_to_gl_coords = glm::translate(glm::mat4(1.0f), glm::vec3{-1.0f, 1.0f, 0.0f});
+    screen_to_gl_coords = glm::translate(glm::mat4(1.0f), glm::vec3{-1.0f, 1.0f, 0.0f});
 
     /*
      * Perspective division is one thing that can't be done in a matrix
@@ -266,14 +277,6 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
                       -rect.top_left.y.as_float(),
                       0.0f});
 
-    for (auto& p : programs)
-    {
-        glUseProgram(p.id);
-        glUniformMatrix4fv(p.screen_to_gl_coords_uniform, 1, GL_FALSE,
-                           glm::value_ptr(screen_to_gl_coords));
-    }
-    glUseProgram(0);
-
     viewport = rect;
 }
 
@@ -285,17 +288,10 @@ void mc::GLRenderer::set_rotation(float degrees)
     float rad = degrees * M_PI / 180.0f;
     GLfloat cos = cosf(rad);
     GLfloat sin = sinf(rad);
-    GLfloat rot[16] = {cos,  sin,  0.0f, 0.0f,
+    screen_rotation = {cos,  sin,  0.0f, 0.0f,
                        -sin, cos,  0.0f, 0.0f,
                        0.0f, 0.0f, 1.0f, 0.0f,
                        0.0f, 0.0f, 0.0f, 1.0f};
-
-    for (auto& p : programs)
-    {
-        glUseProgram(p.id);
-        glUniformMatrix4fv(p.display_transform_uniform, 1, GL_FALSE, rot);
-    }
-    glUseProgram(0);
 
     rotation = degrees;
 }
