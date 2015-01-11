@@ -76,6 +76,8 @@ private:
     int max_fingers;  // Maximum number of fingers touched during gesture
     int zoom_exponent = 0;
     ColourEffect colour_effect = none;
+
+    void toggle(ColourEffect);
 };
 
 }
