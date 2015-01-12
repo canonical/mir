@@ -111,6 +111,7 @@ add_library(
 target_link_libraries(
   mirplatformgraphicsstub
 
+  mir-test
   mir-test-framework
   mir-test-doubles
   ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
