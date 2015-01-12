@@ -31,6 +31,7 @@
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_hwc_report.h"
+#include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_gl_program_factory.h"
 #include <system/window.h>
@@ -63,7 +64,8 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
     MockResourceFactory()
     {
         using namespace testing;
-        ON_CALL(*this, create_hwc_native_device()).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_hwc_wrapper(_))
+            .WillByDefault(Return(std::make_tuple(nullptr, mga::HwcVersion::hwc10)));
         ON_CALL(*this, create_fb_native_device()).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_native_window(_)).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_fb_device(_)).WillByDefault(Return(nullptr));
@@ -71,7 +73,8 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
         ON_CALL(*this, create_hwc_fb_device(_,_)).WillByDefault(Return(nullptr));
     }
 
-    MOCK_CONST_METHOD0(create_hwc_native_device, std::shared_ptr<hwc_composer_device_1>());
+    MOCK_CONST_METHOD1(create_hwc_wrapper,
+        std::tuple<std::shared_ptr<mga::HwcWrapper>, mga::HwcVersion>(std::shared_ptr<mga::HwcReport> const&));
     MOCK_CONST_METHOD0(create_fb_native_device, std::shared_ptr<framebuffer_device_t>());
 
     MOCK_CONST_METHOD1(create_native_window,
@@ -93,8 +96,9 @@ public:
     {
         using namespace testing;
         mock_resource_factory = std::make_shared<testing::NiceMock<MockResourceFactory>>();
-        ON_CALL(*mock_resource_factory, create_hwc_native_device())
-            .WillByDefault(Return(hw_access_mock.mock_hwc_device));
+        mock_wrapper = std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>();
+        ON_CALL(*mock_resource_factory, create_hwc_wrapper(_))
+            .WillByDefault(Return(std::make_tuple(mock_wrapper, mga::HwcVersion::hwc11)));
         ON_CALL(*mock_resource_factory, create_fb_native_device())
             .WillByDefault(Return(mt::fake_shared(fb_hal_mock)));
     }
@@ -112,17 +116,18 @@ public:
     mtd::StubGLProgramFactory const stub_program_factory;
     std::shared_ptr<mtd::MockHwcReport> mock_hwc_report{
         std::make_shared<testing::NiceMock<mtd::MockHwcReport>>()};
+    std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_wrapper;
 };
 }
 
 TEST_F(OutputBuilder, builds_hwc_version_10)
 {
     using namespace testing;
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
-    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device());
+    EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
+        .WillOnce(Return(std::make_tuple(mock_wrapper, mga::HwcVersion::hwc10)));
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device());
     EXPECT_CALL(*mock_resource_factory, create_hwc_fb_device(_,_));
-    EXPECT_CALL(*mock_hwc_report, report_hwc_version(HWC_DEVICE_API_VERSION_1_0));
+    EXPECT_CALL(*mock_hwc_report, report_hwc_version(mga::HwcVersion::hwc10));
     EXPECT_CALL(*mock_resource_factory, create_native_window(_));
 
     mga::OutputBuilder factory(
@@ -136,10 +141,10 @@ TEST_F(OutputBuilder, builds_hwc_version_10)
 TEST_F(OutputBuilder, builds_hwc_version_11_and_later)
 {
     using namespace testing;
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
-    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device());
+    EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
+        .WillOnce(Return(std::make_tuple(mock_wrapper, mga::HwcVersion::hwc11)));
     EXPECT_CALL(*mock_resource_factory, create_hwc_device(_,_));
-    EXPECT_CALL(*mock_hwc_report, report_hwc_version(HWC_DEVICE_API_VERSION_1_1));
+    EXPECT_CALL(*mock_hwc_report, report_hwc_version(mga::HwcVersion::hwc11));
 
     mga::OutputBuilder factory(
         mt::fake_shared(mock_buffer_allocator),
@@ -152,7 +157,7 @@ TEST_F(OutputBuilder, builds_hwc_version_11_and_later)
 TEST_F(OutputBuilder, hwc_failure_falls_back_to_fb)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
+    EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
         .WillOnce(Throw(std::runtime_error("")));
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device());
     EXPECT_CALL(*mock_resource_factory, create_fb_device(_));
@@ -170,8 +175,7 @@ TEST_F(OutputBuilder, hwc_failure_falls_back_to_fb)
 TEST_F(OutputBuilder, hwc_and_fb_failure_fatal)
 {
     using namespace testing;
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
-    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
+    EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
         .WillOnce(Throw(std::runtime_error("")));
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
         .WillOnce(Throw(std::runtime_error("")));
