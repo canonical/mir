@@ -32,7 +32,6 @@ class DemoRenderer : public compositor::GLRenderer
 {
 public:
     DemoRenderer(
-        graphics::GLProgramFactory const& factory,
         geometry::Rectangle const& display_area,
         compositor::DestinationAlpha dest_alpha,
         float const titlebar_height,

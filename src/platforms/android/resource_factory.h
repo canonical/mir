@@ -32,7 +32,8 @@ class ResourceFactory : public DisplayResourceFactory
 {
 public:
     //native allocations
-    std::shared_ptr<hwc_composer_device_1> create_hwc_native_device() const override;
+    std::tuple<std::shared_ptr<HwcWrapper>, HwcVersion> create_hwc_wrapper(
+        std::shared_ptr<HwcReport> const&) const override;
     std::shared_ptr<framebuffer_device_t> create_fb_native_device() const override;
 
     //devices
