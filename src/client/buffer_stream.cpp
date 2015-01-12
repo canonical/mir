@@ -21,6 +21,7 @@
 #include "mir/frontend/client_constants.h"
 
 #include "mir_toolkit/mir_native_buffer.h"
+#include "egl_native_window_factory.h"
 
 
 namespace mcl = mir::client;
@@ -28,6 +29,8 @@ namespace mp = mir::protobuf;
 
 namespace
 {
+void null_callback(mcl::BufferStream*, void*) {}
+
 void populate_buffer_package(
     MirBufferPackage& buffer_package,
     mir::protobuf::Buffer const& protobuf_buffer)
@@ -77,8 +80,8 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
       buffer_depository{buffer_factory, mir::frontend::client_buffer_cache_size}
       
 {
-    // Create EGLNativeWindow here or later?
-    // When to verify error on protobuf screencast
+    // TODO: When to verify error on protobuf screencast
+    egl_native_window_ = native_window_factory->create_egl_native_window(this);
     process_buffer(protobuf_bs.buffer());
 }
 
@@ -106,29 +109,87 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
 
 MirWaitHandle* mcl::BufferStream::next_buffer(mir_buffer_stream_callback callback, void* context)
 {
-    (void)callback;
-    (void)context;
-    return nullptr;
-}
+    mir::protobuf::BufferStreamId buffer_stream_id;
+    buffer_stream_id.set_value(protobuf_bs.id().value());
 
-MirSurfaceParameters mcl::BufferStream::get_parameters()
-{
-    return MirSurfaceParameters();
+    next_buffer_wait_handle.expect_result();
+
+    if (mode == mcl::BufferStreamMode::Producer)
+    {
+        mp::BufferRequest request;
+// TODO: Fix after porting ID's
+        request.mutable_id()->set_value(protobuf_bs.id().value());
+        request.mutable_buffer()->set_buffer_id(protobuf_bs.buffer().buffer_id());
+        display_server.exchange_buffer(
+            nullptr,
+            &request,
+            protobuf_bs.mutable_buffer(),
+            google::protobuf::NewCallback(
+            this, &mcl::BufferStream::next_buffer_received,
+            callback, context));
+    }
+    else
+    {
+        // TODO: Fix after porting screencast
+        mp::ScreencastId screencast_id;
+        screencast_id.set_value(protobuf_bs.id().value());
+
+        display_server.screencast_buffer(
+            nullptr,
+            &screencast_id,
+            protobuf_bs.mutable_buffer(),
+            google::protobuf::NewCallback(
+            this, &mcl::BufferStream::next_buffer_received,
+            callback, context));
+    }
+
+
+    return &next_buffer_wait_handle;
 }
 
 std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
 {
-    return nullptr;
+    return buffer_depository.current_buffer();
 }
 
 EGLNativeWindowType mcl::BufferStream::egl_native_window()
 {
-    return EGLNativeWindowType();
+    return *egl_native_window_;
 }
 
 std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 {
-    return nullptr;
+// TODO: Who owns this region? e.g. do we have to track a secured region ala mir surface or will
+// surface screencast and buffer stream do it...
+    return get_current_buffer()->secure_for_cpu_write();
 }
 
+void mcl::BufferStream::next_buffer_received(
+    mir_buffer_stream_callback callback, void* context)
+{
+    process_buffer(protobuf_bs.buffer());
 
+    callback(this, context);
+    next_buffer_wait_handle.result_received();
+}
+
+/* mcl::ClientSurface interface for EGLNativeWindow integration */
+MirSurfaceParameters mcl::BufferStream::get_parameters() const
+{
+    return MirSurfaceParameters{
+        "",
+        protobuf_bs.buffer().width(),
+        protobuf_bs.buffer().height(),
+        static_cast<MirPixelFormat>(protobuf_bs.pixel_format()),
+        static_cast<MirBufferUsage>(protobuf_bs.buffer_usage()),
+        mir_display_output_id_invalid};
+}
+
+void mcl::BufferStream::request_and_wait_for_next_buffer()
+{
+    next_buffer(null_callback, nullptr)->wait_for_all();
+}
+
+void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib, int)
+{
+}

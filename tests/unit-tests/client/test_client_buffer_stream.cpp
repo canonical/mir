@@ -40,9 +40,10 @@ namespace
 
 struct MockProtobufServer : public mp::DisplayServer
 {
+    // TODO Update params
     MOCK_METHOD4(screencast_buffer,
                  void(google::protobuf::RpcController* /*controller*/,
-                      mp::BufferStreamId const* /*request*/,
+                      mp::ScreencastId const* /*request*/,
                       mp::Buffer* /*response*/,
                       google::protobuf::Closure* /*done*/));
     MOCK_METHOD4(exchange_buffer,

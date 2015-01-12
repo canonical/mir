@@ -22,6 +22,8 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_wait_handle.h"
+#include "mir_client_surface.h"
+#include "client_buffer.h"
 #include "client_buffer_depository.h"
 
 #include "mir_toolkit/client_types.h"
@@ -41,16 +43,15 @@ struct MemoryRegion;
 
 enum BufferStreamMode
 {
-Producer, // Like surfaces
-Consumer // Like screencasts
+Producer, // As in surfaces
+Consumer // As in screencasts
 };
 
 class BufferStream;
 typedef void (*mir_buffer_stream_callback)(
     BufferStream*, void*);
 
-// TODO: Inherits from client surface
-class BufferStream
+class BufferStream : public ClientSurface
 {
 public:
     BufferStream(mir::protobuf::DisplayServer& server,
@@ -61,11 +62,16 @@ public:
     virtual ~BufferStream();
     
     MirWaitHandle* next_buffer(mir_buffer_stream_callback callback, void* context);
-    MirSurfaceParameters get_parameters();
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
 
     EGLNativeWindowType egl_native_window();
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
+
+    // mcl::ClientSurface interface
+    MirSurfaceParameters get_parameters() const;
+    void request_and_wait_for_next_buffer();
+    // TODO: In this context this seems like a strange wart from swap interval...
+    void request_and_wait_for_configure(MirSurfaceAttrib attrib, int);
 
 protected:
     BufferStream(BufferStream const&) = delete;
@@ -73,6 +79,8 @@ protected:
 
 private:
     void process_buffer(protobuf::Buffer const& buffer);
+    void next_buffer_received(
+        mir_buffer_stream_callback callback, void* context);
 
     mir::protobuf::DisplayServer& display_server;
 
@@ -81,6 +89,9 @@ private:
     
     mir::protobuf::BufferStream protobuf_bs;
     mir::client::ClientBufferDepository buffer_depository;
+    std::shared_ptr<EGLNativeWindowType> egl_native_window_;
+
+    MirWaitHandle next_buffer_wait_handle;
 };
 
 }
