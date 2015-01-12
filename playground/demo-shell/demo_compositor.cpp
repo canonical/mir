@@ -40,14 +40,12 @@ std::unordered_set<me::DemoCompositor*> me::DemoCompositor::instances;
 
 me::DemoCompositor::DemoCompositor(
     mg::DisplayBuffer& display_buffer,
-    mg::GLProgramFactory const& factory,
     std::shared_ptr<mc::CompositorReport> const& report) :
     display_buffer(display_buffer),
     report(report),
     viewport(display_buffer.view_area()),
     zoom_mag{1.0f},
     renderer(
-        factory,
         display_buffer.view_area(),
         destination_alpha(display_buffer),
         30.0f, //titlebar_height
