@@ -152,19 +152,14 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
 TEST_F(HwcConfiguration, subscribes_to_hotplug)
 {
     using namespace testing;
-    std::function<void(mga::DisplayName, bool)> hotplug_fn;
-    EXPECT_CALL(*mock_hwc_wrapper, subscribe_to_events(&config,_,_,_))
+    std::function<void(mga::DisplayName, bool)> hotplug_fn([](mga::DisplayName, bool){});
+    EXPECT_CALL(*mock_hwc_wrapper, subscribe_to_events(_,_,_,_))
         .WillOnce(SaveArg<2>(&hotplug_fn));
-    EXPECT_CALL(*mock_hwc_wrapper, unsubscribe_from_events_(&config));
+    EXPECT_CALL(*mock_hwc_wrapper, unsubscribe_from_events_(_));
 
     unsigned int call_count{0};
-    {
-        auto subscription = config.subscribe_to_config_changes([&]{ call_count++; });
-
-        hotplug_fn(mga::DisplayName::primary, true);
-        hotplug_fn(mga::DisplayName::primary, true);
-    }
+    auto subscription = config.subscribe_to_config_changes([&]{ call_count++; });
     hotplug_fn(mga::DisplayName::primary, true);
-
+    hotplug_fn(mga::DisplayName::primary, true);
     EXPECT_THAT(call_count, Eq(2));
 }
