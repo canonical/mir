@@ -321,32 +321,36 @@ TEST_F(Display, configures_power_modes)
     auto configuration = display.configuration();
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
         //on by default
-//        EXPECT_EQ(output.power_mode, mir_power_mode_on);
+        EXPECT_EQ(output.power_mode, mir_power_mode_on);
         output.power_mode = mir_power_mode_on;
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
-//        EXPECT_EQ(output.power_mode, mir_power_mode_on);
+        if (output.id == mg::DisplayConfigurationOutputId{0})
+            EXPECT_EQ(output.power_mode, mir_power_mode_on);
         output.power_mode = mir_power_mode_standby;
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
-//        EXPECT_EQ(output.power_mode, mir_power_mode_standby);
+        if (output.id == mg::DisplayConfigurationOutputId{0})
+            EXPECT_EQ(output.power_mode, mir_power_mode_standby);
         output.power_mode = mir_power_mode_off;
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
-//        EXPECT_EQ(output.power_mode, mir_power_mode_off);
+        if (output.id == mg::DisplayConfigurationOutputId{0})
+            EXPECT_EQ(output.power_mode, mir_power_mode_off);
         output.power_mode = mir_power_mode_suspend;
     });
     display.configure(*configuration);
 
- //   configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
- //       EXPECT_EQ(output.power_mode, mir_power_mode_suspend);
-  //  });
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        if (output.id == mg::DisplayConfigurationOutputId{0})
+            EXPECT_EQ(output.power_mode, mir_power_mode_suspend);
+    });
 }
 
 TEST_F(Display, returns_correct_config_with_one_connected_output_at_start)

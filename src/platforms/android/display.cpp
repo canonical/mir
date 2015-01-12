@@ -29,8 +29,7 @@
 #include "mir/graphics/event_handler_register.h"
 
 #include <boost/throw_exception.hpp>
-
-#include <unistd.h>
+#include <fcntl.h>
 
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
@@ -41,7 +40,8 @@ struct mga::DisplayChangePipe
     DisplayChangePipe()
     {
         int pipes_raw[2] {-1, -1};
-        ::pipe(pipes_raw);
+        if(::pipe2(pipes_raw, O_CLOEXEC | O_NONBLOCK))
+            BOOST_THROW_EXCEPTION(std::runtime_error("failed to create display change pipe"));
         read_pipe = mir::Fd{pipes_raw[0]}; 
         write_pipe = mir::Fd{pipes_raw[1]}; 
     }
