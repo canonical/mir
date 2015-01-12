@@ -139,6 +139,20 @@ std::ostream& operator<<(std::ostream& str, mga::OverlayOptimization opt)
     else
         return str << "OFF";
 }
+
+std::ostream& operator<<(std::ostream& str, mga::HwcVersion version) 
+{
+    switch (version)
+    {
+        case mga::HwcVersion::hwc10: str << "1.0"; break;
+        case mga::HwcVersion::hwc11: str << "1.1"; break;
+        case mga::HwcVersion::hwc12: str << "1.2"; break;
+        case mga::HwcVersion::hwc13: str << "1.3"; break;
+        case mga::HwcVersion::hwc14: str << "1.4"; break;
+        default: break;
+    }
+    return str;
+}
 }
 
 void mga::HwcFormattedLogger::report_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const
@@ -209,28 +223,9 @@ void mga::HwcFormattedLogger::report_vsync_off() const
     std::cout << "HWC: vsync signal off" << std::endl;
 }
 
-void mga::HwcFormattedLogger::report_hwc_version(uint32_t version) const
+void mga::HwcFormattedLogger::report_hwc_version(mga::HwcVersion version) const
 {
-    std::cout << "HWC version ";
-    switch (version)
-    {
-        case HWC_DEVICE_API_VERSION_1_0:
-            std::cout << "1.0";
-            break;
-        case HWC_DEVICE_API_VERSION_1_1:
-            std::cout << "1.1";
-            break;
-        case HWC_DEVICE_API_VERSION_1_2:
-            std::cout << "1.2";
-            break;
-        case HWC_DEVICE_API_VERSION_1_3:
-            std::cout << "1.3";
-            break;
-        default:
-            std::cout << "unknown (0x" << std::hex << version << std::dec << ")";
-            break;
-    }
-    std::cout << std::endl;
+    std::cout << "HWC version " << version << std::endl;
 }
 
 void mga::HwcFormattedLogger::report_legacy_fb_module() const
@@ -246,5 +241,5 @@ void mga::NullHwcReport::report_display_on() const {}
 void mga::NullHwcReport::report_display_off() const {}
 void mga::NullHwcReport::report_vsync_on() const {}
 void mga::NullHwcReport::report_vsync_off() const {}
-void mga::NullHwcReport::report_hwc_version(uint32_t) const {}
+void mga::NullHwcReport::report_hwc_version(mga::HwcVersion) const {}
 void mga::NullHwcReport::report_legacy_fb_module() const {}
