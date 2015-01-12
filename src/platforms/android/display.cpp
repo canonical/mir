@@ -162,7 +162,7 @@ void mga::Display::register_configuration_change_handler(
     EventHandlerRegister& event_handler,
     DisplayConfigurationChangeHandler const& change_handler)
 {
-    event_handler.register_fd_handler({display_change_pipe->read_pipe}, this, [&](int){
+    event_handler.register_fd_handler({display_change_pipe->read_pipe}, this, [change_handler, this](int){
         change_handler();
         display_change_pipe->ack_change();
     });
