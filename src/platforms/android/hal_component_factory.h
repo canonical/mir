@@ -21,7 +21,6 @@
 
 #include "display_component_factory.h"
 #include "display_resource_factory.h"
-#include "overlay_optimization.h"
 
 namespace mir
 {
@@ -61,7 +60,6 @@ private:
 
     std::shared_ptr<HwcWrapper> hwc_wrapper;
     std::shared_ptr<framebuffer_device_t> fb_native;
-    OverlayOptimization overlay_optimization;
     HwcVersion hwc_version;
 };
 
