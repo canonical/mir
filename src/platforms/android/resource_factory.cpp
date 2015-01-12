@@ -28,8 +28,6 @@
 #include "hwc_device.h"
 #include "hwc_fb_device.h"
 #include "hwc_layerlist.h"
-#include "hwc_vsync.h"
-#include "hwc_configuration.h"
 #include "display.h"
 #include "real_hwc_wrapper.h"
 
@@ -58,8 +56,10 @@ std::shared_ptr<framebuffer_device_t> mga::ResourceFactory::create_fb_native_dev
                       });
 }
 
-std::shared_ptr<hwc_composer_device_1> mga::ResourceFactory::create_hwc_native_device() const
+std::tuple<std::shared_ptr<mga::HwcWrapper>, mga::HwcVersion>
+mga::ResourceFactory::create_hwc_wrapper(std::shared_ptr<mga::HwcReport> const& hwc_report) const
 {
+    //TODO: could probably be collapsed further into HwcWrapper's constructor
     hwc_composer_device_1* hwc_device_raw = nullptr;
     hw_module_t const *module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &module);
@@ -71,9 +71,22 @@ std::shared_ptr<hwc_composer_device_1> mga::ResourceFactory::create_hwc_native_d
         BOOST_THROW_EXCEPTION(std::runtime_error("error opening hwc hal"));
     }
 
-    return std::shared_ptr<hwc_composer_device_1>(
-        hwc_device_raw,
-        [](hwc_composer_device_1* device) { device->common.close((hw_device_t*) device); });
+    auto hwc_native = std::shared_ptr<hwc_composer_device_1>(hwc_device_raw,
+            [](hwc_composer_device_1* device) { device->common.close((hw_device_t*) device); });
+
+    auto version = mga::HwcVersion::hwc10;
+    switch(hwc_native->common.version)
+    {
+        case HWC_DEVICE_API_VERSION_1_0: version = mga::HwcVersion::hwc10; break;
+        case HWC_DEVICE_API_VERSION_1_1: version = mga::HwcVersion::hwc11; break;
+        case HWC_DEVICE_API_VERSION_1_2: version = mga::HwcVersion::hwc12; break;
+        case HWC_DEVICE_API_VERSION_1_3: version = mga::HwcVersion::hwc13; break;
+        default: version = mga::HwcVersion::unknown; break;
+    }
+    
+    return std::make_tuple(
+        std::make_shared<mga::RealHwcWrapper>(hwc_native, hwc_report),
+        version);
 }
 
 std::shared_ptr<ANativeWindow> mga::ResourceFactory::create_native_window(
@@ -94,16 +107,12 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_device(
     std::shared_ptr<HwcWrapper> const& wrapper,
     std::shared_ptr<LayerAdapter> const& layer_adapter) const
 {
-    auto syncer = std::make_shared<mga::HWCVsync>();
-    auto config = std::make_shared<mga::HwcBlankingControl>(wrapper);
-    return std::make_shared<mga::HwcDevice>(wrapper, config, syncer, layer_adapter);
+    return std::make_shared<mga::HwcDevice>(wrapper, layer_adapter);
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_fb_device(
     std::shared_ptr<HwcWrapper> const& wrapper,
     std::shared_ptr<framebuffer_device_t> const& fb_native_device) const
 {
-    auto syncer = std::make_shared<mga::HWCVsync>();
-    auto config = std::make_shared<mga::HwcBlankingControl>(wrapper);
-    return std::make_shared<mga::HwcFbDevice>(wrapper, fb_native_device, config, syncer);
+    return std::make_shared<mga::HwcFbDevice>(wrapper, fb_native_device);
 }

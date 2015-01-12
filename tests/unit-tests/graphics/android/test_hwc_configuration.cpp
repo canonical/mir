@@ -42,18 +42,23 @@ TEST_F(HwcConfiguration, turns_screen_on)
     config.power_mode(display, mir_power_mode_on);
 }
 
-TEST_F(HwcConfiguration, turns_screen_off)
+TEST_F(HwcConfiguration, turns_screen_off_for_off_suspend_and_standby)
 {
     testing::InSequence seq;
     EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off(display));
     EXPECT_CALL(*mock_hwc_wrapper, display_off(display));
-    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off(display));
-    EXPECT_CALL(*mock_hwc_wrapper, display_off(display));
+    EXPECT_CALL(*mock_hwc_wrapper, display_on(display));
+    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_on(display));
     EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off(display));
     EXPECT_CALL(*mock_hwc_wrapper, display_off(display));
     config.power_mode(display, mir_power_mode_off);
 
     //HWC version 1.3 and prior do not support anything more than on and off.
+    config.power_mode(display, mir_power_mode_suspend);
+    config.power_mode(display, mir_power_mode_off);
+    config.power_mode(display, mir_power_mode_standby);
+    config.power_mode(display, mir_power_mode_on);
+    config.power_mode(display, mir_power_mode_standby);
     //translate this into blanking the screen
     config.power_mode(display, mir_power_mode_suspend);
     config.power_mode(display, mir_power_mode_standby);

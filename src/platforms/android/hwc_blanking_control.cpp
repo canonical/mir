@@ -26,7 +26,8 @@ namespace mga = mir::graphics::android;
 
 mga::HwcBlankingControl::HwcBlankingControl(
     std::shared_ptr<mga::HwcWrapper> const& hwc_device) :
-    hwc_device{hwc_device}
+    hwc_device{hwc_device},
+    off{false}
 {
 }
 
@@ -36,11 +37,14 @@ void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode 
     {
         hwc_device->display_on(display_name);
         hwc_device->vsync_signal_on(display_name);
+        off = false;
     }
-    else
+    //suspend, standby, and off all count as off
+    else if (!off)
     {
         hwc_device->vsync_signal_off(display_name);
         hwc_device->display_off(display_name);
+        off = true;
     }
 }
 
