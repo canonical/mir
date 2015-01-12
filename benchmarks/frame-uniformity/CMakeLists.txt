@@ -11,7 +11,7 @@ include_directories(
   ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES}
 )
 
-add_executable(frame_uniformity_test_client
+mir_add_wrapped_executable(frame_uniformity_test_client NOINSTALL
   touch_measuring_client.cpp
   touch_producing_server.cpp
   frame_uniformity_test.cpp

@@ -18,7 +18,6 @@
 
 #include "src/platforms/android/real_hwc_wrapper.h"
 #include "src/platforms/android/hwc_report.h"
-#include "src/platforms/android/hwc_common_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_report.h"
 #include <gmock/gmock.h>
@@ -26,7 +25,6 @@
 
 namespace mga = mir::graphics::android;
 namespace mtd = mir::test::doubles;
-namespace geom = mir::geometry;
 
 struct HwcWrapper : public ::testing::Test
 {
@@ -154,23 +152,6 @@ TEST_F(HwcWrapper, throws_on_set_failure)
     }, std::runtime_error);
 }
 
-TEST_F(HwcWrapper, register_procs_registers_and_preserves_hooks_until_destruction)
-{
-    using namespace testing;
-    auto procs = std::make_shared<mga::HWCCallbacks>();
-    EXPECT_CALL(*mock_device, registerProcs_interface(
-        mock_device.get(), reinterpret_cast<hwc_procs_t*>(procs.get())))
-        .Times(1);
-
-    auto use_count = procs.use_count();
-    {
-        mga::RealHwcWrapper wrapper(mock_device, mock_report);
-        wrapper.register_hooks(procs);
-        EXPECT_THAT(procs.use_count(), Eq(use_count+1));
-    }
-    EXPECT_THAT(procs.use_count(), Eq(use_count));
-}
-
 TEST_F(HwcWrapper, turns_display_on)
 {
     using namespace testing;
@@ -284,4 +265,92 @@ TEST_F(HwcWrapper, calls_access_functions)
 
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
     wrapper.display_attributes(mga::DisplayName::primary, hwc_config, attributes, values);
+}
+
+TEST_F(HwcWrapper, registers_hooks_for_driver)
+{
+    using namespace testing;
+    mga::HwcCallbacks const* callbacks{nullptr};
+    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(),_))
+        .WillOnce(Invoke([&](struct hwc_composer_device_1*, hwc_procs_t const* procs)
+            {callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs);}));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_report);
+
+    ASSERT_THAT(callbacks, Ne(nullptr));
+    EXPECT_THAT(callbacks->hooks.invalidate, Ne(nullptr));
+    EXPECT_THAT(callbacks->hooks.vsync, Ne(nullptr));
+    EXPECT_THAT(callbacks->hooks.hotplug, Ne(nullptr));
+    callbacks->hooks.invalidate(&callbacks->hooks);
+    callbacks->hooks.vsync(&callbacks->hooks, 0, 33223);
+    callbacks->hooks.hotplug(&callbacks->hooks, 0, 1);
+}
+
+TEST_F(HwcWrapper, can_dish_out_notifications)
+{
+    using namespace testing;
+    auto const expected_invalidate_call_count = 8u;
+    auto const expected_vsync_call_count = 5u;
+    auto const expected_hotplug_call_count = 3u;
+
+    mga::HwcCallbacks const* callbacks{nullptr};
+    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(),_))
+        .WillOnce(Invoke([&](struct hwc_composer_device_1*, hwc_procs_t const* procs)
+            {callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs);}));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_report);
+
+    auto invalidate_call_count = 0u;
+    auto vsync_call_count = 0u;
+    auto hotplug_call_count = 0u;
+    wrapper.subscribe_to_events(this,
+        [&](mga::DisplayName, std::chrono::nanoseconds){vsync_call_count++;},
+        [&](mga::DisplayName, bool){hotplug_call_count++;},
+        [&](){invalidate_call_count++;});
+
+    for(auto i = 0u; i < expected_invalidate_call_count; i++)
+        callbacks->hooks.invalidate(&callbacks->hooks);
+    for(auto i = 0u; i < expected_vsync_call_count; i++)
+        callbacks->hooks.vsync(&callbacks->hooks, 0, 33223);
+    for(auto i = 0u; i < expected_hotplug_call_count; i++)
+        callbacks->hooks.hotplug(&callbacks->hooks, 0, 1);
+
+    wrapper.unsubscribe_from_events(this);
+    //should not get these callbacks
+    callbacks->hooks.invalidate(&callbacks->hooks);
+    callbacks->hooks.vsync(&callbacks->hooks, 0, 33223);
+    callbacks->hooks.hotplug(&callbacks->hooks, 0, 1);
+
+    EXPECT_THAT(vsync_call_count, Eq(expected_vsync_call_count));
+    EXPECT_THAT(invalidate_call_count, Eq(expected_invalidate_call_count));
+    EXPECT_THAT(hotplug_call_count, Eq(expected_hotplug_call_count));
+}
+
+TEST_F(HwcWrapper, callback_calls_hwcvsync_and_can_continue_calling_after_destruction)
+{
+    using namespace testing;
+    auto call_count = 0u;
+    mga::HwcCallbacks const* callbacks{nullptr};
+    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(),_))
+        .WillOnce(Invoke([&](struct hwc_composer_device_1*, hwc_procs_t const* procs)
+            {callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs);}));
+
+    {
+        mga::RealHwcWrapper wrapper(mock_device, mock_report);
+        wrapper.subscribe_to_events(
+            this,
+            [&](mga::DisplayName, std::chrono::nanoseconds){ call_count++; },
+            [](mga::DisplayName, bool){},
+            []{});
+
+        ASSERT_THAT(callbacks, Ne(nullptr));
+        ASSERT_THAT(callbacks->hooks.vsync, Ne(nullptr));
+        callbacks->hooks.vsync(&callbacks->hooks, 0, 0);
+    }
+
+    //some bad drivers call the hooks after we close() the module.
+    //After that point, we don't care, so just make sure there's something to call 
+    callbacks->hooks.vsync(&callbacks->hooks, 0, 0);
+
+    EXPECT_THAT(call_count, Eq(1));
 }

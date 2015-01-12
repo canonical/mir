@@ -20,8 +20,8 @@
 #define MIR_GRAPHICS_ANDROID_HAL_COMPONENT_FACTORY_H_
 
 #include "display_component_factory.h"
-#include "hardware/hwcomposer.h"
-#include "hardware/fb.h"
+#include "display_resource_factory.h"
+#include "overlay_optimization.h"
 
 namespace mir
 {
@@ -60,8 +60,9 @@ private:
     bool force_backup_display;
 
     std::shared_ptr<HwcWrapper> hwc_wrapper;
-    std::shared_ptr<hwc_composer_device_1> hwc_native;
     std::shared_ptr<framebuffer_device_t> fb_native;
+    OverlayOptimization overlay_optimization;
+    HwcVersion hwc_version;
 };
 
 }
