@@ -86,7 +86,7 @@ private:
     std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;
     std::unique_ptr<HwcConfiguration> const hwc_config;
     ConfigChangeSubscription const hotplug_subscription;
-    std::array<DisplayConfigurationOutput, 2> mutable configurations;
+    DisplayConfiguration mutable config;
     std::unique_ptr<DisplayChangePipe> display_change_pipe;
 };
 

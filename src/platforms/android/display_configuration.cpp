@@ -15,14 +15,65 @@
  */
 
 #include "display_configuration.h"
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mga = mg::android;
 namespace geom = mir::geometry;
 
+namespace
+{
+int const primary_id{0};
+int const external_id{1};
+mg::DisplayConfigurationOutput external_output(
+    mga::DisplayAttribs const& external_attribs, MirPixelFormat format)
+{
+    std::vector<mg::DisplayConfigurationMode> external_modes;
+    if (external_attribs.connected)
+        external_modes.emplace_back(
+            mg::DisplayConfigurationMode{external_attribs.pixel_size, external_attribs.vrefresh_hz});
+    return {
+        mg::DisplayConfigurationOutputId{external_id},
+        mg::DisplayConfigurationCardId{0},
+        mg::DisplayConfigurationOutputType::displayport,
+        {format},
+        external_modes,
+        0,
+        external_attribs.mm_size,
+        external_attribs.connected,
+        false,
+        geom::Point{0,0},
+        0,
+        format,
+        mir_power_mode_on,
+        mir_orientation_normal
+    };
+}
+}
+
 mga::DisplayConfiguration::DisplayConfiguration(
-    std::array<DisplayConfigurationOutput, 2> const& configurations) :
-    configurations(configurations),
+    mga::DisplayAttribs const& primary_attribs,
+    mga::DisplayAttribs const& external_attribs,
+    MirPixelFormat format) :
+    configurations{
+        mg::DisplayConfigurationOutput{
+            mg::DisplayConfigurationOutputId{primary_id},
+            mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::lvds,
+            {format},
+            {mg::DisplayConfigurationMode{primary_attribs.pixel_size, primary_attribs.vrefresh_hz}},
+            0,
+            primary_attribs.mm_size,
+            primary_attribs.connected,
+            true,
+            geom::Point{0,0},
+            0,
+            format,
+            mir_power_mode_on,
+            mir_orientation_normal
+        }, 
+        external_output(external_attribs, format)
+    },
     card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }
@@ -62,4 +113,17 @@ void mga::DisplayConfiguration::for_each_output(std::function<void(mg::UserDispl
         mg::UserDisplayConfigurationOutput user(configuration);
         f(user);
     }
+}
+
+mg::DisplayConfigurationOutput const& mga::DisplayConfiguration::primary_config()
+{
+    return configurations[primary_id];
+}
+
+mg::DisplayConfigurationOutput& mga::DisplayConfiguration::operator[](mg::DisplayConfigurationOutputId const& disp_id)
+{
+    auto id = disp_id.as_value();
+    if (id != primary_id && id != external_id)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("invalid display id"));
+    return configurations[id];
 }

@@ -487,7 +487,8 @@ TEST_F(Display, display_orientation_not_supported)
 
     config = display.configuration();
     config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
-        EXPECT_EQ(mir_orientation_left, c.orientation);
+        if (c.id == mg::DisplayConfigurationOutputId{0})
+            EXPECT_EQ(mir_orientation_left, c.orientation);
     });
 }
 
