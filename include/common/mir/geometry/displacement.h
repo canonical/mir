@@ -90,6 +90,29 @@ inline bool operator<(Displacement const& lhs, Displacement const& rhs)
     return lhs.length_squared() < rhs.length_squared();
 }
 
+template<typename Scalar>
+inline Displacement operator*(Scalar scale, Displacement const& disp)
+{
+    return Displacement{scale*disp.dx, scale*disp.dy};
+}
+
+template<typename Scalar>
+inline Displacement operator*(Displacement const& disp, Scalar scale)
+{
+    return scale*disp;
+}
+
+#ifdef MIR_GEOMETRY_SIZE_H_
+inline Displacement as_displacement(Size const& size)
+{
+    return Displacement{size.width.as_int(), size.height.as_int()};
+}
+
+inline Size as_size(Displacement const& disp)
+{
+    return Size{disp.dx.as_int(), disp.dy.as_int()};
+}
+#endif
 }
 }
 
