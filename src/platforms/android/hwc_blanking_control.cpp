@@ -101,10 +101,9 @@ mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_chang
     return std::make_shared<
         mir::raii::PairedCalls<std::function<void()>, std::function<void()>>>(
         [hotplug, this]{
-            printf("SUB");
             hwc_device->subscribe_to_events(this,
                 [](DisplayName, std::chrono::nanoseconds){},
-                [hotplug](DisplayName, bool){ printf("OOO\n"); hotplug(); },
+                [hotplug](DisplayName, bool){ hotplug(); },
                 []{});
         },
         [this]{
