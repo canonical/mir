@@ -191,7 +191,7 @@ struct WithOrientation : ClientSurfaces, ::testing::WithParamInterface<MirOrient
 TEST_P(WithOrientation, have_requested_preferred_orientation)
 {
     auto spec = mir_connection_create_spec_for_normal_surface(connection, 1, 1, mir_pixel_format_abgr_8888);
-    ASSERT_TRUE(spec != nullptr);
+    ASSERT_THAT(spec, NotNull());
 
     MirOrientationMode mode{GetParam()};
     mir_surface_spec_set_preferred_orientation(spec, mode);
@@ -219,7 +219,7 @@ TEST_F(ClientSurfaces, can_be_menus)
 
     auto spec = mir_connection_create_spec_for_menu_surface(connection, 640, 480,
         mir_pixel_format_abgr_8888, parent, &attachment_rect, mir_edge_attachment_vertical);
-    ASSERT_TRUE(spec != nullptr);
+    ASSERT_THAT(spec, NotNull());
 
     auto menu = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);

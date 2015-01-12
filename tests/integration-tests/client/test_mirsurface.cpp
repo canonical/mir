@@ -176,7 +176,7 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
         spec_deleter
     };
 
-    ASSERT_TRUE(menu_spec != nullptr);
+    ASSERT_THAT(menu_spec, NotNull());
 
     EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(IsAMenu(),
         HasParent(parent.get()), MatchesAttachment(attachment_rect), MatchesEdge(edge)),_));
