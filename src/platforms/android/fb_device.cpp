@@ -32,16 +32,38 @@ namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::FBDevice::FBDevice(
-    std::shared_ptr<framebuffer_device_t> const& fbdev)
-    : fb_device(fbdev)
+mga::FbControl::FbControl(std::shared_ptr<framebuffer_device_t> const& fbdev) :
+    fb_device(fbdev)
 {
     if (fb_device->setSwapInterval)
-    {
         fb_device->setSwapInterval(fb_device.get(), 1);
-    }
+}
 
-    mode(mir_power_mode_on);
+void mga::FbControl::power_mode(DisplayName display, MirPowerMode mode)
+{
+    if (display != mga::DisplayName::primary)
+        BOOST_THROW_EXCEPTION(std::runtime_error("fb device cannot activate non-primary display"));
+
+    int enable = 0;
+    if (mode == mir_power_mode_on)
+        enable = 1;
+    
+    if (fb_device->enableScreen)
+        fb_device->enableScreen(fb_device.get(), enable);
+}
+
+mga::DisplayAttribs mga::FbControl::active_attribs_for(DisplayName)
+{
+    return mga::DisplayAttribs{
+      {fb_device->width, fb_device->height},
+      {0,0},
+      fb_device->fps,
+      true};
+}
+
+mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev) :
+    fb_device(fbdev)
+{
 }
 
 void mga::FBDevice::post_gl(SwappingGLContext const& context)
@@ -62,16 +84,6 @@ bool mga::FBDevice::post_overlays(
     return false;
 }
 
-void mga::FBDevice::mode(MirPowerMode mode)
+void mga::FBDevice::content_cleared()
 {
-    int enable = 0;
-    if (mode == mir_power_mode_on)
-    {
-        enable = 1;
-    }
-    
-    if (fb_device->enableScreen)
-    {
-        fb_device->enableScreen(fb_device.get(), enable);
-    }
 }

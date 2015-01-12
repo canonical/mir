@@ -98,28 +98,19 @@ TEST_F(FBDevice, commits_frame_via_post)
     fbdev.post_gl(mock_context);
 }
 
-TEST_F(FBDevice, sets_swapinterval_1_on_start)
-{
-    EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 1))
-        .Times(1);
-    mga::FBDevice fbdev(fb_hal_mock);
-}
-
 //not all fb devices provide a swap interval hook. make sure we don't explode if thats the case
 TEST_F(FBDevice, does_not_segfault_if_null_swapinterval_hook)
 {
     fb_hal_mock->setSwapInterval = nullptr;
-    mga::FBDevice fbdev(fb_hal_mock);
+    mga::FbControl fb_control(fb_hal_mock);
 }
 
 TEST_F(FBDevice, can_screen_on_off)
 {
-    fb_hal_mock->setSwapInterval = nullptr;
     using namespace testing;
-    //constructor turns on
     Sequence seq;
-    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,1))
-        .InSequence(seq);
+    EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 1))
+        .Times(1);
     EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,0))
         .InSequence(seq);
     EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,0))
@@ -129,9 +120,13 @@ TEST_F(FBDevice, can_screen_on_off)
     EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,1))
         .InSequence(seq);
  
-    mga::FBDevice fbdev(fb_hal_mock);
-    fbdev.mode(mir_power_mode_standby);
-    fbdev.mode(mir_power_mode_suspend);
-    fbdev.mode(mir_power_mode_off);
-    fbdev.mode(mir_power_mode_on);
+    mga::FbControl fb_control(fb_hal_mock);
+    fb_control.power_mode(mga::DisplayName::primary, mir_power_mode_standby);
+    fb_control.power_mode(mga::DisplayName::primary, mir_power_mode_suspend);
+    fb_control.power_mode(mga::DisplayName::primary, mir_power_mode_off);
+    fb_control.power_mode(mga::DisplayName::primary, mir_power_mode_on);
+
+    EXPECT_THROW({
+        fb_control.power_mode(mga::DisplayName::external, mir_power_mode_on);
+    }, std::runtime_error);
 }

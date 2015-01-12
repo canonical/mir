@@ -21,6 +21,7 @@
 
 #include "src/platforms/android/display_buffer_builder.h"
 #include "src/platforms/android/configurable_display_buffer.h"
+#include "src/platforms/android/hwc_configuration.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -53,17 +54,24 @@ struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDis
                    graphics::DisplayConfigurationCardId{0},
                    graphics::DisplayConfigurationOutputType::vga,
                    {}, {}, 0, {}, false, false, {}, 0, mir_pixel_format_abgr_8888, 
-                   mir_power_mode_off,
+                   mir_power_mode_on,
                    mir_orientation_normal};
     }
 private:
     geometry::Rectangle rect;
 };
 
+struct MockHwcConfiguration : public graphics::android::HwcConfiguration
+{
+    MOCK_METHOD2(power_mode, void(graphics::android::DisplayName, MirPowerMode));
+    MOCK_METHOD1(active_attribs_for, graphics::android::DisplayAttribs(graphics::android::DisplayName));
+};
+
 struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
 {
     StubDisplayBuilder(geometry::Size sz)
-        : sz(sz)
+        : sz(sz),
+          mock_config{new testing::NiceMock<MockHwcConfiguration>()}
     {
     }
 
@@ -84,8 +92,21 @@ struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
         return std::unique_ptr<graphics::android::ConfigurableDisplayBuffer>(
                 new StubConfigurableDisplayBuffer(geometry::Rectangle{{0,0},sz}));
     }
+
+    std::unique_ptr<graphics::android::HwcConfiguration> create_hwc_configuration() override
+    {
+        auto config = std::unique_ptr<MockHwcConfiguration>(new testing::NiceMock<MockHwcConfiguration>());
+        std::swap(config, mock_config);
+        return std::move(config);
+    }
     
+    void with_next_config(std::function<void(MockHwcConfiguration& mock_config)> const& fn)
+    {
+        fn(*mock_config); 
+    }
+
     geometry::Size sz;
+    std::unique_ptr<MockHwcConfiguration> mock_config;
 };
 }
 }
