@@ -19,6 +19,7 @@
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_doubles/stub_scene_surface.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test/validity_matchers.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
@@ -146,7 +147,7 @@ TEST_F(ClientMirSurface, sends_optional_params)
     auto surf = create_surface(&spec);
 
     // A valid surface is needed to be specified as a parent
-    ASSERT_TRUE(mir_surface_is_valid(surf.get()));
+    ASSERT_THAT(surf.get(), IsValid());
     spec.parent = surf.get();
 
     // The second time around we don't care if the surface gets created,
@@ -162,7 +163,7 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
 {
     EXPECT_CALL(*mock_surface_coordinator, add_surface(_,_));
     auto parent = create_surface(&spec);
-    ASSERT_TRUE(mir_surface_is_valid(parent.get()));
+    ASSERT_THAT(parent.get(), IsValid());
 
     MirRectangle attachment_rect{100, 200, 300, 400};
     MirEdgeAttachment edge{mir_edge_attachment_horizontal};

@@ -21,6 +21,7 @@
 
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
+#include "mir_test/validity_matchers.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -198,7 +199,7 @@ TEST_P(WithOrientation, have_requested_preferred_orientation)
     auto surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
-    ASSERT_TRUE(mir_surface_is_valid(surface));
+    ASSERT_THAT(surface, IsValid());
     EXPECT_EQ(mir_surface_get_preferred_orientation(surface), mode);
 
     mir_surface_release_sync(surface);
@@ -223,7 +224,7 @@ TEST_F(ClientSurfaces, can_be_menus)
     auto menu = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
-    ASSERT_TRUE(mir_surface_is_valid(menu));
+    ASSERT_THAT(menu, IsValid());
     EXPECT_EQ(mir_surface_get_type(menu), mir_surface_type_menu);
 
     mir_surface_release_sync(parent);
