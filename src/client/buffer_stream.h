@@ -18,12 +18,13 @@
 
 #ifndef MIR_CLIENT_BUFFER_STREAM_H
 #define MIR_CLIENT_BUFFER_STREAM_H
-
+ 
 #include "mir_protobuf.pb.h"
 
 #include "mir_wait_handle.h"
 #include "mir_client_surface.h"
 #include "client_buffer.h"
+#include "client_buffer_stream.h"
 #include "client_buffer_depository.h"
 
 #include "mir_toolkit/client_types.h"
@@ -47,11 +48,8 @@ Producer, // As in surfaces
 Consumer // As in screencasts
 };
 
-class BufferStream;
-typedef void (*mir_buffer_stream_callback)(
-    BufferStream*, void*);
-
-class BufferStream : public ClientSurface
+// TODO: Remove client surface interface...
+class BufferStream : public ClientSurface, public ClientBufferStream
 {
 public:
     BufferStream(mir::protobuf::DisplayServer& server,
@@ -61,7 +59,7 @@ public:
                  protobuf::BufferStream const& protobuf_bs);
     virtual ~BufferStream();
     
-    MirWaitHandle* next_buffer(mir_buffer_stream_callback callback, void* context);
+    MirWaitHandle* next_buffer(mir_client_buffer_stream_callback callback, void* context);
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
 
     EGLNativeWindowType egl_native_window();
@@ -80,7 +78,7 @@ protected:
 private:
     void process_buffer(protobuf::Buffer const& buffer);
     void next_buffer_received(
-        mir_buffer_stream_callback callback, void* context);
+        mir_client_buffer_stream_callback callback, void* context);
 
     mir::protobuf::DisplayServer& display_server;
 

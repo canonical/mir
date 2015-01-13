@@ -29,7 +29,7 @@ namespace mp = mir::protobuf;
 
 namespace
 {
-void null_callback(mcl::BufferStream*, void*) {}
+void null_callback(mcl::ClientBufferStream*, void*) {}
 
 void populate_buffer_package(
     MirBufferPackage& buffer_package,
@@ -107,7 +107,7 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
     }
 }
 
-MirWaitHandle* mcl::BufferStream::next_buffer(mir_buffer_stream_callback callback, void* context)
+MirWaitHandle* mcl::BufferStream::next_buffer(mir_client_buffer_stream_callback callback, void* context)
 {
     mir::protobuf::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(protobuf_bs.id().value());
@@ -165,7 +165,7 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 }
 
 void mcl::BufferStream::next_buffer_received(
-    mir_buffer_stream_callback callback, void* context)
+    mir_client_buffer_stream_callback callback, void* context)
 {
     process_buffer(protobuf_bs.buffer());
 

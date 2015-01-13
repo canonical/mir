@@ -195,6 +195,7 @@ message ScreencastId {
 message Screencast {
   optional ScreencastId screencast_id = 1;
   optional Buffer buffer = 2;
+  optional BufferStream buffer_stream = 3;
   optional string error = 127;
 }
 

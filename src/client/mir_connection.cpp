@@ -19,6 +19,7 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
+#include "default_client_buffer_stream_factory.h"
 #include "mir_toolkit/mir_platform_message.h"
 #include "client_platform.h"
 #include "client_platform_factory.h"
@@ -266,6 +267,9 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
 
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
+        client_buffer_stream_factory = 
+            std::make_shared<mcl::DefaultClientBufferStreamFactory>(platform->create_buffer_factory(), 
+                platform);
         display_configuration->set_configuration(connect_result.display_configuration());
         lifecycle_control->set_lifecycle_event_handler(default_lifecycle_event_handler);
     }
@@ -479,6 +483,13 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     return platform;
+}
+
+std::shared_ptr<mir::client::ClientBufferStreamFactory> MirConnection::get_client_buffer_stream_factory()
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
+    return client_buffer_stream_factory;
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()

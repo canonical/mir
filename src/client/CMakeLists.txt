@@ -80,6 +80,7 @@ add_library(mirclientobjects OBJECT
   periodic_perf_report.cpp
   mir_platform_message_api.cpp
   buffer_stream.cpp
+  default_client_buffer_stream_factory.cpp
 )
 
 add_library(mirclient SHARED

@@ -163,7 +163,7 @@ ACTION_P(SetBufferInfoFromPackage, buffer_package)
     arg2->set_height(buffer_package.height);
 }
 
-void null_callback_func(mcl::BufferStream*, void*)
+void null_callback_func(mcl::ClientBufferStream*, void*)
 {
 }
 
