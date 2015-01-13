@@ -164,8 +164,8 @@ static const GLchar contrast_fshader[] =
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
     "    vec4 raw = texture2D(tex, v_texcoord);\n"
-    "    vec4 bent = (1.0 - cos(raw * 3.141592654)) / 2.0;\n"
-    "    gl_FragColor = alpha * bent;\n"
+    "    vec3 bent = (1.0 - cos(raw.rgb * 3.141592654)) / 2.0;\n"
+    "    gl_FragColor = alpha * vec4(bent, raw.a);\n"
     "}\n"
 };
 
