@@ -61,6 +61,8 @@ public:
     
     MirWaitHandle* next_buffer(mir_client_buffer_stream_callback callback, void* context);
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
+    // TODO: Investigate requirement ~racarr
+    uint32_t get_current_buffer_id();
 
     EGLNativeWindowType egl_native_window();
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();

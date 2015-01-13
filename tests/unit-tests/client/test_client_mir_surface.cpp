@@ -16,6 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+// TODO: There's a lot to suggest (usage of real connection most prevalent)
+// that this is perhaps a set of integration tests. But moving it there conflicts
+// with test_mirsurface.cpp. Client MirSurface testing probably needs to be reviewed
+
 #include "mir_protobuf.pb.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/client_buffer.h"
@@ -410,14 +414,12 @@ struct MirClientSurfaceTest : public testing::Test
     }
 
     std::shared_ptr<MirSurface> create_surface_with(
-        mir::protobuf::DisplayServer::Stub& server_stub,
-        std::shared_ptr<mcl::ClientBufferFactory> const& buffer_factory)
+        mir::protobuf::DisplayServer::Stub& server_stub)
     {
         return std::make_shared<MirSurface>(
             connection.get(),
             server_stub,
             nullptr,
-            buffer_factory,
             input_platform,
             spec,
             &null_surface_callback,
@@ -426,7 +428,6 @@ struct MirClientSurfaceTest : public testing::Test
 
     std::shared_ptr<MirSurface> create_and_wait_for_surface_with(
         mir::protobuf::DisplayServer::Stub& server_stub,
-        std::shared_ptr<mcl::ClientBufferFactory> const& buffer_factory)
     {
         auto surface = create_surface_with(server_stub, buffer_factory);
         surface->get_create_wait_handle()->wait_for_all();

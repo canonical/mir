@@ -21,6 +21,7 @@
 #include "client_buffer.h"
 #include "mir_surface.h"
 #include "cursor_configuration.h"
+#include "client_buffer_stream_factory.h"
 #include "mir_connection.h"
 #include "mir/input/input_receiver_thread.h"
 #include "mir/input/input_platform.h"
@@ -105,7 +106,6 @@ MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mp::DisplayServer::Stub& the_server,
     mp::Debug::Stub* debug,
-    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceSpec const& spec,
     mir_surface_callback callback, void * context)
@@ -113,7 +113,6 @@ MirSurface::MirSurface(
       debug{debug},
       name{spec.surface_name.value()},
       connection(allocating_connection),
-      buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
       input_platform(input_platform)
 {
     const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
@@ -213,7 +212,7 @@ void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    auto buffer = buffer_depository->current_buffer();
+    auto buffer = buffer_stream->get_current_buffer();
 
     secured_region = buffer->secure_for_cpu_write();
     region_out.width = secured_region->width.as_uint32_t();
@@ -228,25 +227,26 @@ void MirSurface::release_cpu_region()
     secured_region.reset();
 }
 
+namespace
+{
+// TODO: Eliminate once perf report pulled in to buffer stream
+struct NewBufferThunk
+{
+    MirSurface *surface;
+    mir_surface_callback callback;
+    void *context;
+};
+}
+
 MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * context)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     release_cpu_region();
-
-    //TODO: we have extract the per-message information from the buffer
-    *buffer_request.mutable_id() = surface.id();
-    buffer_request.mutable_buffer()->set_buffer_id(surface.buffer().buffer_id());
-    perf_report->end_frame(surface.buffer().buffer_id());
+    perf_report->end_frame(buffer_stream->get_current_buffer_id());
     lock.unlock();
 
-    next_buffer_wait_handle.expect_result();
-    server->exchange_buffer(
-        0,
-        &buffer_request,
-        surface.mutable_buffer(),
-        google::protobuf::NewCallback(this, &MirSurface::new_buffer, callback, context));
-
-    return &next_buffer_wait_handle;
+    // TODO: Fix thunk
+    return buffer_stream->next_buffer(&MirSurface::new_buffer, new NewBufferThunk{this, callback, context});
 }
 
 MirWaitHandle* MirSurface::get_create_wait_handle()
@@ -263,36 +263,17 @@ MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf) const
 
 void MirSurface::process_incoming_buffer()
 {
-    auto const& buffer = surface.buffer();
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
-    /*
-     * On most frames when the properties aren't changing, the server won't
-     * fill in the width and height. I think this is an intentional
-     * protocol optimization ("need_full_ipc").
-     */
-    if (buffer.has_width() && buffer.has_height())
-    {
-        surface.set_width(buffer.width());
-        surface.set_height(buffer.height());
-    }
+    auto const& buffer = get_current_buffer();
 
-    auto surface_size = geom::Size{surface.width(), surface.height()};
-    auto surface_pf = convert_ipc_pf_to_geometry(surface.pixel_format());
+    auto buffer_width = buffer->size().width.as_int();
+    auto buffer_height = buffer->size().height.as_int();
 
-    auto ipc_package = std::make_shared<MirBufferPackage>();
-    populate(*ipc_package);
-
-    try
-    {
-        buffer_depository->deposit_package(std::move(ipc_package),
-                                           buffer.buffer_id(),
-                                           surface_size, surface_pf);
-        perf_report->begin_frame(buffer.buffer_id());
-    }
-    catch (const std::runtime_error& err)
-    {
-        // TODO: Report the error
-    }
+    if (buffer_height != surface.width())
+        surface.set_width(buffer_width);
+    if (buffer_height != surface.height())
+        surface.set_width(buffer_height);
 }
 
 void MirSurface::created(mir_surface_callback callback, void * context)
@@ -303,26 +284,28 @@ void MirSurface::created(mir_surface_callback callback, void * context)
     {
         if (!surface.has_error())
             surface.set_error("Error processing surface create response, no ID (disconnected?)");
+
         callback(this, context);
         create_wait_handle.result_received();
         return;
     }
     }
 
-    auto platform = connection->get_client_platform();
     try
     {
         {
             std::lock_guard<decltype(mutex)> lock(mutex);
-
-            process_incoming_buffer();
-            accelerated_window = platform->create_egl_native_window(this);
 
             for(int i = 0; i < surface.attributes_size(); i++)
             {
                 auto const& attrib = surface.attributes(i);
                 attrib_cache[attrib.attrib()] = attrib.ivalue();
             }
+
+            // TODO: Fill from protocol
+            mir::protobuf::BufferStream protobuf_bs;
+            buffer_stream = connection->get_client_buffer_stream_factory()->
+                make_producer_stream(*server, protobuf_bs);
         }
 
         connection->on_surface_created(id(), this);
@@ -337,15 +320,16 @@ void MirSurface::created(mir_surface_callback callback, void * context)
     create_wait_handle.result_received();
 }
 
-void MirSurface::new_buffer(mir_surface_callback callback, void * context)
+void MirSurface::new_buffer(mcl::ClientBufferStream* /* bs */, void * context)
 {
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        process_incoming_buffer();
-    }
+    auto ctx = static_cast<NewBufferThunk*>(context);
 
-    callback(this, context);
-    next_buffer_wait_handle.result_received();
+    // Perf report etc
+    ctx->surface->process_incoming_buffer();
+
+    ctx->callback(ctx->surface, ctx->context);
+    
+    delete ctx;
 }
 
 MirWaitHandle* MirSurface::release_surface(
@@ -383,53 +367,21 @@ std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    return buffer_depository->current_buffer();
+    return buffer_stream->get_current_buffer();
 }
 
 uint32_t MirSurface::get_current_buffer_id() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    return buffer_depository->current_buffer_id();
-}
-
-void MirSurface::populate(MirBufferPackage& buffer_package)
-{
-    if (!surface.has_error() && surface.has_buffer())
-    {
-        auto const& buffer = surface.buffer();
-
-        buffer_package.data_items = buffer.data_size();
-        for (int i = 0; i != buffer.data_size(); ++i)
-        {
-            buffer_package.data[i] = buffer.data(i);
-        }
-
-        buffer_package.fd_items = buffer.fd_size();
-
-        for (int i = 0; i != buffer.fd_size(); ++i)
-        {
-            buffer_package.fd[i] = buffer.fd(i);
-        }
-
-        buffer_package.stride = buffer.stride();
-        buffer_package.flags = buffer.flags();
-        buffer_package.width = buffer.width();
-        buffer_package.height = buffer.height();
-    }
-    else
-    {
-        buffer_package.data_items = 0;
-        buffer_package.fd_items = 0;
-        buffer_package.stride = 0;
-    }
+    return buffer_stream->get_current_buffer_id();
 }
 
 EGLNativeWindowType MirSurface::generate_native_window()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    return *accelerated_window;
+    return buffer_stream->egl_native_window();
 }
 
 MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor)
@@ -638,4 +590,3 @@ MirWaitHandle* MirSurface::set_preferred_orientation(MirOrientationMode mode)
 {
     return configure(mir_surface_attrib_preferred_orientation, mode);
 }
-

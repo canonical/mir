@@ -137,7 +137,7 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, &debug, platform->create_buffer_factory(), input_platform, spec, callback, context);
+    auto surface = new MirSurface(this, server, &debug, input_platform, spec, callback, context);
 
     return surface->get_create_wait_handle();
 }

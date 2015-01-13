@@ -193,3 +193,8 @@ void mcl::BufferStream::request_and_wait_for_next_buffer()
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib, int)
 {
 }
+
+uint32_t mcl::BufferStream::get_current_buffer_id()
+{
+    return buffer_depository.current_buffer_id();
+}

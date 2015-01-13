@@ -33,10 +33,11 @@ class DefaultClientBufferStreamFactory : public ClientBufferStreamFactory
 public:
     DefaultClientBufferStreamFactory(std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
         std::shared_ptr<EGLNativeWindowFactory> const& native_window_factory);
-
     virtual ~DefaultClientBufferStreamFactory() = default;
 
     std::shared_ptr<ClientBufferStream> make_consumer_stream(protobuf::DisplayServer& server,
+       protobuf::BufferStream const& protobuf_bs);
+    std::shared_ptr<ClientBufferStream> make_producer_stream(protobuf::DisplayServer& server,
        protobuf::BufferStream const& protobuf_bs);
 
 private:

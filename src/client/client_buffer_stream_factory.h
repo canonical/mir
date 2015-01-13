@@ -21,6 +21,8 @@
 
 #include "mir_protobuf.pb.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace client
@@ -30,6 +32,8 @@ class ClientBufferStreamFactory
 {
 public:
     virtual std::shared_ptr<ClientBufferStream> make_consumer_stream(protobuf::DisplayServer& server,
+       protobuf::BufferStream const& protobuf_bs) = 0;
+    virtual std::shared_ptr<ClientBufferStream> make_producer_stream(protobuf::DisplayServer& server,
        protobuf::BufferStream const& protobuf_bs) = 0;
 
 protected:
