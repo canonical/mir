@@ -33,7 +33,8 @@ class CompositorReport : public compositor::CompositorReport
 public:
     void added_display(int width, int height, int x, int y, SubCompositorId id) override;
     void began_frame(SubCompositorId id) override;
-    void finished_frame(bool bypassed, SubCompositorId id) override;
+    void rendered_frame(SubCompositorId id) override;
+    void finished_frame(SubCompositorId id) override;
     void started() override;
     void stopped() override;
     void scheduled() override;

@@ -77,7 +77,6 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer->suspend();
-        report->finished_frame(true, this);
     }
     else
     {
@@ -88,7 +87,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->render(renderable_list);
 
         display_buffer.gl_swap_buffers();
-        report->finished_frame(false, this);
+        report->rendered_frame(this);
 
         // Release the buffers we did use back to the clients, before starting
         // on the potentially slow flip().
@@ -97,4 +96,6 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
         display_buffer.flip();
     }
+
+    report->finished_frame(this);
 }
