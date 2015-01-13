@@ -504,10 +504,6 @@ private:
 
                 if (surface_info.state == state)
                 {
-                    focussed_surface->move_to(surface_info.restore_rect.top_left);
-                    focussed_surface->resize(surface_info.restore_rect.size);
-                    surface_info.state = SurfaceInfo::restored;
-
                     notify_client = [focussed_surface]()
                         {
                             focussed_surface->configure(
@@ -517,21 +513,9 @@ private:
                 }
                 else
                 {
-                    if (surface_info.state == SurfaceInfo::restored)
-                    {
-                        surface_info.restore_rect =
-                            {focussed_surface->top_left(), focussed_surface->size()};
-                    }
-
-                    auto const& session_info = this->session_info[focussed_session.get()];
-                    surface_info.state = state;
-
                     switch (state)
                     {
                     case SurfaceInfo::maximized:
-                        focussed_surface->move_to(session_info.tile.top_left);
-                        focussed_surface->resize(session_info.tile.size);
-
                         notify_client = [focussed_surface]()
                             {
                                 focussed_surface->configure(
@@ -541,6 +525,10 @@ private:
                         break;
 
                     case SurfaceInfo::hmax:
+                    {
+                        // We have to implement this here as we can't code hmax into mir_surface_attrib_state
+                        auto const& session_info = this->session_info[focussed_session.get()];
+                        surface_info.state = state;
                         focussed_surface->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
                         focussed_surface->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
 
@@ -551,11 +539,8 @@ private:
                                     mir_surface_state_unknown);
                             };
                         break;
-
+                    }
                     case SurfaceInfo::vmax:
-                        focussed_surface->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
-                        focussed_surface->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
-
                         notify_client = [focussed_surface]()
                             {
                                 focussed_surface->configure(
