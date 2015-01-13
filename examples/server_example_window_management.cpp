@@ -309,19 +309,16 @@ public:
 
     void toggle_maximized() override
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
         toggle(SurfaceInfo::maximized);
     }
 
     void toggle_max_horizontal() override
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
         toggle(SurfaceInfo::hmax);
     }
 
     void toggle_max_vertical() override
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
         toggle(SurfaceInfo::vmax);
     }
 
@@ -492,65 +489,92 @@ private:
 
     void toggle(SurfaceInfo::State state)
     {
-        if (auto const focussed_session = focus_controller()->focussed_application().lock())
+        std::function<void()> on_exit = [](){};
+
         {
-            if (auto const focussed_surface = focussed_session->default_surface())
+            std::lock_guard<decltype(mutex)> lock(mutex);
+
+            if (auto const focussed_session = focus_controller()->focussed_application().lock())
             {
-                auto& surface_info = this->surface_info[focussed_surface];
-
-                if (surface_info.state == state)
+                if (auto const focussed_surface = focussed_session->default_surface())
                 {
-                    focussed_surface->move_to(surface_info.restore_rect.top_left);
-                    focussed_surface->resize(surface_info.restore_rect.size);
-                    surface_info.state = SurfaceInfo::restored;
+                    auto& surface_info = this->surface_info[focussed_surface];
 
-                    // Duplicate the state information into surface
-                    focussed_surface->configure(mir_surface_attrib_state, mir_surface_state_restored);
-                }
-                else
-                {
-                    if (surface_info.state == SurfaceInfo::restored)
+                    if (surface_info.state == state)
                     {
-                        surface_info.restore_rect =
-                            {focussed_surface->top_left(), focussed_surface->size()};
-                    }
-
-                    auto const& session_info = this->session_info[focussed_session.get()];
-
-                    switch (state)
-                    {
-                    case SurfaceInfo::maximized:
-                        focussed_surface->move_to(session_info.tile.top_left);
-                        focussed_surface->resize(session_info.tile.size);
+                        focussed_surface->move_to(surface_info.restore_rect.top_left);
+                        focussed_surface->resize(surface_info.restore_rect.size);
+                        surface_info.state = SurfaceInfo::restored;
 
                         // Duplicate the state information into surface
-                        focussed_surface->configure(mir_surface_attrib_state, mir_surface_state_maximized);
-                        break;
-
-                    case SurfaceInfo::hmax:
-                        focussed_surface->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
-                        focussed_surface->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
-
-                        // Can't duplicate the state information into surface
-                        focussed_surface->configure(mir_surface_attrib_state, mir_surface_state_unknown);
-                        break;
-
-                    case SurfaceInfo::vmax:
-                        focussed_surface->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
-                        focussed_surface->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
-
-                        // Duplicate the state information into surface
-                        focussed_surface->configure(mir_surface_attrib_state, mir_surface_state_vertmaximized);
-                        break;
-
-                    default:
-                        break;
+                        on_exit = [focussed_surface]()
+                            {
+                                focussed_surface->configure(
+                                    mir_surface_attrib_state,
+                                    mir_surface_state_restored);
+                            };
                     }
+                    else
+                    {
+                        if (surface_info.state == SurfaceInfo::restored)
+                        {
+                            surface_info.restore_rect =
+                                {focussed_surface->top_left(), focussed_surface->size()};
+                        }
 
-                    surface_info.state = state;
+                        auto const& session_info = this->session_info[focussed_session.get()];
+                        surface_info.state = state;
+
+                        switch (state)
+                        {
+                        case SurfaceInfo::maximized:
+                            focussed_surface->move_to(session_info.tile.top_left);
+                            focussed_surface->resize(session_info.tile.size);
+
+                            on_exit = [focussed_surface]()
+                                {
+                                    // Duplicate the state information into surface
+                                    focussed_surface->configure(
+                                        mir_surface_attrib_state,
+                                        mir_surface_state_maximized);
+                                };
+                            break;
+
+                        case SurfaceInfo::hmax:
+                            focussed_surface->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
+                            focussed_surface->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
+
+                            on_exit = [focussed_surface]()
+                                {
+                                    // Can't duplicate the state information into surface
+                                    focussed_surface->configure(
+                                        mir_surface_attrib_state,
+                                        mir_surface_state_unknown);
+                                };
+                            break;
+
+                        case SurfaceInfo::vmax:
+                            focussed_surface->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
+                            focussed_surface->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
+
+                            on_exit = [focussed_surface]()
+                                {
+                                    // Can't duplicate the state information into surface
+                                    focussed_surface->configure(
+                                        mir_surface_attrib_state,
+                                        mir_surface_state_vertmaximized);
+                                };
+                            break;
+
+                        default:
+                            break;
+                        }
+                    }
                 }
             }
         }
+
+        on_exit();
     }
 
     void set_state(ms::Surface const& surface, int value)
