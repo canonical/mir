@@ -183,12 +183,3 @@ TEST_F(ServerRenderWindow, throws_on_driver_unknown_inquiry)
         render_window.driver_requests_info(NATIVE_WINDOW_CONSUMER_RUNNING_BEHIND);
     }, std::runtime_error);
 }
-
-TEST_F(ServerRenderWindow, services_driver_swapinterval_request)
-{
-    EXPECT_CALL(*mock_fb_bundle, wait_for_consumed_buffer(false))
-        .Times(1);
-
-    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
-    render_window.sync_to_display(false);
-}
