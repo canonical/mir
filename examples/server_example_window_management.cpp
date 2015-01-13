@@ -489,7 +489,10 @@ private:
 
     void toggle(SurfaceInfo::State state)
     {
-        std::function<void()> on_exit = [](){};
+        // We have to duplicate the state information into surface to notify the
+        // client. But this has to happen without holding a lock (as we are also
+        // notified via a call to attribute_set()).
+        std::function<void()> notify_client = [](){};
 
         if (auto const focussed_session = focus_controller()->focussed_application().lock())
         {
@@ -505,8 +508,7 @@ private:
                     focussed_surface->resize(surface_info.restore_rect.size);
                     surface_info.state = SurfaceInfo::restored;
 
-                    // Duplicate the state information into surface
-                    on_exit = [focussed_surface]()
+                    notify_client = [focussed_surface]()
                         {
                             focussed_surface->configure(
                                 mir_surface_attrib_state,
@@ -530,9 +532,8 @@ private:
                         focussed_surface->move_to(session_info.tile.top_left);
                         focussed_surface->resize(session_info.tile.size);
 
-                        on_exit = [focussed_surface]()
+                        notify_client = [focussed_surface]()
                             {
-                                // Duplicate the state information into surface
                                 focussed_surface->configure(
                                     mir_surface_attrib_state,
                                     mir_surface_state_maximized);
@@ -543,9 +544,8 @@ private:
                         focussed_surface->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
                         focussed_surface->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
 
-                        on_exit = [focussed_surface]()
+                        notify_client = [focussed_surface]()
                             {
-                                // Can't duplicate the state information into surface
                                 focussed_surface->configure(
                                     mir_surface_attrib_state,
                                     mir_surface_state_unknown);
@@ -556,9 +556,8 @@ private:
                         focussed_surface->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
                         focussed_surface->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
 
-                        on_exit = [focussed_surface]()
+                        notify_client = [focussed_surface]()
                             {
-                                // Can't duplicate the state information into surface
                                 focussed_surface->configure(
                                     mir_surface_attrib_state,
                                     mir_surface_state_vertmaximized);
@@ -572,7 +571,7 @@ private:
             }
         }
 
-        on_exit();
+        notify_client();
     }
 
     void set_state(ms::Surface const& surface, int value)
