@@ -61,6 +61,12 @@ mir_add_wrapped_executable(mir_demo_client_cursors
 target_link_libraries(mir_demo_client_cursors
   eglapp
 )
+mir_add_wrapped_executable(mir_demo_client_eglstateswitcher
+  eglstateswitcher.c
+)
+target_link_libraries(mir_demo_client_eglstateswitcher
+  eglapp
+)
 
 mir_add_wrapped_executable(mir_demo_client_basic
   basic.c
