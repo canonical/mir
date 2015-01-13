@@ -88,6 +88,8 @@ bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
 void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
     hwc_list.update_list({}, fbtarget_plus_skip_size);
+//    hwc_list.set_fb_target(context.last_rendered_buffer());
+
     auto& skip = *hwc_list.additional_layers_begin();
     auto& fbtarget = *(++hwc_list.additional_layers_begin());
 

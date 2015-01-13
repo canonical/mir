@@ -114,3 +114,48 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
     for(auto it = list.additional_layers_begin(); it != list.end(); it++)
         EXPECT_FALSE(it->needs_commit);
 }
+
+void fill_hwc_layer(
+    hwc_layer_1_t& layer,
+    hwc_rect_t* visible_rect,
+    geom::Rectangle const& position,
+    mg::Buffer const& buffer,
+    int type, int flags)
+{
+    *visible_rect = {0, 0, buffer.size().width.as_int(), buffer.size().height.as_int()};
+    layer.compositionType = type;
+    layer.hints = 0;
+    layer.flags = flags;
+    layer.handle = buffer.native_buffer_handle()->handle();
+    layer.transform = 0;
+    layer.blending = HWC_BLENDING_NONE;
+    layer.sourceCrop = *visible_rect;
+    layer.displayFrame = {
+        position.top_left.x.as_int(),
+        position.top_left.y.as_int(),
+        position.bottom_right().x.as_int(),
+        position.bottom_right().y.as_int()
+    };
+    layer.visibleRegionScreen = {1, visible_rect};
+    layer.acquireFenceFd = -1;
+    layer.releaseFenceFd = -1;
+    layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
+}
+
+TEST_F(LayerListTest, set_fb_target)
+{
+    StubBuffer buffer{22,33};
+    hwc_layer_1_t layer;
+    hwc_rect_t visible_rect;   
+    geom::Rectangle const disp_frame{{0,0}, {buffer->size()}};
+    fill_hwc_layer(layer, &visible_rect, disp_frame, buffer, HWC_FRAMEBUFFER_TARGET, 0);
+
+    mga::LayerList list(layer_adapter, renderlist, 0);
+    EXPECT_THROW({
+        list.set_fb_target(buffer);
+    }, std::logic_error);
+
+    list.update_list(renderlist, 1);
+    auto fb_target = list.additional_layers_begin();
+    EXPECT_THAT(fb_target.layer, MatchesLegacyLayer(layer));
+}
