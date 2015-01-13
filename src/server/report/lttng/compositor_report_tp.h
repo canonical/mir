@@ -47,7 +47,7 @@ TRACEPOINT_EVENT(
         ctf_integer(int, x, x)
         ctf_integer(int, y, y)
         ctf_integer_hex(uintptr_t, id, (uintptr_t)(id))
-     )
+    )
 )
 
 TRACEPOINT_EVENT(
@@ -56,7 +56,7 @@ TRACEPOINT_EVENT(
     TP_ARGS(void const*, id),
     TP_FIELDS(
         ctf_integer_hex(uintptr_t, id, (uintptr_t)(id))
-     )
+    )
 )
 
 TRACEPOINT_EVENT(
@@ -65,7 +65,7 @@ TRACEPOINT_EVENT(
     TP_ARGS(void const*, id),
     TP_FIELDS(
         ctf_integer_hex(uintptr_t, id, (uintptr_t)(id))
-     )
+    )
 )
 
 TRACEPOINT_EVENT(
@@ -74,7 +74,7 @@ TRACEPOINT_EVENT(
     TP_ARGS(void const*, id),
     TP_FIELDS(
         ctf_integer_hex(uintptr_t, id, (uintptr_t)(id))
-     )
+    )
 )
 
 #endif /* MIR_LTTNG_COMPOSITOR_REPORT_TP_H_ */
