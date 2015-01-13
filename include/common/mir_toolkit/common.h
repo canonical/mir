@@ -161,9 +161,10 @@ typedef enum MirOrientationMode
 
 typedef enum MirEdgeAttachment
 {
-    mir_edge_attachment_any = 0,
     mir_edge_attachment_vertical = 1 << 0,
-    mir_edge_attachment_horizontal = 1 << 1
+    mir_edge_attachment_horizontal = 1 << 1,
+    mir_edge_attachment_any = mir_edge_attachment_vertical |
+                              mir_edge_attachment_horizontal
 } MirEdgeAttachment;
 /**@}*/
 
