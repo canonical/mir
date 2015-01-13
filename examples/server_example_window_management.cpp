@@ -699,7 +699,6 @@ private:
             mir_key_modifier_alt |
             mir_key_modifier_shift |
             mir_key_modifier_sym |
-            mir_key_modifier_function |
             mir_key_modifier_ctrl |
             mir_key_modifier_meta;
 
