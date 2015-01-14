@@ -120,8 +120,11 @@ MirWaitHandle* MirScreencast::release(
 MirWaitHandle* MirScreencast::next_buffer(
     mir_screencast_callback callback, void* context)
 {
-    // TODO: Cast
-    return buffer_stream->next_buffer((mcl::mir_client_buffer_stream_callback)callback, context);
+    return buffer_stream->next_buffer([&, callback, context]() {
+            // TODO: Perf report?
+            if (callback)
+                callback(this, context);
+    });
 }
 
 EGLNativeWindowType MirScreencast::egl_native_window()

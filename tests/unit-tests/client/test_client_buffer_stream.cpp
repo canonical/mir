@@ -163,10 +163,6 @@ ACTION_P(SetBufferInfoFromPackage, buffer_package)
     arg2->set_height(buffer_package.height);
 }
 
-void null_callback_func(mcl::ClientBufferStream*, void*)
-{
-}
-
 }
 
 TEST_F(ClientBufferStreamTest, uses_buffer_message_from_server)
@@ -199,7 +195,7 @@ TEST_F(ClientBufferStreamTest, producer_streams_call_exchange_buffer_on_next_buf
         std::make_shared<mtd::StubClientBufferFactory>(), mt::fake_shared(stub_native_window_factory),
         protobuf_bs);
     
-    bs.next_buffer(null_callback_func, nullptr);
+    bs.next_buffer([](){});
 }
 
 TEST_F(ClientBufferStreamTest, consumer_streams_call_screencast_buffer_on_next_buffer)
@@ -217,7 +213,7 @@ TEST_F(ClientBufferStreamTest, consumer_streams_call_screencast_buffer_on_next_b
         std::make_shared<mtd::StubClientBufferFactory>(),
         mt::fake_shared(stub_native_window_factory), protobuf_bs);
     
-    bs.next_buffer(null_callback_func, nullptr);
+    bs.next_buffer([](){});
 }
 
 TEST_F(ClientBufferStreamTest, returns_correct_surface_parameters)
@@ -269,7 +265,7 @@ TEST_F(ClientBufferStreamTest, returns_current_client_buffer)
         mt::fake_shared(stub_native_window_factory),  protobuf_bs);
 
     EXPECT_EQ(client_buffer_1, bs.get_current_buffer());
-    bs.next_buffer(null_callback_func, nullptr);
+    bs.next_buffer([](){});
     EXPECT_EQ(client_buffer_2, bs.get_current_buffer());
 }
 

@@ -437,7 +437,7 @@ TEST_F(MirClientSurfaceTest, next_buffer_delegates_to_buffer_stream)
     using namespace testing;
 
     mtd::MockClientBufferStream mock_bs;
-    EXPECT_CALL(mock_bs, next_buffer(_,_)).Times(1);
+    EXPECT_CALL(mock_bs, next_buffer(_)).Times(1);
 
     mtd::MockClientBufferStreamFactory bs_factory;
     EXPECT_CALL(bs_factory, make_producer_stream(_,_))

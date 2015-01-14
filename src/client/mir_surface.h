@@ -150,7 +150,6 @@ private:
     void on_cursor_configured();
     void process_incoming_buffer();
     void created(mir_surface_callback callback, void * context);
-    static void new_buffer(mir::client::ClientBufferStream* bs, void * context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
     void release_cpu_region();
 

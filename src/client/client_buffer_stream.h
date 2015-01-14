@@ -25,16 +25,13 @@
 #include <EGL/eglplatform.h>
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {
 namespace client
 {
 class ClientBuffer;
-
-class ClientBufferStream;
-typedef void (*mir_client_buffer_stream_callback)(
-    ClientBufferStream*, void*);
 
 class ClientBufferStream
 {
@@ -43,7 +40,7 @@ public:
     virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
     virtual uint32_t get_current_buffer_id() = 0;
     virtual EGLNativeWindowType egl_native_window() = 0;
-    virtual MirWaitHandle* next_buffer(mir_client_buffer_stream_callback callback, void* context) = 0;
+    virtual MirWaitHandle* next_buffer(std::function<void()> const& done) = 0;
 
 protected:
     ClientBufferStream() = default;

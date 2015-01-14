@@ -59,7 +59,7 @@ public:
                  protobuf::BufferStream const& protobuf_bs);
     virtual ~BufferStream();
     
-    MirWaitHandle* next_buffer(mir_client_buffer_stream_callback callback, void* context);
+    MirWaitHandle* next_buffer(std::function<void()> const& done);
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     // TODO: Investigate requirement ~racarr
     uint32_t get_current_buffer_id();
@@ -80,7 +80,7 @@ protected:
 private:
     void process_buffer(protobuf::Buffer const& buffer);
     void next_buffer_received(
-        mir_client_buffer_stream_callback callback, void* context);
+        std::function<void()> done);
 
     mir::protobuf::DisplayServer& display_server;
 

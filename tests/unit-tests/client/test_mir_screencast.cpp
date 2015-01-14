@@ -234,7 +234,7 @@ TEST_F(MirScreencastTest, advances_buffer_stream_on_next_buffer)
 //    EXPECT_CALL(mock_server,
 //                create_screencast(_,_,_,_));
     
-    EXPECT_CALL(mock_bs, next_buffer(_, _)).Times(1)
+    EXPECT_CALL(mock_bs, next_buffer(_)).Times(1)
         .WillOnce(Return(nullptr));
     
     MirScreencast screencast{

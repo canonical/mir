@@ -29,7 +29,6 @@ namespace mp = mir::protobuf;
 
 namespace
 {
-void null_callback(mcl::ClientBufferStream*, void*) {}
 
 void populate_buffer_package(
     MirBufferPackage& buffer_package,
@@ -107,12 +106,15 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
     }
 }
 
-MirWaitHandle* mcl::BufferStream::next_buffer(mir_client_buffer_stream_callback callback, void* context)
+MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
     mir::protobuf::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(protobuf_bs.id().value());
 
     next_buffer_wait_handle.expect_result();
+    
+    // TODO: Fix signature
+    std::function<void()> copy_done = done;
 
     if (mode == mcl::BufferStreamMode::Producer)
     {
@@ -126,7 +128,7 @@ MirWaitHandle* mcl::BufferStream::next_buffer(mir_client_buffer_stream_callback 
             protobuf_bs.mutable_buffer(),
             google::protobuf::NewCallback(
             this, &mcl::BufferStream::next_buffer_received,
-            callback, context));
+            copy_done));
     }
     else
     {
@@ -140,7 +142,7 @@ MirWaitHandle* mcl::BufferStream::next_buffer(mir_client_buffer_stream_callback 
             protobuf_bs.mutable_buffer(),
             google::protobuf::NewCallback(
             this, &mcl::BufferStream::next_buffer_received,
-            callback, context));
+            copy_done));
     }
 
 
@@ -165,11 +167,12 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 }
 
 void mcl::BufferStream::next_buffer_received(
-    mir_client_buffer_stream_callback callback, void* context)
+    std::function<void()> done)                                             
 {
     process_buffer(protobuf_bs.buffer());
 
-    callback(this, context);
+    done();
+
     next_buffer_wait_handle.result_received();
 }
 
@@ -187,7 +190,7 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
 
 void mcl::BufferStream::request_and_wait_for_next_buffer()
 {
-    next_buffer(null_callback, nullptr)->wait_for_all();
+    next_buffer([](){})->wait_for_all();
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib, int)

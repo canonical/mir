@@ -229,26 +229,19 @@ void MirSurface::release_cpu_region()
     secured_region.reset();
 }
 
-namespace
-{
-// TODO: Eliminate once perf report pulled in to buffer stream
-struct NewBufferThunk
-{
-    MirSurface *surface;
-    mir_surface_callback callback;
-    void *context;
-};
-}
-
-MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * context)
+MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void *context)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     release_cpu_region();
     perf_report->end_frame(buffer_stream->get_current_buffer_id());
     lock.unlock();
 
-    // TODO: Fix thunk
-    return buffer_stream->next_buffer(&MirSurface::new_buffer, new NewBufferThunk{this, callback, context});
+    return buffer_stream->next_buffer([&, callback, context]
+    {
+        process_incoming_buffer();
+        if (callback)
+            callback(this, context);
+    });
 }
 
 MirWaitHandle* MirSurface::get_create_wait_handle()
@@ -317,18 +310,6 @@ void MirSurface::created(mir_surface_callback callback, void * context)
 
     callback(this, context);
     create_wait_handle.result_received();
-}
-
-void MirSurface::new_buffer(mcl::ClientBufferStream* /* bs */, void * context)
-{
-    auto ctx = static_cast<NewBufferThunk*>(context);
-
-    // Perf report etc
-    ctx->surface->process_incoming_buffer();
-
-    ctx->callback(ctx->surface, ctx->context);
-    
-    delete ctx;
 }
 
 MirWaitHandle* MirSurface::release_surface(
