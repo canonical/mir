@@ -74,6 +74,7 @@ typedef enum MirSurfaceState
        Omitted for now, since it's functionally a subset of vertmaximized and
        differs only in the X coordinate. */
     mir_surface_state_fullscreen,
+    mir_surface_state_horizmaximized,
     mir_surface_states
 } MirSurfaceState;
 
