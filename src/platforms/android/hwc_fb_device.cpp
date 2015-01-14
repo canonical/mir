@@ -59,15 +59,15 @@ void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
 {
     layer_list.setup_fb(*context.last_rendered_buffer());
 
-    if (auto display_list = layer_list.native_list().lock())
+    if (auto display_list = layer_list.native_list())
     {
-        hwc_wrapper->prepare({{display_list.get(), nullptr, nullptr}});
+        hwc_wrapper->prepare({{display_list, nullptr, nullptr}});
         display_list->dpy = eglGetCurrentDisplay();
         display_list->sur = eglGetCurrentSurface(EGL_DRAW);
 
         //set() may affect EGL state by calling eglSwapBuffers.
         //HWC 1.0 is the only version of HWC that can do this.
-        hwc_wrapper->set({{display_list.get(), nullptr, nullptr}});
+        hwc_wrapper->set({{display_list, nullptr, nullptr}});
     }
     else
     {

@@ -64,7 +64,7 @@ TEST_F(LayerListTest, list_defaults)
 {
     mga::LayerList layerlist{layer_adapter, {}};
 
-    auto list = layerlist.native_list().lock();
+    auto list = layerlist.native_list();
     EXPECT_EQ(-1, list->retireFenceFd);
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
     EXPECT_NE(nullptr, list->dpy);
@@ -115,8 +115,8 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
     for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
         EXPECT_TRUE(it->needs_commit);
 
-    ASSERT_THAT(list.native_list().lock()->numHwLayers, testing::Eq(list2.size() + fb_target_size));
-    list.native_list().lock()->hwLayers[2].compositionType = HWC_OVERLAY;
+    ASSERT_THAT(list.native_list()->numHwLayers, testing::Eq(list2.size() + fb_target_size));
+    list.native_list()->hwLayers[2].compositionType = HWC_OVERLAY;
     list.update_list(list2);
 
     auto i = 0;
@@ -138,7 +138,7 @@ TEST_F(LayerListTest, setup_fb_hwc10)
     mga::LayerList list(std::make_shared<mga::Hwc10Adapter>(), {});
     list.setup_fb(stub_fb);
 
-    auto l = list.native_list().lock();
+    auto l = list.native_list();
     ASSERT_THAT(l->numHwLayers, Eq(1));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(skip));
 }
@@ -149,7 +149,7 @@ TEST_F(LayerListTest, setup_fb_without_skip)
     mga::LayerList list(layer_adapter, renderables);
     list.setup_fb(stub_fb);
 
-    auto l = list.native_list().lock();
+    auto l = list.native_list();
     ASSERT_THAT(l->numHwLayers, Eq(1 + renderables.size()));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(fbtarget));
 }
@@ -159,7 +159,7 @@ TEST_F(LayerListTest, setup_fb_with_skip)
     using namespace testing;
     mga::LayerList list(layer_adapter, {});
     list.setup_fb(stub_fb);
-    auto l = list.native_list().lock();
+    auto l = list.native_list();
     ASSERT_THAT(l->numHwLayers, Eq(2));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(skip));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(fbtarget));

@@ -156,9 +156,9 @@ std::list<mga::HwcLayerEntry>::iterator mga::LayerList::end()
     return layers.end(); 
 }
 
-std::weak_ptr<hwc_display_contents_1_t> mga::LayerList::native_list()
+hwc_display_contents_1_t* mga::LayerList::native_list()
 {
-    return hwc_representation;
+    return hwc_representation.get();
 }
 
 mga::NativeFence mga::LayerList::retirement_fence()

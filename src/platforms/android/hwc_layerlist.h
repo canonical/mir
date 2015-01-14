@@ -66,7 +66,7 @@ public:
 
     void setup_fb(Buffer const& fb_target);
 
-    std::weak_ptr<hwc_display_contents_1_t> native_list();
+    hwc_display_contents_1_t* native_list();
     NativeFence retirement_fence();
 private:
     LayerList& operator=(LayerList const&) = delete;
