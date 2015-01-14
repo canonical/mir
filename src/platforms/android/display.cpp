@@ -23,8 +23,11 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
+#include "display_component_factory.h"
+#include "interpreter_cache.h"
+#include "server_render_window.h"
 #include "display_buffer.h"
-#include "display_buffer_builder.h"
+#include "mir/graphics/android/mir_native_window.h"
 #include "mir/geometry/rectangle.h"
 
 #include <boost/throw_exception.hpp>
@@ -41,15 +44,34 @@ try
     config.power_mode(mga::DisplayName::primary, mode);
 } catch (...) {}
 
-mg::DisplayConfigurationOutput query_config(
-    mga::HwcConfiguration& hwc_config, MirPixelFormat format)
+std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
+    mga::DisplayComponentFactory& display_buffer_builder,
+    mga::DisplayAttribs const& attribs,
+    std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
+    mga::PbufferGLContext const& gl_context,
+    mga::OverlayOptimization overlay_option)
 {
-    auto attribs = hwc_config.active_attribs_for(mga::DisplayName::primary);
+    std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(attribs)};
+    auto cache = std::make_shared<mga::InterpreterCache>();
+    auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, cache);
+    auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
+    return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new mga::DisplayBuffer(
+        fbs,
+        display_buffer_builder.create_display_device(),
+        native_window,
+        gl_context,
+        *gl_program_factory,
+        mir_orientation_normal,
+        overlay_option));
+}
+
+mg::DisplayConfigurationOutput fill_config_from(mga::DisplayAttribs const& attribs)
+{
     return mg::DisplayConfigurationOutput{
         mg::DisplayConfigurationOutputId{1},
         mg::DisplayConfigurationCardId{0},
         mg::DisplayConfigurationOutputType::lvds,
-        {format},
+        {attribs.display_format},
         {mg::DisplayConfigurationMode{attribs.pixel_size, attribs.vrefresh_hz}},
         0,
         attribs.mm_size,
@@ -57,22 +79,29 @@ mg::DisplayConfigurationOutput query_config(
         true,
         geom::Point{0,0},
         0,
-        format,
+        attribs.display_format,
         mir_power_mode_on,
         mir_orientation_normal};
 }
 }
 
 mga::Display::Display(
-    std::shared_ptr<mga::DisplayBufferBuilder> const& display_buffer_builder,
+    std::shared_ptr<mga::DisplayComponentFactory> const& display_buffer_builder,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
     std::shared_ptr<GLConfig> const& gl_config,
-    std::shared_ptr<DisplayReport> const& display_report) :
+    std::shared_ptr<DisplayReport> const& display_report,
+    mga::OverlayOptimization overlay_option) :
     display_buffer_builder{display_buffer_builder},
-    gl_context{display_buffer_builder->display_format(), *gl_config, *display_report},
-    display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)},
     hwc_config{display_buffer_builder->create_hwc_configuration()},
-    primary_configuration(query_config(*hwc_config, display_buffer_builder->display_format()))
+    attribs(hwc_config->active_attribs_for(mga::DisplayName::primary)),
+    primary_configuration(fill_config_from(attribs)),
+    gl_context{attribs.display_format, *gl_config, *display_report},
+    display_buffer{create_display_buffer(
+        *display_buffer_builder,
+        attribs,
+        gl_program_factory,
+        gl_context,
+        overlay_option)}
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
     safe_power_mode(*hwc_config, mir_power_mode_on);

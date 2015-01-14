@@ -91,7 +91,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(fake_fence));
 
-    mga::Platform platform(stub_display_builder, stub_display_report);
+    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -122,7 +122,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(-1));
 
-    mga::Platform platform(stub_display_builder, stub_display_report);
+    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -161,7 +161,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(-1));
 
-    mga::Platform platform(stub_display_builder, stub_display_report);
+    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -196,7 +196,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
     using namespace ::testing;
 
     int fake_fence{33};
-    mga::Platform platform(stub_display_builder, stub_display_report);
+    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled);
     auto ipc_ops = platform.make_ipc_operations();
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
@@ -222,8 +222,8 @@ TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
 {
     mga::Platform platform(
         std::make_shared<mtd::StubDisplayBuilder>(),
-        mr::null_display_report());
-
+        mr::null_display_report(),
+        mga::OverlayOptimization::enabled);
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());
 }
 

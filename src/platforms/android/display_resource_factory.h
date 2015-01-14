@@ -53,23 +53,9 @@ class DisplayResourceFactory
 {
 public:
     virtual ~DisplayResourceFactory() = default;
-
     virtual std::tuple<std::shared_ptr<HwcWrapper>, HwcVersion> create_hwc_wrapper(
         std::shared_ptr<HwcReport> const&) const = 0;
     virtual std::shared_ptr<framebuffer_device_t> create_fb_native_device() const = 0;
-
-    virtual std::shared_ptr<ANativeWindow> create_native_window(
-        std::shared_ptr<FramebufferBundle> const& device) const = 0;
-
-    virtual std::shared_ptr<DisplayDevice> create_fb_device(
-        std::shared_ptr<framebuffer_device_t> const& fb_native_device) const = 0;
-    virtual std::shared_ptr<DisplayDevice> create_hwc_device(
-        std::shared_ptr<HwcWrapper> const& hwc_native_device,
-        std::shared_ptr<LayerAdapter> const& layer_adapter) const = 0;
-    virtual std::shared_ptr<DisplayDevice> create_hwc_fb_device(
-        std::shared_ptr<HwcWrapper> const& hwc_native_device,
-        std::shared_ptr<framebuffer_device_t> const& fb_native_device) const = 0;
-
 protected:
     DisplayResourceFactory() = default;
     DisplayResourceFactory& operator=(DisplayResourceFactory const&) = delete;

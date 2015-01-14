@@ -147,6 +147,21 @@ bool me::WindowManager::handle(MirEvent const& event)
             focus_controller->focus_next();
             return true;
         }
+        else if (event.key.modifiers & mir_key_modifier_alt &&
+                 event.key.scan_code == KEY_F4)
+        {
+            auto const app = focus_controller->focussed_application().lock();
+            if (app)
+            {
+                // Ask the app to close politely. It has the right to refuse.
+                auto const surf = app->default_surface();
+                if (surf)
+                {
+                    surf->request_client_surface_close();
+                    return true;
+                }
+            }
+        }
         else if ((event.key.modifiers & mir_key_modifier_alt &&
                   event.key.scan_code == KEY_P) ||
                  (event.key.scan_code == KEY_POWER))
