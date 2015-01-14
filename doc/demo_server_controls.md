@@ -39,7 +39,7 @@ The following operations are supported:
  - Switch apps: tap or click on the corresponding tile
  - Move window: *Alt-leftmousebutton* drag
  - Resize window: *Meta-mousewheel*
- - Maximize/restore current window (to tile size): F11
+ - Maximize/restore current window (to tile size): Alt-F11
  - Maximize/restore current window (to tile height): Shift-F11
  - Maximize/restore current window (to tile width): Ctrl-F11
 

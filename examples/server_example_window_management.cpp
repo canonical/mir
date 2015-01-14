@@ -94,7 +94,7 @@ private:
 //  o Switch apps: tap or click on the corresponding tile
 //  o Move window: Alt-leftmousebutton drag
 //  o Resize window: Meta-mousewheel
-//  o Maximize/restore current window (to tile size): F11
+//  o Maximize/restore current window (to tile size): Alt-F11
 //  o Maximize/restore current window (to tile height): Shift-F11
 //  o Maximize/restore current window (to tile width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
@@ -666,7 +666,7 @@ private:
             if (auto const wm = window_manager.lock())
             switch (event.modifiers & modifier_mask)
             {
-            case mir_key_modifier_none:
+            case mir_key_modifier_alt:
                 wm->toggle_maximized();
                 return true;
 
