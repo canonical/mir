@@ -63,6 +63,8 @@ public:
 
     virtual void drag(geometry::Point cursor) = 0;
 
+    virtual void resize(geometry::Point cursor) = 0;
+
     virtual void resize(geometry::Point cursor, double scale) = 0;
 
     virtual void toggle_maximized() = 0;

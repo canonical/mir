@@ -38,7 +38,7 @@ The following operations are supported:
  - Switch virtual terminals (VTs): *Ctrl-Alt-(F1-F12)*
  - Switch apps: tap or click on the corresponding tile
  - Move window: *Alt-leftmousebutton* drag
- - Resize window: *Meta-mousewheel*
+ - Resize window: *Alt-middle_button* drag
  - Maximize/restore current window (to tile size): Alt-F11
  - Maximize/restore current window (to tile height): Shift-F11
  - Maximize/restore current window (to tile width): Ctrl-F11

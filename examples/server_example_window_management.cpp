@@ -76,6 +76,8 @@ private:
 
     void drag(Point) override {}
 
+    void resize(Point) override {}
+
     void resize(Point, double) override {}
 
     void toggle_maximized() override {}
@@ -93,7 +95,7 @@ private:
 // simple tiling algorithm:
 //  o Switch apps: tap or click on the corresponding tile
 //  o Move window: Alt-leftmousebutton drag
-//  o Resize window: Meta-mousewheel
+//  o Resize window: Alt-middle_button drag
 //  o Maximize/restore current window (to tile size): Alt-F11
 //  o Maximize/restore current window (to tile height): Shift-F11
 //  o Maximize/restore current window (to tile width): Ctrl-F11
@@ -232,6 +234,44 @@ public:
 
         old_cursor = cursor;
     }
+
+    void resize(Point cursor) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+
+        if (auto const session = session_under(cursor))
+        {
+            if (session == session_under(old_cursor))
+            {
+                auto const& info = session_info[session.get()];
+
+                if (resize(old_surface.lock(), cursor, old_cursor, info.tile))
+                {
+                    // Still dragging the same old_surface
+                }
+                else if (resize(session->default_surface(), cursor, old_cursor, info.tile))
+                {
+                    old_surface = session->default_surface();
+                }
+                else
+                {
+                    for (auto const& ps : info.surfaces)
+                    {
+                        auto const new_surface = ps.lock();
+
+                        if (resize(new_surface, cursor, old_cursor, info.tile))
+                        {
+                            old_surface = new_surface;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        old_cursor = cursor;
+    }
+
 
     void resize(Point cursor, double scale) override
     {
@@ -430,6 +470,39 @@ private:
 
             surface->move_to(new_pos);
             surface->resize(as_size(br_disp));
+
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool resize(std::shared_ptr<ms::Surface> surface, Point cursor, Point old_cursor, Rectangle bounds)
+    {
+        if (surface && surface->input_area_contains(old_cursor))
+        {
+            auto const top_left = surface->top_left();
+
+            auto const old_displacement = old_cursor - top_left;
+            auto const new_displacement = cursor - top_left;
+
+            auto const scale_x = new_displacement.dx.as_float()/std::max(1.0f, old_displacement.dx.as_float());
+            auto const scale_y = new_displacement.dy.as_float()/std::max(1.0f, old_displacement.dy.as_float());
+
+            if (scale_x <= 0.0f || scale_y <= 0.0f) return false;
+
+            auto const old_size = surface->size();
+            Size new_size{scale_x*old_size.width, scale_y*old_size.height};
+
+            auto const size_limits = as_size(bounds.bottom_right() - top_left);
+
+            if (new_size.width > size_limits.width)
+                new_size.width = size_limits.width;
+
+            if (new_size.height > size_limits.height)
+                new_size.height = size_limits.height;
+
+            surface->resize(new_size);
 
             return true;
         }
@@ -702,7 +775,10 @@ private:
         {
             if (auto const wm = window_manager.lock())
             {
-                wm->drag(average_pointer(event.pointer_count, event.pointer_coordinates));
+                if (event.button_state == mir_motion_button_tertiary)
+                    wm->resize(average_pointer(event.pointer_count, event.pointer_coordinates));
+                else
+                    wm->drag(average_pointer(event.pointer_count, event.pointer_coordinates));
                 return true;
             }
         }
