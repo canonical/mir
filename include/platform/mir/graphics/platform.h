@@ -95,7 +95,7 @@ public:
 };
 
 /**
- * A measure of how good this module is at supporting the current device
+ * A measure of how well a platform supports a device
  *
  * \note This is compared as an integer; best + 1 is a valid PlatformPriority that
  *       will be used in preference to a module that reports best.
