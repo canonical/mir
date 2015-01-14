@@ -167,7 +167,7 @@ MATCHER_P(MirKeyEventMatches, event, "")
 
 MATCHER_P(MirTouchEventMatches, event, "")
 {
-    auto expected = maybe_touch_event(to_address(arg));
+    auto expected = maybe_touch_event(to_address(event));
     auto actual = maybe_touch_event(to_address(arg));
     
     if (expected == nullptr || actual == nullptr)
@@ -293,7 +293,7 @@ MATCHER_P4(TouchEventInDirection, x0, y0, x1, y1, "")
     float dx2 = x2 - x0;
     float dy2 = y2 - y0;
 
-    float dot_product = dx1 * dx2 + dy1 + dy2;
+    float dot_product = dx1 * dx2 + dy1 * dy2;
 
     // Return true if both vectors are roughly the same direction (within
     // 90 degrees).
@@ -326,10 +326,10 @@ MATCHER(PointerMovementEvent, "")
 
 MATCHER_P2(SurfaceEvent, attrib, value, "")
 {
-    auto as_ref = to_ref(arg);
-    if (mir_event_get_type(&as_ref) != mir_event_type_surface)
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_surface)
         return false;
-    auto surface_ev = mir_event_get_surface_event(&as_ref);
+    auto surface_ev = mir_event_get_surface_event(&as_address);
     if (mir_surface_event_get_attribute(surface_ev) != attrib)
         return false;
     if (mir_surface_event_get_attribute_value(surface_ev) != value)
