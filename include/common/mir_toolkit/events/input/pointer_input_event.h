@@ -38,16 +38,16 @@ typedef struct MirPointerInputEvent MirPointerInputEvent;
  * Possible pointer actions
  */
 typedef enum {
-    /* The pointer has come up */
-    mir_pointer_input_event_action_up = 0,
-    /* The pointer has gone down */
-    mir_pointer_input_event_action_down = 1,
+    /* A pointer button has come up */
+    mir_pointer_input_event_action_button_up = 0,
+    /* A pointer button has gone down */
+    mir_pointer_input_event_action_button_down = 1,
     /* The pointer has entered the surface to which this event was delivered */
     mir_pointer_input_event_action_enter = 2,
     /* The pointer has left the surface to which this event was delivered */
     mir_pointer_input_event_action_leave = 3,
-    /* Axis values or button state has changed for the pointer */
-    mir_pointer_input_event_action_change = 4
+    /* Axis values have changed for the pointer */
+    mir_pointer_input_event_action_motion = 4
 } MirPointerInputEventAction;
 
 /**
@@ -58,9 +58,9 @@ typedef enum {
     mir_pointer_input_axis_x = 0,
 /* Absolute axis containing the y coordinate of the pointer */
     mir_pointer_input_axis_y = 1,
-/* Relative axis containing the speed of the vertical scroll wheel */
+/* Relative axis containing ticks reported by the vertical scroll wheel */
     mir_pointer_input_axis_vscroll = 2,
-/* Relative axis containing the speed of the horizontal scroll wheel */
+/* Relative axis containing ticks reported by the horizontal scroll wheel */
     mir_pointer_input_axis_hscroll = 3
 } MirPointerInputEventAxis;
 

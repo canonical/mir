@@ -39,7 +39,7 @@ public:
     void report_display_off() const override;
     void report_vsync_on() const override;
     void report_vsync_off() const override;
-    void report_hwc_version(uint32_t) const override;
+    void report_hwc_version(HwcVersion) const override;
     void report_legacy_fb_module() const override;
 };
 
@@ -55,7 +55,7 @@ public:
     void report_display_off() const override;
     void report_vsync_on() const override;
     void report_vsync_off() const override;
-    void report_hwc_version(uint32_t) const override;
+    void report_hwc_version(HwcVersion) const override;
     void report_legacy_fb_module() const override;
 };
 }

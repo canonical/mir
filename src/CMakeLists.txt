@@ -1,6 +1,6 @@
 # We need MIRPLATFORM_ABI and MIR_PLATFORM_DRIVER_BINARY in both libmirplatform 
 # and the platform implementations.
-set(MIRPLATFORM_ABI 5)
+set(MIRPLATFORM_ABI 6)
 
 set(PLATFORM_DRIVER platform${MIRPLATFORM_ABI}driver)
 set(MIR_PLATFORM_DRIVER mir${PLATFORM_DRIVER})
