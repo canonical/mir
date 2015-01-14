@@ -54,6 +54,17 @@ public:
 
     void stop_prompt_session(std::shared_ptr<frontend::PromptSession> const& prompt_session) override;
 
+    int configure(
+        std::shared_ptr<frontend::Session> const& session,
+        frontend::SurfaceId surface_id,
+        MirSurfaceAttrib attrib,
+        int value) override;
+
+    int query(
+        std::shared_ptr<frontend::Session> const& session,
+        frontend::SurfaceId surface_id,
+        MirSurfaceAttrib attrib) override;
+
 protected:
     std::shared_ptr<scene::SessionCoordinator> const wrapped;
 };

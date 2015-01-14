@@ -51,6 +51,13 @@ struct MockShell : public frontend::Shell
         std::shared_ptr<frontend::PromptSession> const&,
         std::shared_ptr<frontend::Session> const&));
     MOCK_METHOD1(stop_prompt_session, void(std::shared_ptr<frontend::PromptSession> const&));
+    MOCK_METHOD4(configure, int(
+        std::shared_ptr<frontend::Session> const& session, frontend::SurfaceId surface_id,
+        MirSurfaceAttrib attrib, int value));
+
+    MOCK_METHOD3(query, int(std::shared_ptr<frontend::Session> const& session,
+        frontend::SurfaceId surface_id, MirSurfaceAttrib attrib));
+
 };
 
 }
