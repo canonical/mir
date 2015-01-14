@@ -22,6 +22,7 @@
 #include "mir_test_doubles/null_client_buffer.h"
 #include "mir_test_doubles/mock_client_buffer_factory.h"
 #include "mir_test_doubles/stub_client_buffer_factory.h"
+#include "mir_test_doubles/null_logger.h"
 #include "mir_test/fake_shared.h"
 
 #include <mir_toolkit/mir_client_library.h>
@@ -30,6 +31,7 @@
 #include <gmock/gmock.h>
 
 namespace mp = mir::protobuf;
+namespace ml = mir::logging;
 namespace mcl = mir::client;
 
 namespace mt = mir::test;
@@ -80,6 +82,8 @@ struct ClientBufferStreamTest : public testing::Test
 
     MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
     MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
+
+    std::shared_ptr<ml::Logger> const logger = std::make_shared<mtd::NullLogger>();
 };
 
 void fill_protobuf_buffer_stream_from_package(mp::BufferStream &protobuf_bs, MirBufferPackage const& buffer_package)
@@ -177,7 +181,7 @@ TEST_F(ClientBufferStreamTest, uses_buffer_message_from_server)
         .WillOnce(Return(std::make_shared<mtd::NullClientBuffer>()));
 
     mcl::BufferStream bs(mock_protobuf_server, any_buffer_stream_mode(), mt::fake_shared(mock_client_buffer_factory),
-        mt::fake_shared(stub_native_window_factory), protobuf_bs);
+        mt::fake_shared(stub_native_window_factory), protobuf_bs, logger);
 }
 
 TEST_F(ClientBufferStreamTest, producer_streams_call_exchange_buffer_on_next_buffer)
@@ -193,7 +197,7 @@ TEST_F(ClientBufferStreamTest, producer_streams_call_exchange_buffer_on_next_buf
 
     mcl::BufferStream bs(mock_protobuf_server, mcl::BufferStreamMode::Producer, 
         std::make_shared<mtd::StubClientBufferFactory>(), mt::fake_shared(stub_native_window_factory),
-        protobuf_bs);
+        protobuf_bs, logger);
     
     bs.next_buffer([](){});
 }
@@ -211,7 +215,8 @@ TEST_F(ClientBufferStreamTest, consumer_streams_call_screencast_buffer_on_next_b
 
     mcl::BufferStream bs(mock_protobuf_server, mcl::BufferStreamMode::Consumer,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        mt::fake_shared(stub_native_window_factory), protobuf_bs);
+        mt::fake_shared(stub_native_window_factory), protobuf_bs,
+        logger);
     
     bs.next_buffer([](){});
 }
@@ -227,7 +232,8 @@ TEST_F(ClientBufferStreamTest, returns_correct_surface_parameters)
 
     mcl::BufferStream bs(mock_protobuf_server, any_buffer_stream_mode(), 
         std::make_shared<mtd::StubClientBufferFactory>(), mt::fake_shared(stub_native_window_factory),
-        protobuf_bs);
+        protobuf_bs,
+        logger);
     auto params = bs.get_parameters();
 
     EXPECT_STREQ("", params.name);
@@ -262,7 +268,8 @@ TEST_F(ClientBufferStreamTest, returns_current_client_buffer)
 
     mcl::BufferStream bs(mock_protobuf_server, 
         mcl::BufferStreamMode::Producer, mt::fake_shared(mock_client_buffer_factory),
-        mt::fake_shared(stub_native_window_factory),  protobuf_bs);
+        mt::fake_shared(stub_native_window_factory),  protobuf_bs,
+        logger);
 
     EXPECT_EQ(client_buffer_1, bs.get_current_buffer());
     bs.next_buffer([](){});
@@ -277,7 +284,8 @@ TEST_F(ClientBufferStreamTest, gets_egl_native_window)
         a_buffer_package());
 
     mcl::BufferStream bs(mock_protobuf_server, any_buffer_stream_mode(), std::make_shared<mtd::StubClientBufferFactory>(),
-        mt::fake_shared(stub_native_window_factory), protobuf_bs);
+        mt::fake_shared(stub_native_window_factory), protobuf_bs,
+        logger);
     auto egl_native_window = bs.egl_native_window();
 
     EXPECT_EQ(StubEGLNativeWindowFactory::egl_native_window, egl_native_window);
@@ -298,7 +306,8 @@ TEST_F(ClientBufferStreamTest, map_graphics_region)
         .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
 
     mcl::BufferStream bs(mock_protobuf_server, any_buffer_stream_mode(), mt::fake_shared(mock_client_buffer_factory),
-        mt::fake_shared(stub_native_window_factory), protobuf_bs);
+        mt::fake_shared(stub_native_window_factory), protobuf_bs,
+        logger);
 
     mcl::MemoryRegion expected_memory_region;
     EXPECT_CALL(mock_client_buffer, secure_for_cpu_write()).Times(1)

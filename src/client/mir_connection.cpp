@@ -486,7 +486,7 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
 std::shared_ptr<mir::client::ClientBufferStreamFactory> MirConnection::get_client_buffer_stream_factory()
 {
     return std::make_shared<mcl::DefaultClientBufferStreamFactory>(platform->create_buffer_factory(), 
-        platform);
+        platform, the_logger());
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()

@@ -35,11 +35,16 @@
 
 namespace mir
 {
+namespace logging
+{
+class Logger;
+}
 namespace client
 {
 class ClientBufferFactory;
 class ClientBuffer;
 class EGLNativeWindowFactory;
+class PerfReport;
 struct MemoryRegion;
 
 enum BufferStreamMode
@@ -56,7 +61,8 @@ public:
         BufferStreamMode mode,
         std::shared_ptr<ClientBufferFactory> const& buffer_factory,
         std::shared_ptr<EGLNativeWindowFactory> const& native_window_factory,
-                 protobuf::BufferStream const& protobuf_bs);
+        protobuf::BufferStream const& protobuf_bs,
+        std::shared_ptr<logging::Logger> const& logger);
     virtual ~BufferStream();
     
     MirWaitHandle* next_buffer(std::function<void()> const& done);
@@ -86,9 +92,12 @@ private:
 
     BufferStreamMode const mode;
     std::shared_ptr<EGLNativeWindowFactory> const native_window_factory;
-    
+
     mir::protobuf::BufferStream protobuf_bs;
     mir::client::ClientBufferDepository buffer_depository;
+
+    std::shared_ptr<mir::client::PerfReport> const perf_report;
+    
     std::shared_ptr<EGLNativeWindowType> egl_native_window_;
 
     MirWaitHandle next_buffer_wait_handle;

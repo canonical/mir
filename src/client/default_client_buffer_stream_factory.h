@@ -23,6 +23,10 @@
 
 namespace mir
 {
+namespace logging
+{
+class Logger;
+}
 namespace client
 {
 class ClientBufferFactory;
@@ -32,7 +36,8 @@ class DefaultClientBufferStreamFactory : public ClientBufferStreamFactory
 {
 public:
     DefaultClientBufferStreamFactory(std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
-        std::shared_ptr<EGLNativeWindowFactory> const& native_window_factory);
+        std::shared_ptr<EGLNativeWindowFactory> const& native_window_factory,
+        std::shared_ptr<logging::Logger> const& logger);
     virtual ~DefaultClientBufferStreamFactory() = default;
 
     std::shared_ptr<ClientBufferStream> make_consumer_stream(protobuf::DisplayServer& server,
@@ -43,6 +48,7 @@ public:
 private:
     std::shared_ptr<ClientBufferFactory> const client_buffer_factory;
     std::shared_ptr<EGLNativeWindowFactory> const native_window_factory;
+    std::shared_ptr<logging::Logger> const logger;
     
 };
 }

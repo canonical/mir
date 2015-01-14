@@ -23,8 +23,11 @@
 #include "mir_toolkit/mir_native_buffer.h"
 #include "egl_native_window_factory.h"
 
+#include "perf_report.h"
+#include "logging/perf_report.h"
 
 namespace mcl = mir::client;
+namespace ml = mir::logging;
 namespace mp = mir::protobuf;
 
 namespace
@@ -64,24 +67,47 @@ void populate_buffer_package(
         buffer_package.height = 0;
     }
 }
+
+std::shared_ptr<mcl::PerfReport>
+make_perf_report(std::shared_ptr<ml::Logger> const& logger)
+{
+    // TODO: It seems strange that this directly uses getenv
+    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
+    if (report_target && !strcmp(report_target, "log"))
+    {
+        return std::make_shared<mir::client::logging::PerfReport>(logger);
+    }
+    else
+    {
+        return std::make_shared<mir::client::NullPerfReport>();
+    }
+}
 }
 
 // TODO: Examine mutexing requirements
+// TODO: It seems like a bit of a wart that we have to pass the Logger specifically here...perhaps
+// due to the lack of an easily mockable client configuration interface (passing around
+// connection can complicate unit tests ala MirSurface and test_client_mir_surface.cpp)
 mcl::BufferStream::BufferStream(mp::DisplayServer& server,
     mcl::BufferStreamMode mode,
     std::shared_ptr<mcl::ClientBufferFactory> const& buffer_factory,
     std::shared_ptr<mcl::EGLNativeWindowFactory> const& native_window_factory,
-    mp::BufferStream const& protobuf_bs)
+    mp::BufferStream const& protobuf_bs,
+    std::shared_ptr<ml::Logger> const& logger)
     : display_server(server),
       mode(mode),
       native_window_factory(native_window_factory),
       protobuf_bs(protobuf_bs),
-      buffer_depository{buffer_factory, mir::frontend::client_buffer_cache_size}
+      buffer_depository{buffer_factory, mir::frontend::client_buffer_cache_size},
+      perf_report(make_perf_report(logger))
       
 {
-    // TODO: When to verify error on protobuf screencast
+    // TODO: When to verify error on protobuf screencast/buffer stream?
     egl_native_window_ = native_window_factory->create_egl_native_window(this);
     process_buffer(protobuf_bs.buffer());
+
+    // TODO: Probably something better than this available...
+    perf_report->name_surface(std::to_string(reinterpret_cast<long unsigned int>(this)).c_str());
 }
 
 mcl::BufferStream::~BufferStream()
@@ -99,6 +125,7 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
         buffer_depository.deposit_package(buffer_package,
             buffer.buffer_id(),
             {buffer_package->width, buffer_package->height}, pixel_format);
+        perf_report->begin_frame(buffer.buffer_id());
     }
     catch (const std::runtime_error& err)
     {
@@ -108,6 +135,8 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
 
 MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
+    perf_report->end_frame(get_current_buffer_id());
+
     mir::protobuf::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(protobuf_bs.id().value());
 

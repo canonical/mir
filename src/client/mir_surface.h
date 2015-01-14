@@ -51,7 +51,6 @@ namespace client
 class ClientBuffer;
 class ClientBufferStream;
 class ClientBufferStreamFactory;
-class PerfReport;
 
 struct MemoryRegion;
 }
@@ -181,7 +180,6 @@ private:
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::input::receiver::InputReceiverThread> input_thread;
-    std::shared_ptr<mir::client::PerfReport> perf_report;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

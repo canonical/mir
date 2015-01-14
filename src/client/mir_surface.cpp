@@ -25,8 +25,6 @@
 #include "mir_connection.h"
 #include "mir/input/input_receiver_thread.h"
 #include "mir/input/input_platform.h"
-#include "perf_report.h"
-#include "logging/perf_report.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -117,18 +115,6 @@ MirSurface::MirSurface(
       buffer_stream_factory(buffer_stream_factory),
       input_platform(input_platform)
 {
-    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
-    if (report_target && !strcmp(report_target, "log"))
-    {
-        auto& logger = connection->the_logger();
-        perf_report = std::make_shared<mir::client::logging::PerfReport>(logger);
-    }
-    else
-    {
-        perf_report = std::make_shared<mir::client::NullPerfReport>();
-    }
-    perf_report->name_surface(name.c_str());
-
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
 
@@ -233,7 +219,6 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void *cont
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     release_cpu_region();
-    perf_report->end_frame(buffer_stream->get_current_buffer_id());
     lock.unlock();
 
     return buffer_stream->next_buffer([&, callback, context]
