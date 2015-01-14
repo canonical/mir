@@ -40,6 +40,7 @@
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_client_buffer.h"
+#include "mir_test_doubles/stub_client_buffer_factory.h"
 #include "mir_test_doubles/stub_client_buffer_stream_factory.h"
 #include "mir_test_doubles/mock_client_buffer_stream_factory.h"
 #include "mir_test_doubles/mock_client_buffer_stream.h"
@@ -199,62 +200,16 @@ std::map<int, int> MockServerPackageGenerator::sent_surface_attributes = {
     { mir_surface_attrib_preferred_orientation, mir_orientation_mode_any }
 };
 
-struct MockBuffer : public mcl::ClientBuffer
-{
-    MockBuffer()
-    {
-    }
-    ~MockBuffer() noexcept
-    {
-    }
-
-    MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
-    MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
-    MOCK_CONST_METHOD0(age, uint32_t());
-    MOCK_METHOD0(increment_age, void());
-    MOCK_METHOD0(mark_as_submitted, void());
-    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mg::NativeBuffer>());
-    MOCK_METHOD1(update_from, void(MirBufferPackage const&));
-    MOCK_METHOD1(fill_update_msg, void(MirBufferPackage&));
-};
-
-struct MockClientBufferFactory : public mcl::ClientBufferFactory
-{
-    MockClientBufferFactory()
-    {
-        using namespace testing;
-
-        emptybuffer=std::make_shared<NiceMock<MockBuffer>>();
-
-        ON_CALL(*this, create_buffer(_,_,_))
-            .WillByDefault(DoAll(WithArgs<0>(Invoke(close_package_fds)),
-                                 ReturnPointee(&emptybuffer)));
-    }
-
-    static void close_package_fds(std::shared_ptr<MirBufferPackage> const& package)
-    {
-        for (int i = 0; i < package->fd_items; i++)
-            close(package->fd[i]);
-    }
-
-    MOCK_METHOD3(create_buffer,
-                 std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const&,
-                                                    geom::Size, MirPixelFormat));
-
-    std::shared_ptr<mcl::ClientBuffer> emptybuffer;
-};
-
 struct StubClientPlatform : public mcl::ClientPlatform
 {
     MirPlatformType platform_type() const
     {
         return mir_platform_type_android;
     }
+
     std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
     {
-        return std::shared_ptr<MockClientBufferFactory>();
+        return std::make_shared<mtd::StubClientBufferFactory>();
     }
 
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::ClientSurface* /*surface*/)
@@ -346,21 +301,6 @@ void null_event_callback(MirSurface*, MirEvent const*, void*)
 
 void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
 {
-}
-
-MATCHER_P(BufferPackageMatches, package, "")
-{
-    // Can't simply use memcmp() on the whole struct because age is not sent over the wire
-    if (package.data_items != arg.data_items)
-        return false;
-    // Note we can not compare the fd's directly as they may change when being sent over the wire.
-    if (package.fd_items != arg.fd_items)
-        return false;
-    if (std::memcmp(package.data, arg.data, sizeof(package.data[0]) * package.data_items))
-        return false;
-    if (package.stride != arg.stride)
-        return false;
-    return true;
 }
 
 struct MirClientSurfaceTest : public testing::Test
