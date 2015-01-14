@@ -18,7 +18,6 @@
  */
 
 #include "hwc_fb_device.h"
-#include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "android_format_conversion-inl.h"
 #include "hwc_wrapper.h"
@@ -37,13 +36,22 @@ namespace geom = mir::geometry;
 
 mga::HwcFbDevice::HwcFbDevice(
     std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-    std::shared_ptr<framebuffer_device_t> const& fb_device,
-    std::shared_ptr<HwcConfiguration> const& config,
-    std::shared_ptr<HWCVsyncCoordinator> const& coordinator) :
-    HWCCommonDevice(hwc_wrapper, config, coordinator),
+    std::shared_ptr<framebuffer_device_t> const& fb_device) :
     hwc_wrapper(hwc_wrapper), 
     fb_device(fb_device),
-    layer_list{std::make_shared<IntegerSourceCrop>(), {}, 1}
+    layer_list{std::make_shared<IntegerSourceCrop>(), {}, 1},
+    vsync_subscription{
+        [hwc_wrapper, this]{
+            using namespace std::placeholders;
+            hwc_wrapper->subscribe_to_events(this,
+                std::bind(&mga::HwcFbDevice::notify_vsync, this, _1, _2),
+                [](mga::DisplayName, bool){},
+                []{});
+        },
+        [hwc_wrapper, this]{
+            hwc_wrapper->unsubscribe_from_events(this);
+        }
+    }
 {
 }
 
@@ -77,7 +85,16 @@ void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }
 
-    coordinator->wait_for_vsync();
+    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
+    vsync_occurred = false;
+    vsync_trigger.wait(lk, [this]{return vsync_occurred;});
+}
+
+void mga::HwcFbDevice::notify_vsync(mga::DisplayName, std::chrono::nanoseconds)
+{
+    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
+    vsync_occurred = true;
+    vsync_trigger.notify_all();
 }
 
 bool mga::HwcFbDevice::post_overlays(
@@ -86,4 +103,8 @@ bool mga::HwcFbDevice::post_overlays(
     RenderableListCompositor const&)
 {
     return false;
+}
+
+void mga::HwcFbDevice::content_cleared()
+{
 }

@@ -21,7 +21,7 @@
 
 #include "mir_toolkit/common.h"
 #include "mir/graphics/android/sync_fence.h"
-#include "hwc_common_device.h"
+#include "display_device.h"
 #include "hwc_layerlist.h"
 #include <memory>
 #include <vector>
@@ -34,29 +34,26 @@ class Buffer;
 
 namespace android
 {
-class HWCVsyncCoordinator;
 class SyncFileOps;
 class HwcWrapper;
 class HwcConfiguration;
 
-class HwcDevice : public HWCCommonDevice
+class HwcDevice : public DisplayDevice
 {
 public:
     HwcDevice(
         std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-        std::shared_ptr<HwcConfiguration> const& hwc_config,
-        std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
         std::shared_ptr<LayerAdapter> const& layer_adapter);
 
-    virtual void post_gl(SwappingGLContext const& context) override;
-    virtual bool post_overlays(
+    void post_gl(SwappingGLContext const& context) override;
+    bool post_overlays(
         SwappingGLContext const& context,
         RenderableList const& list,
         RenderableListCompositor const& list_compositor) override;
+    void content_cleared() override;
 
 private:
     bool buffer_is_onscreen(Buffer const&) const;
-    void turned_screen_off() override;
     LayerList hwc_list;
     std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 
