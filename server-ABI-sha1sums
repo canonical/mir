@@ -62,7 +62,7 @@ d49eae4f986645b32e29ce2c1f99f524703ba3c0  include/server/mir/compositor/display_
 59d6703def2a0ff840e5eb75390a5af76fd93f58  include/server/mir/frontend/prompt_session.h
 b729a7710c37d9f1fba56a6f8e8eae1c2559f57a  include/server/mir/frontend/session_authorizer.h
 34ce482df448fd2fc5f0c4ae5ac8b7fecbd228c9  include/server/mir/frontend/session_credentials.h
-e5ea465ed7e05f0e1d6a837d0d6b3a04c2d7fc19  include/server/mir/frontend/session.h
+ea86b5a3c419aec3c65f04fdcb51f32f2007309f  include/server/mir/frontend/session.h
 d754e5bb057f3018d7228170cf9a0c66d75d8cc2  include/server/mir/frontend/session_mediator_report.h
 9f2f6a13d758f934ece0ee17dae727a1694c1b4b  include/server/mir/frontend/shell.h
 8903a35ecdf09fc2e63b9b7cbd8b2442fa0a4255  include/server/mir/frontend/surface.h
@@ -90,7 +90,7 @@ b657cfb8fb31140b83b78fc19135dd0165ede67b  include/server/mir/scene/prompt_sessio
 a745a63d413ced63b82350b8c253b65dffd5bf44  include/server/mir/scene/prompt_session_listener.h
 a09a3f18ecea53dc45386c1e2baf545c4177c047  include/server/mir/scene/prompt_session_manager.h
 5edf446380070f567500069e422d293e88468ee5  include/server/mir/scene/session_coordinator.h
-cf13a79b20acf9e53db6e0078df085b9a023d8da  include/server/mir/scene/session.h
+4fc498e0563ebfcc95ba412f7f927ebb6462aaf1  include/server/mir/scene/session.h
 ee94083f10f890e24c0e0bbdb94842e2dd788deb  include/server/mir/scene/session_listener.h
 7f5f26000fd2312373817d05c488a6a950a47c82  include/server/mir/scene/snapshot.h
 5bab4dc0a6488b8b9d47e958c6bab94f1dcf2c57  include/server/mir/scene/surface_buffer_access.h

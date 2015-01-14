@@ -45,12 +45,6 @@ struct StubSession : public frontend::Session
     {
         return std::string();
     }
-    void hide() override
-    {
-    }
-    void show() override
-    {
-    }
 };
 
 }
