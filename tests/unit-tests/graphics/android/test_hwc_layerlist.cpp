@@ -30,37 +30,10 @@ namespace geom=mir::geometry;
 
 namespace
 {
-
-struct StubLayerAdapter : mga::LayerAdapter
-{
-    StubLayerAdapter(bool hwc10)
-        : needs_fbtarget(hwc10)
-    {
-    }
-
-    void fill_source_crop(hwc_layer_1_t& hwc_layer, geometry::Rectangle const& crop_rect) const
-    {
-        hwc_layer.sourceCropi = 
-        {
-            crop_rect.top_left.x.as_int(),
-            crop_rect.top_left.y.as_int(),
-            crop_rect.size.width.as_int(),
-            crop_rect.size.height.as_int()
-        };
-    }
-
-    bool needs_fb_target() const
-    {
-        return needs_fbtarget;
-    }
-
-    bool needs_fbtarget;
-}
-
 struct LayerListTest : public testing::Test
 {
     LayerListTest() :
-        layer_adapter{std::make_shared<StubLayerAdapter>(true)},
+        layer_adapter{std::make_shared<mga::IntegerSourceCrop>()},
         buffer1{std::make_shared<mtd::StubBuffer>()},
         buffer2{std::make_shared<mtd::StubBuffer>()},
         renderables{std::make_shared<mtd::StubRenderable>(buffer1),
@@ -77,31 +50,33 @@ struct LayerListTest : public testing::Test
 
 TEST_F(LayerListTest, list_defaults)
 {
-    mga::LayerList layerlist{layer_adapter, {}, 0};
+    mga::LayerList layerlist{layer_adapter, {}};
 
     auto list = layerlist.native_list().lock();
     EXPECT_EQ(-1, list->retireFenceFd);
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
-    EXPECT_EQ(layerlist.begin(), layerlist.end());
-    EXPECT_EQ(layerlist.additional_layers_begin(), layerlist.end());
+    EXPECT_EQ(layerlist.begin(), layerlist.additional_layers_begin());
+    EXPECT_EQ(std::distance(layerlist.additional_layers_begin(), layerlist.end()), 2);
 }
 
 TEST_F(LayerListTest, list_iterators)
 {
     size_t additional_layers = 2;
-    mga::LayerList list(layer_adapter, renderables, additional_layers);
-    EXPECT_EQ(std::distance(list.begin(), list.end()), additional_layers + renderables.size());
+    mga::LayerList list(layer_adapter, {});
+    EXPECT_EQ(std::distance(list.begin(), list.end()), additional_layers);
     EXPECT_EQ(std::distance(list.additional_layers_begin(), list.end()), additional_layers);
-    EXPECT_EQ(std::distance(list.begin(), list.additional_layers_begin()), renderables.size());
+    EXPECT_EQ(std::distance(list.begin(), list.additional_layers_begin()), 0);
 
-    mga::LayerList list2(layer_adapter, {}, additional_layers);
-    EXPECT_EQ(std::distance(list2.begin(), list2.end()), additional_layers);
+    additional_layers = 1;
+    mga::LayerList list2(layer_adapter, renderables);
+    EXPECT_EQ(std::distance(list2.begin(), list2.end()), additional_layers + renderables.size());
     EXPECT_EQ(std::distance(list2.additional_layers_begin(), list2.end()), additional_layers);
-    EXPECT_EQ(std::distance(list2.begin(), list2.additional_layers_begin()), 0);
+    EXPECT_EQ(std::distance(list2.begin(), list2.additional_layers_begin()), renderables.size());
 
-    mga::LayerList list3(layer_adapter, renderables, 0);
+    additional_layers = 0;
+    mga::LayerList list3(std::make_shared<mga::Hwc10Adapter>(), renderables);
     EXPECT_EQ(std::distance(list3.begin(), list3.end()), renderables.size());
     EXPECT_EQ(std::distance(list3.additional_layers_begin(), list3.end()), 0);
     EXPECT_EQ(std::distance(list3.begin(), list3.additional_layers_begin()), renderables.size());
@@ -109,8 +84,8 @@ TEST_F(LayerListTest, list_iterators)
 
 TEST_F(LayerListTest, keeps_track_of_needs_commit)
 {
-    size_t additional_layers = 4;
-    mga::LayerList list(layer_adapter, renderables, additional_layers);
+    size_t fb_target_size{1};
+    mga::LayerList list(layer_adapter, renderables);
 
     for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
         EXPECT_TRUE(it->needs_commit);
@@ -122,15 +97,15 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
         std::make_shared<mtd::StubRenderable>(buffer2),
         std::make_shared<mtd::StubRenderable>()
     };
-    list.update_list(list2, additional_layers);
+    list.update_list(list2);
 
     //here, all should be needs_commit because they were all HWC_FRAMEBUFFER 
     for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
         EXPECT_TRUE(it->needs_commit);
 
-    ASSERT_THAT(list.native_list().lock()->numHwLayers, testing::Eq(list2.size() + additional_layers));
+    ASSERT_THAT(list.native_list().lock()->numHwLayers, testing::Eq(list2.size() + fb_target_size));
     list.native_list().lock()->hwLayers[2].compositionType = HWC_OVERLAY;
-    list.update_list(list2, additional_layers);
+    list.update_list(list2);
 
     auto i = 0;
     for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
@@ -172,16 +147,26 @@ void fill_hwc_layer(
     layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 }
 
-TEST_F(LayerListTest, set_fb_target_hwc10)
+TEST_F(LayerListTest, setup_fb_hwc10)
 {
-    StubLayerAdapter hwc10_adapter(true);
-    mga::LayerList list(hwc10_adapter, renderables);
-    EXPECT_THROW({
-        list.set_fb_target(stub_buffer);
-    }, std::logic_error);
+    using namespace testing;
+    geom::Size sz{44,22};
+    auto mock_native_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>(sz);
+    mtd::StubBuffer stub_buffer(mock_native_buffer, sz);
+    hwc_layer_1_t layer;
+    hwc_rect_t visible_rect;   
+    geom::Rectangle const disp_frame{{0,0}, sz};
+    fill_hwc_layer(layer, &visible_rect, disp_frame, stub_buffer, HWC_FRAMEBUFFER, HWC_SKIP_LAYER);
+
+    mga::LayerList list(std::make_shared<mga::Hwc10Adapter>(), {});
+    list.setup_fb(stub_buffer);
+
+    auto l = list.native_list().lock();
+    ASSERT_THAT(l->numHwLayers, Eq(1));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(layer));
 }
 
-TEST_F(LayerListTest, set_fb_target_without_skip)
+TEST_F(LayerListTest, setup_fb_without_skip)
 {
     using namespace testing;
     geom::Size sz{44,22};
@@ -193,11 +178,14 @@ TEST_F(LayerListTest, set_fb_target_without_skip)
     fill_hwc_layer(layer, &visible_rect, disp_frame, stub_buffer, HWC_FRAMEBUFFER_TARGET, 0);
 
     mga::LayerList list(layer_adapter, renderables);
+    list.setup_fb(stub_buffer);
+
     auto l = list.native_list().lock();
+    ASSERT_THAT(l->numHwLayers, Eq(1 + renderables.size()));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(layer));
 }
 
-TEST_F(LayerListTest, set_fb_target_with_skip)
+TEST_F(LayerListTest, setup_fb_with_skip)
 {
     using namespace testing;
     geom::Size sz{44,22};
@@ -211,6 +199,9 @@ TEST_F(LayerListTest, set_fb_target_with_skip)
     fill_hwc_layer(layer2, &visible_rect, disp_frame, stub_buffer, HWC_FRAMEBUFFER, HWC_SKIP_LAYER);
 
     mga::LayerList list(layer_adapter, {});
+    list.setup_fb(stub_buffer);
+    auto l = list.native_list().lock();
+    ASSERT_THAT(l->numHwLayers, Eq(2));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(layer));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(layer2));
 }

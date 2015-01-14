@@ -58,16 +58,25 @@ public:
     LayerAdapter& operator=(LayerAdapter const&) = delete; 
 };
 
-//HWC 1.0 to 1.2 have int sourceCrop
+//HWC 1.1 to 1.2 have int sourceCrop and no fbtarget
+class Hwc10Adapter : public LayerAdapter
+{
+    void fill_source_crop(hwc_layer_1_t&, geometry::Rectangle const& crop_size) const override;
+    bool needs_fb_target() const override;
+};
+
+//HWC 1.1 to 1.2 have int sourceCrop and fbtarget
 class IntegerSourceCrop : public LayerAdapter
 {
     void fill_source_crop(hwc_layer_1_t&, geometry::Rectangle const& crop_size) const override;
+    bool needs_fb_target() const override;
 };
 
-//HWC 1.3 and later have float sourceCrop
+//HWC 1.3 and later have float sourceCrop and fbtarget
 class FloatSourceCrop : public LayerAdapter
 {
     void fill_source_crop(hwc_layer_1_t&, geometry::Rectangle const& crop_size) const override;
+    bool needs_fb_target() const override;
 };
 
 class HWCLayer
