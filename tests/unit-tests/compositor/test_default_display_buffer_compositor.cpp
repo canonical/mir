@@ -203,11 +203,39 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
         .WillOnce(Return(true));
     EXPECT_CALL(mock_renderer, suspend())
         .InSequence(seq);
-    EXPECT_CALL(*report, finished_frame(true,_))
+    EXPECT_CALL(*report, rendered_frame(_))
+        .Times(0);
+    EXPECT_CALL(*report, finished_frame(_))
         .InSequence(seq);
 
     EXPECT_CALL(mock_renderer, render(_))
         .Times(0);
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(mock_renderer),
+        report);
+    compositor.composite(make_scene_elements({}));
+}
+
+TEST_F(DefaultDisplayBufferCompositor, rendering_reports_everything)
+{
+    using namespace testing;
+    auto report = std::make_shared<mtd::MockCompositorReport>();
+
+    Sequence seq;
+    EXPECT_CALL(*report, began_frame(_))
+        .InSequence(seq);
+    EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
+        .InSequence(seq)
+        .WillOnce(Return(false));
+    EXPECT_CALL(*report, rendered_frame(_))
+        .InSequence(seq);
+    EXPECT_CALL(*report, finished_frame(_))
+        .InSequence(seq);
+
+    EXPECT_CALL(mock_renderer, render(_))
+        .Times(1);
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,

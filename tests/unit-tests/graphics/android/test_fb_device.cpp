@@ -46,12 +46,11 @@ struct FBDevice : public ::testing::Test
     {
         using namespace testing;
 
-        width = 413;
-        height = 516;
         fbnum = 4;
         format = HAL_PIXEL_FORMAT_RGBA_8888;
 
-        fb_hal_mock = std::make_shared<NiceMock<mtd::MockFBHalDevice>>(width, height, format, fbnum);
+        fb_hal_mock = std::make_shared<NiceMock<mtd::MockFBHalDevice>>(
+            display_size.width.as_int(), display_size.height.as_int(), format, fbnum);
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())
@@ -60,7 +59,8 @@ struct FBDevice : public ::testing::Test
             .WillByDefault(Return(mock_buffer));
     }
 
-    unsigned int width, height, format, fbnum;
+    unsigned int format, fbnum;
+    geom::Size display_size{413, 516};
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer;
@@ -98,28 +98,19 @@ TEST_F(FBDevice, commits_frame_via_post)
     fbdev.post_gl(mock_context);
 }
 
-TEST_F(FBDevice, sets_swapinterval_1_on_start)
-{
-    EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 1))
-        .Times(1);
-    mga::FBDevice fbdev(fb_hal_mock);
-}
-
 //not all fb devices provide a swap interval hook. make sure we don't explode if thats the case
 TEST_F(FBDevice, does_not_segfault_if_null_swapinterval_hook)
 {
     fb_hal_mock->setSwapInterval = nullptr;
-    mga::FBDevice fbdev(fb_hal_mock);
+    mga::FbControl fb_control(fb_hal_mock);
 }
 
 TEST_F(FBDevice, can_screen_on_off)
 {
-    fb_hal_mock->setSwapInterval = nullptr;
     using namespace testing;
-    //constructor turns on
     Sequence seq;
-    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,1))
-        .InSequence(seq);
+    EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 1))
+        .Times(1);
     EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,0))
         .InSequence(seq);
     EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,0))
@@ -129,9 +120,32 @@ TEST_F(FBDevice, can_screen_on_off)
     EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,1))
         .InSequence(seq);
  
-    mga::FBDevice fbdev(fb_hal_mock);
-    fbdev.mode(mir_power_mode_standby);
-    fbdev.mode(mir_power_mode_suspend);
-    fbdev.mode(mir_power_mode_off);
-    fbdev.mode(mir_power_mode_on);
+    mga::FbControl fb_control(fb_hal_mock);
+    fb_control.power_mode(mga::DisplayName::primary, mir_power_mode_standby);
+    fb_control.power_mode(mga::DisplayName::primary, mir_power_mode_suspend);
+    fb_control.power_mode(mga::DisplayName::primary, mir_power_mode_off);
+    fb_control.power_mode(mga::DisplayName::primary, mir_power_mode_on);
+
+    EXPECT_THROW({
+        fb_control.power_mode(mga::DisplayName::external, mir_power_mode_on);
+    }, std::runtime_error);
+}
+
+TEST_F(FBDevice, bundle_from_fb)
+{
+    using namespace testing;
+    mga::FbControl fb_control(fb_hal_mock);
+    auto attribs = fb_control.active_attribs_for(mga::DisplayName::primary);
+    EXPECT_EQ(display_size, attribs.pixel_size);
+    EXPECT_EQ(mir_pixel_format_abgr_8888, attribs.display_format);
+    EXPECT_EQ(fbnum, attribs.num_framebuffers);
+}
+
+//some drivers incorrectly report 0 buffers available. request 2 fbs in this case.
+TEST_F(FBDevice, determine_fbnum_always_reports_2_minimum)
+{
+    auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(
+        display_size.width.as_int(), display_size.height.as_int(), format, 0);
+    mga::FbControl fb_control(slightly_malformed_fb_hal_mock);
+    EXPECT_EQ(2u, fb_control.active_attribs_for(mga::DisplayName::primary).num_framebuffers);
 }

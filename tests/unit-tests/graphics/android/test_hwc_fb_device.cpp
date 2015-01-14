@@ -22,19 +22,21 @@
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
-#include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/stub_swapping_gl_context.h"
 #include "mir_test_doubles/mock_swapping_gl_context.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test/auto_unblock_thread.h"
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
 #include "src/platforms/android/hwc_fallback_gl_renderer.h"
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
+#include <thread>
+#include <atomic>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -43,11 +45,6 @@ namespace geom=mir::geometry;
 
 namespace
 {
-struct StubConfig : public mga::HwcConfiguration
-{
-    void power_mode(mga::DisplayName, MirPowerMode) override {}
-    mga::DisplayAttribs active_attribs_for(mga::DisplayName) override { return {{}, {}, 0.0, false}; }
-};
 class HwcFbDevice : public ::testing::Test
 {
 protected:
@@ -60,7 +57,6 @@ protected:
         int fbnum = 558;
         mock_fb_device = std::make_shared<mtd::MockFBHalDevice>(
             width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum);
-        mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_hwc_device_wrapper = std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>();
 
@@ -85,8 +81,6 @@ protected:
             .WillByDefault(Return(stub_native_buffer));
         ON_CALL(mock_context, last_rendered_buffer())
             .WillByDefault(Return(mock_buffer));
-
-        stub_config = std::make_shared<StubConfig>();
     }
 
     int fake_dpy = 0;
@@ -98,37 +92,25 @@ protected:
 
     geom::Size test_size;
     std::shared_ptr<mtd::MockFBHalDevice> mock_fb_device;
-    std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_device_wrapper;
     std::shared_ptr<mtd::StubAndroidNativeBuffer> stub_native_buffer;
     mtd::StubSwappingGLContext stub_context;
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
-    std::shared_ptr<mga::HwcConfiguration> stub_config;
     hwc_layer_1_t skip_layer;
 };
 }
 
-TEST_F(HwcFbDevice, hwc10_post_gl_only)
+TEST_F(HwcFbDevice, hwc10_subscribes_to_vsync_events)
 {
     using namespace testing;
-    std::list<hwc_layer_1_t*> expected_list{&skip_layer};
-
     Sequence seq;
-    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesPrimaryList(expected_list)))
+    EXPECT_CALL(*mock_hwc_device_wrapper, subscribe_to_events(_,_,_,_))
         .InSequence(seq);
-    EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
-        .InSequence(seq)
-        .WillOnce(Return(dpy));
-    EXPECT_CALL(mock_egl, eglGetCurrentSurface(EGL_DRAW))
-        .InSequence(seq)
-        .WillOnce(Return(sur));
-    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
+    EXPECT_CALL(*mock_hwc_device_wrapper, unsubscribe_from_events_(_))
         .InSequence(seq);
 
-    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config, mock_vsync);
-
-    device.post_gl(mock_context);
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device);
 }
 
 TEST_F(HwcFbDevice, hwc10_rejects_overlays)
@@ -143,25 +125,49 @@ TEST_F(HwcFbDevice, hwc10_rejects_overlays)
         renderable2
     };
 
-    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device);
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
 
 TEST_F(HwcFbDevice, hwc10_post)
 {
     using namespace testing;
-    auto native_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
+    std::list<hwc_layer_1_t*> expected_list{&skip_layer};
+    std::function<void(mga::DisplayName, std::chrono::nanoseconds)> vsync_cb;
+    EXPECT_CALL(*mock_hwc_device_wrapper, subscribe_to_events(_,_,_,_))
+        .WillOnce(SaveArg<1>(&vsync_cb));
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device);
+    Mock::VerifyAndClearExpectations(mock_hwc_device_wrapper.get());
+
+    std::atomic<bool> vsync_thread_on{true};
+    mir::test::AutoUnblockThread vsync_thread(
+        [&]{ vsync_thread_on = false; },
+        [&]{
+            while(vsync_thread_on)
+            {
+                std::this_thread::sleep_for(std::chrono::microseconds(500));
+                vsync_cb(mga::DisplayName::primary, std::chrono::nanoseconds(0));
+            }});
+
     Sequence seq;
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .InSequence(seq)
-        .WillOnce(Return(native_buffer));
+        .WillOnce(Return(stub_native_buffer));
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesPrimaryList(expected_list)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
+        .InSequence(seq)
+        .WillOnce(Return(dpy));
+    EXPECT_CALL(mock_egl, eglGetCurrentSurface(EGL_DRAW))
+        .InSequence(seq)
+        .WillOnce(Return(sur));
+    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
+        .InSequence(seq);
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .InSequence(seq)
-        .WillOnce(Return(native_buffer));
-    EXPECT_CALL(*mock_fb_device, post_interface(mock_fb_device.get(), &native_buffer->native_handle))
+        .WillOnce(Return(stub_native_buffer));
+    EXPECT_CALL(*mock_fb_device, post_interface(mock_fb_device.get(), &stub_native_buffer->native_handle))
         .InSequence(seq);
-    EXPECT_CALL(*mock_vsync, wait_for_vsync())
-        .InSequence(seq);
-    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config, mock_vsync);
+
     device.post_gl(mock_context);
 }

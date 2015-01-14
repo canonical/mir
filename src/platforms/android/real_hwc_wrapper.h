@@ -23,6 +23,9 @@
 #include <memory>
 #include <hardware/hwcomposer.h>
 
+#include <mutex>
+#include <unordered_map>
+
 namespace mir
 {
 namespace graphics
@@ -30,16 +33,31 @@ namespace graphics
 namespace android
 {
 class HwcReport;
+class RealHwcWrapper;
+struct HwcCallbacks
+{
+    hwc_procs_t hooks;
+    RealHwcWrapper* self;
+};
+
 class RealHwcWrapper : public HwcWrapper
 {
 public:
     RealHwcWrapper(
+        //should probably be unique_ptr
         std::shared_ptr<hwc_composer_device_1> const& hwc_device,
         std::shared_ptr<HwcReport> const& report);
+    ~RealHwcWrapper();
+
+    void subscribe_to_events(
+        void const* subscriber,
+        std::function<void(DisplayName, std::chrono::nanoseconds)> const& vsync_callback,
+        std::function<void(DisplayName, bool)> const& hotplug_callback,
+        std::function<void()> const& invalidate_callback) override;
+    void unsubscribe_from_events(void const* subscriber) noexcept override;
 
     void prepare(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const override;
     void set(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const override;
-    void register_hooks(std::shared_ptr<HWCCallbacks> const& callbacks) override;
     void vsync_signal_on(DisplayName) const override;
     void vsync_signal_off(DisplayName) const override;
     void display_on(DisplayName) const override;
@@ -47,12 +65,21 @@ public:
     std::vector<ConfigId> display_configs(DisplayName) const override;
     void display_attributes(
         DisplayName, ConfigId, uint32_t const* attributes, int32_t* values) const override;
+
+    void vsync(DisplayName, std::chrono::nanoseconds);
+    void hotplug(DisplayName, bool);
+    void invalidate();
 private:
-    //note: the callbacks have to extend past the lifetime of the hwc_composer_device_1 for some
-    //      devices (LP: 1364637)
-    std::shared_ptr<HWCCallbacks> registered_callbacks;
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
     std::shared_ptr<HwcReport> const report;
+    std::mutex callback_map_lock;
+    struct Callbacks
+    {
+        std::function<void(DisplayName, std::chrono::nanoseconds)> vsync;
+        std::function<void(DisplayName, bool)> hotplug;
+        std::function<void()> invalidate;
+    };
+    std::unordered_map<void const*, Callbacks> callback_map;
 };
 
 }

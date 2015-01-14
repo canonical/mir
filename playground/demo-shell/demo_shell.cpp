@@ -53,9 +53,7 @@ class DisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
     DisplayBufferCompositorFactory(
-        std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
         std::shared_ptr<mc::CompositorReport> const& report) :
-        gl_program_factory(gl_program_factory),
         report(report)
     {
     }
@@ -64,11 +62,10 @@ public:
         mg::DisplayBuffer& display_buffer) override
     {
         return std::unique_ptr<mc::DisplayBufferCompositor>(
-            new me::DemoCompositor{display_buffer, *gl_program_factory, report});
+            new me::DemoCompositor{display_buffer, report});
     }
 
 private:
-    std::shared_ptr<mg::GLProgramFactory> const gl_program_factory;
     std::shared_ptr<mc::CompositorReport> const report;
 };
 
@@ -99,7 +96,6 @@ public:
             [this]()
             {
                 return std::make_shared<me::DisplayBufferCompositorFactory>(
-                    the_gl_program_factory(),
                     the_compositor_report());
             });
     }

@@ -15,14 +15,12 @@ add_library(mirplatformgraphicsandroidobjects OBJECT
   display.cpp
   display_configuration.cpp
   display_buffer.cpp
-  output_builder.cpp
+  hal_component_factory.cpp
   hwc_layerlist.cpp
   hwc_layers.cpp
   hwc_fb_device.cpp
   hwc_loggers.cpp
   hwc_device.cpp
-  hwc_common_device.cpp
-  hwc_vsync.cpp
   android_alloc_adaptor.cpp
   server_render_window.cpp
   resource_factory.cpp

@@ -21,6 +21,7 @@
 
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
+#include "mir_test/validity_matchers.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -190,7 +191,7 @@ struct WithOrientation : ClientSurfaces, ::testing::WithParamInterface<MirOrient
 TEST_P(WithOrientation, have_requested_preferred_orientation)
 {
     auto spec = mir_connection_create_spec_for_normal_surface(connection, 1, 1, mir_pixel_format_abgr_8888);
-    ASSERT_TRUE(spec != nullptr);
+    ASSERT_THAT(spec, NotNull());
 
     MirOrientationMode mode{GetParam()};
     mir_surface_spec_set_preferred_orientation(spec, mode);
@@ -198,7 +199,7 @@ TEST_P(WithOrientation, have_requested_preferred_orientation)
     auto surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
-    ASSERT_TRUE(mir_surface_is_valid(surface));
+    ASSERT_THAT(surface, IsValid());
     EXPECT_EQ(mir_surface_get_preferred_orientation(surface), mode);
 
     mir_surface_release_sync(surface);
@@ -210,4 +211,23 @@ INSTANTIATE_TEST_CASE_P(ClientSurfaces,
         mir_orientation_mode_portrait_inverted, mir_orientation_mode_landscape_inverted,
         mir_orientation_mode_portrait_any, mir_orientation_mode_landscape_any,
         mir_orientation_mode_any));
+
+TEST_F(ClientSurfaces, can_be_menus)
+{
+    auto parent = mtf::make_any_surface(connection);
+    MirRectangle attachment_rect{100, 200, 100, 100};
+
+    auto spec = mir_connection_create_spec_for_menu_surface(connection, 640, 480,
+        mir_pixel_format_abgr_8888, parent, &attachment_rect, mir_edge_attachment_vertical);
+    ASSERT_THAT(spec, NotNull());
+
+    auto menu = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    ASSERT_THAT(menu, IsValid());
+    EXPECT_EQ(mir_surface_get_type(menu), mir_surface_type_menu);
+
+    mir_surface_release_sync(parent);
+    mir_surface_release_sync(menu);
+}
 

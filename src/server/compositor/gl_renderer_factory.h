@@ -23,21 +23,14 @@
 
 namespace mir
 {
-namespace graphics
-{
-class GLProgramFactory;
-}
 namespace compositor
 {
 
 class GLRendererFactory : public RendererFactory
 {
 public:
-    GLRendererFactory(std::shared_ptr<graphics::GLProgramFactory> const& factory);
     std::unique_ptr<Renderer> create_renderer_for(geometry::Rectangle const& rect,
         DestinationAlpha dest_alpha);
-private:
-    std::shared_ptr<graphics::GLProgramFactory> const program_factory;
 };
 }
 }
