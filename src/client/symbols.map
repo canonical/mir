@@ -34,3 +34,7 @@ MIR_CLIENT_8.2 {
     mir_surface_get_preferred_orientation;
     mir_surface_spec_set_preferred_orientation;
 } MIR_CLIENT_8.1;
+
+MIR_CLIENT_8.3 {
+    mir_connection_create_spec_for_menu_surface;
+} MIR_CLIENT_8.2;
