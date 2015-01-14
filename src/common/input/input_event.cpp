@@ -458,10 +458,10 @@ MirPointerInputEventAction mir_pointer_input_event_get_action(MirPointerInputEve
     {
     case mir_motion_action_up:
     case mir_motion_action_pointer_up:
-        return mir_pointer_input_event_action_up;
+        return mir_pointer_input_event_action_button_up;
     case mir_motion_action_down:
     case mir_motion_action_pointer_down:
-        return mir_pointer_input_event_action_down;
+        return mir_pointer_input_event_action_button_down;
     case mir_motion_action_hover_enter:
         return mir_pointer_input_event_action_enter;
     case mir_motion_action_hover_exit:
@@ -470,7 +470,7 @@ MirPointerInputEventAction mir_pointer_input_event_get_action(MirPointerInputEve
     case mir_motion_action_hover_move:
     case mir_motion_action_outside:
     default:
-        return mir_pointer_input_event_action_change;
+        return mir_pointer_input_event_action_motion;
     }
 }
 

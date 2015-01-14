@@ -331,11 +331,11 @@ TEST_P(MotionToPointerActionTest, old_style_action_translated_to_new_style)
 
 INSTANTIATE_TEST_CASE_P(MotionPointerUpTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_pointer_up, mir_pointer_input_event_action_up}));
+        ActionTestParameters{mir_motion_action_pointer_up, mir_pointer_input_event_action_button_up}));
 
 INSTANTIATE_TEST_CASE_P(MotionPointerDownTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_pointer_down, mir_pointer_input_event_action_down}));
+        ActionTestParameters{mir_motion_action_pointer_down, mir_pointer_input_event_action_button_down}));
 
 INSTANTIATE_TEST_CASE_P(MotionEnterTest,
     MotionToPointerActionTest, ::testing::Values(
@@ -347,15 +347,15 @@ INSTANTIATE_TEST_CASE_P(MotionLeaveTest,
 
 INSTANTIATE_TEST_CASE_P(MotionPointerMoveTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_move, mir_pointer_input_event_action_change}));
+        ActionTestParameters{mir_motion_action_move, mir_pointer_input_event_action_motion}));
 
 INSTANTIATE_TEST_CASE_P(MotionPointerHoverMoveTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_hover_move, mir_pointer_input_event_action_change}));
+        ActionTestParameters{mir_motion_action_hover_move, mir_pointer_input_event_action_motion}));
 
 INSTANTIATE_TEST_CASE_P(MotionPointerOutsideMoveTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_outside, mir_pointer_input_event_action_change}));
+        ActionTestParameters{mir_motion_action_outside, mir_pointer_input_event_action_motion}));
 
 TEST(PointerInputEventProperties, button_state_translated)
 {
