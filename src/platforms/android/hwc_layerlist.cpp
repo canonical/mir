@@ -145,3 +145,12 @@ mga::LayerList::LayerList(
 {
     update_list(renderlist, additional_layers);
 }
+
+void mga::LayerList::set_fb_target(mg::Buffer const& fb_target)
+{
+    if (std::distance(additional_layers_begin(), end()) == 0)
+        throw std::logic_error("no fb target layer");
+
+    geom::Rectangle const disp_frame{{0,0}, {fb_target.size()}};
+    layers.back().layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, fb_target);
+}

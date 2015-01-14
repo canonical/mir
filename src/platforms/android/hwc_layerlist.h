@@ -65,6 +65,8 @@ public:
     std::list<HwcLayerEntry>::iterator additional_layers_begin();
     std::list<HwcLayerEntry>::iterator end();
 
+    void set_fb_target(Buffer const& fb_target);
+
     std::weak_ptr<hwc_display_contents_1_t> native_list();
     NativeFence retirement_fence();
 private:

@@ -19,18 +19,48 @@
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "src/platforms/android/hwc_layerlist.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
+namespace geom=mir::geometry;
+
 namespace
 {
+
+struct StubLayerAdapter : mga::LayerAdapter
+{
+    StubLayerAdapter(bool hwc10)
+        : needs_fbtarget(hwc10)
+    {
+    }
+
+    void fill_source_crop(hwc_layer_1_t& hwc_layer, geometry::Rectangle const& crop_rect) const
+    {
+        hwc_layer.sourceCropi = 
+        {
+            crop_rect.top_left.x.as_int(),
+            crop_rect.top_left.y.as_int(),
+            crop_rect.size.width.as_int(),
+            crop_rect.size.height.as_int()
+        };
+    }
+
+    bool needs_fb_target() const
+    {
+        return needs_fbtarget;
+    }
+
+    bool needs_fbtarget;
+}
+
 struct LayerListTest : public testing::Test
 {
     LayerListTest() :
-        layer_adapter{std::make_shared<mga::IntegerSourceCrop>()},
+        layer_adapter{std::make_shared<StubLayerAdapter>(true)},
         buffer1{std::make_shared<mtd::StubBuffer>()},
         buffer2{std::make_shared<mtd::StubBuffer>()},
         renderables{std::make_shared<mtd::StubRenderable>(buffer1),
@@ -142,20 +172,45 @@ void fill_hwc_layer(
     layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 }
 
-TEST_F(LayerListTest, set_fb_target)
+TEST_F(LayerListTest, set_fb_target_hwc10)
 {
-    StubBuffer buffer{22,33};
+    StubLayerAdapter hwc10_adapter(true);
+    mga::LayerList list(hwc10_adapter, renderables);
+    EXPECT_THROW({
+        list.set_fb_target(stub_buffer);
+    }, std::logic_error);
+}
+
+TEST_F(LayerListTest, set_fb_target_without_skip)
+{
+    using namespace testing;
+    geom::Size sz{44,22};
+    auto mock_native_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>(sz);
+    mtd::StubBuffer stub_buffer(mock_native_buffer, sz);
     hwc_layer_1_t layer;
     hwc_rect_t visible_rect;   
-    geom::Rectangle const disp_frame{{0,0}, {buffer->size()}};
-    fill_hwc_layer(layer, &visible_rect, disp_frame, buffer, HWC_FRAMEBUFFER_TARGET, 0);
+    geom::Rectangle const disp_frame{{0,0}, sz};
+    fill_hwc_layer(layer, &visible_rect, disp_frame, stub_buffer, HWC_FRAMEBUFFER_TARGET, 0);
 
-    mga::LayerList list(layer_adapter, renderlist, 0);
-    EXPECT_THROW({
-        list.set_fb_target(buffer);
-    }, std::logic_error);
+    mga::LayerList list(layer_adapter, renderables);
+    auto l = list.native_list().lock();
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(layer));
+}
 
-    list.update_list(renderlist, 1);
-    auto fb_target = list.additional_layers_begin();
-    EXPECT_THAT(fb_target.layer, MatchesLegacyLayer(layer));
+TEST_F(LayerListTest, set_fb_target_with_skip)
+{
+    using namespace testing;
+    geom::Size sz{44,22};
+    auto mock_native_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>(sz);
+    mtd::StubBuffer stub_buffer(mock_native_buffer, sz);
+    hwc_layer_1_t layer;
+    hwc_layer_1_t layer2;
+    hwc_rect_t visible_rect;   
+    geom::Rectangle const disp_frame{{0,0}, sz};
+    fill_hwc_layer(layer, &visible_rect, disp_frame, stub_buffer, HWC_FRAMEBUFFER_TARGET, 0);
+    fill_hwc_layer(layer2, &visible_rect, disp_frame, stub_buffer, HWC_FRAMEBUFFER, HWC_SKIP_LAYER);
+
+    mga::LayerList list(layer_adapter, {});
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(layer));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(layer2));
 }

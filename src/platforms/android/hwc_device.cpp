@@ -126,6 +126,7 @@ bool mga::HwcDevice::post_overlays(
     if (renderable_list_is_hwc_incompatible(renderables))
         return false;
 
+    auto& fbtarget = *hwc_list.additional_layers_begin();
     hwc_list.update_list(renderables, fbtarget_size);
 
     bool needs_commit{false};
@@ -134,11 +135,7 @@ bool mga::HwcDevice::post_overlays(
     if (!needs_commit)
         return false;
 
-    auto& fbtarget = *hwc_list.additional_layers_begin();
-
-    auto buffer = context.last_rendered_buffer();
-    geom::Rectangle const disp_frame{{0,0}, {buffer->size()}};
-    fbtarget.layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
+    hwc_list.set_fb_target(*context.last_rendered_buffer());
 
     hwc_wrapper->prepare({{hwc_list.native_list().lock().get(), nullptr, nullptr}});
 
@@ -166,9 +163,8 @@ bool mga::HwcDevice::post_overlays(
     {
         list_compositor.render(rejected_renderables, context);
 
-        buffer = context.last_rendered_buffer();
-        fbtarget.layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
-        fbtarget.layer.set_acquirefence_from(*buffer);
+        hwc_list.set_fb_target(*context.last_rendered_buffer());
+        fbtarget.layer.set_acquirefence_from(*context.last_rendered_buffer());
     }
 
     hwc_wrapper->set({{hwc_list.native_list().lock().get(), nullptr, nullptr}});
@@ -181,7 +177,7 @@ bool mga::HwcDevice::post_overlays(
         it++;
     }
     if (!rejected_renderables.empty())
-        fbtarget.layer.update_from_releasefence(*buffer);
+        fbtarget.layer.update_from_releasefence(*context.last_rendered_buffer());
 
     mir::Fd retire_fd(hwc_list.retirement_fence());
     return true;

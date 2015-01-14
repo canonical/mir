@@ -51,6 +51,7 @@ class LayerAdapter
 {
 public:
     virtual void fill_source_crop(hwc_layer_1_t&, geometry::Rectangle const& crop_size) const = 0;
+    virtual bool needs_fb_target() const = 0;
     virtual ~LayerAdapter() = default;
     LayerAdapter() = default;
     LayerAdapter(LayerAdapter const&) = delete; 
