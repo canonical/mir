@@ -78,8 +78,6 @@ private:
 
     void resize(Point) override {}
 
-    void resize(Point, double) override {}
-
     void toggle_maximized() override {}
 
     void toggle_max_horizontal() override {}
@@ -272,39 +270,6 @@ public:
         old_cursor = cursor;
     }
 
-
-    void resize(Point cursor, double scale) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-
-        if (auto const session = session_under(cursor))
-        {
-            auto const& info = session_info[session.get()];
-
-            if (resize(old_surface.lock(), cursor, scale, info.tile))
-            {
-                // Still dragging the same old_surface
-            }
-            else if (resize(session->default_surface(), cursor, scale, info.tile))
-            {
-                old_surface = session->default_surface();
-            }
-            else
-            {
-                for (auto const& ps : info.surfaces)
-                {
-                    auto const new_surface = ps.lock();
-
-                    if (resize(new_surface, cursor, scale, info.tile))
-                    {
-                        old_surface = new_surface;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
     void toggle_maximized() override
     {
         toggle(SurfaceInfo::maximized);
@@ -438,39 +403,6 @@ private:
             auto new_pos = surface->top_left() + movement;
 
             surface->move_to(new_pos);
-            return true;
-        }
-
-        return false;
-    }
-
-    static bool resize(std::shared_ptr<ms::Surface> surface, Point center, double scale, Rectangle bounds)
-    {
-        if (surface && surface->input_area_contains(center))
-        {
-            auto const old_top_left = surface->top_left();
-            auto new_pos = center + scale*(old_top_left - center);
-            auto new_size = scale * surface->size();
-
-            if (new_pos.x < bounds.top_left.x)
-                new_pos.x = bounds.top_left.x;
-
-            if (new_pos.y < bounds.top_left.y)
-                new_pos.y = bounds.top_left.y;
-
-            auto bottom_right = new_pos + as_displacement(new_size);
-
-            if (bottom_right.x > bounds.bottom_right().x)
-                bottom_right.x = bounds.bottom_right().x;
-
-            if (bottom_right.y > bounds.bottom_right().y)
-                bottom_right.y = bounds.bottom_right().y;
-
-            auto const br_disp = bottom_right - new_pos;
-
-            surface->move_to(new_pos);
-            surface->resize(as_size(br_disp));
-
             return true;
         }
 
@@ -775,21 +707,19 @@ private:
         {
             if (auto const wm = window_manager.lock())
             {
-                if (event.button_state == mir_motion_button_tertiary)
-                    wm->resize(average_pointer(event.pointer_count, event.pointer_coordinates));
-                else
+                switch (event.button_state)
+                {
+                case mir_motion_button_primary:
                     wm->drag(average_pointer(event.pointer_count, event.pointer_coordinates));
-                return true;
-            }
-        }
-        else if (event.action == mir_motion_action_scroll &&
-                 event.modifiers & mir_key_modifier_meta)
-        {
-            if (auto const wm = window_manager.lock())
-            {
-                wm->resize(average_pointer(event.pointer_count, event.pointer_coordinates),
-                    std::pow(1.2f, event.pointer_coordinates[0].vscroll));
-                return true;
+                    return true;
+
+                case mir_motion_button_tertiary:
+                    wm->resize(average_pointer(event.pointer_count, event.pointer_coordinates));
+                    return true;
+
+                default:
+                    ;// ignore
+                }
             }
         }
 
