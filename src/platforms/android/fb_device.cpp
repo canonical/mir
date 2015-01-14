@@ -24,6 +24,7 @@
 #include "fb_device.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
+#include "android_format_conversion-inl.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -54,11 +55,16 @@ void mga::FbControl::power_mode(DisplayName display, MirPowerMode mode)
 
 mga::DisplayAttribs mga::FbControl::active_attribs_for(DisplayName)
 {
+    //guarantee always 2 fb's allocated
+    auto fb_num = static_cast<unsigned int>(fb_device->numFramebuffers);
+    fb_num = std::max(2u, fb_num);
     return mga::DisplayAttribs{
       {fb_device->width, fb_device->height},
       {0,0},
       fb_device->fps,
-      true};
+      true,
+      mga::to_mir_format(fb_device->format),
+      fb_num};
 }
 
 mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev) :

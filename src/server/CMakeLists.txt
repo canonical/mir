@@ -40,7 +40,6 @@ add_library(mirserverobjects OBJECT
   report_exception.cpp
   display_server.cpp
   default_server_configuration.cpp
-  asio_main_loop.cpp
   glib_main_loop.cpp
   glib_main_loop_sources.cpp
   default_emergency_cleanup.cpp

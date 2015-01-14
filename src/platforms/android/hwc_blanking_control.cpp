@@ -18,16 +18,67 @@
 
 #include "hwc_configuration.h"
 #include "hwc_wrapper.h"
+#include "android_format_conversion-inl.h"
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <chrono>
 
 namespace mga = mir::graphics::android;
 
+namespace
+{
+MirPixelFormat determine_hwc_fb_format()
+{
+    static EGLint const fb_egl_config_attr [] =
+    {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_FRAMEBUFFER_TARGET_ANDROID, EGL_TRUE,
+        EGL_NONE
+    };
+
+    EGLConfig fb_egl_config;
+    int matching_configs;
+    EGLint major, minor;
+    auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    eglInitialize(egl_display, &major, &minor);
+    eglChooseConfig(egl_display, fb_egl_config_attr, &fb_egl_config, 1, &matching_configs);
+
+    MirPixelFormat fb_format;
+    if (matching_configs)
+    {
+        int visual_id;
+        eglGetConfigAttrib(egl_display, fb_egl_config, EGL_NATIVE_VISUAL_ID, &visual_id);
+        fb_format = mga::to_mir_format(visual_id);
+    }
+    else
+    {
+        //we couldn't figure out the fb format via egl. In this case, we
+        //assume abgr_8888. HWC api really should provide this information directly.
+        fb_format = mir_pixel_format_abgr_8888;
+    }
+
+    eglTerminate(egl_display);
+    return fb_format;
+}
+
+using namespace std::chrono;
+template<class Rep, class Period>
+double period_to_hz(duration<Rep,Period> period_duration)
+{
+    if (period_duration.count() <= 0)
+        return 0.0;
+    return duration<double>{1} / period_duration;
+}
+}
+
 mga::HwcBlankingControl::HwcBlankingControl(
     std::shared_ptr<mga::HwcWrapper> const& hwc_device) :
     hwc_device{hwc_device},
-    off{false}
+    off{false},
+    format(determine_hwc_fb_format())
 {
 }
 
@@ -48,18 +99,6 @@ void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode 
     }
 }
 
-namespace
-{
-using namespace std::chrono;
-template<class Rep, class Period>
-double period_to_hz(duration<Rep,Period> period_duration)
-{
-    if (period_duration.count() <= 0)
-        return 0.0;
-    return duration<double>{1} / period_duration;
-}
-}
-
 mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName display_name)
 {
     auto configs = hwc_device->display_configs(display_name);
@@ -68,7 +107,7 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
         if (display_name == mga::DisplayName::primary)
             BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
         else   
-            return {{}, {}, 0.0, false};
+            return {{}, {}, 0.0, false, format, quirks.num_framebuffers()};
     }
 
     /* note: some drivers (qcom msm8960) choke if this is not the same size array
@@ -90,6 +129,8 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
         {values[0], values[1]},
         {0, 0}, //TODO: convert DPI to MM and return
         period_to_hz(std::chrono::nanoseconds{values[2]}),
-        true
+        true,
+        format,
+        quirks.num_framebuffers()
     };
 }

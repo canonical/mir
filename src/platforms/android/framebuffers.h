@@ -40,18 +40,14 @@ class GraphicBufferAllocator;
 class Framebuffers : public FramebufferBundle
 {
 public:
-    Framebuffers(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
-                 geometry::Size size, double vrefresh_hz, unsigned int num_framebuffers);
-    Framebuffers(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
-                 geometry::Size size, double vrefresh_hz,
-                 std::shared_ptr<framebuffer_device_t> const& fb);
+    Framebuffers(GraphicBufferAllocator& buffer_allocator,
+                 geometry::Size size, MirPixelFormat format, double vrefresh_hz, unsigned int num_framebuffers);
 
     MirPixelFormat fb_format();
     geometry::Size fb_size();
     double fb_refresh_rate();
     std::shared_ptr<Buffer> buffer_for_render();
     std::shared_ptr<Buffer> last_rendered_buffer();
-    void wait_for_consumed_buffer(bool);
 
 private:
     MirPixelFormat const format;

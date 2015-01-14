@@ -15,7 +15,7 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "GLRenderer"
+#define MIR_LOG_COMPONENT "GL"
 #include "mir/compositor/gl_renderer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/destination_alpha.h"
@@ -114,10 +114,10 @@ mc::GLRenderer::GLRenderer(
 {
     struct {GLenum id; char const* label;} const glstrings[] =
     {
-        {GL_VENDOR,   "GL vendor"},
-        {GL_RENDERER, "GL renderer"},
-        {GL_VERSION,  "GL version"},
-        {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
+        {GL_VENDOR,   "vendor"},
+        {GL_RENDERER, "renderer"},
+        {GL_VERSION,  "version"},
+        {GL_SHADING_LANGUAGE_VERSION,  "SL version"},
     };
 
     for (auto& s : glstrings)

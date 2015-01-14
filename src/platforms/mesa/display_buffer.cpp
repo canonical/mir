@@ -318,6 +318,31 @@ bool mgm::DisplayBuffer::flip(
     }
     else
     {
+        /*
+         * Not in clone mode? We can afford to wait for the page flip then,
+         * making us double-buffered (noticeably less laggy than the triple
+         * buffering that clone mode requires).
+         */
+        if (outputs.size() == 1)
+        {
+            wait_for_page_flip();
+
+            /*
+             * bufobj is now physically on screen. Release the old frame...
+             */
+            if (last_flipped_bufobj)
+            {
+                last_flipped_bufobj->release();
+                last_flipped_bufobj = nullptr;
+            }
+
+            /*
+             * last_flipped_bufobj will be set correctly on the next iteration
+             * Don't do it here or else bufobj would be released while still
+             * on screen (hence tearing and artefacts).
+             */
+        }
+
         scheduled_bufobj = bufobj;
     }
 
