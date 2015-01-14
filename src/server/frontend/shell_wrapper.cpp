@@ -58,3 +58,20 @@ void mf::ShellWrapper::stop_prompt_session(
 {
     wrapped->stop_prompt_session(prompt_session);
 }
+
+int mf::ShellWrapper::configure(
+    std::shared_ptr<Session> const& session,
+    SurfaceId surface_id,
+    MirSurfaceAttrib attrib,
+    int value)
+{
+    return wrapped->configure(session, surface_id, attrib, value);
+}
+
+int mf::ShellWrapper::query(
+    std::shared_ptr<Session> const& session,
+    SurfaceId surface_id,
+    MirSurfaceAttrib attrib)
+{
+    return wrapped->query(session, surface_id, attrib);
+}

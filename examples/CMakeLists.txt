@@ -23,6 +23,7 @@ add_library(exampleserverconfig STATIC
   server_example_fullscreen_placement_strategy.cpp
   server_example_host_lifecycle_event.cpp
   server_example_window_manager.cpp
+  server_example_window_management.cpp
 )
 
 target_link_libraries(eglapp
@@ -58,6 +59,12 @@ mir_add_wrapped_executable(mir_demo_client_cursors
   cursors_demo_client.c
 )
 target_link_libraries(mir_demo_client_cursors
+  eglapp
+)
+mir_add_wrapped_executable(mir_demo_client_eglstateswitcher
+  eglstateswitcher.c
+)
+target_link_libraries(mir_demo_client_eglstateswitcher
   eglapp
 )
 

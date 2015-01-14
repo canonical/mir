@@ -74,6 +74,17 @@ public:
                                  std::shared_ptr<frontend::Session> const& session) override;
     void stop_prompt_session(std::shared_ptr<frontend::PromptSession> const& prompt_session) override;
 
+    virtual int configure(
+        std::shared_ptr<frontend::Session> const& session,
+        frontend::SurfaceId surface_id,
+        MirSurfaceAttrib attrib,
+        int value) override;
+
+    virtual int query(
+        std::shared_ptr<frontend::Session> const& session,
+        frontend::SurfaceId surface_id,
+        MirSurfaceAttrib attrib) override;
+
 protected:
     SessionManager(const SessionManager&) = delete;
     SessionManager& operator=(const SessionManager&) = delete;
