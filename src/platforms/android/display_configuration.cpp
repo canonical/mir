@@ -26,7 +26,7 @@ namespace
 int const primary_id{0};
 int const external_id{1};
 mg::DisplayConfigurationOutput external_output(
-    mga::DisplayAttribs const& external_attribs, MirPixelFormat format)
+    mga::DisplayAttribs const& external_attribs)
 {
     std::vector<mg::DisplayConfigurationMode> external_modes;
     if (external_attribs.connected)
@@ -36,7 +36,7 @@ mg::DisplayConfigurationOutput external_output(
         mg::DisplayConfigurationOutputId{external_id},
         mg::DisplayConfigurationCardId{0},
         mg::DisplayConfigurationOutputType::displayport,
-        {format},
+        {external_attribs.display_format},
         external_modes,
         0,
         external_attribs.mm_size,
@@ -44,7 +44,7 @@ mg::DisplayConfigurationOutput external_output(
         false,
         geom::Point{0,0},
         0,
-        format,
+        external_attribs.display_format,
         mir_power_mode_on,
         mir_orientation_normal
     };
@@ -53,14 +53,13 @@ mg::DisplayConfigurationOutput external_output(
 
 mga::DisplayConfiguration::DisplayConfiguration(
     mga::DisplayAttribs const& primary_attribs,
-    mga::DisplayAttribs const& external_attribs,
-    MirPixelFormat format) :
+    mga::DisplayAttribs const& external_attribs) :
     configurations{
         mg::DisplayConfigurationOutput{
             mg::DisplayConfigurationOutputId{primary_id},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::lvds,
-            {format},
+            {primary_attribs.display_format},
             {mg::DisplayConfigurationMode{primary_attribs.pixel_size, primary_attribs.vrefresh_hz}},
             0,
             primary_attribs.mm_size,
@@ -68,11 +67,11 @@ mga::DisplayConfiguration::DisplayConfiguration(
             true,
             geom::Point{0,0},
             0,
-            format,
+            primary_attribs.display_format,
             mir_power_mode_on,
             mir_orientation_normal
         }, 
-        external_output(external_attribs, format)
+        external_output(external_attribs)
     },
     card{mg::DisplayConfigurationCardId{0}, 1}
 {

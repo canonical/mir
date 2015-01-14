@@ -22,6 +22,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/geometry/size.h"
 #include "display_name.h"
+#include "device_quirks.h"
 #include <memory>
 #include <functional>
 
@@ -37,6 +38,8 @@ struct DisplayAttribs
     geometry::Size mm_size;
     double vrefresh_hz;
     bool connected;
+    MirPixelFormat display_format;
+    size_t num_framebuffers;
 };
 
 typedef std::shared_ptr<void> ConfigChangeSubscription;
@@ -65,8 +68,10 @@ public:
     ConfigChangeSubscription subscribe_to_config_changes(std::function<void()> const& cb) override;
 
 private:
+    DeviceQuirks quirks{PropertiesOps{}};
     std::shared_ptr<HwcWrapper> const hwc_device;
     bool off;
+    MirPixelFormat format;
 };
 
 }

@@ -424,7 +424,8 @@ TEST_F(MesaDisplayTest, post_update)
 
         /* Handle the flip event */
         EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
-            .Times(0);
+            .Times(1)
+            .WillOnce(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
 
         /* Release last_flipped_bufobj (at destruction time) */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))

@@ -31,7 +31,7 @@ namespace android
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    DisplayConfiguration(DisplayAttribs const& primary, DisplayAttribs const& external, MirPixelFormat);
+    DisplayConfiguration(DisplayAttribs const& primary, DisplayAttribs const& external);
 
     DisplayConfiguration(DisplayConfiguration const& other);
     DisplayConfiguration& operator=(DisplayConfiguration const& other);

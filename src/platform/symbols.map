@@ -1,4 +1,4 @@
-MIRPLATFORM_5 {
+MIRPLATFORM_6 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -156,7 +156,6 @@ MIRPLATFORM_5 {
     mir::options::server_socket_opt*;
     mir::options::session_mediator_report_opt*;
     mir::options::touchspots_opt*;
-    mir::options::use_asio_main_loop_opt*;
     non-virtual?thunk?to?mir::graphics::Cursor::?Cursor*;
     non-virtual?thunk?to?mir::graphics::CursorImage::?CursorImage*;
     non-virtual?thunk?to?mir::graphics::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;

@@ -23,10 +23,14 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
+#include "display_component_factory.h"
+#include "interpreter_cache.h"
+#include "server_render_window.h"
 #include "display_buffer.h"
-#include "display_buffer_builder.h"
+#include "mir/graphics/android/mir_native_window.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/event_handler_register.h"
+#include "mir/fd.h"
 
 #include <boost/throw_exception.hpp>
 #include <fcntl.h>
@@ -63,22 +67,49 @@ try
 {
     config.power_mode(mga::DisplayName::primary, mode);
 } catch (...) {}
+
+std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
+    mga::DisplayComponentFactory& display_buffer_builder,
+    mga::DisplayAttribs const& attribs,
+    std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
+    mga::PbufferGLContext const& gl_context,
+    mga::OverlayOptimization overlay_option)
+{
+    std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(attribs)};
+    auto cache = std::make_shared<mga::InterpreterCache>();
+    auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, cache);
+    auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
+    return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new mga::DisplayBuffer(
+        fbs,
+        display_buffer_builder.create_display_device(),
+        native_window,
+        gl_context,
+        *gl_program_factory,
+        mir_orientation_normal,
+        overlay_option));
+}
 }
 
 mga::Display::Display(
-    std::shared_ptr<mga::DisplayBufferBuilder> const& display_buffer_builder,
+    std::shared_ptr<mga::DisplayComponentFactory> const& display_buffer_builder,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
     std::shared_ptr<GLConfig> const& gl_config,
-    std::shared_ptr<DisplayReport> const& display_report) :
+    std::shared_ptr<DisplayReport> const& display_report,
+    mga::OverlayOptimization overlay_option) :
     display_buffer_builder{display_buffer_builder},
-    gl_context{display_buffer_builder->display_format(), *gl_config, *display_report},
-    display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)},
     hwc_config{display_buffer_builder->create_hwc_configuration()},
     hotplug_subscription{hwc_config->subscribe_to_config_changes(std::bind(&mga::Display::on_hotplug, this))},
+    primary_attribs(hwc_config->active_attribs_for(mga::DisplayName::primary)),
     config(
-        hwc_config->active_attribs_for(mga::DisplayName::primary),
-        hwc_config->active_attribs_for(mga::DisplayName::external),
-        display_buffer_builder->display_format()),
+        primary_attribs,
+        hwc_config->active_attribs_for(mga::DisplayName::external)),
+    gl_context{config.primary_config().current_format, *gl_config, *display_report},
+    display_buffer{create_display_buffer(
+        *display_buffer_builder,
+        primary_attribs,
+        gl_program_factory,
+        gl_context,
+        overlay_option)},
     display_change_pipe(new DisplayChangePipe)
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
@@ -113,8 +144,7 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
     {
         config = mga::DisplayConfiguration(
             hwc_config->active_attribs_for(mga::DisplayName::primary),
-            hwc_config->active_attribs_for(mga::DisplayName::external),
-            display_buffer_builder->display_format());
+            hwc_config->active_attribs_for(mga::DisplayName::external));
         configuration_dirty = false;
     }
 

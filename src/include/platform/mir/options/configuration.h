@@ -44,7 +44,6 @@ extern char const* const frontend_threads_opt;
 extern char const* const touchspots_opt;
 extern char const* const fatal_abort_opt;
 extern char const* const debug_opt;
-extern char const* const use_asio_main_loop_opt;
 
 extern char const* const name_opt;
 extern char const* const offscreen_opt;

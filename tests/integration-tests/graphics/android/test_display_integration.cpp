@@ -21,7 +21,7 @@
 #include "src/platforms/android/hwc_loggers.h"
 #include "src/platforms/android/resource_factory.h"
 #include "src/platforms/android/android_graphic_buffer_allocator.h"
-#include "src/platforms/android/output_builder.h"
+#include "src/platforms/android/hal_component_factory.h"
 #include "src/server/graphics/program_factory.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/glib_main_loop.h"
@@ -29,6 +29,8 @@
 
 #include "examples/graphics.h"
 #include "mir_test_doubles/mock_display_report.h"
+#include "mir_test_doubles/mock_display_device.h"
+#include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/stub_display_buffer.h"
@@ -69,11 +71,11 @@ protected:
         auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
         auto null_display_report = mir::report::null_display_report();
         auto stub_gl_config = std::make_shared<mtd::StubGLConfig>();
-        auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
-            buffer_allocator, display_resource_factory, mga::OverlayOptimization::enabled, report);
+        auto display_buffer_factory = std::make_shared<mga::HalComponentFactory>(
+            buffer_allocator, display_resource_factory, report);
         auto program_factory = std::make_shared<mg::ProgramFactory>();
         display = std::make_shared<mga::Display>(
-            display_buffer_factory, program_factory, stub_gl_config, null_display_report);
+            display_buffer_factory, program_factory, stub_gl_config, null_display_report, mga::OverlayOptimization::enabled);
     }
 
     static void TearDownTestCase()
@@ -127,7 +129,7 @@ struct AndroidDisplayHotplug : ::testing::Test
         void power_mode(mga::DisplayName, MirPowerMode) override {}
         mga::DisplayAttribs active_attribs_for(mga::DisplayName) override
         {
-            return mga::DisplayAttribs{{0,0}, {0,0}, 0.0, true};
+            return mga::DisplayAttribs{{0,0}, {0,0}, 0.0, true, mir_pixel_format_abgr_8888, 2};
         } 
         mga::ConfigChangeSubscription subscribe_to_config_changes(
             std::function<void()> const& cb) override
@@ -162,29 +164,18 @@ struct AndroidDisplayHotplug : ::testing::Test
         mga::HwcConfiguration& wrapped;
     };
 
-    struct StubOutputBuilder : public mga::DisplayBufferBuilder
+    struct StubOutputBuilder : public mga::DisplayComponentFactory
     {
-        MirPixelFormat display_format() override
+        std::unique_ptr<mga::FramebufferBundle> create_framebuffers(mga::DisplayAttribs const&) override
         {
-            return mir_pixel_format_abgr_8888;
+            return std::unique_ptr<mga::FramebufferBundle>(new testing::NiceMock<mtd::MockFBBundle>());
         }
-        std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
-            mg::GLProgramFactory const&, mga::GLContext const&) override
+
+        std::unique_ptr<mga::DisplayDevice> create_display_device() override
         {
-            struct NullConfigurableDisplayBuffer : mga::ConfigurableDisplayBuffer
-            {
-                geom::Rectangle view_area() const override { return geom::Rectangle(); }
-                void make_current() override {}
-                void release_current() override {}
-                void gl_swap_buffers() override {}
-                void flip() override {}
-                bool post_renderables_if_optimizable(mg::RenderableList const&) override { return false; }
-                MirOrientation orientation() const override { return mir_orientation_normal; }
-                bool uses_alpha() const override { return false; }
-                void configure(MirPowerMode, MirOrientation) {}
-            };
-            return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new NullConfigurableDisplayBuffer());
+            return std::unique_ptr<mga::DisplayDevice>(new testing::NiceMock<mtd::MockDisplayDevice>());
         }
+
         std::unique_ptr<mga::HwcConfiguration> create_hwc_configuration() override
         {
             return std::unique_ptr<mga::HwcConfiguration>(new WrappingConfig(stub_config));
@@ -206,7 +197,8 @@ struct AndroidDisplayHotplug : ::testing::Test
         stub_output_builder,
         std::make_shared<mg::ProgramFactory>(),
         std::make_shared<mtd::StubGLConfig>(),
-        mir::report::null_display_report()};
+        mir::report::null_display_report(),
+        mga::OverlayOptimization::enabled};
 };
 
 TEST_F(AndroidDisplayHotplug, hotplug_generates_mainloop_event)
