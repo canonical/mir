@@ -78,11 +78,7 @@ private:
 
     void resize(Point) override {}
 
-    void toggle_maximized() override {}
-
-    void toggle_max_horizontal() override {}
-
-    void toggle_max_vertical() override {}
+    void toggle(MirSurfaceState) override {}
 
     int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value) override
         { return requested_value; }
@@ -135,7 +131,7 @@ public:
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session].surfaces.push_back(surface);
         surface_info[surface].session = session_info[session].session;
-        surface_info[surface].state = SurfaceInfo::restored;
+        surface_info[surface].state = mir_surface_state_restored;
     }
 
     void remove_surface(
@@ -270,19 +266,70 @@ public:
         old_cursor = cursor;
     }
 
-    void toggle_maximized() override
+    void toggle(MirSurfaceState state) override
     {
-        toggle(SurfaceInfo::maximized);
-    }
+        // We have to duplicate the state information into surface to notify the
+        // client. But this has to happen without holding a lock (as we are also
+        // notified via a call to attribute_set()).
+        std::function<void()> notify_client = [](){};
 
-    void toggle_max_horizontal() override
-    {
-        toggle(SurfaceInfo::hmax);
-    }
+        if (auto const focussed_session = focus_controller()->focussed_application().lock())
+        {
+            if (auto const focussed_surface = focussed_session->default_surface())
+            {
+                std::lock_guard<decltype(mutex)> lock(mutex);
 
-    void toggle_max_vertical() override
-    {
-        toggle(SurfaceInfo::vmax);
+                auto& surface_info = this->surface_info[focussed_surface];
+
+                if (surface_info.state == state)
+                {
+                    notify_client = [focussed_surface]()
+                        {
+                            focussed_surface->configure(
+                                mir_surface_attrib_state,
+                                mir_surface_state_restored);
+                        };
+                }
+                else
+                {
+                    switch (state)
+                    {
+                    case mir_surface_state_maximized:
+                        notify_client = [focussed_surface]()
+                            {
+                                focussed_surface->configure(
+                                    mir_surface_attrib_state,
+                                    mir_surface_state_maximized);
+                            };
+                        break;
+
+                    case mir_surface_state_horizmaximized:
+                    {
+                        notify_client = [focussed_surface]()
+                            {
+                                focussed_surface->configure(
+                                    mir_surface_attrib_state,
+                                    mir_surface_state_horizmaximized);
+                            };
+                        break;
+                    }
+                    case mir_surface_state_vertmaximized:
+                        notify_client = [focussed_surface]()
+                            {
+                                focussed_surface->configure(
+                                    mir_surface_attrib_state,
+                                    mir_surface_state_vertmaximized);
+                            };
+                        break;
+
+                    default:
+                        break;
+                    }
+                }
+            }
+        }
+
+        notify_client();
     }
 
     int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value) override
@@ -446,98 +493,30 @@ private:
     {
         SurfaceInfo() = default;
         std::weak_ptr<ms::Session> session;
-        enum State { restored, maximized, hmax, vmax } state;
+        MirSurfaceState state;
         Rectangle restore_rect;
     };
 
-    void toggle(SurfaceInfo::State state)
-    {
-        // We have to duplicate the state information into surface to notify the
-        // client. But this has to happen without holding a lock (as we are also
-        // notified via a call to attribute_set()).
-        std::function<void()> notify_client = [](){};
-
-        if (auto const focussed_session = focus_controller()->focussed_application().lock())
-        {
-            if (auto const focussed_surface = focussed_session->default_surface())
-            {
-                std::lock_guard<decltype(mutex)> lock(mutex);
-
-                auto& surface_info = this->surface_info[focussed_surface];
-
-                if (surface_info.state == state)
-                {
-                    notify_client = [focussed_surface]()
-                        {
-                            focussed_surface->configure(
-                                mir_surface_attrib_state,
-                                mir_surface_state_restored);
-                        };
-                }
-                else
-                {
-                    switch (state)
-                    {
-                    case SurfaceInfo::maximized:
-                        notify_client = [focussed_surface]()
-                            {
-                                focussed_surface->configure(
-                                    mir_surface_attrib_state,
-                                    mir_surface_state_maximized);
-                            };
-                        break;
-
-                    case SurfaceInfo::hmax:
-                    {
-                        // We have to implement this here as we can't code hmax into mir_surface_attrib_state
-                        auto const& session_info = this->session_info[focussed_session.get()];
-                        surface_info.state = state;
-                        focussed_surface->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
-                        focussed_surface->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
-
-                        notify_client = [focussed_surface]()
-                            {
-                                focussed_surface->configure(
-                                    mir_surface_attrib_state,
-                                    mir_surface_state_unknown);
-                            };
-                        break;
-                    }
-                    case SurfaceInfo::vmax:
-                        notify_client = [focussed_surface]()
-                            {
-                                focussed_surface->configure(
-                                    mir_surface_attrib_state,
-                                    mir_surface_state_vertmaximized);
-                            };
-                        break;
-
-                    default:
-                        break;
-                    }
-                }
-            }
-        }
-
-        notify_client();
-    }
-
     void set_state(ms::Surface const& surface, int value)
     {
-        auto new_state = SurfaceInfo::restored;
+        auto new_state = mir_surface_state_restored;
 
         switch (value)
         {
         case mir_surface_state_restored:
-            new_state = SurfaceInfo::restored;
+            new_state = mir_surface_state_restored;
             break;
 
         case mir_surface_state_maximized:
-            new_state = SurfaceInfo::maximized;
+            new_state = mir_surface_state_maximized;
             break;
 
         case mir_surface_state_vertmaximized:
-            new_state = SurfaceInfo::vmax;
+            new_state = mir_surface_state_vertmaximized;
+            break;
+
+        case mir_surface_state_horizmaximized:
+            new_state = mir_surface_state_horizmaximized;
             break;
 
         default:
@@ -552,7 +531,7 @@ private:
                 {
                     auto& surface_info = i.second;
 
-                    if (surface_info.state == SurfaceInfo::restored)
+                    if (surface_info.state == mir_surface_state_restored)
                     {
                         surface_info.restore_rect = {sp->top_left(), sp->size()};
                     }
@@ -567,24 +546,27 @@ private:
 
                     switch (new_state)
                     {
-                    case SurfaceInfo::restored:
+                    case mir_surface_state_restored:
                         sp->move_to(surface_info.restore_rect.top_left);
                         sp->resize(surface_info.restore_rect.size);
                         break;
 
-                    case SurfaceInfo::maximized:
+                    case mir_surface_state_maximized:
                         sp->move_to(session_info.tile.top_left);
                         sp->resize(session_info.tile.size);
                         break;
 
-                    case SurfaceInfo::hmax:
+                    case mir_surface_state_horizmaximized:
                         sp->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
                         sp->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
                         break;
 
-                    case SurfaceInfo::vmax:
+                    case mir_surface_state_vertmaximized:
                         sp->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
                         sp->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
+                        break;
+
+                    default:
                         break;
                     }
 
@@ -672,15 +654,15 @@ private:
             switch (event.modifiers & modifier_mask)
             {
             case mir_key_modifier_alt:
-                wm->toggle_maximized();
+                wm->toggle(mir_surface_state_maximized);
                 return true;
 
             case mir_key_modifier_shift:
-                wm->toggle_max_vertical();
+                wm->toggle(mir_surface_state_vertmaximized);
                 return true;
 
             case mir_key_modifier_ctrl:
-                wm->toggle_max_horizontal();
+                wm->toggle(mir_surface_state_horizmaximized);
                 return true;
 
             default:
