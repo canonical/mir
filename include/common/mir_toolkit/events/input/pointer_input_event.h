@@ -58,9 +58,9 @@ typedef enum {
     mir_pointer_input_axis_x = 0,
 /* Absolute axis containing the y coordinate of the pointer */
     mir_pointer_input_axis_y = 1,
-/* Relative axis containing the speed of the vertical scroll wheel */
+/* Relative axis containing ticks reported by the vertical scroll wheel */
     mir_pointer_input_axis_vscroll = 2,
-/* Relative axis containing the speed of the horizontal scroll wheel */
+/* Relative axis containing ticks reported by the horizontal scroll wheel */
     mir_pointer_input_axis_hscroll = 3
 } MirPointerInputEventAxis;
 
