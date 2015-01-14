@@ -161,6 +161,6 @@ TEST_F(LayerListTest, setup_fb_with_skip)
     list.setup_fb(stub_fb);
     auto l = list.native_list();
     ASSERT_THAT(l->numHwLayers, Eq(2));
-    EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(skip));
-    EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(fbtarget));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(skip));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(fbtarget));
 }
