@@ -50,6 +50,7 @@ namespace client
 {
 class ClientBuffer;
 class ClientBufferStream;
+class ClientBufferStreamFactory;
 class PerfReport;
 
 struct MemoryRegion;
@@ -95,6 +96,7 @@ public:
         MirConnection *allocating_connection,
         mir::protobuf::DisplayServer::Stub& server,
         mir::protobuf::Debug::Stub* debug,
+        std::shared_ptr<mir::client::ClientBufferStreamFactory> const& buffer_stream_factory,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
         MirSurfaceSpec const& spec,
         mir_surface_callback callback, void * context);
@@ -161,11 +163,14 @@ private:
     mir::protobuf::Void void_response;
 
     MirConnection* const connection{nullptr};
+
     MirWaitHandle create_wait_handle;
     MirWaitHandle configure_wait_handle;
     MirWaitHandle configure_cursor_wait_handle;
 
+
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
+    std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
 

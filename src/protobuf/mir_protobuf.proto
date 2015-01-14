@@ -126,6 +126,8 @@ message Surface {
   optional int32 fds_on_side_channel = 8;
   
   repeated SurfaceSetting attributes = 9;
+  
+  optional BufferStream buffer_stream = 10;
 
   optional string error = 127;
 }

@@ -106,6 +106,7 @@ MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mp::DisplayServer::Stub& the_server,
     mp::Debug::Stub* debug,
+    std::shared_ptr<mcl::ClientBufferStreamFactory> const& buffer_stream_factory,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceSpec const& spec,
     mir_surface_callback callback, void * context)
@@ -113,6 +114,7 @@ MirSurface::MirSurface(
       debug{debug},
       name{spec.surface_name.value()},
       connection(allocating_connection),
+      buffer_stream_factory(buffer_stream_factory),
       input_platform(input_platform)
 {
     const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
@@ -263,9 +265,8 @@ MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf) const
 
 void MirSurface::process_incoming_buffer()
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
     auto const& buffer = get_current_buffer();
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     auto buffer_width = buffer->size().width.as_int();
     auto buffer_height = buffer->size().height.as_int();
@@ -302,10 +303,8 @@ void MirSurface::created(mir_surface_callback callback, void * context)
                 attrib_cache[attrib.attrib()] = attrib.ivalue();
             }
 
-            // TODO: Fill from protocol
-            mir::protobuf::BufferStream protobuf_bs;
-            buffer_stream = connection->get_client_buffer_stream_factory()->
-                make_producer_stream(*server, protobuf_bs);
+            buffer_stream = buffer_stream_factory->
+                make_producer_stream(*server, surface.buffer_stream());
         }
 
         connection->on_surface_created(id(), this);
