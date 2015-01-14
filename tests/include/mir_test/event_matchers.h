@@ -329,7 +329,7 @@ MATCHER_P2(SurfaceEvent, attrib, value, "")
     auto as_address = to_address(arg);
     if (mir_event_get_type(as_address) != mir_event_type_surface)
         return false;
-    auto surface_ev = mir_event_get_surface_event(&as_address);
+    auto surface_ev = mir_event_get_surface_event(as_address);
     if (mir_surface_event_get_attribute(surface_ev) != attrib)
         return false;
     if (mir_surface_event_get_attribute_value(surface_ev) != value)
