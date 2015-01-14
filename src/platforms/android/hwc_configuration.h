@@ -42,7 +42,7 @@ struct DisplayAttribs
     size_t num_framebuffers;
 };
 
-typedef std::shared_ptr<void> ConfigChangeSubscription;
+using ConfigChangeSubscription = std::shared_ptr<void>;
 //interface adapting for the blanking interface differences between fb, HWC 1.0-1.3, and HWC 1.4+
 class HwcConfiguration
 {

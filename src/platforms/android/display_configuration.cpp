@@ -30,8 +30,11 @@ mg::DisplayConfigurationOutput external_output(
 {
     std::vector<mg::DisplayConfigurationMode> external_modes;
     if (external_attribs.connected)
+    {
         external_modes.emplace_back(
             mg::DisplayConfigurationMode{external_attribs.pixel_size, external_attribs.vrefresh_hz});
+    }
+
     return {
         mg::DisplayConfigurationOutputId{external_id},
         mg::DisplayConfigurationCardId{0},
@@ -54,7 +57,7 @@ mg::DisplayConfigurationOutput external_output(
 mga::DisplayConfiguration::DisplayConfiguration(
     mga::DisplayAttribs const& primary_attribs,
     mga::DisplayAttribs const& external_attribs) :
-    configurations{
+    configurations{{
         mg::DisplayConfigurationOutput{
             mg::DisplayConfigurationOutputId{primary_id},
             mg::DisplayConfigurationCardId{0},
@@ -72,7 +75,7 @@ mga::DisplayConfiguration::DisplayConfiguration(
             mir_orientation_normal
         }, 
         external_output(external_attribs)
-    },
+    }},
     card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }
@@ -101,13 +104,13 @@ void mga::DisplayConfiguration::for_each_card(std::function<void(mg::DisplayConf
 
 void mga::DisplayConfiguration::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
 {
-    for(auto const& configuration : configurations)
+    for (auto const& configuration : configurations)
         f(configuration);
 }
 
 void mga::DisplayConfiguration::for_each_output(std::function<void(mg::UserDisplayConfigurationOutput&)> f)
 {
-    for(auto& configuration : configurations)
+    for (auto& configuration : configurations)
     {
         mg::UserDisplayConfigurationOutput user(configuration);
         f(user);

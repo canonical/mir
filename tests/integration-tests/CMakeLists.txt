@@ -49,8 +49,6 @@ add_subdirectory(shell/)
 add_subdirectory(process/)
 add_subdirectory(input/)
 
-include_directories(${GLIB_INCLUDE_DIRS})
-
 if (MIR_TEST_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
