@@ -32,12 +32,23 @@ namespace doubles
 
 struct MockFBBundle : public graphics::android::FramebufferBundle
 {
-    MockFBBundle()
+    MockFBBundle(geometry::Size sz, double vsync_rate, MirPixelFormat pf)
     {
-        using namespace testing;
         ON_CALL(*this, last_rendered_buffer())
-            .WillByDefault(Return(std::make_shared<StubBuffer>()));
+            .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
+        ON_CALL(*this, fb_format())
+            .WillByDefault(testing::Return(pf));
+        ON_CALL(*this, fb_size())
+            .WillByDefault(testing::Return(sz));
+        ON_CALL(*this, fb_refresh_rate())
+            .WillByDefault(testing::Return(vsync_rate));
     }
+
+    MockFBBundle() :
+        MockFBBundle({0,0}, 0.0f, mir_pixel_format_abgr_8888)
+    {
+    }
+
     MOCK_METHOD0(fb_format, MirPixelFormat());
     MOCK_METHOD0(fb_size, geometry::Size());
     MOCK_METHOD0(fb_refresh_rate, double());
