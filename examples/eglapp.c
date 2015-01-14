@@ -144,6 +144,10 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
          */
         printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
         break;
+    case mir_event_type_close_surface:
+        printf("Received close event from server.\n");
+        running = 0;
+        break;
     default:
         break;
     }

@@ -17,7 +17,6 @@
  */
 
 #include "real_hwc_wrapper.h"
-#include "hwc_common_device.h"
 #include "hwc_report.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -25,14 +24,6 @@
 #include <algorithm>
 
 namespace mga=mir::graphics::android;
-
-mga::RealHwcWrapper::RealHwcWrapper(
-    std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-    std::shared_ptr<mga::HwcReport> const& report)
-    : hwc_device(hwc_device),
-      report(report)
-{
-}
 
 namespace
 {
@@ -42,6 +33,67 @@ int num_displays(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> co
         std::find_if(displays.begin(), displays.end(),
             [](hwc_display_contents_1_t* d){ return d == nullptr; }));
 }
+
+mga::DisplayName display_name(int raw_name)
+{
+    switch(raw_name)
+    {
+        default:
+        case HWC_DISPLAY_PRIMARY:
+            return mga::DisplayName::primary;
+        case HWC_DISPLAY_EXTERNAL:
+            return mga::DisplayName::external;
+        case HWC_DISPLAY_VIRTUAL:
+            return mga::DisplayName::virt;
+    }
+}
+
+//note: The destruction ordering of RealHwcWrapper should be enough to ensure that the
+//callbacks are not called after the hwc module is closed. However, some badly synchronized
+//drivers continue to call the hooks for a short period after we call close(). (LP: 1364637)
+static std::mutex callback_lock;
+static void invalidate_hook(const struct hwc_procs* procs)
+{
+    mga::HwcCallbacks const* callbacks{nullptr};
+    std::unique_lock<std::mutex> lk(callback_lock);
+    if ((callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)) && callbacks->self)
+        callbacks->self->invalidate();
+}
+
+static void vsync_hook(const struct hwc_procs* procs, int display, int64_t timestamp)
+{
+    mga::HwcCallbacks const* callbacks{nullptr};
+    std::unique_lock<std::mutex> lk(callback_lock);
+    if ((callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)) && callbacks->self)
+        callbacks->self->vsync(display_name(display), std::chrono::nanoseconds{timestamp});
+}
+
+static void hotplug_hook(const struct hwc_procs* procs, int display, int connected)
+{
+    mga::HwcCallbacks const* callbacks{nullptr};
+    std::unique_lock<std::mutex> lk(callback_lock);
+    if ((callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)) && callbacks->self)
+        callbacks->self->hotplug(display_name(display), connected);
+}
+static mga::HwcCallbacks hwc_callbacks{{invalidate_hook, vsync_hook, hotplug_hook}, nullptr};
+
+}
+
+mga::RealHwcWrapper::RealHwcWrapper(
+    std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    std::shared_ptr<mga::HwcReport> const& report) :
+    hwc_device(hwc_device),
+    report(report)
+{
+    std::unique_lock<std::mutex> lk(callback_lock);
+    hwc_callbacks.self = this;
+    hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(&hwc_callbacks));
+}
+
+mga::RealHwcWrapper::~RealHwcWrapper()
+{
+    std::unique_lock<std::mutex> lk(callback_lock);
+    hwc_callbacks.self = nullptr;
 }
 
 void mga::RealHwcWrapper::prepare(
@@ -71,12 +123,6 @@ void mga::RealHwcWrapper::set(
         ss << "error during hwc prepare(). rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-}
-
-void mga::RealHwcWrapper::register_hooks(std::shared_ptr<HWCCallbacks> const& callbacks)
-{
-    hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(callbacks.get()));
-    registered_callbacks = callbacks;
 }
 
 void mga::RealHwcWrapper::vsync_signal_on(DisplayName display_name) const
@@ -121,6 +167,45 @@ void mga::RealHwcWrapper::display_off(DisplayName display_name) const
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
     report->report_display_off();
+}
+
+void mga::RealHwcWrapper::subscribe_to_events(
+        void const* subscriber,
+        std::function<void(DisplayName, std::chrono::nanoseconds)> const& vsync,
+        std::function<void(DisplayName, bool)> const& hotplug,
+        std::function<void()> const& invalidate)
+{
+    std::unique_lock<std::mutex> lk(callback_map_lock);
+    callback_map[subscriber] = {vsync, hotplug, invalidate};
+}
+
+void mga::RealHwcWrapper::unsubscribe_from_events(void const* subscriber) noexcept
+{
+    std::unique_lock<std::mutex> lk(callback_map_lock);
+    auto it = callback_map.find(subscriber);
+    if (it != callback_map.end())
+        callback_map.erase(it);
+}
+
+void mga::RealHwcWrapper::vsync(DisplayName name, std::chrono::nanoseconds timestamp)
+{
+    std::unique_lock<std::mutex> lk(callback_map_lock);
+    for(auto const& callbacks : callback_map)
+        callbacks.second.vsync(name, timestamp);
+}
+
+void mga::RealHwcWrapper::hotplug(DisplayName name, bool connected)
+{
+    std::unique_lock<std::mutex> lk(callback_map_lock);
+    for(auto const& callbacks : callback_map)
+        callbacks.second.hotplug(name, connected);
+}
+
+void mga::RealHwcWrapper::invalidate()
+{
+    std::unique_lock<std::mutex> lk(callback_map_lock);
+    for(auto const& callbacks : callback_map)
+        callbacks.second.invalidate();
 }
 
 std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName display_name) const

@@ -20,7 +20,6 @@
 #include "swapping_gl_context.h"
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
-#include "hwc_vsync_coordinator.h"
 #include "hwc_wrapper.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
@@ -65,12 +64,11 @@ bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
 }
 }
 
-mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-                          std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
-                          std::shared_ptr<LayerAdapter> const& layer_adapter)
-    : HWCCommonDevice(hwc_wrapper, coordinator),
-      hwc_list{layer_adapter, {}, fbtarget_plus_skip_size},
-      hwc_wrapper(hwc_wrapper)
+mga::HwcDevice::HwcDevice(
+    std::shared_ptr<HwcWrapper> const& hwc_wrapper,
+    std::shared_ptr<LayerAdapter> const& layer_adapter) :
+    hwc_list{layer_adapter, {}, fbtarget_plus_skip_size},
+    hwc_wrapper(hwc_wrapper)
 {
 }
 

@@ -123,7 +123,6 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
-        report->finished_frame(true, this);
     }
     else
     {
@@ -135,7 +134,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         renderer.render(renderable_list);
 
         display_buffer.gl_swap_buffers();
-        report->finished_frame(false, this);
+        report->rendered_frame(this);
 
         // Release buffers back to the clients now that the swap has returned.
         // It's important to do this before starting on the potentially slow
@@ -145,6 +144,8 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
 
         display_buffer.flip();
     }
+
+    report->finished_frame(this);
 }
 
 void me::DemoCompositor::on_cursor_movement(

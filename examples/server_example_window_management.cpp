@@ -90,48 +90,6 @@ private:
     void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override {}
 };
 
-// TODO these are useful operations that should be part of the library API
-// TODO I'll MP that as a follow-up
-inline Width operator*(double scale, Width const& w)
-{
-    return Width{scale*w.as_int()};
-}
-
-inline Height operator*(double scale, Height const& h)
-{
-    return Height{scale*h.as_int()};
-}
-
-inline DeltaX operator*(double scale, DeltaX const& dx)
-{
-    return DeltaX{scale*dx.as_int()};
-}
-
-inline DeltaY operator*(double scale, DeltaY const& dy)
-{
-    return DeltaY{scale*dy.as_int()};
-}
-
-inline Size operator*(double scale, Size const& size)
-{
-    return Size{scale*size.width, scale*size.height};
-}
-
-inline Displacement operator*(double scale, Displacement const& disp)
-{
-    return Displacement{scale*disp.dx, scale*disp.dy};
-}
-
-inline Displacement as_displacement(Size const& size)
-{
-    return Displacement{size.width.as_int(), size.height.as_int()};
-}
-
-inline Size as_size(Displacement const& disp)
-{
-    return Size{disp.dx.as_int(), disp.dy.as_int()};
-}
-
 // simple tiling algorithm:
 //  o Switch apps: tap or click on the corresponding tile
 //  o Move window: Alt-leftmousebutton drag

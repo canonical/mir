@@ -43,7 +43,6 @@ struct MockFBBundle : public graphics::android::FramebufferBundle
     MOCK_METHOD0(fb_refresh_rate, double());
     MOCK_METHOD0(buffer_for_render, std::shared_ptr<graphics::Buffer>());
     MOCK_METHOD0(last_rendered_buffer, std::shared_ptr<graphics::Buffer>());
-    MOCK_METHOD1(wait_for_consumed_buffer, void(bool));
 };
 }
 }

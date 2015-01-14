@@ -22,6 +22,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/geometry/size.h"
 #include "display_name.h"
+#include "device_quirks.h"
 #include <memory>
 
 namespace mir
@@ -36,6 +37,8 @@ struct DisplayAttribs
     geometry::Size mm_size;
     double vrefresh_hz;
     bool connected;
+    MirPixelFormat display_format;
+    size_t num_framebuffers;
 };
 
 //interface adapting for the blanking interface differences between fb, HWC 1.0-1.3, and HWC 1.4+
@@ -60,8 +63,10 @@ public:
     void power_mode(DisplayName, MirPowerMode) override;
     DisplayAttribs active_attribs_for(DisplayName) override;
 private:
+    DeviceQuirks quirks{PropertiesOps{}};
     std::shared_ptr<HwcWrapper> const hwc_device;
     bool off;
+    MirPixelFormat format;
 };
 
 }
