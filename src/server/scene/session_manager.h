@@ -74,13 +74,13 @@ public:
                                  std::shared_ptr<frontend::Session> const& session) override;
     void stop_prompt_session(std::shared_ptr<frontend::PromptSession> const& prompt_session) override;
 
-    virtual int configure(
+    virtual int set_surface_attribute(
         std::shared_ptr<frontend::Session> const& session,
         frontend::SurfaceId surface_id,
         MirSurfaceAttrib attrib,
         int value) override;
 
-    virtual int query(
+    virtual int get_surface_attribute(
         std::shared_ptr<frontend::Session> const& session,
         frontend::SurfaceId surface_id,
         MirSurfaceAttrib attrib) override;

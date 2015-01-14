@@ -53,13 +53,13 @@ public:
     void stop_prompt_session(
         std::shared_ptr<PromptSession> const& prompt_session) override;
 
-    int configure(
+    int set_surface_attribute(
         std::shared_ptr<Session> const& session,
         SurfaceId surface_id,
         MirSurfaceAttrib attrib,
         int value) override;
 
-    int query(
+    int get_surface_attribute(
         std::shared_ptr<Session> const& session,
         SurfaceId surface_id,
         MirSurfaceAttrib attrib) override;

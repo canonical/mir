@@ -59,19 +59,19 @@ void mf::ShellWrapper::stop_prompt_session(
     wrapped->stop_prompt_session(prompt_session);
 }
 
-int mf::ShellWrapper::configure(
+int mf::ShellWrapper::set_surface_attribute(
     std::shared_ptr<Session> const& session,
     SurfaceId surface_id,
     MirSurfaceAttrib attrib,
     int value)
 {
-    return wrapped->configure(session, surface_id, attrib, value);
+    return wrapped->set_surface_attribute(session, surface_id, attrib, value);
 }
 
-int mf::ShellWrapper::query(
+int mf::ShellWrapper::get_surface_attribute(
     std::shared_ptr<Session> const& session,
     SurfaceId surface_id,
     MirSurfaceAttrib attrib)
 {
-    return wrapped->query(session, surface_id, attrib);
+    return wrapped->get_surface_attribute(session, surface_id, attrib);
 }

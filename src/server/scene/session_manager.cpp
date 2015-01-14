@@ -193,7 +193,7 @@ void ms::SessionManager::stop_prompt_session(std::shared_ptr<mf::PromptSession> 
 }
 
 // TODO this is clunky, but just wires the new interaction route to the old implementation
-int ms::SessionManager::configure(
+int ms::SessionManager::set_surface_attribute(
     std::shared_ptr<mf::Session> const& session,
     mf::SurfaceId surface_id,
     MirSurfaceAttrib attrib,
@@ -211,7 +211,7 @@ int ms::SessionManager::configure(
 }
 
 // TODO this is clunky, but just wires the new interaction route to the old implementation
-int ms::SessionManager::query(
+int ms::SessionManager::get_surface_attribute(
     std::shared_ptr<mf::Session> const& session,
     mf::SurfaceId surface_id,
     MirSurfaceAttrib attrib)

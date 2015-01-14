@@ -228,7 +228,7 @@ void mf::SessionMediator::create_surface(
         
         setting->mutable_surfaceid()->set_value(surf_id.as_value());
         setting->set_attrib(i);
-        setting->set_ivalue(shell->query(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
+        setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
     advance_buffer(surf_id, *surface,
@@ -388,7 +388,7 @@ void mf::SessionMediator::configure_surface(
 
         auto const id = mf::SurfaceId(request->surfaceid().value());
         int value = request->ivalue();
-        int newvalue = shell->configure(session, id, attrib, value);
+        int newvalue = shell->set_surface_attribute(session, id, attrib, value);
 
         response->set_ivalue(newvalue);
     }
