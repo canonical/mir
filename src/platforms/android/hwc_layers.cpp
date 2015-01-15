@@ -135,7 +135,7 @@ mga::HWCLayer::HWCLayer(
     LayerType type,
     geometry::Rectangle const& position,
     bool alpha_enabled,
-    Buffer const& buffer) :
+    std::shared_ptr<Buffer> const& buffer) :
     HWCLayer(layer_adapter, list, layer_index)
 {
     setup_layer(type, position, alpha_enabled, buffer);
@@ -161,7 +161,7 @@ bool mga::HWCLayer::setup_layer(
     LayerType type,
     geometry::Rectangle const& position,
     bool alpha_enabled,
-    Buffer const& buffer)
+    std::shared_ptr<Buffer> const& buffer)
 {
     bool needs_commit = needs_gl_render();
 
@@ -202,12 +202,12 @@ bool mga::HWCLayer::setup_layer(
         position.bottom_right().y.as_int()
     };
 
-    geom::Rectangle crop_rect{{0,0}, buffer.size()};
+    geom::Rectangle crop_rect{{0,0}, buffer->size()};
     layer_adapter->fill_source_crop(*hwc_layer, crop_rect);
 
     visible_rect = hwc_layer->displayFrame;
 
-    auto const& native_buffer = buffer.native_buffer_handle();
+    auto const& native_buffer = buffer->native_buffer_handle();
     needs_commit |= (hwc_layer->handle != native_buffer->handle());
     hwc_layer->handle = native_buffer->handle();
 

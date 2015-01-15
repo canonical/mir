@@ -42,8 +42,8 @@ struct LayerListTest : public testing::Test
                     std::make_shared<mtd::StubRenderable>()}
     {
 
-        mt::fill_hwc_layer(fbtarget, &visible_rect, disp_frame, stub_fb, HWC_FRAMEBUFFER_TARGET, 0);
-        mt::fill_hwc_layer(skip, &visible_rect, disp_frame, stub_fb, HWC_FRAMEBUFFER, HWC_SKIP_LAYER);
+        mt::fill_hwc_layer(fbtarget, &visible_rect, disp_frame, *stub_fb, HWC_FRAMEBUFFER_TARGET, 0);
+        mt::fill_hwc_layer(skip, &visible_rect, disp_frame, *stub_fb, HWC_FRAMEBUFFER, HWC_SKIP_LAYER);
     }
 
     std::shared_ptr<mga::LayerAdapter> layer_adapter;
@@ -52,8 +52,9 @@ struct LayerListTest : public testing::Test
     std::list<std::shared_ptr<mg::Renderable>> renderables;
 
     geom::Rectangle const disp_frame{{0,0}, {44,22}};
-    mtd::StubBuffer stub_fb{
-        std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>(disp_frame.size), disp_frame.size};
+    std::shared_ptr<mtd::StubBuffer> stub_fb{
+        std::make_shared<mtd::StubBuffer>(
+            std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>(disp_frame.size), disp_frame.size)};
     hwc_layer_1_t fbtarget;
     hwc_layer_1_t skip;
     hwc_rect_t visible_rect;

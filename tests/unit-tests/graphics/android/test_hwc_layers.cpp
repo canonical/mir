@@ -41,9 +41,9 @@ public:
         using namespace testing;
 
         native_handle_1 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>(buffer_size);
-        ON_CALL(mock_buffer, size())
+        ON_CALL(*mock_buffer, size())
             .WillByDefault(Return(buffer_size));
-        ON_CALL(mock_buffer, native_buffer_handle())
+        ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(native_handle_1));
 
         list = std::shared_ptr<hwc_display_contents_1_t>(
@@ -86,7 +86,7 @@ public:
     geom::Rectangle screen_position{{9,8},buffer_size};
     bool alpha_enabled{false};
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_handle_1;
-    testing::NiceMock<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<mtd::MockBuffer> mock_buffer{std::make_shared<testing::NiceMock<mtd::MockBuffer>>()};
 
     std::shared_ptr<hwc_display_contents_1_t> list;
     hwc_layer_1_t* hwc_layer;
@@ -195,7 +195,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
         .Times(1)
         .WillOnce(testing::Return(fake_fence));
     expected_layer.acquireFenceFd = fake_fence;
-    layer.set_acquirefence_from(mock_buffer);
+    layer.set_acquirefence_from(*mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 }
 
@@ -223,7 +223,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
         .Times(1)
         .WillOnce(testing::Return(fake_fence));
     expected_layer.acquireFenceFd = fake_fence;
-    layer.set_acquirefence_from(mock_buffer);
+    layer.set_acquirefence_from(*mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 
     //hwc will set this to -1 to acknowledge that its adopted this layer's fence.
@@ -250,7 +250,7 @@ TEST_F(HWCLayersTest, buffer_fence_updates)
         screen_position, alpha_enabled, mock_buffer);
 
     hwc_layer->releaseFenceFd = fake_fence;
-    layer.update_from_releasefence(mock_buffer);
+    layer.update_from_releasefence(*mock_buffer);
 }
 
 TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)

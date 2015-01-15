@@ -119,7 +119,7 @@ void mga::HwcDevice::commit(
     RenderableList const& renderables,
     RenderableListCompositor const& list_compositor)
 {
-    hwc_list.setup_fb(*context.last_rendered_buffer());
+    hwc_list.setup_fb(context.last_rendered_buffer());
 
     hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
 
@@ -161,7 +161,7 @@ void mga::HwcDevice::commit(
 
     if (swap_occurred)
     {
-        hwc_list.setup_fb(*context.last_rendered_buffer());
+        hwc_list.setup_fb(context.last_rendered_buffer());
         hwc_list.back().layer.set_acquirefence_from(*context.last_rendered_buffer());
     }
 

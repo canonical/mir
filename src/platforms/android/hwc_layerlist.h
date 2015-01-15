@@ -65,7 +65,7 @@ public:
     HwcLayerEntry& back();
     std::list<HwcLayerEntry>::iterator end();
 
-    void setup_fb(Buffer const& fb_target);
+    void setup_fb(std::shared_ptr<Buffer> const& fb_target);
 
     hwc_display_contents_1_t* native_list();
     NativeFence retirement_fence();

@@ -104,7 +104,7 @@ void mga::LayerList::update_list(RenderableList const& renderlist)
                 mga::LayerType::gl_rendered,
                 renderable->screen_position(),
                 renderable->shaped(), // TODO: support alpha() in future too
-                *renderable->buffer());
+                renderable->buffer());
             it++;
         }
     }
@@ -120,7 +120,7 @@ void mga::LayerList::update_list(RenderableList const& renderlist)
                     mga::LayerType::gl_rendered,
                     renderable->screen_position(),
                     renderable->shaped(), // TODO: support alpha() in future
-                    *renderable->buffer()), true);
+                    renderable->buffer()), true);
         }
 
         for(; i < needed_size; i++)
@@ -179,9 +179,9 @@ mga::LayerList::LayerList(
     update_list(renderlist);
 }
 
-void mga::LayerList::setup_fb(mg::Buffer const& fb)
+void mga::LayerList::setup_fb(std::shared_ptr<mg::Buffer> const& fb)
 {
-    geom::Rectangle const disp_frame{{0,0}, {fb.size()}};
+    geom::Rectangle const disp_frame{{0,0}, {fb->size()}};
 
     if (mode == Mode::skip_only)
         layers.back().layer.setup_layer(mga::LayerType::skip, disp_frame, false, fb);

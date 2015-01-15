@@ -94,7 +94,7 @@ public:
         LayerType,
         geometry::Rectangle const& screen_position,
         bool alpha_enabled,
-        Buffer const& buffer);
+        std::shared_ptr<Buffer> const& buffer);
 
     HWCLayer& operator=(HWCLayer && layer);
     HWCLayer(HWCLayer && layer);
@@ -106,7 +106,7 @@ public:
         LayerType type,
         geometry::Rectangle const& position,
         bool alpha_enabled,
-        Buffer const& buffer);
+        std::shared_ptr<Buffer> const& buffer);
     bool needs_gl_render() const;
     void set_acquirefence_from(Buffer const& buffer);
     void update_from_releasefence(Buffer const& buffer);
