@@ -89,7 +89,10 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
     //TODO: NullRenderer is temporary until we move the list up to DisplayBuffer
     struct NullRenderer :  RenderableListCompositor
     {
-        void render(RenderableList const&, SwappingGLContext const&) const {}
+        void render(RenderableList const&, SwappingGLContext const& context) const
+        {
+            context.swap_buffers();
+        }
     } null_renderer;
 
     commit(context, {}, null_renderer);
@@ -147,10 +150,7 @@ void mga::HwcDevice::commit(
 
     if (renderables.empty() || !rejected_renderables.empty())
     {
-        if (!rejected_renderables.empty())
-            list_compositor.render(rejected_renderables, context);
-        if (renderables.empty())
-            context.swap_buffers();
+        list_compositor.render(rejected_renderables, context);
         hwc_list.setup_fb(context.last_rendered_buffer());
         hwc_list.back().layer.set_acquirefence();
     }
