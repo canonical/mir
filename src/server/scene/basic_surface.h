@@ -191,7 +191,7 @@ private:
     std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
-    std::weak_ptr<Surface> parent_;
+    std::weak_ptr<Surface> const parent_;
 
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;
