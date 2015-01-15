@@ -133,6 +133,11 @@ MirBufferPackage a_buffer_package()
 mp::BufferStream a_protobuf_buffer_stream(MirPixelFormat format, MirBufferUsage usage, MirBufferPackage const& package)
 {
     mp::BufferStream protobuf_bs;
+    mp::BufferStreamId bs_id;
+    
+    bs_id.set_value(1);
+    *protobuf_bs.mutable_id() = bs_id;
+
     protobuf_bs.set_pixel_format(format);
     protobuf_bs.set_buffer_usage(usage);
     fill_protobuf_buffer_stream_from_package(protobuf_bs, package);
@@ -175,6 +180,38 @@ ACTION_P(SetBufferInfoFromPackage, buffer_package)
 
 }
 
+TEST_F(ClientBufferStreamTest, protobuf_requirements)
+{
+    auto valid_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, a_buffer_package());
+    
+    EXPECT_NO_THROW({
+        mcl::BufferStream bs(mock_protobuf_server, any_buffer_stream_mode(), mt::fake_shared(mock_client_buffer_factory),
+            mt::fake_shared(stub_native_window_factory), valid_bs, logger);
+     });
+    
+    auto error_bs = valid_bs;
+    error_bs.set_error("An error");
+    EXPECT_THROW({
+        mcl::BufferStream bs(mock_protobuf_server, any_buffer_stream_mode(), mt::fake_shared(mock_client_buffer_factory),
+            mt::fake_shared(stub_native_window_factory), error_bs, logger);
+    }, std::runtime_error);
+    
+    auto no_id_bs = valid_bs;
+    no_id_bs.clear_id();
+    EXPECT_THROW({
+        mcl::BufferStream bs(mock_protobuf_server, any_buffer_stream_mode(), mt::fake_shared(mock_client_buffer_factory),
+            mt::fake_shared(stub_native_window_factory), no_id_bs, logger);
+    }, std::runtime_error);
+
+
+    auto no_buffer_bs = valid_bs;
+    no_buffer_bs.clear_buffer();
+    EXPECT_THROW({
+        mcl::BufferStream bs(mock_protobuf_server, any_buffer_stream_mode(), mt::fake_shared(mock_client_buffer_factory),
+            mt::fake_shared(stub_native_window_factory), no_buffer_bs, logger);
+    }, std::runtime_error);
+}
+
 TEST_F(ClientBufferStreamTest, uses_buffer_message_from_server)
 {
     using namespace ::testing;
@@ -197,7 +234,6 @@ TEST_F(ClientBufferStreamTest, producer_streams_call_exchange_buffer_on_next_buf
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
         a_buffer_package());
 
-    // TODO: Improve matching
     EXPECT_CALL(mock_protobuf_server, exchange_buffer(_,_,_,_))
         .WillOnce(RunProtobufClosure());
 
@@ -215,7 +251,6 @@ TEST_F(ClientBufferStreamTest, consumer_streams_call_screencast_buffer_on_next_b
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
         a_buffer_package());
 
-    // TODO: Improve matching
     EXPECT_CALL(mock_protobuf_server, screencast_buffer(_,_,_,_))
         .WillOnce(RunProtobufClosure());
 
@@ -297,7 +332,6 @@ TEST_F(ClientBufferStreamTest, gets_egl_native_window)
     EXPECT_EQ(StubEGLNativeWindowFactory::egl_native_window, egl_native_window);
 }
 
-// TODO: Test unsecuring buffer, etc...
 TEST_F(ClientBufferStreamTest, map_graphics_region)
 {
     using namespace ::testing;

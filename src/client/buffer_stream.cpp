@@ -92,7 +92,6 @@ make_perf_report(std::shared_ptr<ml::Logger> const& logger)
 }
 }
 
-// TODO: Examine mutexing requirements
 // TODO: It seems like a bit of a wart that we have to pass the Logger specifically here...perhaps
 // due to the lack of an easily mockable client configuration interface (passing around
 // connection can complicate unit tests ala MirSurface and test_client_mir_surface.cpp)
@@ -111,12 +110,15 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
       perf_report(make_perf_report(logger))
       
 {
-    // TODO: When to verify error on protobuf screencast/buffer stream?
+    if (!protobuf_bs.has_id() || protobuf_bs.has_error())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs.error())));
+    if (!protobuf_bs.has_buffer())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Buffer stream did not come with a buffer"));
+
     egl_native_window_ = native_window_factory->create_egl_native_window(this);
     process_buffer(protobuf_bs.buffer());
 
-    // TODO: Probably something better than this available...
-    perf_report->name_surface(std::to_string(reinterpret_cast<long unsigned int>(this)).c_str());
+    perf_report->name_surface(std::to_string(protobuf_bs.id().value()).c_str());
 }
 
 mcl::BufferStream::~BufferStream()
@@ -157,13 +159,11 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     lock.unlock();
     next_buffer_wait_handle.expect_result();
     
-    // TODO: Fix signature
-    std::function<void()> copy_done = done;
-
+// TODO: We can fix the strange "ID casting" used below in the second phase
+// of buffer stream which generalizes and clarifies the server side logic.
     if (mode == mcl::BufferStreamMode::Producer)
     {
         mp::BufferRequest request;
-// TODO: Fix after porting ID's
         request.mutable_id()->set_value(protobuf_bs.id().value());
         request.mutable_buffer()->set_buffer_id(protobuf_bs.buffer().buffer_id());
         display_server.exchange_buffer(
@@ -172,11 +172,10 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
             protobuf_bs.mutable_buffer(),
             google::protobuf::NewCallback(
             this, &mcl::BufferStream::next_buffer_received,
-            copy_done));
+            done));
     }
     else
     {
-        // TODO: Fix after porting screencast
         mp::ScreencastId screencast_id;
         screencast_id.set_value(protobuf_bs.id().value());
 
@@ -186,7 +185,7 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
             protobuf_bs.mutable_buffer(),
             google::protobuf::NewCallback(
             this, &mcl::BufferStream::next_buffer_received,
-            copy_done));
+            done));
     }
 
 

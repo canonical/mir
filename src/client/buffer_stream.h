@@ -54,8 +54,6 @@ Producer, // As in surfaces
 Consumer // As in screencasts
 };
 
-// TODO: Remove client surface interface...
-// TODO: Fix override
 class BufferStream : public ClientSurface, public ClientBufferStream
 {
 public:
@@ -67,22 +65,23 @@ public:
         std::shared_ptr<logging::Logger> const& logger);
     virtual ~BufferStream();
     
-    MirWaitHandle* next_buffer(std::function<void()> const& done);
-    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
+    MirWaitHandle* next_buffer(std::function<void()> const& done) override;
+    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override;
     // TODO: Investigate requirement ~racarr
-    uint32_t get_current_buffer_id();
+    uint32_t get_current_buffer_id() override;
     
     int swap_interval() const override;
     void set_swap_interval(int interval) override;
 
-    EGLNativeWindowType egl_native_window();
-    std::shared_ptr<MemoryRegion> secure_for_cpu_write();
+    EGLNativeWindowType egl_native_window() override;
+    std::shared_ptr<MemoryRegion> secure_for_cpu_write() override;
 
     // mcl::ClientSurface interface
-    MirSurfaceParameters get_parameters() const;
-    void request_and_wait_for_next_buffer();
-    // TODO: In this context this seems like a strange wart from swap interval...
-    void request_and_wait_for_configure(MirSurfaceAttrib attrib, int);
+    MirSurfaceParameters get_parameters() const override;
+    void request_and_wait_for_next_buffer() override;
+    // TODO: In this context this seems like a strange wart from swap interval
+    // being linked to "surface attributes"
+    void request_and_wait_for_configure(MirSurfaceAttrib attrib, int) override;
     
 protected:
     BufferStream(BufferStream const&) = delete;

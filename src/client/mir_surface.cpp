@@ -206,9 +206,7 @@ void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    auto buffer = buffer_stream->get_current_buffer();
-
-    auto secured_region = buffer->secure_for_cpu_write();
+    auto secured_region = buffer_stream->secure_for_cpu_write();
     region_out.width = secured_region->width.as_uint32_t();
     region_out.height = secured_region->height.as_uint32_t();
     region_out.stride = secured_region->stride.as_uint32_t();

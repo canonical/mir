@@ -32,6 +32,7 @@ namespace mir
 namespace client
 {
 class ClientBuffer;
+class MemoryRegion;
 
 class ClientBufferStream
 {
@@ -41,6 +42,8 @@ public:
     virtual uint32_t get_current_buffer_id() = 0;
     virtual EGLNativeWindowType egl_native_window() = 0;
     virtual MirWaitHandle* next_buffer(std::function<void()> const& done) = 0;
+
+    virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
 
     virtual int swap_interval() const = 0;
     virtual void set_swap_interval(int interval) = 0;

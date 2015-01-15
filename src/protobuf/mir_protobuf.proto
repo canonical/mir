@@ -115,6 +115,8 @@ message BufferStream {
   optional int32 pixel_format = 2;
   optional int32 buffer_usage = 3;
   optional Buffer buffer = 4;
+  
+  optional string error = 127;
 }
 
 message Surface {

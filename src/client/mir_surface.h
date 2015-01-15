@@ -148,7 +148,7 @@ private:
     void on_configured();
     void on_cursor_configured();
     void process_incoming_buffer();
-    void created(mir_surface_callback callback, void * context);
+    void created(mir_surface_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
     mir::protobuf::DisplayServer::Stub* server{nullptr};
