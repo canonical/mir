@@ -89,7 +89,7 @@ d5273f3363b0b776427d5e3f1af99f0f2bcf3fa6  include/server/mir/scene/observer.h
 b657cfb8fb31140b83b78fc19135dd0165ede67b  include/server/mir/scene/prompt_session.h
 a745a63d413ced63b82350b8c253b65dffd5bf44  include/server/mir/scene/prompt_session_listener.h
 a09a3f18ecea53dc45386c1e2baf545c4177c047  include/server/mir/scene/prompt_session_manager.h
-5edf446380070f567500069e422d293e88468ee5  include/server/mir/scene/session_coordinator.h
+1e7e26e1b0d2806d0d1854eda2d9a88bce0e7136  include/server/mir/scene/session_coordinator.h
 8cb940e808eca7db115239a25167955d34acafc4  include/server/mir/scene/session.h
 ee94083f10f890e24c0e0bbdb94842e2dd788deb  include/server/mir/scene/session_listener.h
 7f5f26000fd2312373817d05c488a6a950a47c82  include/server/mir/scene/snapshot.h

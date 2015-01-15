@@ -194,18 +194,6 @@ mir::DefaultServerConfiguration::wrap_session_coordinator(
     return wrapped;
 }
 
-std::shared_ptr<mf::Shell>
-mir::DefaultServerConfiguration::the_frontend_shell()
-{
-    return the_session_coordinator();
-}
-
-std::shared_ptr<msh::FocusController>
-mir::DefaultServerConfiguration::the_focus_controller()
-{
-    return the_session_coordinator();
-}
-
 std::shared_ptr<ms::PixelBuffer>
 mir::DefaultServerConfiguration::the_pixel_buffer()
 {
