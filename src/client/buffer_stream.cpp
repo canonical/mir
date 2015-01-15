@@ -214,7 +214,7 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    secured_region = get_current_buffer()->secure_for_cpu_write();
+    secured_region = buffer_depository.current_buffer()->secure_for_cpu_write();
     return secured_region;
 }
 
@@ -288,7 +288,7 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex); // TODO: Maybe not required?
+    std::unique_lock<decltype(mutex)> lock(mutex);
     return buffer_depository.current_buffer_id();
 }
 

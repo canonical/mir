@@ -470,7 +470,12 @@ int MirSurface::attrib(MirSurfaceAttrib at) const
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     if (at == mir_surface_attrib_swapinterval)
-        return buffer_stream->swap_interval();
+    {
+        if (buffer_stream)
+            return buffer_stream->swap_interval();
+        else // Surface creation is not finalized
+            return 1;
+    }
 
     return attrib_cache[at];
 }
