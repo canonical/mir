@@ -17,7 +17,14 @@
  */
 
 #include "default_shell.h"
+#include "mir/scene/prompt_session.h"
 #include "mir/scene/session_coordinator.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
+
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -41,7 +48,7 @@ std::shared_ptr<mf::Session> msh::DefaultShell::open_session(
 void msh::DefaultShell::close_session(
     std::shared_ptr<mf::Session> const& session)
 {
-    wrapped->close_session(session);
+    wrapped->close_session(std::dynamic_pointer_cast<ms::Session>(session));
 }
 
 void msh::DefaultShell::focus_next()
@@ -63,36 +70,43 @@ void msh::DefaultShell::set_focus_to(
 void msh::DefaultShell::handle_surface_created(
     std::shared_ptr<mf::Session> const& session)
 {
-    wrapped->handle_surface_created(session);
+    wrapped->handle_surface_created(std::dynamic_pointer_cast<ms::Session>(session));
 }
 
 std::shared_ptr<mf::PromptSession> msh::DefaultShell::start_prompt_session_for(
     std::shared_ptr<mf::Session> const& session,
     scene::PromptSessionCreationParameters const& params)
 {
-    return wrapped->start_prompt_session_for(session, params);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+
+    return wrapped->start_prompt_session_for(scene_session, params);
 }
 
 void msh::DefaultShell::add_prompt_provider_for(
     std::shared_ptr<mf::PromptSession> const& prompt_session,
     std::shared_ptr<mf::Session> const& session)
 {
-    wrapped->add_prompt_provider_for(prompt_session, session);
+    auto const scene_prompt_session = std::dynamic_pointer_cast<ms::PromptSession>(prompt_session);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    wrapped->add_prompt_provider_for(scene_prompt_session, scene_session);
 }
 
 void msh::DefaultShell::stop_prompt_session(std::shared_ptr<mf::PromptSession> const& prompt_session)
 {
-    wrapped->stop_prompt_session(prompt_session);
+    auto const scene_prompt_session = std::dynamic_pointer_cast<ms::PromptSession>(prompt_session);
+    wrapped->stop_prompt_session(scene_prompt_session);
 }
 
 mf::SurfaceId msh::DefaultShell::create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params)
 {
-    return wrapped->create_surface(session, params);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    return wrapped->create_surface(scene_session, params);
 }
 
 void msh::DefaultShell::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)
 {
-    wrapped->destroy_surface(session, surface);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    wrapped->destroy_surface(scene_session, surface);
 }
 
 int msh::DefaultShell::set_surface_attribute(
@@ -101,7 +115,16 @@ int msh::DefaultShell::set_surface_attribute(
     MirSurfaceAttrib attrib,
     int value)
 {
-    return wrapped->set_surface_attribute(session, surface_id, attrib, value);
+    // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
+
+    auto const surface = std::dynamic_pointer_cast<ms::Surface>(session->get_surface(surface_id));
+
+    if (!surface)
+        BOOST_THROW_EXCEPTION(std::logic_error("invalid surface id"));
+
+    return surface->configure(attrib, value);
 }
 
 int msh::DefaultShell::get_surface_attribute(
@@ -109,5 +132,14 @@ int msh::DefaultShell::get_surface_attribute(
     mf::SurfaceId surface_id,
     MirSurfaceAttrib attrib)
 {
-    return wrapped->get_surface_attribute(session, surface_id, attrib);
+    // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
+
+    auto const surface = std::dynamic_pointer_cast<ms::Surface>(session->get_surface(surface_id));
+
+    if (!surface)
+        BOOST_THROW_EXCEPTION(std::logic_error("invalid surface id"));
+
+    return surface->query(attrib);
 }

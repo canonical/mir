@@ -32,17 +32,15 @@ namespace mir
 namespace frontend
 {
 class EventSink;
-class PromptSession;
-class Session;
-class Surface;
 }
 
 namespace scene
 {
+class PromptSession;
+class PromptSessionCreationParameters;
 class Session;
 class Surface;
 class SurfaceCreationParameters;
-class PromptSessionCreationParameters;
 
 class SessionCoordinator
 {
@@ -51,34 +49,23 @@ public:
     virtual std::weak_ptr<Session> focussed_application() const = 0;
     virtual void set_focus_to(std::shared_ptr<Session> const& focus) = 0;
 
-    virtual std::shared_ptr<frontend::Session> open_session(
+    virtual std::shared_ptr<Session> open_session(
         pid_t client_pid,
         std::string const& name,
         std::shared_ptr<frontend::EventSink> const& sink) = 0;
 
-    virtual void close_session(std::shared_ptr<frontend::Session> const& session)  = 0;
+    virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
 
-    virtual void handle_surface_created(std::shared_ptr<frontend::Session> const& session) = 0;
+    virtual void handle_surface_created(std::shared_ptr<Session> const& session) = 0;
 
-    virtual std::shared_ptr<frontend::PromptSession> start_prompt_session_for(std::shared_ptr<frontend::Session> const& session,
+    virtual std::shared_ptr<PromptSession> start_prompt_session_for(std::shared_ptr<Session> const& session,
                                                                   PromptSessionCreationParameters const& params) = 0;
-    virtual void add_prompt_provider_for(std::shared_ptr<frontend::PromptSession> const& prompt_session,
-                                                                  std::shared_ptr<frontend::Session> const& session) = 0;
-    virtual void stop_prompt_session(std::shared_ptr<frontend::PromptSession> const& prompt_session) = 0;
+    virtual void add_prompt_provider_for(std::shared_ptr<PromptSession> const& prompt_session,
+                                                                  std::shared_ptr<Session> const& session) = 0;
+    virtual void stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) = 0;
 
-    virtual frontend::SurfaceId create_surface(std::shared_ptr<frontend::Session> const& session, SurfaceCreationParameters const& params) = 0;
-    virtual void destroy_surface(std::shared_ptr<frontend::Session> const& session, frontend::SurfaceId surface) = 0;
-
-    virtual int set_surface_attribute(
-        std::shared_ptr<frontend::Session> const& session,
-        frontend::SurfaceId surface_id,
-        MirSurfaceAttrib attrib,
-        int value) = 0;
-
-    virtual int get_surface_attribute(
-        std::shared_ptr<frontend::Session> const& session,
-        frontend::SurfaceId surface_id,
-        MirSurfaceAttrib attrib) = 0;
+    virtual frontend::SurfaceId create_surface(std::shared_ptr<Session> const& session, SurfaceCreationParameters const& params) = 0;
+    virtual void destroy_surface(std::shared_ptr<Session> const& session, frontend::SurfaceId surface) = 0;
 
 protected:
     SessionCoordinator() = default;

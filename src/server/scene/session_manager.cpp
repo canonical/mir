@@ -80,7 +80,7 @@ ms::SessionManager::~SessionManager() noexcept
         close_session(session);
 }
 
-std::shared_ptr<mf::Session> ms::SessionManager::open_session(
+std::shared_ptr<ms::Session> ms::SessionManager::open_session(
     pid_t client_pid,
     std::string const& name,
     std::shared_ptr<mf::EventSink> const& sender)
@@ -123,7 +123,7 @@ void ms::SessionManager::set_focus_to(std::shared_ptr<Session> const& session)
     set_focus_to_locked(lg, session);
 }
 
-void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
+void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
 {
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
 
@@ -161,12 +161,12 @@ std::weak_ptr<ms::Session> ms::SessionManager::focussed_application() const
     return focus_application;
 }
 
-void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> const& session)
+void ms::SessionManager::handle_surface_created(std::shared_ptr<Session> const& session)
 {
     set_focus_to(std::dynamic_pointer_cast<Session>(session));
 }
 
-std::shared_ptr<mf::PromptSession> ms::SessionManager::start_prompt_session_for(std::shared_ptr<mf::Session> const& session,
+std::shared_ptr<ms::PromptSession> ms::SessionManager::start_prompt_session_for(std::shared_ptr<Session> const& session,
     PromptSessionCreationParameters const& params)
 {
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
@@ -177,8 +177,8 @@ std::shared_ptr<mf::PromptSession> ms::SessionManager::start_prompt_session_for(
 }
 
 void ms::SessionManager::add_prompt_provider_for(
-    std::shared_ptr<mf::PromptSession> const& prompt_session,
-    std::shared_ptr<frontend::Session> const& session)
+    std::shared_ptr<PromptSession> const& prompt_session,
+    std::shared_ptr<Session> const& session)
 {
     auto scene_prompt_session = std::dynamic_pointer_cast<PromptSession>(prompt_session);
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
@@ -186,13 +186,13 @@ void ms::SessionManager::add_prompt_provider_for(
     prompt_session_manager->add_prompt_provider(scene_prompt_session, scene_session);
 }
 
-void ms::SessionManager::stop_prompt_session(std::shared_ptr<mf::PromptSession> const& prompt_session)
+void ms::SessionManager::stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session)
 {
     auto scene_prompt_session = std::dynamic_pointer_cast<PromptSession>(prompt_session);
     prompt_session_manager->stop_prompt_session(scene_prompt_session);
 }
 
-mf::SurfaceId ms::SessionManager::create_surface(std::shared_ptr<mf::Session> const& session, scene::SurfaceCreationParameters const& params)
+mf::SurfaceId ms::SessionManager::create_surface(std::shared_ptr<Session> const& session, scene::SurfaceCreationParameters const& params)
 {
     // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
     if (auto const sess = std::dynamic_pointer_cast<Session>(session))
@@ -203,7 +203,7 @@ mf::SurfaceId ms::SessionManager::create_surface(std::shared_ptr<mf::Session> co
     BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
 }
 
-void ms::SessionManager::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)
+void ms::SessionManager::destroy_surface(std::shared_ptr<Session> const& session, mf::SurfaceId surface)
 {
     // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
     if (auto const sess = std::dynamic_pointer_cast<Session>(session))
@@ -212,39 +212,4 @@ void ms::SessionManager::destroy_surface(std::shared_ptr<mf::Session> const& ses
     }
 
     BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
-}
-
-int ms::SessionManager::set_surface_attribute(
-    std::shared_ptr<mf::Session> const& session,
-    mf::SurfaceId surface_id,
-    MirSurfaceAttrib attrib,
-    int value)
-{
-    // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
-    if (!session)
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
-
-    auto const surface = std::dynamic_pointer_cast<Surface>(session->get_surface(surface_id));
-
-    if (!surface)
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid surface id"));
-
-    return surface->configure(attrib, value);
-}
-
-int ms::SessionManager::get_surface_attribute(
-    std::shared_ptr<mf::Session> const& session,
-    mf::SurfaceId surface_id,
-    MirSurfaceAttrib attrib)
-{
-    // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
-    if (!session)
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
-
-    auto const surface = std::dynamic_pointer_cast<Surface>(session->get_surface(surface_id));
-
-    if (!surface)
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid surface id"));
-
-    return surface->query(attrib);
 }
