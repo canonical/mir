@@ -25,6 +25,7 @@
 #include "mir/scene/placement_strategy.h"
 #include "mir/scene/surface_configurator.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir_toolkit/common.h"
 
 #include <memory>
 
@@ -65,11 +66,7 @@ public:
 
     virtual void resize(geometry::Point cursor) = 0;
 
-    virtual void toggle_maximized() = 0;
-
-    virtual void toggle_max_horizontal() = 0;
-
-    virtual void toggle_max_vertical() = 0;
+    virtual void toggle(MirSurfaceState state) = 0;
 };
 
 class EventTracker;
