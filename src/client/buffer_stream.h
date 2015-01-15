@@ -67,7 +67,7 @@ public:
     
     MirWaitHandle* next_buffer(std::function<void()> const& done) override;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override;
-    // TODO: Investigate requirement ~racarr
+    // Required by debug API
     uint32_t get_current_buffer_id() override;
     
     int swap_interval() const override;
@@ -79,8 +79,7 @@ public:
     // mcl::EGLNativeSurface interface
     MirSurfaceParameters get_parameters() const override;
     void request_and_wait_for_next_buffer() override;
-    // TODO: In this context this seems like a strange wart from swap interval
-    // being linked to "surface attributes"
+    // TODO: In this context it seems like a wart that this is a "SurfaceAttribute"
     void request_and_wait_for_configure(MirSurfaceAttrib attrib, int) override;
     
 protected:

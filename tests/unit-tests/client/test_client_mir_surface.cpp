@@ -485,31 +485,6 @@ TEST_F(MirClientSurfaceTest, does_not_create_input_thread_when_no_delegate_speci
     wait_handle->wait_for_all();
 }
 
-// TODO
-/* TEST_F(MirClientSurfaceTest, surface_resizes_with_latest_buffer)
-{
-    using namespace testing;
-
-    auto const surface = create_and_wait_for_surface_with(*client_comm_channel, stub_buffer_factory);
-
-    auto buffer_wait_handle = surface->next_buffer(&null_surface_callback, nullptr);
-    buffer_wait_handle->wait_for_all();
-
-    int new_width = mock_server_tool->width_sent += 12;
-    int new_height = mock_server_tool->height_sent -= 34;
-
-    auto const& before = surface->get_parameters();
-    EXPECT_THAT(before.width, Ne(new_width));
-    EXPECT_THAT(before.height, Ne(new_height));
-
-    buffer_wait_handle = surface->next_buffer(&null_surface_callback, nullptr);
-    buffer_wait_handle->wait_for_all();
-
-    auto const& after = surface->get_parameters();
-    EXPECT_THAT(after.width, Eq(new_width));
-    EXPECT_THAT(after.height, Eq(new_height));
-} */
-
 TEST_F(MirClientSurfaceTest, valid_surface_is_valid)
 {
     auto const surface = create_and_wait_for_surface_with(*client_comm_channel);

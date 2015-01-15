@@ -216,9 +216,6 @@ void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 
 MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void *context)
 {
-// TODO: INVESTIGATE
-//    std::unique_lock<decltype(mutex)> lock(mutex);
-
     return buffer_stream->next_buffer([&, callback, context]
     {
         process_incoming_buffer();

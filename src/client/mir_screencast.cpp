@@ -101,8 +101,6 @@ std::shared_ptr<mcl::ClientBuffer> MirScreencast::get_current_buffer()
 MirWaitHandle* MirScreencast::release(
         mir_screencast_callback callback, void* context)
 {
-    // TODO: Reset buffer stream?
-
     mir::protobuf::ScreencastId screencast_id;
     screencast_id.set_value(protobuf_screencast.screencast_id().value());
     
@@ -121,9 +119,8 @@ MirWaitHandle* MirScreencast::next_buffer(
     mir_screencast_callback callback, void* context)
 {
     return buffer_stream->next_buffer([&, callback, context]() {
-            // TODO: Perf report?
-            if (callback)
-                callback(this, context);
+        if (callback)
+            callback(this, context);
     });
 }
 

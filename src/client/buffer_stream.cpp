@@ -194,7 +194,7 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 
 std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex); // TODO: Maybe not required?
+    std::unique_lock<decltype(mutex)> lock(mutex);
     return buffer_depository.current_buffer();
 }
 
