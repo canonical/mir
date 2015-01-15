@@ -209,7 +209,7 @@ void mf::SessionMediator::create_surface(
     if (request->has_edge_attachment())
         params.with_edge_attachment(static_cast<MirEdgeAttachment>(request->edge_attachment()));
 
-    auto const surf_id = session->create_surface(params);
+    auto const surf_id = shell->create_surface(session, params);
 
     auto surface = session->get_surface(surf_id);
     auto const& client_size = surface->client_size();
@@ -333,7 +333,7 @@ void mf::SessionMediator::release_surface(
 
         auto const id = SurfaceId(request->value());
 
-        session->destroy_surface(id);
+        shell->destroy_surface(session, id);
         surface_tracker.remove_surface(id);
     }
 

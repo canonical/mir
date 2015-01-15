@@ -30,13 +30,6 @@ namespace doubles
 
 struct StubSession : public frontend::Session
 {
-    frontend::SurfaceId create_surface(scene::SurfaceCreationParameters const& /* params */) override
-    {
-        return frontend::SurfaceId{0};
-    }
-    void destroy_surface(frontend::SurfaceId /* surface */) override
-    {
-    }
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId /* surface */) const override
     {
         return std::shared_ptr<frontend::Surface>();

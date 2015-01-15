@@ -488,6 +488,8 @@ MIR_SERVER_28 {
     mir::shell::InputTargeter::operator*;
     mir::shell::SessionCoordinatorWrapper::add_prompt_provider_for*;
     mir::shell::SessionCoordinatorWrapper::close_session*;
+    mir::shell::SessionCoordinatorWrapper::create_surface*;
+    mir::shell::SessionCoordinatorWrapper::destroy_surface*;
     mir::shell::SessionCoordinatorWrapper::focus_next*;
     mir::shell::SessionCoordinatorWrapper::focussed_application*;
     mir::shell::SessionCoordinatorWrapper::get_surface_attribute*;

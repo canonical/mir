@@ -192,13 +192,35 @@ void ms::SessionManager::stop_prompt_session(std::shared_ptr<mf::PromptSession> 
     prompt_session_manager->stop_prompt_session(scene_prompt_session);
 }
 
-// TODO this is clunky, but just wires the new interaction route to the old implementation
+mf::SurfaceId ms::SessionManager::create_surface(std::shared_ptr<mf::Session> const& session, scene::SurfaceCreationParameters const& params)
+{
+    // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
+    if (auto const sess = std::dynamic_pointer_cast<Session>(session))
+    {
+        return sess->create_surface(params);
+    }
+
+    BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
+}
+
+void ms::SessionManager::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)
+{
+    // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
+    if (auto const sess = std::dynamic_pointer_cast<Session>(session))
+    {
+        return sess->destroy_surface(surface);
+    }
+
+    BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
+}
+
 int ms::SessionManager::set_surface_attribute(
     std::shared_ptr<mf::Session> const& session,
     mf::SurfaceId surface_id,
     MirSurfaceAttrib attrib,
     int value)
 {
+    // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
 
@@ -210,12 +232,12 @@ int ms::SessionManager::set_surface_attribute(
     return surface->configure(attrib, value);
 }
 
-// TODO this is clunky, but just wires the new interaction route to the old implementation
 int ms::SessionManager::get_surface_attribute(
     std::shared_ptr<mf::Session> const& session,
     mf::SurfaceId surface_id,
     MirSurfaceAttrib attrib)
 {
+    // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
 
