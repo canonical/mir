@@ -74,6 +74,7 @@ typedef enum MirSurfaceState
        Omitted for now, since it's functionally a subset of vertmaximized and
        differs only in the X coordinate. */
     mir_surface_state_fullscreen,
+    mir_surface_state_horizmaximized,
     mir_surface_states
 } MirSurfaceState;
 
@@ -159,6 +160,13 @@ typedef enum MirOrientationMode
                                mir_orientation_mode_landscape_any
 } MirOrientationMode;
 
+typedef enum MirEdgeAttachment
+{
+    mir_edge_attachment_vertical = 1 << 0,
+    mir_edge_attachment_horizontal = 1 << 1,
+    mir_edge_attachment_any = mir_edge_attachment_vertical |
+                              mir_edge_attachment_horizontal
+} MirEdgeAttachment;
 /**@}*/
 
 #endif

@@ -55,6 +55,8 @@ public:
     void zoom(float mag);
     void on_cursor_movement(geometry::Point const& p);
 
+    void set_colour_effect(ColourEffect);
+
     static void for_each(std::function<void(DemoCompositor&)> f);
 
 private:

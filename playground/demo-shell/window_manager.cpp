@@ -128,6 +128,17 @@ float measure_pinch(MirMotionEvent const& motion,
 
 } // namespace
 
+
+void me::WindowManager::toggle(ColourEffect which)
+{
+    colour_effect = (colour_effect == which) ? none : which;
+    me::DemoCompositor::for_each([this](me::DemoCompositor& c)
+    {
+        c.set_colour_effect(colour_effect);
+    });
+    force_redraw();
+}
+
 bool me::WindowManager::handle(MirEvent const& event)
 {
     // TODO: Fix android configuration and remove static hack ~racarr
@@ -146,6 +157,21 @@ bool me::WindowManager::handle(MirEvent const& event)
         {
             focus_controller->focus_next();
             return true;
+        }
+        else if (event.key.modifiers & mir_key_modifier_alt &&
+                 event.key.scan_code == KEY_F4)
+        {
+            auto const app = focus_controller->focussed_application().lock();
+            if (app)
+            {
+                // Ask the app to close politely. It has the right to refuse.
+                auto const surf = app->default_surface();
+                if (surf)
+                {
+                    surf->request_client_surface_close();
+                    return true;
+                }
+            }
         }
         else if ((event.key.modifiers & mir_key_modifier_alt &&
                   event.key.scan_code == KEY_P) ||
@@ -275,6 +301,16 @@ bool me::WindowManager::handle(MirEvent const& event)
             display->configure(*conf.get());
             compositor->start();
             return true;
+        }
+        else if (event.key.modifiers & mir_key_modifier_meta &&
+                 event.key.scan_code == KEY_N)
+        {
+            toggle(inverse);
+        }
+        else if (event.key.modifiers & mir_key_modifier_meta &&
+                 event.key.scan_code == KEY_C)
+        {
+            toggle(contrast);
         }
     }
     else if (event.type == mir_event_type_motion &&

@@ -787,10 +787,19 @@ MIR_SERVER_28 {
     mir::compositor::GLRenderer::set_viewport*;
     mir::compositor::GLRenderer::suspend*;
     mir::compositor::GLRenderer::tessellate*;
-    mir::compositor::GLProgramFamily::*;
     typeinfo?for?mir::compositor::GLRenderer;
     vtable?for?mir::compositor::GLRenderer;
     vtable?for?mir::compositor::RecentlyUsedCache;
   };
  local: *;
 };
+
+MIR_SERVER_28.1 {
+ global:
+  extern "C++" {
+    mir::compositor::GLRenderer::draw*;
+    mir::compositor::GLRenderer::vshader;
+    mir::compositor::GLRenderer::Program::Program*;
+    mir::compositor::GLProgramFamily::*;
+  };
+} MIR_SERVER_28;

@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_display_builder.h"
 #include "mir_test_doubles/stub_gl_config.h"
@@ -59,6 +60,7 @@ public:
 
 protected:
     testing::NiceMock<mtd::MockEGL> mock_egl;
+    testing::NiceMock<mtd::MockGL> mock_gl;
     EGLDisplay const dummy_display;
     EGLContext const dummy_context;
     EGLConfig const dummy_config;
@@ -69,41 +71,48 @@ protected:
     std::shared_ptr<mtd::StubGLProgramFactory> const stub_gl_program_factory;
 };
 
+//egl expectations are hard to tease out, we should unit-test the gl contexts instead
 TEST_F(Display, creation_creates_egl_resources_properly)
 {
     using namespace testing;
-    EGLSurface fake_surface = (EGLSurface) 0x715;
+    EGLSurface fake_surface = reinterpret_cast<EGLSurface>(0x715);
     EGLint const expected_pbuffer_attr[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
     EGLint const expected_context_attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+    EGLContext dummy_context2 = reinterpret_cast<EGLContext>(0x4444);
 
     //on constrution
     EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
-        .Times(1)
         .WillOnce(Return(dummy_display));
     EXPECT_CALL(mock_egl, eglInitialize(dummy_display, _, _))
-        .Times(1)
         .WillOnce(DoAll(SetArgPointee<1>(1), SetArgPointee<2>(4), Return(EGL_TRUE)));
+    //display context
     EXPECT_CALL(mock_egl, eglCreateContext(
         dummy_display, _, EGL_NO_CONTEXT, mtd::AttrMatches(expected_context_attr)))
-        .Times(1)
         .WillOnce(Return(dummy_context));
     EXPECT_CALL(mock_egl, eglCreatePbufferSurface(
         dummy_display, _, mtd::AttrMatches(expected_pbuffer_attr)))
-        .Times(1)
         .WillOnce(Return(fake_surface));
+    //primary display buffer context
+    EXPECT_CALL(mock_egl, eglCreateContext(
+        dummy_display, _, dummy_context, mtd::AttrMatches(expected_context_attr)))
+        .WillOnce(Return(dummy_context2));
+    EXPECT_CALL(mock_egl, eglCreateWindowSurface(
+        dummy_display, _, Ne(nullptr), NULL))
+        .WillOnce(Return(fake_surface));
+    //fallback renderer could make current too
+    EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, fake_surface, fake_surface, dummy_context2))
+        .Times(AtLeast(1));
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, fake_surface, fake_surface, dummy_context))
-        .Times(1);
-
+        .Times(AtLeast(1));
     //on destruction
     EXPECT_CALL(mock_egl, eglGetCurrentContext())
-        .Times(1)
-        .WillOnce(Return(dummy_context));
+        .WillRepeatedly(Return(dummy_context));
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT))
-        .Times(1);
-    EXPECT_CALL(mock_egl, eglDestroySurface(dummy_display, fake_surface))
-        .Times(1);
-    EXPECT_CALL(mock_egl, eglDestroyContext(dummy_display, dummy_context))
-        .Times(1);
+        .Times(2);
+    EXPECT_CALL(mock_egl, eglDestroySurface(_,_))
+        .Times(2);
+    EXPECT_CALL(mock_egl, eglDestroyContext(_,_))
+        .Times(2);
     EXPECT_CALL(mock_egl, eglTerminate(dummy_display))
         .Times(1);
 
@@ -111,10 +120,11 @@ TEST_F(Display, creation_creates_egl_resources_properly)
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
-        null_display_report);
+        null_display_report,
+        mga::OverlayOptimization::disabled);
 }
 
-TEST_F(Display, selects_usable_configuration)
+TEST_F(Display, selects_usable_egl_configuration)
 {
     using namespace testing;
     int const incorrect_visual_id = 2;
@@ -159,7 +169,8 @@ TEST_F(Display, selects_usable_configuration)
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
-        null_display_report);
+        null_display_report,
+        mga::OverlayOptimization::disabled);
     EXPECT_EQ(correct_config, selected_config);
 }
 
@@ -187,7 +198,8 @@ TEST_F(Display, respects_gl_config)
         stub_db_factory,
         stub_gl_program_factory,
         mock_gl_config,
-        null_display_report);
+        null_display_report,
+        mga::OverlayOptimization::disabled);
 }
 
 TEST_F(Display, logs_creation_events)
@@ -209,7 +221,8 @@ TEST_F(Display, logs_creation_events)
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
-        mock_display_report);
+        mock_display_report,
+        mga::OverlayOptimization::disabled);
 }
 
 TEST_F(Display, throws_on_eglMakeCurrent_failure)
@@ -221,7 +234,8 @@ TEST_F(Display, throws_on_eglMakeCurrent_failure)
     EXPECT_CALL(*mock_display_report, report_successful_setup_of_native_resources())
         .Times(1);
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, _, _, _))
-        .Times(1)
+        .WillOnce(Return(EGL_TRUE))
+        .WillOnce(Return(EGL_TRUE))
         .WillOnce(Return(EGL_FALSE));
     EXPECT_CALL(*mock_display_report, report_successful_egl_make_current_on_construction())
         .Times(0);
@@ -233,7 +247,8 @@ TEST_F(Display, throws_on_eglMakeCurrent_failure)
             stub_db_factory,
             stub_gl_program_factory,
             stub_gl_config,
-            mock_display_report);
+            mock_display_report,
+            mga::OverlayOptimization::disabled);
     }, std::runtime_error);
 }
 
@@ -241,7 +256,7 @@ TEST_F(Display, logs_error_because_of_surface_creation_failure)
 {
     using namespace testing;
 
-    auto const mock_display_report = std::make_shared<mtd::MockDisplayReport>();
+    auto const mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
 
     EXPECT_CALL(*mock_display_report, report_successful_setup_of_native_resources())
         .Times(0);
@@ -259,10 +274,10 @@ TEST_F(Display, logs_error_because_of_surface_creation_failure)
             stub_db_factory,
             stub_gl_program_factory,
             stub_gl_config,
-            mock_display_report);
+            mock_display_report,
+            mga::OverlayOptimization::disabled);
     }, std::runtime_error);
 }
-
 
 TEST_F(Display, turns_on_db_at_construction_and_off_at_destruction)
 {
@@ -277,7 +292,8 @@ TEST_F(Display, turns_on_db_at_construction_and_off_at_destruction)
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
-        null_display_report);
+        null_display_report,
+        mga::OverlayOptimization::disabled);
 }
 
 TEST_F(Display, first_power_on_is_not_fatal) //lp:1345533
@@ -289,7 +305,12 @@ TEST_F(Display, first_power_on_is_not_fatal) //lp:1345533
     });
 
     EXPECT_NO_THROW({
-        mga::Display display(stub_db_factory, stub_gl_program_factory, stub_gl_config, null_display_report);});
+        mga::Display display(
+            stub_db_factory,
+            stub_gl_program_factory,
+            stub_gl_config,
+            null_display_report,
+            mga::OverlayOptimization::disabled);});
 }
 
 TEST_F(Display, catches_exceptions_when_turning_off_in_destructor)
@@ -301,10 +322,16 @@ TEST_F(Display, catches_exceptions_when_turning_off_in_destructor)
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_off))
             .WillOnce(testing::Throw(std::runtime_error("")));
     });
-    mga::Display display(stub_db_factory, stub_gl_program_factory, stub_gl_config, null_display_report);
+
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::disabled);
 }
 
-TEST_F(Display, configures_display_buffer)
+TEST_F(Display, configures_power_modes)
 {
     stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
     {
@@ -316,49 +343,136 @@ TEST_F(Display, configures_display_buffer)
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_off));
     });
 
-    mga::Display display(stub_db_factory, stub_gl_program_factory, stub_gl_config, null_display_report);
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::disabled);
 
     auto configuration = display.configuration();
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        //on by default
+        EXPECT_EQ(output.power_mode, mir_power_mode_on);
         output.power_mode = mir_power_mode_on;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_on);
         output.power_mode = mir_power_mode_standby;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_standby);
         output.power_mode = mir_power_mode_off;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_off);
         output.power_mode = mir_power_mode_suspend;
     });
     display.configure(*configuration);
+
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_suspend);
+    });
 }
 
 //we only have single display and single mode on android for the time being
 TEST_F(Display, supports_one_output_configuration)
 {
+    using namespace testing;
+    geom::Size pixel_size{344, 111};
+    geom::Size physical_size{4230, 2229};
+    double vrefresh{4442.32};
+    MirPixelFormat format{mir_pixel_format_abgr_8888};
+
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        ON_CALL(mock_config, active_attribs_for(_))
+            .WillByDefault(Return(mga::DisplayAttribs{pixel_size, physical_size, vrefresh, true, format, 2}));
+    });
+
     mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
-        null_display_report);
+        null_display_report,
+        mga::OverlayOptimization::enabled);
     auto config = display.configuration();
 
     size_t num_configs = 0;
-    config->for_each_output([&](mg::DisplayConfigurationOutput const&)
+    config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf)
     {
+        ASSERT_EQ(1u, disp_conf.modes.size());
+        auto& disp_mode = disp_conf.modes[0];
+        EXPECT_EQ(pixel_size, disp_mode.size);
+        EXPECT_EQ(vrefresh, disp_mode.vrefresh_hz);
+
+        EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
+        EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
+        EXPECT_TRUE(disp_conf.connected);
+        EXPECT_TRUE(disp_conf.used);
+        auto origin = geom::Point{0,0};
+        EXPECT_EQ(origin, disp_conf.top_left);
+        EXPECT_EQ(0, disp_conf.current_mode_index);
+        EXPECT_EQ(physical_size, disp_conf.physical_size_mm);
+        EXPECT_EQ(format, disp_conf.current_format);
+        ASSERT_EQ(1, disp_conf.pixel_formats.size());
+        EXPECT_EQ(format, disp_conf.pixel_formats[0]);
         num_configs++;
     });
 
     EXPECT_EQ(1u, num_configs);
+}
+
+TEST_F(Display, incorrect_display_configure_throws)
+{
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+    auto config = display.configuration();
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        c.current_format = mir_pixel_format_invalid;
+    });
+    EXPECT_THROW({
+        display.configure(*config);
+    }, std::logic_error); 
+
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        c.current_format = mir_pixel_format_bgr_888;
+    });
+    EXPECT_THROW({
+        display.configure(*config);
+    }, std::logic_error); 
+}
+
+//configuration tests
+//TODO: the list does not support fb target rotation yet
+TEST_F(Display, display_orientation_not_supported)
+{
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    auto config = display.configuration();
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        c.orientation = mir_orientation_left;
+    });
+    display.configure(*config); 
+
+    config = display.configuration();
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        EXPECT_EQ(mir_orientation_left, c.orientation);
+    });
+    
 }

@@ -25,6 +25,7 @@
 #include "nested/nested_display.h"
 #include "mir/graphics/nested_context.h"
 #include "offscreen/display.h"
+#include "software_cursor.h"
 
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
@@ -35,6 +36,7 @@
 #include "mir/shared_library_loader.h"
 #include "mir/abnormal_exit.h"
 #include "mir/emergency_cleanup.h"
+#include "mir/log.h"
 
 #include "mir_toolkit/common.h"
 
@@ -163,23 +165,28 @@ mir::DefaultServerConfiguration::the_display()
 std::shared_ptr<mg::Cursor>
 mir::DefaultServerConfiguration::the_cursor()
 {
-    struct NullCursor : public mg::Cursor
-    {
-        void show(mg::CursorImage const&) {}
-        void hide() {}
-        void move_to(geometry::Point) {}
-    };
     return cursor(
         [this]() -> std::shared_ptr<mg::Cursor>
         {
-            // We try to create a hardware cursor, as we have no software 
-            // cursor currently, if this fails we need to return
-            // a valid cursor object.
+            // We try to create a hardware cursor, if this fails we use a software cursor
             auto hardware_cursor = the_display()->create_hardware_cursor(the_default_cursor_image());
             if (hardware_cursor)
+            {
+                mir::log_info("Using hardware cursor");
                 return hardware_cursor;
+            }
             else
-                return std::make_shared<NullCursor>();
+            {
+                mir::log_info("Using software cursor");
+
+                auto const cursor = std::make_shared<mg::SoftwareCursor>(
+                    the_buffer_allocator(),
+                    the_input_scene());
+
+                cursor->show(*the_default_cursor_image());
+
+                return cursor;
+            }
         });
 }
 
