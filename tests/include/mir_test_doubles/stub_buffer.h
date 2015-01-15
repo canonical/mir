@@ -23,6 +23,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_id.h"
+#include <vector>
 
 namespace mir
 {
@@ -101,13 +102,17 @@ public:
 
     virtual bool can_bypass() const override { return true; }
     
-    void write(unsigned char const*, size_t) override { }
+    void write(unsigned char const* pixels, size_t len) override
+    {
+        if (pixels) written_pixels.assign(pixels, pixels + len);
+    }
 
     std::shared_ptr<graphics::NativeBuffer> const native_buffer;
     geometry::Size const buf_size;
     MirPixelFormat const buf_pixel_format;
     geometry::Stride const buf_stride;
     graphics::BufferID const buf_id;
+    std::vector<unsigned char> written_pixels;
 
     std::shared_ptr<graphics::NativeBuffer> create_native_buffer();
 };
