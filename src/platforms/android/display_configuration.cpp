@@ -25,6 +25,10 @@ namespace
 {
 int const primary_id{0};
 int const external_id{1};
+geom::Point const origin{0,0};
+size_t const preferred_format_index{0};
+size_t const preferred_mode_index{0};
+
 mg::DisplayConfigurationOutput external_output(
     mga::DisplayAttribs const& external_attribs)
 {
@@ -35,18 +39,19 @@ mg::DisplayConfigurationOutput external_output(
             mg::DisplayConfigurationMode{external_attribs.pixel_size, external_attribs.vrefresh_hz});
     }
 
+    bool used{false};
     return {
         mg::DisplayConfigurationOutputId{external_id},
         mg::DisplayConfigurationCardId{0},
         mg::DisplayConfigurationOutputType::displayport,
         {external_attribs.display_format},
         external_modes,
-        0,
+        preferred_mode_index,
         external_attribs.mm_size,
         external_attribs.connected,
-        false,
-        geom::Point{0,0},
-        0,
+        used,
+        origin,
+        preferred_format_index,
         external_attribs.display_format,
         mir_power_mode_on,
         mir_orientation_normal
@@ -64,12 +69,12 @@ mga::DisplayConfiguration::DisplayConfiguration(
             mg::DisplayConfigurationOutputType::lvds,
             {primary_attribs.display_format},
             {mg::DisplayConfigurationMode{primary_attribs.pixel_size, primary_attribs.vrefresh_hz}},
-            0,
+            preferred_mode_index,
             primary_attribs.mm_size,
             primary_attribs.connected,
             true,
-            geom::Point{0,0},
-            0,
+            origin,
+            preferred_format_index,
             primary_attribs.display_format,
             mir_power_mode_on,
             mir_orientation_normal
