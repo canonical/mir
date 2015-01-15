@@ -53,6 +53,10 @@ public:
     void content_cleared() override;
 
 private:
+    void commit(
+        SwappingGLContext const& context,
+        RenderableList const& list,
+        RenderableListCompositor const& list_compositor);
     bool buffer_is_onscreen(Buffer const&) const;
     LayerList hwc_list;
     std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;

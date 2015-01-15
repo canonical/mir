@@ -62,6 +62,7 @@ public:
 
     std::list<HwcLayerEntry>::iterator begin();
     std::list<HwcLayerEntry>::iterator additional_layers_begin();
+    HwcLayerEntry& back();
     std::list<HwcLayerEntry>::iterator end();
 
     void setup_fb(Buffer const& fb_target);

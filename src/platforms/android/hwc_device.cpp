@@ -86,26 +86,12 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
     hwc_list.update_list({});
 
-    auto buffer = context.last_rendered_buffer();
-    hwc_list.setup_fb(*buffer);
+    struct NullRenderer :  RenderableListCompositor
+    {
+        void render(RenderableList const&, SwappingGLContext const&) const {}
+    } null_renderer;
 
-    hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
-
-    context.swap_buffers();
-
-    buffer = context.last_rendered_buffer();
-    hwc_list.setup_fb(*buffer);
-
-    for(auto& layer : hwc_list)
-        layer.layer.set_acquirefence_from(*buffer);
-
-    hwc_wrapper->set({{hwc_list.native_list(), nullptr, nullptr}});
-    onscreen_overlay_buffers.clear();
-
-    for(auto& layer : hwc_list)
-        layer.layer.update_from_releasefence(*buffer);
-
-    mir::Fd retire_fd(hwc_list.retirement_fence());
+    commit(context, {}, null_renderer);
 }
 
 bool mga::HwcDevice::post_overlays(
@@ -117,7 +103,6 @@ bool mga::HwcDevice::post_overlays(
         return false;
 
     hwc_list.update_list(renderables);
-    auto& fbtarget = *hwc_list.additional_layers_begin();
 
     bool needs_commit{false};
     for(auto& layer : hwc_list)
@@ -125,52 +110,75 @@ bool mga::HwcDevice::post_overlays(
     if (!needs_commit)
         return false;
 
+    commit(context, renderables, list_compositor);
+    return true;
+}
+
+void mga::HwcDevice::commit(
+    SwappingGLContext const& context,
+    RenderableList const& renderables,
+    RenderableListCompositor const& list_compositor)
+{
     hwc_list.setup_fb(*context.last_rendered_buffer());
 
     hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
 
-    mg::RenderableList rejected_renderables;
+    bool swap_occurred{false};
     std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
-    auto it = hwc_list.begin();
-    for(auto const& renderable : renderables)
+    if (renderables.empty())
     {
-        if (it->layer.needs_gl_render())
+        context.swap_buffers();
+        swap_occurred = true;
+    }
+    else
+    {
+        //process renderables from prepare
+        mg::RenderableList rejected_renderables;
+        auto it = hwc_list.begin();
+        for(auto const& renderable : renderables)
         {
-            rejected_renderables.push_back(renderable);
-        }
-        else
-        {
-            auto buffer = renderable->buffer();
-            if (!buffer_is_onscreen(*buffer))
-                it->layer.set_acquirefence_from(*buffer);
+            if (it->layer.needs_gl_render())
+            {
+                rejected_renderables.push_back(renderable);
+            }
+            else
+            {
+                auto buffer = renderable->buffer();
+                if (!buffer_is_onscreen(*buffer))
+                    it->layer.set_acquirefence_from(*buffer);
 
-            next_onscreen_overlay_buffers.push_back(buffer);
+                next_onscreen_overlay_buffers.push_back(buffer);
+            }
+            it++;
         }
-        it++;
+
+        if (!rejected_renderables.empty())
+        {
+            list_compositor.render(rejected_renderables, context);
+            swap_occurred = true;
+        }
     }
 
-    if (!rejected_renderables.empty())
+    if (swap_occurred)
     {
-        list_compositor.render(rejected_renderables, context);
-
         hwc_list.setup_fb(*context.last_rendered_buffer());
-        fbtarget.layer.set_acquirefence_from(*context.last_rendered_buffer());
+        hwc_list.back().layer.set_acquirefence_from(*context.last_rendered_buffer());
     }
 
     hwc_wrapper->set({{hwc_list.native_list(), nullptr, nullptr}});
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
 
-    it = hwc_list.begin();
+    auto it = hwc_list.begin();
     for(auto const& renderable : renderables)
     {
         it->layer.update_from_releasefence(*renderable->buffer());
         it++;
     }
-    if (!rejected_renderables.empty())
-        fbtarget.layer.update_from_releasefence(*context.last_rendered_buffer());
+
+    if (swap_occurred)
+        hwc_list.back().layer.update_from_releasefence(*context.last_rendered_buffer());
 
     mir::Fd retire_fd(hwc_list.retirement_fence());
-    return true;
 }
 
 void mga::HwcDevice::content_cleared()
