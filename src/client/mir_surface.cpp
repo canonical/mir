@@ -360,14 +360,17 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
 
 MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-
     // TODO: This is obviously strange. It should be
     // possible to eliminate it in the second phase of buffer
     // stream where the existing MirSurface swap interval functions
     // may be deprecated in terms of mir_buffer_stream_ alternatives
     if (at == mir_surface_attrib_swapinterval)
+    {
         buffer_stream->set_swap_interval(value);
+        return &configure_wait_handle;
+    }
+
+    std::unique_lock<decltype(mutex)> lock(mutex);
 
     mp::SurfaceSetting setting;
     setting.mutable_surfaceid()->CopyFrom(surface.id());

@@ -122,9 +122,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
                 };
 
                 auto const surface = mir_connection_create_surface_sync(connection, &request_params);
-                printf("Create surface returned\n");
                 mir_surface_release_sync(surface);
-                printf("Release surface returned \n");
             }
 
             printf("Releasing connecton \n");
@@ -132,7 +130,6 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
             connection_released.raise();
         }}.detach();
 
-    // TODO: Reduce time out to original value (60 ~racarr)
-    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{6000}))
+    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{60}))
         << "Client hung, possibly because of fd leaks" << std::endl;
 }
