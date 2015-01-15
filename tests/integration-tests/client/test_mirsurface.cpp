@@ -94,6 +94,11 @@ MATCHER_P(HasParent, parent, "")
     return arg.parent_id.is_set() && arg.parent_id.value().as_value() == parent->id();
 }
 
+MATCHER(NoParentSet, "")
+{
+    return arg.parent_id.is_set() == false;
+}
+
 MATCHER_P(MatchesAttachment, rect, "")
 {
     return arg.attachment_rect.is_set() &&
@@ -109,11 +114,16 @@ MATCHER_P(MatchesEdge, edge, "")
            arg.edge_attachment.value() == edge;
 }
 
-MATCHER_P2(MatchesRelativeLoc, left, top, "")
+MATCHER_P2(MatchesRelativePos, left, top, "")
 {
     return arg.relative_position.is_set() &&
            arg.relative_position.value().x.as_int() == left &&
            arg.relative_position.value().y.as_int() == top;
+}
+
+MATCHER(NoRelativePos, "")
+{
+    return arg.relative_position.is_set() == false;
 }
 
 }
@@ -226,6 +236,22 @@ TEST_F(ClientMirSurface, as_tooltip_sends_correct_params)
 
 TEST_F(ClientMirSurface, as_dialog_sends_correct_params)
 {
+    auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
+    std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> dialog_spec{
+        mir_connection_create_spec_for_dialog_surface(connection, 640, 480,
+            mir_pixel_format_abgr_8888, nullptr, 0, 0),
+        spec_deleter
+    };
+
+    ASSERT_THAT(dialog_spec, NotNull());
+
+    EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(IsADialog(),
+        NoParentSet(), NoRelativePos()),_));
+    create_surface(dialog_spec.get());
+}
+
+TEST_F(ClientMirSurface, as_modal_dialog_sends_correct_params)
+{
     EXPECT_CALL(*mock_surface_coordinator, add_surface(_,_));
     auto parent = create_surface(&spec);
     ASSERT_THAT(parent.get(), IsValid());
@@ -243,6 +269,6 @@ TEST_F(ClientMirSurface, as_dialog_sends_correct_params)
     ASSERT_THAT(dialog_spec, NotNull());
 
     EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(IsADialog(),
-        HasParent(parent.get()), MatchesRelativeLoc(left, top)),_));
+        HasParent(parent.get()), MatchesRelativePos(left, top)),_));
     create_surface(dialog_spec.get());
 }

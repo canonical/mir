@@ -121,8 +121,14 @@ mir_connection_create_spec_for_tooltip_surface(MirConnection* connection,
 /**
  * Create a surface specification for a dialog surface.
  *
- * An optional (left,top) coordinate (relative to the parent) can be specified
- * The server will attempt to place the surface at the given location.
+ * A modal dialog can be created by specifying a parent. When creating a modal
+ * dialog, an optional (left,top) coordinate relative to the parent can be
+ * specified as an initial location. The server will attempt to place the
+ * dialog at the given initial location.
+ *
+ * During surface creation, if the specified parent is another dialog surface
+ * the server may choose to close the specified parent or morph the parent
+ * to use the requested parameters.
  *
  * \param [in] connection   Connection the surface will be created on
  * \param [in] width        Requested width. The server is not guaranteed to
@@ -130,13 +136,16 @@ mir_connection_create_spec_for_tooltip_surface(MirConnection* connection,
  * \param [in] height       Requested height. The server is not guaranteed to
  *                          return a surface of this height.
  * \param [in] format       Pixel format for the surface.
- * \param [in] parent       A valid parent surface for this menu.
+ * \param [in] parent       A valid parent surface for a modal dialog or NULL
+ *                          for non-modal dialogs.
  * \param [in] left         The left coordinate at which to place this surface
  *                          relative to the parent. Use -1 to specify no
- *                          preference.
+ *                          preference. The value is ignored if parent is not
+ *                          specified.
  * \param [in] top          The top coordinate at which to place this surface
  *                          relative to the parent. Use -1 to specify no
- *                          preference.
+ *                          preference. The value is ignored if parent is not
+ *                          specified.
  *
  */
 MirSurfaceSpec*

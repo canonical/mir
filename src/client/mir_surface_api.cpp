@@ -93,12 +93,19 @@ MirSurfaceSpec* mir_connection_create_spec_for_dialog_surface(MirConnection* con
                                                               int left,
                                                               int top)
 {
-    mir::require(mir_surface_is_valid(parent));
+    // Only modal dialogs need a valid parent surface
+    if (parent != nullptr)
+        mir::require(mir_surface_is_valid(parent));
+
     auto spec = new MirSurfaceSpec{connection, width, height, format};
     spec->type = mir_surface_type_dialog;
-    spec->parent = parent;
-    spec->relative_left = left;
-    spec->relative_top = top;
+
+    if (parent != nullptr)
+    {
+        spec->parent = parent;
+        spec->relative_left = left;
+        spec->relative_top = top;
+    }
     return spec;
 }
 
