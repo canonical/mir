@@ -98,6 +98,8 @@ public:
     virtual void set_reception_mode(input::InputReceptionMode mode) = 0;
 
     virtual void request_client_surface_close() = 0;
+
+    virtual std::shared_ptr<Surface> parent() const = 0;
 };
 }
 }
