@@ -17,9 +17,10 @@
  *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "client_buffer.h"
-#include "client_buffer_factory.h"
 #include "client_buffer_depository.h"
+
+#include "mir/client_buffer.h"
+#include "mir/client_buffer_factory.h"
 
 #include <stdexcept>
 #include <memory>
