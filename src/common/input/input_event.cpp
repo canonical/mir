@@ -280,7 +280,10 @@ MirInputEventModifiers old_modifiers_to_new(MirKeyModifier old_modifier)
         modifier |= mir_input_event_modifier_num_lock;
     if (old_modifier & mir_key_modifier_scroll_lock)
         modifier |= mir_input_event_modifier_scroll_lock;
-    return static_cast<MirInputEventModifiers>(modifier);
+
+    if (modifier)
+        return static_cast<MirInputEventModifiers>(modifier);
+    return mir_input_event_modifier_none;
 }
 }
 MirInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* kev)
