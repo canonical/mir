@@ -250,7 +250,7 @@ TEST_F(HWCLayersTest, buffer_fence_updates)
         screen_position, alpha_enabled, mock_buffer);
 
     hwc_layer->releaseFenceFd = fake_fence;
-    layer.release_buffer()
+    layer.release_buffer();
 }
 
 TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)

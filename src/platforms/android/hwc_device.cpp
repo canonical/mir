@@ -145,7 +145,7 @@ void mga::HwcDevice::commit(
             {
                 auto buffer = renderable->buffer();
                 if (!buffer_is_onscreen(*buffer))
-                    it->layer.set_acquirefence_from(*buffer);
+                    it->layer.set_acquirefence();
 
                 next_onscreen_overlay_buffers.push_back(buffer);
             }
@@ -162,21 +162,14 @@ void mga::HwcDevice::commit(
     if (swap_occurred)
     {
         hwc_list.setup_fb(context.last_rendered_buffer());
-        hwc_list.back().layer.set_acquirefence_from(*context.last_rendered_buffer());
+        hwc_list.back().layer.set_acquirefence();
     }
 
     hwc_wrapper->set({{hwc_list.native_list(), nullptr, nullptr}});
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
 
-    auto it = hwc_list.begin();
-    for(auto const& renderable : renderables)
-    {
-        it->layer.update_from_releasefence(*renderable->buffer());
-        it++;
-    }
-
-    if (swap_occurred)
-        hwc_list.back().layer.update_from_releasefence(*context.last_rendered_buffer());
+    for(auto& it : hwc_list)
+        it.layer.release_buffer();
 
     mir::Fd retire_fd(hwc_list.retirement_fence());
 }
