@@ -18,8 +18,8 @@
 
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir/graphics/android/native_buffer.h"
-#include "src/client/mir_client_surface.h"
-#include "src/client/client_buffer.h"
+#include "mir/mir_client_surface.h"
+#include "mir/client_buffer.h"
 #include "src/client/android/client_surface_interpreter.h"
 #include "mir_test_doubles/stub_android_native_buffer.h"
 #include "mir_test/fake_shared.h"
