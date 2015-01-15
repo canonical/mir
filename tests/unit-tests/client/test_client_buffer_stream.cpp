@@ -60,7 +60,7 @@ struct MockProtobufServer : public mp::DisplayServer
 struct StubEGLNativeWindowFactory : public mcl::EGLNativeWindowFactory
 {
     std::shared_ptr<EGLNativeWindowType>
-        create_egl_native_window(mcl::ClientSurface*)
+        create_egl_native_window(mcl::EGLNativeSurface*)
     {
         return std::make_shared<EGLNativeWindowType>(egl_native_window);
     }

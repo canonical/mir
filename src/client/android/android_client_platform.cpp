@@ -78,9 +78,9 @@ private:
 };
 }
 
-std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_native_window(ClientSurface *surface)
+std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_native_window(EGLNativeSurface *surface)
 {
-    auto anativewindow_interpreter = std::make_shared<mcla::ClientSurfaceInterpreter>(*surface);
+    auto anativewindow_interpreter = std::make_shared<mcla::EGLNativeSurfaceInterpreter>(*surface);
     auto mir_native_window = new mga::MirNativeWindow(anativewindow_interpreter);
     auto egl_native_window = new EGLNativeWindowType;
     *egl_native_window = mir_native_window;

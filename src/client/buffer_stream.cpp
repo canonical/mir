@@ -228,7 +228,7 @@ void mcl::BufferStream::next_buffer_received(
     next_buffer_wait_handle.result_received();
 }
 
-/* mcl::ClientSurface interface for EGLNativeWindow integration */
+/* mcl::EGLNativeSurface interface for EGLNativeWindow integration */
 MirSurfaceParameters mcl::BufferStream::get_parameters() const
 {
     std::unique_lock<decltype(mutex)> lock(mutex);

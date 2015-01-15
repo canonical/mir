@@ -22,7 +22,7 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_wait_handle.h"
-#include "mir_client_surface.h"
+#include "egl_native_surface.h"
 #include "client_buffer.h"
 #include "client_buffer_stream.h"
 #include "client_buffer_depository.h"
@@ -54,7 +54,7 @@ Producer, // As in surfaces
 Consumer // As in screencasts
 };
 
-class BufferStream : public ClientSurface, public ClientBufferStream
+class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:
     BufferStream(mir::protobuf::DisplayServer& server,
@@ -76,7 +76,7 @@ public:
     EGLNativeWindowType egl_native_window() override;
     std::shared_ptr<MemoryRegion> secure_for_cpu_write() override;
 
-    // mcl::ClientSurface interface
+    // mcl::EGLNativeSurface interface
     MirSurfaceParameters get_parameters() const override;
     void request_and_wait_for_next_buffer() override;
     // TODO: In this context this seems like a strange wart from swap interval

@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_MIR_SCREENCAST_H_
 #define MIR_CLIENT_MIR_SCREENCAST_H_
 
-#include "mir_client_surface.h"
+#include "egl_native_surface.h"
 #include "mir_wait_handle.h"
 #include "mir_toolkit/client_types.h"
 #include "mir_protobuf.pb.h"
@@ -38,7 +38,7 @@ class ClientBufferStream;
 }
 }
 
-struct MirScreencast : public mir::client::ClientSurface
+struct MirScreencast : public mir::client::EGLNativeSurface
 {
 public:
     MirScreencast(
@@ -60,7 +60,7 @@ public:
 
     EGLNativeWindowType egl_native_window();
 
-    /* mir::client::ClientSurface */
+    /* mir::client::EGLNativeSurface */
     MirSurfaceParameters get_parameters() const;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     void request_and_wait_for_next_buffer();

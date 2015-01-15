@@ -17,9 +17,9 @@
  */
 
 #include "src/client/client_platform.h"
-#include "src/client/mir_client_surface.h"
+#include "src/client/egl_native_surface.h"
 #include "mir_test_doubles/mock_client_context.h"
-#include "mir_test_doubles/mock_client_surface.h"
+#include "mir_test_doubles/mock_egl_native_surface.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/stub_platform_helpers.h"
 
@@ -138,7 +138,7 @@ TEST_P(ClientPlatformTest, platform_creates)
 TEST_P(ClientPlatformTest, platform_creates_native_window)
 {
     auto platform = create_client_platform(&context);
-    auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
+    auto mock_client_surface = std::make_shared<mtd::MockEGLNativeSurface>();
     auto native_window = platform->create_egl_native_window(mock_client_surface.get());
     EXPECT_NE(*native_window, (EGLNativeWindowType) NULL);
 }

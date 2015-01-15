@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_CLIENT_SURFACE_H_
-#define MIR_TEST_DOUBLES_MOCK_CLIENT_SURFACE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_EGL_NATIVE_SURFACE_H_
+#define MIR_TEST_DOUBLES_MOCK_EGL_NATIVE_SURFACE_H_
 
-#include "src/client/mir_client_surface.h"
+#include "src/client/egl_native_surface.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-struct MockClientSurface : public client::ClientSurface
+struct MockEGLNativeSurface : public client::EGLNativeSurface
 {
     MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());
@@ -40,4 +40,4 @@ struct MockClientSurface : public client::ClientSurface
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_CLIENT_SURFACE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_EGL_NATIVE_SURFACE_H_ */

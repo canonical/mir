@@ -137,7 +137,7 @@ public:
     void set_event_handler(MirEventDelegate const* delegate);
     void handle_event(MirEvent const& e);
 
-    /* mir::client::ClientSurface */
+    /* mir::client::EGLNativeSurface */
     void request_and_wait_for_next_buffer();
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
 
