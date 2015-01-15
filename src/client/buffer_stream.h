@@ -32,6 +32,7 @@
 #include <EGL/eglplatform.h>
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -54,6 +55,7 @@ Consumer // As in screencasts
 };
 
 // TODO: Remove client surface interface...
+// TODO: Fix override
 class BufferStream : public ClientSurface, public ClientBufferStream
 {
 public:
@@ -69,6 +71,9 @@ public:
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     // TODO: Investigate requirement ~racarr
     uint32_t get_current_buffer_id();
+    
+    int swap_interval() const override;
+    void set_swap_interval(int interval) override;
 
     EGLNativeWindowType egl_native_window();
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
@@ -78,7 +83,7 @@ public:
     void request_and_wait_for_next_buffer();
     // TODO: In this context this seems like a strange wart from swap interval...
     void request_and_wait_for_configure(MirSurfaceAttrib attrib, int);
-
+    
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
@@ -87,6 +92,10 @@ private:
     void process_buffer(protobuf::Buffer const& buffer);
     void next_buffer_received(
         std::function<void()> done);
+    void on_configured();
+    void release_cpu_region();
+
+    mutable std::mutex mutex; // Protects all members of *this
 
     mir::protobuf::DisplayServer& display_server;
 
@@ -95,12 +104,17 @@ private:
 
     mir::protobuf::BufferStream protobuf_bs;
     mir::client::ClientBufferDepository buffer_depository;
+    
+    int swap_interval_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
     
     std::shared_ptr<EGLNativeWindowType> egl_native_window_;
 
     MirWaitHandle next_buffer_wait_handle;
+    MirWaitHandle configure_wait_handle;
+    
+    std::shared_ptr<MemoryRegion> secured_region;
 };
 
 }

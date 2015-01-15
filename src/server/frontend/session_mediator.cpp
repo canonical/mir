@@ -226,9 +226,6 @@ void mf::SessionMediator::create_surface(
         {
             lock->unlock();
 
-            auto buffer = response->mutable_buffer();
-            pack_protobuf_buffer(*buffer, client_buffer, msg_type);
-
             response->mutable_buffer_stream()->mutable_id()->set_value(
                surf_id.as_value());
             pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(),

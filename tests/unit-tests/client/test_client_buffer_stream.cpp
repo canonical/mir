@@ -30,6 +30,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <atomic>
+
 namespace mp = mir::protobuf;
 namespace ml = mir::logging;
 namespace mcl = mir::client;
@@ -86,11 +88,15 @@ struct ClientBufferStreamTest : public testing::Test
     std::shared_ptr<ml::Logger> const logger = std::make_shared<mtd::NullLogger>();
 };
 
+ // Just ensure we have a unique ID in order to not confuse the buffer depository caching logic...
+std::atomic<int> unique_buffer_id{1};
+
 void fill_protobuf_buffer_stream_from_package(mp::BufferStream &protobuf_bs, MirBufferPackage const& buffer_package)
 {
+
     auto mb = protobuf_bs.mutable_buffer();
     
-    mb->set_buffer_id(1);
+    mb->set_buffer_id(unique_buffer_id++);
 
     /* assemble buffers */
     mb->set_fds_on_side_channel(buffer_package.fd_items);
@@ -111,7 +117,7 @@ MirBufferPackage a_buffer_package()
 {
     MirBufferPackage bp;
     
-    // Culd be randomized
+    // Could be randomized
     bp.fd_items = 1;
     bp.fd[0] = 16;
     bp.data_items = 2;
@@ -160,9 +166,9 @@ ACTION(RunProtobufClosure)
     arg3->Run();
 }
 
-// TODO: More?
 ACTION_P(SetBufferInfoFromPackage, buffer_package)
 {
+    arg2->set_buffer_id(unique_buffer_id++);
     arg2->set_width(buffer_package.width);
     arg2->set_height(buffer_package.height);
 }

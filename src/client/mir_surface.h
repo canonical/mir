@@ -27,7 +27,6 @@
 #include "mir/optional_value.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
-#include "mir_client_surface.h"
 #include "client_platform.h"
 #include "client_buffer_stream.h"
 
@@ -82,8 +81,7 @@ struct MirSurfaceSpec
     mir::optional_value<MirSurface*> parent;
 };
 
-// TODO: Break inheritance
-struct MirSurface : public mir::client::ClientSurface
+struct MirSurface
 {
 public:
     MirSurface(MirSurface const &) = delete;
@@ -150,7 +148,6 @@ private:
     void process_incoming_buffer();
     void created(mir_surface_callback callback, void * context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
-    void release_cpu_region();
 
     mir::protobuf::DisplayServer::Stub* server{nullptr};
     mir::protobuf::Debug::Stub* debug{nullptr};
@@ -166,8 +163,6 @@ private:
     MirWaitHandle configure_wait_handle;
     MirWaitHandle configure_cursor_wait_handle;
 
-
-    std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;

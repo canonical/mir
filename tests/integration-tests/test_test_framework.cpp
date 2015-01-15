@@ -109,7 +109,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
             getrlimit(RLIMIT_NOFILE, &rlim);
             rlim_t fd_limit = rlim.rlim_cur;
             if (fd_limit == RLIM_INFINITY) fd_limit = 1024;
-
+            
             for (rlim_t i = 0; i < fd_limit; ++i)
             {
                 MirSurfaceParameters request_params =
@@ -122,13 +122,17 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
                 };
 
                 auto const surface = mir_connection_create_surface_sync(connection, &request_params);
+                printf("Create surface returned\n");
                 mir_surface_release_sync(surface);
+                printf("Release surface returned \n");
             }
 
+            printf("Releasing connecton \n");
             mir_connection_release(connection);
             connection_released.raise();
         }}.detach();
 
-    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{60}))
+    // TODO: Reduce time out to original value (60 ~racarr)
+    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{6000}))
         << "Client hung, possibly because of fd leaks" << std::endl;
 }

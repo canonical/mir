@@ -42,6 +42,9 @@ public:
     virtual EGLNativeWindowType egl_native_window() = 0;
     virtual MirWaitHandle* next_buffer(std::function<void()> const& done) = 0;
 
+    virtual int swap_interval() const = 0;
+    virtual void set_swap_interval(int interval) = 0;
+    
 protected:
     ClientBufferStream() = default;
     virtual ~ClientBufferStream() = default;

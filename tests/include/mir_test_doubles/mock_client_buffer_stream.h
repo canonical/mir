@@ -35,6 +35,8 @@ struct MockClientBufferStream : public client::ClientBufferStream
     MOCK_METHOD0(get_current_buffer_id, uint32_t());
     MOCK_METHOD0(egl_native_window, EGLNativeWindowType());
     MOCK_METHOD1(next_buffer, MirWaitHandle*(std::function<void()> const&));
+    MOCK_CONST_METHOD0(swap_interval, int());
+    MOCK_METHOD1(set_swap_interval, void(int));
 };
 
 }

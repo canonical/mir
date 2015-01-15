@@ -16,15 +16,23 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirBufferStream"
+
 #include "buffer_stream.h"
 
 #include "mir/frontend/client_constants.h"
+
+#include "mir/log.h"
 
 #include "mir_toolkit/mir_native_buffer.h"
 #include "egl_native_window_factory.h"
 
 #include "perf_report.h"
 #include "logging/perf_report.h"
+
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
 
 namespace mcl = mir::client;
 namespace ml = mir::logging;
@@ -99,6 +107,7 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
       native_window_factory(native_window_factory),
       protobuf_bs(protobuf_bs),
       buffer_depository{buffer_factory, mir::frontend::client_buffer_cache_size},
+      swap_interval_(1),
       perf_report(make_perf_report(logger))
       
 {
@@ -116,6 +125,8 @@ mcl::BufferStream::~BufferStream()
 
 void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
 {
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    
     auto buffer_package = std::make_shared<MirBufferPackage>();
     populate_buffer_package(*buffer_package, buffer);
 
@@ -129,17 +140,21 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
     }
     catch (const std::runtime_error& err)
     {
-        // TODO: Report the error
+        mir::log_error("Error processing incoming buffer " + std::string(err.what()));
     }
 }
 
 MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
-    perf_report->end_frame(get_current_buffer_id());
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    perf_report->end_frame(buffer_depository.current_buffer_id());
+
+    secured_region.reset();
 
     mir::protobuf::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(protobuf_bs.id().value());
 
+    lock.unlock();
     next_buffer_wait_handle.expect_result();
     
     // TODO: Fix signature
@@ -180,19 +195,27 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 
 std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
 {
+    std::unique_lock<decltype(mutex)> lock(mutex); // TODO: Maybe not required?
     return buffer_depository.current_buffer();
 }
 
 EGLNativeWindowType mcl::BufferStream::egl_native_window()
 {
+    std::unique_lock<decltype(mutex)> lock(mutex);
     return *egl_native_window_;
+}
+
+void mcl::BufferStream::release_cpu_region()
+{
+    secured_region.reset();
 }
 
 std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 {
-// TODO: Who owns this region? e.g. do we have to track a secured region ala mir surface or will
-// surface screencast and buffer stream do it...
-    return get_current_buffer()->secure_for_cpu_write();
+    std::unique_lock<decltype(mutex)> lock(mutex);
+
+    secured_region = get_current_buffer()->secure_for_cpu_write();
+    return secured_region;
 }
 
 void mcl::BufferStream::next_buffer_received(
@@ -202,12 +225,14 @@ void mcl::BufferStream::next_buffer_received(
 
     done();
 
+    std::unique_lock<decltype(mutex)> lock(mutex);
     next_buffer_wait_handle.result_received();
 }
 
 /* mcl::ClientSurface interface for EGLNativeWindow integration */
 MirSurfaceParameters mcl::BufferStream::get_parameters() const
 {
+    std::unique_lock<decltype(mutex)> lock(mutex);
     return MirSurfaceParameters{
         "",
         protobuf_bs.buffer().width(),
@@ -222,11 +247,58 @@ void mcl::BufferStream::request_and_wait_for_next_buffer()
     next_buffer([](){})->wait_for_all();
 }
 
-void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib, int)
+void mcl::BufferStream::on_configured()
 {
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    configure_wait_handle.result_received();
+}
+
+// TODO: It's a little strange that we use SurfaceAttrib here for the swap interval
+// we take advantage of the confusion between buffer stream ids and surface ids...
+// this should be resolved in the second phase of buffer stream which introduces the
+// new server support.
+void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int value)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    if (attrib != mir_surface_attrib_swapinterval)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
+        " on BufferStream but only mir_surface_attrib_swapinterval is supported")); 
+    }
+    if (mode != mcl::BufferStreamMode::Producer)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
+    }
+
+    mp::SurfaceSetting setting, result;
+    setting.mutable_surfaceid()->set_value(protobuf_bs.id().value());
+    setting.set_attrib(attrib);
+    setting.set_ivalue(value);
+    lock.unlock();
+
+    configure_wait_handle.expect_result();
+    display_server.configure_surface(0, &setting, &result,
+        google::protobuf::NewCallback(this, &mcl::BufferStream::on_configured));
+
+    configure_wait_handle.wait_for_all();
+
+    lock.lock();
+    swap_interval_ = result.ivalue();
 }
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
 {
+    std::unique_lock<decltype(mutex)> lock(mutex); // TODO: Maybe not required?
     return buffer_depository.current_buffer_id();
+}
+
+int mcl::BufferStream::swap_interval() const
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    return swap_interval_;
+}
+
+void mcl::BufferStream::set_swap_interval(int interval)
+{
+    request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
 }

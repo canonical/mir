@@ -193,6 +193,8 @@ private:
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 
     std::vector<int> extra_platform_data;
+    
+    std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
 
     struct SurfaceRelease;
 

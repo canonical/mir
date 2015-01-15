@@ -151,8 +151,6 @@ MirSurface::~MirSurface()
 
     for (auto i = 0, end = surface.fd_size(); i != end; ++i)
         close(surface.fd(i));
-
-    release_cpu_region();
 }
 
 MirSurfaceParameters MirSurface::get_parameters() const
@@ -202,7 +200,7 @@ void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 
     auto buffer = buffer_stream->get_current_buffer();
 
-    secured_region = buffer->secure_for_cpu_write();
+    auto secured_region = buffer->secure_for_cpu_write();
     region_out.width = secured_region->width.as_uint32_t();
     region_out.height = secured_region->height.as_uint32_t();
     region_out.stride = secured_region->stride.as_uint32_t();
@@ -210,16 +208,10 @@ void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
     region_out.vaddr = secured_region->vaddr.get();
 }
 
-void MirSurface::release_cpu_region()
-{
-    secured_region.reset();
-}
-
 MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void *context)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    release_cpu_region();
-    lock.unlock();
+// TODO: INVESTIGATE
+//    std::unique_lock<decltype(mutex)> lock(mutex);
 
     return buffer_stream->next_buffer([&, callback, context]
     {
@@ -269,20 +261,19 @@ void MirSurface::created(mir_surface_callback callback, void * context)
         return;
     }
     }
-
     try
     {
         {
             std::lock_guard<decltype(mutex)> lock(mutex);
+
+            buffer_stream = buffer_stream_factory->
+                make_producer_stream(*server, surface.buffer_stream());
 
             for(int i = 0; i < surface.attributes_size(); i++)
             {
                 auto const& attrib = surface.attributes(i);
                 attrib_cache[attrib.attrib()] = attrib.ivalue();
             }
-
-            buffer_stream = buffer_stream_factory->
-                make_producer_stream(*server, surface.buffer_stream());
         }
 
         connection->on_surface_created(id(), this);
@@ -370,6 +361,14 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
 MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
+
+    // TODO: This is obviously strange. It should be
+    // possible to eliminate it in the second phase of buffer
+    // stream where the existing MirSurface swap interval functions
+    // may be deprecated in terms of mir_buffer_stream_ alternatives
+    if (at == mir_surface_attrib_swapinterval)
+        buffer_stream->set_swap_interval(value);
+
     mp::SurfaceSetting setting;
     setting.mutable_surfaceid()->CopyFrom(surface.id());
     setting.set_attrib(at);
@@ -441,7 +440,6 @@ void MirSurface::on_configured()
         case mir_surface_attrib_type:
         case mir_surface_attrib_state:
         case mir_surface_attrib_focus:
-        case mir_surface_attrib_swapinterval:
         case mir_surface_attrib_dpi:
         case mir_surface_attrib_preferred_orientation:
             if (configure_result.has_ivalue())
@@ -467,6 +465,9 @@ void MirSurface::on_cursor_configured()
 int MirSurface::attrib(MirSurfaceAttrib at) const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
+
+    if (at == mir_surface_attrib_swapinterval)
+        return buffer_stream->swap_interval();
 
     return attrib_cache[at];
 }
