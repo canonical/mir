@@ -86,6 +86,7 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
     hwc_list.update_list({});
 
+    //TODO: NullRenderer is temporary until we move the list up to DisplayBuffer
     struct NullRenderer :  RenderableListCompositor
     {
         void render(RenderableList const&, SwappingGLContext const&) const {}
@@ -123,44 +124,33 @@ void mga::HwcDevice::commit(
 
     hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
 
-    bool swap_occurred{false};
     std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
-    if (renderables.empty())
+
+    mg::RenderableList rejected_renderables;
+    auto it = hwc_list.begin();
+    for(auto const& renderable : renderables)
     {
-        context.swap_buffers();
-        swap_occurred = true;
-    }
-    else
-    {
-        //process renderables from prepare
-        mg::RenderableList rejected_renderables;
-        auto it = hwc_list.begin();
-        for(auto const& renderable : renderables)
+        if (it->layer.needs_gl_render())
         {
-            if (it->layer.needs_gl_render())
-            {
-                rejected_renderables.push_back(renderable);
-            }
-            else
-            {
-                auto buffer = renderable->buffer();
-                if (!buffer_is_onscreen(*buffer))
-                    it->layer.set_acquirefence();
-
-                next_onscreen_overlay_buffers.push_back(buffer);
-            }
-            it++;
+            rejected_renderables.push_back(renderable);
         }
+        else
+        {
+            auto buffer = renderable->buffer();
+            if (!buffer_is_onscreen(*buffer))
+                it->layer.set_acquirefence();
 
+            next_onscreen_overlay_buffers.push_back(buffer);
+        }
+        it++;
+    }
+
+    if (renderables.empty() || !rejected_renderables.empty())
+    {
         if (!rejected_renderables.empty())
-        {
             list_compositor.render(rejected_renderables, context);
-            swap_occurred = true;
-        }
-    }
-
-    if (swap_occurred)
-    {
+        if (renderables.empty())
+            context.swap_buffers();
         hwc_list.setup_fb(context.last_rendered_buffer());
         hwc_list.back().layer.set_acquirefence();
     }
