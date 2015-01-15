@@ -80,6 +80,9 @@ struct MirSurfaceSpec
     mir::optional_value<MirSurface*> parent;
     mir::optional_value<MirRectangle> attachment_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
+
+    mir::optional_value<int> relative_left;
+    mir::optional_value<int> relative_top;
 };
 
 struct MirSurface : public mir::client::ClientSurface

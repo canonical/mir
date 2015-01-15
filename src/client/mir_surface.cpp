@@ -97,7 +97,8 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
         message.mutable_attachment_rect()->set_height(attachment_rect.value().height);
     }
     SERIALIZE_OPTION_IF_SET(edge_attachment, message);
-
+    SERIALIZE_OPTION_IF_SET(relative_left, message);
+    SERIALIZE_OPTION_IF_SET(relative_top, message);
     return message;
 }
 

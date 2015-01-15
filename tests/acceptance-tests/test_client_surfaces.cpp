@@ -231,3 +231,42 @@ TEST_F(ClientSurfaces, can_be_menus)
     mir_surface_release_sync(menu);
 }
 
+TEST_F(ClientSurfaces, can_be_tooltips)
+{
+    auto parent = mtf::make_any_surface(connection);
+    MirRectangle attachment_rect{100, 200, 100, 100};
+
+    auto spec = mir_connection_create_spec_for_tooltip_surface(connection, 640, 480,
+        mir_pixel_format_abgr_8888, parent, &attachment_rect, mir_edge_attachment_vertical);
+    ASSERT_THAT(spec, NotNull());
+
+    auto tooltip = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    ASSERT_THAT(tooltip, IsValid());
+    EXPECT_EQ(mir_surface_get_type(tooltip), mir_surface_type_tip);
+
+    mir_surface_release_sync(parent);
+    mir_surface_release_sync(tooltip);
+}
+
+TEST_F(ClientSurfaces, can_be_dialogs)
+{
+    auto parent = mtf::make_any_surface(connection);
+    int const left = 100;
+    int const top = 200;
+
+    auto spec = mir_connection_create_spec_for_dialog_surface(connection, 640, 480,
+        mir_pixel_format_abgr_8888, parent, left, top);
+    ASSERT_THAT(spec, NotNull());
+
+    auto dialog = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    ASSERT_THAT(dialog, IsValid());
+    EXPECT_EQ(mir_surface_get_type(dialog), mir_surface_type_dialog);
+
+    mir_surface_release_sync(parent);
+    mir_surface_release_sync(dialog);
+}
+

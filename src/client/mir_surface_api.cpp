@@ -70,6 +70,38 @@ MirSurfaceSpec* mir_connection_create_spec_for_menu_surface(MirConnection* conne
     return spec;
 }
 
+MirSurfaceSpec* mir_connection_create_spec_for_tooltip_surface(MirConnection* connection,
+                                                               int width,
+                                                               int height,
+                                                               MirPixelFormat format,
+                                                               MirSurface* parent,
+                                                               MirRectangle* rect,
+                                                               MirEdgeAttachment edge)
+{
+    // Tooltip surfaces have the similar semantics to menus
+    auto spec = mir_connection_create_spec_for_menu_surface(
+        connection, width, height,format, parent, rect, edge);
+    spec->type = mir_surface_type_tip;
+    return spec;
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_dialog_surface(MirConnection* connection,
+                                                              int width,
+                                                              int height,
+                                                              MirPixelFormat format,
+                                                              MirSurface* parent,
+                                                              int left,
+                                                              int top)
+{
+    mir::require(mir_surface_is_valid(parent));
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_dialog;
+    spec->parent = parent;
+    spec->relative_left = left;
+    spec->relative_top = top;
+    return spec;
+}
+
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
 {
     MirSurface* surface = nullptr;

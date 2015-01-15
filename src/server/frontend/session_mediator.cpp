@@ -209,6 +209,9 @@ void mf::SessionMediator::create_surface(
     if (request->has_edge_attachment())
         params.with_edge_attachment(static_cast<MirEdgeAttachment>(request->edge_attachment()));
 
+    if (request->has_relative_left() && request->has_relative_top())
+        params.of_relative_position(geom::Point{request->relative_left(), request->relative_top()});
+
     auto const surf_id = session->create_surface(params);
 
     auto surface = session->get_surface(surf_id);

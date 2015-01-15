@@ -136,6 +136,12 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_edge_attachme
     return *this;
 }
 
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_relative_position(geometry::Point const& position)
+{
+    relative_position = position;
+    return *this;
+}
+
 bool ms::operator==(
     const SurfaceCreationParameters& lhs,
     const ms::SurfaceCreationParameters& rhs)

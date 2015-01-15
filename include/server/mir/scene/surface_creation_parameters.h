@@ -71,6 +71,8 @@ struct SurfaceCreationParameters
 
     SurfaceCreationParameters& with_edge_attachment(MirEdgeAttachment edge);
 
+    SurfaceCreationParameters& of_relative_position(geometry::Point const& top_left);
+
     std::string name;
     geometry::Size size;
     geometry::Point top_left;
@@ -86,6 +88,7 @@ struct SurfaceCreationParameters
     mir::optional_value<frontend::SurfaceId> parent_id;
     mir::optional_value<geometry::Rectangle> attachment_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
+    mir::optional_value<geometry::Point> relative_position;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
