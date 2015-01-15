@@ -113,7 +113,7 @@ TEST_F(AndroidCursorListenerIntegrationTest, cursor_listener_receives_motion)
     fake_event_hub->synthesize_builtin_cursor_added();
     fake_event_hub->synthesize_device_scan_complete();
 
-    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(x, y));
+    fake_event_hub->synthesize_event(mis::a_pointer_event().with_movement(x, y));
 
     wait_condition->wait_for_at_most_seconds(1);
 }
