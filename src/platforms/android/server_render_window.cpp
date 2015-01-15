@@ -92,7 +92,6 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
     }
 }
 
-void mga::ServerRenderWindow::sync_to_display(bool sync)
+void mga::ServerRenderWindow::sync_to_display(bool)
 {
-    fb_bundle->wait_for_consumed_buffer(sync);
 }

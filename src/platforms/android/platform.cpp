@@ -22,7 +22,7 @@
 #include "android_graphic_buffer_allocator.h"
 #include "resource_factory.h"
 #include "display.h"
-#include "output_builder.h"
+#include "hal_component_factory.h"
 #include "hwc_loggers.h"
 #include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -79,11 +79,13 @@ namespace
 }
 
 mga::Platform::Platform(
-        std::shared_ptr<mga::DisplayBufferBuilder> const& display_buffer_builder,
-        std::shared_ptr<mg::DisplayReport> const& display_report)
-: display_buffer_builder(display_buffer_builder),
+    std::shared_ptr<mga::DisplayComponentFactory> const& display_buffer_builder,
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    mga::OverlayOptimization overlay_option) :
+    display_buffer_builder(display_buffer_builder),
     display_report(display_report),
-    ipc_operations(std::make_shared<mga::IpcOperations>())
+    ipc_operations(std::make_shared<mga::IpcOperations>()),
+    overlay_option(overlay_option)
 {
 }
 
@@ -116,7 +118,7 @@ std::shared_ptr<mg::Display> mga::Platform::create_display(
         std::shared_ptr<mg::GLConfig> const& gl_config)
 {
     return std::make_shared<mga::Display>(
-            display_buffer_builder, gl_program_factory, gl_config, display_report);
+            display_buffer_builder, gl_program_factory, gl_config, display_report, overlay_option);
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() const
@@ -139,9 +141,9 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
     hwc_report->report_overlay_optimization(overlay_option);
     auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
-    auto display_buffer_builder = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, overlay_option, hwc_report);
-    return std::make_shared<mga::Platform>(display_buffer_builder, display_report);
+    auto component_factory = std::make_shared<mga::HalComponentFactory>(
+        fb_allocator, display_resource_factory, hwc_report);
+    return std::make_shared<mga::Platform>(component_factory, display_report, overlay_option);
 }
 
 extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
@@ -150,7 +152,7 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
 {
     //TODO: remove nullptr parameter once platform classes are sorted.
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
-    return std::make_shared<mga::Platform>(nullptr, display_report);
+    return std::make_shared<mga::Platform>(nullptr, display_report, mga::OverlayOptimization::disabled);
 }
 
 extern "C" void add_platform_options(

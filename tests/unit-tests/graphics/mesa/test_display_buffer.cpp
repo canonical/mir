@@ -294,12 +294,35 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
         mock_egl.fake_egl_context);
 }
 
-TEST_F(MesaDisplayBufferTest, first_flip_flips_but_no_wait)
+TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
+{
+    // Ensure clone mode can do multiple page flips in parallel without
+    // blocking on either (at least till the second post)
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+        .Times(2);
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(0);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output, mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    db.gl_swap_buffers();
+    db.flip();
+}
+
+TEST_F(MesaDisplayBufferTest, single_mode_first_post_flips_with_wait)
 {
     EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
         .Times(1);
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
-        .Times(0);
+        .Times(1);
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
@@ -315,25 +338,25 @@ TEST_F(MesaDisplayBufferTest, first_flip_flips_but_no_wait)
     db.flip();
 }
 
-TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_flip)
+TEST_F(MesaDisplayBufferTest, clone_mode_waits_for_page_flip_on_second_flip)
 {
     InSequence seq;
 
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
         .Times(0);
     EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
-        .Times(1);
+        .Times(2);
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
-        .Times(1);
+        .Times(2);
     EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
-        .Times(1);
+        .Times(2);
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
         .Times(0);
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
         null_display_report(),
-        {mock_kms_output},
+        {mock_kms_output, mock_kms_output},
         nullptr,
         display_area,
         mir_orientation_normal,

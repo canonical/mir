@@ -21,19 +21,14 @@
 #include "src/platforms/android/hwc_loggers.h"
 #include "src/platforms/android/resource_factory.h"
 #include "src/platforms/android/android_graphic_buffer_allocator.h"
-#include "src/platforms/android/output_builder.h"
+#include "src/platforms/android/hal_component_factory.h"
 #include "src/server/graphics/program_factory.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/glib_main_loop.h"
-#include "mir/time/steady_clock.h"
 
 #include "examples/graphics.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_renderable.h"
-#include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/advanceable_clock.h"
-#include "mir_test/auto_unblock_thread.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -42,7 +37,6 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 namespace md=mir::draw;
-namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 
 namespace
@@ -69,11 +63,11 @@ protected:
         auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
         auto null_display_report = mir::report::null_display_report();
         auto stub_gl_config = std::make_shared<mtd::StubGLConfig>();
-        auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
-            buffer_allocator, display_resource_factory, mga::OverlayOptimization::enabled, report);
+        auto display_buffer_factory = std::make_shared<mga::HalComponentFactory>(
+            buffer_allocator, display_resource_factory, report);
         auto program_factory = std::make_shared<mg::ProgramFactory>();
         display = std::make_shared<mga::Display>(
-            display_buffer_factory, program_factory, stub_gl_config, null_display_report);
+            display_buffer_factory, program_factory, stub_gl_config, null_display_report, mga::OverlayOptimization::enabled);
     }
 
     static void TearDownTestCase()
@@ -117,115 +111,4 @@ TEST_F(AndroidDisplay, display_can_post_overlay)
 
         db.post_renderables_if_optimizable(list);
     });
-}
-
-//doesn't use the HW modules, rather tests mainloop integration
-struct AndroidDisplayHotplug : ::testing::Test
-{
-    struct StubHwcConfig : public mga::HwcConfiguration
-    {
-        void power_mode(mga::DisplayName, MirPowerMode) override {}
-        mga::DisplayAttribs active_attribs_for(mga::DisplayName) override
-        {
-            return mga::DisplayAttribs{{0,0}, {0,0}, 0.0, true};
-        } 
-        mga::ConfigChangeSubscription subscribe_to_config_changes(
-            std::function<void()> const& cb) override
-        {
-            hotplug_fn = cb;
-            return {};
-        }
-        void simulate_hotplug()
-        {
-            hotplug_fn();
-        }
-        std::function<void()> hotplug_fn{[]{}};
-    };
-
-    struct WrappingConfig : public mga::HwcConfiguration
-    {
-        WrappingConfig(mga::HwcConfiguration& config) : wrapped(config) {}
-
-        void power_mode(mga::DisplayName d, MirPowerMode m) override
-        {
-            wrapped.power_mode(d, m);
-        }
-        mga::DisplayAttribs active_attribs_for(mga::DisplayName d) override
-        {
-            return wrapped.active_attribs_for(d);
-        } 
-        mga::ConfigChangeSubscription subscribe_to_config_changes(
-            std::function<void()> const& cb) override
-        {
-            return wrapped.subscribe_to_config_changes(cb);
-        }
-        mga::HwcConfiguration& wrapped;
-    };
-
-    struct StubOutputBuilder : public mga::DisplayBufferBuilder
-    {
-        MirPixelFormat display_format() override
-        {
-            return mir_pixel_format_abgr_8888;
-        }
-        std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
-            mg::GLProgramFactory const&, mga::GLContext const&) override
-        {
-            struct NullConfigurableDisplayBuffer : mga::ConfigurableDisplayBuffer
-            {
-                geom::Rectangle view_area() const override { return geom::Rectangle(); }
-                void make_current() override {}
-                void release_current() override {}
-                void gl_swap_buffers() override {}
-                void flip() override {}
-                bool post_renderables_if_optimizable(mg::RenderableList const&) override { return false; }
-                MirOrientation orientation() const override { return mir_orientation_normal; }
-                bool uses_alpha() const override { return false; }
-                void configure(MirPowerMode, MirOrientation) {}
-            };
-            return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new NullConfigurableDisplayBuffer());
-        }
-        std::unique_ptr<mga::HwcConfiguration> create_hwc_configuration() override
-        {
-            return std::unique_ptr<mga::HwcConfiguration>(new WrappingConfig(stub_config));
-        }
-        StubHwcConfig stub_config;
-    };
-
-    AndroidDisplayHotplug() :
-        loop{
-            [this]{ mainloop.enqueue(this, [this] { mainloop.stop(); }); },
-            [this]{ mainloop.run(); }}
-    {
-    }
-
-    mir::GLibMainLoop mainloop{std::make_shared<mir::time::SteadyClock>()};
-    mir::test::AutoUnblockThread loop;
-    std::shared_ptr<StubOutputBuilder> stub_output_builder{std::make_shared<StubOutputBuilder>()};
-    mga::Display display{
-        stub_output_builder,
-        std::make_shared<mg::ProgramFactory>(),
-        std::make_shared<mtd::StubGLConfig>(),
-        mir::report::null_display_report()};
-};
-
-TEST_F(AndroidDisplayHotplug, hotplug_generates_mainloop_event)
-{
-    std::mutex mutex;
-    std::condition_variable cv;
-    int call_count{0};
-    std::function<void()> change_handler{[&]
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        call_count++;
-        cv.notify_all();
-    }};
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    display.register_configuration_change_handler(mainloop, change_handler);
-    stub_output_builder->stub_config.simulate_hotplug();
-    EXPECT_TRUE(cv.wait_for(lk, std::chrono::seconds(2), [&]{ return call_count == 1; }));
-
-    stub_output_builder->stub_config.simulate_hotplug();
-    EXPECT_TRUE(cv.wait_for(lk, std::chrono::seconds(2), [&]{ return call_count == 2; }));
-    mainloop.unregister_fd_handler(&display);
 }

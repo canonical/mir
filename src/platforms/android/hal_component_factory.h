@@ -16,14 +16,11 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_
-#define MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_
+#ifndef MIR_GRAPHICS_ANDROID_HAL_COMPONENT_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_HAL_COMPONENT_FACTORY_H_
 
-#include "display_buffer_builder.h"
+#include "display_component_factory.h"
 #include "display_resource_factory.h"
-#include "overlay_optimization.h"
-#include "hardware/hwcomposer.h"
-#include "hardware/fb.h"
 
 namespace mir
 {
@@ -39,19 +36,18 @@ class DisplayDevice;
 class HwcWrapper;
 class HwcReport;
 
-class OutputBuilder : public DisplayBufferBuilder
+//NOTE: this should be the only class that inspects the HWC version and assembles
+//the components accordingly
+class HalComponentFactory : public DisplayComponentFactory
 {
 public:
-    OutputBuilder(
+    HalComponentFactory(
         std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayResourceFactory> const& res_factory,
-        OverlayOptimization overlay_option,
         std::shared_ptr<HwcReport> const& hwc_report);
 
-    MirPixelFormat display_format() override;
-    std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
-        GLProgramFactory const& gl_program_factory,
-        GLContext const& gl_context) override;
+    std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayAttribs const&) override;
+    std::unique_ptr<DisplayDevice> create_display_device() override;
     std::unique_ptr<HwcConfiguration> create_hwc_configuration() override;
 
 private:
@@ -64,7 +60,6 @@ private:
 
     std::shared_ptr<HwcWrapper> hwc_wrapper;
     std::shared_ptr<framebuffer_device_t> fb_native;
-    OverlayOptimization overlay_optimization;
     HwcVersion hwc_version;
 };
 
@@ -72,4 +67,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HAL_COMPONENT_FACTORY_H_ */
