@@ -199,6 +199,7 @@ struct StubServerGenerator : public mt::StubServerTool
                  google::protobuf::Closure* done)
     {
         response->mutable_id()->set_value(13);
+        response->mutable_buffer_stream()->mutable_id()->set_value(13);
         response->set_width(test_width);
         response->set_height(test_height);
         surface_pf = MirPixelFormat(request->pixel_format());
