@@ -70,8 +70,7 @@ TEST_F(LayerListTest, list_defaults)
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
-    EXPECT_EQ(layerlist.begin(), layerlist.additional_layers_begin());
-    EXPECT_EQ(std::distance(layerlist.additional_layers_begin(), layerlist.end()), 2);
+    EXPECT_EQ(std::distance(layerlist.begin(), layerlist.end()), 2);
 }
 
 TEST_F(LayerListTest, list_iterators)
@@ -79,20 +78,13 @@ TEST_F(LayerListTest, list_iterators)
     size_t additional_layers = 2;
     mga::LayerList list(layer_adapter, {});
     EXPECT_EQ(std::distance(list.begin(), list.end()), additional_layers);
-    EXPECT_EQ(std::distance(list.additional_layers_begin(), list.end()), additional_layers);
-    EXPECT_EQ(std::distance(list.begin(), list.additional_layers_begin()), 0);
 
     additional_layers = 1;
     mga::LayerList list2(layer_adapter, renderables);
     EXPECT_EQ(std::distance(list2.begin(), list2.end()), additional_layers + renderables.size());
-    EXPECT_EQ(std::distance(list2.additional_layers_begin(), list2.end()), additional_layers);
-    EXPECT_EQ(std::distance(list2.begin(), list2.additional_layers_begin()), renderables.size());
 
-    additional_layers = 0;
     mga::LayerList list3(std::make_shared<mga::Hwc10Adapter>(), renderables);
     EXPECT_EQ(std::distance(list3.begin(), list3.end()), renderables.size());
-    EXPECT_EQ(std::distance(list3.additional_layers_begin(), list3.end()), 0);
-    EXPECT_EQ(std::distance(list3.begin(), list3.additional_layers_begin()), renderables.size());
 }
 
 TEST_F(LayerListTest, keeps_track_of_needs_commit)
@@ -100,10 +92,15 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
     size_t fb_target_size{1};
     mga::LayerList list(layer_adapter, renderables);
 
-    for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
-        EXPECT_TRUE(it->needs_commit);
-    for(auto it = list.additional_layers_begin(); it != list.end(); it++)
-        EXPECT_FALSE(it->needs_commit);
+    auto i = 0;
+    for(auto& layer : list)
+    {
+        if (i == 3)
+            EXPECT_FALSE(layer.needs_commit);
+        else
+            EXPECT_TRUE(layer.needs_commit);
+        i++;
+    }
 
     mg::RenderableList list2{
         std::make_shared<mtd::StubRenderable>(buffer1),
@@ -112,25 +109,29 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
     };
     list.update_list(list2);
 
-    //here, all should be needs_commit because they were all HWC_FRAMEBUFFER 
-    for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
-        EXPECT_TRUE(it->needs_commit);
+    i = 0;
+    for(auto& layer : list)
+    {
+        if (i == 3)
+            EXPECT_FALSE(layer.needs_commit);
+        else
+            EXPECT_TRUE(layer.needs_commit);
+        i++;
+    }
 
     ASSERT_THAT(list.native_list()->numHwLayers, testing::Eq(list2.size() + fb_target_size));
     list.native_list()->hwLayers[2].compositionType = HWC_OVERLAY;
     list.update_list(list2);
 
-    auto i = 0;
-    for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
+    i = 0;
+    for(auto& layer : list)
     {
-        if (i == 2)
-            EXPECT_FALSE(it->needs_commit);
+        if ((i == 2) || (i == 3))
+            EXPECT_FALSE(layer.needs_commit);
         else
-            EXPECT_TRUE(it->needs_commit);
+            EXPECT_TRUE(layer.needs_commit);
         i++;
     }
-    for(auto it = list.additional_layers_begin(); it != list.end(); it++)
-        EXPECT_FALSE(it->needs_commit);
 }
 
 TEST_F(LayerListTest, setup_fb_hwc10)

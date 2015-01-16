@@ -130,16 +130,6 @@ void mga::LayerList::update_list(RenderableList const& renderlist)
         }
         layers = std::move(new_layers);
     }
-
-    if (additional_layers == 0)
-    {
-        first_additional_layer = layers.end();
-    }
-    else
-    {
-        first_additional_layer = layers.begin();
-        std::advance(first_additional_layer, renderlist.size());
-    }
 }
 
 std::list<mga::HwcLayerEntry>::iterator mga::LayerList::begin()
@@ -150,11 +140,6 @@ std::list<mga::HwcLayerEntry>::iterator mga::LayerList::begin()
 mga::HwcLayerEntry& mga::LayerList::back()
 {
     return layers.back();
-}
-
-std::list<mga::HwcLayerEntry>::iterator mga::LayerList::additional_layers_begin()
-{
-    return first_additional_layer;
 }
 
 std::list<mga::HwcLayerEntry>::iterator mga::LayerList::end()
@@ -196,14 +181,16 @@ mg::RenderableList mga::LayerList::rejected_renderables()
 void mga::LayerList::setup_fb(std::shared_ptr<mg::Buffer> const& fb)
 {
     geom::Rectangle const disp_frame{{0,0}, {fb->size()}};
+    auto it = layers.begin();
+    std::advance(it, renderable_list.size());
 
     if (mode == Mode::skip_only)
-        layers.back().layer.setup_layer(mga::LayerType::skip, disp_frame, false, fb);
+        it->layer.setup_layer(mga::LayerType::skip, disp_frame, false, fb);
     else if (mode == Mode::target_only)
-        layers.back().layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, fb);
+        it->layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, fb);
     else if (mode == Mode::skip_and_target)
     {
-        additional_layers_begin()->layer.setup_layer(mga::LayerType::skip, disp_frame, false, fb);
-        layers.back().layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, fb);
+        it++->layer.setup_layer(mga::LayerType::skip, disp_frame, false, fb);
+        it->layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, fb);
     }
 }
