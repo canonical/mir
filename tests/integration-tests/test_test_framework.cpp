@@ -109,7 +109,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
             getrlimit(RLIMIT_NOFILE, &rlim);
             rlim_t fd_limit = rlim.rlim_cur;
             if (fd_limit == RLIM_INFINITY) fd_limit = 1024;
-            
+
             for (rlim_t i = 0; i < fd_limit; ++i)
             {
                 MirSurfaceParameters request_params =
@@ -125,7 +125,6 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
                 mir_surface_release_sync(surface);
             }
 
-            printf("Releasing connecton \n");
             mir_connection_release(connection);
             connection_released.raise();
         }}.detach();
