@@ -58,7 +58,7 @@ public:
     LayerAdapter& operator=(LayerAdapter const&) = delete; 
 };
 
-//HWC 1.1 to 1.2 have int sourceCrop and no fbtarget
+//HWC 1.0 has int sourceCrop and no fbtarget
 class Hwc10Adapter : public LayerAdapter
 {
     void fill_source_crop(hwc_layer_1_t&, geometry::Rectangle const& crop_size) const override;
