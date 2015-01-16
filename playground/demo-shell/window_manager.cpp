@@ -160,7 +160,7 @@ void me::WindowManager::save_edges(scene::Surface& surf,
             (click_x >= rightish) ? right_edge :
             hmiddle;
 
-    int click_y = click.y.as_int();
+    int click_y = p.y.as_int();
     yedge = (click_y <= topish) ? top_edge :
             (click_y >= bottomish) ? bottom_edge :
             vmiddle;
