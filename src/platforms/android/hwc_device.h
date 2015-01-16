@@ -55,7 +55,7 @@ public:
 private:
     void commit(
         SwappingGLContext const& context,
-        RenderableList const& list,
+        bool force_swap,
         RenderableListCompositor const& list_compositor);
     bool buffer_is_onscreen(Buffer const&) const;
     LayerList hwc_list;
