@@ -20,11 +20,11 @@
 
 #include "mir/scene/surface.h"
 #include "mir/shell/surface_coordinator_wrapper.h"
-#include "mir/shell/focus_setter.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test/wait_condition.h"
 
+#include <atomic>
 #include <mutex>
 #include <condition_variable>
 
@@ -40,6 +40,9 @@ namespace geom = mir::geometry;
 
 namespace
 {
+// We get some racy "raise" requests from the DefaultFocusManagement
+// so we ignore any raise requests that we don't issue ourselves
+std::atomic<bool> enable_raise{false};
 
 class StoringSurfaceCoordinator : public msh::SurfaceCoordinatorWrapper
 {
@@ -58,6 +61,12 @@ public:
     std::shared_ptr<ms::Surface> surface(int index)
     {
         return surfaces[index].lock();
+    }
+
+    void raise(std::weak_ptr<ms::Surface> const& surface)
+    {
+        if (enable_raise.exchange(false))
+           msh::SurfaceCoordinatorWrapper::raise(surface);
     }
 
 private:
@@ -94,20 +103,6 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
                 return std::make_shared<StoringSurfaceCoordinator>(wrapped);
             });
 
-        /*
-         * Use a null focus setter so that it doesn't change the surface
-         * order and introduce races to our tests.
-         */
-        server.override_the_shell_focus_setter([]
-            {
-                struct NullFocusSetter : msh::FocusSetter
-                {
-                    void set_focus_to(std::shared_ptr<ms::Session> const&) override {}
-                };
-
-                return std::make_shared<NullFocusSetter>();
-            });
-
         mtf::ConnectedClientWithASurface::SetUp();
 
         MirEventDelegate delegate{&event_callback, &mock_visibility_callback};
@@ -137,6 +132,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
     
         mir_surface_spec_release(spec);
 
+        enable_raise = true;
         server.the_surface_coordinator()->raise(server_surface(1));
 
         mir_surface_swap_buffers_sync(second_surface);
@@ -162,6 +158,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
     void raise_surface_on_top()
     {
+        enable_raise = true;
         server.the_surface_coordinator()->raise(server_surface(0));
     }
 
