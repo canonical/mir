@@ -240,9 +240,9 @@ int mir_key_input_event_get_scan_code(MirKeyInputEvent const* kev)
 
 namespace
 {
-MirInputEventModifiers old_modifiers_to_new(MirKeyModifier old_modifier)
+MirInputEventModifiers old_modifiers_to_new(unsigned int old_modifier)
 {
-    unsigned modifier = 0;
+    MirInputEventModifiers modifier = 0;
 
     if (old_modifier & mir_key_modifier_none)
         modifier |= mir_input_event_modifier_none;
@@ -282,21 +282,21 @@ MirInputEventModifiers old_modifiers_to_new(MirKeyModifier old_modifier)
         modifier |= mir_input_event_modifier_scroll_lock;
 
     if (modifier)
-        return static_cast<MirInputEventModifiers>(modifier);
+        return modifier;
     return mir_input_event_modifier_none;
 }
 }
 MirInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* kev)
 {    
     auto const& old_kev = old_kev_from_new(kev);
-    return old_modifiers_to_new(static_cast<MirKeyModifier>(old_kev.modifiers));
+    return old_modifiers_to_new(old_kev.modifiers);
 }
 /* Touch event accessors */
 
 MirInputEventModifiers mir_touch_input_event_get_modifiers(MirTouchInputEvent const* tev)
 {    
     auto const& old_mev = old_mev_from_new(tev);
-    return old_modifiers_to_new(static_cast<MirKeyModifier>(old_mev.modifiers));
+    return old_modifiers_to_new(old_mev.modifiers);
 }
 
 MirTouchInputEvent const* mir_input_event_get_touch_input_event(MirInputEvent const* ev)
@@ -450,7 +450,7 @@ MirPointerInputEvent const* mir_input_event_get_pointer_input_event(MirInputEven
 MirInputEventModifiers mir_pointer_input_event_get_modifiers(MirPointerInputEvent const* pev)
 {    
     auto const& old_mev = old_mev_from_new(pev);
-    return old_modifiers_to_new(static_cast<MirKeyModifier>(old_mev.modifiers));
+    return old_modifiers_to_new(old_mev.modifiers);
 }
 
 MirPointerInputEventAction mir_pointer_input_event_get_action(MirPointerInputEvent const* pev)
