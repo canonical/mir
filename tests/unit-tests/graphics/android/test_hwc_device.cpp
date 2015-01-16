@@ -503,6 +503,7 @@ TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_wit
     //set only the 2nd layer to a new buffer. the first buffer has the same buffer, and would 
     //still be onscreen if this wasn't against a mock
     stub_renderable1->set_buffer(updated_buffer);
+    list.update_list(renderlist);
     device.commit(primary, list, false, stub_context, stub_compositor);
 }
 
