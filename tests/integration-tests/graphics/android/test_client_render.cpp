@@ -204,6 +204,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_height(test_height);
         surface_pf = MirPixelFormat(request->pixel_format());
         response->set_pixel_format(request->pixel_format());
+        response->mutable_buffer_stream()->set_pixel_format(request->pixel_format());
         response->mutable_buffer_stream()->mutable_buffer()->set_buffer_id(client_buffer->id().as_value());
 
         auto buf = client_buffer->native_buffer_handle();

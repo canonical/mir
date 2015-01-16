@@ -216,8 +216,13 @@ void mf::SessionMediator::create_surface(
     response->mutable_id()->set_value(surf_id.as_value());
     response->set_width(client_size.width.as_uint32_t());
     response->set_height(client_size.height.as_uint32_t());
+
+    // TODO: Deprecate
     response->set_pixel_format((int)surface->pixel_format());
     response->set_buffer_usage(request->buffer_usage());
+
+    response->mutable_buffer_stream()->set_pixel_format((int)surface->pixel_format());
+    response->mutable_buffer_stream()->set_buffer_usage(request->buffer_usage());
 
     if (surface->supports_input())
         response->add_fd(surface->client_input_fd());
