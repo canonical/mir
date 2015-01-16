@@ -93,7 +93,7 @@ void mga::DisplayBuffer::release_current()
 
 bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
 {
-    if (!overlay_enabled)
+    if (!(overlay_enabled && display_device->compatible_renderlist(renderlist)))
         return false;
 
     list->update_list(renderlist);
