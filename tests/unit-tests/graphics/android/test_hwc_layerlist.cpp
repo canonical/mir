@@ -165,3 +165,16 @@ TEST_F(LayerListTest, setup_fb_with_skip)
     EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(skip));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(fbtarget));
 }
+
+TEST_F(LayerListTest, generate_rejected_renderables)
+{
+    using namespace testing;
+
+    mga::LayerList list(layer_adapter, renderables);
+
+    auto l = list.native_list();
+    ASSERT_THAT(l.numHwLayers, Eq(4));
+    l.hwLayers[1].compositionType = HWC_OVERLAY;
+
+    EXPECT_THAT(list.generate_rejected_renderables(), ElementsAre(renderables.front(), renderables.back())); 
+}
