@@ -38,11 +38,10 @@ public:
 
     virtual void close_session(std::shared_ptr<scene::Session> const& session) override;
 
-    void focus_next() override;
-    std::weak_ptr<scene::Session> focussed_application() const override;
-    void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
+    std::shared_ptr<scene::Session> successor_of(std::shared_ptr<scene::Session> const&) const override;
 
-    void handle_surface_created(std::shared_ptr<scene::Session> const& session) override;
+    void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
+    void unset_focus() override;
 
     std::shared_ptr<scene::PromptSession> start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,
@@ -53,10 +52,6 @@ public:
         std::shared_ptr<scene::Session> const& session) override;
 
     void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) override;
-
-    frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override;
-
-    void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override;
 
 protected:
     std::shared_ptr<scene::SessionCoordinator> const wrapped;

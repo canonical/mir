@@ -58,21 +58,74 @@ std::string input_event_type_to_string(MirInputEventType input_event_type)
     }
 }
 
+// Never exposed in old event, so lets avoid leaking it in to a header now.
+enum 
+{
+    AINPUT_SOURCE_CLASS_MASK = 0x000000ff,
+
+    AINPUT_SOURCE_CLASS_BUTTON = 0x00000001,
+    AINPUT_SOURCE_CLASS_POINTER = 0x00000002,
+    AINPUT_SOURCE_CLASS_NAVIGATION = 0x00000004,
+    AINPUT_SOURCE_CLASS_POSITION = 0x00000008,
+    AINPUT_SOURCE_CLASS_JOYSTICK = 0x00000010
+};
+enum 
+{
+    AINPUT_SOURCE_UNKNOWN = 0x00000000,
+
+    AINPUT_SOURCE_KEYBOARD = 0x00000100 | AINPUT_SOURCE_CLASS_BUTTON,
+    AINPUT_SOURCE_DPAD = 0x00000200 | AINPUT_SOURCE_CLASS_BUTTON,
+    AINPUT_SOURCE_GAMEPAD = 0x00000400 | AINPUT_SOURCE_CLASS_BUTTON,
+    AINPUT_SOURCE_TOUCHSCREEN = 0x00001000 | AINPUT_SOURCE_CLASS_POINTER,
+    AINPUT_SOURCE_MOUSE = 0x00002000 | AINPUT_SOURCE_CLASS_POINTER,
+    AINPUT_SOURCE_STYLUS = 0x00004000 | AINPUT_SOURCE_CLASS_POINTER,
+    AINPUT_SOURCE_TRACKBALL = 0x00010000 | AINPUT_SOURCE_CLASS_NAVIGATION,
+    AINPUT_SOURCE_TOUCHPAD = 0x00100000 | AINPUT_SOURCE_CLASS_POSITION,
+    AINPUT_SOURCE_JOYSTICK = 0x01000000 | AINPUT_SOURCE_CLASS_JOYSTICK,
+
+    AINPUT_SOURCE_ANY = 0xffffff00
+};
+
 MirEvent const* old_ev_from_new(MirInputEvent const* ev)
 {
     return reinterpret_cast<MirEvent const*>(ev);
 }
+
 MirKeyEvent const& old_kev_from_new(MirKeyInputEvent const* ev)
 {
     auto old_ev = reinterpret_cast<MirEvent const*>(ev);
     expect_old_event_type(old_ev, mir_event_type_key);
     return old_ev->key;
 }
+
 MirMotionEvent const& old_mev_from_new(MirTouchInputEvent const* ev)
 {
     auto old_ev = reinterpret_cast<MirEvent const*>(ev);
     expect_old_event_type(old_ev, mir_event_type_motion);
     return old_ev->motion;
+}
+
+MirMotionEvent const& old_mev_from_new(MirPointerInputEvent const* ev)
+{
+    auto old_ev = reinterpret_cast<MirEvent const*>(ev);
+    expect_old_event_type(old_ev, mir_event_type_motion);
+    return old_ev->motion;
+}
+
+// Differentiate between MirTouchInputEvents and MirPointerInputEvents based on old device class
+MirInputEventType type_from_device_class(int32_t source_class)
+{
+    switch (source_class)
+    {
+    case AINPUT_SOURCE_MOUSE:
+    case AINPUT_SOURCE_TRACKBALL:
+    case AINPUT_SOURCE_TOUCHPAD:
+        return mir_input_event_type_pointer;
+    // Realistically touch events should only come from Stylus and Touchscreen
+    // device classes...practically its not clear this is a safe assumption.
+    default:
+        return mir_input_event_type_touch;
+    }
 }
 }
 
@@ -91,7 +144,7 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* ev)
     case mir_event_type_key:
         return mir_input_event_type_key;
     case mir_event_type_motion:
-        return mir_input_event_type_touch;
+        return type_from_device_class(old_ev->motion.source_id);
     default:
         abort();
     }
@@ -227,7 +280,10 @@ MirInputEventModifiers old_modifiers_to_new(MirKeyModifier old_modifier)
         modifier |= mir_input_event_modifier_num_lock;
     if (old_modifier & mir_key_modifier_scroll_lock)
         modifier |= mir_input_event_modifier_scroll_lock;
-    return static_cast<MirInputEventModifiers>(modifier);
+
+    if (modifier)
+        return static_cast<MirInputEventModifiers>(modifier);
+    return mir_input_event_modifier_none;
 }
 }
 MirInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* kev)
@@ -377,3 +433,86 @@ float mir_touch_input_event_get_touch_axis_value(MirTouchInputEvent const* event
         return -1;
     }
 }                                                                            
+
+/* Pointer event accessors */
+MirPointerInputEvent const* mir_input_event_get_pointer_input_event(MirInputEvent const* ev)
+{
+    if(mir_input_event_get_type(ev) != mir_input_event_type_pointer)
+    {
+        mir::log_critical("expected pointer input event but event was of type " +
+            input_event_type_to_string(mir_input_event_get_type(ev)));
+        abort();
+    }
+
+    return reinterpret_cast<MirPointerInputEvent const*>(ev);
+}
+
+MirInputEventModifiers mir_pointer_input_event_get_modifiers(MirPointerInputEvent const* pev)
+{    
+    auto const& old_mev = old_mev_from_new(pev);
+    return old_modifiers_to_new(static_cast<MirKeyModifier>(old_mev.modifiers));
+}
+
+MirPointerInputEventAction mir_pointer_input_event_get_action(MirPointerInputEvent const* pev)
+{    
+    auto const& old_mev = old_mev_from_new(pev);
+    auto masked_action = old_mev.action & MIR_EVENT_ACTION_MASK;
+    switch (masked_action)
+    {
+    case mir_motion_action_up:
+    case mir_motion_action_pointer_up:
+        return mir_pointer_input_event_action_button_up;
+    case mir_motion_action_down:
+    case mir_motion_action_pointer_down:
+        return mir_pointer_input_event_action_button_down;
+    case mir_motion_action_hover_enter:
+        return mir_pointer_input_event_action_enter;
+    case mir_motion_action_hover_exit:
+        return mir_pointer_input_event_action_leave;
+    case mir_motion_action_move:
+    case mir_motion_action_hover_move:
+    case mir_motion_action_outside:
+    default:
+        return mir_pointer_input_event_action_motion;
+    }
+}
+
+bool mir_pointer_input_event_get_button_state(MirPointerInputEvent const* pev,
+    MirPointerInputEventButton button)
+{
+   auto const& old_mev = old_mev_from_new(pev);
+   switch (button)
+   {
+   case mir_pointer_input_button_primary:
+       return old_mev.button_state & mir_motion_button_primary;
+   case mir_pointer_input_button_secondary:
+       return old_mev.button_state & mir_motion_button_secondary;
+   case mir_pointer_input_button_tertiary:
+       return old_mev.button_state & mir_motion_button_tertiary;
+   case mir_pointer_input_button_back:
+       return old_mev.button_state & mir_motion_button_back;
+   case mir_pointer_input_button_forward:
+       return old_mev.button_state & mir_motion_button_forward;
+   default:
+       return false;
+   }
+}
+
+float mir_pointer_input_event_get_axis_value(MirPointerInputEvent const* pev, MirPointerInputEventAxis axis)
+{
+   auto const& old_mev = old_mev_from_new(pev);
+   switch (axis)
+   {
+   case mir_pointer_input_axis_x:
+       return old_mev.pointer_coordinates[0].x;
+   case mir_pointer_input_axis_y:
+       return old_mev.pointer_coordinates[0].y;
+   case mir_pointer_input_axis_vscroll:
+       return old_mev.pointer_coordinates[0].vscroll;
+   case mir_pointer_input_axis_hscroll:
+       return old_mev.pointer_coordinates[0].hscroll;
+   default:
+       mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
+       abort();
+   }
+}

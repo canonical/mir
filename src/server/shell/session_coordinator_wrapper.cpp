@@ -43,14 +43,10 @@ void msh::SessionCoordinatorWrapper::close_session(
     wrapped->close_session(session);
 }
 
-void msh::SessionCoordinatorWrapper::focus_next()
+std::shared_ptr<ms::Session> msh::SessionCoordinatorWrapper::successor_of(
+    std::shared_ptr<ms::Session> const& session) const
 {
-    wrapped->focus_next();
-}
-
-std::weak_ptr<ms::Session> msh::SessionCoordinatorWrapper::focussed_application() const
-{
-    return wrapped->focussed_application();
+    return wrapped->successor_of(session);
 }
 
 void msh::SessionCoordinatorWrapper::set_focus_to(
@@ -59,10 +55,9 @@ void msh::SessionCoordinatorWrapper::set_focus_to(
     wrapped->set_focus_to(focus);
 }
 
-void msh::SessionCoordinatorWrapper::handle_surface_created(
-    std::shared_ptr<ms::Session> const& session)
+void msh::SessionCoordinatorWrapper::unset_focus()
 {
-    wrapped->handle_surface_created(session);
+    wrapped->unset_focus();
 }
 
 std::shared_ptr<ms::PromptSession> msh::SessionCoordinatorWrapper::start_prompt_session_for(
@@ -82,14 +77,4 @@ void msh::SessionCoordinatorWrapper::add_prompt_provider_for(
 void msh::SessionCoordinatorWrapper::stop_prompt_session(std::shared_ptr<ms::PromptSession> const& prompt_session)
 {
     wrapped->stop_prompt_session(prompt_session);
-}
-
-mf::SurfaceId msh::SessionCoordinatorWrapper::create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
-{
-    return wrapped->create_surface(session, params);
-}
-
-void msh::SessionCoordinatorWrapper::destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface)
-{
-    wrapped->destroy_surface(session, surface);
 }

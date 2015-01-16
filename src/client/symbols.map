@@ -36,5 +36,11 @@ MIR_CLIENT_8.2 {
 } MIR_CLIENT_8.1;
 
 MIR_CLIENT_8.3 {
+  global:
+    mir_input_event_get_pointer_input_event;
+    mir_pointer_input_event_get_modifiers;
+    mir_pointer_input_event_get_action;
+    mir_pointer_input_event_get_button_state;
+    mir_pointer_input_event_get_axis_value;
     mir_connection_create_spec_for_menu_surface;
 } MIR_CLIENT_8.2;

@@ -22,8 +22,9 @@ fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 f4d39e9893ce6308bddd83a49b90f0051f565323  include/common/mir_toolkit/event.h
 2507f2929415aa423f9551d3c595c439fe1c6efd  include/common/mir_toolkit/events/event_deprecated.h
 cb2358a701db2b9c8d9ba1c877f29f834af259a7  include/common/mir_toolkit/events/event.h
-c591a02a8e9851db342c310cf829d018a1eddb51  include/common/mir_toolkit/events/input/input_event.h
+caaf95ea6c02570ab733ade70aba2ecea810b3a7  include/common/mir_toolkit/events/input/input_event.h
 7748a12138474e9be218eeb8f14b372af0fcec7e  include/common/mir_toolkit/events/input/key_input_event.h
+489e8bae7c3e949ac449b09bd3bf554dae0e8986  include/common/mir_toolkit/events/input/pointer_input_event.h
 de7c23453e6d897296f32e49d9ba952a1baa0200  include/common/mir_toolkit/events/input/touch_input_event.h
 8642e85a50e2de651589da3ced70e0fc0a915f26  include/common/mir_toolkit/events/orientation_event.h
 f623dcf3c2ed134c1be20106eb54bcccc84af462  include/common/mir_toolkit/events/prompt_session_event.h
@@ -89,7 +90,7 @@ d5273f3363b0b776427d5e3f1af99f0f2bcf3fa6  include/server/mir/scene/observer.h
 b657cfb8fb31140b83b78fc19135dd0165ede67b  include/server/mir/scene/prompt_session.h
 a745a63d413ced63b82350b8c253b65dffd5bf44  include/server/mir/scene/prompt_session_listener.h
 a09a3f18ecea53dc45386c1e2baf545c4177c047  include/server/mir/scene/prompt_session_manager.h
-6f6635704d7667a205a28f2d8a920e4636472cdf  include/server/mir/scene/session_coordinator.h
+95ab4544d812194290a5f2be5e6f13e5f24c2228  include/server/mir/scene/session_coordinator.h
 8cb940e808eca7db115239a25167955d34acafc4  include/server/mir/scene/session.h
 ee94083f10f890e24c0e0bbdb94842e2dd788deb  include/server/mir/scene/session_listener.h
 7f5f26000fd2312373817d05c488a6a950a47c82  include/server/mir/scene/snapshot.h
@@ -107,7 +108,7 @@ e5e4dd7bcaf186810043fa0f05be42d7e49b0843  include/server/mir/scene/surface_coord
 b74342d8ffab489405a4e12fce0c257ac9f8596c  include/server/mir/shell/focus_setter.h
 f8d415af54b4a477338fb9dbe20db01aa4544029  include/server/mir/shell/host_lifecycle_event_listener.h
 4f50c37bb8e36a1aa4918af6aa01b0f032ed0984  include/server/mir/shell/input_targeter.h
-337d7a5fe44b788a44a72ee2dc15590055874fe2  include/server/mir/shell/session_coordinator_wrapper.h
+ad5f7e4b5bc97f7fc027a256a2d00cefbb0fb9ab  include/server/mir/shell/session_coordinator_wrapper.h
 18e869c5b87ab8be4bc185d2cd55a93d699cde72  include/server/mir/shell/surface_coordinator_wrapper.h
 114cc8c0b12ee4fd78d86c8f3309546e4dc68c9f  include/server/mir/terminate_with_current_exception.h
 1b8c2a763c8f5f00b737c3a187db2304676f8076  include/server/mir/time/alarm.h

@@ -33,7 +33,9 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Defaul
 {
     return default_shell([this]
         {
-            return std::make_shared<msh::DefaultShell>(the_session_coordinator());
+            return std::make_shared<msh::DefaultShell>(
+                the_shell_focus_setter(),
+                the_session_coordinator());
         });
 }
 
