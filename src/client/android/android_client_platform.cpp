@@ -20,7 +20,7 @@
 #include "android_client_platform.h"
 #include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"
-#include "client_surface_interpreter.h"
+#include "egl_native_surface_interpreter.h"
 #include "../mir_connection.h"
 
 #include <EGL/egl.h>

@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "client_surface_interpreter.h"
+#include "egl_native_surface_interpreter.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "../client_buffer.h"
 #include <system/window.h>
