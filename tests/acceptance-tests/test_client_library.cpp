@@ -133,16 +133,10 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         {
             mir_wait_for_one(mir_surface_set_state(surf,
                                             mir_surface_state_maximized));
-            mir_wait_for_one(mir_surface_set_type(surf,
-                                            mir_surface_type_normal));
             mir_wait_for_one(mir_surface_set_state(surf,
                                             mir_surface_state_restored));
-            mir_wait_for_one(mir_surface_set_type(surf,
-                                            mir_surface_type_utility));
             mir_wait_for_one(mir_surface_set_state(surf,
                                             mir_surface_state_fullscreen));
-            mir_wait_for_one(mir_surface_set_type(surf,
-                                            mir_surface_type_dialog));
             mir_wait_for_one(mir_surface_set_state(surf,
                                             mir_surface_state_minimized));
         }
@@ -202,51 +196,6 @@ TEST_F(ClientLibrary, creates_surface)
     EXPECT_EQ(request_buffer_usage, response_params.buffer_usage);
 
     mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
-    mir_connection_release(connection);
-}
-
-TEST_F(ClientLibrary, can_set_surface_types)
-{
-    mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
-
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
-    mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
-
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_normal));
-
-    mir_wait_for(mir_surface_set_type(surface, mir_surface_type_freestyle));
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_freestyle));
-
-    mir_wait_for(mir_surface_set_type(surface, static_cast<MirSurfaceType>(999)));
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_freestyle));
-
-    mir_wait_for(mir_surface_set_type(surface, mir_surface_type_dialog));
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_dialog));
-
-    mir_wait_for(mir_surface_set_type(surface, static_cast<MirSurfaceType>(888)));
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_dialog));
-
-    // Stress-test synchronization logic with some flooding
-    for (int i = 0; i < 100; i++)
-    {
-        mir_surface_set_type(surface, mir_surface_type_normal);
-        mir_surface_set_type(surface, mir_surface_type_utility);
-        mir_surface_set_type(surface, mir_surface_type_dialog);
-        mir_surface_set_type(surface, mir_surface_type_gloss);
-        mir_surface_set_type(surface, mir_surface_type_freestyle);
-        mir_wait_for(mir_surface_set_type(surface, mir_surface_type_menu));
-        ASSERT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_menu));
-    }
-
-    mir_wait_for(mir_surface_release(surface, release_surface_callback, this));
     mir_connection_release(connection);
 }
 
@@ -535,8 +484,7 @@ TEST_F(ClientLibrary, highly_threaded_client)
     b.join();
     c.join();
 
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_dialog));
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_state_minimized));
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_minimized));
 
     mir_surface_release_sync(surface);
 
