@@ -19,6 +19,7 @@
 #include "framebuffer_bundle.h"
 #include "display_buffer.h"
 #include "display_device.h"
+#include "hwc_layerlist.h"
 
 #include <functional>
 #include <boost/throw_exception.hpp>
@@ -31,13 +32,15 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::DisplayBuffer::DisplayBuffer(
+    std::unique_ptr<LayerList> layer_list,
     std::shared_ptr<FramebufferBundle> const& fb_bundle,
     std::shared_ptr<DisplayDevice> const& display_device,
     std::shared_ptr<ANativeWindow> const& native_window,
     mga::GLContext const& shared_gl_context,
     mg::GLProgramFactory const& program_factory,
     mga::OverlayOptimization overlay_option)
-    : fb_bundle{fb_bundle},
+    : layer_list(std::move(layer_list)),
+      fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
       gl_context{shared_gl_context, fb_bundle, native_window},

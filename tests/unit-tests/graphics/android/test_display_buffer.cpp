@@ -85,15 +85,16 @@ protected:
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
     geom::Size const display_size{433,232};
     double const refresh_rate{60.0};
-    std::unique_ptr<mga::LayerList> list(
-        new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
+    std::unique_ptr<mga::LayerList> list{
+        new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})};
 };
 }
 
 TEST_F(DisplayBuffer, can_post_update_with_gl_only)
 {
+    using namespace testing;
     EXPECT_CALL(*mock_display_device, commit(
-        mga::DisplayName::primary, Ref(list), true, Ref(*gl_context), _));
+        mga::DisplayName::primary, Ref(*list), true, _, _));
 
     mga::DisplayBuffer db(
         std::move(list), mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);

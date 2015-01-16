@@ -37,16 +37,20 @@ namespace android
 
 class DisplayDevice;
 class FramebufferBundle;
+class LayerList;
 
 class DisplayBuffer : public ConfigurableDisplayBuffer
 {
 public:
-    DisplayBuffer(std::shared_ptr<FramebufferBundle> const& fb_bundle,
-                  std::shared_ptr<DisplayDevice> const& display_device,
-                  std::shared_ptr<ANativeWindow> const& native_window,
-                  GLContext const& shared_gl_context,
-                  GLProgramFactory const& program_factory,
-                  OverlayOptimization overlay_option);
+    //TODO: some of these could be condensed
+    DisplayBuffer(
+        std::unique_ptr<LayerList> layer_list,
+        std::shared_ptr<FramebufferBundle> const& fb_bundle,
+        std::shared_ptr<DisplayDevice> const& display_device,
+        std::shared_ptr<ANativeWindow> const& native_window,
+        GLContext const& shared_gl_context,
+        GLProgramFactory const& program_factory,
+        OverlayOptimization overlay_option);
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
@@ -62,6 +66,7 @@ public:
     void configure(DisplayConfigurationOutput const&) override;
 
 private:
+    std::unique_ptr<LayerList> layer_list;
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;
