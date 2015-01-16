@@ -262,9 +262,18 @@ int mir_surface_get_id(MirSurface* /*surface*/)
     return 0;
 }
 
-MirWaitHandle* mir_surface_set_type(MirSurface*, MirSurfaceType)
+MirWaitHandle* mir_surface_set_type(MirSurface* surf,
+                                    MirSurfaceType type)
 {
-    return nullptr;
+    try
+    {
+        return surf ? surf->configure(mir_surface_attrib_type, type) : nullptr;
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
 }
 
 MirSurfaceType mir_surface_get_type(MirSurface* surf)
