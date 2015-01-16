@@ -185,12 +185,22 @@ void mga::LayerList::setup_fb(std::shared_ptr<mg::Buffer> const& fb)
     std::advance(it, renderable_list.size());
 
     if (mode == Mode::skip_only)
+    {
         it->layer.setup_layer(mga::LayerType::skip, disp_frame, false, fb);
+    }
     else if (mode == Mode::target_only)
+    {
         it->layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, fb);
+    }
     else if (mode == Mode::skip_and_target)
     {
         it++->layer.setup_layer(mga::LayerType::skip, disp_frame, false, fb);
         it->layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, fb);
     }
+}
+
+void mga::LayerList::swap_occurred()
+{
+    if ((mode == Mode::target_only) || (mode == Mode::skip_and_target))
+        layers.back().layer.set_acquirefence();
 }

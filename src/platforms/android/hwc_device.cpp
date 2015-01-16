@@ -133,7 +133,7 @@ void mga::HwcDevice::commit(
     {
         list_compositor.render(rejected_renderables, context);
         hwc_list.setup_fb(context.last_rendered_buffer());
-//        hwc_list.back().layer.set_acquirefence();
+        hwc_list.swap_occurred();
     }
 
     //setup overlays
@@ -141,13 +141,11 @@ void mga::HwcDevice::commit(
     for (auto& layer : hwc_list)
     {
         auto buffer = layer.layer.buf();
-        if (buffer)
+        if (layer.layer.is_overlay() && buffer)
         {
             if (!buffer_is_onscreen(*buffer))
                 layer.layer.set_acquirefence();
-
-            if (!layer.layer.needs_gl_render())
-                next_onscreen_overlay_buffers.push_back(buffer);
+            next_onscreen_overlay_buffers.push_back(buffer);
         }
     }
 

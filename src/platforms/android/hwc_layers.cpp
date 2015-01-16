@@ -148,6 +148,11 @@ bool mga::HWCLayer::needs_gl_render() const
     return (hwc_layer->compositionType == HWC_FRAMEBUFFER);
 }
 
+bool mga::HWCLayer::is_overlay() const
+{
+    return (hwc_layer->compositionType == HWC_OVERLAY);
+}
+
 void mga::HWCLayer::release_buffer()
 {
     if ((hwc_layer->compositionType != HWC_FRAMEBUFFER) && buffer)
