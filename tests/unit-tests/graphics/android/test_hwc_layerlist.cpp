@@ -169,12 +169,11 @@ TEST_F(LayerListTest, setup_fb_with_skip)
 TEST_F(LayerListTest, generate_rejected_renderables)
 {
     using namespace testing;
-
     mga::LayerList list(layer_adapter, renderables);
 
     auto l = list.native_list();
-    ASSERT_THAT(l.numHwLayers, Eq(4));
-    l.hwLayers[1].compositionType = HWC_OVERLAY;
+    ASSERT_THAT(l->numHwLayers, Eq(4));
+    l->hwLayers[1].compositionType = HWC_OVERLAY;
 
-    EXPECT_THAT(list.generate_rejected_renderables(), ElementsAre(renderables.front(), renderables.back())); 
+    EXPECT_THAT(list.rejected_renderables(), ElementsAre(renderables.front(), renderables.back())); 
 }

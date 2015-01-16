@@ -65,6 +65,7 @@ public:
     HwcLayerEntry& back();
     std::list<HwcLayerEntry>::iterator end();
 
+    RenderableList rejected_renderables();
     void setup_fb(std::shared_ptr<Buffer> const& fb_target);
 
     hwc_display_contents_1_t* native_list();

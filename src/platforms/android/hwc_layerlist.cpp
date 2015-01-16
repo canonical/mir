@@ -179,6 +179,12 @@ mga::LayerList::LayerList(
     update_list(renderlist);
 }
 
+mg::RenderableList mga::LayerList::rejected_renderables()
+{
+    mg::RenderableList rejected_renderables;
+    return rejected_renderables;
+}
+
 void mga::LayerList::setup_fb(std::shared_ptr<mg::Buffer> const& fb)
 {
     geom::Rectangle const disp_frame{{0,0}, {fb->size()}};
