@@ -74,11 +74,11 @@ protected:
     virtual void tessellate(std::vector<graphics::GLPrimitive>& primitives,
                             graphics::Renderable const& renderable) const;
 
-    virtual void render(graphics::Renderable const& renderable) const;
-
     DestinationAlpha destination_alpha() const;
 
     GLfloat clear_color[4];
+
+    mutable long long frameno = 0;
 
     GLProgramFamily family;
     struct Program
@@ -92,16 +92,25 @@ protected:
        GLint transform_uniform = -1;
        GLint screen_to_gl_coords_uniform = -1;
        GLint alpha_uniform = -1;
+       mutable long long last_used_frameno = 0;
 
        Program(GLuint program_id);
     };
-    std::vector<Program> programs;
+    Program default_program, alpha_program;
+
+    static const GLchar* const vshader;
+    static const GLchar* const default_fshader;
+    static const GLchar* const alpha_fshader;
+
+    virtual void draw(graphics::Renderable const& renderable,
+                      GLRenderer::Program const& prog) const;
 
 private:
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
     float rotation;
     DestinationAlpha const dest_alpha;
     geometry::Rectangle viewport;
+    glm::mat4 screen_to_gl_coords, screen_rotation;
 
     std::vector<graphics::GLPrimitive> mutable primitives;
 };

@@ -86,6 +86,10 @@ void toggle_surface_state(MirSurface* const surface, MirSurfaceState* state)
         break;
 
     case mir_surface_state_vertmaximized:
+        NEW_STATE(mir_surface_state_horizmaximized);
+        break;
+
+    case mir_surface_state_horizmaximized:
         NEW_STATE(mir_surface_state_minimized);
         break;
 
