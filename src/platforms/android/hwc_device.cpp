@@ -46,7 +46,7 @@ bool plane_alpha_is_translucent(mg::Renderable const& renderable)
 bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
 {
     if (list.empty())
-        return true;
+        return false;
 
     for(auto const& renderable : list)
     {
@@ -55,10 +55,10 @@ bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
         if (plane_alpha_is_translucent(*renderable) ||
            (renderable->transformation() != identity))
         {
-            return true;
+            return false;
         }
     }
-    return false;
+    return true;
 }
 
 mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper) :
@@ -132,7 +132,11 @@ void mga::HwcDevice::commit(
     auto rejected_renderables = hwc_list.rejected_renderables();
     if (force_swap || !rejected_renderables.empty())
     {
-        list_compositor.render(rejected_renderables, context);
+        //FIXME: fix this downstream
+        if (force_swap)
+            context.swap_buffers();
+        else
+            list_compositor.render(rejected_renderables, context);
         hwc_list.setup_fb(context.last_rendered_buffer());
         hwc_list.swap_occurred();
     }

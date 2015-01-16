@@ -359,6 +359,7 @@ TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
 #endif
+
 TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
 {
     using namespace testing;
@@ -526,37 +527,31 @@ TEST_F(HwcDevice, does_not_own_framebuffer_buffers_past_set)
     device.commit(primary, list, false, stub_context, stub_compositor);
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
-#if 0
 
 TEST_F(HwcDevice, rejects_empty_list)
 {
-    mga::HwcDevice device(mock_device, layer_adapter);
-
+    mga::HwcDevice device(mock_device);
     std::list<std::shared_ptr<mg::Renderable>> renderlist{};
-    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
+    EXPECT_FALSE(device.compatible_renderlist(renderlist));
 }
 
 //TODO: we could accept a 90 degree transform
 TEST_F(HwcDevice, rejects_list_containing_transformed)
 {
-    mga::HwcDevice device(mock_device, layer_adapter);
+    mga::HwcDevice device(mock_device);
 
     auto renderable = std::make_shared<mtd::StubTransformedRenderable>();
     mg::RenderableList renderlist{renderable};
-    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
+    EXPECT_FALSE(device.compatible_renderlist(renderlist));
 }
 
 //TODO: support plane alpha for hwc 1.2 and later
 TEST_F(HwcDevice, rejects_list_containing_plane_alpha)
 {
-    using namespace testing;
-
-    mga::HwcDevice device(mock_device, layer_adapter);
-
+    mga::HwcDevice device(mock_device);
     mg::RenderableList renderlist{std::make_shared<mtd::PlaneAlphaRenderable>()};
-    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
+    EXPECT_FALSE(device.compatible_renderlist(renderlist));
 }
-#endif
 
 TEST_F(HwcDevice, does_not_own_overlay_buffers_after_screen_off)
 {
