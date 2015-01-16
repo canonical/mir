@@ -107,6 +107,8 @@ public:
         geometry::Rectangle const& position,
         bool alpha_enabled,
         std::shared_ptr<Buffer> const& buffer);
+
+    bool is_overlay() const;
     bool needs_gl_render() const;
     void set_acquirefence();
     void release_buffer();

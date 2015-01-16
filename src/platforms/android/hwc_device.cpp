@@ -93,7 +93,7 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
         }
     } null_renderer;
 
-    commit(context, {}, null_renderer);
+    commit(context, true, null_renderer);
 }
 
 bool mga::HwcDevice::post_overlays(
@@ -112,7 +112,7 @@ bool mga::HwcDevice::post_overlays(
     if (!needs_commit)
         return false;
 
-    commit(context, renderables, list_compositor);
+    commit(context, false, list_compositor);
     return true;
 }
 #endif
@@ -128,25 +128,25 @@ void mga::HwcDevice::commit(
 
     hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
 
+    //render and swap as needed
     auto rejected_renderables = hwc_list.rejected_renderables();
     if (force_swap || !rejected_renderables.empty())
     {
         list_compositor.render(rejected_renderables, context);
         hwc_list.setup_fb(context.last_rendered_buffer());
-        hwc_list.back().layer.set_acquirefence();
+        hwc_list.swap_occurred();
     }
 
+    //setup overlays
     std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
     for (auto& layer : hwc_list)
     {
         auto buffer = layer.layer.buf();
-        if (buffer)
+        if (layer.layer.is_overlay() && buffer)
         {
             if (!buffer_is_onscreen(*buffer))
                 layer.layer.set_acquirefence();
-
-            if (!layer.layer.needs_gl_render())
-                next_onscreen_overlay_buffers.push_back(buffer);
+            next_onscreen_overlay_buffers.push_back(buffer);
         }
     }
 
