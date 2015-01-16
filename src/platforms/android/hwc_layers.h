@@ -110,6 +110,7 @@ public:
     bool needs_gl_render() const;
     void set_acquirefence();
     void release_buffer();
+    std::shared_ptr<Buffer> buf();
 
 private:
     std::shared_ptr<LayerAdapter> layer_adapter;

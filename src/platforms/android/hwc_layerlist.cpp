@@ -86,6 +86,7 @@ void mga::LayerList::update_list_mode(mg::RenderableList const& renderlist)
 
 void mga::LayerList::update_list(RenderableList const& renderlist)
 {
+    renderable_list = renderlist;
     update_list_mode(renderlist);
     size_t additional_layers = additional_layers_for(mode);
     size_t needed_size = renderlist.size() + additional_layers;
@@ -182,6 +183,13 @@ mga::LayerList::LayerList(
 mg::RenderableList mga::LayerList::rejected_renderables()
 {
     mg::RenderableList rejected_renderables;
+    auto it = layers.begin();
+    for(auto const& renderable : renderable_list)
+    {
+        if (it->layer.needs_gl_render())
+            rejected_renderables.push_back(renderable);
+        it++;
+    }
     return rejected_renderables;
 }
 

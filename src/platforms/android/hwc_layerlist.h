@@ -74,6 +74,8 @@ private:
     LayerList& operator=(LayerList const&) = delete;
     LayerList(LayerList const&) = delete;
 
+    RenderableList renderable_list;
+
     void update_list_mode(RenderableList const& renderlist);
 
     std::shared_ptr<LayerAdapter> const layer_adapter;

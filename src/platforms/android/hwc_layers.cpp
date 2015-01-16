@@ -152,7 +152,6 @@ void mga::HWCLayer::release_buffer()
 {
     if ((hwc_layer->compositionType != HWC_FRAMEBUFFER) && buffer)
     {
-        printf("RELEASE.\n"); 
         auto const& native_buffer = buffer->native_buffer_handle();
         native_buffer->update_usage(hwc_layer->releaseFenceFd, mga::BufferAccess::read);
         hwc_layer->releaseFenceFd = -1;
@@ -161,13 +160,17 @@ void mga::HWCLayer::release_buffer()
     buffer.reset();
 }
 
+std::shared_ptr<mg::Buffer> mga::HWCLayer::buf()
+{
+    return buffer;
+}
+
 bool mga::HWCLayer::setup_layer(
     LayerType type,
     geometry::Rectangle const& position,
     bool alpha_enabled,
     std::shared_ptr<Buffer> const& b)
 {
-    printf("SETUP %X\n", (int) (long) (int)b.get());
     if (type != mga::LayerType::skip)
         buffer = b;
     bool needs_commit = needs_gl_render();
@@ -231,9 +234,5 @@ void mga::HWCLayer::set_acquirefence()
     {
         auto const& native_buffer = buffer->native_buffer_handle();
         hwc_layer->acquireFenceFd = native_buffer->copy_fence();
-    }
-    else
-    {
-        printf("DINT COPY %i %i\n", !needs_gl_render(), (int) (long) buffer.get());
     }
 }
