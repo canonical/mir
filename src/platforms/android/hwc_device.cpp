@@ -41,8 +41,9 @@ bool plane_alpha_is_translucent(mg::Renderable const& renderable)
     };
     return (renderable.alpha() < 1.0f - tolerance);
 }
+}
 
-bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
+bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
 {
     if (list.empty())
         return true;
@@ -59,12 +60,8 @@ bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
     }
     return false;
 }
-}
 
-mga::HwcDevice::HwcDevice(
-    std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-    std::shared_ptr<LayerAdapter> const& layer_adapter) :
-    hwc_list{layer_adapter, {}},
+mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper) :
     hwc_wrapper(hwc_wrapper)
 {
 }
@@ -82,6 +79,7 @@ bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
     return it != onscreen_overlay_buffers.end();
 }
 
+#if 0
 void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
     hwc_list.update_list({});
@@ -117,10 +115,13 @@ bool mga::HwcDevice::post_overlays(
     commit(context, renderables, list_compositor);
     return true;
 }
+#endif
 
 void mga::HwcDevice::commit(
+    mga::DisplayName,
+    mga::LayerList& hwc_list,
+    bool force_swap,
     SwappingGLContext const& context,
-    RenderableList const& renderables,
     RenderableListCompositor const& list_compositor)
 {
     hwc_list.setup_fb(context.last_rendered_buffer());
@@ -128,7 +129,7 @@ void mga::HwcDevice::commit(
     hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
 
     auto rejected_renderables = hwc_list.rejected_renderables();
-    if (renderables.empty() || !rejected_renderables.empty())
+    if (force_swap || !rejected_renderables.empty())
     {
         list_compositor.render(rejected_renderables, context);
         hwc_list.setup_fb(context.last_rendered_buffer());

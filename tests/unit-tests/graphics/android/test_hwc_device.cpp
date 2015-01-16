@@ -112,9 +112,10 @@ struct HwcDevice : public ::testing::Test
     std::shared_ptr<mtd::StubRenderable> const stub_renderable1;
     std::shared_ptr<mtd::StubRenderable> const stub_renderable2;
     std::shared_ptr<mtd::MockHWCDeviceWrapper> const mock_device;
-    mtd::StubSwappingGLContext stub_context;
+    mtd::StubSwappingGLContext const stub_context;
     mg::RenderableList renderlist;
     std::shared_ptr<mga::LayerAdapter> const layer_adapter;
+    mga::DisplayName primary{mga::DisplayName::primary};
 };
 }
 
@@ -130,11 +131,9 @@ TEST_F(HwcDevice, prepares_a_skip_and_target_layer_by_default)
     EXPECT_CALL(*mock_device, prepare(MatchesPrimaryList(expected_list)))
         .Times(1);
 
-    auto list = std::make_shared<mga::LayerList>(layer_adapter, {});
-    mga::HwcDevice device(mock_device, list);
-    device.post_gl(stub_context);
-
-    device.commit();
+    mga::LayerList list(layer_adapter, {});
+    mga::HwcDevice device(mock_device);
+    device.commit(primary, list, false, stub_context, stub_compositor);
 }
 
 #if 0
