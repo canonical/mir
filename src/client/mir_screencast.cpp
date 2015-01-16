@@ -45,7 +45,6 @@ MirScreencast::MirScreencast(
     mir_screencast_callback callback, void* context)
     : server(server),
       output_size{size},
-      output_format{pixel_format},
       buffer_stream_factory{buffer_stream_factory}
 {
     if (output_size.width.as_int()  == 0 ||

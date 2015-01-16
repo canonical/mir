@@ -74,7 +74,6 @@ private:
 
     mir::protobuf::DisplayServer& server;
     mir::geometry::Size const output_size;
-    MirPixelFormat const output_format;
     std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
     
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
