@@ -203,23 +203,23 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_height(test_height);
         surface_pf = MirPixelFormat(request->pixel_format());
         response->set_pixel_format(request->pixel_format());
-        response->mutable_buffer()->set_buffer_id(client_buffer->id().as_value());
+        response->mutable_buffer_stream()->mutable_buffer()->set_buffer_id(client_buffer->id().as_value());
 
         auto buf = client_buffer->native_buffer_handle();
         //note about the stride. Mir protocol sends stride in bytes, android uses stride in pixels
-        response->mutable_buffer()->set_stride(client_buffer->stride().as_uint32_t());
+        response->mutable_buffer_stream()->mutable_buffer()->set_stride(client_buffer->stride().as_uint32_t());
 
         auto const& size = client_buffer->size();
-        response->mutable_buffer()->set_width(size.width.as_int());
-        response->mutable_buffer()->set_height(size.height.as_int());
+        response->mutable_buffer_stream()->mutable_buffer()->set_width(size.width.as_int());
+        response->mutable_buffer_stream()->mutable_buffer()->set_height(size.height.as_int());
 
-        response->mutable_buffer()->set_fds_on_side_channel(1);
+        response->mutable_buffer_stream()->mutable_buffer()->set_fds_on_side_channel(1);
         native_handle_t const* native_handle = buf->handle();
         for (auto i = 0; i < native_handle->numFds; i++)
-            response->mutable_buffer()->add_fd(dup(native_handle->data[i]));
-        response->mutable_buffer()->add_data(static_cast<int>(mga::BufferFlag::unfenced));
+            response->mutable_buffer_stream()->mutable_buffer()->add_fd(dup(native_handle->data[i]));
+        response->mutable_buffer_stream()->mutable_buffer()->add_data(static_cast<int>(mga::BufferFlag::unfenced));
         for (auto i = 0; i < native_handle->numInts; i++)
-            response->mutable_buffer()->add_data(native_handle->data[native_handle->numFds+i]);
+            response->mutable_buffer_stream()->mutable_buffer()->add_data(native_handle->data[native_handle->numFds+i]);
 
         std::unique_lock<std::mutex> lock(guard);
         surface_name = request->surface_name();
