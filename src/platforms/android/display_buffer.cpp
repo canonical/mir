@@ -39,7 +39,7 @@ mga::DisplayBuffer::DisplayBuffer(
     mga::GLContext const& shared_gl_context,
     mg::GLProgramFactory const& program_factory,
     mga::OverlayOptimization overlay_option)
-    : layer_list(std::move(layer_list)),
+    : list(std::move(layer_list)),
       fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
@@ -96,14 +96,15 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     if (!overlay_enabled)
         return false;
 
-    (void) renderlist;
-    return false;
-    //return display_device->post_overlays(gl_context, renderlist, overlay_program);
+    list->update_list(renderlist);
+    display_device->commit(mga::DisplayName::primary, *list, false, gl_context, overlay_program);
+    return true;
 }
 
 void mga::DisplayBuffer::gl_swap_buffers()
 {
-//    display_device->post_gl(gl_context);
+    list->update_list({});
+    display_device->commit(mga::DisplayName::primary, *list, true, gl_context, overlay_program);
 }
 
 void mga::DisplayBuffer::flip()
