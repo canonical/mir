@@ -1,3 +1,23 @@
+mir (0.11.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.11.0 (https://launchpad.net/mir/+milestone/0.11.0)
+    - Enhancements:
+      . Lots more major plumbing in the Android code, on the path to supporting
+        external displays.
+      . Performance: Use optimally efficient fragment shading when possible.
+      . Performance: (Desktop) Composite using double buffering instead of
+        triple to reduce visible lag.
+      . TODO fill me in more
+    - ABI summary: Servers (will?) need rebuilding, but clients do not;
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI unchanged at 3
+      . Mirplatform ABI bumped to 6
+      . Mirserver ABI unchanged at 28 (expect 29 before release)
+    - Bug fixes:
+      . TODO fill me in at release
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 14 Jan 2015 16:10:37 +0800
+
 mir (0.10.0+15.04.20150107.2-0ubuntu1) vivid; urgency=medium
 
   [ Daniel van Vugt ]

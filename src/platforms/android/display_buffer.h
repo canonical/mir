@@ -46,6 +46,7 @@ public:
                   std::shared_ptr<ANativeWindow> const& native_window,
                   GLContext const& shared_gl_context,
                   GLProgramFactory const& program_factory,
+                  MirOrientation orientation,
                   OverlayOptimization overlay_option);
 
     geometry::Rectangle view_area() const override;
@@ -57,10 +58,7 @@ public:
 
     MirOrientation orientation() const override;
     bool uses_alpha() const override;
-
-    DisplayConfigurationOutput configuration() const override;
-    void configure(DisplayConfigurationOutput const&) override;
-
+    void configure(MirPowerMode power_mode, MirOrientation orientation) override;
 private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;
@@ -68,7 +66,7 @@ private:
     FramebufferGLContext gl_context;
     HWCFallbackGLRenderer overlay_program;
     bool overlay_enabled;
-    DisplayConfigurationOutput current_configuration;
+    MirOrientation orientation_;
 };
 
 }
