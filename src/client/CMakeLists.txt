@@ -63,6 +63,10 @@ add_library(mirclientobjects OBJECT
   mir_platform_message_api.cpp
 )
 
+# Ensure protobuf C++ headers have been produced before
+# trying to compile mirclientobjects
+add_dependencies(mirclientobjects mirprotobuf)
+
 add_library(mirclient SHARED
 
   $<TARGET_OBJECTS:mirclientobjects>
