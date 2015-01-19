@@ -45,7 +45,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -55,7 +54,7 @@ namespace mr = mir::report;
 namespace
 {
 
-void post_a_frame(mf::Surface& s)
+void post_a_frame(ms::Surface& s)
 {
     mtd::StubBuffer old_buffer;
     s.swap_buffers(&old_buffer, [](mg::Buffer*){});
