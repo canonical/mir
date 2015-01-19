@@ -57,24 +57,35 @@ class LayerList
 public:
     LayerList(
         std::shared_ptr<LayerAdapter> const& layer_adapter,
-        RenderableList const& renderlist,
-        size_t additional_layers);
-    void update_list(RenderableList const& renderlist, size_t additional_layers);
+        RenderableList const& renderlist);
+    void update_list(RenderableList const& renderlist);
 
     std::list<HwcLayerEntry>::iterator begin();
     std::list<HwcLayerEntry>::iterator additional_layers_begin();
     std::list<HwcLayerEntry>::iterator end();
 
-    std::weak_ptr<hwc_display_contents_1_t> native_list();
+    void setup_fb(Buffer const& fb_target);
+
+    hwc_display_contents_1_t* native_list();
     NativeFence retirement_fence();
 private:
     LayerList& operator=(LayerList const&) = delete;
     LayerList(LayerList const&) = delete;
 
+    void update_list_mode(RenderableList const& renderlist);
+
     std::shared_ptr<LayerAdapter> const layer_adapter;
     std::list<HwcLayerEntry> layers;
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
     std::list<HwcLayerEntry>::iterator first_additional_layer;
+    enum Mode
+    {
+        no_extra_layers,
+        skip_only,
+        target_only,
+        skip_and_target
+    } mode;
+    size_t additional_layers_for(Mode mode);
 };
 
 }

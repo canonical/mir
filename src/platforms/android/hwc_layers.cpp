@@ -50,6 +50,11 @@ void mga::FloatSourceCrop::fill_source_crop(
     };
 }
 
+bool mga::FloatSourceCrop::needs_fb_target() const
+{
+    return true;
+}
+
 void mga::IntegerSourceCrop::fill_source_crop(
     hwc_layer_1_t& hwc_layer, geometry::Rectangle const& crop_rect) const
 {
@@ -60,6 +65,28 @@ void mga::IntegerSourceCrop::fill_source_crop(
         crop_rect.size.width.as_int(),
         crop_rect.size.height.as_int()
     };
+}
+
+bool mga::IntegerSourceCrop::needs_fb_target() const
+{
+    return true;
+}
+
+void mga::Hwc10Adapter::fill_source_crop(
+    hwc_layer_1_t& hwc_layer, geometry::Rectangle const& crop_rect) const
+{
+    hwc_layer.sourceCropi = 
+    {
+        crop_rect.top_left.x.as_int(),
+        crop_rect.top_left.y.as_int(),
+        crop_rect.size.width.as_int(),
+        crop_rect.size.height.as_int()
+    };
+}
+
+bool mga::Hwc10Adapter::needs_fb_target() const
+{
+    return false;
 }
 
 mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer && other)

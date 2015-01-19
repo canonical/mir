@@ -18,7 +18,7 @@
 
 #include "mesa_native_display_container.h"
 
-#include "../client_context.h"
+#include "mir/client_context.h"
 
 #include <cstring>
 #include <unordered_set>

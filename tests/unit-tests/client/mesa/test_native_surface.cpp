@@ -17,7 +17,7 @@
  */
 
 #include "src/client/mesa/native_surface.h"
-#include "src/client/client_buffer.h"
+#include "mir/client_buffer.h"
 #include "mir_test_doubles/mock_client_surface.h"
 
 #include <gmock/gmock.h>

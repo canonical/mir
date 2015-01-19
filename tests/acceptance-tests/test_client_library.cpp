@@ -23,7 +23,7 @@
 #include "mir_test_framework/stub_platform_helpers.h"
 #include "mir_test/validity_matchers.h"
 
-#include "src/client/client_buffer.h"
+#include "src/include/client/mir/client_buffer.h"
 
 #include "mir_protobuf.pb.h"
 
