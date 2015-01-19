@@ -151,13 +151,6 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     EXPECT_CALL(*mock_renderable3, transformation())
         .WillOnce(Return(simple));
 
-    EXPECT_CALL(*mock_renderable1, visible())
-        .WillRepeatedly(Return(true));
-    EXPECT_CALL(*mock_renderable2, visible())
-        .WillRepeatedly(Return(false));
-    EXPECT_CALL(*mock_renderable3, visible())
-        .WillRepeatedly(Return(true));
-
     EXPECT_CALL(*mock_renderable1, alpha())
         .WillOnce(Return(1.0f));
     EXPECT_CALL(*mock_renderable3, alpha())
@@ -348,7 +341,6 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
     auto window1 = std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{10,10},{20,20}});
     auto window2 = std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{100,100}});
     auto window3 = std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{100,100}});
-    auto window4 = std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{500,500}}, 1.0f, true, false, true);
 
     mg::RenderableList const visible{window0, window3};
 
@@ -370,8 +362,7 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
         window0, //not occluded
         window1, //occluded
         window2, //occluded
-        window3, //not occluded
-        window4  //invisible
+        window3  //not occluded
     }));
 }
 
@@ -437,20 +428,3 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
     compositor.composite({element0_occluded, element1_rendered, element2_occluded});
 }
 
-TEST_F(DefaultDisplayBufferCompositor, ignores_invisible_scene_elements)
-{
-    using namespace testing;
-
-    auto element0_invisible = std::make_shared<NiceMock<MockSceneElement>>(
-        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{500,500}}, 1.0f, true, false, true));
-
-    EXPECT_CALL(*element0_invisible, occluded()).Times(0);
-    EXPECT_CALL(*element0_invisible, rendered()).Times(0);
-
-    mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
-        mt::fake_shared(mock_renderer),
-        mr::null_compositor_report());
-
-    compositor.composite({element0_invisible});
-}
