@@ -161,12 +161,24 @@ struct SurfaceStack : public ::testing::Test
             report);
 
         post_a_frame(*stub_surface3);
+
+        invisible_stub_surface = std::make_shared<ms::BasicSurface>(
+            std::string("stub"),
+            geom::Rectangle{{},{}},
+            false,
+            std::make_shared<mtd::StubBufferStream>(),
+            std::shared_ptr<mir::input::InputChannel>(),
+            std::shared_ptr<mir::input::InputSender>(),
+            std::make_shared<mtd::NullSurfaceConfigurator>(),
+            std::shared_ptr<mg::CursorImage>(),
+            report);
     }
 
     ms::SurfaceCreationParameters default_params;
     std::shared_ptr<ms::BasicSurface> stub_surface1;
     std::shared_ptr<ms::BasicSurface> stub_surface2;
     std::shared_ptr<ms::BasicSurface> stub_surface3;
+    std::shared_ptr<ms::BasicSurface> invisible_stub_surface;
 
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     ms::SurfaceStack stack{report};
@@ -204,6 +216,21 @@ TEST_F(SurfaceStack, stacking_order)
             SceneElementFor(stub_surface1),
             SceneElementFor(stub_surface2),
             SceneElementFor(stub_surface3)));
+}
+
+TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
+{
+    using namespace testing;
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(invisible_stub_surface, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface2)));
 }
 
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
