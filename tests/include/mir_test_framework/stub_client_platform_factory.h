@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_FRAMEWORK_STUB_CLIENT_PLATFORM_FACTORY_
 #define MIR_TEST_FRAMEWORK_STUB_CLIENT_PLATFORM_FACTORY_
 
-#include "src/client/client_platform_factory.h"
+#include "mir/client_platform_factory.h"
 
 namespace mir_test_framework
 {
