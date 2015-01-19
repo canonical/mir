@@ -27,8 +27,6 @@
 
 namespace mir
 {
-// TODO Much of this interface should be rewritten in terms of scene type
-// TODO frontend types are retained temporarily while restructuring
 namespace frontend
 {
 class EventSink;
