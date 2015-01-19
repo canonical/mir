@@ -115,7 +115,6 @@ mf::SurfaceId msh::DefaultShell::create_surface(std::shared_ptr<mf::Session> con
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
     auto const result = scene_session->create_surface(params);
-    set_focus_to(scene_session);
     return result;
 }
 
