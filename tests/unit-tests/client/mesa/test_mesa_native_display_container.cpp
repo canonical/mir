@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/client/mesa/mesa_native_display_container.h"
+#include "src/platforms/mesa/client/mesa_native_display_container.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mesa/native_display.h"
