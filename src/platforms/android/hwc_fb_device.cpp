@@ -39,7 +39,7 @@ mga::HwcFbDevice::HwcFbDevice(
     std::shared_ptr<framebuffer_device_t> const& fb_device) :
     hwc_wrapper(hwc_wrapper), 
     fb_device(fb_device),
-    layer_list{std::make_shared<IntegerSourceCrop>(), {}, 1},
+    layer_list{std::make_shared<mga::Hwc10Adapter>(), {}},
     vsync_subscription{
         [hwc_wrapper, this]{
             using namespace std::placeholders;
@@ -57,18 +57,17 @@ mga::HwcFbDevice::HwcFbDevice(
 
 void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
 {
-    auto& buffer = *context.last_rendered_buffer();
-    layer_list.begin()->layer.setup_layer(mga::LayerType::skip, {{0,0},buffer.size()}, false, buffer);
+    layer_list.setup_fb(*context.last_rendered_buffer());
 
-    if (auto display_list = layer_list.native_list().lock())
+    if (auto display_list = layer_list.native_list())
     {
-        hwc_wrapper->prepare({{display_list.get(), nullptr, nullptr}});
+        hwc_wrapper->prepare({{display_list, nullptr, nullptr}});
         display_list->dpy = eglGetCurrentDisplay();
         display_list->sur = eglGetCurrentSurface(EGL_DRAW);
 
         //set() may affect EGL state by calling eglSwapBuffers.
         //HWC 1.0 is the only version of HWC that can do this.
-        hwc_wrapper->set({{display_list.get(), nullptr, nullptr}});
+        hwc_wrapper->set({{display_list, nullptr, nullptr}});
     }
     else
     {
@@ -77,7 +76,7 @@ void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 
-    buffer = *context.last_rendered_buffer();
+    auto& buffer = *context.last_rendered_buffer();
     auto native_buffer = buffer.native_buffer_handle();
     native_buffer->ensure_available_for(mga::BufferAccess::read);
     if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)

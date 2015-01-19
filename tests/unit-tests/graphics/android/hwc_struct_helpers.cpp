@@ -18,6 +18,7 @@
 
 #include <hardware/hwcomposer.h>
 #include "hwc_struct_helpers.h"
+#include "mir/graphics/android/native_buffer.h"
 
 void PrintTo(const hwc_rect_t& rect, ::std::ostream* os)
 {
@@ -44,4 +45,31 @@ void PrintTo(const hwc_layer_1& layer , ::std::ostream* os)
     << "\tplaneAlpha: " << layer.planeAlpha << std::endl
     << "\tacquireFenceFd: " << layer.acquireFenceFd << std::endl
     << "\treleaseFenceFd: " << layer.releaseFenceFd << std::endl;
+}
+
+void mir::test::fill_hwc_layer(
+    hwc_layer_1_t& layer,
+    hwc_rect_t* visible_rect,
+    mir::geometry::Rectangle const& position,
+    mir::graphics::Buffer const& buffer,
+    int type, int flags)
+{
+    *visible_rect = {0, 0, buffer.size().width.as_int(), buffer.size().height.as_int()};
+    layer.compositionType = type;
+    layer.hints = 0;
+    layer.flags = flags;
+    layer.handle = buffer.native_buffer_handle()->handle();
+    layer.transform = 0;
+    layer.blending = HWC_BLENDING_NONE;
+    layer.sourceCrop = *visible_rect;
+    layer.displayFrame = {
+        position.top_left.x.as_int(),
+        position.top_left.y.as_int(),
+        position.bottom_right().x.as_int(),
+        position.bottom_right().y.as_int()
+    };
+    layer.visibleRegionScreen = {1, visible_rect};
+    layer.acquireFenceFd = -1;
+    layer.releaseFenceFd = -1;
+    layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 }
