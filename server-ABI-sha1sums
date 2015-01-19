@@ -17,7 +17,7 @@ be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 31b9c24e2ce7194aeea6694e81c160354033d28a  include/common/mir/optional_value.h
 9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
 3350dac884d6006753de2a955bc7a05663cd9449  include/common/mir_toolkit/client_types.h
-76f831c2160dd42807fab3fa560463d04f141ade  include/common/mir_toolkit/common.h
+b042ff8f542759fb82ad4cf1f4bab4aa2824e7f0  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 f4d39e9893ce6308bddd83a49b90f0051f565323  include/common/mir_toolkit/event.h
 2507f2929415aa423f9551d3c595c439fe1c6efd  include/common/mir_toolkit/events/event_deprecated.h
