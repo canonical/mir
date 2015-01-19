@@ -55,6 +55,12 @@ namespace mr = mir::report;
 namespace
 {
 
+void post_a_frame(mf::Surface& s)
+{
+    mtd::StubBuffer old_buffer;
+    s.swap_buffers(&old_buffer, [](mg::Buffer*){});
+}
+
 MATCHER_P(SurfaceWithInputReceptionMode, mode, "")
 {
     return arg->reception_mode() == mode;
@@ -128,6 +134,8 @@ struct SurfaceStack : public ::testing::Test
             std::shared_ptr<mg::CursorImage>(),
             report);
 
+        post_a_frame(*stub_surface1);
+
         stub_surface2 = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{{},{}},
@@ -139,6 +147,8 @@ struct SurfaceStack : public ::testing::Test
             std::shared_ptr<mg::CursorImage>(),
             report);
 
+        post_a_frame(*stub_surface2);
+
         stub_surface3 = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{{},{}},
@@ -149,6 +159,8 @@ struct SurfaceStack : public ::testing::Test
             std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
+
+        post_a_frame(*stub_surface3);
     }
 
     ms::SurfaceCreationParameters default_params;
@@ -309,6 +321,7 @@ TEST_F(SurfaceStack, generate_elementelements)
             std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
+        post_a_frame(*surface);
 
         surfaces.emplace_back(surface);
         stack.add_surface(surface, default_params.depth, default_params.input_mode);
@@ -473,6 +486,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
         std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
+    post_a_frame(*surface);
     stack.add_surface(surface, default_params.depth, default_params.input_mode);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -504,6 +518,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
         std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
+    post_a_frame(*surface);
     stack.add_surface(surface, default_params.depth, default_params.input_mode);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -543,10 +558,9 @@ TEST_F(SurfaceStack, occludes_not_rendered_surface)
     stack.register_compositor(compositor_id);
     stack.register_compositor(compositor_id2);
 
-    auto const old_buffer = reinterpret_cast<mg::Buffer*>(this);
     auto const mock_surface = std::make_shared<MockConfigureSurface>();
     mock_surface->show();
-    mock_surface->swap_buffers(old_buffer, [](mg::Buffer*){});
+    post_a_frame(*mock_surface);
 
     stack.add_surface(mock_surface, default_params.depth, default_params.input_mode);
 
@@ -571,6 +585,7 @@ TEST_F(SurfaceStack, exposes_rendered_surface)
     stack.register_compositor(compositor_id2);
 
     auto const mock_surface = std::make_shared<MockConfigureSurface>();
+    post_a_frame(*mock_surface);
     stack.add_surface(mock_surface, default_params.depth, default_params.input_mode);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -596,6 +611,7 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
     stack.register_compositor(compositor_id3);
 
     auto const mock_surface = std::make_shared<MockConfigureSurface>();
+    post_a_frame(*mock_surface);
     stack.add_surface(mock_surface, default_params.depth, default_params.input_mode);
 
     auto const elements = stack.scene_elements_for(compositor_id);
