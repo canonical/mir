@@ -23,6 +23,7 @@
 #include "mir/frontend/connector.h"
 #include "mir/run_mir.h"
 #include "mir/main_loop.h"
+#include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -87,6 +88,7 @@ mir::DisplayServer* mtf::ServerRunner::start_mir_server()
     std::condition_variable started;
     mir::DisplayServer* result{nullptr};
     auto const main_loop = server_config().the_main_loop();
+    mir::logging::set_logger(server_config().the_logger());
 
     server_thread = std::thread([&]
     {

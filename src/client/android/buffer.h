@@ -21,7 +21,7 @@
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 
 #include "mir/graphics/android/android_native_buffer.h"
-#include "../aging_buffer.h"
+#include "mir/aging_buffer.h"
 
 #include <system/window.h>
 #include <memory>

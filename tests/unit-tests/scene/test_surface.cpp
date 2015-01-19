@@ -34,7 +34,7 @@
 #include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test/client_event_matchers.h"
+#include "mir_test/event_matchers.h"
 
 #include "gmock_set_arg.h"
 #include <gmock/gmock.h>
@@ -486,7 +486,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     motion_event.type = mir_event_type_motion;
 
     EXPECT_CALL(mock_sender, send_event(mt::MirKeyEventMatches(key_event), _)).Times(1);
-    EXPECT_CALL(mock_sender, send_event(mt::MirMotionEventMatches(motion_event), _)).Times(1);
+    EXPECT_CALL(mock_sender, send_event(mt::MirTouchEventMatches(motion_event), _)).Times(1);
 
     surface.consume(key_event);
     surface.consume(motion_event);

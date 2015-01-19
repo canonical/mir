@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_CLIENT_BUFFER_H_
 #define MIR_TEST_DOUBLES_NULL_CLIENT_BUFFER_H_
 
-#include "src/client/client_buffer.h"
+#include "mir/client_buffer.h"
 
 namespace mir
 {
