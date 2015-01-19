@@ -134,55 +134,6 @@ TEST_F(DefaultDisplayBufferCompositor, render)
     compositor.composite(make_scene_elements({}));
 }
 
-TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
-{
-    using namespace testing;
-    
-    mtd::StubDisplayBuffer display_buffer{geom::Rectangle{{0,0},{14,14}}};
-    auto mock_renderable1 = std::make_shared<NiceMock<mtd::MockRenderable>>();
-    auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
-    auto mock_renderable3 = std::make_shared<NiceMock<mtd::MockRenderable>>();
-
-    glm::mat4 simple;
-    EXPECT_CALL(*mock_renderable1, transformation())
-        .WillOnce(Return(simple));
-    EXPECT_CALL(*mock_renderable2, transformation())
-        .WillOnce(Return(simple));
-    EXPECT_CALL(*mock_renderable3, transformation())
-        .WillOnce(Return(simple));
-
-    EXPECT_CALL(*mock_renderable1, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(*mock_renderable3, alpha())
-        .WillOnce(Return(1.0f));
-
-    EXPECT_CALL(*mock_renderable1, shaped())
-        .WillOnce(Return(false));
-    EXPECT_CALL(*mock_renderable3, shaped())
-        .WillOnce(Return(false));
-
-    EXPECT_CALL(*mock_renderable1, screen_position())
-        .WillRepeatedly(Return(geom::Rectangle{{1,2}, {3,4}}));
-    EXPECT_CALL(*mock_renderable2, screen_position())
-        .WillRepeatedly(Return(geom::Rectangle{{1,2}, {3,4}}));
-    EXPECT_CALL(*mock_renderable3, screen_position())
-        .WillRepeatedly(Return(geom::Rectangle{{5,6}, {7,8}}));
-
-    mg::RenderableList const visible{mock_renderable1, mock_renderable3};
-    EXPECT_CALL(mock_renderer, render(visible))
-        .Times(1);
-
-    mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
-        mt::fake_shared(mock_renderer),
-        mr::null_compositor_report());
-    compositor.composite(make_scene_elements({
-        mock_renderable1,
-        mock_renderable2,
-        mock_renderable3
-    }));
-}
-
 TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
 {
     using namespace testing;
