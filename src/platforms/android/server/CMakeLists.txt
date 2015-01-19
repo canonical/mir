@@ -1,3 +1,7 @@
+include_directories(
+    ${server_common_include_dirs}
+)
+
 include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 include_directories(
     ${EGL_INCLUDE_DIRS}
@@ -42,7 +46,7 @@ set_target_properties(
   mirplatformgraphicsandroid PROPERTIES
   OUTPUT_NAME ${MIR_PLATFORM_DRIVER}
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/android
-  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${server_symbol_map}"
 )
 
 target_link_libraries(mirplatformgraphicsandroid

@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/egl_extensions.h"
-#include "src/platforms/android/buffer.h"
+#include "src/platforms/android/server/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir_test/fake_shared.h"

@@ -1,4 +1,8 @@
 include_directories(
+    ${server_common_include_dirs}
+)
+
+include_directories(
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
@@ -42,7 +46,7 @@ set_target_properties(
   mirplatformgraphicsmesa PROPERTIES
   OUTPUT_NAME ${MIR_PLATFORM_DRIVER}
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/mesa
-  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${server_symbol_map}"
 )
 
 target_link_libraries(mirplatformgraphicsmesa
