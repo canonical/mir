@@ -268,6 +268,23 @@ TEST_F(ClientBufferStreamTest, consumer_streams_call_screencast_buffer_on_next_b
     bs->next_buffer([](){});
 }
 
+TEST_F(ClientBufferStreamTest, invokes_callback_on_next_buffer)
+{
+    using namespace ::testing;
+    
+    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
+        a_buffer_package());
+
+    EXPECT_CALL(mock_protobuf_server, exchange_buffer(_,_,_,_))
+        .WillOnce(RunProtobufClosure());
+
+    auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Producer);
+
+    bool callback_invoked = false;
+    bs->next_buffer([&callback_invoked](){ callback_invoked = true; })->wait_for_all();
+    EXPECT_EQ(callback_invoked, true);
+}
+
 TEST_F(ClientBufferStreamTest, returns_correct_surface_parameters)
 {
    int const width = 73, height = 32;
