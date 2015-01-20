@@ -137,11 +137,6 @@ std::list<mga::HwcLayerEntry>::iterator mga::LayerList::begin()
     return layers.begin(); 
 }
 
-mga::HwcLayerEntry& mga::LayerList::back()
-{
-    return layers.back();
-}
-
 std::list<mga::HwcLayerEntry>::iterator mga::LayerList::end()
 {
     return layers.end(); 

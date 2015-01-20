@@ -56,7 +56,6 @@ public:
 
     std::list<HwcLayerEntry>::iterator begin();
     std::list<HwcLayerEntry>::iterator end();
-    HwcLayerEntry& back();
 
     RenderableList rejected_renderables();
     void setup_fb(std::shared_ptr<Buffer> const& fb_target);
