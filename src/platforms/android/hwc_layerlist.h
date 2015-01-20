@@ -60,6 +60,7 @@ public:
 
     RenderableList rejected_renderables();
     void setup_fb(std::shared_ptr<Buffer> const& fb_target);
+    bool needs_swap();
     void swap_occurred();
 
     hwc_display_contents_1_t* native_list();

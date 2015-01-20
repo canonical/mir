@@ -165,6 +165,11 @@ mga::LayerList::LayerList(
     update_list(renderlist);
 }
 
+bool mga::LayerList::needs_swap()
+{
+    return false;
+}
+
 mg::RenderableList mga::LayerList::rejected_renderables()
 {
     mg::RenderableList rejected_renderables;
