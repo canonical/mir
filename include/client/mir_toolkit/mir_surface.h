@@ -76,23 +76,25 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
  *                          to complete construction.
  */
 MirSurfaceSpec*
-mir_connection_create_spec_for_menu_surface(MirConnection* connection,
-                                            int width,
-                                            int height,
-                                            MirPixelFormat format,
-                                            MirSurface* parent,
-                                            MirRectangle* rect,
-                                            MirEdgeAttachment edge);
+mir_connection_create_spec_for_menu(MirConnection* connection,
+                                    int width,
+                                    int height,
+                                    MirPixelFormat format,
+                                    MirSurface* parent,
+                                    MirRectangle* rect,
+                                    MirEdgeAttachment edge);
 
 /**
  * Create a surface specification for a tooltip surface.
  *
- * Positioning of the surface is specified with respect to the parent surface
- * via an adjacency rectangle. The server will attempt to choose an edge of the
- * adjacency rectangle on which to place the surface taking in to account
- * screen-edge proximity or similar constraints. In addition, the server can use
- * the edge affinity hint to consider only horizontal or only vertical adjacency
- * edges in the given rectangle.
+ * A tooltip surface becomes visible when the pointer hovers the specified
+ * target zone. A tooltip surface has no input focus and will be closed when
+ * the pointer moves out of the target zone or the parent closes, moves or hides
+ *
+ * The tooltip parent cannot be another tooltip surface.
+ *
+ * The tooltip position is decided by the server but typically it will appear
+ * near the pointer.
  *
  * \param [in] connection   Connection the surface will be created on
  * \param [in] width        Requested width. The server is not guaranteed to
@@ -100,35 +102,32 @@ mir_connection_create_spec_for_menu_surface(MirConnection* connection,
  * \param [in] height       Requested height. The server is not guaranteed to
  *                          return a surface of this height.
  * \param [in] format       Pixel format for the surface.
- * \param [in] parent       A valid parent surface for this menu.
- * \param [in] rect         The adjacency rectangle. The server is not
- *                          guaranteed to create a surface at the requested
- *                          location.
- * \param [in] edge         The preferred edge direction to attach to. Use
- *                          mir_edge_attachment_any for no preference.
+ * \param [in] parent       A valid parent surface for this tooltip.
+ * \param [in] rect         A target zone relative to parent where the tooltip
+ *                          will
  * \return                  A handle that can be passed to mir_surface_create()
  *                          to complete construction.
  */
 MirSurfaceSpec*
-mir_connection_create_spec_for_tooltip_surface(MirConnection* connection,
-                                               int width,
-                                               int height,
-                                               MirPixelFormat format,
-                                               MirSurface* parent,
-                                               MirRectangle* rect,
-                                               MirEdgeAttachment edge);
+mir_connection_create_spec_for_tooltip(MirConnection* connection,
+                                       int width,
+                                       int height,
+                                       MirPixelFormat format,
+                                       MirSurface* parent,
+                                       MirRectangle* zone);
 
 /**
- * Create a surface specification for a dialog surface.
+ * Create a surface specification for a modal dialog surface.
  *
- * A modal dialog can be created by specifying a parent. When creating a modal
- * dialog, an optional (left,top) coordinate relative to the parent can be
- * specified as an initial location. The server will attempt to place the
- * dialog at the given initial location.
+ * The dialog surface will have input focus; the parent can still be moved,
+ * resized or hidden/minimized but no interaction is possible until the dialog
+ * is dismissed.
+ *
+ * A dialog will typically have no close/maximize button decorations.
  *
  * During surface creation, if the specified parent is another dialog surface
- * the server may choose to close the specified parent or morph the parent
- * to use the requested parameters.
+ * the server may choose to close the specified parent in order to show this
+ * new dialog surface.
  *
  * \param [in] connection   Connection the surface will be created on
  * \param [in] width        Requested width. The server is not guaranteed to
@@ -136,26 +135,38 @@ mir_connection_create_spec_for_tooltip_surface(MirConnection* connection,
  * \param [in] height       Requested height. The server is not guaranteed to
  *                          return a surface of this height.
  * \param [in] format       Pixel format for the surface.
- * \param [in] parent       A valid parent surface for a modal dialog or NULL
- *                          for non-modal dialogs.
- * \param [in] left         The left coordinate at which to place this surface
- *                          relative to the parent. Use -1 to specify no
- *                          preference. The value is ignored if parent is not
- *                          specified.
- * \param [in] top          The top coordinate at which to place this surface
- *                          relative to the parent. Use -1 to specify no
- *                          preference. The value is ignored if parent is not
- *                          specified.
+ * \param [in] parent       A valid parent surface.
  *
  */
 MirSurfaceSpec*
-mir_connection_create_spec_for_dialog_surface(MirConnection* connection,
-                                              int width,
-                                              int height,
-                                              MirPixelFormat format,
-                                              MirSurface* parent,
-                                              int left,
-                                              int top);
+mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
+                                            int width,
+                                            int height,
+                                            MirPixelFormat format,
+                                            MirSurface* parent);
+
+/**
+ * Create a surface specification for a parentless dialog surface.
+ *
+ * A parentless dialog surface is similar to a normal surface, but it cannot
+ * be fullscreen and typically won't have any maximize/close button decorations.
+ *
+ * A parentless dialog is not allowed to have other dialog children. The server
+ * may decide to close the parent and show the child dialog only.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ *
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_dialog(MirConnection* connection,
+                                      int width,
+                                      int height,
+                                      MirPixelFormat format);
 
 /**
  * Create a surface from a given specification

@@ -217,7 +217,7 @@ TEST_F(ClientSurfaces, can_be_menus)
     auto parent = mtf::make_any_surface(connection);
     MirRectangle attachment_rect{100, 200, 100, 100};
 
-    auto spec = mir_connection_create_spec_for_menu_surface(connection, 640, 480,
+    auto spec = mir_connection_create_spec_for_menu(connection, 640, 480,
         mir_pixel_format_abgr_8888, parent, &attachment_rect, mir_edge_attachment_vertical);
     ASSERT_THAT(spec, NotNull());
 
@@ -234,10 +234,10 @@ TEST_F(ClientSurfaces, can_be_menus)
 TEST_F(ClientSurfaces, can_be_tooltips)
 {
     auto parent = mtf::make_any_surface(connection);
-    MirRectangle attachment_rect{100, 200, 100, 100};
+    MirRectangle zone_rect{100, 200, 100, 100};
 
-    auto spec = mir_connection_create_spec_for_tooltip_surface(connection, 640, 480,
-        mir_pixel_format_abgr_8888, parent, &attachment_rect, mir_edge_attachment_vertical);
+    auto spec = mir_connection_create_spec_for_tooltip(connection, 640, 480,
+        mir_pixel_format_abgr_8888, parent, &zone_rect);
     ASSERT_THAT(spec, NotNull());
 
     auto tooltip = mir_surface_create_sync(spec);
@@ -252,8 +252,8 @@ TEST_F(ClientSurfaces, can_be_tooltips)
 
 TEST_F(ClientSurfaces, can_be_dialogs)
 {
-    auto spec = mir_connection_create_spec_for_dialog_surface(connection, 640, 480,
-        mir_pixel_format_abgr_8888, nullptr, 0, 0);
+    auto spec = mir_connection_create_spec_for_dialog(connection, 640, 480,
+        mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
     auto dialog = mir_surface_create_sync(spec);
@@ -268,11 +268,8 @@ TEST_F(ClientSurfaces, can_be_dialogs)
 TEST_F(ClientSurfaces, can_be_modal_dialogs)
 {
     auto parent = mtf::make_any_surface(connection);
-    int const left = 100;
-    int const top = 200;
-
-    auto spec = mir_connection_create_spec_for_dialog_surface(connection, 640, 480,
-        mir_pixel_format_abgr_8888, parent, left, top);
+    auto spec = mir_connection_create_spec_for_modal_dialog(connection, 640, 480,
+        mir_pixel_format_abgr_8888, parent);
     ASSERT_THAT(spec, NotNull());
 
     auto dialog = mir_surface_create_sync(spec);

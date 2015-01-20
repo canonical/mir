@@ -99,31 +99,19 @@ MATCHER(NoParentSet, "")
     return arg.parent_id.is_set() == false;
 }
 
-MATCHER_P(MatchesAttachment, rect, "")
+MATCHER_P(MatchesAuxRect, rect, "")
 {
-    return arg.attachment_rect.is_set() &&
-           arg.attachment_rect.value().top_left.x.as_int() == rect.left &&
-           arg.attachment_rect.value().top_left.y.as_int() == rect.top &&
-           arg.attachment_rect.value().size.width.as_uint32_t() == rect.width &&
-           arg.attachment_rect.value().size.height.as_uint32_t() == rect.height;
+    return arg.aux_rect.is_set() &&
+           arg.aux_rect.value().top_left.x.as_int() == rect.left &&
+           arg.aux_rect.value().top_left.y.as_int() == rect.top &&
+           arg.aux_rect.value().size.width.as_uint32_t() == rect.width &&
+           arg.aux_rect.value().size.height.as_uint32_t() == rect.height;
 }
 
 MATCHER_P(MatchesEdge, edge, "")
 {
     return arg.edge_attachment.is_set() &&
            arg.edge_attachment.value() == edge;
-}
-
-MATCHER_P2(MatchesRelativePos, left, top, "")
-{
-    return arg.relative_position.is_set() &&
-           arg.relative_position.value().x.as_int() == left &&
-           arg.relative_position.value().y.as_int() == top;
-}
-
-MATCHER(NoRelativePos, "")
-{
-    return arg.relative_position.is_set() == false;
 }
 
 }
@@ -197,7 +185,7 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
 
     auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
     std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> menu_spec{
-        mir_connection_create_spec_for_menu_surface(connection, 640, 480,
+        mir_connection_create_spec_for_menu(connection, 640, 480,
             mir_pixel_format_abgr_8888, parent.get(), &attachment_rect,
             edge),
         spec_deleter
@@ -206,7 +194,7 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
     ASSERT_THAT(menu_spec, NotNull());
 
     EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(IsAMenu(),
-        HasParent(parent.get()), MatchesAttachment(attachment_rect), MatchesEdge(edge)),_));
+        HasParent(parent.get()), MatchesAuxRect(attachment_rect), MatchesEdge(edge)),_));
     create_surface(menu_spec.get());
 }
 
@@ -216,21 +204,19 @@ TEST_F(ClientMirSurface, as_tooltip_sends_correct_params)
     auto parent = create_surface(&spec);
     ASSERT_THAT(parent.get(), IsValid());
 
-    MirRectangle attachment_rect{100, 200, 300, 400};
-    MirEdgeAttachment edge{mir_edge_attachment_horizontal};
+    MirRectangle target_zone_rect{100, 200, 300, 400};
 
     auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
     std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> tooltip_spec{
-        mir_connection_create_spec_for_tooltip_surface(connection, 640, 480,
-            mir_pixel_format_abgr_8888, parent.get(), &attachment_rect,
-            edge),
+        mir_connection_create_spec_for_tooltip(connection, 640, 480,
+            mir_pixel_format_abgr_8888, parent.get(), &target_zone_rect),
         spec_deleter
     };
 
     ASSERT_THAT(tooltip_spec, NotNull());
 
     EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(IsATooltip(),
-        HasParent(parent.get()), MatchesAttachment(attachment_rect), MatchesEdge(edge)),_));
+        HasParent(parent.get()), MatchesAuxRect(target_zone_rect)),_));
     create_surface(tooltip_spec.get());
 }
 
@@ -238,15 +224,14 @@ TEST_F(ClientMirSurface, as_dialog_sends_correct_params)
 {
     auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
     std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> dialog_spec{
-        mir_connection_create_spec_for_dialog_surface(connection, 640, 480,
-            mir_pixel_format_abgr_8888, nullptr, 0, 0),
+        mir_connection_create_spec_for_dialog(connection, 640, 480, mir_pixel_format_abgr_8888),
         spec_deleter
     };
 
     ASSERT_THAT(dialog_spec, NotNull());
 
     EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(IsADialog(),
-        NoParentSet(), NoRelativePos()),_));
+        NoParentSet()),_));
     create_surface(dialog_spec.get());
 }
 
@@ -256,19 +241,16 @@ TEST_F(ClientMirSurface, as_modal_dialog_sends_correct_params)
     auto parent = create_surface(&spec);
     ASSERT_THAT(parent.get(), IsValid());
 
-    int const left = 10;
-    int const top = 20;
-
     auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
     std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> dialog_spec{
-        mir_connection_create_spec_for_dialog_surface(connection, 640, 480,
-            mir_pixel_format_abgr_8888, parent.get(), left, top),
+        mir_connection_create_spec_for_modal_dialog(connection, 640, 480,
+            mir_pixel_format_abgr_8888, parent.get()),
         spec_deleter
     };
 
     ASSERT_THAT(dialog_spec, NotNull());
 
     EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(IsADialog(),
-        HasParent(parent.get()), MatchesRelativePos(left, top)),_));
+        HasParent(parent.get())),_));
     create_surface(dialog_spec.get());
 }

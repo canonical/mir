@@ -124,21 +124,15 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_parent_id(mf:
     return *this;
 }
 
-ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_attachment_rect(geometry::Rectangle const& rect)
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_aux_rect(geometry::Rectangle const& rect)
 {
-    attachment_rect = rect;
+    aux_rect = rect;
     return *this;
 }
 
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_edge_attachment(MirEdgeAttachment edge)
 {
     edge_attachment = edge;
-    return *this;
-}
-
-ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_relative_position(geometry::Point const& position)
-{
-    relative_position = position;
     return *this;
 }
 

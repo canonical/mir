@@ -198,19 +198,16 @@ void mf::SessionMediator::create_surface(
     if (request->has_parent_id())
         params.with_parent_id(SurfaceId{request->parent_id()});
 
-    if (request->has_attachment_rect())
+    if (request->has_aux_rect())
     {
-        params.with_attachment_rect(geom::Rectangle{
-            {request->attachment_rect().left(), request->attachment_rect().top()},
-            {request->attachment_rect().width(), request->attachment_rect().height()}
+        params.with_aux_rect(geom::Rectangle{
+            {request->aux_rect().left(), request->aux_rect().top()},
+            {request->aux_rect().width(), request->aux_rect().height()}
         });
     }
 
     if (request->has_edge_attachment())
         params.with_edge_attachment(static_cast<MirEdgeAttachment>(request->edge_attachment()));
-
-    if (request->has_relative_left() && request->has_relative_top())
-        params.of_relative_position(geom::Point{request->relative_left(), request->relative_top()});
 
     auto const surf_id = session->create_surface(params);
 

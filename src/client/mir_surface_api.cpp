@@ -51,13 +51,13 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
     return new MirSurfaceSpec{connection, width, height, format};
 }
 
-MirSurfaceSpec* mir_connection_create_spec_for_menu_surface(MirConnection* connection,
-                                                            int width,
-                                                            int height,
-                                                            MirPixelFormat format,
-                                                            MirSurface* parent,
-                                                            MirRectangle* rect,
-                                                            MirEdgeAttachment edge)
+MirSurfaceSpec* mir_connection_create_spec_for_menu(MirConnection* connection,
+                                                    int width,
+                                                    int height,
+                                                    MirPixelFormat format,
+                                                    MirSurface* parent,
+                                                    MirRectangle* rect,
+                                                    MirEdgeAttachment edge)
 {
     mir::require(mir_surface_is_valid(parent));
     mir::require(rect != nullptr);
@@ -65,47 +65,50 @@ MirSurfaceSpec* mir_connection_create_spec_for_menu_surface(MirConnection* conne
     auto spec = new MirSurfaceSpec{connection, width, height, format};
     spec->type = mir_surface_type_menu;
     spec->parent = parent;
-    spec->attachment_rect = *rect;
+    spec->aux_rect = *rect;
     spec->edge_attachment = edge;
     return spec;
 }
 
-MirSurfaceSpec* mir_connection_create_spec_for_tooltip_surface(MirConnection* connection,
-                                                               int width,
-                                                               int height,
-                                                               MirPixelFormat format,
-                                                               MirSurface* parent,
-                                                               MirRectangle* rect,
-                                                               MirEdgeAttachment edge)
+MirSurfaceSpec* mir_connection_create_spec_for_tooltip(MirConnection* connection,
+                                                       int width,
+                                                       int height,
+                                                       MirPixelFormat format,
+                                                       MirSurface* parent,
+                                                       MirRectangle* rect)
 {
-    // Tooltip surfaces have the similar semantics to menus
-    auto spec = mir_connection_create_spec_for_menu_surface(
-        connection, width, height,format, parent, rect, edge);
+    mir::require(mir_surface_is_valid(parent));
+    mir::require(rect != nullptr);
+
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
     spec->type = mir_surface_type_tip;
+    spec->parent = parent;
+    spec->aux_rect = *rect;
     return spec;
 }
 
-MirSurfaceSpec* mir_connection_create_spec_for_dialog_surface(MirConnection* connection,
-                                                              int width,
-                                                              int height,
-                                                              MirPixelFormat format,
-                                                              MirSurface* parent,
-                                                              int left,
-                                                              int top)
+MirSurfaceSpec* mir_connection_create_spec_for_dialog(MirConnection* connection,
+                                                      int width,
+                                                      int height,
+                                                      MirPixelFormat format)
 {
-    // Only modal dialogs need a valid parent surface
-    if (parent != nullptr)
-        mir::require(mir_surface_is_valid(parent));
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_dialog;
+    return spec;
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
+                                                           int width,
+                                                           int height,
+                                                           MirPixelFormat format,
+                                                           MirSurface* parent)
+{
+    mir::require(mir_surface_is_valid(parent));
 
     auto spec = new MirSurfaceSpec{connection, width, height, format};
     spec->type = mir_surface_type_dialog;
+    spec->parent = parent;
 
-    if (parent != nullptr)
-    {
-        spec->parent = parent;
-        spec->relative_left = left;
-        spec->relative_top = top;
-    }
     return spec;
 }
 
