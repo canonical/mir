@@ -167,7 +167,10 @@ mga::LayerList::LayerList(
 
 bool mga::LayerList::needs_swap()
 {
-    return false;
+    bool any_rendered = false;
+    for(auto const& layer : layers)
+        any_rendered |= layer.layer.needs_gl_render();
+    return any_rendered;
 }
 
 mg::RenderableList mga::LayerList::rejected_renderables()

@@ -188,6 +188,7 @@ TEST_F(LayerListTest, swap_needed)
     ASSERT_THAT(l->numHwLayers, Eq(4));
     for(auto i = 0u; i < 3; i++)
         l->hwLayers[i].compositionType = HWC_OVERLAY;
+    l->hwLayers[3].compositionType = HWC_FRAMEBUFFER_TARGET;
 
     EXPECT_FALSE(list.needs_swap());
 
