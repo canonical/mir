@@ -35,6 +35,7 @@
 namespace mp = mir::protobuf;
 namespace ml = mir::logging;
 namespace mcl = mir::client;
+namespace geom = mir::geometry;
 
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
@@ -187,6 +188,11 @@ ACTION_P(SetBufferInfoFromPackage, buffer_package)
     arg2->set_height(buffer_package.height);
 }
 
+ACTION_P(SetPartialBufferInfoFromPackage, buffer_package)
+{
+    arg2->set_buffer_id(unique_buffer_id++);
+}
+
 }
 
 TEST_F(ClientBufferStreamTest, protobuf_requirements)
@@ -294,12 +300,46 @@ TEST_F(ClientBufferStreamTest, returns_current_client_buffer)
     
     EXPECT_CALL(mock_protobuf_server, exchange_buffer(_, _, _, _))
         .WillOnce(DoAll(SetBufferInfoFromPackage(buffer_package_2), RunProtobufClosure()));
-
+    
     {
         InSequence seq;
         EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package_1),_,_))
             .Times(1).WillOnce(Return(client_buffer_1));
         EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package_2),_,_))
+            .Times(1).WillOnce(Return(client_buffer_2));
+    }
+
+    auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
+
+    EXPECT_EQ(client_buffer_1, bs->get_current_buffer());
+    bs->next_buffer([](){});
+    EXPECT_EQ(client_buffer_2, bs->get_current_buffer());
+}
+
+TEST_F(ClientBufferStreamTest, caches_width_and_height_in_case_of_partial_updates)
+{
+    using namespace ::testing;
+
+    auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>(),
+        client_buffer_2 = std::make_shared<mtd::NullClientBuffer>();
+
+    auto buffer_package_1 = a_buffer_package();
+    auto buffer_package_2 = a_buffer_package();
+    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
+        buffer_package_1);
+        
+    // Here we us SetPartialBufferInfoFromPackage and do not fill in width
+    // and height
+    EXPECT_CALL(mock_protobuf_server, exchange_buffer(_, _, _, _))
+        .WillOnce(DoAll(SetPartialBufferInfoFromPackage(buffer_package_2), RunProtobufClosure()));
+
+    auto expected_size = geom::Size{buffer_package_1.width, buffer_package_1.height};
+
+    {
+        InSequence seq;
+        EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package_1), expected_size, _))
+            .Times(1).WillOnce(Return(client_buffer_1));
+        EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package_2), expected_size, _))
             .Times(1).WillOnce(Return(client_buffer_2));
    }
 

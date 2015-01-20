@@ -113,6 +113,8 @@ private:
     MirWaitHandle configure_wait_handle;
     
     std::shared_ptr<MemoryRegion> secured_region;
+    
+    geometry::Size cached_buffer_size;
 };
 
 }

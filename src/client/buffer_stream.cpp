@@ -37,6 +37,7 @@
 namespace mcl = mir::client;
 namespace ml = mir::logging;
 namespace mp = mir::protobuf;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -132,6 +133,11 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
     auto buffer_package = std::make_shared<MirBufferPackage>();
     populate_buffer_package(*buffer_package, buffer);
     
+    if (buffer.has_width() && buffer.has_height())
+    {
+        cached_buffer_size = geom::Size{buffer.width(), buffer.height()};
+    }
+    
     if (buffer.has_error())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("BufferStream received buffer with error:" + buffer.error()));
@@ -142,7 +148,7 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
         auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs.pixel_format());
         buffer_depository.deposit_package(buffer_package,
             buffer.buffer_id(),
-            {buffer_package->width, buffer_package->height}, pixel_format);
+            cached_buffer_size, pixel_format);
         perf_report->begin_frame(buffer.buffer_id());
     }
     catch (const std::runtime_error& err)
@@ -233,7 +239,6 @@ void mcl::BufferStream::next_buffer_received(
 
     done();
 
-    std::unique_lock<decltype(mutex)> lock(mutex);
     next_buffer_wait_handle.result_received();
 }
 
@@ -243,8 +248,8 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
     std::unique_lock<decltype(mutex)> lock(mutex);
     return MirSurfaceParameters{
         "",
-        protobuf_bs.buffer().width(),
-        protobuf_bs.buffer().height(),
+        cached_buffer_size.height.as_int(),
+        cached_buffer_size.width.as_int(),
         static_cast<MirPixelFormat>(protobuf_bs.pixel_format()),
         static_cast<MirBufferUsage>(protobuf_bs.buffer_usage()),
         mir_display_output_id_invalid};
