@@ -134,7 +134,7 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
     
     if (buffer.has_error())
     {
-        BOOST_THROW_EXCEPTION(std::runtime_Error("BufferStream received buffer with error:" + buffer.error()));
+        BOOST_THROW_EXCEPTION(std::runtime_error("BufferStream received buffer with error:" + buffer.error()));
     }
 
     try
