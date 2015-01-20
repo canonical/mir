@@ -75,6 +75,7 @@ class FocusSetter;
 class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
+class DefaultShell;
 }
 namespace time
 {
@@ -248,7 +249,6 @@ public:
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
      *  @{ */
-    virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
     virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
@@ -398,7 +398,6 @@ protected:
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<scene::SurfaceCoordinator> surface_coordinator;
-    CachedPtr<shell::FocusSetter>       shell_focus_setter;
     CachedPtr<scene::PlacementStrategy> shell_placement_strategy;
     CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
@@ -438,6 +437,10 @@ private:
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
+
+    // TODO properly expose a shell::Shell interface
+    CachedPtr<shell::DefaultShell> default_shell;
+    auto the_shell() -> std::shared_ptr<shell::DefaultShell>;
 };
 }
 

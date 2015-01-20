@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_SHELL_H_
 
 #include "mir/frontend/surface_id.h"
+#include "mir_toolkit/common.h"
 
 #include <sys/types.h>
 
@@ -57,6 +58,20 @@ public:
     virtual void add_prompt_provider_for(std::shared_ptr<PromptSession> const& prompt_session,
                                                                   std::shared_ptr<Session> const& session) = 0;
     virtual void stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) = 0;
+
+    virtual SurfaceId create_surface(std::shared_ptr<Session> const& session, scene::SurfaceCreationParameters const& params) = 0;
+    virtual void destroy_surface(std::shared_ptr<Session> const& session, SurfaceId surface) = 0;
+
+    virtual int set_surface_attribute(
+        std::shared_ptr<Session> const& session,
+        SurfaceId surface_id,
+        MirSurfaceAttrib attrib,
+        int value) = 0;
+
+    virtual int get_surface_attribute(
+        std::shared_ptr<Session> const& session,
+        SurfaceId surface_id,
+        MirSurfaceAttrib attrib) = 0;
 
 protected:
     Shell() = default;
