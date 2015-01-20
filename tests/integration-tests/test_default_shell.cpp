@@ -48,6 +48,15 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
+struct MockSessionManager : ms::SessionManager
+{
+    using ms::SessionManager::SessionManager;
+
+    MOCK_METHOD1(set_focus_to, void (std::shared_ptr<ms::Session> const& focus));
+
+    void unmocked_set_focus_to(std::shared_ptr<ms::Session> const& focus)
+    { ms::SessionManager::set_focus_to(focus); }
+};
 
 struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
 {
@@ -56,7 +65,7 @@ struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
     mtd::StubInputTargeter input_targeter;
     std::shared_ptr<mf::Session> new_session;
     ms::NullSessionListener session_listener;
-    ms::SessionManager session_manager
+    MockSessionManager session_manager
         {
             mt::fake_shared(surface_coordinator),
             mt::fake_shared(container),
@@ -73,58 +82,58 @@ struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
 };
 }
 
-//TEST_F(TestDefaultShellAndFocusSelectionStrategy, cycle_focus)
-//{
-//    using namespace ::testing;
-//
-//    EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
-//
-//    auto session1 = shell.open_session(__LINE__, "Visual Basic Studio", std::make_shared<mtd::NullEventSink>());
-//    auto session2 = shell.open_session(__LINE__, "Microsoft Access", std::make_shared<mtd::NullEventSink>());
-//    auto session3 = shell.open_session(__LINE__, "WordPerfect", std::make_shared<mtd::NullEventSink>());
-//
-//    Mock::VerifyAndClearExpectations(&focus_setter);
-//
-//    {
-//      InSequence seq;
-//      EXPECT_CALL(focus_setter, set_focus_to(Eq(session1))).Times(1);
-//      EXPECT_CALL(focus_setter, set_focus_to(Eq(session2))).Times(1);
-//      EXPECT_CALL(focus_setter, set_focus_to(Eq(session3))).Times(1);
-//    }
-//
-//    shell.focus_next();
-//    shell.focus_next();
-//    shell.focus_next();
-//
-//    Mock::VerifyAndClearExpectations(&focus_setter);
-//
-//    // Possible change of focus while sessions are closed on shutdown
-//    EXPECT_CALL(focus_setter, set_focus_to(_)).Times(AtLeast(0));
-//}
-//
-//TEST_F(TestDefaultShellAndFocusSelectionStrategy, closing_applications_transfers_focus)
-//{
-//    using namespace ::testing;
-//
-//    EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
-//
-//    auto session1 = shell.open_session(__LINE__, "Visual Basic Studio", std::make_shared<mtd::NullEventSink>());
-//    auto session2 = shell.open_session(__LINE__, "Microsoft Access", std::make_shared<mtd::NullEventSink>());
-//    auto session3 = shell.open_session(__LINE__, "WordPerfect", std::make_shared<mtd::NullEventSink>());
-//
-//    Mock::VerifyAndClearExpectations(&focus_setter);
-//
-//    {
-//      InSequence seq;
-//      EXPECT_CALL(focus_setter, set_focus_to(Eq(session2))).Times(1);
-//      EXPECT_CALL(focus_setter, set_focus_to(Eq(session1))).Times(1);
-//    }
-//
-//    shell.close_session(session3);
-//    shell.close_session(session2);
-//
-//    Mock::VerifyAndClearExpectations(&focus_setter);
-//
-//    // Possible change of focus while sessions are closed on shutdown
-//    EXPECT_CALL(focus_setter, set_focus_to(_)).Times(AtLeast(0));
-//}
+TEST_F(TestDefaultShellAndFocusSelectionStrategy, cycle_focus)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(session_manager, set_focus_to(_)).Times(3);
+
+    auto session1 = shell.open_session(__LINE__, "Visual Basic Studio", std::make_shared<mtd::NullEventSink>());
+    auto session2 = shell.open_session(__LINE__, "Microsoft Access", std::make_shared<mtd::NullEventSink>());
+    auto session3 = shell.open_session(__LINE__, "WordPerfect", std::make_shared<mtd::NullEventSink>());
+
+    Mock::VerifyAndClearExpectations(&session_manager);
+
+    {
+      InSequence seq;
+      EXPECT_CALL(session_manager, set_focus_to(Eq(session1))).Times(1);
+      EXPECT_CALL(session_manager, set_focus_to(Eq(session2))).Times(1);
+      EXPECT_CALL(session_manager, set_focus_to(Eq(session3))).Times(1);
+    }
+
+    shell.focus_next();
+    shell.focus_next();
+    shell.focus_next();
+
+    Mock::VerifyAndClearExpectations(&session_manager);
+
+    // Possible change of focus while sessions are closed on shutdown
+    EXPECT_CALL(session_manager, set_focus_to(_)).Times(AtLeast(0));
+}
+
+TEST_F(TestDefaultShellAndFocusSelectionStrategy, closing_applications_transfers_focus)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(session_manager, set_focus_to(_)).Times(3);
+
+    auto session1 = shell.open_session(__LINE__, "Visual Basic Studio", std::make_shared<mtd::NullEventSink>());
+    auto session2 = shell.open_session(__LINE__, "Microsoft Access", std::make_shared<mtd::NullEventSink>());
+    auto session3 = shell.open_session(__LINE__, "WordPerfect", std::make_shared<mtd::NullEventSink>());
+
+    Mock::VerifyAndClearExpectations(&session_manager);
+
+    {
+      InSequence seq;
+      EXPECT_CALL(session_manager, set_focus_to(Eq(session2))).Times(1);
+      EXPECT_CALL(session_manager, set_focus_to(Eq(session1))).Times(1);
+    }
+
+    shell.close_session(session3);
+    shell.close_session(session2);
+
+    Mock::VerifyAndClearExpectations(&session_manager);
+
+    // Possible change of focus while sessions are closed on shutdown
+    EXPECT_CALL(session_manager, set_focus_to(_)).Times(AtLeast(0));
+}
