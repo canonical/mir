@@ -32,9 +32,10 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 msh::DefaultShell::DefaultShell(
-    std::shared_ptr<FocusSetter> const& focus_setter,
+    std::shared_ptr<InputTargeter> const& input_targeter,
+    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator) :
-    focus_setter(focus_setter),
+    focus_setter(input_targeter, surface_coordinator),
     session_coordinator(session_coordinator)
 {
 }
@@ -164,7 +165,7 @@ inline void msh::DefaultShell::set_focus_to_locked(std::unique_lock<std::mutex> 
 {
     auto old_focus = focus_application.lock();
 
-    focus_setter->set_focus_to(session);
+    focus_setter.set_focus_to(session);
     focus_application = session;
 
     if (session)

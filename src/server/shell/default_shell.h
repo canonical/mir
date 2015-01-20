@@ -21,6 +21,7 @@
 
 #include "mir/frontend/shell.h"
 #include "mir/shell/focus_controller.h"
+#include "default_focus_mechanism.h"
 
 #include <mutex>
 
@@ -30,13 +31,12 @@ namespace scene { class SessionCoordinator; }
 
 namespace shell
 {
-class FocusSetter;
-
 class DefaultShell : public frontend::Shell, public FocusController
 {
 public:
     DefaultShell(
-        std::shared_ptr<FocusSetter> const& focus_setter,
+        std::shared_ptr<InputTargeter> const& input_targeter,
+        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
 
     void focus_next() override;
@@ -80,7 +80,7 @@ public:
         MirSurfaceAttrib attrib) override;
 
 private:
-    std::shared_ptr<FocusSetter> const focus_setter;
+    DefaultFocusMechanism focus_setter;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
 
     std::mutex mutex;

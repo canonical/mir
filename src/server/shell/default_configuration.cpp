@@ -34,7 +34,8 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Defaul
     return default_shell([this]
         {
             return std::make_shared<msh::DefaultShell>(
-                the_shell_focus_setter(),
+                the_input_targeter(),
+                the_surface_coordinator(),
                 the_session_coordinator());
         });
 }
@@ -60,18 +61,6 @@ mir::DefaultServerConfiguration::the_placement_strategy()
         {
             return std::make_shared<msh::DefaultPlacementStrategy>(
                 the_shell_display_layout());
-        });
-}
-
-std::shared_ptr<msh::FocusSetter>
-mir::DefaultServerConfiguration::the_shell_focus_setter()
-{
-    return shell_focus_setter(
-        [this]
-        {
-            return std::make_shared<msh::DefaultFocusMechanism>(
-                the_input_targeter(),
-                the_surface_coordinator());
         });
 }
 

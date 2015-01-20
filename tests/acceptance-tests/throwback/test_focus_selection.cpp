@@ -46,39 +46,39 @@ MATCHER(NonNullSession, "")
 }
 }
 
-TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
-{
-    struct ServerConfig : TestingServerConfiguration
-    {
-        std::shared_ptr<msh::FocusSetter>
-        the_shell_focus_setter() override
-        {
-            return shell_focus_setter(
-            []
-            {
-                using namespace ::testing;
-
-                auto focus_setter = std::make_shared<mtd::MockFocusSetter>();
-                {
-                    InSequence seq;
-                    // Once on application registration and once on surface creation
-                    EXPECT_CALL(*focus_setter, set_focus_to(NonNullSession())).Times(2);
-                    // Focus is cleared when the session is closed
-                    EXPECT_CALL(*focus_setter, set_focus_to(_)).Times(1);
-                }
-                // TODO: Counterexample ~racarr
-
-                return focus_setter;
-            });
-        }
-    } server_config;
-
-    launch_server_process(server_config);
-
-    mtf::SurfaceCreatingClient client;
-
-    launch_client_process(client);
-}
+//TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
+//{
+//    struct ServerConfig : TestingServerConfiguration
+//    {
+//        std::shared_ptr<msh::FocusSetter>
+//        the_shell_focus_setter() override
+//        {
+//            return shell_focus_setter(
+//            []
+//            {
+//                using namespace ::testing;
+//
+//                auto focus_setter = std::make_shared<mtd::MockFocusSetter>();
+//                {
+//                    InSequence seq;
+//                    // Once on application registration and once on surface creation
+//                    EXPECT_CALL(*focus_setter, set_focus_to(NonNullSession())).Times(2);
+//                    // Focus is cleared when the session is closed
+//                    EXPECT_CALL(*focus_setter, set_focus_to(_)).Times(1);
+//                }
+//                // TODO: Counterexample ~racarr
+//
+//                return focus_setter;
+//            });
+//        }
+//    } server_config;
+//
+//    launch_server_process(server_config);
+//
+//    mtf::SurfaceCreatingClient client;
+//
+//    launch_client_process(client);
+//}
 
 TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_created)
 {
