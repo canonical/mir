@@ -224,8 +224,6 @@ TEST_F(SessionManagerSessionEventsSetup, session_event_sink_is_notified_of_lifec
 // TODO but as I'm reworking that interaction and they use mocks that only exist
 // TODO in this file (e.g. MockSessionContainer) I've left them here temporarily.
 #include "src/server/shell/default_shell.h"
-#include "src/server/shell/default_focus_mechanism.h"
-#include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/stub_input_targeter.h"
 
 namespace msh = mir::shell;

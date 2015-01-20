@@ -21,7 +21,6 @@
 
 
 #include "default_placement_strategy.h"
-#include "default_focus_mechanism.h"
 #include "default_shell.h"
 #include "graphics_display_layout.h"
 

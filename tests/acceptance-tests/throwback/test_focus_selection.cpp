@@ -23,7 +23,6 @@
 #include "mir/shell/input_targeter.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/mock_input_targeter.h"
 
 #include <gtest/gtest.h>
