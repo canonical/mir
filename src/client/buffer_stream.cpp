@@ -115,8 +115,8 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
     if (!protobuf_bs.has_buffer())
         BOOST_THROW_EXCEPTION(std::runtime_error("Buffer stream did not come with a buffer"));
 
-    egl_native_window_ = native_window_factory->create_egl_native_window(this);
     process_buffer(protobuf_bs.buffer());
+    egl_native_window_ = native_window_factory->create_egl_native_window(this);
 
     perf_report->name_surface(std::to_string(protobuf_bs.id().value()).c_str());
 }
