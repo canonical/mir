@@ -248,8 +248,8 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
     std::unique_lock<decltype(mutex)> lock(mutex);
     return MirSurfaceParameters{
         "",
-        cached_buffer_size.height.as_int(),
         cached_buffer_size.width.as_int(),
+        cached_buffer_size.height.as_int(),
         static_cast<MirPixelFormat>(protobuf_bs.pixel_format()),
         static_cast<MirBufferUsage>(protobuf_bs.buffer_usage()),
         mir_display_output_id_invalid};
