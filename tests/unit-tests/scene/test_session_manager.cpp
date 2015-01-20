@@ -175,17 +175,6 @@ struct SessionManagerSessionListenerSetup : public testing::Test
 };
 }
 
-//TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_focus)
-//{
-//    using namespace ::testing;
-//
-//    EXPECT_CALL(session_listener, focused(_)).Times(1);
-//    EXPECT_CALL(session_listener, unfocused()).Times(1);
-//
-//    auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
-//    session_manager.close_session(session);
-//}
-
 TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifecycle)
 {
     using namespace ::testing;
@@ -202,13 +191,7 @@ namespace
 
 struct SessionManagerSessionEventsSetup : public testing::Test
 {
-    SessionManagerSessionEventsSetup()
-      : session_manager(mt::fake_shared(surface_coordinator),
-                        mt::fake_shared(container),
-                        std::make_shared<mtd::NullSnapshotStrategy>(),
-                        mt::fake_shared(session_event_sink),
-                        std::make_shared<ms::NullSessionListener>(),
-                        std::make_shared<mtd::NullPromptSessionManager>())
+    void SetUp() override
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
@@ -218,10 +201,47 @@ struct SessionManagerSessionEventsSetup : public testing::Test
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     MockSessionEventSink session_event_sink;
 
-    ms::SessionManager session_manager;
+    ms::SessionManager session_manager{
+        mt::fake_shared(surface_coordinator),
+        mt::fake_shared(container),
+        std::make_shared<mtd::NullSnapshotStrategy>(),
+        mt::fake_shared(session_event_sink),
+        std::make_shared<ms::NullSessionListener>(),
+        std::make_shared<mtd::NullPromptSessionManager>()};
 };
 
 }
+TEST_F(SessionManagerSessionEventsSetup, session_event_sink_is_notified_of_lifecycle)
+{
+    using namespace ::testing;
+
+    auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto session1 = session_manager.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
+
+    Mock::VerifyAndClearExpectations(&session_event_sink);
+
+    EXPECT_CALL(session_event_sink, handle_focus_change(_)).Times(AnyNumber());
+    EXPECT_CALL(session_event_sink, handle_no_focus()).Times(AnyNumber());
+
+    InSequence s;
+    EXPECT_CALL(session_event_sink, handle_session_stopping(_)).Times(1);
+    EXPECT_CALL(session_event_sink, handle_session_stopping(_)).Times(1);
+
+    session_manager.close_session(session1);
+    session_manager.close_session(session);
+}
+
+
+//TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_focus)
+//{
+//    using namespace ::testing;
+//
+//    EXPECT_CALL(session_listener, focused(_)).Times(1);
+//    EXPECT_CALL(session_listener, unfocused()).Times(1);
+//
+//    auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+//    session_manager.close_session(session);
+//}
 
 //TEST_F(SessionManagerSessionEventsSetup, session_event_sink_is_notified_of_focus)
 //{
@@ -246,22 +266,3 @@ struct SessionManagerSessionEventsSetup : public testing::Test
 //    session_manager.close_session(session);
 //}
 
-TEST_F(SessionManagerSessionEventsSetup, session_event_sink_is_notified_of_lifecycle)
-{
-    using namespace ::testing;
-
-    auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
-    auto session1 = session_manager.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
-
-    Mock::VerifyAndClearExpectations(&session_event_sink);
-
-    EXPECT_CALL(session_event_sink, handle_focus_change(_)).Times(AnyNumber());
-    EXPECT_CALL(session_event_sink, handle_no_focus()).Times(AnyNumber());
-
-    InSequence s;
-    EXPECT_CALL(session_event_sink, handle_session_stopping(_)).Times(1);
-    EXPECT_CALL(session_event_sink, handle_session_stopping(_)).Times(1);
-
-    session_manager.close_session(session1);
-    session_manager.close_session(session);
-}
