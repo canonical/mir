@@ -137,7 +137,7 @@ void mga::HwcDevice::commit(
     std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
     for (auto& layer : hwc_list)
     {
-        auto buffer = layer.layer.buf();
+        auto buffer = layer.layer.buffer();
         if (layer.layer.is_overlay() && buffer)
         {
             if (!buffer_is_onscreen(*buffer))

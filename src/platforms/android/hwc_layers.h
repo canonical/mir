@@ -112,14 +112,14 @@ public:
     bool needs_gl_render() const;
     void set_acquirefence();
     void release_buffer();
-    std::shared_ptr<Buffer> buf();
+    std::shared_ptr<Buffer> buffer();
 
 private:
     std::shared_ptr<LayerAdapter> layer_adapter;
     hwc_layer_1_t* hwc_layer;
     std::shared_ptr<hwc_display_contents_1_t> hwc_list;
     hwc_rect_t visible_rect;
-    std::shared_ptr<Buffer> buffer;
+    std::shared_ptr<Buffer> associated_buffer;
 };
 }
 }
