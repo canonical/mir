@@ -19,8 +19,23 @@
 #ifndef MIR_TEST_HWC_STRUCT_HELPERS_H_
 #define MIR_TEST_HWC_STRUCT_HELPERS_H_
 
+#include "mir/geometry/rectangle.h"
+#include "mir/graphics/buffer.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+namespace mir
+{
+namespace test
+{
+void fill_hwc_layer(
+    hwc_layer_1_t& layer,
+    hwc_rect_t* visible_rect,
+    mir::geometry::Rectangle const& position,
+    mir::graphics::Buffer const& buffer,
+    int type, int flags);
+}
+}
 
 void PrintTo(const hwc_rect_t& rect, ::std::ostream* os);
 void PrintTo(const hwc_layer_1& layer , ::std::ostream* os);

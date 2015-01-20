@@ -21,8 +21,7 @@
 #include "client_buffer_factory.h"
 #include "mesa_native_display_container.h"
 #include "native_surface.h"
-#include "../mir_connection.h"
-#include "../client_buffer_factory.h"
+#include "mir/client_buffer_factory.h"
 
 namespace mcl=mir::client;
 namespace mclm=mir::client::mesa;

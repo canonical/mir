@@ -18,7 +18,7 @@
 
 #include "client_surface_interpreter.h"
 #include "mir/graphics/android/sync_fence.h"
-#include "../client_buffer.h"
+#include "mir/client_buffer.h"
 #include <system/window.h>
 #include <stdexcept>
 
