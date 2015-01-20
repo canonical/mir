@@ -131,6 +131,11 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
     
     auto buffer_package = std::make_shared<MirBufferPackage>();
     populate_buffer_package(*buffer_package, buffer);
+    
+    if (buffer.has_error())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_Error("BufferStream received buffer with error:" + buffer.error()));
+    }
 
     try
     {
