@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/client/client_platform.h"
+#include "mir/client_platform.h"
 #include "mir/shared_library.h"
 #include "src/client/mesa/mesa_native_display_container.h"
 #include "mir_test_framework/client_platform_factory.h"

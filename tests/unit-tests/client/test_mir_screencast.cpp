@@ -17,7 +17,9 @@
  */
 
 #include "src/client/mir_screencast.h"
-#include "src/client/client_platform.h"
+
+#include "mir/client_buffer_factory.h"
+#include "mir/client_platform.h"
 
 #include "mir_test_doubles/stub_client_buffer_stream_factory.h"
 #include "mir_test_doubles/mock_client_buffer_stream_factory.h"
@@ -231,9 +233,6 @@ TEST_F(MirScreencastTest, advances_buffer_stream_on_next_buffer)
 
     InSequence seq;
 
-//    EXPECT_CALL(mock_server,
-//                create_screencast(_,_,_,_));
-    
     EXPECT_CALL(mock_bs, next_buffer(_)).Times(1)
         .WillOnce(Return(nullptr));
     

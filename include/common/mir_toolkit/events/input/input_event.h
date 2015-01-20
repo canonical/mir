@@ -61,7 +61,8 @@ typedef enum {
     mir_input_event_modifier_caps_lock   = 1 << 15,
     mir_input_event_modifier_num_lock    = 1 << 16,
     mir_input_event_modifier_scroll_lock = 1 << 17
-} MirInputEventModifiers;
+} MirInputEventModifier;
+typedef unsigned int MirInputEventModifiers;
 
 #ifdef __cplusplus
 }

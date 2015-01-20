@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_CLIENT_BUFFER_FACTORY_H_
 #define MIR_TEST_DOUBLES_MOCK_CLIENT_BUFFER_FACTORY_H_
 
-#include "src/client/client_buffer_factory.h"
+#include "mir/client_buffer_factory.h"
 
 namespace mir
 {

@@ -417,6 +417,7 @@ MirSurfaceState ms::BasicSurface::set_state(MirSurfaceState s)
     {
         state_ = s;
         lg.unlock();
+        set_hidden(s == mir_surface_state_hidden);
         
         observers.attrib_changed(mir_surface_attrib_state, s);
     }

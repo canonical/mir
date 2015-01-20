@@ -56,33 +56,6 @@ struct MockFileOps : public mga::SyncFileOps
     MOCK_METHOD1(close, int(int));
 };
 
-void fill_hwc_layer(
-    hwc_layer_1_t& layer,
-    hwc_rect_t* visible_rect,
-    geom::Rectangle const& position,
-    mg::Buffer const& buffer,
-    int type, int flags)
-{
-    *visible_rect = {0, 0, buffer.size().width.as_int(), buffer.size().height.as_int()};
-    layer.compositionType = type;
-    layer.hints = 0;
-    layer.flags = flags;
-    layer.handle = buffer.native_buffer_handle()->handle();
-    layer.transform = 0;
-    layer.blending = HWC_BLENDING_NONE;
-    layer.sourceCrop = *visible_rect;
-    layer.displayFrame = {
-        position.top_left.x.as_int(),
-        position.top_left.y.as_int(),
-        position.bottom_right().x.as_int(),
-        position.bottom_right().y.as_int()
-    };
-    layer.visibleRegionScreen = {1, visible_rect};
-    layer.acquireFenceFd = -1;
-    layer.releaseFenceFd = -1;
-    layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
-}
-
 struct HwcDevice : public ::testing::Test
 {
     HwcDevice() :
@@ -99,10 +72,10 @@ struct HwcDevice : public ::testing::Test
         renderlist({stub_renderable1, stub_renderable2}),
         layer_adapter{std::make_shared<mga::IntegerSourceCrop>()}
     {
-        fill_hwc_layer(layer, &comp_rect, position1, *stub_buffer1, HWC_FRAMEBUFFER, 0);
-        fill_hwc_layer(layer2, &comp2_rect, position2, *stub_buffer2, HWC_FRAMEBUFFER, 0);
-        fill_hwc_layer(target_layer, &target_rect, fb_position, *stub_fb_buffer, HWC_FRAMEBUFFER_TARGET, 0);
-        fill_hwc_layer(skip_layer, &skip_rect, fb_position, *stub_fb_buffer, HWC_FRAMEBUFFER, HWC_SKIP_LAYER);
+        mt::fill_hwc_layer(layer, &comp_rect, position1, *stub_buffer1, HWC_FRAMEBUFFER, 0);
+        mt::fill_hwc_layer(layer2, &comp2_rect, position2, *stub_buffer2, HWC_FRAMEBUFFER, 0);
+        mt::fill_hwc_layer(target_layer, &target_rect, fb_position, *stub_fb_buffer, HWC_FRAMEBUFFER_TARGET, 0);
+        mt::fill_hwc_layer(skip_layer, &skip_rect, fb_position, *stub_fb_buffer, HWC_FRAMEBUFFER, HWC_SKIP_LAYER);
         set_all_layers_to_overlay = [&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
         {
             for(auto i = 0u; i < contents[0]->numHwLayers - 1; i++) //-1 because the last layer is the target
@@ -477,8 +450,8 @@ TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_wit
     hwc_layer_1_t update_layer;
     hwc_rect_t nofence_rect;
     hwc_layer_1_t nofence_layer;
-    fill_hwc_layer(update_layer, &update_layer_rect, position1, *updated_buffer, HWC_OVERLAY, 0);
-    fill_hwc_layer(nofence_layer, &nofence_rect, position2, *stub_buffer2, HWC_OVERLAY, 0);
+    mt::fill_hwc_layer(update_layer, &update_layer_rect, position1, *updated_buffer, HWC_OVERLAY, 0);
+    mt::fill_hwc_layer(nofence_layer, &nofence_rect, position2, *stub_buffer2, HWC_OVERLAY, 0);
     update_layer.acquireFenceFd = acquire_fence3;
     nofence_layer.acquireFenceFd = -1;
     std::list<hwc_layer_1_t*> expected_list2
@@ -586,8 +559,8 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_even_across_list_changes)
 {
     using namespace testing;
     hwc_layer_1_t layer3;
-    fill_hwc_layer(layer2, &comp_rect, position1, *stub_buffer1, HWC_FRAMEBUFFER, 0);
-    fill_hwc_layer(layer3, &comp2_rect, position2, *stub_buffer2, HWC_FRAMEBUFFER, 0);
+    mt::fill_hwc_layer(layer2, &comp_rect, position1, *stub_buffer1, HWC_FRAMEBUFFER, 0);
+    mt::fill_hwc_layer(layer3, &comp2_rect, position2, *stub_buffer2, HWC_FRAMEBUFFER, 0);
 
     int acquire_fence1 = 39303;
     int acquire_fence2 = 393044;
@@ -678,8 +651,8 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
     using namespace testing;
     hwc_layer_1_t layer3;
     hwc_layer_1_t layer4;
-    fill_hwc_layer(layer3, &comp2_rect, position2, *stub_buffer2, HWC_FRAMEBUFFER, 0);
-    fill_hwc_layer(layer4, &comp_rect, position1, *stub_buffer1, HWC_FRAMEBUFFER, 0);
+    mt::fill_hwc_layer(layer3, &comp2_rect, position2, *stub_buffer2, HWC_FRAMEBUFFER, 0);
+    mt::fill_hwc_layer(layer4, &comp_rect, position1, *stub_buffer1, HWC_FRAMEBUFFER, 0);
 
     int acquire_fence1 = 39303;
     int acquire_fence2 = 393044;

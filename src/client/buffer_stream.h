@@ -22,8 +22,8 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_wait_handle.h"
-#include "egl_native_surface.h"
-#include "client_buffer.h"
+#include "mir/egl_native_surface.h"
+#include "mir/client_buffer.h"
 #include "client_buffer_stream.h"
 #include "client_buffer_depository.h"
 

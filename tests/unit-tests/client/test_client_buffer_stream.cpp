@@ -17,7 +17,8 @@
  */
 
 #include "src/client/buffer_stream.h"
-#include "src/client/egl_native_window_factory.h"
+
+#include "mir/egl_native_window_factory.h"
 
 #include "mir_test_doubles/null_client_buffer.h"
 #include "mir_test_doubles/mock_client_buffer_factory.h"

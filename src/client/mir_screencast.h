@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_MIR_SCREENCAST_H_
 #define MIR_CLIENT_MIR_SCREENCAST_H_
 
-#include "egl_native_surface.h"
+#include "mir/egl_native_surface.h"
 #include "mir_wait_handle.h"
 #include "mir_toolkit/client_types.h"
 #include "mir_protobuf.pb.h"

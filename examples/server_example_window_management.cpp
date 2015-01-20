@@ -268,68 +268,20 @@ public:
 
     void toggle(MirSurfaceState state) override
     {
-        // We have to duplicate the state information into surface to notify the
-        // client. But this has to happen without holding a lock (as we are also
-        // notified via a call to attribute_set()).
-        std::function<void()> notify_client = [](){};
-
         if (auto const focussed_session = focus_controller()->focussed_application().lock())
         {
             if (auto const focussed_surface = focussed_session->default_surface())
             {
-                std::lock_guard<decltype(mutex)> lock(mutex);
-
-                auto& surface_info = this->surface_info[focussed_surface];
-
-                if (surface_info.state == state)
                 {
-                    notify_client = [focussed_surface]()
-                        {
-                            focussed_surface->configure(
-                                mir_surface_attrib_state,
-                                mir_surface_state_restored);
-                        };
-                }
-                else
-                {
-                    switch (state)
-                    {
-                    case mir_surface_state_maximized:
-                        notify_client = [focussed_surface]()
-                            {
-                                focussed_surface->configure(
-                                    mir_surface_attrib_state,
-                                    mir_surface_state_maximized);
-                            };
-                        break;
+                    std::lock_guard<decltype(mutex)> lock(mutex);
 
-                    case mir_surface_state_horizmaximized:
-                    {
-                        notify_client = [focussed_surface]()
-                            {
-                                focussed_surface->configure(
-                                    mir_surface_attrib_state,
-                                    mir_surface_state_horizmaximized);
-                            };
-                        break;
-                    }
-                    case mir_surface_state_vertmaximized:
-                        notify_client = [focussed_surface]()
-                            {
-                                focussed_surface->configure(
-                                    mir_surface_attrib_state,
-                                    mir_surface_state_vertmaximized);
-                            };
-                        break;
-
-                    default:
-                        break;
-                    }
+                    if (surface_info[focussed_surface].state == state)
+                        state = mir_surface_state_restored;
                 }
+
+                focussed_surface->configure(mir_surface_attrib_state, state);
             }
         }
-
-        notify_client();
     }
 
     int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value) override

@@ -31,8 +31,8 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 
-#include "client_platform.h"
-#include "client_context.h"
+#include "mir/client_platform.h"
+#include "mir/client_context.h"
 
 #include "mir_wait_handle.h"
 

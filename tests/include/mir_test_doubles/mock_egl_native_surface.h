@@ -19,7 +19,8 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_EGL_NATIVE_SURFACE_H_
 #define MIR_TEST_DOUBLES_MOCK_EGL_NATIVE_SURFACE_H_
 
-#include "src/client/egl_native_surface.h"
+#include "mir/egl_native_surface.h"
+
 #include <gmock/gmock.h>
 
 namespace mir

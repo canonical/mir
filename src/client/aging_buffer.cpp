@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "aging_buffer.h"
+#include "mir/aging_buffer.h"
 
 namespace mcl = mir::client;
 

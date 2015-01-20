@@ -27,7 +27,7 @@
 #include "mir/optional_value.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
-#include "client_platform.h"
+#include "mir/client_platform.h"
 #include "client_buffer_stream.h"
 
 #include <memory>

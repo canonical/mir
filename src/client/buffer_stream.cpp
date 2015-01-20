@@ -25,7 +25,7 @@
 #include "mir/log.h"
 
 #include "mir_toolkit/mir_native_buffer.h"
-#include "egl_native_window_factory.h"
+#include "mir/egl_native_window_factory.h"
 
 #include "perf_report.h"
 #include "logging/perf_report.h"

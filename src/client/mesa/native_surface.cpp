@@ -17,7 +17,7 @@
  */
 
 #include <cstring>
-#include "../client_buffer.h"
+#include "mir/client_buffer.h"
 #include "native_surface.h"
 
 #include <boost/exception/diagnostic_information.hpp> 

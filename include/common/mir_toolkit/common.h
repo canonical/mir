@@ -75,6 +75,7 @@ typedef enum MirSurfaceState
        differs only in the X coordinate. */
     mir_surface_state_fullscreen,
     mir_surface_state_horizmaximized,
+    mir_surface_state_hidden,
     mir_surface_states
 } MirSurfaceState;
 

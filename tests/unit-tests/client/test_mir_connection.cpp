@@ -17,14 +17,14 @@
  */
 
 #include "mir/geometry/rectangle.h"
-#include "src/client/client_platform.h"
-#include "src/client/client_platform_factory.h"
+#include "mir/client_platform.h"
+#include "mir/client_platform_factory.h"
 #include "src/client/mir_connection.h"
 #include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/display_configuration.h"
 #include "src/client/mir_surface.h"
-#include "src/client/client_buffer_factory.h"
+#include "mir/client_buffer_factory.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"

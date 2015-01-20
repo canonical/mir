@@ -19,9 +19,9 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 
-#include "src/client/client_platform_factory.h"
-#include "src/client/client_platform.h"
-#include "src/client/client_buffer_factory.h"
+#include "src/include/client/mir/client_platform_factory.h"
+#include "src/include/client/mir/client_platform.h"
+#include "src/include/client/mir/client_buffer_factory.h"
 
 #include "mir_test/validity_matchers.h"
 
