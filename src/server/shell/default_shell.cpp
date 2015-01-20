@@ -167,32 +167,30 @@ inline void msh::DefaultShell::set_focus_to_locked(std::unique_lock<std::mutex> 
 {
     auto old_focus = focus_application.lock();
 
-    // TODO: This path should be encapsulated in a seperate clear_focus message
-    if (!session)
+    std::shared_ptr<ms::Surface> surface;
+
+    if (session)
+        surface = session->default_surface();
+
+    if (surface)
     {
-        input_targeter->focus_cleared();
+        std::lock_guard<std::mutex> lg(surface_focus_lock);
+
+        // Ensure the surface has really taken the focus before notifying it that it is focused
+        surface_coordinator->raise(surface);
+        surface->take_input_focus(input_targeter);
+
+        auto current_focus = currently_focused_surface.lock();
+        if (current_focus)
+            current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+        surface->configure(mir_surface_attrib_focus, mir_surface_focused);
+        currently_focused_surface = surface;
     }
     else
     {
-        if (auto const surface = session->default_surface())
-        {
-            std::lock_guard<std::mutex> lg(surface_focus_lock);
-
-            // Ensure the surface has really taken the focus before notifying it that it is focused
-            surface_coordinator->raise(surface);
-            surface->take_input_focus(input_targeter);
-
-            auto current_focus = currently_focused_surface.lock();
-            if (current_focus)
-                current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
-            surface->configure(mir_surface_attrib_focus, mir_surface_focused);
-            currently_focused_surface = surface;
-        }
-        else
-        {
-            input_targeter->focus_cleared();
-        }
+        input_targeter->focus_cleared();
     }
+
     focus_application = session;
 
     if (session)
