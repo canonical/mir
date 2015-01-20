@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_ANDROID_NATIVE_DISPLAY_CONTAINER_H_
 #define MIR_CLIENT_ANDROID_NATIVE_DISPLAY_CONTAINER_H_
 
-#include "../egl_native_display_container.h"
+#include "mir/egl_native_display_container.h"
 
 #include "mir_toolkit/client_types.h"
 

@@ -36,6 +36,7 @@ mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<ANativeWindow> const& native_window,
     mga::GLContext const& shared_gl_context,
     mg::GLProgramFactory const& program_factory,
+    MirOrientation orientation,
     mga::OverlayOptimization overlay_option)
     : fb_bundle{fb_bundle},
       display_device{display_device},
@@ -43,23 +44,7 @@ mga::DisplayBuffer::DisplayBuffer(
       gl_context{shared_gl_context, fb_bundle, native_window},
       overlay_program{program_factory, gl_context, geom::Rectangle{{0,0},fb_bundle->fb_size()}},
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
-      current_configuration{
-          mg::DisplayConfigurationOutputId{1},
-          mg::DisplayConfigurationCardId{0},
-          mg::DisplayConfigurationOutputType::lvds,
-          {
-              fb_bundle->fb_format()
-          },
-          {mg::DisplayConfigurationMode{fb_bundle->fb_size(), fb_bundle->fb_refresh_rate()}},
-          0,
-          geom::Size{0,0}, //could use DPI information to fill this
-          true,
-          true,
-          geom::Point{0,0},
-          0,
-          fb_bundle->fb_format(),
-          mir_power_mode_on,
-          mir_orientation_normal}
+      orientation_{orientation}
 {
 }
 
@@ -69,11 +54,8 @@ geom::Rectangle mga::DisplayBuffer::view_area() const
     int width = size.width.as_int();
     int height = size.height.as_int();
 
-    if (current_configuration.orientation == mir_orientation_left
-        || current_configuration.orientation == mir_orientation_right)
-    {
+    if (orientation_ == mir_orientation_left || orientation_ == mir_orientation_right)
         std::swap(width, height);
-    }
 
     return {{0,0}, {width,height}};
 }
@@ -113,7 +95,7 @@ MirOrientation mga::DisplayBuffer::orientation() const
      * and let the renderer do it.
      * If and when we choose to implement HWC rotation, this may change.
      */
-    return current_configuration.orientation;
+    return orientation_;
 }
 
 bool mga::DisplayBuffer::uses_alpha() const
@@ -121,27 +103,9 @@ bool mga::DisplayBuffer::uses_alpha() const
     return false;
 }
 
-mg::DisplayConfigurationOutput mga::DisplayBuffer::configuration() const
+void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation)
 {
-    return mg::DisplayConfigurationOutput(current_configuration);
-}
-
-void mga::DisplayBuffer::configure(DisplayConfigurationOutput const& new_configuration)
-{
-    if (new_configuration.power_mode != mir_power_mode_on)
+    if (power_mode != mir_power_mode_on)
         display_device->content_cleared();
-    current_configuration.power_mode = new_configuration.power_mode;
-
-    //TODO: We don't support rotation yet, so
-    //we preserve this orientation change so the compositor can rotate everything in GL 
-    current_configuration.orientation = new_configuration.orientation;
-
-    //do not allow fb format reallocation
-    if (new_configuration.current_format != current_configuration.current_format)
-    {
-        std::stringstream err_msg; 
-        err_msg << std::string("could not change display buffer format to request: ")
-                << new_configuration.current_format;
-        BOOST_THROW_EXCEPTION(std::runtime_error(err_msg.str()));
-    }
+    orientation_ = orientation;
 }

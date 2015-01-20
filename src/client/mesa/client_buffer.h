@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_MESA_CLIENT_BUFFER_H_
 #define MIR_CLIENT_MESA_CLIENT_BUFFER_H_
 
-#include "../aging_buffer.h"
+#include "mir/aging_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/geometry/rectangle.h"
 

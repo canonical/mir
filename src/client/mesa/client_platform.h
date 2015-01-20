@@ -18,7 +18,7 @@
 #ifndef MIR_CLIENT_MESA_CLIENT_PLATFORM_H_
 #define MIR_CLIENT_MESA_CLIENT_PLATFORM_H_
 
-#include "../client_platform.h"
+#include "mir/client_platform.h"
 
 namespace mir
 {

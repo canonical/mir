@@ -34,7 +34,7 @@
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
 #include "mir/shared_library.h"
-#include "client_platform_factory.h"
+#include "mir/client_platform_factory.h"
 #include "probing_client_platform_factory.h"
 #include "mir_event_distributor.h"
 #include "mir/shared_library_prober.h"

@@ -162,6 +162,11 @@ void me::DemoCompositor::zoom(float mag)
     update_viewport();
 }
 
+void me::DemoCompositor::set_colour_effect(me::ColourEffect e)
+{
+    renderer.set_colour_effect(e);
+}
+
 void me::DemoCompositor::update_viewport()
 {
     auto const& view_area = display_buffer.view_area();

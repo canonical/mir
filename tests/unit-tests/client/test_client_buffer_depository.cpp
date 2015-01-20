@@ -18,8 +18,8 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/client_buffer_depository.h"
-#include "src/client/client_buffer_factory.h"
-#include "src/client/aging_buffer.h"
+#include "mir/client_buffer_factory.h"
+#include "mir/aging_buffer.h"
 #include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 #include "mir_test/fake_shared.h"

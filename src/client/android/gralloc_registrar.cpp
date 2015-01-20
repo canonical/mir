@@ -19,7 +19,7 @@
 #include "mir/graphics/android/android_native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "gralloc_registrar.h"
-#include "../client_buffer.h"
+#include "mir/client_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

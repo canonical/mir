@@ -28,7 +28,7 @@
 #include "mir_test_doubles/mock_scene.h"
 #include "mir_test_doubles/stub_timer.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test/client_event_matchers.h"
+#include "mir_test/event_matchers.h"
 
 #include "androidfw/Input.h"
 #include "androidfw/InputTransport.h"
@@ -341,7 +341,7 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_consumed)
 
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &seq, &event));
     EXPECT_CALL(observer,
-                send_suceeded(mt::MirMotionEventMatches(motion_event),
+                send_suceeded(mt::MirTouchEventMatches(motion_event),
                               &stub_surface,
                               mi::InputSendObserver::consumed));
 
@@ -357,7 +357,7 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_not_consum
 
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &seq, &event));
     EXPECT_CALL(observer,
-                send_suceeded(mt::MirMotionEventMatches(motion_event),
+                send_suceeded(mt::MirTouchEventMatches(motion_event),
                               &stub_surface,
                               mi::InputSendObserver::not_consumed));
 
@@ -381,7 +381,7 @@ TEST_F(AndroidInputSender, unordered_finish_signal_triggers_the_right_callback)
                               &stub_surface,
                               mi::InputSendObserver::consumed));
     EXPECT_CALL(observer,
-                send_suceeded(mt::MirMotionEventMatches(motion_event),
+                send_suceeded(mt::MirTouchEventMatches(motion_event),
                               &stub_surface,
                               mi::InputSendObserver::not_consumed));
     consumer.sendFinishedSignal(second_sequence, true);
