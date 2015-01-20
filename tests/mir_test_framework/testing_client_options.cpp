@@ -21,10 +21,10 @@
 #include "mir_test_doubles/stub_client_buffer_factory.h"
 #include "mir/options/program_option.h"
 #include "src/client/default_connection_configuration.h"
-#include "src/client/client_platform_factory.h"
-#include "src/client/client_buffer_factory.h"
-#include "src/client/client_buffer.h"
-#include "src/client/client_platform.h"
+#include "mir/client_platform_factory.h"
+#include "mir/client_buffer_factory.h"
+#include "mir/client_buffer.h"
+#include "mir/client_platform.h"
 #include "src/client/mir_connection.h"
 
 namespace mcl = mir::client;

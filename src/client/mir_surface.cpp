@@ -18,7 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/frontend/client_constants.h"
-#include "client_buffer.h"
+#include "mir/client_buffer.h"
 #include "mir_surface.h"
 #include "cursor_configuration.h"
 #include "mir_connection.h"
