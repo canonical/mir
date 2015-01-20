@@ -156,9 +156,6 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     mir::protobuf::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(protobuf_bs.id().value());
 
-    lock.unlock();
-    next_buffer_wait_handle.expect_result();
-    
 // TODO: We can fix the strange "ID casting" used below in the second phase
 // of buffer stream which generalizes and clarifies the server side logic.
     if (mode == mcl::BufferStreamMode::Producer)
@@ -166,6 +163,10 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
         mp::BufferRequest request;
         request.mutable_id()->set_value(protobuf_bs.id().value());
         request.mutable_buffer()->set_buffer_id(protobuf_bs.buffer().buffer_id());
+
+        lock.unlock();
+        next_buffer_wait_handle.expect_result();
+
         display_server.exchange_buffer(
             nullptr,
             &request,
@@ -178,6 +179,9 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     {
         mp::ScreencastId screencast_id;
         screencast_id.set_value(protobuf_bs.id().value());
+
+        lock.unlock();
+        next_buffer_wait_handle.expect_result();
 
         display_server.screencast_buffer(
             nullptr,
