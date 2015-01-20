@@ -86,8 +86,8 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
     hwc_list.update_list({});
 
-    //TODO: NullRenderer is temporary until we move the list up to DisplayBuffer
-    struct NullRenderer :  RenderableListCompositor
+    //TODO: SwappingRenderer is temporary until we move the list up to DisplayBuffer
+    struct SwappingRenderer : RenderableListCompositor
     {
         void render(RenderableList const&, SwappingGLContext const& context) const
         {
