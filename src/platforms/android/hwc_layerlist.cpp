@@ -149,6 +149,7 @@ hwc_display_contents_1_t* mga::LayerList::native_list()
 
 mga::NativeFence mga::LayerList::retirement_fence()
 {
+    renderable_list.clear();
     return hwc_representation->retireFenceFd;
 }
 
