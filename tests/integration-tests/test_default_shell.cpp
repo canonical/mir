@@ -19,17 +19,12 @@
 #include "src/server/shell/default_shell.h"
 #include "src/server/scene/session_manager.h"
 #include "mir/scene/session.h"
-#include "mir/shell/focus_setter.h"
 #include "src/server/scene/default_session_container.h"
 #include "mir/scene/null_session_listener.h"
-#include "mir/compositor/buffer_stream.h"
-#include "src/server/scene/basic_surface.h"
-#include "mir/scene/surface_creation_parameters.h"
 
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_coordinator.h"
-#include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_session_event_sink.h"
@@ -39,7 +34,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
@@ -53,9 +47,6 @@ struct MockSessionManager : ms::SessionManager
     using ms::SessionManager::SessionManager;
 
     MOCK_METHOD1(set_focus_to, void (std::shared_ptr<ms::Session> const& focus));
-
-    void unmocked_set_focus_to(std::shared_ptr<ms::Session> const& focus)
-    { ms::SessionManager::set_focus_to(focus); }
 };
 
 struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
