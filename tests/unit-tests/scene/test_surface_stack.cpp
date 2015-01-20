@@ -498,7 +498,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
 {
     using namespace testing;
 
-    auto mock_stream = std::make_shared<mtd::MockBufferStream>();
+    auto mock_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
         .Times(0);
 
@@ -529,7 +529,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
 {
     using namespace testing;
 
-    auto mock_stream = std::make_shared<mtd::MockBufferStream>();
+    auto mock_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
         .Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
