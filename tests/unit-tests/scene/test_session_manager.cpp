@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -218,6 +218,11 @@ TEST_F(SessionManagerSessionEventsSetup, session_event_sink_is_notified_of_lifec
     session_manager.close_session(session);
 }
 
+// TODO the following tests replace unit tests of "window management" functions
+// TODO that were implemented by SessionManager.
+// TODO They are now actually integration tests of DefaultShell + SessionManager
+// TODO but as I'm reworking that interaction and they use mocks that only exist
+// TODO in this file (e.g. MockSessionContainer) I've left them here temporarily.
 #include "src/server/shell/default_shell.h"
 #include "src/server/shell/default_focus_mechanism.h"
 #include "mir_test_doubles/mock_focus_setter.h"
@@ -227,17 +232,27 @@ using namespace ::testing;
 
 namespace
 {
-struct DefaultShell : SessionManagerSessionEventsSetup
+struct DefaultShell : Test
 {
+    mtd::MockSurfaceCoordinator surface_coordinator;
+    NiceMock<MockSessionContainer> container;
+    NiceMock<MockSessionEventSink> session_event_sink;
+    NiceMock<mtd::MockSessionListener> session_listener;
+
+    ms::SessionManager session_manager{
+        mt::fake_shared(surface_coordinator),
+        mt::fake_shared(container),
+        std::make_shared<mtd::NullSnapshotStrategy>(),
+        mt::fake_shared(session_event_sink),
+        mt::fake_shared(session_listener),
+        std::make_shared<mtd::NullPromptSessionManager>()};
+
     NiceMock<mtd::MockFocusSetter> focus_setter;
     msh::DefaultShell shell{mt::fake_shared(focus_setter), mt::fake_shared(session_manager)};
 
     void SetUp() override
     {
-        EXPECT_CALL(session_event_sink, handle_focus_change(_)).Times(AnyNumber());
-        EXPECT_CALL(session_event_sink, handle_session_stopping(_)).Times(AnyNumber());
-        EXPECT_CALL(session_event_sink, handle_no_focus()).Times(AnyNumber());
-        SessionManagerSessionEventsSetup::SetUp();
+        ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
     }
 };
 }
