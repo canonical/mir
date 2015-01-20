@@ -44,16 +44,23 @@ struct mga::DisplayChangePipe
     DisplayChangePipe()
     {
         int pipes_raw[2] {-1, -1};
-        if(::pipe2(pipes_raw, O_CLOEXEC | O_NONBLOCK))
+        if (::pipe2(pipes_raw, O_CLOEXEC | O_NONBLOCK))
             BOOST_THROW_EXCEPTION(std::runtime_error("failed to create display change pipe"));
         read_pipe = mir::Fd{pipes_raw[0]}; 
         write_pipe = mir::Fd{pipes_raw[1]}; 
     }
-    void notify_change() { ::write(write_pipe, &data, sizeof(data)); }
+
+    void notify_change()
+    {
+        if (::write(write_pipe, &data, sizeof(data)))
+            BOOST_THROW_EXCEPTION(std::runtime_error("failed to write to display change pipe"));
+    }
+
     void ack_change()
     {
         char tmp{'b'};
-        ::read(read_pipe, &tmp, sizeof(tmp));
+        if (::read(read_pipe, &tmp, sizeof(tmp)))
+            BOOST_THROW_EXCEPTION(std::runtime_error("failed to read from display change pipe"));
     }
     mir::Fd read_pipe;
     mir::Fd write_pipe;
