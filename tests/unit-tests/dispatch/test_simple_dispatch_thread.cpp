@@ -39,15 +39,14 @@ class SimpleDispatchThreadTest : public ::testing::Test
 public:
     SimpleDispatchThreadTest()
     {
-        watch_fd = mir::Fd{pipe.read_fd()};
-        test_fd = mir::Fd{pipe.write_fd()};
+        mt::Pipe pipe;
+        watch_fd = pipe.read_fd();
+        test_fd = pipe.write_fd();
         fcntl(watch_fd, F_SETFL, O_NONBLOCK);
     }
 
     mir::Fd watch_fd;
     mir::Fd test_fd;
-private:
-    mt::Pipe pipe;
 };
 
 class MockDispatchable : public md::Dispatchable

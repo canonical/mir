@@ -29,6 +29,7 @@ namespace mt = mir::test;
 
 mt::Pipe::Pipe()
 {
+    int pipefd[2];
     if (pipe(pipefd))
     {
         BOOST_THROW_EXCEPTION(
@@ -36,20 +37,16 @@ mt::Pipe::Pipe()
                                                        std::system_category(),
                                                        "Failed to create pipe")));
     }
+    reader = mir::Fd{pipefd[0]};
+    writer = mir::Fd{pipefd[1]};
 }
 
-mt::Pipe::~Pipe()
+mir::Fd mt::Pipe::read_fd() const
 {
-    close(pipefd[0]);
-    close(pipefd[1]);
+    return reader;
 }
 
-int mt::Pipe::read_fd() const
+mir::Fd mt::Pipe::write_fd() const
 {
-    return pipefd[0];
-}
-
-int mt::Pipe::write_fd() const
-{
-    return pipefd[1];
+    return writer;
 }
