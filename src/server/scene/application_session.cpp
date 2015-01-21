@@ -209,7 +209,7 @@ void ms::ApplicationSession::stop_prompt_session()
 
 void ms::ApplicationSession::suspend_prompt_session()
 {
-    event_sink->handle_event(*mev::make_prompt_session_event(mir_prompt_session_state_stopped));
+    event_sink->handle_event(*mev::make_prompt_session_event(mir_prompt_session_state_suspended));
 }
 
 void ms::ApplicationSession::resume_prompt_session()
