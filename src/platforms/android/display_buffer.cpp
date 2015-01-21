@@ -79,6 +79,13 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
         return false;
 
     list->update_list(renderlist);
+
+    bool needs_commit{false};
+    for(auto& layer : *list)
+        needs_commit |= layer.needs_commit;
+    if (!needs_commit)
+        return false;
+
     display_device->commit(mga::DisplayName::primary, *list, gl_context, overlay_program);
     return true;
 }

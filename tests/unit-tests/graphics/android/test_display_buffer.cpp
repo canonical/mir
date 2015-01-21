@@ -307,17 +307,12 @@ TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
     mg::RenderableList renderlist{buffer1, buffer2};
     EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
-    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 
-    //ordering changed
-    renderlist = mg::RenderableList{buffer2, buffer1};
+    renderlist = mg::RenderableList{buffer2, buffer1}; //ordering changed
     EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
-    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 
-    //buffer changed
-    renderlist = mg::RenderableList{buffer3, buffer1};
+    renderlist = mg::RenderableList{buffer3, buffer1}; //buffer changed
     EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
-    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
