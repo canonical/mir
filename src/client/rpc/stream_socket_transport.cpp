@@ -176,6 +176,11 @@ void mclr::StreamSocketTransport::send_message(
         mir::send_fds(socket_fd, fds);
 }
 
+int mclr::StreamSocketTransport::watch_fd() const
+{
+    return 65;
+}
+
 void mclr::StreamSocketTransport::init()
 {
     // We use sockets rather than a pipe so that we can control

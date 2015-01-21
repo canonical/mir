@@ -1061,3 +1061,9 @@ TYPED_TEST(StreamTransportTest, ReceivingDataWithoutAskingForFdsIsAnErrorWhenThe
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 }
+
+TYPED_TEST(StreamTransportTest, ReturnsValidWatchFd)
+{
+    // A valid fd is >= 0, and we know that stdin, stdout, and stderr aren't correct.
+    EXPECT_GE(this->transport->watch_fd(), 3);
+}

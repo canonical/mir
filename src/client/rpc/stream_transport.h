@@ -145,6 +145,13 @@ public:
      *         of buffer to the server.
      */
     virtual void send_message(std::vector<uint8_t> const& buffer, std::vector<Fd> const& fds) = 0;
+
+    /**
+     * \brief Get a poll()able file descriptor
+     * \return A file descriptor usable with poll() or equivalent function calls that
+     *         becomes readable when there are dispatchable events
+     */
+    virtual int watch_fd() const = 0;
 };
 
 }
