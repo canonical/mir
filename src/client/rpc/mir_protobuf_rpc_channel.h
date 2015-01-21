@@ -21,7 +21,7 @@
 
 #include "mir_basic_rpc_channel.h"
 #include "stream_transport.h"
-#include "mir/dispatchable.h"
+#include "mir/dispatch/dispatchable.h"
 
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
@@ -54,7 +54,7 @@ class RpcReport;
 class MirProtobufRpcChannel :
         public MirBasicRpcChannel,
         public StreamTransport::Observer,
-        public Dispatchable
+        public dispatch::Dispatchable
 {
 public:
     MirProtobufRpcChannel(std::unique_ptr<StreamTransport> transport,

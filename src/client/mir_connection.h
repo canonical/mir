@@ -53,7 +53,6 @@ class EventHandlerRegister;
 namespace rpc
 {
 class MirBasicRpcChannel;
-class SimpleRpcThread;
 }
 }
 
@@ -68,6 +67,11 @@ class InputPlatform;
 namespace logging
 {
 class Logger;
+}
+
+namespace dispatch
+{
+class SimpleDispatchThread;
 }
 }
 
@@ -191,7 +195,7 @@ private:
 
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 
-    std::unique_ptr<mir::client::rpc::SimpleRpcThread> const eventloop;
+    std::unique_ptr<mir::dispatch::SimpleDispatchThread> const eventloop;
 
     std::vector<int> extra_platform_data;
 

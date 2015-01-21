@@ -16,36 +16,37 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_CLIENT_RPC_SIMPLE_RPC_THREAD_H_
-#define MIR_CLIENT_RPC_SIMPLE_RPC_THREAD_H_
+#ifndef MIR_DISPATCH_DISPATCHABLE_H_
+#define MIR_DISPATCH_DISPATCHABLE_H_
 
-#include <memory>
-#include <thread>
 #include "mir/fd.h"
 
 namespace mir
 {
-class Dispatchable;
-
-namespace client
+namespace dispatch
 {
-namespace rpc
-{
-
-class SimpleRpcThread
+class Dispatchable
 {
 public:
-    SimpleRpcThread(std::shared_ptr<Dispatchable> const& dispatchee);
-    ~SimpleRpcThread() noexcept;
+    Dispatchable() = default;
+    virtual ~Dispatchable() = default;
 
-private:
-    Fd shutdown_fd;
-    std::thread eventloop;
+    Dispatchable& operator=(Dispatchable const&) = delete;
+    Dispatchable(Dispatchable const&) = delete;
+
+    /**
+     * \brief Get a poll()able file descriptor
+     * \return A file descriptor usable with poll() or equivalent function calls that
+     *         becomes readable when there are dispatchable events
+     */
+    virtual Fd watch_fd() const = 0;
+
+    /**
+     * \brief Dispatch one pending event
+     */
+    virtual void dispatch() = 0;
 };
-
-}
 }
 }
 
-
-#endif // MIR_CLIENT_RPC_SIMPLE_RPC_THREAD_H_
+#endif // MIR_DISPATCH_DISPATCHABLE_H_

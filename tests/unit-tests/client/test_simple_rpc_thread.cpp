@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "src/client/rpc/simple_rpc_thread.h"
-#include "mir/dispatchable.h"
+#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/dispatchable.h"
 #include "mir/fd.h"
 #include "mir_test/pipe.h"
 #include "mir_test/signal.h"
@@ -29,7 +29,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mclr = mir::client::rpc;
+namespace md = mir::dispatch;
 namespace mt = mir::test;
 
 namespace
@@ -50,7 +50,7 @@ private:
     mt::Pipe pipe;
 };
 
-class MockDispatchable : public mir::Dispatchable
+class MockDispatchable : public md::Dispatchable
 {
 public:
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
@@ -69,7 +69,7 @@ TEST_F(SimpleRPCThreadTest, CallsDispatchWhenFdIsReadable)
     auto dispatched = std::make_shared<mt::Signal>();
     ON_CALL(*dispatchable, dispatch()).WillByDefault(Invoke([dispatched]() { dispatched->raise(); }));
 
-    mclr::SimpleRpcThread dispatcher{dispatchable};
+    md::SimpleDispatchThread dispatcher{dispatchable};
 
     uint64_t dummy{0xdeadbeef};
     EXPECT_EQ(sizeof(dummy), write(test_fd, &dummy, sizeof(dummy)));
@@ -95,7 +95,7 @@ TEST_F(SimpleRPCThreadTest, StopsCallingDispatchOnceFdIsNotReadable)
                                                          read(this->watch_fd, &buffer, sizeof(buffer));
                                                      }));
 
-    mclr::SimpleRpcThread dispatcher{dispatchable};
+    md::SimpleDispatchThread dispatcher{dispatchable};
 
     EXPECT_EQ(sizeof(dummy), write(test_fd, &dummy, sizeof(dummy)));
 

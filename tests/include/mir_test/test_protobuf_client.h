@@ -30,12 +30,9 @@
 
 namespace mir
 {
-namespace client
+namespace dispatch
 {
-namespace rpc
-{
-class SimpleRpcThread;
-}
+class SimpleDispatchThread;
 }
 namespace test
 {
@@ -49,7 +46,7 @@ struct TestProtobufClient
 
     std::shared_ptr<doubles::MockRpcReport> rpc_report;
     std::shared_ptr<google::protobuf::RpcChannel> channel;
-    std::shared_ptr<client::rpc::SimpleRpcThread> eventloop;
+    std::shared_ptr<dispatch::SimpleDispatchThread> eventloop;
     mir::protobuf::DisplayServer::Stub display_server;
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::SurfaceParameters surface_parameters;

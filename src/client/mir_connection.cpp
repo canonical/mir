@@ -23,8 +23,8 @@
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
-#include "mir/dispatchable.h"
-#include "rpc/simple_rpc_thread.h"
+#include "mir/dispatch/dispatchable.h"
+#include "mir/dispatch/simple_dispatch_thread.h"
 #include "connection_configuration.h"
 #include "display_configuration.h"
 #include "connection_surface_map.h"
@@ -40,6 +40,7 @@
 #include <boost/exception/diagnostic_information.hpp>
 
 namespace mcl = mir::client;
+namespace md = mir::dispatch;
 namespace mircv = mir::input::receiver;
 namespace gp = google::protobuf;
 
@@ -109,7 +110,7 @@ MirConnection::MirConnection(
         lifecycle_control(conf.the_lifecycle_control()),
         surface_map(conf.the_surface_map()),
         event_handler_register(conf.the_event_handler_register()),
-        eventloop{std::unique_ptr<mcl::rpc::SimpleRpcThread>{new mcl::rpc::SimpleRpcThread{std::dynamic_pointer_cast<mir::Dispatchable>(channel)}}}
+        eventloop{new md::SimpleDispatchThread{std::dynamic_pointer_cast<md::Dispatchable>(channel)}}
 {
     connect_result.set_error("connect not called");
     {

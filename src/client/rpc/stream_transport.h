@@ -25,7 +25,7 @@
 #include <stdint.h>
 
 #include "mir/fd.h"
-#include "mir/dispatchable.h"
+#include "mir/dispatch/dispatchable.h"
 
 namespace mir
 {
@@ -65,7 +65,7 @@ namespace rpc
  *       from different threads. Multiple threads calling the same
  *       function need synchronisation.
  */
-class StreamTransport : public Dispatchable
+class StreamTransport : public dispatch::Dispatchable
 {
 public:
     /**

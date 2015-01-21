@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "simple_rpc_thread.h"
-#include "mir/dispatchable.h"
+#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/dispatchable.h"
 
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -25,11 +25,11 @@
 #include <signal.h>
 #include <boost/exception/all.hpp>
 
-namespace mclr = mir::client::rpc;
+namespace md = mir::dispatch;
 
 namespace
 {
-void wait_for_events_forever(std::shared_ptr<mir::Dispatchable> const& dispatchee, mir::Fd shutdown_fd)
+void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee, mir::Fd shutdown_fd)
 {
     auto epoll_fd = mir::Fd{epoll_create1(0)};
     if (epoll_fd == mir::Fd::invalid)
@@ -66,7 +66,7 @@ void wait_for_events_forever(std::shared_ptr<mir::Dispatchable> const& dispatche
 
 }
 
-mclr::SimpleRpcThread::SimpleRpcThread(std::shared_ptr<mir::Dispatchable> const& dispatchee)
+md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable> const& dispatchee)
 {
     int pipefds[2];
     if (pipe(pipefds) < 0)
@@ -93,7 +93,7 @@ mclr::SimpleRpcThread::SimpleRpcThread(std::shared_ptr<mir::Dispatchable> const&
                             }};
 }
 
-mclr::SimpleRpcThread::~SimpleRpcThread() noexcept
+md::SimpleDispatchThread::~SimpleDispatchThread() noexcept
 {
     ::close(shutdown_fd);
     if (eventloop.joinable())
