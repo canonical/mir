@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -41,6 +41,7 @@ public:
     /* We want to keep implicit copy and move methods */
 
     void add(Rectangle const& rect);
+    void remove(Rectangle const& rect);
     void clear();
     Rectangle bounding_rectangle() const;
     void confine(Point& point) const;
