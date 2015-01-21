@@ -71,12 +71,6 @@ public:
         transport = std::make_shared<TransportMechanism>(transport_fd);
     }
 
-    virtual ~StreamTransportTest()
-    {
-        // We don't care about errors, so unconditionally close the test fd.
-        close(test_fd);
-    }
-
     mir::Fd transport_fd;
     mir::Fd test_fd;
     std::shared_ptr<TransportMechanism> transport;
