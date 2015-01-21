@@ -249,6 +249,46 @@ TYPED_TEST(StreamTransportTest, NoEventsDispatchedUntilDispatchCalled)
     EXPECT_TRUE(disconnected);
 }
 
+TYPED_TEST(StreamTransportTest, DispatchesSingleEventAtATime)
+{
+    using namespace testing;
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    bool data_available{false};
+    bool disconnected{false};
+
+    uint64_t dummy{0xdeadbeef};
+    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+    ::close(this->test_fd);
+
+    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([this, dummy, &data_available]()
+                                                                 {
+                                                                     decltype(dummy) buffer;
+                                                                     this->transport->receive_data(&buffer, sizeof(buffer));
+                                                                     data_available = true;
+                                                                 }));
+    ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([&disconnected]()
+                                                               { disconnected = true; }));
+
+    this->transport->register_observer(observer);
+
+    EXPECT_FALSE(data_available);
+    EXPECT_FALSE(disconnected);
+
+    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+
+    this->transport->dispatch();
+
+    EXPECT_TRUE(data_available xor disconnected);
+
+    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+
+    this->transport->dispatch();
+
+    EXPECT_TRUE(data_available);
+    EXPECT_TRUE(disconnected);
+}
+
 TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnect)
 {
     using namespace testing;
