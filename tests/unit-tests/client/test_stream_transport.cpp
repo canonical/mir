@@ -22,6 +22,7 @@
 
 #include "mir_test/auto_unblock_thread.h"
 #include "mir_test/signal.h"
+#include "mir_test/fd_utils.h"
 #include "mir/raii.h"
 
 #include <sys/socket.h>
@@ -43,6 +44,7 @@
 #include <gmock/gmock.h>
 
 namespace mclr = mir::client::rpc;
+namespace mt = mir::test;
 
 namespace
 {
@@ -52,57 +54,6 @@ public:
     MOCK_METHOD0(on_data_available, void());
     MOCK_METHOD0(on_disconnected, void());
 };
-
-::testing::AssertionResult std_call_succeeded(int retval)
-{
-    if (retval >= 0)
-    {
-        return ::testing::AssertionSuccess();
-    }
-    else
-    {
-        return ::testing::AssertionFailure() << "errno: "
-                                             << errno
-                                             << " ["
-                                             << strerror(errno)
-                                             << "]";
-    }
-}
-
-template<typename Period, typename Rep>
-::testing::AssertionResult fd_becomes_readable(mir::Fd const& fd,
-                                               std::chrono::duration<Period, Rep> timeout)
-{
-    int timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
-
-    pollfd readable;
-    readable.events = POLLIN;
-    readable.fd = fd;
-
-    auto result = std_call_succeeded(poll(&readable, 1, timeout_ms));
-    if (result)
-    {
-        if (readable.revents & POLLERR)
-        {
-            return ::testing::AssertionFailure() << "error condition on fd";
-        }
-        if (readable.revents & POLLNVAL)
-        {
-            return ::testing::AssertionFailure() << "fd is invalid";
-        }
-        if (!(readable.revents & POLLIN))
-        {
-            return ::testing::AssertionFailure() << "fd is not readable";
-        }
-        return ::testing::AssertionSuccess();
-    }
-    return result;
-}
-
-::testing::AssertionResult fd_is_readable(mir::Fd const& fd)
-{
-    return fd_becomes_readable(fd, std::chrono::seconds{0});
-}
 }
 
 template <typename TransportMechanism>
@@ -142,7 +93,7 @@ TYPED_TEST(StreamTransportTest, WatchFdIsPollable)
     socket_readable.events = POLLIN;
     socket_readable.fd = this->transport->watch_fd();
 
-    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 0)));
+    ASSERT_TRUE(mt::std_call_succeeded(poll(&socket_readable, 1, 0)));
 
     EXPECT_FALSE(socket_readable.revents & POLLERR);
     EXPECT_FALSE(socket_readable.revents & POLLNVAL);
@@ -150,38 +101,25 @@ TYPED_TEST(StreamTransportTest, WatchFdIsPollable)
 
 TYPED_TEST(StreamTransportTest, WatchFdNotifiesReadableWhenDataPending)
 {
-    pollfd socket_readable;
-    socket_readable.events = POLLIN;
-    socket_readable.fd = this->transport->watch_fd();
-
     uint64_t dummy{0xdeadbeef};
     EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
-    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 1000)));
-
-    ASSERT_FALSE(socket_readable.revents & POLLERR);
-    ASSERT_FALSE(socket_readable.revents & POLLNVAL);
-
-    EXPECT_TRUE(socket_readable.revents & POLLIN);
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 }
 
 TYPED_TEST(StreamTransportTest, WatchFdRemainsUnreadableUntilEventPending)
 {
-    EXPECT_FALSE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    EXPECT_FALSE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
     uint64_t dummy{0xdeadbeef};
     EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 }
 
 TYPED_TEST(StreamTransportTest, WatchFdIsNoLongerReadableAfterEventProcessing)
 {
     using namespace testing;
-
-    pollfd socket_readable;
-    socket_readable.events = POLLIN;
-    socket_readable.fd = this->transport->watch_fd();
 
     uint64_t dummy{0xdeadbeef};
 
@@ -198,18 +136,11 @@ TYPED_TEST(StreamTransportTest, WatchFdIsNoLongerReadableAfterEventProcessing)
 
     EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
-    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 1000)));
-
-    ASSERT_FALSE(socket_readable.revents & POLLERR);
-    ASSERT_FALSE(socket_readable.revents & POLLNVAL);
-
-    EXPECT_TRUE(socket_readable.revents & POLLIN);
+    ASSERT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
     this->transport->dispatch();
 
-    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 0)));
-
-    EXPECT_FALSE(socket_readable.revents & POLLIN);
+    EXPECT_FALSE(mt::fd_is_readable(this->test_fd));
 }
 
 TYPED_TEST(StreamTransportTest, NoEventsDispatchedUntilDispatchCalled)
@@ -239,8 +170,8 @@ TYPED_TEST(StreamTransportTest, NoEventsDispatchedUntilDispatchCalled)
     EXPECT_FALSE(data_available);
     EXPECT_FALSE(disconnected);
 
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
-    while (fd_is_readable(this->transport->watch_fd()))
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    while (mt::fd_is_readable(this->transport->watch_fd()))
     {
         this->transport->dispatch();
     }
@@ -275,13 +206,13 @@ TYPED_TEST(StreamTransportTest, DispatchesSingleEventAtATime)
     EXPECT_FALSE(data_available);
     EXPECT_FALSE(disconnected);
 
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
     this->transport->dispatch();
 
     EXPECT_TRUE(data_available xor disconnected);
 
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
     this->transport->dispatch();
 
@@ -302,8 +233,8 @@ TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnect)
 
     close(this->test_fd);
 
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
-    while (fd_is_readable(this->transport->watch_fd()))
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    while (mt::fd_is_readable(this->transport->watch_fd()))
     {
         this->transport->dispatch();
     }
@@ -339,7 +270,7 @@ TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnectWhileReading)
     }
 
     // There should now be a disconnect event pending...
-    EXPECT_TRUE(fd_is_readable(this->transport->watch_fd()));
+    EXPECT_TRUE(mt::fd_is_readable(this->transport->watch_fd()));
 
     this->transport->dispatch();
 
@@ -362,7 +293,7 @@ TYPED_TEST(StreamTransportTest, NotifiesOnDataAvailable)
     uint64_t dummy{0xdeadbeef};
     EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
     this->transport->dispatch();
 
@@ -391,8 +322,8 @@ TYPED_TEST(StreamTransportTest, KeepsNotifyingOfAvailableDataUntilAllIsRead)
 
     EXPECT_EQ(data.size(), write(this->test_fd, data.data(), data.size()));
 
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
-    while (fd_is_readable(this->transport->watch_fd()))
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    while (mt::fd_is_readable(this->transport->watch_fd()))
     {
         this->transport->dispatch();
     }
@@ -422,13 +353,13 @@ TYPED_TEST(StreamTransportTest, StopsNotifyingOnceAllDataIsRead)
 
     EXPECT_EQ(data.size(), write(this->test_fd, data.data(), data.size()));
 
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     while (bytes_left > 0)
     {
         this->transport->dispatch();
     }
 
-    EXPECT_FALSE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    EXPECT_FALSE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 }
 
 TYPED_TEST(StreamTransportTest, DoesntSendDataAvailableNotificationOnDisconnect)
@@ -455,21 +386,21 @@ TYPED_TEST(StreamTransportTest, DoesntSendDataAvailableNotificationOnDisconnect)
 
     this->transport->register_observer(observer);
 
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
-    while (fd_is_readable(this->transport->watch_fd()))
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    while (mt::fd_is_readable(this->transport->watch_fd()))
     {
         this->transport->dispatch();
     }
 
     ::close(this->test_fd);
 
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
-    while (fd_is_readable(this->transport->watch_fd()))
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    while (mt::fd_is_readable(this->transport->watch_fd()))
     {
         this->transport->dispatch();
     }
 
-    EXPECT_FALSE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    EXPECT_FALSE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     EXPECT_EQ(1, notify_count);
     EXPECT_TRUE(disconnected);
 }
@@ -493,8 +424,8 @@ TYPED_TEST(StreamTransportTest, ReadsCorrectData)
 
     EXPECT_EQ(expected.size(), write(this->test_fd, expected.data(), expected.size()));
 
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
-    while (fd_is_readable(this->transport->watch_fd()))
+    EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    while (mt::fd_is_readable(this->transport->watch_fd()))
     {
         this->transport->dispatch();
     }
