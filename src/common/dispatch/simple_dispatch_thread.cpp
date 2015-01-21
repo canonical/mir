@@ -29,44 +29,44 @@ namespace md = mir::dispatch;
 
 namespace
 {
-md::fd_events epoll_to_fd_event(epoll_event const& event)
+md::FdEvents epoll_to_fd_event(epoll_event const& event)
 {
-    md::fd_events val{0};
+    md::FdEvents val{0};
     if (event.events & EPOLLIN)
     {
-        val |= md::fd_event::readable;
+        val |= md::FdEvent::readable;
     }
     if (event.events & EPOLLOUT)
     {
-        val = md::fd_event::writable;
+        val = md::FdEvent::writable;
     }
     if (event.events & (EPOLLHUP | EPOLLRDHUP))
     {
-        val |= md::fd_event::remote_closed;
+        val |= md::FdEvent::remote_closed;
     }
     if (event.events & EPOLLERR)
     {
-        val = md::fd_event::error;
+        val = md::FdEvent::error;
     }
     return val;
 }
 
-int fd_event_to_epoll(md::fd_events const& event)
+int fd_event_to_epoll(md::FdEvents const& event)
 {
     int epoll_value{0};
-    if (event & md::fd_event::readable)
+    if (event & md::FdEvent::readable)
     {
         epoll_value |= EPOLLIN;
     }
-    if (event & md::fd_event::writable)
+    if (event & md::FdEvent::writable)
     {
         epoll_value |= EPOLLOUT;
     }
-    if (event & md::fd_event::remote_closed)
+    if (event & md::FdEvent::remote_closed)
     {
         epoll_value |= EPOLLRDHUP | EPOLLHUP;
     }
-    if (event & md::fd_event::error)
+    if (event & md::FdEvent::error)
     {
         epoll_value |= EPOLLERR;
     }

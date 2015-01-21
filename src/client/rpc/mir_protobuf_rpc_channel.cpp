@@ -357,12 +357,12 @@ mir::Fd mir::client::rpc::MirProtobufRpcChannel::watch_fd() const
     return transport->watch_fd();
 }
 
-bool mir::client::rpc::MirProtobufRpcChannel::dispatch(md::fd_events events)
+bool mir::client::rpc::MirProtobufRpcChannel::dispatch(md::FdEvents events)
 {
     return transport->dispatch(events);
 }
 
-md::fd_events mclr::MirProtobufRpcChannel::relevant_events() const
+md::FdEvents mclr::MirProtobufRpcChannel::relevant_events() const
 {
     return transport->relevant_events();
 }

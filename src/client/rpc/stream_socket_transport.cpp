@@ -169,11 +169,11 @@ mir::Fd mclr::StreamSocketTransport::watch_fd() const
     return socket_fd;
 }
 
-bool mclr::StreamSocketTransport::dispatch(md::fd_events events)
+bool mclr::StreamSocketTransport::dispatch(md::FdEvents events)
 {
-    if (events & (md::fd_event::remote_closed | md::fd_event::error))
+    if (events & (md::FdEvent::remote_closed | md::FdEvent::error))
     {
-        if (events & md::fd_event::readable)
+        if (events & md::FdEvent::readable)
         {
             // If the remote end shut down cleanly it's possible there's some more
             // data left to read, or that reads will now return 0 (EOF)
@@ -189,16 +189,16 @@ bool mclr::StreamSocketTransport::dispatch(md::fd_events events)
         notify_disconnected();
         return false;
     }
-    else if (events & md::fd_event::readable)
+    else if (events & md::FdEvent::readable)
     {
         notify_data_available();
     }
     return true;
 }
 
-md::fd_events mclr::StreamSocketTransport::relevant_events() const
+md::FdEvents mclr::StreamSocketTransport::relevant_events() const
 {
-    return md::fd_event::readable | md::fd_event::remote_closed;
+    return md::FdEvent::readable | md::FdEvent::remote_closed;
 }
 
 mir::Fd mclr::StreamSocketTransport::open_socket(std::string const& path)

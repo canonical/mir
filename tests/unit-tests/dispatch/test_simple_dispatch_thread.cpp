@@ -54,8 +54,8 @@ class MockDispatchable : public md::Dispatchable
 {
 public:
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
-    MOCK_METHOD1(dispatch, bool(md::fd_events));
-    MOCK_CONST_METHOD0(relevant_events, md::fd_events());
+    MOCK_METHOD1(dispatch, bool(md::FdEvents));
+    MOCK_CONST_METHOD0(relevant_events, md::FdEvents());
 };
 
 }
@@ -66,10 +66,10 @@ TEST_F(SimpleDispatchThreadTest, CallsDispatchWhenFdIsReadable)
 
     auto dispatchable = std::make_shared<NiceMock<MockDispatchable>>();
     ON_CALL(*dispatchable, watch_fd()).WillByDefault(Return(watch_fd));
-    ON_CALL(*dispatchable, relevant_events()).WillByDefault(Return(md::fd_event::readable));
+    ON_CALL(*dispatchable, relevant_events()).WillByDefault(Return(md::FdEvent::readable));
 
     auto dispatched = std::make_shared<mt::Signal>();
-    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([dispatched](md::fd_events) { dispatched->raise(); return true; }));
+    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([dispatched](md::FdEvents) { dispatched->raise(); return true; }));
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -88,10 +88,10 @@ TEST_F(SimpleDispatchThreadTest, StopsCallingDispatchOnceFdIsNotReadable)
 
     auto dispatchable = std::make_shared<NiceMock<MockDispatchable>>();
     ON_CALL(*dispatchable, watch_fd()).WillByDefault(Return(watch_fd));
-    ON_CALL(*dispatchable, relevant_events()).WillByDefault(Return(md::fd_event::readable));
+    ON_CALL(*dispatchable, relevant_events()).WillByDefault(Return(md::FdEvent::readable));
 
     auto dispatched = std::make_shared<mt::Signal>();
-    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([this, &dispatch_count](md::fd_events)
+    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([this, &dispatch_count](md::FdEvents)
     {
         decltype(dummy) buffer;
 	dispatch_count++;
@@ -117,18 +117,18 @@ TEST_F(SimpleDispatchThreadTest, passes_dispatch_events_through)
 
     auto dispatchable = std::make_shared<NiceMock<MockDispatchable>>();
     ON_CALL(*dispatchable, watch_fd()).WillByDefault(Return(watch_fd));
-    ON_CALL(*dispatchable, relevant_events()).WillByDefault(Return(md::fd_event::readable | md::fd_event::remote_closed));
+    ON_CALL(*dispatchable, relevant_events()).WillByDefault(Return(md::FdEvent::readable | md::FdEvent::remote_closed));
 
     auto dispatched_with_only_readable = std::make_shared<mt::Signal>();
     auto dispatched_with_hangup = std::make_shared<mt::Signal>();
 
-    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([=](md::fd_events events)
+    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([=](md::FdEvents events)
                                                      {
-                                                         if (events == md::fd_event::readable)
+                                                         if (events == md::FdEvent::readable)
                                                          {
                                                              dispatched_with_only_readable->raise();
                                                          }
-                                                         if (events & md::fd_event::remote_closed)
+                                                         if (events & md::FdEvent::remote_closed)
                                                          {
                                                              dispatched_with_hangup->raise();
                                                              return false;
@@ -156,11 +156,11 @@ TEST_F(SimpleDispatchThreadTest, doesnt_call_dispatch_after_first_false_return)
 
     auto dispatchable = std::make_shared<NiceMock<MockDispatchable>>();
     ON_CALL(*dispatchable, watch_fd()).WillByDefault(Return(watch_fd));
-    ON_CALL(*dispatchable, relevant_events()).WillByDefault(Return(md::fd_event::readable));
+    ON_CALL(*dispatchable, relevant_events()).WillByDefault(Return(md::FdEvent::readable));
 
     auto dispatched_more_than_enough = std::make_shared<mt::Signal>();
 
-    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([dispatched_more_than_enough](md::fd_events)
+    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([dispatched_more_than_enough](md::FdEvents)
                                                      {
                                                           static std::atomic<int> dispatch_count{0};
                                                           int constexpr expected_count{10};
@@ -189,17 +189,17 @@ TEST_F(SimpleDispatchThreadTest, only_calls_dispatch_with_remote_closed_when_rel
 
     auto dispatchable = std::make_shared<NiceMock<MockDispatchable>>();
     ON_CALL(*dispatchable, watch_fd()).WillByDefault(Return(test_fd));
-    ON_CALL(*dispatchable, relevant_events()).WillByDefault(Return(md::fd_event::writable));
+    ON_CALL(*dispatchable, relevant_events()).WillByDefault(Return(md::FdEvent::writable));
     auto dispatched_writable = std::make_shared<mt::Signal>();
     auto dispatched_closed = std::make_shared<mt::Signal>();
 
-    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([=](md::fd_events events)
+    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([=](md::FdEvents events)
     {
-        if (events & md::fd_event::writable)
+        if (events & md::FdEvent::writable)
         {
             dispatched_writable->raise();
         }
-        if (events & md::fd_event::remote_closed)
+        if (events & md::FdEvent::remote_closed)
         {
             dispatched_closed->raise();
         }

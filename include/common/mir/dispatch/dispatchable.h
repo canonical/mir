@@ -26,14 +26,14 @@ namespace mir
 namespace dispatch
 {
 
-enum fd_event : uint32_t {
+enum FdEvent : uint32_t {
     readable =      1<<0,
     writable =      1<<1,
     remote_closed = 1<<2,
     error =         1<<3
 };
 
-using fd_events = uint32_t;
+using FdEvents = uint32_t;
 
 class Dispatchable
 {
@@ -62,15 +62,15 @@ public:
      * \note It is harmless to call dispatch() with an event that does not contain
      *       any of the events from relevant_events(). The function will do
      *       nothing in such a case.
-     * \note An implementation of dispatch() MUST handle fd_event::error,
+     * \note An implementation of dispatch() MUST handle FdEvent::error,
      *       if only to return false and terminate further event dispatch.
      */
-    virtual bool dispatch(fd_events events) = 0;
+    virtual bool dispatch(FdEvents events) = 0;
 
     /**
      * \brief The set of file-descriptor events this Dispatchable handles.
      */
-    virtual fd_events relevant_events() const = 0;
+    virtual FdEvents relevant_events() const = 0;
 };
 }
 }
