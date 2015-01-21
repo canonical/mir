@@ -1067,3 +1067,31 @@ TYPED_TEST(StreamTransportTest, ReturnsValidWatchFd)
     // A valid fd is >= 0, and we know that stdin, stdout, and stderr aren't correct.
     EXPECT_GE(this->transport->watch_fd(), 3);
 }
+
+::testing::AssertionResult StdlibCallSucceeded(int retval)
+{
+    if (retval >= 0)
+    {
+        return ::testing::AssertionSuccess();
+    }
+    else
+    {
+        return ::testing::AssertionFailure() << "errno: "
+                                             << errno
+                                             << "["
+                                             << strerror(errno)
+                                             << "]";
+    }
+}
+
+TYPED_TEST(StreamTransportTest, WatchFDIsPollable)
+{
+    pollfd socket_readable;
+    socket_readable.events = POLLIN;
+    socket_readable.fd = this->transport->watch_fd();
+
+    ASSERT_TRUE(StdlibCallSucceeded(poll(&socket_readable, 1, 0)));
+
+    EXPECT_FALSE(socket_readable.revents & POLLERR);
+    EXPECT_FALSE(socket_readable.revents & POLLNVAL);
+}

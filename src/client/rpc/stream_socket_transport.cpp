@@ -178,7 +178,7 @@ void mclr::StreamSocketTransport::send_message(
 
 int mclr::StreamSocketTransport::watch_fd() const
 {
-    return 65;
+    return epoll_create(EPOLL_CLOEXEC);
 }
 
 void mclr::StreamSocketTransport::init()
