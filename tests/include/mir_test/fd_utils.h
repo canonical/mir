@@ -30,21 +30,9 @@ namespace mir
 {
 namespace test
 {
-::testing::AssertionResult std_call_succeeded(int retval)
-{
-    if (retval >= 0)
-    {
-        return ::testing::AssertionSuccess();
-    }
-    else
-    {
-        return ::testing::AssertionFailure() << "errno: "
-                                             << errno
-                                             << " ["
-                                             << strerror(errno)
-                                             << "]";
-    }
-}
+::testing::AssertionResult std_call_succeeded(int retval);
+
+::testing::AssertionResult fd_is_readable(mir::Fd const& fd);
 
 template<typename Period, typename Rep>
 ::testing::AssertionResult fd_becomes_readable(mir::Fd const& fd,
@@ -75,12 +63,6 @@ template<typename Period, typename Rep>
     }
     return result;
 }
-
-::testing::AssertionResult fd_is_readable(mir::Fd const& fd)
-{
-    return fd_becomes_readable(fd, std::chrono::seconds{0});
-}
-
 }
 }
 
