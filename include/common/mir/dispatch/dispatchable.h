@@ -62,11 +62,13 @@ public:
      * \note It is harmless to call dispatch() with an event that does not contain
      *       any of the events from relevant_events(). The function will do
      *       nothing in such a case.
+     * \note An implementation of dispatch() MUST handle fd_event::error,
+     *       if only to return false and terminate further event dispatch.
      */
     virtual bool dispatch(fd_events events) = 0;
 
     /**
-     * \brief The set of file-descriptor events this Dispatchable handles
+     * \brief The set of file-descriptor events this Dispatchable handles.
      */
     virtual fd_events relevant_events() const = 0;
 };
