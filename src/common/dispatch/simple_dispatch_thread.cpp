@@ -150,7 +150,7 @@ md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable>
 
 md::SimpleDispatchThread::~SimpleDispatchThread() noexcept
 {
-    ::close(shutdown_fd);
+    shutdown_fd = mir::Fd{};
     if (eventloop.joinable())
     {
         eventloop.join();
