@@ -60,7 +60,7 @@ public:
 
 }
 
-TEST_F(SimpleDispatchThreadTest, CallsDispatchWhenFdIsReadable)
+TEST_F(SimpleDispatchThreadTest, calls_dispatch_when_fd_is_readable)
 {
     using namespace testing;
 
@@ -79,7 +79,7 @@ TEST_F(SimpleDispatchThreadTest, CallsDispatchWhenFdIsReadable)
     EXPECT_TRUE(dispatched->wait_for(std::chrono::seconds{1}));
 }
 
-TEST_F(SimpleDispatchThreadTest, StopsCallingDispatchOnceFdIsNotReadable)
+TEST_F(SimpleDispatchThreadTest, stops_calling_dispatch_once_fd_is_not_readable)
 {
     using namespace testing;
 
