@@ -113,13 +113,14 @@ mga::Display::Display(
         primary_attribs,
         hwc_config->active_attribs_for(mga::DisplayName::external)),
     gl_context{config.primary_config().current_format, *gl_config, *display_report},
-    display_buffer{create_display_buffer(
+    primary_db{create_display_buffer(
         *display_buffer_builder,
         primary_attribs,
         gl_program_factory,
         gl_context,
         overlay_option)},
-    display_change_pipe(new DisplayChangePipe)
+    display_change_pipe(new DisplayChangePipe),
+    gl_program_factory(gl_program_factory)
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
     safe_power_mode(*hwc_config, mir_power_mode_on);
@@ -138,17 +139,8 @@ mga::Display::~Display() noexcept
         safe_power_mode(*hwc_config, mir_power_mode_off);
 }
 
-void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) const
 {
-    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
-
-    if (config.primary_config().power_mode == mir_power_mode_on)
-        f(*display_buffer);
-}
-
-std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
-{
-    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     if (configuration_dirty)
     {
         config = mga::DisplayConfiguration(
@@ -157,6 +149,38 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
         configuration_dirty = false;
     }
 
+    if (config.external_config().connected)
+    {
+        printf("CONNECT.\n");
+        external_db = create_display_buffer(
+            *display_buffer_builder,
+            hwc_config->active_attribs_for(mga::DisplayName::external),
+            gl_program_factory,
+            gl_context,
+            mga::OverlayOptimization::disabled);
+    }
+    else
+    {
+        printf("DISCONNECT.\n");
+        external_db.reset();
+    }
+}
+
+void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+{
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+    update_configuration(lock);
+
+    if (external_db)// && config.external_config().power_mode == mir_power_mode_on)
+        f(*external_db);
+    if (config.primary_config().power_mode == mir_power_mode_on)
+        f(*primary_db);
+}
+
+std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
+{
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+    update_configuration(lock);
     return std::unique_ptr<mg::DisplayConfiguration>(new mga::DisplayConfiguration(config));
 }
 
@@ -184,7 +208,7 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
                 config[output.id].power_mode = output.power_mode;
             }
 
-            display_buffer->configure(output.power_mode, output.orientation);
+            primary_db->configure(output.power_mode, output.orientation);
         }
     });
 }

@@ -35,9 +35,10 @@ mg::DisplayConfigurationOutput external_output(
     std::vector<mg::DisplayConfigurationMode> external_modes;
     if (external_attribs.connected)
     {
+        printf("CONN\n");
         external_modes.emplace_back(
             mg::DisplayConfigurationMode{external_attribs.pixel_size, external_attribs.vrefresh_hz});
-    }
+    } else printf("DCON\n");
 
     bool used{false};
     return {
@@ -125,6 +126,11 @@ void mga::DisplayConfiguration::for_each_output(std::function<void(mg::UserDispl
 mg::DisplayConfigurationOutput const& mga::DisplayConfiguration::primary_config()
 {
     return configurations[primary_id];
+}
+
+mg::DisplayConfigurationOutput const& mga::DisplayConfiguration::external_config()
+{
+    return configurations[external_id];
 }
 
 mg::DisplayConfigurationOutput& mga::DisplayConfiguration::operator[](mg::DisplayConfigurationOutputId const& disp_id)

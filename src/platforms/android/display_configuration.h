@@ -43,6 +43,7 @@ public:
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
 
     DisplayConfigurationOutput const& primary_config();
+    DisplayConfigurationOutput const& external_config();
     DisplayConfigurationOutput& operator[](DisplayConfigurationOutputId const&);
 
 private:
