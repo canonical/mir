@@ -54,8 +54,8 @@ class MockDispatchable : public md::Dispatchable
 {
 public:
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
-    MOCK_METHOD1(dispatch, void(md::fd_event));
-    MOCK_CONST_METHOD0(relevant_events, md::fd_event());
+    MOCK_METHOD1(dispatch, void(md::fd_events));
+    MOCK_CONST_METHOD0(relevant_events, md::fd_events());
 };
 
 }
@@ -68,7 +68,7 @@ TEST_F(SimpleDispatchThreadTest, CallsDispatchWhenFdIsReadable)
     ON_CALL(*dispatchable, watch_fd()).WillByDefault(Return(watch_fd));
 
     auto dispatched = std::make_shared<mt::Signal>();
-    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([dispatched](md::fd_event) { dispatched->raise(); }));
+    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([dispatched](md::fd_events) { dispatched->raise(); }));
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -89,7 +89,7 @@ TEST_F(SimpleDispatchThreadTest, StopsCallingDispatchOnceFdIsNotReadable)
     ON_CALL(*dispatchable, watch_fd()).WillByDefault(Return(watch_fd));
 
     auto dispatched = std::make_shared<mt::Signal>();
-    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([this, &dispatch_count](md::fd_event)
+    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([this, &dispatch_count](md::fd_events)
                                                      {
                                                          decltype(dummy) buffer;
                                                          dispatch_count++;
@@ -103,4 +103,41 @@ TEST_F(SimpleDispatchThreadTest, StopsCallingDispatchOnceFdIsNotReadable)
     std::this_thread::sleep_for(std::chrono::seconds{1});
 
     EXPECT_EQ(1, dispatch_count);
+}
+
+TEST_F(SimpleDispatchThreadTest, passes_dispatch_events_through)
+{
+    using namespace testing;
+
+    uint64_t dummy{0xdeadbeef};
+    std::atomic<int> dispatch_count{0};
+
+    auto dispatchable = std::make_shared<NiceMock<MockDispatchable>>();
+    ON_CALL(*dispatchable, watch_fd()).WillByDefault(Return(watch_fd));
+
+    auto dispatched_with_only_readable = std::make_shared<mt::Signal>();
+    auto dispatched_with_hangup = std::make_shared<mt::Signal>();
+
+    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([=](md::fd_events events)
+                                                     {
+                                                         if (events == md::fd_event::readable)
+                                                         {
+                                                             dispatched_with_only_readable->raise();
+                                                         }
+                                                         if (events & md::fd_event::remote_closed)
+                                                         {
+                                                             dispatched_with_hangup->raise();
+                                                         }
+                                                     }));
+
+    md::SimpleDispatchThread dispatcher{dispatchable};
+
+    EXPECT_EQ(sizeof(dummy), write(test_fd, &dummy, sizeof(dummy)));
+
+    EXPECT_TRUE(dispatched_with_only_readable->wait_for(std::chrono::seconds{1}));
+
+    // This will trigger hangup
+    ::close(test_fd);
+
+    EXPECT_TRUE(dispatched_with_hangup->wait_for(std::chrono::seconds{1}));
 }

@@ -183,7 +183,7 @@ mir::Fd mclr::StreamSocketTransport::watch_fd() const
     return epoll_fd;
 }
 
-void mclr::StreamSocketTransport::dispatch(md::fd_event /*event*/)
+void mclr::StreamSocketTransport::dispatch(md::fd_events /*event*/)
 {
     epoll_event event;
     epoll_wait(epoll_fd, &event, 1, 0);
@@ -214,7 +214,7 @@ void mclr::StreamSocketTransport::dispatch(md::fd_event /*event*/)
     }
 }
 
-md::fd_event mclr::StreamSocketTransport::relevant_events() const
+md::fd_events mclr::StreamSocketTransport::relevant_events() const
 {
     return md::fd_event::readable;
 }

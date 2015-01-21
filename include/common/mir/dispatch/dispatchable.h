@@ -26,12 +26,14 @@ namespace mir
 namespace dispatch
 {
 
-enum fd_event {
+enum fd_event : uint32_t {
     readable =      1<<0,
     writable =      1<<1,
     remote_closed = 1<<2,
     error =         1<<3
 };
+
+using fd_events = uint32_t;
 
 class Dispatchable
 {
@@ -59,12 +61,12 @@ public:
      *       any of the events from relevant_events(). The function will do
      *       nothing in such a case.
      */
-    virtual void dispatch(fd_event event) = 0;
+    virtual void dispatch(fd_events events) = 0;
 
     /**
      * \brief The set of file-descriptor events this Dispatchable handles
      */
-    virtual fd_event relevant_events() const = 0;
+    virtual fd_events relevant_events() const = 0;
 };
 }
 }

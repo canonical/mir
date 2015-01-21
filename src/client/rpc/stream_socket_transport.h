@@ -45,8 +45,8 @@ public:
     void send_message(std::vector<uint8_t> const& buffer, std::vector<mir::Fd> const& fds) override;
 
     Fd watch_fd() const override;
-    void dispatch(mir::dispatch::fd_event event) override;
-    mir::dispatch::fd_event relevant_events() const override;
+    void dispatch(mir::dispatch::fd_events event) override;
+    mir::dispatch::fd_events relevant_events() const override;
 private:
     Fd open_socket(std::string const& path);
     void notify_data_available();

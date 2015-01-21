@@ -29,6 +29,24 @@ namespace md = mir::dispatch;
 
 namespace
 {
+md::fd_events epoll_to_fd_event(epoll_event const& event)
+{
+    md::fd_events val{0};
+    if (event.events & EPOLLIN)
+    {
+        val |= md::fd_event::readable;
+    }
+    if (event.events & (EPOLLHUP | EPOLLRDHUP))
+    {
+        val |= md::fd_event::remote_closed;
+    }
+    if (event.events & EPOLLERR)
+    {
+        val = md::fd_event::error;
+    }
+    return val;
+}
+
 void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee, mir::Fd shutdown_fd)
 {
     auto epoll_fd = mir::Fd{epoll_create1(0)};
@@ -41,24 +59,31 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
     epoll_event event;
     memset(&event, 0, sizeof(event));
 
+    enum fd_names : uint32_t {
+        shutdown,
+        dispatchee_fd
+    };
+
     // We only care when the shutdown pipe has been closed
+    event.data.u32 = fd_names::shutdown;
     event.events = EPOLLRDHUP;
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, shutdown_fd, &event);
 
     // We want readability or closure for the dispatchee.
+    event.data.u32 = fd_names::dispatchee_fd;
     event.events = EPOLLIN | EPOLLRDHUP;
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, dispatchee->watch_fd(), &event);
 
     for (;;)
     {
         epoll_wait(epoll_fd, &event, 1, -1);
-        if (event.events & EPOLLIN)
+        if (event.data.u32 == fd_names::dispatchee_fd)
         {
-            dispatchee->dispatch(md::fd_event::readable);
+            dispatchee->dispatch(epoll_to_fd_event(event));
         }
-        else if (event.events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+        else if (event.data.u32 == fd_names::shutdown)
         {
-            // On hangup we go away.
+            // The only thing we do with the shutdown fd is to close it.
             return;
         }
     }
