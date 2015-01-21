@@ -52,14 +52,14 @@ struct mga::DisplayChangePipe
 
     void notify_change()
     {
-        if (::write(write_pipe, &data, sizeof(data)))
+        if (::write(write_pipe, &data, sizeof(data)) == -1)
             BOOST_THROW_EXCEPTION(std::runtime_error("failed to write to display change pipe"));
     }
 
     void ack_change()
     {
         char tmp{'b'};
-        if (::read(read_pipe, &tmp, sizeof(tmp)))
+        if (::read(read_pipe, &tmp, sizeof(tmp)) == -1)
             BOOST_THROW_EXCEPTION(std::runtime_error("failed to read from display change pipe"));
     }
     mir::Fd read_pipe;
