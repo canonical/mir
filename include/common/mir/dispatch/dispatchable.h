@@ -46,8 +46,8 @@ public:
 
     /**
      * \brief Get a poll()able file descriptor
-     * \return A file descriptor usable with poll() or equivalent function calls that
-     *         becomes readable when there are dispatchable events
+     * \return A file descriptor usable with poll() or equivalent function calls.
+     *         relevant_events() contains the set of event types to watch for.
      */
     virtual Fd watch_fd() const = 0;
 
