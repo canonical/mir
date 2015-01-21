@@ -90,12 +90,12 @@ TEST_F(SimpleDispatchThreadTest, StopsCallingDispatchOnceFdIsNotReadable)
 
     auto dispatched = std::make_shared<mt::Signal>();
     ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([this, &dispatch_count](md::fd_events)
-                                                     {
-                                                         decltype(dummy) buffer;
-                                                         dispatch_count++;
-                                                         read(this->watch_fd, &buffer, sizeof(buffer));
-                                                         return true;
-                                                     }));
+    {
+        decltype(dummy) buffer;
+	dispatch_count++;
+	EXPECT_THAT(read(this->watch_fd, &buffer, sizeof(buffer)), Eq(sizeof(buffer)));
+	return true;
+    }));
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
