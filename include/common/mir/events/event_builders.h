@@ -18,22 +18,24 @@
 
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
+#ifndef MIR_EVENT_BUILDERS_H_
+#define MIR_EVENT_BUILDERS_H_
+
 #include "mir_toolkit/event.h"
 
 #include "mir/geometry/size.h"
 
-#ifndef MIR_EVENT_BUILDERS_H_
-#define MIR_EVENT_BUILDERS_H_
+#include <memory>
 
 namespace mir
 {
 namespace events
 {
-MirEvent make_orientation_event(int surface_id, MirOrientation orientation);
-MirEvent make_prompt_session_event(MirPromptSessionState state);
-MirEvent make_resize_event(int surface_id, geometry::Size const& size);
-MirEvent make_surface_event(int surface_id, MirSurfaceAttrib attribute, int value);
-MirEvent make_close_surface_event(int surface_id);
+std::shared_ptr<MirEvent> make_orientation_event(int surface_id, MirOrientation orientation);
+std::shared_ptr<MirEvent> make_prompt_session_event(MirPromptSessionState state);
+std::shared_ptr<MirEvent> make_resize_event(int surface_id, geometry::Size const& size);
+std::shared_ptr<MirEvent> make_surface_event(int surface_id, MirSurfaceAttrib attribute, int value);
+std::shared_ptr<MirEvent> make_close_surface_event(int surface_id);
 }
 }
 
