@@ -34,7 +34,11 @@ class StubScene : public compositor::Scene
 public:
     compositor::SceneElementSequence scene_elements_for(compositor::CompositorID) override
     {
-          return {};
+        return {};
+    }
+    int frames_pending(compositor::CompositorID) const override
+    {
+        return 0;
     }
     void register_compositor(compositor::CompositorID) override
     {

@@ -718,6 +718,12 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
             this));
 }
 
+int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
+{
+    std::unique_lock<std::mutex> lk(guard);
+    return surface_buffer_stream->buffers_ready_for_compositor(id);
+}
+
 void ms::BasicSurface::consume(MirEvent const& event)
 {
     input_sender->send_event(event, server_input_channel);

@@ -114,6 +114,7 @@ public:
         CurrentRenderingTarget target{buffer};
 
         auto display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
+        auto const comp_id = display_buffer_compositor.get();
 
         CompositorReport::SubCompositorId report_id =
             display_buffer_compositor.get();
@@ -147,12 +148,17 @@ public:
                  * to ensure all surfaces' queues are fully drained.
                  */
                 frames_scheduled--;
+
                 lock.unlock();
 
                 display_buffer_compositor->composite(
-                    scene->scene_elements_for(display_buffer_compositor.get()));
+                    scene->scene_elements_for(comp_id));
 
                 lock.lock();
+
+                int pending = scene->frames_pending(comp_id);
+                if (pending > frames_scheduled)
+                    frames_scheduled = pending;
             }
         }
     }

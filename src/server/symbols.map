@@ -31,6 +31,7 @@ MIR_SERVER_29 {
     mir::compositor::Scene::remove_observer*;
     mir::compositor::Scene::Scene*;
     mir::compositor::Scene::scene_elements_for*;
+    mir::compositor::Scene::frames_pending*;
     mir::compositor::Scene::unregister_compositor*;
     mir::DefaultServerConfiguration::clock*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
