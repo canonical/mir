@@ -17,8 +17,6 @@
  */
 
 #include <functional>
-#include <string>
-#include <cstring>
 #include <stdexcept>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
