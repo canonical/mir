@@ -24,13 +24,19 @@
 #include <system_error>
 
 #include <unistd.h>
+#include <fcntl.h>
 
 namespace mt = mir::test;
 
 mt::Pipe::Pipe()
+    : Pipe(0)
+{
+}
+
+mt::Pipe::Pipe(int flags)
 {
     int pipefd[2];
-    if (pipe(pipefd))
+    if (pipe2(pipefd, flags))
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(std::system_error(errno,

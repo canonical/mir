@@ -30,6 +30,7 @@ class Pipe
 {
 public:
     Pipe();
+    Pipe(int flags);
     ~Pipe() = default;
 
     Fd read_fd() const;
