@@ -151,7 +151,7 @@ public:
      * \return A file descriptor usable with poll() or equivalent function calls that
      *         becomes readable when there are dispatchable events
      */
-    virtual int watch_fd() const = 0;
+    virtual Fd watch_fd() const = 0;
 
     /**
      * \brief Dispatch one pending event

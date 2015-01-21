@@ -182,7 +182,7 @@ void mclr::StreamSocketTransport::send_message(
         mir::send_fds(socket_fd, fds);
 }
 
-int mclr::StreamSocketTransport::watch_fd() const
+mir::Fd mclr::StreamSocketTransport::watch_fd() const
 {
     return epoll_fd;
 }

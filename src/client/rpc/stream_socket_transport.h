@@ -45,7 +45,7 @@ public:
     void receive_data(void* buffer, size_t bytes_requested, std::vector<Fd>& fds) override;
     void send_message(std::vector<uint8_t> const& buffer, std::vector<mir::Fd> const& fds) override;
 
-    int watch_fd() const override;
+    Fd watch_fd() const override;
     bool dispatch() override;
 
 private:
