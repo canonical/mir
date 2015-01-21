@@ -16,6 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+
 #include "mir/scene/surface_event_source.h"
 
 #include "mir/geometry/size.h"
