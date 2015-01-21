@@ -103,8 +103,7 @@ mir_connection_create_spec_for_menu(MirConnection* connection,
  *                          return a surface of this height.
  * \param [in] format       Pixel format for the surface.
  * \param [in] parent       A valid parent surface for this tooltip.
- * \param [in] rect         A target zone relative to parent where the tooltip
- *                          will
+ * \param [in] rect         A target zone relative to parent.
  * \return                  A handle that can be passed to mir_surface_create()
  *                          to complete construction.
  */
