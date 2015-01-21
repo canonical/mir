@@ -148,7 +148,6 @@ public:
                  * to ensure all surfaces' queues are fully drained.
                  */
                 frames_scheduled--;
-
                 lock.unlock();
 
                 display_buffer_compositor->composite(
