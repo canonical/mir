@@ -46,6 +46,7 @@ public:
     void send_message(std::vector<uint8_t> const& buffer, std::vector<mir::Fd> const& fds) override;
 
     int watch_fd() const override;
+    bool dispatch() override;
 
 private:
     void init();

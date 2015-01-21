@@ -187,6 +187,12 @@ int mclr::StreamSocketTransport::watch_fd() const
     return epoll_fd;
 }
 
+bool mclr::StreamSocketTransport::dispatch()
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds{10});
+    return false;
+}
+
 void mclr::StreamSocketTransport::init()
 {
     // We use sockets rather than a pipe so that we can control

@@ -80,8 +80,8 @@ public:
 
     /**
      * \brief Observer of IO status
-     * \note The Transport may call Observer members from arbitrary threads.
-     *       The Observer implementation is responsible for any synchronisation.
+     * \note The Transport will only call Observers in response to dispatch(),
+     *       and on the thread calling dispatch().
      */
     class Observer
     {
@@ -152,6 +152,12 @@ public:
      *         becomes readable when there are dispatchable events
      */
     virtual int watch_fd() const = 0;
+
+    /**
+     * \brief Dispatch one pending event
+     * \return True iff there are further events pending
+     */
+    virtual bool dispatch() = 0;
 };
 
 }

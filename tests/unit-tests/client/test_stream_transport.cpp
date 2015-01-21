@@ -1105,10 +1105,47 @@ TYPED_TEST(StreamTransportTest, WatchFdNotifiesReadableWhenDataPending)
     uint64_t dummy{0xdeadbeef};
     EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
-    ASSERT_TRUE(StdlibCallSucceeded(poll(&socket_readable, 1, 100)));
+    ASSERT_TRUE(StdlibCallSucceeded(poll(&socket_readable, 1, 1000)));
 
     ASSERT_FALSE(socket_readable.revents & POLLERR);
     ASSERT_FALSE(socket_readable.revents & POLLNVAL);
 
     EXPECT_TRUE(socket_readable.revents & POLLIN);
+}
+
+TYPED_TEST(StreamTransportTest, WatchFdIsNoLongerReadableAfterEventProcessing)
+{
+    using namespace testing;
+
+    pollfd socket_readable;
+    socket_readable.events = POLLIN;
+    socket_readable.fd = this->transport->watch_fd();
+
+    uint64_t dummy{0xdeadbeef};
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+
+    ON_CALL(*observer, on_data_available())
+        .WillByDefault(Invoke([dummy, this]()
+                              {
+                                  decltype(dummy) buffer;
+                                  this->transport->receive_data(&buffer, sizeof(dummy));
+                              }));
+
+    this->transport->register_observer(observer);
+
+    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+
+    ASSERT_TRUE(StdlibCallSucceeded(poll(&socket_readable, 1, 1000)));
+
+    ASSERT_FALSE(socket_readable.revents & POLLERR);
+    ASSERT_FALSE(socket_readable.revents & POLLNVAL);
+
+    EXPECT_TRUE(socket_readable.revents & POLLIN);
+
+    this->transport->dispatch();
+
+    ASSERT_TRUE(StdlibCallSucceeded(poll(&socket_readable, 1, 0)));
+
+    EXPECT_FALSE(socket_readable.revents & POLLIN);
 }
