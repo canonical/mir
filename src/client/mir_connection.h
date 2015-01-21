@@ -53,6 +53,7 @@ class EventHandlerRegister;
 namespace rpc
 {
 class MirBasicRpcChannel;
+class SimpleRpcThread;
 }
 }
 
@@ -189,6 +190,8 @@ private:
     std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
 
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
+
+    std::unique_ptr<mir::client::rpc::SimpleRpcThread> const eventloop;
 
     std::vector<int> extra_platform_data;
 

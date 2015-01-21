@@ -350,3 +350,13 @@ void mclr::MirProtobufRpcChannel::on_disconnected()
 {
     notify_disconnected();
 }
+
+mir::Fd mir::client::rpc::MirProtobufRpcChannel::watch_fd() const
+{
+    return transport->watch_fd();
+}
+
+void mir::client::rpc::MirProtobufRpcChannel::dispatch()
+{
+    transport->dispatch();
+}
