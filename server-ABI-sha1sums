@@ -59,7 +59,7 @@ f4030e400baf8baa9c38e7c6ec6b4a5ad7134aeb  include/server/mir/compositor/composit
 a9f284ba4b05d58fd3eeb628d1f56fe4ac188526  include/server/mir/compositor/compositor_id.h
 98fe6bde01fb8b25b1bacafcdf572f24c3ade3c3  include/server/mir/compositor/display_buffer_compositor_factory.h
 d49eae4f986645b32e29ce2c1f99f524703ba3c0  include/server/mir/compositor/display_buffer_compositor.h
-4fcf34e424128b87ddc76733594e32e09ebbd486  include/server/mir/compositor/scene.h
+5fa944a08d5944503fd10d87a4e57985cfcce379  include/server/mir/compositor/scene.h
 59d6703def2a0ff840e5eb75390a5af76fd93f58  include/server/mir/frontend/prompt_session.h
 b729a7710c37d9f1fba56a6f8e8eae1c2559f57a  include/server/mir/frontend/session_authorizer.h
 34ce482df448fd2fc5f0c4ae5ac8b7fecbd228c9  include/server/mir/frontend/session_credentials.h
@@ -98,7 +98,7 @@ ee94083f10f890e24c0e0bbdb94842e2dd788deb  include/server/mir/scene/session_liste
 bbc9e2e2bb71634cd6f1c5c0430093e10e74fa23  include/server/mir/scene/surface_configurator.h
 e5e4dd7bcaf186810043fa0f05be42d7e49b0843  include/server/mir/scene/surface_coordinator.h
 8e3636b736700d72520709c8a61f5e85d9231d4c  include/server/mir/scene/surface_creation_parameters.h
-86c7c4089ed350f22a63923e91b8590739169c02  include/server/mir/scene/surface.h
+136bc769fd6f45a6eab542a6bcaeca6a843538f5  include/server/mir/scene/surface.h
 587e22d751656ce2d9536afdf5659276ff9bbc46  include/server/mir/scene/surface_observer.h
 7ef3e99901168cda296d74d05a979f47bf9c3ff1  include/server/mir/server_action_queue.h
 9ebaf52d83b27063498eda8481dd4e53213e98f8  include/server/mir/server.h
