@@ -1326,7 +1326,6 @@ TEST_F(BufferQueueTest, buffers_ready_eventually_reaches_zero)
     {
         mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
     
-
         const int nmonitors = 3;
         int monitor[nmonitors];
 
