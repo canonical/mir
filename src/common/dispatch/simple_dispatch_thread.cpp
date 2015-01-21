@@ -36,6 +36,10 @@ md::fd_events epoll_to_fd_event(epoll_event const& event)
     {
         val |= md::fd_event::readable;
     }
+    if (event.events & EPOLLOUT)
+    {
+        val = md::fd_event::writable;
+    }
     if (event.events & (EPOLLHUP | EPOLLRDHUP))
     {
         val |= md::fd_event::remote_closed;
@@ -45,6 +49,28 @@ md::fd_events epoll_to_fd_event(epoll_event const& event)
         val = md::fd_event::error;
     }
     return val;
+}
+
+int fd_event_to_epoll(md::fd_events const& event)
+{
+    int epoll_value{0};
+    if (event & md::fd_event::readable)
+    {
+        epoll_value |= EPOLLIN;
+    }
+    if (event & md::fd_event::writable)
+    {
+        epoll_value |= EPOLLOUT;
+    }
+    if (event & md::fd_event::remote_closed)
+    {
+        epoll_value |= EPOLLRDHUP | EPOLLHUP;
+    }
+    if (event & md::fd_event::error)
+    {
+        epoll_value |= EPOLLERR;
+    }
+    return epoll_value;
 }
 
 void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee, mir::Fd shutdown_fd)
@@ -69,9 +95,9 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
     event.events = EPOLLRDHUP;
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, shutdown_fd, &event);
 
-    // We want readability or closure for the dispatchee.
+    // Ask the dispatchee what it events it's interested in...
     event.data.u32 = fd_names::dispatchee_fd;
-    event.events = EPOLLIN | EPOLLRDHUP;
+    event.events = fd_event_to_epoll(dispatchee->relevant_events());
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, dispatchee->watch_fd(), &event);
 
     for (;;)
