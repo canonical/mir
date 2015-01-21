@@ -54,7 +54,9 @@ private:
     void notify_disconnected();
 
     std::thread io_service_thread;
+
     Fd const socket_fd;
+    Fd const epoll_fd;
     Fd shutdown_fd;
 
     std::mutex observer_mutex;

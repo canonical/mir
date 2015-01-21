@@ -1078,13 +1078,13 @@ TYPED_TEST(StreamTransportTest, ReturnsValidWatchFd)
     {
         return ::testing::AssertionFailure() << "errno: "
                                              << errno
-                                             << "["
+                                             << " ["
                                              << strerror(errno)
                                              << "]";
     }
 }
 
-TYPED_TEST(StreamTransportTest, WatchFDIsPollable)
+TYPED_TEST(StreamTransportTest, WatchFdIsPollable)
 {
     pollfd socket_readable;
     socket_readable.events = POLLIN;
@@ -1094,4 +1094,21 @@ TYPED_TEST(StreamTransportTest, WatchFDIsPollable)
 
     EXPECT_FALSE(socket_readable.revents & POLLERR);
     EXPECT_FALSE(socket_readable.revents & POLLNVAL);
+}
+
+TYPED_TEST(StreamTransportTest, WatchFdNotifiesReadableWhenDataPending)
+{
+    pollfd socket_readable;
+    socket_readable.events = POLLIN;
+    socket_readable.fd = this->transport->watch_fd();
+
+    uint64_t dummy{0xdeadbeef};
+    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+
+    ASSERT_TRUE(StdlibCallSucceeded(poll(&socket_readable, 1, 100)));
+
+    ASSERT_FALSE(socket_readable.revents & POLLERR);
+    ASSERT_FALSE(socket_readable.revents & POLLNVAL);
+
+    EXPECT_TRUE(socket_readable.revents & POLLIN);
 }
