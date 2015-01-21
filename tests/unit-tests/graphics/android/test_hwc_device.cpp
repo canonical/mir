@@ -171,6 +171,21 @@ TEST_F(HwcDevice, calls_backup_compositor_when_overlay_rejected)
     device.commit(primary, list, stub_context, mock_compositor);
 }
 
+TEST_F(HwcDevice, swaps_buffers_directly_when_no_renderables)
+{
+    using namespace testing;
+    mtd::MockRenderableListCompositor mock_compositor;
+    mtd::MockSwappingGLContext mock_context;
+
+    EXPECT_CALL(mock_compositor, render(_,_))
+        .Times(0);
+    EXPECT_CALL(mock_context, swap_buffers());
+
+    mga::LayerList list(layer_adapter, {});
+    mga::HwcDevice device(mock_device);
+    device.commit(primary, list, mock_context, mock_compositor);
+}
+
 TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
 {
     using namespace testing;

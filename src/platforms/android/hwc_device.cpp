@@ -79,44 +79,6 @@ bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
     return it != onscreen_overlay_buffers.end();
 }
 
-#if 0
-void mga::HwcDevice::post_gl(SwappingGLContext const& context)
-{
-    hwc_list.update_list({});
-
-    //TODO: SwappingRenderer is temporary until we move the list up to DisplayBuffer
-    struct SwappingRenderer : RenderableListCompositor
-    {
-        void render(RenderableList const&, SwappingGLContext const& context) const
-        {
-            context.swap_buffers();
-        }
-    } null_renderer;
-
-    commit(context, null_renderer);
-}
-
-bool mga::HwcDevice::post_overlays(
-    SwappingGLContext const& context,
-    RenderableList const& renderables,
-    RenderableListCompositor const& list_compositor)
-{
-    if (renderable_list_is_hwc_incompatible(renderables))
-        return false;
-
-    hwc_list.update_list(renderables);
-
-    bool needs_commit{false};
-    for(auto& layer : hwc_list)
-        needs_commit |= layer.needs_commit;
-    if (!needs_commit)
-        return false;
-
-    commit(context, list_compositor);
-    return true;
-}
-#endif
-
 void mga::HwcDevice::commit(
     mga::DisplayName,
     mga::LayerList& hwc_list,
