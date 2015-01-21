@@ -155,6 +155,12 @@ public:
 
                 lock.lock();
 
+                /*
+                 * Note the compositor may have chosen to ignore any number
+                 * of renderables and not consumed buffers from them. So it's
+                 * important to re-count number of frames pending, separately
+                 * to the initial scene_elements_for()...
+                 */
                 int pending = scene->frames_pending(comp_id);
                 if (pending > frames_scheduled)
                     frames_scheduled = pending;
