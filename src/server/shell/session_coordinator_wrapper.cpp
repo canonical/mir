@@ -83,3 +83,30 @@ void msh::SessionCoordinatorWrapper::stop_prompt_session(std::shared_ptr<mf::Pro
 {
     wrapped->stop_prompt_session(prompt_session);
 }
+
+mf::SurfaceId msh::SessionCoordinatorWrapper::create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params)
+{
+    return wrapped->create_surface(session, params);
+}
+
+void msh::SessionCoordinatorWrapper::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)
+{
+    wrapped->destroy_surface(session, surface);
+}
+
+int msh::SessionCoordinatorWrapper::set_surface_attribute(
+    std::shared_ptr<mf::Session> const& session,
+    mf::SurfaceId surface_id,
+    MirSurfaceAttrib attrib,
+    int value)
+{
+    return wrapped->set_surface_attribute(session, surface_id, attrib, value);
+}
+
+int msh::SessionCoordinatorWrapper::get_surface_attribute(
+    std::shared_ptr<mf::Session> const& session,
+    mf::SurfaceId surface_id,
+    MirSurfaceAttrib attrib)
+{
+    return wrapped->get_surface_attribute(session, surface_id, attrib);
+}

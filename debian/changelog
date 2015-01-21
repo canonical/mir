@@ -8,11 +8,11 @@ mir (0.11.0-0ubuntu1) UNRELEASED; urgency=medium
       . Performance: (Desktop) Composite using double buffering instead of
         triple to reduce visible lag.
       . TODO fill me in more
-    - ABI summary: Servers (will?) need rebuilding, but clients do not;
+    - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8
       . Mircommon ABI unchanged at 3
       . Mirplatform ABI bumped to 6
-      . Mirserver ABI unchanged at 28 (expect 29 before release)
+      . Mirserver ABI bumped to 29
     - Bug fixes:
       . TODO fill me in at release
 
