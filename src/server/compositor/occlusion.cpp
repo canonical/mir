@@ -40,12 +40,6 @@ bool renderable_is_occluded(
     if (renderable.transformation() != identity)
         return false;  // Weirdly transformed. Assume never occluded.
 
-    //TODO: remove this check, why are we getting a non visible renderable 
-    //      in the list of surfaces?
-    // This will check the surface is not hidden and has been posted.
-    if (!renderable.visible())
-        return true;  //invisible; definitely occluded.
-
     auto const& window = renderable.screen_position();
     auto const& clipped_window = window.intersection_with(area);
 

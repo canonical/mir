@@ -29,6 +29,7 @@ namespace mir
 namespace scene
 {
 class Surface;
+struct SurfaceCreationParameters;
 
 class Session : public frontend::Session
 {
@@ -41,10 +42,16 @@ public:
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
     virtual void send_display_config(graphics::DisplayConfiguration const&) = 0;
 
+    virtual void hide() = 0;
+    virtual void show() = 0;
+
     virtual void start_prompt_session() = 0;
     virtual void stop_prompt_session() = 0;
     virtual void suspend_prompt_session() = 0;
     virtual void resume_prompt_session() = 0;
+
+    virtual frontend::SurfaceId create_surface(SurfaceCreationParameters const& params) = 0;
+    virtual void destroy_surface(frontend::SurfaceId surface) = 0;
 };
 }
 }

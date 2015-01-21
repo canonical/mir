@@ -209,7 +209,7 @@ void mf::SessionMediator::create_surface(
     if (request->has_edge_attachment())
         params.with_edge_attachment(static_cast<MirEdgeAttachment>(request->edge_attachment()));
 
-    auto const surf_id = session->create_surface(params);
+    auto const surf_id = shell->create_surface(session, params);
 
     auto surface = session->get_surface(surf_id);
     auto const& client_size = surface->client_size();
@@ -228,7 +228,7 @@ void mf::SessionMediator::create_surface(
         
         setting->mutable_surfaceid()->set_value(surf_id.as_value());
         setting->set_attrib(i);
-        setting->set_ivalue(surface->query(static_cast<MirSurfaceAttrib>(i)));
+        setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
     advance_buffer(surf_id, *surface,
@@ -333,7 +333,7 @@ void mf::SessionMediator::release_surface(
 
         auto const id = SurfaceId(request->value());
 
-        session->destroy_surface(id);
+        shell->destroy_surface(session, id);
         surface_tracker.remove_surface(id);
     }
 
@@ -388,8 +388,7 @@ void mf::SessionMediator::configure_surface(
 
         auto const id = mf::SurfaceId(request->surfaceid().value());
         int value = request->ivalue();
-        auto const surface = session->get_surface(id);
-        int newvalue = surface->configure(attrib, value);
+        int newvalue = shell->set_surface_attribute(session, id, attrib, value);
 
         response->set_ivalue(newvalue);
     }
