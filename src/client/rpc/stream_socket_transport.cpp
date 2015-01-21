@@ -29,7 +29,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <poll.h>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -184,7 +183,7 @@ mir::Fd mclr::StreamSocketTransport::watch_fd() const
     return epoll_fd;
 }
 
-bool mclr::StreamSocketTransport::dispatch()
+void mclr::StreamSocketTransport::dispatch()
 {
     epoll_event event;
     epoll_wait(epoll_fd, &event, 1, 0);
@@ -241,14 +240,6 @@ bool mclr::StreamSocketTransport::dispatch()
             }
         }
     }
-
-    pollfd events_remaining;
-    events_remaining.events = POLLIN;
-    events_remaining.fd = epoll_fd;
-
-    poll(&events_remaining, 1, 0);
-
-    return events_remaining.revents & POLLIN;
 }
 
 mir::Fd mclr::StreamSocketTransport::open_socket(std::string const& path)

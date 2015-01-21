@@ -143,8 +143,11 @@ TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnect)
 
     close(this->test_fd);
 
-    while(this->transport->dispatch())
-        ;
+    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    while (fd_is_readable(this->transport->watch_fd()))
+    {
+        this->transport->dispatch();
+    }
 
     EXPECT_TRUE(disconnected);
 }
@@ -1215,8 +1218,11 @@ TYPED_TEST(StreamTransportTest, NoEventsDispatchedUntilDispatchCalled)
     EXPECT_FALSE(data_available);
     EXPECT_FALSE(disconnected);
 
-    while (this->transport->dispatch())
-        ;
+    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    while (fd_is_readable(this->transport->watch_fd()))
+    {
+        this->transport->dispatch();
+    }
 
     EXPECT_TRUE(data_available);
     EXPECT_TRUE(disconnected);

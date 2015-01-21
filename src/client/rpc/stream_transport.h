@@ -155,9 +155,8 @@ public:
 
     /**
      * \brief Dispatch one pending event
-     * \return True iff there are further events pending
      */
-    virtual bool dispatch() = 0;
+    virtual void dispatch() = 0;
 };
 
 }

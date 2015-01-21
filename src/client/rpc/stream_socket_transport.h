@@ -45,7 +45,7 @@ public:
     void send_message(std::vector<uint8_t> const& buffer, std::vector<mir::Fd> const& fds) override;
 
     Fd watch_fd() const override;
-    bool dispatch() override;
+    void dispatch() override;
 
 private:
     Fd open_socket(std::string const& path);
