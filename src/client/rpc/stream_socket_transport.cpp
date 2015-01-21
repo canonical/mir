@@ -36,22 +36,8 @@ namespace mclr = mir::client::rpc;
 namespace md = mir::dispatch;
 
 mclr::StreamSocketTransport::StreamSocketTransport(mir::Fd const& fd)
-    : socket_fd{fd},
-      epoll_fd{epoll_create1(EPOLL_CLOEXEC)}
+    : socket_fd{fd}
 {
-    if (epoll_fd < 0)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                 std::system_category(),
-                                                 "Failed to create epoll monitor for IO"}));
-    }
-    epoll_event event;
-    // Make valgrind happy, harder
-    memset(&event, 0, sizeof(event));
-
-    event.events = EPOLLIN | EPOLLRDHUP;
-    event.data.fd = socket_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd, &event);
 }
 
 mclr::StreamSocketTransport::StreamSocketTransport(std::string const& socket_path)
@@ -180,43 +166,41 @@ void mclr::StreamSocketTransport::send_message(
 
 mir::Fd mclr::StreamSocketTransport::watch_fd() const
 {
-    return epoll_fd;
+    return socket_fd;
 }
 
-void mclr::StreamSocketTransport::dispatch(md::fd_events /*event*/)
+void mclr::StreamSocketTransport::dispatch(md::fd_events events)
 {
-    epoll_event event;
-    epoll_wait(epoll_fd, &event, 1, 0);
-    if (event.data.fd == socket_fd)
+    if (events & md::fd_event::remote_closed)
     {
-        if (event.events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+        if (events & md::fd_event::readable)
         {
-            if (event.events & EPOLLIN)
+            // If the remote end shut down cleanly it's possible there's some more
+            // data left to read, or that reads will now return 0 (EOF)
+            //
+            // If there's more data left to read, notify of this before disconnect.
+            int dummy;
+            if (recv(socket_fd, &dummy, sizeof(dummy), MSG_PEEK | MSG_NOSIGNAL) > 0)
             {
-                // If the remote end shut down cleanly it's possible there's some more
-                // data left to read, or that reads will now return 0 (EOF)
-                //
-                // If there's more data left to read, notify of this before disconnect.
-                int dummy;
-                if (recv(socket_fd, &dummy, sizeof(dummy), MSG_PEEK | MSG_NOSIGNAL) > 0)
-                {
-                    notify_data_available();
-                    return;
-                }
+                notify_data_available();
+                return;
             }
-            notify_disconnected();
-            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, socket_fd, nullptr);
         }
-        else if (event.events & EPOLLIN)
-        {
-            notify_data_available();
-        }
+        notify_disconnected();
+        // We need to close the socket fd to ensure that it's removed from any
+        // watches; otherwise, it will remain in the “remote closed” state and
+        // watchers will continue to generate events.
+        socket_fd = mir::Fd{};
+    }
+    else if (events & md::fd_event::readable)
+    {
+        notify_data_available();
     }
 }
 
 md::fd_events mclr::StreamSocketTransport::relevant_events() const
 {
-    return md::fd_event::readable;
+    return md::fd_event::readable | md::fd_event::remote_closed;
 }
 
 mir::Fd mclr::StreamSocketTransport::open_socket(std::string const& path)
