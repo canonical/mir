@@ -200,44 +200,16 @@ void mclr::StreamSocketTransport::dispatch()
                 int dummy;
                 if (recv(socket_fd, &dummy, sizeof(dummy), MSG_PEEK | MSG_NOSIGNAL) > 0)
                 {
-                    try
-                    {
-                        notify_data_available();
-                    }
-                    catch(...)
-                    {
-                        //It's quite likely that notify_data_available() will lead to
-                        //an exception being thrown; after all, the remote has closed
-                        //the connection.
-                        //
-                        //This doesn't matter; we're already shutting down.
-                    }
+                    notify_data_available();
+                    return;
                 }
             }
             notify_disconnected();
+            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, socket_fd, nullptr);
         }
         else if (event.events & EPOLLIN)
         {
-            try
-            {
-                notify_data_available();
-            }
-            catch (socket_disconnected_error &err)
-            {
-                // We've already notified of disconnection.
-            }
-            // These need not be fatal.
-            catch (fd_reception_error &err)
-            {
-            }
-            catch (socket_error &err)
-            {
-            }
-            catch (...)
-            {
-                // We've no idea what the problem is, so clean up as best we can.
-                notify_disconnected();
-            }
+            notify_data_available();
         }
     }
 }
