@@ -292,10 +292,16 @@ TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
     ON_CALL(*mock_display_device, commit(_,_,_,_))
         .WillByDefault(Invoke([](
             mga::DisplayName,
-            mga::LayerList&,//list,
+            mga::LayerList& list,
             mga::SwappingGLContext const&,
             mga::RenderableListCompositor const&)
         {
+            auto native_list = list.native_list();
+            for (auto i = 0u; i < native_list->numHwLayers; i++)
+            {
+                if (native_list->hwLayers[i].compositionType == HWC_FRAMEBUFFER)
+                    native_list->hwLayers[i].compositionType = HWC_OVERLAY;
+            }
         }));
 
     mg::RenderableList renderlist{buffer1, buffer2};
