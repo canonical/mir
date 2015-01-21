@@ -1,3 +1,5 @@
+include_directories(${client_common_include_dirs})
+
 include_directories(
     ${DRM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
@@ -18,7 +20,7 @@ add_library(
   mirclientplatformmesa MODULE
 
   $<TARGET_OBJECTS:mirclientplatformmesaobjects>
-  $<TARGET_OBJECTS:mirclient_platformimpl>
+  $<TARGET_OBJECTS:client_platform_common>
 )
 
 set_target_properties(
