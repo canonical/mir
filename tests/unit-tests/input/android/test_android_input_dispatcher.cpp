@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/input/android/android_input_dispatcher.h"
 #include "src/server/input/android/android_input_thread.h"
 #include "src/server/input/android/android_input_constants.h"

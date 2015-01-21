@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <racarr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "application_session.h"
 #include "snapshot_strategy.h"
 #include "default_session_container.h"

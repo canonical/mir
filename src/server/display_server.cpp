@@ -18,6 +18,10 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
+// TODO: Eliminate usage of nsecs_t in input_dispatcher.h
+// to remove this.
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+
 #define MIR_LOG_COMPONENT "DisplayServer"
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"

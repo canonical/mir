@@ -16,6 +16,8 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/client_buffer.h"

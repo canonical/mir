@@ -16,6 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_protobuf_rpc_channel.h"
 #include "rpc_report.h"
 

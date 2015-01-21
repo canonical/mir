@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir/geometry/rectangle.h"
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
