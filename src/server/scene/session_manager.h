@@ -74,6 +74,20 @@ public:
                                  std::shared_ptr<frontend::Session> const& session) override;
     void stop_prompt_session(std::shared_ptr<frontend::PromptSession> const& prompt_session) override;
 
+    int set_surface_attribute(
+        std::shared_ptr<frontend::Session> const& session,
+        frontend::SurfaceId surface_id,
+        MirSurfaceAttrib attrib,
+        int value) override;
+
+    int get_surface_attribute(
+        std::shared_ptr<frontend::Session> const& session,
+        frontend::SurfaceId surface_id,
+        MirSurfaceAttrib attrib) override;
+
+    frontend::SurfaceId create_surface(std::shared_ptr<frontend::Session> const& session, SurfaceCreationParameters const& params) override;
+    void destroy_surface(std::shared_ptr<frontend::Session> const& session, frontend::SurfaceId surface) override;
+
 protected:
     SessionManager(const SessionManager&) = delete;
     SessionManager& operator=(const SessionManager&) = delete;

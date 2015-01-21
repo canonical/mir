@@ -98,6 +98,11 @@ public:
     virtual void set_reception_mode(input::InputReceptionMode mode) = 0;
 
     virtual void request_client_surface_close() = 0;
+
+    // TODO a legacy of old interactions and needs removing
+    virtual int configure(MirSurfaceAttrib attrib, int value) = 0;
+    // TODO a legacy of old interactions and needs removing
+    virtual int query(MirSurfaceAttrib attrib) = 0;
 };
 }
 }
