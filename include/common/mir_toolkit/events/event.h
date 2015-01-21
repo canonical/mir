@@ -191,4 +191,4 @@ void mir_event_unref(MirEvent const* ev);
 /**@}*/
 #endif
 
-#endif // MIR_TOOLKIT_EVENT_H_
+#endif /* MIR_TOOLKIT_EVENT_H_ */
