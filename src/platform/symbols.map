@@ -101,7 +101,6 @@ MIRPLATFORM_6 {
     mir::graphics::Renderable::screen_position*;
     mir::graphics::Renderable::shaped*;
     mir::graphics::Renderable::transformation*;
-    mir::graphics::Renderable::visible*;
     mir::graphics::UserDisplayConfigurationOutput::extents*;
     mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
     mir::options::compositor_report_opt*;
