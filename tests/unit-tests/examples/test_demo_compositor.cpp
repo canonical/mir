@@ -94,25 +94,3 @@ struct DemoCompositor : testing::Test
 
 }
 
-// Regression test for https://bugs.launchpad.net/mir/+bug/1359487
-TEST_F(DemoCompositor, sets_surface_visibility)
-{
-    using namespace testing;
-
-    me::DemoCompositor demo_compositor{
-        stub_display_buffer,
-        mir::report::null_compositor_report()};
-
-    EXPECT_CALL(element, renderable())
-        .Times(2)
-        .WillOnce(Return(std::make_shared<mtd::StubRenderable>(true)))
-        .WillOnce(Return(std::make_shared<mtd::StubRenderable>(false)));
-
-    InSequence seq;
-    EXPECT_CALL(element, rendered());
-    EXPECT_CALL(element, occluded());
-
-    demo_compositor.composite(mc::SceneElementSequence(scene_elements));
-    demo_compositor.composite(mc::SceneElementSequence(scene_elements));
-
-}

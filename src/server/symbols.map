@@ -1,4 +1,4 @@
-MIR_SERVER_28 {
+MIR_SERVER_29 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -488,12 +488,16 @@ MIR_SERVER_28 {
     mir::shell::InputTargeter::operator*;
     mir::shell::SessionCoordinatorWrapper::add_prompt_provider_for*;
     mir::shell::SessionCoordinatorWrapper::close_session*;
+    mir::shell::SessionCoordinatorWrapper::create_surface*;
+    mir::shell::SessionCoordinatorWrapper::destroy_surface*;
     mir::shell::SessionCoordinatorWrapper::focus_next*;
     mir::shell::SessionCoordinatorWrapper::focussed_application*;
+    mir::shell::SessionCoordinatorWrapper::get_surface_attribute*;
     mir::shell::SessionCoordinatorWrapper::handle_surface_created*;
     mir::shell::SessionCoordinatorWrapper::open_session*;
     mir::shell::SessionCoordinatorWrapper::SessionCoordinatorWrapper*;
     mir::shell::SessionCoordinatorWrapper::set_focus_to*;
+    mir::shell::SessionCoordinatorWrapper::set_surface_attribute*;
     mir::shell::SessionCoordinatorWrapper::start_prompt_session_for*;
     mir::shell::SessionCoordinatorWrapper::stop_prompt_session*;
     mir::shell::SurfaceCoordinatorWrapper::add_surface*;
@@ -778,28 +782,22 @@ MIR_SERVER_28 {
     vtable?for?mir::time::Timer;
 
 # these symbols are needed by mir_proving_server but are not intended to be public
+    mir::compositor::GLProgramFamily::*;
+    mir::compositor::GLRenderer::GLRenderer*;
+    mir::compositor::GLRenderer::Program::Program*;
     mir::compositor::GLRenderer::begin*;
     mir::compositor::GLRenderer::destination_alpha*;
+    mir::compositor::GLRenderer::draw*;
     mir::compositor::GLRenderer::end*;
-    mir::compositor::GLRenderer::GLRenderer*;
     mir::compositor::GLRenderer::render*;
     mir::compositor::GLRenderer::set_rotation*;
     mir::compositor::GLRenderer::set_viewport*;
     mir::compositor::GLRenderer::suspend*;
     mir::compositor::GLRenderer::tessellate*;
+    mir::compositor::GLRenderer::vshader;
     typeinfo?for?mir::compositor::GLRenderer;
     vtable?for?mir::compositor::GLRenderer;
     vtable?for?mir::compositor::RecentlyUsedCache;
   };
  local: *;
 };
-
-MIR_SERVER_28.1 {
- global:
-  extern "C++" {
-    mir::compositor::GLRenderer::draw*;
-    mir::compositor::GLRenderer::vshader;
-    mir::compositor::GLRenderer::Program::Program*;
-    mir::compositor::GLProgramFamily::*;
-  };
-} MIR_SERVER_28;

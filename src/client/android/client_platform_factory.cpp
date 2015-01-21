@@ -16,9 +16,9 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "../client_platform_factory.h"
+#include "mir/client_platform_factory.h"
 #include "mir_toolkit/client_types.h"
-#include "../client_context.h"
+#include "mir/client_context.h"
 #include "android_client_platform.h"
 
 #include <boost/throw_exception.hpp>
