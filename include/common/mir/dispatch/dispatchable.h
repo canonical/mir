@@ -54,6 +54,8 @@ public:
     /**
      * \brief Dispatch one pending event
      * \param [in] event    The set of events current on the file-descriptor
+     * \returns False iff no more events will be produced by this Dispatchable
+     *          Dispatch should no longer be called.
      * \note This will dispatch at most one event. If there are multiple events
      *       specify in \ref event (eg: readable | remote_closed) then dispatch
      *       will process only one.
@@ -61,7 +63,7 @@ public:
      *       any of the events from relevant_events(). The function will do
      *       nothing in such a case.
      */
-    virtual void dispatch(fd_events events) = 0;
+    virtual bool dispatch(fd_events events) = 0;
 
     /**
      * \brief The set of file-descriptor events this Dispatchable handles

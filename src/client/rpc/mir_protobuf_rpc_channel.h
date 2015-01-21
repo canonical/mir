@@ -72,7 +72,7 @@ public:
 
     // Dispatchable
     Fd watch_fd() const override;
-    void dispatch(mir::dispatch::fd_events events) override;
+    bool dispatch(mir::dispatch::fd_events events) override;
     mir::dispatch::fd_events relevant_events() const override;
 private:
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,

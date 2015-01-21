@@ -85,7 +85,7 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
     MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
 
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
-    MOCK_METHOD1(dispatch, void(md::fd_events));
+    MOCK_METHOD1(dispatch, bool(md::fd_events));
     MOCK_CONST_METHOD0(relevant_events, md::fd_events());
 };
 

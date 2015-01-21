@@ -169,9 +169,9 @@ mir::Fd mclr::StreamSocketTransport::watch_fd() const
     return socket_fd;
 }
 
-void mclr::StreamSocketTransport::dispatch(md::fd_events events)
+bool mclr::StreamSocketTransport::dispatch(md::fd_events events)
 {
-    if (events & md::fd_event::remote_closed)
+    if (events & (md::fd_event::remote_closed | md::fd_event::error))
     {
         if (events & md::fd_event::readable)
         {
@@ -183,19 +183,17 @@ void mclr::StreamSocketTransport::dispatch(md::fd_events events)
             if (recv(socket_fd, &dummy, sizeof(dummy), MSG_PEEK | MSG_NOSIGNAL) > 0)
             {
                 notify_data_available();
-                return;
+                return true;
             }
         }
         notify_disconnected();
-        // We need to close the socket fd to ensure that it's removed from any
-        // watches; otherwise, it will remain in the “remote closed” state and
-        // watchers will continue to generate events.
-        socket_fd = mir::Fd{};
+        return false;
     }
     else if (events & md::fd_event::readable)
     {
         notify_data_available();
     }
+    return true;
 }
 
 md::fd_events mclr::StreamSocketTransport::relevant_events() const

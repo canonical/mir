@@ -110,7 +110,7 @@ public:
     MOCK_METHOD3(receive_data, void(void*, size_t, std::vector<mir::Fd>&));
     MOCK_METHOD2(send_message, void(std::vector<uint8_t> const&, std::vector<mir::Fd> const&));
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
-    MOCK_METHOD1(dispatch, void(md::fd_events));
+    MOCK_METHOD1(dispatch, bool(md::fd_events));
     MOCK_CONST_METHOD0(relevant_events, md::fd_events());
 
     // Transport interface

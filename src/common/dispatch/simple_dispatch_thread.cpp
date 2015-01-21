@@ -79,7 +79,11 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
         epoll_wait(epoll_fd, &event, 1, -1);
         if (event.data.u32 == fd_names::dispatchee_fd)
         {
-            dispatchee->dispatch(epoll_to_fd_event(event));
+            if (!dispatchee->dispatch(epoll_to_fd_event(event)))
+            {
+                // No need to keep looping, the Dispatchable's not going to produce any more events.
+                return;
+            }
         }
         else if (event.data.u32 == fd_names::shutdown)
         {
