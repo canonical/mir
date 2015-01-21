@@ -304,7 +304,7 @@ public:
 private:
     void update_tiles()
     {
-        if (session_info.size() < 1 || displays.begin() == displays.end()) return;
+        if (session_info.size() < 1 || displays.size() < 1) return;
 
         auto const sessions = session_info.size();
 
