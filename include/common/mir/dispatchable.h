@@ -16,16 +16,12 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_CLIENT_RPC_DISPATCHABLE_H_
-#define MIR_CLIENT_RPC_DISPATCHABLE_H_
+#ifndef MIR_DISPATCHABLE_H_
+#define MIR_DISPATCHABLE_H_
 
 #include "mir/fd.h"
 
 namespace mir
-{
-namespace client
-{
-namespace rpc
 {
 class Dispatchable
 {
@@ -49,7 +45,5 @@ public:
     virtual void dispatch() = 0;
 };
 }
-}
-}
 
-#endif // MIR_CLIENT_RPC_DISPATCHABLE_H_
+#endif // MIR_DISPATCHABLE_H_

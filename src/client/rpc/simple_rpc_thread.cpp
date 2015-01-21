@@ -17,7 +17,7 @@
  */
 
 #include "simple_rpc_thread.h"
-#include "dispatchable.h"
+#include "mir/dispatchable.h"
 
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -29,7 +29,7 @@ namespace mclr = mir::client::rpc;
 
 namespace
 {
-void wait_for_events_forever(std::shared_ptr<mclr::Dispatchable> const& dispatchee, mir::Fd shutdown_fd)
+void wait_for_events_forever(std::shared_ptr<mir::Dispatchable> const& dispatchee, mir::Fd shutdown_fd)
 {
     auto epoll_fd = mir::Fd{epoll_create1(0)};
     if (epoll_fd == mir::Fd::invalid)
@@ -66,7 +66,7 @@ void wait_for_events_forever(std::shared_ptr<mclr::Dispatchable> const& dispatch
 
 }
 
-mclr::SimpleRpcThread::SimpleRpcThread(std::shared_ptr<mclr::Dispatchable> const& dispatchee)
+mclr::SimpleRpcThread::SimpleRpcThread(std::shared_ptr<mir::Dispatchable> const& dispatchee)
 {
     int pipefds[2];
     if (pipe(pipefds) < 0)

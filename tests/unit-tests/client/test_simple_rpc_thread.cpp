@@ -17,7 +17,7 @@
  */
 
 #include "src/client/rpc/simple_rpc_thread.h"
-#include "src/client/rpc/dispatchable.h"
+#include "mir/dispatchable.h"
 #include "mir/fd.h"
 #include "mir_test/pipe.h"
 #include "mir_test/signal.h"
@@ -50,7 +50,7 @@ private:
     mt::Pipe pipe;
 };
 
-class MockDispatchable : public mclr::Dispatchable
+class MockDispatchable : public mir::Dispatchable
 {
 public:
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());

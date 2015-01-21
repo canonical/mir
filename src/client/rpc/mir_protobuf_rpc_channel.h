@@ -21,7 +21,7 @@
 
 #include "mir_basic_rpc_channel.h"
 #include "stream_transport.h"
-#include "dispatchable.h"
+#include "mir/dispatchable.h"
 
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>

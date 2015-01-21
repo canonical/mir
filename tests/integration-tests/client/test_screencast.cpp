@@ -19,7 +19,7 @@
 #include "mir_protobuf.pb.h"
 #include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/simple_rpc_thread.h"
-#include "src/client/rpc/dispatchable.h"
+#include "mir/dispatchable.h"
 
 #include "mir/frontend/connector.h"
 #include "mir_test/test_protobuf_server.h"
@@ -78,7 +78,7 @@ struct MirScreencastTest : public testing::Test
             std::make_shared<mir::protobuf::DisplayServer::Stub>(rpc_channel.get());
         eventloop =
             std::make_shared<mir::client::rpc::SimpleRpcThread>(
-                std::dynamic_pointer_cast<mir::client::rpc::Dispatchable>(rpc_channel));
+                std::dynamic_pointer_cast<mir::Dispatchable>(rpc_channel));
     }
 
     char const* const test_socket = "./test_socket_screencast";

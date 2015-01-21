@@ -25,7 +25,7 @@
 #include "src/client/display_configuration.h"
 #include "src/client/mir_surface.h"
 #include "mir/client_buffer_factory.h"
-#include "src/client/rpc/dispatchable.h"
+#include "mir/dispatchable.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"
@@ -48,7 +48,7 @@ namespace
 {
 
 struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
-                        public mir::client::rpc::Dispatchable
+                        public mir::Dispatchable
 {
     MockRpcChannel()
     {

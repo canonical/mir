@@ -23,7 +23,7 @@
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
-#include "rpc/dispatchable.h"
+#include "mir/dispatchable.h"
 #include "rpc/simple_rpc_thread.h"
 #include "connection_configuration.h"
 #include "display_configuration.h"
@@ -109,7 +109,7 @@ MirConnection::MirConnection(
         lifecycle_control(conf.the_lifecycle_control()),
         surface_map(conf.the_surface_map()),
         event_handler_register(conf.the_event_handler_register()),
-        eventloop{std::unique_ptr<mcl::rpc::SimpleRpcThread>{new mcl::rpc::SimpleRpcThread{std::dynamic_pointer_cast<mcl::rpc::Dispatchable>(channel)}}}
+        eventloop{std::unique_ptr<mcl::rpc::SimpleRpcThread>{new mcl::rpc::SimpleRpcThread{std::dynamic_pointer_cast<mir::Dispatchable>(channel)}}}
 {
     connect_result.set_error("connect not called");
     {

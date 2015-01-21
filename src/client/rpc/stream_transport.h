@@ -25,7 +25,7 @@
 #include <stdint.h>
 
 #include "mir/fd.h"
-#include "dispatchable.h"
+#include "mir/dispatchable.h"
 
 namespace mir
 {

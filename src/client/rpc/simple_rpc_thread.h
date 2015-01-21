@@ -25,11 +25,12 @@
 
 namespace mir
 {
+class Dispatchable;
+
 namespace client
 {
 namespace rpc
 {
-class Dispatchable;
 
 class SimpleRpcThread
 {
