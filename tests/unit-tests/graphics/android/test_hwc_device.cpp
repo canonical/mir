@@ -133,7 +133,7 @@ TEST_F(HwcDevice, prepares_a_skip_and_target_layer_by_default)
 
     mga::LayerList list(layer_adapter, {});
     mga::HwcDevice device(mock_device);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
 }
 
 TEST_F(HwcDevice, calls_backup_compositor_when_overlay_rejected)
@@ -168,7 +168,7 @@ TEST_F(HwcDevice, calls_backup_compositor_when_overlay_rejected)
 
     mga::LayerList list(layer_adapter, renderlist);
     mga::HwcDevice device(mock_device);
-    device.commit(primary, list, false, stub_context, mock_compositor);
+    device.commit(primary, list, stub_context, mock_compositor);
 }
 
 TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
@@ -195,9 +195,9 @@ TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
 
     mga::HwcDevice device(mock_device);
     mga::LayerList list(layer_adapter, renderlist);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
     list.update_list({});
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
 }
 
 TEST_F(HwcDevice, sets_and_updates_fences)
@@ -229,7 +229,7 @@ TEST_F(HwcDevice, sets_and_updates_fences)
 
     mga::HwcDevice device(mock_device);
     mga::LayerList list(layer_adapter, {});
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
 
     //check that the retire fence is closed
     bool retire_fence_was_closed{fcntl(hwc_retire_fence, F_GETFD) == -1};
@@ -280,7 +280,7 @@ TEST_F(HwcDevice, commits_correct_list_with_rejected_renderables)
 
     mga::HwcDevice device(mock_device);
     mga::LayerList list(layer_adapter, {stub_renderable1});
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
 }
 
 TEST_F(HwcDevice, commits_correct_list_when_all_accepted_as_overlays)
@@ -317,8 +317,9 @@ TEST_F(HwcDevice, commits_correct_list_when_all_accepted_as_overlays)
 
     EXPECT_CALL(*mock_native_buffer3, copy_fence())
         .Times(0);
-//    EXPECT_CALL(*mock_native_buffer3, update_usage(_,_))
-//        .Times(0);
+    int invalid{-1};
+    EXPECT_CALL(*mock_native_buffer3, update_usage(invalid,_))
+        .Times(1);
 
     Sequence seq; 
     EXPECT_CALL(*mock_device, prepare(_))
@@ -342,7 +343,7 @@ TEST_F(HwcDevice, commits_correct_list_when_all_accepted_as_overlays)
 
     mga::HwcDevice device(mock_device);
     mga::LayerList list(layer_adapter, renderlist);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
 }
 #if 0
 
@@ -378,9 +379,9 @@ TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
         .Times(2);
 
     mga::LayerList list(layer_adapter, renderlist);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
     list.update_list(renderlist);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
 }
 
 TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
@@ -401,9 +402,9 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
         .InSequence(seq);
 
     mga::LayerList list(layer_adapter, renderlist);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
     list.update_list(renderlist2);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
 }
 
 //note: HWC models overlay layer buffers as owned by the display hardware until a subsequent set.
@@ -418,10 +419,10 @@ TEST_F(HwcDevice, owns_overlay_buffers_until_next_set)
 
     auto use_count_before = stub_buffer1.use_count();
     mga::LayerList list(layer_adapter, {stub_renderable1});
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
     EXPECT_THAT(stub_buffer1.use_count(), Gt(use_count_before));
     list.update_list({stub_renderable1});
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
 
@@ -500,12 +501,12 @@ TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_wit
 
     mga::HwcDevice device(mock_device);
     mga::LayerList list(layer_adapter, renderlist);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
     //set only the 2nd layer to a new buffer. the first buffer has the same buffer, and would 
     //still be onscreen if this wasn't against a mock
     stub_renderable1->set_buffer(updated_buffer);
     list.update_list(renderlist);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
 }
 
 TEST_F(HwcDevice, does_not_own_framebuffer_buffers_past_set)
@@ -524,7 +525,7 @@ TEST_F(HwcDevice, does_not_own_framebuffer_buffers_past_set)
     auto use_count_before = stub_buffer1.use_count();
 
     mga::LayerList list(layer_adapter, {stub_renderable1});
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
 
@@ -563,7 +564,7 @@ TEST_F(HwcDevice, does_not_own_overlay_buffers_after_screen_off)
 
     auto use_count_before = stub_buffer1.use_count();
     mga::LayerList list(layer_adapter, {stub_renderable1});
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
     EXPECT_THAT(stub_buffer1.use_count(), Gt(use_count_before));
 
     device.content_cleared();
@@ -657,9 +658,9 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_even_across_list_changes)
 
     mga::HwcDevice device(mock_device);
     mga::LayerList list(layer_adapter, renderlist1);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
     list.update_list(renderlist2);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
 }
 
 TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
@@ -760,7 +761,7 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
 
     mga::HwcDevice device(mock_device);
     mga::LayerList list(layer_adapter, renderlist);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
     list.update_list(renderlist2);
-    device.commit(primary, list, false, stub_context, stub_compositor);
+    device.commit(primary, list, stub_context, stub_compositor);
 }

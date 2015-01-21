@@ -59,7 +59,6 @@ mga::HwcFbDevice::HwcFbDevice(
 void mga::HwcFbDevice::commit(
     mga::DisplayName,
     mga::LayerList& layer_list,
-    bool,
     SwappingGLContext const& context,
     RenderableListCompositor const&)
 {

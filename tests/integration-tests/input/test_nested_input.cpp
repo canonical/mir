@@ -29,7 +29,7 @@
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test/client_event_matchers.h"
+#include "mir_test/event_matchers.h"
 
 #include "InputEnumerator.h"
 #include "InputDispatcher.h"

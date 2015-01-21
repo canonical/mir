@@ -137,11 +137,6 @@ std::list<mga::HwcLayerEntry>::iterator mga::LayerList::begin()
     return layers.begin(); 
 }
 
-mga::HwcLayerEntry& mga::LayerList::back()
-{
-    return layers.back();
-}
-
 std::list<mga::HwcLayerEntry>::iterator mga::LayerList::end()
 {
     return layers.end(); 
@@ -154,6 +149,7 @@ hwc_display_contents_1_t* mga::LayerList::native_list()
 
 mga::NativeFence mga::LayerList::retirement_fence()
 {
+    renderable_list.clear();
     return hwc_representation->retireFenceFd;
 }
 
@@ -163,6 +159,14 @@ mga::LayerList::LayerList(
     layer_adapter{layer_adapter}
 {
     update_list(renderlist);
+}
+
+bool mga::LayerList::needs_swap()
+{
+    bool any_rendered = false;
+    for(auto const& layer : layers)
+        any_rendered |= layer.layer.needs_gl_render();
+    return any_rendered;
 }
 
 mg::RenderableList mga::LayerList::rejected_renderables()

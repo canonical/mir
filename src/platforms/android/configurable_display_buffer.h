@@ -32,8 +32,7 @@ namespace android
 class ConfigurableDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    virtual DisplayConfigurationOutput configuration() const = 0;
-    virtual void configure(DisplayConfigurationOutput const&) = 0;
+    virtual void configure(MirPowerMode power_mode, MirOrientation orientation) = 0;
 };
 
 }

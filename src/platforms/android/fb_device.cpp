@@ -75,7 +75,6 @@ mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev) :
 void mga::FBDevice::commit(
     DisplayName,
     LayerList&,
-    bool,
     SwappingGLContext const& context,
     RenderableListCompositor const&)
 {

@@ -331,15 +331,3 @@ TEST_F(HWCFallbackGLRenderer, activates_alpha_per_renderable)
 
     glprogram.render(renderlist, mock_swapping_context);
 }
-
-TEST_F(HWCFallbackGLRenderer, empty_list_still_swaps)
-{
-    using namespace testing;
-    mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
-
-    InSequence seq;
-    EXPECT_CALL(mock_gl, glUseProgram(_)).Times(0);
-    EXPECT_CALL(mock_gl, glDrawArrays(_,_,_)).Times(0);
-    EXPECT_CALL(mock_swapping_context, swap_buffers());
-    glprogram.render({}, mock_swapping_context);
-}

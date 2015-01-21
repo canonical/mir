@@ -22,6 +22,7 @@
 #include "mir/graphics/display.h"
 #include "gl_context.h"
 #include "hwc_configuration.h"
+#include "display_configuration.h"
 #include "overlay_optimization.h"
 
 #include <memory>
@@ -75,10 +76,12 @@ public:
 
 private:
     std::shared_ptr<DisplayComponentFactory> const display_buffer_builder;
+    mutable std::mutex configuration_mutex;
     std::unique_ptr<HwcConfiguration> const hwc_config;
     DisplayAttribs attribs;
+    DisplayConfigurationOutput primary_configuration;
+
     PbufferGLContext gl_context;
-    mutable std::mutex configuration_mutex;
 
     //primary display is always connected
     std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;

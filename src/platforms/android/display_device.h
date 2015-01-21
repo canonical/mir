@@ -51,7 +51,6 @@ public:
     virtual void commit(
         DisplayName,
         LayerList&,
-        bool force_swap,
         SwappingGLContext const& context,
         RenderableListCompositor const& list_compositor) = 0;
 

@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_CLIENT_SURFACE_H_
 #define MIR_TEST_DOUBLES_MOCK_CLIENT_SURFACE_H_
 
-#include "src/client/mir_client_surface.h"
+#include "mir/mir_client_surface.h"
 #include <gmock/gmock.h>
 
 namespace mir

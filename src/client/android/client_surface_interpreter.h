@@ -20,7 +20,7 @@
 #define MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
 
 #include "mir/graphics/android/android_driver_interpreter.h"
-#include "../mir_client_surface.h"
+#include "mir/mir_client_surface.h"
 
 namespace mir
 {

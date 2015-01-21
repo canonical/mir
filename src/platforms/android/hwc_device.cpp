@@ -84,8 +84,8 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
     hwc_list.update_list({});
 
-    //TODO: NullRenderer is temporary until we move the list up to DisplayBuffer
-    struct NullRenderer :  RenderableListCompositor
+    //TODO: SwappingRenderer is temporary until we move the list up to DisplayBuffer
+    struct SwappingRenderer : RenderableListCompositor
     {
         void render(RenderableList const&, SwappingGLContext const& context) const
         {
@@ -93,7 +93,7 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
         }
     } null_renderer;
 
-    commit(context, true, null_renderer);
+    commit(context, null_renderer);
 }
 
 bool mga::HwcDevice::post_overlays(
@@ -112,7 +112,7 @@ bool mga::HwcDevice::post_overlays(
     if (!needs_commit)
         return false;
 
-    commit(context, false, list_compositor);
+    commit(context, list_compositor);
     return true;
 }
 #endif
@@ -120,7 +120,6 @@ bool mga::HwcDevice::post_overlays(
 void mga::HwcDevice::commit(
     mga::DisplayName,
     mga::LayerList& hwc_list,
-    bool force_swap,
     SwappingGLContext const& context,
     RenderableListCompositor const& list_compositor)
 {
@@ -128,15 +127,10 @@ void mga::HwcDevice::commit(
 
     hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
 
-    //render and swap as needed
-    auto rejected_renderables = hwc_list.rejected_renderables();
-    if (force_swap || !rejected_renderables.empty())
+    if (hwc_list.needs_swap())
     {
-        //FIXME: fix this downstream
-        if (force_swap)
-            context.swap_buffers();
-        else
-            list_compositor.render(rejected_renderables, context);
+        //FIXME: fix to SWAP ALWAYS
+        list_compositor.render(hwc_list.rejected_renderables(), context);
         hwc_list.setup_fb(context.last_rendered_buffer());
         hwc_list.swap_occurred();
     }
@@ -145,7 +139,7 @@ void mga::HwcDevice::commit(
     std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
     for (auto& layer : hwc_list)
     {
-        auto buffer = layer.layer.buf();
+        auto buffer = layer.layer.buffer();
         if (layer.layer.is_overlay() && buffer)
         {
             if (!buffer_is_onscreen(*buffer))

@@ -20,7 +20,7 @@
 #define MIR_CLIENT_MESA_NATIVE_SURFACES_H_
 
 #include "mir_toolkit/mesa/native_display.h"
-#include "../mir_client_surface.h"
+#include "mir/mir_client_surface.h"
 
 namespace mir
 {

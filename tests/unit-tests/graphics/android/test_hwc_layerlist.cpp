@@ -178,3 +178,24 @@ TEST_F(LayerListTest, generate_rejected_renderables)
 
     EXPECT_THAT(list.rejected_renderables(), ElementsAre(renderables.front(), renderables.back())); 
 }
+
+TEST_F(LayerListTest, swap_needed)
+{
+    using namespace testing;
+    mga::LayerList list(layer_adapter, renderables);
+
+    auto l = list.native_list();
+    ASSERT_THAT(l->numHwLayers, Eq(4));
+    for(auto i = 0u; i < 3; i++)
+        l->hwLayers[i].compositionType = HWC_OVERLAY;
+    l->hwLayers[3].compositionType = HWC_FRAMEBUFFER_TARGET;
+
+    EXPECT_FALSE(list.needs_swap());
+
+    l->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+
+    EXPECT_TRUE(list.needs_swap());
+
+    list.update_list({});
+    EXPECT_TRUE(list.needs_swap());
+}

@@ -67,8 +67,8 @@ private:
     std::weak_ptr<scene::Observer> observer;
     
 
-    void update_cursor_image_locked(std::lock_guard<std::mutex> const&);
-    void set_cursor_image_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<graphics::CursorImage> const& image);
+    void update_cursor_image_locked(std::unique_lock<std::mutex>&);
+    void set_cursor_image_locked(std::unique_lock<std::mutex>&, std::shared_ptr<graphics::CursorImage> const& image);
 };
 
 }

@@ -26,7 +26,7 @@
 #include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 
-#include "../client_buffer_factory.h"
+#include "mir/client_buffer_factory.h"
 
 namespace mir
 {
