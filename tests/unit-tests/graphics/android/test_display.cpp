@@ -622,3 +622,51 @@ TEST_F(Display, will_requery_display_configuration_after_hotplug)
         EXPECT_THAT(c.modes[c.current_mode_index].size, Eq(attribs2.pixel_size));
     });
 }
+
+TEST_F(Display, returns_correct_dbs_with_external_and_primary_output_at_start)
+{
+    using namespace testing;
+    std::function<void()> hotplug_fn = []{};
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        EXPECT_CALL(mock_config, active_attribs_for(mga::DisplayName::primary))
+            .Times(3)
+            .WillRepeatedly(testing::Return(
+                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, true, mir_pixel_format_abgr_8888, 2}));
+        EXPECT_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
+            .Times(3)
+            .WillOnce(testing::Return(
+                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, true, mir_pixel_format_abgr_8888, 2}))
+            .WillOnce(testing::Return(
+                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, false, mir_pixel_format_abgr_8888, 2}))
+            .WillOnce(testing::Return(
+                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, true, mir_pixel_format_abgr_8888, 2}));
+        EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
+            .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(std::make_shared<char>('2'))));
+    });
+
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    auto db_count = 0;
+    display.for_each_display_buffer([&](mg::DisplayBuffer&){ db_count++; });
+    EXPECT_THAT(db_count, Eq(2));
+
+    //hotplug external away
+    hotplug_fn();
+
+    db_count = 0;
+    display.for_each_display_buffer([&](mg::DisplayBuffer&){ db_count++; });
+    EXPECT_THAT(db_count, Eq(1));
+
+    //hotplug external back 
+    hotplug_fn();
+
+    db_count = 0;
+    display.for_each_display_buffer([&](mg::DisplayBuffer&){ db_count++; });
+    EXPECT_THAT(db_count, Eq(2));
+}
