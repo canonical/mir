@@ -97,11 +97,6 @@ public:
         return true;
     }
 
-    int buffers_ready_for_compositor() const override
-    {
-        return 1;
-    }
-
     void move_to(geom::Point new_position)
     {
         std::lock_guard<std::mutex> lock{position_mutex};

@@ -51,7 +51,7 @@ public:
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;
     void force_requests_to_complete() override;
-    int buffers_ready_for_compositor() const override;
+    int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     void drop_client_requests() override;
 

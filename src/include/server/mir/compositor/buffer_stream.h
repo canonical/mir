@@ -52,7 +52,7 @@ public:
     virtual void resize(geometry::Size const& size) = 0;
     virtual void allow_framedropping(bool) = 0;
     virtual void force_requests_to_complete() = 0;
-    virtual int buffers_ready_for_compositor() const = 0;
+    virtual int buffers_ready_for_compositor(void const* user_id) const = 0;
     virtual void drop_old_buffers() = 0;
     virtual void drop_client_requests() = 0;
 };

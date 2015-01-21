@@ -37,8 +37,6 @@ struct MockRenderable : public graphics::Renderable
             .WillByDefault(testing::Return(geometry::Rectangle{{},{}}));
         ON_CALL(*this, buffer())
             .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
-        ON_CALL(*this, buffers_ready_for_compositor())
-            .WillByDefault(testing::Return(1));
         ON_CALL(*this, alpha())
             .WillByDefault(testing::Return(1.0f));
         ON_CALL(*this, transformation())
@@ -54,7 +52,6 @@ struct MockRenderable : public graphics::Renderable
     MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_CONST_METHOD0(visible, bool());
     MOCK_CONST_METHOD0(shaped, bool());
-    MOCK_CONST_METHOD0(buffers_ready_for_compositor, int());
 };
 }
 }

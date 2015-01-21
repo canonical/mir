@@ -1307,11 +1307,12 @@ TEST_F(BufferQueueTest, buffers_ready_is_not_underestimated)
         q.compositor_release(b);
     
         // Verify frame 3 is ready for the first compositor
-        ASSERT_THAT(q.buffers_ready_for_compositor(), Ge(1));
+        ASSERT_THAT(q.buffers_ready_for_compositor(this), Ge(1));
         auto c = q.compositor_acquire(this);
 
         // Verify frame 3 is ready for a second compositor
-        ASSERT_THAT(q.buffers_ready_for_compositor(), Ge(1));
+        int const that = 0;
+        ASSERT_THAT(q.buffers_ready_for_compositor(&that), Ge(1));
 
         q.compositor_release(c);
     }
