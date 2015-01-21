@@ -176,6 +176,8 @@ TEST_F(HwcDevice, swaps_buffers_directly_when_no_renderables)
     using namespace testing;
     mtd::MockRenderableListCompositor mock_compositor;
     mtd::MockSwappingGLContext mock_context;
+    ON_CALL(mock_context, last_rendered_buffer())
+        .WillByDefault(Return(stub_fb_buffer));
 
     EXPECT_CALL(mock_compositor, render(_,_))
         .Times(0);

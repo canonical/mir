@@ -91,8 +91,11 @@ void mga::HwcDevice::commit(
 
     if (hwc_list.needs_swap())
     {
-        //FIXME: fix to SWAP ALWAYS
-        list_compositor.render(hwc_list.rejected_renderables(), context);
+        auto rejected_renderables = hwc_list.rejected_renderables();
+        if (rejected_renderables.empty())
+            context.swap_buffers();
+        else
+            list_compositor.render(std::move(rejected_renderables), context);
         hwc_list.setup_fb(context.last_rendered_buffer());
         hwc_list.swap_occurred();
     }
