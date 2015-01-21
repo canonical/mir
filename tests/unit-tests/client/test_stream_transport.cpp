@@ -45,6 +45,7 @@
 
 namespace mclr = mir::client::rpc;
 namespace mt = mir::test;
+namespace md = mir::dispatch;
 
 namespace
 {
@@ -138,7 +139,7 @@ TYPED_TEST(StreamTransportTest, WatchFdIsNoLongerReadableAfterEventProcessing)
 
     ASSERT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
-    this->transport->dispatch();
+    this->transport->dispatch(md::fd_event::readable);
 
     EXPECT_FALSE(mt::fd_is_readable(this->test_fd));
 }
@@ -173,7 +174,7 @@ TYPED_TEST(StreamTransportTest, NoEventsDispatchedUntilDispatchCalled)
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     while (mt::fd_is_readable(this->transport->watch_fd()))
     {
-        this->transport->dispatch();
+        this->transport->dispatch(md::fd_event::readable);
     }
 
     EXPECT_TRUE(data_available);
@@ -208,13 +209,13 @@ TYPED_TEST(StreamTransportTest, DispatchesSingleEventAtATime)
 
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
-    this->transport->dispatch();
+    this->transport->dispatch(md::fd_event::readable);
 
     EXPECT_TRUE(data_available xor disconnected);
 
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
-    this->transport->dispatch();
+    this->transport->dispatch(md::fd_event::readable);
 
     EXPECT_TRUE(data_available);
     EXPECT_TRUE(disconnected);
@@ -236,7 +237,7 @@ TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnect)
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     while (mt::fd_is_readable(this->transport->watch_fd()))
     {
-        this->transport->dispatch();
+        this->transport->dispatch(md::fd_event::readable);
     }
 
     EXPECT_TRUE(disconnected);
@@ -272,7 +273,7 @@ TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnectWhileReading)
     // There should now be a disconnect event pending...
     EXPECT_TRUE(mt::fd_is_readable(this->transport->watch_fd()));
 
-    this->transport->dispatch();
+    this->transport->dispatch(md::fd_event::readable);
 
     EXPECT_TRUE(disconnected);
     EXPECT_TRUE(receive_error_detected);
@@ -295,7 +296,7 @@ TYPED_TEST(StreamTransportTest, NotifiesOnDataAvailable)
 
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
-    this->transport->dispatch();
+    this->transport->dispatch(md::fd_event::readable);
 
     EXPECT_TRUE(notified_data_available);
 }
@@ -325,7 +326,7 @@ TYPED_TEST(StreamTransportTest, KeepsNotifyingOfAvailableDataUntilAllIsRead)
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     while (mt::fd_is_readable(this->transport->watch_fd()))
     {
-        this->transport->dispatch();
+        this->transport->dispatch(md::fd_event::readable);
     }
 
     EXPECT_EQ(0, bytes_left);
@@ -356,7 +357,7 @@ TYPED_TEST(StreamTransportTest, StopsNotifyingOnceAllDataIsRead)
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     while (bytes_left > 0)
     {
-        this->transport->dispatch();
+        this->transport->dispatch(md::fd_event::readable);
     }
 
     EXPECT_FALSE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
@@ -389,7 +390,7 @@ TYPED_TEST(StreamTransportTest, DoesntSendDataAvailableNotificationOnDisconnect)
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     while (mt::fd_is_readable(this->transport->watch_fd()))
     {
-        this->transport->dispatch();
+        this->transport->dispatch(md::fd_event::readable);
     }
 
     ::close(this->test_fd);
@@ -397,7 +398,7 @@ TYPED_TEST(StreamTransportTest, DoesntSendDataAvailableNotificationOnDisconnect)
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     while (mt::fd_is_readable(this->transport->watch_fd()))
     {
-        this->transport->dispatch();
+        this->transport->dispatch(md::fd_event::readable);
     }
 
     EXPECT_FALSE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
@@ -427,7 +428,7 @@ TYPED_TEST(StreamTransportTest, ReadsCorrectData)
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     while (mt::fd_is_readable(this->transport->watch_fd()))
     {
-        this->transport->dispatch();
+        this->transport->dispatch(md::fd_event::readable);
     }
 
     EXPECT_EQ(0, memcmp(expected.data(), received.data(), expected.size()));

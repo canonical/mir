@@ -54,7 +54,8 @@ class MockDispatchable : public md::Dispatchable
 {
 public:
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
-    MOCK_METHOD0(dispatch, void());
+    MOCK_METHOD1(dispatch, void(md::fd_event));
+    MOCK_CONST_METHOD0(relevant_events, md::fd_event());
 };
 
 }
@@ -67,7 +68,7 @@ TEST_F(SimpleDispatchThreadTest, CallsDispatchWhenFdIsReadable)
     ON_CALL(*dispatchable, watch_fd()).WillByDefault(Return(watch_fd));
 
     auto dispatched = std::make_shared<mt::Signal>();
-    ON_CALL(*dispatchable, dispatch()).WillByDefault(Invoke([dispatched]() { dispatched->raise(); }));
+    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([dispatched](md::fd_event) { dispatched->raise(); }));
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -88,7 +89,7 @@ TEST_F(SimpleDispatchThreadTest, StopsCallingDispatchOnceFdIsNotReadable)
     ON_CALL(*dispatchable, watch_fd()).WillByDefault(Return(watch_fd));
 
     auto dispatched = std::make_shared<mt::Signal>();
-    ON_CALL(*dispatchable, dispatch()).WillByDefault(Invoke([this, &dispatch_count]()
+    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([this, &dispatch_count](md::fd_event)
                                                      {
                                                          decltype(dummy) buffer;
                                                          dispatch_count++;

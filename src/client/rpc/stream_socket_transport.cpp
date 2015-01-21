@@ -33,6 +33,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace mclr = mir::client::rpc;
+namespace md = mir::dispatch;
 
 mclr::StreamSocketTransport::StreamSocketTransport(mir::Fd const& fd)
     : socket_fd{fd},
@@ -182,7 +183,7 @@ mir::Fd mclr::StreamSocketTransport::watch_fd() const
     return epoll_fd;
 }
 
-void mclr::StreamSocketTransport::dispatch()
+void mclr::StreamSocketTransport::dispatch(md::fd_event /*event*/)
 {
     epoll_event event;
     epoll_wait(epoll_fd, &event, 1, 0);
@@ -211,6 +212,11 @@ void mclr::StreamSocketTransport::dispatch()
             notify_data_available();
         }
     }
+}
+
+md::fd_event mclr::StreamSocketTransport::relevant_events() const
+{
+    return md::fd_event::readable;
 }
 
 mir::Fd mclr::StreamSocketTransport::open_socket(std::string const& path)

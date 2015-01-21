@@ -38,6 +38,7 @@
 
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
+namespace md = mir::dispatch;
 
 namespace
 {
@@ -356,7 +357,12 @@ mir::Fd mir::client::rpc::MirProtobufRpcChannel::watch_fd() const
     return transport->watch_fd();
 }
 
-void mir::client::rpc::MirProtobufRpcChannel::dispatch()
+void mir::client::rpc::MirProtobufRpcChannel::dispatch(md::fd_event event)
 {
-    transport->dispatch();
+    transport->dispatch(event);
+}
+
+md::fd_event mclr::MirProtobufRpcChannel::relevant_events() const
+{
+    return transport->relevant_events();
 }

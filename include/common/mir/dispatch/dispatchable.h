@@ -25,6 +25,14 @@ namespace mir
 {
 namespace dispatch
 {
+
+enum fd_event {
+    readable =      1<<0,
+    writable =      1<<1,
+    remote_closed = 1<<2,
+    error =         1<<3
+};
+
 class Dispatchable
 {
 public:
@@ -43,8 +51,20 @@ public:
 
     /**
      * \brief Dispatch one pending event
+     * \param [in] event    The set of events current on the file-descriptor
+     * \note This will dispatch at most one event. If there are multiple events
+     *       specify in \ref event (eg: readable | remote_closed) then dispatch
+     *       will process only one.
+     * \note It is harmless to call dispatch() with an event that does not contain
+     *       any of the events from relevant_events(). The function will do
+     *       nothing in such a case.
      */
-    virtual void dispatch() = 0;
+    virtual void dispatch(fd_event event) = 0;
+
+    /**
+     * \brief The set of file-descriptor events this Dispatchable handles
+     */
+    virtual fd_event relevant_events() const = 0;
 };
 }
 }

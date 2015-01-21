@@ -54,7 +54,7 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
         epoll_wait(epoll_fd, &event, 1, -1);
         if (event.events & EPOLLIN)
         {
-            dispatchee->dispatch();
+            dispatchee->dispatch(md::fd_event::readable);
         }
         else if (event.events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
         {

@@ -43,6 +43,7 @@ namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace md = mir::dispatch;
 
 namespace
 {
@@ -84,7 +85,8 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
     MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
 
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
-    MOCK_METHOD0(dispatch, void());
+    MOCK_METHOD1(dispatch, void(md::fd_event));
+    MOCK_CONST_METHOD0(relevant_events, md::fd_event());
 };
 
 struct MockClientPlatform : public mcl::ClientPlatform

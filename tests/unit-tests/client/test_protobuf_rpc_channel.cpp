@@ -41,6 +41,7 @@
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 namespace mtd = mir::test::doubles;
+namespace md = mir::dispatch;
 
 namespace
 {
@@ -109,7 +110,8 @@ public:
     MOCK_METHOD3(receive_data, void(void*, size_t, std::vector<mir::Fd>&));
     MOCK_METHOD2(send_message, void(std::vector<uint8_t> const&, std::vector<mir::Fd> const&));
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
-    MOCK_METHOD0(dispatch, void());
+    MOCK_METHOD1(dispatch, void(md::fd_event));
+    MOCK_CONST_METHOD0(relevant_events, md::fd_event());
 
     // Transport interface
     void register_observer_default(std::shared_ptr<Observer> const& observer)
