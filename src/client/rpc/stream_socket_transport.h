@@ -52,7 +52,7 @@ private:
     void notify_data_available();
     void notify_disconnected();
 
-    Fd socket_fd;
+    Fd const socket_fd;
 
     std::mutex observer_mutex;
     std::vector<std::shared_ptr<Observer>> observers;
