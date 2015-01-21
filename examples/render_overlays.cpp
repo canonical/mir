@@ -162,11 +162,6 @@ public:
         return false;
     }
 
-    bool visible() const override
-    {
-        return true;
-    }
-
 private:
     std::shared_ptr<DemoOverlayClient> const client;
     geom::Rectangle const position;

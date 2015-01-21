@@ -87,11 +87,6 @@ public:
         return glm::mat4();
     }
 
-    bool visible() const override
-    {
-        return true;
-    }
-
     bool shaped() const override
     {
         return true;
