@@ -47,12 +47,14 @@ public:
     */
     virtual bool compatible_renderlist(RenderableList const& renderlist) = 0;
 
-    /* post the list */
+    /* post the layer list to the display, optionally drawing using the context/compositor if
+     * instructed to by the driver
+     */
     virtual void commit(
-        DisplayName,
-        LayerList&,
+        DisplayName display_name,
+        LayerList& layer_list,
         SwappingGLContext const& context,
-        RenderableListCompositor const& list_compositor) = 0;
+        RenderableListCompositor const& compositor) = 0;
 
     //notify the DisplayDevice that the screen content was cleared in a way other than the above fns
     virtual void content_cleared() = 0;

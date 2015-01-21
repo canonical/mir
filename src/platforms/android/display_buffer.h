@@ -42,7 +42,8 @@ class LayerList;
 class DisplayBuffer : public ConfigurableDisplayBuffer
 {
 public:
-    //TODO: some of these could be condensed
+    //TODO: could probably just take the HalComponentFactory to reduce the
+    //      number of dependencies
     DisplayBuffer(
         std::unique_ptr<LayerList> layer_list,
         std::shared_ptr<FramebufferBundle> const& fb_bundle,

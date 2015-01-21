@@ -40,7 +40,6 @@ mga::HwcFbDevice::HwcFbDevice(
     std::shared_ptr<framebuffer_device_t> const& fb_device) :
     hwc_wrapper(hwc_wrapper), 
     fb_device(fb_device),
-    //layer_list{std::make_shared<mga::Hwc10Adapter>(), {}},
     vsync_subscription{
         [hwc_wrapper, this]{
             using namespace std::placeholders;

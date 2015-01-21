@@ -362,21 +362,6 @@ TEST_F(HwcDevice, commits_correct_list_when_all_accepted_as_overlays)
     mga::LayerList list(layer_adapter, renderlist);
     device.commit(primary, list, stub_context, stub_compositor);
 }
-#if 0
-
-TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
-{
-    using namespace testing;
-    ON_CALL(*mock_device, prepare(_))
-        .WillByDefault(Invoke(set_all_layers_to_overlay));
-    EXPECT_CALL(*mock_device, set(_))
-        .Times(1);
-
-    mga::HwcDevice device(mock_device, layer_adapter);
-    EXPECT_TRUE(device.post_overlays(stub_context, renderlist, stub_compositor));
-    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
-}
-#endif
 
 TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
 {

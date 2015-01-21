@@ -244,6 +244,16 @@ TEST_F(DisplayBuffer, release_current)
     db.release_current();
 }
 
+TEST_F(DisplayBuffer, notifies_list_that_content_is_cleared)
+{
+    EXPECT_CALL(*mock_display_device, content_cleared())
+        .Times(3);
+    db.configure(mir_power_mode_off, mir_orientation_normal);
+    db.configure(mir_power_mode_suspend, mir_orientation_normal);
+    db.configure(mir_power_mode_standby, mir_orientation_normal);
+    db.configure(mir_power_mode_on, mir_orientation_normal);
+}
+
 TEST_F(DisplayBuffer, does_not_use_alpha)
 {
     EXPECT_FALSE(db.uses_alpha());
@@ -268,4 +278,40 @@ TEST_F(DisplayBuffer, reject_list_if_option_disabled)
         mga::OverlayOptimization::disabled);
 
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
+}
+
+TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
+{
+    using namespace testing;
+    auto buffer1 = std::make_shared<mtd::StubRenderable>();
+    auto buffer2 = std::make_shared<mtd::StubRenderable>();
+    auto buffer3 = std::make_shared<mtd::StubRenderable>();
+
+    ON_CALL(*mock_display_device, compatible_renderlist(_))
+        .WillByDefault(Return(true));
+    ON_CALL(*mock_display_device, commit(_,_,_,_))
+        .WillByDefault(Invoke([](
+            mga::DisplayName,
+            mga::LayerList&,//list,
+            mga::SwappingGLContext const&,
+            mga::RenderableListCompositor const&)
+        {
+        }));
+
+    mg::RenderableList renderlist{buffer1, buffer2};
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
+
+    //ordering changed
+    renderlist = mg::RenderableList{buffer2, buffer1};
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
+
+    //buffer changed
+    renderlist = mg::RenderableList{buffer3, buffer1};
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
