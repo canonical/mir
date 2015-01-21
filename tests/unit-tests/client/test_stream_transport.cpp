@@ -130,6 +130,125 @@ public:
 typedef ::testing::Types<mclr::StreamSocketTransport> Transports;
 TYPED_TEST_CASE(StreamTransportTest, Transports);
 
+TYPED_TEST(StreamTransportTest, ReturnsValidWatchFd)
+{
+    // A valid fd is >= 0, and we know that stdin, stdout, and stderr aren't correct.
+    EXPECT_GE(this->transport->watch_fd(), 3);
+}
+
+TYPED_TEST(StreamTransportTest, WatchFdIsPollable)
+{
+    pollfd socket_readable;
+    socket_readable.events = POLLIN;
+    socket_readable.fd = this->transport->watch_fd();
+
+    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 0)));
+
+    EXPECT_FALSE(socket_readable.revents & POLLERR);
+    EXPECT_FALSE(socket_readable.revents & POLLNVAL);
+}
+
+TYPED_TEST(StreamTransportTest, WatchFdNotifiesReadableWhenDataPending)
+{
+    pollfd socket_readable;
+    socket_readable.events = POLLIN;
+    socket_readable.fd = this->transport->watch_fd();
+
+    uint64_t dummy{0xdeadbeef};
+    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+
+    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 1000)));
+
+    ASSERT_FALSE(socket_readable.revents & POLLERR);
+    ASSERT_FALSE(socket_readable.revents & POLLNVAL);
+
+    EXPECT_TRUE(socket_readable.revents & POLLIN);
+}
+
+TYPED_TEST(StreamTransportTest, WatchFdRemainsUnreadableUntilEventPending)
+{
+    EXPECT_FALSE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+
+    uint64_t dummy{0xdeadbeef};
+    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+
+    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+}
+
+TYPED_TEST(StreamTransportTest, WatchFdIsNoLongerReadableAfterEventProcessing)
+{
+    using namespace testing;
+
+    pollfd socket_readable;
+    socket_readable.events = POLLIN;
+    socket_readable.fd = this->transport->watch_fd();
+
+    uint64_t dummy{0xdeadbeef};
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+
+    ON_CALL(*observer, on_data_available())
+        .WillByDefault(Invoke([dummy, this]()
+                              {
+                                  decltype(dummy) buffer;
+                                  this->transport->receive_data(&buffer, sizeof(dummy));
+                              }));
+
+    this->transport->register_observer(observer);
+
+    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+
+    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 1000)));
+
+    ASSERT_FALSE(socket_readable.revents & POLLERR);
+    ASSERT_FALSE(socket_readable.revents & POLLNVAL);
+
+    EXPECT_TRUE(socket_readable.revents & POLLIN);
+
+    this->transport->dispatch();
+
+    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 0)));
+
+    EXPECT_FALSE(socket_readable.revents & POLLIN);
+}
+
+TYPED_TEST(StreamTransportTest, NoEventsDispatchedUntilDispatchCalled)
+{
+    using namespace testing;
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    bool data_available{false};
+    bool disconnected{false};
+
+    uint64_t dummy{0xdeadbeef};
+    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+    ::close(this->test_fd);
+
+    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([this, dummy, &data_available]()
+                                                                 {
+                                                                     decltype(dummy) buffer;
+                                                                     this->transport->receive_data(&buffer, sizeof(buffer));
+                                                                     data_available = true;
+                                                                 }));
+    ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([&disconnected]()
+                                                               { disconnected = true; }));
+
+    this->transport->register_observer(observer);
+
+    std::this_thread::sleep_for(std::chrono::seconds{1});
+    EXPECT_FALSE(data_available);
+    EXPECT_FALSE(disconnected);
+
+    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
+    while (fd_is_readable(this->transport->watch_fd()))
+    {
+        this->transport->dispatch();
+    }
+
+    EXPECT_TRUE(data_available);
+    EXPECT_TRUE(disconnected);
+}
+
 TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnect)
 {
     using namespace testing;
@@ -1107,123 +1226,4 @@ TYPED_TEST(StreamTransportTest, ReceivingDataWithoutAskingForFdsIsAnErrorWhenThe
     EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
-}
-
-TYPED_TEST(StreamTransportTest, ReturnsValidWatchFd)
-{
-    // A valid fd is >= 0, and we know that stdin, stdout, and stderr aren't correct.
-    EXPECT_GE(this->transport->watch_fd(), 3);
-}
-
-TYPED_TEST(StreamTransportTest, WatchFdIsPollable)
-{
-    pollfd socket_readable;
-    socket_readable.events = POLLIN;
-    socket_readable.fd = this->transport->watch_fd();
-
-    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 0)));
-
-    EXPECT_FALSE(socket_readable.revents & POLLERR);
-    EXPECT_FALSE(socket_readable.revents & POLLNVAL);
-}
-
-TYPED_TEST(StreamTransportTest, WatchFdNotifiesReadableWhenDataPending)
-{
-    pollfd socket_readable;
-    socket_readable.events = POLLIN;
-    socket_readable.fd = this->transport->watch_fd();
-
-    uint64_t dummy{0xdeadbeef};
-    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
-
-    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 1000)));
-
-    ASSERT_FALSE(socket_readable.revents & POLLERR);
-    ASSERT_FALSE(socket_readable.revents & POLLNVAL);
-
-    EXPECT_TRUE(socket_readable.revents & POLLIN);
-}
-
-TYPED_TEST(StreamTransportTest, WatchFdRemainsUnreadableUntilEventPending)
-{
-    EXPECT_FALSE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
-
-    uint64_t dummy{0xdeadbeef};
-    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
-
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
-}
-
-TYPED_TEST(StreamTransportTest, WatchFdIsNoLongerReadableAfterEventProcessing)
-{
-    using namespace testing;
-
-    pollfd socket_readable;
-    socket_readable.events = POLLIN;
-    socket_readable.fd = this->transport->watch_fd();
-
-    uint64_t dummy{0xdeadbeef};
-
-    auto observer = std::make_shared<NiceMock<MockObserver>>();
-
-    ON_CALL(*observer, on_data_available())
-        .WillByDefault(Invoke([dummy, this]()
-                              {
-                                  decltype(dummy) buffer;
-                                  this->transport->receive_data(&buffer, sizeof(dummy));
-                              }));
-
-    this->transport->register_observer(observer);
-
-    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
-
-    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 1000)));
-
-    ASSERT_FALSE(socket_readable.revents & POLLERR);
-    ASSERT_FALSE(socket_readable.revents & POLLNVAL);
-
-    EXPECT_TRUE(socket_readable.revents & POLLIN);
-
-    this->transport->dispatch();
-
-    ASSERT_TRUE(std_call_succeeded(poll(&socket_readable, 1, 0)));
-
-    EXPECT_FALSE(socket_readable.revents & POLLIN);
-}
-
-TYPED_TEST(StreamTransportTest, NoEventsDispatchedUntilDispatchCalled)
-{
-    using namespace testing;
-
-    auto observer = std::make_shared<NiceMock<MockObserver>>();
-    bool data_available{false};
-    bool disconnected{false};
-
-    uint64_t dummy{0xdeadbeef};
-    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
-    ::close(this->test_fd);
-
-    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([this, dummy, &data_available]()
-                                                                 {
-                                                                     decltype(dummy) buffer;
-                                                                     this->transport->receive_data(&buffer, sizeof(buffer));
-                                                                     data_available = true;
-                                                                 }));
-    ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([&disconnected]()
-                                                               { disconnected = true; }));
-
-    this->transport->register_observer(observer);
-
-    std::this_thread::sleep_for(std::chrono::seconds{1});
-    EXPECT_FALSE(data_available);
-    EXPECT_FALSE(disconnected);
-
-    EXPECT_TRUE(fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
-    while (fd_is_readable(this->transport->watch_fd()))
-    {
-        this->transport->dispatch();
-    }
-
-    EXPECT_TRUE(data_available);
-    EXPECT_TRUE(disconnected);
 }
