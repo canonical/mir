@@ -27,6 +27,7 @@
 
 #include <memory>
 #include <mutex>
+#include <array>
 
 namespace mir
 {
@@ -42,6 +43,7 @@ namespace android
 class DisplayComponentFactory;
 class DisplaySupportProvider;
 class ConfigurableDisplayBuffer;
+class DisplayChangePipe;
 
 class Display : public graphics::Display
 {
@@ -75,16 +77,18 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
+    void on_hotplug();
+
     std::shared_ptr<DisplayComponentFactory> const display_buffer_builder;
-    mutable std::mutex configuration_mutex;
+    std::mutex mutable configuration_mutex;
+    bool mutable configuration_dirty{false};
     std::unique_ptr<HwcConfiguration> const hwc_config;
-    DisplayAttribs attribs;
-    DisplayConfigurationOutput primary_configuration;
-
+    ConfigChangeSubscription const hotplug_subscription;
+    DisplayAttribs const primary_attribs; //TODO: could be removed, really only useful in construction
+    DisplayConfiguration mutable config;
     PbufferGLContext gl_context;
-
-    //primary display is always connected
     std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;
+    std::unique_ptr<DisplayChangePipe> display_change_pipe;
 };
 
 }
