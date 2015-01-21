@@ -16,12 +16,12 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "../client_platform_factory.h"
+#include "mir/client_platform_factory.h"
 #include "client_platform.h"
 #include "mir_toolkit/client_types.h"
-#include "../client_context.h"
+#include "mir/client_context.h"
 #include "buffer_file_ops.h"
-#include "../egl_native_display_container.h"
+#include "mir/egl_native_display_container.h"
 
 #include <sys/mman.h>
 #include <unistd.h>

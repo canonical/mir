@@ -21,6 +21,7 @@
 
 #include "mir/graphics/platform.h"
 #include "device_quirks.h"
+#include "overlay_optimization.h"
 
 namespace mir
 {
@@ -31,14 +32,15 @@ namespace android
 {
 class GraphicBufferAllocator;
 class FramebufferFactory;
-class DisplayBufferBuilder;
+class DisplayComponentFactory;
 
 class Platform : public graphics::Platform
 {
 public:
     Platform(
-        std::shared_ptr<DisplayBufferBuilder> const& display_buffer_builder,
-        std::shared_ptr<DisplayReport> const& display_report);
+        std::shared_ptr<DisplayComponentFactory> const& display_buffer_builder,
+        std::shared_ptr<DisplayReport> const& display_report,
+        OverlayOptimization overlay_option);
 
     /* From Platform */
     std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
@@ -54,9 +56,10 @@ private:
 
     std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator();
 
-    std::shared_ptr<DisplayBufferBuilder> const display_buffer_builder;
+    std::shared_ptr<DisplayComponentFactory> const display_buffer_builder;
     std::shared_ptr<DisplayReport> const display_report;
     std::shared_ptr<PlatformIpcOperations> const ipc_operations;
+    OverlayOptimization const overlay_option;
     DeviceQuirks quirks{PropertiesOps{}};
 };
 

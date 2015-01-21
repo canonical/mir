@@ -47,7 +47,6 @@ class DemoCompositor : public compositor::DisplayBufferCompositor
 public:
     DemoCompositor(
         graphics::DisplayBuffer& display_buffer,
-        graphics::GLProgramFactory const& factory,
         std::shared_ptr<compositor::CompositorReport> const& report);
     ~DemoCompositor();
 
@@ -55,6 +54,8 @@ public:
 
     void zoom(float mag);
     void on_cursor_movement(geometry::Point const& p);
+
+    void set_colour_effect(ColourEffect);
 
     static void for_each(std::function<void(DemoCompositor&)> f);
 

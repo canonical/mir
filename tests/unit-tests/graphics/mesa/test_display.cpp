@@ -424,7 +424,8 @@ TEST_F(MesaDisplayTest, post_update)
 
         /* Handle the flip event */
         EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
-            .Times(0);
+            .Times(1)
+            .WillOnce(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
 
         /* Release last_flipped_bufobj (at destruction time) */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
@@ -803,5 +804,31 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         create_platform(),
         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
         mir::test::fake_shared(mock_gl_config),
+        null_report};
+}
+
+TEST_F(MesaDisplayTest, supports_as_low_as_15bit_colour)
+{  // Regression test for LP: #1212753
+    using namespace testing;
+
+    mtd::StubGLConfig stub_gl_config;
+
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    AllOf(mtd::EGLConfigContainsAttrib(EGL_RED_SIZE, 5),
+                          mtd::EGLConfigContainsAttrib(EGL_GREEN_SIZE, 5),
+                          mtd::EGLConfigContainsAttrib(EGL_BLUE_SIZE, 5),
+                          mtd::EGLConfigContainsAttrib(EGL_ALPHA_SIZE, 0)),
+                    _,_,_))
+        .Times(AtLeast(1))
+        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                        SetArgPointee<4>(1),
+                        Return(EGL_TRUE)));
+
+    mgm::Display display{
+        create_platform(),
+        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        mir::test::fake_shared(stub_gl_config),
         null_report};
 }

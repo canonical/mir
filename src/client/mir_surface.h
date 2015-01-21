@@ -27,8 +27,8 @@
 #include "mir/optional_value.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
-#include "mir_client_surface.h"
-#include "client_platform.h"
+#include "mir/mir_client_surface.h"
+#include "mir/client_platform.h"
 
 #include <memory>
 #include <functional>
@@ -78,6 +78,8 @@ struct MirSurfaceSpec
     mir::optional_value<MirOrientationMode> pref_orientation;
 
     mir::optional_value<MirSurface*> parent;
+    mir::optional_value<MirRectangle> attachment_rect;
+    mir::optional_value<MirEdgeAttachment> edge_attachment;
 };
 
 struct MirSurface : public mir::client::ClientSurface

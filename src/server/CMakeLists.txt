@@ -40,7 +40,6 @@ add_library(mirserverobjects OBJECT
   report_exception.cpp
   display_server.cpp
   default_server_configuration.cpp
-  asio_main_loop.cpp
   glib_main_loop.cpp
   glib_main_loop_sources.cpp
   default_emergency_cleanup.cpp
@@ -103,7 +102,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 28) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 29) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

@@ -171,18 +171,18 @@ public:
         return surface;
     }
 
-    mf::SurfaceId create_surface(ms::SurfaceCreationParameters const& /* params */) override
+    mf::SurfaceId create_surface(ms::SurfaceCreationParameters const& /* params */)
     {
         mf::SurfaceId id{last_surface_id};
         if (mock_surfaces.end() == mock_surfaces.find(id))
         {
-            mock_surfaces[id] = create_mock_surface(); 
+            mock_surfaces[id] = create_mock_surface();
         }
         last_surface_id++;
         return id;
     }
 
-    void destroy_surface(mf::SurfaceId surface) override
+    void destroy_surface(mf::SurfaceId surface)
     {
         mock_surfaces.erase(surface);
     }
@@ -236,6 +236,12 @@ struct SessionMediator : public ::testing::Test
         using namespace ::testing;
 
         ON_CALL(*shell, open_session(_, _, _)).WillByDefault(Return(stubbed_session));
+
+        ON_CALL(*shell, create_surface( _, _)).WillByDefault(
+            WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::create_surface)));
+
+        ON_CALL(*shell, destroy_surface( _, _)).WillByDefault(
+            WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::destroy_surface)));
     }
 
     MockConnector connector;

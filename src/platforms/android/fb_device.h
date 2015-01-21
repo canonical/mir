@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
 
 #include "display_device.h"
+#include "hwc_configuration.h"
 #include <hardware/gralloc.h>
 #include <hardware/fb.h>
 
@@ -30,20 +31,30 @@ namespace graphics
 namespace android
 {
 
+class FbControl : public HwcConfiguration
+{
+public:
+    FbControl(std::shared_ptr<framebuffer_device_t> const& fbdev);
+    void power_mode(DisplayName, MirPowerMode) override;
+    DisplayAttribs active_attribs_for(DisplayName) override; 
+private:
+    std::shared_ptr<framebuffer_device_t> const fb_device;
+};
+
 class FBDevice : public DisplayDevice
 {
 public:
     FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev);
 
-    void mode(MirPowerMode mode);
-    virtual void post_gl(SwappingGLContext const& context);
-    virtual bool post_overlays(
+    void post_gl(SwappingGLContext const& context) override;
+    bool post_overlays(
         SwappingGLContext const& context,
         RenderableList const& list,
-        RenderableListCompositor const& list_compositor);
+        RenderableListCompositor const& list_compositor) override;
 
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
+    void content_cleared() override;
 };
 
 }

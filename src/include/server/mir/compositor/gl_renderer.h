@@ -19,13 +19,12 @@
 #ifndef MIR_COMPOSITOR_GL_RENDERER_H_
 #define MIR_COMPOSITOR_GL_RENDERER_H_
 
+#include <mir/compositor/gl_program_family.h>
 #include <mir/compositor/renderer.h>
-#include <mir/graphics/gl_program.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/gl_primitive.h>
-#include <mir/graphics/gl_program_factory.h>
 #include <mir/graphics/gl_texture_cache.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
@@ -43,7 +42,6 @@ class GLRenderer : public Renderer
 {
 public:
     GLRenderer(
-        graphics::GLProgramFactory const& program_factory,
         std::unique_ptr<graphics::GLTextureCache> && texture_cache, 
         geometry::Rectangle const& display_area,
         DestinationAlpha dest_alpha);
@@ -76,24 +74,43 @@ protected:
     virtual void tessellate(std::vector<graphics::GLPrimitive>& primitives,
                             graphics::Renderable const& renderable) const;
 
-    virtual void render(graphics::Renderable const& renderable) const;
-
     DestinationAlpha destination_alpha() const;
 
     GLfloat clear_color[4];
 
+    mutable long long frameno = 0;
+
+    GLProgramFamily family;
+    struct Program
+    {
+       GLuint id = 0;
+       GLint tex_uniform = -1;
+       GLint position_attr = -1;
+       GLint texcoord_attr = -1;
+       GLint centre_uniform = -1;
+       GLint display_transform_uniform = -1;
+       GLint transform_uniform = -1;
+       GLint screen_to_gl_coords_uniform = -1;
+       GLint alpha_uniform = -1;
+       mutable long long last_used_frameno = 0;
+
+       Program(GLuint program_id);
+    };
+    Program default_program, alpha_program;
+
+    static const GLchar* const vshader;
+    static const GLchar* const default_fshader;
+    static const GLchar* const alpha_fshader;
+
+    virtual void draw(graphics::Renderable const& renderable,
+                      GLRenderer::Program const& prog) const;
+
 private:
-    std::unique_ptr<graphics::GLProgram> program;
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
-    GLuint position_attr_loc;
-    GLuint texcoord_attr_loc;
-    GLuint centre_uniform_loc;
-    GLuint display_transform_uniform_loc;
-    GLuint transform_uniform_loc;
-    GLuint alpha_uniform_loc;
     float rotation;
     DestinationAlpha const dest_alpha;
     geometry::Rectangle viewport;
+    glm::mat4 screen_to_gl_coords, screen_rotation;
 
     std::vector<graphics::GLPrimitive> mutable primitives;
 };

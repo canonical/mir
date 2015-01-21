@@ -22,6 +22,7 @@
 #include "server_example_fullscreen_placement_strategy.h"
 #include "server_example_display_configuration_policy.h"
 #include "server_example_host_lifecycle_event_listener.h"
+#include "server_example_window_manager.h"
 #include "server_example_test_client.h"
 
 #include "mir/server.h"
@@ -82,20 +83,20 @@ try
 {
     mir::Server server;
 
-    // Create some input filters (we need to keep them or they deactivate)
-    auto const quit_filter = me::make_quit_filter_for(server);
-    auto const printing_filter = me::make_printing_input_filter_for(server);
-
     // Add example options for display layout, logging, launching clients and timeout
     me::add_display_configuration_options_to(server);
     me::add_log_host_lifecycle_option_to(server);
     me::add_glog_options_to(server);
-    me::add_fullscreen_option_to(server);
+    me::add_window_manager_option_to(server);
     add_launcher_option_to(server);
     add_timeout_option_to(server);
 
     std::atomic<bool> test_failed{false};
     me::add_test_client_option_to(server, test_failed);
+
+    // Create some input filters (we need to keep them or they deactivate)
+    auto const quit_filter = me::make_quit_filter_for(server);
+    auto const printing_filter = me::make_printing_input_filter_for(server);
 
     // Provide the command line and run the server
     server.set_command_line(argc, argv);
