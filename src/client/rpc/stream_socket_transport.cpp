@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <poll.h>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -45,22 +46,18 @@ mclr::StreamSocketTransport::StreamSocketTransport(mir::Fd const& fd)
                                                  std::system_category(),
                                                  "Failed to create epoll monitor for IO"}));
     }
-    init();
+    epoll_event event;
+    // Make valgrind happy, harder
+    memset(&event, 0, sizeof(event));
+
+    event.events = EPOLLIN | EPOLLRDHUP;
+    event.data.fd = socket_fd;
+    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd, &event);
 }
 
 mclr::StreamSocketTransport::StreamSocketTransport(std::string const& socket_path)
     : StreamSocketTransport(open_socket(socket_path))
 {
-}
-
-mclr::StreamSocketTransport::~StreamSocketTransport()
-{
-    int dummy{0};
-    send(shutdown_fd, &dummy, sizeof(dummy), MSG_NOSIGNAL);
-    if (io_service_thread.joinable())
-    {
-        io_service_thread.join();
-    }
 }
 
 void mclr::StreamSocketTransport::register_observer(std::shared_ptr<Observer> const& observer)
@@ -189,111 +186,69 @@ mir::Fd mclr::StreamSocketTransport::watch_fd() const
 
 bool mclr::StreamSocketTransport::dispatch()
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds{10});
-    return false;
-}
-
-void mclr::StreamSocketTransport::init()
-{
-    // We use sockets rather than a pipe so that we can control
-    // EPIPE behaviour; we don't want SIGPIPE when the IO loop terminates.
-    int socket_fds[2];
-    socketpair(AF_UNIX, SOCK_STREAM, 0, socket_fds);
-    this->shutdown_fd = mir::Fd{socket_fds[1]};
-
-    auto shutdown_fd = mir::Fd{socket_fds[0]};
-    io_service_thread = std::thread([this, shutdown_fd]
+    epoll_event event;
+    epoll_wait(epoll_fd, &event, 1, 0);
+    if (event.data.fd == socket_fd)
     {
-        // Our IO threads must not receive any signals
-        sigset_t all_signals;
-        sigfillset(&all_signals);
-
-        if (auto error = pthread_sigmask(SIG_BLOCK, &all_signals, NULL))
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
-
-        mir::set_thread_name("Client IO loop");
-
-        epoll_event event;
-        // Make valgrind happy, harder
-        memset(&event, 0, sizeof(event));
-
-        event.events = EPOLLIN | EPOLLRDHUP;
-        event.data.fd = socket_fd;
-        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd, &event);
-
-        event.events = EPOLLIN | EPOLLRDHUP;
-        event.data.fd = shutdown_fd;
-        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, shutdown_fd, &event);
-
-        bool shutdown_requested{false};
-        while (!shutdown_requested)
+        if (event.events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
         {
-            epoll_event event;
-            epoll_wait(epoll_fd, &event, 1, -1);
-            if (event.data.fd == socket_fd)
+            if (event.events & EPOLLIN)
             {
-                if (event.events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-                {
-                    if (event.events & EPOLLIN)
-                    {
-                        // If the remote end shut down cleanly it's possible there's some more
-                        // data left to read, or that reads will now return 0 (EOF)
-                        //
-                        // If there's more data left to read, notify of this before disconnect.
-                        int dummy;
-                        if (recv(socket_fd, &dummy, sizeof(dummy), MSG_PEEK | MSG_NOSIGNAL) > 0)
-                        {
-                            try
-                            {
-                                notify_data_available();
-                            }
-                            catch(...)
-                            {
-                                //It's quite likely that notify_data_available() will lead to
-                                //an exception being thrown; after all, the remote has closed
-                                //the connection.
-                                //
-                                //This doesn't matter; we're already shutting down.
-                            }
-                        }
-                    }
-                    notify_disconnected();
-                    shutdown_requested = true;
-                }
-                else if (event.events & EPOLLIN)
+                // If the remote end shut down cleanly it's possible there's some more
+                // data left to read, or that reads will now return 0 (EOF)
+                //
+                // If there's more data left to read, notify of this before disconnect.
+                int dummy;
+                if (recv(socket_fd, &dummy, sizeof(dummy), MSG_PEEK | MSG_NOSIGNAL) > 0)
                 {
                     try
                     {
                         notify_data_available();
                     }
-                    catch (socket_disconnected_error &err)
+                    catch(...)
                     {
-                        // We've already notified of disconnection.
-                        shutdown_requested = true;
-                    }
-                    // These need not be fatal.
-                    catch (fd_reception_error &err)
-                    {
-                    }
-                    catch (socket_error &err)
-                    {
-                    }
-                    catch (...)
-                    {
-                        // We've no idea what the problem is, so clean up as best we can.
-                        notify_disconnected();
-                        shutdown_requested = true;
+                        //It's quite likely that notify_data_available() will lead to
+                        //an exception being thrown; after all, the remote has closed
+                        //the connection.
+                        //
+                        //This doesn't matter; we're already shutting down.
                     }
                 }
             }
-            if (event.data.fd == shutdown_fd)
+            notify_disconnected();
+        }
+        else if (event.events & EPOLLIN)
+        {
+            try
             {
-                shutdown_requested = true;
+                notify_data_available();
+            }
+            catch (socket_disconnected_error &err)
+            {
+                // We've already notified of disconnection.
+            }
+            // These need not be fatal.
+            catch (fd_reception_error &err)
+            {
+            }
+            catch (socket_error &err)
+            {
+            }
+            catch (...)
+            {
+                // We've no idea what the problem is, so clean up as best we can.
+                notify_disconnected();
             }
         }
-    });
+    }
+
+    pollfd events_remaining;
+    events_remaining.events = POLLIN;
+    events_remaining.fd = epoll_fd;
+
+    poll(&events_remaining, 1, 0);
+
+    return events_remaining.revents & POLLIN;
 }
 
 mir::Fd mclr::StreamSocketTransport::open_socket(std::string const& path)
