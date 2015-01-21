@@ -106,8 +106,6 @@ public:
     /**
      * \brief Register an IO observer
      * \param [in] observer
-     * \note There is no guarantee which thread will call into the observer.
-     *       Synchronisation is the responsibility of the caller.
      */
     virtual void register_observer(std::shared_ptr<Observer> const& observer) = 0;
 
