@@ -14,7 +14,6 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mir_prompt_session.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_event_distributor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_periodic_perf_report.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_simple_rpc_thread.cpp
 )
 
 if(MIR_TEST_PLATFORM STREQUAL "android")

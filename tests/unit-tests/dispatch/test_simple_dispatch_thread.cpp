@@ -34,10 +34,10 @@ namespace mt = mir::test;
 
 namespace
 {
-class SimpleRPCThreadTest : public ::testing::Test
+class SimpleDispatchThreadTest : public ::testing::Test
 {
 public:
-    SimpleRPCThreadTest()
+    SimpleDispatchThreadTest()
     {
         watch_fd = mir::Fd{pipe.read_fd()};
         test_fd = mir::Fd{pipe.write_fd()};
@@ -59,7 +59,7 @@ public:
 
 }
 
-TEST_F(SimpleRPCThreadTest, CallsDispatchWhenFdIsReadable)
+TEST_F(SimpleDispatchThreadTest, CallsDispatchWhenFdIsReadable)
 {
     using namespace testing;
 
@@ -77,7 +77,7 @@ TEST_F(SimpleRPCThreadTest, CallsDispatchWhenFdIsReadable)
     EXPECT_TRUE(dispatched->wait_for(std::chrono::seconds{1}));
 }
 
-TEST_F(SimpleRPCThreadTest, StopsCallingDispatchOnceFdIsNotReadable)
+TEST_F(SimpleDispatchThreadTest, StopsCallingDispatchOnceFdIsNotReadable)
 {
     using namespace testing;
 
