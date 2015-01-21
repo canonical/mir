@@ -645,7 +645,6 @@ public:
         void const* compositor_id,
         geom::Rectangle const& position,
         glm::mat4 const& transform,
-        bool visible,
         float alpha,
         bool shaped,
         mg::Renderable::ID id)
@@ -654,7 +653,6 @@ public:
       compositor_id{compositor_id},
       alpha_{alpha},
       shaped_{shaped},
-      visible_{visible},
       screen_position_(position),
       transformation_(transform),
       id_(id)
@@ -674,9 +672,6 @@ public:
             compositor_buffer = underlying_buffer_stream->lock_compositor_buffer(compositor_id);
         return compositor_buffer;
     }
-
-    bool visible() const override
-    { return visible_; }
 
     geom::Rectangle screen_position() const override
     { return screen_position_; }
@@ -698,7 +693,6 @@ private:
     void const*const compositor_id;
     float const alpha_;
     bool const shaped_;
-    bool const visible_;
     geom::Rectangle const screen_position_;
     glm::mat4 const transformation_;
     mg::Renderable::ID const id_; 
@@ -715,7 +709,6 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
             compositor_id,
             surface_rect,
             transformation_matrix,
-            visible(lk),
             surface_alpha,
             nonrectangular, 
             this));

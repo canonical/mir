@@ -52,10 +52,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     auto const& occlusions = mc::filter_occlusions_from(scene_elements, view_area);
 
     for (auto const& element : occlusions)
-    {
-        if (element->renderable()->visible())
-            element->occluded();
-    }
+        element->occluded();
 
     mg::RenderableList renderable_list;
     for (auto const& element : scene_elements)

@@ -162,11 +162,6 @@ public:
         return false;
     }
 
-    bool visible() const override
-    {
-        return true;
-    }
-
     int buffers_ready_for_compositor() const override
     {
         return 1;
