@@ -1,0 +1,67 @@
+/*
+ * Copyright © 2015 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Author: Robert Carr <robert.carr@canonical.com>
+ */
+
+#include "mir/events/event_builders.h"
+
+namespace mev = mir::events;
+namespace geom = mir::geometry;
+
+MirEvent mev::make_orientation_event(int surface_id, MirOrientation orientation)
+{
+    MirEvent e;
+    e.type = mir_event_type_orientation;
+    e.orientation.surface_id = surface_id;
+    e.orientation.direction = orientation;
+    return e;
+}
+
+MirEvent mev::make_prompt_session_event(MirPromptSessionState state)
+{
+    MirEvent e;
+    e.type = mir_event_type_prompt_session_state_change;
+    e.prompt_session.new_state = state;
+    return e;
+}
+
+MirEvent mev::make_resize_event(int surface_id, geom::Size const& size)
+{
+    MirEvent e;
+    e.type = mir_event_type_resize;
+    e.resize.surface_id = surface_id;
+    e.resize.width = size.width.as_int();
+    e.resize.height = size.height.as_int();
+    return e;
+}
+
+MirEvent mev::make_surface_event(int surface_id, MirSurfaceAttrib attribute, int value)
+{
+    MirEvent e;
+    e.type = mir_event_type_surface;
+    e.surface.id = surface_id;
+    e.surface.attrib = attribute;
+    e.surface.value = value;
+    return e;
+}
+
+MirEvent mev::make_close_surface_event(int surface_id)
+{
+    MirEvent e;
+    e.type = mir_event_type_close_surface;
+    e.close_surface.surface_id = surface_id;
+    return e;
+}
