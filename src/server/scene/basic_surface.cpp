@@ -228,14 +228,12 @@ void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(m
             first_frame_posted = true;
         }
 
-        int const non_consumer = 0;
-
-        // Max frames ready for some new compositor that hasn't consumed yet:
-        int const nready =
-            surface_buffer_stream->buffers_ready_for_compositor(&non_consumer);
-        
-        // XXX This function doesn't really need the nready parameter any more:
-        observers.frame_posted(nready);
+        /*
+         * TODO: In future frame_posted() could be made parameterless.
+         *       The new method of catching up on buffer backlogs is to
+         *       query buffers_ready_for_compositor() or Scene::frames_pending
+         */
+        observers.frame_posted(1);
     }
 
     surface_buffer_stream->acquire_client_buffer(complete);
