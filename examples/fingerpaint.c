@@ -214,7 +214,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         MirInputEvent const* input_event = mir_event_get_input_event(event);
         MirTouchInputEvent const* tev = NULL;
         MirPointerInputEvent const* pev = NULL;
-        unsigned touch_count = 1;
+        unsigned touch_count = 0;
         bool ended = false;
         MirInputEventType type = mir_input_event_get_type(input_event);
 
@@ -225,15 +225,14 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             touch_count = mir_touch_input_event_get_touch_count(tev);
             ended = touch_count == 1 &&
                     (mir_touch_input_event_get_touch_action(tev, 0) ==
-                        mir_touch_input_event_action_up);
+                     mir_touch_input_event_action_up);
             break;
         case mir_input_event_type_pointer:
             pev = mir_input_event_get_pointer_input_event(input_event);
             ended = mir_pointer_input_event_get_action(pev) ==
                 mir_pointer_input_event_action_button_up;
-            touch_count =
-                mir_pointer_input_event_get_button_state(pev,
-                    mir_pointer_input_button_primary) ? 1 : 0;
+            touch_count = mir_pointer_input_event_get_button_state(pev,
+                               mir_pointer_input_button_primary) ? 1 : 0;
         default:
             break;
         }
@@ -244,7 +243,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                          (sizeof(color)/sizeof(color[0]));
             max_fingers = 0;
         }
-        else
+        else if (touch_count)
         {
             size_t p;
 
@@ -255,7 +254,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             {
                 int x = 0;
                 int y = 0;
-                int radius;
+                int radius = 1;
                 float pressure = 1.0f;
 
                 if (tev != NULL)
