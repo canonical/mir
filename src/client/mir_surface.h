@@ -78,7 +78,7 @@ struct MirSurfaceSpec
     mir::optional_value<MirOrientationMode> pref_orientation;
 
     mir::optional_value<MirSurface*> parent;
-    mir::optional_value<MirRectangle> attachment_rect;
+    mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
 };
 

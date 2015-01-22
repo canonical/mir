@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platforms/android/hal_component_factory.h"
-#include "src/platforms/android/android_format_conversion-inl.h"
-#include "src/platforms/android/resource_factory.h"
-#include "src/platforms/android/graphic_buffer_allocator.h"
-#include "src/platforms/android/hwc_loggers.h"
+#include "src/platforms/android/server/hal_component_factory.h"
+#include "src/platforms/android/server/android_format_conversion-inl.h"
+#include "src/platforms/android/server/resource_factory.h"
+#include "src/platforms/android/server/graphic_buffer_allocator.h"
+#include "src/platforms/android/server/hwc_loggers.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test/fake_shared.h"

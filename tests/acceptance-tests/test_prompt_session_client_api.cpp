@@ -78,7 +78,7 @@ public:
         pid_t client_pid,
         std::string const& name,
         std::shared_ptr<mf::EventSink> const& sink)
-            -> std::shared_ptr<mf::Session> override
+            -> std::shared_ptr<ms::Session> override
     {
         auto const override_pid = (next != pids.end()) ? *next++ : client_pid;
 
