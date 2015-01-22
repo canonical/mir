@@ -19,9 +19,9 @@
 #include "mir_test_framework/process.h"
 
 #include "mir/graphics/buffer_properties.h"
-#include "src/platforms/android/buffer.h"
+#include "src/platforms/android/server/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
-#include "src/platforms/android/android_graphic_buffer_allocator.h"
+#include "src/platforms/android/server/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
 #include "mir_test/stub_server_tool.h"

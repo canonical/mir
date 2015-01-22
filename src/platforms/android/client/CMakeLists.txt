@@ -1,3 +1,4 @@
+include_directories(${client_common_include_dirs})
 include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 add_definitions(-DANDROID)
 
@@ -17,7 +18,7 @@ add_library(
   mirclientplatformandroid MODULE
 
   $<TARGET_OBJECTS:mirclientplatformandroidobjects>
-  $<TARGET_OBJECTS:mirclient_platformimpl>
+  $<TARGET_OBJECTS:client_platform_common>
 )
 
 set_target_properties(
