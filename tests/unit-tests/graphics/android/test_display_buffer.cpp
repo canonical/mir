@@ -71,6 +71,7 @@ struct DisplayBuffer : public ::testing::Test
             display_size, refresh_rate, mir_pixel_format_abgr_8888)};
     MirOrientation orientation{mir_orientation_normal};
     mga::DisplayBuffer db{
+        mga::DisplayName::primary,
         std::move(list),
         mock_fb_bundle,
         mock_display_device,
@@ -79,7 +80,6 @@ struct DisplayBuffer : public ::testing::Test
         stub_program_factory,
         orientation,
         mga::OverlayOptimization::enabled};
-
 };
 }
 
@@ -91,6 +91,7 @@ TEST_F(DisplayBuffer, can_post_update_with_gl_only)
         mga::DisplayName::primary, Ref(*list), _, _));
 
     mga::DisplayBuffer db{
+        mga::DisplayName::external,
         std::move(list),
         mock_fb_bundle,
         mock_display_device,
@@ -173,6 +174,7 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
         .Times(AtLeast(1));
 
     mga::DisplayBuffer db{
+        mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
             new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
         mock_fb_bundle,
@@ -198,6 +200,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
 
     EXPECT_THROW({
         mga::DisplayBuffer db(
+            mga::DisplayName::primary,
             std::unique_ptr<mga::LayerList>(
                 new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
             mock_fb_bundle,
@@ -211,6 +214,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
 
     EXPECT_THROW({
         mga::DisplayBuffer db(
+            mga::DisplayName::primary,
             std::unique_ptr<mga::LayerList>(
                 new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
             mock_fb_bundle,
@@ -267,6 +271,7 @@ TEST_F(DisplayBuffer, reject_list_if_option_disabled)
 
     mg::RenderableList renderlist{std::make_shared<mtd::StubRenderable>()};
     mga::DisplayBuffer db(
+        mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
             new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
         mock_fb_bundle,
