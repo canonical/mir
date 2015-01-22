@@ -44,7 +44,6 @@ add_library(mirserverobjects OBJECT
   glib_main_loop_sources.cpp
   default_emergency_cleanup.cpp
   server.cpp
-  events/event_builders.cpp
 )
 
 set(MIR_SERVER_OBJECTS
