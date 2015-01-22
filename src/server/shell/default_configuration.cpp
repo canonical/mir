@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -22,11 +22,35 @@
 
 #include "default_placement_strategy.h"
 #include "default_focus_mechanism.h"
+#include "default_shell.h"
 #include "graphics_display_layout.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
+
+auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::DefaultShell>
+{
+    return default_shell([this]
+        {
+            return std::make_shared<msh::DefaultShell>(
+                the_shell_focus_setter(),
+                the_session_coordinator());
+        });
+}
+
+std::shared_ptr<mf::Shell>
+mir::DefaultServerConfiguration::the_frontend_shell()
+{
+    return the_shell();
+}
+
+
+std::shared_ptr<msh::FocusController>
+mir::DefaultServerConfiguration::the_focus_controller()
+{
+    return the_shell();
+}
 
 std::shared_ptr<ms::PlacementStrategy>
 mir::DefaultServerConfiguration::the_placement_strategy()

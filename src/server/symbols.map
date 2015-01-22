@@ -500,6 +500,8 @@ MIR_SERVER_29 {
     mir::shell::SessionCoordinatorWrapper::set_surface_attribute*;
     mir::shell::SessionCoordinatorWrapper::start_prompt_session_for*;
     mir::shell::SessionCoordinatorWrapper::stop_prompt_session*;
+    mir::shell::SessionCoordinatorWrapper::successor_of*;
+    mir::shell::SessionCoordinatorWrapper::unset_focus*;
     mir::shell::SurfaceCoordinatorWrapper::add_surface*;
     mir::shell::SurfaceCoordinatorWrapper::raise*;
     mir::shell::SurfaceCoordinatorWrapper::remove_surface*;
