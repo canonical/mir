@@ -1,3 +1,4 @@
+
 MIR_COMMON_3 {
  global: mir_*;
   extern "C++" {
@@ -221,4 +222,4 @@ MIR_COMMON_3.2 {
     extern "C++" {
         mir::events::*
     };
-} MIR_COMMON_3;
+} MIR_COMMON_3.1;
