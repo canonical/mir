@@ -18,7 +18,7 @@
 
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "src/platforms/android/hwc_layerlist.h"
+#include "src/platforms/android/server/hwc_layerlist.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>

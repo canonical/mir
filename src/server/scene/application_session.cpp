@@ -73,9 +73,14 @@ mf::SurfaceId ms::ApplicationSession::next_id()
     return mf::SurfaceId(next_surface_id.fetch_add(1));
 }
 
-mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters const& params)
+mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters const& the_params)
 {
     auto const id = next_id();
+
+    auto params = the_params;
+
+    if (params.parent_id.is_set())
+        params.parent = checked_find(the_params.parent_id.value())->second;
 
     auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
     auto surf = surface_coordinator->add_surface(params, this);

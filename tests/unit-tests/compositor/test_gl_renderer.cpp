@@ -17,8 +17,6 @@
  */
 
 #include <functional>
-#include <string>
-#include <cstring>
 #include <stdexcept>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -74,9 +72,6 @@ const GLint screen_to_gl_coords_uniform_location = 5;
 const GLint tex_uniform_location = 6;
 const GLint display_transform_uniform_location = 7;
 const GLint centre_uniform_location = 8;
-const std::string stub_info_log = "something failed!";
-const size_t stub_info_log_length = stub_info_log.size();
-
 
 void SetUpMockProgramData(mtd::MockGL &mock_gl)
 {
@@ -170,12 +165,6 @@ public:
 };
 
 }
-
-/*
- * Once stood here: TEST_F(GLRenderer, render_is_done_in_sequence)
- * but it was a useless test that protected against nothing, and was
- * painful to maintain. So it has been deleted.
- */
 
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 {

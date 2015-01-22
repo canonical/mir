@@ -8,6 +8,12 @@ set(MIR_PLATFORM_DRIVER_BINARY lib${MIR_PLATFORM_DRIVER}.so
     CACHE STRING "File name of Mir server platform drivers")
 add_definitions(-DMIR_PLATFORM_DRIVER_BINARY="${MIR_PLATFORM_DRIVER_BINARY}")
 
+# We need MIR_CLIENT_PLATFORM_PATH in both libmirclient and the platform
+# implementations
+set(MIR_CLIENT_PLATFORM_PATH
+  ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/mir/client-platform
+)
+
 # Add the platform implementations before exposing any private APIs
 add_subdirectory(platforms/)
 
