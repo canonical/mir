@@ -18,7 +18,7 @@
 
 #include "mir/client_platform.h"
 #include "mir/shared_library.h"
-#include "src/client/mesa/mesa_native_display_container.h"
+#include "src/platforms/mesa/client/mesa_native_display_container.h"
 #include "mir_test_framework/client_platform_factory.h"
 #include "mir_test_doubles/mock_client_surface.h"
 

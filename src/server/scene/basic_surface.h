@@ -89,6 +89,18 @@ public:
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
         std::shared_ptr<SceneReport> const& report);
 
+    BasicSurface(
+        std::string const& name,
+        geometry::Rectangle rect,
+        std::weak_ptr<Surface> const& parent,
+        bool nonrectangular,
+        std::shared_ptr<compositor::BufferStream> const& buffer_stream,
+        std::shared_ptr<input::InputChannel> const& input_channel,
+        std::shared_ptr<input::InputSender> const& sender,
+        std::shared_ptr<SurfaceConfigurator> const& configurator,
+        std::shared_ptr<graphics::CursorImage> const& cursor_image,
+        std::shared_ptr<SceneReport> const& report);
+
     ~BasicSurface() noexcept;
 
     std::string name() const override;
@@ -145,6 +157,8 @@ public:
 
     void request_client_surface_close() override;
 
+    std::shared_ptr<Surface> parent() const override;
+
     void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
 
@@ -177,6 +191,7 @@ private:
     std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
+    std::weak_ptr<Surface> const parent_;
 
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;
