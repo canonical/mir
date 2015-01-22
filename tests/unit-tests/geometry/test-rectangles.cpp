@@ -259,3 +259,29 @@ TEST_F(TestRectangles, tracks_add_and_remove)
     EXPECT_THAT(contents_of(rectangles), UnorderedElementsAre(rect[0], rect[1], rect[2]));
     EXPECT_THAT(rectangles.bounding_rectangle(), Eq(Rectangle{{0,0}, {900,700}}));
 }
+
+TEST_F(TestRectangles, can_add_same_rectangle_many_times)
+{
+    int const many_times = 10;
+    Rectangle const rectangle{{  0,   0}, {800, 600}};
+
+    for (auto i = 0; i != many_times; ++i)
+        rectangles.add(rectangle);
+
+    EXPECT_THAT(rectangles.size(), Eq(many_times));
+}
+
+TEST_F(TestRectangles, remove_only_removes_one_instance)
+{
+    int const many_times = 10;
+    Rectangle const rectangle{{  0,   0}, {800, 600}};
+
+    for (auto i = 0; i != many_times; ++i)
+        rectangles.add(rectangle);
+
+    for (auto i = many_times; i-- != 0;)
+    {
+        rectangles.remove(rectangle);
+        EXPECT_THAT(rectangles.size(), Eq(i));
+    }
+}
