@@ -359,13 +359,9 @@ __attribute__((__deprecated__("Use mir_debug_surface_id()")))
 int mir_surface_get_id(MirSurface *surface);
 
 /**
- * Set the type (purpose) of a surface. This is not guaranteed to always work
- * with some shell types (e.g. phone/tablet UIs). As such, you may have to
- * wait on the function and check the result using mir_surface_get_type.
- *   \param [in] surface  The surface to operate on
- *   \param [in] type     The new type of the surface
- *   \return              A wait handle that can be passed to mir_wait_for
+ * \deprecated Use the mir_connection_create_spec_for_xxx family of APIs
  */
+__attribute__((__deprecated__("Use mir_connection_create_spec_for_xxx()")))
 MirWaitHandle* mir_surface_set_type(MirSurface *surface, MirSurfaceType type);
 
 /**

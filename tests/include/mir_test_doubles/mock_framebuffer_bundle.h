@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_FRAMEBUFFER_BUNDLE_H_
 #define MIR_TEST_DOUBLES_MOCK_FRAMEBUFFER_BUNDLE_H_
 
-#include "src/platforms/android/framebuffer_bundle.h"
+#include "src/platforms/android/server/framebuffer_bundle.h"
 #include "stub_buffer.h"
 #include <gmock/gmock.h>
 

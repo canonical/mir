@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_AGING_BUFFER_H_
 #define MIR_CLIENT_AGING_BUFFER_H_
 
-#include "client_buffer.h"
+#include "mir/client_buffer.h"
 
 namespace mir
 {
