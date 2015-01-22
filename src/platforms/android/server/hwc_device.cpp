@@ -126,7 +126,7 @@ void mga::HwcDevice::commit(
 
     hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
 
-    if (hwc_list.needs_swap())
+    if (hwc_list.needs_swapbuffers())
     {
         list_compositor.render(hwc_list.rejected_renderables(), context);
         hwc_list.setup_fb(context.last_rendered_buffer());

@@ -179,23 +179,32 @@ TEST_F(LayerListTest, generate_rejected_renderables)
     EXPECT_THAT(list.rejected_renderables(), ElementsAre(renderables.front(), renderables.back())); 
 }
 
-TEST_F(LayerListTest, swap_needed)
+TEST_F(LayerListTest, swap_not_needed_when_all_layers_overlay)
 {
     using namespace testing;
     mga::LayerList list(layer_adapter, renderables);
-
     auto l = list.native_list();
     ASSERT_THAT(l->numHwLayers, Eq(4));
     for (auto i = 0u; i < 3; i++)
         l->hwLayers[i].compositionType = HWC_OVERLAY;
     l->hwLayers[3].compositionType = HWC_FRAMEBUFFER_TARGET;
 
-    EXPECT_FALSE(list.needs_swap());
+    EXPECT_FALSE(list.needs_swapbuffers());
+}
 
+TEST_F(LayerListTest, swap_needed_when_one_layer_is_gl_rendered)
+{
+    using namespace testing;
+    mga::LayerList list(layer_adapter, renderables);
+    auto l = list.native_list();
+    for (auto i = 0u; i < 3; i++)
+        l->hwLayers[i].compositionType = HWC_OVERLAY;
     l->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+    EXPECT_TRUE(list.needs_swapbuffers());
+}
 
-    EXPECT_TRUE(list.needs_swap());
-
-    list.update_list({});
-    EXPECT_TRUE(list.needs_swap());
+TEST_F(LayerListTest, swap_needed_when_gl_is_forced)
+{
+    mga::LayerList list(layer_adapter, {});
+    EXPECT_TRUE(list.needs_swapbuffers());
 }

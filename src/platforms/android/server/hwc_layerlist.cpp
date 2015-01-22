@@ -161,7 +161,7 @@ mga::LayerList::LayerList(
     update_list(renderlist);
 }
 
-bool mga::LayerList::needs_swap()
+bool mga::LayerList::needs_swapbuffers()
 {
     bool any_rendered = false;
     for (auto const& layer : layers)
