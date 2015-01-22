@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,6 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "src/server/shell/default_shell.h"
 #include "src/server/scene/session_manager.h"
 #include "mir/scene/session.h"
 #include "mir/shell/focus_setter.h"
@@ -47,40 +48,36 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
+struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
 {
-    TestSessionManagerAndFocusSelectionStrategy()
-        : session_manager(
-              mt::fake_shared(surface_coordinator),
-              mt::fake_shared(container),
-              mt::fake_shared(focus_setter),
-              std::make_shared<mtd::NullSnapshotStrategy>(),
-              std::make_shared<mtd::NullSessionEventSink>(),
-              mt::fake_shared(session_listener),
-              std::make_shared<mtd::NullPromptSessionManager>())
-    {
-
-    }
-
     mtd::MockSurfaceCoordinator surface_coordinator; // TODO this isn't used as a mock
     ms::DefaultSessionContainer container;
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
     ms::NullSessionListener session_listener;
-    ms::SessionManager session_manager;
-};
+    ms::SessionManager session_manager
+        {
+            mt::fake_shared(surface_coordinator),
+            mt::fake_shared(container),
+            std::make_shared<mtd::NullSnapshotStrategy>(),
+            std::make_shared<mtd::NullSessionEventSink>(),
+            mt::fake_shared(session_listener),
+            std::make_shared<mtd::NullPromptSessionManager>()
+        };
 
+    msh::DefaultShell shell{mt::fake_shared(focus_setter), mt::fake_shared(session_manager)};
+};
 }
 
-TEST_F(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
+TEST_F(TestDefaultShellAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 
-    auto session1 = session_manager.open_session(__LINE__, "Visual Basic Studio", std::make_shared<mtd::NullEventSink>());
-    auto session2 = session_manager.open_session(__LINE__, "Microsoft Access", std::make_shared<mtd::NullEventSink>());
-    auto session3 = session_manager.open_session(__LINE__, "WordPerfect", std::make_shared<mtd::NullEventSink>());
+    auto session1 = shell.open_session(__LINE__, "Visual Basic Studio", std::make_shared<mtd::NullEventSink>());
+    auto session2 = shell.open_session(__LINE__, "Microsoft Access", std::make_shared<mtd::NullEventSink>());
+    auto session3 = shell.open_session(__LINE__, "WordPerfect", std::make_shared<mtd::NullEventSink>());
 
     Mock::VerifyAndClearExpectations(&focus_setter);
 
@@ -91,9 +88,9 @@ TEST_F(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
       EXPECT_CALL(focus_setter, set_focus_to(Eq(session3))).Times(1);
     }
 
-    session_manager.focus_next();
-    session_manager.focus_next();
-    session_manager.focus_next();
+    shell.focus_next();
+    shell.focus_next();
+    shell.focus_next();
 
     Mock::VerifyAndClearExpectations(&focus_setter);
 
@@ -101,15 +98,15 @@ TEST_F(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(AtLeast(0));
 }
 
-TEST_F(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
+TEST_F(TestDefaultShellAndFocusSelectionStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 
-    auto session1 = session_manager.open_session(__LINE__, "Visual Basic Studio", std::make_shared<mtd::NullEventSink>());
-    auto session2 = session_manager.open_session(__LINE__, "Microsoft Access", std::make_shared<mtd::NullEventSink>());
-    auto session3 = session_manager.open_session(__LINE__, "WordPerfect", std::make_shared<mtd::NullEventSink>());
+    auto session1 = shell.open_session(__LINE__, "Visual Basic Studio", std::make_shared<mtd::NullEventSink>());
+    auto session2 = shell.open_session(__LINE__, "Microsoft Access", std::make_shared<mtd::NullEventSink>());
+    auto session3 = shell.open_session(__LINE__, "WordPerfect", std::make_shared<mtd::NullEventSink>());
 
     Mock::VerifyAndClearExpectations(&focus_setter);
 
@@ -119,8 +116,8 @@ TEST_F(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfe
       EXPECT_CALL(focus_setter, set_focus_to(Eq(session1))).Times(1);
     }
 
-    session_manager.close_session(session3);
-    session_manager.close_session(session2);
+    shell.close_session(session3);
+    shell.close_session(session2);
 
     Mock::VerifyAndClearExpectations(&focus_setter);
 
