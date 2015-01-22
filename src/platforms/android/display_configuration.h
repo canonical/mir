@@ -31,7 +31,10 @@ namespace android
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    DisplayConfiguration(DisplayAttribs const& primary, DisplayAttribs const& external);
+    DisplayConfiguration(DisplayAttribs const& primary,
+                         MirPowerMode primary_mode,
+                         DisplayAttribs const& external,
+                         MirPowerMode external_mode);
 
     DisplayConfiguration(DisplayConfiguration const& other);
     DisplayConfiguration& operator=(DisplayConfiguration const& other);
@@ -42,8 +45,8 @@ public:
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
 
-    DisplayConfigurationOutput const& primary_config();
-    DisplayConfigurationOutput const& external_config();
+    DisplayConfigurationOutput& primary_config();
+    DisplayConfigurationOutput& external_config();
     DisplayConfigurationOutput& operator[](DisplayConfigurationOutputId const&);
 
 private:

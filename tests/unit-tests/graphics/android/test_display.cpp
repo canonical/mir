@@ -74,6 +74,12 @@ protected:
 //egl expectations are hard to tease out, we should unit-test the gl contexts instead
 TEST_F(Display, creation_creates_egl_resources_properly)
 {
+    stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
+    {
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
+            .WillByDefault(testing::Return(
+                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, false, mir_pixel_format_abgr_8888, 2}));
+    });
     using namespace testing;
     EGLSurface fake_surface = reinterpret_cast<EGLSurface>(0x715);
     EGLint const expected_pbuffer_attr[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
@@ -229,6 +235,12 @@ TEST_F(Display, throws_on_eglMakeCurrent_failure)
 {
     using namespace testing;
 
+    stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
+    {
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
+            .WillByDefault(testing::Return(
+                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, false, mir_pixel_format_abgr_8888, 2}));
+    });
     auto const mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
 
     EXPECT_CALL(*mock_display_report, report_successful_setup_of_native_resources())
@@ -283,6 +295,9 @@ TEST_F(Display, turns_on_db_at_construction_and_off_at_destruction)
 {
     stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
     {
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
+            .WillByDefault(testing::Return(
+                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, false, mir_pixel_format_abgr_8888, 2}));
         testing::InSequence seq;
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_off));
@@ -300,6 +315,9 @@ TEST_F(Display, first_power_on_is_not_fatal) //lp:1345533
 {
     stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
     {
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
+            .WillByDefault(testing::Return(
+                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, false, mir_pixel_format_abgr_8888, 2}));
         ON_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on))
             .WillByDefault(testing::Throw(std::runtime_error("")));
     });
@@ -317,6 +335,9 @@ TEST_F(Display, catches_exceptions_when_turning_off_in_destructor)
 {
     stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
     {
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
+            .WillByDefault(testing::Return(
+                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, false, mir_pixel_format_abgr_8888, 2}));
         testing::InSequence seq;
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_off))
@@ -335,6 +356,12 @@ TEST_F(Display, configures_power_modes)
 {
     stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
     {
+        using namespace testing;
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
+            .WillByDefault(testing::Return(
+                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, false, mir_pixel_format_abgr_8888, 2}));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, _))
+            .Times(AnyNumber());
         testing::InSequence seq;
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_standby));
@@ -353,7 +380,8 @@ TEST_F(Display, configures_power_modes)
     auto configuration = display.configuration();
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
         //on by default
-        EXPECT_EQ(output.power_mode, mir_power_mode_on);
+        if (output.id == mg::DisplayConfigurationOutputId{0})
+            EXPECT_EQ(output.power_mode, mir_power_mode_on);
         output.power_mode = mir_power_mode_on;
     });
     display.configure(*configuration);
@@ -687,15 +715,21 @@ TEST_F(Display, turns_external_display_on_with_hotplug)
         ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
             .WillByDefault(Invoke([&](mga::DisplayName)
             {
+                printf("EXT %i\n", external_connected);
                 return mga::DisplayAttribs{
                     {20,20}, {4,4}, 50.0f, external_connected, mir_pixel_format_abgr_8888, 2};
             }));
 
-        InSequence seq;
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, _))
+            .Times(AnyNumber());
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, _))
+            .Times(AnyNumber());
+
+        testing::InSequence seq;
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_on));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_off));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_on));
-
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_off));
     });
 
     mga::Display display(
@@ -721,7 +755,10 @@ TEST_F(Display, configures_external_display)
     using namespace testing;
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
     {
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, _))
+            .Times(AnyNumber());
         InSequence seq;
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_on));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_off));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_suspend));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_on));

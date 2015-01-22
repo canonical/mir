@@ -70,13 +70,44 @@ struct mga::DisplayChangePipe
 
 namespace
 {
-void safe_power_mode(mga::HwcConfiguration& config, MirPowerMode mode) noexcept
+void power_mode(
+    mga::DisplayName name,
+    mga::HwcConfiguration& control,
+    mg::DisplayConfigurationOutput& config,
+    MirPowerMode intended_mode)
+{
+    if (config.power_mode != intended_mode)
+    {
+        control.power_mode(name, intended_mode);
+        config.power_mode = intended_mode;
+    }
+}
+
+void power_mode_safe(
+    mga::DisplayName name,
+    mga::HwcConfiguration& control,
+    mg::DisplayConfigurationOutput& config,
+    MirPowerMode intended_mode) noexcept
 try
 {
-    config.power_mode(mga::DisplayName::primary, mode);
+    power_mode(name, control, config, intended_mode);
 } catch (...) {}
 
+void set_powermode_all_displays(
+    mga::HwcConfiguration& control,
+    mga::DisplayConfiguration& config,
+    MirPowerMode intended_mode) noexcept
+try
+{
+    power_mode_safe(mga::DisplayName::primary, control, config.primary_config(), intended_mode);
+    if (config.external_config().connected)
+        power_mode_safe(mga::DisplayName::external, control, config.external_config(), intended_mode); 
+} catch (...) {}
+
+
+//this should probably be the constructor of DisplayBuffer
 std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
+    mga::DisplayName name,
     mga::DisplayComponentFactory& display_buffer_builder,
     mga::DisplayAttribs const& attribs,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
@@ -88,7 +119,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, cache);
     auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
     return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new mga::DisplayBuffer(
-        mga::DisplayName::primary, 
+        name,
         display_buffer_builder.create_layer_list(),
         fbs,
         display_buffer_builder.create_display_device(),
@@ -110,11 +141,15 @@ mga::Display::Display(
     hwc_config{display_buffer_builder->create_hwc_configuration()},
     hotplug_subscription{hwc_config->subscribe_to_config_changes(std::bind(&mga::Display::on_hotplug, this))},
     primary_attribs(hwc_config->active_attribs_for(mga::DisplayName::primary)),
+    external_attribs(hwc_config->active_attribs_for(mga::DisplayName::external)),
     config(
         primary_attribs,
-        hwc_config->active_attribs_for(mga::DisplayName::external)),
+        mir_power_mode_off,
+        external_attribs,
+        mir_power_mode_off),
     gl_context{config.primary_config().current_format, *gl_config, *display_report},
     primary_db{create_display_buffer(
+        mga::DisplayName::primary,
         *display_buffer_builder,
         primary_attribs,
         gl_program_factory,
@@ -124,7 +159,16 @@ mga::Display::Display(
     gl_program_factory(gl_program_factory)
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
-    safe_power_mode(*hwc_config, mir_power_mode_on);
+    set_powermode_all_displays(*hwc_config, config, mir_power_mode_on);
+
+    if (config.external_config().connected)
+        external_db = create_display_buffer(
+            mga::DisplayName::external,
+            *display_buffer_builder,
+            external_attribs,
+            gl_program_factory,
+            gl_context,
+            mga::OverlayOptimization::disabled);
 
     display_report->report_successful_setup_of_native_resources();
 
@@ -136,29 +180,39 @@ mga::Display::Display(
 
 mga::Display::~Display() noexcept
 {
-    if (config.primary_config().power_mode != mir_power_mode_off)
-        safe_power_mode(*hwc_config, mir_power_mode_off);
+    printf("DESTROY.\n");
+    set_powermode_all_displays(*hwc_config, config, mir_power_mode_off);
 }
 
 void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) const
 {
     if (configuration_dirty)
     {
+        auto attribs = hwc_config->active_attribs_for(mga::DisplayName::external);
+        if (attribs.connected)
+            power_mode(mga::DisplayName::external, *hwc_config, config.external_config(), mir_power_mode_on);
+        else
+            power_mode(mga::DisplayName::external, *hwc_config, config.external_config(), mir_power_mode_off);
+
         config = mga::DisplayConfiguration(
             hwc_config->active_attribs_for(mga::DisplayName::primary),
-            hwc_config->active_attribs_for(mga::DisplayName::external));
+            config.primary_config().power_mode,
+            attribs,
+            config.external_config().power_mode);
         configuration_dirty = false;
+
+        if (config.external_config().connected)
+            external_db = create_display_buffer(
+                mga::DisplayName::external,
+                *display_buffer_builder,
+                attribs,
+                gl_program_factory,
+                gl_context,
+                mga::OverlayOptimization::disabled);
+        else
+            external_db.reset();
     }
 
-    if (config.external_config().connected)
-        external_db = create_display_buffer(
-            *display_buffer_builder,
-            hwc_config->active_attribs_for(mga::DisplayName::external),
-            gl_program_factory,
-            gl_context,
-            mga::OverlayOptimization::disabled);
-    else
-        external_db.reset();
 }
 
 void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
@@ -187,23 +241,22 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
     new_configuration.for_each_output([this](mg::DisplayConfigurationOutput const& output) {
-        //TODO: support configuring the external displaybuffer
+        if (output.current_format != config[output.id].current_format)
+            BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
+
         if (config.primary_config().id == output.id)
         {
-            if (output.current_format != config[output.id].current_format)
-                BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
-
             //TODO: We don't support rotation yet, so
             //we preserve this orientation change so the compositor can rotate everything in GL 
             config[output.id].orientation = output.orientation;
-
-            if (output.power_mode != config[output.id].power_mode)
-            {
-                hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
-                config[output.id].power_mode = output.power_mode;
-            }
-
+            power_mode(mga::DisplayName::primary, *hwc_config, config.primary_config(), output.power_mode);
             primary_db->configure(output.power_mode, output.orientation);
+        }
+        else
+        {
+            config[output.id].orientation = output.orientation;
+            power_mode(mga::DisplayName::external, *hwc_config, config.external_config(), output.power_mode);
+            if (external_db) external_db->configure(output.power_mode, output.orientation);
         }
     });
 }
