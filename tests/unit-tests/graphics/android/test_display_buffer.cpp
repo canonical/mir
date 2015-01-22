@@ -86,12 +86,12 @@ struct DisplayBuffer : public ::testing::Test
 TEST_F(DisplayBuffer, can_post_update_with_gl_only)
 {
     using namespace testing;
+    mga::DisplayName external{mga::DisplayName::external};
     list.reset(new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
-    EXPECT_CALL(*mock_display_device, commit(
-        mga::DisplayName::primary, Ref(*list), _, _));
+    EXPECT_CALL(*mock_display_device, commit(external, Ref(*list), _, _));
 
     mga::DisplayBuffer db{
-        mga::DisplayName::external,
+        external,
         std::move(list),
         mock_fb_bundle,
         mock_display_device,

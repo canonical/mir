@@ -88,6 +88,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, cache);
     auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
     return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new mga::DisplayBuffer(
+        mga::DisplayName::primary, 
         display_buffer_builder.create_layer_list(),
         fbs,
         display_buffer_builder.create_display_device(),
