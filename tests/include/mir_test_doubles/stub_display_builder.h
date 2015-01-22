@@ -19,10 +19,10 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
-#include "src/platforms/android/framebuffer_bundle.h"
-#include "src/platforms/android/display_component_factory.h"
-#include "src/platforms/android/configurable_display_buffer.h"
-#include "src/platforms/android/hwc_configuration.h"
+#include "src/platforms/android/server/framebuffer_bundle.h"
+#include "src/platforms/android/server/display_component_factory.h"
+#include "src/platforms/android/server/configurable_display_buffer.h"
+#include "src/platforms/android/server/hwc_configuration.h"
 #include "mock_display_device.h"
 #include <gmock/gmock.h>
 

@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platforms/android/framebuffers.h"
-#include "src/platforms/android/graphic_buffer_allocator.h"
+#include "src/platforms/android/server/framebuffers.h"
+#include "src/platforms/android/server/graphic_buffer_allocator.h"
 #include "mir_test_doubles/mock_buffer.h"
 
 #include <future>

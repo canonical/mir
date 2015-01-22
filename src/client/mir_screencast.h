@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_MIR_SCREENCAST_H_
 #define MIR_CLIENT_MIR_SCREENCAST_H_
 
-#include "mir_client_surface.h"
+#include "mir/mir_client_surface.h"
 #include "mir_wait_handle.h"
 #include "client_buffer_depository.h"
 #include "mir_toolkit/client_types.h"

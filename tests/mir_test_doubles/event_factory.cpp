@@ -110,7 +110,7 @@ mis::MotionParameters& mis::MotionParameters::with_movement(int new_rel_x, int n
     return *this;
 }
 
-mis::MotionParameters mis::a_motion_event()
+mis::MotionParameters mis::a_pointer_event()
 {
     return mis::MotionParameters();
 }

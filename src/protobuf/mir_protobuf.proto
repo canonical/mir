@@ -25,7 +25,7 @@ message SurfaceParameters {
   optional int32 pref_orientation = 9;
   optional int32 parent_id = 10;
   
-  optional Rectangle attachment_rect = 11;
+  optional Rectangle aux_rect = 11;
   optional int32 edge_attachment = 12;
 }
 

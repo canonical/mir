@@ -28,6 +28,14 @@ namespace mir
 namespace examples
 {
 
+enum ColourEffect
+{
+    none,
+    inverse,
+    contrast,
+    neffects
+};
+
 class DemoRenderer : public compositor::GLRenderer
 {
 public:
@@ -40,9 +48,20 @@ public:
 
     void begin(std::unordered_set<graphics::Renderable::ID> renderables_not_to_decorate) const;
     
-    void tessellate(
-        std::vector<graphics::GLPrimitive>& primitives,
-        graphics::Renderable const& renderable) const override;
+    bool would_embellish(
+        graphics::Renderable const& renderable,
+        geometry::Rectangle const&) const;
+
+    void set_colour_effect(ColourEffect);
+
+protected:
+    void tessellate(std::vector<graphics::GLPrimitive>& primitives,
+                    graphics::Renderable const& renderable) const override;
+
+    void draw(graphics::Renderable const& renderable,
+              GLRenderer::Program const& prog) const override;
+
+private:
     void tessellate_shadow(
         std::vector<graphics::GLPrimitive>& primitives,
         graphics::Renderable const& renderable,
@@ -51,16 +70,15 @@ public:
         std::vector<graphics::GLPrimitive>& primitives,
         graphics::Renderable const& renderable,
         float titlebar_height) const;
-    bool would_embellish(
-        graphics::Renderable const& renderable,
-        geometry::Rectangle const&) const;
 
-private:
     float const titlebar_height;
     float const shadow_radius;
     float const corner_radius;
     GLuint shadow_corner_tex;
     GLuint titlebar_corner_tex;
+
+    ColourEffect colour_effect;
+    Program inverse_program, contrast_program;
     
     mutable std::unordered_set<graphics::Renderable::ID> decoration_skip_list;
 };
