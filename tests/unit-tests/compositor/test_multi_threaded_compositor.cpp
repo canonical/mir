@@ -128,7 +128,19 @@ public:
         throw_on_add_observer_ = flag;
     }
 
+    int frames_pending(mc::CompositorID) const override
+    {
+        return pending;
+    }
+
+    void set_pending(int n)
+    {
+        pending = n;
+        observer->scene_changed();
+    }
+
 private:
+    int pending = 0;
     std::mutex observer_mutex;
     std::shared_ptr<ms::Observer> observer;
     bool throw_on_add_observer_;
@@ -476,6 +488,79 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
 
     // Verify we never triggered more than 9 compositions
     EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 3*composites_per_update, 3*composites_per_update));
+
+    compositor.stop();
+}
+
+TEST(MultiThreadedCompositor, schedules_enough_frames)
+{
+    using namespace testing;
+
+    unsigned int const nbuffers = 3;
+
+    auto display = std::make_shared<StubDisplay>(nbuffers);
+    auto scene = std::make_shared<StubScene>();
+    auto factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{display, scene, factory,
+                                           null_report, true};
+
+    EXPECT_TRUE(factory->check_record_count_for_each_buffer(nbuffers, 0, 0));
+
+    compositor.start();
+
+    int const max_retries = 100;
+    int retry = 0;
+    while (retry < max_retries &&
+           !factory->check_record_count_for_each_buffer(nbuffers, 1))
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        ++retry;
+    }
+
+    ASSERT_LT(retry, max_retries);
+
+    // Now we have the initial frame wait a bit
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // ... and make sure the number is still only 1
+    ASSERT_TRUE(factory->check_record_count_for_each_buffer(nbuffers, 1, 1));
+
+    // Trigger scene changes. Only need one frame to cover them all...
+    scene->emit_change_event();
+    scene->emit_change_event();
+    scene->emit_change_event();
+
+    // Display buffers should be forced to render another 1, so that's 2
+    retry = 0;
+    while (retry < max_retries &&
+           !factory->check_record_count_for_each_buffer(nbuffers, 2))
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        ++retry;
+    }
+    ASSERT_LT(retry, max_retries);
+
+    // Scene unchanged. Expect no new frames:
+    retry = 0;
+    while (retry < max_retries &&
+           !factory->check_record_count_for_each_buffer(nbuffers, 2))
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        ++retry;
+    }
+    ASSERT_LT(retry, max_retries);
+
+    // Some surface queues up multiple frames
+    scene->set_pending(3);
+
+    // Make sure they all get composited separately (2 + 3 more)
+    retry = 0;
+    while (retry < max_retries &&
+           !factory->check_record_count_for_each_buffer(nbuffers, 5))
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        ++retry;
+    }
+    ASSERT_LT(retry, max_retries);
 
     compositor.stop();
 }
