@@ -185,13 +185,6 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
         report, vt, *emergency_cleanup_registry, bypass_option);
 }
 
-//TODO: internal client support was dropped. should remove this call from the mesa egl impl
-//and remove this function
-extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay*)
-{
-    return false;
-}
-
 extern "C" void add_platform_options(boost::program_options::options_description& config)
 {
     config.add_options()

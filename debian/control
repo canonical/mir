@@ -280,6 +280,21 @@ Description: Display server for Ubuntu - client platform library for Mesa
  Contains the shared libraries required for the Mir clients to interact with
  the underlying hardware platform using the Mesa drivers.
 
+Package: mir-client-platform-mesa-dev
+Section: libdevel
+Architecture: i386 amd64 armhf arm64
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: mir-client-platform-mesa (= ${binary:Version}),
+         libmircommon-dev,
+         ${misc:Depends},
+Description: Display server for Ubuntu - client platform library for Mesa development files
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains header files required to use the platform specific capabilities of
+ the Mir Mesa backend.
+
 Package: mir-client-platform-android
 Section: libs
 Architecture: i386 amd64 armhf
