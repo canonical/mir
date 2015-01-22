@@ -1329,9 +1329,10 @@ TEST_F(BufferQueueTest, buffers_ready_eventually_reaches_zero)
         const int nmonitors = 3;
         int monitor[nmonitors];
 
-        // Clear the ready queue of fake initial frames
         for (int m = 0; m < nmonitors; ++m)
-            q.compositor_release(q.compositor_acquire(&monitor[m]));
+        {
+            ASSERT_EQ(0, q.buffers_ready_for_compositor(&monitor[m]));
+        }
 
         // Produce a frame
         q.client_release(client_acquire_sync(q));

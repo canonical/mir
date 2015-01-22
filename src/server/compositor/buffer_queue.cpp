@@ -357,7 +357,7 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
     std::lock_guard<decltype(guard)> lock(guard);
 
     int count = ready_to_composite_queue.size();
-    if (!is_a_current_buffer_user(user_id))
+    if (!current_buffer_users.empty() && !is_a_current_buffer_user(user_id))
     {
         // The virtual front of the ready queue isn't actually in the ready
         // queue, but is the current_compositor_buffer, so count that too:
