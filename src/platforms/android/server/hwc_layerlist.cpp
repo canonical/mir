@@ -161,10 +161,10 @@ mga::LayerList::LayerList(
     update_list(renderlist);
 }
 
-bool mga::LayerList::needs_swap()
+bool mga::LayerList::needs_swapbuffers()
 {
     bool any_rendered = false;
-    for(auto const& layer : layers)
+    for (auto const& layer : layers)
         any_rendered |= layer.layer.needs_gl_render();
     return any_rendered;
 }
@@ -173,7 +173,7 @@ mg::RenderableList mga::LayerList::rejected_renderables()
 {
     mg::RenderableList rejected_renderables;
     auto it = layers.begin();
-    for(auto const& renderable : renderable_list)
+    for (auto const& renderable : renderable_list)
     {
         if (it->layer.needs_gl_render())
             rejected_renderables.push_back(renderable);

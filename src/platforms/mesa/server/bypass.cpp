@@ -35,9 +35,8 @@ bool mgm::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& r
     if (!bypass_is_feasible)
         return false;
 
-    //offscreen or invisible surfaces don't affect if bypass is possible 
-    if (!(renderable->visible() && //TODO: we shouldn't be getting invisible surfaces 
-         view_area.contains(renderable->screen_position())))
+    //offscreen surfaces don't affect if bypass is possible 
+    if (!view_area.contains(renderable->screen_position()))
         return false;
 
     auto const is_opaque = !((renderable->alpha() != 1.0f) || renderable->shaped());

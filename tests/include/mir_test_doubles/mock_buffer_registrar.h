@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_REGISTRAR_H_
 #define MIR_TEST_DOUBLES_MOCK_BUFFER_REGISTRAR_H_
 
-#include "src/client/android/buffer_registrar.h"
+#include "src/platforms/android/client/buffer_registrar.h"
 #include <gmock/gmock.h>
 
 namespace mir

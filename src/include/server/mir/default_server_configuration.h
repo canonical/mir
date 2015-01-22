@@ -75,6 +75,7 @@ class FocusSetter;
 class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
+class DefaultShell;
 }
 namespace time
 {
@@ -438,6 +439,10 @@ private:
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
+
+    // TODO properly expose a shell::Shell interface
+    CachedPtr<shell::DefaultShell> default_shell;
+    auto the_shell() -> std::shared_ptr<shell::DefaultShell>;
 };
 }
 
