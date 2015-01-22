@@ -1,5 +1,5 @@
 3329ada91412ded2f127aee9a92f065e57b81cb2  include/common/mir/cached_ptr.h
-ca55d3f3076c0d32d0b2b21cef9258e0ed4b68a4  include/common/mir/events/event_builders.h
+3504533882bad8240df93587b2698e6e43f2ddfe  include/common/mir/events/event_builders.h
 82ff9499ef62739379616e02164dc98f9914c329  include/common/mir/fd.h
 06bec8c9d241475f0f88e2692aed40cdf663e88b  include/common/mir/frontend/surface_id.h
 212be468fdca8134c1dff7a9cd61ecec76b26967  include/common/mir/geometry/dimensions.h
