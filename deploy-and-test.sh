@@ -1,28 +1,4 @@
 #!/bin/sh
-#
-# Warning: This script is very slow.
-#
-# If you need to run tests repeatedly, you'd be better off setting your
-# device up this way:
-#
-# One time setup:
-#   adb push ~/.ssh/id_rsa.pub /home/phablet/.ssh/authorized_keys
-#   adb shell
-#      chmod -R go-w ~/.ssh
-#      chown phablet ~/.ssh
-#      mkdir testrundir
-#      sudo start ssh
-#      sudo mount -o remount,rw /
-#      sudo apt-get install umockdev
-#
-# Push and test binaries much faster than adb shell:
-#   cd build-android-arm
-#   rsync -avH lib bin phablet@${phone_ip}:testrundir/
-#   adb shell  (or ssh phablet@${phone_ip})
-#      cd testrundir
-#      umockdev-run bin/mir_unit-tests
-#      ...
-# 
 
 if [ ! -d build-android-arm ] ; then
     echo "Built tree not found in $(pwd)/build-android-arm"
