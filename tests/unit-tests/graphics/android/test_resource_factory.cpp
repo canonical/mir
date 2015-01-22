@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platforms/android/resource_factory.h"
-#include "src/platforms/android/hwc_loggers.h"
+#include "src/platforms/android/server/resource_factory.h"
+#include "src/platforms/android/server/hwc_loggers.h"
 #include "mir_test_doubles/mock_android_hw.h"
 
 #include <stdexcept>

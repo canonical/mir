@@ -111,6 +111,7 @@ void ms::SurfaceObservers::client_surface_close_requested()
 ms::BasicSurface::BasicSurface(
     std::string const& name,
     geometry::Rectangle rect,
+    std::weak_ptr<Surface> const& parent,
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<mi::InputChannel> const& input_channel,
@@ -131,9 +132,26 @@ ms::BasicSurface::BasicSurface(
     input_sender(input_sender),
     configurator(configurator),
     cursor_image_(cursor_image),
-    report(report)
+    report(report),
+    parent_(parent)
 {
     report->surface_created(this, surface_name);
+}
+
+ms::BasicSurface::BasicSurface(
+    std::string const& name,
+    geometry::Rectangle rect,
+    bool nonrectangular,
+    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::shared_ptr<mi::InputChannel> const& input_channel,
+    std::shared_ptr<input::InputSender> const& input_sender,
+    std::shared_ptr<SurfaceConfigurator> const& configurator,
+    std::shared_ptr<mg::CursorImage> const& cursor_image,
+    std::shared_ptr<SceneReport> const& report) :
+    BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, nonrectangular,buffer_stream,
+                 input_channel, input_sender, configurator,
+                 cursor_image, report)
+{
 }
 
 void ms::BasicSurface::force_requests_to_complete()
@@ -632,6 +650,12 @@ void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& obs
     if (!o)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
     observers.remove(o);
+}
+
+std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const
+{
+    std::lock_guard<std::mutex> lg(guard);
+    return parent_.lock();
 }
 
 namespace
