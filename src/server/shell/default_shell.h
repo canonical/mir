@@ -26,11 +26,11 @@
 
 namespace mir
 {
-namespace scene { class SessionCoordinator; }
+namespace scene { class SessionCoordinator; class Surface; class SurfaceCoordinator; }
 
 namespace shell
 {
-class FocusSetter;
+class InputTargeter;
 
 /** Default shell implementation.
  * To customise derive from this class and override the methods you want to change
@@ -39,7 +39,8 @@ class DefaultShell : public frontend::Shell, public FocusController
 {
 public:
     DefaultShell(
-        std::shared_ptr<FocusSetter> const& focus_setter,
+        std::shared_ptr<InputTargeter> const& input_targeter,
+        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
 
 /** @name these come from FocusController
@@ -93,8 +94,12 @@ public:
 /** @} */
 
 private:
-    std::shared_ptr<FocusSetter> const focus_setter;
+    std::shared_ptr<InputTargeter> const input_targeter;
+    std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
+
+    std::mutex surface_focus_lock;
+    std::weak_ptr<scene::Surface> currently_focused_surface;
 
     std::mutex mutex;
     std::weak_ptr<scene::Session> focus_application;
