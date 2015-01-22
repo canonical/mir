@@ -38,21 +38,21 @@ ms::SurfaceEventSource::SurfaceEventSource(
 
 void ms::SurfaceEventSource::resized_to(geom::Size const& size)
 {
-    event_sink->handle_event(*mev::make_resize_event(id.as_value(), size));
+    event_sink->handle_event(*mev::make_event(id, size));
 }
 
 
 void ms::SurfaceEventSource::attrib_changed(MirSurfaceAttrib attrib, int value)
 {
-    event_sink->handle_event(*mev::make_surface_event(id.as_value(), attrib, value));
+    event_sink->handle_event(*mev::make_event(id, attrib, value));
 }
 
 void ms::SurfaceEventSource::orientation_set_to(MirOrientation orientation)
 {
-    event_sink->handle_event(*mev::make_orientation_event(id.as_value(), orientation));
+    event_sink->handle_event(*mev::make_event(id, orientation));
 }
 
 void ms::SurfaceEventSource::client_surface_close_requested()
 {
-    event_sink->handle_event(*mev::make_close_surface_event(id.as_value()));
+    event_sink->handle_event(*mev::make_event(id));
 }

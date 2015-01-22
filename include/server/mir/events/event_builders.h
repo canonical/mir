@@ -24,6 +24,7 @@
 #include "mir_toolkit/event.h"
 
 #include "mir/geometry/size.h"
+#include "mir/frontend/surface_id.h"
 
 #include <memory>
 
@@ -31,11 +32,16 @@ namespace mir
 {
 namespace events
 {
-std::shared_ptr<MirEvent> make_orientation_event(int surface_id, MirOrientation orientation);
-std::shared_ptr<MirEvent> make_prompt_session_event(MirPromptSessionState state);
-std::shared_ptr<MirEvent> make_resize_event(int surface_id, geometry::Size const& size);
-std::shared_ptr<MirEvent> make_surface_event(int surface_id, MirSurfaceAttrib attribute, int value);
-std::shared_ptr<MirEvent> make_close_surface_event(int surface_id);
+// Surface orientation change event
+std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id, MirOrientation orientation);
+// Prompt session state change event
+std::shared_ptr<MirEvent> make_event(MirPromptSessionState state);
+// Surface resize event
+std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id, geometry::Size const& size);
+// Surface configure event
+std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value);
+// Close surface event
+std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id);
 }
 }
 

@@ -22,21 +22,22 @@
 
 #include <string.h>
 
+namespace mf = mir::frontend;
 namespace mev = mir::events;
 namespace geom = mir::geometry;
 
-std::shared_ptr<MirEvent> mev::make_orientation_event(int surface_id, MirOrientation orientation)
+std::shared_ptr<MirEvent> mev::make_event(mf::SurfaceId const& surface_id, MirOrientation orientation)
 {
     MirEvent *e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_orientation;
-    e->orientation.surface_id = surface_id;
+    e->orientation.surface_id = surface_id.as_value();
     e->orientation.direction = orientation;
     return std::shared_ptr<MirEvent>(e);
 }
 
-std::shared_ptr<MirEvent> mev::make_prompt_session_event(MirPromptSessionState state)
+std::shared_ptr<MirEvent> mev::make_event(MirPromptSessionState state)
 {
     MirEvent *e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
@@ -46,36 +47,36 @@ std::shared_ptr<MirEvent> mev::make_prompt_session_event(MirPromptSessionState s
     return std::shared_ptr<MirEvent>(e);
 }
 
-std::shared_ptr<MirEvent> mev::make_resize_event(int surface_id, geom::Size const& size)
+std::shared_ptr<MirEvent> mev::make_event(mf::SurfaceId const& surface_id, geom::Size const& size)
 {
     MirEvent *e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_resize;
-    e->resize.surface_id = surface_id;
+    e->resize.surface_id = surface_id.as_value();
     e->resize.width = size.width.as_int();
     e->resize.height = size.height.as_int();
     return std::shared_ptr<MirEvent>(e);
 }
 
-std::shared_ptr<MirEvent> mev::make_surface_event(int surface_id, MirSurfaceAttrib attribute, int value)
+std::shared_ptr<MirEvent> mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value)
 {
     MirEvent *e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_surface;
-    e->surface.id = surface_id;
+    e->surface.id = surface_id.as_value();
     e->surface.attrib = attribute;
     e->surface.value = value;
     return std::shared_ptr<MirEvent>(e);
 }
 
-std::shared_ptr<MirEvent> mev::make_close_surface_event(int surface_id)
+std::shared_ptr<MirEvent> mev::make_event(mf::SurfaceId const& surface_id)
 {
     MirEvent *e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_close_surface;
-    e->close_surface.surface_id = surface_id;
+    e->close_surface.surface_id = surface_id.as_value();
     return std::shared_ptr<MirEvent>(e);
 }

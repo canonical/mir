@@ -1,5 +1,4 @@
 3329ada91412ded2f127aee9a92f065e57b81cb2  include/common/mir/cached_ptr.h
-e70e863e676f490f6b01ca09dcbfb74c5f64928e  include/common/mir/events/event_builders.h
 82ff9499ef62739379616e02164dc98f9914c329  include/common/mir/fd.h
 212be468fdca8134c1dff7a9cd61ecec76b26967  include/common/mir/geometry/dimensions.h
 dd2eb355262622f08280e63dbc2680068fe81d9e  include/common/mir/geometry/displacement.h
@@ -61,6 +60,7 @@ a9f284ba4b05d58fd3eeb628d1f56fe4ac188526  include/server/mir/compositor/composit
 98fe6bde01fb8b25b1bacafcdf572f24c3ade3c3  include/server/mir/compositor/display_buffer_compositor_factory.h
 d49eae4f986645b32e29ce2c1f99f524703ba3c0  include/server/mir/compositor/display_buffer_compositor.h
 4fcf34e424128b87ddc76733594e32e09ebbd486  include/server/mir/compositor/scene.h
+6473b6b17e72053a4ca3f7dcf8e2d81156fbfb85  include/server/mir/events/event_builders.h
 59d6703def2a0ff840e5eb75390a5af76fd93f58  include/server/mir/frontend/prompt_session.h
 b729a7710c37d9f1fba56a6f8e8eae1c2559f57a  include/server/mir/frontend/session_authorizer.h
 34ce482df448fd2fc5f0c4ae5ac8b7fecbd228c9  include/server/mir/frontend/session_credentials.h
