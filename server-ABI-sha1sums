@@ -90,14 +90,14 @@ d5273f3363b0b776427d5e3f1af99f0f2bcf3fa6  include/server/mir/scene/observer.h
 b657cfb8fb31140b83b78fc19135dd0165ede67b  include/server/mir/scene/prompt_session.h
 a745a63d413ced63b82350b8c253b65dffd5bf44  include/server/mir/scene/prompt_session_listener.h
 a09a3f18ecea53dc45386c1e2baf545c4177c047  include/server/mir/scene/prompt_session_manager.h
-5edf446380070f567500069e422d293e88468ee5  include/server/mir/scene/session_coordinator.h
+d812335ef394d076952db04d1560f1f4a3159510  include/server/mir/scene/session_coordinator.h
 8cb940e808eca7db115239a25167955d34acafc4  include/server/mir/scene/session.h
 ee94083f10f890e24c0e0bbdb94842e2dd788deb  include/server/mir/scene/session_listener.h
 7f5f26000fd2312373817d05c488a6a950a47c82  include/server/mir/scene/snapshot.h
 5bab4dc0a6488b8b9d47e958c6bab94f1dcf2c57  include/server/mir/scene/surface_buffer_access.h
 bbc9e2e2bb71634cd6f1c5c0430093e10e74fa23  include/server/mir/scene/surface_configurator.h
 e5e4dd7bcaf186810043fa0f05be42d7e49b0843  include/server/mir/scene/surface_coordinator.h
-308d886cae96072a87ec1119fc31a66031727893  include/server/mir/scene/surface_creation_parameters.h
+da52304237a348a90fcb56729293d628ceaa351c  include/server/mir/scene/surface_creation_parameters.h
 aceccc0bdeea5c90d6c5ea17ed4ce6b5dc1b0ed4  include/server/mir/scene/surface.h
 587e22d751656ce2d9536afdf5659276ff9bbc46  include/server/mir/scene/surface_observer.h
 7ef3e99901168cda296d74d05a979f47bf9c3ff1  include/server/mir/server_action_queue.h
@@ -107,7 +107,7 @@ aceccc0bdeea5c90d6c5ea17ed4ce6b5dc1b0ed4  include/server/mir/scene/surface.h
 6a2107b01feae13060d5c305804906e53c52e0be  include/server/mir/shell/focus_controller.h
 f8d415af54b4a477338fb9dbe20db01aa4544029  include/server/mir/shell/host_lifecycle_event_listener.h
 4f50c37bb8e36a1aa4918af6aa01b0f032ed0984  include/server/mir/shell/input_targeter.h
-a46723e246b4cb6619cf8abbedb02c3391f563c9  include/server/mir/shell/session_coordinator_wrapper.h
+abb366424a9e09a75e5e68c67095f0b9bbe8eb54  include/server/mir/shell/session_coordinator_wrapper.h
 18e869c5b87ab8be4bc185d2cd55a93d699cde72  include/server/mir/shell/surface_coordinator_wrapper.h
 114cc8c0b12ee4fd78d86c8f3309546e4dc68c9f  include/server/mir/terminate_with_current_exception.h
 1b8c2a763c8f5f00b737c3a187db2304676f8076  include/server/mir/time/alarm.h

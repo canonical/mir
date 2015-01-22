@@ -21,18 +21,11 @@
 
 #include "mir/scene/session_coordinator.h"
 
-#include <mutex>
 #include <memory>
 #include <vector>
 
 namespace mir
 {
-
-namespace shell
-{
-class FocusSetter;
-}
-
 namespace scene
 {
 class SessionContainer;
@@ -48,45 +41,29 @@ class SessionManager : public SessionCoordinator
 public:
     explicit SessionManager(std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,
                             std::shared_ptr<SessionContainer> const& app_container,
-                            std::shared_ptr<shell::FocusSetter> const& focus_setter,
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionEventSink> const& session_event_sink,
                             std::shared_ptr<SessionListener> const& session_listener,
                             std::shared_ptr<PromptSessionManager> const& prompt_session_manager);
     virtual ~SessionManager() noexcept;
 
-    virtual std::shared_ptr<frontend::Session> open_session(
+    std::shared_ptr<Session> open_session(
         pid_t client_pid,
         std::string const& name,
         std::shared_ptr<frontend::EventSink> const& sink) override;
 
-    virtual void close_session(std::shared_ptr<frontend::Session> const& session) override;
+    void close_session(std::shared_ptr<Session> const& session) override;
 
-    void focus_next() override;
-    std::weak_ptr<Session> focussed_application() const override;
+    std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const&) const override;
+
     void set_focus_to(std::shared_ptr<Session> const& focus) override;
+    void unset_focus() override;
 
-    void handle_surface_created(std::shared_ptr<frontend::Session> const& session) override;
-
-    std::shared_ptr<frontend::PromptSession> start_prompt_session_for(std::shared_ptr<frontend::Session> const& session,
+    std::shared_ptr<PromptSession> start_prompt_session_for(std::shared_ptr<Session> const& session,
                                                   PromptSessionCreationParameters const& params) override;
-    void add_prompt_provider_for(std::shared_ptr<frontend::PromptSession> const& prompt_session,
-                                 std::shared_ptr<frontend::Session> const& session) override;
-    void stop_prompt_session(std::shared_ptr<frontend::PromptSession> const& prompt_session) override;
-
-    int set_surface_attribute(
-        std::shared_ptr<frontend::Session> const& session,
-        frontend::SurfaceId surface_id,
-        MirSurfaceAttrib attrib,
-        int value) override;
-
-    int get_surface_attribute(
-        std::shared_ptr<frontend::Session> const& session,
-        frontend::SurfaceId surface_id,
-        MirSurfaceAttrib attrib) override;
-
-    frontend::SurfaceId create_surface(std::shared_ptr<frontend::Session> const& session, SurfaceCreationParameters const& params) override;
-    void destroy_surface(std::shared_ptr<frontend::Session> const& session, frontend::SurfaceId surface) override;
+    void add_prompt_provider_for(std::shared_ptr<PromptSession> const& prompt_session,
+                                 std::shared_ptr<Session> const& session) override;
+    void stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) override;
 
 protected:
     SessionManager(const SessionManager&) = delete;
@@ -95,16 +72,10 @@ protected:
 private:
     std::shared_ptr<SurfaceCoordinator> const surface_coordinator;
     std::shared_ptr<SessionContainer> const app_container;
-    std::shared_ptr<shell::FocusSetter> const focus_setter;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<PromptSessionManager> const prompt_session_manager;
-
-    std::mutex mutex;
-    std::weak_ptr<Session> focus_application;
-
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<Session> const& next_focus);
 };
 
 }

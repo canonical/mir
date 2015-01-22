@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/mesa/display_helpers.h"
+#include "src/platforms/mesa/server/display_helpers.h"
 #include "mir/udev/wrapper.h"
 
 #include "mir_test_framework/udev_environment.h"

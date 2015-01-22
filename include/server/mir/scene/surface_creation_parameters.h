@@ -68,7 +68,7 @@ struct SurfaceCreationParameters
 
     SurfaceCreationParameters& with_parent_id(frontend::SurfaceId const& id);
 
-    SurfaceCreationParameters& with_attachment_rect(geometry::Rectangle const& rect);
+    SurfaceCreationParameters& with_aux_rect(geometry::Rectangle const& rect);
 
     SurfaceCreationParameters& with_edge_attachment(MirEdgeAttachment edge);
 
@@ -85,7 +85,7 @@ struct SurfaceCreationParameters
     mir::optional_value<MirSurfaceType> type;
     mir::optional_value<MirOrientationMode> preferred_orientation;
     mir::optional_value<frontend::SurfaceId> parent_id;
-    mir::optional_value<geometry::Rectangle> attachment_rect;
+    mir::optional_value<geometry::Rectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
 
     std::weak_ptr<Surface> parent;
