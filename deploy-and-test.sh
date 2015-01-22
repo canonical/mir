@@ -1,4 +1,5 @@
 #!/bin/sh
+# WARNING: This script is slow. See: doc/avoid_deploy-and-test.md
 
 if [ ! -d build-android-arm ] ; then
     echo "Built tree not found in $(pwd)/build-android-arm"
