@@ -32,6 +32,9 @@ namespace shell
 {
 class FocusSetter;
 
+/** Default shell implementation.
+ * To customise derive from this class and override the methods you want to change
+ */
 class DefaultShell : public frontend::Shell, public FocusController
 {
 public:
@@ -39,12 +42,21 @@ public:
         std::shared_ptr<FocusSetter> const& focus_setter,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
 
+/** @name these come from FocusController
+ * I think the FocusController interface is unnecessary as:
+ *   1. the functions are only meaningful in the context of implementing a Shell
+ *   2. the implementation of these functions is Shell behaviour
+ * Simply providing them as part of a public DefaultShell is probably adequate.
+ *  @{ */
     void focus_next() override;
 
     std::weak_ptr<scene::Session> focussed_application() const override;
 
     void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
+/** @} */
 
+/** @name these come from frontend::Shell
+ *  @{ */
     virtual std::shared_ptr<frontend::Session> open_session(
         pid_t client_pid,
         std::string const& name,
@@ -78,6 +90,7 @@ public:
         std::shared_ptr<frontend::Session> const& session,
         frontend::SurfaceId surface_id,
         MirSurfaceAttrib attrib) override;
+/** @} */
 
 private:
     std::shared_ptr<FocusSetter> const focus_setter;
