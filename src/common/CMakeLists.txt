@@ -20,7 +20,8 @@ add_subdirectory(time)
 list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirtime>
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
-)
+  )
+add_subdirectory(events)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
