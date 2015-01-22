@@ -18,7 +18,7 @@
 
 #include "mir_test_doubles/mock_buffer_registrar.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
-#include "src/client/android/buffer.h"
+#include "src/platforms/android/client/buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 
 #include <memory>

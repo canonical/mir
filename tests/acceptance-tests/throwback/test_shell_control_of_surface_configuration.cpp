@@ -74,14 +74,14 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notifi
         {
             using namespace ::testing;
 
-            EXPECT_CALL(mock_configurator, select_attribute_value(_, Ne(mir_surface_attrib_type), _))
+            EXPECT_CALL(mock_configurator, select_attribute_value(_, Ne(mir_surface_attrib_state), _))
                 .Times(AnyNumber())
                 .WillRepeatedly(ReturnArg<2>());
-            EXPECT_CALL(mock_configurator, attribute_set(_, Ne(mir_surface_attrib_type), _)).Times(AnyNumber());
+            EXPECT_CALL(mock_configurator, attribute_set(_, Ne(mir_surface_attrib_state), _)).Times(AnyNumber());
 
-            ON_CALL(mock_configurator, select_attribute_value(_, _, _)).WillByDefault(Return(mir_surface_type_freestyle));
-            EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_type, Eq(mir_surface_type_freestyle))).Times(1);
-            EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_type, Eq(mir_surface_type_freestyle))).Times(1);
+            ON_CALL(mock_configurator, select_attribute_value(_, _, _)).WillByDefault(Return(mir_surface_state_maximized));
+            EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_state, Eq(mir_surface_state_maximized))).Times(1);
+            EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_state, Eq(mir_surface_state_maximized))).Times(1);
         }
 
         mtd::MockSurfaceConfigurator mock_configurator;
@@ -93,10 +93,8 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notifi
         void exec() override
         {
             SurfaceCreatingClient::exec();
-            mir_wait_for(mir_surface_set_type(surface,
-                                               mir_surface_type_freestyle));
-            EXPECT_EQ(mir_surface_type_freestyle,
-                      mir_surface_get_type(surface));
+            mir_wait_for(mir_surface_set_state(surface, mir_surface_state_maximized));
+            EXPECT_EQ(mir_surface_state_maximized, mir_surface_get_state(surface));
         }
     } client_config;
     launch_client_process(client_config);
@@ -114,14 +112,14 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_may_inter
         {
             using namespace ::testing;
 
-            EXPECT_CALL(mock_configurator, select_attribute_value(_, Ne(mir_surface_attrib_type), _))
+            EXPECT_CALL(mock_configurator, select_attribute_value(_, Ne(mir_surface_attrib_state), _))
                 .Times(AnyNumber())
                 .WillRepeatedly(ReturnArg<2>());
-            EXPECT_CALL(mock_configurator, attribute_set(_, Ne(mir_surface_attrib_type), _)).Times(AnyNumber());
+            EXPECT_CALL(mock_configurator, attribute_set(_, Ne(mir_surface_attrib_state), _)).Times(AnyNumber());
 
-            EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_type, Eq(mir_surface_type_freestyle))).Times(1)
-                .WillOnce(Return(mir_surface_type_normal));
-            EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_type, Eq(mir_surface_type_normal))).Times(1);
+            EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_state, Eq(mir_surface_state_maximized))).Times(1)
+                .WillOnce(Return(mir_surface_state_maximized));
+            EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_state, Eq(mir_surface_state_maximized))).Times(1);
         }
         mtd::MockSurfaceConfigurator mock_configurator;
     } server_config;
@@ -132,10 +130,8 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_may_inter
         void exec() override
         {
             SurfaceCreatingClient::exec();
-            mir_wait_for(mir_surface_set_type(surface,
-                                               mir_surface_type_freestyle));
-            EXPECT_EQ(mir_surface_type_normal,
-                      mir_surface_get_type(surface));
+            mir_wait_for(mir_surface_set_state(surface, mir_surface_state_maximized));
+            EXPECT_EQ(mir_surface_state_maximized, mir_surface_get_state(surface));
         }
     } client_config;
     launch_client_process(client_config);

@@ -41,7 +41,7 @@ struct MySessionCoordinator : msh::SessionCoordinatorWrapper
 {
     using msh::SessionCoordinatorWrapper::SessionCoordinatorWrapper;
 
-    MOCK_METHOD0(focus_next, void());
+    MOCK_METHOD0(unset_focus, void());
 };
 
 struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
@@ -102,8 +102,8 @@ TEST_F(ServerConfigurationWrapping, can_override_session_coordinator_methods)
 {
     auto const my_session_coordinator = std::dynamic_pointer_cast<MySessionCoordinator>(session_coordinator);
 
-    EXPECT_CALL(*my_session_coordinator, focus_next()).Times(1);
-    session_coordinator->focus_next();
+    EXPECT_CALL(*my_session_coordinator, unset_focus()).Times(1);
+    session_coordinator->unset_focus();
 }
 
 TEST_F(ServerConfigurationWrapping, returns_same_session_coordinator_from_cache)

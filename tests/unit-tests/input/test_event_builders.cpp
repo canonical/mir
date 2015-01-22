@@ -40,7 +40,7 @@ TEST_F(InputEventBuilder, makes_valid_key_event)
     xkb_keysym_t const key_code = 34;
     int const scan_code = 17;
 
-   auto ev = mev::make_key_event(device_id, timestamp,
+   auto ev = mev::make_event(device_id, timestamp,
        action, key_code, scan_code, modifiers);
    auto e = ev.get();
 
@@ -68,7 +68,7 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
     float touch_minor_values[] = {13, 3, 9.13};
     float size_values[] = {4, 9, 6};
 
-   auto ev = mev::make_touch_event(device_id, timestamp,
+   auto ev = mev::make_event(device_id, timestamp,
        modifiers);
    for (unsigned i = 0; i < touch_count; i++)
    {
@@ -104,7 +104,7 @@ TEST_F(InputEventBuilder, makes_valid_pointer_event)
     std::vector<MirPointerInputEventButton> depressed_buttons = 
         {mir_pointer_input_button_back, mir_pointer_input_button_tertiary};
     float x_axis_value = 3.9, y_axis_value = 7.4, hscroll_value = .9, vscroll_value = .3;
-    auto ev = mev::make_pointer_event(device_id, timestamp, modifiers, 
+    auto ev = mev::make_event(device_id, timestamp, modifiers, 
         action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
     auto e = ev.get();
 
