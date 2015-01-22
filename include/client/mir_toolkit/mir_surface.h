@@ -76,13 +76,96 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
  *                          to complete construction.
  */
 MirSurfaceSpec*
-mir_connection_create_spec_for_menu_surface(MirConnection* connection,
+mir_connection_create_spec_for_menu(MirConnection* connection,
+                                    int width,
+                                    int height,
+                                    MirPixelFormat format,
+                                    MirSurface* parent,
+                                    MirRectangle* rect,
+                                    MirEdgeAttachment edge);
+
+/**
+ * Create a surface specification for a tooltip surface.
+ *
+ * A tooltip surface becomes visible when the pointer hovers the specified
+ * target zone. A tooltip surface has no input focus and will be closed when
+ * the pointer moves out of the target zone or the parent closes, moves or hides
+ *
+ * The tooltip parent cannot be another tooltip surface.
+ *
+ * The tooltip position is decided by the server but typically it will appear
+ * near the pointer.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \param [in] parent       A valid parent surface for this tooltip.
+ * \param [in] rect         A target zone relative to parent.
+ * \return                  A handle that can be passed to mir_surface_create()
+ *                          to complete construction.
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_tooltip(MirConnection* connection,
+                                       int width,
+                                       int height,
+                                       MirPixelFormat format,
+                                       MirSurface* parent,
+                                       MirRectangle* zone);
+
+/**
+ * Create a surface specification for a modal dialog surface.
+ *
+ * The dialog surface will have input focus; the parent can still be moved,
+ * resized or hidden/minimized but no interaction is possible until the dialog
+ * is dismissed.
+ *
+ * A dialog will typically have no close/maximize button decorations.
+ *
+ * During surface creation, if the specified parent is another dialog surface
+ * the server may choose to close the specified parent in order to show this
+ * new dialog surface.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \param [in] parent       A valid parent surface.
+ *
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
                                             int width,
                                             int height,
                                             MirPixelFormat format,
-                                            MirSurface* parent,
-                                            MirRectangle* rect,
-                                            MirEdgeAttachment edge);
+                                            MirSurface* parent);
+
+/**
+ * Create a surface specification for a parentless dialog surface.
+ *
+ * A parentless dialog surface is similar to a normal surface, but it cannot
+ * be fullscreen and typically won't have any maximize/close button decorations.
+ *
+ * A parentless dialog is not allowed to have other dialog children. The server
+ * may decide to close the parent and show the child dialog only.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ *
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_dialog(MirConnection* connection,
+                                      int width,
+                                      int height,
+                                      MirPixelFormat format);
 
 /**
  * Create a surface from a given specification
@@ -359,13 +442,9 @@ __attribute__((__deprecated__("Use mir_debug_surface_id()")))
 int mir_surface_get_id(MirSurface *surface);
 
 /**
- * Set the type (purpose) of a surface. This is not guaranteed to always work
- * with some shell types (e.g. phone/tablet UIs). As such, you may have to
- * wait on the function and check the result using mir_surface_get_type.
- *   \param [in] surface  The surface to operate on
- *   \param [in] type     The new type of the surface
- *   \return              A wait handle that can be passed to mir_wait_for
+ * \deprecated Use the mir_connection_create_spec_for_xxx family of APIs
  */
+__attribute__((__deprecated__("Use mir_connection_create_spec_for_xxx()")))
 MirWaitHandle* mir_surface_set_type(MirSurface *surface, MirSurfaceType type);
 
 /**

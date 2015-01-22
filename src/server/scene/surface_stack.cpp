@@ -129,11 +129,14 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
     {
         for (auto const& surface : layer.second) 
         {
-            auto element = std::make_shared<SurfaceSceneElement>(
-                surface->compositor_snapshot(id),
-                rendering_trackers[surface.get()],
-                id);
-            elements.emplace_back(element);
+            if (surface->visible())
+            {
+                auto element = std::make_shared<SurfaceSceneElement>(
+                    surface->compositor_snapshot(id),
+                    rendering_trackers[surface.get()],
+                    id);
+                elements.emplace_back(element);
+            }
         }
     }
     for (auto const& renderable : overlays)

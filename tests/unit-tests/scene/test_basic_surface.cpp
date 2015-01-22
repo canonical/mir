@@ -526,6 +526,24 @@ TEST_F(BasicSurfaceTest, reception_mode_can_be_changed)
     EXPECT_EQ(mi::InputReceptionMode::receives_all_input, surface.reception_mode());
 }
 
+TEST_F(BasicSurfaceTest, stores_parent)
+{
+    auto parent = mt::fake_shared(surface);
+    ms::BasicSurface child{
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        parent,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
+        stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
+        report};
+
+    EXPECT_EQ(child.parent(), parent);
+}
+
 namespace
 {
 
