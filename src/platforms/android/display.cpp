@@ -150,20 +150,14 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
     }
 
     if (config.external_config().connected)
-    {
-        printf("CONNECT.\n");
         external_db = create_display_buffer(
             *display_buffer_builder,
             hwc_config->active_attribs_for(mga::DisplayName::external),
             gl_program_factory,
             gl_context,
             mga::OverlayOptimization::disabled);
-    }
     else
-    {
-        printf("DISCONNECT.\n");
         external_db.reset();
-    }
 }
 
 void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)

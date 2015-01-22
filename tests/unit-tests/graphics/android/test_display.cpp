@@ -659,7 +659,6 @@ TEST_F(Display, returns_correct_dbs_with_external_and_primary_output_at_start)
     external_connected = false;
     hotplug_fn();
 
-
     db_count = 0;
     display.for_each_display_buffer([&](mg::DisplayBuffer&){ db_count++; });
     EXPECT_THAT(db_count, Eq(1));
@@ -671,4 +670,89 @@ TEST_F(Display, returns_correct_dbs_with_external_and_primary_output_at_start)
     db_count = 0;
     display.for_each_display_buffer([&](mg::DisplayBuffer&){ db_count++; });
     EXPECT_THAT(db_count, Eq(2));
+}
+
+TEST_F(Display, turns_external_display_on_with_hotplug)
+{
+    using namespace testing;
+    std::function<void()> hotplug_fn = []{};
+    bool external_connected = true;
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
+            .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(std::make_shared<char>('2'))));
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::primary))
+            .WillByDefault(Return(
+                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, true, mir_pixel_format_abgr_8888, 2}));
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
+            .WillByDefault(Invoke([&](mga::DisplayName)
+            {
+                return mga::DisplayAttribs{
+                    {20,20}, {4,4}, 50.0f, external_connected, mir_pixel_format_abgr_8888, 2};
+            }));
+
+        InSequence seq;
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_on));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_off));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_on));
+
+    });
+
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    //hotplug external away
+    external_connected = false;
+    hotplug_fn();
+    display.for_each_display_buffer([](mg::DisplayBuffer&){});
+
+    //hotplug external back 
+    external_connected = true;
+    hotplug_fn();
+    display.for_each_display_buffer([](mg::DisplayBuffer&){});
+}
+
+TEST_F(Display, configures_external_display)
+{
+    using namespace testing;
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        InSequence seq;
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_off));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_suspend));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_on));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_off));
+    });
+
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    auto configuration = display.configuration();
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        output.power_mode = mir_power_mode_off;
+    });
+    display.configure(*configuration);
+
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        output.power_mode = mir_power_mode_suspend;
+    });
+    display.configure(*configuration);
+
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        output.power_mode = mir_power_mode_on;
+    });
+    display.configure(*configuration);
+
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        output.power_mode = mir_power_mode_off;
+    });
+    display.configure(*configuration);
 }
