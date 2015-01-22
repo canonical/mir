@@ -47,7 +47,7 @@ bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
     if (list.empty())
         return true;
 
-    for(auto const& renderable : list)
+    for (auto const& renderable : list)
     {
         //TODO: enable planeAlpha for (hwc version >= 1.2), 90 deg rotation
         static glm::mat4 const identity;
@@ -109,7 +109,7 @@ bool mga::HwcDevice::post_overlays(
     hwc_list.update_list(renderables);
 
     bool needs_commit{false};
-    for(auto& layer : hwc_list)
+    for (auto& layer : hwc_list)
         needs_commit |= layer.needs_commit;
     if (!needs_commit)
         return false;
@@ -149,7 +149,7 @@ void mga::HwcDevice::commit(
     hwc_wrapper->set({{hwc_list.native_list(), nullptr, nullptr}});
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
 
-    for(auto& it : hwc_list)
+    for (auto& it : hwc_list)
         it.layer.release_buffer();
 
     mir::Fd retire_fd(hwc_list.retirement_fence());

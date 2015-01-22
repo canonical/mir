@@ -93,7 +93,7 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
     mga::LayerList list(layer_adapter, renderables);
 
     auto i = 0;
-    for(auto& layer : list)
+    for (auto& layer : list)
     {
         if (i == 3)
             EXPECT_FALSE(layer.needs_commit);
@@ -110,7 +110,7 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
     list.update_list(list2);
 
     i = 0;
-    for(auto& layer : list)
+    for (auto& layer : list)
     {
         if (i == 3)
             EXPECT_FALSE(layer.needs_commit);
@@ -124,7 +124,7 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
     list.update_list(list2);
 
     i = 0;
-    for(auto& layer : list)
+    for (auto& layer : list)
     {
         if ((i == 2) || (i == 3))
             EXPECT_FALSE(layer.needs_commit);
@@ -186,7 +186,7 @@ TEST_F(LayerListTest, swap_needed)
 
     auto l = list.native_list();
     ASSERT_THAT(l->numHwLayers, Eq(4));
-    for(auto i = 0u; i < 3; i++)
+    for (auto i = 0u; i < 3; i++)
         l->hwLayers[i].compositionType = HWC_OVERLAY;
     l->hwLayers[3].compositionType = HWC_FRAMEBUFFER_TARGET;
 
