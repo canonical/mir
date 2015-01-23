@@ -31,43 +31,27 @@ class SessionCoordinatorWrapper : public scene::SessionCoordinator
 public:
     SessionCoordinatorWrapper(std::shared_ptr<scene::SessionCoordinator> const& wrapped);
 
-    virtual std::shared_ptr<frontend::Session> open_session(
+    virtual std::shared_ptr<scene::Session> open_session(
         pid_t client_pid,
         std::string const& name,
         std::shared_ptr<frontend::EventSink> const& sink) override;
 
-    virtual void close_session(std::shared_ptr<frontend::Session> const& session) override;
+    virtual void close_session(std::shared_ptr<scene::Session> const& session) override;
 
-    void focus_next() override;
-    std::weak_ptr<scene::Session> focussed_application() const override;
+    std::shared_ptr<scene::Session> successor_of(std::shared_ptr<scene::Session> const&) const override;
+
     void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
+    void unset_focus() override;
 
-    void handle_surface_created(std::shared_ptr<frontend::Session> const& session) override;
-
-    std::shared_ptr<frontend::PromptSession> start_prompt_session_for(
-        std::shared_ptr<frontend::Session> const& session,
+    std::shared_ptr<scene::PromptSession> start_prompt_session_for(
+        std::shared_ptr<scene::Session> const& session,
         scene::PromptSessionCreationParameters const& params) override;
 
     void add_prompt_provider_for(
-        std::shared_ptr<frontend::PromptSession> const& prompt_session,
-        std::shared_ptr<frontend::Session> const& session) override;
+        std::shared_ptr<scene::PromptSession> const& prompt_session,
+        std::shared_ptr<scene::Session> const& session) override;
 
-    void stop_prompt_session(std::shared_ptr<frontend::PromptSession> const& prompt_session) override;
-
-    frontend::SurfaceId create_surface(std::shared_ptr<frontend::Session> const& session, scene::SurfaceCreationParameters const& params) override;
-
-    void destroy_surface(std::shared_ptr<frontend::Session> const& session, frontend::SurfaceId surface) override;
-
-    int set_surface_attribute(
-        std::shared_ptr<frontend::Session> const& session,
-        frontend::SurfaceId surface_id,
-        MirSurfaceAttrib attrib,
-        int value) override;
-
-    int get_surface_attribute(
-        std::shared_ptr<frontend::Session> const& session,
-        frontend::SurfaceId surface_id,
-        MirSurfaceAttrib attrib) override;
+    void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) override;
 
 protected:
     std::shared_ptr<scene::SessionCoordinator> const wrapped;
