@@ -126,12 +126,12 @@ void mga::DisplayConfiguration::for_each_output(std::function<void(mg::UserDispl
     }
 }
 
-mg::DisplayConfigurationOutput& mga::DisplayConfiguration::primary_config()
+mg::DisplayConfigurationOutput& mga::DisplayConfiguration::primary()
 {
     return configurations[primary_id];
 }
 
-mg::DisplayConfigurationOutput& mga::DisplayConfiguration::external_config()
+mg::DisplayConfigurationOutput& mga::DisplayConfiguration::external()
 {
     return configurations[external_id];
 }

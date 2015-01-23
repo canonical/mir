@@ -80,6 +80,7 @@ struct DisplayBuffer : public ::testing::Test
         stub_program_factory,
         orientation,
         mga::OverlayOptimization::enabled};
+
 };
 }
 
