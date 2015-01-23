@@ -323,7 +323,7 @@ MirTouchEvent const* mir_input_event_get_touch_input_event(MirInputEvent const* 
     return mir_input_event_get_touch_event(ev);
 }
 
-unsigned int mir_touch_event_get_touch_count(MirTouchEvent const* event)
+unsigned int mir_touch_event_get_count(MirTouchEvent const* event)
 {
     auto const& old_mev = reinterpret_cast<MirEvent const*>(event)->motion;
     return old_mev.pointer_count;
@@ -332,10 +332,10 @@ unsigned int mir_touch_event_get_touch_count(MirTouchEvent const* event)
 // ABI-compatible MIR_COMMON_3.1
 unsigned int mir_touch_input_event_get_touch_count(MirTouchEvent const* event)
 {
-    return mir_touch_event_get_touch_count(event);
+    return mir_touch_event_get_count(event);
 }
 
-MirTouchEventTouchId mir_touch_event_get_touch_id(MirTouchEvent const* event, size_t touch_index)
+MirTouchId mir_touch_event_get_id(MirTouchEvent const* event, size_t touch_index)
 {
     auto const& old_mev = old_mev_from_new(event);
 
@@ -349,9 +349,9 @@ MirTouchEventTouchId mir_touch_event_get_touch_id(MirTouchEvent const* event, si
 }
 
 // ABI-compatible MIR_COMMON_3.1
-MirTouchEventTouchId mir_touch_input_event_get_touch_id(MirTouchEvent const* event, size_t touch_index)
+MirTouchId mir_touch_input_event_get_touch_id(MirTouchEvent const* event, size_t touch_index)
 {
-    return mir_touch_event_get_touch_id(event, touch_index);
+    return mir_touch_event_get_id(event, touch_index);
 }
  
 MirTouchAction mir_touch_event_get_action(MirTouchEvent const* event, size_t touch_index)
@@ -408,7 +408,7 @@ MirTouchAction mir_touch_input_event_get_action(MirTouchEvent const* event, size
     return mir_touch_event_get_action(event, touch_index);
 }
 
-MirTouchTooltype mir_touch_event_get_touch_tooltype(MirTouchEvent const* event,
+MirTouchTooltype mir_touch_event_get_tooltype(MirTouchEvent const* event,
     size_t touch_index)
 {
     auto const& old_mev = old_mev_from_new(event);
@@ -437,10 +437,10 @@ MirTouchTooltype mir_touch_event_get_touch_tooltype(MirTouchEvent const* event,
 MirTouchTooltype mir_touch_input_event_get_touch_tooltype(
     MirTouchEvent const* event, size_t touch_index)
 {
-    return mir_touch_event_get_touch_tooltype(event, touch_index);
+    return mir_touch_event_get_tooltype(event, touch_index);
 }
 
-float mir_touch_event_get_touch_axis_value(MirTouchEvent const* event,
+float mir_touch_event_get_axis_value(MirTouchEvent const* event,
     size_t touch_index, MirTouchAxis axis)
 {
     auto const& old_mev = old_mev_from_new(event);
@@ -475,7 +475,7 @@ float mir_touch_event_get_touch_axis_value(MirTouchEvent const* event,
 float mir_touch_input_event_get_touch_axis_value(MirTouchEvent const* event,
     size_t touch_index, MirTouchAxis axis)
 {
-    return mir_touch_event_get_touch_axis_value(event, touch_index, axis);
+    return mir_touch_event_get_axis_value(event, touch_index, axis);
 }
 
 /* Pointer event accessors */

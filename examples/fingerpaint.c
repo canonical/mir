@@ -222,7 +222,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         {
         case mir_input_event_type_touch:
             tev = mir_input_event_get_touch_event(input_event);
-            touch_count = mir_touch_event_get_touch_count(tev);
+            touch_count = mir_touch_event_get_count(tev);
             ended = touch_count == 1 &&
                    (mir_touch_event_get_action(tev, 0) == mir_touch_action_up);
             break;
@@ -258,13 +258,13 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 
                 if (tev != NULL)
                 {
-                    x = mir_touch_event_get_touch_axis_value(tev, p,
+                    x = mir_touch_event_get_axis_value(tev, p,
                         mir_touch_axis_x);
-                    y = mir_touch_event_get_touch_axis_value(tev, p,
+                    y = mir_touch_event_get_axis_value(tev, p,
                         mir_touch_axis_y);
-                    float size = mir_touch_event_get_touch_axis_value(
+                    float size = mir_touch_event_get_axis_value(
                         tev, p, mir_touch_axis_size);
-                    pressure = mir_touch_event_get_touch_axis_value(tev,
+                    pressure = mir_touch_event_get_axis_value(tev,
                         p, mir_touch_axis_pressure);
                     radius = size * 50.0f + 1.0f;
                 }

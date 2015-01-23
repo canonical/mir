@@ -37,7 +37,7 @@ typedef struct MirTouchEvent MirTouchEvent;
  * That is to say, once a touch has gone down at time T, no other touch will
  * use that touch's ID until all touches at time T have come up.
  */
-typedef int32_t MirTouchEventTouchId;
+typedef int32_t MirTouchId;
 
 /**
  * Possible per touch actions for state changing
@@ -99,7 +99,7 @@ MirInputEventModifiers mir_touch_event_get_modifiers(MirTouchEvent const* event)
  *   \param [in] event The touch event
  *   \return           The number of touches
  */
-unsigned int mir_touch_event_get_touch_count(MirTouchEvent const* event);
+unsigned int mir_touch_event_get_count(MirTouchEvent const* event);
 
 /**
  * Retrieve the TouchID for a touch at given index.
@@ -108,7 +108,7 @@ unsigned int mir_touch_event_get_touch_count(MirTouchEvent const* event);
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 ID of the touch at index
  */
-MirTouchEventTouchId mir_touch_event_get_touch_id(MirTouchEvent const* event, size_t touch_index);
+MirTouchId mir_touch_event_get_id(MirTouchEvent const* event, size_t touch_index);
 
 /**
  * Retrieve the action which occured for a touch at given index.
@@ -126,7 +126,7 @@ MirTouchAction mir_touch_event_get_action(MirTouchEvent const* event, size_t tou
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 Tooltype used for the touch at index
  */
-MirTouchTooltype mir_touch_event_get_touch_tooltype(MirTouchEvent const* event,
+MirTouchTooltype mir_touch_event_get_tooltype(MirTouchEvent const* event,
     size_t touch_index);
 
 
@@ -138,7 +138,7 @@ MirTouchTooltype mir_touch_event_get_touch_tooltype(MirTouchEvent const* event,
  *  \param [in] axis        The axis to retreive a value from
  *  \return                 The value of the given axis
  */
-float mir_touch_event_get_touch_axis_value(MirTouchEvent const* event, 
+float mir_touch_event_get_axis_value(MirTouchEvent const* event, 
     size_t touch_index, MirTouchAxis axis);
 
 #ifdef __cplusplus
