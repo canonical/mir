@@ -72,6 +72,7 @@ void msh::DefaultShell::focus_next()
 
 std::weak_ptr<ms::Session> msh::DefaultShell::focussed_application() const
 {
+    std::unique_lock<std::mutex> lg(focus_application_mutex);
     return focus_application;
 }
 

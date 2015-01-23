@@ -52,7 +52,7 @@ public:
  * I think the FocusController interface is unnecessary as:
  *   1. the functions are only meaningful in the context of implementing a Shell
  *   2. the implementation of these functions is Shell behaviour
- * Simply providing them as part of a public DefaultShell is probably adequate.
+ * Simply providing them as part of a public ShellLibrary is probably adequate.
  *  @{ */
     void focus_next() override;
 
@@ -104,10 +104,10 @@ private:
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
 
     // TODO the rest of the implementation doesn't need to be public
-    std::mutex focus_surface_mutex;
+    std::mutex mutable focus_surface_mutex;
     std::weak_ptr<scene::Surface> focus_surface;
 
-    std::mutex focus_application_mutex;
+    std::mutex mutable focus_application_mutex;
     std::weak_ptr<scene::Session> focus_application;
 
     void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Session> const& next_focus);
