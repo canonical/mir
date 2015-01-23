@@ -70,6 +70,13 @@
 }
 
 {
+    libgcc_s_addr4
+    Memcheck:Addr4
+    ...
+    obj:/lib/arm-linux-gnueabihf/libgcc_s.so.1
+}
+
+{
     libgcc_s_cond
     Memcheck:Cond
     ...
