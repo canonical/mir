@@ -299,6 +299,12 @@ MirInputEventModifiers mir_touch_event_get_modifiers(MirTouchEvent const* tev)
     return old_modifiers_to_new(old_mev.modifiers);
 }
 
+// ABI-compatible MIR_COMMON_3.1
+MirInputEventModifiers mir_touch_input_event_get_modifiers(MirTouchEvent const* tev)
+{
+    return mir_touch_event_get_modifiers(tev);
+}
+
 MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev)
 {
     if(mir_input_event_get_type(ev) != mir_input_event_type_touch)
@@ -311,10 +317,22 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev)
     return reinterpret_cast<MirTouchEvent const*>(ev);
 }
 
+// ABI-compatible MIR_COMMON_3.1
+MirTouchEvent const* mir_input_event_get_touch_input_event(MirInputEvent const* ev)
+{
+    return mir_input_event_get_touch_event(ev);
+}
+
 unsigned int mir_touch_event_get_touch_count(MirTouchEvent const* event)
 {
     auto const& old_mev = reinterpret_cast<MirEvent const*>(event)->motion;
     return old_mev.pointer_count;
+}
+
+// ABI-compatible MIR_COMMON_3.1
+unsigned int mir_touch_input_event_get_touch_count(MirTouchEvent const* event)
+{
+    return mir_touch_event_get_touch_count(event);
 }
 
 MirTouchEventTouchId mir_touch_event_get_touch_id(MirTouchEvent const* event, size_t touch_index)
@@ -330,6 +348,12 @@ MirTouchEventTouchId mir_touch_event_get_touch_id(MirTouchEvent const* event, si
     return old_mev.pointer_coordinates[touch_index].id;
 }
 
+// ABI-compatible MIR_COMMON_3.1
+MirTouchEventTouchId mir_touch_input_event_get_touch_id(MirTouchEvent const* event, size_t touch_index)
+{
+    return mir_touch_event_get_touch_id(event, touch_index);
+}
+ 
 MirTouchAction mir_touch_event_get_action(MirTouchEvent const* event, size_t touch_index)
 {
     auto const& old_mev = old_mev_from_new(event);
@@ -378,6 +402,12 @@ MirTouchAction mir_touch_event_get_action(MirTouchEvent const* event, size_t tou
     }
 }
 
+// ABI-compatible MIR_COMMON_3.1
+MirTouchAction mir_touch_input_event_get_action(MirTouchEvent const* event, size_t touch_index)
+{
+    return mir_touch_event_get_action(event, touch_index);
+}
+
 MirTouchTooltype mir_touch_event_get_touch_tooltype(MirTouchEvent const* event,
     size_t touch_index)
 {
@@ -401,6 +431,13 @@ MirTouchTooltype mir_touch_event_get_touch_tooltype(MirTouchEvent const* event,
     default:
         return mir_touch_tooltype_unknown;
     }
+}
+
+// ABI-compatible MIR_COMMON_3.1
+MirTouchTooltype mir_touch_input_event_get_touch_tooltype(
+    MirTouchEvent const* event, size_t touch_index)
+{
+    return mir_touch_event_get_touch_tooltype(event, touch_index);
 }
 
 float mir_touch_event_get_touch_axis_value(MirTouchEvent const* event,
@@ -433,6 +470,13 @@ float mir_touch_event_get_touch_axis_value(MirTouchEvent const* event,
         return -1;
     }
 }                                                                            
+
+// ABI-compatible MIR_COMMON_3.1
+float mir_touch_input_event_get_touch_axis_value(MirTouchEvent const* event,
+    size_t touch_index, MirTouchAxis axis)
+{
+    return mir_touch_event_get_touch_axis_value(event, touch_index, axis);
+}
 
 /* Pointer event accessors */
 MirPointerInputEvent const* mir_input_event_get_pointer_input_event(MirInputEvent const* ev)
