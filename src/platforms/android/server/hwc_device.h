@@ -25,6 +25,8 @@
 #include "hwc_layerlist.h"
 #include <memory>
 #include <vector>
+#include <mutex>
+#include <condition_variable>
 
 namespace mir
 {
@@ -54,11 +56,28 @@ public:
     void display_removed(DisplayName) override;
 
 private:
+    void commit();
     bool buffer_is_onscreen(Buffer const&) const;
-    std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<SyncFileOps> const sync_ops;
+
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool posted;
+
+    size_t needed_list_count;
+    struct ListResources
+    {
+        LayerList& list;
+        SwappingGLContext const& context;
+        RenderableListCompositor const& compositor;
+    };
+    std::list<ListResources> displays;
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> lists; 
+
+
+    std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 };
 
 }

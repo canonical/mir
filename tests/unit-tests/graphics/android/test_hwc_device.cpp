@@ -40,6 +40,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
+#include <future>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -789,8 +790,11 @@ TEST_F(HwcDevice, commits_external_list_with_both_force_gl)
     mga::HwcDevice device(mock_device);
     device.display_added(mga::DisplayName::external);
 
+    auto handle = std::async(std::launch::async, [&]{
+        device.commit(mga::DisplayName::primary, primary_list, stub_context, stub_compositor);
+    }); 
     device.commit(mga::DisplayName::external, external_list, stub_context, stub_compositor);
-    device.commit(mga::DisplayName::primary, primary_list, stub_context, stub_compositor);
+    EXPECT_THAT(handle.wait_for(std::chrono::seconds(1)), Eq(std::future_status::ready));
 
     device.display_removed(mga::DisplayName::external);
 }

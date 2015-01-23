@@ -62,7 +62,9 @@ bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
 }
 
 mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper) :
-    hwc_wrapper(hwc_wrapper)
+    hwc_wrapper(hwc_wrapper),
+    posted{false},
+    needed_list_count{1} //primary always connected
 {
 }
 
@@ -80,46 +82,79 @@ bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
 }
 
 void mga::HwcDevice::commit(
-    mga::DisplayName,
-    mga::LayerList& hwc_list,
+    mga::DisplayName name,
+    mga::LayerList& list,
     SwappingGLContext const& context,
-    RenderableListCompositor const& list_compositor)
+    RenderableListCompositor const& compositor)
 {
-    hwc_list.setup_fb(context.last_rendered_buffer());
+    std::unique_lock<decltype(mutex)> lk(mutex);
 
-    hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
+    if (name == mga::DisplayName::external)
+        lists[1] = list.native_list();
+    else if (name == mga::DisplayName::primary)
+        lists[0] = list.native_list();
 
-    if (hwc_list.needs_swapbuffers())
+    displays.emplace_back(ListResources{list, context, compositor});
+    if (displays.size() < needed_list_count)
     {
-        auto rejected_renderables = hwc_list.rejected_renderables();
-        if (rejected_renderables.empty())
-            context.swap_buffers();
-        else
-            list_compositor.render(std::move(rejected_renderables), context);
-        hwc_list.setup_fb(context.last_rendered_buffer());
-        hwc_list.swap_occurred();
+        posted = false;
+        cv.wait(lk, [this]{ return posted; }); 
+    }
+    else
+    {
+        commit();
+        displays.clear();
+        posted = true;
+        cv.notify_all();
+    }
+}
+
+void mga::HwcDevice::commit()
+{
+    for(auto& display : displays)
+    {
+        display.list.setup_fb(display.context.last_rendered_buffer());
     }
 
-    //setup overlays
+    hwc_wrapper->prepare(lists);
+
     std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
-    for (auto& layer : hwc_list)
+    for(auto& display : displays)
     {
-        auto buffer = layer.layer.buffer();
-        if (layer.layer.is_overlay() && buffer)
+        if (display.list.needs_swapbuffers())
         {
-            if (!buffer_is_onscreen(*buffer))
-                layer.layer.set_acquirefence();
-            next_onscreen_overlay_buffers.push_back(buffer);
+            auto rejected_renderables = display.list.rejected_renderables();
+            if (rejected_renderables.empty())
+                display.context.swap_buffers();
+            else
+                display.compositor.render(std::move(rejected_renderables), display.context);
+            display.list.setup_fb(display.context.last_rendered_buffer());
+            display.list.swap_occurred();
+        }
+
+        //setup overlays
+        for (auto& layer : display.list)
+        {
+            auto buffer = layer.layer.buffer();
+            if (layer.layer.is_overlay() && buffer)
+            {
+                if (!buffer_is_onscreen(*buffer))
+                    layer.layer.set_acquirefence();
+                next_onscreen_overlay_buffers.push_back(buffer);
+            }
         }
     }
 
-    hwc_wrapper->set({{hwc_list.native_list(), nullptr, nullptr}});
+    hwc_wrapper->set(lists);
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
 
-    for (auto& it : hwc_list)
-        it.layer.release_buffer();
+    for(auto& display : displays)
+    {
+        for (auto& it : display.list)
+            it.layer.release_buffer();
 
-    mir::Fd retire_fd(hwc_list.retirement_fence());
+        mir::Fd retire_fd(display.list.retirement_fence());
+    }
 }
 
 void mga::HwcDevice::content_cleared()
@@ -127,10 +162,16 @@ void mga::HwcDevice::content_cleared()
     onscreen_overlay_buffers.clear();
 }
 
-void mga::HwcDevice::display_added(mga::DisplayName)
+void mga::HwcDevice::display_added(mga::DisplayName name)
 {
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    if (name == mga::DisplayName::external)
+        needed_list_count = 2;
 }
 
-void mga::HwcDevice::display_removed(mga::DisplayName)
+void mga::HwcDevice::display_removed(mga::DisplayName name)
 {
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    if (name == mga::DisplayName::external)
+        needed_list_count = 1;
 }
