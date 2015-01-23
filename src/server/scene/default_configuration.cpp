@@ -181,8 +181,7 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                     the_session_container(),
                     the_snapshot_strategy(),
                     the_session_event_sink(),
-                    the_session_listener(),
-                    the_prompt_session_manager()));
+                    the_session_listener()));
         });
 }
 

@@ -23,6 +23,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_coordinator.h"
+#include "mir/scene/prompt_session_manager.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -35,10 +36,12 @@ namespace msh = mir::shell;
 msh::DefaultShell::DefaultShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
     std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator) :
+    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+    std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager) :
     input_targeter(input_targeter),
     surface_coordinator(surface_coordinator),
-    session_coordinator(session_coordinator)
+    session_coordinator(session_coordinator),
+    prompt_session_manager(prompt_session_manager)
 {
 }
 
@@ -55,8 +58,10 @@ std::shared_ptr<mf::Session> msh::DefaultShell::open_session(
 void msh::DefaultShell::close_session(
     std::shared_ptr<mf::Session> const& session)
 {
-    session_coordinator->close_session(std::dynamic_pointer_cast<ms::Session>(session));
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
 
+    prompt_session_manager->remove_session(scene_session);
+    session_coordinator->close_session(scene_session);
     set_focus_to(session_coordinator->successor_of(std::shared_ptr<ms::Session>()));
 }
 
@@ -96,7 +101,7 @@ std::shared_ptr<mf::PromptSession> msh::DefaultShell::start_prompt_session_for(
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
 
-    return session_coordinator->start_prompt_session_for(scene_session, params);
+    return prompt_session_manager->start_prompt_session_for(scene_session, params);
 }
 
 void msh::DefaultShell::add_prompt_provider_for(
@@ -105,13 +110,13 @@ void msh::DefaultShell::add_prompt_provider_for(
 {
     auto const scene_prompt_session = std::dynamic_pointer_cast<ms::PromptSession>(prompt_session);
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    session_coordinator->add_prompt_provider_for(scene_prompt_session, scene_session);
+    prompt_session_manager->add_prompt_provider(scene_prompt_session, scene_session);
 }
 
 void msh::DefaultShell::stop_prompt_session(std::shared_ptr<mf::PromptSession> const& prompt_session)
 {
     auto const scene_prompt_session = std::dynamic_pointer_cast<ms::PromptSession>(prompt_session);
-    session_coordinator->stop_prompt_session(scene_prompt_session);
+    prompt_session_manager->stop_prompt_session(scene_prompt_session);
 }
 
 mf::SurfaceId msh::DefaultShell::create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params)

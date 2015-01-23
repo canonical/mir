@@ -78,12 +78,11 @@ struct MockSessionEventSink : public ms::SessionEventSink
 struct SessionManagerSetup : public testing::Test
 {
     SessionManagerSetup()
-      : session_manager(mt::fake_shared(surface_coordinator),
+      : session_manager{mt::fake_shared(surface_coordinator),
                         mt::fake_shared(container),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
                         std::make_shared<mtd::NullSessionEventSink>(),
-                        mt::fake_shared(session_listener),
-                        std::make_shared<mtd::NullPromptSessionManager>())
+                        mt::fake_shared(session_listener)}
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
@@ -143,12 +142,11 @@ namespace
 struct SessionManagerSessionListenerSetup : public testing::Test
 {
     SessionManagerSessionListenerSetup()
-      : session_manager(mt::fake_shared(surface_coordinator),
+      : session_manager{mt::fake_shared(surface_coordinator),
                         mt::fake_shared(container),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
                         std::make_shared<mtd::NullSessionEventSink>(),
-                        mt::fake_shared(session_listener),
-                        std::make_shared<mtd::NullPromptSessionManager>())
+                        mt::fake_shared(session_listener)}
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
@@ -193,8 +191,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
         mt::fake_shared(container),
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),
-        mt::fake_shared(session_listener),
-        std::make_shared<mtd::NullPromptSessionManager>()};
+        mt::fake_shared(session_listener)};
 };
 }
 
@@ -253,14 +250,14 @@ struct DefaultShell : Test
         mt::fake_shared(container),
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),
-        mt::fake_shared(session_listener),
-        std::make_shared<mtd::NullPromptSessionManager>()};
+        mt::fake_shared(session_listener)};
 
     mtd::StubInputTargeter input_targeter;
     msh::DefaultShell shell{
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_coordinator),
-        mt::fake_shared(session_manager)};
+        mt::fake_shared(session_manager),
+        std::make_shared<mtd::NullPromptSessionManager>()};
 
     void SetUp() override
     {

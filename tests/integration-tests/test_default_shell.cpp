@@ -66,14 +66,14 @@ struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
             mt::fake_shared(container),
             std::make_shared<mtd::NullSnapshotStrategy>(),
             std::make_shared<mtd::NullSessionEventSink>(),
-            mt::fake_shared(session_listener),
-            std::make_shared<mtd::NullPromptSessionManager>()
+            mt::fake_shared(session_listener)
         };
 
     msh::DefaultShell shell{
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_coordinator),
-        mt::fake_shared(session_manager)};
+        mt::fake_shared(session_manager),
+        std::make_shared<mtd::NullPromptSessionManager>()};
 };
 }
 
