@@ -89,15 +89,14 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
     SERIALIZE_OPTION_IF_SET(pref_orientation, message);
     if (parent.is_set() && parent.value() != nullptr)
         message.set_parent_id(parent.value()->id());
-    if (attachment_rect.is_set())
+    if (aux_rect.is_set())
     {
-        message.mutable_attachment_rect()->set_left(attachment_rect.value().left);
-        message.mutable_attachment_rect()->set_top(attachment_rect.value().top);
-        message.mutable_attachment_rect()->set_width(attachment_rect.value().width);
-        message.mutable_attachment_rect()->set_height(attachment_rect.value().height);
+        message.mutable_aux_rect()->set_left(aux_rect.value().left);
+        message.mutable_aux_rect()->set_top(aux_rect.value().top);
+        message.mutable_aux_rect()->set_width(aux_rect.value().width);
+        message.mutable_aux_rect()->set_height(aux_rect.value().height);
     }
     SERIALIZE_OPTION_IF_SET(edge_attachment, message);
-
     return message;
 }
 

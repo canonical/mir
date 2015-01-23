@@ -76,6 +76,11 @@ MATCHER_P(EqPromptSessionEventState, state, "") {
   return arg.type == mir_event_type_prompt_session_state_change && arg.prompt_session.new_state == state;
 }
 
+MATCHER_P(HasParent, parent, "")
+{
+    return arg.parent.lock() == parent;
+}
+
 struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
 {
     void raise(std::weak_ptr<ms::Surface> const&) override
@@ -340,6 +345,31 @@ TEST_F(ApplicationSession, process_id)
     EXPECT_THAT(app_session.process_id(), Eq(session_pid));
 }
 
+TEST_F(ApplicationSession, fowards_parent_info_to_coordinator)
+{
+    using namespace ::testing;
+
+    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
+    auto mock_surface = make_mock_surface();
+    EXPECT_CALL(surface_coordinator, add_surface(_, _))
+        .WillOnce(Return(mock_surface));
+
+    auto session = make_application_session_with_coordinator(mt::fake_shared(surface_coordinator));
+
+    // Create parent surface
+    ms::SurfaceCreationParameters params;
+    auto parent_id = session->create_surface(params);
+    auto parent = session->get_surface(parent_id);
+
+    EXPECT_CALL(surface_coordinator, add_surface(HasParent(parent), _))
+        .WillOnce(Return(mock_surface));
+
+    params.with_parent_id(parent_id);
+    auto child_id = session->create_surface(params);
+
+    session->destroy_surface(parent_id);
+    session->destroy_surface(child_id);
+}
 namespace
 {
 class MockEventSink : public mf::EventSink

@@ -48,7 +48,7 @@ bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
     if (list.empty())
         return false;
 
-    for(auto const& renderable : list)
+    for (auto const& renderable : list)
     {
         //TODO: enable planeAlpha for (hwc version >= 1.2), 90 deg rotation
         static glm::mat4 const identity;
@@ -89,7 +89,7 @@ void mga::HwcDevice::commit(
 
     hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
 
-    if (hwc_list.needs_swap())
+    if (hwc_list.needs_swapbuffers())
     {
         auto rejected_renderables = hwc_list.rejected_renderables();
         if (rejected_renderables.empty())
@@ -116,7 +116,7 @@ void mga::HwcDevice::commit(
     hwc_wrapper->set({{hwc_list.native_list(), nullptr, nullptr}});
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
 
-    for(auto& it : hwc_list)
+    for (auto& it : hwc_list)
         it.layer.release_buffer();
 
     mir::Fd retire_fd(hwc_list.retirement_fence());

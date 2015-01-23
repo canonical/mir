@@ -42,5 +42,7 @@ MIR_CLIENT_8.3 {
     mir_pointer_input_event_get_action;
     mir_pointer_input_event_get_button_state;
     mir_pointer_input_event_get_axis_value;
-    mir_connection_create_spec_for_menu_surface;
+    mir_connection_create_spec_for_menu;
+    mir_connection_create_spec_for_tooltip;
+    mir_connection_create_spec_for_dialog;
 } MIR_CLIENT_8.2;
