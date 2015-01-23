@@ -36,7 +36,6 @@ class SurfaceController : public SurfaceCoordinator
 public:
     SurfaceController(
         std::shared_ptr<SurfaceFactory> const& surface_factory,
-        std::shared_ptr<PlacementStrategy> const& placement_strategy,
         std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
     std::shared_ptr<Surface> add_surface(
@@ -49,7 +48,6 @@ public:
 
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
-    std::shared_ptr<PlacementStrategy> const placement_strategy;
     std::shared_ptr<SurfaceStackModel> const surface_stack;
 };
 

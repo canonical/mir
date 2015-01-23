@@ -32,6 +32,7 @@ class PromptSessionManager;
 class SessionCoordinator;
 class Surface;
 class SurfaceCoordinator;
+class PlacementStrategy;
 }
 
 namespace shell
@@ -43,7 +44,6 @@ class InputTargeter;
  */
 class DefaultShell :
     public virtual frontend::Shell,
-// TODO public virtual scene::PlacementStrategy,
 // TODO public virtual scene::SurfaceConfigurator,
 // TODO public virtual graphics::DisplayConfigurationPolicy,
     public virtual FocusController
@@ -53,7 +53,8 @@ public:
         std::shared_ptr<InputTargeter> const& input_targeter,
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager);
+        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
+        std::shared_ptr<scene::PlacementStrategy> const& placement_strategy);
 
 /** @name these come from FocusController
  * I think the FocusController interface is unnecessary as:
@@ -110,8 +111,8 @@ private:
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
     std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
+    std::shared_ptr<scene::PlacementStrategy> const placement_strategy;  // TODO doesn't need to be a strategy
 
-    // TODO the rest of the implementation doesn't need to be public
     std::mutex mutable focus_surface_mutex;
     std::weak_ptr<scene::Surface> focus_surface;
 

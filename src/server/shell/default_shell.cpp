@@ -18,12 +18,14 @@
 
 #include "default_shell.h"
 #include "mir/shell/input_targeter.h"
+#include "mir/scene/placement_strategy.h"
 #include "mir/scene/prompt_session.h"
+#include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_coordinator.h"
-#include "mir/scene/prompt_session_manager.h"
+#include "mir/scene/surface_creation_parameters.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -37,11 +39,13 @@ msh::DefaultShell::DefaultShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
     std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-    std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager) :
+    std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
+    std::shared_ptr<ms::PlacementStrategy> const& placement_strategy) :
     input_targeter(input_targeter),
     surface_coordinator(surface_coordinator),
     session_coordinator(session_coordinator),
-    prompt_session_manager(prompt_session_manager)
+    prompt_session_manager(prompt_session_manager),
+    placement_strategy(placement_strategy)
 {
 }
 
@@ -122,7 +126,8 @@ void msh::DefaultShell::stop_prompt_session(std::shared_ptr<mf::PromptSession> c
 mf::SurfaceId msh::DefaultShell::create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    auto const result = scene_session->create_surface(params);
+    auto placed_params = placement_strategy->place(*scene_session, params);
+    auto const result = scene_session->create_surface(placed_params);
     return result;
 }
 

@@ -222,12 +222,19 @@ TEST_F(SessionManagerSessionEventsSetup, session_event_sink_is_notified_of_lifec
 // TODO in this file (e.g. MockSessionContainer) I've left them here temporarily.
 #include "src/server/shell/default_shell.h"
 #include "mir_test_doubles/stub_input_targeter.h"
+#include "mir/scene/placement_strategy.h"
 
 namespace msh = mir::shell;
 using namespace ::testing;
 
 namespace
 {
+struct NullPlacementStrategy : ms::PlacementStrategy
+{
+    auto place(ms::Session const& , ms::SurfaceCreationParameters const& params)
+    -> ms::SurfaceCreationParameters  override { return params; }
+};
+
 struct MockSessionManager : ms::SessionManager
 {
     using ms::SessionManager::SessionManager;
@@ -257,7 +264,8 @@ struct DefaultShell : Test
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_coordinator),
         mt::fake_shared(session_manager),
-        std::make_shared<mtd::NullPromptSessionManager>()};
+        std::make_shared<mtd::NullPromptSessionManager>(),
+        std::make_shared<NullPlacementStrategy>()};
 
     void SetUp() override
     {
