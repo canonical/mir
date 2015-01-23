@@ -207,7 +207,7 @@ mi::CursorController::~CursorController()
     }
 }
 
-void mi::CursorController::set_cursor_image_locked(std::lock_guard<std::mutex> const&,
+void mi::CursorController::set_cursor_image_locked(std::unique_lock<std::mutex>& lock,
     std::shared_ptr<mg::CursorImage> const& image)
 {
     if (current_cursor == image)
@@ -216,38 +216,45 @@ void mi::CursorController::set_cursor_image_locked(std::lock_guard<std::mutex> c
     }
 
     current_cursor = image;
+
+    lock.unlock();
+
     if (image)
         cursor->show(*image);
     else
         cursor->hide();
 }
 
-void mi::CursorController::update_cursor_image_locked(std::lock_guard<std::mutex> const& lg)
+void mi::CursorController::update_cursor_image_locked(std::unique_lock<std::mutex>& lock)
 {
     auto surface = topmost_surface_containing_point(input_targets, cursor_location);
     if (surface)
     {
-        set_cursor_image_locked(lg, surface->cursor_image());
+        set_cursor_image_locked(lock, surface->cursor_image());
     }
     else
     {
-        set_cursor_image_locked(lg, default_cursor_image);
+        set_cursor_image_locked(lock, default_cursor_image);
     }
 }
 
 void mi::CursorController::update_cursor_image()
 {
-    std::lock_guard<std::mutex> lg(cursor_state_guard);
-    update_cursor_image_locked(lg);
+    std::unique_lock<std::mutex> lock(cursor_state_guard);
+    update_cursor_image_locked(lock);
 }
 
 void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
 {
-    std::lock_guard<std::mutex> lg(cursor_state_guard);
+    auto const new_location = geom::Point{geom::X{abs_x}, geom::Y{abs_y}};
 
-    cursor_location = geom::Point{geom::X{abs_x}, geom::Y{abs_y}};
-    
-    update_cursor_image_locked(lg);
+    {
+        std::unique_lock<std::mutex> lock(cursor_state_guard);
 
-    cursor->move_to(cursor_location);
+        cursor_location = new_location;
+
+        update_cursor_image_locked(lock);
+    }
+
+    cursor->move_to(new_location);
 }

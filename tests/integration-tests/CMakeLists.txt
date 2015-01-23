@@ -19,7 +19,6 @@ set(
   INTEGRATION_TESTS_SRCS
   test_surface_stack_with_compositor.cpp
   test_client_screencast.cpp
-  test_client_surface_swap_buffers.cpp
   test_large_messages.cpp
   test_protobuf.cpp
   test_surfaceloop.cpp
@@ -34,7 +33,7 @@ set(
   test_swapinterval.cpp
   test_server_client_types.cpp
   test_server_shutdown.cpp
-  test_session_manager.cpp
+  test_default_shell.cpp
   test_session.cpp
   session_management.cpp
   surface_composition.cpp

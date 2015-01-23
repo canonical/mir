@@ -85,7 +85,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         
         if (!it->is_a_surface())
             decoration_skip_list.insert(renderable->id());
-        if (renderable->visible() && any_part_drawn)
+        if (any_part_drawn)
         {
             renderable_list.push_back(renderable);
 
@@ -160,6 +160,11 @@ void me::DemoCompositor::zoom(float mag)
 {
     zoom_mag = mag;
     update_viewport();
+}
+
+void me::DemoCompositor::set_colour_effect(me::ColourEffect e)
+{
+    renderer.set_colour_effect(e);
 }
 
 void me::DemoCompositor::update_viewport()

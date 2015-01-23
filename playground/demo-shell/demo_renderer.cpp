@@ -25,6 +25,7 @@
 using namespace mir;
 using namespace mir::examples;
 using namespace mir::geometry;
+using namespace mir::compositor;
 
 namespace
 {
@@ -143,6 +144,31 @@ GLuint generate_frame_corner_texture(float corner_radius,
     return corner;
 }
 
+static const GLchar inverse_fshader[] =
+{
+    "precision mediump float;\n"
+    "uniform sampler2D tex;\n"
+    "uniform float alpha;\n"
+    "varying vec2 v_texcoord;\n"
+    "void main() {\n"
+    "    vec4 f = texture2D(tex, v_texcoord);\n"
+    "    vec3 inverted = (vec3(1.0) - (f.rgb / f.a)) * f.a;\n"
+    "    gl_FragColor = alpha*vec4(inverted, f.a);\n"
+    "}\n"
+};
+static const GLchar contrast_fshader[] =
+{
+    "precision mediump float;\n"
+    "uniform sampler2D tex;\n"
+    "uniform float alpha;\n"
+    "varying vec2 v_texcoord;\n"
+    "void main() {\n"
+    "    vec4 raw = texture2D(tex, v_texcoord);\n"
+    "    vec3 bent = (1.0 - cos(raw.rgb * 3.141592654)) / 2.0;\n"
+    "    gl_FragColor = alpha * vec4(bent, raw.a);\n"
+    "}\n"
+};
+
 } // namespace
 
 DemoRenderer::DemoRenderer(
@@ -156,7 +182,10 @@ DemoRenderer::DemoRenderer(
         dest_alpha),
     titlebar_height{titlebar_height},
     shadow_radius{shadow_radius},
-    corner_radius{0.5f}
+    corner_radius{0.5f},
+    colour_effect{none},
+    inverse_program(family.add_program(vshader, inverse_fshader)),
+    contrast_program(family.add_program(vshader, contrast_fshader))
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
@@ -337,4 +366,22 @@ bool DemoRenderer::would_embellish(
             display_area.overlaps(right) ||
             display_area.overlaps(top) ||
             display_area.overlaps(bottom));
+}
+
+void DemoRenderer::set_colour_effect(ColourEffect e)
+{
+    colour_effect = e;
+}
+
+void DemoRenderer::draw(graphics::Renderable const& renderable,
+                        GLRenderer::Program const& current_program) const
+{
+    const GLRenderer::Program* const programs[ColourEffect::neffects] =
+    {
+        &current_program,
+        &inverse_program,
+        &contrast_program
+    };
+
+    GLRenderer::draw(renderable, *programs[colour_effect]);
 }

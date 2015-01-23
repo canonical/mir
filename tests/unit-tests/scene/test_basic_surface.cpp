@@ -309,6 +309,9 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
 
     surface.set_hidden(false);
     EXPECT_TRUE(surface.visible());
+
+    surface.configure(mir_surface_attrib_state, mir_surface_state_hidden);
+    EXPECT_FALSE(surface.visible());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
@@ -521,6 +524,24 @@ TEST_F(BasicSurfaceTest, reception_mode_can_be_changed)
     surface.set_reception_mode(mi::InputReceptionMode::receives_all_input);
 
     EXPECT_EQ(mi::InputReceptionMode::receives_all_input, surface.reception_mode());
+}
+
+TEST_F(BasicSurfaceTest, stores_parent)
+{
+    auto parent = mt::fake_shared(surface);
+    ms::BasicSurface child{
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        parent,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
+        stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
+        report};
+
+    EXPECT_EQ(child.parent(), parent);
 }
 
 namespace

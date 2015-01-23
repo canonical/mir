@@ -33,7 +33,7 @@ namespace graphics { class Platform; class Display; class GLConfig; class Displa
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
 namespace logging { class Logger; }
 namespace options { class Option; }
-namespace shell { class FocusController; class FocusSetter; class DisplayLayout; class HostLifecycleEventListener; }
+namespace shell { class FocusController; class DisplayLayout; class HostLifecycleEventListener; }
 namespace scene
 {
 class PlacementStrategy;
@@ -240,9 +240,6 @@ public:
 
     /// Sets an override functor for creating the session mediator report.
     void override_the_session_mediator_report(Builder<frontend::SessionMediatorReport> const& session_mediator_builder);
-
-    /// Sets an override functor for creating the shell focus setter.
-    void override_the_shell_focus_setter(Builder<shell::FocusSetter> const& focus_setter_builder);
 
     /// Sets an override functor for creating the surface configurator.
     void override_the_surface_configurator(Builder<scene::SurfaceConfigurator> const& surface_configurator_builder);

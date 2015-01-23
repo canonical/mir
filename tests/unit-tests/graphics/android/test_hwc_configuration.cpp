@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platforms/android/hwc_configuration.h"
+#include "src/platforms/android/server/hwc_configuration.h"
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test_doubles/mock_egl.h"
 #include <gmock/gmock.h>

@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platforms/android/display.h"
-#include "src/platforms/android/hal_component_factory.h"
+#include "src/platforms/android/server/display.h"
+#include "src/platforms/android/server/hal_component_factory.h"
 #include "src/server/graphics/program_factory.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/glib_main_loop.h"
