@@ -36,10 +36,9 @@ mg::DisplayConfigurationOutput external_output(
     std::vector<mg::DisplayConfigurationMode> external_modes;
     if (external_attribs.connected)
     {
-        printf("CONN\n");
         external_modes.emplace_back(
             mg::DisplayConfigurationMode{external_attribs.pixel_size, external_attribs.vrefresh_hz});
-    } else printf("DCON\n");
+    }
 
     bool used{false};
     return {

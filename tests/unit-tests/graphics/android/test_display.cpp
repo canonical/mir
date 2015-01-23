@@ -692,7 +692,6 @@ TEST_F(Display, turns_external_display_on_with_hotplug)
         ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
             .WillByDefault(Invoke([&](mga::DisplayName)
             {
-                printf("EXT %i\n", external_connected);
                 return mga::DisplayAttribs{
                     {20,20}, {4,4}, 50.0f, external_connected, mir_pixel_format_abgr_8888, 2};
             }));

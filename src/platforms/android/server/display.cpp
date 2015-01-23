@@ -179,7 +179,6 @@ mga::Display::Display(
 
 mga::Display::~Display() noexcept
 {
-    printf("DESTROY.\n");
     set_powermode_all_displays(*hwc_config, config, mir_power_mode_off);
 }
 
