@@ -48,7 +48,7 @@ public:
     virtual bool compatible_renderlist(RenderableList const& renderlist) = 0;
 
     /* post the layer list to the display, optionally drawing using the context/compositor if
-     * instructed to by the driver
+     * instructed to by the driver.
      */
     virtual void commit(
         DisplayName display_name,
@@ -58,6 +58,9 @@ public:
 
     //notify the DisplayDevice that the screen content was cleared in a way other than the above fns
     virtual void content_cleared() = 0;
+
+    virtual void display_added(DisplayName) = 0;
+    virtual void display_removed(DisplayName) = 0;
 
 protected:
     DisplayDevice() = default;

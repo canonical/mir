@@ -50,6 +50,8 @@ public:
         SwappingGLContext const& context,
         RenderableListCompositor const& list_compositor) override;
     void content_cleared() override;
+    void display_added(DisplayName) override;
+    void display_removed(DisplayName) override;
 
 private:
     bool buffer_is_onscreen(Buffer const&) const;

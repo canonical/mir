@@ -126,3 +126,11 @@ void mga::HwcDevice::content_cleared()
 {
     onscreen_overlay_buffers.clear();
 }
+
+void mga::HwcDevice::display_added(mga::DisplayName)
+{
+}
+
+void mga::HwcDevice::display_removed(mga::DisplayName)
+{
+}

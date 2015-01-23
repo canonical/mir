@@ -47,6 +47,8 @@ public:
         LayerList&,
         SwappingGLContext const& context,
         RenderableListCompositor const& list_compositor) override;
+    void display_added(DisplayName) override;
+    void display_removed(DisplayName) override;
 
 private:
     void content_cleared() override;

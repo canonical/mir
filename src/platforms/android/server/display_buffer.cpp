@@ -32,6 +32,7 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::DisplayBuffer::DisplayBuffer(
+    mga::DisplayName name,
     std::unique_ptr<LayerList> layer_list,
     std::shared_ptr<FramebufferBundle> const& fb_bundle,
     std::shared_ptr<DisplayDevice> const& display_device,
@@ -40,7 +41,8 @@ mga::DisplayBuffer::DisplayBuffer(
     mg::GLProgramFactory const& program_factory,
     MirOrientation orientation,
     mga::OverlayOptimization overlay_option)
-    : list(std::move(layer_list)),
+    : display_name{name},
+      list(std::move(layer_list)),
       fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},

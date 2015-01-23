@@ -96,3 +96,11 @@ bool mga::FBDevice::compatible_renderlist(RenderableList const&)
 void mga::FBDevice::content_cleared()
 {
 }
+
+void mga::FBDevice::display_added(mga::DisplayName)
+{
+}
+
+void mga::FBDevice::display_removed(mga::DisplayName)
+{
+}

@@ -108,3 +108,11 @@ bool mga::HwcFbDevice::compatible_renderlist(RenderableList const&)
 void mga::HwcFbDevice::content_cleared()
 {
 }
+
+void mga::HwcFbDevice::display_added(mga::DisplayName)
+{
+}
+
+void mga::HwcFbDevice::display_removed(mga::DisplayName)
+{
+}

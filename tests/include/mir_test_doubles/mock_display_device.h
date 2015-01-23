@@ -44,6 +44,8 @@ public:
         graphics::android::RenderableListCompositor const&));
     MOCK_METHOD1(compatible_renderlist, bool(
         graphics::RenderableList const&));
+    MOCK_METHOD1(display_added, void(graphics::android::DisplayName));
+    MOCK_METHOD1(display_removed, void(graphics::android::DisplayName));
 };
 }
 }

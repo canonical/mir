@@ -87,8 +87,9 @@ struct DisplayBuffer : public ::testing::Test
 TEST_F(DisplayBuffer, notifies_display_device_of_presence)
 {
     mga::DisplayName external{mga::DisplayName::external};
-    EXPECT_CALL(*mock_display_device, display_buffer_added(external));
-    EXPECT_CALL(*mock_display_device, display_buffer_added(external));
+    testing::InSequence seq;
+    EXPECT_CALL(*mock_display_device, display_added(external));
+    EXPECT_CALL(*mock_display_device, display_removed(external));
 
     mga::DisplayBuffer db{
         external,
