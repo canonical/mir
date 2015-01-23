@@ -1,7 +1,6 @@
 set(
   SHELL_SOURCES
 
-  default_focus_mechanism.cpp
   default_placement_strategy.cpp
   graphics_display_layout.cpp
   default_configuration.cpp

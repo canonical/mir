@@ -13,8 +13,6 @@ include /usr/share/dpkg/default.mk
 export CC=$(DEB_HOST_GNU_TYPE)-gcc-4.9
 export CXX=$(DEB_HOST_GNU_TYPE)-g++-4.9
 
-export PLATFORM_DRIVER = platform6driver
-
 %:
 	dh $@ --parallel --fail-missing
 
@@ -57,15 +55,4 @@ override_dh_install:
 # Delete the symlink so that --fail-missing doesn't think we've missed it
 # accidentally.
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
-	dh_install --fail-missing \
-	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmir$(PLATFORM_DRIVER).so
-	sh debian/install_ld_so_conf.sh $(DEB_HOST_ARCH) $(DEB_HOST_MULTIARCH)
-
-override_dh_installdeb:
-	sh debian/create_postinst_prerm_scripts.sh \
-	  $(DEB_HOST_ARCH) $(DEB_HOST_MULTIARCH)
-	dh_installdeb
-
-override_dh_gencontrol:
-	dh_gencontrol -- \
-		-Vplatform-driver=$(PLATFORM_DRIVER)
+	dh_install --fail-missing

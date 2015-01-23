@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,30 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
-#define MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
+#include "mir/graphics/platform.h"
 
-#include "mir/shell/focus_setter.h"
+extern "C" mir::graphics::PlatformPriority probe_graphics_platform()
+{
+    return mir::graphics::supported;
+}
 
-#include <gmock/gmock.h>
-
-namespace mir
-{
-namespace test
-{
-namespace doubles
-{
-
-struct MockFocusSetter : public shell::FocusSetter
-{
-    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<scene::Session> const&));
+mir::ModuleProperties const description {
+    "dummy",
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO
 };
 
+extern "C" mir::ModuleProperties const* describe_graphics_module()
+{
+    return &description;
 }
-}
-} // namespace mir
-
-#endif // MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
