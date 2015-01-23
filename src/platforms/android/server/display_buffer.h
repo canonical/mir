@@ -55,6 +55,7 @@ public:
         GLProgramFactory const& program_factory,
         MirOrientation orientation,
         OverlayOptimization overlay_option);
+    ~DisplayBuffer();
 
     geometry::Rectangle view_area() const override;
     void make_current() override;

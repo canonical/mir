@@ -51,6 +51,12 @@ mga::DisplayBuffer::DisplayBuffer(
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
       orientation_{orientation}
 {
+    display_device->display_added(display_name);
+}
+
+mga::DisplayBuffer::~DisplayBuffer()
+{
+    display_device->display_removed(display_name);
 }
 
 geom::Rectangle mga::DisplayBuffer::view_area() const
@@ -88,14 +94,14 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     if (!needs_commit)
         return false;
 
-    display_device->commit(mga::DisplayName::primary, *list, gl_context, overlay_program);
+    display_device->commit(display_name, *list, gl_context, overlay_program);
     return true;
 }
 
 void mga::DisplayBuffer::gl_swap_buffers()
 {
     list->update_list({});
-    display_device->commit(mga::DisplayName::primary, *list, gl_context, overlay_program);
+    display_device->commit(display_name, *list, gl_context, overlay_program);
 }
 
 void mga::DisplayBuffer::flip()
