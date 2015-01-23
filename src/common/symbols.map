@@ -101,8 +101,6 @@ MIR_COMMON_3 {
     typeinfo?for?mir::input::receiver::InputReceiverThread;
     typeinfo?for?mir::IntOwnedFd;
     typeinfo?for?MirKeyEvent;
-    typeinfo?for?MirMesaEGLNativeDisplay;
-    typeinfo?for?MirMesaEGLNativeSurface;
     typeinfo?for?MirMotionEvent;
     typeinfo?for?MirMotionPointer;
     typeinfo?for?MirOrientationEvent;
@@ -134,8 +132,6 @@ MIR_COMMON_3 {
     vtable?for?mir::input::receiver::InputReceiverThread;
     vtable?for?mir::IntOwnedFd;
     vtable?for?MirKeyEvent;
-    vtable?for?MirMesaEGLNativeDisplay;
-    vtable?for?MirMesaEGLNativeSurface;
     vtable?for?MirMotionEvent;
     vtable?for?MirMotionPointer;
     vtable?for?MirOrientationEvent;
