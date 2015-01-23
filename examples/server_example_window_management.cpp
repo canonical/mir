@@ -170,15 +170,14 @@ public:
     void add_display(Rectangle const& area) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        displays.push_back(area);
+        displays.add(area);
         update_tiles();
     }
 
     void remove_display(Rectangle const& area) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        auto const i = std::find(begin(displays), end(displays), area);
-        if (i != end(displays)) displays.erase(i);
+        displays.remove(area);
         update_tiles();
     }
 
@@ -308,12 +307,8 @@ private:
         if (session_info.size() < 1 || displays.size() < 1) return;
 
         auto const sessions = session_info.size();
-        Rectangles view;
 
-        for (auto const& display : displays)
-            view.add(display);
-
-        auto const bounding_rect = view.bounding_rectangle();
+        auto const bounding_rect = displays.bounding_rectangle();
 
         auto const total_width  = bounding_rect.size.width.as_int();
         auto const total_height = bounding_rect.size.height.as_int();
@@ -558,7 +553,7 @@ private:
     FocusControllerFactory const focus_controller;
 
     std::mutex mutex;
-    std::vector<Rectangle> displays;
+    Rectangles displays;
 
     std::map<ms::Session const*, SessionInfo> session_info;
     std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>> surface_info;
