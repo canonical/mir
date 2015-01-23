@@ -40,6 +40,7 @@ namespace droidinput = android;
 namespace mir
 {
 class ServerActionQueue;
+class SharedLibraryProberReport;
 
 namespace compositor
 {
@@ -316,6 +317,7 @@ public:
 
     virtual std::shared_ptr<time::Clock> the_clock();
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
+    virtual std::shared_ptr<SharedLibraryProberReport>  the_shared_library_prober_report();
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
@@ -425,6 +427,7 @@ protected:
     CachedPtr<scene::CoordinateTranslator> coordinate_translator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
+    CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

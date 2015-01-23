@@ -26,6 +26,7 @@
 #include "mir/options/option.h"
 #include "mir/graphics/native_buffer.h"
 #include "mir/emergency_cleanup_registry.h"
+#include "mir/udev/wrapper.h"
 
 
 #include <boost/throw_exception.hpp>
@@ -194,4 +195,34 @@ extern "C" void add_platform_options(boost::program_options::options_description
         (bypass_option_name,
          boost::program_options::value<bool>()->default_value(true),
          "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
+}
+
+extern "C" mg::PlatformPriority probe_graphics_platform()
+{
+    auto udev = std::make_shared<mir::udev::Context>();
+
+    mir::udev::Enumerator drm_devices{udev};
+    drm_devices.match_subsystem("drm");
+    drm_devices.match_sysname("card[0-9]*");
+    drm_devices.scan_devices();
+
+    for (auto& device : drm_devices)
+    {
+        static_cast<void>(device);
+        return mg::PlatformPriority::best;
+    }
+
+    return mg::PlatformPriority::unsupported;
+}
+
+mir::ModuleProperties const description = {
+    "mesa",
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO
+};
+
+extern "C" mir::ModuleProperties const* describe_graphics_module()
+{
+    return &description;
 }

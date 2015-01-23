@@ -13,26 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>>
  */
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
+#include "mir/graphics/platform.h"
 
-#include <dlfcn.h>
-
-#include "mir_test_framework/executable_path.h"
-
-using namespace testing;
-namespace mtf = mir_test_framework;
-
-TEST(SymbolsRequiredByMesa, are_exported_by_client_platform_mesa)
+extern "C" mir::graphics::PlatformPriority probe_graphics_platform()
 {
-    auto const handle = dlopen(mtf::client_platform("mesa.so").c_str(), RTLD_LAZY);
-    ASSERT_THAT(handle, NotNull());
+    return mir::graphics::supported;
+}
 
-    auto const sym = dlsym(handle, "mir_client_mesa_egl_native_display_is_valid");
-    EXPECT_THAT(sym, NotNull());
+mir::ModuleProperties const description {
+    "dummy",
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO
+};
 
-    dlclose(handle);
+extern "C" mir::ModuleProperties const* describe_graphics_module()
+{
+    return &description;
 }

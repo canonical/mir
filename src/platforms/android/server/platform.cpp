@@ -155,7 +155,7 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     return std::make_shared<mga::Platform>(nullptr, display_report, mga::OverlayOptimization::disabled);
 }
 
-extern "C" void add_platform_options(
+extern "C" void add_graphics_platform_options(
     boost::program_options::options_description& config)
 {
     config.add_options()
@@ -165,4 +165,26 @@ extern "C" void add_platform_options(
         (hwc_overlay_opt,
          boost::program_options::value<bool>()->default_value(false),
          "[platform-specific] Whether to disable overlay optimizations [{on,off}]");
+}
+
+extern "C" mg::PlatformPriority probe_graphics_platform()
+{
+    int err;
+    hw_module_t const* hw_module;
+
+    err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
+
+    return err < 0 ? mg::PlatformPriority::unsupported : mg::PlatformPriority::best;
+}
+
+mir::ModuleProperties const description = {
+    "android",
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO
+};
+
+extern "C" mir::ModuleProperties const* describe_graphics_module()
+{
+    return &description;
 }

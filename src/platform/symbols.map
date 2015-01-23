@@ -6,7 +6,6 @@ MIRPLATFORM_6 {
     mir::fatal_error*;
     mir::fatal_error_abort*;
     mir::fatal_error_except*;
-    mir::graphics::add_platform_options*;
     mir::graphics::BufferBasic::BufferBasic*;
     mir::graphics::Buffer::Buffer*;
     mir::graphics::Buffer::can_bypass*;
@@ -17,8 +16,6 @@ MIRPLATFORM_6 {
     mir::graphics::Buffer::size*;
     mir::graphics::Buffer::stride*;
     mir::graphics::Buffer::write*;
-    mir::graphics::create_guest_platform*;
-    mir::graphics::create_host_platform*;
     mir::graphics::Cursor::?Cursor*;
     mir::graphics::Cursor::Cursor*;
     mir::graphics::Cursor::hide*;
@@ -81,6 +78,7 @@ MIRPLATFORM_6 {
     mir::graphics::GraphicBufferAllocator::GraphicBufferAllocator*;
     mir::graphics::GraphicBufferAllocator::operator*;
     mir::graphics::GraphicBufferAllocator::supported_pixel_formats*;
+    mir::graphics::module_for_device*;
     mir::graphics::operator*;
     mir::graphics::Platform::create_buffer_allocator*;
     mir::graphics::Platform::create_display*;
@@ -127,6 +125,7 @@ MIRPLATFORM_6 {
     mir::options::glog_log_dir*;
     mir::options::glog_minloglevel*;
     mir::options::glog_stderrthreshold*;
+    mir::options::platform_path*;
     mir::options::host_socket_opt*;
     mir::options::input_report_opt*;
     mir::options::legacy_input_report_opt*;
@@ -154,6 +153,7 @@ MIRPLATFORM_6 {
     mir::options::scene_report_opt*;
     mir::options::server_socket_opt*;
     mir::options::session_mediator_report_opt*;
+    mir::options::shared_library_prober_report_opt*;
     mir::options::touchspots_opt*;
     non-virtual?thunk?to?mir::graphics::Cursor::?Cursor*;
     non-virtual?thunk?to?mir::graphics::CursorImage::?CursorImage*;
