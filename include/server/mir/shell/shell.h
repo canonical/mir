@@ -85,20 +85,6 @@ public:
         frontend::SurfaceId surface_id,
         MirSurfaceAttrib attrib) = 0;
 /** @} */
-
-protected:
-/** @name these come from FocusController
- * I think the FocusController interface is unnecessary as:
- *   1. the functions are only meaningful in the context of implementing a Shell
- *   2. the implementation of these functions is Shell behaviour
- * Simply providing them as part of a public ShellLibrary is probably adequate.
- *  @{ */
-    using FocusController::focus_next;
-
-    using FocusController::focussed_application;
-
-    using FocusController::set_focus_to;
-/** @} */
 };
 
 /// A placeholder for stuff all shells will want
