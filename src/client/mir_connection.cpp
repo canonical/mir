@@ -16,6 +16,8 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
