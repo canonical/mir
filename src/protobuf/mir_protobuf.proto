@@ -33,6 +33,10 @@ message SurfaceId {
   required int32 value = 1;
 };
 
+message BufferStreamId {
+  required int32 value = 1;
+};
+
 message BufferRequest {
   optional SurfaceId id = 1;
   optional Buffer buffer = 2;
@@ -106,6 +110,15 @@ message Connection {
   optional string error = 127;
 }
 
+message BufferStream {
+  optional BufferStreamId id = 1;
+  optional int32 pixel_format = 2;
+  optional int32 buffer_usage = 3;
+  optional Buffer buffer = 4;
+  
+  optional string error = 127;
+}
+
 message Surface {
   optional SurfaceId id = 1;
   optional int32 width = 2;
@@ -118,6 +131,8 @@ message Surface {
   optional int32 fds_on_side_channel = 8;
   
   repeated SurfaceSetting attributes = 9;
+  
+  optional BufferStream buffer_stream = 10;
 
   optional string error = 127;
 }
@@ -187,6 +202,7 @@ message ScreencastId {
 message Screencast {
   optional ScreencastId screencast_id = 1;
   optional Buffer buffer = 2;
+  optional BufferStream buffer_stream = 3;
   optional string error = 127;
 }
 
