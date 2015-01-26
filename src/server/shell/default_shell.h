@@ -25,6 +25,8 @@
 
 namespace mir
 {
+namespace scene { class PlacementStrategy; }
+
 namespace shell
 {
 /** Default shell implementation.

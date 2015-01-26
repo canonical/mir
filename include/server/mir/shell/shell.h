@@ -31,7 +31,6 @@ namespace mir
 namespace frontend { class EventSink; }
 namespace scene
 {
-class PlacementStrategy;
 class PromptSession;
 class PromptSessionManager;
 class PromptSessionCreationParameters;
