@@ -139,6 +139,9 @@ int msh::DefaultShell::set_surface_attribute(
     if (!surface)
         BOOST_THROW_EXCEPTION(std::logic_error("invalid surface id"));
 
+    // TODO scene::SurfaceConfigurator is really a DefaultShell strategy
+    // TODO it should be invoked from here around any changes to the surface
+
     return surface->configure(attrib, value);
 }
 
@@ -148,9 +151,6 @@ int msh::DefaultShell::get_surface_attribute(
     MirSurfaceAttrib attrib)
 {
     // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
-    if (!session)
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
-
     auto const surface = std::dynamic_pointer_cast<ms::Surface>(session->get_surface(surface_id));
 
     if (!surface)

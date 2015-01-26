@@ -49,7 +49,6 @@ class InputTargeter;
  * To customise derive from this class and override the methods you want to change
  */
 class DefaultShell :
-// TODO public virtual scene::SurfaceConfigurator,
 // TODO public virtual graphics::DisplayConfigurationPolicy,
     public virtual FocusController
 {
