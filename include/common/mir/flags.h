@@ -121,7 +121,7 @@ inline detail::TypePrinter ## Type get_type_printer_helper(Type);               
 inline std::true_type is_bit_enum_flag_helper(Type);                                             \
 
 
-inline std::false_type get_type_printer_helper(...);
+inline std::false_type has_type_printer_helper(...);
 inline std::false_type is_bit_enum_flag_helper(...);
 
 /*!
