@@ -44,6 +44,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/include
 )
 
 option(MIR_BUILD_ACCEPTANCE_TESTS "Build acceptance tests" ON)

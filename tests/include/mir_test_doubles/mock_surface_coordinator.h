@@ -21,6 +21,7 @@
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_COORDINATOR_H_
 
 #include "mir/scene/surface_coordinator.h"
+#include "mir/scene/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
 
