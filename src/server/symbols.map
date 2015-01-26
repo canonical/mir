@@ -1,9 +1,10 @@
-MIR_SERVER_29 {
+sed_applicationIR_SERVER_29 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
     vtable?for?mir::input::NullInputDispatcher;
     VTT?for?mir::DefaultServerConfiguration;
+    VTT?for?mir::shell::ShellWrapper;
     
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort  
@@ -510,6 +511,20 @@ MIR_SERVER_29 {
     mir::shell::SurfaceCoordinatorWrapper::raise*;
     mir::shell::SurfaceCoordinatorWrapper::remove_surface*;
     mir::shell::SurfaceCoordinatorWrapper::SurfaceCoordinatorWrapper*;
+    mir::shell::ShellWrapper::add_prompt_provider_for*;
+    mir::shell::ShellWrapper::close_session*;
+    mir::shell::ShellWrapper::create_surface*;
+    mir::shell::ShellWrapper::destroy_surface*;
+    mir::shell::ShellWrapper::focussed_application*;
+    mir::shell::ShellWrapper::focus_next*;
+    mir::shell::ShellWrapper::get_surface_attribute*;
+    mir::shell::ShellWrapper::handle_surface_created*;
+    mir::shell::ShellWrapper::open_session*;
+    mir::shell::ShellWrapper::set_surface_attribute*;
+    mir::shell::ShellWrapper::set_focus_to*;
+    mir::shell::ShellWrapper::start_prompt_session_for*;
+    mir::shell::ShellWrapper::stop_prompt_session*;
+    mir::shell::ShellWrapper::ShellWrapper*;
     mir::terminate_with_current_exception*;
     mir::time::Alarm::?Alarm*;
     mir::time::Alarm::Alarm*;
@@ -725,6 +740,7 @@ MIR_SERVER_29 {
     typeinfo?for?mir::shell::InputTargeter;
     typeinfo?for?mir::shell::SessionCoordinatorWrapper;
     typeinfo?for?mir::shell::SurfaceCoordinatorWrapper;
+    typeinfo?for?mir::shell::ShellWrapper;
     typeinfo?for?mir::time::Alarm;
     typeinfo?for?mir::time::Timer;
     vtable?for?mir::compositor::Compositor;

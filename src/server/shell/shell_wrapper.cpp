@@ -22,6 +22,11 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
+msh::ShellWrapper::ShellWrapper(std::shared_ptr<Shell> const& wrapped) :
+    wrapped(wrapped)
+{
+}
+
 std::shared_ptr<ms::Session> msh::ShellWrapper::open_session(
     pid_t client_pid,
     std::string const& name,
