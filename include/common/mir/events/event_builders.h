@@ -28,38 +28,41 @@
 
 #include <memory>
 #include <vector>
+#include <functional>
 
 namespace mir
 {
+typedef std::unique_ptr<MirEvent, std::function<void(MirEvent*)>> EventUPtr;
+    
 namespace events
 {
 // Surface orientation change event
-std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id, MirOrientation orientation);
+EventUPtr make_event(frontend::SurfaceId const& surface_id, MirOrientation orientation);
 // Prompt session state change event
-std::shared_ptr<MirEvent> make_event(MirPromptSessionState state);
+EventUPtr make_event(MirPromptSessionState state);
 // Surface resize event
-std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id, geometry::Size const& size);
+EventUPtr make_event(frontend::SurfaceId const& surface_id, geometry::Size const& size);
 // Surface configure event
-std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value);
+EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value);
 // Close surface event
-std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id);
+EventUPtr make_event(frontend::SurfaceId const& surface_id);
 
 // For QtMir
  
 // Key event
-std::shared_ptr<MirEvent> make_event(MirInputDeviceId device_id, int64_t timestamp,
+EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
     MirKeyInputEventAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers);
 
 // Touch event
-std::shared_ptr<MirEvent> make_event(MirInputDeviceId device_id, int64_t timestamp,
+EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
     MirInputEventModifiers modifiers);
 void add_touch(MirEvent &event, MirTouchInputEventTouchId touch_id, MirTouchInputEventTouchAction action,
     MirTouchInputEventTouchTooltype tooltype, float x_axis_value, float y_axis_value,
     float pressure_value, float touch_major_value, float touch_minor_value, float size_value);
 
 // Pointer event
-std::shared_ptr<MirEvent> make_event(MirInputDeviceId device_id, int64_t timestamp,
+EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
     MirInputEventModifiers modifiers, MirPointerInputEventAction action,
     std::vector<MirPointerInputEventButton> const& buttons_pressed,
     float x_axis_value, float y_axis_value,

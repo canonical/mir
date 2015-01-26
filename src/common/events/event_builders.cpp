@@ -29,7 +29,15 @@ namespace mf = mir::frontend;
 namespace mev = mir::events;
 namespace geom = mir::geometry;
 
-std::shared_ptr<MirEvent> mev::make_event(mf::SurfaceId const& surface_id, MirOrientation orientation)
+namespace
+{
+    mir::EventUPtr make_event_uptr(MirEvent *e)
+    {
+        return mir::EventUPtr(e, [](MirEvent *d) { delete d; });
+    }
+}
+
+mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirOrientation orientation)
 {
     MirEvent *e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
@@ -37,20 +45,20 @@ std::shared_ptr<MirEvent> mev::make_event(mf::SurfaceId const& surface_id, MirOr
     e->type = mir_event_type_orientation;
     e->orientation.surface_id = surface_id.as_value();
     e->orientation.direction = orientation;
-    return std::shared_ptr<MirEvent>(e);
+    return make_event_uptr(e);
 }
 
-std::shared_ptr<MirEvent> mev::make_event(MirPromptSessionState state)
+mir::EventUPtr mev::make_event(MirPromptSessionState state)
 {
     MirEvent *e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_prompt_session_state_change;
     e->prompt_session.new_state = state;
-    return std::shared_ptr<MirEvent>(e);
+    return make_event_uptr(e);
 }
 
-std::shared_ptr<MirEvent> mev::make_event(mf::SurfaceId const& surface_id, geom::Size const& size)
+mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, geom::Size const& size)
 {
     MirEvent *e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
@@ -59,10 +67,10 @@ std::shared_ptr<MirEvent> mev::make_event(mf::SurfaceId const& surface_id, geom:
     e->resize.surface_id = surface_id.as_value();
     e->resize.width = size.width.as_int();
     e->resize.height = size.height.as_int();
-    return std::shared_ptr<MirEvent>(e);
+    return make_event_uptr(e);
 }
 
-std::shared_ptr<MirEvent> mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value)
+mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value)
 {
     MirEvent *e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
@@ -71,17 +79,17 @@ std::shared_ptr<MirEvent> mev::make_event(mf::SurfaceId const& surface_id, MirSu
     e->surface.id = surface_id.as_value();
     e->surface.attrib = attribute;
     e->surface.value = value;
-    return std::shared_ptr<MirEvent>(e);
+    return make_event_uptr(e);
 }
 
-std::shared_ptr<MirEvent> mev::make_event(mf::SurfaceId const& surface_id)
+mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
 {
     MirEvent *e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_close_surface;
     e->close_surface.surface_id = surface_id.as_value();
-    return std::shared_ptr<MirEvent>(e);
+    return make_event_uptr(e);
 }
 
 namespace
@@ -144,7 +152,7 @@ MirKeyModifier old_modifiers_from_new(MirInputEventModifiers modifiers)
 }
 }
 
-std::shared_ptr<MirEvent> mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
     MirKeyInputEventAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers)
 {
@@ -162,7 +170,7 @@ std::shared_ptr<MirEvent> mev::make_event(MirInputDeviceId device_id, int64_t ti
     kev.scan_code = scan_code;
     kev.modifiers = old_modifiers_from_new(modifiers);
 
-    return std::shared_ptr<MirEvent>(e);
+    return make_event_uptr(e);
 }
 
 namespace
@@ -196,7 +204,7 @@ enum
 };
 }
 
-std::shared_ptr<MirEvent> mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
     MirInputEventModifiers modifiers)
 {
     MirEvent *e = new MirEvent;
@@ -210,7 +218,7 @@ std::shared_ptr<MirEvent> mev::make_event(MirInputDeviceId device_id, int64_t ti
     mev.action = mir_motion_action_move;
     mev.source_id = AINPUT_SOURCE_TOUCHSCREEN;
     
-    return std::shared_ptr<MirEvent>(e);
+    return make_event_uptr(e);
 }
 
 namespace
@@ -294,7 +302,7 @@ MirMotionAction old_action_from_pointer_action(MirPointerInputEventAction action
 }
 }
 
-std::shared_ptr<MirEvent> mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
     MirInputEventModifiers modifiers, MirPointerInputEventAction action,
     std::vector<MirPointerInputEventButton> const& buttons_pressed,
     float x_axis_value, float y_axis_value,
@@ -342,5 +350,5 @@ std::shared_ptr<MirEvent> mev::make_event(MirInputDeviceId device_id, int64_t ti
     pc.hscroll = hscroll_value;
     pc.vscroll = vscroll_value;
     
-    return std::shared_ptr<MirEvent>(e);
+    return make_event_uptr(e);
 }
