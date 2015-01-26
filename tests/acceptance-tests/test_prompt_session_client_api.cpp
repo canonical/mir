@@ -23,7 +23,6 @@
 #include "mir/scene/session.h"
 #include "mir/shell/session_coordinator_wrapper.h"
 #include "mir/frontend/session_credentials.h"
-#include "mir/frontend/shell.h"
 #include "mir/cached_ptr.h"
 #include "mir/fd.h"
 
