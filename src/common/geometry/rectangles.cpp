@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -53,6 +53,12 @@ geom::Rectangles::Rectangles(std::initializer_list<Rectangle> const& rects)
 void geom::Rectangles::add(geom::Rectangle const& rect)
 {
     rectangles.push_back(rect);
+}
+
+void geom::Rectangles::remove(Rectangle const& rect)
+{
+    auto const i = std::find(rectangles.begin(), rectangles.end(), rect);
+    if (i != rectangles.end()) rectangles.erase(i);
 }
 
 void geom::Rectangles::clear()

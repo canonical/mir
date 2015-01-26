@@ -188,12 +188,15 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     // TODO this is an ugly frig to avoid exposing the render factory to end users and tests running headless
     auto the_renderer_factory() -> std::shared_ptr<compositor::RendererFactory> override
     {
-        auto const graphics_lib = the_options()->get<std::string>(options::platform_graphics_lib);
+        auto const& options = the_options();
+        if (options->is_set(options::platform_graphics_lib))
+        {
+            auto const graphics_lib = options->get<std::string>(options::platform_graphics_lib);
 
-        if (graphics_lib != "libmirplatformstub.so")
-            return mir::DefaultServerConfiguration::the_renderer_factory();
-        else
-            return std::make_shared<StubRendererFactory>();
+            if (graphics_lib.find("graphics-dummy.so") != std::string::npos)
+                return std::make_shared<StubRendererFactory>();
+        }
+        return mir::DefaultServerConfiguration::the_renderer_factory();
     }
 
     using mir::DefaultServerConfiguration::the_options;
