@@ -33,6 +33,7 @@ extern char const* const no_server_socket_opt;
 extern char const* const enable_input_opt;
 extern char const* const session_mediator_report_opt;
 extern char const* const msg_processor_report_opt;
+extern char const* const shared_library_prober_report_opt;
 extern char const* const compositor_report_opt;
 extern char const* const display_report_opt;
 extern char const* const legacy_input_report_opt;
@@ -53,6 +54,7 @@ extern char const* const log_opt_value;
 extern char const* const lttng_opt_value;
 
 extern char const* const platform_graphics_lib;
+extern char const* const platform_path;
 
 class Configuration
 {

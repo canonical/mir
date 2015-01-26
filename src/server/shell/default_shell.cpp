@@ -17,11 +17,12 @@
  */
 
 #include "default_shell.h"
-#include "mir/shell/focus_setter.h"
+#include "mir/shell/input_targeter.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_coordinator.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -32,9 +33,11 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 msh::DefaultShell::DefaultShell(
-    std::shared_ptr<FocusSetter> const& focus_setter,
+    std::shared_ptr<InputTargeter> const& input_targeter,
+    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator) :
-    focus_setter(focus_setter),
+    input_targeter(input_targeter),
+    surface_coordinator(surface_coordinator),
     session_coordinator(session_coordinator)
 {
 }
@@ -164,7 +167,30 @@ inline void msh::DefaultShell::set_focus_to_locked(std::unique_lock<std::mutex> 
 {
     auto old_focus = focus_application.lock();
 
-    focus_setter->set_focus_to(session);
+    std::shared_ptr<ms::Surface> surface;
+
+    if (session)
+        surface = session->default_surface();
+
+    if (surface)
+    {
+        std::lock_guard<std::mutex> lg(surface_focus_lock);
+
+        // Ensure the surface has really taken the focus before notifying it that it is focused
+        surface_coordinator->raise(surface);
+        surface->take_input_focus(input_targeter);
+
+        auto current_focus = currently_focused_surface.lock();
+        if (current_focus)
+            current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+        surface->configure(mir_surface_attrib_focus, mir_surface_focused);
+        currently_focused_surface = surface;
+    }
+    else
+    {
+        input_targeter->focus_cleared();
+    }
+
     focus_application = session;
 
     if (session)

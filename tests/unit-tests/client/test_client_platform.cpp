@@ -59,7 +59,7 @@ struct ClientPlatformTraits
 struct ClientPlatformTest : public ::testing::TestWithParam<ClientPlatformTraits const*>
 {
     ClientPlatformTest()
-        : platform_library{mtf::library_path() + "/" + GetParam()->platform_library_name},
+        : platform_library{mtf::client_platform(GetParam()->platform_library_name)},
           create_client_platform{platform_library.load_function<mcl::CreateClientPlatform>("create_client_platform")},
           probe{platform_library.load_function<mcl::ClientPlatformProbe>("is_appropriate_module")}
     {
@@ -78,7 +78,7 @@ struct ClientPlatformTest : public ::testing::TestWithParam<ClientPlatformTraits
 };
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
-ClientPlatformTraits const android_platform{"/client-modules/android.so",
+ClientPlatformTraits const android_platform{"android.so",
                                             [](MirPlatformPackage& pkg)
                                             {
                                                 ::memset(&pkg, 0, sizeof(pkg));
@@ -93,7 +93,7 @@ INSTANTIATE_TEST_CASE_P(Android,
 #endif
 
 #ifdef MIR_BUILD_PLATFORM_MESA
-ClientPlatformTraits const mesa_platform{"/client-modules/mesa.so",
+ClientPlatformTraits const mesa_platform{"mesa.so",
                                          [](MirPlatformPackage& pkg)
                                          {
                                              ::memset(&pkg, 0, sizeof(pkg));
@@ -108,7 +108,7 @@ INSTANTIATE_TEST_CASE_P(Mesa,
 
 #endif
 
-ClientPlatformTraits const dummy_platform{"/client-modules/dummy.so",
+ClientPlatformTraits const dummy_platform{"dummy.so",
                                           [](MirPlatformPackage& pkg)
                                           {
                                               mtf::create_stub_platform_package(pkg);

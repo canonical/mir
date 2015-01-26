@@ -22,8 +22,6 @@
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
 
-#include "mir_toolkit/mesa/native_display.h"
-
 namespace mir
 {
 class EmergencyCleanupRegistry;
@@ -70,8 +68,6 @@ public:
 private:
     BypassOption const bypass_option_;
 };
-
-extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display);
 
 }
 }

@@ -17,6 +17,7 @@ set(
   session_mediator_report.cpp
   scene_report.cpp
   server_tracepoint_provider.cpp
+  shared_library_prober_report.cpp
 )
 
 add_library(
