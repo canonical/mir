@@ -48,8 +48,9 @@ public:
     void set_display_config_change_callback(std::function<void()> const& cb) override;
     void apply_display_config(MirDisplayConfiguration&) override;
 
-    void drm_auth_magic(int magic) override;
     void drm_set_gbm_device(struct gbm_device* dev) override;
+    virtual PlatformOperationMessage platform_operation(
+        unsigned int op, PlatformOperationMessage const& request) override;
 
 private:
     MirConnection* const mir_connection;
