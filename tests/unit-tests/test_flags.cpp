@@ -17,11 +17,11 @@
  */
 
 #include "mir/flags.h"
+#include "mir_toolkit/common.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#if 0
-#endif
+
 namespace arbitrary_namespace
 {
 MIR_FLAGS(Character, uint32_t,
@@ -38,11 +38,31 @@ MIR_FLAGS(Character, uint32_t,
 using Profile = mir::Flags<Character>;
 }
 
+MIR_FLAGS_PRETTY_PRINTER(MirOrientationMode,
+                         mir_orientation_mode_portrait,
+                         mir_orientation_mode_landscape,
+                         mir_orientation_mode_landscape_inverted,
+                         mir_orientation_mode_portrait_inverted,
+                         mir_orientation_mode_portrait_any,
+                         mir_orientation_mode_landscape_any,
+                         mir_orientation_mode_any
+                        )
+using OrientatonModeFlags = mir::Flags<MirOrientationMode>;
+
+enum class AnotherExample : uint8_t
+{
+    None, Set
+};
+
+MIR_FLAGS_PRETTY_PRINTER(AnotherExample,
+                         AnotherExample::None,
+                         AnotherExample::Set)
+using ExampleScopedFlags = mir::Flags<AnotherExample>;
+
 namespace mir
 {
 namespace ns_inside_mir
 {
-
 MIR_FLAGS(Capability, uint8_t, (Pointer, 1<<4),(Touchpad, 1<<3))
 using Capabilities = mir::Flags<Capability>;
 }
@@ -102,4 +122,25 @@ TEST(MirFlags,toggling_bits)
     EXPECT_THAT(contains(negative,arb::Character::Paranoid),Eq(true));
     EXPECT_THAT(contains(negative^arb::Character::Paranoid,arb::Character::Paranoid),Eq(false));
     EXPECT_THAT(contains(~negative,arb::Character::Positive),Eq(true));
+}
+
+TEST(MirFlags,pretty_printing_existing_enum)
+{
+    using namespace testing;
+    OrientatonModeFlags flags;
+
+    EXPECT_THAT(to_string(flags),Eq("Empty"));
+    EXPECT_THAT(to_string(flags|mir_orientation_mode_portrait_inverted),Eq("mir_orientation_mode_portrait_inverted"));
+    EXPECT_THAT(to_string(flags|mir_orientation_mode_landscape_any),
+                Eq("mir_orientation_mode_landscape|mir_orientation_mode_landscape_inverted|mir_orientation_mode_landscape_any"));
+}
+
+
+TEST(MirFlags,pretty_printing_existing_scoped_enum)
+{
+    using namespace testing;
+    ExampleScopedFlags flags;
+
+    EXPECT_THAT(to_string(flags),Eq("AnotherExample::None"));
+    EXPECT_THAT(to_string(flags|AnotherExample::Set),Eq("AnotherExample::Set"));
 }

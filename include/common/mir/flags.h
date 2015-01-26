@@ -40,11 +40,56 @@ namespace mir
         }                                                                                        \
         else str += "|" #x;                                                                      \
     }
+#define MIR_FLAGS_APPEND_ENUM(x)                                                                 \
+    if ((type(x) == 0 && flags.value == 0) ||                                                    \
+        (type(x) != 0 && type(x) == (flags.value&type(x))))                                      \
+    {                                                                                            \
+        if(first)                                                                                \
+        {                                                                                        \
+            first = false;                                                                       \
+            str = #x;                                                                            \
+        }                                                                                        \
+        else str += "|" #x;                                                                      \
+    }
 
+/*!
+ * Create pretty printing for an existing enumeration.
+ *
+ * Use this macro instead of MIR_FLAGS(...) if the enumeration already exists.
+ * Usage example:
+ * \code
+ *     MIR_FLAGS(Proc,Zero,Carry,Interrupt);
+ *     using ProcFlags = mir::Flags<Proc>;
+ * \endcode
+ *
+ * If you use this for scoped enumerations you will have to repeat the enumeration type for each
+ * value, hence those will also show up inside the strings.
+ *
+ * \note The bitwise (Enum,Enum) operators are declared inside mir namespace to make collisions
+ * with other customer provided operators impossible.
+ */
+#define MIR_FLAGS_PRETTY_PRINTER(Type,...)                                                       \
+namespace detail                                                                                 \
+{                                                                                                \
+   struct TypePrinter ##  Type                                                                   \
+   {                                                                                             \
+       inline std::string operator()(mir::Flags<Type> const& flags) const                        \
+       {                                                                                         \
+           bool first = true;                                                                    \
+           using type = mir::Flags<Type>::value_type;                                            \
+           std::string str("Empty");                                                             \
+           MIR_FOR_EACH(MIR_FLAGS_APPEND_ENUM,__VA_ARGS__);                                      \
+           return str;                                                                           \
+       }                                                                                         \
+   };                                                                                            \
+}                                                                                                \
+inline std::true_type has_type_printer_helper(Type);                                             \
+inline detail::TypePrinter ## Type get_type_printer_helper(Type);                                \
+inline std::true_type is_bit_enum_flag_helper(Type);                                             \
 
 /*!
  * Declare a scoped enum the underlying type and let the macro add utilities to allow type safe
- * bit wise operations for that enum and pretty printing to a std::string using \
+ * bit wise operations for that enum and pretty printing to a std::string using
  * mir::to_string(Flags<EnumType>);
  *
  * Usage example:
@@ -62,7 +107,7 @@ namespace detail                                                                
 {                                                                                                \
    struct TypePrinter ##  Type                                                                   \
    {                                                                                             \
-       inline std::string operator()(mir::Flags<Type> const& flags)                              \
+       inline std::string operator()(mir::Flags<Type> const& flags) const                        \
        {                                                                                         \
            bool first = true;                                                                    \
            std::string str("Empty");                                                             \
@@ -71,9 +116,9 @@ namespace detail                                                                
        }                                                                                         \
    };                                                                                            \
 }                                                                                                \
-inline std::true_type is_bit_enum_flag_helper(Type);                                             \
 inline std::true_type has_type_printer_helper(Type);                                             \
 inline detail::TypePrinter ## Type get_type_printer_helper(Type);                                \
+inline std::true_type is_bit_enum_flag_helper(Type);                                             \
 
 
 inline std::false_type get_type_printer_helper(...);
