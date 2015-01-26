@@ -65,7 +65,6 @@ b729a7710c37d9f1fba56a6f8e8eae1c2559f57a  include/server/mir/frontend/session_au
 34ce482df448fd2fc5f0c4ae5ac8b7fecbd228c9  include/server/mir/frontend/session_credentials.h
 4f9db6ed8ec63e9c366cd94be8913d9c179e9c49  include/server/mir/frontend/session.h
 d754e5bb057f3018d7228170cf9a0c66d75d8cc2  include/server/mir/frontend/session_mediator_report.h
-471fafe5234816663e9a6988e090f94e2c8209fc  include/server/mir/frontend/shell.h
 8903a35ecdf09fc2e63b9b7cbd8b2442fa0a4255  include/server/mir/frontend/surface.h
 618b43a84cce0ad671ed68fe2ba796fbc7b79e31  include/server/mir/frontend/surface_id.h
 f95c2bddf13d15993ef5d6a0ad7b9106ae550b87  include/server/mir/input/composite_event_filter.h
