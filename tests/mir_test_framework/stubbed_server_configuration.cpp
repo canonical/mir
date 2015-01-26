@@ -19,7 +19,7 @@
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/command_line_server_configuration.h"
 
-#include "stubbed_graphics_platform.h"
+#include "mir_test_framework/stub_server_platform_factory.h"
 
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/cursor.h"
@@ -92,7 +92,7 @@ std::shared_ptr<mg::Platform> mtf::StubbedServerConfiguration::the_graphics_plat
 {
     if (!graphics_platform)
     {
-        graphics_platform = std::make_shared<StubGraphicPlatform>(display_rects);
+        graphics_platform = mtf::make_stubbed_server_graphics_platform(display_rects);
     }
 
     return graphics_platform;

@@ -38,7 +38,10 @@ mtd::MockGL::MockGL()
 
     ON_CALL(*this, glCheckFramebufferStatus(_))
         .WillByDefault(Return(GL_FRAMEBUFFER_COMPLETE));
-
+    ON_CALL(*this, glGetShaderiv(_,_,_))
+        .WillByDefault(SetArgPointee<2>(GL_TRUE));
+    ON_CALL(*this, glGetProgramiv(_,_,_))
+        .WillByDefault(SetArgPointee<2>(GL_TRUE));
     ON_CALL(*this, glGenTextures(_, _))
         .WillByDefault(Invoke(
             [] (GLsizei n, GLuint *textures)

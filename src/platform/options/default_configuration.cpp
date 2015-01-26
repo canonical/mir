@@ -17,11 +17,13 @@
  */
 
 #include "mir/shared_library.h"
-#include "mir/shared_library_loader.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/default_configuration.h"
 #include "mir/abnormal_exit.h"
+#include "mir/shared_library_prober.h"
+#include "mir/logging/null_shared_library_prober_report.h"
+#include "mir/graphics/platform_probe.h"
 
 #include <dlfcn.h>
 
@@ -39,6 +41,7 @@ char const* const mo::legacy_input_report_opt     = "legacy-input-report";
 char const* const mo::connector_report_opt        = "connector-report";
 char const* const mo::scene_report_opt            = "scene-report";
 char const* const mo::input_report_opt            = "input-report";
+char const* const mo::shared_library_prober_report_opt = "shared-library-prober-report";
 char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
@@ -52,12 +55,12 @@ char const* const mo::log_opt_value = "log";
 char const* const mo::lttng_opt_value = "lttng";
 
 char const* const mo::platform_graphics_lib = "platform-graphics-lib";
+char const* const mo::platform_path = "platform-path";
 
 namespace
 {
 int const default_ipc_threads          = 1;
 bool const enable_input_default        = true;
-char const* const default_platform_graphics_lib = MIR_PLATFORM_DRIVER_BINARY;
 
 // Hack around the way Qt loads mir:
 // platform_api and therefore Mir are loaded via dlopen(..., RTLD_LOCAL).
@@ -114,8 +117,10 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (prompt_socket_opt, "Provide a \"..._trusted\" filename for prompt helper connections")
-        (platform_graphics_lib, po::value<std::string>()->default_value(default_platform_graphics_lib),
-            "Library to use for platform graphics support")
+        (platform_graphics_lib, po::value<std::string>(),
+            "Library to use for platform graphics support (default: autodetect)")
+        (platform_path, po::value<std::string>()->default_value(MIR_SERVER_PLATFORM_PATH),
+            "Directory to look for platform libraries (default: " MIR_SERVER_PLATFORM_PATH ")")
         (enable_input_opt, po::value<bool>()->default_value(enable_input_default),
             "Enable input.")
         (compositor_report_opt, po::value<std::string>()->default_value(off_opt_value),
@@ -134,6 +139,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the MessageProcessor report. [{log,lttng,off}]")
         (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the scene report. [{log,lttng,off}]")
+        (shared_library_prober_report_opt, po::value<std::string>()->default_value(log_opt_value),
+            "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
             "threads in frontend thread pool.")
         (name_opt, po::value<std::string>(),
@@ -156,26 +163,48 @@ void mo::DefaultConfiguration::add_platform_options()
     po::options_description program_options;
     program_options.add_options()
         (platform_graphics_lib,
-         po::value<std::string>()->default_value(default_platform_graphics_lib), "");
+         po::value<std::string>(), "");
+    program_options.add_options()
+        (platform_path,
+         po::value<std::string>()->default_value(MIR_SERVER_PLATFORM_PATH),
+        "");
     mo::ProgramOption options;
     options.parse_arguments(program_options, argc, argv);
 
-    std::string graphics_libname;
-    auto env_libname = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB");
-    if (!options.is_set(platform_graphics_lib) && env_libname)
-    {
-        graphics_libname = std::string{env_libname};
-    }
-    else
-    {
-        graphics_libname = options.get<std::string>(platform_graphics_lib);
-    }
-
     ensure_loaded_with_rtld_global();
 
-    auto graphics_lib = load_library(graphics_libname);
-    auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
-    add_platform_options(*this->program_options);
+    // TODO: We should just load all the platform plugins we can and present their options.
+    auto env_libname = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB");
+    auto env_libpath = ::getenv("MIR_SERVER_PLATFORM_PATH");
+    try
+    {
+        if (options.is_set(platform_graphics_lib))
+        {
+            platform_graphics_library = std::make_shared<mir::SharedLibrary>(options.get<std::string>(platform_graphics_lib));
+        }
+        else if (env_libname)
+        {
+            platform_graphics_library = std::make_shared<mir::SharedLibrary>(std::string{env_libname});
+        }
+        else
+        {
+            mir::logging::NullSharedLibraryProberReport null_report;
+            auto const plugin_path = env_libpath ? env_libpath : options.get<std::string>(platform_path);
+            auto plugins = mir::libraries_for_path(plugin_path, null_report);
+            platform_graphics_library = mir::graphics::module_for_device(plugins);
+        }
+
+        auto add_platform_options = platform_graphics_library->load_function<mir::graphics::AddPlatformOptions>("add_graphics_platform_options", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+        add_platform_options(*this->program_options);
+    }
+    catch(...)
+    {
+        // We don't actually care at this point if this failed.
+        // Maybe we've been pointed at the wrong place. Maybe this platform doesn't actually
+        // *have* platform-specific options.
+        // Regardless, if we need a platform and can't find one then we'll bail later
+        // in startup with a useful error.
+    }
 }
 
 boost::program_options::options_description_easy_init mo::DefaultConfiguration::add_options()
