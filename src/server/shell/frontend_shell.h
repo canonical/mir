@@ -28,16 +28,16 @@ namespace mir
 {
 namespace shell
 {
-class DefaultShell;
+class Shell;
 
 namespace detail
 {
 // Adapter class to translate types between frontend and shell
 struct FrontendShell : mf::Shell
 {
-    std::shared_ptr<DefaultShell> const wrapped;
+    std::shared_ptr<shell::Shell> const wrapped;
 
-    explicit FrontendShell(std::shared_ptr<DefaultShell> const& wrapped) :
+    explicit FrontendShell(std::shared_ptr<shell::Shell> const& wrapped) :
         wrapped{wrapped} {}
 
     std::shared_ptr<mf::Session> open_session(

@@ -76,7 +76,7 @@ class FocusSetter;
 class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
-class DefaultShell;
+class Shell;
 namespace detail { class FrontendShell; }
 }
 namespace time
@@ -443,9 +443,9 @@ private:
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
 
     // TODO properly expose a shell::Shell interface
-    CachedPtr<shell::DefaultShell> default_shell;
+    CachedPtr<shell::Shell> default_shell;
     CachedPtr<shell::detail::FrontendShell> frontend_shell;
-    auto the_shell() -> std::shared_ptr<shell::DefaultShell>;
+    auto the_shell() -> std::shared_ptr<shell::Shell>;
 };
 }
 

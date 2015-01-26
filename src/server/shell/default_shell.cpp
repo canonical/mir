@@ -35,16 +35,29 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
+msh::Shell::Shell(
+    std::shared_ptr<InputTargeter> const& input_targeter,
+    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+    std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager) :
+    input_targeter(input_targeter),
+    surface_coordinator(surface_coordinator),
+    session_coordinator(session_coordinator),
+    prompt_session_manager(prompt_session_manager)
+{
+}
+
+msh::Shell::~Shell() noexcept
+{
+}
+
 msh::DefaultShell::DefaultShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
     std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<ms::PlacementStrategy> const& placement_strategy) :
-    input_targeter(input_targeter),
-    surface_coordinator(surface_coordinator),
-    session_coordinator(session_coordinator),
-    prompt_session_manager(prompt_session_manager),
+    Shell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
     placement_strategy(placement_strategy)
 {
 }

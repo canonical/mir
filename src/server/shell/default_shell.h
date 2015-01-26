@@ -19,38 +19,18 @@
 #ifndef MIR_SHELL_DEFAULT_SHELL_H_
 #define MIR_SHELL_DEFAULT_SHELL_H_
 
-#include "mir/shell/focus_controller.h"
-#include "mir/frontend/surface_id.h"
-
-#include "mir_toolkit/common.h"
+#include "mir/shell/shell.h"
 
 #include <mutex>
 
 namespace mir
 {
-namespace frontend { class EventSink; }
-namespace scene
-{
-class PlacementStrategy;
-class PromptSession;
-class PromptSessionManager;
-class PromptSessionCreationParameters;
-class SessionCoordinator;
-class Surface;
-class SurfaceCoordinator;
-class SurfaceCreationParameters;
-}
-
 namespace shell
 {
-class InputTargeter;
-
 /** Default shell implementation.
  * To customise derive from this class and override the methods you want to change
  */
-class DefaultShell :
-// TODO public virtual graphics::DisplayConfigurationPolicy,
-    public virtual FocusController
+class DefaultShell : public Shell
 {
 public:
     DefaultShell(
@@ -111,10 +91,6 @@ public:
 /** @} */
 
 private:
-    std::shared_ptr<InputTargeter> const input_targeter;
-    std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
-    std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
-    std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
     std::shared_ptr<scene::PlacementStrategy> const placement_strategy;  // TODO doesn't need to be a strategy
 
     std::mutex mutable focus_surface_mutex;

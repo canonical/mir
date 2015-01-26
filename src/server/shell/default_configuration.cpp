@@ -30,7 +30,7 @@ namespace msh = mir::shell;
 namespace mf = mir::frontend;
 
 
-auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::DefaultShell>
+auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 {
     return default_shell([this]
         {
