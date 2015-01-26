@@ -32,7 +32,7 @@ namespace shell
 /** Default shell implementation.
  * To customise derive from this class and override the methods you want to change
  */
-class DefaultShell : public Shell
+class DefaultShell : public AbstractShell
 {
 public:
     DefaultShell(

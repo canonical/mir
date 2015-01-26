@@ -35,7 +35,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-msh::Shell::Shell(
+msh::AbstractShell::AbstractShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
     std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
@@ -47,7 +47,7 @@ msh::Shell::Shell(
 {
 }
 
-msh::Shell::~Shell() noexcept
+msh::AbstractShell::~AbstractShell() noexcept
 {
 }
 
@@ -57,7 +57,7 @@ msh::DefaultShell::DefaultShell(
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<ms::PlacementStrategy> const& placement_strategy) :
-    Shell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
+    AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
     placement_strategy(placement_strategy)
 {
 }

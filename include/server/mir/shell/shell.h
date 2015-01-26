@@ -49,14 +49,6 @@ class Shell :
     public virtual FocusController
 {
 public:
-    Shell(
-        std::shared_ptr<InputTargeter> const& input_targeter,
-        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager);
-
-    ~Shell() noexcept;
-
 /** @name these functions support frontend requests
  *  @{ */
     virtual std::shared_ptr<scene::Session> open_session(
@@ -107,6 +99,19 @@ protected:
 
     using FocusController::set_focus_to;
 /** @} */
+};
+
+/// A placeholder for stuff all shells will want
+class AbstractShell : public Shell
+{
+public:
+    AbstractShell(
+        std::shared_ptr<InputTargeter> const& input_targeter,
+        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager);
+
+    ~AbstractShell() noexcept;
 
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
