@@ -225,7 +225,6 @@ namespace
 {
 int const MIR_EVENT_ACTION_POINTER_INDEX_MASK = 0xff00;
 int const MIR_EVENT_ACTION_POINTER_INDEX_SHIFT = 8;
-int const MIR_EVENT_ACTION_MASK = 0xff;
 
 void update_action_mask(MirMotionEvent &mev, MirTouchInputEventTouchAction action)
 {
