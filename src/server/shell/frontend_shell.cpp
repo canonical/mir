@@ -17,8 +17,11 @@
  */
 
 #include "frontend_shell.h"
-
 #include "default_shell.h"
+
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/prompt_session.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -34,41 +37,51 @@ std::shared_ptr<mf::Session> msh::FrontendShell::open_session(
 
 void msh::FrontendShell::close_session(std::shared_ptr<mf::Session> const& session)
 {
-    wrapped->close_session(session);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+
+    wrapped->close_session(scene_session);
 }
 
 void msh::FrontendShell::handle_surface_created(std::shared_ptr<mf::Session> const& session)
 {
-    wrapped->handle_surface_created(session);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    wrapped->handle_surface_created(scene_session);
 }
 
 std::shared_ptr<mf::PromptSession> msh::FrontendShell::start_prompt_session_for(
     std::shared_ptr<mf::Session> const& session,
     ms::PromptSessionCreationParameters const& params)
 {
-    return wrapped->start_prompt_session_for(session, params);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+
+    return wrapped->start_prompt_session_for(scene_session, params);
 }
 
 void msh::FrontendShell::add_prompt_provider_for(
     std::shared_ptr<mf::PromptSession> const& prompt_session,
     std::shared_ptr<mf::Session> const& session)
 {
-    wrapped->add_prompt_provider_for(prompt_session, session);
+    auto const scene_prompt_session = std::dynamic_pointer_cast<ms::PromptSession>(prompt_session);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    wrapped->add_prompt_provider_for(scene_prompt_session, scene_session);
 }
 
 void msh::FrontendShell::stop_prompt_session(std::shared_ptr<mf::PromptSession> const& prompt_session)
 {
-    wrapped->stop_prompt_session(prompt_session);
+    auto const scene_prompt_session = std::dynamic_pointer_cast<ms::PromptSession>(prompt_session);
+    wrapped->stop_prompt_session(scene_prompt_session);
 }
 
 mf::SurfaceId msh::FrontendShell::create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params)
 {
-    return wrapped->create_surface(session, params);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    return wrapped->create_surface(scene_session, params);
 }
 
 void msh::FrontendShell::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)
 {
-    wrapped->destroy_surface(session, surface);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    wrapped->destroy_surface(scene_session, surface);
 }
 
 int msh::FrontendShell::set_surface_attribute(
@@ -77,7 +90,8 @@ int msh::FrontendShell::set_surface_attribute(
     MirSurfaceAttrib attrib,
     int value)
 {
-    return wrapped->set_surface_attribute(session, surface_id, attrib, value);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    return wrapped->set_surface_attribute(scene_session, surface_id, attrib, value);
 }
 
 int msh::FrontendShell::get_surface_attribute(
@@ -85,5 +99,6 @@ int msh::FrontendShell::get_surface_attribute(
     mf::SurfaceId surface_id,
     MirSurfaceAttrib attrib)
 {
-    return wrapped->get_surface_attribute(session, surface_id, attrib);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    return wrapped->get_surface_attribute(scene_session, surface_id, attrib);
 }

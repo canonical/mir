@@ -19,20 +19,26 @@
 #ifndef MIR_SHELL_DEFAULT_SHELL_H_
 #define MIR_SHELL_DEFAULT_SHELL_H_
 
-#include "mir/frontend/shell.h"
 #include "mir/shell/focus_controller.h"
+#include "mir/frontend/surface_id.h"
+
+#include "mir_toolkit/common.h"
 
 #include <mutex>
 
 namespace mir
 {
+namespace frontend { class EventSink; }
 namespace scene
 {
+class PlacementStrategy;
+class PromptSession;
 class PromptSessionManager;
+class PromptSessionCreationParameters;
 class SessionCoordinator;
 class Surface;
 class SurfaceCoordinator;
-class PlacementStrategy;
+class SurfaceCreationParameters;
 }
 
 namespace shell
@@ -43,7 +49,6 @@ class InputTargeter;
  * To customise derive from this class and override the methods you want to change
  */
 class DefaultShell :
-    public virtual frontend::Shell,
 // TODO public virtual scene::SurfaceConfigurator,
 // TODO public virtual graphics::DisplayConfigurationPolicy,
     public virtual FocusController
@@ -71,39 +76,39 @@ public:
 
 /** @name these come from frontend::Shell
  *  @{ */
-    virtual std::shared_ptr<frontend::Session> open_session(
+    virtual std::shared_ptr<scene::Session> open_session(
         pid_t client_pid,
         std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
+        std::shared_ptr<frontend::EventSink> const& sink);
 
-    virtual void close_session(std::shared_ptr<frontend::Session> const& session) override;
+    virtual void close_session(std::shared_ptr<scene::Session> const& session);
 
-    void handle_surface_created(std::shared_ptr<frontend::Session> const& session) override;
+    virtual void handle_surface_created(std::shared_ptr<scene::Session> const& session);
 
-    std::shared_ptr<frontend::PromptSession> start_prompt_session_for(
-        std::shared_ptr<frontend::Session> const& session,
-        scene::PromptSessionCreationParameters const& params) override;
+    virtual std::shared_ptr<scene::PromptSession> start_prompt_session_for(
+        std::shared_ptr<scene::Session> const& session,
+        scene::PromptSessionCreationParameters const& params);
 
-    void add_prompt_provider_for(
-        std::shared_ptr<frontend::PromptSession> const& prompt_session,
-        std::shared_ptr<frontend::Session> const& session) override;
+    virtual void add_prompt_provider_for(
+        std::shared_ptr<scene::PromptSession> const& prompt_session,
+        std::shared_ptr<scene::Session> const& session);
 
-    void stop_prompt_session(std::shared_ptr<frontend::PromptSession> const& prompt_session) override;
+    virtual void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session);
 
-    frontend::SurfaceId create_surface(std::shared_ptr<frontend::Session> const& session, scene::SurfaceCreationParameters const& params) override;
+    virtual frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params);
 
-    void destroy_surface(std::shared_ptr<frontend::Session> const& session, frontend::SurfaceId surface) override;
+    virtual void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface);
 
-    int set_surface_attribute(
-        std::shared_ptr<frontend::Session> const& session,
+    virtual int set_surface_attribute(
+        std::shared_ptr<scene::Session> const& session,
         frontend::SurfaceId surface_id,
         MirSurfaceAttrib attrib,
-        int value) override;
+        int value);
 
-    int get_surface_attribute(
-        std::shared_ptr<frontend::Session> const& session,
+    virtual int get_surface_attribute(
+        std::shared_ptr<scene::Session> const& session,
         frontend::SurfaceId surface_id,
-        MirSurfaceAttrib attrib) override;
+        MirSurfaceAttrib attrib);
 /** @} */
 
 private:
