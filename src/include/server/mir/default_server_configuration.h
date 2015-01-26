@@ -77,6 +77,7 @@ class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
 class DefaultShell;
+namespace detail { class FrontendShell; }
 }
 namespace time
 {
@@ -443,6 +444,7 @@ private:
 
     // TODO properly expose a shell::Shell interface
     CachedPtr<shell::DefaultShell> default_shell;
+    CachedPtr<shell::detail::FrontendShell> frontend_shell;
     auto the_shell() -> std::shared_ptr<shell::DefaultShell>;
 };
 }
