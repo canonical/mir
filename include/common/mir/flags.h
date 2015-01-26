@@ -64,9 +64,6 @@ namespace mir
  *
  * If you use this for scoped enumerations you will have to repeat the enumeration type for each
  * value, hence those will also show up inside the strings.
- *
- * \note The bitwise (Enum,Enum) operators are declared inside mir namespace to make collisions
- * with other customer provided operators impossible.
  */
 #define MIR_FLAGS_PRETTY_PRINTER(Type,...)                                                       \
 namespace detail                                                                                 \
@@ -82,10 +79,11 @@ namespace detail                                                                
            return str;                                                                           \
        }                                                                                         \
    };                                                                                            \
+   inline std::true_type has_type_printer_helper(Type);                                          \
+   inline TypePrinter ## Type get_type_printer_helper(Type);                                     \
 }                                                                                                \
-inline std::true_type has_type_printer_helper(Type);                                             \
-inline detail::TypePrinter ## Type get_type_printer_helper(Type);                                \
-inline std::true_type is_bit_enum_flag_helper(Type);                                             \
+using detail::has_type_printer_helper;                                                           \
+using detail::get_type_printer_helper;                                                           \
 
 /*!
  * Declare a scoped enum the underlying type and let the macro add utilities to allow type safe
@@ -97,32 +95,34 @@ inline std::true_type is_bit_enum_flag_helper(Type);                            
  *     MIR_FLAGS(Proc,uint32_t,(Zero,1),(Carry,1),(Interrupt,2));
  *     using ProcFlags = mir::Flags<Proc>;
  * \endcode
- *
- * \note The bitwise (Enum,Enum) operators are declared inside mir namespace to make collisions
- * with other customer provided operators impossible.
  */
 #define MIR_FLAGS(Type,UnderlyingType,...)                                                       \
-enum class Type : UnderlyingType { MIR_FOR_EACH_TUPLE(MIR_FLAGS_DECLARE_VALUE,__VA_ARGS__) };    \
 namespace detail                                                                                 \
 {                                                                                                \
-   struct TypePrinter ##  Type                                                                   \
-   {                                                                                             \
-       inline std::string operator()(mir::Flags<Type> const& flags) const                        \
-       {                                                                                         \
-           bool first = true;                                                                    \
-           std::string str("Empty");                                                             \
-           MIR_FOR_EACH_TUPLE(MIR_FLAGS_APPEND_VALUE,__VA_ARGS__);                               \
-           return str;                                                                           \
-       }                                                                                         \
-   };                                                                                            \
+using mir::detail::enum_bitwise_operators::operator|;                                            \
+using mir::detail::enum_bitwise_operators::operator&;                                            \
+using mir::detail::enum_bitwise_operators::operator^;                                            \
+enum class Type : UnderlyingType { MIR_FOR_EACH_TUPLE(MIR_FLAGS_DECLARE_VALUE,__VA_ARGS__) };    \
 }                                                                                                \
-inline std::true_type has_type_printer_helper(Type);                                             \
-inline detail::TypePrinter ## Type get_type_printer_helper(Type);                                \
-inline std::true_type is_bit_enum_flag_helper(Type);                                             \
+namespace detail                                                                                 \
+{                                                                                                \
+    struct TypePrinter ##  Type                                                                  \
+    {                                                                                            \
+        inline std::string operator()(mir::Flags<Type> const& flags) const                       \
+        {                                                                                        \
+            bool first = true;                                                                   \
+            std::string str("Empty");                                                            \
+            MIR_FOR_EACH_TUPLE(MIR_FLAGS_APPEND_VALUE,__VA_ARGS__);                              \
+            return str;                                                                          \
+        }                                                                                        \
+    };                                                                                           \
+    inline std::true_type has_type_printer_helper(Type);                                         \
+    inline detail::TypePrinter ## Type get_type_printer_helper(Type);                            \
+}                                                                                                \
+using Type = detail::Type;                                                                       \
 
 
 inline std::false_type has_type_printer_helper(...);
-inline std::false_type is_bit_enum_flag_helper(...);
 
 /*!
  * Treat an enumeration, scoped and unscoped, like a set of flags.
@@ -254,36 +254,34 @@ constexpr bool contains(Flags<Enum> flags, Enum e) noexcept
     return e == static_cast<Enum>(flags.value & static_cast<decltype(flags.value)>(e));
 }
 
-template<typename T>
-struct is_bit_flag_enum
+namespace detail
 {
-    using type = decltype(is_bit_enum_flag_helper(static_cast<T>(0)));
-};
-
-template<typename T>
-using is_bit_flag_enum_t = typename is_bit_flag_enum<T>::type;
+namespace enum_bitwise_operators
+{
 
 template<typename Enum>
-constexpr typename std::enable_if<is_bit_flag_enum_t<Enum>::value,Flags<Enum>>::type
+constexpr Flags<Enum>
 operator|(Enum lhs, Enum rhs) noexcept
 {
     return Flags<Enum>(lhs) | Flags<Enum>(rhs);
 }
 
 template<typename Enum>
-constexpr typename std::enable_if<is_bit_flag_enum_t<Enum>::value,Flags<Enum>>::type
+constexpr Flags<Enum>
 operator&(Enum lhs, Enum rhs) noexcept
 {
     return Flags<Enum>(lhs) & Flags<Enum>(rhs);
 }
 
 template<typename Enum>
-constexpr typename std::enable_if<is_bit_flag_enum_t<Enum>::value,Flags<Enum>>::type
+constexpr Flags<Enum>
 operator^(Enum lhs, Enum rhs) noexcept
 {
     return Flags<Enum>(lhs) ^ Flags<Enum>(rhs);
 }
 
+}
+}
 }
 
 #endif

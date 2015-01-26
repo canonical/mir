@@ -36,6 +36,8 @@ MIR_FLAGS(Character, uint32_t,
           (Positive, (1<<4) - 1),
           (Negative, 0xFFFF0000))
 using Profile = mir::Flags<Character>;
+
+struct A { };
 }
 
 MIR_FLAGS_PRETTY_PRINTER(MirOrientationMode,
@@ -74,7 +76,6 @@ namespace arb = arbitrary_namespace;
 TEST(MirFlags,lookup_rules_work_in_mir_nested_namespace)
 {
     using namespace testing;
-    using namespace mir;
     nested::Capabilities cap = nested::Capability::Pointer | nested::Capability::Touchpad;
 
     EXPECT_THAT(mir::to_string(cap),Eq("Pointer|Touchpad"));
@@ -83,27 +84,14 @@ TEST(MirFlags,lookup_rules_work_in_mir_nested_namespace)
 TEST(MirFlags,lookup_rules_work_in_arbitrary_namespace)
 {
     using namespace testing;
-    using namespace mir;
     arb::Profile empty = arb::Character::Curious & arb::Character::Reckless;
 
     EXPECT_THAT(mir::to_string(empty),Eq("Empty"));
 }
 
-namespace mir
-{
-TEST(MirFlags,using_namespace_mir_not_needed_inside_mir)
-{
-    using namespace testing;
-    arb::Profile mostly_positive = arb::Character::Curious | arb::Character::Logical;
-
-    EXPECT_THAT(mir::to_string(mostly_positive),Eq("Logical|Curious"));
-}
-}
-
 TEST(MirFlags,contains_check_works_for_masks)
 {
     using namespace testing;
-    using namespace mir;
     arb::Profile mostly_positive;
     mostly_positive |= arb::Character::Curious | arb::Character::Logical;
 
@@ -116,7 +104,6 @@ TEST(MirFlags,contains_check_works_for_masks)
 TEST(MirFlags,toggling_bits)
 {
     using namespace testing;
-    using namespace mir;
     arb::Profile negative{arb::Character::Negative};
 
     EXPECT_THAT(contains(negative,arb::Character::Paranoid),Eq(true));
