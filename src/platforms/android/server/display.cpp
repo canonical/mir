@@ -29,12 +29,43 @@
 #include "display_buffer.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/event_handler_register.h"
+#include "mir/fd.h"
 
 #include <boost/throw_exception.hpp>
+#include <fcntl.h>
 
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
+
+struct mga::DisplayChangePipe
+{
+    DisplayChangePipe()
+    {
+        int pipes_raw[2] {-1, -1};
+        if (::pipe2(pipes_raw, O_CLOEXEC | O_NONBLOCK))
+            BOOST_THROW_EXCEPTION(std::runtime_error("failed to create display change pipe"));
+        read_pipe = mir::Fd{pipes_raw[0]}; 
+        write_pipe = mir::Fd{pipes_raw[1]}; 
+    }
+
+    void notify_change()
+    {
+        if (::write(write_pipe, &data, sizeof(data)) == -1)
+            BOOST_THROW_EXCEPTION(std::runtime_error("failed to write to display change pipe"));
+    }
+
+    void ack_change()
+    {
+        char tmp{'b'};
+        if (::read(read_pipe, &tmp, sizeof(tmp)) == -1)
+            BOOST_THROW_EXCEPTION(std::runtime_error("failed to read from display change pipe"));
+    }
+    mir::Fd read_pipe;
+    mir::Fd write_pipe;
+    char const data{'a'};
+};
 
 namespace
 {
@@ -64,25 +95,6 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
         mir_orientation_normal,
         overlay_option));
 }
-
-mg::DisplayConfigurationOutput fill_config_from(mga::DisplayAttribs const& attribs)
-{
-    return mg::DisplayConfigurationOutput{
-        mg::DisplayConfigurationOutputId{1},
-        mg::DisplayConfigurationCardId{0},
-        mg::DisplayConfigurationOutputType::lvds,
-        {attribs.display_format},
-        {mg::DisplayConfigurationMode{attribs.pixel_size, attribs.vrefresh_hz}},
-        0,
-        attribs.mm_size,
-        attribs.connected,
-        true,
-        geom::Point{0,0},
-        0,
-        attribs.display_format,
-        mir_power_mode_on,
-        mir_orientation_normal};
-}
 }
 
 mga::Display::Display(
@@ -93,15 +105,19 @@ mga::Display::Display(
     mga::OverlayOptimization overlay_option) :
     display_buffer_builder{display_buffer_builder},
     hwc_config{display_buffer_builder->create_hwc_configuration()},
-    attribs(hwc_config->active_attribs_for(mga::DisplayName::primary)),
-    primary_configuration(fill_config_from(attribs)),
-    gl_context{attribs.display_format, *gl_config, *display_report},
+    hotplug_subscription{hwc_config->subscribe_to_config_changes(std::bind(&mga::Display::on_hotplug, this))},
+    primary_attribs(hwc_config->active_attribs_for(mga::DisplayName::primary)),
+    config(
+        primary_attribs,
+        hwc_config->active_attribs_for(mga::DisplayName::external)),
+    gl_context{config.primary_config().current_format, *gl_config, *display_report},
     display_buffer{create_display_buffer(
         *display_buffer_builder,
-        attribs,
+        primary_attribs,
         gl_program_factory,
         gl_context,
-        overlay_option)}
+        overlay_option)},
+    display_change_pipe(new DisplayChangePipe)
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
     safe_power_mode(*hwc_config, mir_power_mode_on);
@@ -116,7 +132,7 @@ mga::Display::Display(
 
 mga::Display::~Display() noexcept
 {
-    if (primary_configuration.power_mode != mir_power_mode_off)
+    if (config.primary_config().power_mode != mir_power_mode_off)
         safe_power_mode(*hwc_config, mir_power_mode_off);
 }
 
@@ -124,16 +140,22 @@ void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
-    if (primary_configuration.power_mode == mir_power_mode_on)
+    if (config.primary_config().power_mode == mir_power_mode_on)
         f(*display_buffer);
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+    if (configuration_dirty)
+    {
+        config = mga::DisplayConfiguration(
+            hwc_config->active_attribs_for(mga::DisplayName::primary),
+            hwc_config->active_attribs_for(mga::DisplayName::external));
+        configuration_dirty = false;
+    }
 
-    return std::unique_ptr<mg::DisplayConfiguration>(
-        new mga::DisplayConfiguration(mg::DisplayConfigurationOutput(primary_configuration)));
+    return std::unique_ptr<mg::DisplayConfiguration>(new mga::DisplayConfiguration(config));
 }
 
 void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
@@ -144,27 +166,43 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
     new_configuration.for_each_output([this](mg::DisplayConfigurationOutput const& output) {
-        if (output.current_format != primary_configuration.current_format)
-            BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
-
-        if (output.power_mode != primary_configuration.power_mode)
+        //TODO: support configuring the external displaybuffer
+        if (config.primary_config().id == output.id)
         {
-            hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
-            primary_configuration.power_mode = output.power_mode;
+            if (output.current_format != config[output.id].current_format)
+                BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
+
+            //TODO: We don't support rotation yet, so
+            //we preserve this orientation change so the compositor can rotate everything in GL 
+            config[output.id].orientation = output.orientation;
+
+            if (output.power_mode != config[output.id].power_mode)
+            {
+                hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
+                config[output.id].power_mode = output.power_mode;
+            }
+
+            display_buffer->configure(output.power_mode, output.orientation);
         }
-
-        //TODO: We don't support rotation yet, so
-        //we preserve this orientation change so the compositor can rotate everything in GL 
-        primary_configuration.orientation = output.orientation;
-
-        display_buffer->configure(primary_configuration.power_mode, primary_configuration.orientation);
     });
 }
 
-void mga::Display::register_configuration_change_handler(
-    EventHandlerRegister&,
-    DisplayConfigurationChangeHandler const&)
+//NOTE: We cannot call back to hwc from within the hotplug callback. Only arrange for an update.
+void mga::Display::on_hotplug()
 {
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+    configuration_dirty = true;
+    display_change_pipe->notify_change();
+}
+
+void mga::Display::register_configuration_change_handler(
+    EventHandlerRegister& event_handler,
+    DisplayConfigurationChangeHandler const& change_handler)
+{
+    event_handler.register_fd_handler({display_change_pipe->read_pipe}, this, [change_handler, this](int){
+        change_handler();
+        display_change_pipe->ack_change();
+    });
 }
 
 void mga::Display::register_pause_resume_handlers(
