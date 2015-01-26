@@ -251,6 +251,7 @@ public:
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
      *  @{ */
+    virtual auto the_shell() -> std::shared_ptr<shell::Shell>;
     virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
@@ -349,6 +350,9 @@ protected:
     virtual std::shared_ptr<scene::SessionCoordinator>  wrap_session_coordinator(
         std::shared_ptr<scene::SessionCoordinator> const& wrapped);
 
+    virtual std::shared_ptr<shell::Shell>  wrap_shell(
+        std::shared_ptr<shell::Shell> const& wrapped);
+
     virtual std::shared_ptr<input::CursorListener>  wrap_cursor_listener(
         std::shared_ptr<input::CursorListener> const& wrapped);
 /** @} */
@@ -401,7 +405,7 @@ protected:
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<scene::SurfaceCoordinator> surface_coordinator;
-    CachedPtr<scene::PlacementStrategy> shell_placement_strategy;
+    CachedPtr<scene::PlacementStrategy> placement_strategy;
     CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
@@ -427,6 +431,7 @@ protected:
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
+    CachedPtr<shell::Shell> shell;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
@@ -442,10 +447,7 @@ private:
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
 
-    // TODO properly expose a shell::Shell interface
-    CachedPtr<shell::Shell> default_shell;
     CachedPtr<shell::detail::FrontendShell> frontend_shell;
-    auto the_shell() -> std::shared_ptr<shell::Shell>;
 };
 }
 

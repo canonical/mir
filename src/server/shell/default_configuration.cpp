@@ -32,15 +32,20 @@ namespace mf = mir::frontend;
 
 auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 {
-    return default_shell([this]
+    return shell([this]
         {
-            return std::make_shared<msh::DefaultShell>(
+            return wrap_shell(std::make_shared<msh::DefaultShell>(
                 the_input_targeter(),
                 the_surface_coordinator(),
                 the_session_coordinator(),
                 the_prompt_session_manager(),
-                the_placement_strategy());
+                the_placement_strategy()));
         });
+}
+
+auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) -> std::shared_ptr<msh::Shell>
+{
+    return wrapped;
 }
 
 std::shared_ptr<mf::Shell>
@@ -61,7 +66,7 @@ mir::DefaultServerConfiguration::the_focus_controller()
 std::shared_ptr<ms::PlacementStrategy>
 mir::DefaultServerConfiguration::the_placement_strategy()
 {
-    return shell_placement_strategy(
+    return placement_strategy(
         [this]
         {
             return std::make_shared<msh::DefaultPlacementStrategy>(
