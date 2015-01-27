@@ -31,12 +31,23 @@ namespace mir
 {
 namespace dispatch
 {
+/**
+ * \brief How concurrent dispatch should be handled
+ */
 enum class DispatchReentrancy
 {
-    sequential,
-    reentrant
+    sequential,     /**< The dispatch function is guaranteed not to be called
+                     *   while a thread is currently running it.
+                     */
+    reentrant       /**< The dispatch function may be called on multiple threads
+                     *   simultaneously
+                     */
 };
 
+/**
+ * \brief An adaptor that combines multiple Dispatchables into a single Dispatchable
+ * \note Instances are fully thread-safe.
+ */
 class MultiplexingDispatchable : public Dispatchable
 {
 public:
@@ -51,9 +62,21 @@ public:
     bool dispatch(FdEvents events) override;
     FdEvents relevant_events() const override;
 
+    /**
+     * \brief Add a dispatchable to the adaptor
+     * \param [in] dispatchee   Dispatchable to add. The Dispatchable's dispatch()
+     *                          function will not be called reentrantly.
+     */
     void add_watch(std::shared_ptr<Dispatchable> const& dispatchee);
+    /**
+     * \brief Add a dispatchable to the adaptor, specifying the reentrancy of dispatch()
+     */
     void add_watch(std::shared_ptr<Dispatchable> const& dispatchee, DispatchReentrancy reentrancy);
 
+    /**
+     * \brief Remove a watch from the dispatchable
+     * \param [in] dispatchee   Dispatchable to remove
+     */
     void remove_watch(std::shared_ptr<Dispatchable> const& dispatchee);
 private:
     std::mutex lifetime_mutex;
