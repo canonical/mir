@@ -140,6 +140,10 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
     e.data.ptr = static_cast<void*>(&dispatchee_holder.back());
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, dispatchee->watch_fd(), &e) < 0)
     {
+        if (errno == EEXIST)
+        {
+            BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to monitor the same fd twice"}));
+        }
         BOOST_THROW_EXCEPTION((std::system_error{errno,
                                                  std::system_category(),
                                                  "Failed to monitor fd"}));

@@ -149,3 +149,16 @@ TEST(MultiplexingDispatchableTest, removed_dispatchables_are_no_longer_dispatche
 
     EXPECT_FALSE(dispatched);
 }
+
+TEST(MultiDispatchableTest, adding_same_fd_twice_is_an_error)
+{
+    using namespace testing;
+
+    auto dispatchable = std::make_shared<mt::TestDispatchable>([](){});
+
+    md::MultiplexingDispatchable dispatcher;
+    dispatcher.add_watch(dispatchable);
+
+    EXPECT_THROW(dispatcher.add_watch(dispatchable),
+                 std::logic_error);
+}
