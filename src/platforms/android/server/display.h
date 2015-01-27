@@ -44,6 +44,7 @@ class DisplayComponentFactory;
 class DisplaySupportProvider;
 class ConfigurableDisplayBuffer;
 class DisplayChangePipe;
+class DisplayDevice;
 
 class Display : public graphics::Display
 {
@@ -88,6 +89,7 @@ private:
     DisplayAttribs const external_attribs; //TODO: could be removed, really only useful in construction
     DisplayConfiguration mutable config;
     PbufferGLContext gl_context;
+    std::shared_ptr<DisplayDevice> display_device;
     std::unique_ptr<ConfigurableDisplayBuffer> const primary_db;
     std::unique_ptr<ConfigurableDisplayBuffer> mutable external_db;
     std::unique_ptr<DisplayChangePipe> display_change_pipe;
