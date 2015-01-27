@@ -201,7 +201,7 @@ MIR_COMMON_3 {
 
 MIR_COMMON_3.1 {
   global:
-    extern "C++" {
+    extern "C++" {  # <-- Wrong, but too late to fix and seems harmless
       mir_event_get*;
       mir_event_get*;
       mir_input_event_get_device_id;
@@ -220,7 +220,7 @@ MIR_COMMON_3.1 {
 
 MIR_COMMON_3.2 {
   global:
-    extern "C++" {
+    extern "C" {
       mir_input_event_get_touch_event;
 
       mir_touch_event_get_action;
