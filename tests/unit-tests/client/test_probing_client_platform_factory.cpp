@@ -36,10 +36,10 @@ all_available_modules()
 {
     std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
 #ifdef MIR_BUILD_PLATFORM_MESA
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::library_path() + "/client-modules/mesa.so"));
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("mesa.so")));
 #endif
 #ifdef MIR_BUILD_PLATFORM_ANDROID
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::library_path() + "/client-modules/android.so"));
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("android.so")));
 #endif
     return modules;
 }
@@ -127,7 +127,7 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
     auto modules = all_available_modules();
     // NOTE: For minimum fuss, load something that has minimal side-effects...
     modules.push_back(std::make_shared<mir::SharedLibrary>("libc.so.6"));
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::library_path() + "/client-modules/dummy.so"));
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("dummy.so")));
 
     mir::client::ProbingClientPlatformFactory factory{modules};
 

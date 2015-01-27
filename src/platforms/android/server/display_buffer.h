@@ -67,7 +67,7 @@ public:
     void configure(MirPowerMode power_mode, MirOrientation orientation) override;
 private:
     DisplayName display_name;
-    std::unique_ptr<LayerList> list;
+    std::unique_ptr<LayerList> layer_list;
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;

@@ -42,7 +42,7 @@ mga::DisplayBuffer::DisplayBuffer(
     MirOrientation orientation,
     mga::OverlayOptimization overlay_option)
     : display_name(display_name),
-      list(std::move(layer_list)),
+      layer_list(std::move(layer_list)),
       fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
@@ -80,22 +80,22 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     if (!overlay_enabled || !display_device->compatible_renderlist(renderlist))
         return false;
 
-    list->update_list(renderlist);
+    layer_list->update_list(renderlist);
 
     bool needs_commit{false};
-    for(auto& layer : *list)
+    for (auto& layer : *layer_list)
         needs_commit |= layer.needs_commit;
     if (!needs_commit)
         return false;
 
-    display_device->commit(display_name, *list, gl_context, overlay_program);
+    display_device->commit(display_name, *layer_list, gl_context, overlay_program);
     return true;
 }
 
 void mga::DisplayBuffer::gl_swap_buffers()
 {
-    list->update_list({});
-    display_device->commit(display_name, *list, gl_context, overlay_program);
+    layer_list->update_list({});
+    display_device->commit(display_name, *layer_list, gl_context, overlay_program);
 }
 
 void mga::DisplayBuffer::flip()

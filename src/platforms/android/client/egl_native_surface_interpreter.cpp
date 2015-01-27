@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "client_surface_interpreter.h"
+#include "egl_native_surface_interpreter.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/client_buffer.h"
 #include <system/window.h>
@@ -25,7 +25,7 @@
 namespace mcla=mir::client::android;
 namespace mga=mir::graphics::android;
 
-mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface& surface)
+mcla::EGLNativeSurfaceInterpreter::EGLNativeSurfaceInterpreter(EGLNativeSurface& surface)
  :  surface(surface),
     driver_pixel_format(-1),
     sync_ops(std::make_shared<mga::RealSyncFileOps>())
@@ -33,7 +33,7 @@ mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface& surface)
 {
 }
 
-mir::graphics::NativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
+mir::graphics::NativeBuffer* mcla::EGLNativeSurfaceInterpreter::driver_requests_buffer()
 {
     auto buffer = surface.get_current_buffer();
     auto buffer_to_driver = buffer->native_buffer_handle();
@@ -43,7 +43,7 @@ mir::graphics::NativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buf
     return buffer_to_driver.get();
 }
 
-void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int fence_fd)
+void mcla::EGLNativeSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int fence_fd)
 {
     //TODO: pass fence to server instead of waiting here
     mga::SyncFence sync_fence(sync_ops, mir::Fd(fence_fd));
@@ -52,12 +52,12 @@ void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*,
     surface.request_and_wait_for_next_buffer();
 }
 
-void mcla::ClientSurfaceInterpreter::dispatch_driver_request_format(int format)
+void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_format(int format)
 {
     driver_pixel_format = format;
 }
 
-int mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
+int mcla::EGLNativeSurfaceInterpreter::driver_requests_info(int key) const
 {
     switch (key)
     {
@@ -80,7 +80,7 @@ int mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
     }
 }
 
-void mcla::ClientSurfaceInterpreter::sync_to_display(bool should_sync)
+void mcla::EGLNativeSurfaceInterpreter::sync_to_display(bool should_sync)
 { 
     surface.request_and_wait_for_configure(mir_surface_attrib_swapinterval, should_sync);
 }

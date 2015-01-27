@@ -1,7 +1,23 @@
 include(CMakeDependentOption)
 
+add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
+
+if (MIR_BUILD_PLATFORM_ANDROID)
+  add_definitions(-DMIR_BUILD_PLATFORM_ANDROID)
+endif()
+
+if (MIR_BUILD_PLATFORM_MESA)
+  add_definitions(-DMIR_BUILD_PLATFORM_MESA)
+endif()
+
 include_directories(
   ${CMAKE_SOURCE_DIR}
+
+  ${ANDROID_HEADERS_INCLUDE_DIRS}
+  ${DRM_INCLUDE_DIRS}
+  ${GBM_INCLUDE_DIRS}
+  ${UMOCKDEV_INCLUDE_DIRS}
+
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
@@ -10,12 +26,6 @@ include_directories(
   ${GLIB_INCLUDE_DIRS}
 )
 
-add_definitions(
-  -DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/"
-  -DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}"
-)
-
-include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${UMOCKDEV_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 # TODO: Aim to remove
 include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
 
@@ -79,9 +89,9 @@ target_link_libraries(
   demo-shell
 
   mir-test
+  mir-test-framework
   mir-test-doubles
   mir-test-doubles-platform
-  mir-test-framework
 
   3rd_party
 
@@ -91,6 +101,15 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
+  # Mesa platform dependencies
+  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
+  # Android platform dependencies
+  ${LIBHARDWARE_LIBRARIES}
+  ${ANDROID_PROPERTIES_LIBRARIES}
+  # Shared platform dependencies
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
   ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
@@ -99,7 +118,7 @@ target_link_libraries(
   ${MIR_SERVER_REFERENCES}
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "android")
+if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_unit_tests 
   mirsharedandroid
   ${ANDROID_PROPERTIES_LDFLAGS}

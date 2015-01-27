@@ -7,12 +7,10 @@ include_directories(
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
-add_library(mirplatformobjects OBJECT
-  shared_library_loader.cpp
-)
+add_definitions(-DMIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
+add_definitions(-DMIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
 
 set(MIR_PLATFORM_OBJECTS
-  $<TARGET_OBJECTS:mirplatformobjects>
   $<TARGET_OBJECTS:mirplatformgraphicscommon>
   $<TARGET_OBJECTS:miroptions>
   $<TARGET_OBJECTS:mirfatal>
@@ -31,16 +29,18 @@ add_library(mirplatform SHARED
 )
 
 target_link_libraries(mirplatform
+
   mircommon
   ${MIR_PLATFORM_REFERENCES}
 )
 
-set_target_properties(mirplatform
+set_target_properties(
+  mirplatform
+
   PROPERTIES
   SOVERSION ${MIRPLATFORM_ABI}
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
-
 
 install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 

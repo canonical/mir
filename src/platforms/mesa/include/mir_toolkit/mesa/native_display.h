@@ -18,8 +18,8 @@
 #ifndef MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H
 #define MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H
 
-#include "mir_toolkit/mir_native_buffer.h"
-#include "mir_toolkit/client_types.h"
+#include <mir_toolkit/mir_native_buffer.h>
+#include <mir_toolkit/client_types.h>
 
 #define MIR_MESA_TRUE 1
 #define MIR_MESA_FALSE 0
