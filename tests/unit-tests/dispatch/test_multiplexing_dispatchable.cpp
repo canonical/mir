@@ -150,7 +150,7 @@ TEST(MultiplexingDispatchableTest, removed_dispatchables_are_no_longer_dispatche
     EXPECT_FALSE(dispatched);
 }
 
-TEST(MultiDispatchableTest, adding_same_fd_twice_is_an_error)
+TEST(MultiplexingDispatchableTest, adding_same_fd_twice_is_an_error)
 {
     using namespace testing;
 
@@ -161,4 +161,21 @@ TEST(MultiDispatchableTest, adding_same_fd_twice_is_an_error)
 
     EXPECT_THROW(dispatcher.add_watch(dispatchable),
                  std::logic_error);
+}
+
+TEST(MultiplexingDispatchableTest, dispatcher_does_not_hold_reference_after_failing_to_add_dispatchee)
+{
+    using namespace testing;
+
+    auto dispatchable = std::make_shared<mt::TestDispatchable>([](){});
+
+    md::MultiplexingDispatchable dispatcher;
+    dispatcher.add_watch(dispatchable);
+
+    auto const dispatchable_refcount = dispatchable.use_count();
+
+    // This should not increase refcount
+    EXPECT_THROW(dispatcher.add_watch(dispatchable),
+                 std::logic_error);
+    EXPECT_THAT(dispatchable.use_count(), Eq(dispatchable_refcount));
 }
