@@ -10,7 +10,7 @@ add_library(mirclientplatformandroidobjects OBJECT
   gralloc_registrar.cpp
   android_client_platform.cpp
   client_platform_factory.cpp
-  client_surface_interpreter.cpp
+  egl_native_surface_interpreter.cpp
   android_native_display_container.cpp
 )
 

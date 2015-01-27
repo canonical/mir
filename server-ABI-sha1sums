@@ -21,7 +21,7 @@ b042ff8f542759fb82ad4cf1f4bab4aa2824e7f0  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 f4d39e9893ce6308bddd83a49b90f0051f565323  include/common/mir_toolkit/event.h
 2507f2929415aa423f9551d3c595c439fe1c6efd  include/common/mir_toolkit/events/event_deprecated.h
-cb2358a701db2b9c8d9ba1c877f29f834af259a7  include/common/mir_toolkit/events/event.h
+75f81e8250bd76c5281b8792aeadf5319eb2f169  include/common/mir_toolkit/events/event.h
 003b178a1d2418e03a13c54ca02353fa24beb1d6  include/common/mir_toolkit/events/input/input_event.h
 7748a12138474e9be218eeb8f14b372af0fcec7e  include/common/mir_toolkit/events/input/key_input_event.h
 489e8bae7c3e949ac449b09bd3bf554dae0e8986  include/common/mir_toolkit/events/input/pointer_input_event.h

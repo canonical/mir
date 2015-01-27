@@ -16,6 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+
 #include "server_example_window_management.h"
 #include "server_example_fullscreen_placement_strategy.h"
 

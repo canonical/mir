@@ -64,7 +64,7 @@ bool should_fail()
 template<Method failure_set>
 class ConfigurableFailurePlatform : public mir::client::ClientPlatform
 {
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mir::client::ClientSurface *)
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mir::client::EGLNativeSurface *)
     {
         if (should_fail<Method::create_egl_native_window, failure_set>())
         {

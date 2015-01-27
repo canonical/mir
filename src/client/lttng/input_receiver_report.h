@@ -19,6 +19,8 @@
 #ifndef MIR_CLIENT_LTTNG_INPUT_RECEIVER_REPORT_H_
 #define MIR_CLIENT_LTTNG_INPUT_RECEIVER_REPORT_H_
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir/input/input_receiver_report.h"
 #include "client_tracepoint_provider.h"
 
