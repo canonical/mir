@@ -22,6 +22,7 @@
 #include "mir_toolkit/event.h"
 
 #include "mir/dispatch/dispatchable.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
 
 #include <utils/StrongPointer.h>
 #include <androidfw/Input.h>
@@ -85,13 +86,7 @@ protected:
     InputReceiver& operator=(const InputReceiver&) = delete;
 
 private:
-    enum WakeupReason : uint32_t
-    {
-        input,
-        wakeup,
-        timer
-    };
-
+    dispatch::MultiplexingDispatchable dispatcher;
     Fd notify_receiver_fd;
     Fd notify_sender_fd;
     Fd timer_fd;
@@ -108,14 +103,6 @@ private:
     AndroidClock const android_clock;
 
     bool try_next_event(MirEvent &ev);
-
-    /* Keep this last so that:
-     * a) It's constructed last, and so we're guaranteed that if creation fails
-     *    errno hasn't been overwritten by a subsequent call, and
-     * b) It's destroyed first, so it won't be spuriously woken by the ::close-ing of
-     *    any fd it's monitoring.
-     */
-    Fd epoll_fd;
 };
 
 }
