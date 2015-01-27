@@ -72,7 +72,7 @@ public:
         ms::SurfaceCreationParameters const& params) override
     {
         auto const surface = msh::ShellWrapper::create_surface(session, params);
-        surfaces.push_back(std::dynamic_pointer_cast<ms::Surface>(session->get_surface(surface)));
+        surfaces.push_back(session->surface(surface));
         return surface;
     }
 

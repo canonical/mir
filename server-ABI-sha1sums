@@ -90,7 +90,7 @@ b657cfb8fb31140b83b78fc19135dd0165ede67b  include/server/mir/scene/prompt_sessio
 a745a63d413ced63b82350b8c253b65dffd5bf44  include/server/mir/scene/prompt_session_listener.h
 a09a3f18ecea53dc45386c1e2baf545c4177c047  include/server/mir/scene/prompt_session_manager.h
 558b95657c97e46b2e58e13677a11a2fcad75516  include/server/mir/scene/session_coordinator.h
-8cb940e808eca7db115239a25167955d34acafc4  include/server/mir/scene/session.h
+f6d1e20ce24fbf92749df611479e478d68d2b428  include/server/mir/scene/session.h
 ee94083f10f890e24c0e0bbdb94842e2dd788deb  include/server/mir/scene/session_listener.h
 7f5f26000fd2312373817d05c488a6a950a47c82  include/server/mir/scene/snapshot.h
 5bab4dc0a6488b8b9d47e958c6bab94f1dcf2c57  include/server/mir/scene/surface_buffer_access.h

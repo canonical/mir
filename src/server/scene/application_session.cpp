@@ -117,6 +117,11 @@ ms::ApplicationSession::Surfaces::const_iterator ms::ApplicationSession::checked
 
 std::shared_ptr<mf::Surface> ms::ApplicationSession::get_surface(mf::SurfaceId id) const
 {
+    return surface(id);
+}
+
+std::shared_ptr<ms::Surface> ms::ApplicationSession::surface(mf::SurfaceId id) const
+{
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 
     return checked_find(id)->second;

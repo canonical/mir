@@ -55,7 +55,7 @@ struct MockShell : msh::ShellWrapper
         ms::SurfaceCreationParameters const& params) override
     {
         auto const surface = msh::ShellWrapper::create_surface(session, params);
-        latest_surface = std::dynamic_pointer_cast<ms::Surface>(session->get_surface(surface));
+        latest_surface = session->surface(surface);
         return surface;
     }
 

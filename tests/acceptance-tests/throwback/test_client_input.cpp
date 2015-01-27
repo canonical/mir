@@ -160,7 +160,7 @@ struct RegionApplyingShell : msh::ShellWrapper
     {
         auto const id = wrapped->create_surface(session, params);
 
-        auto const surface = std::dynamic_pointer_cast<ms::Surface>(session->get_surface(id));
+        auto const surface = session->surface(id);
 
         if (client_input_regions.find(params.name) != client_input_regions.end())
             surface->set_input_region(client_input_regions.at(params.name));
