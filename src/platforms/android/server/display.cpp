@@ -78,7 +78,6 @@ void power_mode(
 {
     if (config.power_mode != intended_mode)
     {
-        printf("POWER %i, %i\n", (int) name, (int) intended_mode);
         control.power_mode(name, intended_mode);
         config.power_mode = intended_mode;
     }
