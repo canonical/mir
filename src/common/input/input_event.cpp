@@ -100,7 +100,7 @@ MirKeyEvent const& old_kev_from_new(MirKeyInputEvent const* ev)
     return old_ev->key;
 }
 
-MirMotionEvent const& old_mev_from_new(MirTouchEvent const* ev)
+MirMotionEvent const& old_mev_from_new(MirTouch const* ev)
 {
     auto old_ev = reinterpret_cast<MirEvent const*>(ev);
     expect_old_event_type(old_ev, mir_event_type_motion);
@@ -114,7 +114,7 @@ MirMotionEvent const& old_mev_from_new(MirPointerInputEvent const* ev)
     return old_ev->motion;
 }
 
-// Differentiate between MirTouchEvents and MirPointerInputEvents based on old device class
+// Differentiate between MirTouchs and MirPointerInputEvents based on old device class
 MirInputEventType type_from_device_class(int32_t source_class)
 {
     switch (source_class)
@@ -295,7 +295,14 @@ MirInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const*
 }
 /* Touch event accessors */
 
-MirInputEventModifiers mir_touch_event_get_modifiers(MirTouchEvent const* tev)
+// ABI-compatible MIR_COMMON_3.1
+extern "C"
+MirInputEventModifiers mir_touch_input_event_get_modifiers(MirTouch const* tev)
+{
+    return mir_touch_modifiers(tev);
+}
+
+MirInputEventModifiers mir_touch_modifiers(MirTouch const* tev)
 {    
     auto const& old_mev = old_mev_from_new(tev);
     return old_modifiers_to_new(old_mev.modifiers);
@@ -303,12 +310,12 @@ MirInputEventModifiers mir_touch_event_get_modifiers(MirTouchEvent const* tev)
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-MirInputEventModifiers mir_touch_input_event_get_modifiers(MirTouchEvent const* tev)
+MirTouch const* mir_input_event_get_touch_input_event(MirInputEvent const* ev)
 {
-    return mir_touch_event_get_modifiers(tev);
+    return mir_input_event_get_touch(ev);
 }
 
-MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev)
+MirTouch const* mir_input_event_get_touch(MirInputEvent const* ev)
 {
     if(mir_input_event_get_type(ev) != mir_input_event_type_touch)
     {
@@ -317,17 +324,17 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev)
         abort();
     }
 
-    return reinterpret_cast<MirTouchEvent const*>(ev);
+    return reinterpret_cast<MirTouch const*>(ev);
 }
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-MirTouchEvent const* mir_input_event_get_touch_input_event(MirInputEvent const* ev)
+unsigned int mir_touch_input_event_get_touch_count(MirTouch const* event)
 {
-    return mir_input_event_get_touch_event(ev);
+    return mir_touch_count(event);
 }
 
-unsigned int mir_touch_event_get_count(MirTouchEvent const* event)
+unsigned int mir_touch_count(MirTouch const* event)
 {
     auto const& old_mev = reinterpret_cast<MirEvent const*>(event)->motion;
     return old_mev.pointer_count;
@@ -335,12 +342,12 @@ unsigned int mir_touch_event_get_count(MirTouchEvent const* event)
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-unsigned int mir_touch_input_event_get_touch_count(MirTouchEvent const* event)
+MirTouchId mir_touch_input_event_get_touch_id(MirTouch const* event, size_t touch_index)
 {
-    return mir_touch_event_get_count(event);
+    return mir_touch_id(event, touch_index);
 }
 
-MirTouchId mir_touch_event_get_id(MirTouchEvent const* event, size_t touch_index)
+MirTouchId mir_touch_id(MirTouch const* event, size_t touch_index)
 {
     auto const& old_mev = old_mev_from_new(event);
 
@@ -353,14 +360,15 @@ MirTouchId mir_touch_event_get_id(MirTouchEvent const* event, size_t touch_index
     return old_mev.pointer_coordinates[touch_index].id;
 }
 
+
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-MirTouchId mir_touch_input_event_get_touch_id(MirTouchEvent const* event, size_t touch_index)
+MirTouchAction mir_touch_input_event_get_action(MirTouch const* event, size_t touch_index)
 {
-    return mir_touch_event_get_id(event, touch_index);
+    return mir_touch_action(event, touch_index);
 }
- 
-MirTouchAction mir_touch_event_get_action(MirTouchEvent const* event, size_t touch_index)
+
+MirTouchAction mir_touch_action(MirTouch const* event, size_t touch_index)
 {
     auto const& old_mev = old_mev_from_new(event);
 
@@ -410,12 +418,13 @@ MirTouchAction mir_touch_event_get_action(MirTouchEvent const* event, size_t tou
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-MirTouchAction mir_touch_input_event_get_action(MirTouchEvent const* event, size_t touch_index)
+MirTouchTooltype mir_touch_input_event_get_touch_tooltype(
+    MirTouch const* event, size_t touch_index)
 {
-    return mir_touch_event_get_action(event, touch_index);
+    return mir_touch_tooltype(event, touch_index);
 }
 
-MirTouchTooltype mir_touch_event_get_tooltype(MirTouchEvent const* event,
+MirTouchTooltype mir_touch_tooltype(MirTouch const* event,
     size_t touch_index)
 {
     auto const& old_mev = old_mev_from_new(event);
@@ -442,13 +451,13 @@ MirTouchTooltype mir_touch_event_get_tooltype(MirTouchEvent const* event,
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-MirTouchTooltype mir_touch_input_event_get_touch_tooltype(
-    MirTouchEvent const* event, size_t touch_index)
+float mir_touch_input_event_get_touch_axis_value(MirTouch const* event,
+    size_t touch_index, MirTouchAxis axis)
 {
-    return mir_touch_event_get_tooltype(event, touch_index);
+    return mir_touch_axis(event, touch_index, axis);
 }
 
-float mir_touch_event_get_axis_value(MirTouchEvent const* event,
+float mir_touch_axis(MirTouch const* event,
     size_t touch_index, MirTouchAxis axis)
 {
     auto const& old_mev = old_mev_from_new(event);
@@ -478,14 +487,6 @@ float mir_touch_event_get_axis_value(MirTouchEvent const* event,
         return -1;
     }
 }                                                                            
-
-// ABI-compatible MIR_COMMON_3.1
-extern "C"
-float mir_touch_input_event_get_touch_axis_value(MirTouchEvent const* event,
-    size_t touch_index, MirTouchAxis axis)
-{
-    return mir_touch_event_get_axis_value(event, touch_index, axis);
-}
 
 /* Pointer event accessors */
 MirPointerInputEvent const* mir_input_event_get_pointer_input_event(MirInputEvent const* ev)

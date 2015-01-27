@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TOOLKIT_TOUCH_EVENT_H_
-#define MIR_TOOLKIT_TOUCH_EVENT_H_
+#ifndef MIR_TOOLKIT_TOUCH_H_
+#define MIR_TOOLKIT_TOUCH_H_
 
 #ifdef __cplusplus
 /**
@@ -30,7 +30,7 @@ extern "C" {
 /**
  * An event type describing a change in touch device state.
  */
-typedef struct MirTouchEvent MirTouchEvent;
+typedef struct MirTouch MirTouch;
 
 /** 
  * An identifier for a touch-point. TouchId's are unique per-gesture.
@@ -90,7 +90,7 @@ typedef enum {
  *   \param [in] event The key event
  *   \return           The modifier mask
  */
-MirInputEventModifiers mir_touch_event_get_modifiers(MirTouchEvent const* event);
+MirInputEventModifiers mir_touch_modifiers(MirTouch const* event);
 
 /**
  * Retrieve the number of touches reported for a given touch event. Each touch
@@ -99,7 +99,7 @@ MirInputEventModifiers mir_touch_event_get_modifiers(MirTouchEvent const* event)
  *   \param [in] event The touch event
  *   \return           The number of touches
  */
-unsigned int mir_touch_event_get_count(MirTouchEvent const* event);
+unsigned int mir_touch_count(MirTouch const* event);
 
 /**
  * Retrieve the TouchID for a touch at given index.
@@ -108,7 +108,7 @@ unsigned int mir_touch_event_get_count(MirTouchEvent const* event);
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 ID of the touch at index
  */
-MirTouchId mir_touch_event_get_id(MirTouchEvent const* event, size_t touch_index);
+MirTouchId mir_touch_id(MirTouch const* event, size_t touch_index);
 
 /**
  * Retrieve the action which occured for a touch at given index.
@@ -117,33 +117,31 @@ MirTouchId mir_touch_event_get_id(MirTouchEvent const* event, size_t touch_index
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 Action performed for the touch at index.
  */
-MirTouchAction mir_touch_event_get_action(MirTouchEvent const* event, size_t touch_index);
+MirTouchAction mir_touch_action(MirTouch const* event, size_t touch_index);
 
 /**
  * Retrieve the tooltype for touch at given index.
  *
- *  \param [in] event       The touch event
- *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
- *  \return                 Tooltype used for the touch at index
+ *  \param [in] event  The touch event
+ *  \param [in] index  The touch index. Must be less than (touch_count - 1).
+ *  \return            Tooltype used for the touch at index
  */
-MirTouchTooltype mir_touch_event_get_tooltype(MirTouchEvent const* event,
-    size_t touch_index);
+MirTouchTooltype mir_touch_tooltype(MirTouch const* event, size_t index);
 
 
 /**
  * Retrieve the axis value for a given axis on an indexed touch.
  *
- *  \param [in] event       The touch event
- *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
- *  \param [in] axis        The axis to retreive a value from
- *  \return                 The value of the given axis
+ *  \param [in] event  The touch event
+ *  \param [in] index  The touch index. Must be less than (touch_count - 1).
+ *  \param [in] axis   The axis to retreive a value from
+ *  \return            The value of the given axis
  */
-float mir_touch_event_get_axis_value(MirTouchEvent const* event, 
-    size_t touch_index, MirTouchAxis axis);
+float mir_touch_axis(MirTouch const* event, size_t index, MirTouchAxis axis);
 
 #ifdef __cplusplus
 }
 /**@}*/
 #endif
 
-#endif /* MIR_TOOLKIT_TOUCH_EVENT_H_ */
+#endif /* MIR_TOOLKIT_TOUCH_H_ */

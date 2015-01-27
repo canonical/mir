@@ -69,7 +69,7 @@ typedef unsigned int MirInputEventModifiers;
 /**@}*/
 #endif
 
-#include "mir_toolkit/events/input/touch_event.h"
+#include "mir_toolkit/events/input/touch.h"
 #include "mir_toolkit/events/input/key_input_event.h"
 #include "mir_toolkit/events/input/pointer_input_event.h"
 
@@ -115,13 +115,13 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* ev);
 MirKeyInputEvent const* mir_input_event_get_key_input_event(MirInputEvent const* ev);
 
 /*
- * Retrieve the MirTouchEvent associated with a given input event.
+ * Retrieve the MirTouch associated with a given input event.
  *
  * \param[in] event The input event
- * \return          The MirTouchEvent or NULL if event type is not 
+ * \return          The MirTouch or NULL if event type is not 
  *                  mir_input_event_type_touch
  */
-MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev);
+MirTouch const* mir_input_event_get_touch(MirInputEvent const* ev);
 
 /*
  * Retrieve the MirPointerInputEvent associated with a given input event.

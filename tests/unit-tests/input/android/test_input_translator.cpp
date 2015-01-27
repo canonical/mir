@@ -322,7 +322,7 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
     properties[0].id = pointer.id;
     properties[0].toolType = pointer.tool_type;
     InSequence seq;
-    EXPECT_CALL(dispatcher, dispatch(mt::MirTouchEventMatches(expected))).Times(1);
+    EXPECT_CALL(dispatcher, dispatch(mt::MirTouchMatches(expected))).Times(1);
 
     droidinput::NotifyMotionArgs notified(expected.motion.event_time,
                                           expected.motion.device_id,
