@@ -99,6 +99,7 @@ private:
     std::list<std::pair<std::shared_ptr<Dispatchable>, bool>> dispatchee_holder;
 
     Fd gc_queue;
+    Fd gc_read_queue;
     Fd epoll_fd;
 };
 }

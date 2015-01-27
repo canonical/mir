@@ -322,3 +322,83 @@ TEST(MultiplexingDispatchableTest, removal_is_threadsafe)
 
     EXPECT_TRUE(canary_killed->wait_for(std::chrono::seconds{2}));
 }
+
+TEST(MultiplexingDispatchableTest, destruction_is_threadsafe)
+{
+    using namespace testing;
+
+    auto canary_killed = std::make_shared<mt::Signal>();
+    auto canary = std::shared_ptr<int>(new int, [canary_killed](int* victim) { delete victim; canary_killed->raise(); });
+    auto in_dispatch = std::make_shared<mt::Signal>();
+
+    auto dispatcher = std::make_shared<md::MultiplexingDispatchable>();
+
+    auto dispatchee = std::make_shared<mt::TestDispatchable>([canary, in_dispatch]()
+    {
+        in_dispatch->raise();
+        std::this_thread::sleep_for(std::chrono::seconds{1});
+        EXPECT_THAT(canary.use_count(), Gt(0));
+    });
+    dispatcher->add_watch(dispatchee);
+
+    dispatchee->trigger();
+
+    mt::AutoJoinThread dispatch_thread{[dispatcher]() { dispatcher->dispatch(md::FdEvent::readable); }};
+
+    EXPECT_TRUE(in_dispatch->wait_for(std::chrono::seconds{1}));
+
+    dispatcher->remove_watch(dispatchee);
+    dispatcher.reset();
+    dispatchee.reset();
+    canary.reset();
+
+    EXPECT_TRUE(canary_killed->wait_for(std::chrono::seconds{2}));
+}
+
+TEST(MultiplexingDispatchableTest, stress_test_threading)
+{
+    using namespace testing;
+
+    int const dispatchee_count{20};
+
+    auto dispatcher = std::make_shared<md::MultiplexingDispatchable>();
+
+    std::vector<std::shared_ptr<md::SimpleDispatchThread>> eventloops;
+    for (int i = 0 ; i < dispatchee_count + 5 ; ++i)
+    {
+        eventloops.push_back(std::make_shared<md::SimpleDispatchThread>(dispatcher));
+    }
+
+    std::vector<std::shared_ptr<mt::Signal>> canary_tomb;
+    std::vector<std::shared_ptr<mt::TestDispatchable>> dispatchees;
+    for (int i = 0 ; i < dispatchee_count ; ++i)
+    {
+        canary_tomb.push_back(std::make_shared<mt::Signal>());
+        auto current_canary = canary_tomb.back();
+        auto canary = std::shared_ptr<int>(new int, [current_canary](int* victim) { delete victim; current_canary->raise(); });
+        auto dispatchee = std::make_shared<mt::TestDispatchable>([canary]()
+        {
+            std::this_thread::sleep_for(std::chrono::seconds{1});
+            EXPECT_THAT(canary.use_count(), Gt(0));
+        });
+        dispatcher->add_watch(dispatchee, md::DispatchReentrancy::reentrant);
+
+        dispatchee->trigger();
+    }
+
+    for (auto& dispatchee : dispatchees)
+    {
+        dispatchee->trigger();
+        dispatcher->remove_watch(dispatchee);
+    }
+
+    dispatchees.clear();
+    dispatcher.reset();
+    eventloops.clear();
+
+    for (auto headstone : canary_tomb)
+    {
+        // Use assert so as to not block for *ages* on failure
+        ASSERT_TRUE(headstone->wait_for(std::chrono::seconds{2}));
+    }
+}

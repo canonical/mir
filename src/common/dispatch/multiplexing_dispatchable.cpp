@@ -23,6 +23,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <sys/epoll.h>
+#include <poll.h>
 #include <limits.h>
 #include <unistd.h>
 #include <string.h>
@@ -89,6 +90,31 @@ void add_to_gc_queue(mir::Fd const& queue, std::atomic<int>* generation, VictimR
         }
     }
 }
+
+template<typename VictimReference>
+void pull_from_gc_queue(mir::Fd const& queue, std::atomic<int>*& generation, VictimReference& victim)
+{
+    while (read(queue, &generation, sizeof(generation)) <
+           static_cast<ssize_t>(sizeof(generation)))
+    {
+        if (errno != EINTR)
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                     std::system_category(),
+                                                     "Failed to read from delayed GC queue"}));
+        }
+    }
+    while (read(queue, &victim, sizeof(victim)) <
+           static_cast<ssize_t>(sizeof(victim)))
+    {
+        if (errno != EINTR)
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                     std::system_category(),
+                                                     "Failed to read from delayed GC queue"}));
+        }
+    }
+}
 }
 
 md::MultiplexingDispatchable::MultiplexingDispatchable()
@@ -110,38 +136,14 @@ md::MultiplexingDispatchable::MultiplexingDispatchable()
                                                  "Failed to create delayed-destroy pipe"}));
     }
     gc_queue = mir::Fd{pipefds[1]};
-    mir::Fd const gc_read_queue{pipefds[0]};
+    gc_read_queue = mir::Fd{pipefds[0]};
     auto gc_dispatchable = std::make_shared<DispatchableAdaptor>(gc_read_queue,
-                                                                 [this, gc_read_queue]()
+                                                                 [this]()
     {
         std::atomic<int>* generation;
         decltype(dispatchee_holder)::const_iterator victim;
 
-        /* We can safely read from the pipe in chunks; sequential dispatch guarantees
-         * that we're the only reader.
-         *
-         * Loop to protect against interruption by signals.
-         */
-        while (read(gc_read_queue, &generation, sizeof(generation)) <
-               static_cast<ssize_t>(sizeof(generation)))
-        {
-            if (errno != EINTR)
-            {
-                BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                         std::system_category(),
-                                                         "Failed to read from delayed GC queue"}));
-            }
-        }
-        while (read(gc_read_queue, &victim, sizeof(victim)) <
-               static_cast<ssize_t>(sizeof(victim)))
-        {
-            if (errno != EINTR)
-            {
-                BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                         std::system_category(),
-                                                         "Failed to read from delayed GC queue"}));
-            }
-        }
+        pull_from_gc_queue(gc_read_queue, generation, victim);
 
         if (*generation == 0)
         {
@@ -161,6 +163,23 @@ md::MultiplexingDispatchable::MultiplexingDispatchable()
 md::MultiplexingDispatchable::~MultiplexingDispatchable() noexcept
 {
     delete in_current_generation.load();
+
+    /*
+     * The dispatchee_holder destructor will clean up all the Dispatchables, but
+     * if we have any pending GC queued up we need to free the generation atomics.
+     */
+    pollfd pending_gc;
+    pending_gc.events = POLLIN;
+    pending_gc.fd = gc_read_queue;
+
+    while (poll(&pending_gc, 1, 0) > 0)
+    {
+        std::atomic<int>* generation;
+        decltype(dispatchee_holder)::const_iterator victim;
+
+        pull_from_gc_queue(gc_read_queue, generation, victim);
+        delete generation;
+    }
 }
 
 md::MultiplexingDispatchable::MultiplexingDispatchable(std::initializer_list<std::shared_ptr<Dispatchable>> dispatchees)
