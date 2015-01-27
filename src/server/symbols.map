@@ -457,6 +457,7 @@ sed_applicationIR_SERVER_29 {
     mir::Server::the_session_authorizer*;
     mir::Server::the_session_coordinator*;
     mir::Server::the_session_listener*;
+    mir::Server::the_shell*;
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_configurator*;
     mir::Server::the_surface_coordinator*;

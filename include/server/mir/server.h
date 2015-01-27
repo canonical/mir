@@ -315,6 +315,9 @@ public:
     /// \return the session listener.
     auto the_session_listener() const -> std::shared_ptr<scene::SessionListener>;
 
+    /// \return the shell.
+    auto the_shell() const -> std::shared_ptr<shell::Shell>;
+
     /// \return the display layout.
     auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;
 

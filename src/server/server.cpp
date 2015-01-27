@@ -78,6 +78,7 @@ namespace mo = mir::options;
     MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
     MACRO(the_prompt_session_manager)\
+    MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
     MACRO(the_surface_configurator)\
     MACRO(the_surface_coordinator)\
