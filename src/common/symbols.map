@@ -212,3 +212,10 @@ MIR_COMMON_3.1 {
       mir::libraries_for_path*;
     };
 } MIR_COMMON_3;
+
+MIR_COMMON_3.2 {
+  global:
+    extern "C++" {
+        mir::events::*
+    };
+} MIR_COMMON_3;
