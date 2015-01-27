@@ -53,7 +53,7 @@ void report_exception_at_driver_boundary(std::exception const& e)
 }
 }
 
-mclm::NativeSurface::NativeSurface(ClientSurface& surface)
+mclm::NativeSurface::NativeSurface(EGLNativeSurface& surface)
     : starting(true), surface(surface)
 {
     surface_advance_buffer = advance_buffer_static;

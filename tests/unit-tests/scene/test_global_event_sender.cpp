@@ -16,6 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/scene/global_event_sender.h"
 #include "src/server/scene/session_container.h"
 #include "mir_test_doubles/mock_scene_session.h"

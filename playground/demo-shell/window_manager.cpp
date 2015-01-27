@@ -17,6 +17,8 @@
  *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+
 #include "window_manager.h"
 #include "demo_compositor.h"
 

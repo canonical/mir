@@ -16,6 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test_doubles/mock_rpc_report.h"
 #include "mir_test_doubles/null_client_event_sink.h"

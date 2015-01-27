@@ -16,9 +16,12 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
+#include "default_client_buffer_stream_factory.h"
 #include "mir_toolkit/mir_platform_message.h"
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
@@ -136,7 +139,8 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, &debug, platform->create_buffer_factory(), input_platform, spec, callback, context);
+    auto surface = new MirSurface(this, server, &debug, get_client_buffer_stream_factory(),
+        input_platform, spec, callback, context);
 
     return surface->get_create_wait_handle();
 }
@@ -479,6 +483,14 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     return platform;
+}
+
+std::shared_ptr<mir::client::ClientBufferStreamFactory> MirConnection::get_client_buffer_stream_factory()
+{
+    if (!buffer_stream_factory)
+        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(platform->create_buffer_factory(), 
+            platform, the_logger());
+    return buffer_stream_factory;
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()
