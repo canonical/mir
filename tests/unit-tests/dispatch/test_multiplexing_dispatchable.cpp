@@ -128,3 +128,24 @@ TEST(MultiplexingDispatchableTest, keeps_dispatchees_alive)
 
     EXPECT_TRUE(dispatched);
 }
+
+TEST(MultiplexingDispatchableTest, removed_dispatchables_are_no_longer_dispatched)
+{
+    using namespace testing;
+
+    mt::Pipe pipe;
+
+    bool dispatched{false};
+    auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatched]() { dispatched = true; });
+
+    md::MultiplexingDispatchable dispatcher;
+    dispatcher.add_watch(dispatchable);
+    dispatcher.remove_watch(dispatchable);
+
+    dispatchable->trigger();
+
+    EXPECT_FALSE(mt::fd_is_readable(dispatcher.watch_fd()));
+    dispatcher.dispatch(md::FdEvent::readable);
+
+    EXPECT_FALSE(dispatched);
+}

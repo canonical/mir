@@ -45,6 +45,7 @@ public:
     FdEvents relevant_events() const override;
 
     void add_watch(std::shared_ptr<Dispatchable> const& dispatchee);
+    void remove_watch(std::shared_ptr<Dispatchable> const& dispatchee);
 private:
     // Ensure the lifetimes of everything we watch.
     std::list<std::shared_ptr<Dispatchable>> dispatchee_holder;

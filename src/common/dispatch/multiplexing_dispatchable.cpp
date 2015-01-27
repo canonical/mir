@@ -145,3 +145,18 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
                                                  "Failed to monitor fd"}));
     }
 }
+
+void md::MultiplexingDispatchable::remove_watch(std::shared_ptr<Dispatchable> const& dispatchee)
+{
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, dispatchee->watch_fd(), nullptr))
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 "Failed to remove fd monitor"}));
+    }
+
+    dispatchee_holder.remove_if ([&dispatchee](std::shared_ptr<Dispatchable> const& candidate)
+    {
+        return candidate->watch_fd() == dispatchee->watch_fd();
+    });
+}
