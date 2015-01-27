@@ -270,7 +270,8 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     // Key events don't get resampled. Will be reported first.
     EXPECT_TRUE(wait_for_next_event(receiver, next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
-    ASSERT_EQ(mir_event_type_key, last_event.type);
+    EXPECT_TRUE(handler_called);
+    ASSERT_EQ(mir_event_type_key, ev.type);
 
     // The motion is still too new. Won't be reported yet, but is batched.
     auto start = high_resolution_clock::now();
