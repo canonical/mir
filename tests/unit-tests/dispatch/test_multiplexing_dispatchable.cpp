@@ -17,11 +17,13 @@
  */
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
+#include "mir/dispatch/simple_dispatch_thread.h"
 #include "mir/fd.h"
 #include "mir_test/pipe.h"
 #include "mir_test/signal.h"
 #include "mir_test/fd_utils.h"
 #include "mir_test/test_dispatchable.h"
+#include "mir_test/auto_unblock_thread.h"
 
 #include <fcntl.h>
 
@@ -288,4 +290,35 @@ TEST(MultiplexingDispatchableTest, raw_callback_can_be_removed)
     dispatcher.dispatch(md::FdEvent::readable);
 
     EXPECT_FALSE(dispatched);
+}
+
+TEST(MultiplexingDispatchableTest, removal_is_threadsafe)
+{
+    using namespace testing;
+
+    auto canary_killed = std::make_shared<mt::Signal>();
+    auto canary = std::shared_ptr<int>(new int, [canary_killed](int* victim) { delete victim; canary_killed->raise(); });
+    auto in_dispatch = std::make_shared<mt::Signal>();
+
+    auto dispatcher = std::make_shared<md::MultiplexingDispatchable>();
+
+    auto dispatchee = std::make_shared<mt::TestDispatchable>([canary, in_dispatch]()
+    {
+        in_dispatch->raise();
+        std::this_thread::sleep_for(std::chrono::seconds{1});
+        EXPECT_THAT(canary.use_count(), Gt(0));
+    });
+    dispatcher->add_watch(dispatchee);
+
+    dispatchee->trigger();
+
+    md::SimpleDispatchThread eventloop{dispatcher};
+
+    EXPECT_TRUE(in_dispatch->wait_for(std::chrono::seconds{1}));
+
+    dispatcher->remove_watch(dispatchee);
+    dispatchee.reset();
+    canary.reset();
+
+    EXPECT_TRUE(canary_killed->wait_for(std::chrono::seconds{2}));
 }

@@ -26,6 +26,7 @@
 #include <list>
 #include <mutex>
 #include <tuple>
+#include <atomic>
 
 namespace mir
 {
@@ -53,7 +54,7 @@ class MultiplexingDispatchable : public Dispatchable
 public:
     MultiplexingDispatchable();
     MultiplexingDispatchable(std::initializer_list<std::shared_ptr<Dispatchable>> dispatchees);
-    virtual ~MultiplexingDispatchable() = default;
+    virtual ~MultiplexingDispatchable() noexcept;
 
     MultiplexingDispatchable& operator=(MultiplexingDispatchable const&) = delete;
     MultiplexingDispatchable(MultiplexingDispatchable const&) = delete;
@@ -93,9 +94,11 @@ public:
      */
     void remove_watch(Fd const& fd);
 private:
+    std::atomic<std::atomic<int>*> in_current_generation;
     std::mutex lifetime_mutex;
     std::list<std::pair<std::shared_ptr<Dispatchable>, bool>> dispatchee_holder;
 
+    Fd gc_queue;
     Fd epoll_fd;
 };
 }

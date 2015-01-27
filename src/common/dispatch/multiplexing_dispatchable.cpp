@@ -18,18 +18,82 @@
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "utils.h"
+#include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
 
 #include <sys/epoll.h>
+#include <limits.h>
 #include <unistd.h>
 #include <string.h>
 #include <system_error>
+#include <algorithm>
 
 namespace md = mir::dispatch;
 
+namespace
+{
+class DispatchableAdaptor : public md::Dispatchable
+{
+public:
+    DispatchableAdaptor(mir::Fd const& fd, std::function<void()> const& callback)
+        : fd{fd},
+          handler{callback}
+    {
+    }
+
+    mir::Fd watch_fd() const override
+    {
+        return fd;
+    }
+
+    bool dispatch(md::FdEvents events) override
+    {
+        if (events & md::FdEvent::error)
+        {
+            return false;
+        }
+        handler();
+        return true;
+    }
+
+    md::FdEvents relevant_events() const override
+    {
+        return md::FdEvent::readable;
+    }
+private:
+    mir::Fd const fd;
+    std::function<void()> const handler;
+};
+
+template<typename VictimReference>
+void add_to_gc_queue(mir::Fd const& queue, std::atomic<int>* generation, VictimReference victim)
+{
+    constexpr ssize_t gc_data_size{sizeof(generation) + sizeof(victim)};
+    static_assert(gc_data_size < PIPE_BUF,
+                  "Size of data for delayed GC must be less than PIPE_BUF for atomic guarantees");
+
+    std::unique_ptr<char[]> gc_data{new char[gc_data_size]};
+
+    memcpy(gc_data.get(), &generation, sizeof(generation));
+    memcpy(gc_data.get() + sizeof(generation), &victim, sizeof(victim));
+
+    // Loop to protect against interruption by signals
+    while (write(queue, gc_data.get(), gc_data_size) < gc_data_size)
+    {
+        if (errno != EINTR)
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                     std::system_category(),
+                                                     "Failed to write to delayed GC queue"}));
+        }
+    }
+}
+}
+
 md::MultiplexingDispatchable::MultiplexingDispatchable()
-    : epoll_fd{mir::Fd{::epoll_create1(EPOLL_CLOEXEC)}}
+    : in_current_generation{new std::atomic<int>{0}},
+      epoll_fd{mir::Fd{::epoll_create1(EPOLL_CLOEXEC)}}
 {
     if (epoll_fd == mir::Fd::invalid)
     {
@@ -37,6 +101,66 @@ md::MultiplexingDispatchable::MultiplexingDispatchable()
                                                  std::system_category(),
                                                  "Failed to create epoll monitor"}));
     }
+
+    int pipefds[2];
+    if (pipe(pipefds) < 0)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 "Failed to create delayed-destroy pipe"}));
+    }
+    gc_queue = mir::Fd{pipefds[1]};
+    mir::Fd const gc_read_queue{pipefds[0]};
+    auto gc_dispatchable = std::make_shared<DispatchableAdaptor>(gc_read_queue,
+                                                                 [this, gc_read_queue]()
+    {
+        std::atomic<int>* generation;
+        decltype(dispatchee_holder)::const_iterator victim;
+
+        /* We can safely read from the pipe in chunks; sequential dispatch guarantees
+         * that we're the only reader.
+         *
+         * Loop to protect against interruption by signals.
+         */
+        while (read(gc_read_queue, &generation, sizeof(generation)) <
+               static_cast<ssize_t>(sizeof(generation)))
+        {
+            if (errno != EINTR)
+            {
+                BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                         std::system_category(),
+                                                         "Failed to read from delayed GC queue"}));
+            }
+        }
+        while (read(gc_read_queue, &victim, sizeof(victim)) <
+               static_cast<ssize_t>(sizeof(victim)))
+        {
+            if (errno != EINTR)
+            {
+                BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                         std::system_category(),
+                                                         "Failed to read from delayed GC queue"}));
+            }
+        }
+
+        if (*generation == 0)
+        {
+            std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
+            dispatchee_holder.erase(victim);
+            delete generation;
+        }
+        else
+        {
+            add_to_gc_queue(gc_queue, generation, victim);
+        }
+    });
+
+    add_watch(gc_dispatchable, DispatchReentrancy::sequential);
+}
+
+md::MultiplexingDispatchable::~MultiplexingDispatchable() noexcept
+{
+    delete in_current_generation.load();
 }
 
 md::MultiplexingDispatchable::MultiplexingDispatchable(std::initializer_list<std::shared_ptr<Dispatchable>> dispatchees)
@@ -59,6 +183,10 @@ bool md::MultiplexingDispatchable::dispatch(md::FdEvents events)
     {
         return false;
     }
+
+    std::atomic<int>* our_generation = in_current_generation.load();
+    auto count_handler = mir::raii::paired_calls([our_generation]() { ++(*our_generation); },
+                                                 [our_generation]() { --(*our_generation); });
 
     epoll_event event;
 
@@ -130,42 +258,6 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
     }
 }
 
-namespace
-{
-class DispatchableAdaptor : public md::Dispatchable
-{
-public:
-    DispatchableAdaptor(mir::Fd const& fd, std::function<void()> const& callback)
-        : fd{fd},
-          handler{callback}
-    {
-    }
-
-    mir::Fd watch_fd() const override
-    {
-        return fd;
-    }
-
-    bool dispatch(md::FdEvents events) override
-    {
-        if (events & md::FdEvent::error)
-        {
-            return false;
-        }
-        handler();
-        return true;
-    }
-
-    md::FdEvents relevant_events() const override
-    {
-        return md::FdEvent::readable;
-    }
-private:
-    mir::Fd const fd;
-    std::function<void()> const handler;
-};
-}
-
 void md::MultiplexingDispatchable::add_watch(Fd const& fd, std::function<void()> const& callback)
 {
     add_watch(std::make_shared<DispatchableAdaptor>(fd, callback));
@@ -185,11 +277,46 @@ void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
                                                  "Failed to remove fd monitor"}));
     }
 
+    /*
+     * Theory of operation:
+     * The kernel guarantees that any call to epoll_wait at this point will not return an
+     * event from the fd we've just removed. That means all we need to do to safely destroy
+     * the Dispatchable is wait for all the dispatch()es that are currently running to finish.
+     *
+     * If there are no threads in dispatch() then we can delete immediately.
+     *
+     * If there is at least one thread in dispatch() then we:
+     * 1) Save a pointer to the current generation counter, x.
+     * 2) Replace the current generation counter with a fresh std::atomic<int>.
+     *    This means that any new threads will not change our saved counter.
+     * 3) Add the pair (x, victim) to the gc queue.
+     *
+     * When the GC queue is dispatched it checks if the old generation counter, x, is now
+     * zero. If so, it's safe to free the victim. If not, it re-queues (x, victim).
+     */
     {
         std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
-        dispatchee_holder.remove_if ([&fd](std::pair<std::shared_ptr<Dispatchable>,bool> const& candidate)
+
+        decltype(dispatchee_holder)::const_iterator victim;
+        victim = std::find_if(dispatchee_holder.begin(), dispatchee_holder.end(),
+                              [&fd](std::pair<std::shared_ptr<Dispatchable>,bool> const& candidate)
         {
             return candidate.first->watch_fd() == fd;
         });
+
+        if (*in_current_generation == 0)
+        {
+            // No thread from before the removal of the fd is in dispatch(); safe to free.
+            dispatchee_holder.erase(victim);
+        }
+        else
+        {
+            // Punt the destruction to the delayed GC
+            auto next_generation = new std::atomic<int>{0};
+            std::atomic<int>* current_generation = in_current_generation.load();
+            in_current_generation = next_generation;
+
+            add_to_gc_queue(gc_queue, current_generation, victim);
+        }
     }
 }
