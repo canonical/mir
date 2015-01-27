@@ -54,10 +54,8 @@ void print_touch_event(MirInputEvent const* ev)
     for (unsigned i = 0; i < tc; i++)
     {
         auto id = mir_touch_event_get_id(tev, i);
-        auto px = mir_touch_event_get_axis_value(tev, i, 
-            mir_touch_axis_x);
-        auto py = mir_touch_event_get_axis_value(tev, i, 
-            mir_touch_axis_y);
+        auto px = mir_touch_event_get_axis_value(tev, i, mir_touch_axis_x);
+        auto py = mir_touch_event_get_axis_value(tev, i, mir_touch_axis_y);
 
         std::cout << "  "
             << " id=" << id
