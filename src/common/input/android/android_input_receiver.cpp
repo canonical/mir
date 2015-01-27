@@ -93,12 +93,7 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
                                                      std::system_category(),
                                                      "Failed to consume notification"}));
         }
-        if (!input_consumer->hasDeferredEvent())
-        {
-            // We've been woken up for some reason other than to deliver
-            // pending events. We've woken up now, so that's our job done.
-            return;
-        }
+
         MirEvent e;
         if (try_next_event(e))
         {
