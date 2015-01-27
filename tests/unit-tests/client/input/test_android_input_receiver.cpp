@@ -20,6 +20,7 @@
 #include "mir/input/null_input_receiver_report.h"
 #include "mir_toolkit/event.h"
 
+#include "mir_test/fd_utils.h"
 
 #include <androidfw/InputTransport.h>
 
@@ -35,46 +36,12 @@
 namespace mircv = mir::input::receiver;
 namespace mircva = mircv::android;
 namespace md = mir::dispatch;
+namespace mt = mir::test;
 
 namespace droidinput = android;
 
 namespace
 {
-
-template<typename Rep, typename Period>
-bool wait_for_next_event(mir::dispatch::Dispatchable const& source,
-                         std::chrono::duration<Rep, Period> timeout)
-{
-    struct pollfd events {
-        source.watch_fd(),
-        POLLIN,
-        0
-    };
-
-    auto val = poll(&events, 1, std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count());
-    if (val < 0)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                std::system_category(),
-                                                "Failed to wait for event"}));
-    }
-    if ((val > 0) && (events.revents & POLLIN))
-    {
-        return true;
-    }
-    return false;
-}
-
-bool events_available(mir::dispatch::Dispatchable const& source)
-{
-    struct pollfd events {
-        source.watch_fd(),
-        POLLIN,
-        0
-    };
-
-    return poll(&events, 1, 0) > 0;
-}
 
 class TestingInputProducer
 {
@@ -197,7 +164,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
 
     flush_channels();
 
-    EXPECT_TRUE(wait_for_next_event(receiver, next_event_timeout));
+    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
 
     EXPECT_EQ(mir_event_type_key, last_event.type);
@@ -212,7 +179,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
     producer.produce_a_key_event();
     flush_channels();
 
-    EXPECT_TRUE(wait_for_next_event(receiver, next_event_timeout));
+    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
 
     flush_channels();
@@ -232,11 +199,11 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
 
     flush_channels();
 
-    EXPECT_TRUE(wait_for_next_event(receiver, next_event_timeout));
+    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
 
     // Now there should be no events
-    EXPECT_FALSE(events_available(receiver));
+    EXPECT_FALSE(mt::fd_is_readable(receiver.watch_fd()));
 }
 
 TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
@@ -268,7 +235,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     std::chrono::milliseconds const max_timeout(1000);
 
     // Key events don't get resampled. Will be reported first.
-    EXPECT_TRUE(wait_for_next_event(receiver, next_event_timeout));
+    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
     EXPECT_TRUE(handler_called);
     ASSERT_EQ(mir_event_type_key, ev.type);
@@ -276,7 +243,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     // The motion is still too new. Won't be reported yet, but is batched.
     auto start = high_resolution_clock::now();
 
-    EXPECT_TRUE(wait_for_next_event(receiver, max_timeout));
+    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), max_timeout));
     handler_called = false;
     receiver.dispatch(md::FdEvent::readable);
     // We've processed the data, but no new event has been generated.
@@ -294,7 +261,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 
     // But later in a frame or so, the motion will be reported:
     t += 2 * one_frame;  // Account for the new slower 55Hz event rate
-    EXPECT_TRUE(wait_for_next_event(receiver, next_event_timeout));
+    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
 
     EXPECT_TRUE(handler_called);
@@ -337,7 +304,7 @@ TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
             flush_channels();
         }
 
-        if (events_available(receiver))
+        if (mt::fd_is_readable(receiver.watch_fd()))
         {
             receiver.dispatch(md::FdEvent::readable);
         }
@@ -386,7 +353,7 @@ TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)
             flush_channels();
         }
 
-        if (events_available(receiver))
+        if (mt::fd_is_readable(receiver.watch_fd()))
         {
             receiver.dispatch(md::FdEvent::readable);
             last_consumed = t;
