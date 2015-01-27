@@ -201,7 +201,7 @@ MIR_COMMON_3 {
 
 MIR_COMMON_3.1 {
   global:
-    extern "C++" {  # <-- Wrong, but saved by `extern "C"' in the headers
+    extern "C" {
       mir_event_get*;
       mir_input_event_get_device_id;
       mir_input_event_get_event_time;
@@ -211,6 +211,8 @@ MIR_COMMON_3.1 {
       mir_input_event_get_type;
       mir_key_input_event_get*;
       mir_touch_input_event_get*;
+    };
+    extern "C++" {
       mir::log*char*;
       mir::logv*;
       mir::libraries_for_path*;
