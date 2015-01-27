@@ -81,7 +81,7 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     layer_list->update_list(renderlist);
 
     bool needs_commit{false};
-    for(auto& layer : *layer_list)
+    for (auto& layer : *layer_list)
         needs_commit |= layer.needs_commit;
     if (!needs_commit)
         return false;
