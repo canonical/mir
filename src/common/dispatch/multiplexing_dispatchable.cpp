@@ -130,9 +130,55 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
     }
 }
 
+namespace
+{
+class DispatchableAdaptor : public md::Dispatchable
+{
+public:
+    DispatchableAdaptor(mir::Fd const& fd, std::function<void()> const& callback)
+        : fd{fd},
+          handler{callback}
+    {
+    }
+
+    mir::Fd watch_fd() const override
+    {
+        return fd;
+    }
+
+    bool dispatch(md::FdEvents events) override
+    {
+        if (events & md::FdEvent::error)
+        {
+            return false;
+        }
+        handler();
+        return true;
+    }
+
+    md::FdEvents relevant_events() const override
+    {
+        return md::FdEvent::readable;
+    }
+private:
+    mir::Fd const fd;
+    std::function<void()> const handler;
+};
+}
+
+void md::MultiplexingDispatchable::add_watch(Fd const& fd, std::function<void()> const& callback)
+{
+    add_watch(std::make_shared<DispatchableAdaptor>(fd, callback));
+}
+
 void md::MultiplexingDispatchable::remove_watch(std::shared_ptr<Dispatchable> const& dispatchee)
 {
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, dispatchee->watch_fd(), nullptr))
+    remove_watch(dispatchee->watch_fd());
+}
+
+void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
+{
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr))
     {
         BOOST_THROW_EXCEPTION((std::system_error{errno,
                                                  std::system_category(),
@@ -141,9 +187,9 @@ void md::MultiplexingDispatchable::remove_watch(std::shared_ptr<Dispatchable> co
 
     {
         std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
-        dispatchee_holder.remove_if ([&dispatchee](std::pair<std::shared_ptr<Dispatchable>,bool> const& candidate)
+        dispatchee_holder.remove_if ([&fd](std::pair<std::shared_ptr<Dispatchable>,bool> const& candidate)
         {
-            return candidate.first->watch_fd() == dispatchee->watch_fd();
+            return candidate.first->watch_fd() == fd;
         });
     }
 }

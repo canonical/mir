@@ -74,10 +74,24 @@ public:
     void add_watch(std::shared_ptr<Dispatchable> const& dispatchee, DispatchReentrancy reentrancy);
 
     /**
+     * \brief Add a simple callback to the adaptor
+     * \param [in] fd       File descriptor to monitor for readability
+     * \param [in] callback Callback to fire when \ref fd becomes readable.
+     *                      This callback is not called reentrantly.
+     */
+    void add_watch(Fd const& fd, std::function<void()> const& callback);
+
+    /**
      * \brief Remove a watch from the dispatchable
      * \param [in] dispatchee   Dispatchable to remove
      */
     void remove_watch(std::shared_ptr<Dispatchable> const& dispatchee);
+
+    /**
+     * \brief Remove a watch by file-descriptor
+     * \param [in] fd   File descriptor of watch to remove.
+     */
+    void remove_watch(Fd const& fd);
 private:
     std::mutex lifetime_mutex;
     std::list<std::pair<std::shared_ptr<Dispatchable>, bool>> dispatchee_holder;

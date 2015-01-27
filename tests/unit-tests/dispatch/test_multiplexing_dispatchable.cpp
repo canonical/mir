@@ -248,3 +248,44 @@ TEST(MultiplexingDispatchableTest, reentrant_dispatchee_is_dispatched_concurrent
     first.join();
     second.join();
 }
+
+TEST(MultiplexingDispatchableTest, raw_callback_is_dispatched)
+{
+    using namespace testing;
+
+    bool dispatched{false};
+    auto dispatchee = [&dispatched]() { dispatched = true; };
+    mt::Pipe fd_source;
+
+    md::MultiplexingDispatchable dispatcher;
+    dispatcher.add_watch(fd_source.read_fd(), dispatchee);
+
+    char buffer{0};
+    ASSERT_THAT(::write(fd_source.write_fd(), &buffer, sizeof(buffer)), Eq(sizeof(buffer)));
+
+    EXPECT_TRUE(mt::fd_is_readable(dispatcher.watch_fd()));
+    dispatcher.dispatch(md::FdEvent::readable);
+
+    EXPECT_TRUE(dispatched);
+}
+
+TEST(MultiplexingDispatchableTest, raw_callback_can_be_removed)
+{
+    using namespace testing;
+
+    bool dispatched{false};
+    auto dispatchee = [&dispatched]() { dispatched = true; };
+    mt::Pipe fd_source;
+
+    md::MultiplexingDispatchable dispatcher;
+    dispatcher.add_watch(fd_source.read_fd(), dispatchee);
+    dispatcher.remove_watch(fd_source.read_fd());
+
+    char buffer{0};
+    ASSERT_THAT(::write(fd_source.write_fd(), &buffer, sizeof(buffer)), Eq(sizeof(buffer)));
+
+    EXPECT_FALSE(mt::fd_is_readable(dispatcher.watch_fd()));
+    dispatcher.dispatch(md::FdEvent::readable);
+
+    EXPECT_FALSE(dispatched);
+}
