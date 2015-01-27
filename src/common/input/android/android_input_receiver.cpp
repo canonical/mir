@@ -70,7 +70,12 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
     {
         // Disarm the timer
         uint64_t dummy;
-        (void)read(timer_fd, &dummy, sizeof(dummy));
+        if (read(timer_fd, &dummy, sizeof(dummy)) != sizeof(dummy))
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                     std::system_category(),
+                                                     "Failed read from timer"}));
+        }
 
         MirEvent e;
         if (try_next_event(e))
