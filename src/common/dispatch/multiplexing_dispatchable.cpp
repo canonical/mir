@@ -17,6 +17,7 @@
  */
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
+#include "utils.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -26,53 +27,6 @@
 #include <system_error>
 
 namespace md = mir::dispatch;
-
-namespace
-{
-md::FdEvents epoll_to_fd_event(epoll_event const& event)
-{
-    md::FdEvents val{0};
-    if (event.events & EPOLLIN)
-    {
-        val |= md::FdEvent::readable;
-    }
-    if (event.events & EPOLLOUT)
-    {
-        val = md::FdEvent::writable;
-    }
-    if (event.events & (EPOLLHUP | EPOLLRDHUP))
-    {
-        val |= md::FdEvent::remote_closed;
-    }
-    if (event.events & EPOLLERR)
-    {
-        val = md::FdEvent::error;
-    }
-    return val;
-}
-
-int fd_event_to_epoll(md::FdEvents const& event)
-{
-    int epoll_value{0};
-    if (event & md::FdEvent::readable)
-    {
-        epoll_value |= EPOLLIN;
-    }
-    if (event & md::FdEvent::writable)
-    {
-        epoll_value |= EPOLLOUT;
-    }
-    if (event & md::FdEvent::remote_closed)
-    {
-        epoll_value |= EPOLLRDHUP | EPOLLHUP;
-    }
-    if (event & md::FdEvent::error)
-    {
-        epoll_value |= EPOLLERR;
-    }
-    return epoll_value;
-}
-}
 
 md::MultiplexingDispatchable::MultiplexingDispatchable()
     : epoll_fd{mir::Fd{::epoll_create1(EPOLL_CLOEXEC)}}
