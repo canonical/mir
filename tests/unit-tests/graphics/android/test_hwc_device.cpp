@@ -312,8 +312,9 @@ TEST_F(HwcDevice, commits_correct_list_when_all_accepted_as_overlays)
 
     EXPECT_CALL(*mock_native_buffer3, copy_fence())
         .Times(0);
-    EXPECT_CALL(*mock_native_buffer3, update_usage(_,_))
-        .Times(0);
+    int invalid{-1};
+    EXPECT_CALL(*mock_native_buffer3, update_usage(invalid,_))
+        .Times(1);
 
     Sequence seq; 
     EXPECT_CALL(*mock_device, prepare(_))
