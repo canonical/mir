@@ -104,6 +104,7 @@ void set_powermode_all_displays(
 }
 
 std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
+    std::shared_ptr<mga::DisplayDevice> const& display_device,
     mga::DisplayName name,
     mga::DisplayComponentFactory& display_buffer_builder,
     mga::DisplayAttribs const& attribs,
@@ -119,7 +120,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
         name,
         display_buffer_builder.create_layer_list(),
         fbs,
-        display_buffer_builder.create_display_device(),
+        display_device,
         native_window,
         gl_context,
         *gl_program_factory,
@@ -145,7 +146,9 @@ mga::Display::Display(
         external_attribs,
         mir_power_mode_off),
     gl_context{config.primary().current_format, *gl_config, *display_report},
+    display_device(display_buffer_builder->create_display_device()),
     primary_db{create_display_buffer(
+        display_device,
         mga::DisplayName::primary,
         *display_buffer_builder,
         primary_attribs,
@@ -161,6 +164,7 @@ mga::Display::Display(
     if (config.external().connected)
     {
         external_db = create_display_buffer(
+            display_device,
             mga::DisplayName::external,
             *display_buffer_builder,
             external_attribs,
@@ -201,6 +205,7 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
 
         if (config.external().connected)
             external_db = create_display_buffer(
+                display_device,
                 mga::DisplayName::external,
                 *display_buffer_builder,
                 attribs,
