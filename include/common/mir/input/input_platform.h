@@ -41,7 +41,7 @@ class InputReceiverReport;
 class InputPlatform
 {
 public:
-    virtual ~InputPlatform() {};
+    virtual ~InputPlatform() = default;
 
     virtual std::shared_ptr<dispatch::Dispatchable> create_input_dispatcher(int fd, std::function<void(MirEvent*)> const& callback) = 0;
 
