@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/dispatchable.h"
 
 #include "android_input_platform.h"
 #include "android_input_receiver.h"
@@ -36,11 +36,10 @@ mircva::AndroidInputPlatform::~AndroidInputPlatform()
 {
 }
 
-std::shared_ptr<md::SimpleDispatchThread> mircva::AndroidInputPlatform::create_input_thread(
+std::shared_ptr<md::Dispatchable> mircva::AndroidInputPlatform::create_input_dispatcher(
     int fd, std::function<void(MirEvent*)> const& callback)
 {
-    auto receiver = std::make_shared<mircva::InputReceiver>(fd, callback, report);
-    return std::make_shared<md::SimpleDispatchThread>(receiver);
+    return std::make_shared<mircva::InputReceiver>(fd, callback, report);
 }
 
 std::shared_ptr<mircv::InputPlatform> mircv::InputPlatform::create()

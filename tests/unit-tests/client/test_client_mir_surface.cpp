@@ -39,6 +39,7 @@
 #include "mir_test/pipe.h"
 #include "mir_test/signal.h"
 #include "mir_test_doubles/stub_client_buffer.h"
+#include "mir_test/test_dispatchable.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -282,15 +283,15 @@ struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
 
 struct StubClientInputPlatform : public mircv::InputPlatform
 {
-    std::shared_ptr<mir::dispatch::SimpleDispatchThread> create_input_thread(int /* fd */, std::function<void(MirEvent*)> const& /* callback */)
+    std::shared_ptr<mir::dispatch::Dispatchable> create_input_dispatcher(int /* fd */, std::function<void(MirEvent*)> const& /* callback */)
     {
-        return std::shared_ptr<mir::dispatch::SimpleDispatchThread>();
+        return std::shared_ptr<mir::dispatch::Dispatchable>();
     }
 };
 
 struct MockClientInputPlatform : public mircv::InputPlatform
 {
-    MOCK_METHOD2(create_input_thread, std::shared_ptr<mir::dispatch::SimpleDispatchThread>(int, std::function<void(MirEvent*)> const&));
+    MOCK_METHOD2(create_input_dispatcher, std::shared_ptr<mir::dispatch::Dispatchable>(int, std::function<void(MirEvent*)> const&));
 };
 
 class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
@@ -555,53 +556,18 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation)
 }
 
 // TODO: input fd is not checked in the test
-TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_fd_when_delegate_specified)
+TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_dispatcher_when_delegate_specified)
 {
     using namespace ::testing;
 
-    struct RecordingDispatchable : public mir::dispatch::Dispatchable
-    {
-        RecordingDispatchable()
-            : watch_fd_read_count{0}
-        {
-            char dummy{0};
-            if (::write(fd_source.write_fd(), &dummy, sizeof(dummy)) != sizeof(dummy))
-            {
-                BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                         std::system_category(),
-                                                         "Failed to write to pipe"}));
-            }
-        }
+    auto dispatched = std::make_shared<mt::Signal>();
 
-        mir::Fd watch_fd() const override
-        {
-            ++watch_fd_read_count;
-            return fd_source.read_fd();
-        }
-
-        bool dispatch(mir::dispatch::FdEvents) override
-        {
-            dispatched.raise();
-            return true;
-        }
-
-        mir::dispatch::FdEvents relevant_events() const override
-        {
-            return mir::dispatch::FdEvent::readable;
-        }
-
-        mt::Signal dispatched;
-        mutable std::atomic<int> watch_fd_read_count;
-        mt::Pipe fd_source;
-    };
-
-    auto mock_input_receiver = std::make_shared<RecordingDispatchable>();
+    auto mock_input_dispatcher = std::make_shared<mt::TestDispatchable>([dispatched]() { dispatched->raise(); });
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
-    auto mock_input_thread = std::make_shared<mir::dispatch::SimpleDispatchThread>(mock_input_receiver);
     MirEventDelegate delegate = {null_event_callback, nullptr};
 
-    EXPECT_CALL(*mock_input_platform, create_input_thread(_, _)).Times(1)
-        .WillOnce(Return(mock_input_thread));
+    EXPECT_CALL(*mock_input_platform, create_input_dispatcher(_, _)).Times(1)
+        .WillOnce(Return(mock_input_dispatcher));
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
         stub_buffer_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
@@ -609,17 +575,46 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_fd_when_delegate_sp
     wait_handle->wait_for_all();
     surface.set_event_handler(&delegate);
 
-    EXPECT_THAT(mock_input_receiver->watch_fd_read_count, Ge(1));
-    EXPECT_TRUE(mock_input_receiver->dispatched.wait_for(std::chrono::seconds{5}));
+    mock_input_dispatcher->trigger();
+
+    EXPECT_TRUE(dispatched->wait_for(std::chrono::seconds{5}));
 }
 
-TEST_F(MirClientSurfaceTest, does_not_create_input_thread_when_no_delegate_specified)
+TEST_F(MirClientSurfaceTest, replacing_delegate_with_nullptr_prevents_further_dispatch)
+{
+    using namespace ::testing;
+
+    auto dispatched = std::make_shared<mt::Signal>();
+
+    auto mock_input_dispatcher = std::make_shared<mt::TestDispatchable>([dispatched]() { dispatched->raise(); });
+    auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
+    MirEventDelegate delegate = {null_event_callback, nullptr};
+
+    EXPECT_CALL(*mock_input_platform, create_input_dispatcher(_, _)).Times(1)
+        .WillOnce(Return(mock_input_dispatcher));
+
+    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+        stub_buffer_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
+    auto wait_handle = surface.get_create_wait_handle();
+    wait_handle->wait_for_all();
+    surface.set_event_handler(&delegate);
+
+    // Should now not get dispatched.
+    surface.set_event_handler(nullptr);
+
+    mock_input_dispatcher->trigger();
+
+    EXPECT_FALSE(dispatched->wait_for(std::chrono::seconds{2}));
+}
+
+
+TEST_F(MirClientSurfaceTest, does_not_create_input_dispatcher_when_no_delegate_specified)
 {
     using namespace ::testing;
 
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
 
-    EXPECT_CALL(*mock_input_platform, create_input_thread(_, _)).Times(0);
+    EXPECT_CALL(*mock_input_platform, create_input_dispatcher(_, _)).Times(0);
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
         stub_buffer_factory, mock_input_platform, spec, &null_surface_callback, nullptr};

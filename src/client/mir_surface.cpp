@@ -37,6 +37,7 @@ namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
+namespace md = mir::dispatch;
 
 #define SERIALIZE_OPTION_IF_SET(option, message) \
     if (option.is_set()) \
@@ -562,10 +563,7 @@ void MirSurface::set_event_handler(MirEventDelegate const* delegate)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (input_thread)
-    {
-        input_thread.reset();
-    }
+    input_thread.reset();
 
     if (delegate)
     {
@@ -575,8 +573,9 @@ void MirSurface::set_event_handler(MirEventDelegate const* delegate)
 
         if (surface.fd_size() > 0 && handle_event_callback)
         {
-            input_thread = input_platform->create_input_thread(surface.fd(0),
-                                                        handle_event_callback);
+            auto input_dispatcher = input_platform->create_input_dispatcher(surface.fd(0),
+                                                                            handle_event_callback);
+            input_thread = std::make_shared<md::SimpleDispatchThread>(input_dispatcher);
         }
     }
 }

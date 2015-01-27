@@ -28,7 +28,7 @@ namespace mir
 {
 namespace dispatch
 {
-class SimpleDispatchThread;
+class Dispatchable;
 }
 namespace input
 {
@@ -43,7 +43,7 @@ class InputPlatform
 public:
     virtual ~InputPlatform() {};
 
-    virtual std::shared_ptr<dispatch::SimpleDispatchThread> create_input_thread(int fd, std::function<void(MirEvent *)> const& callback) = 0;
+    virtual std::shared_ptr<dispatch::Dispatchable> create_input_dispatcher(int fd, std::function<void(MirEvent*)> const& callback) = 0;
 
     static std::shared_ptr<InputPlatform> create();
     static std::shared_ptr<InputPlatform> create(std::shared_ptr<InputReceiverReport> const& report);
