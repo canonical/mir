@@ -15,6 +15,9 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
+
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+
 #include "event_filter_dispatcher_policy.h"
 #include "mir/input/android/android_input_lexicon.h"
 

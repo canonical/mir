@@ -44,11 +44,6 @@ struct MockSurfaceAllocator : public ms::SurfaceFactory
         ms::SurfaceCreationParameters const&));
 };
 
-struct MockPlacementStrategy : public ms::PlacementStrategy
-{
-    MOCK_METHOD2(place, ms::SurfaceCreationParameters(ms::Session const&, ms::SurfaceCreationParameters const&));
-};
-
 struct MockSurfaceStackModel : public ms::SurfaceStackModel
 {
     MOCK_METHOD3(add_surface, void(
@@ -61,7 +56,6 @@ struct MockSurfaceStackModel : public ms::SurfaceStackModel
 
 struct SurfaceController : testing::Test
 {
-    MockPlacementStrategy placement_strategy;
     mtd::MockSurface mock_surface;
     std::shared_ptr<ms::Surface> const expect_surface = mt::fake_shared(mock_surface);
     testing::NiceMock<MockSurfaceAllocator> mock_surface_allocator;
@@ -72,7 +66,6 @@ struct SurfaceController : testing::Test
     {
         using namespace ::testing;
         ON_CALL(mock_surface_allocator, create_surface(_)).WillByDefault(Return(expect_surface));
-        ON_CALL(placement_strategy, place(_, _)).WillByDefault(ReturnArg<1>());
     }
 };
 }
@@ -83,11 +76,9 @@ TEST_F(SurfaceController, add_and_remove_surface)
 
     ms::SurfaceController controller(
         mt::fake_shared(mock_surface_allocator),
-        mt::fake_shared(placement_strategy),
         mt::fake_shared(model));
 
     InSequence seq;
-    EXPECT_CALL(placement_strategy, place(_, _)).Times(1);
     EXPECT_CALL(mock_surface_allocator, create_surface(_)).Times(1).WillOnce(Return(expect_surface));
     EXPECT_CALL(model, add_surface(_,_,_)).Times(1);
     EXPECT_CALL(model, remove_surface(_)).Times(1);
@@ -104,7 +95,6 @@ TEST_F(SurfaceController, raise_surface)
 
     ms::SurfaceController controller(
         mt::fake_shared(mock_surface_allocator),
-        mt::fake_shared(placement_strategy),
         mt::fake_shared(model));
 
     EXPECT_CALL(model, raise(_)).Times(1);
@@ -112,42 +102,3 @@ TEST_F(SurfaceController, raise_surface)
     controller.raise(std::weak_ptr<ms::Surface>());
 }
 
-TEST_F(SurfaceController, offers_create_surface_parameters_to_placement_strategy)
-{
-    using namespace ::testing;
-    EXPECT_CALL(mock_surface, add_observer(_)).Times(AnyNumber());
-    EXPECT_CALL(model, add_surface(_,_,_)).Times(AnyNumber());
-
-    ms::SurfaceController controller(
-        mt::fake_shared(mock_surface_allocator),
-        mt::fake_shared(placement_strategy),
-        mt::fake_shared(model));
-
-    auto params = ms::a_surface();
-    EXPECT_CALL(placement_strategy, place(Ref(session), Ref(params))).Times(1)
-        .WillOnce(Return(ms::a_surface()));
-
-    controller.add_surface(params, &session);
-}
-
-TEST_F(SurfaceController, forwards_create_surface_parameters_from_placement_strategy_to_underlying_factory)
-{
-    using namespace ::testing;
-    EXPECT_CALL(mock_surface, add_observer(_)).Times(AnyNumber());
-    EXPECT_CALL(model, add_surface(_,_,_)).Times(AnyNumber());
-
-    ms::SurfaceController controller(
-        mt::fake_shared(mock_surface_allocator),
-        mt::fake_shared(placement_strategy),
-        mt::fake_shared(model));
-
-    auto params = ms::a_surface();
-    auto placed_params = params;
-    placed_params.size.width = geom::Width{100};
-
-    EXPECT_CALL(placement_strategy, place(_, Ref(params))).Times(1)
-        .WillOnce(Return(placed_params));
-    EXPECT_CALL(mock_surface_allocator, create_surface(placed_params));
-
-    controller.add_surface(params, &session);
-}

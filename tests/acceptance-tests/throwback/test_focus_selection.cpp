@@ -18,19 +18,18 @@
 
 #include "clients.h"
 
-#include "src/server/scene/session_container.h"
-#include "src/server/scene/session_manager.h"
+#include "mir/shell/session_coordinator_wrapper.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/input_targeter.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/mock_input_targeter.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mt = mir::test;
@@ -38,39 +37,59 @@ namespace mtd = mt::doubles;
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 
+using namespace testing;
+
 namespace
 {
 MATCHER(NonNullSession, "")
 {
     return arg.operator bool();
 }
+
+struct MockSessionManager : msh::SessionCoordinatorWrapper
+{
+    explicit MockSessionManager(std::shared_ptr<ms::SessionCoordinator> const& wrapped) :
+        msh::SessionCoordinatorWrapper{wrapped}
+    {
+        ON_CALL(*this, set_focus_to(_)).
+            WillByDefault(Invoke(this, &MockSessionManager::unmocked_set_focus_to));
+
+        ON_CALL(*this, unset_focus()).
+            WillByDefault(Invoke(this, &MockSessionManager::unmocked_unset_focus));
+}
+
+    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<ms::Session> const& focus));
+    MOCK_METHOD0(unset_focus, void());
+
+private:
+    void unmocked_set_focus_to(std::shared_ptr<ms::Session> const& focus)
+    { msh::SessionCoordinatorWrapper::set_focus_to(focus); }
+
+    void unmocked_unset_focus()
+    { msh::SessionCoordinatorWrapper::unset_focus(); }
+};
 }
 
 TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<msh::FocusSetter>
-        the_shell_focus_setter() override
+        std::shared_ptr<ms::SessionCoordinator>
+        wrap_session_coordinator(
+            std::shared_ptr<ms::SessionCoordinator> const& wrapped) override
         {
-            return shell_focus_setter(
-            []
-            {
-                using namespace ::testing;
+            sm = std::make_shared<MockSessionManager>(wrapped);
 
-                auto focus_setter = std::make_shared<mtd::MockFocusSetter>();
-                {
-                    InSequence seq;
-                    // Once on application registration and once on surface creation
-                    EXPECT_CALL(*focus_setter, set_focus_to(NonNullSession())).Times(2);
-                    // Focus is cleared when the session is closed
-                    EXPECT_CALL(*focus_setter, set_focus_to(_)).Times(1);
-                }
-                // TODO: Counterexample ~racarr
+            InSequence seq;
+            // Once on application registration and once on surface creation
+            EXPECT_CALL(*sm, set_focus_to(NonNullSession())).Times(2);
+            // Focus is cleared when the session is closed
+            EXPECT_CALL(*sm, unset_focus()).Times(1);
 
-                return focus_setter;
-            });
+            return sm;
         }
+
+        std::shared_ptr<MockSessionManager> sm;
     } server_config;
 
     launch_server_process(server_config);

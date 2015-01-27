@@ -2,11 +2,11 @@
 # and the platform implementations.
 set(MIRPLATFORM_ABI 6)
 
-set(PLATFORM_DRIVER platform${MIRPLATFORM_ABI}driver)
-set(MIR_PLATFORM_DRIVER mir${PLATFORM_DRIVER})
-set(MIR_PLATFORM_DRIVER_BINARY lib${MIR_PLATFORM_DRIVER}.so
-    CACHE STRING "File name of Mir server platform drivers")
-add_definitions(-DMIR_PLATFORM_DRIVER_BINARY="${MIR_PLATFORM_DRIVER_BINARY}")
+# We need MIR_CLIENT_PLATFORM_PATH in both libmirclient and the platform
+# implementations
+set(MIR_CLIENT_PLATFORM_PATH
+  ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/mir/client-platform
+)
 
 # Add the platform implementations before exposing any private APIs
 add_subdirectory(platforms/)
@@ -41,3 +41,4 @@ set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
 set(MIR_COMMON_OBJECTS ${MIR_COMMON_OBJECTS} PARENT_SCOPE)
 set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)
 set(MIR_CLIENT_PLATFORM_PATH ${MIR_CLIENT_PLATFORM_PATH} PARENT_SCOPE)
+set(MIR_SERVER_PLATFORM_PATH ${MIR_SERVER_PLATFORM_PATH} PARENT_SCOPE)

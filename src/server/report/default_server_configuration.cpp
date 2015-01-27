@@ -117,3 +117,12 @@ auto mir::DefaultServerConfiguration::the_scene_report() -> std::shared_ptr<ms::
             return report_factory(options::scene_report_opt)->create_scene_report();
         });
 }
+
+auto mir::DefaultServerConfiguration::the_shared_library_prober_report() -> std::shared_ptr<SharedLibraryProberReport>
+{
+    return shared_library_prober_report(
+        [this]()->std::shared_ptr<SharedLibraryProberReport>
+        {
+            return report_factory(options::shared_library_prober_report_opt)->create_shared_library_prober_report();
+        });
+}
