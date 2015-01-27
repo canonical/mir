@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,7 +17,7 @@
  */
 
 #include "mir/shell/session_coordinator_wrapper.h"
-#include "mir/shell/surface_coordinator_wrapper.h"
+#include "mir/shell/shell_wrapper.h"
 
 #include "mir_test_framework/headless_test.h"
 
@@ -34,10 +34,10 @@ using namespace testing;
 
 namespace
 {
-struct MySurfaceCoordinator : msh::SurfaceCoordinatorWrapper
+struct MyShell : msh::ShellWrapper
 {
-    using msh::SurfaceCoordinatorWrapper::SurfaceCoordinatorWrapper;
-    MOCK_METHOD1(raise, void(std::weak_ptr<ms::Surface> const&));
+    using msh::ShellWrapper::ShellWrapper;
+    MOCK_METHOD1(handle_surface_created, void(std::shared_ptr<ms::Session> const&));
 };
 
 struct MySessionCoordinator : msh::SessionCoordinatorWrapper
@@ -51,10 +51,10 @@ struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
 {
     void SetUp() override
     {
-        server.wrap_surface_coordinator([]
-            (std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
+        server.wrap_shell([]
+            (std::shared_ptr<msh::Shell> const& wrapped)
             {
-                return std::make_shared<MySurfaceCoordinator>(wrapped);
+                return std::make_shared<MyShell>(wrapped);
             });
 
         server.wrap_session_coordinator([]
@@ -65,33 +65,33 @@ struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
 
         server.apply_settings();
 
-        surface_coordinator = server.the_surface_coordinator();
+        shell = server.the_shell();
         session_coordinator = server.the_session_coordinator();
     }
 
-    std::shared_ptr<ms::SurfaceCoordinator> surface_coordinator;
+    std::shared_ptr<msh::Shell> shell;
     std::shared_ptr<ms::SessionCoordinator> session_coordinator;
 };
 }
 
-TEST_F(ServerConfigurationWrapping, surface_coordinator_is_of_wrapper_type)
+TEST_F(ServerConfigurationWrapping, shell_is_of_wrapper_type)
 {
-    auto const my_surface_coordinator = std::dynamic_pointer_cast<MySurfaceCoordinator>(surface_coordinator);
+    auto const my_shell = std::dynamic_pointer_cast<MyShell>(shell);
 
-    EXPECT_THAT(my_surface_coordinator, Ne(nullptr));
+    EXPECT_THAT(my_shell, Ne(nullptr));
 }
 
-TEST_F(ServerConfigurationWrapping, can_override_surface_coordinator_methods)
+TEST_F(ServerConfigurationWrapping, can_override_shell_methods)
 {
-    auto const my_surface_coordinator = std::dynamic_pointer_cast<MySurfaceCoordinator>(surface_coordinator);
+    auto const my_shell = std::dynamic_pointer_cast<MyShell>(shell);
 
-    EXPECT_CALL(*my_surface_coordinator, raise(_)).Times(1);
-    surface_coordinator->raise({});
+    EXPECT_CALL(*my_shell, handle_surface_created(_)).Times(1);
+    shell->handle_surface_created({});
 }
 
-TEST_F(ServerConfigurationWrapping, returns_same_surface_coordinator_from_cache)
+TEST_F(ServerConfigurationWrapping, returns_same_shell_from_cache)
 {
-    ASSERT_THAT(server.the_surface_coordinator(), Eq(surface_coordinator));
+    ASSERT_THAT(server.the_shell(), Eq(shell));
 }
 
 TEST_F(ServerConfigurationWrapping, session_coordinator_is_of_wrapper_type)
