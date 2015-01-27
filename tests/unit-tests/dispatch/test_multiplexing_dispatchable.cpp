@@ -402,3 +402,30 @@ TEST(MultiplexingDispatchableTest, stress_test_threading)
         ASSERT_TRUE(headstone->wait_for(std::chrono::seconds{2}));
     }
 }
+
+TEST(MultiplexingDispatchableTest, removes_dispatchable_that_returns_false_from_dispatch)
+{
+    bool dispatched{false};
+    auto dispatchee = std::make_shared<mt::TestDispatchable>([&dispatched](md::FdEvents)
+    {
+        dispatched = true;
+        return false;
+    });
+    md::MultiplexingDispatchable dispatcher{dispatchee};
+
+    dispatchee->trigger();
+    dispatchee->trigger();
+
+    ASSERT_TRUE(mt::fd_is_readable(dispatcher.watch_fd()));
+    dispatcher.dispatch(md::FdEvent::readable);
+
+    EXPECT_TRUE(dispatched);
+
+    dispatched = false;
+    while (mt::fd_is_readable(dispatcher.watch_fd()))
+    {
+        dispatcher.dispatch(md::FdEvent::readable);
+    }
+
+    EXPECT_FALSE(dispatched);
+}

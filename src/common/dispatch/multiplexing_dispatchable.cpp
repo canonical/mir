@@ -222,7 +222,10 @@ bool md::MultiplexingDispatchable::dispatch(md::FdEvents events)
     {
         auto event_source = reinterpret_cast<std::pair<std::shared_ptr<Dispatchable>, bool>*>(event.data.ptr);
 
-        event_source->first->dispatch(epoll_to_fd_event(event));
+        if (!event_source->first->dispatch(epoll_to_fd_event(event)))
+        {
+            remove_watch(event_source->first);
+        }
 
         if (event_source->second)
         {
