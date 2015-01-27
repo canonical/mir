@@ -37,7 +37,7 @@ mircva::AndroidInputPlatform::~AndroidInputPlatform()
 std::shared_ptr<mircv::InputReceiverThread> mircva::AndroidInputPlatform::create_input_thread(
     int fd, std::function<void(MirEvent*)> const& callback)
 {
-    auto receiver = std::make_shared<mircva::InputReceiver>(fd, report);
+    auto receiver = std::make_shared<mircva::InputReceiver>(fd, callback, report);
     return std::make_shared<mircva::InputReceiverThread>(receiver, callback);
 }
 

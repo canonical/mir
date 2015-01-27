@@ -22,37 +22,98 @@
 #include "mir/input/input_receiver_report.h"
 #include "mir/input/android/android_input_lexicon.h"
 
+#include <boost/throw_exception.hpp>
+
 #include <androidfw/InputTransport.h>
-#include <utils/Looper.h>
+
+#include <sys/epoll.h>
+#include <sys/timerfd.h>
+#include <unistd.h>
+#include <system_error>
 
 namespace mircv = mir::input::receiver;
 namespace mircva = mircv::android;
+namespace md = mir::dispatch;
 
 namespace mia = mir::input::android;
 
 mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
+                                     std::function<void(MirEvent*)> const& event_handling_callback,
                                      std::shared_ptr<mircv::InputReceiverReport> const& report,
                                      AndroidClock clock)
   : input_channel(input_channel),
+    handler{event_handling_callback},
     report(report),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
-    looper(new droidinput::Looper(true)),
-    fd_added(false),
     xkb_mapper(std::make_shared<mircv::XKBMapper>()),
-    android_clock(clock)
+    android_clock(clock),
+    epoll_fd{mir::Fd{::epoll_create1(0)}}
 {
+    if (epoll_fd == mir::Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 "Failed to create epoll IO monitor"}));
+    }
+
+    timer_fd = mir::Fd{timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC)};
+    if (timer_fd == mir::Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 "Failed to create IO timer"}));
+    }
+
+    int pipefds[2];
+    if (pipe(pipefds) < 0)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 "Failed to create notification pipe for IO"}));
+    }
+    notify_receiver_fd = mir::Fd{pipefds[0]};
+    notify_sender_fd = mir::Fd{pipefds[1]};
+
+    epoll_event event;
+    memset(&event, 0, sizeof(event));
+
+    // We want readability or closure for the dispatchee.
+    event.events = EPOLLIN | EPOLLRDHUP;
+    event.data.u32 = WakeupReason::input;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, input_channel->getFd(), &event) < 0)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 "Failed to monitor input fd"}));
+    }
+
+    event.events = EPOLLIN;
+    event.data.u32 = WakeupReason::wakeup;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, notify_receiver_fd, &event) < 0)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                std::system_category(),
+                                                "Failed to monitor supplemental IO notify fd"}));
+    }
+
+    event.events = EPOLLIN;
+    event.data.u32 = WakeupReason::timer;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, timer_fd, &event) < 0)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                std::system_category(),
+                                                "Failed to monitor IO timer fd"}));
+    }
 }
 
 mircva::InputReceiver::InputReceiver(int fd,
+                                     std::function<void(MirEvent*)> const& event_handling_callback,
                                      std::shared_ptr<mircv::InputReceiverReport> const& report,
                                      AndroidClock clock)
-  : input_channel(new droidinput::InputChannel(droidinput::String8(""), fd)),
-    report(report),
-    input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
-    looper(new droidinput::Looper(true)),
-    fd_added(false),
-    xkb_mapper(std::make_shared<mircv::XKBMapper>()),
-    android_clock(clock)
+    : InputReceiver(new droidinput::InputChannel(droidinput::String8(""), fd),
+                    event_handling_callback,
+                    report,
+                    clock)
 {
 }
 
@@ -60,9 +121,61 @@ mircva::InputReceiver::~InputReceiver()
 {
 }
 
-int mircva::InputReceiver::fd() const
+mir::Fd mircva::InputReceiver::watch_fd() const
 {
-    return input_channel->getFd();
+    return epoll_fd;
+}
+
+bool mircva::InputReceiver::dispatch(md::FdEvents events)
+{
+    if (events & md::FdEvent::error)
+    {
+        return false;
+    }
+
+    epoll_event event;
+
+    if (epoll_wait(epoll_fd, &event, 1, 0) < 0)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 "Failed to read IO events"}));
+    }
+    switch (event.data.u32)
+    {
+    case WakeupReason::wakeup:
+        char dummy;
+        if (read(notify_receiver_fd, &dummy, sizeof(dummy)) != sizeof(dummy))
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                     std::system_category(),
+                                                     "Failed to consume notification"}));
+        }
+        if (!input_consumer->hasDeferredEvent())
+        {
+            // We've been woken up for some reason other than to deliver
+            // pending events. We've woken up now, so that's our job done.
+            return true;
+        }
+        break;
+    case WakeupReason::timer:
+        uint64_t count;
+        (void)read(timer_fd, &count, sizeof(count));
+        break;
+    case WakeupReason::input:
+        break;
+    }
+    MirEvent e;
+    if (try_next_event(e))
+    {
+        handler(&e);
+    }
+    return true;
+}
+
+md::FdEvents mircva::InputReceiver::relevant_events() const
+{
+    return md::FdEvent::readable;
 }
 
 namespace
@@ -113,9 +226,12 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
     nsecs_t const one_frame = 1000000000ULL / event_rate_hz;
     nsecs_t frame_time = (now / one_frame) * one_frame;
 
-    if (input_consumer->consume(&event_factory, true, frame_time,
-                                &event_sequence_id, &android_event)
-        == droidinput::OK)
+    auto result = input_consumer->consume(&event_factory,
+                                          true,
+                                          frame_time,
+                                          &event_sequence_id,
+                                          &android_event);
+    if (result == droidinput::OK)
     {
         mia::Lexicon::translate(android_event, ev);
 
@@ -125,50 +241,54 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
 
         report->received_event(ev);
 
-        return true;
     }
-   return false;
+    if (input_consumer->hasDeferredEvent())
+    {
+        // Ensure we get called again.
+        wake();
+    }
+    else if (input_consumer->hasPendingBatch())
+    {
+        /* TODO: Feed in vsync-ish events (or work out when consume() would
+         *       actually generate an event) rather than polling at 1000Hz
+         */
+        struct itimerspec const msec_delay = {
+            { 0, 0 },
+            { 0, 1000000 /* 10⁶ ns is 1ms */}
+        };
+        timerfd_settime(timer_fd, 0, &msec_delay, NULL);
+    }
+   return result == droidinput::OK;
 }
 
 // TODO: We use a droidinput::Looper here for polling functionality but it might be nice to integrate
 // with the existing client io_service ~racarr ~tvoss
 bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
 {
-    if (!fd_added)
+    epoll_event event;
+    auto result = epoll_wait(epoll_fd, &event, 1, timeout.count());
+
+    if (result < 0)
     {
-        // TODO: Why will this fail from the constructor? ~racarr
-        looper->addFd(fd(), fd(), ALOOPER_EVENT_INPUT, nullptr, nullptr);
-        fd_added = true;
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 "Failed to wait for IO event"}));
     }
 
-    auto reduced_timeout = timeout;
-    if (input_consumer->hasDeferredEvent())
+    if (result == 0 || (event.events & (EPOLLRDHUP | EPOLLERR | EPOLLHUP)))
     {
-        // consume() didn't finish last time. Retry it immediately.
-        reduced_timeout = std::chrono::milliseconds::zero();
-    }
-    else if (input_consumer->hasPendingBatch())
-    {
-        // When in constant motion we will usually "hasPendingBatch".
-        // But the batch won't get flushed until the next frame interval,
-        // so be sure to use a non-zero sleep time to avoid spinning the CPU
-        // for the whole interval...
-
-        // During tests with mocked clocks we may already have zero...
-        if (reduced_timeout != std::chrono::milliseconds::zero())
-            reduced_timeout = std::chrono::milliseconds(1);
-    }
-
-    auto result = looper->pollOnce(reduced_timeout.count());
-    if (result == ALOOPER_POLL_WAKE)
         return false;
-    if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
-       return false;
-
+    }
     return try_next_event(ev);
 }
 
 void mircva::InputReceiver::wake()
 {
-    looper->wake();
+    char dummy{0};
+    if (write(notify_sender_fd, &dummy, sizeof(dummy)) != sizeof(dummy))
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 "Failed to notify IO loop"}));
+    }
 }

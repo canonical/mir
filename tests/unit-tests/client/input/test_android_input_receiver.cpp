@@ -140,22 +140,16 @@ public:
     int server_fd, client_fd;
 
     static std::chrono::milliseconds const next_event_timeout;
+    std::function<void(MirEvent*)> dummy_handler;
 };
 
 std::chrono::milliseconds const AndroidInputReceiverSetup::next_event_timeout(1000);
 
 }
 
-TEST_F(AndroidInputReceiverSetup, receiever_takes_channel_fd)
-{
-    mircva::InputReceiver receiver(client_fd, std::make_shared<mircv::NullInputReceiverReport>());
-
-    EXPECT_EQ(client_fd, receiver.fd());
-}
-
 TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
 {
-    mircva::InputReceiver receiver(client_fd, std::make_shared<mircv::NullInputReceiverReport>());
+    mircva::InputReceiver receiver(client_fd, dummy_handler, std::make_shared<mircv::NullInputReceiverReport>());
     TestingInputProducer producer(server_fd);
 
     producer.produce_a_key_event();
@@ -171,7 +165,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
 
 TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
 {
-    mircva::InputReceiver receiver(client_fd, std::make_shared<mircv::NullInputReceiverReport>());
+    mircva::InputReceiver receiver(client_fd, dummy_handler, std::make_shared<mircv::NullInputReceiverReport>());
     TestingInputProducer producer(server_fd);
 
     producer.produce_a_key_event();
@@ -187,7 +181,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
 
 TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
 {
-    mircva::InputReceiver receiver(client_fd, std::make_shared<mircv::NullInputReceiverReport>());
+    mircva::InputReceiver receiver(client_fd, dummy_handler, std::make_shared<mircv::NullInputReceiverReport>());
     TestingInputProducer producer(server_fd);
 
     // Produce 3 motion events before client handles any.
@@ -212,7 +206,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     nsecs_t t = 0;
 
     mircva::InputReceiver receiver(
-        client_fd, std::make_shared<mircv::NullInputReceiverReport>(),
+        client_fd, dummy_handler, std::make_shared<mircv::NullInputReceiverReport>(),
         [&t](int) { return t; }
         );
     TestingInputProducer producer(server_fd);
@@ -259,7 +253,7 @@ TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
     nsecs_t t = 0;
 
     mircva::InputReceiver receiver(
-        client_fd, std::make_shared<mircv::NullInputReceiverReport>(),
+        client_fd, dummy_handler, std::make_shared<mircv::NullInputReceiverReport>(),
         [&t](int) { return t; }
         );
     TestingInputProducer producer(server_fd);
@@ -307,7 +301,7 @@ TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)
     nsecs_t t = 0;
 
     mircva::InputReceiver receiver(
-        client_fd, std::make_shared<mircv::NullInputReceiverReport>(),
+        client_fd, dummy_handler, std::make_shared<mircv::NullInputReceiverReport>(),
         [&t](int) { return t; }
         );
     TestingInputProducer producer(server_fd);

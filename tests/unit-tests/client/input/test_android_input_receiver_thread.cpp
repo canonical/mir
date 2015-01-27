@@ -23,6 +23,8 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include "mir_test/pipe.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -34,6 +36,7 @@
 
 namespace mircv = mir::input::receiver;
 namespace mircva = mircv::android;
+namespace mt = mir::test;
 
 namespace
 {
@@ -46,7 +49,7 @@ struct MockEventHandler
 struct MockInputReceiver : public mircva::InputReceiver
 {
     MockInputReceiver(int fd)
-      : InputReceiver(fd, std::make_shared<mircv::NullInputReceiverReport>())
+      : InputReceiver(fd, std::function<void(MirEvent*)>(), std::make_shared<mircv::NullInputReceiverReport>())
     {
     }
     MOCK_METHOD1(next_event, bool(MirEvent &));
@@ -56,15 +59,10 @@ struct AndroidInputReceiverThreadSetup : public testing::Test
 {
     AndroidInputReceiverThreadSetup()
     {
-        test_receiver_fd = open("/dev/null", O_APPEND);
-        input_receiver = std::make_shared<MockInputReceiver>(test_receiver_fd);
-    }
-    virtual ~AndroidInputReceiverThreadSetup()
-    {
-        close(test_receiver_fd);
+        input_receiver = std::make_shared<MockInputReceiver>(dummy_pipe.read_fd());
     }
 
-    int test_receiver_fd;
+    mt::Pipe dummy_pipe;
     std::shared_ptr<MockInputReceiver> input_receiver;
 };
 

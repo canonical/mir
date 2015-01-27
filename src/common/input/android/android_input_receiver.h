@@ -21,11 +21,14 @@
 
 #include "mir_toolkit/event.h"
 
+#include "mir/dispatch/dispatchable.h"
+
 #include <utils/StrongPointer.h>
 #include <androidfw/Input.h>
 
 #include <memory>
 #include <chrono>
+#include <functional>
 
 namespace droidinput = android;
 
@@ -49,20 +52,25 @@ namespace android
 {
 
 /// Synchronously receives input events in a blocking manner
-class InputReceiver
+class InputReceiver : public dispatch::Dispatchable
 {
 public:
     typedef std::function<nsecs_t(int)> AndroidClock;
 
     InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
+                  std::function<void(MirEvent*)> const& event_handling_callback,
                   std::shared_ptr<InputReceiverReport> const& report,
                   AndroidClock clock = systemTime);
     InputReceiver(int fd,
+                  std::function<void(MirEvent*)> const& event_handling_callback,
                   std::shared_ptr<InputReceiverReport> const& report,
                   AndroidClock clock = systemTime);
 
     virtual ~InputReceiver();
-    int fd() const;
+
+    Fd watch_fd() const override;
+    bool dispatch(dispatch::FdEvents events) override;
+    dispatch::FdEvents relevant_events() const override;
 
     /// Synchronously receive an event with millisecond timeout. A negative timeout value
     /// is used to request indefinite polling.
@@ -77,20 +85,37 @@ protected:
     InputReceiver& operator=(const InputReceiver&) = delete;
 
 private:
+    enum WakeupReason : uint32_t
+    {
+        input,
+        wakeup,
+        timer
+    };
+
+    Fd notify_receiver_fd;
+    Fd notify_sender_fd;
+    Fd timer_fd;
+
     droidinput::sp<droidinput::InputChannel> input_channel;
+    std::function<void(MirEvent*)> const handler;
     std::shared_ptr<InputReceiverReport> const report;
 
     std::shared_ptr<droidinput::InputConsumer> input_consumer;
     droidinput::PreallocatedInputEventFactory event_factory;
-    droidinput::sp<droidinput::Looper> looper;
-
-    bool fd_added;
 
     std::shared_ptr<XKBMapper> xkb_mapper;
 
     AndroidClock const android_clock;
 
     bool try_next_event(MirEvent &ev);
+
+    /* Keep this last so that:
+     * a) It's constructed last, and so we're guaranteed that if creation fails
+     *    errno hasn't been overwritten by a subsequent call, and
+     * b) It's destroyed first, so it won't be spuriously woken by the ::close-ing of
+     *    any fd it's monitoring.
+     */
+    Fd epoll_fd;
 };
 
 }
