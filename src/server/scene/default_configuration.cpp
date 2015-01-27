@@ -86,18 +86,10 @@ mir::DefaultServerConfiguration::the_surface_coordinator()
     return surface_coordinator(
         [this]()
         {
-            return wrap_surface_coordinator(
-                std::make_shared<ms::SurfaceController>(
+            return std::make_shared<ms::SurfaceController>(
                     the_surface_factory(),
-                    the_surface_stack_model()));
+                    the_surface_stack_model());
         });
-}
-
-std::shared_ptr<ms::SurfaceCoordinator>
-mir::DefaultServerConfiguration::wrap_surface_coordinator(
-    std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
-{
-    return wrapped;
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>

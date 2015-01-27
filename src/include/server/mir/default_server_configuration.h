@@ -344,9 +344,6 @@ protected:
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> wrap_display_configuration_policy(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const& wrapped);
 
-    virtual std::shared_ptr<scene::SurfaceCoordinator>  wrap_surface_coordinator(
-        std::shared_ptr<scene::SurfaceCoordinator> const& wrapped);
-
     virtual std::shared_ptr<scene::SessionCoordinator>  wrap_session_coordinator(
         std::shared_ptr<scene::SessionCoordinator> const& wrapped);
 

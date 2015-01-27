@@ -8,7 +8,6 @@ set(
   default_shell.cpp
   session_coordinator_wrapper.cpp
   shell_wrapper.cpp
-  surface_coordinator_wrapper.cpp
 )
 
 add_library(

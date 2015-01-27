@@ -262,9 +262,6 @@ public:
 
     /// Sets a wrapper functor for creating the shell.
     void wrap_shell(Wrapper<shell::Shell> const& wrapper);
-
-    /// Sets a wrapper functor for creating the surface coordinator.
-    void wrap_surface_coordinator(Wrapper<scene::SurfaceCoordinator> const& wrapper);
 /** @} */
 
 /** @name Getting access to Mir subsystems
