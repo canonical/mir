@@ -30,6 +30,10 @@ set(MIR_VERSION_MAJOR 0)
 set(MIR_VERSION_MINOR 11) # This should change at least with every MIRSERVER_ABI
 set(MIR_VERSION_PATCH 0)
 
+add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
+add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})
+add_definitions(-DMIR_VERSION_MICRO=${MIR_VERSION_PATCH})
+
 set(MIR_VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -115,6 +119,8 @@ set(CMAKE_EXE_LINKER_FLAGS_THREADSANITIZER "-pie")
 # Define LOG_NDEBUG=1 to ensure Android ALOGV calls are not compiled in to
 # consume CPU time...
 add_definitions(-DLOG_NDEBUG=1)
+
+add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
 
 enable_testing()
 

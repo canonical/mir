@@ -1,3 +1,19 @@
+# This needs to change whenever the ABI between the platform
+# modules and the server changes in an incompatible way.
+# This ABI is much smaller than the full libmirplatform ABI.
+#
+# TODO: Add an extra driver-ABI check target.
+set(MIR_SERVER_GRAPHICS_PLATFORM_VERSION "MIR_GRAPHICS_PLATFORM_1")
+set(MIR_SERVER_GRAPHICS_PLATFORM_VERSION ${MIR_SERVER_GRAPHICS_PLATFORM_VERSION} PARENT_SCOPE)
+
+set(MIR_SERVER_PLATFORM_PATH
+  ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/mir/server-platform
+)
+set(MIR_SERVER_PLATFORM_PATH
+  ${MIR_SERVER_PLATFORM_PATH}
+  PARENT_SCOPE
+)
+
 set(server_common_include_dirs
   ${PROJECT_SOURCE_DIR}/include/platform
 )
