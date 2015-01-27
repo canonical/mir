@@ -64,14 +64,13 @@ struct DisplayBuffer : public ::testing::Test
         std::make_shared<testing::NiceMock<mtd::MockDisplayDevice>>()};
     geom::Size const display_size{433,232};
     double const refresh_rate{60.0};
-    std::unique_ptr<mga::LayerList> list{
-        new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})};
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle{
         std::make_shared<testing::NiceMock<mtd::MockFBBundle>>(
             display_size, refresh_rate, mir_pixel_format_abgr_8888)};
     MirOrientation orientation{mir_orientation_normal};
     mga::DisplayBuffer db{
-        std::move(list),
+        std::unique_ptr<mga::LayerList>(
+            new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
         mock_fb_bundle,
         mock_display_device,
         native_window,
@@ -79,14 +78,13 @@ struct DisplayBuffer : public ::testing::Test
         stub_program_factory,
         orientation,
         mga::OverlayOptimization::enabled};
-
 };
 }
 
 TEST_F(DisplayBuffer, can_post_update_with_gl_only)
 {
     using namespace testing;
-    list.reset(new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
+    std::unique_ptr<mga::LayerList> list(new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
     EXPECT_CALL(*mock_display_device, commit(
         mga::DisplayName::primary, Ref(*list), _, _));
 
