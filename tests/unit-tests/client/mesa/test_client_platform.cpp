@@ -20,7 +20,7 @@
 #include "mir/shared_library.h"
 #include "src/platforms/mesa/client/mesa_native_display_container.h"
 #include "mir_test_framework/client_platform_factory.h"
-#include "mir_test_doubles/mock_client_surface.h"
+#include "mir_test_doubles/mock_egl_native_surface.h"
 
 #include "mir_toolkit/mesa/native_display.h"
 

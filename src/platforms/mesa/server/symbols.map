@@ -1,0 +1,16 @@
+MIR_GRAPHICS_PLATFORM_1 {
+  global:
+    add_graphics_platform_options;
+    create_host_platform;
+    create_guest_platform;
+    probe_graphics_platform;
+    describe_graphics_module;
+  local:
+    *;
+};
+
+# Mesa EGL platform requires this, because madness.
+MIR_MESA_EGL_INTEGRATION {
+  global:
+    mir_server_mesa_egl_native_display_is_valid;
+};

@@ -14,7 +14,7 @@ b042ff8f542759fb82ad4cf1f4bab4aa2824e7f0  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 f4d39e9893ce6308bddd83a49b90f0051f565323  include/common/mir_toolkit/event.h
 2507f2929415aa423f9551d3c595c439fe1c6efd  include/common/mir_toolkit/events/event_deprecated.h
-cb2358a701db2b9c8d9ba1c877f29f834af259a7  include/common/mir_toolkit/events/event.h
+75f81e8250bd76c5281b8792aeadf5319eb2f169  include/common/mir_toolkit/events/event.h
 003b178a1d2418e03a13c54ca02353fa24beb1d6  include/common/mir_toolkit/events/input/input_event.h
 7748a12138474e9be218eeb8f14b372af0fcec7e  include/common/mir_toolkit/events/input/key_input_event.h
 489e8bae7c3e949ac449b09bd3bf554dae0e8986  include/common/mir_toolkit/events/input/pointer_input_event.h
@@ -23,6 +23,5 @@ de7c23453e6d897296f32e49d9ba952a1baa0200  include/common/mir_toolkit/events/inpu
 f623dcf3c2ed134c1be20106eb54bcccc84af462  include/common/mir_toolkit/events/prompt_session_event.h
 633893b0def2b71f969872908a5b3529bc2fbf10  include/common/mir_toolkit/events/resize_event.h
 5944dc0556223cc54b45b32c8aa70b8c60ee0337  include/common/mir_toolkit/events/surface_event.h
-4975998aa1056ed0d39dcc538127453e516ad8e9  include/common/mir_toolkit/mesa/native_display.h
 101017c17714a57db57d79b7b5e7df40a3568236  include/common/mir_toolkit/mir_native_buffer.h
 4ce105a3a18241f5d33db31939ca15256f353c37  include/common/mir_toolkit/mir_version_number.h

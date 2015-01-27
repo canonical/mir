@@ -18,7 +18,7 @@
 
 #include "src/platforms/mesa/client/native_surface.h"
 #include "mir/client_buffer.h"
-#include "mir_test_doubles/mock_client_surface.h"
+#include "mir_test_doubles/mock_egl_native_surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -74,7 +74,7 @@ public:
     }
 
     MirSurfaceParameters surf_params;
-    testing::NiceMock<mtd::MockClientSurface> mock_surface;
+    testing::NiceMock<mtd::MockEGLNativeSurface> mock_surface;
     mclg::NativeSurface native_surface{mock_surface};
 };
 
