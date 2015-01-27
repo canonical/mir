@@ -26,26 +26,51 @@
 
 namespace mir
 {
-namespace scene { class SessionCoordinator; class Surface; class SurfaceCoordinator; }
+namespace scene
+{
+class PromptSessionManager;
+class SessionCoordinator;
+class Surface;
+class SurfaceCoordinator;
+class PlacementStrategy;
+}
 
 namespace shell
 {
 class InputTargeter;
 
-class DefaultShell : public frontend::Shell, public FocusController
+/** Default shell implementation.
+ * To customise derive from this class and override the methods you want to change
+ */
+class DefaultShell :
+    public virtual frontend::Shell,
+// TODO public virtual scene::SurfaceConfigurator,
+// TODO public virtual graphics::DisplayConfigurationPolicy,
+    public virtual FocusController
 {
 public:
     DefaultShell(
         std::shared_ptr<InputTargeter> const& input_targeter,
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
+        std::shared_ptr<scene::PlacementStrategy> const& placement_strategy);
 
+/** @name these come from FocusController
+ * I think the FocusController interface is unnecessary as:
+ *   1. the functions are only meaningful in the context of implementing a Shell
+ *   2. the implementation of these functions is Shell behaviour
+ * Simply providing them as part of a public ShellLibrary is probably adequate.
+ *  @{ */
     void focus_next() override;
 
     std::weak_ptr<scene::Session> focussed_application() const override;
 
     void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
+/** @} */
 
+/** @name these come from frontend::Shell
+ *  @{ */
     virtual std::shared_ptr<frontend::Session> open_session(
         pid_t client_pid,
         std::string const& name,
@@ -79,16 +104,19 @@ public:
         std::shared_ptr<frontend::Session> const& session,
         frontend::SurfaceId surface_id,
         MirSurfaceAttrib attrib) override;
+/** @} */
 
 private:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
+    std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
+    std::shared_ptr<scene::PlacementStrategy> const placement_strategy;  // TODO doesn't need to be a strategy
 
-    std::mutex surface_focus_lock;
-    std::weak_ptr<scene::Surface> currently_focused_surface;
+    std::mutex mutable focus_surface_mutex;
+    std::weak_ptr<scene::Surface> focus_surface;
 
-    std::mutex mutex;
+    std::mutex mutable focus_application_mutex;
     std::weak_ptr<scene::Session> focus_application;
 
     void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Session> const& next_focus);
