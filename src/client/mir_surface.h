@@ -37,12 +37,15 @@
 
 namespace mir
 {
+namespace dispatch
+{
+class SimpleDispatchThread;
+}
 namespace input
 {
 namespace receiver
 {
 class InputPlatform;
-class InputReceiverThread;
 }
 }
 namespace client
@@ -180,7 +183,7 @@ private:
     MirOrientation orientation = mir_orientation_normal;
 
     std::function<void(MirEvent const*)> handle_event_callback;
-    std::shared_ptr<mir::input::receiver::InputReceiverThread> input_thread;
+    std::shared_ptr<mir::dispatch::SimpleDispatchThread> input_thread;
     std::shared_ptr<mir::client::PerfReport> perf_report;
 };
 

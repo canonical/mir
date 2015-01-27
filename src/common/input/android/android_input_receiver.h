@@ -73,14 +73,6 @@ public:
     bool dispatch(dispatch::FdEvents events) override;
     dispatch::FdEvents relevant_events() const override;
 
-    /// Synchronously receive an event with millisecond timeout. A negative timeout value
-    /// is used to request indefinite polling.
-    virtual bool next_event(std::chrono::milliseconds const& timeout, MirEvent &ev);
-    virtual bool next_event(MirEvent &ev) { return next_event(std::chrono::milliseconds(-1), ev); }
-
-    /// May be used from any thread to wake an InputReceiver blocked in next_event
-    virtual void wake();
-
 protected:
     InputReceiver(const InputReceiver&) = delete;
     InputReceiver& operator=(const InputReceiver&) = delete;
@@ -103,6 +95,7 @@ private:
     AndroidClock const android_clock;
 
     bool try_next_event(MirEvent &ev);
+    void wake();
 };
 
 }

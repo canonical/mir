@@ -22,7 +22,7 @@
 #include "mir_surface.h"
 #include "cursor_configuration.h"
 #include "mir_connection.h"
-#include "mir/input/input_receiver_thread.h"
+#include "mir/dispatch/simple_dispatch_thread.h"
 #include "mir/input/input_platform.h"
 #include "perf_report.h"
 #include "logging/perf_report.h"
@@ -164,11 +164,7 @@ MirSurface::~MirSurface()
 
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (input_thread)
-    {
-        input_thread->stop();
-        input_thread->join();
-    }
+    input_thread.reset();
 
     for (auto i = 0, end = surface.fd_size(); i != end; ++i)
         close(surface.fd(i));
@@ -568,9 +564,7 @@ void MirSurface::set_event_handler(MirEventDelegate const* delegate)
 
     if (input_thread)
     {
-        input_thread->stop();
-        input_thread->join();
-        input_thread = nullptr;
+        input_thread.reset();
     }
 
     if (delegate)
@@ -583,7 +577,6 @@ void MirSurface::set_event_handler(MirEventDelegate const* delegate)
         {
             input_thread = input_platform->create_input_thread(surface.fd(0),
                                                         handle_event_callback);
-            input_thread->start();
         }
     }
 }

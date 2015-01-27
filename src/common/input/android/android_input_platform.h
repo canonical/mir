@@ -23,6 +23,10 @@
 
 namespace mir
 {
+namespace dispatch
+{
+class SimpleDispatchThread;
+}
 namespace input
 {
 namespace receiver
@@ -37,7 +41,7 @@ public:
     AndroidInputPlatform(std::shared_ptr<InputReceiverReport> const& report);
     virtual ~AndroidInputPlatform();
 
-    std::shared_ptr<InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> const& callback);
+    std::shared_ptr<dispatch::SimpleDispatchThread> create_input_thread(int fd, std::function<void(MirEvent *)> const& callback);
 
 protected:
     AndroidInputPlatform(const AndroidInputPlatform&) = delete;

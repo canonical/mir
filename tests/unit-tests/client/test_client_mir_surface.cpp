@@ -26,22 +26,28 @@
 #include "src/client/mir_connection.h"
 #include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/null_rpc_report.h"
+#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/dispatchable.h"
 
 #include "mir/frontend/connector.h"
 #include "mir/input/input_platform.h"
-#include "mir/input/input_receiver_thread.h"
 
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test/pipe.h"
+#include "mir_test/signal.h"
 #include "mir_test_doubles/stub_client_buffer.h"
+
+#include <boost/throw_exception.hpp>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <cstring>
 #include <map>
+#include <atomic>
 
 #include <fcntl.h>
 
@@ -276,22 +282,15 @@ struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
 
 struct StubClientInputPlatform : public mircv::InputPlatform
 {
-    std::shared_ptr<mircv::InputReceiverThread> create_input_thread(int /* fd */, std::function<void(MirEvent*)> const& /* callback */)
+    std::shared_ptr<mir::dispatch::SimpleDispatchThread> create_input_thread(int /* fd */, std::function<void(MirEvent*)> const& /* callback */)
     {
-        return std::shared_ptr<mircv::InputReceiverThread>();
+        return std::shared_ptr<mir::dispatch::SimpleDispatchThread>();
     }
 };
 
 struct MockClientInputPlatform : public mircv::InputPlatform
 {
-    MOCK_METHOD2(create_input_thread, std::shared_ptr<mircv::InputReceiverThread>(int, std::function<void(MirEvent*)> const&));
-};
-
-struct MockInputReceiverThread : public mircv::InputReceiverThread
-{
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
-    MOCK_METHOD0(join, void());
+    MOCK_METHOD2(create_input_thread, std::shared_ptr<mir::dispatch::SimpleDispatchThread>(int, std::function<void(MirEvent*)> const&));
 };
 
 class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
@@ -560,20 +559,58 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_fd_when_delegate_sp
 {
     using namespace ::testing;
 
+    struct RecordingDispatchable : public mir::dispatch::Dispatchable
+    {
+        RecordingDispatchable()
+            : watch_fd_read_count{0}
+        {
+            char dummy{0};
+            if (::write(fd_source.write_fd(), &dummy, sizeof(dummy)) != sizeof(dummy))
+            {
+                BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                         std::system_category(),
+                                                         "Failed to write to pipe"}));
+            }
+        }
+
+        mir::Fd watch_fd() const override
+        {
+            ++watch_fd_read_count;
+            return fd_source.read_fd();
+        }
+
+        bool dispatch(mir::dispatch::FdEvents) override
+        {
+            dispatched.raise();
+            return true;
+        }
+
+        mir::dispatch::FdEvents relevant_events() const override
+        {
+            return mir::dispatch::FdEvent::readable;
+        }
+
+        mt::Signal dispatched;
+        mutable std::atomic<int> watch_fd_read_count;
+        mt::Pipe fd_source;
+    };
+
+    auto mock_input_receiver = std::make_shared<RecordingDispatchable>();
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
-    auto mock_input_thread = std::make_shared<NiceMock<MockInputReceiverThread>>();
+    auto mock_input_thread = std::make_shared<mir::dispatch::SimpleDispatchThread>(mock_input_receiver);
     MirEventDelegate delegate = {null_event_callback, nullptr};
 
     EXPECT_CALL(*mock_input_platform, create_input_thread(_, _)).Times(1)
         .WillOnce(Return(mock_input_thread));
-    EXPECT_CALL(*mock_input_thread, start()).Times(1);
-    EXPECT_CALL(*mock_input_thread, stop()).Times(1);
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
         stub_buffer_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
     auto wait_handle = surface.get_create_wait_handle();
     wait_handle->wait_for_all();
     surface.set_event_handler(&delegate);
+
+    EXPECT_THAT(mock_input_receiver->watch_fd_read_count, Ge(1));
+    EXPECT_TRUE(mock_input_receiver->dispatched.wait_for(std::chrono::seconds{5}));
 }
 
 TEST_F(MirClientSurfaceTest, does_not_create_input_thread_when_no_delegate_specified)
@@ -581,11 +618,8 @@ TEST_F(MirClientSurfaceTest, does_not_create_input_thread_when_no_delegate_speci
     using namespace ::testing;
 
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
-    auto mock_input_thread = std::make_shared<NiceMock<MockInputReceiverThread>>();
 
     EXPECT_CALL(*mock_input_platform, create_input_thread(_, _)).Times(0);
-    EXPECT_CALL(*mock_input_thread, start()).Times(0);
-    EXPECT_CALL(*mock_input_thread, stop()).Times(0);
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
         stub_buffer_factory, mock_input_platform, spec, &null_surface_callback, nullptr};

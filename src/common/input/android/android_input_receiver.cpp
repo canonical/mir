@@ -110,7 +110,6 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
             handler(&e);
         }
     });
-
 }
 
 mircva::InputReceiver::InputReceiver(int fd,
@@ -224,27 +223,6 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
         timerfd_settime(timer_fd, 0, &msec_delay, NULL);
     }
    return result == droidinput::OK;
-}
-
-// TODO: We use a droidinput::Looper here for polling functionality but it might be nice to integrate
-// with the existing client io_service ~racarr ~tvoss
-bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
-{
-    epoll_event event;
-    auto result = epoll_wait(dispatcher.watch_fd(), &event, 1, timeout.count());
-
-    if (result < 0)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                 std::system_category(),
-                                                 "Failed to wait for IO event"}));
-    }
-
-    if (result == 0 || (event.events & (EPOLLRDHUP | EPOLLERR | EPOLLHUP)))
-    {
-        return false;
-    }
-    return try_next_event(ev);
 }
 
 void mircva::InputReceiver::wake()
