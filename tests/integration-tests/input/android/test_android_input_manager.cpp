@@ -17,6 +17,8 @@
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/input/android/android_input_targeter.h"
 #include "src/server/input/android/android_input_registrar.h"
 #include "src/server/input/event_filter_chain.h"
@@ -253,6 +255,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : testing::Test, mtf::FakeEve
         int fds[2];
         // Closed by droidinput InputChannel on shutdown
         socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds);
+        close(fds[1]);
         return fds[0];
     }
 };

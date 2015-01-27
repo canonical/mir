@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir/scene/surface.h"

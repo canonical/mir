@@ -19,7 +19,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/options/program_option.h"
-#include "src/platforms/android/platform.h"
+#include "src/platforms/android/server/platform.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
@@ -28,6 +28,8 @@
 #include "mir_test_doubles/fd_matcher.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_framework/executable_path.h"
+#include "mir/shared_library.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
@@ -38,6 +40,9 @@ namespace mtd=mir::test::doubles;
 namespace mr=mir::report;
 namespace geom=mir::geometry;
 namespace mo=mir::options;
+namespace mtf=mir_test_framework;
+
+static const char probe_platform[] = "probe_graphics_platform";
 
 class PlatformBufferIPCPackaging : public ::testing::Test
 {
@@ -225,6 +230,27 @@ TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
         mr::null_display_report(),
         mga::OverlayOptimization::enabled);
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());
+}
+
+TEST(AndroidGraphicsPlatform, probe_returns_unsupported_when_no_hwaccess)
+{
+    using namespace testing;
+    NiceMock<mtd::HardwareAccessMock> hwaccess;
+
+    ON_CALL(hwaccess, hw_get_module(_,_)).WillByDefault(Return(-1));
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-android.so")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe());
+}
+
+TEST(AndroidGraphicsPlatform, probe_returns_best_when_hwaccess_succeeds)
+{
+    testing::NiceMock<mtd::HardwareAccessMock> hwaccess;
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-android.so")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    EXPECT_EQ(mg::PlatformPriority::best, probe());
 }
 
 TEST(NestedPlatformCreation, doesnt_access_display_hardware)

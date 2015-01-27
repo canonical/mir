@@ -16,63 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_framework/testing_client_configuration.h"
 #include "mir_test_framework/stub_client_connection_configuration.h"
-#include "mir_test_doubles/stub_client_buffer_factory.h"
-#include "mir/options/program_option.h"
 #include "src/client/default_connection_configuration.h"
-#include "mir/client_platform_factory.h"
-#include "mir/client_buffer_factory.h"
-#include "mir/client_buffer.h"
-#include "mir/client_platform.h"
-#include "src/client/mir_connection.h"
+#include "mir_test_framework/stub_client_platform_factory.h"
 
 namespace mcl = mir::client;
-namespace mtf=mir_test_framework;
-namespace geom = mir::geometry;
-namespace mtd = mir::test::doubles;
-
-namespace
-{
-struct StubClientPlatform : public mcl::ClientPlatform
-{
-    MirPlatformType platform_type() const
-    {
-        return mir_platform_type_gbm;
-    }
-
-    std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
-    {
-        return std::make_shared<mtd::StubClientBufferFactory>();
-    }
-
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::ClientSurface*)
-    {
-        auto fake_window = reinterpret_cast<EGLNativeWindowType>(0x12345678lu);
-        return std::make_shared<EGLNativeWindowType>(fake_window);
-    }
-
-    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
-    {
-        auto fake_display = reinterpret_cast<EGLNativeDisplayType>(0x12345678lu);
-        return std::make_shared<EGLNativeDisplayType>(fake_display);
-    }
-
-    MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer*) const
-    {
-        return nullptr;
-    }
-};
-
-struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
-{
-    std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext*)
-    {
-        return std::make_shared<StubClientPlatform>();
-    }
-};
-
-}
+namespace mtf = mir_test_framework;
 
 mtf::StubConnectionConfiguration::StubConnectionConfiguration(std::string const& socket_file)
     : DefaultConnectionConfiguration(socket_file)

@@ -45,6 +45,7 @@ namespace client
 {
 class ConnectionConfiguration;
 class ClientPlatformFactory;
+class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class LifecycleControl;
@@ -125,6 +126,7 @@ public:
                                    unsigned int formats_size, unsigned int& valid_formats);
 
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
+    std::shared_ptr<mir::client::ClientBufferStreamFactory> get_client_buffer_stream_factory();
 
     static bool is_valid(MirConnection *connection);
 
@@ -198,6 +200,8 @@ private:
     std::unique_ptr<mir::dispatch::SimpleDispatchThread> const eventloop;
 
     std::vector<int> extra_platform_data;
+    
+    std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
 
     struct SurfaceRelease;
 

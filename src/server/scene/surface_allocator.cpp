@@ -64,6 +64,7 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(SurfaceCreatio
     auto const surface = std::make_shared<BasicSurface>(
         params.name,
         actual_size,
+        params.parent,
         nonrectangular,
         buffer_stream,
         input_channel,

@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platforms/android/server_render_window.h"
+#include "src/platforms/android/server/server_render_window.h"
 
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_fence.h"

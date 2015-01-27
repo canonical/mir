@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "android_input_receiver.h"
 
 #include "mir/input/xkb_mapper.h"

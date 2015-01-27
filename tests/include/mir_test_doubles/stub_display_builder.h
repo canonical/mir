@@ -19,10 +19,10 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
-#include "src/platforms/android/framebuffer_bundle.h"
-#include "src/platforms/android/display_component_factory.h"
-#include "src/platforms/android/configurable_display_buffer.h"
-#include "src/platforms/android/hwc_configuration.h"
+#include "src/platforms/android/server/framebuffer_bundle.h"
+#include "src/platforms/android/server/display_component_factory.h"
+#include "src/platforms/android/server/configurable_display_buffer.h"
+#include "src/platforms/android/server/hwc_configuration.h"
 #include "mock_display_device.h"
 #include <gmock/gmock.h>
 
@@ -46,12 +46,16 @@ struct MockHwcConfiguration : public graphics::android::HwcConfiguration
 {
     MockHwcConfiguration()
     {
+        using namespace testing;
+        ON_CALL(*this, subscribe_to_config_changes(_)).WillByDefault(Return(nullptr));
         ON_CALL(*this, active_attribs_for(testing::_))
             .WillByDefault(testing::Return(graphics::android::DisplayAttribs{
                 {0,0},{0,0}, 0.0, true, mir_pixel_format_abgr_8888, 2}));
     }
     MOCK_METHOD2(power_mode, void(graphics::android::DisplayName, MirPowerMode));
     MOCK_METHOD1(active_attribs_for, graphics::android::DisplayAttribs(graphics::android::DisplayName));
+    MOCK_METHOD1(subscribe_to_config_changes,
+        graphics::android::ConfigChangeSubscription(std::function<void()> const&));
 };
 
 struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
