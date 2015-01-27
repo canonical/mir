@@ -119,7 +119,11 @@ bool md::MultiplexingDispatchable::dispatch(md::FdEvents events)
 
     if (result > 0)
     {
-        (*reinterpret_cast<std::shared_ptr<Dispatchable>*>(event.data.ptr))->dispatch(epoll_to_fd_event(event));
+        auto dispatchable = *reinterpret_cast<std::shared_ptr<Dispatchable>*>(event.data.ptr);
+        dispatchable->dispatch(epoll_to_fd_event(event));
+
+        event.events = dispatchable->relevant_events() | EPOLLONESHOT;
+        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, dispatchable->watch_fd(), &event);
     }
     return true;
 }
@@ -131,16 +135,21 @@ md::FdEvents md::MultiplexingDispatchable::relevant_events() const
 
 void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> const& dispatchee)
 {
-    dispatchee_holder.push_back(dispatchee);
+    decltype(dispatchee_holder)::iterator new_holder;
+    {
+        std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
+        new_holder = dispatchee_holder.emplace(dispatchee_holder.begin(), dispatchee);
+    }
 
     epoll_event e;
     ::memset(&e, 0, sizeof(e));
 
-    e.events = fd_event_to_epoll(dispatchee->relevant_events());
-    e.data.ptr = static_cast<void*>(&dispatchee_holder.back());
+    e.events = fd_event_to_epoll(dispatchee->relevant_events()) | EPOLLONESHOT;
+    e.data.ptr = static_cast<void*>(&(*new_holder));
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, dispatchee->watch_fd(), &e) < 0)
     {
-        dispatchee_holder.pop_back();
+        std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
+        dispatchee_holder.erase(new_holder);
         if (errno == EEXIST)
         {
             BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to monitor the same fd twice"}));
@@ -160,8 +169,11 @@ void md::MultiplexingDispatchable::remove_watch(std::shared_ptr<Dispatchable> co
                                                  "Failed to remove fd monitor"}));
     }
 
-    dispatchee_holder.remove_if ([&dispatchee](std::shared_ptr<Dispatchable> const& candidate)
     {
-        return candidate->watch_fd() == dispatchee->watch_fd();
-    });
+        std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
+        dispatchee_holder.remove_if ([&dispatchee](std::shared_ptr<Dispatchable> const& candidate)
+        {
+            return candidate->watch_fd() == dispatchee->watch_fd();
+        });
+    }
 }

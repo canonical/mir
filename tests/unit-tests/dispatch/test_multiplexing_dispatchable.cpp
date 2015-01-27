@@ -26,6 +26,7 @@
 #include <fcntl.h>
 
 #include <atomic>
+#include <thread>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -178,4 +179,46 @@ TEST(MultiplexingDispatchableTest, dispatcher_does_not_hold_reference_after_fail
     EXPECT_THROW(dispatcher.add_watch(dispatchable),
                  std::logic_error);
     EXPECT_THAT(dispatchable.use_count(), Eq(dispatchable_refcount));
+}
+
+TEST(MultiplexingDispatchableTest, individual_dispatchee_is_not_concurrent)
+{
+    using namespace testing;
+
+    std::atomic<int> canary{0};
+    std::atomic<int> total_count{0};
+
+    auto dispatchee = std::make_shared<mt::TestDispatchable>([&canary, &total_count]()
+    {
+        ++canary;
+        ++total_count;
+        EXPECT_THAT(canary, Eq(1));
+        std::this_thread::sleep_for(std::chrono::seconds{1});
+        --canary;
+    });
+
+    dispatchee->trigger();
+    dispatchee->trigger();
+
+    md::MultiplexingDispatchable dispatcher{dispatchee};
+
+    std::thread first{[&dispatcher]()
+        {
+            while (mt::fd_becomes_readable(dispatcher.watch_fd(), std::chrono::seconds{3}))
+            {
+                dispatcher.dispatch(md::FdEvent::readable);
+            }
+        }};
+    std::thread second{[&dispatcher]()
+        {
+            while (mt::fd_becomes_readable(dispatcher.watch_fd(), std::chrono::seconds{3}))
+            {
+                dispatcher.dispatch(md::FdEvent::readable);
+            }
+        }};
+
+    first.join();
+    second.join();
+
+    EXPECT_THAT(total_count, Eq(2));
 }

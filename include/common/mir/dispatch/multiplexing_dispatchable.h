@@ -24,6 +24,7 @@
 #include <functional>
 #include <initializer_list>
 #include <list>
+#include <mutex>
 #include <tuple>
 
 namespace mir
@@ -47,7 +48,7 @@ public:
     void add_watch(std::shared_ptr<Dispatchable> const& dispatchee);
     void remove_watch(std::shared_ptr<Dispatchable> const& dispatchee);
 private:
-    // Ensure the lifetimes of everything we watch.
+    std::mutex lifetime_mutex;
     std::list<std::shared_ptr<Dispatchable>> dispatchee_holder;
 
     Fd epoll_fd;
