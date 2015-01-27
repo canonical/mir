@@ -6,7 +6,6 @@ set(
   graphics_display_layout.cpp
   default_configuration.cpp
   default_shell.cpp
-  session_coordinator_wrapper.cpp
   shell_wrapper.cpp
 )
 

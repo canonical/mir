@@ -257,9 +257,6 @@ public:
     /// Sets a wrapper functor for creating the display configuration policy.
     void wrap_display_configuration_policy(Wrapper<graphics::DisplayConfigurationPolicy> const& wrapper);
 
-    /// Sets a wrapper functor for creating the session coordinator.
-    void wrap_session_coordinator(Wrapper<scene::SessionCoordinator> const& wrapper);
-
     /// Sets a wrapper functor for creating the shell.
     void wrap_shell(Wrapper<shell::Shell> const& wrapper);
 /** @} */
