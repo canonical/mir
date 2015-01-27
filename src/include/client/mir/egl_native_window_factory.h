@@ -27,7 +27,7 @@ namespace mir
 {
 namespace client
 {
-class ClientSurface;
+class EGLNativeSurface;
 
 class EGLNativeWindowFactory
 {
@@ -35,7 +35,7 @@ public:
     virtual ~EGLNativeWindowFactory() = default;
 
     virtual std::shared_ptr<EGLNativeWindowType>
-        create_egl_native_window(ClientSurface* surface) = 0;
+        create_egl_native_window(EGLNativeSurface* surface) = 0;
 
 protected:
     EGLNativeWindowFactory() = default;

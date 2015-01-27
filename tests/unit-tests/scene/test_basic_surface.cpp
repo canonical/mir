@@ -16,6 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/legacy_surface_change_notification.h"
 

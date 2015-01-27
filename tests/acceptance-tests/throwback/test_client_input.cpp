@@ -18,6 +18,8 @@
  *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+
 #include "mir/shell/shell_wrapper.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface.h"

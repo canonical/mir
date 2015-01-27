@@ -57,7 +57,7 @@ mga::HwcFbDevice::HwcFbDevice(
 
 void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
 {
-    layer_list.setup_fb(*context.last_rendered_buffer());
+    layer_list.setup_fb(context.last_rendered_buffer());
 
     if (auto display_list = layer_list.native_list())
     {

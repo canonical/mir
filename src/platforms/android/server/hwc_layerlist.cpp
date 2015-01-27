@@ -86,6 +86,7 @@ void mga::LayerList::update_list_mode(mg::RenderableList const& renderlist)
 
 void mga::LayerList::update_list(RenderableList const& renderlist)
 {
+    renderable_list = renderlist;
     update_list_mode(renderlist);
     size_t additional_layers = additional_layers_for(mode);
     size_t needed_size = renderlist.size() + additional_layers;
@@ -104,7 +105,7 @@ void mga::LayerList::update_list(RenderableList const& renderlist)
                 mga::LayerType::gl_rendered,
                 renderable->screen_position(),
                 renderable->shaped(), // TODO: support alpha() in future too
-                *renderable->buffer());
+                renderable->buffer());
             it++;
         }
     }
@@ -120,7 +121,7 @@ void mga::LayerList::update_list(RenderableList const& renderlist)
                     mga::LayerType::gl_rendered,
                     renderable->screen_position(),
                     renderable->shaped(), // TODO: support alpha() in future
-                    *renderable->buffer()), true);
+                    renderable->buffer()), true);
         }
 
         for(; i < needed_size; i++)
@@ -129,26 +130,11 @@ void mga::LayerList::update_list(RenderableList const& renderlist)
         }
         layers = std::move(new_layers);
     }
-
-    if (additional_layers == 0)
-    {
-        first_additional_layer = layers.end();
-    }
-    else
-    {
-        first_additional_layer = layers.begin();
-        std::advance(first_additional_layer, renderlist.size());
-    }
 }
 
 std::list<mga::HwcLayerEntry>::iterator mga::LayerList::begin()
 {
     return layers.begin(); 
-}
-
-std::list<mga::HwcLayerEntry>::iterator mga::LayerList::additional_layers_begin()
-{
-    return first_additional_layer;
 }
 
 std::list<mga::HwcLayerEntry>::iterator mga::LayerList::end()
@@ -163,6 +149,7 @@ hwc_display_contents_1_t* mga::LayerList::native_list()
 
 mga::NativeFence mga::LayerList::retirement_fence()
 {
+    renderable_list.clear();
     return hwc_representation->retireFenceFd;
 }
 
@@ -174,17 +161,50 @@ mga::LayerList::LayerList(
     update_list(renderlist);
 }
 
-void mga::LayerList::setup_fb(mg::Buffer const& fb)
+bool mga::LayerList::needs_swapbuffers()
 {
-    geom::Rectangle const disp_frame{{0,0}, {fb.size()}};
+    bool any_rendered = false;
+    for (auto const& layer : layers)
+        any_rendered |= layer.layer.needs_gl_render();
+    return any_rendered;
+}
+
+mg::RenderableList mga::LayerList::rejected_renderables()
+{
+    mg::RenderableList rejected_renderables;
+    auto it = layers.begin();
+    for (auto const& renderable : renderable_list)
+    {
+        if (it->layer.needs_gl_render())
+            rejected_renderables.push_back(renderable);
+        it++;
+    }
+    return rejected_renderables;
+}
+
+void mga::LayerList::setup_fb(std::shared_ptr<mg::Buffer> const& fb)
+{
+    geom::Rectangle const disp_frame{{0,0}, {fb->size()}};
+    auto it = layers.begin();
+    std::advance(it, renderable_list.size());
 
     if (mode == Mode::skip_only)
-        layers.back().layer.setup_layer(mga::LayerType::skip, disp_frame, false, fb);
+    {
+        it->layer.setup_layer(mga::LayerType::skip, disp_frame, false, fb);
+    }
     else if (mode == Mode::target_only)
-        layers.back().layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, fb);
+    {
+        it->layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, fb);
+    }
     else if (mode == Mode::skip_and_target)
     {
-        additional_layers_begin()->layer.setup_layer(mga::LayerType::skip, disp_frame, false, fb);
-        layers.back().layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, fb);
+        it++->layer.setup_layer(mga::LayerType::skip, disp_frame, false, fb);
+        it->layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, fb);
     }
+}
+
+void mga::LayerList::swap_occurred()
+{
+    if ((mode == Mode::target_only) || (mode == Mode::skip_and_target))
+        layers.back().layer.set_acquirefence();
 }
