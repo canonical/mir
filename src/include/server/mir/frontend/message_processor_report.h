@@ -45,8 +45,6 @@ public:
 
     virtual void exception_handled(void const* mediator, std::exception const& error) = 0;
 
-    virtual void sent_event(void const* mediator, MirSurfaceEvent const& ev) = 0;
-
 private:
     MessageProcessorReport(MessageProcessorReport const&) = delete;
     MessageProcessorReport& operator=(MessageProcessorReport const&) = delete;

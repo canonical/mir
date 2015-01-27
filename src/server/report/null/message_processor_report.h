@@ -38,8 +38,6 @@ class MessageProcessorReport : public frontend::MessageProcessorReport
     void exception_handled(void const*, int, std::exception const&);
 
     void exception_handled(void const*, std::exception const&);
-
-    void sent_event(void const*, MirSurfaceEvent const& e);
 };
 }
 }
