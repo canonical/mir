@@ -12,6 +12,7 @@ set(
   gl_program.cpp
   gl_texture.cpp
   tessellation_helpers.cpp
+  platform_probe.cpp
 )
 
 add_library(mirplatformgraphicscommon OBJECT

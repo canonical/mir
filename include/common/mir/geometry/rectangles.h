@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -14,9 +14,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
- *
- * XXX This header is only used externally in one location in QtMir. It could
- *     possibly be made private with only minor changes.
  */
 
 #ifndef MIR_GEOMETRY_RECTANGLES_H_
@@ -33,6 +30,7 @@ namespace mir
 namespace geometry
 {
 
+/// A collection of rectangles (with possible duplicates).
 class Rectangles
 {
 public:
@@ -41,6 +39,8 @@ public:
     /* We want to keep implicit copy and move methods */
 
     void add(Rectangle const& rect);
+    /// removes at most one matching rectangle
+    void remove(Rectangle const& rect);
     void clear();
     Rectangle bounding_rectangle() const;
     void confine(Point& point) const;

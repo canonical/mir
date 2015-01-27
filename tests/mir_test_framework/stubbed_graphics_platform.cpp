@@ -243,8 +243,6 @@ std::shared_ptr<mg::Display> mtf::StubGraphicPlatform::create_display(
 
 namespace
 {
-std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
-
 struct GuestPlatformAdapter : mg::Platform
 {
     GuestPlatformAdapter(
@@ -285,6 +283,12 @@ struct GuestPlatformAdapter : mg::Platform
 };
 
 std::weak_ptr<mg::Platform> the_graphics_platform{};
+std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
+}
+
+extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::Rectangle> const& display_rects)
+{
+    return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
 }
 
 extern "C" std::shared_ptr<mg::Platform> create_host_platform(
@@ -296,12 +300,12 @@ extern "C" std::shared_ptr<mg::Platform> create_host_platform(
 
     if (auto const display_rects = std::move(chosen_display_rects))
     {
-        result = std::make_shared<mtf::StubGraphicPlatform>(*display_rects);
+        result = create_stub_platform(*display_rects);
     }
     else
     {
         static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
-        result = std::make_shared<mtf::StubGraphicPlatform>(default_display_rects);
+        result = create_stub_platform(default_display_rects);
     }
     the_graphics_platform = result;
     return result;
@@ -315,18 +319,18 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     return std::make_shared<GuestPlatformAdapter>(context, graphics_platform);
 }
 
-extern "C" void add_platform_options(
+extern "C" void add_graphis_platform_options(
     boost::program_options::options_description& /*config*/)
 {
 }
 
-extern "C" void set_display_rects(
+extern "C" void set_next_display_rects(
     std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects)
 {
     chosen_display_rects = std::move(display_rects);
 }
 
-extern "C" void preset_display(std::shared_ptr<mir::graphics::Display> const& display)
+extern "C" void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display)
 {
     display_preset = display;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,16 +13,25 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_SHARED_LIBRARY_LOADER_H_
-#define MIR_SHARED_LIBRARY_LOADER_H_
+#ifndef MIR_GRAPHICS_PLATFORM_PROBE_H_
+#define MIR_GRAPHICS_PLATFORM_PROBE_H_
 
-#include <string>
+#include <vector>
+#include <memory>
+#include "mir/shared_library.h"
+
 namespace mir
 {
-class SharedLibrary;
-SharedLibrary const* load_library(std::string const& libname);
+namespace graphics
+{
+class Platform;
+
+std::shared_ptr<SharedLibrary> module_for_device(std::vector<std::shared_ptr<SharedLibrary>> const& modules);
+
 }
-#endif
+}
+
+#endif // MIR_GRAPHICS_PLATFORM_PROBE_H_

@@ -216,8 +216,13 @@ void mf::SessionMediator::create_surface(
     response->mutable_id()->set_value(surf_id.as_value());
     response->set_width(client_size.width.as_uint32_t());
     response->set_height(client_size.height.as_uint32_t());
+
+    // TODO: Deprecate
     response->set_pixel_format((int)surface->pixel_format());
     response->set_buffer_usage(request->buffer_usage());
+
+    response->mutable_buffer_stream()->set_pixel_format((int)surface->pixel_format());
+    response->mutable_buffer_stream()->set_buffer_usage(request->buffer_usage());
 
     if (surface->supports_input())
         response->add_fd(surface->client_input_fd());
@@ -232,13 +237,16 @@ void mf::SessionMediator::create_surface(
     }
 
     advance_buffer(surf_id, *surface,
-        [lock, this, response, done, session]
+        [lock, this, &surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
             lock->unlock();
 
-            auto buffer = response->mutable_buffer();
-            pack_protobuf_buffer(*buffer, client_buffer, msg_type);
+            response->mutable_buffer_stream()->mutable_id()->set_value(
+               surf_id.as_value());
+            pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(),
+                         client_buffer,
+                         msg_type);
 
             // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
             // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client.
@@ -462,7 +470,10 @@ void mf::SessionMediator::create_screencast(
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
-    pack_protobuf_buffer(*protobuf_screencast->mutable_buffer(),
+
+    protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
+        screencast_session_id.as_value());
+    pack_protobuf_buffer(*protobuf_screencast->mutable_buffer_stream()->mutable_buffer(),
                          buffer.get(),
                          msg_type);
 

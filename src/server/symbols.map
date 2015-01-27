@@ -110,6 +110,7 @@ MIR_SERVER_29 {
     mir::DefaultServerConfiguration::the_session_event_sink*;
     mir::DefaultServerConfiguration::the_session_listener*;
     mir::DefaultServerConfiguration::the_session_mediator_report*;
+    mir::DefaultServerConfiguration::the_shared_library_prober_report*;
     mir::DefaultServerConfiguration::the_shell_display_layout*;
     mir::DefaultServerConfiguration::the_shell_focus_setter*;
     mir::DefaultServerConfiguration::the_snapshot_strategy*;
@@ -596,6 +597,7 @@ MIR_SERVER_29 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_session_event_sink*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_session_listener*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_session_mediator_report*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_shared_library_prober_report*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_shell_display_layout*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_shell_focus_setter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_snapshot_strategy*;

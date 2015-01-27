@@ -21,11 +21,14 @@
 
 #include "mir_test_framework/headless_test.h"
 
+#include "mir_test_framework/executable_path.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+namespace mtf = mir_test_framework;
 
 using namespace testing;
 
