@@ -224,5 +224,15 @@ MIR_COMMON_3.2 {
 
       typeinfo?for?mir::dispatch::SimpleDispatchThread;
       vtable?for?mir::dispatch::SimpleDispatchThread;
+
+      mir::MultiplexingDispatchable::MultiplexingDispatchable*;
+      mir::MultiplexingDispatchable::?MultiplexingDispatchable*;
+      mir::MultiplexingDispatchable::watch_fd*;
+      mir::MultiplexingDispatchable::dispatch*;
+      mir::MultiplexingDispatchable::relevant_events*;
+      mir::MultiplexingDispatchable::add_watch*;
+
+      typeinfo?for?mir::MultiplexingDispatchable;
+      vtable?for?mir::MultiplexingDispatchable;
     };
 } MIR_COMMON_3.1;

@@ -77,6 +77,7 @@ target_link_libraries(
   mirclientrpc
   mirclientlttngstatic
   demo-shell
+  mircommon
 
   mir-test
   mir-test-doubles
