@@ -48,8 +48,6 @@ MirScreencast* mir_connection_create_screencast_sync(
             mir_connection_create_display_config(connection),
             &mir_display_config_destroy);
 
-        auto const client_platform = connection->get_client_platform();
-
         mir::geometry::Rectangle const region{
             {parameters->region.left, parameters->region.top},
             {parameters->region.width, parameters->region.height}
@@ -62,8 +60,7 @@ MirScreencast* mir_connection_create_screencast_sync(
                 size,
                 parameters->pixel_format,
                 connection->display_server(),
-                client_platform,
-                client_platform->create_buffer_factory(),
+                connection->get_client_buffer_stream_factory(),
                 null_callback, nullptr}};
 
         screencast_uptr->creation_wait_handle()->wait_for_all();

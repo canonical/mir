@@ -16,6 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/scene/basic_surface.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/scene/surface_event_source.h"

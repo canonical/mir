@@ -43,7 +43,7 @@ struct StubScreencastServerTool : mt::StubServerTool
         mir::protobuf::Screencast* response,
         google::protobuf::Closure* done) override
     {
-        response->mutable_buffer()->add_fd(pipe.read_fd());
+        response->mutable_buffer_stream()->mutable_buffer()->add_fd(pipe.read_fd());
         done->Run();
     }
 
@@ -112,8 +112,8 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_creating_screencast)
 
     wait_rpc.wait_until_ready();
 
-    ASSERT_EQ(1, protobuf_screencast.buffer().fd_size());
-    auto const read_fd = protobuf_screencast.buffer().fd(0);
+    ASSERT_EQ(1, protobuf_screencast.buffer_stream().buffer().fd_size());
+    auto const read_fd = protobuf_screencast.buffer_stream().buffer().fd(0);
 
     std::vector<char> received(cookie.size(), '\0');
     EXPECT_EQ(static_cast<ssize_t>(cookie.size()),

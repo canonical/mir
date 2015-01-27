@@ -22,6 +22,7 @@
 #include "mir/client_buffer.h"
 #include "mir/client_platform.h"
 
+#include <unistd.h>
 #include <string.h>
 
 namespace mcl = mir::client;
@@ -43,7 +44,7 @@ struct StubClientPlatform : public mcl::ClientPlatform
         return std::make_shared<mtd::StubClientBufferFactory>();
     }
 
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::ClientSurface*)
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::EGLNativeSurface*)
     {
         auto fake_window = reinterpret_cast<EGLNativeWindowType>(0x12345678lu);
         return std::make_shared<EGLNativeWindowType>(fake_window);

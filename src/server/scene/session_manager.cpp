@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -24,7 +24,6 @@
 #include "mir/scene/session.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/prompt_session.h"
-#include "mir/scene/prompt_session_manager.h"
 #include "session_event_sink.h"
 
 #include <boost/throw_exception.hpp>
@@ -42,14 +41,12 @@ ms::SessionManager::SessionManager(std::shared_ptr<SurfaceCoordinator> const& su
     std::shared_ptr<SessionContainer> const& container,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionEventSink> const& session_event_sink,
-    std::shared_ptr<SessionListener> const& session_listener,
-    std::shared_ptr<PromptSessionManager> const& prompt_session_manager) :
+    std::shared_ptr<SessionListener> const& session_listener) :
     surface_coordinator(surface_factory),
     app_container(container),
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
-    session_listener(session_listener),
-    prompt_session_manager(prompt_session_manager)
+    session_listener(session_listener)
 {
     assert(surface_factory);
     assert(container);
@@ -112,38 +109,11 @@ void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
 
     session_event_sink->handle_session_stopping(scene_session);
 
-    prompt_session_manager->remove_session(scene_session);
-
     session_listener->stopping(scene_session);
 
     app_container->remove_session(scene_session);
 }
 
-std::shared_ptr<ms::PromptSession> ms::SessionManager::start_prompt_session_for(std::shared_ptr<Session> const& session,
-    PromptSessionCreationParameters const& params)
-{
-    auto shell_session = std::dynamic_pointer_cast<Session>(session);
-
-    return prompt_session_manager->start_prompt_session_for(
-        shell_session, params);
-
-}
-
-void ms::SessionManager::add_prompt_provider_for(
-    std::shared_ptr<PromptSession> const& prompt_session,
-    std::shared_ptr<Session> const& session)
-{
-    auto scene_prompt_session = std::dynamic_pointer_cast<PromptSession>(prompt_session);
-    auto scene_session = std::dynamic_pointer_cast<Session>(session);
-
-    prompt_session_manager->add_prompt_provider(scene_prompt_session, scene_session);
-}
-
-void ms::SessionManager::stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session)
-{
-    auto scene_prompt_session = std::dynamic_pointer_cast<PromptSession>(prompt_session);
-    prompt_session_manager->stop_prompt_session(scene_prompt_session);
-}
 
 std::shared_ptr<ms::Session> ms::SessionManager::successor_of(
     std::shared_ptr<Session> const& session) const

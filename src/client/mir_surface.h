@@ -27,8 +27,8 @@
 #include "mir/optional_value.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
-#include "mir/mir_client_surface.h"
 #include "mir/client_platform.h"
+#include "client_buffer_stream.h"
 
 #include <memory>
 #include <functional>
@@ -48,7 +48,8 @@ class InputReceiverThread;
 namespace client
 {
 class ClientBuffer;
-class PerfReport;
+class ClientBufferStream;
+class ClientBufferStreamFactory;
 
 struct MemoryRegion;
 }
@@ -82,7 +83,7 @@ struct MirSurfaceSpec
     mir::optional_value<MirEdgeAttachment> edge_attachment;
 };
 
-struct MirSurface : public mir::client::ClientSurface
+struct MirSurface
 {
 public:
     MirSurface(MirSurface const &) = delete;
@@ -94,7 +95,7 @@ public:
         MirConnection *allocating_connection,
         mir::protobuf::DisplayServer::Stub& server,
         mir::protobuf::Debug::Stub* debug,
-        std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
+        std::shared_ptr<mir::client::ClientBufferStreamFactory> const& buffer_stream_factory,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
         MirSurfaceSpec const& spec,
         mir_surface_callback callback, void * context);
@@ -136,7 +137,7 @@ public:
     void set_event_handler(MirEventDelegate const* delegate);
     void handle_event(MirEvent const& e);
 
-    /* mir::client::ClientSurface */
+    /* mir::client::EGLNativeSurface */
     void request_and_wait_for_next_buffer();
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
 
@@ -147,11 +148,8 @@ private:
     void on_configured();
     void on_cursor_configured();
     void process_incoming_buffer();
-    void populate(MirBufferPackage& buffer_package);
-    void created(mir_surface_callback callback, void * context);
-    void new_buffer(mir_surface_callback callback, void * context);
+    void created(mir_surface_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
-    void release_cpu_region();
 
     mir::protobuf::DisplayServer::Stub* server{nullptr};
     mir::protobuf::Debug::Stub* debug{nullptr};
@@ -162,16 +160,14 @@ private:
     mir::protobuf::Void void_response;
 
     MirConnection* const connection{nullptr};
+
     MirWaitHandle create_wait_handle;
-    MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;
     MirWaitHandle configure_cursor_wait_handle;
 
-    std::shared_ptr<mir::client::MemoryRegion> secured_region;
-    std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;
+    std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
+    std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
-
-    std::shared_ptr<EGLNativeWindowType> accelerated_window;
 
     mir::protobuf::SurfaceSetting configure_result;
 
@@ -181,7 +177,6 @@ private:
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::input::receiver::InputReceiverThread> input_thread;
-    std::shared_ptr<mir::client::PerfReport> perf_report;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

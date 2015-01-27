@@ -60,6 +60,9 @@ int main(int argc, char** argv)
     *dest_max = '\0';
     setenv("MIR_CLIENT_PLATFORM_PATH", path, 1);
     printf("MIR_CLIENT_PLATFORM_PATH=%s\n", path);
+    strncpy(pivot+7, "server-modules/", pivot_max-7);
+    setenv("MIR_SERVER_PLATFORM_PATH", path, 1);
+    printf("MIR_SERVER_PLATFORM_PATH=%s\n", path);
 
     pivot[6] = '\0';  /* truncate lib/client-modules to just lib */
     appendenv("LD_LIBRARY_PATH", path);

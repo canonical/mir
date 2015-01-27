@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER // For lttng logger header
+
 #include "default_connection_configuration.h"
 
 #include "display_configuration.h"
@@ -226,7 +228,7 @@ std::shared_ptr<mir::SharedLibraryProberReport> mir::client::DefaultConnectionCo
         [this] () -> std::shared_ptr<mir::SharedLibraryProberReport>
         {
             auto val_raw = getenv("MIR_CLIENT_SHARED_LIBRARY_PROBER_REPORT");
-            std::string const val{val_raw ? val_raw : off_opt_val};
+            std::string const val{val_raw ? val_raw : log_opt_val};
             if (val == log_opt_val)
                 return std::make_shared<mir::logging::SharedLibraryProberReport>(the_logger());
             else if (val == lttng_opt_val)

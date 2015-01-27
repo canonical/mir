@@ -16,6 +16,8 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_prompt_session.h"
 #include "event_handler_register.h"
 
