@@ -119,11 +119,15 @@ bool md::MultiplexingDispatchable::dispatch(md::FdEvents events)
 
     if (result > 0)
     {
-        auto dispatchable = *reinterpret_cast<std::shared_ptr<Dispatchable>*>(event.data.ptr);
-        dispatchable->dispatch(epoll_to_fd_event(event));
+        auto event_source = reinterpret_cast<std::pair<std::shared_ptr<Dispatchable>, bool>*>(event.data.ptr);
 
-        event.events = dispatchable->relevant_events() | EPOLLONESHOT;
-        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, dispatchable->watch_fd(), &event);
+        event_source->first->dispatch(epoll_to_fd_event(event));
+
+        if (event_source->second)
+        {
+            event.events = event_source->first->relevant_events() | EPOLLONESHOT;
+            epoll_ctl(epoll_fd, EPOLL_CTL_MOD, event_source->first->watch_fd(), &event);
+        }
     }
     return true;
 }
@@ -135,16 +139,28 @@ md::FdEvents md::MultiplexingDispatchable::relevant_events() const
 
 void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> const& dispatchee)
 {
+    add_watch(dispatchee, DispatchReentrancy::sequential);
+}
+
+void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> const& dispatchee,
+                                             DispatchReentrancy reentrancy)
+{
     decltype(dispatchee_holder)::iterator new_holder;
     {
         std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
-        new_holder = dispatchee_holder.emplace(dispatchee_holder.begin(), dispatchee);
+        new_holder = dispatchee_holder.emplace(dispatchee_holder.begin(),
+                                               dispatchee,
+                                               reentrancy == DispatchReentrancy::sequential);
     }
 
     epoll_event e;
     ::memset(&e, 0, sizeof(e));
 
-    e.events = fd_event_to_epoll(dispatchee->relevant_events()) | EPOLLONESHOT;
+    e.events = fd_event_to_epoll(dispatchee->relevant_events());
+    if (reentrancy == DispatchReentrancy::sequential)
+    {
+        e.events |= EPOLLONESHOT;
+    }
     e.data.ptr = static_cast<void*>(&(*new_holder));
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, dispatchee->watch_fd(), &e) < 0)
     {
@@ -171,9 +187,9 @@ void md::MultiplexingDispatchable::remove_watch(std::shared_ptr<Dispatchable> co
 
     {
         std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
-        dispatchee_holder.remove_if ([&dispatchee](std::shared_ptr<Dispatchable> const& candidate)
+        dispatchee_holder.remove_if ([&dispatchee](std::pair<std::shared_ptr<Dispatchable>,bool> const& candidate)
         {
-            return candidate->watch_fd() == dispatchee->watch_fd();
+            return candidate.first->watch_fd() == dispatchee->watch_fd();
         });
     }
 }

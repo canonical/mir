@@ -222,3 +222,29 @@ TEST(MultiplexingDispatchableTest, individual_dispatchee_is_not_concurrent)
 
     EXPECT_THAT(total_count, Eq(2));
 }
+
+TEST(MultiplexingDispatchableTest, reentrant_dispatchee_is_dispatched_concurrently)
+{
+    using namespace testing;
+
+    std::atomic<int> count{0};
+
+    auto dispatchee = std::make_shared<mt::TestDispatchable>([&count]()
+    {
+        ++count;
+        std::this_thread::sleep_for(std::chrono::seconds{1});
+        EXPECT_THAT(count, Gt(1));
+    });
+
+    dispatchee->trigger();
+    dispatchee->trigger();
+
+    md::MultiplexingDispatchable dispatcher;
+    dispatcher.add_watch(dispatchee, md::DispatchReentrancy::reentrant);
+
+    std::thread first{[&dispatcher]() { dispatcher.dispatch(md::FdEvent::readable); }};
+    std::thread second{[&dispatcher]() { dispatcher.dispatch(md::FdEvent::readable); }};
+
+    first.join();
+    second.join();
+}

@@ -31,6 +31,12 @@ namespace mir
 {
 namespace dispatch
 {
+enum class DispatchReentrancy
+{
+    sequential,
+    reentrant
+};
+
 class MultiplexingDispatchable : public Dispatchable
 {
 public:
@@ -46,10 +52,12 @@ public:
     FdEvents relevant_events() const override;
 
     void add_watch(std::shared_ptr<Dispatchable> const& dispatchee);
+    void add_watch(std::shared_ptr<Dispatchable> const& dispatchee, DispatchReentrancy reentrancy);
+
     void remove_watch(std::shared_ptr<Dispatchable> const& dispatchee);
 private:
     std::mutex lifetime_mutex;
-    std::list<std::shared_ptr<Dispatchable>> dispatchee_holder;
+    std::list<std::pair<std::shared_ptr<Dispatchable>, bool>> dispatchee_holder;
 
     Fd epoll_fd;
 };
