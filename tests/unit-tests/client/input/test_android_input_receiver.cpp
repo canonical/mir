@@ -320,7 +320,10 @@ TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)
     std::chrono::nanoseconds const frame_interval = one_second / 60;
     std::chrono::nanoseconds const gesture_duration = 10 * one_second;
 
-    std::chrono::nanoseconds last_produced, last_consumed, last_rendered, last_in_phase;
+    std::chrono::nanoseconds last_produced = std::chrono::nanoseconds(0);
+    std::chrono::nanoseconds last_consumed = std::chrono::nanoseconds(0);
+    std::chrono::nanoseconds last_rendered = std::chrono::nanoseconds(0);
+    std::chrono::nanoseconds last_in_phase = std::chrono::nanoseconds(0);
 
     for (t = std::chrono::nanoseconds(0); t < gesture_duration; t += one_millisecond)
     {
