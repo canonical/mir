@@ -27,6 +27,7 @@
 #include "src/client/display_configuration.h"
 #include "src/client/mir_surface.h"
 #include "mir/client_buffer_factory.h"
+#include "mir/dispatch/dispatchable.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"
@@ -44,12 +45,19 @@ namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace md = mir::dispatch;
 
 namespace
 {
 
-struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
+struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
+                        public mir::dispatch::Dispatchable
 {
+    MockRpcChannel()
+    {
+        ON_CALL(*this, watch_fd()).WillByDefault(testing::Return(mir::Fd{}));
+    }
+
     void CallMethod(const google::protobuf::MethodDescriptor* method,
                     google::protobuf::RpcController*,
                     const google::protobuf::Message* parameters,
@@ -77,6 +85,10 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
     MOCK_METHOD1(drm_auth_magic, void(const mp::DRMMagic*));
     MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
     MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
+
+    MOCK_CONST_METHOD0(watch_fd, mir::Fd());
+    MOCK_METHOD1(dispatch, bool(md::FdEvents));
+    MOCK_CONST_METHOD0(relevant_events, md::FdEvents());
 };
 
 struct MockClientPlatform : public mcl::ClientPlatform

@@ -16,8 +16,6 @@
  * Authored by: Robert Carr <racarr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "application_session.h"
 #include "snapshot_strategy.h"
 #include "default_session_container.h"
@@ -27,6 +25,7 @@
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/session_listener.h"
+#include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
 
 #include <boost/throw_exception.hpp>
@@ -41,6 +40,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
+namespace mev = mir::events;
 
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
@@ -204,36 +204,20 @@ void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 void ms::ApplicationSession::start_prompt_session()
 {
     // All sessions which are part of the prompt session get this event.
-    MirEvent start_event;
-    memset(&start_event, 0, sizeof start_event);
-    start_event.type = mir_event_type_prompt_session_state_change;
-    start_event.prompt_session.new_state = mir_prompt_session_state_started;
-    event_sink->handle_event(start_event);
+    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_started));
 }
 
 void ms::ApplicationSession::stop_prompt_session()
 {
-    MirEvent stop_event;
-    memset(&stop_event, 0, sizeof stop_event);
-    stop_event.type = mir_event_type_prompt_session_state_change;
-    stop_event.prompt_session.new_state = mir_prompt_session_state_stopped;
-    event_sink->handle_event(stop_event);
+    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_stopped));
 }
 
 void ms::ApplicationSession::suspend_prompt_session()
 {
-    MirEvent start_event;
-    memset(&start_event, 0, sizeof start_event);
-    start_event.type = mir_event_type_prompt_session_state_change;
-    start_event.prompt_session.new_state = mir_prompt_session_state_suspended;
-    event_sink->handle_event(start_event);
+    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_suspended));
 }
 
 void ms::ApplicationSession::resume_prompt_session()
 {
-    MirEvent start_event;
-    memset(&start_event, 0, sizeof start_event);
-    start_event.type = mir_event_type_prompt_session_state_change;
-    start_event.prompt_session.new_state = mir_prompt_session_state_started;
-    event_sink->handle_event(start_event);
+    start_prompt_session();
 }
