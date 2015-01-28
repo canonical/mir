@@ -16,8 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
+#include "mir/events/event_builders.h"
 #include "mir/scene/surface_event_source.h"
 
 #include "mir/geometry/size.h"
@@ -26,6 +25,7 @@
 #include <algorithm>
 
 namespace ms = mir::scene;
+namespace mev = mir::events;
 namespace geom = mir::geometry;
 
 ms::SurfaceEventSource::SurfaceEventSource(
@@ -38,52 +38,21 @@ ms::SurfaceEventSource::SurfaceEventSource(
 
 void ms::SurfaceEventSource::resized_to(geom::Size const& size)
 {
-    MirEvent e;
-    memset(&e, 0, sizeof e);
-    e.type = mir_event_type_resize;
-    e.resize.surface_id = id.as_value();
-    e.resize.width = size.width.as_int();
-    e.resize.height = size.height.as_int();
-    event_sink->handle_event(e);
+    event_sink->handle_event(*mev::make_event(id, size));
 }
 
 
 void ms::SurfaceEventSource::attrib_changed(MirSurfaceAttrib attrib, int value)
 {
-    MirEvent e;
-
-    // This memset is not really required. However it does avoid some
-    // harmless uninitialized memory reads that valgrind will complain
-    // about, due to gaps in MirEvent.
-    memset(&e, 0, sizeof e);
-
-    e.type = mir_event_type_surface;
-    e.surface.id = id.as_value();
-    e.surface.attrib = attrib;
-    e.surface.value = value;
-
-    event_sink->handle_event(e);
+    event_sink->handle_event(*mev::make_event(id, attrib, value));
 }
 
 void ms::SurfaceEventSource::orientation_set_to(MirOrientation orientation)
 {
-    MirEvent e;
-    memset(&e, 0, sizeof e);
-
-    e.type = mir_event_type_orientation;
-    e.orientation.surface_id = id.as_value();
-    e.orientation.direction = orientation;
-
-    event_sink->handle_event(e);
+    event_sink->handle_event(*mev::make_event(id, orientation));
 }
 
 void ms::SurfaceEventSource::client_surface_close_requested()
 {
-    MirEvent e;
-    memset(&e, 0, sizeof e);
-
-    e.type = mir_event_type_close_surface;
-    e.close_surface.surface_id = id.as_value();
-
-    event_sink->handle_event(e);
+    event_sink->handle_event(*mev::make_event(id));
 }

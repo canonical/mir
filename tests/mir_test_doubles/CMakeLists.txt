@@ -20,6 +20,7 @@ set(
   mock_frame_dropping_policy_factory.cpp
   null_logger.cpp
   platform_factory.cpp
+  triggered_main_loop.cpp
   stub_buffer.cpp
 )
 

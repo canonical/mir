@@ -69,6 +69,11 @@ namespace logging
 {
 class Logger;
 }
+
+namespace dispatch
+{
+class SimpleDispatchThread;
+}
 }
 
 struct MirConnection : mir::client::ClientContext
@@ -191,6 +196,8 @@ private:
     std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
 
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
+
+    std::unique_ptr<mir::dispatch::SimpleDispatchThread> const eventloop;
 
     std::vector<int> extra_platform_data;
     
