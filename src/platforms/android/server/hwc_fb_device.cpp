@@ -109,10 +109,10 @@ void mga::HwcFbDevice::content_cleared()
 {
 }
 
-void mga::HwcFbDevice::display_added(mga::DisplayName)
+void mga::HwcFbDevice::start_posting_external_display()
 {
 }
 
-void mga::HwcFbDevice::display_removed(mga::DisplayName)
+void mga::HwcFbDevice::stop_posting_external_display()
 {
 }

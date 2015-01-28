@@ -52,8 +52,8 @@ public:
         SwappingGLContext const& context,
         RenderableListCompositor const& list_compositor) override;
     void content_cleared() override;
-    void display_added(DisplayName) override;
-    void display_removed(DisplayName) override;
+    void start_posting_external_display() override;
+    void stop_posting_external_display() override;
 
 private:
     void commit();

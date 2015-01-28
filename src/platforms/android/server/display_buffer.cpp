@@ -51,12 +51,6 @@ mga::DisplayBuffer::DisplayBuffer(
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
       orientation_{orientation}
 {
-    display_device->display_added(display_name);
-}
-
-mga::DisplayBuffer::~DisplayBuffer()
-{
-    display_device->display_removed(display_name);
 }
 
 geom::Rectangle mga::DisplayBuffer::view_area() const

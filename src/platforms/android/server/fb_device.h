@@ -53,8 +53,8 @@ public:
         LayerList&,
         SwappingGLContext const& context,
         RenderableListCompositor const& list_compositor) override;
-    void display_added(DisplayName) override;
-    void display_removed(DisplayName) override;
+    void start_posting_external_display() override;
+    void stop_posting_external_display() override;
 
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;

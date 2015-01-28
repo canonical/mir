@@ -772,3 +772,23 @@ TEST_F(Display, configures_external_display)
     });
     display.configure(*configuration);
 }
+#if 0
+TEST_F(DisplayBuffer, notifies_display_device_of_presence)
+{
+    mga::DisplayName external{mga::DisplayName::external};
+    testing::InSequence seq;
+    EXPECT_CALL(*mock_display_device, display_added(external));
+    EXPECT_CALL(*mock_display_device, display_removed(external));
+
+    mga::DisplayBuffer db{
+        external,
+        std::move(list),
+        mock_fb_bundle,
+        mock_display_device,
+        native_window,
+        *gl_context,
+        stub_program_factory,
+        orientation,
+        mga::OverlayOptimization::enabled};
+}
+#endif

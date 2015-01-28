@@ -102,10 +102,10 @@ void mga::FBDevice::content_cleared()
 {
 }
 
-void mga::FBDevice::display_added(mga::DisplayName)
+void mga::FBDevice::start_posting_external_display()
 {
 }
 
-void mga::FBDevice::display_removed(mga::DisplayName)
+void mga::FBDevice::stop_posting_external_display()
 {
 }

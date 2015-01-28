@@ -162,16 +162,14 @@ void mga::HwcDevice::content_cleared()
     onscreen_overlay_buffers.clear();
 }
 
-void mga::HwcDevice::display_added(mga::DisplayName name)
+void mga::HwcDevice::start_posting_external_display()
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    if (name == mga::DisplayName::external)
-        needed_list_count = 2;
+    needed_list_count = 2;
 }
 
-void mga::HwcDevice::display_removed(mga::DisplayName name)
+void mga::HwcDevice::stop_posting_external_display()
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    if (name == mga::DisplayName::external)
-        needed_list_count = 1;
+    needed_list_count = 1;
 }

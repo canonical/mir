@@ -788,7 +788,7 @@ TEST_F(HwcDevice, commits_external_list_with_both_force_gl)
     mga::LayerList external_list(layer_adapter, {});
 
     mga::HwcDevice device(mock_device);
-    device.display_added(mga::DisplayName::external);
+    device.start_posting_external_display();
 
     auto handle = std::async(std::launch::async, [&]{
         device.commit(mga::DisplayName::primary, primary_list, stub_context, stub_compositor);
@@ -796,5 +796,5 @@ TEST_F(HwcDevice, commits_external_list_with_both_force_gl)
     device.commit(mga::DisplayName::external, external_list, stub_context, stub_compositor);
     EXPECT_THAT(handle.wait_for(std::chrono::seconds(1)), Eq(std::future_status::ready));
 
-    device.display_removed(mga::DisplayName::external);
+    device.stop_posting_external_display();
 }

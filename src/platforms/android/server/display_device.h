@@ -59,8 +59,9 @@ public:
     //notify the DisplayDevice that the screen content was cleared in a way other than the above fns
     virtual void content_cleared() = 0;
 
-    virtual void display_added(DisplayName) = 0;
-    virtual void display_removed(DisplayName) = 0;
+    //TODO: remove once we've reshaped the compositor interfaces in an android-friendly way
+    virtual void start_posting_external_display() = 0;
+    virtual void stop_posting_external_display() = 0;
 
 protected:
     DisplayDevice() = default;
