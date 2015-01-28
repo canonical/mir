@@ -229,7 +229,7 @@ bool md::MultiplexingDispatchable::dispatch(md::FdEvents events)
 
         if (event_source->second)
         {
-            event.events = event_source->first->relevant_events() | EPOLLONESHOT;
+            event.events = fd_event_to_epoll(event_source->first->relevant_events()) | EPOLLONESHOT;
             epoll_ctl(epoll_fd, EPOLL_CTL_MOD, event_source->first->watch_fd(), &event);
         }
     }
