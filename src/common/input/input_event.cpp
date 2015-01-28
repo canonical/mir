@@ -295,6 +295,13 @@ MirInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const*
 }
 /* Touch event accessors */
 
+// ABI-compatible MIR_COMMON_3.1
+extern "C"
+MirInputEventModifiers mir_touch_input_event_get_modifiers(MirTouchEvent const* tev)
+{
+    return mir_touch_event_get_modifiers(tev);
+}
+
 MirInputEventModifiers mir_touch_event_get_modifiers(MirTouchEvent const* tev)
 {    
     auto const& old_mev = old_mev_from_new(tev);
@@ -303,9 +310,9 @@ MirInputEventModifiers mir_touch_event_get_modifiers(MirTouchEvent const* tev)
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-MirInputEventModifiers mir_touch_input_event_get_modifiers(MirTouchEvent const* tev)
+MirTouchEvent const* mir_input_event_get_touch_input_event(MirInputEvent const* ev)
 {
-    return mir_touch_event_get_modifiers(tev);
+    return mir_input_event_get_touch_event(ev);
 }
 
 MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev)
@@ -322,9 +329,9 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev)
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-MirTouchEvent const* mir_input_event_get_touch_input_event(MirInputEvent const* ev)
+unsigned int mir_touch_input_event_get_touch_count(MirTouchEvent const* event)
 {
-    return mir_input_event_get_touch_event(ev);
+    return mir_touch_event_get_count(event);
 }
 
 unsigned int mir_touch_event_get_count(MirTouchEvent const* event)
@@ -335,9 +342,9 @@ unsigned int mir_touch_event_get_count(MirTouchEvent const* event)
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-unsigned int mir_touch_input_event_get_touch_count(MirTouchEvent const* event)
+MirTouchId mir_touch_input_event_get_touch_id(MirTouchEvent const* event, size_t touch_index)
 {
-    return mir_touch_event_get_count(event);
+    return mir_touch_event_get_id(event, touch_index);
 }
 
 MirTouchId mir_touch_event_get_id(MirTouchEvent const* event, size_t touch_index)
@@ -355,11 +362,11 @@ MirTouchId mir_touch_event_get_id(MirTouchEvent const* event, size_t touch_index
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-MirTouchId mir_touch_input_event_get_touch_id(MirTouchEvent const* event, size_t touch_index)
+MirTouchAction mir_touch_input_event_get_action(MirTouchEvent const* event, size_t touch_index)
 {
-    return mir_touch_event_get_id(event, touch_index);
+    return mir_touch_event_get_action(event, touch_index);
 }
- 
+
 MirTouchAction mir_touch_event_get_action(MirTouchEvent const* event, size_t touch_index)
 {
     auto const& old_mev = old_mev_from_new(event);
@@ -410,9 +417,10 @@ MirTouchAction mir_touch_event_get_action(MirTouchEvent const* event, size_t tou
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-MirTouchAction mir_touch_input_event_get_action(MirTouchEvent const* event, size_t touch_index)
+MirTouchTooltype mir_touch_input_event_get_touch_tooltype(
+    MirTouchEvent const* event, size_t touch_index)
 {
-    return mir_touch_event_get_action(event, touch_index);
+    return mir_touch_event_get_tooltype(event, touch_index);
 }
 
 MirTouchTooltype mir_touch_event_get_tooltype(MirTouchEvent const* event,
@@ -442,10 +450,10 @@ MirTouchTooltype mir_touch_event_get_tooltype(MirTouchEvent const* event,
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-MirTouchTooltype mir_touch_input_event_get_touch_tooltype(
-    MirTouchEvent const* event, size_t touch_index)
+float mir_touch_input_event_get_touch_axis_value(MirTouchEvent const* event,
+    size_t touch_index, MirTouchAxis axis)
 {
-    return mir_touch_event_get_tooltype(event, touch_index);
+    return mir_touch_event_get_axis_value(event, touch_index, axis);
 }
 
 float mir_touch_event_get_axis_value(MirTouchEvent const* event,
@@ -478,14 +486,6 @@ float mir_touch_event_get_axis_value(MirTouchEvent const* event,
         return -1;
     }
 }                                                                            
-
-// ABI-compatible MIR_COMMON_3.1
-extern "C"
-float mir_touch_input_event_get_touch_axis_value(MirTouchEvent const* event,
-    size_t touch_index, MirTouchAxis axis)
-{
-    return mir_touch_event_get_axis_value(event, touch_index, axis);
-}
 
 /* Pointer event accessors */
 MirPointerInputEvent const* mir_input_event_get_pointer_input_event(MirInputEvent const* ev)
