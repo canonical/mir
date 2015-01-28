@@ -47,8 +47,6 @@ EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib att
 // Close surface event
 EventUPtr make_event(frontend::SurfaceId const& surface_id);
 
-// For QtMir
- 
 // Key event
 EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
     MirKeyInputEventAction action, xkb_keysym_t key_code,
