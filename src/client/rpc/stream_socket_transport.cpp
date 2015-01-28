@@ -23,7 +23,6 @@
 
 #include <system_error>
 
-#include <signal.h>
 #include <errno.h>
 #include <sys/epoll.h>
 #include <sys/types.h>
@@ -34,27 +33,16 @@
 #include <boost/throw_exception.hpp>
 
 namespace mclr = mir::client::rpc;
+namespace md = mir::dispatch;
 
 mclr::StreamSocketTransport::StreamSocketTransport(mir::Fd const& fd)
     : socket_fd{fd}
 {
-    init();
 }
 
 mclr::StreamSocketTransport::StreamSocketTransport(std::string const& socket_path)
     : StreamSocketTransport(open_socket(socket_path))
 {
-}
-
-mclr::StreamSocketTransport::~StreamSocketTransport()
-{
-    int dummy{0};
-    send(shutdown_fd, &dummy, sizeof(dummy), MSG_NOSIGNAL);
-    if (io_service_thread.joinable())
-    {
-        io_service_thread.join();
-    }
-    close(shutdown_fd);
 }
 
 void mclr::StreamSocketTransport::register_observer(std::shared_ptr<Observer> const& observer)
@@ -176,110 +164,41 @@ void mclr::StreamSocketTransport::send_message(
         mir::send_fds(socket_fd, fds);
 }
 
-void mclr::StreamSocketTransport::init()
+mir::Fd mclr::StreamSocketTransport::watch_fd() const
 {
-    // We use sockets rather than a pipe so that we can control
-    // EPIPE behaviour; we don't want SIGPIPE when the IO loop terminates.
-    int socket_fds[2];
-    socketpair(AF_UNIX, SOCK_STREAM, 0, socket_fds);
-    this->shutdown_fd = mir::Fd{socket_fds[1]};
+    return socket_fd;
+}
 
-    auto shutdown_fd = mir::Fd{socket_fds[0]};
-    io_service_thread = std::thread([this, shutdown_fd]
+bool mclr::StreamSocketTransport::dispatch(md::FdEvents events)
+{
+    if (events & (md::FdEvent::remote_closed | md::FdEvent::error))
     {
-        // Our IO threads must not receive any signals
-        sigset_t all_signals;
-        sigfillset(&all_signals);
-
-        if (auto error = pthread_sigmask(SIG_BLOCK, &all_signals, NULL))
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
-
-        mir::set_thread_name("Client IO loop");
-
-        int epoll_fd = epoll_create1(0);
-
-        epoll_event event;
-        // Make valgrind happy, harder
-        memset(&event, 0, sizeof(event));
-
-        event.events = EPOLLIN | EPOLLRDHUP;
-        event.data.fd = socket_fd;
-        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd, &event);
-
-        event.events = EPOLLIN | EPOLLRDHUP;
-        event.data.fd = shutdown_fd;
-        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, shutdown_fd, &event);
-
-        bool shutdown_requested{false};
-        while (!shutdown_requested)
+        if (events & md::FdEvent::readable)
         {
-            epoll_event event;
-            epoll_wait(epoll_fd, &event, 1, -1);
-            if (event.data.fd == socket_fd)
+            // If the remote end shut down cleanly it's possible there's some more
+            // data left to read, or that reads will now return 0 (EOF)
+            //
+            // If there's more data left to read, notify of this before disconnect.
+            int dummy;
+            if (recv(socket_fd, &dummy, sizeof(dummy), MSG_PEEK | MSG_NOSIGNAL) > 0)
             {
-                if (event.events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-                {
-                    if (event.events & EPOLLIN)
-                    {
-                        // If the remote end shut down cleanly it's possible there's some more
-                        // data left to read, or that reads will now return 0 (EOF)
-                        //
-                        // If there's more data left to read, notify of this before disconnect.
-                        int dummy;
-                        if (recv(socket_fd, &dummy, sizeof(dummy), MSG_PEEK | MSG_NOSIGNAL) > 0)
-                        {
-                            try
-                            {
-                                notify_data_available();
-                            }
-                            catch(...)
-                            {
-                                //It's quite likely that notify_data_available() will lead to
-                                //an exception being thrown; after all, the remote has closed
-                                //the connection.
-                                //
-                                //This doesn't matter; we're already shutting down.
-                            }
-                        }
-                    }
-                    notify_disconnected();
-                    shutdown_requested = true;
-                }
-                else if (event.events & EPOLLIN)
-                {
-                    try
-                    {
-                        notify_data_available();
-                    }
-                    catch (socket_disconnected_error &err)
-                    {
-                        // We've already notified of disconnection.
-                        shutdown_requested = true;
-                    }
-                    // These need not be fatal.
-                    catch (fd_reception_error &err)
-                    {
-                    }
-                    catch (socket_error &err)
-                    {
-                    }
-                    catch (...)
-                    {
-                        // We've no idea what the problem is, so clean up as best we can.
-                        notify_disconnected();
-                        shutdown_requested = true;
-                    }
-                }
-            }
-            if (event.data.fd == shutdown_fd)
-            {
-                shutdown_requested = true;
+                notify_data_available();
+                return true;
             }
         }
-        ::close(epoll_fd);
-    });
+        notify_disconnected();
+        return false;
+    }
+    else if (events & md::FdEvent::readable)
+    {
+        notify_data_available();
+    }
+    return true;
+}
+
+md::FdEvents mclr::StreamSocketTransport::relevant_events() const
+{
+    return md::FdEvent::readable | md::FdEvent::remote_closed;
 }
 
 mir::Fd mclr::StreamSocketTransport::open_socket(std::string const& path)
