@@ -488,7 +488,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     motion_event.type = mir_event_type_motion;
 
     EXPECT_CALL(mock_sender, send_event(mt::MirKeyEventMatches(key_event), _)).Times(1);
-    EXPECT_CALL(mock_sender, send_event(mt::MirTouchMatches(motion_event), _)).Times(1);
+    EXPECT_CALL(mock_sender, send_event(mt::MirTouchEventMatches(motion_event), _)).Times(1);
 
     surface.consume(key_event);
     surface.consume(motion_event);

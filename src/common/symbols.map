@@ -222,13 +222,13 @@ MIR_COMMON_3.1 {
 MIR_COMMON_3.2 {
   global:
     extern "C" {
-      mir_input_event_get_touch;
+      mir_input_event_get_touch_event;
 
-      mir_touch_action;
-      mir_touch_axis;
-      mir_touch_count;
-      mir_touch_id;
-      mir_touch_modifiers;
-      mir_touch_tooltype;
+      mir_touch_event_get_action;
+      mir_touch_event_get_axis_value;
+      mir_touch_event_get_count;
+      mir_touch_event_get_id;
+      mir_touch_event_get_modifiers;
+      mir_touch_event_get_tooltype;
     };
 } MIR_COMMON_3.1;

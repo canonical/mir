@@ -68,14 +68,14 @@ inline MirKeyInputEvent const* maybe_key_event(MirEvent const* event)
     return mir_input_event_get_key_input_event(input_event);
 }
 
-inline MirTouch const* maybe_touch_event(MirEvent const* event)
+inline MirTouchEvent const* maybe_touch_event(MirEvent const* event)
 {
     if (mir_event_get_type(event) != mir_event_type_input)
         return nullptr;
     auto input_event = mir_event_get_input_event(event);
     if (mir_input_event_get_type(input_event) != mir_input_event_type_touch)
         return nullptr;
-    return mir_input_event_get_touch(input_event);
+    return mir_input_event_get_touch_event(input_event);
 }
 
 inline MirPointerInputEvent const* maybe_pointer_event(MirEvent const* event)
@@ -168,7 +168,7 @@ MATCHER_P(MirKeyEventMatches, event, "")
         mir_key_input_event_get_modifiers(expected) == mir_key_input_event_get_modifiers(actual);
 }
 
-MATCHER_P(MirTouchMatches, event, "")
+MATCHER_P(MirTouchEventMatches, event, "")
 {
     auto expected = maybe_touch_event(to_address(event));
     auto actual = maybe_touch_event(to_address(arg));
@@ -176,19 +176,19 @@ MATCHER_P(MirTouchMatches, event, "")
     if (expected == nullptr || actual == nullptr)
         return false;
 
-    auto tc = mir_touch_count(actual);
-    if (mir_touch_count(expected) != tc)
+    auto tc = mir_touch_event_get_count(actual);
+    if (mir_touch_event_get_count(expected) != tc)
         return false;
 
     for (unsigned i = 0; i != tc; i++)
     {
-        if (mir_touch_id(actual, i) !=  mir_touch_id(expected, i) ||
-            mir_touch_action(actual, i) !=  mir_touch_action(expected, i) ||
-            mir_touch_tooltype(actual, i) != mir_touch_tooltype(expected, i) ||
-            mir_touch_axis(actual, i, mir_touch_axis_x) != 
-                mir_touch_axis(expected, i, mir_touch_axis_x) ||
-            mir_touch_axis(actual, i, mir_touch_axis_y) != 
-                mir_touch_axis(expected, i, mir_touch_axis_y))
+        if (mir_touch_event_get_id(actual, i) !=  mir_touch_event_get_id(expected, i) ||
+            mir_touch_event_get_action(actual, i) !=  mir_touch_event_get_action(expected, i) ||
+            mir_touch_event_get_tooltype(actual, i) != mir_touch_event_get_tooltype(expected, i) ||
+            mir_touch_event_get_axis_value(actual, i, mir_touch_axis_x) != 
+                mir_touch_event_get_axis_value(expected, i, mir_touch_axis_x) ||
+            mir_touch_event_get_axis_value(actual, i, mir_touch_axis_y) != 
+                mir_touch_event_get_axis_value(expected, i, mir_touch_axis_y))
         {
             return false;
         }
@@ -254,11 +254,11 @@ MATCHER_P2(TouchEvent, x, y, "")
     if (tev == nullptr)
         return false;
 
-    if (mir_touch_action(tev, 0) != mir_touch_action_down)
+    if (mir_touch_event_get_action(tev, 0) != mir_touch_action_down)
         return false;
-    if (mir_touch_axis(tev, 0, mir_touch_axis_x) != x)
+    if (mir_touch_event_get_axis_value(tev, 0, mir_touch_axis_x) != x)
         return false;
-    if (mir_touch_axis(tev, 0, mir_touch_axis_y) != y)
+    if (mir_touch_event_get_axis_value(tev, 0, mir_touch_axis_y) != y)
         return false;
 
     return true;
@@ -284,11 +284,11 @@ MATCHER_P4(TouchEventInDirection, x0, y0, x1, y1, "")
     if (tev == nullptr)
         return false;
 
-    if (mir_touch_action(tev, 0) != mir_touch_action_change)
+    if (mir_touch_event_get_action(tev, 0) != mir_touch_action_change)
         return false;
 
-    auto x2 = mir_touch_axis(tev, 0, mir_touch_axis_x);
-    auto y2 = mir_touch_axis(tev, 0, mir_touch_axis_y);
+    auto x2 = mir_touch_event_get_axis_value(tev, 0, mir_touch_axis_x);
+    auto y2 = mir_touch_event_get_axis_value(tev, 0, mir_touch_axis_y);
 
     float dx1 = x1 - x0;
     float dy1 = y1 - y0;
@@ -309,7 +309,7 @@ MATCHER(TouchMovementEvent, "")
     if (tev == nullptr)
         return false;
 
-    if (mir_touch_action(tev, 0) != mir_touch_action_change)
+    if (mir_touch_event_get_action(tev, 0) != mir_touch_action_change)
         return false;
 
     return true;
