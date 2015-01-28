@@ -22,13 +22,12 @@
 #include "src/server/input/android/input_sender.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir_test_doubles/mock_main_loop.h"
 #include "mir_test_doubles/stub_scene_surface.h"
 #include "mir_test_doubles/mock_input_surface.h"
 #include "mir_test_doubles/mock_input_send_observer.h"
 #include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/mock_scene.h"
-#include "mir_test_doubles/stub_timer.h"
+#include "mir_test_doubles/triggered_main_loop.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_matchers.h"
 
@@ -40,8 +39,7 @@
 
 #include <boost/exception/all.hpp>
 
-#include <vector>
-#include <algorithm>
+//#include <algorithm>
 #include <cstring>
 
 namespace mi = mir::input;
@@ -75,89 +73,6 @@ public:
     }
 
     std::shared_ptr<ms::Observer> observer;
-};
-
-class TriggeredMainLoop : public ::testing::NiceMock<mtd::MockMainLoop>
-{
-public:
-    typedef ::testing::NiceMock<mtd::MockMainLoop> base;
-    typedef std::function<void(int)> fd_callback;
-    typedef std::function<void(int)> signal_callback;
-    typedef std::function<void()> callback;
-
-    void register_fd_handler(std::initializer_list<int> fds, void const* owner, fd_callback const& handler) override
-    {
-        base::register_fd_handler(fds, owner, handler);
-        for (int fd : fds)
-        {
-            fd_callbacks.emplace_back(Item{fd, owner, handler});
-        }
-    }
-
-    void unregister_fd_handler(void const* owner)
-    {
-        base::unregister_fd_handler(owner);
-        fd_callbacks.erase(
-            remove_if(
-                begin(fd_callbacks),
-                end(fd_callbacks),
-                [owner](Item const& item)
-                {
-                    return item.owner == owner;
-                }),
-            end(fd_callbacks)
-            );
-    }
-
-    void trigger_pending_fds()
-    {
-        fd_set read_fds;
-        FD_ZERO(&read_fds);
-        int max_fd = 0;
-
-        for (auto const & item : fd_callbacks)
-        {
-            FD_SET(item.fd, &read_fds);
-            max_fd = std::max(item.fd, max_fd);
-        }
-
-        struct timeval do_not_wait{0, 0};
-
-        if (select(max_fd+1, &read_fds, nullptr, nullptr, &do_not_wait))
-        {
-            for (auto const & item : fd_callbacks)
-            {
-                FD_ISSET(item.fd, &read_fds);
-                item.callback(item.fd);
-            }
-        }
-    }
-
-    std::unique_ptr<mir::time::Alarm> notify_in(std::chrono::milliseconds delay,
-                                                callback call) override
-    {
-        base::notify_in(delay, call);
-        timeout_callbacks.push_back(call);
-        return std::unique_ptr<mir::time::Alarm>{new mtd::StubAlarm};
-    }
-
-    void fire_all_alarms()
-    {
-        for(auto const& callback : timeout_callbacks)
-            callback();
-    }
-
-private:
-    std::vector<callback> timeout_callbacks;
-
-private:
-    struct Item
-    {
-        int fd;
-        void const* owner;
-        fd_callback callback;
-    };
-    std::vector<Item> fd_callbacks;
 };
 
 }
@@ -207,7 +122,7 @@ public:
     droidinput::sp<droidinput::InputChannel> client_channel{new droidinput::InputChannel(droidinput::String8("test"), channel->client_fd())};
     droidinput::InputConsumer consumer{client_channel};
 
-    TriggeredMainLoop loop;
+    mtd::TriggeredMainLoop loop;
     testing::NiceMock<mtd::MockInputSendObserver> observer;
 
     MirEvent key_event;
