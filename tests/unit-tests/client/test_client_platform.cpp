@@ -17,9 +17,10 @@
  */
 
 #include "mir/client_platform.h"
-#include "mir/mir_client_surface.h"
+#include "mir/egl_native_surface.h"
+
 #include "mir_test_doubles/mock_client_context.h"
-#include "mir_test_doubles/mock_client_surface.h"
+#include "mir_test_doubles/mock_egl_native_surface.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/stub_platform_helpers.h"
 
@@ -59,7 +60,7 @@ struct ClientPlatformTraits
 struct ClientPlatformTest : public ::testing::TestWithParam<ClientPlatformTraits const*>
 {
     ClientPlatformTest()
-        : platform_library{mtf::library_path() + "/" + GetParam()->platform_library_name},
+        : platform_library{mtf::client_platform(GetParam()->platform_library_name)},
           create_client_platform{platform_library.load_function<mcl::CreateClientPlatform>("create_client_platform")},
           probe{platform_library.load_function<mcl::ClientPlatformProbe>("is_appropriate_module")}
     {
@@ -78,7 +79,7 @@ struct ClientPlatformTest : public ::testing::TestWithParam<ClientPlatformTraits
 };
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
-ClientPlatformTraits const android_platform{"/client-modules/android.so",
+ClientPlatformTraits const android_platform{"android.so",
                                             [](MirPlatformPackage& pkg)
                                             {
                                                 ::memset(&pkg, 0, sizeof(pkg));
@@ -93,7 +94,7 @@ INSTANTIATE_TEST_CASE_P(Android,
 #endif
 
 #ifdef MIR_BUILD_PLATFORM_MESA
-ClientPlatformTraits const mesa_platform{"/client-modules/mesa.so",
+ClientPlatformTraits const mesa_platform{"mesa.so",
                                          [](MirPlatformPackage& pkg)
                                          {
                                              ::memset(&pkg, 0, sizeof(pkg));
@@ -108,7 +109,7 @@ INSTANTIATE_TEST_CASE_P(Mesa,
 
 #endif
 
-ClientPlatformTraits const dummy_platform{"/client-modules/dummy.so",
+ClientPlatformTraits const dummy_platform{"dummy.so",
                                           [](MirPlatformPackage& pkg)
                                           {
                                               mtf::create_stub_platform_package(pkg);
@@ -138,7 +139,7 @@ TEST_P(ClientPlatformTest, platform_creates)
 TEST_P(ClientPlatformTest, platform_creates_native_window)
 {
     auto platform = create_client_platform(&context);
-    auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
+    auto mock_client_surface = std::make_shared<mtd::MockEGLNativeSurface>();
     auto native_window = platform->create_egl_native_window(mock_client_surface.get());
     EXPECT_NE(*native_window, (EGLNativeWindowType) NULL);
 }

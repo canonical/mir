@@ -40,6 +40,7 @@ namespace droidinput = android;
 namespace mir
 {
 class ServerActionQueue;
+class SharedLibraryProberReport;
 
 namespace compositor
 {
@@ -75,6 +76,7 @@ class FocusSetter;
 class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
+class DefaultShell;
 }
 namespace time
 {
@@ -248,7 +250,6 @@ public:
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
      *  @{ */
-    virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
     virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
@@ -315,6 +316,7 @@ public:
 
     virtual std::shared_ptr<time::Clock> the_clock();
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
+    virtual std::shared_ptr<SharedLibraryProberReport>  the_shared_library_prober_report();
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
@@ -398,7 +400,6 @@ protected:
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<scene::SurfaceCoordinator> surface_coordinator;
-    CachedPtr<shell::FocusSetter>       shell_focus_setter;
     CachedPtr<scene::PlacementStrategy> shell_placement_strategy;
     CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
@@ -424,6 +425,7 @@ protected:
     CachedPtr<scene::CoordinateTranslator> coordinate_translator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
+    CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
@@ -438,6 +440,10 @@ private:
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
+
+    // TODO properly expose a shell::Shell interface
+    CachedPtr<shell::DefaultShell> default_shell;
+    auto the_shell() -> std::shared_ptr<shell::DefaultShell>;
 };
 }
 

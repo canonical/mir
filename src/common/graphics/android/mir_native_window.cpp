@@ -20,7 +20,6 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/graphics/android/sync_fence.h"
 
-#include <iostream>
 #include <boost/exception/diagnostic_information.hpp> 
 
 namespace mg=mir::graphics;

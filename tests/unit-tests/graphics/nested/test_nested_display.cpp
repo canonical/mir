@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/graphics/nested/nested_display.h"
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/report/null/display_report.h"

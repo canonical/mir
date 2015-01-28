@@ -111,6 +111,7 @@ void ms::SurfaceObservers::client_surface_close_requested()
 ms::BasicSurface::BasicSurface(
     std::string const& name,
     geometry::Rectangle rect,
+    std::weak_ptr<Surface> const& parent,
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<mi::InputChannel> const& input_channel,
@@ -131,9 +132,26 @@ ms::BasicSurface::BasicSurface(
     input_sender(input_sender),
     configurator(configurator),
     cursor_image_(cursor_image),
-    report(report)
+    report(report),
+    parent_(parent)
 {
     report->surface_created(this, surface_name);
+}
+
+ms::BasicSurface::BasicSurface(
+    std::string const& name,
+    geometry::Rectangle rect,
+    bool nonrectangular,
+    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::shared_ptr<mi::InputChannel> const& input_channel,
+    std::shared_ptr<input::InputSender> const& input_sender,
+    std::shared_ptr<SurfaceConfigurator> const& configurator,
+    std::shared_ptr<mg::CursorImage> const& cursor_image,
+    std::shared_ptr<SceneReport> const& report) :
+    BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, nonrectangular,buffer_stream,
+                 input_channel, input_sender, configurator,
+                 cursor_image, report)
+{
 }
 
 void ms::BasicSurface::force_requests_to_complete()
@@ -634,6 +652,12 @@ void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& obs
     observers.remove(o);
 }
 
+std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const
+{
+    std::lock_guard<std::mutex> lg(guard);
+    return parent_.lock();
+}
+
 namespace
 {
 //This class avoids locking for long periods of time by copying (or lazy-copying)
@@ -645,7 +669,6 @@ public:
         void const* compositor_id,
         geom::Rectangle const& position,
         glm::mat4 const& transform,
-        bool visible,
         float alpha,
         bool shaped,
         mg::Renderable::ID id)
@@ -654,7 +677,6 @@ public:
       compositor_id{compositor_id},
       alpha_{alpha},
       shaped_{shaped},
-      visible_{visible},
       screen_position_(position),
       transformation_(transform),
       id_(id)
@@ -674,9 +696,6 @@ public:
             compositor_buffer = underlying_buffer_stream->lock_compositor_buffer(compositor_id);
         return compositor_buffer;
     }
-
-    bool visible() const override
-    { return visible_; }
 
     geom::Rectangle screen_position() const override
     { return screen_position_; }
@@ -698,7 +717,6 @@ private:
     void const*const compositor_id;
     float const alpha_;
     bool const shaped_;
-    bool const visible_;
     geom::Rectangle const screen_position_;
     glm::mat4 const transformation_;
     mg::Renderable::ID const id_; 
@@ -715,7 +733,6 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
             compositor_id,
             surface_rect,
             transformation_matrix,
-            visible(lk),
             surface_alpha,
             nonrectangular, 
             this));
