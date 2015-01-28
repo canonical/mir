@@ -187,42 +187,35 @@ TEST(MultiplexingDispatchableTest, individual_dispatchee_is_not_concurrent)
 {
     using namespace testing;
 
-    std::atomic<int> canary{0};
-    std::atomic<int> total_count{0};
-
-    auto dispatchee = std::make_shared<mt::TestDispatchable>([&canary, &total_count]()
+    auto second_dispatch = std::make_shared<mt::Signal>();
+    auto dispatchee = std::make_shared<mt::TestDispatchable>([second_dispatch]()
     {
+        static std::atomic<int> canary{0};
+        static std::atomic<int> total_count{0};
+
         ++canary;
-        ++total_count;
         EXPECT_THAT(canary, Eq(1));
-        std::this_thread::sleep_for(std::chrono::seconds{1});
+        if (++total_count == 2)
+        {
+            second_dispatch->raise();
+        }
+        else
+        {
+            std::this_thread::sleep_for(std::chrono::seconds{1});
+        }
         --canary;
     });
 
     dispatchee->trigger();
     dispatchee->trigger();
 
-    md::MultiplexingDispatchable dispatcher{dispatchee};
+    auto dispatcher = std::make_shared<md::MultiplexingDispatchable>();
+    dispatcher->add_watch(dispatchee);
 
-    std::thread first{[&dispatcher]()
-        {
-            while (mt::fd_becomes_readable(dispatcher.watch_fd(), std::chrono::seconds{3}))
-            {
-                dispatcher.dispatch(md::FdEvent::readable);
-            }
-        }};
-    std::thread second{[&dispatcher]()
-        {
-            while (mt::fd_becomes_readable(dispatcher.watch_fd(), std::chrono::seconds{3}))
-            {
-                dispatcher.dispatch(md::FdEvent::readable);
-            }
-        }};
+    md::SimpleDispatchThread first_loop{dispatcher};
+    md::SimpleDispatchThread second_loop{dispatcher};
 
-    first.join();
-    second.join();
-
-    EXPECT_THAT(total_count, Eq(2));
+    EXPECT_TRUE(second_dispatch->wait_for(std::chrono::seconds{5}));
 }
 
 TEST(MultiplexingDispatchableTest, reentrant_dispatchee_is_dispatched_concurrently)
