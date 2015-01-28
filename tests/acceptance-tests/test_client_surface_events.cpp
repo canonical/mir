@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,8 +21,9 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 
-#include "mir/shell/surface_coordinator_wrapper.h"
+#include "mir/shell/shell_wrapper.h"
 
+#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 
@@ -36,6 +37,7 @@
 #include <chrono>
 #include <mutex>
 
+namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -44,19 +46,17 @@ using namespace testing;
 
 namespace
 {
-struct MockSurfaceCoordinator : msh::SurfaceCoordinatorWrapper
+struct MockShell : msh::ShellWrapper
 {
-    MockSurfaceCoordinator(std::shared_ptr<ms::SurfaceCoordinator> const& wrapped) :
-        msh::SurfaceCoordinatorWrapper(wrapped)
-    {
-    }
+    using msh::ShellWrapper::ShellWrapper;
 
-    std::shared_ptr<ms::Surface> add_surface(
-        ms::SurfaceCreationParameters const& params,
-        ms::Session* session) override
+    mf::SurfaceId create_surface(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& params) override
     {
-        latest_surface = wrapped->add_surface(params, session);
-        return latest_surface;
+        auto const surface = msh::ShellWrapper::create_surface(session, params);
+        latest_surface = session->surface(surface);
+        return surface;
     }
 
     std::shared_ptr<ms::Surface> latest_surface;
@@ -106,23 +106,23 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
         last_event_surface = nullptr;
     }
 
-    std::shared_ptr<MockSurfaceCoordinator> the_mock_surface_coordinator() const
+    std::shared_ptr<MockShell> the_mock_shell() const
     {
-        return mock_surface_coordinator.lock();
+        return mock_shell.lock();
     }
 
     std::shared_ptr<ms::Surface> the_latest_surface() const
     {
-        return the_mock_surface_coordinator()->latest_surface;
+        return the_mock_shell()->latest_surface;
     }
 
     void SetUp() override
     {
-        server.wrap_surface_coordinator([&](std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
-            -> std::shared_ptr<ms::SurfaceCoordinator>
+        server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
+            -> std::shared_ptr<msh::Shell>
         {
-            auto const msc = std::make_shared<MockSurfaceCoordinator>(wrapped);
-            mock_surface_coordinator = msc;
+            auto const msc = std::make_shared<MockShell>(wrapped);
+            mock_shell = msc;
             return msc;
         });
 
@@ -146,7 +146,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
         mtf::ConnectedClientWithASurface::TearDown();
     }
 
-    std::weak_ptr<MockSurfaceCoordinator> mock_surface_coordinator;
+    std::weak_ptr<MockShell> mock_shell;
 };
 }
 
