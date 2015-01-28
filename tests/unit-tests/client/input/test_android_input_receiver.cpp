@@ -220,7 +220,8 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 
     std::chrono::milliseconds const one_millisecond = std::chrono::milliseconds(1);
     std::chrono::seconds const one_second = std::chrono::seconds(1);
-    std::chrono::nanoseconds const one_frame = one_second / 60;
+    std::chrono::nanoseconds const one_frame =
+        std::chrono::nanoseconds(std::chrono::duration_cast<nanoseconds>(one_second).count() / 60);
 
     MirEvent ev;
 
@@ -228,7 +229,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     producer.produce_a_key_event();
     flush_channels();
 
-    std::chrono::milliseconds const max_timeout(1000);
+    std::chrono::milliseconds const max_timeout(1);
 
     // Key events don't get resampled. Will be reported first.
     ASSERT_TRUE(receiver.next_event(max_timeout, ev));
