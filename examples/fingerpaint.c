@@ -229,7 +229,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         case mir_input_event_type_pointer:
             pev = mir_input_event_get_pointer_input_event(input_event);
             ended = mir_pointer_input_event_get_action(pev) ==
-                    mir_pointer_input_event_action_button_up;
+                mir_pointer_input_event_action_button_up;
             touch_count = mir_pointer_input_event_get_button_state(pev,
                                mir_pointer_input_button_primary) ? 1 : 0;
         default:
@@ -271,9 +271,9 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                 else if (pev != NULL)
                 {
                     x = mir_pointer_input_event_get_axis_value(pev,
-                                                     mir_pointer_input_axis_x);
+                        mir_pointer_input_axis_x);
                     y = mir_pointer_input_event_get_axis_value(pev,
-                                                     mir_pointer_input_axis_y);
+                        mir_pointer_input_axis_y);
                     pressure = 0.5f;
                     radius = 5;
                 }
