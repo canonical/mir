@@ -57,12 +57,12 @@ status_t KeyLayoutMap::load(Tokenizer *tokenizer, sp<KeyLayoutMap>* outMap) {
 	status = NO_MEMORY;
     } else {
 #if DEBUG_PARSER_PERFORMANCE
-	nsecs_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
+	std::chrono::nanoseconds startTime = systemTime(SYSTEM_TIME_MONOTONIC);
 #endif
 	Parser parser(map.get(), tokenizer);
 	status = parser.parse();
 #if DEBUG_PARSER_PERFORMANCE
-	nsecs_t elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
+	std::chrono::nanoseconds elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
 	ALOGD("Parsed key layout map file '%s' %d lines in %0.3fms.",
 	      tokenizer->getFilename().string(), tokenizer->getLineNumber(),
 	      elapsedTime / 1000000.0);

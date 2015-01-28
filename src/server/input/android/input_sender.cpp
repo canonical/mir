@@ -246,8 +246,8 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
         event.scan_code,
         event.modifiers,
         event.repeat_count,
-        event.down_time,
-        event.event_time
+        std::chrono::nanoseconds(event.down_time),
+        std::chrono::nanoseconds(event.event_time)
         );
 }
 
@@ -290,8 +290,8 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_motion_event(uint32_
         0.0f,  // event.y_offset,
         event.x_precision,
         event.y_precision,
-        event.down_time,
-        event.event_time,
+        std::chrono::nanoseconds(event.down_time),
+        std::chrono::nanoseconds(event.event_time),
         event.pointer_count,
         properties,
         coords

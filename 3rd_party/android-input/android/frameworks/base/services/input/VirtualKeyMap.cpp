@@ -59,12 +59,12 @@ status_t VirtualKeyMap::load(const String8& filename, VirtualKeyMap** outMap) {
             status = NO_MEMORY;
         } else {
 #if DEBUG_PARSER_PERFORMANCE
-            nsecs_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
+            std::chrono::nanoseconds startTime = systemTime(SYSTEM_TIME_MONOTONIC);
 #endif
             Parser parser(map, tokenizer);
             status = parser.parse();
 #if DEBUG_PARSER_PERFORMANCE
-            nsecs_t elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
+            std::chrono::nanoseconds elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
             ALOGD("Parsed key character map file '%s' %d lines in %0.3fms.",
                 c_str(tokenizer->getFilename()), tokenizer->getLineNumber(),
                     elapsedTime / 1000000.0);

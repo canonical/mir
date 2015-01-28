@@ -47,6 +47,6 @@ TEST(AndroidInputApplicationHandle, takes_name_from_surface_and_specifies_max_ti
     mia::InputApplicationHandle application_handle(&surface_info);
     EXPECT_TRUE(application_handle.updateInfo());
     auto info = application_handle.getInfo();
-    EXPECT_EQ(INT_MAX, info->dispatchingTimeout);
+    EXPECT_EQ(std::chrono::nanoseconds(INT_MAX), info->dispatchingTimeout);
     EXPECT_EQ(droidinput::String8(testing_surface_name.c_str()), info->name);
 }

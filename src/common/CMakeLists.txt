@@ -17,6 +17,8 @@ add_subdirectory(env)
 add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(time)
+add_subdirectory(dispatch)
+
 list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirtime>
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp

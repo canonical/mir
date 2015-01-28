@@ -108,7 +108,7 @@ public:
     droidinput::sp<droidinput::KeyCharacterMap> getKeyCharacterMap(int32_t deviceId) const override;
     bool setKeyboardLayoutOverlay(int32_t deviceId,
             const droidinput::sp<droidinput::KeyCharacterMap>& map) override;
-    void vibrate(int32_t deviceId, nsecs_t duration) override;
+    void vibrate(int32_t deviceId, std::chrono::nanoseconds duration) override;
     void cancelVibrate(int32_t deviceId) override;
     void requestReopenDevices() override;
     void wake() override;
@@ -125,7 +125,7 @@ public:
     void synthesize_event(synthesis::ButtonParameters const& parameters);
     void synthesize_event(synthesis::MotionParameters const& parameters);
     void synthesize_event(synthesis::TouchParameters const& parameters);
-    void synthesize_event(nsecs_t when, int32_t deviceId, int32_t type, int32_t code, int32_t value);
+    void synthesize_event(std::chrono::nanoseconds when, int32_t deviceId, int32_t type, int32_t code, int32_t value);
 
     void addDevice(int32_t deviceId, const std::string& name, uint32_t classes);
     void removeDevice(int32_t deviceId);
