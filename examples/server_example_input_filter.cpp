@@ -47,15 +47,15 @@ void print_touch_event(MirInputEvent const* ev)
 {
     auto event_time = mir_input_event_get_event_time(ev);
     auto tev = mir_input_event_get_touch_event(ev);
-    auto tc = mir_touch_event_get_count(tev);
+    auto tc = mir_touch_event_point_count(tev);
 
     std::cout << "Handline touch event time=" << event_time
               << " touch_count=" << tc << std::endl;
     for (unsigned i = 0; i < tc; i++)
     {
-        auto id = mir_touch_event_get_id(tev, i);
-        auto px = mir_touch_event_get_axis_value(tev, i, mir_touch_axis_x);
-        auto py = mir_touch_event_get_axis_value(tev, i, mir_touch_axis_y);
+        auto id = mir_touch_event_id(tev, i);
+        auto px = mir_touch_event_axis_value(tev, i, mir_touch_axis_x);
+        auto py = mir_touch_event_axis_value(tev, i, mir_touch_axis_y);
 
         std::cout << "  "
             << " id=" << id

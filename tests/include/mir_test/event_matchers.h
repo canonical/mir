@@ -176,19 +176,19 @@ MATCHER_P(MirTouchEventMatches, event, "")
     if (expected == nullptr || actual == nullptr)
         return false;
 
-    auto tc = mir_touch_event_get_count(actual);
-    if (mir_touch_event_get_count(expected) != tc)
+    auto tc = mir_touch_event_point_count(actual);
+    if (mir_touch_event_point_count(expected) != tc)
         return false;
 
     for (unsigned i = 0; i != tc; i++)
     {
-        if (mir_touch_event_get_id(actual, i) !=  mir_touch_event_get_id(expected, i) ||
-            mir_touch_event_get_action(actual, i) !=  mir_touch_event_get_action(expected, i) ||
-            mir_touch_event_get_tooltype(actual, i) != mir_touch_event_get_tooltype(expected, i) ||
-            mir_touch_event_get_axis_value(actual, i, mir_touch_axis_x) != 
-                mir_touch_event_get_axis_value(expected, i, mir_touch_axis_x) ||
-            mir_touch_event_get_axis_value(actual, i, mir_touch_axis_y) != 
-                mir_touch_event_get_axis_value(expected, i, mir_touch_axis_y))
+        if (mir_touch_event_id(actual, i) !=  mir_touch_event_id(expected, i) ||
+            mir_touch_event_action(actual, i) !=  mir_touch_event_action(expected, i) ||
+            mir_touch_event_tooltype(actual, i) != mir_touch_event_tooltype(expected, i) ||
+            mir_touch_event_axis_value(actual, i, mir_touch_axis_x) != 
+                mir_touch_event_axis_value(expected, i, mir_touch_axis_x) ||
+            mir_touch_event_axis_value(actual, i, mir_touch_axis_y) != 
+                mir_touch_event_axis_value(expected, i, mir_touch_axis_y))
         {
             return false;
         }
@@ -254,11 +254,11 @@ MATCHER_P2(TouchEvent, x, y, "")
     if (tev == nullptr)
         return false;
 
-    if (mir_touch_event_get_action(tev, 0) != mir_touch_action_down)
+    if (mir_touch_event_action(tev, 0) != mir_touch_action_down)
         return false;
-    if (mir_touch_event_get_axis_value(tev, 0, mir_touch_axis_x) != x)
+    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) != x)
         return false;
-    if (mir_touch_event_get_axis_value(tev, 0, mir_touch_axis_y) != y)
+    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) != y)
         return false;
 
     return true;
@@ -284,11 +284,11 @@ MATCHER_P4(TouchEventInDirection, x0, y0, x1, y1, "")
     if (tev == nullptr)
         return false;
 
-    if (mir_touch_event_get_action(tev, 0) != mir_touch_action_change)
+    if (mir_touch_event_action(tev, 0) != mir_touch_action_change)
         return false;
 
-    auto x2 = mir_touch_event_get_axis_value(tev, 0, mir_touch_axis_x);
-    auto y2 = mir_touch_event_get_axis_value(tev, 0, mir_touch_axis_y);
+    auto x2 = mir_touch_event_axis_value(tev, 0, mir_touch_axis_x);
+    auto y2 = mir_touch_event_axis_value(tev, 0, mir_touch_axis_y);
 
     float dx1 = x1 - x0;
     float dy1 = y1 - y0;
@@ -309,7 +309,7 @@ MATCHER(TouchMovementEvent, "")
     if (tev == nullptr)
         return false;
 
-    if (mir_touch_event_get_action(tev, 0) != mir_touch_action_change)
+    if (mir_touch_event_action(tev, 0) != mir_touch_action_change)
         return false;
 
     return true;
