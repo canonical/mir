@@ -154,7 +154,6 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
     std::shared_ptr<MockSurfaceCoordinator> mock_surface_coordinator;
 };
 
-
 TEST_F(ClientMirSurface, sends_optional_params)
 {
     EXPECT_CALL(*mock_surface_coordinator, add_surface(AllOf(MatchesRequired(&spec), MatchesOptional(&spec)),_));
@@ -164,11 +163,6 @@ TEST_F(ClientMirSurface, sends_optional_params)
     // A valid surface is needed to be specified as a parent
     ASSERT_THAT(surf.get(), IsValid());
     spec.parent = surf.get();
-
-    // The second time around we don't care if the surface gets created,
-    // but we'd like to validate that the server received the output id specified
-    int const arbitrary_output_id = 3000;
-    spec.output_id = arbitrary_output_id;
 
     EXPECT_CALL(*mock_surface_coordinator, add_surface(MatchesOptional(&spec),_));
     create_surface(&spec);

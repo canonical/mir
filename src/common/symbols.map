@@ -230,5 +230,8 @@ MIR_COMMON_3.2 {
       mir_touch_event_get_id;
       mir_touch_event_get_modifiers;
       mir_touch_event_get_tooltype;
+    }
+    extern "C++" {
+      mir::events::*
     };
 } MIR_COMMON_3.1;

@@ -59,22 +59,3 @@ void msh::SessionCoordinatorWrapper::unset_focus()
 {
     wrapped->unset_focus();
 }
-
-std::shared_ptr<ms::PromptSession> msh::SessionCoordinatorWrapper::start_prompt_session_for(
-    std::shared_ptr<ms::Session> const& session,
-    scene::PromptSessionCreationParameters const& params)
-{
-    return wrapped->start_prompt_session_for(session, params);
-}
-
-void msh::SessionCoordinatorWrapper::add_prompt_provider_for(
-    std::shared_ptr<ms::PromptSession> const& prompt_session,
-    std::shared_ptr<ms::Session> const& session)
-{
-    wrapped->add_prompt_provider_for(prompt_session, session);
-}
-
-void msh::SessionCoordinatorWrapper::stop_prompt_session(std::shared_ptr<ms::PromptSession> const& prompt_session)
-{
-    wrapped->stop_prompt_session(prompt_session);
-}

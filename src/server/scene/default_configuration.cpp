@@ -89,7 +89,6 @@ mir::DefaultServerConfiguration::the_surface_coordinator()
             return wrap_surface_coordinator(
                 std::make_shared<ms::SurfaceController>(
                     the_surface_factory(),
-                    the_placement_strategy(),
                     the_surface_stack_model()));
         });
 }
@@ -181,8 +180,7 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                     the_session_container(),
                     the_snapshot_strategy(),
                     the_session_event_sink(),
-                    the_session_listener(),
-                    the_prompt_session_manager()));
+                    the_session_listener()));
         });
 }
 
