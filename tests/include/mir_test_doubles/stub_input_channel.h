@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
 
 #include "mir/input/input_channel.h"
+#include "mir/fd.h"
 
 namespace mir
 {
@@ -36,7 +37,7 @@ struct StubInputChannel : public input::InputChannel
     }
 
     StubInputChannel()
-     : StubInputChannel(0)
+     : StubInputChannel(Fd::invalid)
     {
     }
 
@@ -48,7 +49,7 @@ struct StubInputChannel : public input::InputChannel
     {
         return input_fd;
     }
-    int input_fd;
+    Fd input_fd;
 };
 
 }

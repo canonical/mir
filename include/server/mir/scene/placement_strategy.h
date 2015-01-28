@@ -26,6 +26,7 @@ namespace scene
 class Session;
 struct SurfaceCreationParameters;
 
+// TODO Can be subsumed by DefaultShell
 class PlacementStrategy
 {
 public:

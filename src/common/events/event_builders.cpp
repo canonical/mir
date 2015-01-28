@@ -31,9 +31,10 @@ namespace geom = mir::geometry;
 
 namespace
 {
+    void delete_event(MirEvent *e) { delete e; }
     mir::EventUPtr make_event_uptr(MirEvent *e)
     {
-        return mir::EventUPtr(e, [](MirEvent *d) { delete d; });
+        return mir::EventUPtr(e, delete_event);
     }
 }
 

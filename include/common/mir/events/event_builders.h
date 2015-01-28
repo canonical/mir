@@ -32,7 +32,7 @@
 
 namespace mir
 {
-typedef std::unique_ptr<MirEvent, std::function<void(MirEvent*)>> EventUPtr;
+    typedef std::unique_ptr<MirEvent, void(*)(MirEvent*)> EventUPtr;
     
 namespace events
 {

@@ -255,6 +255,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : testing::Test, mtf::FakeEve
         int fds[2];
         // Closed by droidinput InputChannel on shutdown
         socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds);
+        close(fds[1]);
         return fds[0];
     }
 };

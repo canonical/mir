@@ -21,10 +21,13 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
+#include "default_client_buffer_stream_factory.h"
 #include "mir_toolkit/mir_platform_message.h"
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
+#include "mir/dispatch/dispatchable.h"
+#include "mir/dispatch/simple_dispatch_thread.h"
 #include "connection_configuration.h"
 #include "display_configuration.h"
 #include "connection_surface_map.h"
@@ -40,6 +43,7 @@
 #include <boost/exception/diagnostic_information.hpp>
 
 namespace mcl = mir::client;
+namespace md = mir::dispatch;
 namespace mircv = mir::input::receiver;
 namespace gp = google::protobuf;
 
@@ -108,7 +112,8 @@ MirConnection::MirConnection(
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
         surface_map(conf.the_surface_map()),
-        event_handler_register(conf.the_event_handler_register())
+        event_handler_register(conf.the_event_handler_register()),
+        eventloop{new md::SimpleDispatchThread{std::dynamic_pointer_cast<md::Dispatchable>(channel)}}
 {
     connect_result.set_error("connect not called");
     {
@@ -138,7 +143,8 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, &debug, platform->create_buffer_factory(), input_platform, spec, callback, context);
+    auto surface = new MirSurface(this, server, &debug, get_client_buffer_stream_factory(),
+        input_platform, spec, callback, context);
 
     return surface->get_create_wait_handle();
 }
@@ -481,6 +487,14 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     return platform;
+}
+
+std::shared_ptr<mir::client::ClientBufferStreamFactory> MirConnection::get_client_buffer_stream_factory()
+{
+    if (!buffer_stream_factory)
+        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(platform->create_buffer_factory(), 
+            platform, the_logger());
+    return buffer_stream_factory;
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()
