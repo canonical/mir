@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 #include "mir/fd.h"
+#include "mir/dispatch/dispatchable.h"
 
 namespace mir
 {
@@ -64,7 +65,7 @@ namespace rpc
  *       from different threads. Multiple threads calling the same
  *       function need synchronisation.
  */
-class StreamTransport
+class StreamTransport : public dispatch::Dispatchable
 {
 public:
     /**
@@ -80,8 +81,8 @@ public:
 
     /**
      * \brief Observer of IO status
-     * \note The Transport may call Observer members from arbitrary threads.
-     *       The Observer implementation is responsible for any synchronisation.
+     * \note The Transport will only call Observers in response to dispatch(),
+     *       and on the thread calling dispatch().
      */
     class Observer
     {
@@ -106,8 +107,6 @@ public:
     /**
      * \brief Register an IO observer
      * \param [in] observer
-     * \note There is no guarantee which thread will call into the observer.
-     *       Synchronisation is the responsibility of the caller.
      */
     virtual void register_observer(std::shared_ptr<Observer> const& observer) = 0;
 
