@@ -110,7 +110,7 @@ f7c31027e803d28e6221e523d7fb679189b6e1a0  include/server/mir/server.h
 f8d415af54b4a477338fb9dbe20db01aa4544029  include/server/mir/shell/host_lifecycle_event_listener.h
 4f50c37bb8e36a1aa4918af6aa01b0f032ed0984  include/server/mir/shell/input_targeter.h
 455fbd79aa33d1a3fcf078c5e5b7a8575ee9eb8f  include/server/mir/shell/shell.h
-31476c6846f51dbc1eb887bcbf51458d335da4ce  include/server/mir/shell/shell_wrapper.h
+66140bd35f412fca4cb3eb58d890acecabeb333a  include/server/mir/shell/shell_wrapper.h
 114cc8c0b12ee4fd78d86c8f3309546e4dc68c9f  include/server/mir/terminate_with_current_exception.h
 1b8c2a763c8f5f00b737c3a187db2304676f8076  include/server/mir/time/alarm.h
 a134c7b86e9c3b191f1004abe7bbdceed8ac42ee  include/server/mir/time/timer.h
