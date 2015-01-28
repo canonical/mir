@@ -141,7 +141,7 @@ bool mircva::InputReceiver::dispatch(md::FdEvents events)
 
 md::FdEvents mircva::InputReceiver::relevant_events() const
 {
-    return md::FdEvent::readable;
+    return dispatcher.relevant_events();
 }
 
 namespace
