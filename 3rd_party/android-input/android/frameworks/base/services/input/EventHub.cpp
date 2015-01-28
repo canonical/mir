@@ -580,7 +580,7 @@ bool EventHub::setKeyboardLayoutOverlay(int32_t deviceId,
     return false;
 }
 
-void EventHub::vibrate(int32_t deviceId, nsecs_t duration) {
+void EventHub::vibrate(int32_t deviceId, std::chrono::nanoseconds duration) {
     AutoMutex _l(mLock);
     Device* device = getDeviceLocked(deviceId);
     if (device && !device->isVirtual()) {
@@ -590,7 +590,7 @@ void EventHub::vibrate(int32_t deviceId, nsecs_t duration) {
         effect.id = device->ffEffectId;
         effect.u.rumble.strong_magnitude = 0xc000;
         effect.u.rumble.weak_magnitude = 0xc000;
-        effect.replay.length = (duration + 999999LL) / 1000000LL;
+        effect.replay.length = (duration + std::chrono::nanoseconds(999999)) / std::chrono::nanoseconds(1000000LL);
         effect.replay.delay = 0;
         if (ioctl(device->fd, EVIOCSFF, &effect)) {
             ALOGW("Could not upload force feedback effect to device %s due to error %d.",
@@ -665,7 +665,7 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
     size_t capacity = bufferSize;
     bool awoken = false;
     for (;;) {
-        nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+        std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
 
         // Reopen input devices if needed.
         if (mNeedToReopenDevices) {
@@ -802,8 +802,8 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
                         // The systemTime(SYSTEM_TIME_MONOTONIC) function we use everywhere
                         // calls clock_gettime(CLOCK_MONOTONIC) which is implemented as a
                         // system call that also queries ktime_get_ts().
-                        event->when = nsecs_t(iev.time.tv_sec) * 1000000000LL
-                                + nsecs_t(iev.time.tv_usec) * 1000LL;
+                        event->when = std::chrono::nanoseconds(iev.time.tv_sec) * 1000000000LL
+                                + std::chrono::nanoseconds(iev.time.tv_usec) * 1000LL;
                         ALOGV("event time %lld, now %lld", event->when, now);
 #else
                         event->when = now;
@@ -813,7 +813,7 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
                         event->code = iev.code;
                         event->value = iev.value;
 
-                        input_report->received_event_from_kernel(event->when, event->type, event->code, event->value);
+                        input_report->received_event_from_kernel(event->when.count(), event->type, event->code, event->value);
 
                         event += 1;
                     }
