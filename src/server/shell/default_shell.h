@@ -76,12 +76,11 @@ public:
 /** @} */
 
 private:
-    std::shared_ptr<scene::PlacementStrategy> const placement_strategy;  // TODO doesn't need to be a strategy
+    std::shared_ptr<scene::PlacementStrategy> const placement_strategy;
 
-    std::mutex mutable focus_surface_mutex;
+
+    std::mutex mutable focus_mutex;
     std::weak_ptr<scene::Surface> focus_surface;
-
-    std::mutex mutable focus_application_mutex;
     std::weak_ptr<scene::Session> focus_application;
 
     void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Session> const& next_focus);

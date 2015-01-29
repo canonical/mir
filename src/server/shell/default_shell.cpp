@@ -61,7 +61,7 @@ void msh::DefaultShell::close_session(
 
 void msh::DefaultShell::focus_next()
 {
-    std::unique_lock<std::mutex> lock(focus_application_mutex);
+    std::unique_lock<std::mutex> lock(focus_mutex);
     auto focus = focus_application.lock();
 
     focus = session_coordinator->successor_of(focus);
@@ -71,14 +71,14 @@ void msh::DefaultShell::focus_next()
 
 std::weak_ptr<ms::Session> msh::DefaultShell::focussed_application() const
 {
-    std::unique_lock<std::mutex> lg(focus_application_mutex);
+    std::unique_lock<std::mutex> lg(focus_mutex);
     return focus_application;
 }
 
 void msh::DefaultShell::set_focus_to(
     std::shared_ptr<scene::Session> const& focus)
 {
-    std::unique_lock<std::mutex> lg(focus_application_mutex);
+    std::unique_lock<std::mutex> lg(focus_mutex);
     set_focus_to_locked(lg, focus);
 }
 
@@ -117,8 +117,6 @@ inline void msh::DefaultShell::set_focus_to_locked(std::unique_lock<std::mutex> 
 
     if (surface)
     {
-        std::lock_guard<std::mutex> lg(focus_surface_mutex);
-
         // Ensure the surface has really taken the focus before notifying it that it is focused
         surface_coordinator->raise(surface);
         surface->take_input_focus(input_targeter);
