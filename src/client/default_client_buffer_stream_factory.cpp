@@ -32,15 +32,15 @@ mcl::DefaultClientBufferStreamFactory::DefaultClientBufferStreamFactory(std::sha
 }
 
 std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_consumer_stream(mp::DisplayServer& server,
-    mp::BufferStream const& protobuf_bs)
+    mp::BufferStream const& protobuf_bs, std::string const& surface_name)
 {
     return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Consumer, client_buffer_factory,
-        native_window_factory, protobuf_bs, logger);
+        native_window_factory, protobuf_bs, logger, surface_name);
 }
 
 std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_producer_stream(mp::DisplayServer& server,
-    mp::BufferStream const& protobuf_bs)
+    mp::BufferStream const& protobuf_bs, std::string const& surface_name)
 {
     return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Producer, client_buffer_factory,
-        native_window_factory, protobuf_bs, logger);
+        native_window_factory, protobuf_bs, logger, surface_name);
 }

@@ -100,7 +100,7 @@ struct ClientBufferStreamTest : public testing::Test
         mcl::BufferStreamMode mode=mcl::BufferStreamMode::Producer)
     {
         return std::make_shared<mcl::BufferStream>(mock_protobuf_server, mode, mt::fake_shared(buffer_factory),
-            mt::fake_shared(stub_native_window_factory), protobuf_bs, logger);
+            mt::fake_shared(stub_native_window_factory), protobuf_bs, logger, "testsurface");
     }
 };
 

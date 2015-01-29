@@ -30,10 +30,10 @@ namespace doubles
 
 struct MockClientBufferStreamFactory : public client::ClientBufferStreamFactory
 {
-    MOCK_METHOD2(make_consumer_stream, std::shared_ptr<client::ClientBufferStream>(protobuf::DisplayServer&,
-        protobuf::BufferStream const&));
-    MOCK_METHOD2(make_producer_stream, std::shared_ptr<client::ClientBufferStream>(protobuf::DisplayServer&,
-        protobuf::BufferStream const&));
+    MOCK_METHOD3(make_consumer_stream, std::shared_ptr<client::ClientBufferStream>(protobuf::DisplayServer&,
+        protobuf::BufferStream const&, std::string const&));
+    MOCK_METHOD3(make_producer_stream, std::shared_ptr<client::ClientBufferStream>(protobuf::DisplayServer&,
+        protobuf::BufferStream const&, std::string const&));
 };
 
 }

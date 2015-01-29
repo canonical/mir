@@ -101,7 +101,8 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
     std::shared_ptr<mcl::ClientBufferFactory> const& buffer_factory,
     std::shared_ptr<mcl::EGLNativeWindowFactory> const& native_window_factory,
     mp::BufferStream const& protobuf_bs,
-    std::shared_ptr<ml::Logger> const& logger)
+    std::shared_ptr<ml::Logger> const& logger,
+    std::string const& surface_name)
     : display_server(server),
       mode(mode),
       native_window_factory(native_window_factory),
@@ -119,7 +120,7 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
     process_buffer(protobuf_bs.buffer());
     egl_native_window_ = native_window_factory->create_egl_native_window(this);
 
-    perf_report->name_surface(std::to_string(protobuf_bs.id().value()).c_str());
+    perf_report->name_surface(surface_name.c_str());
 }
 
 mcl::BufferStream::~BufferStream()

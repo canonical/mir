@@ -32,9 +32,9 @@ class ClientBufferStreamFactory
 {
 public:
     virtual std::shared_ptr<ClientBufferStream> make_consumer_stream(protobuf::DisplayServer& server,
-       protobuf::BufferStream const& protobuf_bs) = 0;
+       protobuf::BufferStream const& protobuf_bs, std::string const& surface_name) = 0;
     virtual std::shared_ptr<ClientBufferStream> make_producer_stream(protobuf::DisplayServer& server,
-       protobuf::BufferStream const& protobuf_bs) = 0;
+       protobuf::BufferStream const& protobuf_bs, std::string const& surface_name) = 0;
 
 protected:
     ClientBufferStreamFactory() = default;
