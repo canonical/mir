@@ -36,6 +36,6 @@ extern "C" bool is_appropriate_module(mcl::ClientContext* context)
 {
     using namespace testing;
     MirPlatformPackage package;
-    context->populate(package);
+    context->populate_server_package(package);
     return Matches(mtf::IsStubPlatformPackage())(package);
 }

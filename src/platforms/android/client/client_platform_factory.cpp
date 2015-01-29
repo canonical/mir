@@ -31,19 +31,19 @@ extern "C" std::shared_ptr<mcl::ClientPlatform>
 mcl::create_client_platform(mcl::ClientContext* context)
 {
     MirPlatformPackage platform;
-    context->populate(platform);
+    context->populate_server_package(platform);
     if (platform.data_items != 0 || platform.fd_items != 0)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create Android client platform on non-Android server"}));
     }
-    return std::make_shared<mcla::AndroidClientPlatform>();
+    return std::make_shared<mcla::AndroidClientPlatform>(context);
 }
 
 extern "C" bool
 mcl::is_appropriate_module(mcl::ClientContext* context)
 {
     MirPlatformPackage platform;
-    context->populate(platform);
+    context->populate_server_package(platform);
     // TODO: Actually check what platform we're using, rather than blindly
     //       hope we can distinguish them from the stuff they've put in the
     //       PlatformPackage.

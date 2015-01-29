@@ -72,6 +72,11 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
         }
         return std::shared_ptr<EGLNativeWindowType>{};
     }
+
+    void populate(MirPlatformPackage&) const override
+    {
+    }
+
     MirPlatformType platform_type() const
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
