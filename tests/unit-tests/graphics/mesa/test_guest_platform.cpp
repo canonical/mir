@@ -61,20 +61,16 @@ protected:
 
 }
 
-TEST_F(MesaGuestPlatformTest, auth_magic_is_delegated_to_nested_context)
+TEST_F(MesaGuestPlatformTest, auth_fd_is_delegated_to_nested_context)
 {
     using namespace testing;
 
-    int const success{0};
-    mg::PlatformOperationMessage auth_magic_success_response;
-    auth_magic_success_response.data.resize(sizeof(MirMesaAuthMagicResponse));
-    *reinterpret_cast<MirMesaAuthMagicResponse*>(
-        auth_magic_success_response.data.data()) =
-            MirMesaAuthMagicResponse{success};
+    int const auth_fd{13};
+    mg::PlatformOperationMessage auth_fd_response{{},{auth_fd}};
 
     EXPECT_CALL(mock_nested_context,
-                platform_operation(MirMesaPlatformOperation::auth_magic, _))
-        .WillOnce(Return(auth_magic_success_response));
+                platform_operation(MirMesaPlatformOperation::auth_fd, _))
+        .WillOnce(Return(auth_fd_response));
 
     mgm::GuestPlatform native(mt::fake_shared(mock_nested_context));
     auto ipc_ops = native.make_ipc_operations();
