@@ -362,7 +362,7 @@ MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index)
 
 // ABI-compatible MIR_COMMON_3.1
 extern "C"
-MirTouchAction mir_touch_input_event_get_action(MirTouchEvent const* event, size_t touch_index)
+MirTouchAction mir_touch_input_event_get_touch_action(MirTouchEvent const* event, size_t touch_index)
 {
     return mir_touch_event_action(event, touch_index);
 }
