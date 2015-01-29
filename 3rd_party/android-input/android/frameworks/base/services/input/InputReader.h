@@ -86,7 +86,7 @@ struct InputReaderConfiguration {
     // Gets the amount of time to disable virtual keys after the screen is touched
     // in order to filter out accidental virtual key presses due to swiping gestures
     // or taps near the edge of the display.  May be 0 to disable the feature.
-    nsecs_t virtualKeyQuietTime;
+    std::chrono::nanoseconds virtualKeyQuietTime;
 
     // The excluded device names for the platform.
     // Devices with these names will be ignored.
@@ -104,7 +104,7 @@ struct InputReaderConfiguration {
     // Quiet time between certain pointer gesture transitions.
     // Time to allow for all fingers or buttons to settle into a stable state before
     // starting a new gesture.
-    nsecs_t pointerGestureQuietInterval;
+    std::chrono::nanoseconds pointerGestureQuietInterval;
 
     // The minimum speed that a pointer must travel for us to consider switching the active
     // touch pointer to it during a drag.  This threshold is set to avoid switching due
@@ -113,7 +113,7 @@ struct InputReaderConfiguration {
 
     // Tap gesture delay time.
     // The time between down and up must be less than this to be considered a tap.
-    nsecs_t pointerGestureTapInterval;
+    std::chrono::nanoseconds pointerGestureTapInterval;
 
     // Tap drag gesture delay time.
     // The time between the previous tap's up and the next down must be less than
@@ -122,7 +122,7 @@ struct InputReaderConfiguration {
     //
     // Note that the previous tap will be held down for this entire duration so this
     // interval must be shorter than the long press timeout.
-    nsecs_t pointerGestureTapDragInterval;
+    std::chrono::nanoseconds pointerGestureTapDragInterval;
 
     // The distance in pixels that the pointer is allowed to move from initial down
     // to up and still be called a tap.
@@ -131,7 +131,7 @@ struct InputReaderConfiguration {
     // Time after the first touch points go down to settle on an initial centroid.
     // This is intended to be enough time to handle cases where the user puts down two
     // fingers at almost but not quite exactly the same time.
-    nsecs_t pointerGestureMultitouchSettleInterval;
+    std::chrono::nanoseconds pointerGestureMultitouchSettleInterval;
 
     // The transition from PRESS to SWIPE or FREEFORM gesture mode is made when
     // at least two pointers have moved at least this far from their starting place.
@@ -293,7 +293,7 @@ public:
     virtual void requestRefreshConfiguration(uint32_t changes) = 0;
 
     /* Controls the vibrator of a particular input device. */
-    virtual void vibrate(int32_t deviceId, const nsecs_t* pattern, size_t patternSize,
+    virtual void vibrate(int32_t deviceId, const std::chrono::nanoseconds* pattern, size_t patternSize,
             ssize_t repeat, int32_t token) = 0;
     virtual void cancelVibrate(int32_t deviceId, int32_t token) = 0;
 };
@@ -310,13 +310,13 @@ public:
     virtual void updateGlobalMetaState() = 0;
     virtual int32_t getGlobalMetaState() = 0;
 
-    virtual void disableVirtualKeysUntil(nsecs_t time) = 0;
-    virtual bool shouldDropVirtualKey(nsecs_t now,
+    virtual void disableVirtualKeysUntil(std::chrono::nanoseconds time) = 0;
+    virtual bool shouldDropVirtualKey(std::chrono::nanoseconds now,
             InputDevice* device, int32_t keyCode, int32_t scanCode) = 0;
 
     virtual void fadePointer() = 0;
 
-    virtual void requestTimeoutAtTime(nsecs_t when) = 0;
+    virtual void requestTimeoutAtTime(std::chrono::nanoseconds when) = 0;
     virtual int32_t bumpGeneration() = 0;
 
     virtual InputReaderPolicyInterface* getPolicy() = 0;
@@ -362,7 +362,7 @@ public:
 
     virtual void requestRefreshConfiguration(uint32_t changes);
 
-    virtual void vibrate(int32_t deviceId, const nsecs_t* pattern, size_t patternSize,
+    virtual void vibrate(int32_t deviceId, const std::chrono::nanoseconds* pattern, size_t patternSize,
             ssize_t repeat, int32_t token);
     virtual void cancelVibrate(int32_t deviceId, int32_t token);
 
@@ -379,11 +379,11 @@ protected:
 
         virtual void updateGlobalMetaState();
         virtual int32_t getGlobalMetaState();
-        virtual void disableVirtualKeysUntil(nsecs_t time);
-        virtual bool shouldDropVirtualKey(nsecs_t now,
+        virtual void disableVirtualKeysUntil(std::chrono::nanoseconds time);
+        virtual bool shouldDropVirtualKey(std::chrono::nanoseconds now,
                 InputDevice* device, int32_t keyCode, int32_t scanCode);
         virtual void fadePointer();
-        virtual void requestTimeoutAtTime(nsecs_t when);
+        virtual void requestTimeoutAtTime(std::chrono::nanoseconds when);
         virtual int32_t bumpGeneration();
         virtual InputReaderPolicyInterface* getPolicy();
         virtual InputListenerInterface* getListener();
@@ -412,12 +412,12 @@ private:
     // low-level input event decoding and device management
     void processEventsLocked(const RawEvent* rawEvents, size_t count);
 
-    void addDeviceLocked(nsecs_t when, int32_t deviceId);
-    void removeDeviceLocked(nsecs_t when, int32_t deviceId);
+    void addDeviceLocked(std::chrono::nanoseconds when, int32_t deviceId);
+    void removeDeviceLocked(std::chrono::nanoseconds when, int32_t deviceId);
     void processEventsForDeviceLocked(int32_t deviceId, const RawEvent* rawEvents, size_t count);
-    void timeoutExpiredLocked(nsecs_t when);
+    void timeoutExpiredLocked(std::chrono::nanoseconds when);
 
-    void handleConfigurationChangedLocked(nsecs_t when);
+    void handleConfigurationChangedLocked(std::chrono::nanoseconds when);
 
     int32_t mGlobalMetaState;
     void updateGlobalMetaStateLocked();
@@ -430,13 +430,13 @@ private:
 
     void getInputDevicesLocked(Vector<InputDeviceInfo>& outInputDevices);
 
-    nsecs_t mDisableVirtualKeysTimeout;
-    void disableVirtualKeysUntilLocked(nsecs_t time);
-    bool shouldDropVirtualKeyLocked(nsecs_t now,
+    std::chrono::nanoseconds mDisableVirtualKeysTimeout;
+    void disableVirtualKeysUntilLocked(std::chrono::nanoseconds time);
+    bool shouldDropVirtualKeyLocked(std::chrono::nanoseconds now,
             InputDevice* device, int32_t keyCode, int32_t scanCode);
 
-    nsecs_t mNextTimeout;
-    void requestTimeoutAtTimeLocked(nsecs_t when);
+    std::chrono::nanoseconds mNextTimeout;
+    void requestTimeoutAtTimeLocked(std::chrono::nanoseconds when);
 
     uint32_t mConfigurationChangesToRefresh;
     void refreshConfigurationLocked(uint32_t changes);
@@ -485,10 +485,10 @@ public:
 
     void dump(String8& dump);
     void addMapper(InputMapper* mapper);
-    void configure(nsecs_t when, InputReaderConfiguration const* config, uint32_t changes);
-    void reset(nsecs_t when);
+    void configure(std::chrono::nanoseconds when, InputReaderConfiguration const* config, uint32_t changes);
+    void reset(std::chrono::nanoseconds when);
     void process(const RawEvent* rawEvents, size_t count);
-    void timeoutExpired(nsecs_t when);
+    void timeoutExpired(std::chrono::nanoseconds when);
 
     void getDeviceInfo(InputDeviceInfo* outDeviceInfo);
     int32_t getKeyCodeState(uint32_t sourceMask, int32_t keyCode);
@@ -496,7 +496,7 @@ public:
     int32_t getSwitchState(uint32_t sourceMask, int32_t switchCode);
     bool markSupportedKeyCodes(uint32_t sourceMask, size_t numCodes,
             const int32_t* keyCodes, uint8_t* outFlags);
-    void vibrate(const nsecs_t* pattern, size_t patternSize, ssize_t repeat, int32_t token);
+    void vibrate(const std::chrono::nanoseconds* pattern, size_t patternSize, ssize_t repeat, int32_t token);
     void cancelVibrate(int32_t token);
 
     int32_t getMetaState();
@@ -505,7 +505,7 @@ public:
 
     void bumpGeneration();
 
-    void notifyReset(nsecs_t when);
+    void notifyReset(std::chrono::nanoseconds when);
 
     inline const PropertyMap& getConfiguration() { return mConfiguration; }
     inline EventHubInterface* getEventHub() { return mContext->getEventHub(); }
@@ -897,17 +897,17 @@ public:
     virtual uint32_t getSources() = 0;
     virtual void populateDeviceInfo(InputDeviceInfo* deviceInfo);
     virtual void dump(String8& dump);
-    virtual void configure(nsecs_t when, InputReaderConfiguration const* config, uint32_t changes);
-    virtual void reset(nsecs_t when);
+    virtual void configure(std::chrono::nanoseconds when, InputReaderConfiguration const* config, uint32_t changes);
+    virtual void reset(std::chrono::nanoseconds when);
     virtual void process(const RawEvent* rawEvent) = 0;
-    virtual void timeoutExpired(nsecs_t when);
+    virtual void timeoutExpired(std::chrono::nanoseconds when);
 
     virtual int32_t getKeyCodeState(uint32_t sourceMask, int32_t keyCode);
     virtual int32_t getScanCodeState(uint32_t sourceMask, int32_t scanCode);
     virtual int32_t getSwitchState(uint32_t sourceMask, int32_t switchCode);
     virtual bool markSupportedKeyCodes(uint32_t sourceMask, size_t numCodes,
             const int32_t* keyCodes, uint8_t* outFlags);
-    virtual void vibrate(const nsecs_t* pattern, size_t patternSize, ssize_t repeat,
+    virtual void vibrate(const std::chrono::nanoseconds* pattern, size_t patternSize, ssize_t repeat,
             int32_t token);
     virtual void cancelVibrate(int32_t token);
 
@@ -938,7 +938,7 @@ public:
     virtual int32_t getSwitchState(uint32_t sourceMask, int32_t switchCode);
 
 private:
-    void processSwitch(nsecs_t when, int32_t switchCode, int32_t switchValue);
+    void processSwitch(std::chrono::nanoseconds when, int32_t switchCode, int32_t switchValue);
 };
 
 
@@ -951,20 +951,20 @@ public:
     virtual void populateDeviceInfo(InputDeviceInfo* deviceInfo);
     virtual void process(const RawEvent* rawEvent);
 
-    virtual void vibrate(const nsecs_t* pattern, size_t patternSize, ssize_t repeat,
+    virtual void vibrate(const std::chrono::nanoseconds* pattern, size_t patternSize, ssize_t repeat,
             int32_t token);
     virtual void cancelVibrate(int32_t token);
-    virtual void timeoutExpired(nsecs_t when);
+    virtual void timeoutExpired(std::chrono::nanoseconds when);
     virtual void dump(String8& dump);
 
 private:
     bool mVibrating;
-    nsecs_t mPattern[MAX_VIBRATE_PATTERN_SIZE];
+    std::chrono::nanoseconds mPattern[MAX_VIBRATE_PATTERN_SIZE];
     size_t mPatternSize;
     ssize_t mRepeat;
     int32_t mToken;
     ssize_t mIndex;
-    nsecs_t mNextStepTime;
+    std::chrono::nanoseconds mNextStepTime;
 
     void nextStep();
     void stopVibrating();
@@ -979,9 +979,9 @@ public:
     virtual uint32_t getSources();
     virtual void populateDeviceInfo(InputDeviceInfo* deviceInfo);
     virtual void dump(String8& dump);
-    virtual void configure(nsecs_t when, 
+    virtual void configure(std::chrono::nanoseconds when, 
         InputReaderConfiguration const* config, uint32_t changes);
-    virtual void reset(nsecs_t when);
+    virtual void reset(std::chrono::nanoseconds when);
     virtual void process(const RawEvent* rawEvent);
 
     virtual int32_t getKeyCodeState(uint32_t sourceMask, int32_t keyCode);
@@ -1004,7 +1004,7 @@ private:
 
     Vector<KeyDown> mKeyDowns; // keys that are down
     int32_t mMetaState;
-    nsecs_t mDownTime; // time of most recent key down
+    std::chrono::nanoseconds mDownTime; // time of most recent key down
 
     int32_t mCurrentHidUsage; // most recent HID usage seen this packet, or 0 if none
 
@@ -1027,7 +1027,7 @@ private:
 
     bool isKeyboardOrGamepadKey(int32_t scanCode);
 
-    void processKey(nsecs_t when, bool down, int32_t keyCode, int32_t scanCode,
+    void processKey(std::chrono::nanoseconds when, bool down, int32_t keyCode, int32_t scanCode,
             uint32_t policyFlags);
 
     ssize_t findKeyDown(int32_t scanCode);
@@ -1048,9 +1048,9 @@ public:
     virtual uint32_t getSources();
     virtual void populateDeviceInfo(InputDeviceInfo* deviceInfo);
     virtual void dump(String8& dump);
-    virtual void configure(nsecs_t when, 
+    virtual void configure(std::chrono::nanoseconds when, 
         InputReaderConfiguration const* config, uint32_t changes);
-    virtual void reset(nsecs_t when);
+    virtual void reset(std::chrono::nanoseconds when);
     virtual void process(const RawEvent* rawEvent);
 
     virtual int32_t getScanCodeState(uint32_t sourceMask, int32_t scanCode);
@@ -1097,12 +1097,12 @@ private:
     sp<PointerControllerInterface> mPointerController;
 
     int32_t mButtonState;
-    nsecs_t mDownTime;
+    std::chrono::nanoseconds mDownTime;
 
     void configureParameters();
     void dumpParameters(String8& dump);
 
-    void sync(nsecs_t when);
+    void sync(std::chrono::nanoseconds when);
 };
 
 
@@ -1114,9 +1114,9 @@ public:
     virtual uint32_t getSources();
     virtual void populateDeviceInfo(InputDeviceInfo* deviceInfo);
     virtual void dump(String8& dump);
-    virtual void configure(nsecs_t when, 
+    virtual void configure(std::chrono::nanoseconds when, 
         InputReaderConfiguration const* config, uint32_t changes);
-    virtual void reset(nsecs_t when);
+    virtual void reset(std::chrono::nanoseconds when);
     virtual void process(const RawEvent* rawEvent);
 
     virtual int32_t getKeyCodeState(uint32_t sourceMask, int32_t keyCode);
@@ -1125,7 +1125,7 @@ public:
             const int32_t* keyCodes, uint8_t* outFlags);
 
     virtual void fadePointer();
-    virtual void timeoutExpired(nsecs_t when);
+    virtual void timeoutExpired(std::chrono::nanoseconds when);
 
 protected:
     CursorButtonAccumulator mCursorButtonAccumulator;
@@ -1276,7 +1276,7 @@ protected:
     bool mSentHoverEnter;
 
     // The time the primary pointer last went down.
-    nsecs_t mDownTime;
+    std::chrono::nanoseconds mDownTime;
 
     // The pointer controller, or null if the device is not a pointer.
     sp<PointerControllerInterface> mPointerController;
@@ -1287,7 +1287,7 @@ protected:
     virtual void dumpParameters(String8& dump);
     virtual void configureRawPointerAxes();
     virtual void dumpRawPointerAxes(String8& dump);
-    virtual void configureSurface(nsecs_t when, bool* outResetNeeded);
+    virtual void configureSurface(std::chrono::nanoseconds when, bool* outResetNeeded);
     virtual void dumpSurface(String8& dump);
     virtual void configureVirtualKeys();
     virtual void dumpVirtualKeys(String8& dump);
@@ -1296,7 +1296,7 @@ protected:
     virtual void dumpCalibration(String8& dump);
     virtual bool hasStylus() const = 0;
 
-    virtual void syncTouch(nsecs_t when, bool* outHavePointerIds) = 0;
+    virtual void syncTouch(std::chrono::nanoseconds when, bool* outHavePointerIds) = 0;
     int32_t fetchNewPointerId();
 
 private:
@@ -1383,7 +1383,7 @@ private:
     struct CurrentVirtualKeyState {
         bool down;
         bool ignored;
-        nsecs_t downTime;
+        std::chrono::nanoseconds downTime;
         int32_t keyCode;
         int32_t scanCode;
     } mCurrentVirtualKey;
@@ -1467,7 +1467,7 @@ private:
         };
 
         // Time the first finger went down.
-        nsecs_t firstTouchTime;
+        std::chrono::nanoseconds firstTouchTime;
 
         // The active pointer id from the raw touch data.
         int32_t activeTouchId; // -1 if none
@@ -1489,19 +1489,19 @@ private:
         PointerCoords lastGestureCoords[MAX_POINTERS];
 
         // Time the pointer gesture last went down.
-        nsecs_t downTime;
+        std::chrono::nanoseconds downTime;
 
         // Time when the pointer went down for a TAP.
-        nsecs_t tapDownTime;
+        std::chrono::nanoseconds tapDownTime;
 
         // Time when the pointer went up for a TAP.
-        nsecs_t tapUpTime;
+        std::chrono::nanoseconds tapUpTime;
 
         // Location of initial tap.
         float tapX, tapY;
 
         // Time we started waiting for quiescence.
-        nsecs_t quietTime;
+        std::chrono::nanoseconds quietTime;
 
         // Reference points for multitouch gestures.
         float referenceTouchX;    // reference touch X/Y coordinates in surface units
@@ -1524,26 +1524,26 @@ private:
         VelocityTracker velocityTracker;
 
         void reset() {
-            firstTouchTime = LLONG_MIN;
+            firstTouchTime = std::chrono::nanoseconds(LLONG_MIN);
             activeTouchId = -1;
             activeGestureId = -1;
             currentGestureMode = NEUTRAL;
             currentGestureIds.clear();
             lastGestureMode = NEUTRAL;
             lastGestureIds.clear();
-            downTime = 0;
+            downTime = std::chrono::nanoseconds(0);
             velocityTracker.clear();
             resetTap();
             resetQuietTime();
         }
 
         void resetTap() {
-            tapDownTime = LLONG_MIN;
-            tapUpTime = LLONG_MIN;
+            tapDownTime = std::chrono::nanoseconds(LLONG_MIN);
+            tapUpTime = std::chrono::nanoseconds(LLONG_MIN);
         }
 
         void resetQuietTime() {
-            quietTime = LLONG_MIN;
+            quietTime = std::chrono::nanoseconds(LLONG_MIN);
         }
     } mPointerGesture;
 
@@ -1560,7 +1560,7 @@ private:
         bool hovering;
 
         // Time the pointer last went down.
-        nsecs_t downTime;
+        std::chrono::nanoseconds downTime;
 
         void reset() {
             currentCoords.clear();
@@ -1569,7 +1569,7 @@ private:
             lastProperties.clear();
             down = false;
             hovering = false;
-            downTime = 0;
+            downTime = std::chrono::nanoseconds(0);
         }
     } mPointerSimple;
 
@@ -1578,52 +1578,52 @@ private:
     VelocityControl mWheelXVelocityControl;
     VelocityControl mWheelYVelocityControl;
 
-    void sync(nsecs_t when);
+    void sync(std::chrono::nanoseconds when);
 
-    bool consumeRawTouches(nsecs_t when, uint32_t policyFlags);
-    void dispatchVirtualKey(nsecs_t when, uint32_t policyFlags,
+    bool consumeRawTouches(std::chrono::nanoseconds when, uint32_t policyFlags);
+    void dispatchVirtualKey(std::chrono::nanoseconds when, uint32_t policyFlags,
             int32_t keyEventAction, int32_t keyEventFlags);
 
-    void dispatchTouches(nsecs_t when, uint32_t policyFlags);
-    void dispatchHoverExit(nsecs_t when, uint32_t policyFlags);
-    void dispatchHoverEnterAndMove(nsecs_t when, uint32_t policyFlags);
+    void dispatchTouches(std::chrono::nanoseconds when, uint32_t policyFlags);
+    void dispatchHoverExit(std::chrono::nanoseconds when, uint32_t policyFlags);
+    void dispatchHoverEnterAndMove(std::chrono::nanoseconds when, uint32_t policyFlags);
     void cookPointerData();
 
-    void dispatchPointerUsage(nsecs_t when, uint32_t policyFlags, PointerUsage pointerUsage);
-    void abortPointerUsage(nsecs_t when, uint32_t policyFlags);
+    void dispatchPointerUsage(std::chrono::nanoseconds when, uint32_t policyFlags, PointerUsage pointerUsage);
+    void abortPointerUsage(std::chrono::nanoseconds when, uint32_t policyFlags);
 
-    void dispatchPointerGestures(nsecs_t when, uint32_t policyFlags, bool isTimeout);
-    void abortPointerGestures(nsecs_t when, uint32_t policyFlags);
-    bool preparePointerGestures(nsecs_t when,
+    void dispatchPointerGestures(std::chrono::nanoseconds when, uint32_t policyFlags, bool isTimeout);
+    void abortPointerGestures(std::chrono::nanoseconds when, uint32_t policyFlags);
+    bool preparePointerGestures(std::chrono::nanoseconds when,
             bool* outCancelPreviousGesture, bool* outFinishPreviousGesture,
             bool isTimeout);
 
-    void dispatchPointerStylus(nsecs_t when, uint32_t policyFlags);
-    void abortPointerStylus(nsecs_t when, uint32_t policyFlags);
+    void dispatchPointerStylus(std::chrono::nanoseconds when, uint32_t policyFlags);
+    void abortPointerStylus(std::chrono::nanoseconds when, uint32_t policyFlags);
 
-    void dispatchPointerMouse(nsecs_t when, uint32_t policyFlags);
-    void abortPointerMouse(nsecs_t when, uint32_t policyFlags);
+    void dispatchPointerMouse(std::chrono::nanoseconds when, uint32_t policyFlags);
+    void abortPointerMouse(std::chrono::nanoseconds when, uint32_t policyFlags);
 
-    void dispatchPointerSimple(nsecs_t when, uint32_t policyFlags,
+    void dispatchPointerSimple(std::chrono::nanoseconds when, uint32_t policyFlags,
             bool down, bool hovering);
-    void abortPointerSimple(nsecs_t when, uint32_t policyFlags);
+    void abortPointerSimple(std::chrono::nanoseconds when, uint32_t policyFlags);
 
     // Dispatches a motion event.
     // If the changedId is >= 0 and the action is POINTER_DOWN or POINTER_UP, the
     // method will take care of setting the index and transmuting the action to DOWN or UP
     // it is the first / last pointer to go down / up.
-    void dispatchMotion(nsecs_t when, uint32_t policyFlags, uint32_t source,
+    void dispatchMotion(std::chrono::nanoseconds when, uint32_t policyFlags, uint32_t source,
             int32_t action, int32_t flags, int32_t metaState, int32_t buttonState,
             int32_t edgeFlags,
             const PointerProperties* properties, const PointerCoords* coords,
             uint32_t inPointerCount,
-            int32_t changedId, float xPrecision, float yPrecision, nsecs_t downTime);
-    void dispatchMotion(nsecs_t when, uint32_t policyFlags, uint32_t source,
+            int32_t changedId, float xPrecision, float yPrecision, std::chrono::nanoseconds downTime);
+    void dispatchMotion(std::chrono::nanoseconds when, uint32_t policyFlags, uint32_t source,
             int32_t action, int32_t flags, int32_t metaState, int32_t buttonState,
             int32_t edgeFlags,
             const PointerProperties* properties, const PointerCoords* coords,
             uint32_t inPointerCount, const IntSet &idsToDispatch,
-            int32_t changedId, float xPrecision, float yPrecision, nsecs_t downTime);
+            int32_t changedId, float xPrecision, float yPrecision, std::chrono::nanoseconds downTime);
 
     // Updates pointer coords and properties for pointers that have moved.
     // Returns true if any of them changed.
@@ -1644,11 +1644,11 @@ public:
     SingleTouchInputMapper(InputDevice* device);
     virtual ~SingleTouchInputMapper();
 
-    virtual void reset(nsecs_t when);
+    virtual void reset(std::chrono::nanoseconds when);
     virtual void process(const RawEvent* rawEvent);
 
 protected:
-    virtual void syncTouch(nsecs_t when, bool* outHavePointerIds);
+    virtual void syncTouch(std::chrono::nanoseconds when, bool* outHavePointerIds);
     virtual void configureRawPointerAxes();
     virtual bool hasStylus() const;
 
@@ -1662,11 +1662,11 @@ public:
     MultiTouchInputMapper(InputDevice* device);
     virtual ~MultiTouchInputMapper();
 
-    virtual void reset(nsecs_t when);
+    virtual void reset(std::chrono::nanoseconds when);
     virtual void process(const RawEvent* rawEvent);
 
 protected:
-    virtual void syncTouch(nsecs_t when, bool* outHavePointerIds);
+    virtual void syncTouch(std::chrono::nanoseconds when, bool* outHavePointerIds);
     virtual void configureRawPointerAxes();
     virtual bool hasStylus() const;
 
@@ -1687,9 +1687,9 @@ public:
     virtual uint32_t getSources();
     virtual void populateDeviceInfo(InputDeviceInfo* deviceInfo);
     virtual void dump(String8& dump);
-    virtual void configure(nsecs_t when,
+    virtual void configure(std::chrono::nanoseconds when,
         InputReaderConfiguration const* config, uint32_t changes);
-    virtual void reset(nsecs_t when);
+    virtual void reset(std::chrono::nanoseconds when);
     virtual void process(const RawEvent* rawEvent);
 
 private:
@@ -1745,7 +1745,7 @@ private:
     // Axes indexed by raw ABS_* axis index.
     KeyedVector<int32_t, Axis> mAxes;
 
-    void sync(nsecs_t when, bool force);
+    void sync(std::chrono::nanoseconds when, bool force);
 
     bool haveAxis(int32_t axisId);
     void pruneAxes(bool ignoreExplicitlyMappedAxes);

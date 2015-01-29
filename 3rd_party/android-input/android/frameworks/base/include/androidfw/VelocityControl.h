@@ -90,16 +90,16 @@ public:
 
     /* Translates a raw movement delta into an appropriately
      * scaled / accelerated delta based on the current velocity. */
-    void move(nsecs_t eventTime, float* deltaX, float* deltaY);
+    void move(std::chrono::nanoseconds eventTime, float* deltaX, float* deltaY);
 
 private:
     // If no movements are received within this amount of time,
     // we assume the movement has stopped and reset the movement counters.
-    static const nsecs_t STOP_TIME = 500 * 1000000; // 500 ms
+    static constexpr const std::chrono::nanoseconds STOP_TIME = std::chrono::nanoseconds(500 * 1000000); // 500 ms
 
     VelocityControlParameters mParameters;
 
-    nsecs_t mLastMovementTime;
+    std::chrono::nanoseconds mLastMovementTime;
     VelocityTracker::Position mRawPosition;
     VelocityTracker mVelocityTracker;
     IntSet mIds;
