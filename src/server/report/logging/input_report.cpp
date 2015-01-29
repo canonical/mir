@@ -112,7 +112,7 @@ void mrl::InputReport::received_event_from_kernel(int64_t when, int type, int co
     std::stringstream ss;
 
     ss << "Received event"
-       << " time=" << ml::input_timestamp(when)
+       << " time=" << ml::input_timestamp(std::chrono::nanoseconds(when))
        << " type=" << type
        << " code=" << code
        << " value=" << value;
@@ -126,7 +126,7 @@ void mrl::InputReport::published_key_event(int dest_fd, uint32_t seq_id, int64_t
 
     ss << "Published key event"
        << " seq_id=" << seq_id
-       << " time=" << ml::input_timestamp(event_time)
+       << " time=" << ml::input_timestamp(std::chrono::nanoseconds(event_time))
        << " dest_fd=" << dest_fd;
 
     logger->log(ml::Severity::informational, ss.str(), component());
@@ -138,7 +138,7 @@ void mrl::InputReport::published_motion_event(int dest_fd, uint32_t seq_id, int6
 
     ss << "Published motion event"
        << " seq_id=" << seq_id
-       << " time=" << ml::input_timestamp(event_time)
+       << " time=" << ml::input_timestamp(std::chrono::nanoseconds(event_time))
        << " dest_fd=" << dest_fd;
 
     logger->log(ml::Severity::informational, ss.str(), component());

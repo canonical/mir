@@ -32,7 +32,7 @@
 #include <windows.h>
 #endif
 
-nsecs_t systemTime(int clock)
+std::chrono::nanoseconds systemTime(int clock)
 {
 #if defined(HAVE_POSIX_CLOCKS)
     static const clockid_t clocks[] = {
@@ -44,21 +44,21 @@ nsecs_t systemTime(int clock)
     struct timespec t;
     t.tv_sec = t.tv_nsec = 0;
     clock_gettime(clocks[clock], &t);
-    return nsecs_t(t.tv_sec)*1000000000LL + t.tv_nsec;
+    return std::chrono::nanoseconds(t.tv_sec)*1000000000LL + t.tv_nsec;
 #else
     // we don't support the clocks here.
     struct timeval t;
     t.tv_sec = t.tv_usec = 0;
     gettimeofday(&t, NULL);
-    return nsecs_t(t.tv_sec)*1000000000LL + nsecs_t(t.tv_usec)*1000LL;
+    return std::chrono::nanoseconds(t.tv_sec)*1000000000LL + std::chrono::nanoseconds(t.tv_usec)*1000LL;
 #endif
 }
 
-int toMillisecondTimeoutDelay(nsecs_t referenceTime, nsecs_t timeoutTime)
+int toMillisecondTimeoutDelay(std::chrono::nanoseconds referenceTime, std::chrono::nanoseconds timeoutTime)
 {
     int timeoutDelayMillis;
     if (timeoutTime > referenceTime) {
-        uint64_t timeoutDelay = uint64_t(timeoutTime - referenceTime);
+        uint64_t timeoutDelay = (timeoutTime - referenceTime).count();
         if (timeoutDelay > uint64_t((INT_MAX - 1) * 1000000LL)) {
             timeoutDelayMillis = -1;
         } else {
