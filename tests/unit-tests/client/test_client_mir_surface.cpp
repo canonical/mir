@@ -245,7 +245,7 @@ struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
 
 struct StubClientInputPlatform : public mircv::InputPlatform
 {
-    std::shared_ptr<mir::dispatch::Dispatchable> create_input_dispatcher(int /* fd */, std::function<void(MirEvent*)> const& /* callback */)
+    std::shared_ptr<mir::dispatch::Dispatchable> create_input_receiver(int /* fd */, std::function<void(MirEvent*)> const& /* callback */)
     {
         return std::shared_ptr<mir::dispatch::Dispatchable>();
     }
@@ -253,7 +253,7 @@ struct StubClientInputPlatform : public mircv::InputPlatform
 
 struct MockClientInputPlatform : public mircv::InputPlatform
 {
-    MOCK_METHOD2(create_input_dispatcher, std::shared_ptr<mir::dispatch::Dispatchable>(int, std::function<void(MirEvent*)> const&));
+    MOCK_METHOD2(create_input_receiver, std::shared_ptr<mir::dispatch::Dispatchable>(int, std::function<void(MirEvent*)> const&));
 };
 
 class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
@@ -457,7 +457,7 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_dispatcher_when_del
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
     MirEventDelegate delegate = {null_event_callback, nullptr};
 
-    EXPECT_CALL(*mock_input_platform, create_input_dispatcher(_, _)).Times(1)
+    EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _)).Times(1)
         .WillOnce(Return(mock_input_dispatcher));
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
@@ -481,7 +481,7 @@ TEST_F(MirClientSurfaceTest, replacing_delegate_with_nullptr_prevents_further_di
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
     MirEventDelegate delegate = {null_event_callback, nullptr};
 
-    EXPECT_CALL(*mock_input_platform, create_input_dispatcher(_, _)).Times(1)
+    EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _)).Times(1)
         .WillOnce(Return(mock_input_dispatcher));
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
@@ -505,7 +505,7 @@ TEST_F(MirClientSurfaceTest, does_not_create_input_dispatcher_when_no_delegate_s
 
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
 
-    EXPECT_CALL(*mock_input_platform, create_input_dispatcher(_, _)).Times(0);
+    EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _)).Times(0);
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
         stub_buffer_stream_factory, mock_input_platform, spec, &null_surface_callback, nullptr};

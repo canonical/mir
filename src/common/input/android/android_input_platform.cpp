@@ -36,7 +36,7 @@ mircva::AndroidInputPlatform::~AndroidInputPlatform()
 {
 }
 
-std::shared_ptr<md::Dispatchable> mircva::AndroidInputPlatform::create_input_dispatcher(
+std::shared_ptr<md::Dispatchable> mircva::AndroidInputPlatform::create_input_receiver(
     int fd, std::function<void(MirEvent*)> const& callback)
 {
     return std::make_shared<mircva::InputReceiver>(fd, callback, report);

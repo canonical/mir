@@ -43,7 +43,7 @@ class InputPlatform
 public:
     virtual ~InputPlatform() = default;
 
-    virtual std::shared_ptr<dispatch::Dispatchable> create_input_dispatcher(int fd, std::function<void(MirEvent*)> const& callback) = 0;
+    virtual std::shared_ptr<dispatch::Dispatchable> create_input_receiver(int fd, std::function<void(MirEvent*)> const& callback) = 0;
 
     static std::shared_ptr<InputPlatform> create();
     static std::shared_ptr<InputPlatform> create(std::shared_ptr<InputReceiverReport> const& report);

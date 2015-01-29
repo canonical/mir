@@ -41,7 +41,7 @@ public:
     AndroidInputPlatform(std::shared_ptr<InputReceiverReport> const& report);
     virtual ~AndroidInputPlatform();
 
-    std::shared_ptr<dispatch::Dispatchable> create_input_dispatcher(int fd, std::function<void(MirEvent *)> const& callback);
+    std::shared_ptr<dispatch::Dispatchable> create_input_receiver(int fd, std::function<void(MirEvent *)> const& callback);
 
 protected:
     AndroidInputPlatform(const AndroidInputPlatform&) = delete;
