@@ -94,7 +94,7 @@ private:
 
     AndroidClock const android_clock;
 
-    bool try_next_event(MirEvent &ev);
+    void process_and_maybe_send_event();
     void wake();
 };
 

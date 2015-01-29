@@ -79,11 +79,7 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
                                                      "Failed read from timer"}));
         }
 
-        MirEvent e;
-        if (try_next_event(e))
-        {
-            handler(&e);
-        }
+        process_and_maybe_send_event();
     });
 
     dispatcher.add_watch(notify_receiver_fd, [this]()
@@ -96,22 +92,11 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
                                                      "Failed to consume notification"}));
         }
 
-        MirEvent e;
-        if (try_next_event(e))
-        {
-            handler(&e);
-        }
+        process_and_maybe_send_event();
     });
 
     dispatcher.add_watch(mir::Fd{input_channel->getFd()},
-                         [this]()
-    {
-        MirEvent e;
-        if (try_next_event(e))
-        {
-            handler(&e);
-        }
-    });
+                         [this]() { process_and_maybe_send_event(); });
 }
 
 mircva::InputReceiver::InputReceiver(int fd,
@@ -159,8 +144,9 @@ static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, M
 
 }
 
-bool mircva::InputReceiver::try_next_event(MirEvent &ev)
+void mircva::InputReceiver::process_and_maybe_send_event()
 {
+    MirEvent ev;
     droidinput::InputEvent *android_event;
     uint32_t event_sequence_id;
 
@@ -207,6 +193,8 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
 
         report->received_event(ev);
 
+        // Send the event on its merry way.
+        handler(&ev);
     }
     if (input_consumer->hasDeferredEvent())
     {
@@ -224,7 +212,6 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
         };
         timerfd_settime(timer_fd, 0, &msec_delay, NULL);
     }
-   return result == droidinput::OK;
 }
 
 void mircva::InputReceiver::wake()
