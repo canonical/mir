@@ -218,7 +218,7 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
     expected_properties[0].id = pointer.id;
     expected_properties[0].toolType = pointer.tool_type;
 
-    droidinput::NotifyMotionArgs expected(event.motion.event_time,
+    droidinput::NotifyMotionArgs expected(std::chrono::nanoseconds(event.motion.event_time),
                                           event.motion.device_id,
                                           event.motion.source_id,
                                           default_policy_flags,
@@ -232,7 +232,7 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
                                           expected_coords,
                                           event.motion.x_precision,
                                           event.motion.y_precision,
-                                          event.motion.down_time);
+                                          std::chrono::nanoseconds(event.motion.down_time));
 
     EXPECT_CALL(*dispatcher, notifyMotion(MotionArgsMatches(expected)));
 
@@ -256,7 +256,7 @@ TEST_F(AndroidInputDispatcherTest, forwards_all_key_event_paramters_correctly)
     event.key.modifiers = 7;
     event.key.is_system_key = false;
 
-    droidinput::NotifyKeyArgs expected(event.key.event_time,
+    droidinput::NotifyKeyArgs expected(std::chrono::nanoseconds(event.key.event_time),
                                        event.key.device_id,
                                        event.key.source_id,
                                        default_policy_flags,
@@ -265,7 +265,7 @@ TEST_F(AndroidInputDispatcherTest, forwards_all_key_event_paramters_correctly)
                                        event.key.key_code,
                                        event.key.scan_code,
                                        event.key.modifiers,
-                                       event.key.down_time);
+                                       std::chrono::nanoseconds(event.key.down_time));
 
     EXPECT_CALL(*dispatcher, notifyKey(KeyArgsMatches(expected)));
 

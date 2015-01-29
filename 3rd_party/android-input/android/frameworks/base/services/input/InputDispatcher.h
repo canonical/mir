@@ -180,10 +180,10 @@ struct InputTarget {
  */
 struct InputDispatcherConfiguration {
     // The key repeat initial timeout.
-    nsecs_t keyRepeatTimeout;
+    std::chrono::nanoseconds keyRepeatTimeout;
 
     // The key repeat inter-key delay.
-    nsecs_t keyRepeatDelay;
+    std::chrono::nanoseconds keyRepeatDelay;
 
     InputDispatcherConfiguration() :
             keyRepeatTimeout(500 * 1000000LL),
@@ -207,11 +207,11 @@ protected:
 
 public:
     /* Notifies the system that a configuration change has occurred. */
-    virtual void notifyConfigurationChanged(nsecs_t when) = 0;
+    virtual void notifyConfigurationChanged(std::chrono::nanoseconds when) = 0;
 
     /* Notifies the system that an application is not responding.
      * Returns a new timeout to continue waiting, or 0 to abort dispatch. */
-    virtual nsecs_t notifyANR(const sp<InputApplicationHandle>& inputApplicationHandle,
+    virtual std::chrono::nanoseconds notifyANR(const sp<InputApplicationHandle>& inputApplicationHandle,
             const sp<InputWindowHandle>& inputWindowHandle) = 0;
 
     /* Notifies the system that an input channel is unrecoverably broken. */
@@ -246,10 +246,10 @@ public:
      * This method is expected to set the POLICY_FLAG_PASS_TO_USER policy flag if the event
      * should be dispatched to applications.
      */
-    virtual void interceptMotionBeforeQueueing(nsecs_t when, uint32_t& policyFlags) = 0;
+    virtual void interceptMotionBeforeQueueing(std::chrono::nanoseconds when, uint32_t& policyFlags) = 0;
 
     /* Allows the policy a chance to intercept a key before dispatching. */
-    virtual nsecs_t interceptKeyBeforeDispatching(const sp<InputWindowHandle>& inputWindowHandle,
+    virtual std::chrono::nanoseconds interceptKeyBeforeDispatching(const sp<InputWindowHandle>& inputWindowHandle,
             const KeyEvent* keyEvent, uint32_t policyFlags) = 0;
 
     /* Allows the policy a chance to perform default processing for an unhandled key.
@@ -259,11 +259,11 @@ public:
 
     /* Notifies the policy about switch events.
      */
-    virtual void notifySwitch(nsecs_t when,
+    virtual void notifySwitch(std::chrono::nanoseconds when,
             int32_t switchCode, int32_t switchValue, uint32_t policyFlags) = 0;
 
     /* Poke user activity for an event dispatched to a window. */
-    virtual void pokeUserActivity(nsecs_t eventTime, int32_t eventType) = 0;
+    virtual void pokeUserActivity(std::chrono::nanoseconds eventTime, int32_t eventType) = 0;
 
     /* Checks whether a given application pid/uid has permission to inject input events
      * into other applications.
@@ -451,7 +451,7 @@ private:
 
         mutable int32_t refCount;
         int32_t type;
-        nsecs_t eventTime;
+        std::chrono::nanoseconds eventTime;
         uint32_t policyFlags;
         InjectionState* injectionState;
 
@@ -464,13 +464,13 @@ private:
         virtual void appendDescription(String8& msg) const = 0;
 
     protected:
-        EventEntry(int32_t type, nsecs_t eventTime, uint32_t policyFlags);
+        EventEntry(int32_t type, std::chrono::nanoseconds eventTime, uint32_t policyFlags);
         virtual ~EventEntry();
         void releaseInjectionState();
     };
 
     struct ConfigurationChangedEntry : EventEntry {
-        ConfigurationChangedEntry(nsecs_t eventTime);
+        ConfigurationChangedEntry(std::chrono::nanoseconds eventTime);
         virtual void appendDescription(String8& msg) const;
 
     protected:
@@ -480,7 +480,7 @@ private:
     struct DeviceResetEntry : EventEntry {
         int32_t deviceId;
 
-        DeviceResetEntry(nsecs_t eventTime, int32_t deviceId);
+        DeviceResetEntry(std::chrono::nanoseconds eventTime, int32_t deviceId);
         virtual void appendDescription(String8& msg) const;
 
     protected:
@@ -496,7 +496,7 @@ private:
         int32_t scanCode;
         int32_t metaState;
         int32_t repeatCount;
-        nsecs_t downTime;
+        std::chrono::nanoseconds downTime;
 
         bool syntheticRepeat; // set to true for synthetic key repeats
 
@@ -507,12 +507,12 @@ private:
             INTERCEPT_KEY_RESULT_TRY_AGAIN_LATER
         };
         InterceptKeyResult interceptKeyResult; // set based on the interception result
-        nsecs_t interceptKeyWakeupTime; // used with INTERCEPT_KEY_RESULT_TRY_AGAIN_LATER
+        std::chrono::nanoseconds interceptKeyWakeupTime; // used with INTERCEPT_KEY_RESULT_TRY_AGAIN_LATER
 
-        KeyEntry(nsecs_t eventTime,
+        KeyEntry(std::chrono::nanoseconds eventTime,
                 int32_t deviceId, uint32_t source, uint32_t policyFlags, int32_t action,
                 int32_t flags, int32_t keyCode, int32_t scanCode, int32_t metaState,
-                int32_t repeatCount, nsecs_t downTime);
+                int32_t repeatCount, std::chrono::nanoseconds downTime);
         virtual void appendDescription(String8& msg) const;
         void recycle();
 
@@ -521,7 +521,7 @@ private:
     };
 
     struct MotionEntry : EventEntry {
-        nsecs_t eventTime;
+        std::chrono::nanoseconds eventTime;
         int32_t deviceId;
         uint32_t source;
         int32_t action;
@@ -531,16 +531,16 @@ private:
         int32_t edgeFlags;
         float xPrecision;
         float yPrecision;
-        nsecs_t downTime;
+        std::chrono::nanoseconds downTime;
         uint32_t pointerCount;
         PointerProperties pointerProperties[MAX_POINTERS];
         PointerCoords pointerCoords[MAX_POINTERS];
 
-        MotionEntry(nsecs_t eventTime,
+        MotionEntry(std::chrono::nanoseconds eventTime,
                 int32_t deviceId, uint32_t source, uint32_t policyFlags, int32_t action,
                 int32_t flags, int32_t metaState, int32_t buttonState, int32_t edgeFlags,
                 float xPrecision, float yPrecision,
-                nsecs_t downTime, uint32_t pointerCount,
+                std::chrono::nanoseconds downTime, uint32_t pointerCount,
                 const PointerProperties* pointerProperties, const PointerCoords* pointerCoords);
         virtual void appendDescription(String8& msg) const;
 
@@ -557,7 +557,7 @@ private:
         float xOffset;
         float yOffset;
         float scaleFactor;
-        nsecs_t deliveryTime; // time when the event was actually delivered
+        std::chrono::nanoseconds deliveryTime; // time when the event was actually delivered
 
         // Set to the resolved action and flags when the event is enqueued.
         int32_t resolvedAction;
@@ -609,7 +609,7 @@ private:
 
         // parameters for the command (usage varies by command)
         sp<Connection> connection;
-        nsecs_t eventTime;
+        std::chrono::nanoseconds eventTime;
         KeyEntry* keyEntry;
         sp<InputApplicationHandle> inputApplicationHandle;
         sp<InputWindowHandle> inputWindowHandle;
@@ -730,7 +730,7 @@ private:
         bool trackMotion(const MotionEntry* entry, int32_t action, int32_t flags);
 
         // Synthesizes cancelation events for the current state and resets the tracked state.
-        void synthesizeCancelationEvents(nsecs_t currentTime,
+        void synthesizeCancelationEvents(std::chrono::nanoseconds currentTime,
                 Vector<EventEntry*>& outEvents, const CancelationOptions& options);
 
         // Clears the current state.
@@ -762,7 +762,7 @@ private:
             int32_t scanCode;
             int32_t metaState;
             int32_t flags;
-            nsecs_t downTime;
+            std::chrono::nanoseconds downTime;
             uint32_t policyFlags;
         };
 
@@ -772,7 +772,7 @@ private:
             int32_t flags;
             float xPrecision;
             float yPrecision;
-            nsecs_t downTime;
+            std::chrono::nanoseconds downTime;
             uint32_t pointerCount;
             PointerProperties pointerProperties[MAX_POINTERS];
             PointerCoords pointerCoords[MAX_POINTERS];
@@ -864,7 +864,7 @@ private:
     Queue<EventEntry> mInboundQueue;
     Queue<CommandEntry> mCommandQueue;
 
-    void dispatchOnceInnerLocked(nsecs_t* nextWakeupTime);
+    void dispatchOnceInnerLocked(std::chrono::nanoseconds* nextWakeupTime);
 
     // Enqueues an inbound event.  Returns true if mLooper->wake() should be called.
     bool enqueueInboundEventLocked(EventEntry* entry);
@@ -874,7 +874,7 @@ private:
 
     // App switch latency optimization.
     bool mAppSwitchSawKeyDown;
-    nsecs_t mAppSwitchDueTime;
+    std::chrono::nanoseconds mAppSwitchDueTime;
 
     static bool isAppSwitchKeyCode(int32_t keyCode);
     bool isAppSwitchKeyEventLocked(KeyEntry* keyEntry);
@@ -882,7 +882,7 @@ private:
     void resetPendingAppSwitchLocked(bool handled);
 
     // Stale event latency optimization.
-    static bool isStaleEventLocked(nsecs_t currentTime, EventEntry* entry);
+    static bool isStaleEventLocked(std::chrono::nanoseconds currentTime, EventEntry* entry);
 
     // Blocked event latency optimization.  Drops old events when the user intends
     // to transfer focus to a new application.
@@ -910,11 +910,11 @@ private:
     // Key repeat tracking.
     struct KeyRepeatState {
         KeyEntry* lastKeyEntry; // or null if no repeat
-        nsecs_t nextRepeatTime;
+        std::chrono::nanoseconds nextRepeatTime;
     } mKeyRepeatState;
 
     void resetKeyRepeatLocked();
-    KeyEntry* synthesizeKeyRepeatLocked(nsecs_t currentTime);
+    KeyEntry* synthesizeKeyRepeatLocked(std::chrono::nanoseconds currentTime);
 
     // Deferred command processing.
     bool runCommandsLockedInterruptible();
@@ -974,16 +974,16 @@ private:
 
     // Dispatch inbound events.
     bool dispatchConfigurationChangedLocked(
-            nsecs_t currentTime, ConfigurationChangedEntry* entry);
+            std::chrono::nanoseconds currentTime, ConfigurationChangedEntry* entry);
     bool dispatchDeviceResetLocked(
-            nsecs_t currentTime, DeviceResetEntry* entry);
+            std::chrono::nanoseconds currentTime, DeviceResetEntry* entry);
     bool dispatchKeyLocked(
-            nsecs_t currentTime, KeyEntry* entry,
-            DropReason* dropReason, nsecs_t* nextWakeupTime);
+            std::chrono::nanoseconds currentTime, KeyEntry* entry,
+            DropReason* dropReason, std::chrono::nanoseconds* nextWakeupTime);
     bool dispatchMotionLocked(
-            nsecs_t currentTime, MotionEntry* entry,
-            DropReason* dropReason, nsecs_t* nextWakeupTime);
-    void dispatchEventLocked(nsecs_t currentTime, EventEntry* entry,
+            std::chrono::nanoseconds currentTime, MotionEntry* entry,
+            DropReason* dropReason, std::chrono::nanoseconds* nextWakeupTime);
+    void dispatchEventLocked(std::chrono::nanoseconds currentTime, EventEntry* entry,
             const Vector<InputTarget>& inputTargets);
 
     void logOutboundKeyDetailsLocked(const char* prefix, const KeyEntry* entry);
@@ -997,8 +997,8 @@ private:
     };
 
     InputTargetWaitCause mInputTargetWaitCause;
-    nsecs_t mInputTargetWaitStartTime;
-    nsecs_t mInputTargetWaitTimeoutTime;
+    std::chrono::nanoseconds mInputTargetWaitStartTime;
+    std::chrono::nanoseconds mInputTargetWaitTimeoutTime;
     bool mInputTargetWaitTimeoutExpired;
     sp<InputApplicationHandle> mInputTargetWaitApplicationHandle;
 
@@ -1006,19 +1006,19 @@ private:
     sp<InputWindowHandle> mLastHoverWindowHandle;
 
     // Finding targets for input events.
-    int32_t handleTargetsNotReadyLocked(nsecs_t currentTime, const EventEntry* entry,
+    int32_t handleTargetsNotReadyLocked(std::chrono::nanoseconds currentTime, const EventEntry* entry,
             const sp<InputApplicationHandle>& applicationHandle,
             const sp<InputWindowHandle>& windowHandle,
-            nsecs_t* nextWakeupTime, const char* reason);
-    void resumeAfterTargetsNotReadyTimeoutLocked(nsecs_t newTimeout,
+            std::chrono::nanoseconds* nextWakeupTime, const char* reason);
+    void resumeAfterTargetsNotReadyTimeoutLocked(std::chrono::nanoseconds newTimeout,
             const sp<InputChannel>& inputChannel);
-    nsecs_t getTimeSpentWaitingForApplicationLocked(nsecs_t currentTime);
+    std::chrono::nanoseconds getTimeSpentWaitingForApplicationLocked(std::chrono::nanoseconds currentTime);
     void resetANRTimeoutsLocked();
 
-    int32_t findFocusedWindowTargetsLocked(nsecs_t currentTime, const EventEntry* entry,
-            Vector<InputTarget>& inputTargets, nsecs_t* nextWakeupTime);
-    int32_t findTouchedWindowTargetsLocked(nsecs_t currentTime, const MotionEntry* entry,
-            Vector<InputTarget>& inputTargets, nsecs_t* nextWakeupTime,
+    int32_t findFocusedWindowTargetsLocked(std::chrono::nanoseconds currentTime, const EventEntry* entry,
+            Vector<InputTarget>& inputTargets, std::chrono::nanoseconds* nextWakeupTime);
+    int32_t findTouchedWindowTargetsLocked(std::chrono::nanoseconds currentTime, const MotionEntry* entry,
+            Vector<InputTarget>& inputTargets, std::chrono::nanoseconds* nextWakeupTime,
             bool* outConflictingPointerActions);
 
     void addWindowTargetLocked(const sp<InputWindowHandle>& windowHandle,
@@ -1029,7 +1029,7 @@ private:
             const InjectionState* injectionState);
     bool isWindowObscuredAtPointLocked(const sp<InputWindowHandle>& windowHandle,
             int32_t x, int32_t y) const;
-    bool isWindowReadyForMoreInputLocked(nsecs_t currentTime,
+    bool isWindowReadyForMoreInputLocked(std::chrono::nanoseconds currentTime,
             const sp<InputWindowHandle>& windowHandle, const EventEntry* eventEntry);
     String8 getApplicationWindowLabelLocked(const sp<InputApplicationHandle>& applicationHandle,
             const sp<InputWindowHandle>& windowHandle);
@@ -1038,16 +1038,16 @@ private:
     // These methods are deliberately not Interruptible because doing all of the work
     // with the mutex held makes it easier to ensure that connection invariants are maintained.
     // If needed, the methods post commands to run later once the critical bits are done.
-    void prepareDispatchCycleLocked(nsecs_t currentTime, const sp<Connection>& connection,
+    void prepareDispatchCycleLocked(std::chrono::nanoseconds currentTime, const sp<Connection>& connection,
             EventEntry* eventEntry, const InputTarget* inputTarget);
-    void enqueueDispatchEntriesLocked(nsecs_t currentTime, const sp<Connection>& connection,
+    void enqueueDispatchEntriesLocked(std::chrono::nanoseconds currentTime, const sp<Connection>& connection,
             EventEntry* eventEntry, const InputTarget* inputTarget);
     void enqueueDispatchEntryLocked(const sp<Connection>& connection,
             EventEntry* eventEntry, const InputTarget* inputTarget, int32_t dispatchMode);
-    void startDispatchCycleLocked(nsecs_t currentTime, const sp<Connection>& connection);
-    void finishDispatchCycleLocked(nsecs_t currentTime, const sp<Connection>& connection,
+    void startDispatchCycleLocked(std::chrono::nanoseconds currentTime, const sp<Connection>& connection);
+    void finishDispatchCycleLocked(std::chrono::nanoseconds currentTime, const sp<Connection>& connection,
             uint32_t seq, bool handled);
-    void abortBrokenDispatchCycleLocked(nsecs_t currentTime, const sp<Connection>& connection,
+    void abortBrokenDispatchCycleLocked(std::chrono::nanoseconds currentTime, const sp<Connection>& connection,
             bool notify);
     void drainDispatchQueueLocked(Queue<DispatchEntry>* queue);
     void releaseDispatchEntryLocked(DispatchEntry* dispatchEntry);
@@ -1080,13 +1080,13 @@ private:
 
     // Interesting events that we might like to log or tell the framework about.
     void onDispatchCycleFinishedLocked(
-            nsecs_t currentTime, const sp<Connection>& connection, uint32_t seq, bool handled);
+            std::chrono::nanoseconds currentTime, const sp<Connection>& connection, uint32_t seq, bool handled);
     void onDispatchCycleBrokenLocked(
-            nsecs_t currentTime, const sp<Connection>& connection);
+            std::chrono::nanoseconds currentTime, const sp<Connection>& connection);
     void onANRLocked(
-            nsecs_t currentTime, const sp<InputApplicationHandle>& applicationHandle,
+            std::chrono::nanoseconds currentTime, const sp<InputApplicationHandle>& applicationHandle,
             const sp<InputWindowHandle>& windowHandle,
-            nsecs_t eventTime, nsecs_t waitStartTime, const char* reason);
+            std::chrono::nanoseconds eventTime, std::chrono::nanoseconds waitStartTime, const char* reason);
 
     // Outbound policy interactions.
     void doNotifyConfigurationChangedInterruptible(CommandEntry* commandEntry);
@@ -1102,8 +1102,8 @@ private:
     void initializeKeyEvent(KeyEvent* event, const KeyEntry* entry);
 
     // Statistics gathering.
-    void updateDispatchStatisticsLocked(nsecs_t currentTime, const EventEntry* entry,
-            int32_t injectionResult, nsecs_t timeSpentWaitingForApplication);
+    void updateDispatchStatisticsLocked(std::chrono::nanoseconds currentTime, const EventEntry* entry,
+            int32_t injectionResult, std::chrono::nanoseconds timeSpentWaitingForApplication);
 
     void setKeyboardFocusLocked(const sp<InputWindowHandle>& windowHandle);
 };

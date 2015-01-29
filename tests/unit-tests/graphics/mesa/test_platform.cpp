@@ -146,49 +146,6 @@ TEST_F(MesaGraphicsPlatform, fails_if_no_resources)
     }, std::runtime_error) << "Expected that c'tor of Platform throws";
 }
 
-/* ipc packaging tests */
-TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
-{
-    using namespace testing;
-
-    unsigned int const magic{0x10111213};
-
-    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
-        .WillOnce(Return(0));
-
-    mg::PlatformOperationMessage magic_msg;
-    magic_msg.data.resize(sizeof(unsigned int));
-    *(reinterpret_cast<unsigned int*>(magic_msg.data.data())) = magic;
-
-    int drm_opcode{44};
-    auto platform = create_platform();
-    auto ipc_ops = platform->make_ipc_operations();
-    auto response_msg = ipc_ops->platform_operation(drm_opcode, magic_msg);
-    ASSERT_THAT(response_msg.data.size(), Eq(sizeof(int)));
-    EXPECT_THAT(*(reinterpret_cast<int*>(response_msg.data.data())), Eq(0));
-}
-
-TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
-{
-    using namespace testing;
-
-    unsigned int const magic{0x10111213};
-
-    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
-        .WillOnce(Return(-1));
-
-    int drm_opcode{44};
-    auto platform = create_platform();
-    auto ipc_ops = platform->make_ipc_operations();
-    mg::PlatformOperationMessage magic_msg;
-    magic_msg.data.resize(sizeof(unsigned int));
-    *(reinterpret_cast<unsigned int*>(magic_msg.data.data())) = magic;
-
-    EXPECT_THROW({
-        ipc_ops->platform_operation(drm_opcode, magic_msg);
-    }, std::runtime_error);
-}
-
 TEST_F(MesaGraphicsPlatform, egl_native_display_is_gbm_device)
 {
     auto platform = create_platform();

@@ -45,6 +45,11 @@
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
 
+// Temporary include to ease client transition from mir_connection_drm* APIs
+// to mir_connection_platform_operation().
+// TODO: Remove when transition is complete
+#include "../../src/platforms/mesa/include/mir_toolkit/mesa/platform_operation.h"
+
 #include "mir/geometry/rectangles.h"
 #include "surface_tracker.h"
 #include "client_buffer_tracker.h"
@@ -629,34 +634,20 @@ void mf::SessionMediator::drm_auth_magic(
         report->session_drm_auth_magic_called(session->name());
     }
 
-    //TODO: the opcode should be provided as part of the request, and should be opaque to the server code.
-    unsigned int const made_up_opcode{0};
-    mg::PlatformOperationMessage platform_request;
-
     auto const magic = request->magic();
-    platform_request.data.resize(sizeof(int));
-    auto const data_ptr = reinterpret_cast<int*>(platform_request.data.data());
-    *data_ptr = magic;
 
-    try
-    {
-        auto platform_response = ipc_operations->platform_operation(made_up_opcode, platform_request);
-        if (platform_response.data.size() >= sizeof(int))
-        {
-            auto const status =
-                *reinterpret_cast<int const*>(platform_response.data.data());
-            response->set_status_code(status);
-        }
-    }
-    catch (std::exception const& e)
-    {
-        auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
+    mg::PlatformOperationMessage platform_request;
+    platform_request.data.resize(sizeof(MirMesaAuthMagicRequest));
+    auto const auth_magic_request_ptr =
+        reinterpret_cast<MirMesaAuthMagicRequest*>(platform_request.data.data());
+    *auth_magic_request_ptr = MirMesaAuthMagicRequest{magic};
 
-        if (errno_ptr != nullptr)
-            response->set_status_code(*errno_ptr);
-        else
-            throw;
-    }
+    auto const platform_response = ipc_operations->platform_operation(
+        MirMesaPlatformOperation::auth_magic, platform_request);
+
+    auto const auth_magic_response_ptr =
+        reinterpret_cast<MirMesaAuthMagicResponse const*>(platform_response.data.data());
+    response->set_status_code(auth_magic_response_ptr->status);
 
     done->Run();
 }

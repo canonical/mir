@@ -41,8 +41,8 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.key.key_code = kev->getKeyCode();
             mir_event.key.scan_code = kev->getScanCode();
             mir_event.key.repeat_count = kev->getRepeatCount();
-            mir_event.key.down_time = kev->getDownTime();
-            mir_event.key.event_time = kev->getEventTime();
+            mir_event.key.down_time = kev->getDownTime().count();
+            mir_event.key.event_time = kev->getEventTime().count();
             mir_event.key.is_system_key = false; // TODO: Figure out what this is. //kev->isSystemKey();
             break;
         }
@@ -61,8 +61,8 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.motion.y_offset = mev->getYOffset();
             mir_event.motion.x_precision = mev->getXPrecision();
             mir_event.motion.y_precision = mev->getYPrecision();
-            mir_event.motion.down_time = mev->getDownTime();
-            mir_event.motion.event_time = mev->getEventTime();
+            mir_event.motion.down_time = mev->getDownTime().count();
+            mir_event.motion.event_time = mev->getEventTime().count();
             mir_event.motion.pointer_count = mev->getPointerCount();
             for(unsigned int i = 0; i < mev->getPointerCount(); i++)
             {
