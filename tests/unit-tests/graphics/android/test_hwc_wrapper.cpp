@@ -260,7 +260,7 @@ TEST_F(HwcWrapper, calls_access_functions)
     uint32_t* attributes{nullptr};
     int32_t* values{nullptr};
     mga::ConfigId hwc_config{3};
-    auto rc{-2};
+    int rc{-2};
 
     EXPECT_CALL(*mock_device, getDisplayAttributes_interface(
         mock_device.get(), HWC_DISPLAY_PRIMARY, hwc_config.as_value(), attributes, values))

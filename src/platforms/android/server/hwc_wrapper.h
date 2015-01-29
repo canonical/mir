@@ -59,7 +59,7 @@ public:
     virtual void display_on(DisplayName) const = 0;
     virtual void display_off(DisplayName) const = 0;
     virtual std::vector<ConfigId> display_configs(DisplayName) const = 0;
-    virtual void display_attributes(
+    virtual int display_attributes(
         DisplayName, ConfigId, uint32_t const* attributes, int32_t* values) const = 0;
 
 protected:

@@ -160,6 +160,7 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
                 }
                 //the attribute list should be at least this long, as some qcom drivers always deref attribute_list[5]
                 EXPECT_EQ(5, i);
+                return 0;
             }));
 
     auto vrefresh_hz = 1000.0 / vrefresh_period.count();
@@ -186,7 +187,7 @@ TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
 }
 
 //some devices (bq) only report an error later in the display attributes call, make sure to report disconnected on error to this call. 
-TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
+TEST_F(HwcConfiguration, display_attributes_failure_indicates_problem_for_primary_disconnect_for_secondary)
 {
     using namespace testing;
     ON_CALL(*mock_hwc_wrapper, display_attributes(_,_,_,_))
@@ -221,6 +222,7 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
                     }
                     i++;
                 }
+                return 0;
             }));
     auto attribs = config.active_attribs_for(mga::DisplayName::external);
     EXPECT_THAT(attribs.vrefresh_hz, Eq(0.0f));
