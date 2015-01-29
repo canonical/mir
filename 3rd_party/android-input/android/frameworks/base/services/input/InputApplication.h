@@ -30,7 +30,7 @@ namespace android {
  */
 struct InputApplicationInfo {
     String8 name;
-    nsecs_t dispatchingTimeout;
+    std::chrono::nanoseconds dispatchingTimeout;
 };
 
 
@@ -50,7 +50,7 @@ public:
         return mInfo ? mInfo->name : String8("<invalid>");
     }
 
-    inline nsecs_t getDispatchingTimeout(nsecs_t defaultValue) const {
+    inline std::chrono::nanoseconds getDispatchingTimeout(std::chrono::nanoseconds defaultValue) const {
         return mInfo ? mInfo->dispatchingTimeout : defaultValue;
     }
 

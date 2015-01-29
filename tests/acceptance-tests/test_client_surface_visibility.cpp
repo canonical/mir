@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,8 +20,10 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/shell/surface_coordinator_wrapper.h"
+#include "mir/scene/surface_coordinator.h"
+#include "mir/shell/shell_wrapper.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test/wait_condition.h"
@@ -32,6 +34,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
 namespace ms = mir::scene;
@@ -41,17 +44,22 @@ namespace geom = mir::geometry;
 
 namespace
 {
-class StoringSurfaceCoordinator : public msh::SurfaceCoordinatorWrapper
+class StoringShell : public msh::ShellWrapper
 {
 public:
-    using msh::SurfaceCoordinatorWrapper::SurfaceCoordinatorWrapper;
+    StoringShell(
+        std::shared_ptr<msh::Shell> const& wrapped,
+        std::shared_ptr<ms::SurfaceCoordinator> const surface_coordinator) :
+        msh::ShellWrapper{wrapped},
+        surface_coordinator{surface_coordinator}
+    {}
 
-    std::shared_ptr<ms::Surface> add_surface(
-        ms::SurfaceCreationParameters const& params,
-        ms::Session* session) override
+    mf::SurfaceId create_surface(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& params) override
     {
-        auto const surface = msh::SurfaceCoordinatorWrapper::add_surface(params, session);
-        surfaces.push_back(surface);
+        auto const surface = msh::ShellWrapper::create_surface(session, params);
+        surfaces.push_back(session->surface(surface));
         return surface;
     }
 
@@ -60,18 +68,19 @@ public:
         return surfaces[index].lock();
     }
 
-    void raise(std::weak_ptr<ms::Surface> const& /*surface*/) override
+    void handle_surface_created(std::shared_ptr<ms::Session> const& /*session*/) override
     {
-         // We get some racy "raise" requests from the DefaultFocusManagement
+         // We get some racy "raise" requests from the DefaultShell
          // so we ignore any raise requests that we don't issue ourselves
     }
 
     void raise(int index)
     {
-         msh::SurfaceCoordinatorWrapper::raise(surface(index));
+        surface_coordinator->raise(surface(index));
     }
 
 private:
+    std::shared_ptr<ms::SurfaceCoordinator> const surface_coordinator;
     std::vector<std::weak_ptr<ms::Surface>> surfaces;
 
 };
@@ -99,11 +108,10 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
     void SetUp() override
     {
-        server.wrap_surface_coordinator([&]
-            (std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
+        server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
             {
-                auto const result = std::make_shared<StoringSurfaceCoordinator>(wrapped);
-                storing_surface_coordinator = result;
+                auto const result = std::make_shared<StoringShell>(wrapped, server.the_surface_coordinator());
+                shell = result;
                 return result;
             });
 
@@ -136,14 +144,14 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
     
         mir_surface_spec_release(spec);
 
-        storing_surface_coordinator.lock()->raise(1);
+        shell.lock()->raise(1);
 
         mir_surface_swap_buffers_sync(second_surface);
     }
 
     std::shared_ptr<ms::Surface> server_surface(size_t index)
     {
-        return storing_surface_coordinator.lock()->surface(index);
+        return shell.lock()->surface(index);
     }
 
     void move_surface_off_screen()
@@ -158,7 +166,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
     void raise_surface_on_top()
     {
-        storing_surface_coordinator.lock()->raise(0);
+        shell.lock()->raise(0);
     }
 
     void expect_surface_visibility_event_after(
@@ -186,7 +194,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
     MirSurface* second_surface = nullptr;
     testing::NiceMock<MockVisibilityCallback> mock_visibility_callback;
-    std::weak_ptr<StoringSurfaceCoordinator> storing_surface_coordinator;
+    std::weak_ptr<StoringShell> shell;
 };
 
 }

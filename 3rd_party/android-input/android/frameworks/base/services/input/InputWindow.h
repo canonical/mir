@@ -115,7 +115,7 @@ struct InputWindowInfo {
     String8 name;
     int32_t layoutParamsFlags;
     int32_t layoutParamsType;
-    nsecs_t dispatchingTimeout;
+    std::chrono::nanoseconds dispatchingTimeout;
     int32_t frameLeft;
     int32_t frameTop;
     int32_t frameRight;
@@ -174,7 +174,7 @@ public:
         return mInfo ? mInfo->name : String8("<invalid>");
     }
 
-    inline nsecs_t getDispatchingTimeout(nsecs_t defaultValue) const {
+    inline std::chrono::nanoseconds getDispatchingTimeout(std::chrono::nanoseconds defaultValue) const {
         return mInfo ? mInfo->dispatchingTimeout : defaultValue;
     }
 

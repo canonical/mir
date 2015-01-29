@@ -141,12 +141,12 @@ status_t KeyCharacterMap::load(Tokenizer* tokenizer,
         status = NO_MEMORY;
     } else {
 #if DEBUG_PARSER_PERFORMANCE
-        nsecs_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
+        std::chrono::nanoseconds startTime = systemTime(SYSTEM_TIME_MONOTONIC);
 #endif
         Parser parser(map.get(), tokenizer, format);
         status = parser.parse();
 #if DEBUG_PARSER_PERFORMANCE
-        nsecs_t elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
+        std::chrono::nanoseconds elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
         ALOGD("Parsed key character map file '%s' %d lines in %0.3fms.",
             c_str(tokenizer->getFilename()), tokenizer->getLineNumber(),
                 elapsedTime / 1000000.0);
@@ -294,7 +294,7 @@ char16_t KeyCharacterMap::getMatch(int32_t keyCode, const char16_t* chars, size_
 
 bool KeyCharacterMap::getEvents(int32_t deviceId, const char16_t* chars, size_t numChars,
         Vector<KeyEvent>& outEvents) const {
-    nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+    std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
 
     for (size_t i = 0; i < numChars; i++) {
         int32_t keyCode, metaState;
@@ -439,7 +439,7 @@ bool KeyCharacterMap::findKey(char16_t ch, int32_t* outKeyCode, int32_t* outMeta
 }
 
 void KeyCharacterMap::addKey(Vector<KeyEvent>& outEvents,
-        int32_t deviceId, int32_t keyCode, int32_t metaState, bool down, nsecs_t time) {
+        int32_t deviceId, int32_t keyCode, int32_t metaState, bool down, std::chrono::nanoseconds time) {
     outEvents.push();
     KeyEvent& event = outEvents.editTop();
     event.initialize(deviceId, AINPUT_SOURCE_KEYBOARD,
@@ -448,7 +448,7 @@ void KeyCharacterMap::addKey(Vector<KeyEvent>& outEvents,
 }
 
 void KeyCharacterMap::addMetaKeys(Vector<KeyEvent>& outEvents,
-        int32_t deviceId, int32_t metaState, bool down, nsecs_t time,
+        int32_t deviceId, int32_t metaState, bool down, std::chrono::nanoseconds time,
         int32_t* currentMetaState) {
     // Add and remove meta keys symmetrically.
     if (down) {
@@ -513,7 +513,7 @@ void KeyCharacterMap::addMetaKeys(Vector<KeyEvent>& outEvents,
 }
 
 bool KeyCharacterMap::addSingleEphemeralMetaKey(Vector<KeyEvent>& outEvents,
-        int32_t deviceId, int32_t metaState, bool down, nsecs_t time,
+        int32_t deviceId, int32_t metaState, bool down, std::chrono::nanoseconds time,
         int32_t keyCode, int32_t keyMetaState,
         int32_t* currentMetaState) {
     if ((metaState & keyMetaState) == keyMetaState) {
@@ -525,7 +525,7 @@ bool KeyCharacterMap::addSingleEphemeralMetaKey(Vector<KeyEvent>& outEvents,
 }
 
 void KeyCharacterMap::addDoubleEphemeralMetaKey(Vector<KeyEvent>& outEvents,
-        int32_t deviceId, int32_t metaState, bool down, nsecs_t time,
+        int32_t deviceId, int32_t metaState, bool down, std::chrono::nanoseconds time,
         int32_t leftKeyCode, int32_t leftKeyMetaState,
         int32_t rightKeyCode, int32_t rightKeyMetaState,
         int32_t eitherKeyMetaState,
@@ -543,7 +543,7 @@ void KeyCharacterMap::addDoubleEphemeralMetaKey(Vector<KeyEvent>& outEvents,
 }
 
 void KeyCharacterMap::addLockedMetaKey(Vector<KeyEvent>& outEvents,
-        int32_t deviceId, int32_t metaState, nsecs_t time,
+        int32_t deviceId, int32_t metaState, std::chrono::nanoseconds time,
         int32_t keyCode, int32_t keyMetaState,
         int32_t* currentMetaState) {
     if ((metaState & keyMetaState) == keyMetaState) {

@@ -22,14 +22,16 @@
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
 #include "mir_toolkit/event.h"
+
 #include <string>
+#include <chrono>
 
 namespace mir
 {
 namespace logging
 {
 
-std::string input_timestamp(nsecs_t when);
+std::string input_timestamp(std::chrono::nanoseconds when);
 
 }
 }
