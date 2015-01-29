@@ -281,6 +281,7 @@ public:
                 }
 
                 focussed_surface->configure(mir_surface_attrib_state, state);
+                attribute_set(*focussed_surface, mir_surface_attrib_state, state);
             }
         }
     }
