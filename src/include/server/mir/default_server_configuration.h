@@ -40,6 +40,7 @@ namespace droidinput = android;
 namespace mir
 {
 class ServerActionQueue;
+class SharedLibrary;
 class SharedLibraryProberReport;
 
 namespace compositor
@@ -123,6 +124,10 @@ namespace input
 class InputReport;
 class Scene;
 class InputManager;
+class Platform;
+class InputDeviceRegistry;
+class InputDeviceHub;
+class DefaultInputDeviceHub;
 class CompositeEventFilter;
 class InputChannelFactory;
 class CursorListener;
@@ -306,6 +311,14 @@ public:
     virtual std::shared_ptr<droidinput::InputReaderPolicyInterface> the_input_reader_policy();
     virtual std::shared_ptr<droidinput::InputListenerInterface> the_input_translator();
     virtual std::shared_ptr<input::android::InputThread> the_input_reader_thread();
+
+    // new input reading related parts:
+    virtual std::shared_ptr<input::Platform> the_input_platform();
+    virtual std::shared_ptr<SharedLibrary> the_input_platform_library();
+    virtual std::shared_ptr<input::InputManager> the_new_input_manager();
+    virtual std::shared_ptr<MainLoop> the_event_loop();
+    virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
+    virtual std::shared_ptr<input::InputDeviceHub> the_input_device_hub();
     /** @} */
 
     /** @name logging configuration - customization
@@ -366,6 +379,12 @@ protected:
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<input::InputManager>    new_input_manager; // currently not used by default
+    CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
+    CachedPtr<MainLoop>    input_event_loop; // currently not used by default
+    CachedPtr<input::Platform>    input_platform; // currently not used by default
+    std::shared_ptr<SharedLibrary> platform_input_library; // currently not used by default // TODO find different solution for managing platform
+    CachedPtr<MainLoop> event_loop; // currently not used by default
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
     CachedPtr<input::InputSendObserver> input_send_observer;

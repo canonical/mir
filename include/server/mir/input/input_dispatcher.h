@@ -23,6 +23,7 @@
 
 #include "mir_toolkit/event.h"
 
+typedef int64_t nsecs_t;       // nano-seconds
 namespace mir
 {
 namespace input

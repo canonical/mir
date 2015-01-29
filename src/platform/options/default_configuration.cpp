@@ -55,6 +55,7 @@ char const* const mo::log_opt_value = "log";
 char const* const mo::lttng_opt_value = "lttng";
 
 char const* const mo::platform_graphics_lib = "platform-graphics-lib";
+char const* const mo::platform_input_lib = "platform-input-lib";
 char const* const mo::platform_path = "platform-path";
 
 namespace
