@@ -35,22 +35,6 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-msh::AbstractShell::AbstractShell(
-    std::shared_ptr<InputTargeter> const& input_targeter,
-    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-    std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager) :
-    input_targeter(input_targeter),
-    surface_coordinator(surface_coordinator),
-    session_coordinator(session_coordinator),
-    prompt_session_manager(prompt_session_manager)
-{
-}
-
-msh::AbstractShell::~AbstractShell() noexcept
-{
-}
-
 msh::DefaultShell::DefaultShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
     std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
@@ -67,7 +51,7 @@ std::shared_ptr<ms::Session> msh::DefaultShell::open_session(
     std::string const& name,
     std::shared_ptr<mf::EventSink> const& sink)
 {
-    auto const new_session = session_coordinator->open_session(client_pid, name, sink);
+    auto const new_session = AbstractShell::open_session(client_pid, name, sink);
     set_focus_to(new_session);
     return new_session;
 }
@@ -75,8 +59,7 @@ std::shared_ptr<ms::Session> msh::DefaultShell::open_session(
 void msh::DefaultShell::close_session(
     std::shared_ptr<ms::Session> const& session)
 {
-    prompt_session_manager->remove_session(session);
-    session_coordinator->close_session(session);
+    AbstractShell::close_session(session);
     set_focus_to(session_coordinator->successor_of(std::shared_ptr<ms::Session>()));
 }
 
@@ -106,38 +89,13 @@ void msh::DefaultShell::set_focus_to(
 void msh::DefaultShell::handle_surface_created(
     std::shared_ptr<ms::Session> const& session)
 {
+    AbstractShell::handle_surface_created(session);
     set_focus_to(session);
-}
-
-std::shared_ptr<ms::PromptSession> msh::DefaultShell::start_prompt_session_for(
-    std::shared_ptr<ms::Session> const& session,
-    scene::PromptSessionCreationParameters const& params)
-{
-    return prompt_session_manager->start_prompt_session_for(session, params);
-}
-
-void msh::DefaultShell::add_prompt_provider_for(
-    std::shared_ptr<ms::PromptSession> const& prompt_session,
-    std::shared_ptr<ms::Session> const& session)
-{
-    prompt_session_manager->add_prompt_provider(prompt_session, session);
-}
-
-void msh::DefaultShell::stop_prompt_session(std::shared_ptr<ms::PromptSession> const& prompt_session)
-{
-    prompt_session_manager->stop_prompt_session(prompt_session);
 }
 
 mf::SurfaceId msh::DefaultShell::create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
 {
-    auto placed_params = placement_strategy->place(*session, params);
-    auto const result = session->create_surface(placed_params);
-    return result;
-}
-
-void msh::DefaultShell::destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface)
-{
-    session->destroy_surface(surface);
+    return AbstractShell::create_surface(session, placement_strategy->place(*session, params));
 }
 
 int msh::DefaultShell::set_surface_attribute(

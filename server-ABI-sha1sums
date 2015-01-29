@@ -109,7 +109,7 @@ aceccc0bdeea5c90d6c5ea17ed4ce6b5dc1b0ed4  include/server/mir/scene/surface.h
 217ee696afe779c1dc23e1f17e93eafca896a1a6  include/server/mir/shell/focus_controller.h
 f8d415af54b4a477338fb9dbe20db01aa4544029  include/server/mir/shell/host_lifecycle_event_listener.h
 4f50c37bb8e36a1aa4918af6aa01b0f032ed0984  include/server/mir/shell/input_targeter.h
-455fbd79aa33d1a3fcf078c5e5b7a8575ee9eb8f  include/server/mir/shell/shell.h
+fe326005fc24ec25dffba05e07915db87bf97409  include/server/mir/shell/shell.h
 66140bd35f412fca4cb3eb58d890acecabeb333a  include/server/mir/shell/shell_wrapper.h
 114cc8c0b12ee4fd78d86c8f3309546e4dc68c9f  include/server/mir/terminate_with_current_exception.h
 1b8c2a763c8f5f00b737c3a187db2304676f8076  include/server/mir/time/alarm.h
