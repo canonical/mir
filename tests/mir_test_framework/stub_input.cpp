@@ -17,6 +17,7 @@
  */
 
 #include "stub_input_platform.h"
+#include "fake_input_device_impl.h"
 
 namespace mtf = mir_test_framework;
 namespace mo = mir::options;
@@ -42,3 +43,10 @@ extern "C" mi::PlatformPriority probe_input_platform(
 {
     return mi::PlatformPriority::supported;
 }
+
+extern "C" std::unique_ptr<mtf::FakeInputDevice> add_fake_input_device(mi::InputDeviceInfo const& info)
+{
+    return std::unique_ptr<mtf::FakeInputDevice>(new mtf::FakeInputDeviceImpl(info));
+}
+
+

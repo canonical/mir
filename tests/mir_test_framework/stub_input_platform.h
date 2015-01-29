@@ -19,19 +19,34 @@
 #define MIR_TEST_FRAMEWORK_STUB_INPUT_PLATFORM_H_
 
 #include "mir/input/platform.h"
+#include <mutex>
+#include <memory>
+#include <vector>
 
+namespace mir
+{
+namespace input
+{
+class InputDevice;
+class InputDeviceInfo;
+}
+}
 namespace mir_test_framework
 {
+class FakeInputDevice;
 class StubInputPlatform : public mir::input::Platform
 {
 public:
-    void start(mir::input::InputEventHandlerRegister& /*loop*/,
-               std::shared_ptr<mir::input::InputDeviceRegistry> const& /*input_device_registry*/) override
-    {
-    }
-    void stop(mir::input::InputEventHandlerRegister& /*loop*/) override
-    {
-    }
+    void start(mir::input::InputEventHandlerRegister& loop,
+               std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry);
+    void stop(mir::input::InputEventHandlerRegister& loop) override;
+
+    static void add(std::shared_ptr<mir::input::InputDevice> const& dev);
+    static void remove(std::shared_ptr<mir::input::InputDevice> const& dev);
+    static std::mutex platform_mutex;
+    static std::vector<std::shared_ptr<mir::input::InputDevice>> registered_devs;
+    static std::shared_ptr<mir::input::InputDeviceRegistry> registry;
+    static mir::input::InputEventHandlerRegister* event_handler;
 };
 
 }

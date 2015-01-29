@@ -105,6 +105,8 @@ add_library(
   mirplatforminputstub MODULE
   
   stub_input.cpp
+  fake_input_device_impl.cpp
+  stub_input_platform.cpp
   )
 
 set_target_properties(

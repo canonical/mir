@@ -57,5 +57,12 @@ d1ba61e687d75103e9e7aa0409080214f56a990b  include/platform/mir/graphics/platform
 1b77fb3290af00dc7d1c11dcc5388972dacb9ec3  include/platform/mir/graphics/platform_ipc_package.h
 f0db0484b8ccc9091e73c80a2a200cb436b48bfb  include/platform/mir/graphics/platform_operation_message.h
 f18876766861e5d4f5ca999dbd176fe1fc520594  include/platform/mir/graphics/renderable.h
+d9b27e29547fee05c900ffe9304ad4471f6b0152  include/platform/mir/input/device_capability.h
+7c36574454e12873815daf2991ebbf8a7b2b4446  include/platform/mir/input/input_device.h
+93760b9d0729a2141da49def6dc690ae7eef1025  include/platform/mir/input/input_device_info.h
+4f17d5e7b69448ececbc07dee3653a1f0f4dfc89  include/platform/mir/input/input_device_registry.h
+b59d7132b9f4360ef4cf5af4ed0255c00f897dc7  include/platform/mir/input/input_event_handler_register.h
+8b456fe8c9211208bdfad3db893aee45ffa5fb55  include/platform/mir/input/input_sink.h
+897648fdf3531bd57830454f8e9c775a6b53aa0d  include/platform/mir/input/platform.h
 5b3872b04b3686fe9a244572ca0787596431a2cb  include/platform/mir/module_properties.h
 b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
