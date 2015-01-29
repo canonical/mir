@@ -19,25 +19,29 @@
 #include "mir_client_host_connection.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
+#include "mir/raii.h"
+#include "mir/graphics/platform_operation_message.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <stdexcept>
 
+namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 
 namespace
 {
 
-void drm_auth_magic_callback(int status, void* context)
-{
-    int* status_ret = static_cast<int*>(context);
-    *status_ret = status;
-}
-
 void display_config_callback_thunk(MirConnection* /*connection*/, void* context)
 {
     (*static_cast<std::function<void()>*>(context))();
+}
+
+void platform_operation_callback(
+    MirConnection*, MirPlatformMessage* reply, void* context)
+{
+    auto reply_ptr = static_cast<MirPlatformMessage**>(context);
+    *reply_ptr = reply;
 }
 
 static void nested_lifecycle_event_callback_thunk(MirConnection* /*connection*/, MirLifecycleState state, void *context)
@@ -159,20 +163,6 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
         mir_connection, surface_parameters);
 }
 
-void mgn::MirClientHostConnection::drm_auth_magic(int magic)
-{
-    int status{-1};
-    mir_wait_for(mir_connection_drm_auth_magic(mir_connection, magic,
-                                               drm_auth_magic_callback, &status));
-    if (status)
-    {
-        std::string const msg("Nested Mir failed to authenticate magic");
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error(msg)) << boost::errinfo_errno(status));
-    }
-}
-
 void mgn::MirClientHostConnection::drm_set_gbm_device(struct gbm_device* dev)
 {
     if (!mir_connection_drm_set_gbm_device(mir_connection, dev))
@@ -180,4 +170,33 @@ void mgn::MirClientHostConnection::drm_set_gbm_device(struct gbm_device* dev)
         std::string const msg("Nested Mir failed to set the gbm device");
         BOOST_THROW_EXCEPTION(std::runtime_error(msg));
     }
+}
+
+mg::PlatformOperationMessage mgn::MirClientHostConnection::platform_operation(
+    unsigned int op, mg::PlatformOperationMessage const& request)
+{
+    auto const msg = mir::raii::deleter_for(
+        mir_platform_message_create(op),
+        mir_platform_message_release);
+
+    mir_platform_message_set_data(msg.get(), request.data.data(), request.data.size());
+    mir_platform_message_set_fds(msg.get(), request.fds.data(), request.fds.size());
+
+    MirPlatformMessage* raw_reply{nullptr};
+
+    auto const wh = mir_connection_platform_operation(
+        mir_connection, op, msg.get(), platform_operation_callback, &raw_reply);
+    mir_wait_for(wh);
+
+    auto const reply = mir::raii::deleter_for(
+        raw_reply,
+        mir_platform_message_release);
+
+    auto reply_data = mir_platform_message_get_data(reply.get());
+    auto reply_fds = mir_platform_message_get_fds(reply.get());
+
+    return PlatformOperationMessage{
+        {static_cast<uint8_t const*>(reply_data.data),
+         static_cast<uint8_t const*>(reply_data.data) + reply_data.size},
+        {reply_fds.fds, reply_fds.fds + reply_fds.num_fds}};
 }

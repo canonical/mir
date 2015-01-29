@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_NESTED_HOST_CONNECTION_H_
 
 #include "mir_toolkit/client_types.h"
+#include "mir/graphics/nested_context.h"
 
 #include <memory>
 #include <vector>
@@ -50,20 +51,16 @@ protected:
     HostSurface& operator=(HostSurface const&) = delete;
 };
 
-class HostConnection
+class HostConnection : public NestedContext
 {
 public:
     virtual ~HostConnection() = default;
 
-    virtual std::vector<int> platform_fd_items() = 0;
     virtual EGLNativeDisplayType egl_native_display() = 0;
     virtual std::shared_ptr<MirDisplayConfiguration> create_display_config() = 0;
     virtual void set_display_config_change_callback(std::function<void()> const& cb) = 0;
     virtual void apply_display_config(MirDisplayConfiguration&) = 0;
     virtual std::shared_ptr<HostSurface> create_surface(MirSurfaceParameters const&) = 0;
-
-    virtual void drm_auth_magic(int magic) = 0;
-    virtual void drm_set_gbm_device(struct gbm_device* dev) = 0;
 
 protected:
     HostConnection() = default;
