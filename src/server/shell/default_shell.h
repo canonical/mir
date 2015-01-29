@@ -23,7 +23,7 @@
 
 namespace mir
 {
-namespace scene { class PlacementStrategy; }
+namespace scene { class PlacementStrategy; class SurfaceConfigurator; }
 
 namespace shell
 {
@@ -38,7 +38,8 @@ public:
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
-        std::shared_ptr<scene::PlacementStrategy> const& placement_strategy);
+        std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
+        std::shared_ptr<scene::SurfaceConfigurator> const& surface_configurator);
 
 /** @name these come from frontend::Shell
  *  @{ */
@@ -62,6 +63,7 @@ public:
 
 private:
     std::shared_ptr<scene::PlacementStrategy> const placement_strategy;
+    std::shared_ptr<scene::SurfaceConfigurator> const surface_configurator;
 
     void setting_focus_to(std::shared_ptr<scene::Surface> const& surface);
 };

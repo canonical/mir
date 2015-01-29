@@ -27,8 +27,7 @@ namespace mir
 {
 namespace shell
 {
-
-/// A placeholder for stuff all shells will want
+/// Minimal Shell implementation with none of the necessary window management logic
 class AbstractShell : public Shell
 {
 public:
@@ -79,13 +78,13 @@ public:
  * \note I think the FocusController interface is unnecessary as:
  *   1. the functions are only meaningful in the context of implementing a Shell
  *   2. the implementation of these functions is Shell behaviour
- * Simply providing them as part of a public AbstractShell is probably adequate.
+ * Simply providing them as part of AbstractShell is probably adequate.
  *  @{ */
-    void focus_next() override final;
+    void focus_next() override;
 
-    std::weak_ptr<scene::Session> focussed_application() const override final;
+    std::weak_ptr<scene::Session> focussed_application() const override;
 
-    void set_focus_to(std::shared_ptr<scene::Session> const& focus) override final;
+    void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
 /** @} */
 
 protected:

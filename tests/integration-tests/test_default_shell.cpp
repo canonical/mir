@@ -32,6 +32,7 @@
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_session_event_sink.h"
+#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_prompt_session_manager.h"
 #include "mir_test_doubles/mock_input_targeter.h"
 
@@ -82,7 +83,8 @@ struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
         mt::fake_shared(surface_coordinator),
         mt::fake_shared(session_manager),
         std::make_shared<mtd::NullPromptSessionManager>(),
-        std::make_shared<NullPlacementStrategy>()};
+        std::make_shared<NullPlacementStrategy>(),
+        std::make_shared<mtd::NullSurfaceConfigurator>()};
 };
 }
 
