@@ -70,28 +70,13 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
 
     dispatcher.add_watch(timer_fd, [this]()
     {
-        // Disarm the timer
-        uint64_t dummy;
-        if (read(timer_fd, &dummy, sizeof(dummy)) != sizeof(dummy))
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                     std::system_category(),
-                                                     "Failed read from timer"}));
-        }
-
+        consume_wake_notification(timer_fd);
         process_and_maybe_send_event();
     });
 
     dispatcher.add_watch(notify_receiver_fd, [this]()
     {
-        char dummy;
-        if (read(notify_receiver_fd, &dummy, sizeof(dummy)) != sizeof(dummy))
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                     std::system_category(),
-                                                     "Failed to consume notification"}));
-        }
-
+        consume_wake_notification(notify_receiver_fd);
         process_and_maybe_send_event();
     });
 
@@ -214,9 +199,20 @@ void mircva::InputReceiver::process_and_maybe_send_event()
     }
 }
 
+void mircva::InputReceiver::consume_wake_notification(mir::Fd const& fd)
+{
+    uint64_t dummy;
+    if (read(fd, &dummy, sizeof(dummy)) != sizeof(dummy))
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 "Failed to consume notification"}));
+    }
+}
+
 void mircva::InputReceiver::wake()
 {
-    char dummy{0};
+    uint64_t dummy{0};
     if (write(notify_sender_fd, &dummy, sizeof(dummy)) != sizeof(dummy))
     {
         BOOST_THROW_EXCEPTION((std::system_error{errno,

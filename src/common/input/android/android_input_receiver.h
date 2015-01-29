@@ -95,6 +95,7 @@ private:
     AndroidClock const android_clock;
 
     void process_and_maybe_send_event();
+    static void consume_wake_notification(mir::Fd const& fd);
     void wake();
 };
 
