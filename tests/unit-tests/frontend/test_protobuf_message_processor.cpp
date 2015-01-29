@@ -56,9 +56,6 @@ struct StubMessageProcessorReport : mf::MessageProcessorReport
     void exception_handled(void const*, std::exception const&) override
     {
     }
-    void sent_event(void const*, MirSurfaceEvent const&) override
-    {
-    }
 };
 
 struct StubDisplayServer : mfd::DisplayServer

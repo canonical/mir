@@ -1,3 +1,4 @@
+
 MIR_COMMON_3 {
  global: mir_*;
   extern "C++" {
@@ -232,6 +233,10 @@ MIR_COMMON_3.2 {
       mir_touch_event_tooltype;
     };
     extern "C++" {
-      mir::events::*;
+      mir::dispatch::SimpleDispatchThread::SimpleDispatchThread*;
+      mir::dispatch::SimpleDispatchThread::?SimpleDispatchThread*;
+      typeinfo?for?mir::dispatch::SimpleDispatchThread;
+      vtable?for?mir::dispatch::SimpleDispatchThread;
+      mir::events::*
     };
 } MIR_COMMON_3.1;

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER // Required until wire format changes
 
 #include "mir_protobuf_rpc_channel.h"
 #include "rpc_report.h"
@@ -40,6 +40,7 @@
 
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
+namespace md = mir::dispatch;
 
 namespace
 {
@@ -353,4 +354,19 @@ void mclr::MirProtobufRpcChannel::on_data_available()
 void mclr::MirProtobufRpcChannel::on_disconnected()
 {
     notify_disconnected();
+}
+
+mir::Fd mir::client::rpc::MirProtobufRpcChannel::watch_fd() const
+{
+    return transport->watch_fd();
+}
+
+bool mir::client::rpc::MirProtobufRpcChannel::dispatch(md::FdEvents events)
+{
+    return transport->dispatch(events);
+}
+
+md::FdEvents mclr::MirProtobufRpcChannel::relevant_events() const
+{
+    return transport->relevant_events();
 }
