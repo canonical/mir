@@ -16,8 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "message_processor_report.h"
 #include "mir/logging/logger.h"
 
@@ -163,11 +161,4 @@ void mrl::MessageProcessorReport::exception_handled(void const* mediator, std::e
     auto const pm = mediators.find(mediator);
     if (pm != mediators.end())
         mediators.erase(mediator);
-}
-
-void mrl::MessageProcessorReport::sent_event(void const* mediator, MirSurfaceEvent const& event)
-{
-    std::ostringstream out;
-    out << "mediator=" << mediator << ", sent event, surface id=" << event.id;
-    log->log(ml::Severity::debug, out.str(), component);
 }

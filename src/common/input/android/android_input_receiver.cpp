@@ -158,10 +158,10 @@ void mircva::InputReceiver::process_and_maybe_send_event()
      * as the display refresh rate.
      */
 
-    nsecs_t const now = android_clock(SYSTEM_TIME_MONOTONIC);
+    std::chrono::nanoseconds const now = android_clock(SYSTEM_TIME_MONOTONIC);
     int const event_rate_hz = 55;
-    nsecs_t const one_frame = 1000000000ULL / event_rate_hz;
-    nsecs_t frame_time = (now / one_frame) * one_frame;
+    std::chrono::nanoseconds const one_frame = std::chrono::nanoseconds(1000000000ULL / event_rate_hz);
+    std::chrono::nanoseconds frame_time = (now / one_frame) * one_frame;
 
     auto result = input_consumer->consume(&event_factory,
                                           true,

@@ -102,7 +102,7 @@ public:
 
     std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
     {
-        return shell_placement_strategy(
+        return placement_strategy(
             [this]() -> std::shared_ptr<ms::PlacementStrategy>
             {
                 if (the_options()->is_set("fullscreen-surfaces"))

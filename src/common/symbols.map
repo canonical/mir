@@ -1,3 +1,4 @@
+
 MIR_COMMON_3 {
  global: mir_*;
   extern "C++" {

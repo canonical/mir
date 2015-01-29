@@ -56,7 +56,7 @@ namespace android
 class InputReceiver : public dispatch::Dispatchable
 {
 public:
-    typedef std::function<nsecs_t(int)> AndroidClock;
+    typedef std::function<std::chrono::nanoseconds(int)> AndroidClock;
 
     InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
                   std::function<void(MirEvent*)> const& event_handling_callback,

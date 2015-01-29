@@ -16,8 +16,6 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
@@ -33,6 +31,7 @@
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
 
+#include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
 
 #include <algorithm>
@@ -45,6 +44,7 @@
 namespace mcl = mir::client;
 namespace md = mir::dispatch;
 namespace mircv = mir::input::receiver;
+namespace mev = mir::events;
 namespace gp = google::protobuf;
 
 namespace
@@ -185,12 +185,8 @@ void MirConnection::released(SurfaceRelease data)
     // If it's still focused, send an unfocused event before we kill it entirely
     if (data.surface->attrib(mir_surface_attrib_focus) == mir_surface_focused)
     {
-        MirEvent unfocus;
-        unfocus.type = mir_event_type_surface;
-        unfocus.surface.id = data.surface->id();
-        unfocus.surface.attrib = mir_surface_attrib_focus;
-        unfocus.surface.value = mir_surface_unfocused;
-        data.surface->handle_event(unfocus);
+        auto unfocus = mev::make_event(mir::frontend::SurfaceId{data.surface->id()}, mir_surface_attrib_focus, mir_surface_unfocused);
+        data.surface->handle_event(*unfocus);
     }
     data.callback(data.surface, data.context);
     data.handle->result_received();

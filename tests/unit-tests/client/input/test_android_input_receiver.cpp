@@ -70,10 +70,10 @@ public:
             testing_key_event_scan_code,
             0 /* meta_state */,
             0 /* repeat_count */,
-            0 /* down_time */,
-            0 /* event_time */);
+            std::chrono::nanoseconds(0) /* down_time */,
+            std::chrono::nanoseconds(0) /* event_time */);
     }
-    void produce_a_pointer_event(float x, float y, nsecs_t t)
+    void produce_a_pointer_event(float x, float y, std::chrono::nanoseconds t)
     {
         droidinput::PointerProperties filler_pointer_properties;
         droidinput::PointerCoords filler_pointer_coordinates;
@@ -95,7 +95,7 @@ public:
             0 /* button_state */,
             0 /* x_offset */, 0 /* y_offset */,
             0 /* x_precision */, 0 /* y_precision */,
-            0 /* down_time */,
+            std::chrono::nanoseconds(0) /* down_time */,
             t,
             default_pointer_count,
             &filler_pointer_properties,
@@ -195,9 +195,9 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     TestingInputProducer producer(server_fd);
 
     // Produce 3 motion events before client handles any.
-    producer.produce_a_pointer_event(0, 0, 0);
-    producer.produce_a_pointer_event(0, 0, 0);
-    producer.produce_a_pointer_event(0, 0, 0);
+    producer.produce_a_pointer_event(0, 0, std::chrono::nanoseconds(0));
+    producer.produce_a_pointer_event(0, 0, std::chrono::nanoseconds(0));
+    producer.produce_a_pointer_event(0, 0, std::chrono::nanoseconds(0));
 
     flush_channels();
 
@@ -213,7 +213,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     using namespace testing;
     using namespace std::chrono;
 
-    nsecs_t t = 0;
+    std::chrono::nanoseconds t = std::chrono::nanoseconds(0);
 
     MirEvent ev;
     bool handler_called{false};
@@ -226,15 +226,16 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     };
     TestingInputProducer producer(server_fd);
 
-    nsecs_t const one_millisecond = 1000000ULL;
-    nsecs_t const one_second = 1000 * one_millisecond;
-    nsecs_t const one_frame = one_second / 60;
+    std::chrono::milliseconds const one_millisecond = std::chrono::milliseconds(1);
+    std::chrono::seconds const one_second = std::chrono::seconds(1);
+    std::chrono::nanoseconds const one_frame =
+        std::chrono::nanoseconds(std::chrono::duration_cast<nanoseconds>(one_second).count() / 60);
 
     producer.produce_a_pointer_event(123, 456, t);
     producer.produce_a_key_event();
     flush_channels();
 
-    std::chrono::milliseconds const max_timeout(1000);
+    std::chrono::milliseconds const max_timeout(1);
 
     // Key events don't get resampled. Will be reported first.
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
@@ -256,10 +257,10 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 
     // Verify we timed out in under a frame (LP: #1372300)
     // Sadly using real time as droidinput::Looper doesn't use a mocked clock.
-    ASSERT_LT(duration_cast<nanoseconds>(duration).count(), one_frame);
+    ASSERT_LT(duration_cast<nanoseconds>(duration), one_frame);
 
     // Verify we don't use all the CPU by not sleeping (LP: #1373809)
-    EXPECT_GT(duration_cast<nanoseconds>(duration).count(), one_millisecond);
+    EXPECT_GT(duration_cast<nanoseconds>(duration), one_millisecond);
 
     // But later in a frame or so, the motion will be reported:
     t += 2 * one_frame;  // Account for the new slower 55Hz event rate
@@ -274,7 +275,7 @@ TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
 {
     using namespace testing;
 
-    nsecs_t t = 0;
+    std::chrono::nanoseconds t;
 
     int frames_triggered = 0;
 
@@ -286,20 +287,20 @@ TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
     };
     TestingInputProducer producer(server_fd);
 
-    nsecs_t const one_millisecond = 1000000ULL;
-    nsecs_t const one_second = 1000 * one_millisecond;
-    nsecs_t const device_sample_interval = one_second / 250;
-    nsecs_t const frame_interval = one_second / 60;
-    nsecs_t const gesture_duration = 1 * one_second;
+    std::chrono::milliseconds const one_millisecond = std::chrono::milliseconds(1);
+    std::chrono::seconds const one_second = std::chrono::seconds(1);
+    std::chrono::nanoseconds const device_sample_interval = one_second / 250;
+    std::chrono::nanoseconds const frame_interval = one_second / 60;
+    std::chrono::nanoseconds const gesture_duration = 1 * one_second;
 
-    nsecs_t last_produced = 0;
+    std::chrono::nanoseconds last_produced = std::chrono::nanoseconds(0);
 
-    for (t = 0; t < gesture_duration; t += one_millisecond)
+    for (t = std::chrono::nanoseconds(0); t < gesture_duration; t += one_millisecond)
     {
-        if (!t || t >= (last_produced + device_sample_interval))
+        if (!t.count() || t >= (last_produced + device_sample_interval))
         {
             last_produced = t;
-            float a = t * M_PI / 1000000.0f;
+            float a = t.count() * M_PI / 1000000.0f;
             float x = 500.0f * sinf(a);
             float y = 1000.0f * cosf(a);
             producer.produce_a_pointer_event(x, y, t);
@@ -314,7 +315,7 @@ TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
 
     // If the rendering time resulting from the gesture is longer than the
     // gesture itself then that's laggy...
-    nsecs_t render_duration = frame_interval * frames_triggered;
+    std::chrono::nanoseconds render_duration = frame_interval * frames_triggered;
     EXPECT_THAT(render_duration, Le(gesture_duration));
 
     int average_lag_milliseconds = (render_duration - gesture_duration) /
@@ -326,7 +327,7 @@ TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)
 {
     using namespace testing;
 
-    nsecs_t t = 0;
+    std::chrono::nanoseconds t;
 
     mircva::InputReceiver receiver(
         client_fd, event_handler, std::make_shared<mircv::NullInputReceiverReport>(),
@@ -334,21 +335,23 @@ TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)
         );
     TestingInputProducer producer(server_fd);
 
-    nsecs_t const one_millisecond = 1000000ULL;
-    nsecs_t const one_second = 1000 * one_millisecond;
-    nsecs_t const device_sample_interval = one_second / 125;
-    nsecs_t const frame_interval = one_second / 60;
-    nsecs_t const gesture_duration = 10 * one_second;
+    std::chrono::nanoseconds const one_millisecond = std::chrono::nanoseconds(1000000ULL);
+    std::chrono::nanoseconds const one_second = 1000 * one_millisecond;
+    std::chrono::nanoseconds const device_sample_interval = one_second / 125;
+    std::chrono::nanoseconds const frame_interval = one_second / 60;
+    std::chrono::nanoseconds const gesture_duration = 10 * one_second;
 
-    nsecs_t last_produced = 0, last_consumed = 0, last_rendered = 0;
-    nsecs_t last_in_phase = 0;
+    std::chrono::nanoseconds last_produced = std::chrono::nanoseconds(0);
+    std::chrono::nanoseconds last_consumed = std::chrono::nanoseconds(0);
+    std::chrono::nanoseconds last_rendered = std::chrono::nanoseconds(0);
+    std::chrono::nanoseconds last_in_phase = std::chrono::nanoseconds(0);
 
-    for (t = 0; t < gesture_duration; t += one_millisecond)
+    for (t = std::chrono::nanoseconds(0); t < gesture_duration; t += one_millisecond)
     {
-        if (!t || t >= (last_produced + device_sample_interval))
+        if (!t.count() || t >= (last_produced + device_sample_interval))
         {
             last_produced = t;
-            float a = t * M_PI / 1000000.0f;
+            float a = t.count() * M_PI / 1000000.0f;
             float x = 500.0f * sinf(a);
             float y = 1000.0f * cosf(a);
             producer.produce_a_pointer_event(x, y, t);
@@ -365,7 +368,7 @@ TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)
         {
             last_rendered = t;
 
-            if (last_consumed)
+            if (last_consumed.count())
             {
                 auto lag = last_rendered - last_consumed;
 
@@ -373,7 +376,7 @@ TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)
                 // time that we emitted/consumed input events?
                 if (lag < 4*one_millisecond)
                     last_in_phase = t;
-                last_consumed = 0;
+                last_consumed = std::chrono::nanoseconds(0);
             }
         }
 
