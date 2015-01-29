@@ -76,13 +76,12 @@ public:
 
     virtual int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
-        frontend::SurfaceId surface_id,
+        std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib,
         int value) = 0;
 
     virtual int get_surface_attribute(
-        std::shared_ptr<scene::Session> const& session,
-        frontend::SurfaceId surface_id,
+        std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib) = 0;
 /** @} */
 };
@@ -112,6 +111,16 @@ public:
     void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override;
 
     void handle_surface_created(std::shared_ptr<scene::Session> const& session) override;
+
+    int set_surface_attribute(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        MirSurfaceAttrib attrib,
+        int value) override;
+
+    int get_surface_attribute(
+        std::shared_ptr<scene::Surface> const& surface,
+        MirSurfaceAttrib attrib) override;
 
     std::shared_ptr<scene::PromptSession> start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,

@@ -27,10 +27,6 @@
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 
-#include <boost/throw_exception.hpp>
-
-#include <stdexcept>
-
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -100,31 +96,15 @@ mf::SurfaceId msh::DefaultShell::create_surface(std::shared_ptr<ms::Session> con
 
 int msh::DefaultShell::set_surface_attribute(
     std::shared_ptr<ms::Session> const& session,
-    mf::SurfaceId surface_id,
+    std::shared_ptr<ms::Surface> const& surface,
     MirSurfaceAttrib attrib,
     int value)
 {
-    auto const surface = session->surface(surface_id);
-
     // TODO scene::SurfaceConfigurator is really a DefaultShell strategy
     // TODO it should be invoked from here around any changes to the surface
 
-    return surface->configure(attrib, value);
+    return AbstractShell::set_surface_attribute(session, surface, attrib, value);
 }
-
-int msh::DefaultShell::get_surface_attribute(
-    std::shared_ptr<ms::Session> const& session,
-    mf::SurfaceId surface_id,
-    MirSurfaceAttrib attrib)
-{
-    auto const surface = session->surface(surface_id);
-
-    if (!surface)
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid surface id"));
-
-    return surface->query(attrib);
-}
-
 
 inline void msh::DefaultShell::set_focus_to_locked(std::unique_lock<std::mutex> const&, std::shared_ptr<ms::Session> const& session)
 {

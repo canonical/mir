@@ -94,3 +94,19 @@ void msh::AbstractShell::stop_prompt_session(std::shared_ptr<ms::PromptSession> 
 {
     prompt_session_manager->stop_prompt_session(prompt_session);
 }
+
+int msh::AbstractShell::set_surface_attribute(
+    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Surface> const& surface,
+    MirSurfaceAttrib attrib,
+    int value)
+{
+    return surface->configure(attrib, value);
+}
+
+int msh::AbstractShell::get_surface_attribute(
+    std::shared_ptr<ms::Surface> const& surface,
+    MirSurfaceAttrib attrib)
+{
+    return surface->query(attrib);
+}
