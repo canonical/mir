@@ -40,7 +40,7 @@ public:
     MesaNativeDisplayContainer();
     virtual ~MesaNativeDisplayContainer();
 
-    MirEGLNativeDisplayType create(ClientPlatform* platform);
+    MirEGLNativeDisplayType create(client::ClientPlatform* platform);
     void release(MirEGLNativeDisplayType display);
 
     bool validate(MirEGLNativeDisplayType display) const;

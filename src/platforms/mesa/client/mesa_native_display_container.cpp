@@ -93,7 +93,7 @@ bool mclm::MesaNativeDisplayContainer::validate(MirEGLNativeDisplayType display)
 }
 
 MirEGLNativeDisplayType
-mclm::MesaNativeDisplayContainer::create(ClientPlatform* platform)
+mclm::MesaNativeDisplayContainer::create(client::ClientPlatform* platform)
 {
     MirMesaEGLNativeDisplay* display = new MirMesaEGLNativeDisplay();
     display->display_get_platform = egl_display_get_platform;
