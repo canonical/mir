@@ -201,7 +201,6 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, notifies_surface_of_focus_chan
 
     ON_CALL(app, default_surface()).WillByDefault(Return(mock_surface));
 
-
     InSequence seq;
     EXPECT_CALL(*mock_surface, take_input_focus(_));
     EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
@@ -215,8 +214,13 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, configurator_selects_attribute
     auto const session = mt::fake_shared(app);
     auto const surface = std::make_shared<NiceMock<mtd::MockSurface>>();
 
+    InSequence seq;
+
     EXPECT_CALL(surface_configurator, select_attribute_value(_, mir_surface_attrib_state, mir_surface_state_restored))
         .WillOnce(Return(mir_surface_state_minimized));
+
+    EXPECT_CALL(*surface, configure(mir_surface_attrib_state, mir_surface_state_minimized))
+        .WillOnce(ReturnArg<1>());
 
     EXPECT_CALL(surface_configurator, attribute_set(_, mir_surface_attrib_state, mir_surface_state_minimized));
 

@@ -24,6 +24,7 @@
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_configurator.h"
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 
@@ -79,10 +80,13 @@ int msh::DefaultShell::set_surface_attribute(
     MirSurfaceAttrib attrib,
     int value)
 {
-    // TODO scene::SurfaceConfigurator is really a DefaultShell strategy
-    // TODO it should be invoked from here around any changes to the surface
+    auto const configured_value = surface_configurator->select_attribute_value(*surface, attrib, value);
 
-    return AbstractShell::set_surface_attribute(session, surface, attrib, value);
+    auto const result = AbstractShell::set_surface_attribute(session, surface, attrib, configured_value);
+
+    surface_configurator->attribute_set(*surface, attrib, result);
+
+    return result;
 }
 
 void msh::DefaultShell::setting_focus_to(std::shared_ptr<ms::Surface> const& surface)
