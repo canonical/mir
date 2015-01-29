@@ -195,7 +195,12 @@ void mircva::InputReceiver::process_and_maybe_send_event()
             { 0, 0 },
             { 0, 1000000 /* 10⁶ ns is 1ms */}
         };
-        timerfd_settime(timer_fd, 0, &msec_delay, NULL);
+        if (timerfd_settime(timer_fd, 0, &msec_delay, NULL) < 0)
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                     std::system_category(),
+                                                     "Failed to arm timer"}));
+        }
     }
 }
 
