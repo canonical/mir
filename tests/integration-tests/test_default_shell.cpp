@@ -32,7 +32,7 @@
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_session_event_sink.h"
-#include "mir_test_doubles/null_surface_configurator.h"
+#include "mir_test_doubles/mock_surface_configurator.h"
 #include "mir_test_doubles/null_prompt_session_manager.h"
 #include "mir_test_doubles/mock_input_targeter.h"
 
@@ -78,13 +78,15 @@ struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
             mt::fake_shared(session_listener)
         };
 
+    NiceMock<mtd::MockSurfaceConfigurator> surface_configurator;
+
     msh::DefaultShell shell{
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_coordinator),
         mt::fake_shared(session_manager),
         std::make_shared<mtd::NullPromptSessionManager>(),
         std::make_shared<NullPlacementStrategy>(),
-        std::make_shared<mtd::NullSurfaceConfigurator>()};
+        mt::fake_shared(surface_configurator)};
 };
 }
 
@@ -205,4 +207,20 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, notifies_surface_of_focus_chan
     EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
 
     shell.set_focus_to(mt::fake_shared(app));
+}
+
+TEST_F(TestDefaultShellAndFocusSelectionStrategy, configurator_selects_attribute_values)
+{
+    NiceMock<mtd::MockSceneSession> app;
+    auto const session = mt::fake_shared(app);
+    auto const surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+
+    EXPECT_CALL(surface_configurator, select_attribute_value(_, mir_surface_attrib_state, mir_surface_state_restored))
+        .WillOnce(Return(mir_surface_state_minimized));
+
+    EXPECT_CALL(surface_configurator, attribute_set(_, mir_surface_attrib_state, mir_surface_state_minimized));
+
+    EXPECT_THAT(
+        shell.set_surface_attribute(session, surface, mir_surface_attrib_state, mir_surface_state_restored),
+        Eq(mir_surface_state_minimized));
 }
