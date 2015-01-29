@@ -77,7 +77,11 @@ mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev) :
 {
 }
 
-void mga::FBDevice::post_gl(SwappingGLContext const& context)
+void mga::FBDevice::commit(
+    DisplayName,
+    LayerList&,
+    SwappingGLContext const& context,
+    RenderableListCompositor const&)
 {
     context.swap_buffers();
     auto const& buffer = context.last_rendered_buffer();
@@ -89,8 +93,7 @@ void mga::FBDevice::post_gl(SwappingGLContext const& context)
     }
 }
 
-bool mga::FBDevice::post_overlays(
-    SwappingGLContext const&, RenderableList const&, RenderableListCompositor const&)
+bool mga::FBDevice::compatible_renderlist(RenderableList const&)
 {
     return false;
 }

@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_ANDROID_HWC_FB_DEVICE_H_
 
 #include "display_device.h"
-#include "hwc_layerlist.h"
 #include "hardware/gralloc.h"
 #include "hardware/fb.h"
 #include "mir/raii.h"
@@ -42,18 +41,18 @@ public:
     HwcFbDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                 std::shared_ptr<framebuffer_device_t> const& fb_device);
 
-    virtual void post_gl(SwappingGLContext const& context);
-    virtual bool post_overlays(
+    bool compatible_renderlist(RenderableList const& renderlist) override;
+    void commit(
+        DisplayName,
+        LayerList&,
         SwappingGLContext const& context,
-        RenderableList const& list,
-        RenderableListCompositor const& list_compositor);
+        RenderableListCompositor const& list_compositor) override;
 
 private:
     void content_cleared() override;
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<framebuffer_device_t> const fb_device;
     static int const num_displays{1};
-    LayerList layer_list;
 
     mir::raii::PairedCalls<std::function<void()>, std::function<void()>> vsync_subscription;
     std::mutex vsync_wait_mutex;

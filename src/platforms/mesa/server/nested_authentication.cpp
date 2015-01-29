@@ -17,20 +17,73 @@
  */
 
 #include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_operation_message.h"
 #include "nested_authentication.h"
+
+#include "mir_toolkit/mesa/platform_operation.h"
+
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
+namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 
-mgm::NestedAuthentication::NestedAuthentication(std::shared_ptr<NestedContext> const& nested_context) :
-    nested_context{nested_context}
+namespace
+{
+
+mg::PlatformOperationMessage make_auth_magic_request_message(drm_magic_t magic)
+{
+    mg::PlatformOperationMessage request;
+    request.data.resize(sizeof(MirMesaAuthMagicRequest));
+    auto auth_magic_request_ptr =
+        reinterpret_cast<MirMesaAuthMagicRequest*>(request.data.data());
+    auth_magic_request_ptr->magic = magic;
+    return request;
+}
+
+MirMesaAuthMagicResponse auth_magic_response_from_message(
+    mg::PlatformOperationMessage const& msg)
+{
+    if (msg.data.size() == sizeof(MirMesaAuthMagicResponse))
+    {
+        auto auth_magic_response_ptr =
+            reinterpret_cast<MirMesaAuthMagicResponse const*>(msg.data.data());
+
+        return *auth_magic_response_ptr;
+    }
+
+    BOOST_THROW_EXCEPTION(
+        std::runtime_error("Nested server got invalid auth magic response"));
+}
+
+}
+
+mgm::NestedAuthentication::NestedAuthentication(
+    std::shared_ptr<NestedContext> const& nested_context)
+    : nested_context{nested_context}
 {
 }
 
 void mgm::NestedAuthentication::auth_magic(drm_magic_t magic)
 {
-    nested_context->drm_auth_magic(magic);
+    static int const success{0};
+
+    auto const request_msg = make_auth_magic_request_message(magic);
+
+    auto const response_msg = nested_context->platform_operation(
+        MirMesaPlatformOperation::auth_magic, request_msg);
+
+    auto const auth_magic_response = auth_magic_response_from_message(response_msg);
+    if (auth_magic_response.status != success)
+    {
+        std::string const error_msg{
+            "Nested server failed to authenticate DRM device magic cookie"};
+
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error(error_msg)) <<
+                    boost::errinfo_errno(auth_magic_response.status));
+    }
 }
 
 mir::Fd mgm::NestedAuthentication::authenticated_fd()
@@ -56,6 +109,6 @@ mir::Fd mgm::NestedAuthentication::authenticated_fd()
                 std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
     }
 
-    nested_context->drm_auth_magic(magic);
+    auth_magic(magic);
     return mir::Fd(IntOwnedFd{auth_fd});
 }
