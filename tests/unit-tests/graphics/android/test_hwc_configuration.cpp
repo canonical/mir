@@ -185,6 +185,22 @@ TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
     EXPECT_FALSE(external_attribs.connected);
 }
 
+//some devices (bq) only report an error later in the display attributes call, make sure to report disconnected on error to this call. 
+TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
+{
+    using namespace testing;
+    ON_CALL(*mock_hwc_wrapper, display_attributes(_,_,_,_))
+        .WillByDefault(Return(-22));
+
+    EXPECT_THROW({
+        config.active_attribs_for(mga::DisplayName::primary);
+    }, std::runtime_error);
+    auto external_attribs = config.active_attribs_for(mga::DisplayName::external);
+    EXPECT_THAT(external_attribs.pixel_size, Eq(geom::Size{0,0}));
+    EXPECT_THAT(external_attribs.vrefresh_hz, Eq(0.0));
+    EXPECT_FALSE(external_attribs.connected);
+}
+
 TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
 {
     using namespace testing;
