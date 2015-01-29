@@ -85,59 +85,6 @@ public:
         MirSurfaceAttrib attrib) = 0;
 /** @} */
 };
-
-/// A placeholder for stuff all shells will want
-class AbstractShell : public Shell
-{
-public:
-    AbstractShell(
-        std::shared_ptr<InputTargeter> const& input_targeter,
-        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager);
-
-    ~AbstractShell() noexcept;
-
-    std::shared_ptr<scene::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
-
-
-    void close_session(std::shared_ptr<scene::Session> const& session) override;
-
-    frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override;
-
-    void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override;
-
-    void handle_surface_created(std::shared_ptr<scene::Session> const& session) override;
-
-    int set_surface_attribute(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib,
-        int value) override;
-
-    int get_surface_attribute(
-        std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib) override;
-
-    std::shared_ptr<scene::PromptSession> start_prompt_session_for(
-        std::shared_ptr<scene::Session> const& session,
-        scene::PromptSessionCreationParameters const& params) override;
-
-    void add_prompt_provider_for(
-        std::shared_ptr<scene::PromptSession> const& prompt_session,
-        std::shared_ptr<scene::Session> const& session) override;
-
-    void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) override;
-
-protected:
-    std::shared_ptr<InputTargeter> const input_targeter;
-    std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
-    std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
-    std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
-};
 }
 }
 

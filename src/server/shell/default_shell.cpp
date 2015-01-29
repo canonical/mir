@@ -59,29 +59,6 @@ void msh::DefaultShell::close_session(
     set_focus_to(session_coordinator->successor_of(std::shared_ptr<ms::Session>()));
 }
 
-void msh::DefaultShell::focus_next()
-{
-    std::unique_lock<std::mutex> lock(focus_mutex);
-    auto focus = focus_application.lock();
-
-    focus = session_coordinator->successor_of(focus);
-
-    set_focus_to_locked(lock, focus);
-}
-
-std::weak_ptr<ms::Session> msh::DefaultShell::focussed_application() const
-{
-    std::unique_lock<std::mutex> lg(focus_mutex);
-    return focus_application;
-}
-
-void msh::DefaultShell::set_focus_to(
-    std::shared_ptr<scene::Session> const& focus)
-{
-    std::unique_lock<std::mutex> lg(focus_mutex);
-    set_focus_to_locked(lg, focus);
-}
-
 void msh::DefaultShell::handle_surface_created(
     std::shared_ptr<ms::Session> const& session)
 {
@@ -106,40 +83,8 @@ int msh::DefaultShell::set_surface_attribute(
     return AbstractShell::set_surface_attribute(session, surface, attrib, value);
 }
 
-inline void msh::DefaultShell::set_focus_to_locked(std::unique_lock<std::mutex> const&, std::shared_ptr<ms::Session> const& session)
+void msh::DefaultShell::setting_focus_to(std::shared_ptr<ms::Surface> const& surface)
 {
-    auto old_focus = focus_application.lock();
-
-    std::shared_ptr<ms::Surface> surface;
-
-    if (session)
-        surface = session->default_surface();
-
     if (surface)
-    {
-        // Ensure the surface has really taken the focus before notifying it that it is focused
         surface_coordinator->raise(surface);
-        surface->take_input_focus(input_targeter);
-
-        auto current_focus = focus_surface.lock();
-        if (current_focus)
-            current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
-        surface->configure(mir_surface_attrib_focus, mir_surface_focused);
-        focus_surface = surface;
-    }
-    else
-    {
-        input_targeter->focus_cleared();
-    }
-
-    focus_application = session;
-
-    if (session)
-    {
-        session_coordinator->set_focus_to(session);
-    }
-    else
-    {
-        session_coordinator->unset_focus();
-    }
 }

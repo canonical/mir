@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/shell/shell.h"
+#include "mir/shell/abstract_shell.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
@@ -24,7 +24,6 @@
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_coordinator.h"
-#include "mir/scene/surface_creation_parameters.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -61,12 +60,16 @@ void msh::AbstractShell::close_session(
     session_coordinator->close_session(session);
 }
 
-mf::SurfaceId msh::AbstractShell::create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
+mf::SurfaceId msh::AbstractShell::create_surface(
+    std::shared_ptr<ms::Session> const& session,
+    ms::SurfaceCreationParameters const& params)
 {
     return session->create_surface(params);
 }
 
-void msh::AbstractShell::destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface)
+void msh::AbstractShell::destroy_surface(
+    std::shared_ptr<ms::Session> const& session,
+    mf::SurfaceId surface)
 {
     session->destroy_surface(surface);
 }
@@ -90,7 +93,8 @@ void msh::AbstractShell::add_prompt_provider_for(
     prompt_session_manager->add_prompt_provider(prompt_session, session);
 }
 
-void msh::AbstractShell::stop_prompt_session(std::shared_ptr<ms::PromptSession> const& prompt_session)
+void msh::AbstractShell::stop_prompt_session(
+    std::shared_ptr<ms::PromptSession> const& prompt_session)
 {
     prompt_session_manager->stop_prompt_session(prompt_session);
 }
@@ -109,4 +113,85 @@ int msh::AbstractShell::get_surface_attribute(
     MirSurfaceAttrib attrib)
 {
     return surface->query(attrib);
+}
+
+
+void msh::AbstractShell::focus_next()
+{
+    std::unique_lock<std::mutex> lock(focus_mutex);
+    auto focus = focus_session.lock();
+
+    focus = session_coordinator->successor_of(focus);
+
+    set_focus_to_locked(lock, focus);
+}
+
+std::weak_ptr<ms::Session> msh::AbstractShell::focussed_application() const
+{
+    std::unique_lock<std::mutex> lg(focus_mutex);
+    return focus_session;
+}
+
+void msh::AbstractShell::set_focus_to(
+    std::shared_ptr<scene::Session> const& focus)
+{
+    std::unique_lock<std::mutex> lg(focus_mutex);
+    set_focus_to_locked(lg, focus);
+}
+
+void msh::AbstractShell::set_focus_to_locked(
+    std::unique_lock<std::mutex> const& /*lock*/,
+    std::shared_ptr<ms::Surface> const& surface)
+{
+    setting_focus_to(surface);
+
+    if (surface)
+    {
+        // Ensure the surface has really taken the focus before notifying it that it is focused
+        surface->take_input_focus(input_targeter);
+        if (auto current_focus = focus_surface.lock())
+            current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+
+        surface->configure(mir_surface_attrib_focus, mir_surface_focused);
+        focus_surface = surface;
+    }
+    else
+    {
+        input_targeter->focus_cleared();
+    }
+}
+
+void msh::AbstractShell::set_focus_to_locked(
+    std::unique_lock<std::mutex> const& lock,
+    std::shared_ptr<ms::Session> const& session)
+{
+    setting_focus_to(session);
+
+    auto old_focus = focus_session.lock();
+
+    std::shared_ptr<ms::Surface> surface;
+
+    if (session)
+        surface = session->default_surface();
+
+    set_focus_to_locked(lock, surface);
+
+    focus_session = session;
+
+    if (session)
+    {
+        session_coordinator->set_focus_to(session);
+    }
+    else
+    {
+        session_coordinator->unset_focus();
+    }
+}
+
+void msh::AbstractShell::setting_focus_to(std::shared_ptr<ms::Surface> const& /*surface*/)
+{
+}
+
+void msh::AbstractShell::setting_focus_to(std::shared_ptr<ms::Session> const& /*session*/)
+{
 }

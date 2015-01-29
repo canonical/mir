@@ -19,9 +19,7 @@
 #ifndef MIR_SHELL_DEFAULT_SHELL_H_
 #define MIR_SHELL_DEFAULT_SHELL_H_
 
-#include "mir/shell/shell.h"
-
-#include <mutex>
+#include "mir/shell/abstract_shell.h"
 
 namespace mir
 {
@@ -41,19 +39,6 @@ public:
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         std::shared_ptr<scene::PlacementStrategy> const& placement_strategy);
-
-/** @name these come from FocusController
- * I think the FocusController interface is unnecessary as:
- *   1. the functions are only meaningful in the context of implementing a Shell
- *   2. the implementation of these functions is Shell behaviour
- * Simply providing them as part of a public ShellLibrary is probably adequate.
- *  @{ */
-    void focus_next() override;
-
-    std::weak_ptr<scene::Session> focussed_application() const override;
-
-    void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
-/** @} */
 
 /** @name these come from frontend::Shell
  *  @{ */
@@ -78,12 +63,7 @@ public:
 private:
     std::shared_ptr<scene::PlacementStrategy> const placement_strategy;
 
-
-    std::mutex mutable focus_mutex;
-    std::weak_ptr<scene::Surface> focus_surface;
-    std::weak_ptr<scene::Session> focus_application;
-
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Session> const& next_focus);
+    void setting_focus_to(std::shared_ptr<scene::Surface> const& surface);
 };
 }
 }
