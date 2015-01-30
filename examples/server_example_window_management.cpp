@@ -191,7 +191,7 @@ public:
         {
             if (session == session_under(old_cursor))
             {
-                auto const& info = session_info[session.get()];
+                auto const& info = session_info[session];
 
                 if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
                 {
@@ -228,7 +228,7 @@ public:
         {
             if (session == session_under(old_cursor))
             {
-                auto const& info = session_info[session.get()];
+                auto const& info = session_info[session];
 
                 if (resize(old_surface.lock(), cursor, old_cursor, info.tile))
                 {
@@ -279,14 +279,14 @@ private:
     void add_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info[session.get()] = session;
+        session_info[session] = session;
         update_tiles();
     }
 
     void remove_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info.erase(session.get());
+        session_info.erase(session);
         update_tiles();
     }
 
@@ -298,7 +298,7 @@ private:
         auto parameters = request_parameters;
 
         std::lock_guard<decltype(mutex)> lock(mutex);
-        auto const ptile = session_info.find(session.get());
+        auto const ptile = session_info.find(session);
         if (ptile != end(session_info))
         {
             Rectangle const& tile = ptile->second.tile;
@@ -315,8 +315,8 @@ private:
         std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info[session.get()].surfaces.push_back(surface);
-        surface_info[surface].session = session_info[session.get()].session;
+        session_info[session].surfaces.push_back(surface);
+        surface_info[surface].session = session_info[session].session;
         surface_info[surface].state = mir_surface_state_restored;
     }
 
@@ -325,7 +325,7 @@ private:
         std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        auto& surfaces = session_info[session.get()].surfaces;
+        auto& surfaces = session_info[session].surfaces;
 
         for (auto i = begin(surfaces); i != end(surfaces); ++i)
         {
@@ -367,7 +367,7 @@ private:
         }
     }
 
-    void update_surfaces(ms::Session const* session, Rectangle const& old_tile, Rectangle const& new_tile)
+    void update_surfaces(std::weak_ptr<ms::Session> const& session, Rectangle const& old_tile, Rectangle const& new_tile)
     {
         auto displacement = new_tile.top_left - old_tile.top_left;
         auto& info = session_info[session];
@@ -507,8 +507,7 @@ private:
             return; // Nothing to do
         }
 
-        auto const& session_info =
-            this->session_info[info.session.lock().get()];
+        auto const& tile = this->session_info[info.session].tile;
 
         switch (value)
         {
@@ -518,18 +517,18 @@ private:
             break;
 
         case mir_surface_state_maximized:
-            surface->move_to(session_info.tile.top_left);
-            surface->resize(session_info.tile.size);
+            surface->move_to(tile.top_left);
+            surface->resize(tile.size);
             break;
 
         case mir_surface_state_horizmaximized:
-            surface->move_to({session_info.tile.top_left.x, info.restore_rect.top_left.y});
-            surface->resize({session_info.tile.size.width, info.restore_rect.size.height});
+            surface->move_to({tile.top_left.x, info.restore_rect.top_left.y});
+            surface->resize({tile.size.width, info.restore_rect.size.height});
             break;
 
         case mir_surface_state_vertmaximized:
-            surface->move_to({info.restore_rect.top_left.x, session_info.tile.top_left.y});
-            surface->resize({info.restore_rect.size.width, session_info.tile.size.height});
+            surface->move_to({info.restore_rect.top_left.x, tile.top_left.y});
+            surface->resize({info.restore_rect.size.width, tile.size.height});
             break;
 
         default:
@@ -569,7 +568,7 @@ private:
     std::mutex mutex;
     Rectangles displays;
 
-    std::map<ms::Session const*, SessionInfo> session_info;
+    std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>> session_info;
     std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>> surface_info;
 
     Point old_cursor{};
