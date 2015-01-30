@@ -39,7 +39,7 @@ public:
     AndroidNativeDisplayContainer();
     virtual ~AndroidNativeDisplayContainer();
 
-    MirEGLNativeDisplayType create(ClientContext* context) override;
+    MirEGLNativeDisplayType create(ClientPlatform* platform) override;
     void release(MirEGLNativeDisplayType display) override;
 
     bool validate(MirEGLNativeDisplayType display) const override;

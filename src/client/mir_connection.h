@@ -148,6 +148,7 @@ public:
     std::shared_ptr<mir::logging::Logger> const& the_logger() const;
 
 private:
+    void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
     struct Deregisterer
     { MirConnection* const self; ~Deregisterer(); } deregisterer;

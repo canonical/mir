@@ -36,10 +36,10 @@ struct MockClientContext : public client::ClientContext
     {
         using namespace testing;
 
-        EXPECT_CALL(*this, populate(_)).Times(AtLeast(0));
+        EXPECT_CALL(*this, populate_server_package(_)).Times(AtLeast(0));
     }
 
-    MOCK_METHOD1(populate, void(MirPlatformPackage&));
+    MOCK_METHOD1(populate_server_package, void(MirPlatformPackage&));
 };
 
 }

@@ -59,7 +59,7 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
     mir::client::ProbingClientPlatformFactory factory{all_available_modules()};
 
     mtd::MockClientContext context;
-    ON_CALL(context, populate(_))
+    ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke([](MirPlatformPackage& pkg)
                            {
                                ::memset(&pkg, 0, sizeof(MirPlatformPackage));
@@ -84,7 +84,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)
     mir::client::ProbingClientPlatformFactory factory{all_available_modules()};
 
     mtd::MockClientContext context;
-    ON_CALL(context, populate(_))
+    ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke([](MirPlatformPackage& pkg)
                            {
                                ::memset(&pkg, 0, sizeof(MirPlatformPackage));
@@ -108,7 +108,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesAndroidPlatformWhenAppropriat
     mir::client::ProbingClientPlatformFactory factory{all_available_modules()};
 
     mtd::MockClientContext context;
-    ON_CALL(context, populate(_))
+    ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke([](MirPlatformPackage& pkg)
                            {
                                // Mock up something that looks like a Android platform package,
@@ -132,7 +132,7 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
     mir::client::ProbingClientPlatformFactory factory{modules};
 
     mtd::MockClientContext context;
-    ON_CALL(context, populate(_))
+    ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke([](MirPlatformPackage& pkg)
                            {
                                mtf::create_stub_platform_package(pkg);
