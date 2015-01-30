@@ -33,7 +33,14 @@ namespace graphics { class Platform; class Display; class GLConfig; class Displa
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
 namespace logging { class Logger; }
 namespace options { class Option; }
-namespace shell { class Shell; class FocusController; class DisplayLayout; class HostLifecycleEventListener; }
+namespace shell
+{
+class DisplayLayout;
+class FocusController;
+class HostLifecycleEventListener;
+class InputTargeter;
+class Shell;
+}
 namespace scene
 {
 class PlacementStrategy;
@@ -290,6 +297,9 @@ public:
 
     /// \return the graphics platform.
     auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
+
+    /// \return the input targeter.
+    auto the_input_targeter() const -> std::shared_ptr<shell::InputTargeter>;
 
     /// \return the logger.
     auto the_logger() const -> std::shared_ptr<logging::Logger>;
