@@ -126,15 +126,15 @@ public:
 
     mf::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params) override
     {
-        ms::SurfaceCreationParameters const placed_params = place(*session, params);
+        ms::SurfaceCreationParameters const placed_params = place_new_surface(session, params);
         auto const result = msh::AbstractShell::create_surface(session, placed_params);
-        add_surface(session->surface(result), session.get());
+        add_surface(session->surface(result), session);
         return result;
     }
 
     void destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface) override
     {
-        remove_surface(session->surface(surface), session.get());
+        remove_surface(session->surface(surface), session);
         msh::AbstractShell::destroy_surface(session, surface);
     }
 
@@ -157,69 +157,6 @@ public:
         }
 
         return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
-    }
-
-    // @@@@@@@@@@@@@@@@@@@@
-
-    auto place(ms::Session const& session, ms::SurfaceCreationParameters const& request_parameters)
-    -> ms::SurfaceCreationParameters
-    {
-        auto parameters = request_parameters;
-
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        auto const ptile = session_info.find(&session);
-        if (ptile != end(session_info))
-        {
-            Rectangle const& tile = ptile->second.tile;
-            parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
-
-            clip_to_tile(parameters, tile);
-        }
-
-        return parameters;
-    }
-
-    void add_surface(
-        std::shared_ptr<ms::Surface> const& surface,
-        ms::Session* session)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info[session].surfaces.push_back(surface);
-        surface_info[surface].session = session_info[session].session;
-        surface_info[surface].state = mir_surface_state_restored;
-    }
-
-    void remove_surface(
-        std::weak_ptr<ms::Surface> const& surface,
-        ms::Session* session)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        auto& surfaces = session_info[session].surfaces;
-
-        for (auto i = begin(surfaces); i != end(surfaces); ++i)
-        {
-            if (surface.lock() == i->lock())
-            {
-                surfaces.erase(i);
-                break;
-            }
-        }
-
-        surface_info.erase(surface);
-    }
-
-    void add_session(std::shared_ptr<ms::Session> const& session)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info[session.get()] = session;
-        update_tiles();
-    }
-
-    void remove_session(std::shared_ptr<ms::Session> const& session)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info.erase(session.get());
-        update_tiles();
     }
 
     void add_display(Rectangle const& area) override
@@ -339,6 +276,69 @@ public:
     }
 
 private:
+    void add_session(std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        session_info[session.get()] = session;
+        update_tiles();
+    }
+
+    void remove_session(std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        session_info.erase(session.get());
+        update_tiles();
+    }
+
+    auto place_new_surface(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& request_parameters)
+    -> ms::SurfaceCreationParameters
+    {
+        auto parameters = request_parameters;
+
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto const ptile = session_info.find(session.get());
+        if (ptile != end(session_info))
+        {
+            Rectangle const& tile = ptile->second.tile;
+            parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
+
+            clip_to_tile(parameters, tile);
+        }
+
+        return parameters;
+    }
+
+    void add_surface(
+        std::shared_ptr<ms::Surface> const& surface,
+        std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        session_info[session.get()].surfaces.push_back(surface);
+        surface_info[surface].session = session_info[session.get()].session;
+        surface_info[surface].state = mir_surface_state_restored;
+    }
+
+    void remove_surface(
+        std::weak_ptr<ms::Surface> const& surface,
+        std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto& surfaces = session_info[session.get()].surfaces;
+
+        for (auto i = begin(surfaces); i != end(surfaces); ++i)
+        {
+            if (surface.lock() == i->lock())
+            {
+                surfaces.erase(i);
+                break;
+            }
+        }
+
+        surface_info.erase(surface);
+    }
+
     void update_tiles()
     {
         if (session_info.size() < 1 || displays.size() < 1) return;
