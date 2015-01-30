@@ -109,57 +109,7 @@ class TilingWindowManager : public me::WindowManager,
 public:
     using msh::AbstractShell::AbstractShell;
 
-    std::shared_ptr<ms::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<mf::EventSink> const& sink) override
-    {
-        auto const result = msh::AbstractShell::open_session(client_pid, name, sink);
-        add_session(result);
-        return result;
-    }
-
-    void close_session(std::shared_ptr<ms::Session> const& session) override
-    {
-        remove_session(session);
-        msh::AbstractShell::close_session(session);
-    }
-
-    mf::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params) override
-    {
-        ms::SurfaceCreationParameters const placed_params = place_new_surface(session, params);
-        auto const result = msh::AbstractShell::create_surface(session, placed_params);
-        add_surface(session->surface(result), session);
-        return result;
-    }
-
-    void destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface) override
-    {
-        remove_surface(session->surface(surface), session);
-        msh::AbstractShell::destroy_surface(session, surface);
-    }
-
-    int set_surface_attribute(
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& surface,
-        MirSurfaceAttrib attrib,
-        int value)
-    {
-        switch (attrib)
-        {
-        case mir_surface_attrib_state:
-        {
-            std::lock_guard<decltype(mutex)> lock(mutex);
-            set_state(surface, MirSurfaceState(value));
-            break;
-        }
-        default:
-            break;
-        }
-
-        return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
-    }
-
+private:
     void add_display(Rectangle const& area) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -276,7 +226,57 @@ public:
         }
     }
 
-private:
+    std::shared_ptr<ms::Session> open_session(
+        pid_t client_pid,
+        std::string const& name,
+        std::shared_ptr<mf::EventSink> const& sink) override
+    {
+        auto const result = msh::AbstractShell::open_session(client_pid, name, sink);
+        add_session(result);
+        return result;
+    }
+
+    void close_session(std::shared_ptr<ms::Session> const& session) override
+    {
+        remove_session(session);
+        msh::AbstractShell::close_session(session);
+    }
+
+    mf::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params) override
+    {
+        ms::SurfaceCreationParameters const placed_params = place_new_surface(session, params);
+        auto const result = msh::AbstractShell::create_surface(session, placed_params);
+        add_surface(session->surface(result), session);
+        return result;
+    }
+
+    void destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface) override
+    {
+        remove_surface(session->surface(surface), session);
+        msh::AbstractShell::destroy_surface(session, surface);
+    }
+
+    int set_surface_attribute(
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& surface,
+        MirSurfaceAttrib attrib,
+        int value)
+    {
+        switch (attrib)
+        {
+        case mir_surface_attrib_state:
+        {
+            std::lock_guard<decltype(mutex)> lock(mutex);
+            set_state(surface, MirSurfaceState(value));
+            break;
+        }
+        default:
+            break;
+        }
+
+        return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
+    }
+
     void add_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
