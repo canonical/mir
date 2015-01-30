@@ -63,7 +63,6 @@ bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
 
 mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper) :
     hwc_wrapper(hwc_wrapper),
-    posted{false},
     needed_list_count{1} //primary always connected
 {
 }
@@ -89,23 +88,39 @@ void mga::HwcDevice::commit(
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
 
-    if (name == mga::DisplayName::external)
-        lists[1] = list.native_list();
-    else if (name == mga::DisplayName::primary)
-        lists[0] = list.native_list();
-
-    displays.emplace_back(ListResources{list, context, compositor});
-    if (displays.size() < needed_list_count)
+    if ((name == mga::DisplayName::external) && (needed_list_count == 1))
     {
-        posted = false;
-        cv.wait(lk, [this]{ return posted; }); 
+        lists[1] = nullptr;
+        return;
+    }
+
+    if ((name == mga::DisplayName::external) && (needed_list_count == 2))
+    {
+        lists[1] = list.native_list();
+        displays.emplace_back(ListResources{name, list, context, compositor});
+    }
+    else if (name == mga::DisplayName::primary)
+    {
+        lists[0] = list.native_list();
+        displays.emplace_back(ListResources{name, list, context, compositor});
+    }
+   
+//    context.release_current();
+
+    if (name == mga::DisplayName::primary)
+    {
+        posters_cv.wait(lk, [this]{ return displays.size() == needed_list_count; });
+        commit();
+
+        committed = true;
+        displays.clear();
+        commit_cv.notify_all();
     }
     else
     {
-        commit();
-        displays.clear();
-        posted = true;
-        cv.notify_all();
+        posters_cv.notify_all();
+        commit_cv.wait(lk, [this] { return committed; });
+        committed = false;
     }
 }
 
@@ -171,5 +186,11 @@ void mga::HwcDevice::start_posting_external_display()
 void mga::HwcDevice::stop_posting_external_display()
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
+    lists[1] = nullptr;
     needed_list_count = 1;
+    auto it = std::find_if(displays.begin(), displays.end(),
+        [&](mga::HwcDevice::ListResources r){ return r.name == mga::DisplayName::external;});
+    if (it != displays.end())
+        displays.erase(it);
+    posters_cv.notify_all();
 }
