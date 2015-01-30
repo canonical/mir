@@ -60,6 +60,7 @@ namespace mo = mir::options;
     MACRO(session_authorizer)\
     MACRO(session_listener)\
     MACRO(session_mediator_report)\
+    MACRO(shell)\
     MACRO(surface_configurator)
 
 #define FOREACH_ACCESSOR(MACRO)\

@@ -33,7 +33,6 @@
 #include "mir_test_doubles/mock_input_sender.h"
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/stub_input_sender.h"
-#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_matchers.h"
@@ -196,7 +195,6 @@ struct SurfaceCreation : public ::testing::Test
             rect, false, mock_buffer_stream, 
             std::make_shared<mtd::StubInputChannel>(),
             std::make_shared<mtd::StubInputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             nullptr /* cursor_image */, report)
     {
     }
@@ -457,7 +455,6 @@ TEST_F(SurfaceCreation, input_fds)
         mock_buffer_stream,
         mt::fake_shared(channel),
         std::make_shared<mtd::StubInputSender>(),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
 
@@ -476,7 +473,6 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
         mock_buffer_stream,
         std::make_shared<mtd::StubInputChannel>(),
         mt::fake_shared(mock_sender),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
 

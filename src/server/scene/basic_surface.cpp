@@ -27,7 +27,6 @@
 #include "mir/graphics/buffer.h"
 
 #include "mir/scene/scene_report.h"
-#include "mir/scene/surface_configurator.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -116,7 +115,6 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<mi::InputChannel> const& input_channel,
     std::shared_ptr<input::InputSender> const& input_sender,
-    std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
     surface_name(name),
@@ -130,7 +128,6 @@ ms::BasicSurface::BasicSurface(
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     input_sender(input_sender),
-    configurator(configurator),
     cursor_image_(cursor_image),
     report(report),
     parent_(parent)
@@ -145,12 +142,10 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<mi::InputChannel> const& input_channel,
     std::shared_ptr<input::InputSender> const& input_sender,
-    std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
     BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, nonrectangular,buffer_stream,
-                 input_channel, input_sender, configurator,
-                 cursor_image, report)
+                 input_channel, input_sender, cursor_image, report)
 {
 }
 
@@ -510,7 +505,7 @@ void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> cons
 
 int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
 {
-    int result = configurator->select_attribute_value(*this, attrib, value);
+    int result = value;
     switch (attrib)
     {
     case mir_surface_attrib_type:
@@ -539,8 +534,6 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
                                                "attribute."));
         break;
     }
-
-    configurator->attribute_set(*this, attrib, result);
 
     return result;
 }
