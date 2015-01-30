@@ -29,7 +29,6 @@
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/stub_renderable.h"
-#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -71,7 +70,6 @@ struct DemoCompositor : testing::Test
         std::make_shared<mtd::StubBufferStream>(),
         std::shared_ptr<mir::input::InputChannel>(),
         std::shared_ptr<mir::input::InputSender>(),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mir::graphics::CursorImage>(),
         mir::report::null_scene_report()};
 
