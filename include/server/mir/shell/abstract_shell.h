@@ -28,7 +28,7 @@ namespace mir
 namespace shell
 {
 /// Minimal Shell implementation with none of the necessary window management logic
-class AbstractShell : public Shell
+class AbstractShell : public virtual Shell
 {
 public:
     AbstractShell(
