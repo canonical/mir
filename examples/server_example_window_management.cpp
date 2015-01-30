@@ -81,14 +81,6 @@ private:
         return msh::AbstractShell::create_surface(session, placed_params);
     }
 
-    void add_surface(std::shared_ptr<ms::Surface> const&, ms::Session*) override {}
-
-    void remove_surface(std::weak_ptr<ms::Surface> const&, ms::Session*) override {}
-
-    void add_session(std::shared_ptr<ms::Session> const&) override {}
-
-    void remove_session(std::shared_ptr<ms::Session> const&) override {}
-
     void add_display(Rectangle const&) override {}
 
     void remove_display(Rectangle const&) override {}
@@ -189,7 +181,7 @@ public:
 
     void add_surface(
         std::shared_ptr<ms::Surface> const& surface,
-        ms::Session* session) override
+        ms::Session* session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session].surfaces.push_back(surface);
@@ -199,7 +191,7 @@ public:
 
     void remove_surface(
         std::weak_ptr<ms::Surface> const& surface,
-        ms::Session* session) override
+        ms::Session* session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         auto& surfaces = session_info[session].surfaces;
@@ -216,14 +208,14 @@ public:
         surface_info.erase(surface);
     }
 
-    void add_session(std::shared_ptr<ms::Session> const& session) override
+    void add_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session.get()] = session;
         update_tiles();
     }
 
-    void remove_session(std::shared_ptr<ms::Session> const& session) override
+    void remove_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info.erase(session.get());

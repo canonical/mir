@@ -38,42 +38,6 @@ using namespace mir::geometry;
 
 namespace
 {
-class SceneTracker : public ms::SessionListener
-{
-public:
-    SceneTracker(std::shared_ptr<me::WindowManager> const& window_manager) :
-        window_manager(window_manager)
-    {
-    }
-
-private:
-
-    void starting(std::shared_ptr<ms::Session> const& session) override
-    {
-        window_manager->add_session(session);
-    }
-
-    void stopping(std::shared_ptr<ms::Session> const& session) override
-    {
-        window_manager->remove_session(session);
-    }
-
-    void focused(std::shared_ptr<ms::Session> const& /*session*/) override {}
-    void unfocused() override {}
-
-    void surface_created(ms::Session& session, std::shared_ptr<ms::Surface> const& surface) override
-    {
-        window_manager->add_surface(surface, &session);
-    }
-
-    void destroying_surface(ms::Session& session, std::shared_ptr<ms::Surface> const& surface) override
-    {
-        window_manager->remove_surface(surface, &session);
-    }
-
-    std::shared_ptr<me::WindowManager> const window_manager;
-};
-
 class DisplayTracker : public mc::DisplayBufferCompositor
 {
 public:

@@ -39,18 +39,6 @@ namespace examples
 class WindowManager : public virtual shell::Shell
 {
 public:
-    virtual void add_surface(
-        std::shared_ptr<scene::Surface> const& surface,
-        scene::Session* session) = 0;
-
-    virtual void remove_surface(
-        std::weak_ptr<scene::Surface> const& surface,
-        scene::Session* session) = 0;
-
-    virtual void add_session(std::shared_ptr<scene::Session> const& session) = 0;
-
-    virtual void remove_session(std::shared_ptr<scene::Session> const& session) = 0;
-
     virtual void add_display(geometry::Rectangle const& area) = 0;
 
     virtual void remove_display(geometry::Rectangle const& area) = 0;
