@@ -630,6 +630,23 @@ MIR_SERVER_29 {
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::Timer;
 
+# needed but not picked up by current version of script
+    virtual?thunk?to?mir::shell::AbstractShell::?AbstractShell*;
+    virtual?thunk?to?mir::shell::AbstractShell::add_prompt_provider_for*;
+    virtual?thunk?to?mir::shell::AbstractShell::close_session*;
+    virtual?thunk?to?mir::shell::AbstractShell::create_surface*;
+    virtual?thunk?to?mir::shell::AbstractShell::destroy_surface*;
+    virtual?thunk?to?mir::shell::AbstractShell::focus_next*;
+    virtual?thunk?to?mir::shell::AbstractShell::focussed_application*;
+    virtual?thunk?to?mir::shell::AbstractShell::get_surface_attribute*;
+    virtual?thunk?to?mir::shell::AbstractShell::handle_surface_created*;
+    virtual?thunk?to?mir::shell::AbstractShell::open_session*;
+    virtual?thunk?to?mir::shell::AbstractShell::set_focus_to*;
+    virtual?thunk?to?mir::shell::AbstractShell::set_surface_attribute*;
+    virtual?thunk?to?mir::shell::AbstractShell::setting_focus_to*;
+    virtual?thunk?to?mir::shell::AbstractShell::start_prompt_session_for*;
+    virtual?thunk?to?mir::shell::AbstractShell::stop_prompt_session*;
+
 # these symbols are needed by mir_proving_server but are not intended to be public
     mir::compositor::GLProgramFamily::*;
     mir::compositor::GLRenderer::GLRenderer*;
