@@ -774,6 +774,10 @@ TEST_F(HwcDevice, commits_external_list_with_both_force_gl)
     using namespace testing;
     mtd::MockSwappingGLContext const mock_context1;
     mtd::MockSwappingGLContext const mock_context2;
+    ON_CALL(mock_context1, last_rendered_buffer())
+        .WillByDefault(Return(stub_fb_buffer));
+    ON_CALL(mock_context2, last_rendered_buffer())
+        .WillByDefault(Return(stub_fb_buffer));
     std::list<hwc_layer_1_t*> expected_list
     {
         &skip_layer,

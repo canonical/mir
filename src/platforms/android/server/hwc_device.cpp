@@ -105,7 +105,7 @@ void mga::HwcDevice::commit(
         displays.emplace_back(ListResources{name, list, context, compositor});
     }
    
-//    context.release_current();
+    context.release_current();
 
     if (name == mga::DisplayName::primary)
     {
@@ -139,10 +139,12 @@ void mga::HwcDevice::commit()
         if (display.list.needs_swapbuffers())
         {
             auto rejected_renderables = display.list.rejected_renderables();
+            display.context.make_current();
             if (rejected_renderables.empty())
                 display.context.swap_buffers();
             else
                 display.compositor.render(std::move(rejected_renderables), display.context);
+            display.context.release_current();
             display.list.setup_fb(display.context.last_rendered_buffer());
             display.list.swap_occurred();
         }
@@ -181,6 +183,7 @@ void mga::HwcDevice::start_posting_external_display()
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     needed_list_count = 2;
+    committed = false;
 }
 
 void mga::HwcDevice::stop_posting_external_display()
