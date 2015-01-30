@@ -149,7 +149,7 @@ public:
         case mir_surface_attrib_state:
         {
             std::lock_guard<decltype(mutex)> lock(mutex);
-            set_state(*surface, value);
+            set_state(surface, MirSurfaceState(value));
             break;
         }
         default:
@@ -481,83 +481,62 @@ private:
         Rectangle restore_rect;
     };
 
-    void set_state(ms::Surface const& surface, int value)
+    void set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
     {
-        auto new_state = mir_surface_state_restored;
-
         switch (value)
         {
         case mir_surface_state_restored:
-            new_state = mir_surface_state_restored;
-            break;
-
         case mir_surface_state_maximized:
-            new_state = mir_surface_state_maximized;
-            break;
-
         case mir_surface_state_vertmaximized:
-            new_state = mir_surface_state_vertmaximized;
-            break;
-
         case mir_surface_state_horizmaximized:
-            new_state = mir_surface_state_horizmaximized;
             break;
 
         default:
             return;
         }
 
-        for (auto& i : surface_info)
+        auto& info = surface_info[surface];
+
+        if (info.state == mir_surface_state_restored)
         {
-            if (auto const sp = i.first.lock())
-            {
-                if (sp.get() == &surface)
-                {
-                    auto& surface_info = i.second;
-
-                    if (surface_info.state == mir_surface_state_restored)
-                    {
-                        surface_info.restore_rect = {sp->top_left(), sp->size()};
-                    }
-
-                    if (surface_info.state == new_state)
-                    {
-                        return; // Nothing to do
-                    }
-
-                    auto const& session_info =
-                        this->session_info[surface_info.session.lock().get()];
-
-                    switch (new_state)
-                    {
-                    case mir_surface_state_restored:
-                        sp->move_to(surface_info.restore_rect.top_left);
-                        sp->resize(surface_info.restore_rect.size);
-                        break;
-
-                    case mir_surface_state_maximized:
-                        sp->move_to(session_info.tile.top_left);
-                        sp->resize(session_info.tile.size);
-                        break;
-
-                    case mir_surface_state_horizmaximized:
-                        sp->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
-                        sp->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
-                        break;
-
-                    case mir_surface_state_vertmaximized:
-                        sp->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
-                        sp->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
-                        break;
-
-                    default:
-                        break;
-                    }
-
-                    surface_info.state = new_state;
-                }
-            }
+            info.restore_rect = {surface->top_left(), surface->size()};
         }
+
+        if (info.state == value)
+        {
+            return; // Nothing to do
+        }
+
+        auto const& session_info =
+            this->session_info[info.session.lock().get()];
+
+        switch (value)
+        {
+        case mir_surface_state_restored:
+            surface->move_to(info.restore_rect.top_left);
+            surface->resize(info.restore_rect.size);
+            break;
+
+        case mir_surface_state_maximized:
+            surface->move_to(session_info.tile.top_left);
+            surface->resize(session_info.tile.size);
+            break;
+
+        case mir_surface_state_horizmaximized:
+            surface->move_to({session_info.tile.top_left.x, info.restore_rect.top_left.y});
+            surface->resize({session_info.tile.size.width, info.restore_rect.size.height});
+            break;
+
+        case mir_surface_state_vertmaximized:
+            surface->move_to({info.restore_rect.top_left.x, session_info.tile.top_left.y});
+            surface->resize({info.restore_rect.size.width, session_info.tile.size.height});
+            break;
+
+        default:
+            break;
+        }
+
+        info.state = value;
     }
 
     std::shared_ptr<ms::Session> session_under(Point position)
