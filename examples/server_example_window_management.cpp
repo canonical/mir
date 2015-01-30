@@ -260,7 +260,7 @@ private:
         std::shared_ptr<ms::Session> const& session,
         std::shared_ptr<ms::Surface> const& surface,
         MirSurfaceAttrib attrib,
-        int value)
+        int value) override
     {
         switch (attrib)
         {
