@@ -361,6 +361,14 @@ MirWaitHandle* MirConnection::platform_operation(
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context)
 {
+    auto const client_response = platform->platform_operation(request);
+    if (client_response)
+    {
+        set_error_message("");
+        callback(this, client_response, context);
+        return nullptr;
+    }
+
     mir::protobuf::PlatformOperationMessage protobuf_request;
 
     protobuf_request.set_opcode(opcode);
@@ -420,11 +428,6 @@ void MirConnection::populate_server_package(MirPlatformPackage& platform_package
         platform_package.fd_items = platform.fd_size();
         for (int i = 0; i != platform.fd_size(); ++i)
             platform_package.fd[i] = platform.fd(i);
-
-        // TODO: Replace the extra platform data mechanism with a
-        // client side, platform specific operation
-        for (auto d : extra_platform_data)
-            platform_package.data[platform_package.data_items++] = d;
     }
     else
     {
@@ -565,21 +568,6 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 
     return &configure_display_wait_handle;
-}
-
-bool MirConnection::set_extra_platform_data(
-    std::vector<int> const& extra_platform_data_arg)
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    auto const total_data_size =
-        connect_result.platform().data_size() + extra_platform_data_arg.size();
-
-    if (total_data_size > mir_platform_package_max)
-        return false;
-
-    extra_platform_data = extra_platform_data_arg;
-    return true;
 }
 
 mir::protobuf::DisplayServer& MirConnection::display_server()

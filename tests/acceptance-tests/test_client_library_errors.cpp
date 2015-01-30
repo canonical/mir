@@ -77,6 +77,11 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
     {
     }
 
+    MirPlatformMessage* platform_operation(MirPlatformMessage const*) override
+    {
+        return nullptr;
+    }
+
     MirPlatformType platform_type() const
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});

@@ -51,11 +51,6 @@ void assign_result(void* result, void** context)
         *context = result;
 }
 
-size_t division_ceiling(size_t a, size_t b)
-{
-    return ((a - 1) / b) + 1;
-}
-
 class DefaultMirConnectionAPI : public mcl::MirConnectionAPI
 {
 public:
@@ -356,6 +351,21 @@ void platform_operation_to_auth_magic_callback(
     auth_magic_context->callback(auth_response->status, auth_magic_context->context);
 }
 
+void assign_set_gbm_device_status(
+    MirConnection*, MirPlatformMessage* response, void* context)
+{
+    auto const response_msg = mir::raii::deleter_for(
+        response,
+        &mir_platform_message_release);
+
+    auto const response_data = mir_platform_message_get_data(response_msg.get());
+    auto const set_gbm_device_response_ptr =
+        reinterpret_cast<MirMesaSetGBMDeviceResponse const*>(response_data.data);
+
+    auto status_ptr = static_cast<int*>(context);
+    *status_ptr = set_gbm_device_response_ptr->status;
+}
+
 }
 
 MirWaitHandle* mir_connection_drm_auth_magic(MirConnection* connection,
@@ -386,10 +396,25 @@ MirWaitHandle* mir_connection_drm_auth_magic(MirConnection* connection,
 int mir_connection_drm_set_gbm_device(MirConnection* connection,
                                       struct gbm_device* gbm_dev)
 {
-    size_t const pointer_size_in_ints = division_ceiling(sizeof(gbm_dev), sizeof(int));
-    std::vector<int> extra_data(pointer_size_in_ints);
+    MirMesaSetGBMDeviceRequest const request{gbm_dev};
 
-    memcpy(extra_data.data(), &gbm_dev, sizeof(gbm_dev));
+    auto const msg = mir::raii::deleter_for(
+        mir_platform_message_create(MirMesaPlatformOperation::set_gbm_device),
+        &mir_platform_message_release);
 
-    return connection->set_extra_platform_data(extra_data);
+    mir_platform_message_set_data(msg.get(), &request, sizeof(request));
+
+    static int const success{0};
+    int status{-1};
+
+    auto wh = mir_connection_platform_operation(
+        connection,
+        MirMesaPlatformOperation::set_gbm_device,
+        msg.get(),
+        assign_set_gbm_device_status,
+        &status);
+
+    mir_wait_for(wh);
+
+    return status == success;
 }
