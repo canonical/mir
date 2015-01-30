@@ -69,6 +69,8 @@ struct DisplayBuffer : public ::testing::Test
             display_size, refresh_rate, mir_pixel_format_abgr_8888)};
     MirOrientation orientation{mir_orientation_normal};
     mga::DisplayBuffer db{
+        std::unique_ptr<mga::LayerList>(
+            new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
         mock_fb_bundle,
         mock_display_device,
         native_window,
@@ -81,7 +83,21 @@ struct DisplayBuffer : public ::testing::Test
 
 TEST_F(DisplayBuffer, can_post_update_with_gl_only)
 {
-    EXPECT_CALL(*mock_display_device, post_gl(testing::_));
+    using namespace testing;
+    std::unique_ptr<mga::LayerList> list(new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
+    EXPECT_CALL(*mock_display_device, commit(
+        mga::DisplayName::primary, Ref(*list), _, _));
+
+    mga::DisplayBuffer db{
+        std::move(list),
+        mock_fb_bundle,
+        mock_display_device,
+        native_window,
+        *gl_context,
+        stub_program_factory,
+        orientation,
+        mga::OverlayOptimization::enabled};
+
     db.gl_swap_buffers();
     db.flip();
 }
@@ -93,7 +109,7 @@ TEST_F(DisplayBuffer, posts_overlay_list_returns_display_device_decision)
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()};
 
-    EXPECT_CALL(*mock_display_device, post_overlays(_, Ref(renderlist), _))
+    EXPECT_CALL(*mock_display_device, compatible_renderlist(Ref(renderlist)))
         .Times(2)
         .WillOnce(Return(true))
         .WillOnce(Return(false));
@@ -102,45 +118,28 @@ TEST_F(DisplayBuffer, posts_overlay_list_returns_display_device_decision)
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
 }
 
+TEST_F(DisplayBuffer, defaults_to_normal_orientation)
+{
+    EXPECT_EQ(mir_orientation_normal, db.orientation());
+}
+
 TEST_F(DisplayBuffer, rotation_transposes_dimensions_and_reports_correctly)
 {
     geom::Size const transposed{display_size.height.as_int(), display_size.width.as_int()};
-    mga::DisplayBuffer inv_db(
-        mock_fb_bundle,
-        mock_display_device,
-        native_window,
-        *gl_context,
-        stub_program_factory,
-        mir_orientation_inverted,
-        mga::OverlayOptimization::enabled);
-    mga::DisplayBuffer left_db(
-        mock_fb_bundle,
-        mock_display_device,
-        native_window,
-        *gl_context,
-        stub_program_factory,
-        mir_orientation_left,
-        mga::OverlayOptimization::enabled);
-    mga::DisplayBuffer right_db(
-        mock_fb_bundle,
-        mock_display_device,
-        native_window,
-        *gl_context,
-        stub_program_factory,
-        mir_orientation_right,
-        mga::OverlayOptimization::enabled);
-
     EXPECT_EQ(display_size, db.view_area().size);
     EXPECT_EQ(db.orientation(), mir_orientation_normal);
+    db.configure(mir_power_mode_on, mir_orientation_inverted);
 
-    EXPECT_EQ(display_size, inv_db.view_area().size);
-    EXPECT_EQ(inv_db.orientation(), mir_orientation_inverted);
+    EXPECT_EQ(display_size, db.view_area().size);
+    EXPECT_EQ(db.orientation(), mir_orientation_inverted);
+    db.configure(mir_power_mode_on, mir_orientation_left);
 
-    EXPECT_EQ(transposed, left_db.view_area().size);
-    EXPECT_EQ(left_db.orientation(), mir_orientation_left);
+    EXPECT_EQ(transposed, db.view_area().size);
+    EXPECT_EQ(db.orientation(), mir_orientation_left);
+    db.configure(mir_power_mode_on, mir_orientation_right);
 
-    EXPECT_EQ(transposed, right_db.view_area().size);
-    EXPECT_EQ(right_db.orientation(), mir_orientation_right);
+    EXPECT_EQ(transposed, db.view_area().size);
+    EXPECT_EQ(db.orientation(), mir_orientation_right);
 }
 
 TEST_F(DisplayBuffer, reports_correct_size)
@@ -153,6 +152,8 @@ TEST_F(DisplayBuffer, reports_correct_size)
 
 TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
 {
+    testing::Mock::VerifyAndClearExpectations(&mock_egl);
+
     using namespace testing;
     EGLint const expected_attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
@@ -170,6 +171,8 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
         .Times(AtLeast(1));
 
     mga::DisplayBuffer db{
+        std::unique_ptr<mga::LayerList>(
+            new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
         mock_fb_bundle,
         mock_display_device,
         native_window,
@@ -193,6 +196,8 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
 
     EXPECT_THROW({
         mga::DisplayBuffer db(
+            std::unique_ptr<mga::LayerList>(
+                new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
             mock_fb_bundle,
             mock_display_device,
             native_window,
@@ -201,8 +206,11 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
             orientation,
             mga::OverlayOptimization::enabled);
     }, std::runtime_error);
+
     EXPECT_THROW({
         mga::DisplayBuffer db(
+            std::unique_ptr<mga::LayerList>(
+                new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
             mock_fb_bundle,
             mock_display_device,
             native_window,
@@ -215,6 +223,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
 
 TEST_F(DisplayBuffer, can_make_current)
 {
+    using namespace testing;
     EXPECT_CALL(mock_egl, eglMakeCurrent(
         dummy_display, mock_egl.fake_egl_surface, mock_egl.fake_egl_surface, dummy_context))
         .Times(2)
@@ -250,8 +259,14 @@ TEST_F(DisplayBuffer, does_not_use_alpha)
 
 TEST_F(DisplayBuffer, reject_list_if_option_disabled)
 {
+    using namespace testing;
+    ON_CALL(*mock_display_device, compatible_renderlist(_))
+        .WillByDefault(Return(true));
+
     mg::RenderableList renderlist{std::make_shared<mtd::StubRenderable>()};
     mga::DisplayBuffer db(
+        std::unique_ptr<mga::LayerList>(
+            new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
         mock_fb_bundle,
         mock_display_device,
         native_window,
@@ -260,5 +275,42 @@ TEST_F(DisplayBuffer, reject_list_if_option_disabled)
         orientation,
         mga::OverlayOptimization::disabled);
 
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
+}
+
+TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
+{
+    using namespace testing;
+    auto buffer1 = std::make_shared<mtd::StubRenderable>();
+    auto buffer2 = std::make_shared<mtd::StubRenderable>();
+    auto buffer3 = std::make_shared<mtd::StubRenderable>();
+
+    ON_CALL(*mock_display_device, compatible_renderlist(_))
+        .WillByDefault(Return(true));
+    ON_CALL(*mock_display_device, commit(_,_,_,_))
+        .WillByDefault(Invoke([](
+            mga::DisplayName,
+            mga::LayerList& list,
+            mga::SwappingGLContext const&,
+            mga::RenderableListCompositor const&)
+        {
+            auto native_list = list.native_list();
+            for (auto i = 0u; i < native_list->numHwLayers; i++)
+            {
+                if (native_list->hwLayers[i].compositionType == HWC_FRAMEBUFFER)
+                    native_list->hwLayers[i].compositionType = HWC_OVERLAY;
+            }
+        }));
+
+    mg::RenderableList renderlist{buffer1, buffer2};
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
+
+    renderlist = mg::RenderableList{buffer2, buffer1}; //ordering changed
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
+
+    renderlist = mg::RenderableList{buffer3, buffer1}; //buffer changed
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
 }

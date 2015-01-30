@@ -34,19 +34,9 @@ namespace
 {
 struct NestedAuthentication : public ::testing::Test
 {
-    NestedAuthentication()
-    {
-        int const success{0};
-        auth_magic_success_response.data.resize(sizeof(MirMesaAuthMagicResponse));
-        *reinterpret_cast<MirMesaAuthMagicResponse*>(
-            auth_magic_success_response.data.data()) =
-                MirMesaAuthMagicResponse{success};
-    }
-
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     mtd::MockNestedContext mock_nested_context;
     mgm::NestedAuthentication auth{mt::fake_shared(mock_nested_context)};
-    mg::PlatformOperationMessage auth_magic_success_response;
 };
 }
 
@@ -65,7 +55,7 @@ bool operator==(mg::PlatformOperationMessage const& msg1,
 
 }
 
-TEST_F(NestedAuthentication, uses_nested_context_to_authenticate)
+TEST_F(NestedAuthentication, uses_nested_context_for_auth_magic)
 {
     using namespace testing;
 
@@ -76,6 +66,13 @@ TEST_F(NestedAuthentication, uses_nested_context_to_authenticate)
     *reinterpret_cast<MirMesaAuthMagicRequest*>(msg.data.data()) =
         MirMesaAuthMagicRequest{magic};
 
+    int const success{0};
+    mg::PlatformOperationMessage auth_magic_success_response;
+    auth_magic_success_response.data.resize(sizeof(MirMesaAuthMagicResponse));
+    *reinterpret_cast<MirMesaAuthMagicResponse*>(
+        auth_magic_success_response.data.data()) =
+            MirMesaAuthMagicResponse{success};
+
     EXPECT_CALL(mock_nested_context,
                 platform_operation(MirMesaPlatformOperation::auth_magic, msg))
         .WillOnce(Return(auth_magic_success_response));
@@ -83,80 +80,18 @@ TEST_F(NestedAuthentication, uses_nested_context_to_authenticate)
     auth.auth_magic(magic);
 }
 
-TEST_F(NestedAuthentication, no_drm_in_platform_package_throws)
+TEST_F(NestedAuthentication, uses_nested_context_for_auth_fd)
 {
     using namespace testing;
-    EXPECT_CALL(mock_nested_context, platform_fd_items())
-        .WillOnce(Return(std::vector<int>{}));
-    EXPECT_THROW({
-        auth.authenticated_fd();
-    }, std::runtime_error);
-}
 
-TEST_F(NestedAuthentication, failure_in_getbusid_throws)
-{
-    using namespace testing;
-    int stub_fd = 33;
+    mg::PlatformOperationMessage msg;
 
-    InSequence seq;
-    EXPECT_CALL(mock_nested_context, platform_fd_items())
-        .WillOnce(Return(std::vector<int>{stub_fd}));
-    EXPECT_CALL(mock_drm, drmGetBusid(stub_fd))
-        .WillOnce(Return(nullptr));
+    int const auth_fd{13};
+    mg::PlatformOperationMessage const response{{}, {auth_fd}};
 
-    EXPECT_THROW({
-        auth.authenticated_fd();
-    }, std::runtime_error);
-}
-
-TEST_F(NestedAuthentication, failure_in_getmagic_throws)
-{
-    using namespace testing;
-    int stub_fd = 33;
-    int auth_fd = 34;
-    //this should get freed by the implementation
-    auto fake_busid = static_cast<char*>(malloc(sizeof(char)));
-    *fake_busid = 'a';
-    int magic{332211};
-
-    InSequence seq;
-    EXPECT_CALL(mock_nested_context, platform_fd_items())
-        .WillOnce(Return(std::vector<int>{stub_fd}));
-    EXPECT_CALL(mock_drm, drmGetBusid(stub_fd))
-        .WillOnce(Return(fake_busid));
-    EXPECT_CALL(mock_drm, drmOpen(nullptr, fake_busid))
-        .WillOnce(Return(auth_fd));
-    EXPECT_CALL(mock_drm, drmGetMagic(auth_fd, _))
-        .WillOnce(DoAll(SetArgPointee<1>(magic), Return(-1)));
-
-    EXPECT_THROW({
-        auth.authenticated_fd();
-    }, std::runtime_error);
-}
-
-TEST_F(NestedAuthentication, creates_new_fd)
-{
-    using namespace testing;
-    int stub_fd = 33;
-    int auth_fd = 34;
-    //this should get freed by the implementation
-    auto fake_busid = static_cast<char*>(malloc(sizeof(char)));
-    *fake_busid = 'a';
-    int magic{332211};
-
-    InSequence seq;
-    EXPECT_CALL(mock_nested_context, platform_fd_items())
-        .WillOnce(Return(std::vector<int>{stub_fd}));
-    EXPECT_CALL(mock_drm, drmGetBusid(stub_fd))
-        .WillOnce(Return(fake_busid));
-    EXPECT_CALL(mock_drm, drmOpen(nullptr, fake_busid))
-        .WillOnce(Return(auth_fd));
-    EXPECT_CALL(mock_drm, drmGetMagic(auth_fd, _))
-        .WillOnce(DoAll(SetArgPointee<1>(magic), Return(0)));
     EXPECT_CALL(mock_nested_context,
-                platform_operation(MirMesaPlatformOperation::auth_magic, _))
-        .WillOnce(Return(auth_magic_success_response));
+                platform_operation(MirMesaPlatformOperation::auth_fd, msg))
+        .WillOnce(Return(response));
 
-    auto fd = auth.authenticated_fd();
-    EXPECT_THAT(fd, Eq(auth_fd));
+    EXPECT_THAT(auth.authenticated_fd(), Eq(auth_fd));
 }

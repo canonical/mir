@@ -120,6 +120,16 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
 
         return response;
     }
+    else if (op == MirMesaPlatformOperation::auth_fd)
+    {
+        if (request.data.size() != 0 || request.fds.size() != 0)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error("Invalid request message for auth_fd platform operation"));
+        }
+
+        return mg::PlatformOperationMessage{{},{drm_auth->authenticated_fd()}};
+    }
     else
     {
         BOOST_THROW_EXCEPTION(

@@ -72,6 +72,26 @@ std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebu
         attribs.vrefresh_hz, attribs.num_framebuffers));
 }
 
+std::unique_ptr<mga::LayerList> mga::HalComponentFactory::create_layer_list()
+{
+    if (force_backup_display)
+        return std::unique_ptr<mga::LayerList>(new mga::LayerList(std::make_shared<mga::Hwc10Adapter>(), {}));
+    switch (hwc_version)
+    {
+        case mga::HwcVersion::hwc10:
+            return std::unique_ptr<mga::LayerList>(new mga::LayerList(std::make_shared<mga::Hwc10Adapter>(), {}));
+        case mga::HwcVersion::hwc11:
+        case mga::HwcVersion::hwc12:
+            return std::unique_ptr<mga::LayerList>(new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
+        case mga::HwcVersion::hwc13:
+            return std::unique_ptr<mga::LayerList>(new mga::LayerList(std::make_shared<mga::FloatSourceCrop>(), {}));
+        case mga::HwcVersion::hwc14:
+        case mga::HwcVersion::unknown:
+        default:
+            BOOST_THROW_EXCEPTION(std::runtime_error("unknown or unsupported hwc version"));
+    }
+}
+
 std::unique_ptr<mga::DisplayDevice> mga::HalComponentFactory::create_display_device()
 {
     if (force_backup_display)
@@ -91,19 +111,10 @@ std::unique_ptr<mga::DisplayDevice> mga::HalComponentFactory::create_display_dev
 
             case mga::HwcVersion::hwc11:
             case mga::HwcVersion::hwc12:
-               return std::unique_ptr<mga::DisplayDevice>(
-                    new mga::HwcDevice(
-                        hwc_wrapper,
-                        std::make_shared<mga::IntegerSourceCrop>()));
-            break;
-
             case mga::HwcVersion::hwc13:
                return std::unique_ptr<mga::DisplayDevice>(
-                    new mga::HwcDevice(
-                        hwc_wrapper,
-                        std::make_shared<mga::FloatSourceCrop>()));
+                    new mga::HwcDevice(hwc_wrapper));
             break;
-
             case mga::HwcVersion::hwc14:
             case mga::HwcVersion::unknown:
             default:

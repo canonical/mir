@@ -19,6 +19,7 @@
 #include "framebuffer_bundle.h"
 #include "display_buffer.h"
 #include "display_device.h"
+#include "hwc_layerlist.h"
 
 #include <functional>
 #include <boost/throw_exception.hpp>
@@ -31,6 +32,7 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::DisplayBuffer::DisplayBuffer(
+    std::unique_ptr<LayerList> layer_list,
     std::shared_ptr<FramebufferBundle> const& fb_bundle,
     std::shared_ptr<DisplayDevice> const& display_device,
     std::shared_ptr<ANativeWindow> const& native_window,
@@ -38,7 +40,8 @@ mga::DisplayBuffer::DisplayBuffer(
     mg::GLProgramFactory const& program_factory,
     MirOrientation orientation,
     mga::OverlayOptimization overlay_option)
-    : fb_bundle{fb_bundle},
+    : layer_list(std::move(layer_list)),
+      fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
       gl_context{shared_gl_context, fb_bundle, native_window},
@@ -72,15 +75,25 @@ void mga::DisplayBuffer::release_current()
 
 bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
 {
-    if (!overlay_enabled)
+    if (!overlay_enabled || !display_device->compatible_renderlist(renderlist))
         return false;
 
-    return display_device->post_overlays(gl_context, renderlist, overlay_program);
+    layer_list->update_list(renderlist);
+
+    bool needs_commit{false};
+    for (auto& layer : *layer_list)
+        needs_commit |= layer.needs_commit;
+    if (!needs_commit)
+        return false;
+
+    display_device->commit(mga::DisplayName::primary, *layer_list, gl_context, overlay_program);
+    return true;
 }
 
 void mga::DisplayBuffer::gl_swap_buffers()
 {
-    display_device->post_gl(gl_context);
+    layer_list->update_list({});
+    display_device->commit(mga::DisplayName::primary, *layer_list, gl_context, overlay_program);
 }
 
 void mga::DisplayBuffer::flip()

@@ -21,6 +21,7 @@
 #include "mir_test_doubles/stub_android_native_buffer.h"
 #include "src/platforms/android/server/fb_device.h"
 #include "src/platforms/android/server/hwc_fallback_gl_renderer.h"
+#include "src/platforms/android/server/hwc_layerlist.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -66,9 +67,12 @@ struct FBDevice : public ::testing::Test
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer;
     mtd::HardwareAccessMock hw_access_mock;
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
+    mga::LayerList list{std::make_shared<mga::IntegerSourceCrop>(), {}};
+    mtd::StubRenderableListCompositor stub_compositor;
+    mga::DisplayName primary{mga::DisplayName::primary};
 };
 
-TEST_F(FBDevice, rejects_overlays)
+TEST_F(FBDevice, rejects_renderables)
 {
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
@@ -76,12 +80,11 @@ TEST_F(FBDevice, rejects_overlays)
         std::make_shared<mtd::StubRenderable>()
     };
 
-    mtd::MockRenderableListCompositor stub_compositor;
     mga::FBDevice fbdev(fb_hal_mock);
-    EXPECT_FALSE(fbdev.post_overlays(mock_context, renderlist, stub_compositor));
+    EXPECT_FALSE(fbdev.compatible_renderlist(renderlist));
 }
 
-TEST_F(FBDevice, commits_frame_via_post)
+TEST_F(FBDevice, commits_frame)
 {
     using namespace testing;
     EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(), native_buffer->handle()))
@@ -92,10 +95,10 @@ TEST_F(FBDevice, commits_frame_via_post)
     mga::FBDevice fbdev(fb_hal_mock);
 
     EXPECT_THROW({
-        fbdev.post_gl(mock_context);
+        fbdev.commit(primary, list, mock_context, stub_compositor);
     }, std::runtime_error);
 
-    fbdev.post_gl(mock_context);
+    fbdev.commit(primary, list, mock_context, stub_compositor);
 }
 
 //not all fb devices provide a swap interval hook. make sure we don't explode if thats the case
