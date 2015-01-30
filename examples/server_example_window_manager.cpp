@@ -30,6 +30,7 @@ namespace mc = mir::compositor;
 namespace me = mir::examples;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 using namespace mir::geometry;
 
 ///\example server_example_window_manager.cpp
@@ -134,35 +135,13 @@ void me::add_window_manager_option_to(Server& server)
 
     auto const factory = std::make_shared<me::WindowManagmentFactory>(server);
 
-    server.override_the_placement_strategy([factory, &server]()
-        -> std::shared_ptr<ms::PlacementStrategy>
+    server.override_the_shell([factory, &server]()
+        -> std::shared_ptr<msh::Shell>
         {
             auto const options = server.get_options();
 
             if (!options->is_set(me::wm_option))
-                return std::shared_ptr<ms::PlacementStrategy>{};
-
-            return factory->window_manager();
-        });
-
-    server.override_the_session_listener([factory, &server]()
-        -> std::shared_ptr<ms::SessionListener>
-        {
-            auto const options = server.get_options();
-
-            if (!options->is_set(me::wm_option))
-                return std::shared_ptr<ms::SessionListener>{};
-
-            return std::make_shared<SceneTracker>(factory->window_manager());
-        });
-
-    server.override_the_surface_configurator([factory, &server]()
-        -> std::shared_ptr<ms::SurfaceConfigurator>
-        {
-            auto const options = server.get_options();
-
-            if (!options->is_set(me::wm_option))
-                return std::shared_ptr<ms::SurfaceConfigurator>{};
+                return std::shared_ptr<msh::Shell>{};
 
             return factory->window_manager();
         });
