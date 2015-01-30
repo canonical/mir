@@ -230,22 +230,22 @@ private:
     static status_t load(Tokenizer* tokenizer, Format format, sp<KeyCharacterMap>* outMap);
 
     static void addKey(Vector<KeyEvent>& outEvents,
-            int32_t deviceId, int32_t keyCode, int32_t metaState, bool down, nsecs_t time);
+            int32_t deviceId, int32_t keyCode, int32_t metaState, bool down, std::chrono::nanoseconds time);
     static void addMetaKeys(Vector<KeyEvent>& outEvents,
-            int32_t deviceId, int32_t metaState, bool down, nsecs_t time,
+            int32_t deviceId, int32_t metaState, bool down, std::chrono::nanoseconds time,
             int32_t* currentMetaState);
     static bool addSingleEphemeralMetaKey(Vector<KeyEvent>& outEvents,
-            int32_t deviceId, int32_t metaState, bool down, nsecs_t time,
+            int32_t deviceId, int32_t metaState, bool down, std::chrono::nanoseconds time,
             int32_t keyCode, int32_t keyMetaState,
             int32_t* currentMetaState);
     static void addDoubleEphemeralMetaKey(Vector<KeyEvent>& outEvents,
-            int32_t deviceId, int32_t metaState, bool down, nsecs_t time,
+            int32_t deviceId, int32_t metaState, bool down, std::chrono::nanoseconds time,
             int32_t leftKeyCode, int32_t leftKeyMetaState,
             int32_t rightKeyCode, int32_t rightKeyMetaState,
             int32_t eitherKeyMetaState,
             int32_t* currentMetaState);
     static void addLockedMetaKey(Vector<KeyEvent>& outEvents,
-            int32_t deviceId, int32_t metaState, nsecs_t time,
+            int32_t deviceId, int32_t metaState, std::chrono::nanoseconds time,
             int32_t keyCode, int32_t keyMetaState,
             int32_t* currentMetaState);
 };

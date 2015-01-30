@@ -194,7 +194,7 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
         if (attribs.connected)
             power_mode(mga::DisplayName::external, *hwc_config, config.external(), mir_power_mode_on);
         else
-            power_mode(mga::DisplayName::external, *hwc_config, config.external(), mir_power_mode_off);
+            config.external().power_mode = mir_power_mode_off;
 
         config = mga::DisplayConfiguration(
             hwc_config->active_attribs_for(mga::DisplayName::primary),

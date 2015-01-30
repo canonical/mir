@@ -696,16 +696,11 @@ TEST_F(Display, turns_external_display_on_with_hotplug)
                     {20,20}, {4,4}, 50.0f, external_connected, mir_pixel_format_abgr_8888, 2};
             }));
 
-        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, _))
-            .Times(AnyNumber());
-        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, _))
-            .Times(AnyNumber());
-
         testing::InSequence seq;
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, _));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_on));
-        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_off));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_on));
-        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_off));
+        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, _));
     });
 
     mga::Display display(

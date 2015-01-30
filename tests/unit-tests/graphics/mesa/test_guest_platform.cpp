@@ -20,6 +20,7 @@
 #include "src/platforms/mesa/server/guest_platform.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/platform_ipc_operations.h"
+#include "mir_toolkit/mesa/platform_operation.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_drm.h"
@@ -27,6 +28,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
 #include "mir_test_doubles/fd_matcher.h"
+#include "mir_test_doubles/mock_nested_context.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -39,13 +41,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
-struct MockNestedContext : public mg::NestedContext
-{
-    MOCK_METHOD0(platform_fd_items, std::vector<int>());
-    MOCK_METHOD1(drm_auth_magic, void(int));
-    MOCK_METHOD1(drm_set_gbm_device, void(struct gbm_device*));
-};
 
 class MesaGuestPlatformTest : public ::testing::Test
 {
@@ -61,7 +56,7 @@ public:
 protected:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
-    ::testing::NiceMock<MockNestedContext> mock_nested_context;
+    ::testing::NiceMock<mtd::MockNestedContext> mock_nested_context;
 };
 
 }
@@ -69,7 +64,18 @@ protected:
 TEST_F(MesaGuestPlatformTest, auth_magic_is_delegated_to_nested_context)
 {
     using namespace testing;
-    EXPECT_CALL(mock_nested_context, drm_auth_magic(_));
+
+    int const success{0};
+    mg::PlatformOperationMessage auth_magic_success_response;
+    auth_magic_success_response.data.resize(sizeof(MirMesaAuthMagicResponse));
+    *reinterpret_cast<MirMesaAuthMagicResponse*>(
+        auth_magic_success_response.data.data()) =
+            MirMesaAuthMagicResponse{success};
+
+    EXPECT_CALL(mock_nested_context,
+                platform_operation(MirMesaPlatformOperation::auth_magic, _))
+        .WillOnce(Return(auth_magic_success_response));
+
     mgm::GuestPlatform native(mt::fake_shared(mock_nested_context));
     auto ipc_ops = native.make_ipc_operations();
     ipc_ops->connection_ipc_package();

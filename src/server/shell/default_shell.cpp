@@ -35,21 +35,34 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
+msh::AbstractShell::AbstractShell(
+    std::shared_ptr<InputTargeter> const& input_targeter,
+    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+    std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager) :
+    input_targeter(input_targeter),
+    surface_coordinator(surface_coordinator),
+    session_coordinator(session_coordinator),
+    prompt_session_manager(prompt_session_manager)
+{
+}
+
+msh::AbstractShell::~AbstractShell() noexcept
+{
+}
+
 msh::DefaultShell::DefaultShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
     std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<ms::PlacementStrategy> const& placement_strategy) :
-    input_targeter(input_targeter),
-    surface_coordinator(surface_coordinator),
-    session_coordinator(session_coordinator),
-    prompt_session_manager(prompt_session_manager),
+    AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
     placement_strategy(placement_strategy)
 {
 }
 
-std::shared_ptr<mf::Session> msh::DefaultShell::open_session(
+std::shared_ptr<ms::Session> msh::DefaultShell::open_session(
     pid_t client_pid,
     std::string const& name,
     std::shared_ptr<mf::EventSink> const& sink)
@@ -60,12 +73,10 @@ std::shared_ptr<mf::Session> msh::DefaultShell::open_session(
 }
 
 void msh::DefaultShell::close_session(
-    std::shared_ptr<mf::Session> const& session)
+    std::shared_ptr<ms::Session> const& session)
 {
-    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-
-    prompt_session_manager->remove_session(scene_session);
-    session_coordinator->close_session(scene_session);
+    prompt_session_manager->remove_session(session);
+    session_coordinator->close_session(session);
     set_focus_to(session_coordinator->successor_of(std::shared_ptr<ms::Session>()));
 }
 
@@ -93,78 +104,62 @@ void msh::DefaultShell::set_focus_to(
 }
 
 void msh::DefaultShell::handle_surface_created(
-    std::shared_ptr<mf::Session> const& session)
+    std::shared_ptr<ms::Session> const& session)
 {
-    auto const focus = std::dynamic_pointer_cast<ms::Session>(session);
-    set_focus_to(focus);
+    set_focus_to(session);
 }
 
-std::shared_ptr<mf::PromptSession> msh::DefaultShell::start_prompt_session_for(
-    std::shared_ptr<mf::Session> const& session,
+std::shared_ptr<ms::PromptSession> msh::DefaultShell::start_prompt_session_for(
+    std::shared_ptr<ms::Session> const& session,
     scene::PromptSessionCreationParameters const& params)
 {
-    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-
-    return prompt_session_manager->start_prompt_session_for(scene_session, params);
+    return prompt_session_manager->start_prompt_session_for(session, params);
 }
 
 void msh::DefaultShell::add_prompt_provider_for(
-    std::shared_ptr<mf::PromptSession> const& prompt_session,
-    std::shared_ptr<mf::Session> const& session)
+    std::shared_ptr<ms::PromptSession> const& prompt_session,
+    std::shared_ptr<ms::Session> const& session)
 {
-    auto const scene_prompt_session = std::dynamic_pointer_cast<ms::PromptSession>(prompt_session);
-    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    prompt_session_manager->add_prompt_provider(scene_prompt_session, scene_session);
+    prompt_session_manager->add_prompt_provider(prompt_session, session);
 }
 
-void msh::DefaultShell::stop_prompt_session(std::shared_ptr<mf::PromptSession> const& prompt_session)
+void msh::DefaultShell::stop_prompt_session(std::shared_ptr<ms::PromptSession> const& prompt_session)
 {
-    auto const scene_prompt_session = std::dynamic_pointer_cast<ms::PromptSession>(prompt_session);
-    prompt_session_manager->stop_prompt_session(scene_prompt_session);
+    prompt_session_manager->stop_prompt_session(prompt_session);
 }
 
-mf::SurfaceId msh::DefaultShell::create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params)
+mf::SurfaceId msh::DefaultShell::create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
 {
-    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    auto placed_params = placement_strategy->place(*scene_session, params);
-    auto const result = scene_session->create_surface(placed_params);
+    auto placed_params = placement_strategy->place(*session, params);
+    auto const result = session->create_surface(placed_params);
     return result;
 }
 
-void msh::DefaultShell::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)
+void msh::DefaultShell::destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface)
 {
-    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    scene_session->destroy_surface(surface);
+    session->destroy_surface(surface);
 }
 
 int msh::DefaultShell::set_surface_attribute(
-    std::shared_ptr<mf::Session> const& session,
+    std::shared_ptr<ms::Session> const& session,
     mf::SurfaceId surface_id,
     MirSurfaceAttrib attrib,
     int value)
 {
-    // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
-    if (!session)
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
+    auto const surface = session->surface(surface_id);
 
-    auto const surface = std::dynamic_pointer_cast<ms::Surface>(session->get_surface(surface_id));
-
-    if (!surface)
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid surface id"));
+    // TODO scene::SurfaceConfigurator is really a DefaultShell strategy
+    // TODO it should be invoked from here around any changes to the surface
 
     return surface->configure(attrib, value);
 }
 
 int msh::DefaultShell::get_surface_attribute(
-    std::shared_ptr<mf::Session> const& session,
+    std::shared_ptr<ms::Session> const& session,
     mf::SurfaceId surface_id,
     MirSurfaceAttrib attrib)
 {
-    // TODO this downcasting is clunky, but is temporary wiring of the new interaction route to the old implementation
-    if (!session)
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid session"));
-
-    auto const surface = std::dynamic_pointer_cast<ms::Surface>(session->get_surface(surface_id));
+    auto const surface = session->surface(surface_id);
 
     if (!surface)
         BOOST_THROW_EXCEPTION(std::logic_error("invalid surface id"));

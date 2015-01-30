@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,8 +18,9 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/shell/surface_coordinator_wrapper.h"
+#include "mir/shell/shell_wrapper.h"
 
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
@@ -32,6 +33,7 @@
 #include <tuple>
 #include <algorithm>
 
+namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mtf = mir_test_framework;
@@ -60,17 +62,17 @@ struct RectangleCompare
     }
 };
 
-class TrackingSurfaceCoordinator : public msh::SurfaceCoordinatorWrapper
+class TrackingShell : public msh::ShellWrapper
 {
 public:
-    using msh::SurfaceCoordinatorWrapper::SurfaceCoordinatorWrapper;
+    using msh::ShellWrapper::ShellWrapper;
 
-    std::shared_ptr<ms::Surface> add_surface(
-        ms::SurfaceCreationParameters const& params,
-        ms::Session* session) override
+    mf::SurfaceId create_surface(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& params) override
     {
-        auto const surface = msh::SurfaceCoordinatorWrapper::add_surface(params, session);
-        surfaces.push_back(surface);
+        auto const surface = msh::ShellWrapper::create_surface(session, params);
+        surfaces.push_back(session->surface(surface));
         return surface;
     }
 
@@ -93,17 +95,17 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
 {
     void SetUp() override
     {
-        server.wrap_surface_coordinator([this]
-            (std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
-            ->std::shared_ptr<ms::SurfaceCoordinator>
+        server.wrap_shell([this]
+            (std::shared_ptr<msh::Shell> const& wrapped)
+            ->std::shared_ptr<msh::Shell>
             {
-                tracking_surface_coordinator = std::make_shared<TrackingSurfaceCoordinator>(wrapped);
-                return tracking_surface_coordinator;
+                tracking_shell = std::make_shared<TrackingShell>(wrapped);
+                return tracking_shell;
             });
 
         initial_display_layout(display_rects);
         mtf::ConnectedClientHeadlessServer::SetUp();
-        ASSERT_THAT(tracking_surface_coordinator, NotNull());
+        ASSERT_THAT(tracking_shell, NotNull());
 
         config = mir_connection_create_display_config(connection);
         ASSERT_TRUE(config != NULL);
@@ -112,7 +114,7 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
     void TearDown() override
     {
         mir_display_config_destroy(config);
-        tracking_surface_coordinator.reset();
+        tracking_shell.reset();
         mtf::ConnectedClientHeadlessServer::TearDown();
     }
 
@@ -164,7 +166,7 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
 
     MirDisplayConfiguration* config;
 
-    std::shared_ptr<TrackingSurfaceCoordinator> tracking_surface_coordinator;
+    std::shared_ptr<TrackingShell> tracking_shell;
 };
 
 }
@@ -180,7 +182,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
         surfaces.push_back(surface);
     }
 
-    auto surface_rects = tracking_surface_coordinator->server_surface_rectangles();
+    auto surface_rects = tracking_shell->server_surface_rectangles();
     auto sorted_display_rects = display_rects;
     std::sort(sorted_display_rects.begin(), sorted_display_rects.end(), RectangleCompare());
     std::sort(surface_rects.begin(), surface_rects.end(), RectangleCompare());
@@ -206,7 +208,7 @@ TEST_F(SurfacesWithOutputId, requested_size_is_ignored_in_favour_of_display_size
 
     }
 
-    auto surface_rects = tracking_surface_coordinator->server_surface_rectangles();
+    auto surface_rects = tracking_shell->server_surface_rectangles();
     auto display_rects = this->display_rects;
 
     std::sort(display_rects.begin(), display_rects.end(), RectangleCompare());

@@ -248,9 +248,9 @@ std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName disp
     return config_ids;
 }
 
-void mga::RealHwcWrapper::display_attributes(
+int mga::RealHwcWrapper::display_attributes(
     DisplayName display_name, ConfigId config, uint32_t const* attributes, int32_t* values) const
 {
-    hwc_device->getDisplayAttributes(
+    return hwc_device->getDisplayAttributes(
         hwc_device.get(), display_name, config.as_value(), attributes, values);
 }

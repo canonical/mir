@@ -86,18 +86,10 @@ mir::DefaultServerConfiguration::the_surface_coordinator()
     return surface_coordinator(
         [this]()
         {
-            return wrap_surface_coordinator(
-                std::make_shared<ms::SurfaceController>(
+            return std::make_shared<ms::SurfaceController>(
                     the_surface_factory(),
-                    the_surface_stack_model()));
+                    the_surface_stack_model());
         });
-}
-
-std::shared_ptr<ms::SurfaceCoordinator>
-mir::DefaultServerConfiguration::wrap_surface_coordinator(
-    std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
-{
-    return wrapped;
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>
@@ -174,21 +166,13 @@ mir::DefaultServerConfiguration::the_session_coordinator()
     return session_coordinator(
         [this]()
         {
-            return wrap_session_coordinator(
-                std::make_shared<ms::SessionManager>(
+            return std::make_shared<ms::SessionManager>(
                     the_surface_coordinator(),
                     the_session_container(),
                     the_snapshot_strategy(),
                     the_session_event_sink(),
-                    the_session_listener()));
+                    the_session_listener());
         });
-}
-
-std::shared_ptr<ms::SessionCoordinator>
-mir::DefaultServerConfiguration::wrap_session_coordinator(
-    std::shared_ptr<ms::SessionCoordinator> const& wrapped)
-{
-    return wrapped;
 }
 
 std::shared_ptr<ms::PixelBuffer>
