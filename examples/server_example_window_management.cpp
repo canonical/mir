@@ -27,7 +27,8 @@
 #include "mir/geometry/displacement.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
-#include "mir/scene/session_listener.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/abstract_shell.h"
 

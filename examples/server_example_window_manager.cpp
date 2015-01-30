@@ -24,7 +24,6 @@
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/options/option.h"
-#include "mir/scene/session_listener.h"
 
 namespace mc = mir::compositor;
 namespace me = mir::examples;

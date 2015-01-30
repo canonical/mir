@@ -21,8 +21,6 @@
 
 #include "mir/geometry/rectangles.h"
 #include "mir/shell/shell.h"
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
 #include "mir_toolkit/common.h"
 
 #include <memory>
