@@ -771,21 +771,21 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
 
 TEST_F(HwcDevice, commits_external_list_with_both_force_gl)
 {
-    mtd::StubSwappingGLContext const stub_context1{stub_fb_buffer};
-    mtd::StubSwappingGLContext const stub_context2{stub_fb_buffer};
     using namespace testing;
+    mtd::MockSwappingGLContext const mock_context1;
+    mtd::MockSwappingGLContext const mock_context2;
     std::list<hwc_layer_1_t*> expected_list
     {
         &skip_layer,
         &target_layer
     };
 
-    EXPECT_CALL(stub_context1, release_current())
+    EXPECT_CALL(mock_context1, release_current())
         .Times(2);
-    EXPECT_CALL(stub_context1, make_current());
-    EXPECT_CALL(stub_context2, release_current())
+    EXPECT_CALL(mock_context1, make_current());
+    EXPECT_CALL(mock_context2, release_current())
         .Times(2);
-    EXPECT_CALL(stub_context2, make_current());
+    EXPECT_CALL(mock_context2, make_current());
     
     Sequence seq;
     EXPECT_CALL(*mock_device, prepare(MatchesLists(expected_list, expected_list)))
@@ -800,9 +800,9 @@ TEST_F(HwcDevice, commits_external_list_with_both_force_gl)
     device.start_posting_external_display();
 
     auto handle = std::async(std::launch::async, [&]{
-        device.commit(mga::DisplayName::primary, primary_list, stub_context1, stub_compositor);
+        device.commit(mga::DisplayName::primary, primary_list, mock_context1, stub_compositor);
     }); 
-    device.commit(mga::DisplayName::external, external_list, stub_context2, stub_compositor);
+    device.commit(mga::DisplayName::external, external_list, mock_context2, stub_compositor);
     EXPECT_THAT(handle.wait_for(std::chrono::seconds(1)), Eq(std::future_status::ready));
 
     device.stop_posting_external_display();
