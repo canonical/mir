@@ -58,6 +58,7 @@ public:
 private:
     void commit();
     bool buffer_is_onscreen(Buffer const&) const;
+    std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<SyncFileOps> const sync_ops;
@@ -79,7 +80,6 @@ private:
     size_t needed_list_count;
 
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> lists; 
-    std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 };
 
 }
