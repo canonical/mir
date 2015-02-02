@@ -18,10 +18,16 @@
 
 #include "mir/compositor/gl_program_family.h"
 
+#include <mutex>
+
 namespace mir { namespace compositor {
 
 void GLProgramFamily::Shader::init(GLenum type, const GLchar* src)
 {
+    // Serialize init() calls - avoids segfault on multimonitor (see lp:1416482)
+    static std::mutex lp1416482_mutex;
+    std::lock_guard<decltype(lp1416482_mutex)> lock{lp1416482_mutex};
+
     if (!id)
     {
         id = glCreateShader(type);
