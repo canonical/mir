@@ -208,7 +208,7 @@ MIR_COMMON_3.1 {
       mir_input_event_get_event_time;
       mir_input_event_get_key_input_event;
       mir_input_event_get_pointer_input_event;
-      mir_input_event_get_touch_event;
+      mir_input_event_get_touch_input_event;
       mir_input_event_get_type;
       mir_key_input_event_get*;
       mir_touch_input_event_get*;
