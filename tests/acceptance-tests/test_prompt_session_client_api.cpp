@@ -21,9 +21,8 @@
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session.h"
-#include "mir/shell/session_coordinator_wrapper.h"
+#include "mir/shell/shell_wrapper.h"
 #include "mir/frontend/session_credentials.h"
-#include "mir/frontend/shell.h"
 #include "mir/cached_ptr.h"
 #include "mir/fd.h"
 
@@ -63,13 +62,13 @@ struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
 };
 
 // We need to fake any client_pids used to identify sessions
-class PidFakingSessionCoordinator : public msh::SessionCoordinatorWrapper
+class PidFakingShell : public msh::ShellWrapper
 {
 public:
-    PidFakingSessionCoordinator(
-        std::shared_ptr<ms::SessionCoordinator> const& wrapped,
+    PidFakingShell(
+        std::shared_ptr<msh::Shell> const& wrapped,
         std::vector<pid_t> const& pids) :
-            msh::SessionCoordinatorWrapper(wrapped),
+            msh::ShellWrapper(wrapped),
         pids(pids)
     {
     }
@@ -150,13 +149,13 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
 
     void SetUp() override
     {
-        auto session_coordinator_wrapper = [&](std::shared_ptr<ms::SessionCoordinator> const& wrapped)
-            -> std::shared_ptr<ms::SessionCoordinator>
+        auto shell_wrapper = [&](std::shared_ptr<msh::Shell> const& wrapped)
+            -> std::shared_ptr<msh::Shell>
             {
                 std::vector<pid_t> fake_pids;
                 fake_pids.push_back(application_session_pid);
 
-                return std::make_shared<PidFakingSessionCoordinator>(wrapped, fake_pids);
+                return std::make_shared<PidFakingShell>(wrapped, fake_pids);
             };
 
         server.override_the_session_authorizer([this]()
@@ -170,7 +169,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
                  return the_mock_prompt_session_listener();
             });
 
-        server.wrap_session_coordinator(session_coordinator_wrapper);
+        server.wrap_shell(shell_wrapper);
 
         mtf::HeadlessInProcessServer::SetUp();
 

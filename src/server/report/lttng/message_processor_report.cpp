@@ -55,9 +55,3 @@ void mir::report::lttng::MessageProcessorReport::exception_handled(
 {
     mir_tracepoint(mir_server_msgproc, exception_handled_wo_invocation, mediator, error.what());
 }
-
-void mir::report::lttng::MessageProcessorReport::sent_event(
-    void const* mediator, MirSurfaceEvent const& event)
-{
-    mir_tracepoint(mir_server_msgproc, sent_event, mediator, event.id, event.attrib, event.value);
-}

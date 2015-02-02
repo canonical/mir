@@ -43,8 +43,8 @@ public:
     EventFilterDispatcherPolicy(std::shared_ptr<EventFilter> const& event_filter, bool key_repeat_enabled);
     virtual ~EventFilterDispatcherPolicy() {}
 
-    void notifyConfigurationChanged(nsecs_t when);
-    nsecs_t notifyANR(droidinput::sp<droidinput::InputApplicationHandle> const& inputApplicationHandle,
+    void notifyConfigurationChanged(std::chrono::nanoseconds when);
+    std::chrono::nanoseconds notifyANR(droidinput::sp<droidinput::InputApplicationHandle> const& inputApplicationHandle,
         droidinput::sp<droidinput::InputWindowHandle> const& inputWindowHandle);
     void notifyInputChannelBroken(droidinput::sp<droidinput::InputWindowHandle> const& inputWindowHandle);
     bool filterInputEvent(const droidinput::InputEvent* input_event,
@@ -53,17 +53,17 @@ public:
         uint32_t& policy_flags);
     void getDispatcherConfiguration(droidinput::InputDispatcherConfiguration* outConfig);
     bool isKeyRepeatEnabled();
-    void interceptMotionBeforeQueueing(nsecs_t when, uint32_t& policyFlags);
+    void interceptMotionBeforeQueueing(std::chrono::nanoseconds when, uint32_t& policyFlags);
 
-    nsecs_t interceptKeyBeforeDispatching(droidinput::sp<droidinput::InputWindowHandle> const& inputWindowHandle,
+    std::chrono::nanoseconds interceptKeyBeforeDispatching(droidinput::sp<droidinput::InputWindowHandle> const& inputWindowHandle,
         droidinput::KeyEvent const* keyEvent, uint32_t policyFlags);
 
     bool dispatchUnhandledKey(droidinput::sp<droidinput::InputWindowHandle> const& inputWindowHandle,
                               droidinput::KeyEvent const* keyEvent, uint32_t policyFlags,
                               droidinput::KeyEvent* outFallbackKeyEvent);
 
-    void notifySwitch(nsecs_t when, int32_t switchCode, int32_t switchValue, uint32_t policyFlags);
-    void pokeUserActivity(nsecs_t eventTime, int32_t eventType);
+    void notifySwitch(std::chrono::nanoseconds when, int32_t switchCode, int32_t switchValue, uint32_t policyFlags);
+    void pokeUserActivity(std::chrono::nanoseconds eventTime, int32_t eventType);
     bool checkInjectEventsPermissionNonReentrant(int32_t injectorPid, int32_t injectorUid);
 
 protected:

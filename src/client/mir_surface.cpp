@@ -16,8 +16,6 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/client_buffer.h"
@@ -514,19 +512,19 @@ void MirSurface::handle_event(MirEvent const& e)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    switch (e.type)
+    switch (mir_event_get_type(&e))
     {
     case mir_event_type_surface:
     {
-        MirSurfaceAttrib a = e.surface.attrib;
+        auto sev = mir_event_get_surface_event(&e);
+        auto a = mir_surface_event_get_attribute(sev);
         if (a < mir_surface_attribs)
-            attrib_cache[a] = e.surface.value;
+            attrib_cache[a] = mir_surface_event_get_attribute_value(sev);
         break;
     }
     case mir_event_type_orientation:
-        orientation = e.orientation.direction;
+        orientation = mir_orientation_event_get_direction(mir_event_get_orientation_event(&e));
         break;
-
     default:
         break;
     };

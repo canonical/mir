@@ -31,7 +31,7 @@ class ClientContext
 public:
     virtual ~ClientContext() {}
 
-    virtual void populate(MirPlatformPackage& platform_package) = 0;
+    virtual void populate_server_package(MirPlatformPackage& platform_package) = 0;
 
 protected:
     ClientContext() = default;

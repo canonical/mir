@@ -50,7 +50,7 @@ public:
 namespace android {
 
 // An arbitrary time value.
-static const nsecs_t ARBITRARY_TIME = 1234;
+    static constexpr const std::chrono::nanoseconds ARBITRARY_TIME = std::chrono::nanoseconds(1234);
 
 // Arbitrary display properties.
 static const int32_t DISPLAY_ID = 0;
@@ -353,9 +353,9 @@ private:
         return mListener.get();
     }
 
-    void disableVirtualKeysUntil(nsecs_t /*time*/) override {}
+    void disableVirtualKeysUntil(std::chrono::nanoseconds /*time*/) override {}
 
-    bool shouldDropVirtualKey(nsecs_t now,
+    bool shouldDropVirtualKey(std::chrono::nanoseconds now,
             InputDevice* device, int32_t keyCode, int32_t scanCode) override {
         (void) now;
         (void) device;
@@ -366,7 +366,7 @@ private:
 
     void fadePointer() override {}
 
-    void requestTimeoutAtTime(nsecs_t /*when*/) override {}
+    void requestTimeoutAtTime(std::chrono::nanoseconds /*when*/) override {}
 
     int32_t bumpGeneration() override {
         return ++mGeneration;
@@ -458,14 +458,14 @@ private:
         }
     }
 
-    void configure(nsecs_t when, const InputReaderConfiguration* config, uint32_t changes) override {
+    void configure(std::chrono::nanoseconds when, const InputReaderConfiguration* config, uint32_t changes) override {
         (void)when;
         (void)config;
         (void)changes;
         mConfigureWasCalled = true;
     }
 
-    void reset(nsecs_t when) override {
+    void reset(std::chrono::nanoseconds when) override {
         (void)when;
         mResetWasCalled = true;
     }
@@ -759,13 +759,13 @@ TEST_F(InputReaderTest, LoopOnce_ForwardsRawEventsToMappers) {
     ASSERT_NO_FATAL_FAILURE(mapper = addDeviceWithFakeInputMapper(1, String8("fake"),
             INPUT_DEVICE_CLASS_KEYBOARD, AINPUT_SOURCE_KEYBOARD, NULL));
 
-    mFakeEventHub->synthesize_event(0, 1, EV_KEY, KEY_A, 1);
+    mFakeEventHub->synthesize_event(std::chrono::nanoseconds(0), 1, EV_KEY, KEY_A, 1);
     mReader->loopOnce();
     EXPECT_EQ(size_t(0), mFakeEventHub->eventsQueueSize());
 
     RawEvent event;
     ASSERT_NO_FATAL_FAILURE(mapper->assertProcessWasCalled(&event));
-    ASSERT_EQ(0, event.when);
+    ASSERT_EQ(std::chrono::nanoseconds(0), event.when);
     ASSERT_EQ(1, event.deviceId);
     ASSERT_EQ(EV_KEY, event.type);
     ASSERT_EQ(KEY_A, event.code);
@@ -1020,7 +1020,7 @@ protected:
                            InputReaderConfiguration::CHANGE_DISPLAY_INFO);
     }
 
-    static void process(InputMapper* mapper, nsecs_t when, int32_t deviceId, int32_t type,
+    static void process(InputMapper* mapper, std::chrono::nanoseconds when, int32_t deviceId, int32_t type,
             int32_t code, int32_t value) {
         RawEvent event;
         event.when = when;
@@ -1173,12 +1173,12 @@ TEST_F(KeyboardInputMapperTest, Process_SimpleKeyPress) {
     ASSERT_EQ(ARBITRARY_TIME, args.downTime);
 
     // Key up by scan code.
-    process(mapper, ARBITRARY_TIME + 1, DEVICE_ID,
+    process(mapper, ARBITRARY_TIME + std::chrono::nanoseconds(1), DEVICE_ID,
             EV_KEY, KEY_HOME, 0);
     ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyKeyWasCalled(&args));
     ASSERT_EQ(DEVICE_ID, args.deviceId);
     ASSERT_EQ(AINPUT_SOURCE_KEYBOARD, args.source);
-    ASSERT_EQ(ARBITRARY_TIME + 1, args.eventTime);
+    ASSERT_EQ(ARBITRARY_TIME + std::chrono::nanoseconds(1), args.eventTime);
     ASSERT_EQ(AKEY_EVENT_ACTION_UP, args.action);
     ASSERT_EQ(AKEYCODE_HOME, args.keyCode);
     ASSERT_EQ(KEY_HOME, args.scanCode);
@@ -1207,12 +1207,12 @@ TEST_F(KeyboardInputMapperTest, Process_SimpleKeyPress) {
     // Key up by usage code.
     process(mapper, ARBITRARY_TIME, DEVICE_ID,
             EV_MSC, MSC_SCAN, USAGE_A);
-    process(mapper, ARBITRARY_TIME + 1, DEVICE_ID,
+    process(mapper, ARBITRARY_TIME + std::chrono::nanoseconds(1), DEVICE_ID,
             EV_KEY, 0, 0);
     ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyKeyWasCalled(&args));
     ASSERT_EQ(DEVICE_ID, args.deviceId);
     ASSERT_EQ(AINPUT_SOURCE_KEYBOARD, args.source);
-    ASSERT_EQ(ARBITRARY_TIME + 1, args.eventTime);
+    ASSERT_EQ(ARBITRARY_TIME + std::chrono::nanoseconds(1), args.eventTime);
     ASSERT_EQ(AKEY_EVENT_ACTION_UP, args.action);
     ASSERT_EQ(AKEYCODE_A, args.keyCode);
     ASSERT_EQ(0, args.scanCode);
@@ -1241,12 +1241,12 @@ TEST_F(KeyboardInputMapperTest, Process_SimpleKeyPress) {
     // Key up with unknown scan code or usage code.
     process(mapper, ARBITRARY_TIME, DEVICE_ID,
             EV_MSC, MSC_SCAN, USAGE_UNKNOWN);
-    process(mapper, ARBITRARY_TIME + 1, DEVICE_ID,
+    process(mapper, ARBITRARY_TIME + std::chrono::nanoseconds(1), DEVICE_ID,
             EV_KEY, KEY_UNKNOWN, 0);
     ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyKeyWasCalled(&args));
     ASSERT_EQ(DEVICE_ID, args.deviceId);
     ASSERT_EQ(AINPUT_SOURCE_KEYBOARD, args.source);
-    ASSERT_EQ(ARBITRARY_TIME + 1, args.eventTime);
+    ASSERT_EQ(ARBITRARY_TIME + std::chrono::nanoseconds(1), args.eventTime);
     ASSERT_EQ(AKEY_EVENT_ACTION_UP, args.action);
     ASSERT_EQ(0, args.keyCode);
     ASSERT_EQ(KEY_UNKNOWN, args.scanCode);
@@ -1277,21 +1277,21 @@ TEST_F(KeyboardInputMapperTest, Process_ShouldUpdateMetaState) {
     ASSERT_NO_FATAL_FAILURE(mFakeContext->assertUpdateGlobalMetaStateWasCalled());
 
     // Key down.
-    process(mapper, ARBITRARY_TIME + 1, DEVICE_ID,
+    process(mapper, ARBITRARY_TIME + std::chrono::nanoseconds(1), DEVICE_ID,
             EV_KEY, KEY_A, 1);
     ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyKeyWasCalled(&args));
     ASSERT_EQ(AMETA_SHIFT_LEFT_ON | AMETA_SHIFT_ON, args.metaState);
     ASSERT_EQ(AMETA_SHIFT_LEFT_ON | AMETA_SHIFT_ON, mapper->getMetaState());
 
     // Key up.
-    process(mapper, ARBITRARY_TIME + 2, DEVICE_ID,
+    process(mapper, ARBITRARY_TIME + std::chrono::nanoseconds(2), DEVICE_ID,
             EV_KEY, KEY_A, 0);
     ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyKeyWasCalled(&args));
     ASSERT_EQ(AMETA_SHIFT_LEFT_ON | AMETA_SHIFT_ON, args.metaState);
     ASSERT_EQ(AMETA_SHIFT_LEFT_ON | AMETA_SHIFT_ON, mapper->getMetaState());
 
     // Metakey up.
-    process(mapper, ARBITRARY_TIME + 3, DEVICE_ID,
+    process(mapper, ARBITRARY_TIME + std::chrono::nanoseconds(3), DEVICE_ID,
             EV_KEY, KEY_LEFTSHIFT, 0);
     ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyKeyWasCalled(&args));
     ASSERT_EQ(AMETA_NONE, args.metaState);
@@ -1656,10 +1656,10 @@ TEST_F(CursorInputMapperTest, Process_ShouldSetAllFieldsAndIncludeGlobalMetaStat
     ASSERT_EQ(ARBITRARY_TIME, args.downTime);
 
     // Button release.  Should have same down time.
-    process(mapper, ARBITRARY_TIME + 1, DEVICE_ID, EV_KEY, BTN_MOUSE, 0);
-    process(mapper, ARBITRARY_TIME + 1, DEVICE_ID, EV_SYN, SYN_REPORT, 0);
+    process(mapper, ARBITRARY_TIME + std::chrono::nanoseconds(1), DEVICE_ID, EV_KEY, BTN_MOUSE, 0);
+    process(mapper, ARBITRARY_TIME + std::chrono::nanoseconds(1), DEVICE_ID, EV_SYN, SYN_REPORT, 0);
     ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyMotionWasCalled(&args));
-    ASSERT_EQ(ARBITRARY_TIME + 1, args.eventTime);
+    ASSERT_EQ(ARBITRARY_TIME + std::chrono::nanoseconds(1), args.eventTime);
     ASSERT_EQ(DEVICE_ID, args.deviceId);
     ASSERT_EQ(AINPUT_SOURCE_TRACKBALL, args.source);
     ASSERT_EQ(uint32_t(0), args.policyFlags);

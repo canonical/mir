@@ -1,0 +1,44 @@
+P: /devices/virtual/input/input4/event4
+N: input/event4
+E: DEVNAME=/dev/input/event4
+E: ID_INPUT=1
+E: ID_INPUT_KEY=1
+E: ID_INPUT_TOUCHSCREEN=1
+E: MAJOR=13
+E: MINOR=68
+E: SUBSYSTEM=input
+A: dev=13:68
+L: device=../../input4
+
+P: /devices/virtual/input/input4
+E: ABS=6630000 1000003
+E: EV=b
+E: ID_INPUT=1
+E: ID_INPUT_KEY=1
+E: ID_INPUT_TOUCHSCREEN=1
+E: KEY=400 0 0 0 0 0 0 100000 0 0 0
+E: MODALIAS=input:b0000v0000p0000e0000-e0,1,3,k74,14A,ra0,1,18,30,31,35,36,39,3A,mlsfw
+E: NAME="mtk-tpd"
+E: PRODUCT=0/0/0/0
+E: PROP=2
+E: SUBSYSTEM=input
+E: TAGS=:seat:
+A: capabilities/abs=6630000 1000003
+A: capabilities/ev=b
+A: capabilities/ff=0
+A: capabilities/key=400 0 0 0 0 0 0 100000 0 0 0
+A: capabilities/led=0
+A: capabilities/msc=0
+A: capabilities/rel=0
+A: capabilities/snd=0
+A: capabilities/sw=0
+A: id/bustype=0000
+A: id/product=0000
+A: id/vendor=0000
+A: id/version=0000
+A: modalias=input:b0000v0000p0000e0000-e0,1,3,k74,14A,ra0,1,18,30,31,35,36,39,3A,mlsfw
+A: name=mtk-tpd
+A: phys=
+A: properties=2
+A: uniq=
+

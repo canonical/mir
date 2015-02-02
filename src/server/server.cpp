@@ -44,8 +44,7 @@ namespace mo = mir::options;
     MACRO(cursor_listener)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
-    MACRO(session_coordinator)\
-    MACRO(surface_coordinator)
+    MACRO(shell)
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
@@ -66,6 +65,7 @@ namespace mo = mir::options;
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_compositor)\
     MACRO(the_composite_event_filter)\
+    MACRO(the_cursor_listener)\
     MACRO(the_display)\
     MACRO(the_focus_controller)\
     MACRO(the_gl_config)\
@@ -77,6 +77,7 @@ namespace mo = mir::options;
     MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
     MACRO(the_prompt_session_manager)\
+    MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
     MACRO(the_surface_configurator)\
     MACRO(the_surface_coordinator)\
@@ -200,13 +201,6 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     }
 
     using mir::DefaultServerConfiguration::the_options;
-
-    // TODO the MIR_SERVER_CONFIG_OVERRIDE macro expects a CachePtr named
-    // TODO "placement_strategy" not "shell_placement_strategy".
-    // Unfortunately, "shell_placement_strategy" is currently part of our
-    // published API and used by qtmir: we cannot just rename it to remove
-    // this ugliness. (Yet.)
-    decltype(shell_placement_strategy)& placement_strategy = shell_placement_strategy;
 
     FOREACH_OVERRIDE(MIR_SERVER_CONFIG_OVERRIDE)
 

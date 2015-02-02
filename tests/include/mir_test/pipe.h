@@ -19,6 +19,8 @@
 #ifndef MIR_TEST_PIPE_H_
 #define MIR_TEST_PIPE_H_
 
+#include "mir/fd.h"
+
 namespace mir
 {
 namespace test
@@ -28,16 +30,18 @@ class Pipe
 {
 public:
     Pipe();
-    ~Pipe();
+    Pipe(int flags);
+    ~Pipe() = default;
 
-    int read_fd() const;
-    int write_fd() const;
+    Fd read_fd() const;
+    Fd write_fd() const;
 
 private:
     Pipe(Pipe const&) = delete;
     Pipe& operator=(Pipe const&) = delete;
 
-    int pipefd[2];
+    Fd reader;
+    Fd writer;
 };
 
 }

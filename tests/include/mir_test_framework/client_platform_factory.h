@@ -35,7 +35,7 @@ std::shared_ptr<mir::client::ClientPlatform> create_android_client_platform()
 {
     using namespace testing;
     mtd::MockClientContext ctx;
-    ON_CALL(ctx, populate(_))
+    ON_CALL(ctx, populate_server_package(_))
         .WillByDefault(Invoke([](MirPlatformPackage& package) { ::memset(&package, 0, sizeof(package)); }));
     platform_library = std::make_shared<mir::SharedLibrary>(client_platform("android.so"));
     auto platform_factory = platform_library->load_function<mir::client::CreateClientPlatform>("create_client_platform");
@@ -46,7 +46,7 @@ std::shared_ptr<mir::client::ClientPlatform> create_mesa_client_platform()
 {
     using namespace testing;
     mtd::MockClientContext ctx;
-    ON_CALL(ctx, populate(_))
+    ON_CALL(ctx, populate_server_package(_))
         .WillByDefault(Invoke([](MirPlatformPackage& package)
                               {
                                   ::memset(&package, 0, sizeof(package));

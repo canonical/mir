@@ -65,7 +65,7 @@ struct ClientPlatformTest : public ::testing::TestWithParam<ClientPlatformTraits
           probe{platform_library.load_function<mcl::ClientPlatformProbe>("is_appropriate_module")}
     {
         using namespace testing;
-        ON_CALL(context, populate(_))
+        ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke(GetParam()->populate_package_for));
     }
 
@@ -159,7 +159,7 @@ TEST_P(ClientPlatformTest, platform_probe_returns_success_when_matching)
 TEST_P(ClientPlatformTest, platform_probe_returns_false_when_not_matching)
 {
     using namespace testing;
-    ON_CALL(context, populate(_))
+    ON_CALL(context, populate_server_package(_))
         .WillByDefault(Invoke([](MirPlatformPackage& pkg)
                               {
                                   //Mock up something that hopefully looks nothing like

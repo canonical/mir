@@ -46,12 +46,6 @@ struct HwcLayerEntry
     bool needs_commit;
 };
 
-/* this is a partitioned list. renderlist makes up the first renderlist.size() elements
-   of the list, and there are additional_layers added to the end. 
-   std::distance(begin(), additional_layers_begin()) == renderlist.size() 
-   std::distance(additional_layers_begin(), end()) == additional_layers
-   std::distance(begin(), end()) == renderlist.size() + additional_layers 
-*/ 
 class LayerList
 {
 public:
@@ -61,10 +55,12 @@ public:
     void update_list(RenderableList const& renderlist);
 
     std::list<HwcLayerEntry>::iterator begin();
-    std::list<HwcLayerEntry>::iterator additional_layers_begin();
     std::list<HwcLayerEntry>::iterator end();
 
-    void setup_fb(Buffer const& fb_target);
+    RenderableList rejected_renderables();
+    void setup_fb(std::shared_ptr<Buffer> const& fb_target);
+    bool needs_swapbuffers();
+    void swap_occurred();
 
     hwc_display_contents_1_t* native_list();
     NativeFence retirement_fence();
@@ -72,12 +68,13 @@ private:
     LayerList& operator=(LayerList const&) = delete;
     LayerList(LayerList const&) = delete;
 
+    RenderableList renderable_list;
+
     void update_list_mode(RenderableList const& renderlist);
 
     std::shared_ptr<LayerAdapter> const layer_adapter;
     std::list<HwcLayerEntry> layers;
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
-    std::list<HwcLayerEntry>::iterator first_additional_layer;
     enum Mode
     {
         no_extra_layers,

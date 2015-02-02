@@ -64,7 +64,7 @@ struct RealBufferFileOps : public mclm::BufferFileOps
 extern "C" std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(mcl::ClientContext* context)
 {
     MirPlatformPackage package;
-    context->populate(package);
+    context->populate_server_package(package);
     if (package.data_items != 0 || package.fd_items != 1)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create Mesa client platform on non-Mesa server"}));
@@ -78,7 +78,7 @@ extern "C" bool
 mcl::is_appropriate_module(mcl::ClientContext* context)
 {
     MirPlatformPackage platform;
-    context->populate(platform);
+    context->populate_server_package(platform);
     // TODO: Actually check what platform we're using, rather than blindly
     //       hope we can distinguish them from the stuff they've put in the
     //       PlatformPackage.

@@ -49,6 +49,7 @@ public:
     std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayAttribs const&) override;
     std::unique_ptr<DisplayDevice> create_display_device() override;
     std::unique_ptr<HwcConfiguration> create_hwc_configuration() override;
+    std::unique_ptr<LayerList> create_layer_list() override;
 
 private:
     std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;

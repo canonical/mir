@@ -11,6 +11,8 @@ add_library(
   wait_object.cpp
   current_thread_name.cpp
   validity_matchers.cpp
+  fd_utils.cpp
+  test_dispatchable.cpp
 )
 
 target_link_libraries(mir-test mirprotobuf)

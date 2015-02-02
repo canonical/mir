@@ -37,17 +37,22 @@ namespace android
 
 class DisplayDevice;
 class FramebufferBundle;
+class LayerList;
 
 class DisplayBuffer : public ConfigurableDisplayBuffer
 {
 public:
-    DisplayBuffer(std::shared_ptr<FramebufferBundle> const& fb_bundle,
-                  std::shared_ptr<DisplayDevice> const& display_device,
-                  std::shared_ptr<ANativeWindow> const& native_window,
-                  GLContext const& shared_gl_context,
-                  GLProgramFactory const& program_factory,
-                  MirOrientation orientation,
-                  OverlayOptimization overlay_option);
+    //TODO: could probably just take the HalComponentFactory to reduce the
+    //      number of dependencies
+    DisplayBuffer(
+        std::unique_ptr<LayerList> layer_list,
+        std::shared_ptr<FramebufferBundle> const& fb_bundle,
+        std::shared_ptr<DisplayDevice> const& display_device,
+        std::shared_ptr<ANativeWindow> const& native_window,
+        GLContext const& shared_gl_context,
+        GLProgramFactory const& program_factory,
+        MirOrientation orientation,
+        OverlayOptimization overlay_option);
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
@@ -60,6 +65,7 @@ public:
     bool uses_alpha() const override;
     void configure(MirPowerMode power_mode, MirOrientation orientation) override;
 private:
+    std::unique_ptr<LayerList> layer_list;
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;

@@ -41,6 +41,7 @@ public:
     virtual std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayAttribs const&) = 0;
     virtual std::unique_ptr<DisplayDevice> create_display_device() = 0;
     virtual std::unique_ptr<HwcConfiguration> create_hwc_configuration() = 0;
+    virtual std::unique_ptr<LayerList> create_layer_list() = 0;
 
 protected:
     DisplayComponentFactory() = default;

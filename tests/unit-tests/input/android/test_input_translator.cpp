@@ -47,8 +47,8 @@ public:
         std::memset(coords, 0, sizeof(coords));
         std::memset(properties, 0, sizeof(properties));
     }
-    const nsecs_t some_time = 13;
-    const nsecs_t later_time = 14;
+    std::chrono::nanoseconds const some_time = std::chrono::nanoseconds(13);
+    std::chrono::nanoseconds const later_time = std::chrono::nanoseconds(14);
     const int32_t device_id = 13;
     const uint32_t source_id = 13;
     const uint32_t default_flags = 0;
@@ -260,7 +260,7 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
     InSequence seq;
     EXPECT_CALL(dispatcher, dispatch(mt::MirKeyEventMatches(expected))).Times(1);
 
-    droidinput::NotifyKeyArgs notified(expected.key.event_time,
+    droidinput::NotifyKeyArgs notified(std::chrono::nanoseconds(expected.key.event_time),
                                        expected.key.device_id,
                                        expected.key.source_id,
                                        default_policy_flags,
@@ -269,7 +269,7 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
                                        expected.key.key_code,
                                        expected.key.scan_code,
                                        expected.key.modifiers,
-                                       expected.key.down_time);
+                                       std::chrono::nanoseconds(expected.key.down_time));
 
     translator.notifyKey(&notified);
 }
@@ -324,7 +324,7 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
     InSequence seq;
     EXPECT_CALL(dispatcher, dispatch(mt::MirTouchEventMatches(expected))).Times(1);
 
-    droidinput::NotifyMotionArgs notified(expected.motion.event_time,
+    droidinput::NotifyMotionArgs notified(std::chrono::nanoseconds(expected.motion.event_time),
                                           expected.motion.device_id,
                                           expected.motion.source_id,
                                           default_policy_flags,
@@ -338,7 +338,7 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
                                           coords,
                                           expected.motion.x_precision,
                                           expected.motion.y_precision,
-                                          expected.motion.down_time);
+                                          std::chrono::nanoseconds(expected.motion.down_time));
 
     translator.notifyMotion(&notified);
 }
