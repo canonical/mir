@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <chrono>
 
 // ------------------------------------------------------------------
 // C API
@@ -31,48 +32,48 @@
 extern "C" {
 #endif
 
-typedef int64_t nsecs_t;       // nano-seconds
+typedef int64_t nsecs_t;
 
-static inline nsecs_t seconds_to_nanoseconds(nsecs_t secs)
+static inline std::chrono::nanoseconds seconds_to_nanoseconds(std::chrono::nanoseconds secs)
 {
     return secs*1000000000;
 }
 
-static inline nsecs_t milliseconds_to_nanoseconds(nsecs_t secs)
+static inline std::chrono::nanoseconds milliseconds_to_nanoseconds(std::chrono::nanoseconds secs)
 {
     return secs*1000000;
 }
 
-static inline nsecs_t microseconds_to_nanoseconds(nsecs_t secs)
+static inline std::chrono::nanoseconds microseconds_to_nanoseconds(std::chrono::nanoseconds secs)
 {
     return secs*1000;
 }
 
-static inline nsecs_t nanoseconds_to_seconds(nsecs_t secs)
+static inline std::chrono::nanoseconds nanoseconds_to_seconds(std::chrono::nanoseconds secs)
 {
     return secs/1000000000;
 }
 
-static inline nsecs_t nanoseconds_to_milliseconds(nsecs_t secs)
+static inline std::chrono::nanoseconds nanoseconds_to_milliseconds(std::chrono::nanoseconds secs)
 {
     return secs/1000000;
 }
 
-static inline nsecs_t nanoseconds_to_microseconds(nsecs_t secs)
+static inline std::chrono::nanoseconds nanoseconds_to_microseconds(std::chrono::nanoseconds secs)
 {
     return secs/1000;
 }
 
-static inline nsecs_t s2ns(nsecs_t v)  {return seconds_to_nanoseconds(v);}
-static inline nsecs_t ms2ns(nsecs_t v) {return milliseconds_to_nanoseconds(v);}
-static inline nsecs_t us2ns(nsecs_t v) {return microseconds_to_nanoseconds(v);}
-static inline nsecs_t ns2s(nsecs_t v)  {return nanoseconds_to_seconds(v);}
-static inline nsecs_t ns2ms(nsecs_t v) {return nanoseconds_to_milliseconds(v);}
-static inline nsecs_t ns2us(nsecs_t v) {return nanoseconds_to_microseconds(v);}
+static inline std::chrono::nanoseconds s2ns(std::chrono::nanoseconds v)  {return seconds_to_nanoseconds(v);}
+static inline std::chrono::nanoseconds ms2ns(std::chrono::nanoseconds v) {return milliseconds_to_nanoseconds(v);}
+static inline std::chrono::nanoseconds us2ns(std::chrono::nanoseconds v) {return microseconds_to_nanoseconds(v);}
+static inline std::chrono::nanoseconds ns2s(std::chrono::nanoseconds v)  {return nanoseconds_to_seconds(v);}
+static inline std::chrono::nanoseconds ns2ms(std::chrono::nanoseconds v) {return nanoseconds_to_milliseconds(v);}
+static inline std::chrono::nanoseconds ns2us(std::chrono::nanoseconds v) {return nanoseconds_to_microseconds(v);}
 
-static inline nsecs_t seconds(nsecs_t v)      { return s2ns(v); }
-static inline nsecs_t milliseconds(nsecs_t v) { return ms2ns(v); }
-static inline nsecs_t microseconds(nsecs_t v) { return us2ns(v); }
+static inline std::chrono::nanoseconds seconds(std::chrono::nanoseconds v)      { return s2ns(v); }
+static inline std::chrono::nanoseconds milliseconds(std::chrono::nanoseconds v) { return ms2ns(v); }
+static inline std::chrono::nanoseconds microseconds(std::chrono::nanoseconds v) { return us2ns(v); }
 
 enum {
     SYSTEM_TIME_REALTIME = 0,  // system-wide realtime clock
@@ -83,9 +84,9 @@ enum {
     
 // return the system-time according to the specified clock
 #ifdef __cplusplus
-nsecs_t systemTime(int clock = SYSTEM_TIME_MONOTONIC);
+std::chrono::nanoseconds systemTime(int clock = SYSTEM_TIME_MONOTONIC);
 #else
-nsecs_t systemTime(int clock);
+std::chrono::nanoseconds systemTime(int clock);
 #endif // def __cplusplus
 
 /**
@@ -96,7 +97,7 @@ nsecs_t systemTime(int clock);
  * Otherwise, returns the difference between the reference time and timeout time
  * rounded up to the next millisecond.
  */
-int toMillisecondTimeoutDelay(nsecs_t referenceTime, nsecs_t timeoutTime);
+int toMillisecondTimeoutDelay(std::chrono::nanoseconds referenceTime, std::chrono::nanoseconds timeoutTime);
 
 #ifdef __cplusplus
 } // extern "C"

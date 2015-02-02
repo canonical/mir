@@ -45,9 +45,10 @@ public:
     ClientPlatform(const ClientPlatform& p) = delete;
     ClientPlatform& operator=(const ClientPlatform& p) = delete;
 
-    virtual ~ClientPlatform() { /* TODO: make nothrow */ }
+    virtual ~ClientPlatform() = default;
 
     virtual MirPlatformType platform_type() const = 0;
+    virtual void populate(MirPlatformPackage& package) const = 0;
     virtual std::shared_ptr<ClientBufferFactory> create_buffer_factory() = 0;
     virtual std::shared_ptr<EGLNativeWindowType> create_egl_native_window(EGLNativeSurface *surface) = 0;
     virtual std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() = 0;

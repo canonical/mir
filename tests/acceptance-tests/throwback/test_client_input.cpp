@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,7 +20,7 @@
 
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
 
-#include "mir/shell/surface_coordinator_wrapper.h"
+#include "mir/shell/shell_wrapper.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/session.h"
@@ -43,6 +43,7 @@
 #include <gmock/gmock.h>
 #include <cstring>
 
+namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 namespace mis = mir::input::synthesis;
@@ -143,26 +144,28 @@ struct InputClient
 
 using ClientInputRegions = std::map<std::string, std::vector<geom::Rectangle>>;
 
-struct RegionApplyingSurfaceCoordinator : msh::SurfaceCoordinatorWrapper
+struct RegionApplyingShell : msh::ShellWrapper
 {
-    RegionApplyingSurfaceCoordinator(
-        std::shared_ptr<ms::SurfaceCoordinator> wrapped_coordinator,
+    RegionApplyingShell(
+        std::shared_ptr<msh::Shell> wrapped_coordinator,
         ClientInputRegions const& client_input_regions)
-        : msh::SurfaceCoordinatorWrapper(wrapped_coordinator),
+        : msh::ShellWrapper(wrapped_coordinator),
           client_input_regions(client_input_regions)
     {
     }
 
-    std::shared_ptr<ms::Surface> add_surface(
-        ms::SurfaceCreationParameters const& params,
-        ms::Session* session) override
+    mf::SurfaceId create_surface(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& params) override
     {
-        auto const surface = wrapped->add_surface(params, session);
+        auto const id = wrapped->create_surface(session, params);
+
+        auto const surface = session->surface(id);
 
         if (client_input_regions.find(params.name) != client_input_regions.end())
             surface->set_input_region(client_input_regions.at(params.name));
 
-        return surface;
+        return id;
     }
 
     ClientInputRegions const& client_input_regions;
@@ -183,10 +186,10 @@ struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
             client_geometries, client_depths);
     }
 
-    std::shared_ptr<ms::SurfaceCoordinator>
-    wrap_surface_coordinator(std::shared_ptr<ms::SurfaceCoordinator> const& wrapped) override
+    std::shared_ptr<msh::Shell>
+    wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) override
     {
-        return std::make_shared<RegionApplyingSurfaceCoordinator>(
+        return std::make_shared<RegionApplyingShell>(
             wrapped,
             client_input_regions);
     }

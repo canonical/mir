@@ -270,7 +270,7 @@ public:
      * The handler must not be null.
      * This method can be called on any thread.
      */
-    void sendMessageDelayed(nsecs_t uptimeDelay, const sp<MessageHandler>& handler,
+    void sendMessageDelayed(std::chrono::nanoseconds uptimeDelay, const sp<MessageHandler>& handler,
             const Message& message);
 
     /**
@@ -281,7 +281,7 @@ public:
      * The handler must not be null.
      * This method can be called on any thread.
      */
-    void sendMessageAtTime(nsecs_t uptime, const sp<MessageHandler>& handler,
+    void sendMessageAtTime(std::chrono::nanoseconds uptime, const sp<MessageHandler>& handler,
             const Message& message);
 
     /**
@@ -339,11 +339,11 @@ private:
     struct MessageEnvelope {
         MessageEnvelope() : uptime(0) { }
 
-        MessageEnvelope(nsecs_t uptime, const sp<MessageHandler> handler,
+        MessageEnvelope(std::chrono::nanoseconds uptime, const sp<MessageHandler> handler,
                 const Message& message) : uptime(uptime), handler(handler), message(message) {
         }
 
-        nsecs_t uptime;
+        std::chrono::nanoseconds uptime;
         sp<MessageHandler> handler;
         Message message;
     };
@@ -366,7 +366,7 @@ private:
     // it runs on a single thread.
     Vector<Response> mResponses;
     size_t mResponseIndex;
-    nsecs_t mNextMessageUptime; // set to LLONG_MAX when none
+    std::chrono::nanoseconds mNextMessageUptime; // set to LLONG_MAX when none
 
     int pollInner(int timeoutMillis);
     void awoken();

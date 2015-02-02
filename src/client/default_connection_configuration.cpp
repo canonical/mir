@@ -16,8 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER // For lttng logger header
-
 #include "default_connection_configuration.h"
 
 #include "display_configuration.h"

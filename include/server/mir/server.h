@@ -33,7 +33,7 @@ namespace graphics { class Platform; class Display; class GLConfig; class Displa
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
 namespace logging { class Logger; }
 namespace options { class Option; }
-namespace shell { class FocusController; class DisplayLayout; class HostLifecycleEventListener; }
+namespace shell { class Shell; class FocusController; class DisplayLayout; class HostLifecycleEventListener; }
 namespace scene
 {
 class PlacementStrategy;
@@ -257,11 +257,8 @@ public:
     /// Sets a wrapper functor for creating the display configuration policy.
     void wrap_display_configuration_policy(Wrapper<graphics::DisplayConfigurationPolicy> const& wrapper);
 
-    /// Sets a wrapper functor for creating the session coordinator.
-    void wrap_session_coordinator(Wrapper<scene::SessionCoordinator> const& wrapper);
-
-    /// Sets a wrapper functor for creating the surface coordinator.
-    void wrap_surface_coordinator(Wrapper<scene::SurfaceCoordinator> const& wrapper);
+    /// Sets a wrapper functor for creating the shell.
+    void wrap_shell(Wrapper<shell::Shell> const& wrapper);
 /** @} */
 
 /** @name Getting access to Mir subsystems
@@ -311,6 +308,9 @@ public:
 
     /// \return the session listener.
     auto the_session_listener() const -> std::shared_ptr<scene::SessionListener>;
+
+    /// \return the shell.
+    auto the_shell() const -> std::shared_ptr<shell::Shell>;
 
     /// \return the display layout.
     auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;

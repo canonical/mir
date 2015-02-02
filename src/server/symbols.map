@@ -4,6 +4,7 @@ MIR_SERVER_29 {
 # Symbols not yet picked up by script
     vtable?for?mir::input::NullInputDispatcher;
     VTT?for?mir::DefaultServerConfiguration;
+    VTT?for?mir::shell::ShellWrapper;
     
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort  
@@ -111,8 +112,8 @@ MIR_SERVER_29 {
     mir::DefaultServerConfiguration::the_session_listener*;
     mir::DefaultServerConfiguration::the_session_mediator_report*;
     mir::DefaultServerConfiguration::the_shared_library_prober_report*;
+    mir::DefaultServerConfiguration::the_shell*;
     mir::DefaultServerConfiguration::the_shell_display_layout*;
-    mir::DefaultServerConfiguration::the_shell_focus_setter*;
     mir::DefaultServerConfiguration::the_snapshot_strategy*;
     mir::DefaultServerConfiguration::the_socket_file*;
     mir::DefaultServerConfiguration::the_surface_configurator*;
@@ -123,8 +124,7 @@ MIR_SERVER_29 {
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
     mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
-    mir::DefaultServerConfiguration::wrap_session_coordinator*;
-    mir::DefaultServerConfiguration::wrap_surface_coordinator*;
+    mir::DefaultServerConfiguration::wrap_shell*;
     mir::DisplayServer::?DisplayServer*;
     mir::DisplayServer::DisplayServer*;
     mir::DisplayServer::run*;
@@ -423,7 +423,6 @@ MIR_SERVER_29 {
     mir::Server::override_the_session_authorizer*;
     mir::Server::override_the_session_listener*;
     mir::Server::override_the_session_mediator_report*;
-    mir::Server::override_the_shell_focus_setter*;
     mir::Server::override_the_surface_configurator*;
     mir::Server::run*;
     mir::Server::Server*;
@@ -454,6 +453,7 @@ MIR_SERVER_29 {
     mir::Server::the_session_authorizer*;
     mir::Server::the_session_coordinator*;
     mir::Server::the_session_listener*;
+    mir::Server::the_shell*;
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_configurator*;
     mir::Server::the_surface_coordinator*;
@@ -461,8 +461,7 @@ MIR_SERVER_29 {
     mir::Server::wrap_cursor_listener*;
     mir::Server::wrap_display_buffer_compositor_factory*;
     mir::Server::wrap_display_configuration_policy*;
-    mir::Server::wrap_session_coordinator*;
-    mir::Server::wrap_surface_coordinator*;
+    mir::Server::wrap_shell*;
     mir::shell::DisplayLayout::clip_to_output*;
     mir::shell::DisplayLayout::?DisplayLayout*;
     mir::shell::DisplayLayout::DisplayLayout*;
@@ -487,26 +486,20 @@ MIR_SERVER_29 {
     mir::shell::InputTargeter::?InputTargeter*;
     mir::shell::InputTargeter::InputTargeter*;
     mir::shell::InputTargeter::operator*;
-    mir::shell::SessionCoordinatorWrapper::add_prompt_provider_for*;
-    mir::shell::SessionCoordinatorWrapper::close_session*;
-    mir::shell::SessionCoordinatorWrapper::create_surface*;
-    mir::shell::SessionCoordinatorWrapper::destroy_surface*;
-    mir::shell::SessionCoordinatorWrapper::focus_next*;
-    mir::shell::SessionCoordinatorWrapper::focussed_application*;
-    mir::shell::SessionCoordinatorWrapper::get_surface_attribute*;
-    mir::shell::SessionCoordinatorWrapper::handle_surface_created*;
-    mir::shell::SessionCoordinatorWrapper::open_session*;
-    mir::shell::SessionCoordinatorWrapper::SessionCoordinatorWrapper*;
-    mir::shell::SessionCoordinatorWrapper::set_focus_to*;
-    mir::shell::SessionCoordinatorWrapper::set_surface_attribute*;
-    mir::shell::SessionCoordinatorWrapper::start_prompt_session_for*;
-    mir::shell::SessionCoordinatorWrapper::stop_prompt_session*;
-    mir::shell::SessionCoordinatorWrapper::successor_of*;
-    mir::shell::SessionCoordinatorWrapper::unset_focus*;
-    mir::shell::SurfaceCoordinatorWrapper::add_surface*;
-    mir::shell::SurfaceCoordinatorWrapper::raise*;
-    mir::shell::SurfaceCoordinatorWrapper::remove_surface*;
-    mir::shell::SurfaceCoordinatorWrapper::SurfaceCoordinatorWrapper*;
+    mir::shell::ShellWrapper::add_prompt_provider_for*;
+    mir::shell::ShellWrapper::close_session*;
+    mir::shell::ShellWrapper::create_surface*;
+    mir::shell::ShellWrapper::destroy_surface*;
+    mir::shell::ShellWrapper::focussed_application*;
+    mir::shell::ShellWrapper::focus_next*;
+    mir::shell::ShellWrapper::get_surface_attribute*;
+    mir::shell::ShellWrapper::handle_surface_created*;
+    mir::shell::ShellWrapper::open_session*;
+    mir::shell::ShellWrapper::set_surface_attribute*;
+    mir::shell::ShellWrapper::set_focus_to*;
+    mir::shell::ShellWrapper::start_prompt_session_for*;
+    mir::shell::ShellWrapper::stop_prompt_session*;
+    mir::shell::ShellWrapper::ShellWrapper*;
     mir::terminate_with_current_exception*;
     mir::time::Alarm::?Alarm*;
     mir::time::Alarm::Alarm*;
@@ -599,7 +592,6 @@ MIR_SERVER_29 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_session_mediator_report*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_shared_library_prober_report*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_shell_display_layout*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_shell_focus_setter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_snapshot_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_socket_file*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_surface_configurator*;
@@ -609,8 +601,6 @@ MIR_SERVER_29 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_touch_visualizer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_cursor_listener*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_session_coordinator*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_surface_coordinator*;
     non-virtual?thunk?to?mir::frontend::DisplayChanger::?DisplayChanger*;
     non-virtual?thunk?to?mir::frontend::EventSink::?EventSink*;
     non-virtual?thunk?to?mir::frontend::PromptSession::?PromptSession*;
@@ -654,14 +644,6 @@ MIR_SERVER_29 {
     non-virtual?thunk?to?mir::shell::FocusController::?FocusController*;
     non-virtual?thunk?to?mir::shell::HostLifecycleEventListener::?HostLifecycleEventListener*;
     non-virtual?thunk?to?mir::shell::InputTargeter::?InputTargeter*;
-    non-virtual?thunk?to?mir::shell::SessionCoordinatorWrapper::close_session*;
-    non-virtual?thunk?to?mir::shell::SessionCoordinatorWrapper::focus_next*;
-    non-virtual?thunk?to?mir::shell::SessionCoordinatorWrapper::focussed_application*;
-    non-virtual?thunk?to?mir::shell::SessionCoordinatorWrapper::open_session*;
-    non-virtual?thunk?to?mir::shell::SessionCoordinatorWrapper::set_focus_to*;
-    non-virtual?thunk?to?mir::shell::SurfaceCoordinatorWrapper::add_surface*;
-    non-virtual?thunk?to?mir::shell::SurfaceCoordinatorWrapper::raise*;
-    non-virtual?thunk?to?mir::shell::SurfaceCoordinatorWrapper::remove_surface*;
     non-virtual?thunk?to?mir::time::Alarm::?Alarm*;
     non-virtual?thunk?to?mir::time::Timer::?Timer*;
     typeinfo?for?mir::compositor::Compositor;
@@ -720,8 +702,7 @@ MIR_SERVER_29 {
     typeinfo?for?mir::shell::FocusSetter;
     typeinfo?for?mir::shell::HostLifecycleEventListener;
     typeinfo?for?mir::shell::InputTargeter;
-    typeinfo?for?mir::shell::SessionCoordinatorWrapper;
-    typeinfo?for?mir::shell::SurfaceCoordinatorWrapper;
+    typeinfo?for?mir::shell::ShellWrapper;
     typeinfo?for?mir::time::Alarm;
     typeinfo?for?mir::time::Timer;
     vtable?for?mir::compositor::Compositor;
@@ -780,8 +761,6 @@ MIR_SERVER_29 {
     vtable?for?mir::shell::FocusSetter;
     vtable?for?mir::shell::HostLifecycleEventListener;
     vtable?for?mir::shell::InputTargeter;
-    vtable?for?mir::shell::SessionCoordinatorWrapper;
-    vtable?for?mir::shell::SurfaceCoordinatorWrapper;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::Timer;
 

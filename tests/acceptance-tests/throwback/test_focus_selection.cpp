@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,7 +18,7 @@
 
 #include "clients.h"
 
-#include "mir/shell/session_coordinator_wrapper.h"
+#include "mir/shell/shell_wrapper.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/input_targeter.h"
 
@@ -46,50 +46,64 @@ MATCHER(NonNullSession, "")
     return arg.operator bool();
 }
 
-struct MockSessionManager : msh::SessionCoordinatorWrapper
+struct MockShell : msh::ShellWrapper
 {
-    explicit MockSessionManager(std::shared_ptr<ms::SessionCoordinator> const& wrapped) :
-        msh::SessionCoordinatorWrapper{wrapped}
+    explicit MockShell(std::shared_ptr<msh::Shell> const& wrapped) :
+        msh::ShellWrapper{wrapped}
     {
-        ON_CALL(*this, set_focus_to(_)).
-            WillByDefault(Invoke(this, &MockSessionManager::unmocked_set_focus_to));
+        ON_CALL(*this, open_session(_, _, _)).
+            WillByDefault(Invoke(this, &MockShell::unmocked_open_session));
 
-        ON_CALL(*this, unset_focus()).
-            WillByDefault(Invoke(this, &MockSessionManager::unmocked_unset_focus));
-}
+        ON_CALL(*this, handle_surface_created(_)).
+            WillByDefault(Invoke(this, &MockShell::unmocked_handle_surface_created));
 
-    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<ms::Session> const& focus));
-    MOCK_METHOD0(unset_focus, void());
+        ON_CALL(*this, close_session(_)).
+            WillByDefault(Invoke(this, &MockShell::unmocked_close_session));
+    }
+
+    MOCK_METHOD3(open_session, std::shared_ptr<ms::Session>(
+        pid_t, std::string const&, std::shared_ptr<mf::EventSink> const&));
+
+    MOCK_METHOD1(handle_surface_created, void (std::shared_ptr<ms::Session> const&));
+
+    MOCK_METHOD1(close_session, void (std::shared_ptr<ms::Session> const&));
 
 private:
-    void unmocked_set_focus_to(std::shared_ptr<ms::Session> const& focus)
-    { msh::SessionCoordinatorWrapper::set_focus_to(focus); }
 
-    void unmocked_unset_focus()
-    { msh::SessionCoordinatorWrapper::unset_focus(); }
+    std::shared_ptr<ms::Session> unmocked_open_session(
+        pid_t client_pid,
+        std::string const& name,
+        std::shared_ptr<mf::EventSink> const& sink)
+    { return msh::ShellWrapper::open_session(client_pid, name, sink); }
+
+    void unmocked_close_session(std::shared_ptr<ms::Session> const& session)
+    { msh::ShellWrapper::close_session(session); }
+
+    void unmocked_handle_surface_created(std::shared_ptr<ms::Session> const& session)
+    { msh::ShellWrapper::handle_surface_created(session); }
 };
 }
 
-TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
+using FocusSelection = BespokeDisplayServerTestFixture;
+
+TEST_F(FocusSelection, when_surface_created_shell_is_notified_of_session)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<ms::SessionCoordinator>
-        wrap_session_coordinator(
-            std::shared_ptr<ms::SessionCoordinator> const& wrapped) override
+        std::shared_ptr<msh::Shell>
+        wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) override
         {
-            sm = std::make_shared<MockSessionManager>(wrapped);
+            sm = std::make_shared<MockShell>(wrapped);
 
             InSequence seq;
-            // Once on application registration and once on surface creation
-            EXPECT_CALL(*sm, set_focus_to(NonNullSession())).Times(2);
-            // Focus is cleared when the session is closed
-            EXPECT_CALL(*sm, unset_focus()).Times(1);
+            EXPECT_CALL(*sm, open_session(_, _, _));
+            EXPECT_CALL(*sm, handle_surface_created(NonNullSession()));
+            EXPECT_CALL(*sm, close_session(NonNullSession()));
 
             return sm;
         }
 
-        std::shared_ptr<MockSessionManager> sm;
+        std::shared_ptr<MockShell> sm;
     } server_config;
 
     launch_server_process(server_config);
@@ -99,7 +113,7 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
     launch_client_process(client);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_created)
+TEST_F(FocusSelection, when_surface_created_input_focus_is_set)
 {
     struct ServerConfig : TestingServerConfiguration
     {

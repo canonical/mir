@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,8 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/shell/session_coordinator_wrapper.h"
-#include "mir/shell/surface_coordinator_wrapper.h"
+#include "mir/input/cursor_listener.h"
+#include "mir/shell/shell_wrapper.h"
 
 #include "mir_test_framework/headless_test.h"
 
@@ -26,6 +26,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mtf = mir_test_framework;
@@ -34,82 +35,88 @@ using namespace testing;
 
 namespace
 {
-struct MySurfaceCoordinator : msh::SurfaceCoordinatorWrapper
+struct MyShell : msh::ShellWrapper
 {
-    using msh::SurfaceCoordinatorWrapper::SurfaceCoordinatorWrapper;
-    MOCK_METHOD1(raise, void(std::weak_ptr<ms::Surface> const&));
+    using msh::ShellWrapper::ShellWrapper;
+    MOCK_METHOD1(handle_surface_created, void(std::shared_ptr<ms::Session> const&));
 };
 
-struct MySessionCoordinator : msh::SessionCoordinatorWrapper
+struct MyCursorListener : mi::CursorListener
 {
-    using msh::SessionCoordinatorWrapper::SessionCoordinatorWrapper;
+    MyCursorListener(std::shared_ptr<mi::CursorListener> const& wrapped) :
+        wrapped{wrapped} {}
 
-    MOCK_METHOD0(unset_focus, void());
+    MOCK_METHOD2(cursor_moved_to, void(float abs_x, float abs_y));
+
+    std::shared_ptr<mi::CursorListener> const wrapped;
 };
 
 struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
 {
     void SetUp() override
     {
-        server.wrap_surface_coordinator([]
-            (std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
+        server.wrap_shell([]
+            (std::shared_ptr<msh::Shell> const& wrapped)
             {
-                return std::make_shared<MySurfaceCoordinator>(wrapped);
+                return std::make_shared<MyShell>(wrapped);
             });
 
-        server.wrap_session_coordinator([]
-            (std::shared_ptr<ms::SessionCoordinator> const& wrapped)
+        server.wrap_cursor_listener([]
+            (std::shared_ptr<mi::CursorListener> const& wrapped)
             {
-                return std::make_shared<MySessionCoordinator>(wrapped);
+                return std::make_shared<MyCursorListener>(wrapped);
             });
 
         server.apply_settings();
 
-        surface_coordinator = server.the_surface_coordinator();
-        session_coordinator = server.the_session_coordinator();
+        shell = server.the_shell();
+        cursor_listener = server.the_cursor_listener();
     }
 
-    std::shared_ptr<ms::SurfaceCoordinator> surface_coordinator;
-    std::shared_ptr<ms::SessionCoordinator> session_coordinator;
+    std::shared_ptr<msh::Shell> shell;
+    std::shared_ptr<mi::CursorListener> cursor_listener;
 };
 }
 
-TEST_F(ServerConfigurationWrapping, surface_coordinator_is_of_wrapper_type)
+TEST_F(ServerConfigurationWrapping, shell_is_of_wrapper_type)
 {
-    auto const my_surface_coordinator = std::dynamic_pointer_cast<MySurfaceCoordinator>(surface_coordinator);
+    auto const my_shell = std::dynamic_pointer_cast<MyShell>(shell);
 
-    EXPECT_THAT(my_surface_coordinator, Ne(nullptr));
+    EXPECT_THAT(my_shell, Ne(nullptr));
 }
 
-TEST_F(ServerConfigurationWrapping, can_override_surface_coordinator_methods)
+TEST_F(ServerConfigurationWrapping, can_override_shell_methods)
 {
-    auto const my_surface_coordinator = std::dynamic_pointer_cast<MySurfaceCoordinator>(surface_coordinator);
+    auto const my_shell = std::dynamic_pointer_cast<MyShell>(shell);
 
-    EXPECT_CALL(*my_surface_coordinator, raise(_)).Times(1);
-    surface_coordinator->raise({});
+    EXPECT_CALL(*my_shell, handle_surface_created(_)).Times(1);
+    shell->handle_surface_created({});
 }
 
-TEST_F(ServerConfigurationWrapping, returns_same_surface_coordinator_from_cache)
+TEST_F(ServerConfigurationWrapping, returns_same_shell_from_cache)
 {
-    ASSERT_THAT(server.the_surface_coordinator(), Eq(surface_coordinator));
+    ASSERT_THAT(server.the_shell(), Eq(shell));
 }
 
-TEST_F(ServerConfigurationWrapping, session_coordinator_is_of_wrapper_type)
+TEST_F(ServerConfigurationWrapping, cursor_listener_is_of_wrapper_type)
 {
-    auto const my_session_coordinator = std::dynamic_pointer_cast<MySessionCoordinator>(session_coordinator);
+    auto const my_cursor_listener = std::dynamic_pointer_cast<MyCursorListener>(cursor_listener);
 
-    EXPECT_THAT(my_session_coordinator, Ne(nullptr));
+    EXPECT_THAT(my_cursor_listener, Ne(nullptr));
 }
 
-TEST_F(ServerConfigurationWrapping, can_override_session_coordinator_methods)
+TEST_F(ServerConfigurationWrapping, can_override_cursor_listener_methods)
 {
-    auto const my_session_coordinator = std::dynamic_pointer_cast<MySessionCoordinator>(session_coordinator);
+    float const abs_x{1};
+    float const abs_y(2);
 
-    EXPECT_CALL(*my_session_coordinator, unset_focus()).Times(1);
-    session_coordinator->unset_focus();
+    auto const my_cursor_listener = std::dynamic_pointer_cast<MyCursorListener>(cursor_listener);
+
+    EXPECT_CALL(*my_cursor_listener, cursor_moved_to(abs_x, abs_y)).Times(1);
+    cursor_listener->cursor_moved_to(abs_x, abs_y);
 }
 
-TEST_F(ServerConfigurationWrapping, returns_same_session_coordinator_from_cache)
+TEST_F(ServerConfigurationWrapping, returns_same_cursor_listener_from_cache)
 {
-    ASSERT_THAT(server.the_session_coordinator(), Eq(session_coordinator));
+    ASSERT_THAT(server.the_cursor_listener(), Eq(cursor_listener));
 }

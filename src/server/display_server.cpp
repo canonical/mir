@@ -18,7 +18,7 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-// TODO: Eliminate usage of nsecs_t in input_dispatcher.h
+// TODO: Eliminate usage of std::chrono::nanoseconds in input_dispatcher.h
 // to remove this.
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
 

@@ -97,6 +97,9 @@ protected:
     std::shared_ptr<mtd::StubAndroidNativeBuffer> stub_native_buffer;
     mtd::StubSwappingGLContext stub_context;
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
+    mtd::StubRenderableListCompositor stub_compositor;
+    mga::DisplayName primary{mga::DisplayName::primary};
+    mga::LayerList list{std::make_shared<mga::Hwc10Adapter>(), {}};
     hwc_layer_1_t skip_layer;
 };
 }
@@ -126,7 +129,7 @@ TEST_F(HwcFbDevice, hwc10_rejects_overlays)
     };
 
     mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device);
-    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
+    EXPECT_FALSE(device.compatible_renderlist(renderlist));
 }
 
 TEST_F(HwcFbDevice, hwc10_post)
@@ -169,5 +172,5 @@ TEST_F(HwcFbDevice, hwc10_post)
     EXPECT_CALL(*mock_fb_device, post_interface(mock_fb_device.get(), &stub_native_buffer->native_handle))
         .InSequence(seq);
 
-    device.post_gl(mock_context);
+    device.commit(primary, list, mock_context, stub_compositor);
 }

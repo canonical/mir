@@ -37,11 +37,11 @@ struct NotifyArgs {
 
 /* Describes a configuration change event. */
 struct NotifyConfigurationChangedArgs : public NotifyArgs {
-    nsecs_t eventTime;
+    std::chrono::nanoseconds eventTime;
 
     inline NotifyConfigurationChangedArgs() : eventTime{0} { }
 
-    NotifyConfigurationChangedArgs(nsecs_t eventTime);
+    NotifyConfigurationChangedArgs(std::chrono::nanoseconds eventTime);
 
     NotifyConfigurationChangedArgs(const NotifyConfigurationChangedArgs& other);
 
@@ -53,7 +53,7 @@ struct NotifyConfigurationChangedArgs : public NotifyArgs {
 
 /* Describes a key event. */
 struct NotifyKeyArgs : public NotifyArgs {
-    nsecs_t eventTime;
+    std::chrono::nanoseconds eventTime;
     int32_t deviceId;
     uint32_t source;
     uint32_t policyFlags;
@@ -62,13 +62,13 @@ struct NotifyKeyArgs : public NotifyArgs {
     int32_t keyCode;
     int32_t scanCode;
     int32_t metaState;
-    nsecs_t downTime;
+    std::chrono::nanoseconds downTime;
 
     inline NotifyKeyArgs() { }
 
-    NotifyKeyArgs(nsecs_t eventTime, int32_t deviceId, uint32_t source, uint32_t policyFlags,
+    NotifyKeyArgs(std::chrono::nanoseconds eventTime, int32_t deviceId, uint32_t source, uint32_t policyFlags,
             int32_t action, int32_t flags, int32_t keyCode, int32_t scanCode,
-            int32_t metaState, nsecs_t downTime);
+            int32_t metaState, std::chrono::nanoseconds downTime);
 
     NotifyKeyArgs(const NotifyKeyArgs& other);
 
@@ -80,7 +80,7 @@ struct NotifyKeyArgs : public NotifyArgs {
 
 /* Describes a motion event. */
 struct NotifyMotionArgs : public NotifyArgs {
-    nsecs_t eventTime;
+    std::chrono::nanoseconds eventTime;
     int32_t deviceId;
     uint32_t source;
     uint32_t policyFlags;
@@ -94,15 +94,15 @@ struct NotifyMotionArgs : public NotifyArgs {
     PointerCoords pointerCoords[MAX_POINTERS];
     float xPrecision;
     float yPrecision;
-    nsecs_t downTime;
+    std::chrono::nanoseconds downTime;
 
     inline NotifyMotionArgs() { }
 
-    NotifyMotionArgs(nsecs_t eventTime, int32_t deviceId, uint32_t source, uint32_t policyFlags,
+    NotifyMotionArgs(std::chrono::nanoseconds eventTime, int32_t deviceId, uint32_t source, uint32_t policyFlags,
             int32_t action, int32_t flags, int32_t metaState, int32_t buttonState,
             int32_t edgeFlags, uint32_t pointerCount,
             const PointerProperties* pointerProperties, const PointerCoords* pointerCoords,
-            float xPrecision, float yPrecision, nsecs_t downTime);
+            float xPrecision, float yPrecision, std::chrono::nanoseconds downTime);
 
     NotifyMotionArgs(const NotifyMotionArgs& other);
 
@@ -114,14 +114,14 @@ struct NotifyMotionArgs : public NotifyArgs {
 
 /* Describes a switch event. */
 struct NotifySwitchArgs : public NotifyArgs {
-    nsecs_t eventTime;
+    std::chrono::nanoseconds eventTime;
     uint32_t policyFlags;
     int32_t switchCode;
     int32_t switchValue;
 
     inline NotifySwitchArgs() { }
 
-    NotifySwitchArgs(nsecs_t eventTime, uint32_t policyFlags,
+    NotifySwitchArgs(std::chrono::nanoseconds eventTime, uint32_t policyFlags,
             int32_t switchCode, int32_t switchValue);
 
     NotifySwitchArgs(const NotifySwitchArgs& other);
@@ -135,12 +135,12 @@ struct NotifySwitchArgs : public NotifyArgs {
 /* Describes a device reset event, such as when a device is added,
  * reconfigured, or removed. */
 struct NotifyDeviceResetArgs : public NotifyArgs {
-    nsecs_t eventTime;
+    std::chrono::nanoseconds eventTime;
     int32_t deviceId;
 
     inline NotifyDeviceResetArgs() { }
 
-    NotifyDeviceResetArgs(nsecs_t eventTime, int32_t deviceId);
+    NotifyDeviceResetArgs(std::chrono::nanoseconds eventTime, int32_t deviceId);
 
     NotifyDeviceResetArgs(const NotifyDeviceResetArgs& other);
 

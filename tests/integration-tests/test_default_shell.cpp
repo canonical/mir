@@ -16,11 +16,13 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mir/scene/session.h"
+#include "mir/scene/null_session_listener.h"
+#include "mir/scene/placement_strategy.h"
+
 #include "src/server/shell/default_shell.h"
 #include "src/server/scene/session_manager.h"
-#include "mir/scene/session.h"
 #include "src/server/scene/default_session_container.h"
-#include "mir/scene/null_session_listener.h"
 
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
@@ -53,6 +55,12 @@ struct MockSessionManager : ms::SessionManager
     MOCK_METHOD1(set_focus_to, void (std::shared_ptr<ms::Session> const& focus));
 };
 
+struct NullPlacementStrategy : ms::PlacementStrategy
+{
+    auto place(ms::Session const& , ms::SurfaceCreationParameters const& params)
+    -> ms::SurfaceCreationParameters  override { return params; }
+};
+
 struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
 {
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
@@ -66,14 +74,15 @@ struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
             mt::fake_shared(container),
             std::make_shared<mtd::NullSnapshotStrategy>(),
             std::make_shared<mtd::NullSessionEventSink>(),
-            mt::fake_shared(session_listener),
-            std::make_shared<mtd::NullPromptSessionManager>()
+            mt::fake_shared(session_listener)
         };
 
     msh::DefaultShell shell{
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_coordinator),
-        mt::fake_shared(session_manager)};
+        mt::fake_shared(session_manager),
+        std::make_shared<mtd::NullPromptSessionManager>(),
+        std::make_shared<NullPlacementStrategy>()};
 };
 }
 

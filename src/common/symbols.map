@@ -1,3 +1,4 @@
+
 MIR_COMMON_3 {
  global: mir_*;
   extern "C++" {
@@ -212,3 +213,14 @@ MIR_COMMON_3.1 {
       mir::libraries_for_path*;
     };
 } MIR_COMMON_3;
+
+MIR_COMMON_3.2 {
+  global:
+    extern "C++" {
+      mir::dispatch::SimpleDispatchThread::SimpleDispatchThread*;
+      mir::dispatch::SimpleDispatchThread::?SimpleDispatchThread*;
+      typeinfo?for?mir::dispatch::SimpleDispatchThread;
+      vtable?for?mir::dispatch::SimpleDispatchThread;
+      mir::events::*
+    };
+} MIR_COMMON_3.1;

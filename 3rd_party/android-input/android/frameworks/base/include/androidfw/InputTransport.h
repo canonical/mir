@@ -61,7 +61,7 @@ struct InputMessage {
     union Body {
         struct Key {
             uint32_t seq;
-            nsecs_t eventTime;
+            int64_t eventTime;
             int32_t deviceId;
             int32_t source;
             int32_t action;
@@ -70,7 +70,7 @@ struct InputMessage {
             int32_t scanCode;
             int32_t metaState;
             int32_t repeatCount;
-            nsecs_t downTime;
+            int64_t downTime;
 
             inline size_t size() const {
                 return sizeof(Key);
@@ -79,7 +79,7 @@ struct InputMessage {
 
         struct Motion {
             uint32_t seq;
-            nsecs_t eventTime;
+            int64_t eventTime;
             int32_t deviceId;
             int32_t source;
             int32_t action;
@@ -87,7 +87,7 @@ struct InputMessage {
             int32_t metaState;
             int32_t buttonState;
             int32_t edgeFlags;
-            nsecs_t downTime;
+            int64_t downTime;
             float xOffset;
             float yOffset;
             float xPrecision;
@@ -210,8 +210,8 @@ public:
             int32_t scanCode,
             int32_t metaState,
             int32_t repeatCount,
-            nsecs_t downTime,
-            nsecs_t eventTime);
+            std::chrono::nanoseconds downTime,
+            std::chrono::nanoseconds eventTime);
 
     /* Publishes a motion event to the input channel.
      *
@@ -234,8 +234,8 @@ public:
             float yOffset,
             float xPrecision,
             float yPrecision,
-            nsecs_t downTime,
-            nsecs_t eventTime,
+            std::chrono::nanoseconds downTime,
+            std::chrono::nanoseconds eventTime,
             size_t pointerCount,
             const PointerProperties* pointerProperties,
             const PointerCoords* pointerCoords);
@@ -295,7 +295,7 @@ public:
      * Other errors probably indicate that the channel is broken.
      */
     status_t consume(InputEventFactoryInterface* factory, bool consumeBatches,
-            nsecs_t frameTime, uint32_t* outSeq, InputEvent** outEvent);
+            std::chrono::nanoseconds frameTime, uint32_t* outSeq, InputEvent** outEvent);
 
     /* Sends a finished signal to the publisher to inform it that the message
      * with the specified sequence number has finished being process and whether
@@ -354,13 +354,13 @@ private:
 
     // Touch state per device and source, only for sources of class pointer.
     struct History {
-        nsecs_t eventTime;
+        std::chrono::nanoseconds eventTime;
         IntSet ids;
         std::unordered_map<int32_t, size_t> idToIndex;
         PointerCoords pointers[MAX_POINTERS];
 
         void initializeFrom(const InputMessage* msg) {
-            eventTime = msg->body.motion.eventTime;
+            eventTime = std::chrono::nanoseconds(msg->body.motion.eventTime);
             ids.clear();
             for (size_t i = 0; i < msg->body.motion.pointerCount; i++) {
                 uint32_t id = msg->body.motion.pointers[i].properties.id;
@@ -387,7 +387,7 @@ private:
             this->source = source;
             historyCurrent = 0;
             historySize = 0;
-            lastResample.eventTime = 0;
+            lastResample.eventTime = std::chrono::nanoseconds(0);
             lastResample.ids.clear();
         }
 
@@ -416,13 +416,13 @@ private:
     Vector<SeqChain> mSeqChains;
 
     status_t consumeBatch(InputEventFactoryInterface* factory,
-            nsecs_t frameTime, uint32_t* outSeq, InputEvent** outEvent);
+            std::chrono::nanoseconds frameTime, uint32_t* outSeq, InputEvent** outEvent);
     status_t consumeSamples(InputEventFactoryInterface* factory,
             Batch& batch, size_t count, uint32_t* outSeq, InputEvent** outEvent);
 
     void updateTouchState(InputMessage* msg);
     void rewriteMessage(const TouchState& state, InputMessage* msg);
-    void resampleTouchState(nsecs_t frameTime, MotionEvent* event,
+    void resampleTouchState(std::chrono::nanoseconds frameTime, MotionEvent* event,
             const InputMessage *next);
 
     ssize_t findBatch(int32_t deviceId, int32_t source) const;
@@ -434,7 +434,7 @@ private:
     static void initializeMotionEvent(MotionEvent* event, const InputMessage* msg);
     static void addSample(MotionEvent* event, const InputMessage* msg);
     static bool canAddSample(const Batch& batch, const InputMessage* msg);
-    static ssize_t findSampleNoLaterThan(const Batch& batch, nsecs_t time);
+    static ssize_t findSampleNoLaterThan(const Batch& batch, std::chrono::nanoseconds time);
     static bool shouldResampleTool(int32_t toolType);
 
     static bool isTouchResamplingEnabled();

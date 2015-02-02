@@ -43,8 +43,7 @@ public:
                             std::shared_ptr<SessionContainer> const& app_container,
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionEventSink> const& session_event_sink,
-                            std::shared_ptr<SessionListener> const& session_listener,
-                            std::shared_ptr<PromptSessionManager> const& prompt_session_manager);
+                            std::shared_ptr<SessionListener> const& session_listener);
     virtual ~SessionManager() noexcept;
 
     std::shared_ptr<Session> open_session(
@@ -59,12 +58,6 @@ public:
     void set_focus_to(std::shared_ptr<Session> const& focus) override;
     void unset_focus() override;
 
-    std::shared_ptr<PromptSession> start_prompt_session_for(std::shared_ptr<Session> const& session,
-                                                  PromptSessionCreationParameters const& params) override;
-    void add_prompt_provider_for(std::shared_ptr<PromptSession> const& prompt_session,
-                                 std::shared_ptr<Session> const& session) override;
-    void stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) override;
-
 protected:
     SessionManager(const SessionManager&) = delete;
     SessionManager& operator=(const SessionManager&) = delete;
@@ -75,7 +68,6 @@ private:
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
-    std::shared_ptr<PromptSessionManager> const prompt_session_manager;
 };
 
 }

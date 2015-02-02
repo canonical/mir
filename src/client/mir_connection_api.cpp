@@ -31,6 +31,10 @@
 #include "error_connections.h"
 #include "uncaught.h"
 
+// Temporary include to ease client transition from mir_connection_drm* APIs.
+// to mir_connection_platform_operation().
+// TODO: Remove when transition is complete
+#include "../platforms/mesa/include/mir_toolkit/mesa/platform_operation.h"
 
 #include <unordered_set>
 #include <cstddef>
@@ -327,12 +331,56 @@ MirWaitHandle* mir_connection_platform_operation(
  * DRM specific functions *
  **************************/
 
+namespace
+{
+
+struct AuthMagicPlatformOperationContext
+{
+    mir_drm_auth_magic_callback callback;
+    void* context;
+};
+
+void platform_operation_to_auth_magic_callback(
+    MirConnection*, MirPlatformMessage* response, void* context)
+{
+    auto const response_msg = mir::raii::deleter_for(
+        response,
+        &mir_platform_message_release);
+    auto const auth_magic_context =
+        std::unique_ptr<AuthMagicPlatformOperationContext>{
+            static_cast<AuthMagicPlatformOperationContext*>(context)};
+
+    auto response_data = mir_platform_message_get_data(response_msg.get());
+    auto auth_response = reinterpret_cast<MirMesaAuthMagicResponse const*>(response_data.data);
+
+    auth_magic_context->callback(auth_response->status, auth_magic_context->context);
+}
+
+}
+
 MirWaitHandle* mir_connection_drm_auth_magic(MirConnection* connection,
                                              unsigned int magic,
                                              mir_drm_auth_magic_callback callback,
                                              void* context)
 {
-    return connection->drm_auth_magic(magic, callback, context);
+    auto const msg = mir::raii::deleter_for(
+        mir_platform_message_create(MirMesaPlatformOperation::auth_magic),
+        &mir_platform_message_release);
+
+    auto const auth_magic_op_context =
+        new AuthMagicPlatformOperationContext{callback, context};
+
+    MirMesaAuthMagicRequest request;
+    request.magic = magic;
+
+    mir_platform_message_set_data(msg.get(), &request, sizeof(request));
+
+    return mir_connection_platform_operation(
+        connection,
+        MirMesaPlatformOperation::auth_magic,
+        msg.get(),
+        platform_operation_to_auth_magic_callback,
+        auth_magic_op_context);
 }
 
 int mir_connection_drm_set_gbm_device(MirConnection* connection,
