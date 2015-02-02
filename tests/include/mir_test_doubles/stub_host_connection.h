@@ -61,7 +61,6 @@ public:
         return std::make_shared<NullHostSurface>();
     }
 
-    void drm_set_gbm_device(struct gbm_device*) override {}
     graphics::PlatformOperationMessage platform_operation(
         unsigned int, graphics::PlatformOperationMessage const&) override
     {

@@ -49,8 +49,17 @@ public:
     {
         using namespace testing;
 
+        mg::PlatformOperationMessage set_gbm_device_success_msg;
+        set_gbm_device_success_msg.data.resize(sizeof(MirMesaSetGBMDeviceResponse));
+        auto set_gbm_device_success = reinterpret_cast<MirMesaSetGBMDeviceResponse*>(
+                set_gbm_device_success_msg.data.data());
+        set_gbm_device_success->status = 0;
+
         ON_CALL(mock_nested_context, platform_fd_items())
             .WillByDefault(Return(std::vector<int>{mock_drm.fake_drm.fd()}));
+        ON_CALL(mock_nested_context,
+                platform_operation(MirMesaPlatformOperation::set_gbm_device, _))
+            .WillByDefault(Return(set_gbm_device_success_msg));
     }
 
 protected:
@@ -69,6 +78,8 @@ TEST_F(MesaGuestPlatformTest, auth_fd_is_delegated_to_nested_context)
     mg::PlatformOperationMessage auth_fd_response{{},{auth_fd}};
 
     EXPECT_CALL(mock_nested_context,
+                platform_operation(MirMesaPlatformOperation::set_gbm_device, _));
+    EXPECT_CALL(mock_nested_context,
                 platform_operation(MirMesaPlatformOperation::auth_fd, _))
         .WillOnce(Return(auth_fd_response));
 
@@ -79,6 +90,15 @@ TEST_F(MesaGuestPlatformTest, auth_fd_is_delegated_to_nested_context)
 
 TEST_F(MesaGuestPlatformTest, sets_gbm_device_during_initialization)
 {
-    EXPECT_CALL(mock_nested_context, drm_set_gbm_device(mock_gbm.fake_gbm.device));
+    mg::PlatformOperationMessage request_msg;
+    request_msg.data.resize(sizeof(MirMesaSetGBMDeviceRequest));
+    auto request_ptr = reinterpret_cast<MirMesaSetGBMDeviceRequest*>(
+       request_msg.data.data());
+    request_ptr->device = mock_gbm.fake_gbm.device;
+
+    EXPECT_CALL(mock_nested_context,
+                platform_operation(MirMesaPlatformOperation::set_gbm_device,
+                                   request_msg));
+
     mgm::GuestPlatform native(mt::fake_shared(mock_nested_context));
 }

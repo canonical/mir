@@ -40,21 +40,6 @@ struct NestedAuthentication : public ::testing::Test
 };
 }
 
-namespace mir
-{
-namespace graphics
-{
-
-bool operator==(mg::PlatformOperationMessage const& msg1,
-                mg::PlatformOperationMessage const& msg2)
-{
-    return msg1.data == msg2.data &&
-           msg1.fds == msg1.fds;
-}
-}
-
-}
-
 TEST_F(NestedAuthentication, uses_nested_context_for_auth_magic)
 {
     using namespace testing;
