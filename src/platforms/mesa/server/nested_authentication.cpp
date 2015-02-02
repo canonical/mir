@@ -88,27 +88,23 @@ void mgm::NestedAuthentication::auth_magic(drm_magic_t magic)
 
 mir::Fd mgm::NestedAuthentication::authenticated_fd()
 {
-    auto fds = nested_context->platform_fd_items();
-    if (fds.size() < 1)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get fd from platform package"));
-    char* busid = drmGetBusid(fds[0]);
-    if (!busid)
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to get BusID of DRM device")) << boost::errinfo_errno(errno));
-    int auth_fd = drmOpen(NULL, busid);
-    free(busid);
+    mg::PlatformOperationMessage request_msg;
 
-    drm_magic_t magic;
-    int ret = -1;
-    if ((ret = drmGetMagic(auth_fd, &magic)) < 0)
+    auto const response_msg = nested_context->platform_operation(
+        MirMesaPlatformOperation::auth_fd, request_msg);
+
+    int auth_fd{-1};
+
+    if (response_msg.fds.size() == 1)
     {
-        close(auth_fd);
+        auth_fd = response_msg.fds[0];
+    }
+    else
+    {
         BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
+            std::runtime_error(
+                "Nested server failed to get authenticated DRM fd"));
     }
 
-    auth_magic(magic);
     return mir::Fd(IntOwnedFd{auth_fd});
 }
