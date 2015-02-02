@@ -103,11 +103,23 @@ struct MockClientPlatform : public mcl::ClientPlatform
             .WillByDefault(Return(std::shared_ptr<EGLNativeWindowType>()));
     }
 
+    void set_client_context(mcl::ClientContext* ctx)
+    {
+        client_context = ctx;
+    }
+
+    void populate(MirPlatformPackage& pkg) const override
+    {
+        client_context->populate_server_package(pkg);
+    }
+
     MOCK_CONST_METHOD1(convert_native_buffer, MirNativeBuffer*(mir::graphics::NativeBuffer*));
     MOCK_CONST_METHOD0(platform_type, MirPlatformType());
     MOCK_METHOD0(create_buffer_factory, std::shared_ptr<mcl::ClientBufferFactory>());
     MOCK_METHOD1(create_egl_native_window, std::shared_ptr<EGLNativeWindowType>(mcl::EGLNativeSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
+
+    mcl::ClientContext* client_context = nullptr;
 };
 
 struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
@@ -172,6 +184,7 @@ struct MirConnectionTest : public testing::Test
           conf{mock_platform, mock_channel},
           connection{std::make_shared<MirConnection>(conf)}
     {
+        mock_platform->set_client_context(connection.get());
     }
 
     std::shared_ptr<testing::NiceMock<MockClientPlatform>> const mock_platform;
