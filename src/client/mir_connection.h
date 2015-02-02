@@ -107,12 +107,7 @@ public:
 
     MirWaitHandle* disconnect();
 
-    MirWaitHandle* drm_auth_magic(unsigned int magic,
-                                  mir_drm_auth_magic_callback callback,
-                                  void* context);
-
     MirWaitHandle* platform_operation(
-        unsigned int opcode,
         MirPlatformMessage const* request,
         mir_platform_operation_callback callback, void* context);
 

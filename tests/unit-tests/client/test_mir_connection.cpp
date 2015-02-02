@@ -615,7 +615,7 @@ TEST_F(MirConnectionTest, uses_client_platform_for_platform_operation)
     MirPlatformMessage* returned_response{nullptr};
 
     auto op_wh = connection->platform_operation(
-        opcode, request.get(), assign_response, &returned_response);
+        request.get(), assign_response, &returned_response);
     mir_wait_for(op_wh);
 
     EXPECT_THAT(returned_response, Eq(response.get()));
@@ -642,7 +642,7 @@ TEST_F(MirConnectionTest, contacts_server_if_client_platform_cannot_handle_platf
     MirPlatformMessage* returned_response{nullptr};
 
     auto op_wh = connection->platform_operation(
-        opcode, request.get(), assign_response, &returned_response);
+        request.get(), assign_response, &returned_response);
     mir_wait_for(op_wh);
 
     EXPECT_THAT(mir_platform_message_get_opcode(returned_response), Eq(opcode));
