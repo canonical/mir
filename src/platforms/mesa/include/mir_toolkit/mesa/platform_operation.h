@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,30 +16,45 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_CLIENT_CLIENT_CONTEXT_H_
-#define MIR_CLIENT_CLIENT_CONTEXT_H_
+#ifndef MIR_TOOLKIT_MESA_PLATFORM_OPERATION_H_
+#define MIR_TOOLKIT_MESA_PLATFORM_OPERATION_H_
 
-#include "mir_toolkit/client_types.h"
-
-namespace mir
+#ifdef __cplusplus
+/**
+ *  \addtogroup mir_toolkit
+ *  @{
+ */
+extern "C"
 {
-namespace client
+#endif
+
+/*
+ * Supported platform operations for the Mesa driver
+ */
+
+enum MirMesaPlatformOperation
 {
-
-class ClientContext
-{
-public:
-    virtual ~ClientContext() {}
-
-    virtual void populate_server_package(MirPlatformPackage& platform_package) = 0;
-
-protected:
-    ClientContext() = default;
-    ClientContext(const ClientContext&) = delete;
-    ClientContext& operator=(const ClientContext&) = delete;
+    auth_magic = 1,
+    auth_fd = 2
 };
 
-}
-}
+/*
+ * MesaPlatformOperation::auth_magic related structures
+ */
 
-#endif /* MIR_CLIENT_CLIENT_CONTEXT_H_ */
+struct MirMesaAuthMagicRequest
+{
+    unsigned int magic;
+};
+
+struct MirMesaAuthMagicResponse
+{
+    int status;
+};
+
+#ifdef __cplusplus
+}
+/**@}*/
+#endif
+
+#endif

@@ -41,23 +41,18 @@ class HwcConfiguration;
 class HwcDevice : public DisplayDevice
 {
 public:
-    HwcDevice(
-        std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-        std::shared_ptr<LayerAdapter> const& layer_adapter);
+    HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper);
 
-    void post_gl(SwappingGLContext const& context) override;
-    bool post_overlays(
+    bool compatible_renderlist(RenderableList const& renderlist) override;
+    void commit(
+        DisplayName,
+        LayerList&,
         SwappingGLContext const& context,
-        RenderableList const& list,
         RenderableListCompositor const& list_compositor) override;
     void content_cleared() override;
 
 private:
-    void commit(
-        SwappingGLContext const& context,
-        RenderableListCompositor const& list_compositor);
     bool buffer_is_onscreen(Buffer const&) const;
-    LayerList hwc_list;
     std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 
     std::shared_ptr<HwcWrapper> const hwc_wrapper;

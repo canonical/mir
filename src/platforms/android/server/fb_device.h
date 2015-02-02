@@ -47,10 +47,11 @@ class FBDevice : public DisplayDevice
 public:
     FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev);
 
-    void post_gl(SwappingGLContext const& context) override;
-    bool post_overlays(
+    bool compatible_renderlist(RenderableList const& renderlist) override;
+    void commit(
+        DisplayName,
+        LayerList&,
         SwappingGLContext const& context,
-        RenderableList const& list,
         RenderableListCompositor const& list_compositor) override;
 
 private:

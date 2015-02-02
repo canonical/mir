@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,13 +16,11 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_CLIENT_CONTEXT_H_
-#define MIR_TEST_DOUBLES_MOCK_CLIENT_CONTEXT_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_NESTED_CONTEXT_H_
+#define MIR_TEST_DOUBLES_MOCK_NESTED_CONTEXT_H_
 
-#include "mir_toolkit/mir_client_library.h"
-#include "mir/client_context.h"
-
-#include <gmock/gmock.h>
+#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_operation_message.h"
 
 namespace mir
 {
@@ -30,20 +28,18 @@ namespace test
 {
 namespace doubles
 {
-struct MockClientContext : public client::ClientContext
+
+struct MockNestedContext : graphics::NestedContext
 {
-    MockClientContext()
-    {
-        using namespace testing;
-
-        EXPECT_CALL(*this, populate_server_package(_)).Times(AtLeast(0));
-    }
-
-    MOCK_METHOD1(populate_server_package, void(MirPlatformPackage&));
+    MOCK_METHOD0(platform_fd_items, std::vector<int>());
+    MOCK_METHOD1(drm_auth_magic, void(int magic));
+    MOCK_METHOD1(drm_set_gbm_device, void(struct gbm_device* dev));
+    MOCK_METHOD2(platform_operation, graphics::PlatformOperationMessage(
+        unsigned int, graphics::PlatformOperationMessage const&));
 };
 
 }
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_CLIENT_CONTEXT_H_ */
+#endif

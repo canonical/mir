@@ -67,10 +67,10 @@ mcla::AndroidNativeDisplayContainer::validate(MirEGLNativeDisplayType display) c
 }
 
 MirEGLNativeDisplayType
-mcla::AndroidNativeDisplayContainer::create(ClientContext* context)
+mcla::AndroidNativeDisplayContainer::create(ClientPlatform* platform)
 {
     std::lock_guard<std::mutex> lg(guard);
-    auto egl_display = static_cast<MirEGLNativeDisplayType>(context);
+    auto egl_display = static_cast<MirEGLNativeDisplayType>(platform);
     valid_displays.insert(egl_display);
 
     return egl_display;
