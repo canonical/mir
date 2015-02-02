@@ -26,7 +26,6 @@
 #include "gl_context.h"
 #include "hwc_fallback_gl_renderer.h"
 #include "overlay_optimization.h"
-#include "display_name.h"
 #include <system/window.h>
 
 namespace mir

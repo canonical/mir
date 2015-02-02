@@ -48,7 +48,7 @@ public:
     virtual bool compatible_renderlist(RenderableList const& renderlist) = 0;
 
     /* post the layer list to the display, optionally drawing using the context/compositor if
-     * instructed to by the driver.
+     * instructed to by the driver
      */
     virtual void commit(
         DisplayName display_name,

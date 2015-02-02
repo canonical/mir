@@ -204,7 +204,6 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
         configuration_dirty = false;
 
         if (config.external().connected && !external_db)
-        {
             external_db = create_display_buffer(
                 display_device,
                 mga::DisplayName::external,
@@ -213,11 +212,8 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
                 gl_program_factory,
                 gl_context,
                 mga::OverlayOptimization::disabled);
-        }
         else
-        {
             display_device->stop_posting_external_display();
-        }
     }
 
 }

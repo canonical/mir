@@ -33,6 +33,9 @@ namespace geom = mir::geometry;
 
 namespace
 {
+unsigned int const primary_only{1};
+unsigned int const both_displays{2};
+
 bool plane_alpha_is_translucent(mg::Renderable const& renderable)
 {
     float static const tolerance
@@ -64,7 +67,7 @@ bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
 mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper) :
     hwc_wrapper(hwc_wrapper),
     committed{false},
-    needed_list_count{1} //primary always connected
+    needed_list_count{primary_only}
 {
 }
 
@@ -89,13 +92,13 @@ void mga::HwcDevice::commit(
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
 
-    if ((name == mga::DisplayName::external) && (needed_list_count == 1))
+    if ((name == mga::DisplayName::external) && (needed_list_count == primary_only))
     {
         lists[1] = nullptr;
         return;
     }
 
-    if ((name == mga::DisplayName::external) && (needed_list_count == 2))
+    if ((name == mga::DisplayName::external) && (needed_list_count == both_displays))
     {
         lists[1] = list.native_list();
         displays.emplace_back(ListResources{name, list, context, compositor});
@@ -183,7 +186,7 @@ void mga::HwcDevice::content_cleared()
 void mga::HwcDevice::start_posting_external_display()
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    needed_list_count = 2;
+    needed_list_count = both_displays;
     committed = false;
 }
 
@@ -191,7 +194,7 @@ void mga::HwcDevice::stop_posting_external_display()
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     lists[1] = nullptr;
-    needed_list_count = 1;
+    needed_list_count = primary_only;
     auto it = std::find_if(displays.begin(), displays.end(),
         [&](mga::HwcDevice::ListResources r){ return r.name == mga::DisplayName::external;});
     if (it != displays.end())
