@@ -109,7 +109,7 @@ void mga::HwcDevice::commit(
 
     if (name == mga::DisplayName::primary)
     {
-        posters_cv.wait(lk, [this]{ return displays.size() == needed_list_count; });
+        list_cv.wait(lk, [this]{ return displays.size() == needed_list_count; });
         commit();
 
         committed = true;
@@ -118,7 +118,7 @@ void mga::HwcDevice::commit(
     }
     else
     {
-        posters_cv.notify_all();
+        list_cv.notify_all();
         commit_cv.wait(lk, [this] { return committed; });
         committed = false;
     }
@@ -195,5 +195,5 @@ void mga::HwcDevice::stop_posting_external_display()
         [&](mga::HwcDevice::ListResources r){ return r.name == mga::DisplayName::external;});
     if (it != displays.end())
         displays.erase(it);
-    posters_cv.notify_all();
+    list_cv.notify_all();
 }

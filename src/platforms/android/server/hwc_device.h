@@ -64,12 +64,9 @@ private:
 
     std::mutex mutex;
 
-    std::condition_variable posters_cv;
-    int posters{0};
     std::condition_variable commit_cv;
     bool committed;
 
-    size_t needed_list_count;
     struct ListResources
     {
         DisplayName name;
@@ -77,9 +74,11 @@ private:
         SwappingGLContext const& context;
         RenderableListCompositor const& compositor;
     };
+    std::condition_variable list_cv;
     std::list<ListResources> displays;
-    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> lists; 
+    size_t needed_list_count;
 
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> lists; 
     std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 };
 
