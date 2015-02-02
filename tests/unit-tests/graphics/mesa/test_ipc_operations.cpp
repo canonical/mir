@@ -112,6 +112,23 @@ TEST_F(IpcOperations, calls_drm_auth_magic_for_auth_magic_operation)
     EXPECT_THAT(response.status, Eq(0));
 }
 
+TEST_F(IpcOperations, gets_authentication_fd_for_auth_fd_operation)
+{
+    using namespace testing;
+
+    mir::Fd stub_fd(fileno(tmpfile()));
+    EXPECT_CALL(mock_drm_ops, authenticated_fd())
+        .WillOnce(Return(stub_fd));
+
+    mg::PlatformOperationMessage request_msg;
+
+    auto const response_msg = ipc_ops.platform_operation(
+        MirMesaPlatformOperation::auth_fd, request_msg);
+
+    EXPECT_THAT(response_msg.data, IsEmpty());
+    EXPECT_THAT(response_msg.fds, ElementsAre(stub_fd));
+}
+
 TEST_F(IpcOperations, gets_authentication_fd_for_connection_package)
 {
     using namespace testing;

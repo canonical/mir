@@ -57,39 +57,39 @@ public:
 
 /** @name these come from frontend::Shell
  *  @{ */
-    virtual std::shared_ptr<scene::Session> open_session(
+    std::shared_ptr<scene::Session> open_session(
         pid_t client_pid,
         std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink);
+        std::shared_ptr<frontend::EventSink> const& sink) override;
 
-    virtual void close_session(std::shared_ptr<scene::Session> const& session);
+    void close_session(std::shared_ptr<scene::Session> const& session) override;
 
-    virtual void handle_surface_created(std::shared_ptr<scene::Session> const& session);
+    void handle_surface_created(std::shared_ptr<scene::Session> const& session) override;
 
-    virtual std::shared_ptr<scene::PromptSession> start_prompt_session_for(
+    std::shared_ptr<scene::PromptSession> start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,
-        scene::PromptSessionCreationParameters const& params);
+        scene::PromptSessionCreationParameters const& params) override;
 
-    virtual void add_prompt_provider_for(
+    void add_prompt_provider_for(
         std::shared_ptr<scene::PromptSession> const& prompt_session,
-        std::shared_ptr<scene::Session> const& session);
+        std::shared_ptr<scene::Session> const& session) override;
 
-    virtual void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session);
+    void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) override;
 
-    virtual frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params);
+    frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override;
 
-    virtual void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface);
+    void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override;
 
-    virtual int set_surface_attribute(
+    int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
         frontend::SurfaceId surface_id,
         MirSurfaceAttrib attrib,
-        int value);
+        int value) override;
 
-    virtual int get_surface_attribute(
+    int get_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
         frontend::SurfaceId surface_id,
-        MirSurfaceAttrib attrib);
+        MirSurfaceAttrib attrib) override;
 /** @} */
 
 private:

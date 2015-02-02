@@ -34,7 +34,8 @@ extern "C"
 
 enum MirMesaPlatformOperation
 {
-    auth_magic = 1
+    auth_magic = 1,
+    auth_fd = 2
 };
 
 /*

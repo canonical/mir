@@ -16,6 +16,8 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
@@ -400,6 +402,11 @@ bool MirConnection::is_valid(MirConnection *connection)
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
 {
+    platform->populate(platform_package);
+}
+
+void MirConnection::populate_server_package(MirPlatformPackage& platform_package)
+{
     // connect_result is write-once: once it's valid, we don't need to lock
     // to use it.
     if (connect_done && !connect_result.has_error() && connect_result.has_platform())
@@ -414,6 +421,8 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
         for (int i = 0; i != platform.fd_size(); ++i)
             platform_package.fd[i] = platform.fd(i);
 
+        // TODO: Replace the extra platform data mechanism with a
+        // client side, platform specific operation
         for (auto d : extra_platform_data)
             platform_package.data[platform_package.data_items++] = d;
     }
