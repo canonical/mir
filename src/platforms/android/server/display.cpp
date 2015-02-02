@@ -203,7 +203,8 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
             config.external().power_mode);
         configuration_dirty = false;
 
-        if (config.external().connected)
+        if (config.external().connected && !external_db)
+        {
             external_db = create_display_buffer(
                 display_device,
                 mga::DisplayName::external,
@@ -212,8 +213,11 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
                 gl_program_factory,
                 gl_context,
                 mga::OverlayOptimization::disabled);
+        }
         else
-            external_db.reset();
+        {
+            display_device->stop_posting_external_display();
+        }
     }
 
 }
@@ -224,7 +228,10 @@ void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&
     update_configuration(lock);
 
     if (external_db && config.external().power_mode == mir_power_mode_on)
+    {
         f(*external_db);
+        display_device->start_posting_external_display();
+    }
     if (config.primary().power_mode == mir_power_mode_on)
         f(*primary_db);
 }
