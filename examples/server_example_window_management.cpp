@@ -280,7 +280,7 @@ private:
     void add_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info[session] = session;
+        session_info[session] = SessionInfo();
         update_tiles();
     }
 
@@ -317,7 +317,7 @@ private:
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session].surfaces.push_back(surface);
-        surface_info[surface].session = session_info[session].session;
+        surface_info[surface].session = session;
         surface_info[surface].state = mir_surface_state_restored;
     }
 
@@ -545,7 +545,7 @@ private:
         {
             if (info.second.tile.contains(position))
             {
-                return info.second.session.lock();
+                return info.first.lock();
             }
         }
 
@@ -554,14 +554,6 @@ private:
 
     struct SessionInfo
     {
-        SessionInfo() = default;
-        SessionInfo& operator=(std::weak_ptr<ms::Session> const& session)
-        {
-            this->session = session;
-            surfaces.clear();
-            return *this;
-        }
-        std::weak_ptr<ms::Session> session;
         Rectangle tile;
         std::vector<std::weak_ptr<ms::Surface>> surfaces;
     };
