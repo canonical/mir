@@ -63,6 +63,7 @@ bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
 
 mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper) :
     hwc_wrapper(hwc_wrapper),
+    committed{false},
     needed_list_count{1} //primary always connected
 {
 }
