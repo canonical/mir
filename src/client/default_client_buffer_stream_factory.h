@@ -31,6 +31,7 @@ namespace client
 {
 class ClientBufferFactory;
 class EGLNativeWindowFactory;
+class PerfReport;
 
 class DefaultClientBufferStreamFactory : public ClientBufferStreamFactory
 {
@@ -49,7 +50,7 @@ private:
     std::shared_ptr<ClientBufferFactory> const client_buffer_factory;
     std::shared_ptr<EGLNativeWindowFactory> const native_window_factory;
     std::shared_ptr<logging::Logger> const logger;
-    
+   /* std::shared_ptr<PerfReport> const perf_report;*/
 };
 }
 }

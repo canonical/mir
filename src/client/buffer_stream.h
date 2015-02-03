@@ -62,7 +62,7 @@ public:
         std::shared_ptr<ClientBufferFactory> const& buffer_factory,
         std::shared_ptr<EGLNativeWindowFactory> const& native_window_factory,
         protobuf::BufferStream const& protobuf_bs,
-        std::shared_ptr<logging::Logger> const& logger,
+        std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name);
     virtual ~BufferStream();
     

@@ -17,6 +17,7 @@
  */
 
 #include "src/client/buffer_stream.h"
+#include "src/client/perf_report.h"
 
 #include "mir/egl_native_window_factory.h"
 
@@ -88,8 +89,8 @@ struct ClientBufferStreamTest : public testing::Test
     MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
     MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
 
-    std::shared_ptr<ml::Logger> const logger = std::make_shared<mtd::NullLogger>();
-    
+    std::shared_ptr<mcl::PerfReport> const perf_report = std::make_shared<mcl::NullPerfReport>();
+
     std::shared_ptr<mcl::BufferStream> make_buffer_stream(mp::BufferStream const& protobuf_bs,
         mcl::BufferStreamMode mode=mcl::BufferStreamMode::Producer)
     {
@@ -100,7 +101,7 @@ struct ClientBufferStreamTest : public testing::Test
         mcl::BufferStreamMode mode=mcl::BufferStreamMode::Producer)
     {
         return std::make_shared<mcl::BufferStream>(mock_protobuf_server, mode, mt::fake_shared(buffer_factory),
-            mt::fake_shared(stub_native_window_factory), protobuf_bs, logger, "testsurface");
+            mt::fake_shared(stub_native_window_factory), protobuf_bs, perf_report, "testsurface");
     }
 };
 
