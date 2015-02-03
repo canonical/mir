@@ -520,3 +520,14 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrient
 
     return result;
 }
+
+MirBufferStream *mir_surface_get_buffer_stream(MirSurface *surface)
+try
+{
+    return reinterpret_cast<MirBufferStream*>(surface->get_buffer_stream());
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}

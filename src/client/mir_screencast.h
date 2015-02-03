@@ -66,6 +66,8 @@ public:
     void request_and_wait_for_next_buffer();
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
 
+    mir::client::ClientBufferStream* get_buffer_stream();
+
 private:
     void screencast_created(
         mir_screencast_callback callback, void* context);

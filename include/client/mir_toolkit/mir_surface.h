@@ -325,6 +325,14 @@ void mir_surface_set_event_handler(MirSurface *surface,
                                    MirEventDelegate const *event_handler);
 
 /**
+ * Retreive the primary MirBufferStream assosciated with a surface (to advance buffers,
+ * obtain EGLNativeWindow, etc...)
+ * 
+ *   \param[in] surface The surface
+ */
+MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface);
+
+/**
  * Get a window type that can be used for OpenGL ES 2.0 acceleration.
  *   \param [in] surface  The surface
  *   \return              An EGLNativeWindowType that the client can use

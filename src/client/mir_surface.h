@@ -141,6 +141,8 @@ public:
     void request_and_wait_for_next_buffer();
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
 
+    mir::client::ClientBufferStream* get_buffer_stream();
+
     static bool is_valid(MirSurface* query);
 private:
     mutable std::mutex mutex; // Protects all members of *this

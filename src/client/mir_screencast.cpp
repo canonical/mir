@@ -156,3 +156,8 @@ void MirScreencast::released(
     callback(this, context);
     release_wait_handle.result_received();
 }
+
+mir::client::ClientBufferStream* MirScreencast::get_buffer_stream()
+{
+    return buffer_stream.get();
+}

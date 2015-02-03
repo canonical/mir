@@ -90,3 +90,14 @@ MirEGLNativeWindowType mir_screencast_egl_native_window(MirScreencast* screencas
 {
     return reinterpret_cast<MirEGLNativeWindowType>(screencast->egl_native_window());
 }
+
+MirBufferStream *mir_screencast_get_buffer_stream(MirScreencast *screencast)
+try
+{
+    return reinterpret_cast<MirBufferStream*>(screencast->get_buffer_stream());
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}

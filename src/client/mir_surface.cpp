@@ -565,3 +565,10 @@ MirWaitHandle* MirSurface::set_preferred_orientation(MirOrientationMode mode)
 {
     return configure(mir_surface_attrib_preferred_orientation, mode);
 }
+
+mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    
+    return buffer_stream.get();
+}
