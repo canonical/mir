@@ -70,6 +70,13 @@ struct StubEGLNativeWindowFactory : public mcl::EGLNativeWindowFactory
     static EGLNativeWindowType egl_native_window;
 };
 
+struct MockPerfReport : public mcl::PerfReport
+{
+    MOCK_METHOD1(name_surface, void(char const*));
+    MOCK_METHOD1(begin_frame, void(int));
+    MOCK_METHOD1(end_frame, void(int));
+};
+
 struct MockClientBuffer : public mtd::NullClientBuffer
 {
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
@@ -117,13 +124,13 @@ void fill_protobuf_buffer_stream_from_package(mp::BufferStream &protobuf_bs, Mir
 
     /* assemble buffers */
     mb->set_fds_on_side_channel(buffer_package.fd_items);
-    for (int i=0; i< buffer_package.data_items; i++)
+    for (int i=0; i<buffer_package.data_items; i++)
     {
-            mb->add_data(buffer_package.data[i]);
+        mb->add_data(buffer_package.data[i]);
     }
-    for (int i=0; i< buffer_package.fd_items; i++)
+    for (int i=0; i<buffer_package.fd_items; i++)
     {
-            mb->add_fd(buffer_package.fd[i]);
+        mb->add_fd(buffer_package.fd[i]);
     }
     mb->set_stride(buffer_package.stride);
     mb->set_width(buffer_package.width);
@@ -402,4 +409,22 @@ TEST_F(ClientBufferStreamTest, map_graphics_region)
         .WillOnce(Return(mt::fake_shared(expected_memory_region)));
      
     EXPECT_EQ(&expected_memory_region, bs->secure_for_cpu_write().get());
+}
+
+TEST_F(ClientBufferStreamTest, passes_name_to_perf_report)
+{
+    using namespace ::testing;
+
+    MirBufferPackage buffer_package = a_buffer_package();
+    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
+        buffer_package);
+
+    NiceMock<MockPerfReport> mock_perf_report;
+    const char* const name = "a_unique_surface_name";
+
+    EXPECT_CALL(mock_perf_report, name_surface(StrEq(name))).Times(1);
+
+    auto bs = std::make_shared<mcl::BufferStream>(mock_protobuf_server, mcl::BufferStreamMode::Producer,
+    		  mt::fake_shared(stub_client_buffer_factory), mt::fake_shared(stub_native_window_factory),
+    		  protobuf_bs, mt::fake_shared(mock_perf_report), name);
 }
