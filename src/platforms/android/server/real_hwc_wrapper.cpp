@@ -122,6 +122,7 @@ void mga::RealHwcWrapper::set(
         ss << "error during hwc prepare(). rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+    report->report_set_done(displays);
 }
 
 void mga::RealHwcWrapper::vsync_signal_on(DisplayName display_name) const

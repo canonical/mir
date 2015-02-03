@@ -128,20 +128,20 @@ TEST_F(HwcWrapper, submits_correct_set_parameters)
 {
     using namespace testing;
     Sequence seq;
-    EXPECT_CALL(*mock_report, report_set_list(Ref(primary_displays)))
+    EXPECT_CALL(*mock_report, report_set_list(Ref(both_displays)))
         .InSequence(seq);
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 3, _))
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 2, _))
         .InSequence(seq)
         .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
-    EXPECT_CALL(*mock_report, report_set_done(Ref(primary_displays)))
+    EXPECT_CALL(*mock_report, report_set_done(Ref(both_displays)))
         .InSequence(seq);
 
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
-    wrapper.set(primary_displays);
+    wrapper.set(both_displays);
 
     EXPECT_EQ(&primary_list, primary_display);
     EXPECT_EQ(&external_list, external_display);
-    EXPECT_EQ(&virtual_list, virtual_display);
+    EXPECT_EQ(nullptr, virtual_display);
 }
 
 TEST_F(HwcWrapper, throws_on_set_failure)

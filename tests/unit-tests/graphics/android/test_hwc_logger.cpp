@@ -89,6 +89,7 @@ struct HwcLogger : public ::testing::Test
         fill_display_list(external_list.get());
         display_list[HWC_DISPLAY_PRIMARY] = primary_list.get();
         display_list[HWC_DISPLAY_EXTERNAL] = external_list.get();
+        display_list[HWC_DISPLAY_VIRTUAL] = nullptr;
     };
 
     virtual ~HwcLogger()
@@ -110,41 +111,19 @@ struct HwcLogger : public ::testing::Test
 };
 }
 
-TEST_F(HwcLogger, null_lists_reported)
-{
-    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> display_list{
-        {nullptr, nullptr, nullptr} };
-    std::stringstream str;
-    str << "[primary]  : no list" << std::endl
-        << "[external] : no list" << std::endl
-        << "[primary]  : no list" << std::endl
-        << "[external] : no list" << std::endl
-        << "[primary]  : no list" << std::endl
-        << "[external] : no list" << std::endl
-        << "[primary]  : no list" << std::endl
-        << "[external] : no list" << std::endl;
-    mga::HwcFormattedLogger logger;
-    logger.report_list_submitted_to_prepare(display_list);
-    logger.report_prepare_done(display_list);
-    logger.report_set_list(display_list);
-    logger.report_set_done(display_list);
-}
-
 TEST_F(HwcLogger, report_pre_prepare)
 {
     std::stringstream str;
     str << "before prepare():" << std::endl
-        << "[primary]" << std::endl
-        << " # | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | " << std::endl
-        << " 0 | {   1,   1,   2,   1} | {   3,   2,   5,   3} | ROT_90    | NONE     | " << std::endl
-        << " 1 | {   8,   5,  13,   8} | {  21,  13,  34,  21} | ROT_180   | PREMULT  | " << std::endl
-        << " 2 | {  55,  34,  89,  55} | { 144,  89, 233, 144} | ROT_270   | COVERAGE | " << std::endl
-        << " 3 | { 377, 233, 610, 337} | { 987, 610,1597, 987} | NONE      | NONE     | " << std::endl
-        << "[external]" << std::endl
-        << " 0 | {   1,   1,   2,   1} | {   3,   2,   5,   3} | ROT_90    | NONE     | " << std::endl
-        << " 1 | {   8,   5,  13,   8} | {  21,  13,  34,  21} | ROT_180   | PREMULT  | " << std::endl
-        << " 2 | {  55,  34,  89,  55} | { 144,  89, 233, 144} | ROT_270   | COVERAGE | " << std::endl
-        << " 3 | { 377, 233, 610, 337} | { 987, 610,1597, 987} | NONE      | NONE     | " << std::endl;
+        << " # | display  | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | " << std::endl
+        << " 0 | primary  | {   1,   1,   2,   1} | {   3,   2,   5,   3} | ROT_90    | NONE     | " << std::endl
+        << " 1 | primary  | {   8,   5,  13,   8} | {  21,  13,  34,  21} | ROT_180   | PREMULT  | " << std::endl
+        << " 2 | primary  | {  55,  34,  89,  55} | { 144,  89, 233, 144} | ROT_270   | COVERAGE | " << std::endl
+        << " 3 | primary  | { 377, 233, 610, 337} | { 987, 610,1597, 987} | NONE      | NONE     | " << std::endl
+        << " 0 | external | {   1,   1,   2,   1} | {   3,   2,   5,   3} | ROT_90    | NONE     | " << std::endl
+        << " 1 | external | {   8,   5,  13,   8} | {  21,  13,  34,  21} | ROT_180   | PREMULT  | " << std::endl
+        << " 2 | external | {  55,  34,  89,  55} | { 144,  89, 233, 144} | ROT_270   | COVERAGE | " << std::endl
+        << " 3 | external | { 377, 233, 610, 337} | { 987, 610,1597, 987} | NONE      | NONE     | " << std::endl;
     mga::HwcFormattedLogger logger;
     logger.report_list_submitted_to_prepare(display_list);
     EXPECT_EQ(str.str(), test_stream.str()); 
@@ -154,17 +133,15 @@ TEST_F(HwcLogger, report_post_prepare)
 {
     std::stringstream str;
     str << "after prepare():" << std::endl 
-        << "[primary]" << std::endl
-        << " # | Type      | " << std::endl
-        << " 0 | OVERLAY   | " << std::endl
-        << " 1 | GL_RENDER | " << std::endl
-        << " 2 | FORCE_GL  | " << std::endl
-        << " 3 | FB_TARGET | " << std::endl
-        << "[external]" << std::endl
-        << " 0 | OVERLAY   | " << std::endl
-        << " 1 | GL_RENDER | " << std::endl
-        << " 2 | FORCE_GL  | " << std::endl
-        << " 3 | FB_TARGET | " << std::endl;
+        << " # | display  | Type      | " << std::endl
+        << " 0 | primary  | OVERLAY   | " << std::endl
+        << " 1 | primary  | GL_RENDER | " << std::endl
+        << " 2 | primary  | FORCE_GL  | " << std::endl
+        << " 3 | primary  | FB_TARGET | " << std::endl
+        << " 0 | external | OVERLAY   | " << std::endl
+        << " 1 | external | GL_RENDER | " << std::endl
+        << " 2 | external | FORCE_GL  | " << std::endl
+        << " 3 | external | FB_TARGET | " << std::endl;
     mga::HwcFormattedLogger logger;
     logger.report_prepare_done(display_list);
     EXPECT_EQ(str.str(), test_stream.str()); 
@@ -174,17 +151,15 @@ TEST_F(HwcLogger, report_set)
 {
     std::stringstream str;
     str << "set list():" << std::endl
-        << "[primary]" << std::endl
-        << " # | handle | acquireFence" << std::endl
-        << " 0 | " << &native_handle1 << " | " << fake_fence[0] << std::endl
-        << " 1 | " << &native_handle2 << " | " << fake_fence[2] << std::endl
-        << " 2 | " << &native_handle3 << " | " << fake_fence[4] << std::endl
-        << " 3 | " << &native_handle4 << " | " << fake_fence[6] << std::endl
-        << "[external]" << std::endl
-        << " 0 | " << &native_handle1 << " | " << fake_fence[0] << std::endl
-        << " 1 | " << &native_handle2 << " | " << fake_fence[2] << std::endl
-        << " 2 | " << &native_handle3 << " | " << fake_fence[4] << std::endl
-        << " 3 | " << &native_handle4 << " | " << fake_fence[6] << std::endl;
+        << " # | display  | handle | acquireFenceFd" << std::endl
+        << " 0 | primary  | " << &native_handle1 << " | " << fake_fence[0] << std::endl
+        << " 1 | primary  | " << &native_handle2 << " | " << fake_fence[2] << std::endl
+        << " 2 | primary  | " << &native_handle3 << " | " << fake_fence[4] << std::endl
+        << " 3 | primary  | " << &native_handle4 << " | " << fake_fence[6] << std::endl
+        << " 0 | external | " << &native_handle1 << " | " << fake_fence[0] << std::endl
+        << " 1 | external | " << &native_handle2 << " | " << fake_fence[2] << std::endl
+        << " 2 | external | " << &native_handle3 << " | " << fake_fence[4] << std::endl
+        << " 3 | external | " << &native_handle4 << " | " << fake_fence[6] << std::endl;
 
     mga::HwcFormattedLogger logger;
     logger.report_set_list(display_list);
@@ -194,18 +169,16 @@ TEST_F(HwcLogger, report_set)
 TEST_F(HwcLogger, report_post_set)
 {
     std::stringstream str;
-    str << "after set:" << std::endl
-        << "[primary]" << std::endl
-        << " # | releaseFence" << std::endl
-        << " 0 | " << fake_fence[1] << std::endl 
-        << " 1 | " << fake_fence[3] << std::endl 
-        << " 2 | " << fake_fence[5] << std::endl 
-        << " 3 | " << fake_fence[7] << std::endl
-        << "[external]" << std::endl
-        << " 0 | " << fake_fence[1] << std::endl 
-        << " 1 | " << fake_fence[3] << std::endl 
-        << " 2 | " << fake_fence[5] << std::endl 
-        << " 3 | " << fake_fence[7] << std::endl; 
+    str << "after set():" << std::endl
+        << " # | display  | releaseFenceFd" << std::endl
+        << " 0 | primary  | " << fake_fence[1] << std::endl 
+        << " 1 | primary  | " << fake_fence[3] << std::endl 
+        << " 2 | primary  | " << fake_fence[5] << std::endl 
+        << " 3 | primary  | " << fake_fence[7] << std::endl
+        << " 0 | external | " << fake_fence[1] << std::endl 
+        << " 1 | external | " << fake_fence[3] << std::endl 
+        << " 2 | external | " << fake_fence[5] << std::endl 
+        << " 3 | external | " << fake_fence[7] << std::endl; 
 
     mga::HwcFormattedLogger logger;
     logger.report_set_done(display_list);
