@@ -33,6 +33,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <cstring>
+
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace mt = mir::test;
@@ -49,11 +51,11 @@ public:
     {
         using namespace testing;
 
+        MirMesaSetGBMDeviceResponse const response_success{0};
         mg::PlatformOperationMessage set_gbm_device_success_msg;
-        set_gbm_device_success_msg.data.resize(sizeof(MirMesaSetGBMDeviceResponse));
-        auto set_gbm_device_success = reinterpret_cast<MirMesaSetGBMDeviceResponse*>(
-                set_gbm_device_success_msg.data.data());
-        set_gbm_device_success->status = 0;
+        set_gbm_device_success_msg.data.resize(sizeof(response_success));
+        std::memcpy(set_gbm_device_success_msg.data.data(),
+                    &response_success, sizeof(response_success));
 
         ON_CALL(mock_nested_context, platform_fd_items())
             .WillByDefault(Return(std::vector<int>{mock_drm.fake_drm.fd()}));
@@ -90,11 +92,10 @@ TEST_F(MesaGuestPlatformTest, auth_fd_is_delegated_to_nested_context)
 
 TEST_F(MesaGuestPlatformTest, sets_gbm_device_during_initialization)
 {
+    MirMesaSetGBMDeviceRequest const request{mock_gbm.fake_gbm.device};
     mg::PlatformOperationMessage request_msg;
-    request_msg.data.resize(sizeof(MirMesaSetGBMDeviceRequest));
-    auto request_ptr = reinterpret_cast<MirMesaSetGBMDeviceRequest*>(
-       request_msg.data.data());
-    request_ptr->device = mock_gbm.fake_gbm.device;
+    request_msg.data.resize(sizeof(request));
+    std::memcpy(request_msg.data.data(), &request, sizeof(request));
 
     EXPECT_CALL(mock_nested_context,
                 platform_operation(MirMesaPlatformOperation::set_gbm_device,

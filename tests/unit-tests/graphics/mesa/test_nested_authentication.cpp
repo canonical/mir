@@ -25,6 +25,8 @@
 #include "mir_test/fake_shared.h"
 #include <gtest/gtest.h>
 
+#include <cstring>
+
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace mt = mir::test;
@@ -46,17 +48,16 @@ TEST_F(NestedAuthentication, uses_nested_context_for_auth_magic)
 
     unsigned int const magic{332211};
 
+    MirMesaAuthMagicRequest const request{magic};
     mg::PlatformOperationMessage msg;
-    msg.data.resize(sizeof(MirMesaAuthMagicRequest));
-    *reinterpret_cast<MirMesaAuthMagicRequest*>(msg.data.data()) =
-        MirMesaAuthMagicRequest{magic};
+    msg.data.resize(sizeof(request));
+    std::memcpy(msg.data.data(), &request, sizeof(request));
 
-    int const success{0};
+    MirMesaAuthMagicResponse const success_response{0};
     mg::PlatformOperationMessage auth_magic_success_response;
-    auth_magic_success_response.data.resize(sizeof(MirMesaAuthMagicResponse));
-    *reinterpret_cast<MirMesaAuthMagicResponse*>(
-        auth_magic_success_response.data.data()) =
-            MirMesaAuthMagicResponse{success};
+    auth_magic_success_response.data.resize(sizeof(success_response));
+    std::memcpy(auth_magic_success_response.data.data(), &success_response,
+                sizeof(success_response));
 
     EXPECT_CALL(mock_nested_context,
                 platform_operation(MirMesaPlatformOperation::auth_magic, msg))

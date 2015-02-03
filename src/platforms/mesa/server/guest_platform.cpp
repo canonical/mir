@@ -32,6 +32,7 @@
 
 #include <mutex>
 #include <stdexcept>
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -41,11 +42,10 @@ namespace
 
 void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* gbm_dev)
 {
+    MirMesaSetGBMDeviceRequest const request{gbm_dev};
     mg::PlatformOperationMessage request_msg;
     request_msg.data.resize(sizeof(MirMesaSetGBMDeviceRequest));
-    auto request_ptr = reinterpret_cast<MirMesaSetGBMDeviceRequest*>(
-        request_msg.data.data());
-    request_ptr->device = gbm_dev;
+    std::memcpy(request_msg.data.data(), &request, sizeof(request));
 
     auto const response_msg = nested_context.platform_operation(
         MirMesaPlatformOperation::set_gbm_device,
@@ -54,14 +54,14 @@ void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* gbm_dev
     if (response_msg.data.size() == sizeof(MirMesaSetGBMDeviceResponse))
     {
         static int const success{0};
-        auto response_ptr = reinterpret_cast<MirMesaSetGBMDeviceResponse const*>(
-            response_msg.data.data());
-        if (response_ptr->status != success)
+        MirMesaSetGBMDeviceResponse response{-1};
+        std::memcpy(&response, response_msg.data.data(), response_msg.data.size());
+        if (response.status != success)
         {
             std::string const msg{"Nested Mir failed to set the gbm device."};
             BOOST_THROW_EXCEPTION(
                 boost::enable_error_info(std::runtime_error(msg))
-                    << boost::errinfo_errno(response_ptr->status));
+                    << boost::errinfo_errno(response.status));
         }
     }
     else

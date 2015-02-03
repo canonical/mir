@@ -136,14 +136,15 @@ MirPlatformMessage* mclm::ClientPlatform::platform_operation(
     MirPlatformMessage const* msg)
 {
     auto const op = mir_platform_message_get_opcode(msg);
+    auto const msg_data = mir_platform_message_get_data(msg);
 
-    if (op == MirMesaPlatformOperation::set_gbm_device)
+    if (op == MirMesaPlatformOperation::set_gbm_device &&
+        msg_data.size == sizeof(MirMesaSetGBMDeviceRequest))
     {
-        auto const msg_data = mir_platform_message_get_data(msg);
-        auto const set_gbm_device_request_ptr =
-            reinterpret_cast<MirMesaSetGBMDeviceRequest const*>(msg_data.data);
+        MirMesaSetGBMDeviceRequest set_gbm_device_request{nullptr};
+        std::memcpy(&set_gbm_device_request, msg_data.data, msg_data.size);
 
-        gbm_dev = set_gbm_device_request_ptr->device;
+        gbm_dev = set_gbm_device_request.device;
 
         static int const success{0};
         MirMesaSetGBMDeviceResponse const response{success};
