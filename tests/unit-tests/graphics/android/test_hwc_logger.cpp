@@ -49,7 +49,6 @@ struct HwcLogger : public ::testing::Test
         display_list->hwLayers[1].blending = HWC_BLENDING_PREMULT;
         display_list->hwLayers[1].displayFrame = {8, 5, 13, 8}; 
         display_list->hwLayers[1].sourceCrop = {21, 13, 34, 21}; 
-        display_list->hwLayers[1].acquireFenceFd = fake_acquire_fd1;
         display_list->hwLayers[1].acquireFenceFd = fake_fence[2];
         display_list->hwLayers[1].releaseFenceFd = fake_fence[3];
 
@@ -60,7 +59,6 @@ struct HwcLogger : public ::testing::Test
         display_list->hwLayers[2].blending = HWC_BLENDING_COVERAGE; 
         display_list->hwLayers[2].displayFrame = {55, 34, 89, 55};  
         display_list->hwLayers[2].sourceCrop = {144, 89, 233, 144}; 
-        display_list->hwLayers[2].acquireFenceFd = fake_acquire_fd2;
         display_list->hwLayers[2].acquireFenceFd = fake_fence[4];
         display_list->hwLayers[2].releaseFenceFd = fake_fence[5];
 
@@ -71,7 +69,6 @@ struct HwcLogger : public ::testing::Test
         display_list->hwLayers[3].blending = HWC_BLENDING_NONE; 
         display_list->hwLayers[3].displayFrame = {377, 233, 610, 337}; 
         display_list->hwLayers[3].sourceCrop = {987, 610, 1597, 987};
-        display_list->hwLayers[3].acquireFenceFd = fake_acquire_fd3;
         display_list->hwLayers[3].acquireFenceFd = fake_fence[6];
         display_list->hwLayers[3].releaseFenceFd = fake_fence[7];
     }
@@ -80,8 +77,8 @@ struct HwcLogger : public ::testing::Test
      : num_layers{4},
        primary_list{std::shared_ptr<hwc_display_contents_1_t>(
             static_cast<hwc_display_contents_1_t*>(
-           ::operator new(sizeof(hwc_display_contents_1_t) + (num_layers * sizeof(hwc_layer_1_t)))))}
-       extern_list{std::shared_ptr<hwc_display_contents_1_t>(
+           ::operator new(sizeof(hwc_display_contents_1_t) + (num_layers * sizeof(hwc_layer_1_t)))))},
+       external_list{std::shared_ptr<hwc_display_contents_1_t>(
             static_cast<hwc_display_contents_1_t*>(
            ::operator new(sizeof(hwc_display_contents_1_t) + (num_layers * sizeof(hwc_layer_1_t)))))}
     {
@@ -90,8 +87,8 @@ struct HwcLogger : public ::testing::Test
 
         fill_display_list(primary_list.get());
         fill_display_list(external_list.get());
-        display_lists[HWC_DISPLAY_PRIMARY] = primary_list.get();
-        display_lists[HWC_DISPLAY_EXTERNAL] = external_list.get();
+        display_list[HWC_DISPLAY_PRIMARY] = primary_list.get();
+        display_list[HWC_DISPLAY_EXTERNAL] = external_list.get();
     };
 
     virtual ~HwcLogger()
@@ -105,12 +102,32 @@ struct HwcLogger : public ::testing::Test
     std::shared_ptr<hwc_display_contents_1_t> const primary_list;
     std::shared_ptr<hwc_display_contents_1_t> const external_list;
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> display_list;
-    std::array<int, 8> fake_fence{4,5,6,7,8,9,10,11};
+    std::array<int, 8> const fake_fence{ {4,5,6,7,8,9,10,11} };
     native_handle_t native_handle1;
     native_handle_t native_handle2;
     native_handle_t native_handle3;
     native_handle_t native_handle4;
 };
+}
+
+TEST_F(HwcLogger, null_lists_reported)
+{
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> display_list{
+        {nullptr, nullptr, nullptr} };
+    std::stringstream str;
+    str << "[primary]  : no list" << std::endl
+        << "[external] : no list" << std::endl
+        << "[primary]  : no list" << std::endl
+        << "[external] : no list" << std::endl
+        << "[primary]  : no list" << std::endl
+        << "[external] : no list" << std::endl
+        << "[primary]  : no list" << std::endl
+        << "[external] : no list" << std::endl;
+    mga::HwcFormattedLogger logger;
+    logger.report_list_submitted_to_prepare(display_list);
+    logger.report_prepare_done(display_list);
+    logger.report_set_list(display_list);
+    logger.report_set_done(display_list);
 }
 
 TEST_F(HwcLogger, report_pre_prepare)

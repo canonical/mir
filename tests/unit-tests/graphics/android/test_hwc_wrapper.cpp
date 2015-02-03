@@ -128,6 +128,8 @@ TEST_F(HwcWrapper, submits_correct_set_parameters)
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 3, _))
         .InSequence(seq)
         .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
+    EXPECT_CALL(*mock_report, report_set_done(Ref(primary_list)))
+        .InSequence(seq);
 
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
     wrapper.set({{&primary_list, &external_list, &virtual_list}});

@@ -155,8 +155,10 @@ std::ostream& operator<<(std::ostream& str, mga::HwcVersion version)
 }
 }
 
-void mga::HwcFormattedLogger::report_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_list_submitted_to_prepare(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
+    auto list = *displays[0];
     std::cout << "before prepare():" << std::endl
               << " # | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | "
               << std::endl;
@@ -174,8 +176,10 @@ void mga::HwcFormattedLogger::report_list_submitted_to_prepare(hwc_display_conte
                   << std::endl;
 }
 
-void mga::HwcFormattedLogger::report_prepare_done(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_prepare_done(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
+    auto list = *displays[0];
     std::cout << "after prepare():" << std::endl
               << " # | Type      | " << std::endl;
     for(auto i = 0u; i < list.numHwLayers; i++)
@@ -186,8 +190,10 @@ void mga::HwcFormattedLogger::report_prepare_done(hwc_display_contents_1_t const
                   << std::endl;
 }
 
-void mga::HwcFormattedLogger::report_set_list(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_set_list(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
+    auto list = *displays[0];
     std::cout << "set list():" << std::endl
               << " # | handle" << std::endl;
 
@@ -196,6 +202,11 @@ void mga::HwcFormattedLogger::report_set_list(hwc_display_contents_1_t const& li
                   << separator
                   << list.hwLayers[i].handle
                   << std::endl;
+}
+
+void mga::HwcFormattedLogger::report_set_done(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const
+{
 }
 
 void mga::HwcFormattedLogger::report_overlay_optimization(OverlayOptimization overlay_optimization) const
@@ -233,9 +244,14 @@ void mga::HwcFormattedLogger::report_legacy_fb_module() const
     std::cout << "Legacy FB module" << std::endl;
 }
 
-void mga::NullHwcReport::report_list_submitted_to_prepare(hwc_display_contents_1_t const&) const {}
-void mga::NullHwcReport::report_prepare_done(hwc_display_contents_1_t const&) const {}
-void mga::NullHwcReport::report_set_list(hwc_display_contents_1_t const&) const {}
+void mga::NullHwcReport::report_list_submitted_to_prepare(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const {}
+void mga::NullHwcReport::report_prepare_done(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const {}
+void mga::NullHwcReport::report_set_list(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const {}
+void mga::NullHwcReport::report_set_done(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const {}
 void mga::NullHwcReport::report_overlay_optimization(OverlayOptimization) const {}
 void mga::NullHwcReport::report_display_on() const {}
 void mga::NullHwcReport::report_display_off() const {}
