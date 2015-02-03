@@ -91,17 +91,16 @@ void msh::ShellWrapper::destroy_surface(std::shared_ptr<ms::Session> const& sess
 
 int msh::ShellWrapper::set_surface_attribute(
     std::shared_ptr<ms::Session> const& session,
-    mf::SurfaceId surface_id,
+    std::shared_ptr<ms::Surface> const& surface,
     MirSurfaceAttrib attrib,
     int value)
 {
-    return wrapped->set_surface_attribute(session, surface_id, attrib, value);
+    return wrapped->set_surface_attribute(session, surface, attrib, value);
 }
 
 int msh::ShellWrapper::get_surface_attribute(
-    std::shared_ptr<ms::Session> const& session,
-    mf::SurfaceId surface_id,
+    std::shared_ptr<ms::Surface> const& surface,
     MirSurfaceAttrib attrib)
 {
-    return wrapped->get_surface_attribute(session, surface_id, attrib);
+    return wrapped->get_surface_attribute(surface, attrib);
 }
