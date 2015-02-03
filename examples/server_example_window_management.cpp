@@ -114,8 +114,6 @@ struct WindowManagerMetadata : virtual me::WindowManager
         handle_session_info_updated();
     }
 
-    virtual void handle_session_info_updated() = 0;
-
     void add_surface(
         std::shared_ptr<ms::Surface> const& surface,
         std::shared_ptr<ms::Session> const& session)
@@ -158,7 +156,8 @@ struct WindowManagerMetadata : virtual me::WindowManager
         handle_displays_updated();
     }
 
-    virtual void handle_displays_updated() = 0;
+    std::function<void()> handle_displays_updated{[]{}};
+    std::function<void()> handle_session_info_updated{[]{}};
 
     std::mutex mutex;
 
@@ -203,7 +202,16 @@ class TilingWindowManager : public virtual me::WindowManager,
     WindowManagerMetadata<SessionInfo, SurfaceInfo>
 {
 public:
-    using msh::AbstractShell::AbstractShell;
+    TilingWindowManager(
+        std::shared_ptr<msh::InputTargeter> const& input_targeter,
+        std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager) :
+        msh::AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager)
+    {
+        handle_session_info_updated = [this] { update_tiles(); };
+        handle_displays_updated = [this] { update_tiles(); };
+    }
 
 private:
     void click(Point cursor) override
@@ -377,16 +385,6 @@ private:
         }
 
         return parameters;
-    }
-
-    void handle_session_info_updated() override
-    {
-        update_tiles();
-    }
-
-    void handle_displays_updated() override
-    {
-        update_tiles();
     }
 
     void update_tiles()
