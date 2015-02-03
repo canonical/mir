@@ -315,10 +315,9 @@ MirWaitHandle* MirSurface::release_surface(
 
 MirNativeBuffer* MirSurface::get_current_buffer_package()
 {
-    auto platform = connection->get_client_platform();
-    auto buffer = get_current_buffer();
-    auto handle = buffer->native_buffer_handle();
-    return platform->convert_native_buffer(handle.get());
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
+    return buffer_stream->get_current_buffer_package();
 }
 
 std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()

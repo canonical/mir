@@ -18,7 +18,7 @@
 
 #include "src/client/buffer_stream.h"
 
-#include "mir/egl_native_window_factory.h"
+#include "mir/client_platform.h"
 
 #include "mir_test_doubles/null_client_buffer.h"
 #include "mir_test_doubles/mock_client_buffer_factory.h"
@@ -35,6 +35,7 @@
 
 namespace mp = mir::protobuf;
 namespace ml = mir::logging;
+namespace mg = mir::graphics;
 namespace mcl = mir::client;
 namespace geom = mir::geometry;
 
@@ -58,15 +59,40 @@ struct MockProtobufServer : public mp::DisplayServer
                       google::protobuf::Closure* /*done*/));
 };
 
-struct StubEGLNativeWindowFactory : public mcl::EGLNativeWindowFactory
+struct StubClientPlatform : public mcl::ClientPlatform
 {
-    std::shared_ptr<EGLNativeWindowType>
-        create_egl_native_window(mcl::EGLNativeSurface*)
+    StubClientPlatform(
+        std::shared_ptr<mcl::ClientBufferFactory> const& bf)
+        : buffer_factory(bf)
+    {
+    }
+    MirPlatformType platform_type() const override
+    {
+        return MirPlatformType();
+    }
+    void populate(MirPlatformPackage& /* package */) const override
+    {
+    }
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::EGLNativeSurface * /* surface */) override
     {
         return std::make_shared<EGLNativeWindowType>(egl_native_window);
     }
+    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override
+    {
+        return nullptr;
+    }
+    MirNativeBuffer* convert_native_buffer(mg::NativeBuffer*) const override
+    {
+        return nullptr;
+    }
+
+    std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory() override
+    {
+        return buffer_factory;
+    }
 
     static EGLNativeWindowType egl_native_window;
+    std::shared_ptr<mcl::ClientBufferFactory> const buffer_factory;
 };
 
 struct MockClientBuffer : public mtd::NullClientBuffer
@@ -74,15 +100,14 @@ struct MockClientBuffer : public mtd::NullClientBuffer
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
 };
 
-EGLNativeWindowType StubEGLNativeWindowFactory::egl_native_window{
-    reinterpret_cast<EGLNativeWindowType>(&StubEGLNativeWindowFactory::egl_native_window)};
+EGLNativeWindowType StubClientPlatform::egl_native_window{
+    reinterpret_cast<EGLNativeWindowType>(&StubClientPlatform::egl_native_window)};
 
 struct ClientBufferStreamTest : public testing::Test
 {
     mtd::MockClientBufferFactory mock_client_buffer_factory;
     mtd::StubClientBufferFactory stub_client_buffer_factory;
 
-    StubEGLNativeWindowFactory stub_native_window_factory;
     MockProtobufServer mock_protobuf_server;
 
     MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
@@ -99,8 +124,7 @@ struct ClientBufferStreamTest : public testing::Test
         mcl::ClientBufferFactory& buffer_factory,
         mcl::BufferStreamMode mode=mcl::BufferStreamMode::Producer)
     {
-        return std::make_shared<mcl::BufferStream>(mock_protobuf_server, mode, mt::fake_shared(buffer_factory),
-            mt::fake_shared(stub_native_window_factory), protobuf_bs, logger);
+        return std::make_shared<mcl::BufferStream>(mock_protobuf_server, mode, std::make_shared<StubClientPlatform>(mt::fake_shared(buffer_factory)), protobuf_bs, logger);
     }
 };
 
@@ -378,7 +402,7 @@ TEST_F(ClientBufferStreamTest, gets_egl_native_window)
     auto bs = make_buffer_stream(protobuf_bs);
     auto egl_native_window = bs->egl_native_window();
 
-    EXPECT_EQ(StubEGLNativeWindowFactory::egl_native_window, egl_native_window);
+    EXPECT_EQ(StubClientPlatform::egl_native_window, egl_native_window);
 }
 
 TEST_F(ClientBufferStreamTest, map_graphics_region)

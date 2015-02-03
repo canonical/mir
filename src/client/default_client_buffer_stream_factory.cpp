@@ -22,11 +22,10 @@ namespace mcl = mir::client;
 namespace ml = mir::logging;
 namespace mp = mir::protobuf;
 
-mcl::DefaultClientBufferStreamFactory::DefaultClientBufferStreamFactory(std::shared_ptr<mcl::ClientBufferFactory> const& client_buffer_factory,
-    std::shared_ptr<mcl::EGLNativeWindowFactory> const& native_window_factory,
+mcl::DefaultClientBufferStreamFactory::DefaultClientBufferStreamFactory(
+    std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     std::shared_ptr<ml::Logger> const& logger)
-    : client_buffer_factory(client_buffer_factory),
-      native_window_factory(native_window_factory),
+    : client_platform(client_platform),
       logger(logger)
 {
 }
@@ -34,13 +33,11 @@ mcl::DefaultClientBufferStreamFactory::DefaultClientBufferStreamFactory(std::sha
 std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_consumer_stream(mp::DisplayServer& server,
     mp::BufferStream const& protobuf_bs)
 {
-    return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Consumer, client_buffer_factory,
-        native_window_factory, protobuf_bs, logger);
+    return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Consumer, client_platform, protobuf_bs, logger);
 }
 
 std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_producer_stream(mp::DisplayServer& server,
     mp::BufferStream const& protobuf_bs)
 {
-    return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Producer, client_buffer_factory,
-        native_window_factory, protobuf_bs, logger);
+    return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Producer, client_platform, protobuf_bs, logger);
 }

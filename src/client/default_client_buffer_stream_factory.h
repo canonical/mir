@@ -30,13 +30,13 @@ class Logger;
 namespace client
 {
 class ClientBufferFactory;
-class EGLNativeWindowFactory;
+class ClientPlatform;
 
 class DefaultClientBufferStreamFactory : public ClientBufferStreamFactory
 {
 public:
-    DefaultClientBufferStreamFactory(std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
-        std::shared_ptr<EGLNativeWindowFactory> const& native_window_factory,
+    DefaultClientBufferStreamFactory(
+        std::shared_ptr<ClientPlatform> const& native_window_factory,
         std::shared_ptr<logging::Logger> const& logger);
     virtual ~DefaultClientBufferStreamFactory() = default;
 
@@ -46,8 +46,7 @@ public:
        protobuf::BufferStream const& protobuf_bs);
 
 private:
-    std::shared_ptr<ClientBufferFactory> const client_buffer_factory;
-    std::shared_ptr<EGLNativeWindowFactory> const native_window_factory;
+    std::shared_ptr<ClientPlatform> const client_platform;
     std::shared_ptr<logging::Logger> const logger;
     
 };
