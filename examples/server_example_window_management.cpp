@@ -96,9 +96,9 @@ private:
 };
 
 template<typename SessionInfo, typename SurfaceInfo>
-struct ShellMetadata
+struct WindowManagerMetadata : virtual me::WindowManager
 {
-    virtual ~ShellMetadata() = default;
+    virtual ~WindowManagerMetadata() = default;
 
     void add_session(std::shared_ptr<ms::Session> const& session)
     {
@@ -144,10 +144,28 @@ struct ShellMetadata
         surface_info.erase(surface);
     }
 
+    void add_display(Rectangle const& area) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        displays.add(area);
+        handle_displays_updated();
+    }
+
+    void remove_display(Rectangle const& area) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        displays.remove(area);
+        handle_displays_updated();
+    }
+
+    virtual void handle_displays_updated() = 0;
+
     std::mutex mutex;
 
     std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>> session_info;
     std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>> surface_info;
+
+    Rectangles displays;
 };
 
 struct SessionInfo
@@ -180,28 +198,14 @@ struct SurfaceInfo
 //  o Maximize/restore current window (to tile height): Shift-F11
 //  o Maximize/restore current window (to tile width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class TilingWindowManager : public me::WindowManager,
+class TilingWindowManager : public virtual me::WindowManager,
     msh::AbstractShell,
-    ShellMetadata<SessionInfo, SurfaceInfo>
+    WindowManagerMetadata<SessionInfo, SurfaceInfo>
 {
 public:
     using msh::AbstractShell::AbstractShell;
 
 private:
-    void add_display(Rectangle const& area) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        displays.add(area);
-        update_tiles();
-    }
-
-    void remove_display(Rectangle const& area) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        displays.remove(area);
-        update_tiles();
-    }
-
     void click(Point cursor) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -376,6 +380,11 @@ private:
     }
 
     void handle_session_info_updated() override
+    {
+        update_tiles();
+    }
+
+    void handle_displays_updated() override
     {
         update_tiles();
     }
@@ -583,8 +592,6 @@ private:
 
         return std::shared_ptr<ms::Session>{};
     }
-
-    Rectangles displays;
 
     Point old_cursor{};
     std::weak_ptr<ms::Surface> old_surface;
