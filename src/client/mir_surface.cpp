@@ -250,13 +250,18 @@ MirWaitHandle* MirSurface::release_surface(
         mir_surface_callback callback,
         void * context)
 {
+    bool was_valid = false;
     {
         std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
+        if (valid_surfaces.count(this))
+            was_valid = true;
         valid_surfaces.erase(this);
     }
+    if (this->surface.has_error())
+        was_valid = false;
 
     MirWaitHandle* wait_handle{nullptr};
-    if (connection)
+    if (connection && was_valid)
     {
         wait_handle = connection->release_surface(this, callback, context);
     }

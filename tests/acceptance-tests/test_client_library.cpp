@@ -481,7 +481,7 @@ TEST_F(ClientLibrary, client_library_accesses_and_advances_buffers)
     mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
 
     buffers = 0;
-    mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), next_buffer_callback, this);
+    mir_wait_for(mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), next_buffer_callback, this));
     EXPECT_THAT(buffers, Eq(1));
 
     mir_wait_for(mir_surface_release(surface, release_surface_callback, this));
