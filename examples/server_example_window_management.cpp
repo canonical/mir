@@ -95,6 +95,39 @@ private:
     void toggle(MirSurfaceState) override {}
 };
 
+template<typename SessionInfo>
+struct ShellMetadata
+{
+    virtual ~ShellMetadata() = default;
+
+    void add_session(std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        session_info[session] = SessionInfo();
+        on_session_info_update();
+    }
+
+    void remove_session(std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        session_info.erase(session);
+        on_session_info_update();
+    }
+
+    virtual void on_session_info_update() = 0;
+
+    std::mutex mutex;
+    Rectangles displays;
+
+    std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>> session_info;
+};
+
+struct SessionInfo
+{
+    Rectangle tile;
+    std::vector<std::weak_ptr<ms::Surface>> surfaces;
+};
+
 // simple tiling algorithm:
 //  o Switch apps: tap or click on the corresponding tile
 //  o Move window: Alt-leftmousebutton drag
@@ -104,7 +137,8 @@ private:
 //  o Maximize/restore current window (to tile width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
 class TilingWindowManager : public me::WindowManager,
-    msh::AbstractShell
+    msh::AbstractShell,
+    ShellMetadata<SessionInfo>
 {
 public:
     using msh::AbstractShell::AbstractShell;
@@ -277,20 +311,6 @@ private:
         return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
     }
 
-    void add_session(std::shared_ptr<ms::Session> const& session)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info[session] = SessionInfo();
-        update_tiles();
-    }
-
-    void remove_session(std::shared_ptr<ms::Session> const& session)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info.erase(session);
-        update_tiles();
-    }
-
     auto place_new_surface(
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& request_parameters)
@@ -319,6 +339,8 @@ private:
         session_info[session].surfaces.push_back(surface);
         surface_info[surface].session = session;
         surface_info[surface].state = mir_surface_state_restored;
+        surface_info[surface].restore_rect = {surface->top_left(), surface->size()};
+
     }
 
     void remove_surface(
@@ -338,6 +360,11 @@ private:
         }
 
         surface_info.erase(surface);
+    }
+
+    void on_session_info_update() override
+    {
+        update_tiles();
     }
 
     void update_tiles()
@@ -558,10 +585,8 @@ private:
         std::vector<std::weak_ptr<ms::Surface>> surfaces;
     };
 
-    std::mutex mutex;
     Rectangles displays;
 
-    std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>> session_info;
     std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>> surface_info;
 
     Point old_cursor{};
