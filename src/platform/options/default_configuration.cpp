@@ -117,7 +117,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
             "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
-        (arw_server_socket_opt, "Make socket filename globally rw (equivalent to chmod a+rw)")
+        (arw_server_socket_opt, "Make socket filename globally rw (equivalent to chmod a=rw)")
         (prompt_socket_opt, "Provide a \"..._trusted\" filename for prompt helper connections")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support (default: autodetect)")
