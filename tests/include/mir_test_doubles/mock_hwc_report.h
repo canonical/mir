@@ -30,9 +30,14 @@ namespace doubles
 {
 struct MockHwcReport : public graphics::android::HwcReport
 {
-    MOCK_CONST_METHOD1(report_list_submitted_to_prepare, void(hwc_display_contents_1_t const&));
-    MOCK_CONST_METHOD1(report_prepare_done, void(hwc_display_contents_1_t const&));
-    MOCK_CONST_METHOD1(report_set_list, void(hwc_display_contents_1_t const&));
+    MOCK_CONST_METHOD1(report_list_submitted_to_prepare,
+        void(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays));
+    MOCK_CONST_METHOD1(report_prepare_done,
+        void(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays));
+    MOCK_CONST_METHOD1(report_set_list,
+        void(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays));
+    MOCK_CONST_METHOD1(report_set_done,
+        void(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays)); 
     MOCK_CONST_METHOD1(report_overlay_optimization, void(graphics::android::OverlayOptimization));
     MOCK_CONST_METHOD0(report_display_on, void());
     MOCK_CONST_METHOD0(report_display_off, void());
