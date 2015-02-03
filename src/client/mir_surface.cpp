@@ -164,13 +164,7 @@ MirSurfaceParameters MirSurface::get_parameters() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    return MirSurfaceParameters {
-        0,
-        surface.width(),
-        surface.height(),
-        static_cast<MirPixelFormat>(surface.pixel_format()),
-        static_cast<MirBufferUsage>(surface.buffer_usage()),
-        mir_display_output_id_invalid};
+    return buffer_stream->get_parameters();
 }
 
 char const * MirSurface::get_error_message()
