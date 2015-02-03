@@ -306,13 +306,13 @@ void mir_connection_get_available_surface_formats(
 }
 
 MirWaitHandle* mir_connection_platform_operation(
-    MirConnection* connection, unsigned int opcode,
+    MirConnection* connection,
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context)
 {
     try
     {
-        return connection->platform_operation(opcode, request, callback, context);
+        return connection->platform_operation(request, callback, context);
     }
     catch (std::exception const& ex)
     {
@@ -387,7 +387,6 @@ MirWaitHandle* mir_connection_drm_auth_magic(MirConnection* connection,
 
     return mir_connection_platform_operation(
         connection,
-        MirMesaPlatformOperation::auth_magic,
         msg.get(),
         platform_operation_to_auth_magic_callback,
         auth_magic_op_context);
@@ -409,7 +408,6 @@ int mir_connection_drm_set_gbm_device(MirConnection* connection,
 
     auto wh = mir_connection_platform_operation(
         connection,
-        MirMesaPlatformOperation::set_gbm_device,
         msg.get(),
         assign_set_gbm_device_status,
         &status);
