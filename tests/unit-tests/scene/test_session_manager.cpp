@@ -31,7 +31,6 @@
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
-#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_session_event_sink.h"
 
 #include "mir_test/fake_shared.h"
@@ -75,7 +74,6 @@ struct SessionManagerSetup : public testing::Test
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
     }
 
-    mtd::NullSurfaceConfigurator surface_configurator;
     std::shared_ptr<ms::Surface> dummy_surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{{},{}},
@@ -83,7 +81,6 @@ struct SessionManagerSetup : public testing::Test
         std::make_shared<mtd::StubBufferStream>(),
         std::shared_ptr<mi::InputChannel>(),
         std::shared_ptr<mi::InputSender>(),
-        mt::fake_shared<ms::SurfaceConfigurator>(surface_configurator),
         std::shared_ptr<mg::CursorImage>(),
         mir::report::null_scene_report());
     mtd::MockSurfaceCoordinator surface_coordinator;
