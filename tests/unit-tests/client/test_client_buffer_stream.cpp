@@ -108,7 +108,7 @@ struct ClientBufferStreamTest : public testing::Test
         mcl::BufferStreamMode mode=mcl::BufferStreamMode::Producer)
     {
         return std::make_shared<mcl::BufferStream>(mock_protobuf_server, mode, mt::fake_shared(buffer_factory),
-            mt::fake_shared(stub_native_window_factory), protobuf_bs, perf_report, "testsurface");
+            mt::fake_shared(stub_native_window_factory), protobuf_bs, perf_report, "");
     }
 };
 
@@ -416,8 +416,7 @@ TEST_F(ClientBufferStreamTest, passes_name_to_perf_report)
     using namespace ::testing;
 
     MirBufferPackage buffer_package = a_buffer_package();
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
-        buffer_package);
+    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
 
     NiceMock<MockPerfReport> mock_perf_report;
     const char* const name = "a_unique_surface_name";
