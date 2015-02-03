@@ -80,7 +80,7 @@ void create_and_run_scroll_surface(MirConnection *connection)
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
-    EGLNativeWindowType native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(surface);
+    EGLNativeWindowType native_window = (EGLNativeWindowType) mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface));
     assert(native_window != (EGLNativeWindowType)NULL);
 
     rc = eglInitialize(disp, &major, &minor);

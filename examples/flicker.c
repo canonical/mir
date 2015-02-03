@@ -164,10 +164,10 @@ int main(int argc, char* argv[])
     int i=0;
     while (1)
     {
-        mir_surface_get_graphics_region( surface, &graphics_region);
+        mir_buffer_stream_get_graphics_region(mir_surface_get_buffer_stream(surface), &graphics_region);
         i++;
         render_pattern(&graphics_region, pattern[i & 1]);
-        mir_surface_swap_buffers_sync(surface);
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     }
 
     mir_surface_release_sync(surface);

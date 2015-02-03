@@ -487,7 +487,7 @@ MirSurfaceState mir_surface_get_state(MirSurface *surface);
  *   \return              A wait handle that can be passed to mir_wait_for,
  *                        or NULL if the interval could not be supported
  */
-MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
+MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
 
 /**
  * Query the swapinterval that the surface is operating with.
@@ -496,7 +496,7 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval) _
  *   \return              The swapinterval value that the client is operating with.
  *                        Returns -1 if surface is invalid.
  */
-int mir_surface_get_swapinterval(MirSurface* surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
+int mir_surface_get_swapinterval(MirSurface* surface);
 
 /**
  * Query the DPI value of the surface (dots per inch). This will vary depending
