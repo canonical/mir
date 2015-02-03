@@ -46,6 +46,8 @@ struct HwcLogger : public ::testing::Test
         display_list->hwLayers[0].blending = HWC_BLENDING_NONE;
         display_list->hwLayers[0].displayFrame = {1, 1, 2, 1}; 
         display_list->hwLayers[0].sourceCrop = {3, 2, 5, 3}; 
+        display_list->hwLayers[0].acquireFenceFd = fake_fence[0];
+        display_list->hwLayers[0].releaseFenceFd = fake_fence[1];
 
         display_list->hwLayers[1].compositionType = HWC_FRAMEBUFFER; 
         display_list->hwLayers[1].flags = 0;
@@ -54,6 +56,9 @@ struct HwcLogger : public ::testing::Test
         display_list->hwLayers[1].blending = HWC_BLENDING_PREMULT;
         display_list->hwLayers[1].displayFrame = {8, 5, 13, 8}; 
         display_list->hwLayers[1].sourceCrop = {21, 13, 34, 21}; 
+        display_list->hwLayers[1].acquireFenceFd = fake_acquire_fd1;
+        display_list->hwLayers[1].acquireFenceFd = fake_fence[2];
+        display_list->hwLayers[1].releaseFenceFd = fake_fence[3];
 
         display_list->hwLayers[2].compositionType = HWC_FRAMEBUFFER; 
         display_list->hwLayers[2].flags = HWC_SKIP_LAYER;
@@ -62,6 +67,9 @@ struct HwcLogger : public ::testing::Test
         display_list->hwLayers[2].blending = HWC_BLENDING_COVERAGE; 
         display_list->hwLayers[2].displayFrame = {55, 34, 89, 55};  
         display_list->hwLayers[2].sourceCrop = {144, 89, 233, 144}; 
+        display_list->hwLayers[2].acquireFenceFd = fake_acquire_fd2;
+        display_list->hwLayers[2].acquireFenceFd = fake_fence[4];
+        display_list->hwLayers[2].releaseFenceFd = fake_fence[5];
 
         display_list->hwLayers[3].compositionType = HWC_FRAMEBUFFER_TARGET; 
         display_list->hwLayers[3].flags = 0; 
@@ -69,7 +77,10 @@ struct HwcLogger : public ::testing::Test
         display_list->hwLayers[3].transform = 0;
         display_list->hwLayers[3].blending = HWC_BLENDING_NONE; 
         display_list->hwLayers[3].displayFrame = {377, 233, 610, 337}; 
-        display_list->hwLayers[3].sourceCrop = {987, 610, 1597, 987};  
+        display_list->hwLayers[3].sourceCrop = {987, 610, 1597, 987};
+        display_list->hwLayers[3].acquireFenceFd = fake_acquire_fd3;
+        display_list->hwLayers[3].acquireFenceFd = fake_fence[6];
+        display_list->hwLayers[3].releaseFenceFd = fake_fence[7];
     };
 
     virtual ~HwcLogger()
@@ -81,6 +92,7 @@ struct HwcLogger : public ::testing::Test
     std::ostringstream test_stream;
     size_t const num_layers;
     std::shared_ptr<hwc_display_contents_1_t> const display_list;
+    std::array<int, 8> fake_fence{4,5,6,7,8,9,10,11};
     native_handle_t native_handle1;
     native_handle_t native_handle2;
     native_handle_t native_handle3;
@@ -120,14 +132,29 @@ TEST_F(HwcLogger, report_set)
 {
     std::stringstream str;
     str << "set list():" << std::endl
-        << " # | handle" << std::endl
-        << " 0 | " << &native_handle1 << std::endl 
-        << " 1 | " << &native_handle2 << std::endl 
-        << " 2 | " << &native_handle3 << std::endl 
-        << " 3 | " << &native_handle4 << std::endl; 
+        << " # | handle | acquireFence" << std::endl
+        << " 0 | " << &native_handle1 << " | " << fake_fence[0] << std::endl 
+        << " 1 | " << &native_handle2 << " | " << fake_fence[2] << std::endl 
+        << " 2 | " << &native_handle3 << " | " << fake_fence[4] << std::endl 
+        << " 3 | " << &native_handle4 << " | " << fake_fence[6] << std::endl; 
 
     mga::HwcFormattedLogger logger;
     logger.report_set_list(*display_list);
+    EXPECT_EQ(str.str(), test_stream.str()); 
+}
+
+TEST_F(HwcLogger, report_post_set)
+{
+    std::stringstream str;
+    str << "set list():" << std::endl
+        << " # | releaseFence" << std::endl
+        << " 0 | " << fake_fence[1] << std::endl 
+        << " 1 | " << fake_fence[3] << std::endl 
+        << " 2 | " << fake_fence[5] << std::endl 
+        << " 3 | " << fake_fence[7] << std::endl; 
+
+    mga::HwcFormattedLogger logger;
+//    logger.report_set_done(*display_list);
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
 
