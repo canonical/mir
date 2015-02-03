@@ -103,6 +103,7 @@ MIRPLATFORM_6 {
     mir::graphics::Renderable::transformation*;
     mir::graphics::UserDisplayConfigurationOutput::extents*;
     mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
+    mir::options::arw_server_socket_opt*;
     mir::options::compositor_report_opt*;
     mir::options::Configuration::?Configuration*;
     mir::options::Configuration::Configuration*;
