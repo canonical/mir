@@ -41,7 +41,7 @@ public:
         static const size_t MAX_DEGREE = 4;
 
         // Estimator time base.
-        nsecs_t time;
+        std::chrono::nanoseconds time;
 
         // Polynomial coefficients describing motion in X and Y.
         float xCoeff[MAX_DEGREE + 1], yCoeff[MAX_DEGREE + 1];
@@ -54,7 +54,7 @@ public:
         float confidence;
 
         inline void clear() {
-            time = 0;
+            time = std::chrono::nanoseconds(0);
             degree = 0;
             confidence = 0;
             for (size_t i = 0; i <= MAX_DEGREE; i++) {
@@ -83,7 +83,7 @@ public:
     // are included in the movement.
     // The positions array contains position information for each pointer in order by
     // increasing id.  Its size should be equal to the size of ids.
-    void addMovement(nsecs_t eventTime, const IntSet &ids, const Position* positions);
+    void addMovement(std::chrono::nanoseconds eventTime, const IntSet &ids, const Position* positions);
 
     // Adds movement information for all pointers in a MotionEvent, including historical samples.
     void addMovement(const MotionEvent* event);
@@ -107,7 +107,7 @@ public:
 private:
     static const char* DEFAULT_STRATEGY;
 
-    nsecs_t mLastEventTime;
+    std::chrono::nanoseconds mLastEventTime;
     IntSet mCurrentPointerIds;
     int32_t mActivePointerId;
     VelocityTrackerStrategy* mStrategy;
@@ -130,7 +130,7 @@ public:
 
     virtual void clear() = 0;
     virtual void clearPointers(const IntSet &ids) = 0;
-    virtual void addMovement(nsecs_t eventTime, const IntSet &ids,
+    virtual void addMovement(std::chrono::nanoseconds eventTime, const IntSet &ids,
             const VelocityTracker::Position* positions) = 0;
     virtual bool getEstimator(uint32_t id, VelocityTracker::Estimator* outEstimator) const = 0;
 };
@@ -162,7 +162,7 @@ public:
 
     virtual void clear();
     virtual void clearPointers(const IntSet &ids);
-    virtual void addMovement(nsecs_t eventTime, const IntSet &ids,
+    virtual void addMovement(std::chrono::nanoseconds eventTime, const IntSet &ids,
             const VelocityTracker::Position* positions);
     virtual bool getEstimator(uint32_t id, VelocityTracker::Estimator* outEstimator) const;
 
@@ -170,13 +170,13 @@ private:
     // Sample horizon.
     // We don't use too much history by default since we want to react to quick
     // changes in direction.
-    static const nsecs_t HORIZON = 100 * 1000000; // 100 ms
+    static constexpr const std::chrono::nanoseconds HORIZON = std::chrono::nanoseconds(100 * 1000000); // 100 ms
 
     // Number of samples to keep.
     static const uint32_t HISTORY_SIZE = 20;
 
     struct Movement {
-        nsecs_t eventTime;
+        std::chrono::nanoseconds eventTime;
         IntSet ids;
         VelocityTracker::Position positions[MAX_POINTERS];
 
@@ -205,14 +205,14 @@ public:
 
     virtual void clear();
     virtual void clearPointers(const IntSet &ids);
-    virtual void addMovement(nsecs_t eventTime, const IntSet &ids,
+    virtual void addMovement(std::chrono::nanoseconds eventTime, const IntSet &ids,
             const VelocityTracker::Position* positions);
     virtual bool getEstimator(uint32_t id, VelocityTracker::Estimator* outEstimator) const;
 
 private:
     // Current state estimate for a particular pointer.
     struct State {
-        nsecs_t updateTime;
+        std::chrono::nanoseconds updateTime;
         uint32_t degree;
 
         float xpos, xvel, xaccel;
@@ -223,8 +223,8 @@ private:
     IntSet mPointerIds;
     std::unordered_map<int32_t, State> mPointerState; // maps the id of a pointer to its state
 
-    void initState(State& state, nsecs_t eventTime, float xpos, float ypos) const;
-    void updateState(State& state, nsecs_t eventTime, float xpos, float ypos) const;
+    void initState(State& state, std::chrono::nanoseconds eventTime, float xpos, float ypos) const;
+    void updateState(State& state, std::chrono::nanoseconds eventTime, float xpos, float ypos) const;
     void populateEstimator(const State& state, VelocityTracker::Estimator* outEstimator) const;
 };
 
@@ -239,22 +239,22 @@ public:
 
     virtual void clear();
     virtual void clearPointers(const IntSet &ids);
-    virtual void addMovement(nsecs_t eventTime, const IntSet &ids,
+    virtual void addMovement(std::chrono::nanoseconds eventTime, const IntSet &ids,
             const VelocityTracker::Position* positions);
     virtual bool getEstimator(uint32_t id, VelocityTracker::Estimator* outEstimator) const;
 
 private:
     // Oldest sample to consider when calculating the velocity.
-    static const nsecs_t HORIZON = 200 * 1000000; // 100 ms
+    static constexpr const std::chrono::nanoseconds HORIZON = std::chrono::nanoseconds(200 * 1000000); // 100 ms
 
     // Number of samples to keep.
     static const uint32_t HISTORY_SIZE = 20;
 
     // The minimum duration between samples when estimating velocity.
-    static const nsecs_t MIN_DURATION = 10 * 1000000; // 10 ms
+    static constexpr const std::chrono::nanoseconds MIN_DURATION = std::chrono::nanoseconds(10 * 1000000); // 10 ms
 
     struct Movement {
-        nsecs_t eventTime;
+        std::chrono::nanoseconds eventTime;
         IntSet ids;
         VelocityTracker::Position positions[MAX_POINTERS];
 

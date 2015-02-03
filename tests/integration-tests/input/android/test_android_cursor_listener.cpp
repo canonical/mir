@@ -17,6 +17,8 @@
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/input/event_filter_chain.h"
 
 #include "mir_test/fake_shared.h"

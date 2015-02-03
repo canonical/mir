@@ -6,7 +6,7 @@ b53736bcb22ddc09aab8275cfdd05c109fdd0f12  include/client/mir_toolkit/mir_client_
 d739af6e64db6b314a727b5fb00be662b98ccd57  include/client/mir_toolkit/mir_platform_message.h
 9d50df5a141ca03ee8a79f7e844ed4b8b3b7d5d3  include/client/mir_toolkit/mir_prompt_session.h
 21d07e655e85eeec8a3523e1c6f9c2252176ec01  include/client/mir_toolkit/mir_screencast.h
-232664cab86958838946ab051e845be5fbd485ca  include/client/mir_toolkit/mir_surface.h
+07c140966a72af13606993f7f8e58b79441f92e6  include/client/mir_toolkit/mir_surface.h
 b141c4d79802ad626d969249c0004744e5c2a525  include/client/mir_toolkit/mir_wait.h
 6f7b4ecc22afba923806ed2bd7d8244be90b0cfd  include/client/mir_toolkit/version.h
 3350dac884d6006753de2a955bc7a05663cd9449  include/common/mir_toolkit/client_types.h
@@ -14,7 +14,7 @@ b042ff8f542759fb82ad4cf1f4bab4aa2824e7f0  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 f4d39e9893ce6308bddd83a49b90f0051f565323  include/common/mir_toolkit/event.h
 2507f2929415aa423f9551d3c595c439fe1c6efd  include/common/mir_toolkit/events/event_deprecated.h
-cb2358a701db2b9c8d9ba1c877f29f834af259a7  include/common/mir_toolkit/events/event.h
+75f81e8250bd76c5281b8792aeadf5319eb2f169  include/common/mir_toolkit/events/event.h
 003b178a1d2418e03a13c54ca02353fa24beb1d6  include/common/mir_toolkit/events/input/input_event.h
 7748a12138474e9be218eeb8f14b372af0fcec7e  include/common/mir_toolkit/events/input/key_input_event.h
 489e8bae7c3e949ac449b09bd3bf554dae0e8986  include/common/mir_toolkit/events/input/pointer_input_event.h

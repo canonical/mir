@@ -25,6 +25,11 @@
 #include "drm_authentication.h"
 #include "drm_close_threadsafe.h"
 #include "ipc_operations.h"
+#include "mir_toolkit/mesa/platform_operation.h"
+
+#include <boost/throw_exception.hpp>
+#include <boost/exception/get_error_info.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -77,18 +82,59 @@ void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 }
 
 mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
-    unsigned int const, mg::PlatformOperationMessage const& request)
+    unsigned int const op, mg::PlatformOperationMessage const& request)
 {
-    int magic{0};
-    if (request.data.size() == sizeof(int))
-        magic = *reinterpret_cast<int const*>(request.data.data());
-    drm_auth->auth_magic(magic);
+    if (op == MirMesaPlatformOperation::auth_magic)
+    {
+        MirMesaAuthMagicRequest auth_magic_request;
+        if (request.data.size() == sizeof(auth_magic_request))
+        {
+            auth_magic_request =
+                *reinterpret_cast<decltype(auth_magic_request) const*>(request.data.data());
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error("Invalid request message for auth_magic platform operation"));
+        }
 
-    mg::PlatformOperationMessage response;
-    response.data.resize(sizeof(int));
-    *reinterpret_cast<int*>(response.data.data()) = 0;
+        mg::PlatformOperationMessage response;
+        response.data.resize(sizeof(MirMesaAuthMagicResponse));
+        auto const auth_magic_response_ptr =
+            reinterpret_cast<MirMesaAuthMagicResponse*>(response.data.data());
 
-    return response;
+        try
+        {
+            drm_auth->auth_magic(auth_magic_request.magic);
+            auth_magic_response_ptr->status = 0;
+        }
+        catch (std::exception const& e)
+        {
+            auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
+
+            if (errno_ptr != nullptr)
+                auth_magic_response_ptr->status = *errno_ptr;
+            else
+                throw;
+        }
+
+        return response;
+    }
+    else if (op == MirMesaPlatformOperation::auth_fd)
+    {
+        if (request.data.size() != 0 || request.fds.size() != 0)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error("Invalid request message for auth_fd platform operation"));
+        }
+
+        return mg::PlatformOperationMessage{{},{drm_auth->authenticated_fd()}};
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Invalid platform operation"));
+    }
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()

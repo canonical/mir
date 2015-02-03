@@ -16,6 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+
 #include "server_example_window_management.h"
 #include "server_example_fullscreen_placement_strategy.h"
 
@@ -279,6 +281,7 @@ public:
                 }
 
                 focussed_surface->configure(mir_surface_attrib_state, state);
+                attribute_set(*focussed_surface, mir_surface_attrib_state, state);
             }
         }
     }

@@ -17,10 +17,11 @@
  */
 
 #include "mir/graphics/android/mir_native_window.h"
+#include "mir/client_context.h"
 #include "android_client_platform.h"
 #include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"
-#include "client_surface_interpreter.h"
+#include "egl_native_surface_interpreter.h"
 
 #include <EGL/egl.h>
 
@@ -40,6 +41,12 @@ struct EmptyDeleter
     }
 };
 
+}
+
+mcla::AndroidClientPlatform::AndroidClientPlatform(
+    ClientContext* const context)
+    : context{context}
+{
 }
 
 std::shared_ptr<mcl::ClientBufferFactory> mcla::AndroidClientPlatform::create_buffer_factory()
@@ -77,9 +84,9 @@ private:
 };
 }
 
-std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_native_window(ClientSurface *surface)
+std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_native_window(EGLNativeSurface *surface)
 {
-    auto anativewindow_interpreter = std::make_shared<mcla::ClientSurfaceInterpreter>(*surface);
+    auto anativewindow_interpreter = std::make_shared<mcla::EGLNativeSurfaceInterpreter>(*surface);
     auto mir_native_window = new mga::MirNativeWindow(anativewindow_interpreter);
     auto egl_native_window = new EGLNativeWindowType;
     *egl_native_window = mir_native_window;
@@ -98,6 +105,17 @@ mcla::AndroidClientPlatform::create_egl_native_display()
 MirPlatformType mcla::AndroidClientPlatform::platform_type() const
 {
     return mir_platform_type_android;
+}
+
+void mcla::AndroidClientPlatform::populate(MirPlatformPackage& package) const
+{
+    context->populate_server_package(package);
+}
+
+MirPlatformMessage* mcla::AndroidClientPlatform::platform_operation(
+    MirPlatformMessage const*)
+{
+    return nullptr;
 }
 
 MirNativeBuffer* mcla::AndroidClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const

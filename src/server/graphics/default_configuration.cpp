@@ -23,7 +23,6 @@
 #include "default_display_configuration_policy.h"
 #include "nested/mir_client_host_connection.h"
 #include "nested/nested_display.h"
-#include "mir/graphics/nested_context.h"
 #include "offscreen/display.h"
 #include "software_cursor.h"
 
@@ -73,37 +72,6 @@ mir::DefaultServerConfiguration::wrap_display_configuration_policy(
     return wrapped;
 }
 
-namespace
-{
-//TODO: what is the point of NestedContext if its just the same as mgn:HostConnection?
-class MirConnectionNestedContext : public mg::NestedContext
-{
-public:
-    MirConnectionNestedContext(std::shared_ptr<mgn::HostConnection> const& connection)
-        : connection{connection}
-    {
-    }
-
-    std::vector<int> platform_fd_items()
-    {
-        return connection->platform_fd_items();
-    }
-
-    void drm_auth_magic(int magic)
-    {
-        connection->drm_auth_magic(magic);
-    }
-
-    void drm_set_gbm_device(struct gbm_device* dev)
-    {
-        connection->drm_set_gbm_device(dev);
-    }
-
-private:
-    std::shared_ptr<mgn::HostConnection> const connection;
-};
-}
-
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     return graphics_platform(
@@ -147,7 +115,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             else
                 return create_guest_platform(
                     the_display_report(),
-                    std::make_shared<MirConnectionNestedContext>(the_host_connection()));
+                    the_host_connection());
 
         });
 }

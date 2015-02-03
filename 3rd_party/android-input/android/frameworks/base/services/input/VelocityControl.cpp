@@ -30,7 +30,7 @@ namespace android {
 
 // --- VelocityControl ---
 
-const nsecs_t VelocityControl::STOP_TIME;
+const constexpr std::chrono::nanoseconds VelocityControl::STOP_TIME;
 
 VelocityControl::VelocityControl() {
     reset();
@@ -43,13 +43,13 @@ void VelocityControl::setParameters(const VelocityControlParameters& parameters)
 }
 
 void VelocityControl::reset() {
-    mLastMovementTime = LLONG_MIN;
+    mLastMovementTime = std::chrono::nanoseconds(LLONG_MIN);
     mRawPosition.x = 0;
     mRawPosition.y = 0;
     mVelocityTracker.clear();
 }
 
-void VelocityControl::move(nsecs_t eventTime, float* deltaX, float* deltaY) {
+void VelocityControl::move(std::chrono::nanoseconds eventTime, float* deltaX, float* deltaY) {
     if ((deltaX && *deltaX) || (deltaY && *deltaY)) {
         if (eventTime >= mLastMovementTime + STOP_TIME) {
 #if DEBUG_ACCELERATION

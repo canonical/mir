@@ -20,6 +20,9 @@
 #ifndef MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 #define MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
+
 #include "mir_toolkit/event.h"
 
 #include <xkbcommon/xkbcommon.h>

@@ -194,7 +194,7 @@ void mo::DefaultConfiguration::add_platform_options()
             platform_graphics_library = mir::graphics::module_for_device(plugins);
         }
 
-        auto add_platform_options = platform_graphics_library->load_function<mir::graphics::AddPlatformOptions>("add_graphics_platform_options");
+        auto add_platform_options = platform_graphics_library->load_function<mir::graphics::AddPlatformOptions>("add_graphics_platform_options", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
         add_platform_options(*this->program_options);
     }
     catch(...)

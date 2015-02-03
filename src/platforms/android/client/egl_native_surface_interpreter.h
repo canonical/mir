@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
-#define MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
+#ifndef MIR_CLIENT_NATIVE_ANDROID_EGL_NATIVE_SURFACE_INTERPRETER_H_
+#define MIR_CLIENT_NATIVE_ANDROID_EGL_NATIVE_SURFACE_INTERPRETER_H_
 
 #include "mir/graphics/android/android_driver_interpreter.h"
-#include "mir/mir_client_surface.h"
+#include "mir/egl_native_surface.h"
 
 namespace mir
 {
@@ -36,10 +36,10 @@ namespace client
 namespace android
 {
 
-class ClientSurfaceInterpreter : public graphics::android::AndroidDriverInterpreter
+class EGLNativeSurfaceInterpreter : public graphics::android::AndroidDriverInterpreter
 {
 public:
-    explicit ClientSurfaceInterpreter(ClientSurface& surface);
+    explicit EGLNativeSurfaceInterpreter(EGLNativeSurface& surface);
 
     graphics::NativeBuffer* driver_requests_buffer();
     void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd );
@@ -48,7 +48,7 @@ public:
     void sync_to_display(bool);
 
 private:
-    ClientSurface& surface;
+    EGLNativeSurface& surface;
     int driver_pixel_format;
     std::shared_ptr<graphics::android::SyncFileOps> const sync_ops;
 };
@@ -57,4 +57,4 @@ private:
 }
 }
 
-#endif /* MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_ */
+#endif /* MIR_CLIENT_NATIVE_ANDROID_EGL_NATIVE_SURFACE_INTERPRETER_H_ */

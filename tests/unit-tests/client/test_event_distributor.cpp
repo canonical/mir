@@ -16,6 +16,8 @@
  * Authored by: Nick Dedekind <nick.dedekind <nick.dedekind@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/client/mir_event_distributor.h"
 
 #include <gtest/gtest.h>

@@ -16,6 +16,8 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/scene/application_session.h"
 #include "mir/graphics/buffer.h"
 #include "mir/scene/surface_creation_parameters.h"

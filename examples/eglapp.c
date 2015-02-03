@@ -16,6 +16,8 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "eglapp.h"
 #include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>

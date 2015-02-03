@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #define MIR_LOGGING_COMPONENT "input-event-access"
 
 #include "mir/event_type_to_string.h"

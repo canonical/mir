@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/report/null/input_report.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/input_dispatcher.h"

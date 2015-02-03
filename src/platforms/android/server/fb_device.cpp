@@ -67,12 +67,21 @@ mga::DisplayAttribs mga::FbControl::active_attribs_for(DisplayName)
       fb_num};
 }
 
+mga::ConfigChangeSubscription mga::FbControl::subscribe_to_config_changes(std::function<void()> const&)
+{
+    return nullptr;
+}
+
 mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev) :
     fb_device(fbdev)
 {
 }
 
-void mga::FBDevice::post_gl(SwappingGLContext const& context)
+void mga::FBDevice::commit(
+    DisplayName,
+    LayerList&,
+    SwappingGLContext const& context,
+    RenderableListCompositor const&)
 {
     context.swap_buffers();
     auto const& buffer = context.last_rendered_buffer();
@@ -84,8 +93,7 @@ void mga::FBDevice::post_gl(SwappingGLContext const& context)
     }
 }
 
-bool mga::FBDevice::post_overlays(
-    SwappingGLContext const&, RenderableList const&, RenderableListCompositor const&)
+bool mga::FBDevice::compatible_renderlist(RenderableList const&)
 {
     return false;
 }

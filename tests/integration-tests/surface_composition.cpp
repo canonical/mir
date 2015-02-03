@@ -21,7 +21,6 @@
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "src/server/compositor/buffer_queue.h"
 
-#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
 #include "mir_test_doubles/stub_input_sender.h"
@@ -53,7 +52,6 @@ struct SurfaceComposition : Test
             create_buffer_stream(),
             create_input_channel(),
             create_input_sender(),
-            create_surface_configurator(),
             create_cursor_image(),
             mr::null_scene_report());
 
@@ -82,10 +80,6 @@ struct SurfaceComposition : Test
 
     auto create_cursor_image() const
     -> std::shared_ptr<mg::CursorImage>  { return {}; }
-
-    auto create_surface_configurator() const
-    -> std::shared_ptr<ms::SurfaceConfigurator>
-    { return std::make_shared<mtd::NullSurfaceConfigurator>(); }
 
     auto create_input_sender() const
     -> std::shared_ptr<mi::InputSender>

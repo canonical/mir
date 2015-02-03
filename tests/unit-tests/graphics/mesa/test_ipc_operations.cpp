@@ -20,6 +20,8 @@
 #include "src/platforms/mesa/server/drm_authentication.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir_toolkit/mesa/platform_operation.h"
+
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
@@ -88,18 +90,43 @@ TEST_F(IpcOperations, packs_buffer_correctly)
     ipc_ops.pack_buffer(mock_buffer_msg, mock_buffer, mg::BufferIpcMsgType::update_msg);
 }
 
-TEST_F(IpcOperations, drm_auth_magic_called_for_platform_operation)
+TEST_F(IpcOperations, calls_drm_auth_magic_for_auth_magic_operation)
 {
-    int const magic{112358};
-    EXPECT_CALL(mock_drm_ops, auth_magic(magic));
+    using namespace testing;
 
-    mg::PlatformOperationMessage magic_msg;
-    magic_msg.data.resize(sizeof(int));
-    *(reinterpret_cast<int*>(magic_msg.data.data())) = magic;
+    MirMesaAuthMagicRequest request;
+    request.magic = 0x10111213;
 
-    auto response = ipc_ops.platform_operation(0, magic_msg);
-    ASSERT_THAT(response.data.size(), testing::Eq(sizeof(int)));
-    ASSERT_THAT(*(reinterpret_cast<int*>(response.data.data())), testing::Eq(0));
+    EXPECT_CALL(mock_drm_ops, auth_magic(request.magic));
+
+    mg::PlatformOperationMessage request_msg;
+    request_msg.data.resize(sizeof(request));
+    *(reinterpret_cast<decltype(request)*>(request_msg.data.data())) = request;
+
+    auto response_msg = ipc_ops.platform_operation(
+        MirMesaPlatformOperation::auth_magic, request_msg);
+
+    MirMesaAuthMagicResponse response;
+    ASSERT_THAT(response_msg.data.size(), Eq(sizeof(response)));
+    response = *(reinterpret_cast<decltype(response)*>(response_msg.data.data()));
+    EXPECT_THAT(response.status, Eq(0));
+}
+
+TEST_F(IpcOperations, gets_authentication_fd_for_auth_fd_operation)
+{
+    using namespace testing;
+
+    mir::Fd stub_fd(fileno(tmpfile()));
+    EXPECT_CALL(mock_drm_ops, authenticated_fd())
+        .WillOnce(Return(stub_fd));
+
+    mg::PlatformOperationMessage request_msg;
+
+    auto const response_msg = ipc_ops.platform_operation(
+        MirMesaPlatformOperation::auth_fd, request_msg);
+
+    EXPECT_THAT(response_msg.data, IsEmpty());
+    EXPECT_THAT(response_msg.fds, ElementsAre(stub_fd));
 }
 
 TEST_F(IpcOperations, gets_authentication_fd_for_connection_package)

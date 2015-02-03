@@ -16,17 +16,18 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/input/android/android_input_channel.h"
 #include "src/server/input/android/input_sender.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir_test_doubles/mock_main_loop.h"
 #include "mir_test_doubles/stub_scene_surface.h"
 #include "mir_test_doubles/mock_input_surface.h"
 #include "mir_test_doubles/mock_input_send_observer.h"
 #include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/mock_scene.h"
-#include "mir_test_doubles/stub_timer.h"
+#include "mir_test_doubles/triggered_main_loop.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_matchers.h"
 
@@ -38,8 +39,7 @@
 
 #include <boost/exception/all.hpp>
 
-#include <vector>
-#include <algorithm>
+//#include <algorithm>
 #include <cstring>
 
 namespace mi = mir::input;
@@ -73,89 +73,6 @@ public:
     }
 
     std::shared_ptr<ms::Observer> observer;
-};
-
-class TriggeredMainLoop : public ::testing::NiceMock<mtd::MockMainLoop>
-{
-public:
-    typedef ::testing::NiceMock<mtd::MockMainLoop> base;
-    typedef std::function<void(int)> fd_callback;
-    typedef std::function<void(int)> signal_callback;
-    typedef std::function<void()> callback;
-
-    void register_fd_handler(std::initializer_list<int> fds, void const* owner, fd_callback const& handler) override
-    {
-        base::register_fd_handler(fds, owner, handler);
-        for (int fd : fds)
-        {
-            fd_callbacks.emplace_back(Item{fd, owner, handler});
-        }
-    }
-
-    void unregister_fd_handler(void const* owner)
-    {
-        base::unregister_fd_handler(owner);
-        fd_callbacks.erase(
-            remove_if(
-                begin(fd_callbacks),
-                end(fd_callbacks),
-                [owner](Item const& item)
-                {
-                    return item.owner == owner;
-                }),
-            end(fd_callbacks)
-            );
-    }
-
-    void trigger_pending_fds()
-    {
-        fd_set read_fds;
-        FD_ZERO(&read_fds);
-        int max_fd = 0;
-
-        for (auto const & item : fd_callbacks)
-        {
-            FD_SET(item.fd, &read_fds);
-            max_fd = std::max(item.fd, max_fd);
-        }
-
-        struct timeval do_not_wait{0, 0};
-
-        if (select(max_fd+1, &read_fds, nullptr, nullptr, &do_not_wait))
-        {
-            for (auto const & item : fd_callbacks)
-            {
-                FD_ISSET(item.fd, &read_fds);
-                item.callback(item.fd);
-            }
-        }
-    }
-
-    std::unique_ptr<mir::time::Alarm> notify_in(std::chrono::milliseconds delay,
-                                                callback call) override
-    {
-        base::notify_in(delay, call);
-        timeout_callbacks.push_back(call);
-        return std::unique_ptr<mir::time::Alarm>{new mtd::StubAlarm};
-    }
-
-    void fire_all_alarms()
-    {
-        for(auto const& callback : timeout_callbacks)
-            callback();
-    }
-
-private:
-    std::vector<callback> timeout_callbacks;
-
-private:
-    struct Item
-    {
-        int fd;
-        void const* owner;
-        fd_callback callback;
-    };
-    std::vector<Item> fd_callbacks;
 };
 
 }
@@ -205,7 +122,7 @@ public:
     droidinput::sp<droidinput::InputChannel> client_channel{new droidinput::InputChannel(droidinput::String8("test"), channel->client_fd())};
     droidinput::InputConsumer consumer{client_channel};
 
-    TriggeredMainLoop loop;
+    mtd::TriggeredMainLoop loop;
     testing::NiceMock<mtd::MockInputSendObserver> observer;
 
     MirEvent key_event;
@@ -286,7 +203,7 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_key_events)
 
     sender.send_event(key_event, channel);
 
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &seq, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
 
     EXPECT_EQ(&client_key_event, event);
     EXPECT_EQ(key_event.key.scan_code, client_key_event.getScanCode());
@@ -299,7 +216,7 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
 
     sender.send_event(motion_event, channel);
 
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &seq, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
 
     EXPECT_EQ(&client_motion_event, event);
     EXPECT_EQ(motion_event.motion.pointer_count, client_motion_event.getPointerCount());
@@ -326,7 +243,7 @@ TEST_F(AndroidInputSender, response_keeps_fd_registered)
     EXPECT_CALL(loop, unregister_fd_handler(_)).Times(0);
 
     sender.send_event(key_event, channel);
-    consumer.consume(&event_factory, true, -1, &seq, &event);
+    consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event);
     consumer.sendFinishedSignal(seq, true);
     loop.trigger_pending_fds();
 
@@ -339,7 +256,7 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_consumed)
 
     sender.send_event(motion_event, channel);
 
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &seq, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
     EXPECT_CALL(observer,
                 send_suceeded(mt::MirTouchEventMatches(motion_event),
                               &stub_surface,
@@ -355,7 +272,7 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_not_consum
 
     sender.send_event(motion_event, channel);
 
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &seq, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
     EXPECT_CALL(observer,
                 send_suceeded(mt::MirTouchEventMatches(motion_event),
                               &stub_surface,
@@ -373,8 +290,8 @@ TEST_F(AndroidInputSender, unordered_finish_signal_triggers_the_right_callback)
     sender.send_event(key_event, channel);
 
     uint32_t first_sequence, second_sequence;
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &first_sequence, &event));
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &second_sequence, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &first_sequence, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &second_sequence, &event));
 
     EXPECT_CALL(observer,
                 send_suceeded(mt::MirKeyEventMatches(key_event),

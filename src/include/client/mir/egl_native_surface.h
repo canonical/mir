@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_CLIENT_SURFACE_H_
-#define MIR_CLIENT_CLIENT_SURFACE_H_
+#ifndef MIR_CLIENT_EGL_NATIVE_SURFACE_H_
+#define MIR_CLIENT_EGL_NATIVE_SURFACE_H_
 
 #include "mir_toolkit/client_types.h"
 
@@ -28,7 +28,7 @@ namespace mir
 namespace client
 {
 class ClientBuffer;
-class ClientSurface
+class EGLNativeSurface
 {
   public:
     virtual MirSurfaceParameters get_parameters() const = 0;
@@ -37,13 +37,13 @@ class ClientSurface
     virtual void request_and_wait_for_configure(MirSurfaceAttrib a, int value) = 0;
 
   protected:
-    ClientSurface() = default;
-    virtual ~ClientSurface() = default;
-    ClientSurface(const ClientSurface&) = delete;
-    ClientSurface& operator=(const ClientSurface&) = delete;
+    EGLNativeSurface() = default;
+    virtual ~EGLNativeSurface() = default;
+    EGLNativeSurface(const EGLNativeSurface&) = delete;
+    EGLNativeSurface& operator=(const EGLNativeSurface&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_CLIENT_CLIENT_SURFACE_H_ */
+#endif /* MIR_CLIENT_EGL_NATIVE_SURFACE_H_ */

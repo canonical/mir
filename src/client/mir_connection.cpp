@@ -16,18 +16,24 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
+#include "default_client_buffer_stream_factory.h"
 #include "mir_toolkit/mir_platform_message.h"
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
+#include "mir/dispatch/dispatchable.h"
+#include "mir/dispatch/simple_dispatch_thread.h"
 #include "connection_configuration.h"
 #include "display_configuration.h"
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
 
+#include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
 
 #include <algorithm>
@@ -38,7 +44,9 @@
 #include <boost/exception/diagnostic_information.hpp>
 
 namespace mcl = mir::client;
+namespace md = mir::dispatch;
 namespace mircv = mir::input::receiver;
+namespace mev = mir::events;
 namespace gp = google::protobuf;
 
 namespace
@@ -106,7 +114,8 @@ MirConnection::MirConnection(
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
         surface_map(conf.the_surface_map()),
-        event_handler_register(conf.the_event_handler_register())
+        event_handler_register(conf.the_event_handler_register()),
+        eventloop{new md::SimpleDispatchThread{std::dynamic_pointer_cast<md::Dispatchable>(channel)}}
 {
     connect_result.set_error("connect not called");
     {
@@ -136,7 +145,8 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, &debug, platform->create_buffer_factory(), input_platform, spec, callback, context);
+    auto surface = new MirSurface(this, server, &debug, get_client_buffer_stream_factory(),
+        input_platform, spec, callback, context);
 
     return surface->get_create_wait_handle();
 }
@@ -177,12 +187,8 @@ void MirConnection::released(SurfaceRelease data)
     // If it's still focused, send an unfocused event before we kill it entirely
     if (data.surface->attrib(mir_surface_attrib_focus) == mir_surface_focused)
     {
-        MirEvent unfocus;
-        unfocus.type = mir_event_type_surface;
-        unfocus.surface.id = data.surface->id();
-        unfocus.surface.attrib = mir_surface_attrib_focus;
-        unfocus.surface.value = mir_surface_unfocused;
-        data.surface->handle_event(unfocus);
+        auto unfocus = mev::make_event(mir::frontend::SurfaceId{data.surface->id()}, mir_surface_attrib_focus, mir_surface_unfocused);
+        data.surface->handle_event(*unfocus);
     }
     data.callback(data.surface, data.context);
     data.handle->result_received();
@@ -328,33 +334,6 @@ MirWaitHandle* MirConnection::disconnect()
     return &disconnect_wait_handle;
 }
 
-void MirConnection::done_drm_auth_magic(mir_drm_auth_magic_callback callback,
-                                        void* context)
-{
-    int const status_code{drm_auth_magic_status.status_code()};
-
-    callback(status_code, context);
-    drm_auth_magic_wait_handle.result_received();
-}
-
-MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
-                                             mir_drm_auth_magic_callback callback,
-                                             void* context)
-{
-    mir::protobuf::DRMMagic request;
-    request.set_magic(magic);
-
-    drm_auth_magic_wait_handle.expect_result();
-    server.drm_auth_magic(
-        0,
-        &request,
-        &drm_auth_magic_status,
-        google::protobuf::NewCallback(this, &MirConnection::done_drm_auth_magic,
-                                      callback, context));
-
-    return &drm_auth_magic_wait_handle;
-}
-
 void MirConnection::done_platform_operation(
     mir_platform_operation_callback callback, void* context)
 {
@@ -382,6 +361,14 @@ MirWaitHandle* MirConnection::platform_operation(
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context)
 {
+    auto const client_response = platform->platform_operation(request);
+    if (client_response)
+    {
+        set_error_message("");
+        callback(this, client_response, context);
+        return nullptr;
+    }
+
     mir::protobuf::PlatformOperationMessage protobuf_request;
 
     protobuf_request.set_opcode(opcode);
@@ -423,6 +410,11 @@ bool MirConnection::is_valid(MirConnection *connection)
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
 {
+    platform->populate(platform_package);
+}
+
+void MirConnection::populate_server_package(MirPlatformPackage& platform_package)
+{
     // connect_result is write-once: once it's valid, we don't need to lock
     // to use it.
     if (connect_done && !connect_result.has_error() && connect_result.has_platform())
@@ -436,9 +428,6 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
         platform_package.fd_items = platform.fd_size();
         for (int i = 0; i != platform.fd_size(); ++i)
             platform_package.fd[i] = platform.fd(i);
-
-        for (auto d : extra_platform_data)
-            platform_package.data[platform_package.data_items++] = d;
     }
     else
     {
@@ -479,6 +468,14 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     return platform;
+}
+
+std::shared_ptr<mir::client::ClientBufferStreamFactory> MirConnection::get_client_buffer_stream_factory()
+{
+    if (!buffer_stream_factory)
+        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(platform->create_buffer_factory(), 
+            platform, the_logger());
+    return buffer_stream_factory;
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()
@@ -571,21 +568,6 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 
     return &configure_display_wait_handle;
-}
-
-bool MirConnection::set_extra_platform_data(
-    std::vector<int> const& extra_platform_data_arg)
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    auto const total_data_size =
-        connect_result.platform().data_size() + extra_platform_data_arg.size();
-
-    if (total_data_size > mir_platform_package_max)
-        return false;
-
-    extra_platform_data = extra_platform_data_arg;
-    return true;
 }
 
 mir::protobuf::DisplayServer& MirConnection::display_server()

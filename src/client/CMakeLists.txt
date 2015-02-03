@@ -61,6 +61,8 @@ add_library(mirclientobjects OBJECT
   probing_client_platform_factory.cpp
   periodic_perf_report.cpp
   mir_platform_message_api.cpp
+  buffer_stream.cpp
+  default_client_buffer_stream_factory.cpp
 )
 
 # Ensure protobuf C++ headers have been produced before

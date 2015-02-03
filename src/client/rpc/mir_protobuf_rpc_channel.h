@@ -21,6 +21,7 @@
 
 #include "mir_basic_rpc_channel.h"
 #include "stream_transport.h"
+#include "mir/dispatch/dispatchable.h"
 
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
@@ -52,7 +53,8 @@ class RpcReport;
 
 class MirProtobufRpcChannel :
         public MirBasicRpcChannel,
-        public StreamTransport::Observer
+        public StreamTransport::Observer,
+        public dispatch::Dispatchable
 {
 public:
     MirProtobufRpcChannel(std::unique_ptr<StreamTransport> transport,
@@ -64,8 +66,14 @@ public:
 
     ~MirProtobufRpcChannel() = default;
 
+    // StreamTransport::Observer
     void on_data_available() override;
     void on_disconnected() override;
+
+    // Dispatchable
+    Fd watch_fd() const override;
+    bool dispatch(mir::dispatch::FdEvents events) override;
+    mir::dispatch::FdEvents relevant_events() const override;
 private:
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
         const google::protobuf::Message* parameters, google::protobuf::Message* response,

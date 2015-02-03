@@ -66,9 +66,9 @@ public:
     void display_attributes(
         DisplayName, ConfigId, uint32_t const* attributes, int32_t* values) const override;
 
-    void vsync(DisplayName, std::chrono::nanoseconds);
-    void hotplug(DisplayName, bool);
-    void invalidate();
+    void vsync(DisplayName, std::chrono::nanoseconds) noexcept;
+    void hotplug(DisplayName, bool) noexcept;
+    void invalidate() noexcept;
 private:
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
     std::shared_ptr<HwcReport> const report;

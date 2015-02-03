@@ -27,6 +27,7 @@ namespace mir
 {
 namespace graphics
 {
+struct PlatformOperationMessage;
 
 class NestedContext
 {
@@ -34,8 +35,9 @@ public:
     virtual ~NestedContext() = default;
 
     virtual std::vector<int> platform_fd_items() = 0;
-    virtual void drm_auth_magic(int magic) = 0;
     virtual void drm_set_gbm_device(struct gbm_device* dev) = 0;
+    virtual PlatformOperationMessage platform_operation(
+        unsigned int op, PlatformOperationMessage const& request) = 0;
 
 protected:
     NestedContext() = default;

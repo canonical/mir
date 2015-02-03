@@ -186,7 +186,7 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
         report, vt, *emergency_cleanup_registry, bypass_option);
 }
 
-extern "C" void add_platform_options(boost::program_options::options_description& config)
+extern "C" void add_graphics_platform_options(boost::program_options::options_description& config)
 {
     config.add_options()
         (vt_option_name,

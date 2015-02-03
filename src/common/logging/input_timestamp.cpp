@@ -21,20 +21,20 @@
 #include <cstdio>
 #include <string>
 
-std::string mir::logging::input_timestamp(nsecs_t when)
+std::string mir::logging::input_timestamp(std::chrono::nanoseconds when)
 {
     // Input events use CLOCK_REALTIME, and so we must...
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
 
-    nsecs_t now = ts.tv_sec * 1000000000LL + ts.tv_nsec;
-    nsecs_t age = now - when;
+    std::chrono::nanoseconds now = std::chrono::nanoseconds(ts.tv_sec * 1000000000LL + ts.tv_nsec);
+    std::chrono::nanoseconds age = now - when;
 
     char str[64];
     snprintf(str, sizeof str, "%lld (%ld.%06ld ms ago)",
-             static_cast<long long>(when),
-             static_cast<long>(age / 1000000LL),
-             static_cast<long>(age % 1000000LL));
+             static_cast<long long>(when.count()),
+             static_cast<long>(age.count() / 1000000LL),
+             static_cast<long>(age.count() % 1000000LL));
 
     return std::string(str);
 }

@@ -19,9 +19,8 @@
 #ifndef MIR_CLIENT_MIR_SCREENCAST_H_
 #define MIR_CLIENT_MIR_SCREENCAST_H_
 
-#include "mir/mir_client_surface.h"
+#include "mir/egl_native_surface.h"
 #include "mir_wait_handle.h"
-#include "client_buffer_depository.h"
 #include "mir_toolkit/client_types.h"
 #include "mir_protobuf.pb.h"
 #include "mir/geometry/size.h"
@@ -34,12 +33,12 @@ namespace mir
 namespace protobuf { class DisplayServer; }
 namespace client
 {
-class ClientBufferFactory;
-class EGLNativeWindowFactory;
+class ClientBufferStreamFactory;
+class ClientBufferStream;
 }
 }
 
-struct MirScreencast : public mir::client::ClientSurface
+struct MirScreencast : public mir::client::EGLNativeSurface
 {
 public:
     MirScreencast(
@@ -47,8 +46,7 @@ public:
         mir::geometry::Size const& size,
         MirPixelFormat pixel_format,
         mir::protobuf::DisplayServer& server,
-        std::shared_ptr<mir::client::EGLNativeWindowFactory> const& egl_native_window_factory,
-        std::shared_ptr<mir::client::ClientBufferFactory> const& factory,
+        std::shared_ptr<mir::client::ClientBufferStreamFactory> const& buffer_stream_factory,
         mir_screencast_callback callback, void* context);
 
     MirWaitHandle* creation_wait_handle();
@@ -62,35 +60,29 @@ public:
 
     EGLNativeWindowType egl_native_window();
 
-    /* mir::client::ClientSurface */
+    /* mir::client::EGLNativeSurface */
     MirSurfaceParameters get_parameters() const;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     void request_and_wait_for_next_buffer();
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
 
 private:
-    void process_buffer(mir::protobuf::Buffer const& buffer);
     void screencast_created(
         mir_screencast_callback callback, void* context);
     void released(
         mir_screencast_callback callback, void* context);
-    void next_buffer_received(
-        mir_screencast_callback callback, void* context);
 
     mir::protobuf::DisplayServer& server;
     mir::geometry::Size const output_size;
-    MirPixelFormat const output_format;
-    std::shared_ptr<mir::client::EGLNativeWindowFactory> const egl_native_window_factory;
-    mir::client::ClientBufferDepository buffer_depository;
-    std::shared_ptr<EGLNativeWindowType> egl_native_window_;
+    std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
+    
+    std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
 
     mir::protobuf::Screencast protobuf_screencast;
-    mir::protobuf::Buffer protobuf_buffer;
     mir::protobuf::Void protobuf_void;
 
     MirWaitHandle create_screencast_wait_handle;
     MirWaitHandle release_wait_handle;
-    MirWaitHandle next_buffer_wait_handle;
 };
 
 #endif /* MIR_CLIENT_MIR_SCREENCAST_H_ */

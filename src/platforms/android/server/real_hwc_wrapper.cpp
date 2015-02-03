@@ -187,25 +187,49 @@ void mga::RealHwcWrapper::unsubscribe_from_events(void const* subscriber) noexce
         callback_map.erase(it);
 }
 
-void mga::RealHwcWrapper::vsync(DisplayName name, std::chrono::nanoseconds timestamp)
+void mga::RealHwcWrapper::vsync(DisplayName name, std::chrono::nanoseconds timestamp) noexcept
 {
     std::unique_lock<std::mutex> lk(callback_map_lock);
     for(auto const& callbacks : callback_map)
-        callbacks.second.vsync(name, timestamp);
+    {
+        try
+        {
+            callbacks.second.vsync(name, timestamp);
+        }
+        catch (...)
+        {
+        }
+    }
 }
 
-void mga::RealHwcWrapper::hotplug(DisplayName name, bool connected)
+void mga::RealHwcWrapper::hotplug(DisplayName name, bool connected) noexcept
 {
     std::unique_lock<std::mutex> lk(callback_map_lock);
     for(auto const& callbacks : callback_map)
-        callbacks.second.hotplug(name, connected);
+    {
+        try
+        {
+            callbacks.second.hotplug(name, connected);
+        }
+        catch (...)
+        {
+        }
+    }
 }
 
-void mga::RealHwcWrapper::invalidate()
+void mga::RealHwcWrapper::invalidate() noexcept
 {
     std::unique_lock<std::mutex> lk(callback_map_lock);
     for(auto const& callbacks : callback_map)
-        callbacks.second.invalidate();
+    {
+        try
+        {
+            callbacks.second.invalidate();
+        }
+        catch (...)
+        {
+        }
+    }
 }
 
 std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName display_name) const

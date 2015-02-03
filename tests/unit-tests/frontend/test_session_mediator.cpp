@@ -337,7 +337,7 @@ TEST_F(SessionMediator, calling_methods_after_connect_works)
 
     EXPECT_NO_THROW({
         mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
-        *buffer_request.mutable_buffer() = surface_response.buffer();
+        *buffer_request.mutable_buffer() = surface_response.buffer_stream().buffer();
         *buffer_request.mutable_id() = surface_response.id();
         mediator.next_buffer(nullptr, buffer_request.mutable_id(), &buffer_response, null_callback.get());
         mediator.exchange_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
@@ -646,7 +646,7 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
 
     mediator.create_screencast(nullptr, &screencast_parameters,
                                &screencast, null_callback.get());
-    EXPECT_EQ(stub_buffer.id().as_value(), screencast.buffer().buffer_id());
+    EXPECT_EQ(stub_buffer.id().as_value(), screencast.buffer_stream().buffer().buffer_id());
 }
 
 TEST_F(SessionMediator, partially_packs_buffer_for_screencast_buffer)
@@ -707,10 +707,10 @@ TEST_F(SessionMediator, exchange_buffer)
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
-    EXPECT_THAT(surface_response.buffer().buffer_id(), Eq(stub_buffer1.id().as_value()));
+    EXPECT_THAT(surface_response.buffer_stream().buffer().buffer_id(), Eq(stub_buffer1.id().as_value()));
 
     *buffer_request.mutable_id() = surface_response.id();
-    buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
+    buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer_stream().buffer().buffer_id());
     mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
     EXPECT_THAT(exchanged_buffer.buffer_id(), Eq(stub_buffer2.id().as_value()));
 }
@@ -754,7 +754,7 @@ TEST_F(SessionMediator, session_exchange_buffer_sends_minimum_information)
 
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
     *buffer_request.mutable_id() = surface_response.id();
-    buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
+    buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer_stream().buffer().buffer_id());
 
     mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
     buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
@@ -779,7 +779,7 @@ TEST_F(SessionMediator, exchange_buffer_throws_if_client_submits_bad_request)
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
-    EXPECT_THAT(surface_response.buffer().buffer_id(), Eq(stub_buffer1.id().as_value()));
+    EXPECT_THAT(surface_response.buffer_stream().buffer().buffer_id(), Eq(stub_buffer1.id().as_value()));
 
     *buffer_request.mutable_id() = surface_response.id();
     //client doesnt own stub_buffer2
@@ -818,10 +818,10 @@ TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
 
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     *req1.mutable_id() = surface_response.id();
-    *req1.mutable_buffer() = surface_response.buffer();
+    *req1.mutable_buffer() = surface_response.buffer_stream().buffer();
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     *req2.mutable_id() = surface_response.id();
-    *req2.mutable_buffer() = surface_response.buffer();
+    *req2.mutable_buffer() = surface_response.buffer_stream().buffer();
     mediator.exchange_buffer(nullptr, &req2, &buffer_response, null_callback.get());
     mediator.exchange_buffer(nullptr, &req1, &buffer_response, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
@@ -858,7 +858,7 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
     *buffer_request.mutable_id() = surface_response.id();
-    buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
+    buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer_stream().buffer().buffer_id());
 
     mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
     buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
@@ -894,29 +894,4 @@ TEST_F(SessionMediator, drm_auth_magic_calls_platform_operation_abstraction)
     ASSERT_THAT(request.data.size(), Eq(sizeof(int)));
     EXPECT_THAT(*(reinterpret_cast<int*>(request.data.data())), Eq(magic));
     EXPECT_THAT(drm_response.status_code(), Eq(test_response));
-}
-
-TEST_F(SessionMediator, drm_auth_magic_sets_status_code_on_error)
-{
-    using namespace testing;
-
-    mp::ConnectParameters connect_parameters;
-    mp::Connection connection;
-
-    unsigned int const drm_magic{0x10111213};
-    int const error_number{667};
-
-    EXPECT_CALL(mock_ipc_operations, platform_operation(_, _))
-        .WillOnce(Throw(::boost::enable_error_info(std::exception())
-            << boost::errinfo_errno(error_number)));
-
-    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-
-    mp::DRMMagic magic;
-    mp::DRMAuthMagicStatus status;
-    magic.set_magic(drm_magic);
-
-    mediator.drm_auth_magic(nullptr, &magic, &status, null_callback.get());
-
-    EXPECT_EQ(error_number, status.status_code());
 }

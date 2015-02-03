@@ -181,7 +181,7 @@ static float calculateCommonVector(float a, float b) {
 }
 
 static void synthesizeButtonKey(InputReaderContext* context, int32_t action,
-        nsecs_t when, int32_t deviceId, uint32_t source,
+        std::chrono::nanoseconds when, int32_t deviceId, uint32_t source,
         uint32_t policyFlags, int32_t lastButtonState, int32_t currentButtonState,
         int32_t buttonState, int32_t keyCode) {
     if (
@@ -198,7 +198,7 @@ static void synthesizeButtonKey(InputReaderContext* context, int32_t action,
 }
 
 static void synthesizeButtonKeys(InputReaderContext* context, int32_t action,
-        nsecs_t when, int32_t deviceId, uint32_t source,
+        std::chrono::nanoseconds when, int32_t deviceId, uint32_t source,
         uint32_t policyFlags, int32_t lastButtonState, int32_t currentButtonState) {
     synthesizeButtonKey(context, action, when, deviceId, source, policyFlags,
             lastButtonState, currentButtonState,
@@ -283,8 +283,8 @@ void InputReader::loopOnce() {
             mConfigurationChangesToRefresh = 0;
             timeoutMillis = 0;
             refreshConfigurationLocked(changes);
-        } else if (mNextTimeout != LLONG_MAX) {
-            nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+        } else if (mNextTimeout != std::chrono::nanoseconds(LLONG_MAX)) {
+            std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
             timeoutMillis = toMillisecondTimeoutDelay(now, mNextTimeout);
         }
     } // release lock
@@ -299,13 +299,13 @@ void InputReader::loopOnce() {
             processEventsLocked(mEventBuffer, count);
         }
 
-        if (mNextTimeout != LLONG_MAX) {
-            nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+        if (mNextTimeout != std::chrono::nanoseconds(LLONG_MAX)) {
+            std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
             if (now >= mNextTimeout) {
 #if DEBUG_RAW_EVENTS
                 ALOGD("Timeout expired, latency=%0.3fms", (now - mNextTimeout) * 0.000001f);
 #endif
-                mNextTimeout = LLONG_MAX;
+                mNextTimeout = std::chrono::nanoseconds(LLONG_MAX);
                 timeoutExpiredLocked(now);
             }
         }
@@ -369,7 +369,7 @@ void InputReader::processEventsLocked(const RawEvent* rawEvents, size_t count) {
     }
 }
 
-void InputReader::addDeviceLocked(nsecs_t when, int32_t deviceId) {
+void InputReader::addDeviceLocked(std::chrono::nanoseconds when, int32_t deviceId) {
     ssize_t deviceIndex = mDevices.indexOfKey(deviceId);
     if (deviceIndex >= 0) {
         ALOGW("Ignoring spurious device added event for deviceId %d.", deviceId);
@@ -395,7 +395,7 @@ void InputReader::addDeviceLocked(nsecs_t when, int32_t deviceId) {
     bumpGenerationLocked();
 }
 
-void InputReader::removeDeviceLocked(nsecs_t when, int32_t deviceId) {
+void InputReader::removeDeviceLocked(std::chrono::nanoseconds when, int32_t deviceId) {
     InputDevice* device = NULL;
     ssize_t deviceIndex = mDevices.indexOfKey(deviceId);
     if (deviceIndex < 0) {
@@ -496,7 +496,7 @@ void InputReader::processEventsForDeviceLocked(int32_t deviceId,
     device->process(rawEvents, count);
 }
 
-void InputReader::timeoutExpiredLocked(nsecs_t when) {
+void InputReader::timeoutExpiredLocked(std::chrono::nanoseconds when) {
     for (size_t i = 0; i < mDevices.size(); i++) {
         InputDevice* device = mDevices.valueAt(i);
         if (!device->isIgnored()) {
@@ -505,7 +505,7 @@ void InputReader::timeoutExpiredLocked(nsecs_t when) {
     }
 }
 
-void InputReader::handleConfigurationChangedLocked(nsecs_t when) {
+void InputReader::handleConfigurationChangedLocked(std::chrono::nanoseconds when) {
     // Reset global meta state because it depends on the list of all configured devices.
     updateGlobalMetaStateLocked();
 
@@ -520,7 +520,7 @@ void InputReader::refreshConfigurationLocked(uint32_t changes) {
 
     if (changes) {
         ALOGI("Reconfiguring input devices.  changes=0x%08x", changes);
-        nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+        std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
 
         if (changes & InputReaderConfiguration::CHANGE_MUST_REOPEN) {
             mEventHub->requestReopenDevices();
@@ -546,11 +546,11 @@ int32_t InputReader::getGlobalMetaStateLocked() {
     return mGlobalMetaState;
 }
 
-void InputReader::disableVirtualKeysUntilLocked(nsecs_t time) {
+void InputReader::disableVirtualKeysUntilLocked(std::chrono::nanoseconds time) {
     mDisableVirtualKeysTimeout = time;
 }
 
-bool InputReader::shouldDropVirtualKeyLocked(nsecs_t now,
+bool InputReader::shouldDropVirtualKeyLocked(std::chrono::nanoseconds now,
         InputDevice* device, int32_t keyCode, int32_t scanCode) {
     if (now < mDisableVirtualKeysTimeout) {
         ALOGI("Dropping virtual key from device %s because virtual keys are "
@@ -571,7 +571,7 @@ void InputReader::fadePointerLocked() {
     }
 }
 
-void InputReader::requestTimeoutAtTimeLocked(nsecs_t when) {
+void InputReader::requestTimeoutAtTimeLocked(std::chrono::nanoseconds when) {
     if (when < mNextTimeout) {
         mNextTimeout = when;
         mEventHub->wake();
@@ -696,7 +696,7 @@ void InputReader::requestRefreshConfiguration(uint32_t changes) {
     }
 }
 
-void InputReader::vibrate(int32_t deviceId, const nsecs_t* pattern, size_t patternSize,
+void InputReader::vibrate(int32_t deviceId, const std::chrono::nanoseconds* pattern, size_t patternSize,
         ssize_t repeat, int32_t token) {
     AutoMutex _l(mLock);
 
@@ -810,12 +810,12 @@ int32_t InputReader::ContextImpl::getGlobalMetaState() {
     return mReader->getGlobalMetaStateLocked();
 }
 
-void InputReader::ContextImpl::disableVirtualKeysUntil(nsecs_t time) {
+void InputReader::ContextImpl::disableVirtualKeysUntil(std::chrono::nanoseconds time) {
     // lock is already held by the input loop
     mReader->disableVirtualKeysUntilLocked(time);
 }
 
-bool InputReader::ContextImpl::shouldDropVirtualKey(nsecs_t now,
+bool InputReader::ContextImpl::shouldDropVirtualKey(std::chrono::nanoseconds now,
         InputDevice* device, int32_t keyCode, int32_t scanCode) {
     // lock is already held by the input loop
     return mReader->shouldDropVirtualKeyLocked(now, device, keyCode, scanCode);
@@ -826,7 +826,7 @@ void InputReader::ContextImpl::fadePointer() {
     mReader->fadePointerLocked();
 }
 
-void InputReader::ContextImpl::requestTimeoutAtTime(nsecs_t when) {
+void InputReader::ContextImpl::requestTimeoutAtTime(std::chrono::nanoseconds when) {
     // lock is already held by the input loop
     mReader->requestTimeoutAtTimeLocked(when);
 }
@@ -922,7 +922,7 @@ void InputDevice::addMapper(InputMapper* mapper) {
     mMappers.add(mapper);
 }
 
-void InputDevice::configure(nsecs_t when, InputReaderConfiguration const* config, uint32_t changes) {
+void InputDevice::configure(std::chrono::nanoseconds when, InputReaderConfiguration const* config, uint32_t changes) {
     mSources = 0;
 
     if (!isIgnored()) {
@@ -959,7 +959,7 @@ void InputDevice::configure(nsecs_t when, InputReaderConfiguration const* config
     }
 }
 
-void InputDevice::reset(nsecs_t when) {
+void InputDevice::reset(std::chrono::nanoseconds when) {
     size_t numMappers = mMappers.size();
     for (size_t i = 0; i < numMappers; i++) {
         InputMapper* mapper = mMappers[i];
@@ -1009,7 +1009,7 @@ void InputDevice::process(const RawEvent* rawEvents, size_t count) {
     }
 }
 
-void InputDevice::timeoutExpired(nsecs_t when) {
+void InputDevice::timeoutExpired(std::chrono::nanoseconds when) {
     size_t numMappers = mMappers.size();
     for (size_t i = 0; i < numMappers; i++) {
         InputMapper* mapper = mMappers[i];
@@ -1071,7 +1071,7 @@ bool InputDevice::markSupportedKeyCodes(uint32_t sourceMask, size_t numCodes,
     return result;
 }
 
-void InputDevice::vibrate(const nsecs_t* pattern, size_t patternSize, ssize_t repeat,
+void InputDevice::vibrate(const std::chrono::nanoseconds* pattern, size_t patternSize, ssize_t repeat,
         int32_t token) {
     size_t numMappers = mMappers.size();
     for (size_t i = 0; i < numMappers; i++) {
@@ -1110,7 +1110,7 @@ void InputDevice::bumpGeneration() {
     mGeneration = mContext->bumpGeneration();
 }
 
-void InputDevice::notifyReset(nsecs_t when) {
+void InputDevice::notifyReset(std::chrono::nanoseconds when) {
     NotifyDeviceResetArgs args(when, mId);
     mContext->getListener()->notifyDeviceReset(&args);
 }
@@ -1760,14 +1760,14 @@ void InputMapper::populateDeviceInfo(InputDeviceInfo* info) {
 void InputMapper::dump(String8& dump) {
 }
 
-void InputMapper::configure(nsecs_t when, 
+void InputMapper::configure(std::chrono::nanoseconds when, 
         const InputReaderConfiguration* config, uint32_t changes) {
 }
 
-void InputMapper::reset(nsecs_t when) {
+void InputMapper::reset(std::chrono::nanoseconds when) {
 }
 
-void InputMapper::timeoutExpired(nsecs_t when) {
+void InputMapper::timeoutExpired(std::chrono::nanoseconds when) {
 }
 
 int32_t InputMapper::getKeyCodeState(uint32_t sourceMask, int32_t keyCode) {
@@ -1787,7 +1787,7 @@ bool InputMapper::markSupportedKeyCodes(uint32_t sourceMask, size_t numCodes,
     return false;
 }
 
-void InputMapper::vibrate(const nsecs_t* pattern, size_t patternSize, ssize_t repeat,
+void InputMapper::vibrate(const std::chrono::nanoseconds* pattern, size_t patternSize, ssize_t repeat,
         int32_t token) {
 }
 
@@ -1841,7 +1841,7 @@ void SwitchInputMapper::process(const RawEvent* rawEvent) {
     }
 }
 
-void SwitchInputMapper::processSwitch(nsecs_t when, int32_t switchCode, int32_t switchValue) {
+void SwitchInputMapper::processSwitch(std::chrono::nanoseconds when, int32_t switchCode, int32_t switchValue) {
     NotifySwitchArgs args(when, 0, switchCode, switchValue);
     getListener()->notifySwitch(&args);
 }
@@ -1874,7 +1874,7 @@ void VibratorInputMapper::process(const RawEvent* rawEvent) {
     // TODO: Handle FF_STATUS, although it does not seem to be widely supported.
 }
 
-void VibratorInputMapper::vibrate(const nsecs_t* pattern, size_t patternSize, ssize_t repeat,
+void VibratorInputMapper::vibrate(const std::chrono::nanoseconds* pattern, size_t patternSize, ssize_t repeat,
         int32_t token) {
 #if DEBUG_VIBRATOR
     String8 patternStr;
@@ -1889,7 +1889,7 @@ void VibratorInputMapper::vibrate(const nsecs_t* pattern, size_t patternSize, ss
 #endif
 
     mVibrating = true;
-    memcpy(mPattern, pattern, patternSize * sizeof(nsecs_t));
+    memcpy(mPattern, pattern, patternSize * sizeof(std::chrono::nanoseconds));
     mPatternSize = patternSize;
     mRepeat = repeat;
     mToken = token;
@@ -1908,7 +1908,7 @@ void VibratorInputMapper::cancelVibrate(int32_t token) {
     }
 }
 
-void VibratorInputMapper::timeoutExpired(nsecs_t when) {
+void VibratorInputMapper::timeoutExpired(std::chrono::nanoseconds when) {
     if (mVibrating) {
         if (when >= mNextStepTime) {
             nextStep();
@@ -1930,7 +1930,7 @@ void VibratorInputMapper::nextStep() {
     }
 
     bool vibratorOn = mIndex & 1;
-    nsecs_t duration = mPattern[mIndex];
+    std::chrono::nanoseconds duration = mPattern[mIndex];
     if (vibratorOn) {
 #if DEBUG_VIBRATOR
         ALOGD("nextStep: sending vibrate deviceId=%d, duration=%lld",
@@ -1943,7 +1943,7 @@ void VibratorInputMapper::nextStep() {
 #endif
         getEventHub()->cancelVibrate(getDeviceId());
     }
-    nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+    std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
     mNextStepTime = now + duration;
     getContext()->requestTimeoutAtTime(mNextStepTime);
 #if DEBUG_VIBRATOR
@@ -1998,7 +1998,7 @@ void KeyboardInputMapper::dump(String8& dump) {
 }
 
 
-void KeyboardInputMapper::configure(nsecs_t when, InputReaderConfiguration const* config, uint32_t changes) {
+void KeyboardInputMapper::configure(std::chrono::nanoseconds when, InputReaderConfiguration const* config, uint32_t changes) {
     InputMapper::configure(when, config, changes);
 
     if (!changes) { // first time only
@@ -2037,9 +2037,9 @@ void KeyboardInputMapper::dumpParameters(String8& dump) {
             toString(mParameters.orientationAware));
 }
 
-void KeyboardInputMapper::reset(nsecs_t when) {
+void KeyboardInputMapper::reset(std::chrono::nanoseconds when) {
     mMetaState = AMETA_NONE;
-    mDownTime = 0;
+    mDownTime = std::chrono::nanoseconds(0);
     mKeyDowns.clear();
     mCurrentHidUsage = 0;
 
@@ -2087,7 +2087,7 @@ bool KeyboardInputMapper::isKeyboardOrGamepadKey(int32_t scanCode) {
         || (scanCode >= BTN_JOYSTICK && scanCode < BTN_DIGI);
 }
 
-void KeyboardInputMapper::processKey(nsecs_t when, bool down, int32_t keyCode,
+void KeyboardInputMapper::processKey(std::chrono::nanoseconds when, bool down, int32_t keyCode,
         int32_t scanCode, uint32_t policyFlags) {
 
     if (down) {
@@ -2141,7 +2141,7 @@ void KeyboardInputMapper::processKey(nsecs_t when, bool down, int32_t keyCode,
         updateLedState(false);
     }
 
-    nsecs_t downTime = mDownTime;
+    std::chrono::nanoseconds downTime = mDownTime;
 
     // Key down on external an keyboard should wake the device.
     // We don't do this for internal keyboards to prevent them from waking up in your pocket.
@@ -2283,7 +2283,7 @@ void CursorInputMapper::dump(String8& dump) {
     appendFormat(dump, INDENT3 "DownTime: %lld\n", mDownTime);
 }
 
-void CursorInputMapper::configure(nsecs_t when, InputReaderConfiguration const* config, uint32_t changes) {
+void CursorInputMapper::configure(std::chrono::nanoseconds when, InputReaderConfiguration const* config, uint32_t changes) {
     InputMapper::configure(when, config, changes);
 
     if (!changes) { // first time only
@@ -2375,9 +2375,9 @@ void CursorInputMapper::dumpParameters(String8& dump) {
             toString(mParameters.orientationAware));
 }
 
-void CursorInputMapper::reset(nsecs_t when) {
+void CursorInputMapper::reset(std::chrono::nanoseconds when) {
     mButtonState = 0;
-    mDownTime = 0;
+    mDownTime = std::chrono::nanoseconds(0);
 
     mPointerVelocityControl.reset();
     mWheelXVelocityControl.reset();
@@ -2400,7 +2400,7 @@ void CursorInputMapper::process(const RawEvent* rawEvent) {
     }
 }
 
-void CursorInputMapper::sync(nsecs_t when) {
+void CursorInputMapper::sync(std::chrono::nanoseconds when) {
     int32_t lastButtonState = mButtonState;
     int32_t currentButtonState = mCursorButtonAccumulator.getButtonState();
     mButtonState = currentButtonState;
@@ -2416,7 +2416,7 @@ void CursorInputMapper::sync(nsecs_t when) {
     } else {
         downChanged = false;
     }
-    nsecs_t downTime = mDownTime;
+    std::chrono::nanoseconds downTime = mDownTime;
     bool buttonsChanged = currentButtonState != lastButtonState;
     bool buttonsPressed = currentButtonState & ~lastButtonState;
 
@@ -2692,7 +2692,7 @@ void TouchInputMapper::dump(String8& dump) {
     }
 }
 
-void TouchInputMapper::configure(nsecs_t when, const InputReaderConfiguration* config,
+void TouchInputMapper::configure(std::chrono::nanoseconds when, const InputReaderConfiguration* config,
     uint32_t changes) {
     InputMapper::configure(when, config, changes);
 
@@ -2850,7 +2850,7 @@ void TouchInputMapper::dumpRawPointerAxes(String8& dump) {
     dumpRawAbsoluteAxisInfo(dump, mRawPointerAxes.slot, "Slot");
 }
 
-void TouchInputMapper::configureSurface(nsecs_t when, bool* outResetNeeded) {
+void TouchInputMapper::configureSurface(std::chrono::nanoseconds when, bool* outResetNeeded) {
     int32_t oldDeviceMode = mDeviceMode;
 
     // Determine device mode.
@@ -3479,7 +3479,7 @@ void TouchInputMapper::dumpCalibration(String8& dump) {
     }
 }
 
-void TouchInputMapper::reset(nsecs_t when) {
+void TouchInputMapper::reset(std::chrono::nanoseconds when) {
     mCursorButtonAccumulator.reset(getDevice());
     mCursorScrollAccumulator.reset(getDevice());
     mTouchButtonAccumulator.reset(getDevice());
@@ -3504,7 +3504,7 @@ void TouchInputMapper::reset(nsecs_t when) {
     mLastMouseIds.clear();
     mPointerUsage = POINTER_USAGE_NONE;
     mSentHoverEnter = false;
-    mDownTime = 0;
+    mDownTime = std::chrono::nanoseconds(0);
 
     mCurrentVirtualKey.down = false;
 
@@ -3529,7 +3529,7 @@ void TouchInputMapper::process(const RawEvent* rawEvent) {
     }
 }
 
-void TouchInputMapper::sync(nsecs_t when) {
+void TouchInputMapper::sync(std::chrono::nanoseconds when) {
     // Sync button state.
     mCurrentButtonState = mTouchButtonAccumulator.getButtonState()
             | mCursorButtonAccumulator.getButtonState();
@@ -3686,7 +3686,7 @@ void TouchInputMapper::sync(nsecs_t when) {
     mCurrentRawHScroll = 0;
 }
 
-void TouchInputMapper::timeoutExpired(nsecs_t when) {
+void TouchInputMapper::timeoutExpired(std::chrono::nanoseconds when) {
     if (mDeviceMode == DEVICE_MODE_POINTER) {
         if (mPointerUsage == POINTER_USAGE_GESTURES) {
             dispatchPointerGestures(when, 0 /*policyFlags*/, true /*isTimeout*/);
@@ -3694,7 +3694,7 @@ void TouchInputMapper::timeoutExpired(nsecs_t when) {
     }
 }
 
-bool TouchInputMapper::consumeRawTouches(nsecs_t when, uint32_t policyFlags) {
+bool TouchInputMapper::consumeRawTouches(std::chrono::nanoseconds when, uint32_t policyFlags) {
     // Check for release of a virtual key.
     if (mCurrentVirtualKey.down) {
         if (mCurrentRawPointerData.touchingIds.isEmpty()) {
@@ -3787,17 +3787,17 @@ bool TouchInputMapper::consumeRawTouches(nsecs_t when, uint32_t policyFlags) {
     //    area and accidentally triggers a virtual key.  This often happens when virtual keys
     //    are layed out below the screen near to where the on screen keyboard's space bar
     //    is displayed.
-    if (mConfig.virtualKeyQuietTime > 0 && !mCurrentRawPointerData.touchingIds.isEmpty()) {
+    if (mConfig.virtualKeyQuietTime > std::chrono::nanoseconds(0) && !mCurrentRawPointerData.touchingIds.isEmpty()) {
         mContext->disableVirtualKeysUntil(when + mConfig.virtualKeyQuietTime);
     }
     return false;
 }
 
-void TouchInputMapper::dispatchVirtualKey(nsecs_t when, uint32_t policyFlags,
+void TouchInputMapper::dispatchVirtualKey(std::chrono::nanoseconds when, uint32_t policyFlags,
         int32_t keyEventAction, int32_t keyEventFlags) {
     int32_t keyCode = mCurrentVirtualKey.keyCode;
     int32_t scanCode = mCurrentVirtualKey.scanCode;
-    nsecs_t downTime = mCurrentVirtualKey.downTime;
+    std::chrono::nanoseconds downTime = mCurrentVirtualKey.downTime;
     int32_t metaState = mContext->getGlobalMetaState();
     policyFlags |= POLICY_FLAG_VIRTUAL;
 
@@ -3806,7 +3806,7 @@ void TouchInputMapper::dispatchVirtualKey(nsecs_t when, uint32_t policyFlags,
     getListener()->notifyKey(&args);
 }
 
-void TouchInputMapper::dispatchTouches(nsecs_t when, uint32_t policyFlags) {
+void TouchInputMapper::dispatchTouches(std::chrono::nanoseconds when, uint32_t policyFlags) {
     IntSet &currentIds = mCurrentCookedPointerData.touchingIds;
     IntSet &lastIds = mLastCookedPointerData.touchingIds;
     int32_t metaState = getContext()->getGlobalMetaState();
@@ -3893,7 +3893,7 @@ void TouchInputMapper::dispatchTouches(nsecs_t when, uint32_t policyFlags) {
     }
 }
 
-void TouchInputMapper::dispatchHoverExit(nsecs_t when, uint32_t policyFlags) {
+void TouchInputMapper::dispatchHoverExit(std::chrono::nanoseconds when, uint32_t policyFlags) {
     if (mSentHoverEnter &&
             (mCurrentCookedPointerData.hoveringIds.isEmpty()
                     || !mCurrentCookedPointerData.touchingIds.isEmpty())) {
@@ -3909,7 +3909,7 @@ void TouchInputMapper::dispatchHoverExit(nsecs_t when, uint32_t policyFlags) {
     }
 }
 
-void TouchInputMapper::dispatchHoverEnterAndMove(nsecs_t when, uint32_t policyFlags) {
+void TouchInputMapper::dispatchHoverEnterAndMove(std::chrono::nanoseconds when, uint32_t policyFlags) {
     if (mCurrentCookedPointerData.touchingIds.isEmpty()
             && !mCurrentCookedPointerData.hoveringIds.isEmpty()) {
         int32_t metaState = getContext()->getGlobalMetaState();
@@ -4135,7 +4135,7 @@ void TouchInputMapper::cookPointerData() {
     }
 }
 
-void TouchInputMapper::dispatchPointerUsage(nsecs_t when, uint32_t policyFlags,
+void TouchInputMapper::dispatchPointerUsage(std::chrono::nanoseconds when, uint32_t policyFlags,
         PointerUsage pointerUsage) {
     if (pointerUsage != mPointerUsage) {
         abortPointerUsage(when, policyFlags);
@@ -4157,7 +4157,7 @@ void TouchInputMapper::dispatchPointerUsage(nsecs_t when, uint32_t policyFlags,
     }
 }
 
-void TouchInputMapper::abortPointerUsage(nsecs_t when, uint32_t policyFlags) {
+void TouchInputMapper::abortPointerUsage(std::chrono::nanoseconds when, uint32_t policyFlags) {
     switch (mPointerUsage) {
     case POINTER_USAGE_GESTURES:
         abortPointerGestures(when, policyFlags);
@@ -4175,7 +4175,7 @@ void TouchInputMapper::abortPointerUsage(nsecs_t when, uint32_t policyFlags) {
     mPointerUsage = POINTER_USAGE_NONE;
 }
 
-void TouchInputMapper::dispatchPointerGestures(nsecs_t when, uint32_t policyFlags,
+void TouchInputMapper::dispatchPointerGestures(std::chrono::nanoseconds when, uint32_t policyFlags,
         bool isTimeout) {
     // Update current gesture coordinates.
     bool cancelPreviousGesture, finishPreviousGesture;
@@ -4376,7 +4376,7 @@ void TouchInputMapper::dispatchPointerGestures(nsecs_t when, uint32_t policyFlag
     }
 }
 
-void TouchInputMapper::abortPointerGestures(nsecs_t when, uint32_t policyFlags) {
+void TouchInputMapper::abortPointerGestures(std::chrono::nanoseconds when, uint32_t policyFlags) {
     // Cancel previously dispatches pointers.
     if (!mPointerGesture.lastGestureIds.isEmpty()) {
         int32_t metaState = getContext()->getGlobalMetaState();
@@ -4400,7 +4400,7 @@ void TouchInputMapper::abortPointerGestures(nsecs_t when, uint32_t policyFlags) 
     }
 }
 
-bool TouchInputMapper::preparePointerGestures(nsecs_t when,
+bool TouchInputMapper::preparePointerGestures(std::chrono::nanoseconds when,
         bool* outCancelPreviousGesture, bool* outFinishPreviousGesture, bool isTimeout) {
     *outCancelPreviousGesture = false;
     *outFinishPreviousGesture = false;
@@ -5148,7 +5148,7 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
     return true;
 }
 
-void TouchInputMapper::dispatchPointerStylus(nsecs_t when, uint32_t policyFlags) {
+void TouchInputMapper::dispatchPointerStylus(std::chrono::nanoseconds when, uint32_t policyFlags) {
     mPointerSimple.currentCoords.clear();
     mPointerSimple.currentProperties.clear();
 
@@ -5178,11 +5178,11 @@ void TouchInputMapper::dispatchPointerStylus(nsecs_t when, uint32_t policyFlags)
     dispatchPointerSimple(when, policyFlags, down, hovering);
 }
 
-void TouchInputMapper::abortPointerStylus(nsecs_t when, uint32_t policyFlags) {
+void TouchInputMapper::abortPointerStylus(std::chrono::nanoseconds when, uint32_t policyFlags) {
     abortPointerSimple(when, policyFlags);
 }
 
-void TouchInputMapper::dispatchPointerMouse(nsecs_t when, uint32_t policyFlags) {
+void TouchInputMapper::dispatchPointerMouse(std::chrono::nanoseconds when, uint32_t policyFlags) {
     mPointerSimple.currentCoords.clear();
     mPointerSimple.currentProperties.clear();
 
@@ -5231,13 +5231,13 @@ void TouchInputMapper::dispatchPointerMouse(nsecs_t when, uint32_t policyFlags) 
     dispatchPointerSimple(when, policyFlags, down, hovering);
 }
 
-void TouchInputMapper::abortPointerMouse(nsecs_t when, uint32_t policyFlags) {
+void TouchInputMapper::abortPointerMouse(std::chrono::nanoseconds when, uint32_t policyFlags) {
     abortPointerSimple(when, policyFlags);
 
     mPointerVelocityControl.reset();
 }
 
-void TouchInputMapper::dispatchPointerSimple(nsecs_t when, uint32_t policyFlags,
+void TouchInputMapper::dispatchPointerSimple(std::chrono::nanoseconds when, uint32_t policyFlags,
         bool down, bool hovering) {
     int32_t metaState = getContext()->getGlobalMetaState();
 
@@ -5350,17 +5350,17 @@ void TouchInputMapper::dispatchPointerSimple(nsecs_t when, uint32_t policyFlags,
     }
 }
 
-void TouchInputMapper::abortPointerSimple(nsecs_t when, uint32_t policyFlags) {
+void TouchInputMapper::abortPointerSimple(std::chrono::nanoseconds when, uint32_t policyFlags) {
     mPointerSimple.currentCoords.clear();
     mPointerSimple.currentProperties.clear();
 
     dispatchPointerSimple(when, policyFlags, false, false);
 }
 
-void TouchInputMapper::dispatchMotion(nsecs_t when, uint32_t policyFlags, uint32_t source,
+void TouchInputMapper::dispatchMotion(std::chrono::nanoseconds when, uint32_t policyFlags, uint32_t source,
         int32_t action, int32_t flags, int32_t metaState, int32_t buttonState, int32_t edgeFlags,
         const PointerProperties* properties, const PointerCoords* coords, uint32_t inPointerCount,
-        int32_t changedId, float xPrecision, float yPrecision, nsecs_t downTime) {
+        int32_t changedId, float xPrecision, float yPrecision, std::chrono::nanoseconds downTime) {
     PointerCoords pointerCoords[MAX_POINTERS];
     PointerProperties pointerProperties[MAX_POINTERS];
     uint32_t pointerCount = 0;
@@ -5398,11 +5398,11 @@ void TouchInputMapper::dispatchMotion(nsecs_t when, uint32_t policyFlags, uint32
     getListener()->notifyMotion(&args);
 }
 
-void TouchInputMapper::dispatchMotion(nsecs_t when, uint32_t policyFlags, uint32_t source,
+void TouchInputMapper::dispatchMotion(std::chrono::nanoseconds when, uint32_t policyFlags, uint32_t source,
         int32_t action, int32_t flags, int32_t metaState, int32_t buttonState, int32_t edgeFlags,
         const PointerProperties* properties, const PointerCoords* coords,
         uint32_t inPointerCount, const IntSet &idsToDispatch,
-        int32_t changedId, float xPrecision, float yPrecision, nsecs_t downTime) {
+        int32_t changedId, float xPrecision, float yPrecision, std::chrono::nanoseconds downTime) {
     PointerCoords pointerCoords[MAX_POINTERS];
     PointerProperties pointerProperties[MAX_POINTERS];
     uint32_t pointerCount = 0;
@@ -5768,7 +5768,7 @@ SingleTouchInputMapper::SingleTouchInputMapper(InputDevice* device) :
 SingleTouchInputMapper::~SingleTouchInputMapper() {
 }
 
-void SingleTouchInputMapper::reset(nsecs_t when) {
+void SingleTouchInputMapper::reset(std::chrono::nanoseconds when) {
     mSingleTouchMotionAccumulator.reset(getDevice());
 
     TouchInputMapper::reset(when);
@@ -5780,7 +5780,7 @@ void SingleTouchInputMapper::process(const RawEvent* rawEvent) {
     mSingleTouchMotionAccumulator.process(rawEvent);
 }
 
-void SingleTouchInputMapper::syncTouch(nsecs_t when, bool* outHavePointerIds) {
+void SingleTouchInputMapper::syncTouch(std::chrono::nanoseconds when, bool* outHavePointerIds) {
     if (mTouchButtonAccumulator.isToolActive()) {
         mCurrentRawPointerData.pointerCount = 1;
 
@@ -5844,7 +5844,7 @@ MultiTouchInputMapper::MultiTouchInputMapper(InputDevice* device) :
 MultiTouchInputMapper::~MultiTouchInputMapper() {
 }
 
-void MultiTouchInputMapper::reset(nsecs_t when) {
+void MultiTouchInputMapper::reset(std::chrono::nanoseconds when) {
     mMultiTouchMotionAccumulator.reset(getDevice());
 
     mPointerIds.clear();
@@ -5858,7 +5858,7 @@ void MultiTouchInputMapper::process(const RawEvent* rawEvent) {
     mMultiTouchMotionAccumulator.process(rawEvent);
 }
 
-void MultiTouchInputMapper::syncTouch(nsecs_t when, bool* outHavePointerIds) {
+void MultiTouchInputMapper::syncTouch(std::chrono::nanoseconds when, bool* outHavePointerIds) {
     size_t inCount = mMultiTouchMotionAccumulator.getSlotCount();
     size_t outCount = 0;
     IntSet newPointerIds;
@@ -6046,7 +6046,7 @@ void JoystickInputMapper::dump(String8& dump) {
     }
 }
 
-void JoystickInputMapper::configure(nsecs_t when, const InputReaderConfiguration* config, uint32_t changes) {
+void JoystickInputMapper::configure(std::chrono::nanoseconds when, const InputReaderConfiguration* config, uint32_t changes) {
     InputMapper::configure(when, config, changes);
 
     if (!changes) { // first time only
@@ -6181,7 +6181,7 @@ bool JoystickInputMapper::isCenteredAxis(int32_t axis) {
     }
 }
 
-void JoystickInputMapper::reset(nsecs_t when) {
+void JoystickInputMapper::reset(std::chrono::nanoseconds when) {
     // Recenter all axes.
     size_t numAxes = mAxes.size();
     for (size_t i = 0; i < numAxes; i++) {
@@ -6240,7 +6240,7 @@ void JoystickInputMapper::process(const RawEvent* rawEvent) {
     }
 }
 
-void JoystickInputMapper::sync(nsecs_t when, bool force) {
+void JoystickInputMapper::sync(std::chrono::nanoseconds when, bool force) {
     if (!filterAxes(force)) {
         return;
     }
@@ -6273,7 +6273,7 @@ void JoystickInputMapper::sync(nsecs_t when, bool force) {
 
     NotifyMotionArgs args(when, getDeviceId(), AINPUT_SOURCE_JOYSTICK, policyFlags,
             AMOTION_EVENT_ACTION_MOVE, 0, metaState, buttonState, AMOTION_EVENT_EDGE_FLAG_NONE,
-            1, &pointerProperties, &pointerCoords, 0, 0, 0);
+                          1, &pointerProperties, &pointerCoords, 0, 0, std::chrono::nanoseconds(0));
     getListener()->notifyMotion(&args);
 }
 

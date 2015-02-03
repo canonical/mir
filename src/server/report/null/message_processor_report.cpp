@@ -39,7 +39,3 @@ void mrn::MessageProcessorReport::exception_handled(void const*, int, std::excep
 void mrn::MessageProcessorReport::exception_handled(void const*, std::exception const&)
 {
 }
-
-void mrn::MessageProcessorReport::sent_event(void const*, MirSurfaceEvent const&)
-{
-}

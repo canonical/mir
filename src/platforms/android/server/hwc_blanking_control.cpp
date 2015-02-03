@@ -134,3 +134,9 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
         quirks.num_framebuffers()
     };
 }
+
+mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_changes(
+    std::function<void()> const&)
+{
+    return nullptr;
+}

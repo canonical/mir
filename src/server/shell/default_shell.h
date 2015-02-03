@@ -19,79 +19,53 @@
 #ifndef MIR_SHELL_DEFAULT_SHELL_H_
 #define MIR_SHELL_DEFAULT_SHELL_H_
 
-#include "mir/frontend/shell.h"
-#include "mir/shell/focus_controller.h"
-
-#include <mutex>
+#include "mir/shell/abstract_shell.h"
 
 namespace mir
 {
-namespace scene { class SessionCoordinator; class Surface; class SurfaceCoordinator; }
+namespace scene { class PlacementStrategy; class SurfaceConfigurator; }
 
 namespace shell
 {
-class InputTargeter;
-
-class DefaultShell : public frontend::Shell, public FocusController
+/** Default shell implementation.
+ * To customise derive from this class and override the methods you want to change
+ */
+class DefaultShell : public AbstractShell
 {
 public:
     DefaultShell(
         std::shared_ptr<InputTargeter> const& input_targeter,
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
+        std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
+        std::shared_ptr<scene::SurfaceConfigurator> const& surface_configurator);
 
-    void focus_next() override;
-
-    std::weak_ptr<scene::Session> focussed_application() const override;
-
-    void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
-
-    virtual std::shared_ptr<frontend::Session> open_session(
+/** @name these come from frontend::Shell
+ *  @{ */
+    std::shared_ptr<scene::Session> open_session(
         pid_t client_pid,
         std::string const& name,
         std::shared_ptr<frontend::EventSink> const& sink) override;
 
-    virtual void close_session(std::shared_ptr<frontend::Session> const& session) override;
+    void close_session(std::shared_ptr<scene::Session> const& session) override;
 
-    void handle_surface_created(std::shared_ptr<frontend::Session> const& session) override;
+    void handle_surface_created(std::shared_ptr<scene::Session> const& session) override;
 
-    std::shared_ptr<frontend::PromptSession> start_prompt_session_for(
-        std::shared_ptr<frontend::Session> const& session,
-        scene::PromptSessionCreationParameters const& params) override;
-
-    void add_prompt_provider_for(
-        std::shared_ptr<frontend::PromptSession> const& prompt_session,
-        std::shared_ptr<frontend::Session> const& session) override;
-
-    void stop_prompt_session(std::shared_ptr<frontend::PromptSession> const& prompt_session) override;
-
-    frontend::SurfaceId create_surface(std::shared_ptr<frontend::Session> const& session, scene::SurfaceCreationParameters const& params) override;
-
-    void destroy_surface(std::shared_ptr<frontend::Session> const& session, frontend::SurfaceId surface) override;
+    frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override;
 
     int set_surface_attribute(
-        std::shared_ptr<frontend::Session> const& session,
-        frontend::SurfaceId surface_id,
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib,
         int value) override;
-
-    int get_surface_attribute(
-        std::shared_ptr<frontend::Session> const& session,
-        frontend::SurfaceId surface_id,
-        MirSurfaceAttrib attrib) override;
+/** @} */
 
 private:
-    std::shared_ptr<InputTargeter> const input_targeter;
-    std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
-    std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
+    std::shared_ptr<scene::PlacementStrategy> const placement_strategy;
+    std::shared_ptr<scene::SurfaceConfigurator> const surface_configurator;
 
-    std::mutex surface_focus_lock;
-    std::weak_ptr<scene::Surface> currently_focused_surface;
-
-    std::mutex mutex;
-    std::weak_ptr<scene::Session> focus_application;
-
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Session> const& next_focus);
+    void setting_focus_to(std::shared_ptr<scene::Surface> const& surface) override;
 };
 }
 }
