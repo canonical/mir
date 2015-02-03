@@ -272,9 +272,8 @@ catch (std::exception const& ex)
 
 void mir_surface_swap_buffers_sync(MirSurface* surface)
 {
-    mir_wait_for(mir_surface_swap_buffers(surface,
-        reinterpret_cast<mir_surface_callback>(assign_result),
-        nullptr));
+    mir_buffer_stream_swap_buffers_sync(
+        mir_surface_get_buffer_stream(surface));
 }
 
 MirWaitHandle* mir_surface_release(
