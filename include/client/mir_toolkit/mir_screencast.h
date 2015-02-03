@@ -61,8 +61,7 @@ MirBufferStream* mir_screencast_get_buffer_stream(MirScreencast *screencast);
  *   \param [in] screencast  The screencast
  *   \return                 An EGLNativeWindowType that the client can use
  */
-MirEGLNativeWindowType mir_screencast_egl_native_window(
-    MirScreencast *screencast);
+MirEGLNativeWindowType mir_screencast_egl_native_window(MirScreencast *screencast) __attribute__((__deprecated__("Use mir_screencast_get_buffer_stream and the corresponding mir_buffer_stream* function")));
 
 #ifdef __cplusplus
 }
