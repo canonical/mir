@@ -59,6 +59,7 @@ private:
     MirPixelFormat const format;
     std::mutex guard;
     std::shared_ptr<detail::CursorRenderable> renderable;
+    bool visible;
     geometry::Displacement hotspot;
 };
 

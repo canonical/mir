@@ -115,6 +115,7 @@ mg::SoftwareCursor::SoftwareCursor(
     : allocator{allocator},
       scene{scene},
       format{get_8888_format(allocator->supported_pixel_formats())},
+      visible(false),
       hotspot{0,0}
 {
 }
@@ -126,7 +127,13 @@ mg::SoftwareCursor::~SoftwareCursor()
 
 void mg::SoftwareCursor::show()
 {
-    if (renderable)
+    bool needs_scene_change = false;
+    {
+        std::lock_guard<std::mutex> lg{guard};
+        if (!visible)
+            visible = needs_scene_change = true;
+    }
+    if (needs_scene_change && renderable)
         scene->add_input_visualization(renderable);
 }
 
@@ -140,6 +147,7 @@ void mg::SoftwareCursor::show(CursorImage const& cursor_image)
     {
         std::lock_guard<std::mutex> lg{guard};
         new_renderable = create_renderable_for(cursor_image);
+        visible = true;
     }
 
     // Add the new renderable first, then remove the old one to avoid
@@ -197,7 +205,16 @@ mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image)
 
 void mg::SoftwareCursor::hide()
 {
-    if (renderable)
+    bool needs_scene_change = false;
+    {
+        std::lock_guard<std::mutex> lg{guard};
+        if (visible)
+        {
+            visible = false;
+            needs_scene_change = true;
+        }
+    }
+    if (needs_scene_change && renderable)
         scene->remove_input_visualization(renderable);
 }
 
