@@ -83,7 +83,7 @@ struct StubStream : public mc::BufferStream
     void resize(geom::Size const&) {};
     void allow_framedropping(bool) {};
     void force_requests_to_complete() {};
-    int buffers_ready_for_compositor() const { return -5; }
+    int buffers_ready_for_compositor(void const*) const override { return -5; }
     void drop_old_buffers() {}
     void drop_client_requests() override {}
 
