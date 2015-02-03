@@ -30,8 +30,6 @@
 #include "mir_test_doubles/mock_input_targeter.h"
 #include "mir_test_doubles/stub_input_sender.h"
 #include "mir_test_doubles/null_event_sink.h"
-#include "mir_test_doubles/null_surface_configurator.h"
-#include "mir_test_doubles/mock_surface_configurator.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_matchers.h"
 
@@ -79,11 +77,10 @@ struct Surface : testing::Test
         
         surface = std::make_shared<ms::BasicSurface>(std::string("stub"), geom::Rectangle{{},{}}, false,
             buffer_stream, nullptr /* input_channel */, stub_input_sender,
-            null_configurator, nullptr /* cursor_image */, report);
+            nullptr /* cursor_image */, report);
     }
 
     mf::SurfaceId stub_id;
-    std::shared_ptr<ms::SurfaceConfigurator> null_configurator = std::make_shared<mtd::NullSurfaceConfigurator>();
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     std::shared_ptr<mtd::StubInputSender> const stub_input_sender = std::make_shared<mtd::StubInputSender>();
     
@@ -262,30 +259,6 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
     surface->configure(mir_surface_attrib_focus, mir_surface_unfocused);
 }
 
-TEST_F(Surface, configurator_selects_attribute_values)
-{
-    using namespace testing;
-
-    mtd::MockSurfaceConfigurator configurator;
-
-    EXPECT_CALL(configurator, select_attribute_value(_, mir_surface_attrib_state, mir_surface_state_restored)).Times(1)
-        .WillOnce(Return(mir_surface_state_minimized));
-    EXPECT_CALL(configurator, attribute_set(_, mir_surface_attrib_state, mir_surface_state_minimized)).Times(1);
-
-    ms::BasicSurface surf(
-        std::string("stub"),
-        geom::Rectangle{{},{}},
-        false,
-        buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_input_sender,
-        mt::fake_shared(configurator),
-        std::shared_ptr<mg::CursorImage>(),
-        report);
-
-    EXPECT_EQ(mir_surface_state_minimized, surf.configure(mir_surface_attrib_state, mir_surface_state_restored));
-}
-
 TEST_F(Surface, take_input_focus)
 {
     using namespace ::testing;
@@ -307,7 +280,6 @@ TEST_F(Surface, with_most_recent_buffer_do_uses_compositor_buffer)
         stub_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
-        null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
 
@@ -352,7 +324,6 @@ TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
-        null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
 
