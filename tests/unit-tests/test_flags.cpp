@@ -24,48 +24,30 @@
 
 namespace arbitrary_namespace
 {
-MIR_FLAGS(Character, uint32_t,
-          (Empty, 0),
-          (Logical, 1<<0),
-          (Idealistic, 1<<1),
-          (Englihtened, 1<<2),
-          (Curious, 1<<3),
-          (Paranoid, 1<<16),
-          (Unstable, 1<<17),
-          (Reckless, 1<<18),
-          (Positive, (1<<4) - 1),
-          (Negative, 0xFFFF0000))
-using Profile = mir::Flags<Character>;
-
-struct A { };
-}
-
-MIR_FLAGS_PRETTY_PRINTER(MirOrientationMode,
-                         mir_orientation_mode_portrait,
-                         mir_orientation_mode_landscape,
-                         mir_orientation_mode_landscape_inverted,
-                         mir_orientation_mode_portrait_inverted,
-                         mir_orientation_mode_portrait_any,
-                         mir_orientation_mode_landscape_any,
-                         mir_orientation_mode_any
-                        )
-using OrientatonModeFlags = mir::Flags<MirOrientationMode>;
-
-enum class AnotherExample : uint8_t
+enum class Character : uint32_t
 {
-    None, Set
+    Empty = 0,
+    Logical = 1<<0,
+    Idealistic = 1<<1,
+    Englihtened = 1<<2,
+    Curious = 1<<3,
+    Paranoid = 1<<16,
+    Unstable = 1<<17,
+    Reckless = 1<<18,
+    Positive = (1<<4) - 1,
+    Negative = 0xFFFF0000
 };
 
-MIR_FLAGS_PRETTY_PRINTER(AnotherExample,
-                         AnotherExample::None,
-                         AnotherExample::Set)
-using ExampleScopedFlags = mir::Flags<AnotherExample>;
+Character mir_enable_enum_bit_operators(Character);
+using Profile = mir::Flags<Character>;
+}
 
 namespace mir
 {
 namespace ns_inside_mir
 {
-MIR_FLAGS(Capability, uint8_t, (Pointer, 1<<4),(Touchpad, 1<<3))
+enum class Capability : uint8_t { Pointer = 1<<4, Touchpad = 1<<3};
+Capability mir_enable_enum_bit_operators(Capability);
 using Capabilities = mir::Flags<Capability>;
 }
 }
@@ -78,7 +60,7 @@ TEST(MirFlags,lookup_rules_work_in_mir_nested_namespace)
     using namespace testing;
     nested::Capabilities cap = nested::Capability::Pointer | nested::Capability::Touchpad;
 
-    EXPECT_THAT(mir::to_string(cap),Eq("Pointer|Touchpad"));
+    EXPECT_THAT(cap.value(), (1<<3) | (1<<4));
 }
 
 TEST(MirFlags,lookup_rules_work_in_arbitrary_namespace)
@@ -86,7 +68,7 @@ TEST(MirFlags,lookup_rules_work_in_arbitrary_namespace)
     using namespace testing;
     arb::Profile empty = arb::Character::Curious & arb::Character::Reckless;
 
-    EXPECT_THAT(mir::to_string(empty),Eq("Empty"));
+    EXPECT_THAT(empty.value(),Eq(0));
 }
 
 TEST(MirFlags,contains_check_works_for_masks)
@@ -101,7 +83,7 @@ TEST(MirFlags,contains_check_works_for_masks)
     EXPECT_THAT(contains(mostly_positive,arb::Character::Positive),Eq(true));
 }
 
-TEST(MirFlags,toggling_bits)
+TEST(MirFlags, toggling_bits)
 {
     using namespace testing;
     arb::Profile negative{arb::Character::Negative};
@@ -109,25 +91,4 @@ TEST(MirFlags,toggling_bits)
     EXPECT_THAT(contains(negative,arb::Character::Paranoid),Eq(true));
     EXPECT_THAT(contains(negative^arb::Character::Paranoid,arb::Character::Paranoid),Eq(false));
     EXPECT_THAT(contains(~negative,arb::Character::Positive),Eq(true));
-}
-
-TEST(MirFlags,pretty_printing_existing_enum)
-{
-    using namespace testing;
-    OrientatonModeFlags flags;
-
-    EXPECT_THAT(to_string(flags),Eq("Empty"));
-    EXPECT_THAT(to_string(flags|mir_orientation_mode_portrait_inverted),Eq("mir_orientation_mode_portrait_inverted"));
-    EXPECT_THAT(to_string(flags|mir_orientation_mode_landscape_any),
-                Eq("mir_orientation_mode_landscape|mir_orientation_mode_landscape_inverted|mir_orientation_mode_landscape_any"));
-}
-
-
-TEST(MirFlags,pretty_printing_existing_scoped_enum)
-{
-    using namespace testing;
-    ExampleScopedFlags flags;
-
-    EXPECT_THAT(to_string(flags),Eq("AnotherExample::None"));
-    EXPECT_THAT(to_string(flags|AnotherExample::Set),Eq("AnotherExample::Set"));
 }

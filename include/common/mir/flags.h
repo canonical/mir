@@ -19,269 +19,190 @@
 #ifndef MIR_FLAGS_H_
 #define MIR_FLAGS_H_
 
-#include "mir/pp_foreach.h"
-
 #include <type_traits>
-#include <string>
-#include <ostream>
 
 namespace mir
 {
 
-#define MIR_FLAGS_DECLARE_VALUE(x,y) x = y,
-#define MIR_FLAGS_APPEND_VALUE(x,y)                                                              \
-    if (((y) == 0 && flags.value == 0) ||                                                        \
-        ((y) != 0 && (y) == (flags.value&(y))))                                                  \
-    {                                                                                            \
-        if(first)                                                                                \
-        {                                                                                        \
-            first = false;                                                                       \
-            str = #x;                                                                            \
-        }                                                                                        \
-        else str += "|" #x;                                                                      \
-    }
-#define MIR_FLAGS_APPEND_ENUM(x)                                                                 \
-    if ((type(x) == 0 && flags.value == 0) ||                                                    \
-        (type(x) != 0 && type(x) == (flags.value&type(x))))                                      \
-    {                                                                                            \
-        if(first)                                                                                \
-        {                                                                                        \
-            first = false;                                                                       \
-            str = #x;                                                                            \
-        }                                                                                        \
-        else str += "|" #x;                                                                      \
-    }
-
-/*!
- * Create pretty printing for an existing enumeration.
- *
- * Use this macro instead of MIR_FLAGS(...) if the enumeration already exists.
- * Usage example:
- * \code
- *     MIR_FLAGS(Proc,Zero,Carry,Interrupt);
- *     using ProcFlags = mir::Flags<Proc>;
- * \endcode
- *
- * If you use this for scoped enumerations you will have to repeat the enumeration type for each
- * value, hence those will also show up inside the strings.
- */
-#define MIR_FLAGS_PRETTY_PRINTER(Type,...)                                                       \
-namespace detail                                                                                 \
-{                                                                                                \
-   struct TypePrinter ##  Type                                                                   \
-   {                                                                                             \
-       inline std::string operator()(mir::Flags<Type> const& flags) const                        \
-       {                                                                                         \
-           bool first = true;                                                                    \
-           using type = mir::Flags<Type>::value_type;                                            \
-           std::string str("Empty");                                                             \
-           MIR_FOR_EACH(MIR_FLAGS_APPEND_ENUM,__VA_ARGS__);                                      \
-           return str;                                                                           \
-       }                                                                                         \
-   };                                                                                            \
-   inline std::true_type has_type_printer_helper(Type);                                          \
-   inline TypePrinter ## Type get_type_printer_helper(Type);                                     \
-}                                                                                                \
-using detail::has_type_printer_helper;                                                           \
-using detail::get_type_printer_helper;                                                           \
-
-/*!
- * Declare a scoped enum the underlying type and let the macro add utilities to allow type safe
- * bit wise operations for that enum and pretty printing to a std::string using
- * mir::to_string(Flags<EnumType>);
- *
- * Usage example:
- * \code
- *     MIR_FLAGS(Proc,uint32_t,(Zero,1),(Carry,1),(Interrupt,2));
- *     using ProcFlags = mir::Flags<Proc>;
- * \endcode
- */
-#define MIR_FLAGS(Type,UnderlyingType,...)                                                       \
-namespace detail                                                                                 \
-{                                                                                                \
-using mir::detail::enum_bitwise_operators::operator|;                                            \
-using mir::detail::enum_bitwise_operators::operator&;                                            \
-using mir::detail::enum_bitwise_operators::operator^;                                            \
-enum class Type : UnderlyingType { MIR_FOR_EACH_TUPLE(MIR_FLAGS_DECLARE_VALUE,__VA_ARGS__) };    \
-}                                                                                                \
-namespace detail                                                                                 \
-{                                                                                                \
-    struct TypePrinter ##  Type                                                                  \
-    {                                                                                            \
-        inline std::string operator()(mir::Flags<Type> const& flags) const                       \
-        {                                                                                        \
-            bool first = true;                                                                   \
-            std::string str("Empty");                                                            \
-            MIR_FOR_EACH_TUPLE(MIR_FLAGS_APPEND_VALUE,__VA_ARGS__);                              \
-            return str;                                                                          \
-        }                                                                                        \
-    };                                                                                           \
-    inline std::true_type has_type_printer_helper(Type);                                         \
-    inline detail::TypePrinter ## Type get_type_printer_helper(Type);                            \
-}                                                                                                \
-using Type = detail::Type;                                                                       \
-
-
-inline std::false_type has_type_printer_helper(...);
-
 /*!
  * Treat an enumeration, scoped and unscoped, like a set of flags.
  *
- * If Enum | Enum and similar operations should yield Flags<Enum> declare
- * a function within the namespace of Enum:
- *   std::true_type is_bit_enum_flag(Enum);
- * and the respective operators in namespace mir will be enabled.
- *
- * This will be done auotmatially if the enumeration is declared with
- * the MIR_FLAGS macro.
+ * For scoped enumerations, there are optional bitwise operators available
+ * that can be enabled by declaring a function within the namespace of the
+ * enumeration (here Enum):
+ * \begincode
+ *   Enum mir_enable_enum_bit_operators(Enum);
+ * \endcode
  */
 template<typename Enum>
 struct Flags
 {
     using value_type = typename std::underlying_type<Enum>::type;
-    value_type value;
 
-    explicit constexpr Flags(value_type value = 0) noexcept
-        : value{value} {}
-    constexpr Flags(Enum value) noexcept
-        : value{static_cast<value_type>(value)} {}
+    explicit constexpr Flags(value_type flag_value = 0) noexcept
+        : flag_value{flag_value} {}
+    constexpr Flags(Enum flag_value) noexcept
+        : flag_value{static_cast<value_type>(flag_value)} {}
 
     constexpr Flags<Enum> operator|(Flags<Enum> other) const noexcept
     {
-        return Flags<Enum>(value|other.value);
+        return Flags<Enum>(flag_value|other.flag_value);
     }
 
     constexpr Flags<Enum> operator&(Flags<Enum> other) const noexcept
     {
-        return Flags<Enum>(value & other.value);
+        return Flags<Enum>(flag_value & other.flag_value);
     }
 
     constexpr Flags<Enum> operator^(Flags<Enum> other) const noexcept
     {
-        return Flags<Enum>(value ^ other.value);
+        return Flags<Enum>(flag_value ^ other.flag_value);
     }
 
     constexpr Flags<Enum> operator~() const noexcept
     {
-        return Flags<Enum>(~value);
+        return Flags<Enum>(~flag_value);
+    }
+
+    constexpr Flags<Enum> operator<<(int shift) const noexcept
+    {
+        return Flags<Enum>{flag_value << shift};
+    }
+
+    constexpr Flags<Enum> operator>>(int shift) const noexcept
+    {
+        return Flags<Enum>{flag_value >> shift};
     }
 
     // those mutating operators could be trated as constexpr with c++14
     Flags<Enum>& operator|=(Flags<Enum> other) noexcept
     {
-        value |= other.value;
+        flag_value |= other.flag_value;
         return *this;
     }
 
     Flags<Enum> operator&=(Flags<Enum> other) noexcept
     {
-        value &= other.value;
+        flag_value &= other.flag_value;
         return *this;
     }
 
     Flags<Enum> operator^=(Flags<Enum> other) noexcept
     {
-        value ^= other.value;
+        flag_value ^= other.flag_value;
+        return *this;
+    }
+
+    Flags<Enum>& operator<<=(int shift) noexcept
+    {
+        flag_value <<= shift;
+        return *this;
+    }
+
+    Flags<Enum>& operator>>=(int shift) noexcept
+    {
+        flag_value >>= shift;
         return *this;
     }
 
     constexpr bool operator==(Flags<Enum> other) const noexcept
     {
-        return value == other.value;
+        return flag_value == other.flag_value;
     }
+
+    constexpr value_type value() const noexcept
+    {
+        return flag_value;
+    }
+
+private:
+    value_type flag_value;
 };
-
-template<typename Enum>
-typename std::enable_if<
-     decltype(has_type_printer_helper(static_cast<Enum>(0)))::value,
-     std::string
-     >::type
-     to_string(Flags<Enum> flags)
-{
-    decltype(get_type_printer_helper(static_cast<Enum>(0))) printer;
-    return printer(flags);
-}
-
-template<typename Enum>
-typename std::enable_if<
-     decltype(has_type_printer_helper(static_cast<Enum>(0)))::value,
-     std::ostream
-     >::type
-     operator<<(std::ostream& out, Flags<Enum> flags)
-{
-    return out << to_string(flags);
-}
 
 template<typename Enum>
 constexpr Flags<Enum> operator|(Flags<Enum> flags, Enum e) noexcept
 {
-    return Flags<Enum>(flags.value | static_cast<decltype(flags.value)>(e));
+    return Flags<Enum>(flags.value() | static_cast<decltype(flags.value())>(e));
 }
 
 template<typename Enum>
 constexpr Flags<Enum> operator|(Enum e, Flags<Enum> flags) noexcept
 {
-    return Flags<Enum>(flags.value | static_cast<decltype(flags.value)>(e));
+    return Flags<Enum>(flags.value() | static_cast<decltype(flags.value())>(e));
 }
 
 template<typename Enum>
 constexpr Enum operator&(Enum e, Flags<Enum> flags) noexcept
 {
-    return static_cast<Enum>(flags.value & static_cast<decltype(flags.value)>(e));
+    return static_cast<Enum>(flags.value() & static_cast<decltype(flags.value())>(e));
 }
 
 template<typename Enum>
 constexpr Enum operator&(Flags<Enum> flags, Enum e) noexcept
 {
-    return static_cast<Enum>(flags.value & static_cast<decltype(flags.value)>(e));
+    return static_cast<Enum>(flags.value() & static_cast<decltype(flags.value())>(e));
 }
 
 template<typename Enum>
 constexpr bool operator==(Flags<Enum> flags, Enum e) noexcept
 {
-    return e == static_cast<Enum>(flags.value);
+    return e == static_cast<Enum>(flags.value());
 }
 
 template<typename Enum>
 constexpr bool operator==(Enum e, Flags<Enum> flags) noexcept
 {
-    return e == static_cast<Enum>(flags.value);
+    return e == static_cast<Enum>(flags.value());
 }
 
 template<typename Enum>
 constexpr bool contains(Flags<Enum> flags, Enum e) noexcept
 {
-    return e == static_cast<Enum>(flags.value & static_cast<decltype(flags.value)>(e));
+    return e == static_cast<Enum>(flags.value() & static_cast<decltype(flags.value())>(e));
 }
 
-namespace detail
-{
-namespace enum_bitwise_operators
-{
+}
 
 template<typename Enum>
-constexpr Flags<Enum>
+constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
 operator|(Enum lhs, Enum rhs) noexcept
 {
-    return Flags<Enum>(lhs) | Flags<Enum>(rhs);
+    return mir::Flags<Enum>(lhs) | mir::Flags<Enum>(rhs);
 }
 
 template<typename Enum>
-constexpr Flags<Enum>
+constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
 operator&(Enum lhs, Enum rhs) noexcept
 {
-    return Flags<Enum>(lhs) & Flags<Enum>(rhs);
+    return mir::Flags<Enum>(lhs) & mir::Flags<Enum>(rhs);
 }
 
 template<typename Enum>
-constexpr Flags<Enum>
+constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
 operator^(Enum lhs, Enum rhs) noexcept
 {
-    return Flags<Enum>(lhs) ^ Flags<Enum>(rhs);
+    return mir::Flags<Enum>(lhs) ^ mir::Flags<Enum>(rhs);
 }
 
+template<typename Enum>
+constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
+operator~(Enum val) noexcept
+{
+    return ~mir::Flags<Enum>(val);
 }
+
+template<typename Enum>
+constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
+operator>>(Enum val, int shift) noexcept
+{
+    return mir::Flags<Enum>(val) >> shift;
 }
+
+template<typename Enum>
+constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
+operator<<(Enum val, int shift) noexcept
+{
+    return mir::Flags<Enum>(val) << shift;
 }
 
 #endif
