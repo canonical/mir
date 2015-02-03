@@ -239,7 +239,6 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
         std::make_shared<mtd::StubBufferStream>(),
         std::shared_ptr<mir::input::InputChannel>(),
         std::shared_ptr<mir::input::InputSender>(),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
     stack.add_surface(surface, default_params.depth, default_params.input_mode);
