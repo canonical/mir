@@ -95,7 +95,7 @@ private:
     void toggle(MirSurfaceState) override {}
 };
 
-template<typename SessionInfo>
+template<typename SessionInfo, typename SurfaceInfo>
 struct ShellMetadata
 {
     virtual ~ShellMetadata() = default;
@@ -104,28 +104,72 @@ struct ShellMetadata
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session] = SessionInfo();
-        on_session_info_update();
+        handle_session_info_updated();
     }
 
     void remove_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info.erase(session);
-        on_session_info_update();
+        handle_session_info_updated();
     }
 
-    virtual void on_session_info_update() = 0;
+    virtual void handle_session_info_updated() = 0;
+
+    void add_surface(
+        std::shared_ptr<ms::Surface> const& surface,
+        std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        session_info[session].surfaces.push_back(surface);
+        surface_info.emplace(surface, SurfaceInfo{session, surface});
+    }
+
+    void remove_surface(
+        std::weak_ptr<ms::Surface> const& surface,
+        std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto& surfaces = session_info[session].surfaces;
+
+        for (auto i = begin(surfaces); i != end(surfaces); ++i)
+        {
+            if (surface.lock() == i->lock())
+            {
+                surfaces.erase(i);
+                break;
+            }
+        }
+
+        surface_info.erase(surface);
+    }
 
     std::mutex mutex;
-    Rectangles displays;
 
     std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>> session_info;
+    std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>> surface_info;
 };
 
 struct SessionInfo
 {
     Rectangle tile;
     std::vector<std::weak_ptr<ms::Surface>> surfaces;
+};
+
+struct SurfaceInfo
+{
+    SurfaceInfo() = default;
+    SurfaceInfo(
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& surface) :
+        session{session},
+        state{mir_surface_state_restored},
+        restore_rect{surface->top_left(), surface->size()}
+    {}
+
+    std::weak_ptr<ms::Session> session;
+    MirSurfaceState state;
+    Rectangle restore_rect;
 };
 
 // simple tiling algorithm:
@@ -138,7 +182,7 @@ struct SessionInfo
 //  o client requests to maximize, vertically maximize & restore
 class TilingWindowManager : public me::WindowManager,
     msh::AbstractShell,
-    ShellMetadata<SessionInfo>
+    ShellMetadata<SessionInfo, SurfaceInfo>
 {
 public:
     using msh::AbstractShell::AbstractShell;
@@ -331,38 +375,7 @@ private:
         return parameters;
     }
 
-    void add_surface(
-        std::shared_ptr<ms::Surface> const& surface,
-        std::shared_ptr<ms::Session> const& session)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info[session].surfaces.push_back(surface);
-        surface_info[surface].session = session;
-        surface_info[surface].state = mir_surface_state_restored;
-        surface_info[surface].restore_rect = {surface->top_left(), surface->size()};
-
-    }
-
-    void remove_surface(
-        std::weak_ptr<ms::Surface> const& surface,
-        std::shared_ptr<ms::Session> const& session)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        auto& surfaces = session_info[session].surfaces;
-
-        for (auto i = begin(surfaces); i != end(surfaces); ++i)
-        {
-            if (surface.lock() == i->lock())
-            {
-                surfaces.erase(i);
-                break;
-            }
-        }
-
-        surface_info.erase(surface);
-    }
-
-    void on_session_info_update() override
+    void handle_session_info_updated() override
     {
         update_tiles();
     }
@@ -501,14 +514,6 @@ private:
         return false;
     }
 
-    struct SurfaceInfo
-    {
-        SurfaceInfo() = default;
-        std::weak_ptr<ms::Session> session;
-        MirSurfaceState state;
-        Rectangle restore_rect;
-    };
-
     void set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
     {
         switch (value)
@@ -579,15 +584,7 @@ private:
         return std::shared_ptr<ms::Session>{};
     }
 
-    struct SessionInfo
-    {
-        Rectangle tile;
-        std::vector<std::weak_ptr<ms::Surface>> surfaces;
-    };
-
     Rectangles displays;
-
-    std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>> surface_info;
 
     Point old_cursor{};
     std::weak_ptr<ms::Surface> old_surface;
