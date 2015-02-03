@@ -42,7 +42,7 @@ f623dcf3c2ed134c1be20106eb54bcccc84af462  include/common/mir_toolkit/events/prom
 990c2c78f68214a54a1f92aa223813548af42998  include/platform/mir/graphics/buffer.h
 5875f13f5b029a4b5291e9baec3ae434b72be27c  include/platform/mir/graphics/buffer_id.h
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
-ffa857f624f1c8cbd50a190107137346fc3204d6  include/platform/mir/graphics/cursor.h
+7679e5e821353054ac2e16aa61995555ceda3d75  include/platform/mir/graphics/cursor.h
 fe2b5f13ccd3ec6b78d90d3abbb7d88b48238578  include/platform/mir/graphics/cursor_image.h
 c2fee623b2fbe55e3eefed051ab7e58f11c240ad  include/platform/mir/graphics/display_buffer.h
 f53a0020b8f1bd4a941a201eb26271cffee0a7dd  include/platform/mir/graphics/display_configuration.h
@@ -103,7 +103,7 @@ da52304237a348a90fcb56729293d628ceaa351c  include/server/mir/scene/surface_creat
 aceccc0bdeea5c90d6c5ea17ed4ce6b5dc1b0ed4  include/server/mir/scene/surface.h
 587e22d751656ce2d9536afdf5659276ff9bbc46  include/server/mir/scene/surface_observer.h
 7ef3e99901168cda296d74d05a979f47bf9c3ff1  include/server/mir/server_action_queue.h
-f7c31027e803d28e6221e523d7fb679189b6e1a0  include/server/mir/server.h
+fc8caf0444534208314d8f334ecbae04a4f0f315  include/server/mir/server.h
 86098b500339bfccd07a9bed8298f75a68b18f5c  include/server/mir/server_status_listener.h
 860c04f32b60e680140148dc9dc2295de145b9c1  include/server/mir/shell/display_layout.h
 217ee696afe779c1dc23e1f17e93eafca896a1a6  include/server/mir/shell/focus_controller.h

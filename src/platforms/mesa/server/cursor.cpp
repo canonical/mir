@@ -138,8 +138,8 @@ void mgm::Cursor::show()
     if (!visible)
     {
         std::lock_guard<std::mutex> lg(guard);
-        place_cursor_at_locked(lg, current_position, ForceState);
         visible = true;
+        place_cursor_at_locked(lg, current_position, ForceState);
     }
 }
 
