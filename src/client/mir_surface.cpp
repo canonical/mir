@@ -43,8 +43,6 @@ namespace gp = google::protobuf;
 
 namespace
 {
-void null_callback(MirSurface*, void*) {}
-
 std::mutex handle_mutex;
 std::unordered_set<MirSurface*> valid_surfaces;
 }
@@ -195,28 +193,6 @@ bool MirSurface::is_valid(MirSurface* query)
     return false;
 }
 
-void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    auto secured_region = buffer_stream->secure_for_cpu_write();
-    region_out.width = secured_region->width.as_uint32_t();
-    region_out.height = secured_region->height.as_uint32_t();
-    region_out.stride = secured_region->stride.as_uint32_t();
-    region_out.pixel_format = secured_region->format;
-    region_out.vaddr = secured_region->vaddr.get();
-}
-
-MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void *context)
-{
-    return buffer_stream->next_buffer([&, callback, context]
-    {
-        process_incoming_buffer();
-        if (callback)
-            callback(this, context);
-    });
-}
-
 MirWaitHandle* MirSurface::get_create_wait_handle()
 {
     return &create_wait_handle;
@@ -227,20 +203,6 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
 MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf) const
 {
     return static_cast<MirPixelFormat>(pf);
-}
-
-void MirSurface::process_incoming_buffer()
-{
-    auto const& buffer = get_current_buffer();
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    auto buffer_width = buffer->size().width.as_int();
-    auto buffer_height = buffer->size().height.as_int();
-
-    if (buffer_height != surface.width())
-        surface.set_width(buffer_width);
-    if (buffer_height != surface.height())
-        surface.set_width(buffer_height);
 }
 
 void MirSurface::created(mir_surface_callback callback, void * context)
@@ -305,34 +267,6 @@ MirWaitHandle* MirSurface::release_surface(
     }
 
     return wait_handle;
-}
-
-MirNativeBuffer* MirSurface::get_current_buffer_package()
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return buffer_stream->get_current_buffer_package();
-}
-
-std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return buffer_stream->get_current_buffer();
-}
-
-uint32_t MirSurface::get_current_buffer_id() const
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return buffer_stream->get_current_buffer_id();
-}
-
-EGLNativeWindowType MirSurface::generate_native_window()
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return buffer_stream->egl_native_window();
 }
 
 MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor)
@@ -528,19 +462,6 @@ void MirSurface::handle_event(MirEvent const& e)
         lock.unlock();
         callback(&e);
     }
-}
-
-MirPlatformType MirSurface::platform_type()
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    auto platform = connection->get_client_platform();
-    return platform->platform_type();
-}
-
-void MirSurface::request_and_wait_for_next_buffer()
-{
-    next_buffer(null_callback, nullptr)->wait_for_all();
 }
 
 void MirSurface::request_and_wait_for_configure(MirSurfaceAttrib a, int value)
