@@ -124,6 +124,12 @@ mg::SoftwareCursor::~SoftwareCursor()
     hide();
 }
 
+void mg::SoftwareCursor::show()
+{
+    if (renderable)
+        scene->add_input_visualization(renderable);
+}
+
 void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 {
     std::shared_ptr<detail::CursorRenderable> new_renderable;
@@ -191,16 +197,8 @@ mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image)
 
 void mg::SoftwareCursor::hide()
 {
-    decltype(renderable) tmp_renderable;
-
-    {
-        std::lock_guard<std::mutex> lg{guard};
-        tmp_renderable = renderable;
-        renderable = nullptr;
-    }
-
-    if (tmp_renderable)
-        scene->remove_input_visualization(tmp_renderable);
+    if (renderable)
+        scene->remove_input_visualization(renderable);
 }
 
 void mg::SoftwareCursor::move_to(geometry::Point position)
