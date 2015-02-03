@@ -137,8 +137,6 @@ public:
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
 
-    bool set_extra_platform_data(std::vector<int> const& extra_platform_data);
-
     std::shared_ptr<google::protobuf::RpcChannel> rpc_channel() const
     {
         return channel;
@@ -197,8 +195,6 @@ private:
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 
     std::unique_ptr<mir::dispatch::SimpleDispatchThread> const eventloop;
-
-    std::vector<int> extra_platform_data;
     
     std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
 

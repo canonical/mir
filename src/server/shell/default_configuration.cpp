@@ -39,7 +39,8 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
                 the_surface_coordinator(),
                 the_session_coordinator(),
                 the_prompt_session_manager(),
-                the_placement_strategy()));
+                the_placement_strategy(),
+                the_surface_configurator()));
         });
 }
 
