@@ -142,6 +142,9 @@ int demo_client(const char* server, int buffer_swap_count)
     assert(mir_surface_is_valid(mcd.surface));
     assert(strcmp(mir_surface_get_error_message(mcd.surface), "") == 0);
 
+    MirBufferStream *bs =
+        mir_surface_get_buffer_stream(mcd.surface);
+
     // We can keep exchanging the current buffer for a new one
     for (int i = 0; i < buffer_swap_count; i++)
     {
@@ -149,9 +152,10 @@ int demo_client(const char* server, int buffer_swap_count)
         {
             ///\internal [get_current_buffer_tag]
             MirNativeBuffer* buffer_package = NULL;
-            mir_buffer_stream_get_current_buffer(mir_surface_get_buffer_stream(mcd.surface), &buffer_package);
+            mir_buffer_stream_get_current_buffer(bs, &buffer_package);
             assert(buffer_package != NULL);
-            MirPlatformType platform_type = mir_buffer_stream_get_platform_type(mir_surface_get_buffer_stream(mcd.surface));
+            MirPlatformType platform_type =
+                mir_buffer_stream_get_platform_type(bs);
             if (mir_platform_type_gbm == platform_type)
             {
                 // Interpret buffer_package as MirBufferPackage
@@ -164,7 +168,7 @@ int demo_client(const char* server, int buffer_swap_count)
         }
 
         ///\internal [swap_buffers_tag]
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(mcd.surface));
+        mir_buffer_stream_swap_buffers_sync(bs);
         ///\internal [swap_buffers_tag]
     }
 
