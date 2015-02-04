@@ -100,7 +100,7 @@ MirKeyEvent const& old_kev_from_new(MirKeyInputEvent const* ev)
     return old_ev->key;
 }
 
-MirMotionEvent const& old_mev_from_new(MirTouchInputEvent const* ev)
+MirMotionEvent const& old_mev_from_new(MirTouchEvent const* ev)
 {
     auto old_ev = reinterpret_cast<MirEvent const*>(ev);
     expect_old_event_type(old_ev, mir_event_type_motion);
@@ -114,7 +114,7 @@ MirMotionEvent const& old_mev_from_new(MirPointerInputEvent const* ev)
     return old_ev->motion;
 }
 
-// Differentiate between MirTouchInputEvents and MirPointerInputEvents based on old device class
+// Differentiate between MirTouchEvents and MirPointerInputEvents based on old device class
 MirInputEventType type_from_device_class(int32_t source_class)
 {
     switch (source_class)
@@ -295,13 +295,27 @@ MirInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const*
 }
 /* Touch event accessors */
 
-MirInputEventModifiers mir_touch_input_event_get_modifiers(MirTouchInputEvent const* tev)
+// ABI-compatible MIR_COMMON_3.1
+extern "C"
+MirInputEventModifiers mir_touch_input_event_get_modifiers(MirTouchEvent const* tev)
+{
+    return mir_touch_event_modifiers(tev);
+}
+
+MirInputEventModifiers mir_touch_event_modifiers(MirTouchEvent const* tev)
 {    
     auto const& old_mev = old_mev_from_new(tev);
     return old_modifiers_to_new(old_mev.modifiers);
 }
 
-MirTouchInputEvent const* mir_input_event_get_touch_input_event(MirInputEvent const* ev)
+// ABI-compatible MIR_COMMON_3.1
+extern "C"
+MirTouchEvent const* mir_input_event_get_touch_input_event(MirInputEvent const* ev)
+{
+    return mir_input_event_get_touch_event(ev);
+}
+
+MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev)
 {
     if(mir_input_event_get_type(ev) != mir_input_event_type_touch)
     {
@@ -310,16 +324,30 @@ MirTouchInputEvent const* mir_input_event_get_touch_input_event(MirInputEvent co
         abort();
     }
 
-    return reinterpret_cast<MirTouchInputEvent const*>(ev);
+    return reinterpret_cast<MirTouchEvent const*>(ev);
 }
 
-unsigned int mir_touch_input_event_get_touch_count(MirTouchInputEvent const* event)
+// ABI-compatible MIR_COMMON_3.1
+extern "C"
+unsigned int mir_touch_input_event_get_touch_count(MirTouchEvent const* event)
+{
+    return mir_touch_event_point_count(event);
+}
+
+unsigned int mir_touch_event_point_count(MirTouchEvent const* event)
 {
     auto const& old_mev = reinterpret_cast<MirEvent const*>(event)->motion;
     return old_mev.pointer_count;
 }
 
-MirTouchInputEventTouchId mir_touch_input_event_get_touch_id(MirTouchInputEvent const* event, size_t touch_index)
+// ABI-compatible MIR_COMMON_3.1
+extern "C"
+MirTouchId mir_touch_input_event_get_touch_id(MirTouchEvent const* event, size_t touch_index)
+{
+    return mir_touch_event_id(event, touch_index);
+}
+
+MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index)
 {
     auto const& old_mev = old_mev_from_new(event);
 
@@ -332,7 +360,14 @@ MirTouchInputEventTouchId mir_touch_input_event_get_touch_id(MirTouchInputEvent 
     return old_mev.pointer_coordinates[touch_index].id;
 }
 
-MirTouchInputEventTouchAction mir_touch_input_event_get_touch_action(MirTouchInputEvent const* event, size_t touch_index)
+// ABI-compatible MIR_COMMON_3.1
+extern "C"
+MirTouchAction mir_touch_input_event_get_touch_action(MirTouchEvent const* event, size_t touch_index)
+{
+    return mir_touch_event_action(event, touch_index);
+}
+
+MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_index)
 {
     auto const& old_mev = old_mev_from_new(event);
 
@@ -350,25 +385,25 @@ MirTouchInputEventTouchAction mir_touch_input_event_get_touch_action(MirTouchInp
     // For the next two cases we could assert pc=1...because a gesture must
     // be starting or ending.
     case mir_motion_action_down:
-        return mir_touch_input_event_action_down;
+        return mir_touch_action_down;
     case mir_motion_action_up:
-        return mir_touch_input_event_action_up;
+        return mir_touch_action_up;
     // We can't tell which touches have actually moved without tracking state
     // so we report all touchpoints as changed.
     case mir_motion_action_move:
     case mir_motion_action_hover_move:
-        return mir_touch_input_event_action_change;
+        return mir_touch_action_change;
     // All touch points are handled at once so we don't know the index
     case mir_motion_action_pointer_down:
         if (touch_index == masked_index)
-            return mir_touch_input_event_action_down;
+            return mir_touch_action_down;
         else
-            return mir_touch_input_event_action_change;
+            return mir_touch_action_change;
     case mir_motion_action_pointer_up:
         if (touch_index == masked_index)
-            return mir_touch_input_event_action_up;
+            return mir_touch_action_up;
         else
-            return mir_touch_input_event_action_change;
+            return mir_touch_action_change;
     // TODO: How to deal with these?
     case mir_motion_action_cancel:
     case mir_motion_action_outside:
@@ -376,11 +411,19 @@ MirTouchInputEventTouchAction mir_touch_input_event_get_touch_action(MirTouchInp
     case mir_motion_action_hover_enter:
     case mir_motion_action_hover_exit:
     default:
-        return mir_touch_input_event_action_change;
+        return mir_touch_action_change;
     }
 }
 
-MirTouchInputEventTouchTooltype mir_touch_input_event_get_touch_tooltype(MirTouchInputEvent const* event,
+// ABI-compatible MIR_COMMON_3.1
+extern "C"
+MirTouchTooltype mir_touch_input_event_get_touch_tooltype(
+    MirTouchEvent const* event, size_t touch_index)
+{
+    return mir_touch_event_tooltype(event, touch_index);
+}
+
+MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
     size_t touch_index)
 {
     auto const& old_mev = old_mev_from_new(event);
@@ -394,19 +437,27 @@ MirTouchInputEventTouchTooltype mir_touch_input_event_get_touch_tooltype(MirTouc
     switch (old_mev.pointer_coordinates[touch_index].tool_type)
     {
     case mir_motion_tool_type_finger:
-        return mir_touch_input_tool_type_finger;
+        return mir_touch_tooltype_finger;
     case mir_motion_tool_type_stylus:
     case mir_motion_tool_type_eraser:
-        return mir_touch_input_tool_type_stylus;
+        return mir_touch_tooltype_stylus;
     case mir_motion_tool_type_mouse:
     case mir_motion_tool_type_unknown:
     default:
-        return mir_touch_input_tool_type_unknown;
+        return mir_touch_tooltype_unknown;
     }
 }
 
-float mir_touch_input_event_get_touch_axis_value(MirTouchInputEvent const* event,
-    size_t touch_index, MirTouchInputEventTouchAxis axis)
+// ABI-compatible MIR_COMMON_3.1
+extern "C"
+float mir_touch_input_event_get_touch_axis_value(MirTouchEvent const* event,
+    size_t touch_index, MirTouchAxis axis)
+{
+    return mir_touch_event_axis_value(event, touch_index, axis);
+}
+
+float mir_touch_event_axis_value(MirTouchEvent const* event,
+    size_t touch_index, MirTouchAxis axis)
 {
     auto const& old_mev = old_mev_from_new(event);
 
@@ -419,17 +470,17 @@ float mir_touch_input_event_get_touch_axis_value(MirTouchInputEvent const* event
     auto const& old_pc = old_mev.pointer_coordinates[touch_index];
     switch (axis)
     {
-    case mir_touch_input_axis_x:
+    case mir_touch_axis_x:
         return old_pc.x;
-    case mir_touch_input_axis_y:
+    case mir_touch_axis_y:
         return old_pc.y;
-    case mir_touch_input_axis_pressure:
+    case mir_touch_axis_pressure:
         return old_pc.pressure;
-    case mir_touch_input_axis_touch_major:
+    case mir_touch_axis_touch_major:
         return old_pc.touch_major;
-    case mir_touch_input_axis_touch_minor:
+    case mir_touch_axis_touch_minor:
         return old_pc.touch_minor;
-    case mir_touch_input_axis_size:
+    case mir_touch_axis_size:
         return old_pc.size;
     default:
         return -1;
