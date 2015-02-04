@@ -200,7 +200,7 @@ MIR_COMMON_3 {
  local: *;
 };
 
-MIR_COMMON_3.1 {
+MIR_COMMON_3.1 {  # Mir 0.10
   global:
     extern "C" {
       mir_event_get*;
