@@ -94,8 +94,13 @@ void add_to_gc_queue(mir::Fd const& queue, std::atomic<int>* generation, VictimR
 template<typename VictimReference>
 void pull_from_gc_queue(mir::Fd const& queue, std::atomic<int>*& generation, VictimReference& victim)
 {
-    while (read(queue, &generation, sizeof(generation)) <
-           static_cast<ssize_t>(sizeof(generation)))
+    static_assert((sizeof(generation) + sizeof(victim)) < PIPE_BUF,
+                  "Size of data for delayed GC must be less than PIPE_BUF for atomic guarantees");
+
+    // The PIPE_BUF check above guarantees that we won't get partial reads,
+    // so the only possible error we can recover from is EINTR, and we can
+    // simply retry.
+    while (read(queue, &generation, sizeof(generation)) != sizeof(generation))
     {
         if (errno != EINTR)
         {
@@ -104,8 +109,7 @@ void pull_from_gc_queue(mir::Fd const& queue, std::atomic<int>*& generation, Vic
                                                      "Failed to read from delayed GC queue"}));
         }
     }
-    while (read(queue, &victim, sizeof(victim)) <
-           static_cast<ssize_t>(sizeof(victim)))
+    while (read(queue, &victim, sizeof(victim)) != sizeof(victim))
     {
         if (errno != EINTR)
         {
