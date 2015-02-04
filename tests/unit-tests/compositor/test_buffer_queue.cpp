@@ -1281,6 +1281,72 @@ TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
     }
 }
 
+TEST_F(BufferQueueTest, buffers_ready_is_not_underestimated)
+{  // Regression test for LP: #1395581
+    using namespace testing;
+ 
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
+    
+        // Produce frame 1
+        q.client_release(client_acquire_sync(q));
+        // Acquire frame 1
+        auto a = q.compositor_acquire(this);
+    
+        // Produce frame 2
+        q.client_release(client_acquire_sync(q));
+        // Acquire frame 2
+        auto b = q.compositor_acquire(this);
+    
+        // Release frame 1
+        q.compositor_release(a);
+        // Produce frame 3
+        q.client_release(client_acquire_sync(q));
+        // Release frame 2
+        q.compositor_release(b);
+    
+        // Verify frame 3 is ready for the first compositor
+        ASSERT_THAT(q.buffers_ready_for_compositor(this), Ge(1));
+        auto c = q.compositor_acquire(this);
+
+        // Verify frame 3 is ready for a second compositor
+        int const that = 0;
+        ASSERT_THAT(q.buffers_ready_for_compositor(&that), Ge(1));
+
+        q.compositor_release(c);
+    }
+}
+
+TEST_F(BufferQueueTest, buffers_ready_eventually_reaches_zero)
+{
+    using namespace testing;
+ 
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
+    
+        const int nmonitors = 3;
+        int monitor[nmonitors];
+
+        for (int m = 0; m < nmonitors; ++m)
+        {
+            ASSERT_EQ(0, q.buffers_ready_for_compositor(&monitor[m]));
+        }
+
+        // Produce a frame
+        q.client_release(client_acquire_sync(q));
+
+        // Consume
+        for (int m = 0; m < nmonitors; ++m)
+        {
+            ASSERT_EQ(1, q.buffers_ready_for_compositor(&monitor[m]));
+            q.compositor_release(q.compositor_acquire(&monitor[m]));
+            ASSERT_EQ(0, q.buffers_ready_for_compositor(&monitor[m]));
+        }
+    }
+}
+
 /* Regression test for LP: #1306464 */
 TEST_F(BufferQueueTest, framedropping_client_acquire_does_not_block_when_no_available_buffers)
 {

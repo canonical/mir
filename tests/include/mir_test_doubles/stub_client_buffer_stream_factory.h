@@ -32,14 +32,16 @@ struct StubClientBufferStreamFactory : public client::ClientBufferStreamFactory
 {
     std::shared_ptr<client::ClientBufferStream> make_consumer_stream(
         protobuf::DisplayServer& /* server */,
-        protobuf::BufferStream const& /* protobuf_bs */)
+        protobuf::BufferStream const& /* protobuf_bs */,
+        std::string const& /* surface_name */)
     {
         return nullptr;
     }
 
     std::shared_ptr<client::ClientBufferStream> make_producer_stream(
         protobuf::DisplayServer& /* server */,
-        protobuf::BufferStream const& /* protobuf_bs */)
+        protobuf::BufferStream const& /* protobuf_bs */,
+        std::string const& /* surface_name */)
     {
         return nullptr;
     }

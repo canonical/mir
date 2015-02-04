@@ -17,6 +17,7 @@
  */
 
 #include "src/client/buffer_stream.h"
+#include "src/client/perf_report.h"
 
 #include "mir/egl_native_window_factory.h"
 
@@ -69,6 +70,13 @@ struct StubEGLNativeWindowFactory : public mcl::EGLNativeWindowFactory
     static EGLNativeWindowType egl_native_window;
 };
 
+struct MockPerfReport : public mcl::PerfReport
+{
+    MOCK_METHOD1(name_surface, void(char const*));
+    MOCK_METHOD1(begin_frame, void(int));
+    MOCK_METHOD1(end_frame, void(int));
+};
+
 struct MockClientBuffer : public mtd::NullClientBuffer
 {
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
@@ -88,8 +96,8 @@ struct ClientBufferStreamTest : public testing::Test
     MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
     MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
 
-    std::shared_ptr<ml::Logger> const logger = std::make_shared<mtd::NullLogger>();
-    
+    std::shared_ptr<mcl::PerfReport> const perf_report = std::make_shared<mcl::NullPerfReport>();
+
     std::shared_ptr<mcl::BufferStream> make_buffer_stream(mp::BufferStream const& protobuf_bs,
         mcl::BufferStreamMode mode=mcl::BufferStreamMode::Producer)
     {
@@ -100,7 +108,7 @@ struct ClientBufferStreamTest : public testing::Test
         mcl::BufferStreamMode mode=mcl::BufferStreamMode::Producer)
     {
         return std::make_shared<mcl::BufferStream>(mock_protobuf_server, mode, mt::fake_shared(buffer_factory),
-            mt::fake_shared(stub_native_window_factory), protobuf_bs, logger);
+            mt::fake_shared(stub_native_window_factory), protobuf_bs, perf_report, "");
     }
 };
 
@@ -116,13 +124,13 @@ void fill_protobuf_buffer_stream_from_package(mp::BufferStream &protobuf_bs, Mir
 
     /* assemble buffers */
     mb->set_fds_on_side_channel(buffer_package.fd_items);
-    for (int i=0; i< buffer_package.data_items; i++)
+    for (int i=0; i<buffer_package.data_items; i++)
     {
-            mb->add_data(buffer_package.data[i]);
+        mb->add_data(buffer_package.data[i]);
     }
-    for (int i=0; i< buffer_package.fd_items; i++)
+    for (int i=0; i<buffer_package.fd_items; i++)
     {
-            mb->add_fd(buffer_package.fd[i]);
+        mb->add_fd(buffer_package.fd[i]);
     }
     mb->set_stride(buffer_package.stride);
     mb->set_width(buffer_package.width);
@@ -401,4 +409,21 @@ TEST_F(ClientBufferStreamTest, map_graphics_region)
         .WillOnce(Return(mt::fake_shared(expected_memory_region)));
      
     EXPECT_EQ(&expected_memory_region, bs->secure_for_cpu_write().get());
+}
+
+TEST_F(ClientBufferStreamTest, passes_name_to_perf_report)
+{
+    using namespace ::testing;
+
+    MirBufferPackage buffer_package = a_buffer_package();
+    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
+
+    NiceMock<MockPerfReport> mock_perf_report;
+    std::string const name = "a_unique_surface_name";
+
+    EXPECT_CALL(mock_perf_report, name_surface(StrEq(name))).Times(1);
+
+    auto bs = std::make_shared<mcl::BufferStream>(mock_protobuf_server, mcl::BufferStreamMode::Producer,
+    		  mt::fake_shared(stub_client_buffer_factory), mt::fake_shared(stub_native_window_factory),
+    		  protobuf_bs, mt::fake_shared(mock_perf_report), name);
 }

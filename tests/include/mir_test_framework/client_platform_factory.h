@@ -42,19 +42,13 @@ std::shared_ptr<mir::client::ClientPlatform> create_android_client_platform()
     return platform_factory(&ctx);
 }
 
-std::shared_ptr<mir::client::ClientPlatform> create_mesa_client_platform()
+std::shared_ptr<mir::client::ClientPlatform> create_mesa_client_platform(
+    mir::client::ClientContext* client_context)
 {
     using namespace testing;
-    mtd::MockClientContext ctx;
-    ON_CALL(ctx, populate_server_package(_))
-        .WillByDefault(Invoke([](MirPlatformPackage& package)
-                              {
-                                  ::memset(&package, 0, sizeof(package));
-                                  package.fd_items = 1;
-                              }));
     platform_library = std::make_shared<mir::SharedLibrary>(client_platform("mesa.so"));
     auto platform_factory = platform_library->load_function<mir::client::CreateClientPlatform>("create_client_platform");
-    return platform_factory(&ctx);
+    return platform_factory(client_context);
 }
 
 std::shared_ptr<mir::SharedLibrary>

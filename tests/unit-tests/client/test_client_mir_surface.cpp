@@ -211,6 +211,12 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
     }
 
+    MirPlatformMessage* platform_operation(
+        MirPlatformMessage const*) override
+    {
+        return nullptr;
+    }
+
     std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
     {
         return std::make_shared<mtd::StubClientBufferFactory>();
@@ -444,7 +450,7 @@ TEST_F(MirClientSurfaceTest, next_buffer_delegates_to_buffer_stream)
     EXPECT_CALL(mock_bs, next_buffer(_)).Times(1);
 
     mtd::MockClientBufferStreamFactory bs_factory;
-    EXPECT_CALL(bs_factory, make_producer_stream(_,_))
+    EXPECT_CALL(bs_factory, make_producer_stream(_,_,_))
         .Times(1).WillOnce(Return(mt::fake_shared(mock_bs)));
 
     auto const surface = create_and_wait_for_surface_with(*client_comm_channel, mt::fake_shared(bs_factory));

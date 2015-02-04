@@ -73,6 +73,7 @@ public:
 
     // From Scene
     compositor::SceneElementSequence scene_elements_for(compositor::CompositorID id) override;
+    int frames_pending(compositor::CompositorID) const override;
     void register_compositor(compositor::CompositorID id) override;
     void unregister_compositor(compositor::CompositorID id) override;
 
@@ -116,6 +117,7 @@ private:
     std::vector<std::shared_ptr<graphics::Renderable>> overlays;
 
     Observers observers;
+    bool scene_changed = false;
 };
 
 }
