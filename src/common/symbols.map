@@ -200,27 +200,21 @@ MIR_COMMON_3 {
  local: *;
 };
 
-MIR_COMMON_3.1 {  # Mir 0.10
+MIR_COMMON_3.1 {
   global:
-    extern "C" {
+    extern "C++" {
       mir_event_get*;
-      mir_input_event_get_device_id;
-      mir_input_event_get_event_time;
-      mir_input_event_get_key_input_event;
-      mir_input_event_get_pointer_input_event;
-      mir_input_event_get_touch_input_event;
-      mir_input_event_get_type;
+      mir_event_get*;
+      mir_input_event_get*;
       mir_key_input_event_get*;
       mir_touch_input_event_get*;
-    };
-    extern "C++" {
       mir::log*char*;
       mir::logv*;
       mir::libraries_for_path*;
     };
 } MIR_COMMON_3;
 
-MIR_COMMON_3.2 {  # Mir 0.11
+MIR_COMMON_3.2 {
   global:
     extern "C++" {
       mir::dispatch::SimpleDispatchThread::SimpleDispatchThread*;
@@ -230,17 +224,3 @@ MIR_COMMON_3.2 {  # Mir 0.11
       mir::events::*
     };
 } MIR_COMMON_3.1;
-
-MIR_COMMON_3.3 {  # Mir 0.12
-  global:
-    extern "C" {
-      mir_input_event_get_touch_event;
-
-      mir_touch_event_action;
-      mir_touch_event_axis_value;
-      mir_touch_event_point_count;
-      mir_touch_event_id;
-      mir_touch_event_modifiers;
-      mir_touch_event_tooltype;
-    };
-} MIR_COMMON_3.2;

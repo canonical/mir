@@ -58,26 +58,26 @@ static void format_key_event(std::stringstream &ss, MirInputEvent const* ev)
 
 static void format_touch_event(std::stringstream &ss, MirInputEvent const* ev)
 {
-    auto tev = mir_input_event_get_touch_event(ev);
+    auto tev = mir_input_event_get_touch_input_event(ev);
     
-    ss << "MirTouchEvent{" << std::endl;
+    ss << "MirTouchInputEvent{" << std::endl;
     ss << "  type: touch" << std::endl;
     ss << "  device_id: " << mir_input_event_get_device_id(ev) << std::endl;
-    ss << "  modifiers: " << mir_touch_event_modifiers(tev) << std::endl;
+    ss << "  modifiers: " << mir_touch_input_event_get_modifiers(tev) << std::endl;
     ss << "  event_time: " << ml::input_timestamp(std::chrono::nanoseconds(mir_input_event_get_event_time(ev))) << std::endl;
-    auto touch_count = mir_touch_event_point_count(tev);
+    auto touch_count = mir_touch_input_event_get_touch_count(tev);
     ss << "  touch_count: " << touch_count << std::endl;
     for (unsigned int i = 0; i < touch_count; i++)
     {
         ss << "  touch[" << i << "]{" << std::endl;
-        ss << "    id: " << mir_touch_event_id(tev, i) << std::endl;
-        ss << "    x: " << mir_touch_event_axis_value(tev, i, mir_touch_axis_x) << std::endl;
-        ss << "    y: " <<  mir_touch_event_axis_value(tev, i, mir_touch_axis_y) << std::endl;
-        ss << "    touch_major: " <<  mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_major) << std::endl;
-        ss << "    touch_minor: " <<  mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_minor) << std::endl;
-        ss << "    size: " <<  mir_touch_event_axis_value(tev, i, mir_touch_axis_size) << std::endl;
-        ss << "    pressure: " <<  mir_touch_event_axis_value(tev, i, mir_touch_axis_pressure) << std::endl;
-        ss << "    tool_type: " << mir_touch_event_tooltype(tev, i) << std::endl;
+        ss << "    id: " << mir_touch_input_event_get_touch_id(tev, i) << std::endl;
+        ss << "    x: " << mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_x) << std::endl;
+        ss << "    y: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_y) << std::endl;
+        ss << "    touch_major: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_touch_major) << std::endl;
+        ss << "    touch_minor: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_touch_minor) << std::endl;
+        ss << "    size: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_size) << std::endl;
+        ss << "    pressure: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_pressure) << std::endl;
+        ss << "    tool_type: " << mir_touch_input_event_get_touch_tooltype(tev, i) << std::endl;
         ss << "  }" << std::endl;
     }
     ss << "}";

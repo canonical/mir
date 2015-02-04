@@ -227,12 +227,12 @@ namespace
 int const MIR_EVENT_ACTION_POINTER_INDEX_MASK = 0xff00;
 int const MIR_EVENT_ACTION_POINTER_INDEX_SHIFT = 8;
 
-void update_action_mask(MirMotionEvent &mev, MirTouchAction action)
+void update_action_mask(MirMotionEvent &mev, MirTouchInputEventTouchAction action)
 {
     int new_mask = (mev.pointer_count - 1) << MIR_EVENT_ACTION_POINTER_INDEX_SHIFT;
-    if (action == mir_touch_action_up)
+    if (action == mir_touch_input_event_action_up)
         new_mask = (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) | mir_motion_action_pointer_up;
-    else if (action == mir_touch_action_down)
+    else if (action == mir_touch_input_event_action_down)
         new_mask = (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) | mir_motion_action_pointer_down;
     else
         new_mask = mir_motion_action_move;
@@ -246,15 +246,15 @@ void update_action_mask(MirMotionEvent &mev, MirTouchAction action)
     mev.action = new_mask;
 }
 
-MirMotionToolType old_tooltype_from_new(MirTouchTooltype tooltype)
+MirMotionToolType old_tooltype_from_new(MirTouchInputEventTouchTooltype tooltype)
 {
    switch (tooltype)
    {
-   case mir_touch_tooltype_unknown:
+   case mir_touch_input_tool_type_unknown:
        return mir_motion_tool_type_unknown;
-   case mir_touch_tooltype_finger:
+   case mir_touch_input_tool_type_finger:
        return mir_motion_tool_type_finger;
-   case mir_touch_tooltype_stylus:
+   case mir_touch_input_tool_type_stylus:
        return mir_motion_tool_type_stylus;
    default:
        BOOST_THROW_EXCEPTION(std::logic_error("Invalid tooltype specified"));
@@ -262,8 +262,8 @@ MirMotionToolType old_tooltype_from_new(MirTouchTooltype tooltype)
 }
 }
 
-void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
-    MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
+void mev::add_touch(MirEvent &event, MirTouchInputEventTouchId touch_id, MirTouchInputEventTouchAction action,
+    MirTouchInputEventTouchTooltype tooltype, float x_axis_value, float y_axis_value,
     float pressure_value, float touch_major_value, float touch_minor_value, float size_value)
 {
     auto& mev = event.motion;

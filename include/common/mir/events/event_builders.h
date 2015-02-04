@@ -55,8 +55,8 @@ EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
 // Touch event
 EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
     MirInputEventModifiers modifiers);
-void add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
-    MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
+void add_touch(MirEvent &event, MirTouchInputEventTouchId touch_id, MirTouchInputEventTouchAction action,
+    MirTouchInputEventTouchTooltype tooltype, float x_axis_value, float y_axis_value,
     float pressure_value, float touch_major_value, float touch_minor_value, float size_value);
 
 // Pointer event
