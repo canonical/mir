@@ -95,6 +95,15 @@ private:
     void toggle(MirSurfaceState) override {}
 };
 
+//template<typename SessionInfo, typename SurfaceInfo>
+//struct WindowManagerMetadataAccess
+//{
+//    auto info_for(std::weak_ptr<ms::Session> const& session) const -> SessionInfo&;
+//    auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo&;
+//    using SessionInfoMap = std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>>;
+//    using SurfaceInfoMap = std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>>;
+//};
+
 template<typename SessionInfo, typename SurfaceInfo>
 struct WindowManagerMetadata : virtual me::WindowManager
 {
@@ -104,14 +113,14 @@ struct WindowManagerMetadata : virtual me::WindowManager
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session] = SessionInfo();
-        handle_session_info_updated();
+        handle_session_info_updated(session_info, displays);
     }
 
     void remove_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info.erase(session);
-        handle_session_info_updated();
+        handle_session_info_updated(session_info, displays);
     }
 
     void add_surface(
@@ -146,24 +155,58 @@ struct WindowManagerMetadata : virtual me::WindowManager
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         displays.add(area);
-        handle_displays_updated();
+        handle_displays_updated(session_info, displays);
     }
 
     void remove_display(Rectangle const& area) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         displays.remove(area);
-        handle_displays_updated();
+        handle_displays_updated(session_info, displays);
     }
 
-    std::function<void()> handle_displays_updated{[]{}};
-    std::function<void()> handle_session_info_updated{[]{}};
+    std::shared_ptr<ms::Session> session_under(Point position)
+    {
+        for(auto& info : session_info)
+        {
+            if (info.second.tile.contains(position))
+            {
+                return info.first.lock();
+            }
+        }
+
+        return std::shared_ptr<ms::Session>{};
+    }
+
+    using SessionInfoMap = std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>>;
+    using SurfaceInfoMap = std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>>;
+
+    std::function<void(
+        SessionInfoMap& session_info,
+        Rectangles const& displays)> handle_displays_updated{[](
+            SessionInfoMap& ,
+            Rectangles const& ){}};
+    std::function<void(
+        SessionInfoMap& session_info,
+        Rectangles const& displays)> handle_session_info_updated{[](
+            SessionInfoMap& ,
+            Rectangles const& ){}};
+
+    auto info_for(std::weak_ptr<ms::Session> const& session) const -> SessionInfo&
+    {
+        return const_cast<SessionInfo&>(session_info.at(session));
+    }
+
+    auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo&
+    {
+        return const_cast<SurfaceInfo&>(surface_info.at(surface));
+    }
 
     std::mutex mutex;
 
-    std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>> session_info;
-    std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>> surface_info;
-
+private:
+    SessionInfoMap session_info;
+    SurfaceInfoMap surface_info;
     Rectangles displays;
 };
 
@@ -209,8 +252,14 @@ public:
         std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager) :
         msh::AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager)
     {
-        handle_session_info_updated = [this] { update_tiles(); };
-        handle_displays_updated = [this] { update_tiles(); };
+        handle_session_info_updated = [this](
+            SessionInfoMap& session_info,
+            Rectangles const& displays)
+            { update_tiles(session_info, displays); };
+        handle_displays_updated = [this](
+            SessionInfoMap& session_info,
+            Rectangles const& displays)
+            { update_tiles(session_info, displays); };
     }
 
 private:
@@ -232,7 +281,7 @@ private:
         {
             if (session == session_under(old_cursor))
             {
-                auto const& info = session_info[session];
+                auto const& info = info_for(session);
 
                 if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
                 {
@@ -269,7 +318,7 @@ private:
         {
             if (session == session_under(old_cursor))
             {
-                auto const& info = session_info[session];
+                auto const& info = info_for(session);
 
                 if (resize(old_surface.lock(), cursor, old_cursor, info.tile))
                 {
@@ -307,7 +356,7 @@ private:
                 {
                     std::lock_guard<decltype(mutex)> lock(mutex);
 
-                    if (surface_info[focussed_surface].state == state)
+                    if (info_for(focussed_surface).state == state)
                         state = mir_surface_state_restored;
                 }
 
@@ -375,19 +424,16 @@ private:
         auto parameters = request_parameters;
 
         std::lock_guard<decltype(mutex)> lock(mutex);
-        auto const ptile = session_info.find(session);
-        if (ptile != end(session_info))
-        {
-            Rectangle const& tile = ptile->second.tile;
-            parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
+        Rectangle const& tile = info_for(session).tile;
+        parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
 
-            clip_to_tile(parameters, tile);
-        }
-
+        clip_to_tile(parameters, tile);
         return parameters;
     }
 
-    void update_tiles()
+    void update_tiles(
+        SessionInfoMap& session_info,
+        Rectangles const& displays)
     {
         if (session_info.size() < 1 || displays.size() < 1) return;
 
@@ -418,7 +464,7 @@ private:
     void update_surfaces(std::weak_ptr<ms::Session> const& session, Rectangle const& old_tile, Rectangle const& new_tile)
     {
         auto displacement = new_tile.top_left - old_tile.top_left;
-        auto& info = session_info[session];
+        auto& info = info_for(session);
 
         for (auto const& ps : info.surfaces)
         {
@@ -535,7 +581,7 @@ private:
             return;
         }
 
-        auto& info = surface_info[surface];
+        auto& info = info_for(surface);
 
         if (info.state == mir_surface_state_restored)
         {
@@ -547,7 +593,7 @@ private:
             return; // Nothing to do
         }
 
-        auto const& tile = this->session_info[info.session].tile;
+        auto const& tile = info_for(info.session).tile;
 
         switch (value)
         {
@@ -576,19 +622,6 @@ private:
         }
 
         info.state = value;
-    }
-
-    std::shared_ptr<ms::Session> session_under(Point position)
-    {
-        for(auto& info : session_info)
-        {
-            if (info.second.tile.contains(position))
-            {
-                return info.first.lock();
-            }
-        }
-
-        return std::shared_ptr<ms::Session>{};
     }
 
     Point old_cursor{};
