@@ -185,7 +185,7 @@ mg::PlatformOperationMessage mgn::MirClientHostConnection::platform_operation(
     MirPlatformMessage* raw_reply{nullptr};
 
     auto const wh = mir_connection_platform_operation(
-        mir_connection, op, msg.get(), platform_operation_callback, &raw_reply);
+        mir_connection, msg.get(), platform_operation_callback, &raw_reply);
     mir_wait_for(wh);
 
     auto const reply = mir::raii::deleter_for(
