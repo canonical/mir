@@ -41,14 +41,14 @@ public:
     virtual ~DefaultClientBufferStreamFactory() = default;
 
     std::shared_ptr<ClientBufferStream> make_consumer_stream(protobuf::DisplayServer& server,
-       protobuf::BufferStream const& protobuf_bs);
+       protobuf::BufferStream const& protobuf_bs, std::string const& surface_name);
     std::shared_ptr<ClientBufferStream> make_producer_stream(protobuf::DisplayServer& server,
-       protobuf::BufferStream const& protobuf_bs);
+       protobuf::BufferStream const& protobuf_bs, std::string const& surface_name);
 
 private:
     std::shared_ptr<ClientPlatform> const client_platform;
     std::shared_ptr<logging::Logger> const logger;
-    
+
 };
 }
 }

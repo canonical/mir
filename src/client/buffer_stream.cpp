@@ -78,20 +78,6 @@ void populate_buffer_package(
     }
 }
 
-std::shared_ptr<mcl::PerfReport>
-make_perf_report(std::shared_ptr<ml::Logger> const& logger)
-{
-    // TODO: It seems strange that this directly uses getenv
-    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
-    if (report_target && !strcmp(report_target, "log"))
-    {
-        return std::make_shared<mir::client::logging::PerfReport>(logger);
-    }
-    else
-    {
-        return std::make_shared<mir::client::NullPerfReport>();
-    }
-}
 }
 
 // TODO: It seems like a bit of a wart that we have to pass the Logger specifically here...perhaps
@@ -101,14 +87,15 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
     mcl::BufferStreamMode mode,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     mp::BufferStream const& protobuf_bs,
-    std::shared_ptr<ml::Logger> const& logger)
+    std::shared_ptr<mcl::PerfReport> const& perf_report,
+    std::string const& surface_name)
     : display_server(server),
       mode(mode),
       client_platform(client_platform),
       protobuf_bs(protobuf_bs),
       buffer_depository{client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size},
       swap_interval_(1),
-      perf_report(make_perf_report(logger))
+      perf_report(perf_report)
       
 {
     if (!protobuf_bs.has_id() || protobuf_bs.has_error())
@@ -119,7 +106,7 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
     process_buffer(protobuf_bs.buffer());
     egl_native_window_ = client_platform->create_egl_native_window(this);
 
-    perf_report->name_surface(std::to_string(protobuf_bs.id().value()).c_str());
+    perf_report->name_surface(surface_name.c_str());
 }
 
 mcl::BufferStream::~BufferStream()

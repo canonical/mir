@@ -169,7 +169,7 @@ public:
         using namespace ::testing;
 
         ON_CALL(*mock_buffer_stream_factory,
-        make_consumer_stream(_,_)).WillByDefault(
+        make_consumer_stream(_,_,_)).WillByDefault(
             Return(mt::fake_shared(mock_bs)));
     }
 

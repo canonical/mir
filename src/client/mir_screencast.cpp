@@ -107,7 +107,7 @@ void MirScreencast::screencast_created(
     if (!protobuf_screencast.has_error())
     {
         buffer_stream = buffer_stream_factory->make_consumer_stream(server,
-            protobuf_screencast.buffer_stream());
+            protobuf_screencast.buffer_stream(), "MirScreencast");
     }
 
     callback(this, context);

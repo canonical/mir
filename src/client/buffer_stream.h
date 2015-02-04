@@ -61,7 +61,8 @@ public:
         BufferStreamMode mode,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
         protobuf::BufferStream const& protobuf_bs,
-        std::shared_ptr<logging::Logger> const& logger);
+        std::shared_ptr<PerfReport> const& perf_report,
+        std::string const& surface_name);
     virtual ~BufferStream();
     
     MirWaitHandle* next_buffer(std::function<void()> const& done) override;
