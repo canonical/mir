@@ -32,7 +32,7 @@ make_perf_report(std::shared_ptr<ml::Logger> const& logger)
 {
     // TODO: It seems strange that this directly uses getenv
     const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
-    if (report_target && !strcmp(report_target, "log"))
+    if (report_target && !strncmp(report_target, "log", strlen(report_target)))
     {
         return std::make_shared<mcl::logging::PerfReport>(logger);
     }

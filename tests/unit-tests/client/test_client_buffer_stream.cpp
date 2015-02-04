@@ -419,7 +419,7 @@ TEST_F(ClientBufferStreamTest, passes_name_to_perf_report)
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
 
     NiceMock<MockPerfReport> mock_perf_report;
-    const char* const name = "a_unique_surface_name";
+    std::string const name = "a_unique_surface_name";
 
     EXPECT_CALL(mock_perf_report, name_surface(StrEq(name))).Times(1);
 
