@@ -325,7 +325,7 @@ void mir_surface_set_event_handler(MirSurface *surface,
                                    MirEventDelegate const *event_handler);
 
 /**
- * Retrieve the primary MirBufferStream assosciated with a surface (to advance buffers,
+ * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,
  * obtain EGLNativeWindow, etc...)
  * 
  *   \param[in] surface The surface
