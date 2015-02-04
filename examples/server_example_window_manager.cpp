@@ -24,12 +24,12 @@
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/options/option.h"
-#include "mir/scene/session_listener.h"
 
 namespace mc = mir::compositor;
 namespace me = mir::examples;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 using namespace mir::geometry;
 
 ///\example server_example_window_manager.cpp
@@ -37,42 +37,6 @@ using namespace mir::geometry;
 
 namespace
 {
-class SceneTracker : public ms::SessionListener
-{
-public:
-    SceneTracker(std::shared_ptr<me::WindowManager> const& window_manager) :
-        window_manager(window_manager)
-    {
-    }
-
-private:
-
-    void starting(std::shared_ptr<ms::Session> const& session) override
-    {
-        window_manager->add_session(session);
-    }
-
-    void stopping(std::shared_ptr<ms::Session> const& session) override
-    {
-        window_manager->remove_session(session);
-    }
-
-    void focused(std::shared_ptr<ms::Session> const& /*session*/) override {}
-    void unfocused() override {}
-
-    void surface_created(ms::Session& session, std::shared_ptr<ms::Surface> const& surface) override
-    {
-        window_manager->add_surface(surface, &session);
-    }
-
-    void destroying_surface(ms::Session& session, std::shared_ptr<ms::Surface> const& surface) override
-    {
-        window_manager->remove_surface(surface, &session);
-    }
-
-    std::shared_ptr<me::WindowManager> const window_manager;
-};
-
 class DisplayTracker : public mc::DisplayBufferCompositor
 {
 public:
@@ -134,35 +98,13 @@ void me::add_window_manager_option_to(Server& server)
 
     auto const factory = std::make_shared<me::WindowManagmentFactory>(server);
 
-    server.override_the_placement_strategy([factory, &server]()
-        -> std::shared_ptr<ms::PlacementStrategy>
+    server.override_the_shell([factory, &server]()
+        -> std::shared_ptr<msh::Shell>
         {
             auto const options = server.get_options();
 
             if (!options->is_set(me::wm_option))
-                return std::shared_ptr<ms::PlacementStrategy>{};
-
-            return factory->window_manager();
-        });
-
-    server.override_the_session_listener([factory, &server]()
-        -> std::shared_ptr<ms::SessionListener>
-        {
-            auto const options = server.get_options();
-
-            if (!options->is_set(me::wm_option))
-                return std::shared_ptr<ms::SessionListener>{};
-
-            return std::make_shared<SceneTracker>(factory->window_manager());
-        });
-
-    server.override_the_surface_configurator([factory, &server]()
-        -> std::shared_ptr<ms::SurfaceConfigurator>
-        {
-            auto const options = server.get_options();
-
-            if (!options->is_set(me::wm_option))
-                return std::shared_ptr<ms::SurfaceConfigurator>{};
+                return std::shared_ptr<msh::Shell>{};
 
             return factory->window_manager();
         });
