@@ -274,3 +274,21 @@ TEST_F(SoftwareCursor, places_new_cursor_renderable_at_correct_position)
 
     cursor.show(another_stub_cursor_image);
 }
+
+//lp: #1413211
+TEST_F(SoftwareCursor, new_buffer_on_each_show)
+{
+    struct MockBufferAllocator : public mg::GraphicBufferAllocator
+    {
+        MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
+        MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
+    } mock_allocator;
+
+    EXPECT_CALL(mock_allocator, alloc_buffer(testing::_)).Times(3);
+    mg::SoftwareCursor cursor{
+        mt::fake_shared(mock_allocator),
+        mt::fake_shared(mock_input_scene)};
+    cursor.show(another_stub_cursor_image);
+    cursor.show(another_stub_cursor_image);
+    cursor.show(stub_cursor_image);
+}
