@@ -49,7 +49,7 @@ void mir_screencast_release_sync(
     MirScreencast *screencast);
 
 /**
- * Retreive the MirBufferStream assosciated with a screencast 
+ * Retrieve the MirBufferStream assosciated with a screencast 
  * (to advance buffers, obtain EGLNativeWindowType, etc...)
  * 
  *   \param[in] screencast The screencast

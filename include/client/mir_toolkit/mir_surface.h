@@ -325,7 +325,7 @@ void mir_surface_set_event_handler(MirSurface *surface,
                                    MirEventDelegate const *event_handler);
 
 /**
- * Retreive the primary MirBufferStream assosciated with a surface (to advance buffers,
+ * Retrieve the primary MirBufferStream assosciated with a surface (to advance buffers,
  * obtain EGLNativeWindow, etc...)
  * 
  *   \param[in] surface The surface
@@ -337,7 +337,7 @@ MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface);
  *   \param [in] surface  The surface
  *   \return              An EGLNativeWindowType that the client can use
  */
-    MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
+MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
 
 /**
  * Test for a valid surface

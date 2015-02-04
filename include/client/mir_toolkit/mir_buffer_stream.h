@@ -39,7 +39,7 @@ extern "C" {
 MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream);
 
 /**
- * Retreive the current buffer in "raw" representation.
+ * Retrieve the current buffer in "raw" representation.
  *   \pre                         The buffer stream is valid
  *   \param [in] surface          The buffer stream
  *   \param [out] buffer_package  Structure to be populated
