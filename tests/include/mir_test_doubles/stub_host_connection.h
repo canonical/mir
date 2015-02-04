@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_HOST_CONNECTION_H_
 
 #include "src/server/graphics/nested/host_connection.h"
+#include "mir/graphics/platform_operation_message.h"
 
 namespace mir
 {
@@ -60,8 +61,12 @@ public:
         return std::make_shared<NullHostSurface>();
     }
 
-    void drm_auth_magic(int) override {}
     void drm_set_gbm_device(struct gbm_device*) override {}
+    graphics::PlatformOperationMessage platform_operation(
+        unsigned int, graphics::PlatformOperationMessage const&) override
+    {
+        return {{},{}};
+    }
 };
 
 

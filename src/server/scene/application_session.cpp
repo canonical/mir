@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <racarr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "application_session.h"
 #include "snapshot_strategy.h"
 #include "default_session_container.h"
@@ -116,6 +118,11 @@ ms::ApplicationSession::Surfaces::const_iterator ms::ApplicationSession::checked
 }
 
 std::shared_ptr<mf::Surface> ms::ApplicationSession::get_surface(mf::SurfaceId id) const
+{
+    return surface(id);
+}
+
+std::shared_ptr<ms::Surface> ms::ApplicationSession::surface(mf::SurfaceId id) const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 

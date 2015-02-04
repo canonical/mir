@@ -26,7 +26,7 @@ namespace android {
 
 // --- NotifyConfigurationChangedArgs ---
 
-NotifyConfigurationChangedArgs::NotifyConfigurationChangedArgs(nsecs_t eventTime) :
+NotifyConfigurationChangedArgs::NotifyConfigurationChangedArgs(std::chrono::nanoseconds eventTime) :
         eventTime(eventTime) {
 }
 
@@ -42,10 +42,10 @@ void NotifyConfigurationChangedArgs::notify(InputListenerInterface& listener) co
 
 // --- NotifyKeyArgs ---
 
-NotifyKeyArgs::NotifyKeyArgs(nsecs_t eventTime, int32_t deviceId, uint32_t source,
+NotifyKeyArgs::NotifyKeyArgs(std::chrono::nanoseconds eventTime, int32_t deviceId, uint32_t source,
         uint32_t policyFlags,
         int32_t action, int32_t flags, int32_t keyCode, int32_t scanCode,
-        int32_t metaState, nsecs_t downTime) :
+        int32_t metaState, std::chrono::nanoseconds downTime) :
         eventTime(eventTime), deviceId(deviceId), source(source), policyFlags(policyFlags),
         action(action), flags(flags), keyCode(keyCode), scanCode(scanCode),
         metaState(metaState), downTime(downTime) {
@@ -66,12 +66,12 @@ void NotifyKeyArgs::notify(InputListenerInterface& listener) const {
 
 // --- NotifyMotionArgs ---
 
-NotifyMotionArgs::NotifyMotionArgs(nsecs_t eventTime, int32_t deviceId, uint32_t source,
+NotifyMotionArgs::NotifyMotionArgs(std::chrono::nanoseconds eventTime, int32_t deviceId, uint32_t source,
         uint32_t policyFlags,
         int32_t action, int32_t flags, int32_t metaState, int32_t buttonState,
         int32_t edgeFlags, uint32_t pointerCount,
         const PointerProperties* pointerProperties, const PointerCoords* pointerCoords,
-        float xPrecision, float yPrecision, nsecs_t downTime) :
+        float xPrecision, float yPrecision, std::chrono::nanoseconds downTime) :
         eventTime(eventTime), deviceId(deviceId), source(source), policyFlags(policyFlags),
         action(action), flags(flags), metaState(metaState), buttonState(buttonState),
         edgeFlags(edgeFlags), pointerCount(pointerCount),
@@ -102,7 +102,7 @@ void NotifyMotionArgs::notify(InputListenerInterface& listener) const {
 
 // --- NotifySwitchArgs ---
 
-NotifySwitchArgs::NotifySwitchArgs(nsecs_t eventTime, uint32_t policyFlags,
+NotifySwitchArgs::NotifySwitchArgs(std::chrono::nanoseconds eventTime, uint32_t policyFlags,
         int32_t switchCode, int32_t switchValue) :
         eventTime(eventTime), policyFlags(policyFlags),
         switchCode(switchCode), switchValue(switchValue) {
@@ -120,7 +120,7 @@ void NotifySwitchArgs::notify(InputListenerInterface& listener) const {
 
 // --- NotifyDeviceResetArgs ---
 
-NotifyDeviceResetArgs::NotifyDeviceResetArgs(nsecs_t eventTime, int32_t deviceId) :
+NotifyDeviceResetArgs::NotifyDeviceResetArgs(std::chrono::nanoseconds eventTime, int32_t deviceId) :
         eventTime(eventTime), deviceId(deviceId) {
 }
 

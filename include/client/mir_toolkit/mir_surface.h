@@ -548,6 +548,22 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surface, MirOri
  */
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surface);
 
+/**
+ * Create a surface specification for an input method surface.
+ *
+ * Currently this is only appropriate for the Unity On-Screen-Keyboard.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \return                  A handle that can be passed to mir_surface_create() to complete construction.
+ */
+MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
+                                                            int width,
+                                                            int height,
+                                                            MirPixelFormat format);
+
 #ifdef __cplusplus
 }
 /**@}*/

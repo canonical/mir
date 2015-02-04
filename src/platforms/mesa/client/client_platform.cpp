@@ -22,6 +22,10 @@
 #include "mesa_native_display_container.h"
 #include "native_surface.h"
 #include "mir/client_buffer_factory.h"
+#include "mir/client_context.h"
+#include "mir_toolkit/mesa/platform_operation.h"
+
+#include <cstring>
 
 namespace mcl=mir::client;
 namespace mclm=mir::client::mesa;
@@ -46,6 +50,11 @@ struct NativeDisplayDeleter
     mcl::EGLNativeDisplayContainer& container;
 };
 
+constexpr size_t division_ceiling(size_t a, size_t b)
+{
+    return ((a - 1) / b) + 1;
+}
+
 }
 
 mclm::ClientPlatform::ClientPlatform(
@@ -54,7 +63,8 @@ mclm::ClientPlatform::ClientPlatform(
         mcl::EGLNativeDisplayContainer& display_container)
     : context{context},
       buffer_file_ops{buffer_file_ops},
-      display_container(display_container)
+      display_container(display_container),
+      gbm_dev{nullptr}
 {
 }
 
@@ -94,7 +104,7 @@ std::shared_ptr<EGLNativeWindowType> mclm::ClientPlatform::create_egl_native_win
 std::shared_ptr<EGLNativeDisplayType> mclm::ClientPlatform::create_egl_native_display()
 {
     MirEGLNativeDisplayType *mir_native_display = new MirEGLNativeDisplayType;
-    *mir_native_display = display_container.create(context);
+    *mir_native_display = display_container.create(this);
     auto egl_native_display = reinterpret_cast<EGLNativeDisplayType*>(mir_native_display);
 
     return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter(display_container));
@@ -103,6 +113,47 @@ std::shared_ptr<EGLNativeDisplayType> mclm::ClientPlatform::create_egl_native_di
 MirPlatformType mclm::ClientPlatform::platform_type() const
 {
     return mir_platform_type_gbm;
+}
+
+void mclm::ClientPlatform::populate(MirPlatformPackage& package) const
+{
+    size_t constexpr pointer_size_in_ints = division_ceiling(sizeof(gbm_dev), sizeof(int));
+
+    context->populate_server_package(package);
+
+    auto const total_data_size = package.data_items + pointer_size_in_ints;
+    if (gbm_dev && total_data_size <= mir_platform_package_max)
+    {
+        int gbm_ptr[pointer_size_in_ints]{};
+        std::memcpy(&gbm_ptr, &gbm_dev, sizeof(gbm_dev));
+
+        for (auto i : gbm_ptr)
+            package.data[package.data_items++] = i;
+    }
+}
+
+MirPlatformMessage* mclm::ClientPlatform::platform_operation(
+    MirPlatformMessage const* msg)
+{
+    auto const op = mir_platform_message_get_opcode(msg);
+
+    if (op == MirMesaPlatformOperation::set_gbm_device)
+    {
+        auto const msg_data = mir_platform_message_get_data(msg);
+        auto const set_gbm_device_request_ptr =
+            reinterpret_cast<MirMesaSetGBMDeviceRequest const*>(msg_data.data);
+
+        gbm_dev = set_gbm_device_request_ptr->device;
+
+        static int const success{0};
+        MirMesaSetGBMDeviceResponse const response{success};
+        auto const response_msg = mir_platform_message_create(op);
+        mir_platform_message_set_data(response_msg, &response, sizeof(response));
+
+        return response_msg;
+    }
+
+    return nullptr;
 }
 
 MirNativeBuffer* mclm::ClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const

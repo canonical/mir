@@ -42,8 +42,8 @@ TEST(AndroidInputLexicon, translates_key_events)
     const int32_t scan_code = 6;
     const int32_t meta_state = 7;
     const int32_t repeat_count = 8;
-    const nsecs_t down_time = 9;
-    const nsecs_t event_time = 10;
+    auto const down_time = std::chrono::nanoseconds(9);
+    auto const event_time = std::chrono::nanoseconds(10);
 
     android_key_ev->initialize(device_id, source_id, action, flags, key_code,
                                scan_code, meta_state, repeat_count,
@@ -65,8 +65,8 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(mir_key_ev->key_code, key_code);
     EXPECT_EQ(mir_key_ev->scan_code, scan_code);
     EXPECT_EQ(mir_key_ev->repeat_count, repeat_count);
-    EXPECT_EQ(mir_key_ev->down_time, down_time);
-    EXPECT_EQ(mir_key_ev->event_time, event_time);
+    EXPECT_EQ(mir_key_ev->down_time, down_time.count());
+    EXPECT_EQ(mir_key_ev->event_time, event_time.count());
     // What is this flag and where does it come from?
     EXPECT_EQ(mir_key_ev->is_system_key, false);
 
@@ -90,8 +90,8 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     const float y_offset = 9;
     const float x_precision = 10;
     const float y_precision = 11;
-    const nsecs_t down_time = 12;
-    const nsecs_t event_time = 13;
+    auto const down_time = std::chrono::nanoseconds(12);
+    auto const event_time = std::chrono::nanoseconds(13);
     const size_t pointer_count = 1;
 
     // Pointer specific properties (i.e. per touch)
@@ -149,8 +149,8 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     EXPECT_EQ(mir_motion_ev->y_offset, y_offset);
     EXPECT_EQ(mir_motion_ev->x_precision, x_precision);
     EXPECT_EQ(mir_motion_ev->y_precision, y_precision);
-    EXPECT_EQ(mir_motion_ev->down_time, down_time);
-    EXPECT_EQ(mir_motion_ev->event_time, event_time);
+    EXPECT_EQ(mir_motion_ev->down_time, down_time.count());
+    EXPECT_EQ(mir_motion_ev->event_time, event_time.count());
 
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
 
@@ -192,8 +192,8 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     const float y_offset = 9;
     const float x_precision = 10;
     const float y_precision = 11;
-    const nsecs_t down_time = 12;
-    const nsecs_t event_time = 13;
+    const std::chrono::nanoseconds down_time = std::chrono::nanoseconds(12);
+    const std::chrono::nanoseconds event_time = std::chrono::nanoseconds(13);
     const size_t pointer_count = 2;
 
     const int pointer_id[2] = {1, 2};
@@ -266,8 +266,8 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     EXPECT_EQ(mir_motion_ev->y_offset, y_offset);
     EXPECT_EQ(mir_motion_ev->x_precision, x_precision);
     EXPECT_EQ(mir_motion_ev->y_precision, y_precision);
-    EXPECT_EQ(mir_motion_ev->down_time, down_time);
-    EXPECT_EQ(mir_motion_ev->event_time, event_time);
+    EXPECT_EQ(mir_motion_ev->down_time, down_time.count());
+    EXPECT_EQ(mir_motion_ev->event_time, event_time.count());
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
 
     auto pointer = &mir_motion_ev->pointer_coordinates[0];

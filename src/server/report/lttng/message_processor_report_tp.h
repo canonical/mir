@@ -85,18 +85,6 @@ TRACEPOINT_EVENT(
         )
     )
 
-TRACEPOINT_EVENT(
-    mir_server_msgproc,
-    sent_event,
-    TP_ARGS(const void*, mediator, int, surface_id, int, attribute, int, value),
-    TP_FIELDS(
-        ctf_integer_hex(void*, mediator, mediator)
-        ctf_integer(int, surface_id, surface_id)
-        ctf_integer(int, attribute, attribute)
-        ctf_integer(int, value, value)
-        )
-    )
-
 #endif /* MIR_LTTNG_MESSAGE_PROCESSOR_REPORT_TP_H_ */
 
 #include <lttng/tracepoint-event.h>

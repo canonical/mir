@@ -29,6 +29,8 @@
 #include <std/RefBase.h>
 #include <std/String8.h>
 
+#include <chrono>
+
 #ifdef HAVE_ANDROID_OS
 class SkMatrix;
 #endif
@@ -274,9 +276,9 @@ public:
 
     inline int32_t getRepeatCount() const { return mRepeatCount; }
 
-    inline nsecs_t getDownTime() const { return mDownTime; }
+    inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
-    inline nsecs_t getEventTime() const { return mEventTime; }
+    inline std::chrono::nanoseconds getEventTime() const { return mEventTime; }
 
     // Return true if this event may have a default action implementation.
     static bool hasDefaultAction(int32_t keyCode);
@@ -295,8 +297,8 @@ public:
             int32_t scanCode,
             int32_t metaState,
             int32_t repeatCount,
-            nsecs_t downTime,
-            nsecs_t eventTime);
+            std::chrono::nanoseconds downTime,
+            std::chrono::nanoseconds eventTime);
     void initialize(const KeyEvent& from);
 
 protected:
@@ -306,8 +308,8 @@ protected:
     int32_t mScanCode;
     int32_t mMetaState;
     int32_t mRepeatCount;
-    nsecs_t mDownTime;
-    nsecs_t mEventTime;
+    std::chrono::nanoseconds mDownTime;
+    std::chrono::nanoseconds mEventTime;
 };
 
 /*
@@ -352,9 +354,9 @@ public:
 
     inline float getYPrecision() const { return mYPrecision; }
 
-    inline nsecs_t getDownTime() const { return mDownTime; }
+    inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
-    inline void setDownTime(nsecs_t downTime) { mDownTime = downTime; }
+    inline void setDownTime(std::chrono::nanoseconds downTime) { mDownTime = downTime; }
 
     inline size_t getPointerCount() const { return mPointerProperties.size(); }
 
@@ -370,7 +372,7 @@ public:
         return mPointerProperties[pointerIndex].toolType;
     }
 
-    inline nsecs_t getEventTime() const { return mSampleEventTimes[getHistorySize()]; }
+    inline std::chrono::nanoseconds getEventTime() const { return mSampleEventTimes[getHistorySize()]; }
 
     const PointerCoords* getRawPointerCoords(size_t pointerIndex) const;
 
@@ -424,7 +426,7 @@ public:
 
     inline size_t getHistorySize() const { return mSampleEventTimes.size() - 1; }
 
-    inline nsecs_t getHistoricalEventTime(size_t historicalIndex) const {
+    inline std::chrono::nanoseconds getHistoricalEventTime(size_t historicalIndex) const {
         return mSampleEventTimes[historicalIndex];
     }
 
@@ -505,8 +507,8 @@ public:
             float yOffset,
             float xPrecision,
             float yPrecision,
-            nsecs_t downTime,
-            nsecs_t eventTime,
+            std::chrono::nanoseconds downTime,
+            std::chrono::nanoseconds eventTime,
             size_t pointerCount,
             const PointerProperties* pointerProperties,
             const PointerCoords* pointerCoords);
@@ -514,7 +516,7 @@ public:
     void copyFrom(const MotionEvent* other, bool keepHistory);
 
     void addSample(
-            nsecs_t eventTime,
+            std::chrono::nanoseconds eventTime,
             const PointerCoords* pointerCoords);
 
     void offsetLocation(float xOffset, float yOffset);
@@ -537,7 +539,7 @@ public:
     inline const PointerProperties* getPointerProperties() const {
         return mPointerProperties.array();
     }
-    inline const nsecs_t* getSampleEventTimes() const { return mSampleEventTimes.array(); }
+    inline const std::chrono::nanoseconds* getSampleEventTimes() const { return mSampleEventTimes.array(); }
     inline const PointerCoords* getSamplePointerCoords() const {
             return mSamplePointerCoords.array();
     }
@@ -552,9 +554,9 @@ protected:
     float mYOffset;
     float mXPrecision;
     float mYPrecision;
-    nsecs_t mDownTime;
+    std::chrono::nanoseconds mDownTime;
     Vector<PointerProperties> mPointerProperties;
-    Vector<nsecs_t> mSampleEventTimes;
+    Vector<std::chrono::nanoseconds> mSampleEventTimes;
     Vector<PointerCoords> mSamplePointerCoords;
 };
 

@@ -193,7 +193,7 @@ struct MockDispatcherPolicy : public mia::EventFilterDispatcherPolicy
       : EventFilterDispatcherPolicy(filter, false)
     {
     }
-    MOCK_METHOD3(interceptKeyBeforeDispatching, nsecs_t(droidinput::sp<droidinput::InputWindowHandle> const&,
+    MOCK_METHOD3(interceptKeyBeforeDispatching, std::chrono::nanoseconds(droidinput::sp<droidinput::InputWindowHandle> const&,
                                                         droidinput::KeyEvent const*, uint32_t));
 };
 
@@ -280,7 +280,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_c
     EXPECT_CALL(event_filter, handle(_)).Times(1).WillOnce(Return(false));
     // We return -1 here to skip publishing of the event (to an unconnected test socket!).
     EXPECT_CALL(dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(surface.fd), _, _))
-        .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
+        .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(std::chrono::nanoseconds(-1))));
 
     input_registrar.add_window_handle_for_surface(&surface);
     the_input_targeter()->focus_changed(surface.input_channel());
@@ -309,11 +309,11 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
         InSequence seq;
 
         EXPECT_CALL(dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(surface1.fd), _, _))
-            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait1), Return(-1)));
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait1), Return(std::chrono::nanoseconds(-1))));
         EXPECT_CALL(dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(surface2.fd), _, _))
-            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait2), Return(-1)));
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait2), Return(std::chrono::nanoseconds(-1))));
         EXPECT_CALL(dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(surface1.fd), _, _))
-            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait3), Return(-1)));
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait3), Return(std::chrono::nanoseconds(-1))));
     }
 
     the_input_targeter()->focus_changed(surface1.input_channel());

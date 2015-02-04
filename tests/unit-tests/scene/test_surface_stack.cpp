@@ -30,7 +30,6 @@
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/null_surface_configurator.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -129,7 +128,6 @@ struct SurfaceStack : public ::testing::Test
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mir::input::InputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
 
@@ -142,7 +140,6 @@ struct SurfaceStack : public ::testing::Test
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mir::input::InputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
 
@@ -155,7 +152,6 @@ struct SurfaceStack : public ::testing::Test
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mir::input::InputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
 
@@ -168,7 +164,6 @@ struct SurfaceStack : public ::testing::Test
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mir::input::InputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
     }
@@ -230,6 +225,39 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
         ElementsAre(
             SceneElementFor(stub_surface1),
             SceneElementFor(stub_surface2)));
+}
+
+TEST_F(SurfaceStack, scene_counts_pending_accurately)
+{
+    using namespace testing;
+
+    ms::SurfaceStack stack{report};
+    auto surface = std::make_shared<ms::BasicSurface>(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        std::make_shared<mtd::StubBufferStream>(),
+        std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+    stack.add_surface(surface, default_params.depth, default_params.input_mode);
+
+    EXPECT_EQ(0, stack.frames_pending(this));
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    EXPECT_EQ(3, stack.frames_pending(this));
+
+    for (int expect = 3; expect >= 0; --expect)
+    {
+        ASSERT_EQ(expect, stack.frames_pending(this));
+        auto snap = stack.scene_elements_for(compositor_id);
+        for (auto& element : snap)
+        {
+            auto consumed = element->renderable()->buffer();
+        }
+    }
 }
 
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
@@ -344,7 +372,6 @@ TEST_F(SurfaceStack, generate_elementelements)
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mir::input::InputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
         post_a_frame(*surface);
@@ -475,7 +502,6 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mir::input::InputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
 
@@ -509,7 +535,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
         mock_stream,
         std::shared_ptr<mir::input::InputChannel>(),
         std::shared_ptr<mir::input::InputSender>(),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
     post_a_frame(*surface);
@@ -541,7 +566,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
         mock_stream,
         std::shared_ptr<mir::input::InputChannel>(),
         std::shared_ptr<mir::input::InputSender>(),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
     post_a_frame(*surface);
@@ -564,7 +588,6 @@ struct MockConfigureSurface : public ms::BasicSurface
             {{},{}},
             true,
             std::make_shared<mtd::StubBufferStream>(),
-            {},
             {},
             {},
             {},

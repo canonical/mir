@@ -27,21 +27,44 @@
 #include "mir/frontend/surface_id.h"
 
 #include <memory>
+#include <vector>
+#include <functional>
 
 namespace mir
 {
+    typedef std::unique_ptr<MirEvent, void(*)(MirEvent*)> EventUPtr;
+    
 namespace events
 {
 // Surface orientation change event
-std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id, MirOrientation orientation);
+EventUPtr make_event(frontend::SurfaceId const& surface_id, MirOrientation orientation);
 // Prompt session state change event
-std::shared_ptr<MirEvent> make_event(MirPromptSessionState state);
+EventUPtr make_event(MirPromptSessionState state);
 // Surface resize event
-std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id, geometry::Size const& size);
+EventUPtr make_event(frontend::SurfaceId const& surface_id, geometry::Size const& size);
 // Surface configure event
-std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value);
+EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value);
 // Close surface event
-std::shared_ptr<MirEvent> make_event(frontend::SurfaceId const& surface_id);
+EventUPtr make_event(frontend::SurfaceId const& surface_id);
+
+// Key event
+EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
+    MirKeyInputEventAction action, xkb_keysym_t key_code,
+    int scan_code, MirInputEventModifiers modifiers);
+
+// Touch event
+EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
+    MirInputEventModifiers modifiers);
+void add_touch(MirEvent &event, MirTouchInputEventTouchId touch_id, MirTouchInputEventTouchAction action,
+    MirTouchInputEventTouchTooltype tooltype, float x_axis_value, float y_axis_value,
+    float pressure_value, float touch_major_value, float touch_minor_value, float size_value);
+
+// Pointer event
+EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
+    MirInputEventModifiers modifiers, MirPointerInputEventAction action,
+    std::vector<MirPointerInputEventButton> const& buttons_pressed,
+    float x_axis_value, float y_axis_value,
+    float hscroll_value, float vscroll_value);
 }
 }
 

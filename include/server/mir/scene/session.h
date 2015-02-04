@@ -52,6 +52,8 @@ public:
 
     virtual frontend::SurfaceId create_surface(SurfaceCreationParameters const& params) = 0;
     virtual void destroy_surface(frontend::SurfaceId surface) = 0;
+
+    virtual std::shared_ptr<Surface> surface(frontend::SurfaceId surface) const = 0;
 };
 }
 }

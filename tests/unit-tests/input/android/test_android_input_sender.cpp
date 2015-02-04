@@ -203,7 +203,7 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_key_events)
 
     sender.send_event(key_event, channel);
 
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &seq, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
 
     EXPECT_EQ(&client_key_event, event);
     EXPECT_EQ(key_event.key.scan_code, client_key_event.getScanCode());
@@ -216,7 +216,7 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
 
     sender.send_event(motion_event, channel);
 
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &seq, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
 
     EXPECT_EQ(&client_motion_event, event);
     EXPECT_EQ(motion_event.motion.pointer_count, client_motion_event.getPointerCount());
@@ -243,7 +243,7 @@ TEST_F(AndroidInputSender, response_keeps_fd_registered)
     EXPECT_CALL(loop, unregister_fd_handler(_)).Times(0);
 
     sender.send_event(key_event, channel);
-    consumer.consume(&event_factory, true, -1, &seq, &event);
+    consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event);
     consumer.sendFinishedSignal(seq, true);
     loop.trigger_pending_fds();
 
@@ -256,7 +256,7 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_consumed)
 
     sender.send_event(motion_event, channel);
 
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &seq, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
     EXPECT_CALL(observer,
                 send_suceeded(mt::MirTouchEventMatches(motion_event),
                               &stub_surface,
@@ -272,7 +272,7 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_not_consum
 
     sender.send_event(motion_event, channel);
 
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &seq, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
     EXPECT_CALL(observer,
                 send_suceeded(mt::MirTouchEventMatches(motion_event),
                               &stub_surface,
@@ -290,8 +290,8 @@ TEST_F(AndroidInputSender, unordered_finish_signal_triggers_the_right_callback)
     sender.send_event(key_event, channel);
 
     uint32_t first_sequence, second_sequence;
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &first_sequence, &event));
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &second_sequence, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &first_sequence, &event));
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &second_sequence, &event));
 
     EXPECT_CALL(observer,
                 send_suceeded(mt::MirKeyEventMatches(key_event),

@@ -39,18 +39,18 @@ namespace android {
 static const size_t SOCKET_BUFFER_SIZE = 32 * 1024;
 
 // Nanoseconds per milliseconds.
-static const nsecs_t NANOS_PER_MS = 1000000;
+static constexpr const std::chrono::nanoseconds NANOS_PER_MS = std::chrono::nanoseconds(1000000);
 
 // Latency added during resampling.  A few milliseconds doesn't hurt much but
 // reduces the impact of mispredicted touch positions.
-static const nsecs_t RESAMPLE_LATENCY = 5 * NANOS_PER_MS;
+static constexpr const std::chrono::nanoseconds RESAMPLE_LATENCY = std::chrono::nanoseconds(5 * NANOS_PER_MS);
 
 // Minimum time difference between consecutive samples before attempting to resample.
-static const nsecs_t RESAMPLE_MIN_DELTA = 2 * NANOS_PER_MS;
+static constexpr const std::chrono::nanoseconds RESAMPLE_MIN_DELTA = std::chrono::nanoseconds(2 * NANOS_PER_MS);
 
 // Maximum time to predict forward from the last known state, to avoid predicting too
 // far into the future.  This time is further bounded by 50% of the last time delta.
-static const nsecs_t RESAMPLE_MAX_PREDICTION = 8 * NANOS_PER_MS;
+static constexpr const std::chrono::nanoseconds RESAMPLE_MAX_PREDICTION = std::chrono::nanoseconds(8 * NANOS_PER_MS);
 
 template<typename T>
 inline static T min(const T& a, const T& b) {
@@ -236,8 +236,8 @@ status_t InputPublisher::publishKeyEvent(
         int32_t scanCode,
         int32_t metaState,
         int32_t repeatCount,
-        nsecs_t downTime,
-        nsecs_t eventTime) {
+        std::chrono::nanoseconds downTime,
+        std::chrono::nanoseconds eventTime) {
 #if DEBUG_TRANSPORT_ACTIONS
     ALOGD("channel '%s' publisher ~ publishKeyEvent: seq=%u, deviceId=%d, source=0x%x, "
             "action=0x%x, flags=0x%x, keyCode=%d, scanCode=%d, metaState=0x%x, repeatCount=%d,"
@@ -263,8 +263,8 @@ status_t InputPublisher::publishKeyEvent(
     msg.body.key.scanCode = scanCode;
     msg.body.key.metaState = metaState;
     msg.body.key.repeatCount = repeatCount;
-    msg.body.key.downTime = downTime;
-    msg.body.key.eventTime = eventTime;
+    msg.body.key.downTime = downTime.count();
+    msg.body.key.eventTime = eventTime.count();
     return mChannel->sendMessage(&msg);
 }
 
@@ -281,8 +281,8 @@ status_t InputPublisher::publishMotionEvent(
         float yOffset,
         float xPrecision,
         float yPrecision,
-        nsecs_t downTime,
-        nsecs_t eventTime,
+        std::chrono::nanoseconds downTime,
+        std::chrono::nanoseconds eventTime,
         size_t pointerCount,
         const PointerProperties* pointerProperties,
         const PointerCoords* pointerCoords) {
@@ -322,8 +322,8 @@ status_t InputPublisher::publishMotionEvent(
     msg.body.motion.yOffset = yOffset;
     msg.body.motion.xPrecision = xPrecision;
     msg.body.motion.yPrecision = yPrecision;
-    msg.body.motion.downTime = downTime;
-    msg.body.motion.eventTime = eventTime;
+    msg.body.motion.downTime = downTime.count();
+    msg.body.motion.eventTime = eventTime.count();
     msg.body.motion.pointerCount = pointerCount;
     for (size_t i = 0; i < pointerCount; i++) {
         msg.body.motion.pointers[i].properties.copyFrom(pointerProperties[i]);
@@ -381,7 +381,7 @@ bool InputConsumer::isTouchResamplingEnabled() {
 }
 
 status_t InputConsumer::consume(InputEventFactoryInterface* factory,
-        bool consumeBatches, nsecs_t frameTime, uint32_t* outSeq, InputEvent** outEvent) {
+        bool consumeBatches, std::chrono::nanoseconds frameTime, uint32_t* outSeq, InputEvent** outEvent) {
 #if DEBUG_TRANSPORT_ACTIONS
     ALOGD("channel '%s' consumer ~ consume: consumeBatches=%s, frameTime=%lld",
         c_str(mChannel->getName()), consumeBatches ? "true" : "false", frameTime);
@@ -498,18 +498,18 @@ status_t InputConsumer::consume(InputEventFactoryInterface* factory,
 }
 
 status_t InputConsumer::consumeBatch(InputEventFactoryInterface* factory,
-        nsecs_t frameTime, uint32_t* outSeq, InputEvent** outEvent) {
+        std::chrono::nanoseconds frameTime, uint32_t* outSeq, InputEvent** outEvent) {
     status_t result;
     for (size_t i = mBatches.size(); i-- > 0; ) {
         Batch& batch = mBatches.editItemAt(i);
-        if (frameTime < 0) {
+        if (frameTime < std::chrono::nanoseconds(0)) {
             result = consumeSamples(factory, batch, batch.samples.size(),
                     outSeq, outEvent);
             mBatches.removeAt(i);
             return result;
         }
 
-        nsecs_t sampleTime = frameTime - RESAMPLE_LATENCY;
+        std::chrono::nanoseconds sampleTime = frameTime - RESAMPLE_LATENCY;
         ssize_t split = findSampleNoLaterThan(batch, sampleTime);
         if (split < 0) {
             continue;
@@ -567,7 +567,7 @@ void InputConsumer::updateTouchState(InputMessage* msg) {
 
     int32_t deviceId = msg->body.motion.deviceId;
     int32_t source = msg->body.motion.source;
-    nsecs_t eventTime = msg->body.motion.eventTime;
+    std::chrono::nanoseconds eventTime = std::chrono::nanoseconds(msg->body.motion.eventTime);
 
     // Update the touch state history to incorporate the new input message.
     // If the message is in the past relative to the most recently produced resampled
@@ -660,7 +660,7 @@ void InputConsumer::rewriteMessage(const TouchState& state, InputMessage* msg) {
     }
 }
 
-void InputConsumer::resampleTouchState(nsecs_t sampleTime, MotionEvent* event,
+void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, MotionEvent* event,
     const InputMessage* next) {
     if (!mResampleTouch
             || !(event->getSource() & AINPUT_SOURCE_CLASS_POINTER)
@@ -706,26 +706,26 @@ void InputConsumer::resampleTouchState(nsecs_t sampleTime, MotionEvent* event,
         // So current->eventTime <= sampleTime <= future.eventTime.
         future.initializeFrom(next);
         other = &future;
-        nsecs_t delta = future.eventTime - current->eventTime;
+        std::chrono::nanoseconds delta = future.eventTime - current->eventTime;
         if (delta < RESAMPLE_MIN_DELTA) {
 #if DEBUG_RESAMPLING
             ALOGD("Not resampled, delta time is %lld ns.", delta);
 #endif
             return;
         }
-        alpha = float(sampleTime - current->eventTime) / delta;
+        alpha = (float)((sampleTime - current->eventTime).count()) / delta.count();
     } else if (touchState.historySize >= 2) {
         // Extrapolate future sample using current sample and past sample.
         // So other->eventTime <= current->eventTime <= sampleTime.
         other = touchState.getHistory(1);
-        nsecs_t delta = current->eventTime - other->eventTime;
+        std::chrono::nanoseconds delta = current->eventTime - other->eventTime;
         if (delta < RESAMPLE_MIN_DELTA) {
 #if DEBUG_RESAMPLING
             ALOGD("Not resampled, delta time is %lld ns.", delta);
 #endif
             return;
         }
-        nsecs_t maxPredict = current->eventTime + min(delta / 2, RESAMPLE_MAX_PREDICTION);
+        std::chrono::nanoseconds maxPredict = current->eventTime + std::chrono::nanoseconds(min(delta.count()/2, RESAMPLE_MAX_PREDICTION.count()));
         if (sampleTime > maxPredict) {
 #if DEBUG_RESAMPLING
             ALOGD("Sample time is too far in the future, adjusting prediction "
@@ -734,7 +734,7 @@ void InputConsumer::resampleTouchState(nsecs_t sampleTime, MotionEvent* event,
 #endif
             sampleTime = maxPredict;
         }
-        alpha = float(current->eventTime - sampleTime) / delta;
+        alpha = (float)((current->eventTime - sampleTime).count()) / delta.count();
     } else {
 #if DEBUG_RESAMPLING
         ALOGD("Not resampled, insufficient data.");
@@ -877,8 +877,8 @@ void InputConsumer::initializeKeyEvent(KeyEvent* event, const InputMessage* msg)
             msg->body.key.scanCode,
             msg->body.key.metaState,
             msg->body.key.repeatCount,
-            msg->body.key.downTime,
-            msg->body.key.eventTime);
+            std::chrono::nanoseconds(msg->body.key.downTime),
+            std::chrono::nanoseconds(msg->body.key.eventTime));
 }
 
 void InputConsumer::initializeMotionEvent(MotionEvent* event, const InputMessage* msg) {
@@ -902,8 +902,8 @@ void InputConsumer::initializeMotionEvent(MotionEvent* event, const InputMessage
             msg->body.motion.yOffset,
             msg->body.motion.xPrecision,
             msg->body.motion.yPrecision,
-            msg->body.motion.downTime,
-            msg->body.motion.eventTime,
+            std::chrono::nanoseconds(msg->body.motion.downTime),
+            std::chrono::nanoseconds(msg->body.motion.eventTime),
             pointerCount,
             pointerProperties,
             pointerCoords);
@@ -917,7 +917,7 @@ void InputConsumer::addSample(MotionEvent* event, const InputMessage* msg) {
     }
 
     event->setMetaState(event->getMetaState() | msg->body.motion.metaState);
-    event->addSample(msg->body.motion.eventTime, pointerCoords);
+    event->addSample(std::chrono::nanoseconds(msg->body.motion.eventTime), pointerCoords);
 }
 
 bool InputConsumer::canAddSample(const Batch& batch, const InputMessage *msg) {
@@ -936,11 +936,11 @@ bool InputConsumer::canAddSample(const Batch& batch, const InputMessage *msg) {
     return true;
 }
 
-ssize_t InputConsumer::findSampleNoLaterThan(const Batch& batch, nsecs_t time) {
+ssize_t InputConsumer::findSampleNoLaterThan(const Batch& batch, std::chrono::nanoseconds time) {
     size_t numSamples = batch.samples.size();
     size_t index = 0;
     while (index < numSamples
-            && batch.samples.itemAt(index).body.motion.eventTime <= time) {
+           && batch.samples.itemAt(index).body.motion.eventTime <= time.count()) {
         index += 1;
     }
     return ssize_t(index) - 1;

@@ -46,13 +46,13 @@ mia::AndroidInputDispatcher::~AndroidInputDispatcher()
     stop();
 }
 
-void mia::AndroidInputDispatcher::configuration_changed(nsecs_t when)
+void mia::AndroidInputDispatcher::configuration_changed(std::chrono::nanoseconds when)
 {
     droidinput::NotifyConfigurationChangedArgs args(when);
     dispatcher->notifyConfigurationChanged(&args);
 }
 
-void mia::AndroidInputDispatcher::device_reset(int32_t device_id, nsecs_t when)
+void mia::AndroidInputDispatcher::device_reset(int32_t device_id, std::chrono::nanoseconds when)
 {
     droidinput::NotifyDeviceResetArgs args(when, device_id);
     dispatcher->notifyDeviceReset(&args);
@@ -67,7 +67,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
     case mir_event_type_key:
     {
         droidinput::NotifyKeyArgs const notify_key_args(
-            event.key.event_time,
+            std::chrono::nanoseconds(event.key.event_time),
             event.key.device_id,
             event.key.source_id,
             policy_flags,
@@ -76,7 +76,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             event.key.key_code,
             event.key.scan_code,
             event.key.modifiers,
-            event.key.down_time);
+            std::chrono::nanoseconds(event.key.down_time));
 
         dispatcher->notifyKey(&notify_key_args);
 
@@ -105,7 +105,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
         }
 
         droidinput::NotifyMotionArgs const notify_motion_args(
-            event.motion.event_time,
+            std::chrono::nanoseconds(event.motion.event_time),
             event.motion.device_id,
             event.motion.source_id,
             policy_flags,
@@ -119,7 +119,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             pointer_coords.data(),
             event.motion.x_precision,
             event.motion.y_precision,
-            event.motion.down_time);
+            std::chrono::nanoseconds(event.motion.down_time));
 
         dispatcher->notifyMotion(&notify_motion_args);
 

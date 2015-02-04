@@ -25,6 +25,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "swapping_gl_context.h"
+#include "hwc_layerlist.h"
 
 #include <boost/throw_exception.hpp>
 #include <sstream>
@@ -39,7 +40,6 @@ mga::HwcFbDevice::HwcFbDevice(
     std::shared_ptr<framebuffer_device_t> const& fb_device) :
     hwc_wrapper(hwc_wrapper), 
     fb_device(fb_device),
-    layer_list{std::make_shared<mga::Hwc10Adapter>(), {}},
     vsync_subscription{
         [hwc_wrapper, this]{
             using namespace std::placeholders;
@@ -55,7 +55,11 @@ mga::HwcFbDevice::HwcFbDevice(
 {
 }
 
-void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
+void mga::HwcFbDevice::commit(
+    mga::DisplayName,
+    mga::LayerList& layer_list,
+    SwappingGLContext const& context,
+    RenderableListCompositor const&)
 {
     layer_list.setup_fb(context.last_rendered_buffer());
 
@@ -96,10 +100,7 @@ void mga::HwcFbDevice::notify_vsync(mga::DisplayName, std::chrono::nanoseconds)
     vsync_trigger.notify_all();
 }
 
-bool mga::HwcFbDevice::post_overlays(
-    SwappingGLContext const&,
-    RenderableList const&,
-    RenderableListCompositor const&)
+bool mga::HwcFbDevice::compatible_renderlist(RenderableList const&)
 {
     return false;
 }

@@ -207,6 +207,16 @@ struct StubClientPlatform : public mcl::ClientPlatform
         return mir_platform_type_android;
     }
 
+    void populate(MirPlatformPackage&) const override
+    {
+    }
+
+    MirPlatformMessage* platform_operation(
+        MirPlatformMessage const*) override
+    {
+        return nullptr;
+    }
+
     std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
     {
         return std::make_shared<mtd::StubClientBufferFactory>();

@@ -128,8 +128,8 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
     mir_event.key.key_code = args->keyCode;
     mir_event.key.scan_code = args->scanCode;
     mir_event.key.repeat_count = 0;
-    mir_event.key.down_time = args->downTime;
-    mir_event.key.event_time = args->eventTime;
+    mir_event.key.down_time = args->downTime.count();
+    mir_event.key.event_time = args->eventTime.count();
     mir_event.key.is_system_key = false; // TODO: Figure out what this is. //kev->isSystemKey();
 
 
@@ -157,8 +157,8 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     mir_event.motion.y_offset = 0;
     mir_event.motion.x_precision = args->xPrecision;
     mir_event.motion.y_precision = args->yPrecision;
-    mir_event.motion.down_time = args->downTime;
-    mir_event.motion.event_time = args->eventTime;
+    mir_event.motion.down_time = args->downTime.count();
+    mir_event.motion.event_time = args->eventTime.count();
     mir_event.motion.pointer_count = args->pointerCount;
     for(unsigned int i = 0; i < args->pointerCount; i++)
     {

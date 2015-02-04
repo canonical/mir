@@ -33,7 +33,14 @@ namespace graphics { class Platform; class Display; class GLConfig; class Displa
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
 namespace logging { class Logger; }
 namespace options { class Option; }
-namespace shell { class FocusController; class DisplayLayout; class HostLifecycleEventListener; }
+namespace shell
+{
+class DisplayLayout;
+class FocusController;
+class HostLifecycleEventListener;
+class InputTargeter;
+class Shell;
+}
 namespace scene
 {
 class PlacementStrategy;
@@ -241,6 +248,9 @@ public:
     /// Sets an override functor for creating the session mediator report.
     void override_the_session_mediator_report(Builder<frontend::SessionMediatorReport> const& session_mediator_builder);
 
+    /// Sets an override functor for creating the shell.
+    void override_the_shell(Builder<shell::Shell> const& wrapper);
+
     /// Sets an override functor for creating the surface configurator.
     void override_the_surface_configurator(Builder<scene::SurfaceConfigurator> const& surface_configurator_builder);
 
@@ -257,11 +267,8 @@ public:
     /// Sets a wrapper functor for creating the display configuration policy.
     void wrap_display_configuration_policy(Wrapper<graphics::DisplayConfigurationPolicy> const& wrapper);
 
-    /// Sets a wrapper functor for creating the session coordinator.
-    void wrap_session_coordinator(Wrapper<scene::SessionCoordinator> const& wrapper);
-
-    /// Sets a wrapper functor for creating the surface coordinator.
-    void wrap_surface_coordinator(Wrapper<scene::SurfaceCoordinator> const& wrapper);
+    /// Sets a wrapper functor for creating the shell.
+    void wrap_shell(Wrapper<shell::Shell> const& wrapper);
 /** @} */
 
 /** @name Getting access to Mir subsystems
@@ -291,6 +298,9 @@ public:
     /// \return the graphics platform.
     auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
 
+    /// \return the input targeter.
+    auto the_input_targeter() const -> std::shared_ptr<shell::InputTargeter>;
+
     /// \return the logger.
     auto the_logger() const -> std::shared_ptr<logging::Logger>;
 
@@ -311,6 +321,9 @@ public:
 
     /// \return the session listener.
     auto the_session_listener() const -> std::shared_ptr<scene::SessionListener>;
+
+    /// \return the shell.
+    auto the_shell() const -> std::shared_ptr<shell::Shell>;
 
     /// \return the display layout.
     auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;
