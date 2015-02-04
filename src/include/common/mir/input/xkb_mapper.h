@@ -40,7 +40,7 @@ public:
     XKBMapper();
     virtual ~XKBMapper() = default;
 
-    void update_state_and_map_event(MirKeyEvent& key_ev);
+    void update_state_and_map_event(MirEvent& ev);
 
 protected:
     XKBMapper(XKBMapper const&) = delete;

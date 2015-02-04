@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir/input/xkb_mapper.h"
 
 #include <string.h>
@@ -85,8 +87,10 @@ static xkb_keysym_t keysym_for_scan_code(xkb_state *state, uint32_t xkb_scan_cod
 
 }
 
-void mircv::XKBMapper::update_state_and_map_event(MirKeyEvent &key_ev)
+void mircv::XKBMapper::update_state_and_map_event(MirEvent &ev)
 {
+    auto key_ev = ev.key;
+                              
     xkb_key_direction direction;
 
     bool update_state = true;

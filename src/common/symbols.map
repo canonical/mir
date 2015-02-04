@@ -221,6 +221,10 @@ MIR_COMMON_3.2 {
       mir::dispatch::SimpleDispatchThread::?SimpleDispatchThread*;
       typeinfo?for?mir::dispatch::SimpleDispatchThread;
       vtable?for?mir::dispatch::SimpleDispatchThread;
-      mir::events::*
+      mir::events::*;
+      mir::input::receiver::XKBMapper::XKBMapper*;
+      mir::input::receiver::XKBMapper::?XKBMapper*;
+      typeinfo?for?mir::input::receiver::XKBMapper;
+      vtable?for?mir::input::receiver::XKBMapper;
     };
 } MIR_COMMON_3.1;

@@ -25,6 +25,7 @@
 #include "mir_connection.h"
 #include "mir/input/input_receiver_thread.h"
 #include "mir/input/input_platform.h"
+#include "mir/input/xkb_mapper.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -120,7 +121,8 @@ MirSurface::MirSurface(
       name{spec.surface_name.value()},
       connection(allocating_connection),
       buffer_stream_factory(buffer_stream_factory),
-      input_platform(input_platform)
+      input_platform(input_platform),
+      keymapper(std::make_shared<mircv::XKBMapper>())
 {
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
@@ -501,8 +503,7 @@ void MirSurface::set_event_handler(MirEventDelegate const* delegate)
 
         if (surface.fd_size() > 0 && handle_event_callback)
         {
-            input_thread = input_platform->create_input_thread(surface.fd(0),
-                                                        handle_event_callback);
+            input_thread = input_platform->create_input_thread(surface.fd(0), keymapper, handle_event_callback);
             input_thread->start();
         }
     }
