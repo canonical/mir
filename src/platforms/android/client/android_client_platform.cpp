@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/android/mir_native_window.h"
+#include "mir/client_context.h"
 #include "android_client_platform.h"
 #include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"
@@ -40,6 +41,12 @@ struct EmptyDeleter
     }
 };
 
+}
+
+mcla::AndroidClientPlatform::AndroidClientPlatform(
+    ClientContext* const context)
+    : context{context}
+{
 }
 
 std::shared_ptr<mcl::ClientBufferFactory> mcla::AndroidClientPlatform::create_buffer_factory()
@@ -98,6 +105,17 @@ mcla::AndroidClientPlatform::create_egl_native_display()
 MirPlatformType mcla::AndroidClientPlatform::platform_type() const
 {
     return mir_platform_type_android;
+}
+
+void mcla::AndroidClientPlatform::populate(MirPlatformPackage& package) const
+{
+    context->populate_server_package(package);
+}
+
+MirPlatformMessage* mcla::AndroidClientPlatform::platform_operation(
+    MirPlatformMessage const*)
+{
+    return nullptr;
 }
 
 MirNativeBuffer* mcla::AndroidClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const

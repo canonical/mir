@@ -895,28 +895,3 @@ TEST_F(SessionMediator, drm_auth_magic_calls_platform_operation_abstraction)
     EXPECT_THAT(*(reinterpret_cast<int*>(request.data.data())), Eq(magic));
     EXPECT_THAT(drm_response.status_code(), Eq(test_response));
 }
-
-TEST_F(SessionMediator, drm_auth_magic_sets_status_code_on_error)
-{
-    using namespace testing;
-
-    mp::ConnectParameters connect_parameters;
-    mp::Connection connection;
-
-    unsigned int const drm_magic{0x10111213};
-    int const error_number{667};
-
-    EXPECT_CALL(mock_ipc_operations, platform_operation(_, _))
-        .WillOnce(Throw(::boost::enable_error_info(std::exception())
-            << boost::errinfo_errno(error_number)));
-
-    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-
-    mp::DRMMagic magic;
-    mp::DRMAuthMagicStatus status;
-    magic.set_magic(drm_magic);
-
-    mediator.drm_auth_magic(nullptr, &magic, &status, null_callback.get());
-
-    EXPECT_EQ(error_number, status.status_code());
-}

@@ -137,8 +137,6 @@ public:
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
 
-    bool set_extra_platform_data(std::vector<int> const& extra_platform_data);
-
     std::shared_ptr<google::protobuf::RpcChannel> rpc_channel() const
     {
         return channel;
@@ -148,6 +146,7 @@ public:
     std::shared_ptr<mir::logging::Logger> const& the_logger() const;
 
 private:
+    void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
     struct Deregisterer
     { MirConnection* const self; ~Deregisterer(); } deregisterer;
@@ -167,7 +166,6 @@ private:
     std::atomic<bool> connect_done;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
-    mir::protobuf::DRMAuthMagicStatus drm_auth_magic_status;
     mir::protobuf::PlatformOperationMessage platform_operation_reply;
     mir::protobuf::DisplayConfiguration display_configuration_response;
     bool disconnecting{false};
@@ -182,7 +180,6 @@ private:
 
     MirWaitHandle connect_wait_handle;
     MirWaitHandle disconnect_wait_handle;
-    MirWaitHandle drm_auth_magic_wait_handle;
     MirWaitHandle platform_operation_wait_handle;
     MirWaitHandle configure_display_wait_handle;
 
@@ -198,8 +195,6 @@ private:
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 
     std::unique_ptr<mir::dispatch::SimpleDispatchThread> const eventloop;
-
-    std::vector<int> extra_platform_data;
     
     std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
 
@@ -211,7 +206,6 @@ private:
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
-    void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
     void done_platform_operation(mir_platform_operation_callback, void* context);
     bool validate_user_display_config(MirDisplayConfiguration* config);
 };

@@ -45,9 +45,21 @@ public:
     ClientPlatform(const ClientPlatform& p) = delete;
     ClientPlatform& operator=(const ClientPlatform& p) = delete;
 
-    virtual ~ClientPlatform() { /* TODO: make nothrow */ }
+    virtual ~ClientPlatform() = default;
 
     virtual MirPlatformType platform_type() const = 0;
+    virtual void populate(MirPlatformPackage& package) const = 0;
+    /**
+     * Perform a platform operation.
+     *
+     * The returned platform message is owned by the caller and should be
+     * released with mir_platform_message_release().
+     *
+     *   \param [in] request      The platform operation request
+     *   \return                  The platform operation reply, or a nullptr if the
+     *                            requested operation is not supported
+     */
+    virtual MirPlatformMessage* platform_operation(MirPlatformMessage const* request) = 0;
     virtual std::shared_ptr<ClientBufferFactory> create_buffer_factory() = 0;
     virtual std::shared_ptr<EGLNativeWindowType> create_egl_native_window(EGLNativeSurface *surface) = 0;
     virtual std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() = 0;

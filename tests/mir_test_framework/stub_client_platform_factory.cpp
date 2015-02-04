@@ -21,6 +21,7 @@
 #include "mir/client_buffer_factory.h"
 #include "mir/client_buffer.h"
 #include "mir/client_platform.h"
+#include "mir/client_context.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -34,9 +35,24 @@ namespace
 {
 struct StubClientPlatform : public mcl::ClientPlatform
 {
+    StubClientPlatform(mcl::ClientContext* context)
+        : context{context}
+    {
+    }
+
     MirPlatformType platform_type() const
     {
         return mir_platform_type_gbm;
+    }
+
+    void populate(MirPlatformPackage& package) const
+    {
+        context->populate_server_package(package);
+    }
+
+    MirPlatformMessage* platform_operation(MirPlatformMessage const*) override
+    {
+        return nullptr;
     }
 
     std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
@@ -65,11 +81,13 @@ struct StubClientPlatform : public mcl::ClientPlatform
         return nullptr;
 #endif
     }
+
+    mcl::ClientContext* const context;
 };
 }
 
 std::shared_ptr<mcl::ClientPlatform>
-mtf::StubClientPlatformFactory::create_client_platform(mcl::ClientContext*)
+mtf::StubClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
 {
-    return std::make_shared<StubClientPlatform>();
+    return std::make_shared<StubClientPlatform>(context);
 }

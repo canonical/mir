@@ -94,6 +94,12 @@ struct DisplayHotplug : ::testing::Test
         {
             return std::unique_ptr<mga::HwcConfiguration>(new WrappingConfig(stub_config));
         }
+
+        std::unique_ptr<mga::LayerList> create_layer_list() override
+        {
+            return std::unique_ptr<mga::LayerList>(new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
+        }
+
         StubHwcConfig stub_config;
     };
 

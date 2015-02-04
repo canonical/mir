@@ -30,6 +30,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
+#include "mir_toolkit/mesa/platform_operation.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -90,7 +91,8 @@ void drm_auth_magic_callback(int status, void* client_context)
 
 TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
 {
-    unsigned int const magic{0x10111213};
+    static unsigned int const magic{0x10111213};
+    static MirMesaAuthMagicResponse const auth_magic_response{123};
 
     struct ServerConfig : TestingServerConfiguration
     {
@@ -99,7 +101,11 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
             using namespace testing;
             if (!platform)
             {
-                mg::PlatformOperationMessage pkg{{0},{}};
+                mg::PlatformOperationMessage pkg;
+                pkg.data.resize(sizeof(MirMesaAuthMagicResponse));
+                *(reinterpret_cast<MirMesaAuthMagicResponse*>(pkg.data.data())) =
+                    auth_magic_response;
+
                 auto ipc_ops = std::make_shared<NiceMock<MockAuthenticatingIpcOps>>();
                 EXPECT_CALL(*ipc_ops, platform_operation(_,_))
                     .Times(1)
@@ -125,7 +131,6 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
             mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__,
                                      connection_callback, &connection));
 
-            int const no_error{0};
             int status{67};
 
             ASSERT_TRUE(mir_connection_is_valid(connection));
@@ -133,56 +138,7 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
             mir_wait_for(mir_connection_drm_auth_magic(connection, magic,
                                                        drm_auth_magic_callback,
                                                        &status));
-            EXPECT_EQ(no_error, status);
-
-            mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
-}
-
-TEST_F(BespokeDisplayServerTestFixture, drm_auth_magic_platform_error_reaches_client)
-{
-    unsigned int const magic{0x10111213};
-    static int const auth_magic_error{667};
-
-    struct ServerConfig : TestingServerConfiguration
-    {
-        std::shared_ptr<mg::Platform> the_graphics_platform()
-        {
-            using namespace testing;
-            if (!platform)
-            {
-                auto ipc_ops = std::make_shared<NiceMock<MockAuthenticatingIpcOps>>();
-                EXPECT_CALL(*ipc_ops, platform_operation(_,_))
-                    .WillOnce(Throw(::boost::enable_error_info(std::exception())
-                        << boost::errinfo_errno(auth_magic_error)));
-                platform = std::make_shared<StubAuthenticatingPlatform>(ipc_ops);
-            }
-
-            return platform;
-        }
-
-        std::shared_ptr<StubAuthenticatingPlatform> platform;
-    } server_config;
-
-    launch_server_process(server_config);
-
-    struct Client : TestingClientConfiguration
-    {
-        void exec()
-        {
-            MirConnection* connection{nullptr};
-            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__,
-                                     connection_callback, &connection));
-
-            int status{67};
-
-            mir_wait_for(mir_connection_drm_auth_magic(connection, magic,
-                                                       drm_auth_magic_callback,
-                                                       &status));
-            EXPECT_EQ(auth_magic_error, status);
+            EXPECT_EQ(auth_magic_response.status, status);
 
             mir_connection_release(connection);
         }
