@@ -55,7 +55,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     {
         devices.push_back(std::unique_ptr<RegisteredDevice>(new RegisteredDevice{device, input_dispatcher}));
 
-        auto const&& info = devices.back()->get_device_info();
+        auto info = devices.back()->get_device_info();
 
         // send input device info to observer loop..
         observer_queue->enqueue(this,

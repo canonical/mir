@@ -449,6 +449,7 @@ MIR_SERVER_29 {
     mir::Server::the_compositor*;
     mir::Server::the_cursor_listener*;
     mir::Server::the_display*;
+    mir::Server::the_input_device_hub*;
     mir::Server::the_focus_controller*;
     mir::Server::the_gl_config*;
     mir::Server::the_graphics_platform*;

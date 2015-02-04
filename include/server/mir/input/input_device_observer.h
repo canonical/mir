@@ -32,6 +32,7 @@ public:
     virtual ~InputDeviceObserver() = default;
 
     virtual void device_added(InputDeviceInfo const& device) = 0;
+    virtual void device_changed(InputDeviceInfo const& device) = 0;
     virtual void device_removed(InputDeviceInfo const& device) = 0;
     /*!
      * Called after every group of changes.

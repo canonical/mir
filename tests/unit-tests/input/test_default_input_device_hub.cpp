@@ -50,6 +50,7 @@ std::ostream& operator<<(std::ostream& out, InputDeviceInfo const& info)
 struct MockInputDeviceObserver : public mi::InputDeviceObserver
 {
     MOCK_METHOD1(device_added, void (mi::InputDeviceInfo const& device));
+    MOCK_METHOD1(device_changed, void(mi::InputDeviceInfo const& device));
     MOCK_METHOD1(device_removed, void(mi::InputDeviceInfo const& device));
     MOCK_METHOD0(changes_complete, void());
 };
@@ -80,13 +81,13 @@ struct InputDeviceHubTest : ::testing::Test
     {
         using namespace testing;
         ON_CALL(device,get_device_info())
-            .WillByDefault(Return(mi::InputDeviceInfo{0,"device","dev-1"}));
+            .WillByDefault(Return(mi::InputDeviceInfo{0,"device","dev-1", mi::DeviceCapability::unknown}));
 
         ON_CALL(another_device,get_device_info())
-            .WillByDefault(Return(mi::InputDeviceInfo{0,"another_device","dev-2"}));
+            .WillByDefault(Return(mi::InputDeviceInfo{0,"another_device","dev-2", mi::DeviceCapability::keyboard}));
 
         ON_CALL(third_device,get_device_info())
-            .WillByDefault(Return(mi::InputDeviceInfo{0,"third_device","dev-3"}));
+            .WillByDefault(Return(mi::InputDeviceInfo{0,"third_device","dev-3", mi::DeviceCapability::keyboard}));
     }
 };
 

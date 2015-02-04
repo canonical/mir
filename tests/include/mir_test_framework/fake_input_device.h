@@ -20,9 +20,11 @@
 #define MIR_TEST_FRAMEWORK_FAKE_INPUT_DEVICE_H_
 
 #include "mir_toolkit/events/event.h"
+#include "mir_test/event_factory.h"
 
 namespace mir_test_framework
 {
+namespace synthesis = mir::input::synthesis;
 
 class FakeInputDevice
 {
@@ -30,7 +32,8 @@ public:
     FakeInputDevice() = default;
     virtual ~FakeInputDevice() = default;
 
-    virtual void emit_event(MirEvent const& input_event) = 0;
+    // only key board events for now
+    virtual void emit_event(synthesis::KeyParameters const& key) = 0;
 
     FakeInputDevice(FakeInputDevice const&) = delete;
     FakeInputDevice& operator=(FakeInputDevice const&) = delete;

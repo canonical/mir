@@ -30,7 +30,7 @@ namespace mir
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
 namespace frontend { class SessionAuthorizer; class Session; class SessionMediatorReport; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
-namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
+namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; class InputDeviceHub;}
 namespace logging { class Logger; }
 namespace options { class Option; }
 namespace shell { class Shell; class FocusController; class DisplayLayout; class HostLifecycleEventListener; }
@@ -323,6 +323,9 @@ public:
 
     /// \return the touch visualizer.
     auto the_touch_visualizer() const -> std::shared_ptr<input::TouchVisualizer>;
+
+    /// \return the input device hub
+    auto the_input_device_hub() const -> std::shared_ptr<input::InputDeviceHub>;
 /** @} */
 
 /** @name Client side support

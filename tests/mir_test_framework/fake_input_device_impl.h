@@ -25,6 +25,7 @@
 #include "mir/input/input_device_info.h"
 
 #include <mutex>
+#include <map>
 
 namespace mi = mir::input;
 namespace mir_test_framework
@@ -34,7 +35,7 @@ class FakeInputDeviceImpl : public FakeInputDevice
 public:
     FakeInputDeviceImpl(mi::InputDeviceInfo const& info);
     ~FakeInputDeviceImpl();
-    void emit_event(MirEvent const& input_event) override;
+    void emit_event(synthesis::KeyParameters const& key_params) override;
 private:
     class InputDevice : public mi::InputDevice
     {
@@ -42,7 +43,11 @@ private:
         InputDevice(mi::InputDeviceInfo const& info);
         void start(mi::InputEventHandlerRegister& registry, mi::InputSink& destination) override;
         void stop(mi::InputEventHandlerRegister& registry) override;
-        void emit_event(MirEvent const& input_event);
+
+        // implemented as template to soon also slope through the other types like ButtonParameters, MotionParameter, ...
+        template<typename T>
+        void emit_event(T const& parameters);
+        void synthesize_events(synthesis::KeyParameters const& key_params);
         mi::InputDeviceInfo get_device_info() override
         {
             return info;
@@ -52,6 +57,9 @@ private:
         mi::InputSink* sink{nullptr};
         mi::InputEventHandlerRegister* event_handler{nullptr};
         mi::InputDeviceInfo info;
+
+        uint32_t modifiers; // not unified accross devices, yet
+        std::map<int32_t, std::chrono::nanoseconds> down_times;
     };
     std::shared_ptr<InputDevice> device;
 };
