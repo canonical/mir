@@ -114,6 +114,7 @@ public:
         CurrentRenderingTarget target{buffer};
 
         auto display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
+        auto const comp_id = display_buffer_compositor.get();
 
         CompositorReport::SubCompositorId report_id =
             display_buffer_compositor.get();
@@ -150,9 +151,19 @@ public:
                 lock.unlock();
 
                 display_buffer_compositor->composite(
-                    scene->scene_elements_for(display_buffer_compositor.get()));
+                    scene->scene_elements_for(comp_id));
 
                 lock.lock();
+
+                /*
+                 * Note the compositor may have chosen to ignore any number
+                 * of renderables and not consumed buffers from them. So it's
+                 * important to re-count number of frames pending, separately
+                 * to the initial scene_elements_for()...
+                 */
+                int pending = scene->frames_pending(comp_id);
+                if (pending > frames_scheduled)
+                    frames_scheduled = pending;
             }
         }
     }

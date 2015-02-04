@@ -357,7 +357,6 @@ void MirConnection::done_platform_operation(
 }
 
 MirWaitHandle* MirConnection::platform_operation(
-    unsigned int opcode,
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context)
 {
@@ -371,7 +370,7 @@ MirWaitHandle* MirConnection::platform_operation(
 
     mir::protobuf::PlatformOperationMessage protobuf_request;
 
-    protobuf_request.set_opcode(opcode);
+    protobuf_request.set_opcode(mir_platform_message_get_opcode(request));
     auto const request_data = mir_platform_message_get_data(request);
     auto const request_fds = mir_platform_message_get_fds(request);
 

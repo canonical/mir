@@ -54,7 +54,6 @@ class Surface;
 namespace scene
 {
 class SceneReport;
-class SurfaceConfigurator;
 
 class SurfaceObservers : public SurfaceObserver, BasicObservers<SurfaceObserver>
 {
@@ -85,7 +84,6 @@ public:
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<input::InputSender> const& sender,
-        std::shared_ptr<SurfaceConfigurator> const& configurator,
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
         std::shared_ptr<SceneReport> const& report);
 
@@ -97,7 +95,6 @@ public:
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<input::InputSender> const& sender,
-        std::shared_ptr<SurfaceConfigurator> const& configurator,
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
         std::shared_ptr<SceneReport> const& report);
 
@@ -140,6 +137,7 @@ public:
     bool visible() const override;
     
     std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const override;
+    int buffers_ready_for_compositor(void const* compositor_id) const override;
 
     void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec) override;
@@ -188,7 +186,6 @@ private:
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<input::InputSender> const input_sender;
-    std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
