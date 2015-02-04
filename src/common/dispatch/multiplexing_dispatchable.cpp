@@ -305,9 +305,7 @@ void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
      * event from the fd we've just removed. That means all we need to do to safely destroy
      * the Dispatchable is wait for all the dispatch()es that are currently running to finish.
      *
-     * If there are no threads in dispatch() then we can delete immediately.
-     *
-     * If there is at least one thread in dispatch() then we:
+     * To ensure this, we:
      * 1) Save a pointer to the current generation counter, x.
      * 2) Replace the current generation counter with a fresh std::atomic<int>.
      *    This means that any new threads will not change our saved counter.
@@ -326,19 +324,11 @@ void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
             return candidate.first->watch_fd() == fd;
         });
 
-        if (*in_current_generation == 0)
-        {
-            // No thread from before the removal of the fd is in dispatch(); safe to free.
-            dispatchee_holder.erase(victim);
-        }
-        else
-        {
-            // Punt the destruction to the delayed GC
-            auto next_generation = new std::atomic<int>{0};
-            std::atomic<int>* current_generation = in_current_generation.load();
-            in_current_generation = next_generation;
+        // Punt the destruction to the delayed GC
+        auto next_generation = new std::atomic<int>{0};
+        std::atomic<int>* current_generation = in_current_generation.load();
+        in_current_generation = next_generation;
 
-            add_to_gc_queue(gc_queue, current_generation, victim);
-        }
+        add_to_gc_queue(gc_queue, current_generation, victim);
     }
 }
