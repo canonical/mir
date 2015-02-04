@@ -257,7 +257,6 @@ MIRPLATFORM_6 {
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::load_library*;
   };
-
  local: *;
 };
 
