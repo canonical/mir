@@ -106,6 +106,12 @@ void ms::SurfaceObservers::client_surface_close_requested()
         { observer->client_surface_close_requested(); });
 }
 
+void ms::SurfaceObservers::keymap_changed(xkb_rule_names const& rules)
+{
+    for_each([&rules](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->keymap_changed(rules); });
+}
+
 
 ms::BasicSurface::BasicSurface(
     std::string const& name,
@@ -734,4 +740,9 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
 void ms::BasicSurface::consume(MirEvent const& event)
 {
     input_sender->send_event(event, server_input_channel);
+}
+
+void ms::BasicSurface::set_keymap(xkb_rule_names const& rules)
+{
+    observers.keymap_changed(rules);
 }
