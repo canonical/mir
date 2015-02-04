@@ -281,10 +281,12 @@ TEST_F(SoftwareCursor, new_buffer_on_each_show)
     struct MockBufferAllocator : public mg::GraphicBufferAllocator
     {
         MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
-        MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
+        std::vector<MirPixelFormat> supported_pixel_formats() { return {mir_pixel_format_abgr_8888}; } 
     } mock_allocator;
 
-    EXPECT_CALL(mock_allocator, alloc_buffer(testing::_)).Times(3);
+    EXPECT_CALL(mock_allocator, alloc_buffer(testing::_))
+        .Times(3)
+        .WillRepeatedly(testing::Return(std::make_shared<mtd::StubBuffer>()));;
     mg::SoftwareCursor cursor{
         mt::fake_shared(mock_allocator),
         mt::fake_shared(mock_input_scene)};

@@ -127,8 +127,11 @@ void mg::SoftwareCursor::show(CursorImage const& cursor_image)
     // Do a lock dance to make this function threadsafe,
     // while avoiding calling scene methods under lock
     {
+        geom::Point position{0,0};
         std::lock_guard<std::mutex> lg{guard};
-        new_renderable = create_renderable_for(cursor_image);
+        if (renderable)
+            position = renderable->screen_position().top_left;
+        new_renderable = create_renderable_for(cursor_image, position);
     }
 
     // Add the new renderable first, then remove the old one to avoid
@@ -148,26 +151,11 @@ void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 }
 
 std::shared_ptr<mg::detail::CursorRenderable>
-mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image)
+mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom::Point position)
 {
-    std::shared_ptr<detail::CursorRenderable> new_renderable;
-
-    // Reuse buffer if possible, to minimize buffer reallocations
-    if (renderable && renderable->buffer()->size() == cursor_image.size())
-    {
-        new_renderable = std::make_shared<detail::CursorRenderable>(
-            renderable->buffer(),
-            renderable->screen_position().top_left + hotspot -
-                cursor_image.hotspot());
-    }
-    else
-    {
-        auto const buffer = allocator->alloc_buffer(
-            {cursor_image.size(), format, mg::BufferUsage::software});
-        new_renderable = std::make_shared<detail::CursorRenderable>(
-            buffer,
-            geom::Point{0,0} - cursor_image.hotspot());
-    }
+    auto new_renderable = std::make_shared<detail::CursorRenderable>(
+        allocator->alloc_buffer({cursor_image.size(), format, mg::BufferUsage::software}),
+        position + hotspot - cursor_image.hotspot());
 
     size_t const pixels_size =
         cursor_image.size().width.as_uint32_t() *
