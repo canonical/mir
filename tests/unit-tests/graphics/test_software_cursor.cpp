@@ -205,10 +205,11 @@ TEST_F(SoftwareCursor, multiple_shows_just_show)
 
     InSequence s;
     EXPECT_CALL(mock_input_scene, add_input_visualization(_));
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_));
 
     EXPECT_CALL(mock_input_scene, remove_input_visualization(_));
     EXPECT_CALL(mock_input_scene, add_input_visualization(_));
+
+    EXPECT_CALL(mock_input_scene, remove_input_visualization(_)); // removal on destruction
 
     cursor.show(stub_cursor_image);
     cursor.hide();
