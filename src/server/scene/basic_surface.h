@@ -162,7 +162,7 @@ public:
 
     int dpi() const;
 
-    void set_keymap(xkb_rule_names const& rules);
+    void set_keymap(xkb_rule_names const& rules) override;
 
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
