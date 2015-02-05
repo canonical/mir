@@ -16,10 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "SharedLibrary"
 #include "mir/shared_library_loader.h"
 #include "mir/shared_library.h"
-#include "mir/log.h"
 #include <memory>
 #include <map>
 
@@ -34,7 +32,6 @@ mir::SharedLibrary const* mir::load_library(std::string const& libname)
     }
     else
     {
-        mir::log_info("Loading " + libname);
         ptr = std::make_shared<mir::SharedLibrary>(libname);
         return ptr.get();
     }
