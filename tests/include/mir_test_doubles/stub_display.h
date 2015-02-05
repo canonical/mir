@@ -63,25 +63,21 @@ class StubDisplay : public NullDisplay
 {
 public:
     StubDisplay(std::vector<geometry::Rectangle> const& output_rects) :
-        output_rects(output_rects),
-        group(output_rects)
+        output_rects(output_rects)
+    {
+        for(auto const& rect : output_rects)
+            groups.emplace_back(new StubDisplayGroup({rect}));
+    }
+
+    StubDisplay(unsigned int nbuffers) :
+        StubDisplay(generate_stub_rects(nbuffers))
     {
     }
-#if 0
-    StubDisplay(unsigned int nbuffers)
-    {
-        for (auto i = 0u; i < nbuffers; i++)
-        {
-            auto output_rect = geometry::Rectangle{{0,0},{1,1}};
-            display_buffers.emplace_back(output_rect);
-            output_rects.push_back(output_rect);
-        }
-    }
-#endif
 
     void for_each_display_group(std::function<void(graphics::DisplayGroup&)> const& f) override
     {
-        f(group);
+        for(auto& group : groups)
+            f(*group);
     }
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override
@@ -93,7 +89,15 @@ public:
 
     std::vector<geometry::Rectangle> const output_rects;
 private:
-    StubDisplayGroup group;
+    std::vector<geometry::Rectangle> generate_stub_rects(unsigned int nbuffers)
+    {
+        std::vector<geometry::Rectangle> rects;
+        for (auto i = 0u; i < nbuffers; i++)
+            rects.push_back(geometry::Rectangle{{0,0},{1,1}});
+        return rects;
+    }
+
+    std::vector<std::unique_ptr<StubDisplayGroup>> groups;
 };
 
 }
