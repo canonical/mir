@@ -259,3 +259,11 @@ MIRPLATFORM_6 {
   };
  local: *;
 };
+
+MIRPLATFORM_6.1
+{
+global:
+  extern "C++" {
+    mir::options::arw_server_socket_opt*;
+  };
+} MIRPLATFORM_6;

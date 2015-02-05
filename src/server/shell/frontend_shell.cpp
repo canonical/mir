@@ -91,7 +91,8 @@ int msh::FrontendShell::set_surface_attribute(
     int value)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    return wrapped->set_surface_attribute(scene_session, surface_id, attrib, value);
+    auto const surface = scene_session->surface(surface_id);
+    return wrapped->set_surface_attribute(scene_session, surface, attrib, value);
 }
 
 int msh::FrontendShell::get_surface_attribute(
@@ -100,5 +101,6 @@ int msh::FrontendShell::get_surface_attribute(
     MirSurfaceAttrib attrib)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    return wrapped->get_surface_attribute(scene_session, surface_id, attrib);
+    auto const surface = scene_session->surface(surface_id);
+    return wrapped->get_surface_attribute(surface, attrib);
 }

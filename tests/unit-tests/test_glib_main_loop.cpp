@@ -57,7 +57,9 @@ void execute_in_forked_process(testing::Test* test, std::function<void()> const&
     else
     {
         mir_test_framework::Process child{pid};
-        auto const result = child.wait_for_termination(std::chrono::seconds{5});
+        // Note: valgrind on armhf can very slow when dealing with forks,
+        // so give it enough time.
+        auto const result = child.wait_for_termination(std::chrono::seconds{10});
         EXPECT_TRUE(result.succeeded());
     }
 }

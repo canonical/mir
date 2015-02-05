@@ -110,6 +110,10 @@ struct RegisteredCompositor
         dbc->composite(scene->scene_elements_for(registration_token));
     }
 
+    int frames_pending()
+    {
+        return scene->frames_pending(registration_token);
+    }
 private:
     std::shared_ptr<Scene> const scene;
     mg::DisplayBuffer& db;
@@ -174,8 +178,21 @@ public:
                 for(auto& compositor : compositors)
                     compositor->composite();
                 group.post();
- 
+
                 lock.lock();
+
+                /*
+                 * Note the compositor may have chosen to ignore any number
+                 * of renderables and not consumed buffers from them. So it's
+                 * important to re-count number of frames pending, separately
+                 * to the initial scene_elements_for()...
+                 */
+                for(auto& compositor : compositors)
+                {
+                    int pending = compositor->frames_pending();
+                    if (pending > frames_scheduled)
+                        frames_scheduled = pending;
+                }
             }
         }
     }

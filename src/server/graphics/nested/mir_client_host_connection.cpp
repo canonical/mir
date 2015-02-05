@@ -18,7 +18,6 @@
 
 #include "mir_client_host_connection.h"
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_drm.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 
@@ -163,15 +162,6 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
         mir_connection, surface_parameters);
 }
 
-void mgn::MirClientHostConnection::drm_set_gbm_device(struct gbm_device* dev)
-{
-    if (!mir_connection_drm_set_gbm_device(mir_connection, dev))
-    {
-        std::string const msg("Nested Mir failed to set the gbm device");
-        BOOST_THROW_EXCEPTION(std::runtime_error(msg));
-    }
-}
-
 mg::PlatformOperationMessage mgn::MirClientHostConnection::platform_operation(
     unsigned int op, mg::PlatformOperationMessage const& request)
 {
@@ -185,7 +175,7 @@ mg::PlatformOperationMessage mgn::MirClientHostConnection::platform_operation(
     MirPlatformMessage* raw_reply{nullptr};
 
     auto const wh = mir_connection_platform_operation(
-        mir_connection, op, msg.get(), platform_operation_callback, &raw_reply);
+        mir_connection, msg.get(), platform_operation_callback, &raw_reply);
     mir_wait_for(wh);
 
     auto const reply = mir::raii::deleter_for(

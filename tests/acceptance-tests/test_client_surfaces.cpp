@@ -282,3 +282,17 @@ TEST_F(ClientSurfaces, can_be_modal_dialogs)
     mir_surface_release_sync(dialog);
 }
 
+TEST_F(ClientSurfaces, can_be_input_methods)
+{
+    auto spec = mir_connection_create_spec_for_input_method(connection, 640, 480,
+        mir_pixel_format_abgr_8888);
+    ASSERT_THAT(spec, NotNull());
+
+    auto im = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    EXPECT_EQ(mir_surface_get_type(im), mir_surface_type_inputmethod);
+
+    mir_surface_release_sync(im);
+}
+

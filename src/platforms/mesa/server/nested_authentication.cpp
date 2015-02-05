@@ -25,6 +25,8 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <cstring>
+
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 
@@ -33,12 +35,11 @@ namespace
 
 mg::PlatformOperationMessage make_auth_magic_request_message(drm_magic_t magic)
 {
-    mg::PlatformOperationMessage request;
-    request.data.resize(sizeof(MirMesaAuthMagicRequest));
-    auto auth_magic_request_ptr =
-        reinterpret_cast<MirMesaAuthMagicRequest*>(request.data.data());
-    auth_magic_request_ptr->magic = magic;
-    return request;
+    MirMesaAuthMagicRequest const request{magic};
+    mg::PlatformOperationMessage request_msg;
+    request_msg.data.resize(sizeof(request));
+    std::memcpy(request_msg.data.data(), &request, sizeof(request));
+    return request_msg;
 }
 
 MirMesaAuthMagicResponse auth_magic_response_from_message(
@@ -46,10 +47,10 @@ MirMesaAuthMagicResponse auth_magic_response_from_message(
 {
     if (msg.data.size() == sizeof(MirMesaAuthMagicResponse))
     {
-        auto auth_magic_response_ptr =
-            reinterpret_cast<MirMesaAuthMagicResponse const*>(msg.data.data());
+        MirMesaAuthMagicResponse response{-1};
+        std::memcpy(&response, msg.data.data(), msg.data.size());
 
-        return *auth_magic_response_ptr;
+        return response;
     }
 
     BOOST_THROW_EXCEPTION(

@@ -69,7 +69,6 @@ public:
     virtual glm::mat4 transformation() const = 0;
 
     virtual bool shaped() const = 0;  // meaning the pixel format has alpha
-    virtual int buffers_ready_for_compositor() const = 0;
 
 protected:
     Renderable() = default;
