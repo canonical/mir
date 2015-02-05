@@ -119,6 +119,22 @@ mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
     eglTerminate(egl_display);
 }
 
+mgn::detail::DisplayGroup::DisplayGroup(
+    std::shared_ptr<mgn::detail::NestedOutput> const& output) :
+    output(output)
+{
+}
+
+void mgn::detail::DisplayGroup::for_each_display_buffer(
+    std::function<void(DisplayBuffer&)> const& f)
+{
+    f(*output);
+}
+
+void mgn::detail::DisplayGroup::post()
+{
+}
+
 mgn::NestedDisplay::NestedDisplay(
     std::shared_ptr<mg::Platform> const& platform,
     std::shared_ptr<HostConnection> const& connection,
@@ -142,7 +158,7 @@ mgn::NestedDisplay::~NestedDisplay() noexcept
 {
 }
 
-void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+void mgn::NestedDisplay::for_each_display_group(std::function<void(mg::DisplayGroup&)> const& f)
 {
     std::unique_lock<std::mutex> lock(outputs_mutex);
     for (auto& i : outputs)
@@ -206,12 +222,13 @@ void mgn::NestedDisplay::create_surfaces(mg::DisplayConfiguration const& configu
 
                         auto const host_surface = connection->create_surface(request_params);
 
-                        result[output.id] = std::make_shared<mgn::detail::NestedOutput>(
-                            egl_display,
-                            host_surface,
-                            area,
-                            dispatcher,
-                            output.current_format);
+                        result[output.id] = std::make_shared<mgn::detail::DisplayGroup>( 
+                            std::make_shared<mgn::detail::NestedOutput>(
+                                egl_display,
+                                host_surface,
+                                area,
+                                dispatcher,
+                                output.current_format));
                         have_output_for_group = true;
                     }
                 });

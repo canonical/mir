@@ -66,15 +66,15 @@ public:
      * an unacceptable performance hit to wait for both before freeing
      * GL resources.
      */
-    virtual void flip() = 0;
+    //virtual void flip() = 0;
 
     /**
      * \deprecated Please try to implement separate gl_swap_buffers and
      * flip functions instead. If not possible, just move your old
      * post_update() logic into gl_swap_buffers.
      */
-    __attribute__((__deprecated__("Use gl_swap_buffers() and flip(), remembering to release all compositor buffers in the middle.")))
-    void post_update() { gl_swap_buffers(); flip(); }
+    //__attribute__((__deprecated__("Use gl_swap_buffers() and flip(), remembering to release all compositor buffers in the middle.")))
+    //void post_update() { gl_swap_buffers(); flip(); }
 
     /** This will render renderlist to the screen and post the result to the 
      *  screen if there is a hardware optimization that can be done.

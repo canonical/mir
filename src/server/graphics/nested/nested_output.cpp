@@ -70,10 +70,6 @@ void mgn::detail::NestedOutput::gl_swap_buffers()
     eglSwapBuffers(egl_display, egl_surface);
 }
 
-void mgn::detail::NestedOutput::flip()
-{
-}
-
 bool mgn::detail::NestedOutput::post_renderables_if_optimizable(RenderableList const&)
 {
     return false;

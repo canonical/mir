@@ -34,7 +34,7 @@ namespace doubles
 class NullDisplay : public graphics::Display
 {
  public:
-    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const&) override
+    void for_each_display_group(std::function<void(graphics::DisplayGroup&)> const&) override
     {
         /* yield() is needed to ensure reasonable runtime under valgrind for some tests */
         std::this_thread::yield();

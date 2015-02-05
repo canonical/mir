@@ -34,10 +34,10 @@ namespace test
 namespace doubles
 {
 
-class StubDisplay : public NullDisplay
+struct StubDisplayGroup : graphics::DisplayGroup
 {
 public:
-    StubDisplay(std::vector<geometry::Rectangle> const& output_rects)
+    StubDisplayGroup(std::vector<geometry::Rectangle> const& output_rects)
         : output_rects{output_rects}
     {
         for (auto const& output_rect : output_rects)
@@ -46,8 +46,42 @@ public:
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override
     {
-        for (auto& db : display_buffers)
+        for(auto& db : display_buffers)
             f(db);
+    }
+
+    void post() override
+    {
+    }
+
+private:
+    std::vector<geometry::Rectangle> const output_rects;
+    std::vector<StubDisplayBuffer> display_buffers;
+};
+
+class StubDisplay : public NullDisplay
+{
+public:
+    StubDisplay(std::vector<geometry::Rectangle> const& output_rects) :
+        output_rects(output_rects),
+        group(output_rects)
+    {
+    }
+#if 0
+    StubDisplay(unsigned int nbuffers)
+    {
+        for (auto i = 0u; i < nbuffers; i++)
+        {
+            auto output_rect = geometry::Rectangle{{0,0},{1,1}};
+            display_buffers.emplace_back(output_rect);
+            output_rects.push_back(output_rect);
+        }
+    }
+#endif
+
+    void for_each_display_group(std::function<void(graphics::DisplayGroup&)> const& f) override
+    {
+        f(group);
     }
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override
@@ -59,7 +93,7 @@ public:
 
     std::vector<geometry::Rectangle> const output_rects;
 private:
-    std::vector<StubDisplayBuffer> display_buffers;
+    StubDisplayGroup group;
 };
 
 }

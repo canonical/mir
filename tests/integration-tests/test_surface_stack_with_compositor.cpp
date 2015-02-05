@@ -31,6 +31,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_input_sender.h"
 #include "mir_test_doubles/null_surface_configurator.h"
+#include "mir_test_doubles/null_display_group.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -57,23 +58,9 @@ public:
     }
 };
 
-struct CountingDisplayBuffer : public mtd::StubDisplayBuffer
+struct CountingDisplayGroup : public mtd::NullDisplayGroup
 {
-    CountingDisplayBuffer() :
-        StubDisplayBuffer({{0,0}, {10, 10}})
-    {
-    }
-
-    bool post_renderables_if_optimizable(mg::RenderableList const&) override
-    {
-        return false;
-    }
-
-    void gl_swap_buffers() override
-    {
-    }
-
-    void flip() override
+    void post() override
     {
         increment_post_count();
     }
@@ -102,19 +89,19 @@ private:
 
 struct StubDisplay : public mtd::NullDisplay
 {
-    StubDisplay(mg::DisplayBuffer& primary, mg::DisplayBuffer& secondary)
+    StubDisplay(mg::DisplayGroup& primary, mg::DisplayGroup& secondary)
       : primary(primary),
         secondary(secondary)
     {
     } 
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& fn) override
+    void for_each_display_group(std::function<void(mg::DisplayGroup&)> const& fn) override
     {
         fn(primary);
         fn(secondary);
     }
 private:
-    mg::DisplayBuffer& primary;
-    mg::DisplayBuffer& secondary;
+    mg::DisplayGroup& primary;
+    mg::DisplayGroup& secondary;
 };
 
 class BypassStubBuffer : public mtd::StubBuffer
@@ -155,8 +142,8 @@ struct SurfaceStackCompositor : public testing::Test
     std::shared_ptr<ms::BasicSurface> stub_surface;
     ms::SurfaceCreationParameters default_params;
     BypassStubBuffer stubbuf;
-    CountingDisplayBuffer stub_primary_db;
-    CountingDisplayBuffer stub_secondary_db;
+    CountingDisplayGroup stub_primary_db;
+    CountingDisplayGroup stub_secondary_db;
     StubDisplay stub_display{stub_primary_db, stub_secondary_db};
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
         mt::fake_shared(renderer_factory),

@@ -216,7 +216,13 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     return false;
 }
 
-void mgm::DisplayBuffer::flip()
+void mgm::DisplayBuffer::for_each_display_buffer(
+    std::function<void(graphics::DisplayBuffer&)> const& f)
+{
+    f(*this);
+}
+
+void mgm::DisplayBuffer::post()
 {
     flip(nullptr);
 }

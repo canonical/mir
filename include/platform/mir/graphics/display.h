@@ -39,6 +39,19 @@ typedef std::function<bool()> DisplayPauseHandler;
 typedef std::function<bool()> DisplayResumeHandler;
 typedef std::function<void()> DisplayConfigurationChangeHandler;
 
+class DisplayGroup
+{
+public:
+    virtual void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) = 0;
+    virtual void post() = 0;
+    virtual ~DisplayGroup() = default;
+protected:
+    DisplayGroup() = default;
+private:
+    DisplayGroup(DisplayGroup const&) = delete;
+    DisplayGroup& operator=(DisplayGroup const&) = delete;
+};
+
 /**
  * Interface to the display subsystem.
  */
@@ -48,7 +61,7 @@ public:
     /**
      * Executes a functor for each output framebuffer.
      */
-    virtual void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) = 0;
+    virtual void for_each_display_group(std::function<void(DisplayGroup&)> const& f) = 0;
 
     /**
      * Gets a copy of the current output configuration.

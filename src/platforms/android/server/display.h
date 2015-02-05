@@ -46,6 +46,13 @@ class ConfigurableDisplayBuffer;
 class DisplayChangePipe;
 class DisplayDevice;
 
+class DisplayGroup : public graphics::DisplayGroup
+{
+public:
+    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) override;
+    void post() override;
+};
+
 class Display : public graphics::Display
 {
 public:
@@ -57,7 +64,7 @@ public:
         OverlayOptimization overlay_option);
     ~Display() noexcept;
 
-    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override;
+    void for_each_display_group(std::function<void(graphics::DisplayGroup&)> const& f) override;
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override;
     void configure(graphics::DisplayConfiguration const&) override;
@@ -90,6 +97,7 @@ private:
     DisplayConfiguration mutable config;
     PbufferGLContext gl_context;
     std::shared_ptr<DisplayDevice> display_device;
+    DisplayGroup display_group;
     std::unique_ptr<ConfigurableDisplayBuffer> const primary_db;
     std::unique_ptr<ConfigurableDisplayBuffer> mutable external_db;
     std::unique_ptr<DisplayChangePipe> display_change_pipe;

@@ -98,9 +98,9 @@ void mga::DisplayBuffer::gl_swap_buffers()
     display_device->commit(display_name, *layer_list, gl_context, overlay_program);
 }
 
-void mga::DisplayBuffer::flip()
-{
-}
+//void mga::DisplayBuffer::flip()
+//{
+//}
 
 MirOrientation mga::DisplayBuffer::orientation() const
 {
