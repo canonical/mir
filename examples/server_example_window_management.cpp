@@ -198,14 +198,12 @@ public:
         case mir_surface_attrib_state:
         {
             std::lock_guard<decltype(mutex)> lock(mutex);
-            policy.handle_set_state(surface, MirSurfaceState(value));
-            break;
+            auto const state = policy.handle_set_state(surface, MirSurfaceState(value));
+            return msh::AbstractShell::set_surface_attribute(session, surface, attrib, state);
         }
         default:
-            break;
+            return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
         }
-
-        return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
     }
 
     // I'm not sure this is generic, but it's in the WindowManager interface
@@ -423,8 +421,10 @@ public:
         return parameters;
     }
 
-    void handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
+    int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
     {
+        auto& info = tools->info_for(surface);
+
         switch (value)
         {
         case mir_surface_state_restored:
@@ -434,10 +434,8 @@ public:
             break;
 
         default:
-            return;
+            return info.state;
         }
-
-        auto& info = tools->info_for(surface);
 
         if (info.state == mir_surface_state_restored)
         {
@@ -446,7 +444,7 @@ public:
 
         if (info.state == value)
         {
-            return; // Nothing to do
+            return info.state;
         }
 
         auto const& tile = tools->info_for(info.session).tile;
@@ -477,7 +475,7 @@ public:
             break;
         }
 
-        info.state = value;
+        return info.state = value;
     }
 
     void handle_drag(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)
