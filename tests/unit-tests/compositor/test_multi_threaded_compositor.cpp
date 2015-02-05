@@ -477,7 +477,7 @@ TEST(MultiThreadedCompositor, schedules_enough_frames)
 
     unsigned int const nbuffers = 3;
 
-    auto display = std::make_shared<StubDisplay>(nbuffers);
+    auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
     auto scene = std::make_shared<StubScene>();
     auto factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
     mc::MultiThreadedCompositor compositor{display, scene, factory,

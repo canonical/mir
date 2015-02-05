@@ -187,11 +187,11 @@ public:
                  * important to re-count number of frames pending, separately
                  * to the initial scene_elements_for()...
                  */
-                for(auto& compositor : compositors)
+        //        for(auto& compositor : compositors)
                 {
-                    int pending = compositor->frames_pending();
-                    if (pending > frames_scheduled)
-                        frames_scheduled = pending;
+        //            int pending = compositor->frames_pending();
+        //            if (pending > frames_scheduled)
+        //                frames_scheduled = pending;
                 }
             }
         }
