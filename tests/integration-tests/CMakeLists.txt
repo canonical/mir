@@ -65,6 +65,12 @@ if(MIR_TEST_PLATFORM STREQUAL "mesa")
 endif()
 
 link_directories(${LIBRARY_OUTPUT_PATH})
+message(STATUS "FOOO ~ ${INTEGRATION_TESTS_SRCS} ~
+  ~ ${MIR_SERVER_OBJECTS} ~
+  ~~~~ $<TARGET_OBJECTS:mirclientobjects> ~~~~
+  ~ ${MIR_PLATFORM_OBJECTS} ~
+  ~ ${MIR_COMMON_OBJECTS} ~")
+
 mir_add_wrapped_executable(
   mir_integration_tests
   ${INTEGRATION_TESTS_SRCS}

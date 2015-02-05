@@ -21,6 +21,7 @@
 #include "mir/input/input_event_handler_register.h"
 #include "mir/input/input_device_registry.h"
 
+#include <iostream>
 #include <algorithm>
 
 namespace mtf = mir_test_framework;
@@ -29,13 +30,27 @@ namespace mi = mir::input;
 void mtf::StubInputPlatform::start(mi::InputEventHandlerRegister& loop,
            std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry)
 {
+    std::cerr << __PRETTY_FUNCTION__ << std::endl;
     std::unique_lock<std::mutex> lock(platform_mutex);
     registry = input_device_registry;
     event_handler = &loop;
 }
 
+mtf::StubInputPlatform::StubInputPlatform()
+{
+    std::cerr << __PRETTY_FUNCTION__ << std::endl;
+    std::cerr << "creating " << this << std::endl;
+}
+
+mtf::StubInputPlatform::~StubInputPlatform()
+{
+    std::cerr << __PRETTY_FUNCTION__ << std::endl;
+    std::cerr << "killing " << this << std::endl;
+}
+
 void mtf::StubInputPlatform::stop(mi::InputEventHandlerRegister&)
 {
+    std::cerr << __PRETTY_FUNCTION__ << std::endl;
     std::unique_lock<std::mutex> lock(platform_mutex);
     registry.reset();
     event_handler = nullptr;

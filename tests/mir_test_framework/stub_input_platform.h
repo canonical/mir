@@ -37,6 +37,8 @@ class FakeInputDevice;
 class StubInputPlatform : public mir::input::Platform
 {
 public:
+    StubInputPlatform();
+    ~StubInputPlatform();
     void start(mir::input::InputEventHandlerRegister& loop,
                std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry);
     void stop(mir::input::InputEventHandlerRegister& loop) override;
