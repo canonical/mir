@@ -29,6 +29,8 @@
 #include "mir_test_doubles/mock_drm.h"
 #include <gtest/gtest.h>
 
+#include <cstring>
+
 namespace mg = mir::graphics;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -101,14 +103,14 @@ TEST_F(IpcOperations, calls_drm_auth_magic_for_auth_magic_operation)
 
     mg::PlatformOperationMessage request_msg;
     request_msg.data.resize(sizeof(request));
-    *(reinterpret_cast<decltype(request)*>(request_msg.data.data())) = request;
+    std::memcpy(request_msg.data.data(), &request, sizeof(request));
 
     auto response_msg = ipc_ops.platform_operation(
         MirMesaPlatformOperation::auth_magic, request_msg);
 
-    MirMesaAuthMagicResponse response;
+    MirMesaAuthMagicResponse response{-1};
     ASSERT_THAT(response_msg.data.size(), Eq(sizeof(response)));
-    response = *(reinterpret_cast<decltype(response)*>(response_msg.data.data()));
+    std::memcpy(&response, response_msg.data.data(), response_msg.data.size());
     EXPECT_THAT(response.status, Eq(0));
 }
 

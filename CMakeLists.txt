@@ -228,25 +228,6 @@ if (MIR_ENABLE_TESTS)
     /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/src/include/server ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
   )
   
-  add_test(NAME server-ABI-unchanged
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMAND sha1sum -c server-ABI-sha1sums
-  )
-  
-  add_test(NAME client-ABI-unchanged
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMAND sha1sum -c client-ABI-sha1sums
-  )
-
-  add_test(NAME common-ABI-unchanged
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMAND sha1sum -c common-ABI-sha1sums
-  )
-
-  add_test(NAME platform-ABI-unchanged
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMAND sha1sum -c platform-ABI-sha1sums
-  )
 endif ()
 
 enable_coverage_report(mirserver)

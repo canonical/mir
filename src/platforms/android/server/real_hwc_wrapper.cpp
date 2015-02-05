@@ -99,8 +99,7 @@ mga::RealHwcWrapper::~RealHwcWrapper()
 void mga::RealHwcWrapper::prepare(
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
-    //TODO: convert report to reporting multimonitor
-    if (displays[0]) report->report_list_submitted_to_prepare(*displays[0]);
+    report->report_list_submitted_to_prepare(displays);
     if (auto rc = hwc_device->prepare(hwc_device.get(), num_displays(displays),
         const_cast<hwc_display_contents_1**>(displays.data())))
     {
@@ -109,13 +108,13 @@ void mga::RealHwcWrapper::prepare(
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 
-    if (displays[0]) report->report_prepare_done(*displays[0]);
+    report->report_prepare_done(displays);
 }
 
 void mga::RealHwcWrapper::set(
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
-    if (displays[0]) report->report_set_list(*displays[0]);
+    report->report_set_list(displays);
     if (auto rc = hwc_device->set(hwc_device.get(), num_displays(displays),
         const_cast<hwc_display_contents_1**>(displays.data())))
     {
@@ -123,6 +122,7 @@ void mga::RealHwcWrapper::set(
         ss << "error during hwc prepare(). rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+    report->report_set_done(displays);
 }
 
 void mga::RealHwcWrapper::vsync_signal_on(DisplayName display_name) const

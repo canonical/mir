@@ -223,7 +223,12 @@ void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(m
             first_frame_posted = true;
         }
 
-        observers.frame_posted(surface_buffer_stream->buffers_ready_for_compositor());
+        /*
+         * TODO: In future frame_posted() could be made parameterless.
+         *       The new method of catching up on buffer backlogs is to
+         *       query buffers_ready_for_compositor() or Scene::frames_pending
+         */
+        observers.frame_posted(1);
     }
 
     surface_buffer_stream->acquire_client_buffer(complete);
@@ -680,9 +685,6 @@ public:
     {
     }
  
-    int buffers_ready_for_compositor() const override
-    { return underlying_buffer_stream->buffers_ready_for_compositor(); }
-
     std::shared_ptr<mg::Buffer> buffer() const override
     {
         if (!compositor_buffer)
@@ -729,6 +731,12 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
             surface_alpha,
             nonrectangular, 
             this));
+}
+
+int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
+{
+    std::unique_lock<std::mutex> lk(guard);
+    return surface_buffer_stream->buffers_ready_for_compositor(id);
 }
 
 void ms::BasicSurface::consume(MirEvent const& event)

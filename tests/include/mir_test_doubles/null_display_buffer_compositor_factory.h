@@ -22,6 +22,8 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
 
+#include <thread>
+
 namespace mir
 {
 namespace test
@@ -37,7 +39,12 @@ public:
     {
         struct NullDisplayBufferCompositor : compositor::DisplayBufferCompositor
         {
-            void composite(compositor::SceneElementSequence&&) {}
+            void composite(compositor::SceneElementSequence&&)
+            {
+                // yield() is needed to ensure reasonable runtime under
+                // valgrind for some tests
+                std::this_thread::yield();
+            }
         };
 
         auto raw = new NullDisplayBufferCompositor{};

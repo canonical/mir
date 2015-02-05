@@ -112,6 +112,12 @@ void mcla::AndroidClientPlatform::populate(MirPlatformPackage& package) const
     context->populate_server_package(package);
 }
 
+MirPlatformMessage* mcla::AndroidClientPlatform::platform_operation(
+    MirPlatformMessage const*)
+{
+    return nullptr;
+}
+
 MirNativeBuffer* mcla::AndroidClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
 {
     return buf->anwb();
