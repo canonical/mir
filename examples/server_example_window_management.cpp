@@ -130,6 +130,7 @@ public:
     {
     }
 
+private:
     std::shared_ptr<ms::Session> open_session(
         pid_t client_pid,
         std::string const& name,
@@ -207,7 +208,7 @@ public:
     // and I don't see any other sane implementation
     void toggle(MirSurfaceState state) override
     {
-        if (auto const focussed_session = focussed_application().lock())
+        if (auto const focussed_session = msh::AbstractShell::focussed_application().lock())
         {
             if (auto const focussed_surface = focussed_session->default_surface())
             {
@@ -220,11 +221,6 @@ public:
             }
         }
     }
-
-protected:
-    using msh::AbstractShell::set_focus_to;
-    using msh::AbstractShell::focussed_application;
-    using msh::AbstractShell::focus_next;
 
     auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
     -> std::shared_ptr<ms::Session> override
