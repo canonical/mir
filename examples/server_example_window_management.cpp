@@ -95,17 +95,22 @@ private:
     void toggle(MirSurfaceState) override {}
 };
 
+template<typename Info>
+struct SurfaceTo
+{
+    using type = std::map<std::weak_ptr<ms::Surface>, Info, std::owner_less<std::weak_ptr<ms::Surface>>>;
+};
+
+template<typename Info>
+struct SessionTo
+{
+    using type = std::map<std::weak_ptr<ms::Session>, Info, std::owner_less<std::weak_ptr<ms::Session>>>;
+};
+
 template<typename SessionInfo, typename SurfaceInfo>
 class BasicWindowManagerTools : public virtual msh::FocusController
 {
 public:
-    using SessionInfoMap = std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>>;
-    using SurfaceInfoMap = std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>>;
-
-    using msh::FocusController::set_focus_to;
-    using msh::FocusController::focussed_application;
-    using msh::FocusController::focus_next;
-
     virtual auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
     -> std::shared_ptr<ms::Session> = 0;
 
@@ -306,8 +311,8 @@ private:
         policy.handle_displays_updated(session_info, displays);
     }
 
-    using typename BasicWindowManagerTools<SessionInfo, SurfaceInfo>::SessionInfoMap;
-    using typename BasicWindowManagerTools<SessionInfo, SurfaceInfo>::SurfaceInfoMap;
+    using SessionInfoMap = typename SessionTo<SessionInfo>::type;
+    using SurfaceInfoMap = typename SurfaceTo<SurfaceInfo>::type;
 
     SessionInfoMap session_info;
     SurfaceInfoMap surface_info;
@@ -351,6 +356,8 @@ class TilingWindowManagerPolicy
 {
 public:
     using Tools = BasicWindowManagerTools<SessionInfo, SurfaceInfo>;
+    using SessionInfoMap = typename SessionTo<SessionInfo>::type;
+
     TilingWindowManagerPolicy(Tools* const tools) :
         tools{tools} {}
 
@@ -360,12 +367,12 @@ public:
             tools->set_focus_to(session);
     }
 
-    void handle_session_info_updated(Tools::SessionInfoMap& session_info, Rectangles const& displays)
+    void handle_session_info_updated(SessionInfoMap& session_info, Rectangles const& displays)
     {
         update_tiles(session_info, displays);
     }
 
-    void handle_displays_updated(Tools::SessionInfoMap& session_info, Rectangles const& displays)
+    void handle_displays_updated(SessionInfoMap& session_info, Rectangles const& displays)
     {
         update_tiles(session_info, displays);
     }
@@ -512,7 +519,7 @@ private:
     }
 
     void update_tiles(
-        Tools::SessionInfoMap& session_info,
+        SessionInfoMap& session_info,
         Rectangles const& displays)
     {
         if (session_info.size() < 1 || displays.size() < 1) return;
