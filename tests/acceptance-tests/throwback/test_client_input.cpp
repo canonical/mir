@@ -656,7 +656,15 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
 {
     using namespace testing;
 
-    mt::WaitCondition first_event_received;
+    xkb_rule_names names;
+    names.rules = "evdev";
+    names.model = "pc105";
+    names.layout = "us";
+    names.variant = "dvorak";
+    names.options = "";
+
+    mt::WaitCondition first_event_received,
+        client_sees_keymap_change;
     InputClient client{new_connection(), test_client_name_1};
     
     InSequence seq;
@@ -664,6 +672,9 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
         mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_n)))).Times(1);
     EXPECT_CALL(client.handler, handle_input(mt::KeyUpEvent()))
         .Times(1).WillOnce(mt::WakeUp(&first_event_received));
+    EXPECT_CALL(client.handler, handle_input(
+        mt::KeymapEventWithRules(names)))
+        .Times(1).WillOnce(mt::WakeUp(&client_sees_keymap_change));
     EXPECT_CALL(client.handler, handle_input(AllOf(
         mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_b)))).Times(1);
     EXPECT_CALL(client.handler, handle_input(mt::KeyUpEvent()))
@@ -679,17 +690,12 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
     first_event_received.wait_for_at_most_seconds(60);
     
     server_config().the_session_container()->for_each(
-        [] (std::shared_ptr<ms::Session> const& session) -> void
+        [&names] (std::shared_ptr<ms::Session> const& session) -> void
         {
-            xkb_rule_names names;
-            names.rules = "evdev";
-            names.model = "pc105";
-            names.layout = "dvorak";
-            names.variant = "";
-            names.options = "";
-            
             session->default_surface()->set_keymap(names);
         });
+
+    client_sees_keymap_change.wait_for_at_most_seconds(60);
 
     fake_event_hub()->synthesize_event(
         mis::a_key_down_event().of_scancode(KEY_N));

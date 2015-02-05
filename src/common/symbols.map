@@ -223,7 +223,8 @@ MIR_COMMON_3.2 {
       vtable?for?mir::dispatch::SimpleDispatchThread;
       mir::events::*;
       mir::input::receiver::XKBMapper::XKBMapper*;
-      mir::input::receiver::XKBMapper::?XKBMapper*;
+      mir::input::receiver::XKBMapper::XKBMapper*;        
+      mir::input::receiver::XKBMapper::set_rules*;
       typeinfo?for?mir::input::receiver::XKBMapper;
       vtable?for?mir::input::receiver::XKBMapper;
     };

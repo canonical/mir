@@ -26,6 +26,7 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -40,6 +41,8 @@ public:
     XKBMapper();
     virtual ~XKBMapper() = default;
 
+    void set_rules(xkb_rule_names const& names);
+
     void update_state_and_map_event(MirEvent& ev);
 
 protected:
@@ -47,6 +50,8 @@ protected:
     XKBMapper& operator=(XKBMapper const&) = delete;
 
 private:
+    std::mutex guard;
+    
     std::shared_ptr<xkb_context> context;
     std::shared_ptr<xkb_keymap> map;
     std::shared_ptr<xkb_state> state;

@@ -526,6 +526,13 @@ void MirSurface::handle_event(MirEvent const& e)
     case mir_event_type_orientation:
         orientation = mir_orientation_event_get_direction(mir_event_get_orientation_event(&e));
         break;
+    case mir_event_type_keymap:
+    {
+        xkb_rule_names names;
+        mir_keymap_event_get_rules(mir_event_get_keymap_event(&e), &names);
+        keymapper->set_rules(names);
+        break;
+    }
     default:
         break;
     };
