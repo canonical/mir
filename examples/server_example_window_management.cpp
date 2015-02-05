@@ -120,7 +120,9 @@ public:
 
     mf::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params) override
     {
-        auto const result = msh::AbstractShell::create_surface(session, params);
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        ms::SurfaceCreationParameters const placed_params = handle_place_new_surface(session, params);
+        auto const result = msh::AbstractShell::create_surface(session, placed_params);
         add_surface(session->surface(result), session);
         return result;
     }
@@ -173,6 +175,24 @@ public:
         return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
     }
 
+    // I'm not sure this is generic, but it's in the WindowManager interface
+    // and I don't see any other sane implementation
+    void toggle(MirSurfaceState state) override
+    {
+        if (auto const focussed_session = focussed_application().lock())
+        {
+            if (auto const focussed_surface = focussed_session->default_surface())
+            {
+                std::lock_guard<decltype(mutex)> lock(mutex);
+
+                if (info_for(focussed_surface).state == state)
+                    state = mir_surface_state_restored;
+
+                handle_set_state(focussed_surface, MirSurfaceState(state));
+            }
+        }
+    }
+
 protected:
     using msh::AbstractShell::set_focus_to;
     using msh::AbstractShell::focussed_application;
@@ -220,9 +240,17 @@ protected:
     std::function<void(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)>
         handle_set_state{[](std::shared_ptr<ms::Surface>, MirSurfaceState){}};
 
-    std::mutex mutex;
+    std::function<ms::SurfaceCreationParameters(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& request_parameters)>
+        handle_place_new_surface{[](
+            std::shared_ptr<ms::Session> const&,
+            ms::SurfaceCreationParameters const& request_parameters)
+            { return request_parameters; }};
 
 private:
+    std::mutex mutex;
+
     void add_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -241,7 +269,6 @@ private:
         std::shared_ptr<ms::Surface> const& surface,
         std::shared_ptr<ms::Session> const& session)
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session].surfaces.push_back(surface);
         surface_info.emplace(surface, SurfaceInfo{session, surface});
     }
@@ -339,6 +366,11 @@ public:
             Rectangles const& displays)
             { update_tiles(session_info, displays); };
 
+        handle_place_new_surface = [this](
+            std::shared_ptr<ms::Session> const& session,
+            ms::SurfaceCreationParameters const& request_parameters)
+            { return place_new_surface(session, request_parameters); };
+
         handle_click = [this](const Point& cursor) { on_click(cursor); };
 
         handle_drag = [this](const Point& cursor, const Point& old_cursor, std::weak_ptr<ms::Surface>& old_surface)
@@ -396,30 +428,6 @@ private:
         }
     }
 
-    void toggle(MirSurfaceState state) override
-    {
-        if (auto const focussed_session = focussed_application().lock())
-        {
-            if (auto const focussed_surface = focussed_session->default_surface())
-            {
-                {
-                    std::lock_guard<decltype(mutex)> lock(mutex);
-
-                    if (info_for(focussed_surface).state == state)
-                        state = mir_surface_state_restored;
-                }
-
-                set_surface_attribute(focussed_session, focussed_surface, mir_surface_attrib_state, state);
-            }
-        }
-    }
-
-    mf::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params) override
-    {
-        ms::SurfaceCreationParameters const placed_params = place_new_surface(session, params);
-        return Super::create_surface(session, placed_params);
-    }
-
     auto place_new_surface(
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& request_parameters)
@@ -427,7 +435,6 @@ private:
     {
         auto parameters = request_parameters;
 
-        std::lock_guard<decltype(mutex)> lock(mutex);
         Rectangle const& tile = info_for(session).tile;
         parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
 
