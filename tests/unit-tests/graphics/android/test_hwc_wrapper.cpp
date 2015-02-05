@@ -263,15 +263,18 @@ TEST_F(HwcWrapper, accesses_display_config)
 
 TEST_F(HwcWrapper, calls_access_functions)
 {
+    using namespace testing;
     uint32_t* attributes{nullptr};
     int32_t* values{nullptr};
     mga::ConfigId hwc_config{3};
+    int rc{-2};
 
     EXPECT_CALL(*mock_device, getDisplayAttributes_interface(
-        mock_device.get(), HWC_DISPLAY_PRIMARY, hwc_config.as_value(), attributes, values));
+        mock_device.get(), HWC_DISPLAY_PRIMARY, hwc_config.as_value(), attributes, values))
+        .WillOnce(Return(rc));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
-    wrapper.display_attributes(mga::DisplayName::primary, hwc_config, attributes, values);
+    EXPECT_THAT(wrapper.display_attributes(mga::DisplayName::primary, hwc_config, attributes, values), Eq(rc));
 }
 
 TEST_F(HwcWrapper, registers_hooks_for_driver)
