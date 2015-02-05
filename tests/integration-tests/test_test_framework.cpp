@@ -129,6 +129,6 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
             connection_released.raise();
         }}.detach();
 
-    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{60}))
+    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{240}))
         << "Client hung, possibly because of fd leaks" << std::endl;
 }
