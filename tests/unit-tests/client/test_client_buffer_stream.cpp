@@ -27,7 +27,7 @@
 #include "mir_test_doubles/null_logger.h"
 #include "mir_test/fake_shared.h"
 
-#include <mir_toolkit/mir_client_library.h>
+#include "mir_toolkit/mir_client_library.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

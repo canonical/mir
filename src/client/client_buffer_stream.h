@@ -20,7 +20,7 @@
 #define MIR_CLIENT_CLIENT_BUFFER_STREAM_H_
 
 #include "mir_toolkit/client_types.h"
-#include "mir/graphics/native_buffer.h"
+#include "mir_toolkit/mir_native_buffer.h"
 #include "mir_wait_handle.h"
 
 #include <EGL/eglplatform.h>

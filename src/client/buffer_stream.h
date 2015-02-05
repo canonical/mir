@@ -18,7 +18,7 @@
 
 #ifndef MIR_CLIENT_BUFFER_STREAM_H
 #define MIR_CLIENT_BUFFER_STREAM_H
- 
+
 #include "mir_protobuf.pb.h"
 
 #include "mir_wait_handle.h"
