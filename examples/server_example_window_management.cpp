@@ -96,8 +96,10 @@ private:
 };
 
 template<typename SessionInfo, typename SurfaceInfo>
-struct BasicWindowManager : virtual me::WindowManager, msh::AbstractShell
+class BasicWindowManager : virtual me::WindowManager,
+    private msh::AbstractShell
 {
+public:
     using msh::AbstractShell::AbstractShell;
 
     std::shared_ptr<ms::Session> open_session(
@@ -150,6 +152,77 @@ struct BasicWindowManager : virtual me::WindowManager, msh::AbstractShell
         old_cursor = cursor;
     }
 
+    int set_surface_attribute(
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& surface,
+        MirSurfaceAttrib attrib,
+        int value) override
+    {
+        switch (attrib)
+        {
+        case mir_surface_attrib_state:
+        {
+            std::lock_guard<decltype(mutex)> lock(mutex);
+            handle_set_state(surface, MirSurfaceState(value));
+            break;
+        }
+        default:
+            break;
+        }
+
+        return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
+    }
+
+protected:
+    using msh::AbstractShell::set_focus_to;
+    using msh::AbstractShell::focussed_application;
+    using msh::AbstractShell::focus_next;
+
+    auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
+    -> std::shared_ptr<ms::Session>
+    {
+        for(auto& info : session_info)
+        {
+            if (predicate(info.second))
+            {
+                return info.first.lock();
+            }
+        }
+
+        return std::shared_ptr<ms::Session>{};
+    }
+
+    auto info_for(std::weak_ptr<ms::Session> const& session) const -> SessionInfo&
+    {
+        return const_cast<SessionInfo&>(session_info.at(session));
+    }
+
+    auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo&
+    {
+        return const_cast<SurfaceInfo&>(surface_info.at(surface));
+    }
+
+    using SessionInfoMap = std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>>;
+    using SurfaceInfoMap = std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>>;
+
+    std::function<void(SessionInfoMap& session_info, Rectangles const& displays)>
+        handle_displays_updated{[](SessionInfoMap& , Rectangles const& ){}};
+
+    std::function<void(SessionInfoMap& session_info, Rectangles const& displays)>
+        handle_session_info_updated{[](SessionInfoMap& , Rectangles const& ){}};
+
+    std::function<void(Point cursor)> handle_click{[](Point){}};
+    std::function<void(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)>
+        handle_drag{[](Point const&, Point const&, std::weak_ptr<ms::Surface>&){}};
+    std::function<void(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)>
+        handle_resize{[](Point const&, Point const&, std::weak_ptr<ms::Surface>&){}};
+
+    std::function<void(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)>
+        handle_set_state{[](std::shared_ptr<ms::Surface>, MirSurfaceState){}};
+
+    std::mutex mutex;
+
+private:
     void add_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -192,27 +265,6 @@ struct BasicWindowManager : virtual me::WindowManager, msh::AbstractShell
         surface_info.erase(surface);
     }
 
-    int set_surface_attribute(
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& surface,
-        MirSurfaceAttrib attrib,
-        int value) override
-    {
-        switch (attrib)
-        {
-        case mir_surface_attrib_state:
-        {
-            std::lock_guard<decltype(mutex)> lock(mutex);
-            handle_set_state(surface, MirSurfaceState(value));
-            break;
-        }
-        default:
-            break;
-        }
-
-        return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
-    }
-
     void add_display(Rectangle const& area) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -227,50 +279,6 @@ struct BasicWindowManager : virtual me::WindowManager, msh::AbstractShell
         handle_displays_updated(session_info, displays);
     }
 
-    std::shared_ptr<ms::Session> find_session(std::function<bool(SessionInfo const& info)> const& predicate)
-    {
-        for(auto& info : session_info)
-        {
-            if (predicate(info.second))
-            {
-                return info.first.lock();
-            }
-        }
-
-        return std::shared_ptr<ms::Session>{};
-    }
-
-    using SessionInfoMap = std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>>;
-    using SurfaceInfoMap = std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>>;
-
-    std::function<void(SessionInfoMap& session_info, Rectangles const& displays)>
-        handle_displays_updated{[](SessionInfoMap& , Rectangles const& ){}};
-
-    std::function<void(SessionInfoMap& session_info, Rectangles const& displays)>
-        handle_session_info_updated{[](SessionInfoMap& , Rectangles const& ){}};
-
-    std::function<void(Point cursor)> handle_click{[](Point){}};
-    std::function<void(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)>
-        handle_drag{[](Point const&, Point const&, std::weak_ptr<ms::Surface>&){}};
-    std::function<void(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)>
-        handle_resize{[](Point const&, Point const&, std::weak_ptr<ms::Surface>&){}};
-
-    std::function<void(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)>
-        handle_set_state{[](std::shared_ptr<ms::Surface>, MirSurfaceState){}};
-
-    auto info_for(std::weak_ptr<ms::Session> const& session) const -> SessionInfo&
-    {
-        return const_cast<SessionInfo&>(session_info.at(session));
-    }
-
-    auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo&
-    {
-        return const_cast<SurfaceInfo&>(surface_info.at(surface));
-    }
-
-    std::mutex mutex;
-
-private:
     SessionInfoMap session_info;
     SurfaceInfoMap surface_info;
     Rectangles displays;
