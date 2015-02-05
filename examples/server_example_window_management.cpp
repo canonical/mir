@@ -135,7 +135,6 @@ public:
     {
     }
 
-private:
     std::shared_ptr<ms::Session> open_session(
         pid_t client_pid,
         std::string const& name,
