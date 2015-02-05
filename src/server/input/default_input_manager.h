@@ -24,6 +24,7 @@
 #include "mir/input/input_manager.h"
 
 #include <thread>
+#include <mutex>
 
 namespace mir
 {
@@ -49,7 +50,7 @@ private:
     std::shared_ptr<InputDeviceRegistry> const input_device_registry;
     MainLoopWrapper input_handler_register;
 
-    std::unique_ptr<std::thread> input_thread;
+    std::thread input_thread;
 };
 
 }
