@@ -433,7 +433,7 @@ TEST(MultiplexingDispatchableTest, removes_dispatchable_that_returns_false_from_
     EXPECT_FALSE(dispatched);
 }
 
-TEST(MultiplexingDispatchableTest, multiple_concurrent_removals_are_threadsafe)
+TEST(MultiplexingDispatchableTest, multiple_removals_are_threadsafe)
 {
     using namespace testing;
 
@@ -456,7 +456,8 @@ TEST(MultiplexingDispatchableTest, multiple_concurrent_removals_are_threadsafe)
 
     first_dispatchee->trigger();
 
-    mt::AutoJoinThread dispatch_thread{[dispatcher]() { dispatcher->dispatch(md::FdEvent::readable); }};
+    md::SimpleDispatchThread eventloop_one{dispatcher};
+    md::SimpleDispatchThread eventloop_two{dispatcher};
 
     EXPECT_TRUE(in_dispatch->wait_for(std::chrono::seconds{1}));
 

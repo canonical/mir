@@ -68,9 +68,12 @@ private:
 };
 
 template<typename VictimReference>
-void add_to_gc_queue(mir::Fd const& queue, std::atomic<int>* generation, VictimReference victim)
+void add_to_gc_queue(mir::Fd const& queue,
+                     std::atomic<int>* generation,
+                     VictimReference victim,
+                     std::weak_ptr<md::Dispatchable>* predecessor)
 {
-    constexpr ssize_t gc_data_size{sizeof(generation) + sizeof(victim)};
+    constexpr ssize_t gc_data_size{sizeof(generation) + sizeof(victim) + sizeof(predecessor)};
     static_assert(gc_data_size < PIPE_BUF,
                   "Size of data for delayed GC must be less than PIPE_BUF for atomic guarantees");
 
@@ -78,6 +81,7 @@ void add_to_gc_queue(mir::Fd const& queue, std::atomic<int>* generation, VictimR
 
     memcpy(gc_data.get(), &generation, sizeof(generation));
     memcpy(gc_data.get() + sizeof(generation), &victim, sizeof(victim));
+    memcpy(gc_data.get() + sizeof(generation) + sizeof(victim), &predecessor, sizeof(predecessor));
 
     // Loop to protect against interruption by signals
     while (write(queue, gc_data.get(), gc_data_size) < gc_data_size)
@@ -92,9 +96,12 @@ void add_to_gc_queue(mir::Fd const& queue, std::atomic<int>* generation, VictimR
 }
 
 template<typename VictimReference>
-void pull_from_gc_queue(mir::Fd const& queue, std::atomic<int>*& generation, VictimReference& victim)
+void pull_from_gc_queue(mir::Fd const& queue,
+                        std::atomic<int>*& generation,
+                        VictimReference& victim,
+                        std::weak_ptr<md::Dispatchable>*& predecessor)
 {
-    static_assert((sizeof(generation) + sizeof(victim)) < PIPE_BUF,
+    static_assert((sizeof(generation) + sizeof(victim) + sizeof(predecessor)) < PIPE_BUF,
                   "Size of data for delayed GC must be less than PIPE_BUF for atomic guarantees");
 
     // The PIPE_BUF check above guarantees that we won't get partial reads,
@@ -118,11 +125,21 @@ void pull_from_gc_queue(mir::Fd const& queue, std::atomic<int>*& generation, Vic
                                                      "Failed to read from delayed GC queue"}));
         }
     }
+    while (read(queue, &predecessor, sizeof(predecessor)) != sizeof(predecessor))
+    {
+        if (errno != EINTR)
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                     std::system_category(),
+                                                     "Failed to read from delayed GC queue"}));
+        }
+    }
 }
 }
 
 md::MultiplexingDispatchable::MultiplexingDispatchable()
     : in_current_generation{new std::atomic<int>{0}},
+      last_gc_victim{new std::weak_ptr<Dispatchable>{}},
       epoll_fd{mir::Fd{::epoll_create1(EPOLL_CLOEXEC)}}
 {
     if (epoll_fd == mir::Fd::invalid)
@@ -139,6 +156,10 @@ md::MultiplexingDispatchable::MultiplexingDispatchable()
                                                  std::system_category(),
                                                  "Failed to create delayed-destroy pipe"}));
     }
+
+    /*
+     * Delayed GC queue implementation
+     */
     gc_queue = mir::Fd{pipefds[1]};
     gc_read_queue = mir::Fd{pipefds[0]};
     auto gc_dispatchable = std::make_shared<DispatchableAdaptor>(gc_read_queue,
@@ -146,18 +167,27 @@ md::MultiplexingDispatchable::MultiplexingDispatchable()
     {
         std::atomic<int>* generation;
         decltype(dispatchee_holder)::const_iterator victim;
+        std::weak_ptr<Dispatchable>* predecessor;
 
-        pull_from_gc_queue(gc_read_queue, generation, victim);
+        pull_from_gc_queue(gc_read_queue, generation, victim, predecessor);
 
-        if (*generation == 0)
+        if (*generation == 0 && predecessor->expired())
         {
+            /*
+             * All of the threads since our predecessor was queued for destruction have
+             * exited dispatch(), and our predecessor has been destroyed.
+             *
+             * By induction, all threads that might be currently dispatch()ing us have
+             * exited dispatch(). It is now safe to destroy.
+             */
             std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
             dispatchee_holder.erase(victim);
             delete generation;
+            delete predecessor;
         }
         else
         {
-            add_to_gc_queue(gc_queue, generation, victim);
+            add_to_gc_queue(gc_queue, generation, victim, predecessor);
         }
     });
 
@@ -167,6 +197,7 @@ md::MultiplexingDispatchable::MultiplexingDispatchable()
 md::MultiplexingDispatchable::~MultiplexingDispatchable() noexcept
 {
     delete in_current_generation.load();
+    delete last_gc_victim;
 
     /*
      * The dispatchee_holder destructor will clean up all the Dispatchables, but
@@ -180,9 +211,11 @@ md::MultiplexingDispatchable::~MultiplexingDispatchable() noexcept
     {
         std::atomic<int>* generation;
         decltype(dispatchee_holder)::const_iterator victim;
+        std::weak_ptr<Dispatchable>* predecessor;
 
-        pull_from_gc_queue(gc_read_queue, generation, victim);
+        pull_from_gc_queue(gc_read_queue, generation, victim, predecessor);
         delete generation;
+        delete predecessor;
     }
 }
 
@@ -309,14 +342,13 @@ void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
      * event from the fd we've just removed. That means all we need to do to safely destroy
      * the Dispatchable is wait for all the dispatch()es that are currently running to finish.
      *
-     * To ensure this, we:
-     * 1) Save a pointer to the current generation counter, x.
-     * 2) Replace the current generation counter with a fresh std::atomic<int>.
-     *    This means that any new threads will not change our saved counter.
-     * 3) Add the pair (x, victim) to the gc queue.
+     * If we know it's safe, we delete immediately. Otherwise, we push the data needed to detect
+     * if it's safe onto the GC queue and rely on that.
      *
-     * When the GC queue is dispatched it checks if the old generation counter, x, is now
-     * zero. If so, it's safe to free the victim. If not, it re-queues (x, victim).
+     * The two things we know:
+     * 1) in_current_generation is the number of threads that have entered dispatch() since the last
+     *    call to remove_request() that have not yet left.
+     * 2) If last_gc_victim->expired() is true then there are no pending remove requests.
      */
     {
         std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
@@ -328,11 +360,37 @@ void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
             return candidate.first->watch_fd() == fd;
         });
 
-        // Punt the destruction to the delayed GC
-        auto next_generation = new std::atomic<int>{0};
-        std::atomic<int>* current_generation = in_current_generation.load();
-        in_current_generation = next_generation;
+        if (*in_current_generation == 0 && last_gc_victim->expired())
+        {
+            /*
+             * in_current_generation == 0 means that no threads started after the last remove_watch
+             * are in dispatch().
+             *
+             * last_gc_victim->expired() means that any threads possibly in dispatch() when the last
+             * remove_watch call was made have left.
+             *
+             * We can therefore free immediately.
+             */
 
-        add_to_gc_queue(gc_queue, current_generation, victim);
+            dispatchee_holder.erase(victim);
+        }
+        else
+        {
+            /*
+             * Either there are threads currently in dispatch() or we're not sure that all threads
+             * from a previous remove_watch() have left dispatch().
+             *
+             * Save the current generation and replace it so that new threads increment a different counter.
+             * This means that current_generation becomes strictly decreasing and hits 0 when the last
+             * thread currently in dispatch() leaves it.
+             */
+            std::atomic<int>* current_generation = in_current_generation.load();
+            auto next_generation = new std::atomic<int>{0};
+            in_current_generation = next_generation;
+
+            add_to_gc_queue(gc_queue, current_generation, victim, last_gc_victim);
+
+            last_gc_victim = new std::weak_ptr<Dispatchable>{victim->first};
+        }
     }
 }

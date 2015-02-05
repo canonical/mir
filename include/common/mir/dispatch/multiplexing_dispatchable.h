@@ -97,6 +97,7 @@ private:
     std::atomic<std::atomic<int>*> in_current_generation;
     std::mutex lifetime_mutex;
     std::list<std::pair<std::shared_ptr<Dispatchable>, bool>> dispatchee_holder;
+    std::weak_ptr<Dispatchable>* last_gc_victim;
 
     Fd gc_queue;
     Fd gc_read_queue;
