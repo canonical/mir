@@ -61,6 +61,7 @@
 
 #include <mutex>
 #include <functional>
+#include <cstring>
 
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
@@ -636,18 +637,18 @@ void mf::SessionMediator::drm_auth_magic(
 
     auto const magic = request->magic();
 
+    MirMesaAuthMagicRequest const auth_magic_request{magic};
     mg::PlatformOperationMessage platform_request;
-    platform_request.data.resize(sizeof(MirMesaAuthMagicRequest));
-    auto const auth_magic_request_ptr =
-        reinterpret_cast<MirMesaAuthMagicRequest*>(platform_request.data.data());
-    *auth_magic_request_ptr = MirMesaAuthMagicRequest{magic};
+    platform_request.data.resize(sizeof(auth_magic_request));
+    std::memcpy(platform_request.data.data(), &auth_magic_request, sizeof(auth_magic_request));
 
     auto const platform_response = ipc_operations->platform_operation(
         MirMesaPlatformOperation::auth_magic, platform_request);
 
-    auto const auth_magic_response_ptr =
-        reinterpret_cast<MirMesaAuthMagicResponse const*>(platform_response.data.data());
-    response->set_status_code(auth_magic_response_ptr->status);
+    MirMesaAuthMagicResponse auth_magic_response{-1};
+    std::memcpy(&auth_magic_response, platform_response.data.data(),
+                platform_response.data.size());
+    response->set_status_code(auth_magic_response.status);
 
     done->Run();
 }

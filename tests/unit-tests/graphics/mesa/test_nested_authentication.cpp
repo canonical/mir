@@ -25,6 +25,8 @@
 #include "mir_test/fake_shared.h"
 #include <gtest/gtest.h>
 
+#include <cstring>
+
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace mt = mir::test;
@@ -40,38 +42,22 @@ struct NestedAuthentication : public ::testing::Test
 };
 }
 
-namespace mir
-{
-namespace graphics
-{
-
-bool operator==(mg::PlatformOperationMessage const& msg1,
-                mg::PlatformOperationMessage const& msg2)
-{
-    return msg1.data == msg2.data &&
-           msg1.fds == msg1.fds;
-}
-}
-
-}
-
 TEST_F(NestedAuthentication, uses_nested_context_for_auth_magic)
 {
     using namespace testing;
 
     unsigned int const magic{332211};
 
+    MirMesaAuthMagicRequest const request{magic};
     mg::PlatformOperationMessage msg;
-    msg.data.resize(sizeof(MirMesaAuthMagicRequest));
-    *reinterpret_cast<MirMesaAuthMagicRequest*>(msg.data.data()) =
-        MirMesaAuthMagicRequest{magic};
+    msg.data.resize(sizeof(request));
+    std::memcpy(msg.data.data(), &request, sizeof(request));
 
-    int const success{0};
+    MirMesaAuthMagicResponse const success_response{0};
     mg::PlatformOperationMessage auth_magic_success_response;
-    auth_magic_success_response.data.resize(sizeof(MirMesaAuthMagicResponse));
-    *reinterpret_cast<MirMesaAuthMagicResponse*>(
-        auth_magic_success_response.data.data()) =
-            MirMesaAuthMagicResponse{success};
+    auth_magic_success_response.data.resize(sizeof(success_response));
+    std::memcpy(auth_magic_success_response.data.data(), &success_response,
+                sizeof(success_response));
 
     EXPECT_CALL(mock_nested_context,
                 platform_operation(MirMesaPlatformOperation::auth_magic, msg))

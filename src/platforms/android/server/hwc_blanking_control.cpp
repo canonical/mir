@@ -124,7 +124,16 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
 
     int32_t values[sizeof(attributes) / sizeof (attributes[0])] = {};
     /* the first config is the active one in hwc 1.1 to hwc 1.3. */
-    hwc_device->display_attributes(display_name, configs.front(), attributes, values);
+    auto rc = hwc_device->display_attributes(display_name, configs.front(), attributes, values);
+
+    if (rc < 0)
+    {
+        if (display_name == mga::DisplayName::primary)
+            BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
+        else   
+            return {{}, {}, 0.0, false, format, quirks.num_framebuffers()};
+    }
+
     return {
         {values[0], values[1]},
         {0, 0}, //TODO: convert DPI to MM and return
