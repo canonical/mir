@@ -96,11 +96,39 @@ private:
 };
 
 template<typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManager : virtual me::WindowManager,
-    private msh::AbstractShell
+class BasicWindowManagerTools : public virtual msh::FocusController
 {
 public:
-    using msh::AbstractShell::AbstractShell;
+    using SessionInfoMap = std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>>;
+    using SurfaceInfoMap = std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>>;
+
+    using msh::FocusController::set_focus_to;
+    using msh::FocusController::focussed_application;
+    using msh::FocusController::focus_next;
+
+    virtual auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
+    -> std::shared_ptr<ms::Session> = 0;
+
+    virtual auto info_for(std::weak_ptr<ms::Session> const& session) const -> SessionInfo& = 0;
+
+    virtual auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo& = 0;
+};
+
+template<typename SessionInfo, typename SurfaceInfo, typename WindowManagementPolicy>
+class BasicWindowManager : public virtual me::WindowManager,
+    private msh::AbstractShell,
+    private BasicWindowManagerTools<SessionInfo, SurfaceInfo>
+{
+public:
+    BasicWindowManager(
+        std::shared_ptr<msh::InputTargeter> const& input_targeter,
+        std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager) :
+        AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
+        policy{this}
+    {
+    }
 
     std::shared_ptr<ms::Session> open_session(
         pid_t client_pid,
@@ -121,7 +149,7 @@ public:
     mf::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        ms::SurfaceCreationParameters const placed_params = handle_place_new_surface(session, params);
+        ms::SurfaceCreationParameters const placed_params = policy.handle_place_new_surface(session, params);
         auto const result = msh::AbstractShell::create_surface(session, placed_params);
         add_surface(session->surface(result), session);
         return result;
@@ -136,21 +164,21 @@ public:
     void click(Point cursor) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        handle_click(cursor);
+        policy.handle_click(cursor);
         old_cursor = cursor;
     }
 
     void drag(Point cursor) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        handle_drag(cursor, old_cursor, old_surface);
+        policy.handle_drag(cursor, old_cursor, old_surface);
         old_cursor = cursor;
     }
 
     void resize(Point cursor) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        handle_resize(cursor, old_cursor, old_surface);
+        policy.handle_resize(cursor, old_cursor, old_surface);
         old_cursor = cursor;
     }
 
@@ -165,7 +193,7 @@ public:
         case mir_surface_attrib_state:
         {
             std::lock_guard<decltype(mutex)> lock(mutex);
-            handle_set_state(surface, MirSurfaceState(value));
+            policy.handle_set_state(surface, MirSurfaceState(value));
             break;
         }
         default:
@@ -188,7 +216,7 @@ public:
                 if (info_for(focussed_surface).state == state)
                     state = mir_surface_state_restored;
 
-                handle_set_state(focussed_surface, MirSurfaceState(state));
+                policy.handle_set_state(focussed_surface, MirSurfaceState(state));
             }
         }
     }
@@ -199,7 +227,7 @@ protected:
     using msh::AbstractShell::focus_next;
 
     auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
-    -> std::shared_ptr<ms::Session>
+    -> std::shared_ptr<ms::Session> override
     {
         for(auto& info : session_info)
         {
@@ -212,57 +240,33 @@ protected:
         return std::shared_ptr<ms::Session>{};
     }
 
-    auto info_for(std::weak_ptr<ms::Session> const& session) const -> SessionInfo&
+    auto info_for(std::weak_ptr<ms::Session> const& session) const -> SessionInfo& override
     {
         return const_cast<SessionInfo&>(session_info.at(session));
     }
 
-    auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo&
+    auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo& override
     {
         return const_cast<SurfaceInfo&>(surface_info.at(surface));
     }
 
-    using SessionInfoMap = std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>>;
-    using SurfaceInfoMap = std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>>;
-
-    std::function<void(SessionInfoMap& session_info, Rectangles const& displays)>
-        handle_displays_updated{[](SessionInfoMap& , Rectangles const& ){}};
-
-    std::function<void(SessionInfoMap& session_info, Rectangles const& displays)>
-        handle_session_info_updated{[](SessionInfoMap& , Rectangles const& ){}};
-
-    std::function<void(Point cursor)> handle_click{[](Point){}};
-    std::function<void(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)>
-        handle_drag{[](Point const&, Point const&, std::weak_ptr<ms::Surface>&){}};
-    std::function<void(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)>
-        handle_resize{[](Point const&, Point const&, std::weak_ptr<ms::Surface>&){}};
-
-    std::function<void(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)>
-        handle_set_state{[](std::shared_ptr<ms::Surface>, MirSurfaceState){}};
-
-    std::function<ms::SurfaceCreationParameters(
-        std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& request_parameters)>
-        handle_place_new_surface{[](
-            std::shared_ptr<ms::Session> const&,
-            ms::SurfaceCreationParameters const& request_parameters)
-            { return request_parameters; }};
-
 private:
+    WindowManagementPolicy policy;
+
     std::mutex mutex;
 
     void add_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session] = SessionInfo();
-        handle_session_info_updated(session_info, displays);
+        policy.handle_session_info_updated(session_info, displays);
     }
 
     void remove_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info.erase(session);
-        handle_session_info_updated(session_info, displays);
+        policy.handle_session_info_updated(session_info, displays);
     }
 
     void add_surface(
@@ -296,15 +300,18 @@ private:
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         displays.add(area);
-        handle_displays_updated(session_info, displays);
+        policy.handle_displays_updated(session_info, displays);
     }
 
     void remove_display(Rectangle const& area) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         displays.remove(area);
-        handle_displays_updated(session_info, displays);
+        policy.handle_displays_updated(session_info, displays);
     }
+
+    using typename BasicWindowManagerTools<SessionInfo, SurfaceInfo>::SessionInfoMap;
+    using typename BasicWindowManagerTools<SessionInfo, SurfaceInfo>::SurfaceInfoMap;
 
     SessionInfoMap session_info;
     SurfaceInfoMap surface_info;
@@ -344,64 +351,36 @@ struct SurfaceInfo
 //  o Maximize/restore current window (to tile height): Shift-F11
 //  o Maximize/restore current window (to tile width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class TilingWindowManager : public virtual me::WindowManager,
-    BasicWindowManager<SessionInfo, SurfaceInfo>
+class TilingWindowManagerPolicy
 {
-    using Super = BasicWindowManager<SessionInfo, SurfaceInfo>;
 public:
-    TilingWindowManager(
-        std::shared_ptr<msh::InputTargeter> const& input_targeter,
-        std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager) :
-        Super(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager)
-    {
-        handle_session_info_updated = [this](
-            SessionInfoMap& session_info,
-            Rectangles const& displays)
-            { update_tiles(session_info, displays); };
+    using Tools = BasicWindowManagerTools<SessionInfo, SurfaceInfo>;
+    TilingWindowManagerPolicy(Tools* const tools) :
+        tools{tools} {}
 
-        handle_displays_updated = [this](
-            SessionInfoMap& session_info,
-            Rectangles const& displays)
-            { update_tiles(session_info, displays); };
-
-        handle_place_new_surface = [this](
-            std::shared_ptr<ms::Session> const& session,
-            ms::SurfaceCreationParameters const& request_parameters)
-            { return place_new_surface(session, request_parameters); };
-
-        handle_click = [this](const Point& cursor) { on_click(cursor); };
-
-        handle_drag = [this](const Point& cursor, const Point& old_cursor, std::weak_ptr<ms::Surface>& old_surface)
-            { on_drag(cursor, old_cursor, old_surface); };
-
-        handle_resize = [this](const Point& cursor, const Point& old_cursor, std::weak_ptr<ms::Surface>& old_surface)
-            { on_resize(cursor, old_cursor, old_surface); };
-
-        handle_set_state = [this](std::shared_ptr<ms::Surface> const& surface, MirSurfaceState state)
-            { set_state(surface, state); };
-    }
-
-private:
-    std::shared_ptr<ms::Session> session_under(Point position)
-    {
-        return find_session([&](SessionInfo const& info) { return info.tile.contains(position);});
-    }
-
-    void on_click(const Point& cursor)
+    void handle_click(const Point& cursor)
     {
         if (const auto session = session_under(cursor))
-            set_focus_to(session);
+            tools->set_focus_to(session);
     }
 
-    void on_resize(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)
+    void handle_session_info_updated(Tools::SessionInfoMap& session_info, Rectangles const& displays)
+    {
+        update_tiles(session_info, displays);
+    }
+
+    void handle_displays_updated(Tools::SessionInfoMap& session_info, Rectangles const& displays)
+    {
+        update_tiles(session_info, displays);
+    }
+
+    void handle_resize(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)
     {
         if (auto const session = session_under(cursor))
         {
             if (session == session_under(old_cursor))
             {
-                auto const& info = info_for(session);
+                auto const& info = tools->info_for(session);
 
                 if (resize(old_surface.lock(), cursor, old_cursor, info.tile))
                 {
@@ -428,22 +407,116 @@ private:
         }
     }
 
-    auto place_new_surface(
+    auto handle_place_new_surface(
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& request_parameters)
     -> ms::SurfaceCreationParameters
     {
         auto parameters = request_parameters;
 
-        Rectangle const& tile = info_for(session).tile;
+        Rectangle const& tile = tools->info_for(session).tile;
         parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
 
         clip_to_tile(parameters, tile);
         return parameters;
     }
 
+    void handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
+    {
+        switch (value)
+        {
+        case mir_surface_state_restored:
+        case mir_surface_state_maximized:
+        case mir_surface_state_vertmaximized:
+        case mir_surface_state_horizmaximized:
+            break;
+
+        default:
+            return;
+        }
+
+        auto& info = tools->info_for(surface);
+
+        if (info.state == mir_surface_state_restored)
+        {
+            info.restore_rect = {surface->top_left(), surface->size()};
+        }
+
+        if (info.state == value)
+        {
+            return; // Nothing to do
+        }
+
+        auto const& tile = tools->info_for(info.session).tile;
+
+        switch (value)
+        {
+        case mir_surface_state_restored:
+            surface->move_to(info.restore_rect.top_left);
+            surface->resize(info.restore_rect.size);
+            break;
+
+        case mir_surface_state_maximized:
+            surface->move_to(tile.top_left);
+            surface->resize(tile.size);
+            break;
+
+        case mir_surface_state_horizmaximized:
+            surface->move_to({tile.top_left.x, info.restore_rect.top_left.y});
+            surface->resize({tile.size.width, info.restore_rect.size.height});
+            break;
+
+        case mir_surface_state_vertmaximized:
+            surface->move_to({info.restore_rect.top_left.x, tile.top_left.y});
+            surface->resize({info.restore_rect.size.width, tile.size.height});
+            break;
+
+        default:
+            break;
+        }
+
+        info.state = value;
+    }
+
+    void handle_drag(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)
+    {
+        if (const auto session = session_under(cursor))
+        {
+            if (session == session_under(old_cursor))
+            {
+                const auto& info = tools->info_for(session);
+                if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
+                {
+                    // Still dragging the same old_surface
+                }
+                else if (drag(session->default_surface(), cursor, old_cursor, info.tile))
+                {
+                    old_surface = session->default_surface();
+                }
+                else
+                {
+                    for (const auto& ps : info.surfaces)
+                    {
+                        const auto new_surface = ps.lock();
+                        if (drag(new_surface, cursor, old_cursor, info.tile))
+                        {
+                            old_surface = new_surface;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+private:
+    std::shared_ptr<ms::Session> session_under(Point position)
+    {
+        return tools->find_session([&](SessionInfo const& info) { return info.tile.contains(position);});
+    }
+
     void update_tiles(
-        SessionInfoMap& session_info,
+        Tools::SessionInfoMap& session_info,
         Rectangles const& displays)
     {
         if (session_info.size() < 1 || displays.size() < 1) return;
@@ -475,7 +548,7 @@ private:
     void update_surfaces(std::weak_ptr<ms::Session> const& session, Rectangle const& old_tile, Rectangle const& new_tile)
     {
         auto displacement = new_tile.top_left - old_tile.top_left;
-        auto& info = info_for(session);
+        auto& info = tools->info_for(session);
 
         for (auto const& ps : info.surfaces)
         {
@@ -578,95 +651,11 @@ private:
         return false;
     }
 
-    void set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
-    {
-        switch (value)
-        {
-        case mir_surface_state_restored:
-        case mir_surface_state_maximized:
-        case mir_surface_state_vertmaximized:
-        case mir_surface_state_horizmaximized:
-            break;
-
-        default:
-            return;
-        }
-
-        auto& info = info_for(surface);
-
-        if (info.state == mir_surface_state_restored)
-        {
-            info.restore_rect = {surface->top_left(), surface->size()};
-        }
-
-        if (info.state == value)
-        {
-            return; // Nothing to do
-        }
-
-        auto const& tile = info_for(info.session).tile;
-
-        switch (value)
-        {
-        case mir_surface_state_restored:
-            surface->move_to(info.restore_rect.top_left);
-            surface->resize(info.restore_rect.size);
-            break;
-
-        case mir_surface_state_maximized:
-            surface->move_to(tile.top_left);
-            surface->resize(tile.size);
-            break;
-
-        case mir_surface_state_horizmaximized:
-            surface->move_to({tile.top_left.x, info.restore_rect.top_left.y});
-            surface->resize({tile.size.width, info.restore_rect.size.height});
-            break;
-
-        case mir_surface_state_vertmaximized:
-            surface->move_to({info.restore_rect.top_left.x, tile.top_left.y});
-            surface->resize({info.restore_rect.size.width, tile.size.height});
-            break;
-
-        default:
-            break;
-        }
-
-        info.state = value;
-    }
-
-    void on_drag(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)
-    {
-        if (const auto session = session_under(cursor))
-        {
-            if (session == session_under(old_cursor))
-            {
-                const auto& info = info_for(session);
-                if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
-                {
-                    // Still dragging the same old_surface
-                }
-                else if (drag(session->default_surface(), cursor, old_cursor, info.tile))
-                {
-                    old_surface = session->default_surface();
-                }
-                else
-                {
-                    for (const auto& ps : info.surfaces)
-                    {
-                        const auto new_surface = ps.lock();
-                        if (drag(new_surface, cursor, old_cursor, info.tile))
-                        {
-                            old_surface = new_surface;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
+    Tools* const tools;
 };
 }
+
+using TilingWindowManager = BasicWindowManager<SessionInfo, SurfaceInfo, TilingWindowManagerPolicy>;
 
 class me::EventTracker : public mi::EventFilter
 {
