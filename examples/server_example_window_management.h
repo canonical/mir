@@ -55,7 +55,7 @@ class EventTracker;
 class WindowManagmentFactory
 {
 public:
-    explicit WindowManagmentFactory(Server& server) : server{server} {}
+    explicit WindowManagmentFactory(Server& server) : server(server) {}
 
     auto window_manager() -> std::shared_ptr<WindowManager>;
 
