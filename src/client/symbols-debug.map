@@ -1,5 +1,9 @@
-{
+MIR_CLIENT_DEBUG_8 {
  global: 
    mir_debug_*;
  local: *;
+};
+
+MIR_CLIENT_8.3 {
+    local: mir_connection_platform_operation;
 };
