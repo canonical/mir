@@ -93,7 +93,8 @@ struct InputClient
 
         MirEventDelegate const event_delegate { handle_input, this };
         mir_surface_set_event_handler(surface, &event_delegate);
-        mir_surface_swap_buffers_sync(surface);
+        mir_buffer_stream_swap_buffers_sync(
+            mir_surface_get_buffer_stream(surface));
 
         wait_for_surface_to_become_focused_and_exposed();
 

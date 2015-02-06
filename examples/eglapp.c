@@ -415,8 +415,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     CHECK(neglconfigs > 0, "No EGL config available");
 
     eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
-            (EGLNativeWindowType)mir_surface_get_egl_native_window(surface),
-            NULL);
+        (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface)), NULL);
+    
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
