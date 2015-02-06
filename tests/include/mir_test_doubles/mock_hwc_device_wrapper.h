@@ -55,7 +55,7 @@ struct MockHWCDeviceWrapper : public graphics::android::HwcWrapper
         unsubscribe_from_events_(id);
     }
     MOCK_CONST_METHOD1(display_configs, std::vector<graphics::android::ConfigId>(graphics::android::DisplayName));
-    MOCK_CONST_METHOD4(display_attributes, void(
+    MOCK_CONST_METHOD4(display_attributes, int(
         graphics::android::DisplayName, graphics::android::ConfigId, uint32_t const*, int32_t*));
 };
 

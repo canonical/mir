@@ -48,9 +48,12 @@ struct MockHwcConfiguration : public graphics::android::HwcConfiguration
     {
         using namespace testing;
         ON_CALL(*this, subscribe_to_config_changes(_)).WillByDefault(Return(nullptr));
-        ON_CALL(*this, active_attribs_for(testing::_))
+        ON_CALL(*this, active_attribs_for(graphics::android::DisplayName::primary))
             .WillByDefault(testing::Return(graphics::android::DisplayAttribs{
                 {0,0},{0,0}, 0.0, true, mir_pixel_format_abgr_8888, 2}));
+        ON_CALL(*this, active_attribs_for(graphics::android::DisplayName::external))
+            .WillByDefault(testing::Return(graphics::android::DisplayAttribs{
+                {0,0},{0,0}, 0.0, false, mir_pixel_format_abgr_8888, 2}));
     }
     MOCK_METHOD2(power_mode, void(graphics::android::DisplayName, MirPowerMode));
     MOCK_METHOD1(active_attribs_for, graphics::android::DisplayAttribs(graphics::android::DisplayName));
@@ -58,11 +61,33 @@ struct MockHwcConfiguration : public graphics::android::HwcConfiguration
         graphics::android::ConfigChangeSubscription(std::function<void()> const&));
 };
 
+struct StubHwcConfiguration : public graphics::android::HwcConfiguration
+{
+    void power_mode(graphics::android::DisplayName, MirPowerMode) override
+    {
+    }
+
+    graphics::android::DisplayAttribs active_attribs_for(graphics::android::DisplayName name) override
+    {
+        if (name == graphics::android::DisplayName::external)
+            return graphics::android::DisplayAttribs{{20,20}, {4,4}, 50.0f, false, mir_pixel_format_abgr_8888, 2};
+        else
+            return graphics::android::DisplayAttribs{{20,20}, {4,4}, 350.0f, true, mir_pixel_format_abgr_8888, 2};
+    }
+
+    
+    graphics::android::ConfigChangeSubscription subscribe_to_config_changes(
+        std::function<void()> const&) override
+    {
+        return nullptr;
+    }
+};
+
 struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
 {
     StubDisplayBuilder(geometry::Size sz)
         : sz(sz),
-          mock_config{new testing::NiceMock<MockHwcConfiguration>()}
+          config{new StubHwcConfiguration}
     {
     }
 
@@ -89,18 +114,21 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
 
     std::unique_ptr<graphics::android::HwcConfiguration> create_hwc_configuration() override
     {
-        auto config = std::unique_ptr<MockHwcConfiguration>(new testing::NiceMock<MockHwcConfiguration>());
-        std::swap(config, mock_config);
-        return std::move(config);
+        auto c = std::unique_ptr<graphics::android::HwcConfiguration>(new StubHwcConfiguration);
+        std::swap(config, c);
+        return std::move(c);
     }
     
     void with_next_config(std::function<void(MockHwcConfiguration& mock_config)> const& fn)
     {
-        fn(*mock_config); 
+        std::unique_ptr<MockHwcConfiguration> mock_config{
+            new testing::NiceMock<MockHwcConfiguration>()};
+        fn(*mock_config);
+        config = std::move(mock_config); 
     }
 
     geometry::Size sz;
-    std::unique_ptr<MockHwcConfiguration> mock_config;
+    std::unique_ptr<graphics::android::HwcConfiguration> config;
 };
 }
 }

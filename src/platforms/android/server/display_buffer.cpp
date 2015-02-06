@@ -32,6 +32,7 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::DisplayBuffer::DisplayBuffer(
+    mga::DisplayName display_name,
     std::unique_ptr<LayerList> layer_list,
     std::shared_ptr<FramebufferBundle> const& fb_bundle,
     std::shared_ptr<DisplayDevice> const& display_device,
@@ -40,7 +41,8 @@ mga::DisplayBuffer::DisplayBuffer(
     mg::GLProgramFactory const& program_factory,
     MirOrientation orientation,
     mga::OverlayOptimization overlay_option)
-    : layer_list(std::move(layer_list)),
+    : display_name(display_name),
+      layer_list(std::move(layer_list)),
       fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
@@ -86,14 +88,14 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     if (!needs_commit)
         return false;
 
-    display_device->commit(mga::DisplayName::primary, *layer_list, gl_context, overlay_program);
+    display_device->commit(display_name, *layer_list, gl_context, overlay_program);
     return true;
 }
 
 void mga::DisplayBuffer::gl_swap_buffers()
 {
     layer_list->update_list({});
-    display_device->commit(mga::DisplayName::primary, *layer_list, gl_context, overlay_program);
+    display_device->commit(display_name, *layer_list, gl_context, overlay_program);
 }
 
 void mga::DisplayBuffer::flip()

@@ -34,9 +34,14 @@ class HwcReport
 public:
     virtual ~HwcReport() = default;
 
-    virtual void report_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const = 0;
-    virtual void report_prepare_done(hwc_display_contents_1_t const& list) const = 0;
-    virtual void report_set_list(hwc_display_contents_1_t const& list) const = 0;
+    virtual void report_list_submitted_to_prepare(
+        std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const = 0;
+    virtual void report_prepare_done(
+        std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const = 0;
+    virtual void report_set_list(
+        std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const = 0;
+    virtual void report_set_done(
+        std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const = 0;
     virtual void report_overlay_optimization(OverlayOptimization optimization_option) const = 0;
     virtual void report_display_on() const = 0;
     virtual void report_display_off() const = 0;
