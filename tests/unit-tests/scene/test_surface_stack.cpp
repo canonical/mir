@@ -242,6 +242,8 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
         std::shared_ptr<mg::CursorImage>(),
         report);
     stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    surface->configure(mir_surface_attrib_visibility,
+                       mir_surface_visibility_exposed);
 
     EXPECT_EQ(0, stack.frames_pending(this));
     post_a_frame(*surface);
@@ -258,6 +260,32 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
             auto consumed = element->renderable()->buffer();
         }
     }
+}
+
+TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
+{  // Regression test for LP: #1418081
+    using namespace testing;
+
+    ms::SurfaceStack stack{report};
+    auto surface = std::make_shared<ms::BasicSurface>(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        std::make_shared<mtd::StubBufferStream>(),
+        std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+
+    stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    surface->configure(mir_surface_attrib_visibility,
+                       mir_surface_visibility_occluded);
+
+    EXPECT_EQ(0, stack.frames_pending(this));
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    EXPECT_EQ(0, stack.frames_pending(this));
 }
 
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
