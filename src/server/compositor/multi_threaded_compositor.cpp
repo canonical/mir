@@ -70,19 +70,21 @@ namespace compositor
 class CurrentRenderingTarget
 {
 public:
-    CurrentRenderingTarget(mg::DisplayBuffer& buffer)
-        : buffer(buffer)
+    CurrentRenderingTarget() = default;
+    void ensure_current(mg::DisplayBuffer* buffer)
     {
-        buffer.make_current();
+        if ((buffer) && (buffer != current_buffer))
+            buffer->make_current();
+        current_buffer = buffer;
     }
-
+    
     ~CurrentRenderingTarget()
     {
-        buffer.release_current();
+        if (current_buffer) current_buffer->release_current();
     }
 
 private:
-    mg::DisplayBuffer& buffer;
+    mg::DisplayBuffer* current_buffer{nullptr};
 };
 
 class CompositingFunctor
@@ -107,16 +109,16 @@ public:
     {
         mir::set_thread_name("Mir/Comp");
 
-        /*
-         * Make the buffer the current rendering target, and release
-         * it when the thread is finished.
-         */
-
+        CurrentRenderingTarget target;
         auto const comp_id = this;
-        std::vector<std::unique_ptr<mc::DisplayBufferCompositor>> compositors;
-        group.for_each_display_buffer([this, &compositors, &comp_id](mg::DisplayBuffer& buffer) {
-            CurrentRenderingTarget target{buffer};
-            compositors.emplace_back(compositor_factory->create_compositor_for(buffer));
+        std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
+        group.for_each_display_buffer(
+        [this, &compositors, &comp_id, &target](mg::DisplayBuffer& buffer)
+        {
+            target.ensure_current(&buffer);
+            compositors.emplace_back(
+                std::make_tuple(&buffer, compositor_factory->create_compositor_for(buffer)));
+
             const auto& r = buffer.view_area();
             report->added_display(r.size.width.as_int(), r.size.height.as_int(),
                                   r.top_left.x.as_int(), r.top_left.y.as_int(),
@@ -150,7 +152,10 @@ public:
                 lock.unlock();
 
                 for(auto& compositor : compositors)
-                    compositor->composite(scene->scene_elements_for(comp_id));
+                {
+                    target.ensure_current(std::get<0>(compositor));
+                    std::get<1>(compositor)->composite(scene->scene_elements_for(comp_id));
+                }
                 group.post();
 
                 lock.lock();
