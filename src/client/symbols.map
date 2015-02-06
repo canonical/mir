@@ -1,5 +1,7 @@
 MIR_CLIENT_8 {
- global: mir_*;
+ global:
+ mir_connection_platform_operation;
+ mir_*;
   extern "C++" { 
    # used by PrivateProtobuf
    mir::client::the_rpc_channel*;
@@ -45,4 +47,5 @@ MIR_CLIENT_8.3 {
     mir_connection_create_spec_for_menu;
     mir_connection_create_spec_for_tooltip;
     mir_connection_create_spec_for_dialog;
+    mir_connection_platform_operation;
 } MIR_CLIENT_8.2;
