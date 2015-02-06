@@ -30,7 +30,6 @@
 #include "mir/raii.h"
 #include "mir/thread_name.h"
 
-#include <list>
 #include <thread>
 #include <condition_variable>
 
@@ -63,7 +62,6 @@ private:
 };
 
 }
-
 namespace mir
 {
 namespace compositor
@@ -75,6 +73,7 @@ public:
     CurrentRenderingTarget(mg::DisplayBuffer& buffer)
         : buffer(buffer)
     {
+        buffer.make_current();
     }
 
     ~CurrentRenderingTarget()
@@ -86,54 +85,20 @@ private:
     mg::DisplayBuffer& buffer;
 };
 
-struct RegisteredCompositor
-{
-    RegisteredCompositor(
-        std::shared_ptr<Scene> const& scene,
-        mg::DisplayBuffer& db,
-        std::unique_ptr<mc::DisplayBufferCompositor> dbc) :
-    scene(scene),
-    db{db},
-    dbc{std::move(dbc)},
-    registration_token{dbc.get()}
-    {
-        scene->register_compositor(registration_token);
-    }
-    ~RegisteredCompositor()
-    {
-        scene->unregister_compositor(registration_token);
-    }
-
-    void composite()
-    {
-        CurrentRenderingTarget target{db};
-        dbc->composite(scene->scene_elements_for(registration_token));
-    }
-
-    int frames_pending()
-    {
-        return scene->frames_pending(registration_token);
-    }
-private:
-    std::shared_ptr<Scene> const scene;
-    mg::DisplayBuffer& db;
-    std::unique_ptr<mc::DisplayBufferCompositor> const dbc;
-    void const* registration_token;
-};
-
 class CompositingFunctor
 {
 public:
-    CompositingFunctor(std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory,
-                       mg::DisplayGroup& group,
-                       std::shared_ptr<mc::Scene> const& scene,
-                       std::shared_ptr<CompositorReport> const& report)
-        : display_buffer_compositor_factory{db_compositor_factory},
-          group(group),
-          scene(scene),
-          running{true},
-          frames_scheduled{0},
-          report{report}
+    CompositingFunctor(
+        std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory,
+        mg::DisplayGroup& group,
+        std::shared_ptr<mc::Scene> const& scene,
+        std::shared_ptr<CompositorReport> const& report) :
+        compositor_factory{db_compositor_factory},
+        group(group),
+        scene(scene),
+        running{true},
+        frames_scheduled{0},
+        report{report}
     {
     }
 
@@ -142,16 +107,25 @@ public:
     {
         mir::set_thread_name("Mir/Comp");
 
-        std::list<std::unique_ptr<RegisteredCompositor>> compositors;
-        group.for_each_display_buffer([&compositors, this](mg::DisplayBuffer& buffer)
-        {
-            auto dbc = display_buffer_compositor_factory->create_compositor_for(buffer);
+        /*
+         * Make the buffer the current rendering target, and release
+         * it when the thread is finished.
+         */
+
+        auto const comp_id = this;
+        std::vector<std::unique_ptr<mc::DisplayBufferCompositor>> compositors;
+        group.for_each_display_buffer([this, &compositors, &comp_id](mg::DisplayBuffer& buffer) {
+            CurrentRenderingTarget target{buffer};
+            compositors.emplace_back(compositor_factory->create_compositor_for(buffer));
             const auto& r = buffer.view_area();
             report->added_display(r.size.width.as_int(), r.size.height.as_int(),
                                   r.top_left.x.as_int(), r.top_left.y.as_int(),
-                                  CompositorReport::SubCompositorId{dbc.get()});
-            compositors.emplace_back(new RegisteredCompositor(scene, buffer, std::move(dbc)));
+                                  CompositorReport::SubCompositorId{comp_id});
         });
+
+        auto compositor_registration = mir::raii::paired_calls(
+            [this,&comp_id]{scene->register_compositor(comp_id);},
+            [this,&comp_id]{scene->unregister_compositor(comp_id);});
 
         std::unique_lock<std::mutex> lock{run_mutex};
         while (running)
@@ -176,7 +150,7 @@ public:
                 lock.unlock();
 
                 for(auto& compositor : compositors)
-                    compositor->composite();
+                    compositor->composite(scene->scene_elements_for(comp_id));
                 group.post();
 
                 lock.lock();
@@ -187,12 +161,9 @@ public:
                  * important to re-count number of frames pending, separately
                  * to the initial scene_elements_for()...
                  */
-        //        for(auto& compositor : compositors)
-                {
-        //            int pending = compositor->frames_pending();
-        //            if (pending > frames_scheduled)
-        //                frames_scheduled = pending;
-                }
+                int pending = scene->frames_pending(comp_id);
+                if (pending > frames_scheduled)
+                    frames_scheduled = pending;
             }
         }
     }
@@ -220,7 +191,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mc::DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
+    std::shared_ptr<mc::DisplayBufferCompositorFactory> const compositor_factory;
     mg::DisplayGroup& group;
     std::shared_ptr<mc::Scene> const scene;
     bool running;
@@ -276,7 +247,9 @@ void mc::MultiThreadedCompositor::start()
 {
     std::unique_lock<std::mutex> lk(state_guard);
     if (state != CompositorState::stopped)
+    {
         return;
+    }
 
     state = CompositorState::starting;
     report->started();
@@ -305,7 +278,9 @@ void mc::MultiThreadedCompositor::stop()
 {
     std::unique_lock<std::mutex> lk(state_guard);
     if (state != CompositorState::started)
+    {
         return;
+    }
 
     state = CompositorState::stopping;
 
@@ -332,8 +307,9 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     /* Start the display buffer compositing threads */
     display->for_each_display_group([this](mg::DisplayGroup& group)
     {
-        auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(
-            new mc::CompositingFunctor{display_buffer_compositor_factory, group, scene, report});
+        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, group, scene, report};
+        auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(thread_functor_raw);
+
         futures.push_back(thread_pool.run(std::ref(*thread_functor), &group));
         thread_functors.push_back(std::move(thread_functor));
     });

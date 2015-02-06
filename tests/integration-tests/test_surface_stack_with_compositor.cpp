@@ -58,8 +58,13 @@ public:
     }
 };
 
-struct CountingDisplayGroup : public mtd::NullDisplayGroup
+struct CountingDisplayGroup : public mtd::StubDisplayGroup
 {
+    CountingDisplayGroup() :
+    mtd::StubDisplayGroup({100,100})
+    {
+    }
+
     void post() override
     {
         increment_post_count();
