@@ -218,27 +218,18 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
 
 }
 
-void mga::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
-{
-//    if (external_db && config.external().power_mode == mir_power_mode_on)
-//    {
-//        f(*external_db);
-//        display_device->start_posting_external_display();
-//    }
-//    if (config.primary().power_mode == mir_power_mode_on)
-//        f(*primary_db);
-    (void )f;
-}
-
-void mga::DisplayGroup::post()
-{
-}
-
 void mga::Display::for_each_display_group(std::function<void(mg::DisplayGroup&)> const& f)
 {
-//    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
-//    update_configuration(lock);
-    f(display_group);
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+    update_configuration(lock);
+
+    if (external_db && config.external().power_mode == mir_power_mode_on)
+    {
+        f(*external_db);
+        display_device->start_posting_external_display();
+    }
+    if (config.primary().power_mode == mir_power_mode_on)
+        f(*primary_db);
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
