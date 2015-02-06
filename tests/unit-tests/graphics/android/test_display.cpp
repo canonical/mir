@@ -658,9 +658,9 @@ TEST_F(Display, returns_correct_dbs_with_external_and_primary_output_at_start)
 
     auto group_count = 0; 
     auto db_count = 0;
-    auto db_group_counter = [&group_count](mg::DisplayGroup& group){
+    auto db_group_counter = [&](mg::DisplayGroup& group){
         group_count++;
-        group.for_each_display_buffer([&](mg::DisplayGroup&){ db_count++; });
+        group.for_each_display_buffer([&](mg::DisplayBuffer&){ db_count++; });
     };
 
     display.for_each_display_group(db_group_counter);

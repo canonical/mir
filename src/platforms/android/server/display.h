@@ -49,8 +49,11 @@ class DisplayDevice;
 class DisplayGroup : public graphics::DisplayGroup
 {
 public:
+    DisplayGroup();
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) override;
     void post() override;
+private:
+
 };
 
 class Display : public graphics::Display
