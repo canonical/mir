@@ -42,7 +42,13 @@ typedef std::function<void()> DisplayConfigurationChangeHandler;
 class DisplayGroup
 {
 public:
+    /**
+     *  Executes a functor that allows the DisplayBuffer contents to be updated
+    **/
     virtual void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) = 0;
+
+    /* post all DisplayBuffers associated with this DisplayGroup to their respective monitors.
+     * This may wait for based on hardware conditions and platform requirements */
     virtual void post() = 0;
     virtual ~DisplayGroup() = default;
 protected:
@@ -59,7 +65,7 @@ class Display
 {
 public:
     /**
-     * Executes a functor for each output framebuffer.
+     * Executes a functor for each output group.
      */
     virtual void for_each_display_group(std::function<void(DisplayGroup&)> const& f) = 0;
 

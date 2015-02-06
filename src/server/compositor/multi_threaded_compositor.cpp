@@ -62,6 +62,7 @@ private:
 };
 
 }
+
 namespace mir
 {
 namespace compositor
