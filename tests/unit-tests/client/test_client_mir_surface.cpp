@@ -211,6 +211,12 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
     }
 
+    MirPlatformMessage* platform_operation(
+        MirPlatformMessage const*) override
+    {
+        return nullptr;
+    }
+
     std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
     {
         return std::make_shared<mtd::StubClientBufferFactory>();
@@ -434,21 +440,6 @@ TEST_F(MirClientSurfaceTest, create_wait_handle_really_blocks)
     wait_handle->wait_for_pending(pause_time);
 
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
-}
-
-TEST_F(MirClientSurfaceTest, next_buffer_delegates_to_buffer_stream)
-{
-    using namespace testing;
-
-    mtd::MockClientBufferStream mock_bs;
-    EXPECT_CALL(mock_bs, next_buffer(_)).Times(1);
-
-    mtd::MockClientBufferStreamFactory bs_factory;
-    EXPECT_CALL(bs_factory, make_producer_stream(_,_))
-        .Times(1).WillOnce(Return(mt::fake_shared(mock_bs)));
-
-    auto const surface = create_and_wait_for_surface_with(*client_comm_channel, mt::fake_shared(bs_factory));
-    surface->next_buffer(&null_surface_callback, nullptr);
 }
 
 // TODO: input fd is not checked in the test

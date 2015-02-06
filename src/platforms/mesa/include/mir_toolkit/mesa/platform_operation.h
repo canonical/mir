@@ -35,7 +35,8 @@ extern "C"
 enum MirMesaPlatformOperation
 {
     auth_magic = 1,
-    auth_fd = 2
+    auth_fd = 2,
+    set_gbm_device = 3
 };
 
 /*
@@ -49,7 +50,23 @@ struct MirMesaAuthMagicRequest
 
 struct MirMesaAuthMagicResponse
 {
-    int status;
+    int status; /* 0 on success, a positive error number on failure */
+};
+
+/*
+ * MesaPlatformOperation::set_gbm_device related structures
+ */
+
+struct gbm_device;
+
+struct MirMesaSetGBMDeviceRequest
+{
+    struct gbm_device* device;
+};
+
+struct MirMesaSetGBMDeviceResponse
+{
+    int status; /* 0 on success, a positive error number on failure */
 };
 
 #ifdef __cplusplus
