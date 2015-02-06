@@ -31,6 +31,7 @@
 #include "mir_test_doubles/mock_compositor_report.h"
 #include "mir_test_doubles/mock_scene.h"
 #include "mir_test_doubles/stub_scene.h"
+#include "mir_test_doubles/null_display_buffer_compositor_factory.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -310,23 +311,6 @@ public:
 private:
     std::shared_ptr<StubScene> const scene;
     unsigned int render_count;
-};
-
-class NullDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
-{
-public:
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer&)
-    {
-        struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
-        {
-            void composite(mc::SceneElementSequence&&) override
-            {
-            }
-        };
-
-        auto raw = new NullDisplayBufferCompositor{};
-        return std::unique_ptr<NullDisplayBufferCompositor>(raw);
-    }
 };
 
 class ThreadNameDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
@@ -650,7 +634,7 @@ TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
 
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
     auto scene = std::make_shared<StubScene>();
-    auto db_compositor_factory = std::make_shared<NullDisplayBufferCompositorFactory>();
+    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
     mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_report, true};
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
@@ -672,7 +656,7 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
     unsigned int const nbuffers{3};
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
     auto mock_scene = std::make_shared<mtd::MockScene>();
-    auto db_compositor_factory = std::make_shared<NullDisplayBufferCompositorFactory>();
+    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
 
     EXPECT_CALL(*mock_report, started())
@@ -775,7 +759,7 @@ TEST(MultiThreadedCompositor, registers_and_unregisters_with_scene)
     unsigned int const nbuffers{3};
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
     auto mock_scene = std::make_shared<NiceMock<mtd::MockScene>>();
-    auto db_compositor_factory = std::make_shared<NullDisplayBufferCompositorFactory>();
+    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
 
     EXPECT_CALL(*mock_scene, register_compositor(_))

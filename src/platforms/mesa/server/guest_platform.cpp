@@ -19,32 +19,67 @@
  */
 
 #include "guest_platform.h"
-
-#include "buffer_allocator.h"
-#include "mir/graphics/buffer_ipc_message.h"
-#include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/nested_context.h"
-
 #include "nested_authentication.h"
-
 #include "ipc_operations.h"
+#include "buffer_allocator.h"
+
+#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_operation_message.h"
+#include "mir_toolkit/mesa/platform_operation.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <mutex>
 #include <stdexcept>
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
-mgm::GuestPlatform::GuestPlatform(std::shared_ptr<NestedContext> const& nested_context_arg)
+namespace
 {
-    //TODO: a bit of round-about initialization to clean up here
-    nested_context = nested_context_arg;
-    auto fds = nested_context->platform_fd_items();
+
+void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* gbm_dev)
+{
+    MirMesaSetGBMDeviceRequest const request{gbm_dev};
+    mg::PlatformOperationMessage request_msg;
+    request_msg.data.resize(sizeof(MirMesaSetGBMDeviceRequest));
+    std::memcpy(request_msg.data.data(), &request, sizeof(request));
+
+    auto const response_msg = nested_context.platform_operation(
+        MirMesaPlatformOperation::set_gbm_device,
+        request_msg);
+
+    if (response_msg.data.size() == sizeof(MirMesaSetGBMDeviceResponse))
+    {
+        static int const success{0};
+        MirMesaSetGBMDeviceResponse response{-1};
+        std::memcpy(&response, response_msg.data.data(), response_msg.data.size());
+        if (response.status != success)
+        {
+            std::string const msg{"Nested Mir failed to set the gbm device."};
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(std::runtime_error(msg))
+                    << boost::errinfo_errno(response.status));
+        }
+    }
+    else
+    {
+        std::string const msg{"Nested Mir failed to set the gbm device: Invalid response."};
+        BOOST_THROW_EXCEPTION(std::runtime_error(msg));
+    }
+}
+
+}
+
+mgm::GuestPlatform::GuestPlatform(
+    std::shared_ptr<NestedContext> const& nested_context)
+    : nested_context{nested_context}
+{
+    auto const fds = nested_context->platform_fd_items();
     gbm.setup(fds.at(0));
-    nested_context->drm_set_gbm_device(gbm.device);
+    set_guest_gbm_device(*nested_context, gbm.device);
     ipc_ops = std::make_shared<mgm::IpcOperations>(
         std::make_shared<mgm::NestedAuthentication>(nested_context)); 
 }
@@ -59,12 +94,6 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
     return std::make_shared<mgm::GuestPlatform>(nested_context);
-}
-
-namespace
-{
-std::shared_ptr<mgm::InternalNativeDisplay> native_display = nullptr;
-std::mutex native_display_guard;
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mgm::GuestPlatform::make_ipc_operations() const

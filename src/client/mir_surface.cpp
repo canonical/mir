@@ -269,7 +269,7 @@ void MirSurface::created(mir_surface_callback callback, void * context)
             std::lock_guard<decltype(mutex)> lock(mutex);
 
             buffer_stream = buffer_stream_factory->
-                make_producer_stream(*server, surface.buffer_stream());
+                make_producer_stream(*server, surface.buffer_stream(), name);
 
             for(int i = 0; i < surface.attributes_size(); i++)
             {

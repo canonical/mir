@@ -20,11 +20,7 @@
 #define MIR_EXAMPLES_WINDOW_MANAGEMENT_H_
 
 #include "mir/geometry/rectangles.h"
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/placement_strategy.h"
-#include "mir/scene/surface_configurator.h"
-#include "mir/scene/surface_creation_parameters.h"
+#include "mir/shell/shell.h"
 #include "mir_toolkit/common.h"
 
 #include <memory>
@@ -38,24 +34,9 @@ class Server;
 
 namespace examples
 {
-class WindowManager :
-    public virtual scene::PlacementStrategy,
-    public virtual scene::SurfaceConfigurator
+class WindowManager : public virtual shell::Shell
 {
 public:
-
-    virtual void add_surface(
-        std::shared_ptr<scene::Surface> const& surface,
-        scene::Session* session) = 0;
-
-    virtual void remove_surface(
-        std::weak_ptr<scene::Surface> const& surface,
-        scene::Session* session) = 0;
-
-    virtual void add_session(std::shared_ptr<scene::Session> const& session) = 0;
-
-    virtual void remove_session(std::shared_ptr<scene::Session> const& session) = 0;
-
     virtual void add_display(geometry::Rectangle const& area) = 0;
 
     virtual void remove_display(geometry::Rectangle const& area) = 0;

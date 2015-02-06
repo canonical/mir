@@ -45,6 +45,7 @@ public:
     //TODO: could probably just take the HalComponentFactory to reduce the
     //      number of dependencies
     DisplayBuffer(
+        DisplayName,
         std::unique_ptr<LayerList> layer_list,
         std::shared_ptr<FramebufferBundle> const& fb_bundle,
         std::shared_ptr<DisplayDevice> const& display_device,
@@ -65,6 +66,7 @@ public:
     bool uses_alpha() const override;
     void configure(MirPowerMode power_mode, MirOrientation orientation) override;
 private:
+    DisplayName display_name;
     std::unique_ptr<LayerList> layer_list;
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;

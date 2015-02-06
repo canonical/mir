@@ -64,12 +64,17 @@ mir::DefaultServerConfiguration::the_connector()
             }
             else
             {
-                return std::make_shared<mf::PublishedSocketConnector>(
+                auto const result = std::make_shared<mf::PublishedSocketConnector>(
                     the_socket_file(),
                     the_connection_creator(),
                     threads,
                     *the_emergency_cleanup(),
                     the_connector_report());
+
+                if (the_options()->is_set(options::arw_server_socket_opt))
+                    chmod(the_socket_file().c_str(), S_IRUSR|S_IWUSR| S_IRGRP|S_IWGRP | S_IROTH|S_IWOTH);
+
+                return result;
             }
         });
 }

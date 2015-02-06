@@ -35,6 +35,9 @@ public:
     MockHWCComposerDevice1()
     {
         using namespace testing;
+        //have mocked hw start with the external display off
+        ON_CALL(*this, getDisplayConfigs_interface(_,HWC_DISPLAY_EXTERNAL,_,_))
+            .WillByDefault(Return(-1));
         common.version = HWC_DEVICE_API_VERSION_1_1;
 
         registerProcs = hook_registerProcs;

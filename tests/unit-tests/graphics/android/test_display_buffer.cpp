@@ -64,11 +64,14 @@ struct DisplayBuffer : public ::testing::Test
         std::make_shared<testing::NiceMock<mtd::MockDisplayDevice>>()};
     geom::Size const display_size{433,232};
     double const refresh_rate{60.0};
+    std::unique_ptr<mga::LayerList> list{
+        new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})};
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle{
         std::make_shared<testing::NiceMock<mtd::MockFBBundle>>(
             display_size, refresh_rate, mir_pixel_format_abgr_8888)};
     MirOrientation orientation{mir_orientation_normal};
     mga::DisplayBuffer db{
+        mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
             new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
         mock_fb_bundle,
@@ -78,17 +81,19 @@ struct DisplayBuffer : public ::testing::Test
         stub_program_factory,
         orientation,
         mga::OverlayOptimization::enabled};
+
 };
 }
 
 TEST_F(DisplayBuffer, can_post_update_with_gl_only)
 {
     using namespace testing;
+    mga::DisplayName external{mga::DisplayName::external};
     std::unique_ptr<mga::LayerList> list(new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
-    EXPECT_CALL(*mock_display_device, commit(
-        mga::DisplayName::primary, Ref(*list), _, _));
+    EXPECT_CALL(*mock_display_device, commit(external, Ref(*list), _, _));
 
     mga::DisplayBuffer db{
+        external,
         std::move(list),
         mock_fb_bundle,
         mock_display_device,
@@ -171,6 +176,7 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
         .Times(AtLeast(1));
 
     mga::DisplayBuffer db{
+        mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
             new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
         mock_fb_bundle,
@@ -196,6 +202,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
 
     EXPECT_THROW({
         mga::DisplayBuffer db(
+            mga::DisplayName::primary,
             std::unique_ptr<mga::LayerList>(
                 new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
             mock_fb_bundle,
@@ -209,6 +216,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
 
     EXPECT_THROW({
         mga::DisplayBuffer db(
+            mga::DisplayName::primary,
             std::unique_ptr<mga::LayerList>(
                 new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
             mock_fb_bundle,
@@ -265,6 +273,7 @@ TEST_F(DisplayBuffer, reject_list_if_option_disabled)
 
     mg::RenderableList renderlist{std::make_shared<mtd::StubRenderable>()};
     mga::DisplayBuffer db(
+        mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
             new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
         mock_fb_bundle,
