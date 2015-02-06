@@ -4,6 +4,10 @@ MIR_CLIENT_DEBUG_8 {
  local: *;
 };
 
+MIR_CLIENT_8 {
+    local: mir_connection_platform_operation;
+};
+
 MIR_CLIENT_8.3 {
     local: mir_connection_platform_operation;
 };
