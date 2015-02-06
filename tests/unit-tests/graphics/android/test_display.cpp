@@ -707,6 +707,7 @@ TEST_F(Display, turns_external_display_on_with_hotplug)
                     {20,20}, {4,4}, 50.0f, external_connected, mir_pixel_format_abgr_8888, 2};
             }));
 
+
         testing::InSequence seq;
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, _));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::external, mir_power_mode_on));
@@ -778,44 +779,4 @@ TEST_F(Display, configures_external_display)
         output.power_mode = mir_power_mode_off;
     });
     display.configure(*configuration);
-}
-
-TEST_F(Display, notifies_display_device_of_presence)
-{
-    using namespace testing;
-    std::function<void()> hotplug_fn = []{};
-    bool external_connected = true;
-    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
-    {
-        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::primary))
-            .WillByDefault(Return(
-                mga::DisplayAttribs{{20,20}, {4,4}, 50.0f, true, mir_pixel_format_abgr_8888, 2}));
-        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
-            .WillByDefault(Invoke([&](mga::DisplayName)
-            {
-                return mga::DisplayAttribs{
-                    {20,20}, {4,4}, 50.0f, external_connected, mir_pixel_format_abgr_8888, 2};
-            }));
-        EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
-            .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(std::make_shared<char>('2'))));
-    });
-    stub_db_factory->with_next_device([](mtd::MockDisplayDevice& mock_device)
-    {
-        EXPECT_CALL(mock_device, start_posting_external_display());
-        EXPECT_CALL(mock_device, stop_posting_external_display());
-    });
-
-    mga::Display display(
-        stub_db_factory,
-        stub_gl_program_factory,
-        stub_gl_config,
-        null_display_report,
-        mga::OverlayOptimization::enabled);
-
-    //TODO: a bit ropey, but we don't get good information about what when the external
-    //device starts to post
-    display.for_each_display_group([](mg::DisplayGroup&){});
-    external_connected = false;
-    hotplug_fn();
-    display.for_each_display_group([](mg::DisplayGroup&){});
 }

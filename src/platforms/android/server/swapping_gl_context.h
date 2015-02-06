@@ -32,8 +32,6 @@ class SwappingGLContext
 {
 public:
     virtual ~SwappingGLContext() = default;
-    virtual void make_current() const = 0;
-    virtual void release_current() const = 0;
     virtual void swap_buffers() const = 0;
     virtual std::shared_ptr<Buffer> last_rendered_buffer() const = 0;
 

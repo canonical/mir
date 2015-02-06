@@ -101,11 +101,3 @@ bool mga::FBDevice::compatible_renderlist(RenderableList const&)
 void mga::FBDevice::content_cleared()
 {
 }
-
-void mga::FBDevice::start_posting_external_display()
-{
-}
-
-void mga::FBDevice::stop_posting_external_display()
-{
-}

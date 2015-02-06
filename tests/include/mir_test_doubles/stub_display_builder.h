@@ -87,8 +87,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
 {
     StubDisplayBuilder(geometry::Size sz)
         : sz(sz),
-          config{new StubHwcConfiguration},
-          device{new testing::NiceMock<MockDisplayDevice>()}
+          config{new StubHwcConfiguration}
     {
     }
 
@@ -110,9 +109,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
 
     std::unique_ptr<graphics::android::DisplayDevice> create_display_device() override
     {
-        std::unique_ptr<graphics::android::DisplayDevice> mock_device(new testing::NiceMock<MockDisplayDevice>());
-        std::swap(mock_device, device);
-        return mock_device;
+        return std::unique_ptr<graphics::android::DisplayDevice>(new testing::NiceMock<MockDisplayDevice>());
     }
 
     std::unique_ptr<graphics::android::HwcConfiguration> create_hwc_configuration() override
@@ -121,14 +118,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
         std::swap(config, c);
         return std::move(c);
     }
-
-    void with_next_device(std::function<void(MockDisplayDevice&)> const& fn)
-    {
-        std::unique_ptr<MockDisplayDevice> mock_device(new testing::NiceMock<MockDisplayDevice>());
-        fn(*mock_device);
-        device = std::move(mock_device);
-    }
- 
+    
     void with_next_config(std::function<void(MockHwcConfiguration& mock_config)> const& fn)
     {
         std::unique_ptr<MockHwcConfiguration> mock_config{
@@ -139,7 +129,6 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
 
     geometry::Size sz;
     std::unique_ptr<graphics::android::HwcConfiguration> config;
-    std::unique_ptr<graphics::android::DisplayDevice> device;
 };
 }
 }

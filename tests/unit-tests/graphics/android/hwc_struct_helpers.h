@@ -108,33 +108,20 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
     return !(::testing::Test::HasFailure());
 }
 
-MATCHER_P(MatchesList, value, std::string(""))
+MATCHER_P(MatchesPrimaryList, value, std::string(""))
 {
-    if (arg == nullptr)
+    if (arg[0] == nullptr)
         return (value.empty()); 
-    auto const& list = *arg;
+    auto const& primary_list = *arg[0];
 
-    EXPECT_EQ(list.numHwLayers, value.size());
+    EXPECT_EQ(primary_list.numHwLayers, value.size());
     auto i = 0u;
     for(auto layer : value)
     {
-        EXPECT_THAT(list.hwLayers[i++], MatchesLegacyLayer(*layer));
+        EXPECT_THAT(primary_list.hwLayers[i++], MatchesLegacyLayer(*layer));
         if (::testing::Test::HasFailure())
             return false;
     }
-    return !(::testing::Test::HasFailure());
-}
-
-MATCHER_P(MatchesPrimaryList, value, std::string(""))
-{
-    EXPECT_THAT(arg[0], MatchesList(value));
-    return !(::testing::Test::HasFailure());
-}
-
-MATCHER_P2(MatchesLists, primary, external, std::string(""))
-{
-    EXPECT_THAT(arg[0], MatchesList(primary));
-    EXPECT_THAT(arg[1], MatchesList(external));
     return !(::testing::Test::HasFailure());
 }
 
