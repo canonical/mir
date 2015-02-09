@@ -1,6 +1,12 @@
 mir (0.11.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release 0.11.0 (https://launchpad.net/mir/+milestone/0.11.0)
+    - Packaging changes:
+      . Due to changes in the Mir driver model the client platforms are no
+        longer versioned by soname. Thusly libmirplatform5driver-(mesa|android) is
+        replaced by mir-client-platform-(mesa-android). A new package
+        mir-client-platform-mesa-dev is introduced containing headers
+        previously in mirplatform-dev.
     - Enhancements:
       . Lots more major plumbing in the Android code, on the path to
         supporting external displays.
