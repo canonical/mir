@@ -120,11 +120,11 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
     });
 
     /* Contexts are released at teardown */
-    display.for_each_display_buffer(
-        [this](mg::DisplayBuffer&)
-        {
+    display.for_each_display_group([&](mg::DisplayGroup& group) {
+        group.for_each_display_buffer([&](mg::DisplayBuffer&) {
             EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,EGL_NO_CONTEXT));
         });
+    });
 }
 
 TEST_F(OffscreenDisplayTest, restores_previous_state_on_fbo_setup_failure)
