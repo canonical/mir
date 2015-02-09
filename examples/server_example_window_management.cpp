@@ -82,7 +82,7 @@ public:
     virtual auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo& = 0;
 
     /* TODO this is probably the only place the functions inherited from
-     * TODO FocusController make any sense.
+     * TODO FocusController makes any sense.
     virtual std::weak_ptr<ms::Session> focussed_application() const = 0;
     virtual void focus_next() = 0;
     virtual void set_focus_to(std::shared_ptr<ms::Session> const& focus) = 0;
