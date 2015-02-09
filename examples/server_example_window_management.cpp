@@ -132,6 +132,7 @@ public:
         ms::SurfaceCreationParameters const placed_params = policy.handle_place_new_surface(session, params);
         auto const result = msh::AbstractShell::create_surface(session, placed_params);
         add_surface(session->surface(result), session);
+        policy.handle_new_surface(session, session->surface(result));
         return result;
     }
 
@@ -358,6 +359,10 @@ public:
         return placed_parameters;
     }
 
+    void handle_new_surface(std::shared_ptr<ms::Session> const& /*session*/, std::shared_ptr<ms::Surface> const& /*surface*/)
+    {
+    }
+
     int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value)
         { return value; }
 
@@ -446,6 +451,10 @@ public:
 
         clip_to_tile(parameters, tile);
         return parameters;
+    }
+
+    void handle_new_surface(std::shared_ptr<ms::Session> const& /*session*/, std::shared_ptr<ms::Surface> const& /*surface*/)
+    {
     }
 
     int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
