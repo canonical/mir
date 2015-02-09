@@ -41,7 +41,7 @@ public:
     StubDisplay(std::vector<geometry::Rectangle> const& output_rects) :
         output_rects(output_rects)
     {
-        for(auto const& rect : output_rects)
+        for (auto const& rect : output_rects)
             groups.emplace_back(new StubDisplayGroup({rect}));
     }
 
@@ -52,7 +52,7 @@ public:
 
     void for_each_display_group(std::function<void(graphics::DisplayGroup&)> const& f) override
     {
-        for(auto& group : groups)
+        for (auto& group : groups)
             f(*group);
     }
 

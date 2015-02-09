@@ -45,7 +45,7 @@ public:
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override
     {
-        for(auto& db : display_buffers)
+        for (auto& db : display_buffers)
             f(db);
     }
 

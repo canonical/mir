@@ -78,7 +78,7 @@ public:
             buffer->make_current();
         current_buffer = buffer;
     }
-    
+
     ~CurrentRenderingTarget()
     {
         if (current_buffer) current_buffer->release_current();
@@ -152,7 +152,7 @@ public:
                 frames_scheduled--;
                 lock.unlock();
 
-                for(auto& compositor : compositors)
+                for (auto& compositor : compositors)
                 {
                     target.ensure_current(std::get<0>(compositor));
                     std::get<1>(compositor)->composite(scene->scene_elements_for(comp_id));

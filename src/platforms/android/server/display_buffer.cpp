@@ -118,6 +118,7 @@ void mga::DisplayBuffer::for_each_display_buffer(std::function<void(mg::DisplayB
 {
     f(*this);
 }
+
 void mga::DisplayBuffer::post()
 {
 }
