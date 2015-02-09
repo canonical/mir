@@ -175,6 +175,8 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
         .WillByDefault(Return(true));  // It has the scanout flag set
     ON_CALL(*nonbypassable, size())
         .WillByDefault(Return(mir::geometry::Size{12,34}));
+    ON_CALL(*nonbypassable, native_buffer_handle())
+        .WillByDefault(Return(stub_gbm_native_buffer));
 
     fullscreen->set_buffer(nonbypassable);
     graphics::RenderableList list{fullscreen};
@@ -396,6 +398,8 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
     auto nonbypassable = std::make_shared<testing::NiceMock<MockBuffer>>();
     ON_CALL(*nonbypassable, can_bypass())
         .WillByDefault(Return(false));
+    ON_CALL(*nonbypassable, native_buffer_handle())
+        .WillByDefault(Return(stub_gbm_native_buffer));
     fullscreen->set_buffer(nonbypassable);
     graphics::RenderableList list{fullscreen};
 
