@@ -1,5 +1,6 @@
-mir (0.11.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.11.0+15.04.20150209.1-0ubuntu1) vivid; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.11.0 (https://launchpad.net/mir/+milestone/0.11.0)
     - Enhancements:
       . Lots more major plumbing in the Android code, on the path to
@@ -57,7 +58,7 @@ mir (0.11.0-0ubuntu1) UNRELEASED; urgency=medium
         constantly redrawing (LP: #1395581)
       . Pointer motion and crossing events are missing (LP: #1417650)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 14 Jan 2015 16:10:37 +0800
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 09 Feb 2015 21:27:35 +0000
 
 mir (0.10.0+15.04.20150107.2-0ubuntu1) vivid; urgency=medium
 
