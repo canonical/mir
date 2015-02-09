@@ -21,6 +21,9 @@
 
 #include <gmock/gmock.h>
 
+#include <unordered_map>
+#include <thread>
+
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
@@ -143,6 +146,7 @@ public:
     EGLContext fake_egl_context;
     EGLImageKHR fake_egl_image;
     int fake_visual_id;
+    std::unordered_map<std::thread::id,EGLContext> current_contexts;
 };
 
 }
