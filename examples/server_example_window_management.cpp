@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -117,6 +117,16 @@ public:
     virtual auto info_for(std::weak_ptr<ms::Session> const& session) const -> SessionInfo& = 0;
 
     virtual auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo& = 0;
+
+    /* TODO this is probably the only place the functions inherited from
+     * TODO FocusController make any sense.
+    virtual std::weak_ptr<ms::Session> focussed_application() const = 0;
+    virtual void focus_next() = 0;
+    virtual void set_focus_to(std::shared_ptr<ms::Session> const& focus) = 0;
+     */
+
+    virtual void set_working_surface_to(std::weak_ptr<ms::Surface> const& surface) = 0;
+    virtual auto working_surface() const -> std::shared_ptr<ms::Surface> = 0;
 };
 
 template<typename SessionInfo, typename SurfaceInfo, typename WindowManagementPolicy>
@@ -176,14 +186,14 @@ public:
     void drag(Point cursor) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        policy.handle_drag(cursor, old_cursor, old_surface);
+        policy.handle_drag(cursor, old_cursor);
         old_cursor = cursor;
     }
 
     void resize(Point cursor) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        policy.handle_resize(cursor, old_cursor, old_surface);
+        policy.handle_resize(cursor, old_cursor);
         old_cursor = cursor;
     }
 
@@ -246,6 +256,16 @@ public:
     auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo& override
     {
         return const_cast<SurfaceInfo&>(surface_info.at(surface));
+    }
+
+    void set_working_surface_to(std::weak_ptr<ms::Surface> const& surface) override
+    {
+        old_surface = surface;
+    }
+
+    auto working_surface() const -> std::shared_ptr<ms::Surface> override
+    {
+        return old_surface.lock();
     }
 
 private:
@@ -374,7 +394,7 @@ public:
         update_tiles(session_info, displays);
     }
 
-    void handle_resize(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)
+    void handle_resize(Point const& cursor, Point const& old_cursor)
     {
         if (auto const session = session_under(cursor))
         {
@@ -382,13 +402,13 @@ public:
             {
                 auto const& info = tools->info_for(session);
 
-                if (resize(old_surface.lock(), cursor, old_cursor, info.tile))
+                if (resize(tools->working_surface(), cursor, old_cursor, info.tile))
                 {
                     // Still dragging the same old_surface
                 }
                 else if (resize(session->default_surface(), cursor, old_cursor, info.tile))
                 {
-                    old_surface = session->default_surface();
+                    tools->set_working_surface_to(session->default_surface());
                 }
                 else
                 {
@@ -398,7 +418,7 @@ public:
 
                         if (resize(new_surface, cursor, old_cursor, info.tile))
                         {
-                            old_surface = new_surface;
+                            tools->set_working_surface_to(new_surface);
                             break;
                         }
                     }
@@ -478,20 +498,20 @@ public:
         return info.state = value;
     }
 
-    void handle_drag(Point const& cursor, Point const& old_cursor, std::weak_ptr<ms::Surface>& old_surface)
+    void handle_drag(Point const& cursor, Point const& old_cursor)
     {
         if (const auto session = session_under(cursor))
         {
             if (session == session_under(old_cursor))
             {
                 const auto& info = tools->info_for(session);
-                if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
+                if (drag(tools->working_surface(), cursor, old_cursor, info.tile))
                 {
                     // Still dragging the same old_surface
                 }
                 else if (drag(session->default_surface(), cursor, old_cursor, info.tile))
                 {
-                    old_surface = session->default_surface();
+                    tools->set_working_surface_to(session->default_surface());
                 }
                 else
                 {
@@ -500,7 +520,7 @@ public:
                         const auto new_surface = ps.lock();
                         if (drag(new_surface, cursor, old_cursor, info.tile))
                         {
-                            old_surface = new_surface;
+                            tools->set_working_surface_to(new_surface);
                             break;
                         }
                     }
