@@ -58,9 +58,6 @@ char const* const wm_fullscreen = "fullscreen";
 
 struct NullSessionInfo
 {
-    void add_surface(std::weak_ptr<ms::Surface> /*surface*/) {}
-
-    void remove_surface(std::weak_ptr<ms::Surface> /*surface*/) {}
 };
 
 struct NullSurfaceInfo
@@ -74,23 +71,6 @@ struct SessionInfo
 {
     Rectangle tile;
     std::vector<std::weak_ptr<ms::Surface>> surfaces;
-
-    void add_surface(std::weak_ptr<ms::Surface> surface)
-    {
-        surfaces.push_back(surface);
-    }
-
-    void remove_surface(std::weak_ptr<ms::Surface> surface)
-    {
-        for (auto i = begin(surfaces); i != end(surfaces); ++i)
-        {
-            if (surface.lock() == i->lock())
-            {
-                surfaces.erase(i);
-                break;
-            }
-        }
-    }
 };
 
 struct SurfaceInfo
@@ -143,6 +123,8 @@ public:
     void handle_new_surface(std::shared_ptr<ms::Session> const& /*session*/, std::shared_ptr<ms::Surface> const& /*surface*/)
     {
     }
+
+    void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/) {}
 
     int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value)
         { return value; }
@@ -234,8 +216,23 @@ public:
         return parameters;
     }
 
-    void handle_new_surface(std::shared_ptr<ms::Session> const& /*session*/, std::shared_ptr<ms::Surface> const& /*surface*/)
+    void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
     {
+        tools->info_for(session).surfaces.push_back(surface);
+    }
+
+    void handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
+    {
+        auto& surfaces = tools->info_for(session).surfaces;
+
+        for (auto i = begin(surfaces); i != end(surfaces); ++i)
+        {
+            if (surface.lock() == i->lock())
+            {
+                surfaces.erase(i);
+                break;
+            }
+        }
     }
 
     int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)

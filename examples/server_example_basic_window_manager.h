@@ -84,15 +84,12 @@ public:
 /// - void handle_displays_updated(SessionInfoMap& session_info, Rectangles const& displays);
 /// - auto handle_place_new_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& request_parameters) -> ms::SurfaceCreationParameters;
 /// - void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface);
+/// - void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/);
 /// - int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value);
 /// - void handle_resize(Point const& cursor, Point const& old_cursor);
 /// - void handle_drag(Point const& cursor, Point const& old_cursor);
 ///
 /// \tparam SessionInfo must be default constructable.
-/// In addition SessionInfo must implement the following methods:
-/// - void add_surface(std::weak_ptr<ms::Surface> surface);
-/// - void remove_surface(std::weak_ptr<ms::Surface> surface);
-
 ///
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
@@ -134,7 +131,6 @@ public:
         std::lock_guard<decltype(mutex)> lock(mutex);
         scene::SurfaceCreationParameters const placed_params = policy.handle_place_new_surface(session, params);
         auto const result = shell::AbstractShell::create_surface(session, placed_params);
-        add_surface(session->surface(result), session);
         policy.handle_new_surface(session, session->surface(result));
         return result;
     }
@@ -268,7 +264,7 @@ private:
         std::shared_ptr<scene::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info[session].remove_surface(surface);
+        policy.handle_delete_surface(session, surface);
 
         surface_info.erase(surface);
     }
