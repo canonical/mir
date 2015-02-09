@@ -25,7 +25,7 @@
 
 #include "mir/client_buffer.h"
 
-#include "uncaught.h"
+#include "mir/uncaught.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>

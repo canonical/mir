@@ -267,7 +267,10 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
     }
     if (mode != mcl::BufferStreamMode::Producer)
     {
-        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
+        // TODO: Normally we would throw here, but as things stand (Feb 2015 ~racarr), the android drivers
+        // call this way quite a lot. Anyway it's harmless to return.
+        //        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
+        return;
     }
 
     mp::SurfaceSetting setting, result;

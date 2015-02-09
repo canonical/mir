@@ -16,9 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "Android/EGLNativeSurfaceInterpreter"
+
 #include "egl_native_surface_interpreter.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/client_buffer.h"
+#include "mir/uncaught.h"
 #include <system/window.h>
 #include <stdexcept>
 
@@ -34,6 +37,7 @@ mcla::EGLNativeSurfaceInterpreter::EGLNativeSurfaceInterpreter(EGLNativeSurface&
 }
 
 mir::graphics::NativeBuffer* mcla::EGLNativeSurfaceInterpreter::driver_requests_buffer()
+try
 {
     auto buffer = surface.get_current_buffer();
     auto buffer_to_driver = buffer->native_buffer_handle();
@@ -42,8 +46,14 @@ mir::graphics::NativeBuffer* mcla::EGLNativeSurfaceInterpreter::driver_requests_
     anwb->format = driver_pixel_format;
     return buffer_to_driver.get();
 }
+catch (std::exception const& e)
+{
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
+    return nullptr;
+}
 
 void mcla::EGLNativeSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int fence_fd)
+try
 {
     //TODO: pass fence to server instead of waiting here
     mga::SyncFence sync_fence(sync_ops, mir::Fd(fence_fd));
@@ -51,13 +61,23 @@ void mcla::EGLNativeSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffe
 
     surface.request_and_wait_for_next_buffer();
 }
+catch (std::exception const& e)
+{
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
+}
 
 void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_format(int format)
+try
 {
     driver_pixel_format = format;
 }
+catch (std::exception const& e)
+{
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
+}
 
 int mcla::EGLNativeSurfaceInterpreter::driver_requests_info(int key) const
+try
 {
     switch (key)
     {
@@ -79,8 +99,18 @@ int mcla::EGLNativeSurfaceInterpreter::driver_requests_info(int key) const
             throw std::runtime_error("driver requested unsupported query");
     }
 }
+catch (std::exception const& e)
+{
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
+    return 0;
+}
 
 void mcla::EGLNativeSurfaceInterpreter::sync_to_display(bool should_sync)
+try
 { 
     surface.request_and_wait_for_configure(mir_surface_attrib_swapinterval, should_sync);
+}
+catch (std::exception const& e)
+{
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
 }
