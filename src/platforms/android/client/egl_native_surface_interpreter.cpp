@@ -16,8 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "Android/EGLNativeSurfaceInterpreter"
-
 #include "egl_native_surface_interpreter.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/client_buffer.h"
