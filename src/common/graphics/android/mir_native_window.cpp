@@ -20,7 +20,7 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/graphics/android/sync_fence.h"
 
-#include <boost/exception/diagnostic_information.hpp>
+#include "mir/uncaught.h"
 
 #include <iostream>
 
@@ -123,13 +123,6 @@ int cancelBuffer_static(struct ANativeWindow* window,
     auto self = static_cast<mga::MirNativeWindow*>(window);
     return self->cancelBuffer(buffer, fence_fd);
 }
-
-void report_exception_at_driver_boundary(std::exception const& e)
-{
-    std::cerr << "Caught exception at Mir/EGL driver boundary: "
-              << boost::diagnostic_information(e) << std::endl;
-}
-
 }
 
 mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter)
@@ -154,6 +147,7 @@ mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> 
 }
 
 int mga::MirNativeWindow::setSwapInterval(int interval)
+try
 {
     if (interval == 0)
     {
@@ -164,6 +158,11 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
         driver_interpreter->sync_to_display(true);
     }
     return 0;
+}
+catch (std::exception const& e)
+{
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
+    return -1;
 }
 
 int mga::MirNativeWindow::dequeueBuffer(struct ANativeWindowBuffer** buffer_to_driver, int* fence_fd)
@@ -187,7 +186,7 @@ try
 }
 catch (std::exception const& e)
 {
-    report_exception_at_driver_boundary(e);
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return -1;
 }
 
@@ -209,7 +208,7 @@ try
 }
 catch (std::exception const& e)
 {
-    report_exception_at_driver_boundary(e);
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return -1;
 }
 
@@ -221,7 +220,7 @@ try
 }
 catch (std::exception const& e)
 {
-    report_exception_at_driver_boundary(e);
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return -1;
 }
 
@@ -236,7 +235,7 @@ try
 }
 catch (std::exception const& e)
 {
-    report_exception_at_driver_boundary(e);
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return -1;
 }
 
@@ -248,7 +247,7 @@ try
 }
 catch (std::exception const& e)
 {
-    report_exception_at_driver_boundary(e);
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return -1;
 }
 
@@ -275,6 +274,6 @@ try
 }
 catch (std::exception const& e)
 {
-    report_exception_at_driver_boundary(e);
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return -1;
 }
