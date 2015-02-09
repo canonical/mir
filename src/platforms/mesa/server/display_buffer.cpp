@@ -205,9 +205,11 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
         if (bypass_it != renderable_list.rend())
         {
             auto bypass_buffer = (*bypass_it)->buffer();
-            auto native = static_cast<mgm::GBMNativeBuffer*>(bypass_buffer->native_buffer_handle().get());
-            auto bufobj = get_buffer_object(native->bo);
-            if (bufobj && bypass_buffer->can_bypass() &&
+            auto native = bypass_buffer->native_buffer_handle();
+            auto gbm_native = static_cast<mgm::GBMNativeBuffer*>(native.get());
+            auto bufobj = get_buffer_object(gbm_native->bo);
+            if (bufobj &&
+                bypass_buffer->can_bypass() &&
                 bypass_buffer->size() == geom::Size{fb_width,fb_height})
             {
                 bypass_buf = bypass_buffer;
