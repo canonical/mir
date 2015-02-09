@@ -185,16 +185,17 @@ public:
     // and I don't see any other sane implementation
     void toggle(MirSurfaceState state) override
     {
-        if (auto const focussed_session = shell::AbstractShell::focussed_application().lock())
+        if (auto const session = shell::AbstractShell::focussed_application().lock())
         {
-            if (auto const focussed_surface = focussed_session->default_surface())
+            if (auto const surface = session->default_surface())
             {
                 std::lock_guard<decltype(mutex)> lock(mutex);
 
-                if (focussed_surface->state() == state)
+                if (surface->state() == state)
                     state = mir_surface_state_restored;
 
-                policy.handle_set_state(focussed_surface, MirSurfaceState(state));
+                auto const value = policy.handle_set_state(surface, MirSurfaceState(state));
+                shell::AbstractShell::set_surface_attribute(session, surface, mir_surface_attrib_state, value);
             }
         }
     }
