@@ -20,7 +20,12 @@ set(GMOCK_PREFIX gmock)
 set(GMOCK_BINARY_DIR ${CMAKE_BINARY_DIR}/${GMOCK_PREFIX}/libs)
 set(GTEST_BINARY_DIR ${GMOCK_BINARY_DIR}/gtest)
 
-set(GTEST_CMAKE_ARGS "-DCMAKE_CXX_FLAGS=-fPIC")
+set(GTEST_CXX_FLAGS "-fPIC")
+if (cmake_build_type_lower MATCHES "threadsanitizer")
+  set(GTEST_CXX_FLAGS "${GTEST_CXX_FLAGS} -fsanitize=thread")
+endif()
+
+set(GTEST_CMAKE_ARGS "-DCMAKE_CXX_FLAGS=${GTEST_CXX_FLAGS}")
 if (${CMAKE_CROSSCOMPILING})
   list(APPEND GTEST_CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=${CMAKE_MODULE_PATH}/LinuxCrossCompile.cmake)
 endif()

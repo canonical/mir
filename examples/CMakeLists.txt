@@ -23,6 +23,7 @@ add_library(exampleserverconfig STATIC
   server_example_fullscreen_placement_strategy.cpp
   server_example_host_lifecycle_event.cpp
   server_example_window_manager.cpp
+  server_example_window_management.cpp
 )
 
 target_link_libraries(eglapp
@@ -58,6 +59,12 @@ mir_add_wrapped_executable(mir_demo_client_cursors
   cursors_demo_client.c
 )
 target_link_libraries(mir_demo_client_cursors
+  eglapp
+)
+mir_add_wrapped_executable(mir_demo_client_eglstateswitcher
+  eglstateswitcher.c
+)
+target_link_libraries(mir_demo_client_eglstateswitcher
   eglapp
 )
 
@@ -164,3 +171,20 @@ target_link_libraries(mir_demo_standalone_render_overlays
     mirserver
     mircommon
 )
+
+# FIXME: Bug not fixed yet.
+if (MIR_ENABLE_TESTS AND MIR_TEST_CLIENT_ABI)
+  # Regression tests for LP: #1415321
+
+  # To see reasons for failure:  ctest -V -R Clients-only-use-client-symbols
+  add_test(NAME Clients-only-use-client-symbols
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    COMMAND /bin/sh -c "!(nm -u .mir_demo_client_* mir_demo_client* | grep -v @@MIR_CLIENT | grep 'U mir_')"
+  )
+
+  # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
+  add_test(NAME Clients-only-use-client-ABI
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    COMMAND /bin/sh -c "!(objdump -p .mir_demo_client_* mir_demo_client*  | grep NEEDED | grep libmir | grep -v libmirclient)"
+  )
+endif ()

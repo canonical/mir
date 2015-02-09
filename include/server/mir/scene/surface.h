@@ -57,6 +57,7 @@ public:
     virtual geometry::Size size() const = 0;
 
     virtual std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const = 0;
+    virtual int buffers_ready_for_compositor(void const* compositor_id) const = 0;
 
     virtual float alpha() const = 0; //only used in examples/
     virtual MirSurfaceType type() const = 0;
@@ -98,6 +99,12 @@ public:
     virtual void set_reception_mode(input::InputReceptionMode mode) = 0;
 
     virtual void request_client_surface_close() = 0;
+    virtual std::shared_ptr<Surface> parent() const = 0;
+
+    // TODO a legacy of old interactions and needs removing
+    virtual int configure(MirSurfaceAttrib attrib, int value) = 0;
+    // TODO a legacy of old interactions and needs removing
+    virtual int query(MirSurfaceAttrib attrib) = 0;
 };
 }
 }

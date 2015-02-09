@@ -25,6 +25,7 @@
 
 namespace mir
 {
+class SharedLibrary;
 namespace options
 {
 class DefaultConfiguration : public Configuration
@@ -42,6 +43,10 @@ public:
     boost::program_options::options_description_easy_init add_options();
 
 private:
+    // MUST be the first member to ensure it's destroyed last, lest we attempt to
+    // call destructors in DSOs we've unloaded.
+    std::shared_ptr<SharedLibrary> platform_graphics_library;
+
     void add_platform_options();
     // accessed via the base interface, when access to add_options() has been "lost"
     std::shared_ptr<options::Option> the_options() const override;

@@ -27,10 +27,8 @@
 
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/stub_gl_program_factory.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/stub_renderable.h"
-#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -65,7 +63,6 @@ struct DemoCompositor : testing::Test
     testing::NiceMock<mtd::MockGL> mock_gl;
     mtd::StubDisplayBuffer stub_display_buffer{
         geom::Rectangle{{0,0}, {1000,1000}}};
-    mtd::StubGLProgramFactory stub_factory;
     ms::BasicSurface stub_surface{
         std::string("stub"),
         geom::Rectangle{{0,0},{100,100}},
@@ -73,36 +70,25 @@ struct DemoCompositor : testing::Test
         std::make_shared<mtd::StubBufferStream>(),
         std::shared_ptr<mir::input::InputChannel>(),
         std::shared_ptr<mir::input::InputSender>(),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mir::graphics::CursorImage>(),
         mir::report::null_scene_report()};
 
-    me::DemoCompositor demo_compositor{
-        stub_display_buffer,
-        stub_factory,
-        mir::report::null_compositor_report()};
-
     testing::NiceMock<MockSceneElement> element;
     mc::SceneElementSequence scene_elements{mt::fake_shared(element)};
+
+    void SetUp()
+    {
+        using namespace testing;
+        ON_CALL(mock_gl, glCreateShader(_))
+            .WillByDefault(Return(12));
+        ON_CALL(mock_gl, glCreateProgram())
+            .WillByDefault(Return(34));
+        ON_CALL(mock_gl, glGetShaderiv(_, _, _))
+            .WillByDefault(SetArgPointee<2>(GL_TRUE));
+        ON_CALL(mock_gl, glGetProgramiv(_, _, _))
+            .WillByDefault(SetArgPointee<2>(GL_TRUE));
+    }
 };
 
 }
 
-// Regression test for https://bugs.launchpad.net/mir/+bug/1359487
-TEST_F(DemoCompositor, sets_surface_visibility)
-{
-    using namespace testing;
-
-    EXPECT_CALL(element, renderable())
-        .Times(2)
-        .WillOnce(Return(std::make_shared<mtd::StubRenderable>(true)))
-        .WillOnce(Return(std::make_shared<mtd::StubRenderable>(false)));
-
-    InSequence seq;
-    EXPECT_CALL(element, rendered());
-    EXPECT_CALL(element, occluded());
-
-    demo_compositor.composite(mc::SceneElementSequence(scene_elements));
-    demo_compositor.composite(mc::SceneElementSequence(scene_elements));
-
-}

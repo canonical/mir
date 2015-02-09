@@ -19,7 +19,7 @@
 #ifndef MOCK_KMS_OUTPUT_H_
 #define MOCK_KMS_OUTPUT_H_
 
-#include "src/platforms/mesa/kms_output.h"
+#include "src/platforms/mesa/server/kms_output.h"
 #include <gmock/gmock.h>
 
 namespace mir

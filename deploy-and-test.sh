@@ -1,4 +1,5 @@
 #!/bin/sh
+# WARNING: This script is slow. See: doc/avoid_deploy-and-test.md
 
 if [ ! -d build-android-arm ] ; then
     echo "Built tree not found in $(pwd)/build-android-arm"
@@ -12,10 +13,14 @@ fi
   dpkg -x libumockdev0_*armhf*.deb .
 )
 
-adb push build-android-arm/bin /home/phablet/mir/bin
-adb push build-android-arm/lib /home/phablet/mir/lib
-adb push build-android-arm/usr /home/phablet/mir/usr
+rundir=/home/phablet/mir/testing
+adb push build-android-arm/bin $rundir/bin
+adb push build-android-arm/lib $rundir/lib
+adb push build-android-arm/usr $rundir/usr
 
-adb shell "LD_LIBRARY_PATH=/home/phablet/mir/usr/lib/arm-linux-gnueabihf/:/home/phablet/mir/lib PATH=$PATH:/home/phablet/mir/usr/bin bash -c \"cd /home/phablet/mir/usr/bin ; umockdev-run /home/phablet/mir/bin/mir_unit_tests\""
-adb shell "LD_LIBRARY_PATH=/home/phablet/mir/usr/lib/arm-linux-gnueabihf/:/home/phablet/mir/lib PATH=$PATH:/home/phablet/mir/usr/bin bash -c \"cd /home/phablet/mir/usr/bin ; umockdev-run /home/phablet/mir/bin/mir_integration_tests\""
-adb shell "LD_LIBRARY_PATH=/home/phablet/mir/usr/lib/arm-linux-gnueabihf/:/home/phablet/mir/lib PATH=$PATH:/home/phablet/mir/usr/bin bash -c \"cd /home/phablet/mir/usr/bin ; umockdev-run /home/phablet/mir/bin/mir_acceptance_tests\""
+libpath=$rundir/usr/lib/arm-linux-gnueabihf/:$rundir/lib
+run_with_env="LD_LIBRARY_PATH=$libpath $rundir/usr/bin/umockdev-run $rundir/bin/"
+
+adb shell "${run_with_env}mir_unit_tests"
+adb shell "${run_with_env}mir_integration_tests"
+adb shell "${run_with_env}mir_acceptance_tests"

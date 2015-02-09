@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/mesa/kms_page_flipper.h"
+#include "src/platforms/mesa/server/kms_page_flipper.h"
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_display_report.h"

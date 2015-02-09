@@ -16,6 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/legacy_surface_change_notification.h"
 #include "src/server/report/null_report_factory.h"
@@ -31,10 +33,9 @@
 #include "mir_test_doubles/mock_input_sender.h"
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/stub_input_sender.h"
-#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test/client_event_matchers.h"
+#include "mir_test/event_matchers.h"
 
 #include "gmock_set_arg.h"
 #include <gmock/gmock.h>
@@ -194,7 +195,6 @@ struct SurfaceCreation : public ::testing::Test
             rect, false, mock_buffer_stream, 
             std::make_shared<mtd::StubInputChannel>(),
             std::make_shared<mtd::StubInputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             nullptr /* cursor_image */, report)
     {
     }
@@ -455,7 +455,6 @@ TEST_F(SurfaceCreation, input_fds)
         mock_buffer_stream,
         mt::fake_shared(channel),
         std::make_shared<mtd::StubInputSender>(),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
 
@@ -474,7 +473,6 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
         mock_buffer_stream,
         std::make_shared<mtd::StubInputChannel>(),
         mt::fake_shared(mock_sender),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
 
@@ -486,7 +484,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     motion_event.type = mir_event_type_motion;
 
     EXPECT_CALL(mock_sender, send_event(mt::MirKeyEventMatches(key_event), _)).Times(1);
-    EXPECT_CALL(mock_sender, send_event(mt::MirMotionEventMatches(motion_event), _)).Times(1);
+    EXPECT_CALL(mock_sender, send_event(mt::MirTouchEventMatches(motion_event), _)).Times(1);
 
     surface.consume(key_event);
     surface.consume(motion_event);

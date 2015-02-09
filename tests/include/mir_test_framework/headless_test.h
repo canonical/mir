@@ -32,7 +32,7 @@ namespace mir_test_framework
 {
 /** Basic fixture for tests that don't use graphics hardware.
  *  This provides a mechanism for temporarily setting environment variables.
- *  It automatically sets "MIR_SERVER_PLATFORM_GRAPHICS_LIB" to "libmirplatformstub.so"
+ *  It automatically sets "MIR_SERVER_PLATFORM_GRAPHICS_LIB" to "graphics-dummy.so"
  *  as the tests do not hit the graphics hardware.
  */
 class HeadlessTest : public ::testing::Test, public AsyncServerRunner

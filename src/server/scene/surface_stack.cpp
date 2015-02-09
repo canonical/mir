@@ -124,16 +124,21 @@ ms::SurfaceStack::SurfaceStack(
 mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID id)
 {
     std::lock_guard<decltype(guard)> lg(guard);
+
+    scene_changed = false;
     mc::SceneElementSequence elements;
     for (auto const& layer : layers_by_depth)
     {
         for (auto const& surface : layer.second) 
         {
-            auto element = std::make_shared<SurfaceSceneElement>(
-                surface->compositor_snapshot(id),
-                rendering_trackers[surface.get()],
-                id);
-            elements.emplace_back(element);
+            if (surface->visible())
+            {
+                auto element = std::make_shared<SurfaceSceneElement>(
+                    surface->compositor_snapshot(id),
+                    rendering_trackers[surface.get()],
+                    id);
+                elements.emplace_back(element);
+            }
         }
     }
     for (auto const& renderable : overlays)
@@ -141,6 +146,29 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
         elements.emplace_back(std::make_shared<OverlaySceneElement>(renderable));
     }
     return elements;
+}
+
+int ms::SurfaceStack::frames_pending(mc::CompositorID id) const
+{
+    std::lock_guard<decltype(guard)> lg(guard);
+
+    int result = scene_changed ? 1 : 0;
+    for (auto const& layer : layers_by_depth)
+    {
+        for (auto const& surface : layer.second) 
+        {
+            if (surface->visible())
+            {
+                // Note that we ask the surface and not a Renderable.
+                // This is because we don't want to waste time and resources
+                // on a snapshot till we're sure we need it...
+                int ready = surface->buffers_ready_for_compositor(id);
+                if (ready > result)
+                    result = ready;
+            }
+        }
+    }
+    return result;
 }
 
 void ms::SurfaceStack::register_compositor(mc::CompositorID cid)
@@ -168,7 +196,7 @@ void ms::SurfaceStack::add_input_visualization(
         std::lock_guard<decltype(guard)> lg(guard);
         overlays.push_back(overlay);
     }
-    observers.scene_changed();
+    emit_scene_changed();
 }
 
 void ms::SurfaceStack::remove_input_visualization(
@@ -185,11 +213,15 @@ void ms::SurfaceStack::remove_input_visualization(
         overlays.erase(p);
     }
     
-    observers.scene_changed();
+    emit_scene_changed();
 }
 
 void ms::SurfaceStack::emit_scene_changed()
 {
+    {
+        std::lock_guard<decltype(guard)> lg(guard);
+        scene_changed = true;
+    }
     observers.scene_changed();
 }
 

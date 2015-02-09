@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test/wait_condition.h"
@@ -97,6 +99,7 @@ TEST_F(ClientFocusNotification, a_surface_is_notified_of_receiving_focus)
 {
     run_in_client([&]
         {
+            InSequence s;
             EXPECT_CALL(observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))).Times(1)
                 .WillOnce(mt::WakeUp(&all_events_received));
             // We may not see mir_surface_unfocused before connection closes

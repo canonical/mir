@@ -40,35 +40,23 @@ public:
     {
     }
     FakeRenderable(geometry::Rectangle display_area)
-        : FakeRenderable{display_area, 1.0f, true, true, true}
+        : FakeRenderable{display_area, 1.0f, true}
     {
     }
 
     FakeRenderable(geometry::Rectangle display_area,
                    float opacity)
-        : FakeRenderable{display_area, opacity, true, true, true}
+        : FakeRenderable{display_area, opacity, true}
     {
     }
 
     FakeRenderable(geometry::Rectangle display_area,
                    float opacity,
-                   bool rectangular,
-                   bool visible)
-        : FakeRenderable{display_area, opacity, rectangular, visible, true}
-    {
-    }
-
-    FakeRenderable(geometry::Rectangle display_area,
-                   float opacity,
-                   bool rectangular,
-                   bool visible,
-                   bool posted)
+                   bool rectangular)
         : buf{std::make_shared<StubBuffer>()},
           rect(display_area),
           opacity(opacity),
-          rectangular(rectangular),
-          visible_(visible),
-          posted(posted)
+          rectangular(rectangular)
     {
     }
 
@@ -85,11 +73,6 @@ public:
     glm::mat4 transformation() const override
     {
         return glm::mat4();
-    }
-
-    bool visible() const override
-    {
-        return visible_ && posted;
     }
 
     bool shaped() const override
@@ -112,18 +95,11 @@ public:
         return rect;
     }
 
-    int buffers_ready_for_compositor() const override
-    {
-        return 1;
-    }
-
 private:
     std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;
     float opacity;
     bool rectangular;
-    bool visible_;
-    bool posted;
 };
 
 } // namespace doubles

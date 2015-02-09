@@ -44,8 +44,7 @@ namespace mo = mir::options;
     MACRO(cursor_listener)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
-    MACRO(session_coordinator)\
-    MACRO(surface_coordinator)
+    MACRO(shell)
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
@@ -61,16 +60,18 @@ namespace mo = mir::options;
     MACRO(session_authorizer)\
     MACRO(session_listener)\
     MACRO(session_mediator_report)\
-    MACRO(shell_focus_setter)\
+    MACRO(shell)\
     MACRO(surface_configurator)
 
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_compositor)\
     MACRO(the_composite_event_filter)\
+    MACRO(the_cursor_listener)\
     MACRO(the_display)\
     MACRO(the_focus_controller)\
     MACRO(the_gl_config)\
     MACRO(the_graphics_platform)\
+    MACRO(the_input_targeter)\
     MACRO(the_logger)\
     MACRO(the_main_loop)\
     MACRO(the_prompt_session_listener)\
@@ -78,6 +79,7 @@ namespace mo = mir::options;
     MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
     MACRO(the_prompt_session_manager)\
+    MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
     MACRO(the_surface_configurator)\
     MACRO(the_surface_coordinator)\
@@ -189,22 +191,18 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     // TODO this is an ugly frig to avoid exposing the render factory to end users and tests running headless
     auto the_renderer_factory() -> std::shared_ptr<compositor::RendererFactory> override
     {
-        auto const graphics_lib = the_options()->get<std::string>(options::platform_graphics_lib);
+        auto const& options = the_options();
+        if (options->is_set(options::platform_graphics_lib))
+        {
+            auto const graphics_lib = options->get<std::string>(options::platform_graphics_lib);
 
-        if (graphics_lib != "libmirplatformstub.so")
-            return mir::DefaultServerConfiguration::the_renderer_factory();
-        else
-            return std::make_shared<StubRendererFactory>();
+            if (graphics_lib.find("graphics-dummy.so") != std::string::npos)
+                return std::make_shared<StubRendererFactory>();
+        }
+        return mir::DefaultServerConfiguration::the_renderer_factory();
     }
 
     using mir::DefaultServerConfiguration::the_options;
-
-    // TODO the MIR_SERVER_CONFIG_OVERRIDE macro expects a CachePtr named
-    // TODO "placement_strategy" not "shell_placement_strategy".
-    // Unfortunately, "shell_placement_strategy" is currently part of our
-    // published API and used by qtmir: we cannot just rename it to remove
-    // this ugliness. (Yet.)
-    decltype(shell_placement_strategy)& placement_strategy = shell_placement_strategy;
 
     FOREACH_OVERRIDE(MIR_SERVER_CONFIG_OVERRIDE)
 

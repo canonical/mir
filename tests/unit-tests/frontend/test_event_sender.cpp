@@ -16,6 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/frontend/message_sender.h"
 #include "src/server/frontend/event_sender.h"
 #include "mir_test_doubles/stub_display_configuration.h"

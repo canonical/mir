@@ -19,17 +19,45 @@
 #ifndef MIR_SCENE_SESSION_COORDINATOR_H_
 #define MIR_SCENE_SESSION_COORDINATOR_H_
 
+#include "mir/frontend/surface_id.h"
 
-#include "mir/frontend/shell.h"
-#include "mir/shell/focus_controller.h"
+#include "mir_toolkit/common.h"
+
+#include <memory>
 
 namespace mir
 {
+namespace frontend
+{
+class EventSink;
+}
+
 namespace scene
 {
+class Session;
+class Surface;
+class SurfaceCreationParameters;
 
-class SessionCoordinator : public frontend::Shell, public shell::FocusController
+class SessionCoordinator
 {
+public:
+    virtual void set_focus_to(std::shared_ptr<Session> const& focus) = 0;
+    virtual void unset_focus() = 0;
+
+    virtual std::shared_ptr<Session> open_session(
+        pid_t client_pid,
+        std::string const& name,
+        std::shared_ptr<frontend::EventSink> const& sink) = 0;
+
+    virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
+
+    virtual std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const&) const = 0;
+
+protected:
+    SessionCoordinator() = default;
+    virtual ~SessionCoordinator() = default;
+    SessionCoordinator(SessionCoordinator const&) = delete;
+    SessionCoordinator& operator=(SessionCoordinator const&) = delete;
 };
 
 }

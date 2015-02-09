@@ -23,18 +23,20 @@
 #include "default_display_configuration_policy.h"
 #include "nested/mir_client_host_connection.h"
 #include "nested/nested_display.h"
-#include "mir/graphics/nested_context.h"
 #include "offscreen/display.h"
+#include "software_cursor.h"
 
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor.h"
+#include "mir/graphics/platform_probe.h"
 #include "program_factory.h"
 
 #include "mir/shared_library.h"
-#include "mir/shared_library_loader.h"
+#include "mir/shared_library_prober.h"
 #include "mir/abnormal_exit.h"
 #include "mir/emergency_cleanup.h"
+#include "mir/log.h"
 
 #include "mir_toolkit/common.h"
 
@@ -43,7 +45,14 @@
 #include <map>
 
 namespace mg = mir::graphics;
+namespace ml = mir::logging;
 namespace mgn = mir::graphics::nested;
+
+namespace
+{
+// TODO: Temporary, until we actually manage module lifetimes
+static std::shared_ptr<mir::SharedLibrary> platform_library;
+}
 
 std::shared_ptr<mg::DisplayConfigurationPolicy>
 mir::DefaultServerConfiguration::the_display_configuration_policy()
@@ -63,60 +72,53 @@ mir::DefaultServerConfiguration::wrap_display_configuration_policy(
     return wrapped;
 }
 
-
-namespace
-{
-//TODO: what is the point of NestedContext if its just the same as mgn:HostConnection?
-class MirConnectionNestedContext : public mg::NestedContext
-{
-public:
-    MirConnectionNestedContext(std::shared_ptr<mgn::HostConnection> const& connection)
-        : connection{connection}
-    {
-    }
-
-    std::vector<int> platform_fd_items()
-    {
-        return connection->platform_fd_items();
-    }
-
-    void drm_auth_magic(int magic)
-    {
-        connection->drm_auth_magic(magic);
-    }
-
-    void drm_set_gbm_device(struct gbm_device* dev)
-    {
-        connection->drm_set_gbm_device(dev);
-    }
-
-private:
-    std::shared_ptr<mgn::HostConnection> const connection;
-};
-}
-
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     return graphics_platform(
         [this]()->std::shared_ptr<mg::Platform>
         {
-            auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
-
-            auto create_host_platform = graphics_lib->load_function<mg::CreateHostPlatform>("create_host_platform");
-            auto create_guest_platform = graphics_lib->load_function<mg::CreateGuestPlatform>("create_guest_platform");
-            if (the_options()->is_set(options::host_socket_opt))
+            // fallback to standalone if host socket is unset
+            if (the_options()->is_set(options::platform_graphics_lib))
             {
-                return create_guest_platform(
-                    the_display_report(),
-                    std::make_shared<MirConnectionNestedContext>(the_host_connection()));
+                platform_library = std::make_shared<mir::SharedLibrary>(the_options()->get<std::string>(options::platform_graphics_lib));
             }
             else
             {
-                return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());
+                auto const& path = the_options()->get<std::string>(options::platform_path);
+                auto platforms = mir::libraries_for_path(path, *the_shared_library_prober_report());
+                if (platforms.empty())
+                {
+                    auto msg = "Failed to find any platform plugins in: " + path;
+                    throw std::runtime_error(msg.c_str());
+                }
+                platform_library = mir::graphics::module_for_device(platforms);
             }
+            auto create_host_platform = platform_library->load_function<mg::CreateHostPlatform>(
+                "create_host_platform",
+                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            auto create_guest_platform = platform_library->load_function<mg::CreateGuestPlatform>(
+                "create_guest_platform",
+                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            auto describe_module = platform_library->load_function<mg::DescribeModule>(
+                "describe_graphics_module",
+                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            auto description = describe_module();
+            ml::log(ml::Severity::informational,
+                    std::string{"Selected driver: "} + description->name + " (version " +
+                    std::to_string(description->major_version) + "." +
+                    std::to_string(description->minor_version) + "." +
+                    std::to_string(description->micro_version) + ")",
+                    "Platform Loader");
+
+            if (!the_options()->is_set(options::host_socket_opt))
+                return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());
+            else
+                return create_guest_platform(
+                    the_display_report(),
+                    the_host_connection());
+
         });
 }
-
 
 std::shared_ptr<mg::GraphicBufferAllocator>
 mir::DefaultServerConfiguration::the_buffer_allocator()
@@ -163,23 +165,28 @@ mir::DefaultServerConfiguration::the_display()
 std::shared_ptr<mg::Cursor>
 mir::DefaultServerConfiguration::the_cursor()
 {
-    struct NullCursor : public mg::Cursor
-    {
-        void show(mg::CursorImage const&) {}
-        void hide() {}
-        void move_to(geometry::Point) {}
-    };
     return cursor(
         [this]() -> std::shared_ptr<mg::Cursor>
         {
-            // We try to create a hardware cursor, as we have no software 
-            // cursor currently, if this fails we need to return
-            // a valid cursor object.
+            // We try to create a hardware cursor, if this fails we use a software cursor
             auto hardware_cursor = the_display()->create_hardware_cursor(the_default_cursor_image());
             if (hardware_cursor)
+            {
+                mir::log_info("Using hardware cursor");
                 return hardware_cursor;
+            }
             else
-                return std::make_shared<NullCursor>();
+            {
+                mir::log_info("Using software cursor");
+
+                auto const cursor = std::make_shared<mg::SoftwareCursor>(
+                    the_buffer_allocator(),
+                    the_input_scene());
+
+                cursor->show(*the_default_cursor_image());
+
+                return cursor;
+            }
         });
 }
 

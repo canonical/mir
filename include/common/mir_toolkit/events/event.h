@@ -59,7 +59,15 @@ typedef union MirEvent MirEvent;
 /**@}*/
 #endif
 
-#include "mir_toolkit/events/event_deprecated.h"
+#ifdef MIR_REQUIRE_DEPRECATED_EVENT_OPT_IN
+    #ifdef MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+        #include "mir_toolkit/events/event_deprecated.h"
+    #endif // MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+#else 
+    #include "mir_toolkit/events/event_deprecated.h"
+#endif // MIR_REQUIRE_DEPRECATED_EVENT_OPT_IN
+
+
 #include "mir_toolkit/events/input/input_event.h"
 #include "mir_toolkit/events/resize_event.h"
 #include "mir_toolkit/events/surface_event.h"
@@ -136,8 +144,8 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev);
 
 /*
  * Retrieve the MirCloseSurfaceEvent associated with a MirEvent of
- * type mir_event_type_close_surface. See <mir_toolkit/events/close_surface_event.h>
- * for accessors.
+ * type mir_event_type_close_surface. The event is a request to close
+ * the surface it is delivered to and has no accessors.
  *
  * \param [in] event The event
  * \return           The associated MirCloseSurfaceEvent

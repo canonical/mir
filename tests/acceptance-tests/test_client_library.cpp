@@ -16,6 +16,8 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
@@ -23,7 +25,7 @@
 #include "mir_test_framework/stub_platform_helpers.h"
 #include "mir_test/validity_matchers.h"
 
-#include "src/client/client_buffer.h"
+#include "src/include/client/mir/client_buffer.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -133,16 +135,10 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         {
             mir_wait_for_one(mir_surface_set_state(surf,
                                             mir_surface_state_maximized));
-            mir_wait_for_one(mir_surface_set_type(surf,
-                                            mir_surface_type_normal));
             mir_wait_for_one(mir_surface_set_state(surf,
                                             mir_surface_state_restored));
-            mir_wait_for_one(mir_surface_set_type(surf,
-                                            mir_surface_type_utility));
             mir_wait_for_one(mir_surface_set_state(surf,
                                             mir_surface_state_fullscreen));
-            mir_wait_for_one(mir_surface_set_type(surf,
-                                            mir_surface_type_dialog));
             mir_wait_for_one(mir_surface_set_state(surf,
                                             mir_surface_state_minimized));
         }
@@ -205,6 +201,9 @@ TEST_F(ClientLibrary, creates_surface)
     mir_connection_release(connection);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 TEST_F(ClientLibrary, can_set_surface_types)
 {
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
@@ -249,6 +248,7 @@ TEST_F(ClientLibrary, can_set_surface_types)
     mir_wait_for(mir_surface_release(surface, release_surface_callback, this));
     mir_connection_release(connection);
 }
+#pragma GCC diagnostic pop
 
 TEST_F(ClientLibrary, can_set_surface_state)
 {
@@ -535,8 +535,7 @@ TEST_F(ClientLibrary, highly_threaded_client)
     b.join();
     c.join();
 
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_dialog));
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_state_minimized));
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_minimized));
 
     mir_surface_release_sync(surface);
 

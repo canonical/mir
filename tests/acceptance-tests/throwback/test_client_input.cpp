@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,7 +18,9 @@
  *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/shell/surface_coordinator_wrapper.h"
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+
+#include "mir/shell/shell_wrapper.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/session.h"
@@ -30,7 +32,7 @@
 #include "mir_test_framework/declarative_placement_strategy.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/fake_event_hub.h"
-#include "mir_test/client_event_matchers.h"
+#include "mir_test/event_matchers.h"
 #include "mir_test/spin_wait.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -41,6 +43,7 @@
 #include <gmock/gmock.h>
 #include <cstring>
 
+namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 namespace mis = mir::input::synthesis;
@@ -141,26 +144,28 @@ struct InputClient
 
 using ClientInputRegions = std::map<std::string, std::vector<geom::Rectangle>>;
 
-struct RegionApplyingSurfaceCoordinator : msh::SurfaceCoordinatorWrapper
+struct RegionApplyingShell : msh::ShellWrapper
 {
-    RegionApplyingSurfaceCoordinator(
-        std::shared_ptr<ms::SurfaceCoordinator> wrapped_coordinator,
+    RegionApplyingShell(
+        std::shared_ptr<msh::Shell> wrapped_coordinator,
         ClientInputRegions const& client_input_regions)
-        : msh::SurfaceCoordinatorWrapper(wrapped_coordinator),
+        : msh::ShellWrapper(wrapped_coordinator),
           client_input_regions(client_input_regions)
     {
     }
 
-    std::shared_ptr<ms::Surface> add_surface(
-        ms::SurfaceCreationParameters const& params,
-        ms::Session* session) override
+    mf::SurfaceId create_surface(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& params) override
     {
-        auto const surface = wrapped->add_surface(params, session);
+        auto const id = wrapped->create_surface(session, params);
+
+        auto const surface = session->surface(id);
 
         if (client_input_regions.find(params.name) != client_input_regions.end())
             surface->set_input_region(client_input_regions.at(params.name));
 
-        return surface;
+        return id;
     }
 
     ClientInputRegions const& client_input_regions;
@@ -181,10 +186,10 @@ struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
             client_geometries, client_depths);
     }
 
-    std::shared_ptr<ms::SurfaceCoordinator>
-    wrap_surface_coordinator(std::shared_ptr<ms::SurfaceCoordinator> const& wrapped) override
+    std::shared_ptr<msh::Shell>
+    wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) override
     {
-        return std::make_shared<RegionApplyingSurfaceCoordinator>(
+        return std::make_shared<RegionApplyingShell>(
             wrapped,
             client_input_regions);
     }
@@ -225,10 +230,11 @@ TEST_F(TestClientInput, clients_receive_key_input)
     using namespace testing;
 
     InputClient client{new_connection(), test_client_name_1};
-
-    EXPECT_CALL(client.handler, handle_input(mt::KeyDownEvent()))
-        .WillOnce(Return())
-        .WillOnce(Return())
+    
+    InSequence seq;
+    EXPECT_CALL(client.handler, handle_input(mt::KeyDownEvent())).Times(1);
+    EXPECT_CALL(client.handler, handle_input(mt::KeyRepeatEvent())).Times(1);
+    EXPECT_CALL(client.handler, handle_input(mt::KeyRepeatEvent()))
         .WillOnce(mt::WakeUp(&client.all_events_received));
 
     int const num_events_produced = 3;
@@ -264,7 +270,7 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
         mis::a_key_down_event().of_scancode(KEY_4));
 }
 
-TEST_F(TestClientInput, clients_receive_motion_inside_window)
+TEST_F(TestClientInput, clients_receive_pointer_inside_window)
 {
     using namespace testing;
 
@@ -273,10 +279,10 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
     InSequence seq;
 
     // We should see the cursor enter
-    EXPECT_CALL(client.handler, handle_input(mt::HoverEnterEvent()));
+    EXPECT_CALL(client.handler, handle_input(mt::PointerEnterEvent()));
     EXPECT_CALL(client.handler,
                 handle_input(
-                    mt::MotionEventWithPosition(
+                    mt::PointerEventWithPosition(
                         InputClient::surface_width - 1,
                         InputClient::surface_height - 1)))
         .WillOnce(mt::WakeUp(&client.all_events_received));
@@ -285,10 +291,10 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
     client.start();
 
     fake_event_hub()->synthesize_event(
-        mis::a_motion_event().with_movement(
+        mis::a_pointer_event().with_movement(
             InputClient::surface_width - 1,
             InputClient::surface_height - 1));
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(2,2));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(2,2));
 }
 
 TEST_F(TestClientInput, clients_receive_button_events_inside_window)
@@ -309,7 +315,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
             .with_action(mis::EventAction::Down));
 }
 
-TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
+TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
 {
     using namespace testing;
 
@@ -328,20 +334,20 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
 
     {
         InSequence seq;
-        EXPECT_CALL(client1.handler, handle_input(mt::HoverEnterEvent()));
+        EXPECT_CALL(client1.handler, handle_input(mt::PointerEnterEvent()));
         EXPECT_CALL(client1.handler,
                     handle_input(
-                        mt::MotionEventWithPosition(client_width - 1, client_height - 1)));
-        EXPECT_CALL(client1.handler, handle_input(mt::HoverExitEvent()))
+                        mt::PointerEventWithPosition(client_width - 1, client_height - 1)));
+        EXPECT_CALL(client1.handler, handle_input(mt::PointerLeaveEvent()))
             .WillOnce(mt::WakeUp(&client1.all_events_received));
     }
 
     {
         InSequence seq;
-        EXPECT_CALL(client2.handler, handle_input(mt::HoverEnterEvent()));
+        EXPECT_CALL(client2.handler, handle_input(mt::PointerEnterEvent()));
         EXPECT_CALL(client2.handler,
                     handle_input(
-                        mt::MotionEventWithPosition(client_width - 1, client_height - 1)))
+                        mt::PointerEventWithPosition(client_width - 1, client_height - 1)))
             .WillOnce(mt::WakeUp(&client2.all_events_received));
     }
 
@@ -350,13 +356,13 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
 
     // In the bounds of the first surface
     fake_event_hub()->synthesize_event(
-        mis::a_motion_event().with_movement(screen_width / 2 - 1, screen_height / 2 - 1));
+        mis::a_pointer_event().with_movement(screen_width / 2 - 1, screen_height / 2 - 1));
     // In the bounds of the second surface
     fake_event_hub()->synthesize_event(
-        mis::a_motion_event().with_movement(screen_width / 2, screen_height / 2));
+        mis::a_pointer_event().with_movement(screen_width / 2, screen_height / 2));
 }
 
-TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
+TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
 {
     using namespace testing;
 
@@ -369,9 +375,9 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
 
     InputClient client{new_connection(), test_client_name_1};
 
-    EXPECT_CALL(client.handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
-    EXPECT_CALL(client.handler, handle_input(mt::HoverExitEvent())).Times(AnyNumber());
-    EXPECT_CALL(client.handler, handle_input(mt::MovementEvent())).Times(AnyNumber());
+    EXPECT_CALL(client.handler, handle_input(mt::PointerEnterEvent())).Times(AnyNumber());
+    EXPECT_CALL(client.handler, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
+    EXPECT_CALL(client.handler, handle_input(mt::PointerMovementEvent())).Times(AnyNumber());
 
     {
         // We should see two of the three button pairs.
@@ -387,7 +393,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
 
     // First we will move the cursor in to the input region on the left side of
     // the window. We should see a click here.
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1, 1));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 1));
     fake_event_hub()->synthesize_event(
         mis::a_button_down_event()
             .of_button(BTN_LEFT)
@@ -395,7 +401,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     fake_event_hub()->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
     // Now in to the dead zone in the center of the window. We should not see
     // a click here.
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(49, 49));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(49, 49));
     fake_event_hub()->synthesize_event(
         mis::a_button_down_event()
             .of_button(BTN_LEFT)
@@ -403,7 +409,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     fake_event_hub()->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
     // Now in to the right edge of the window, in the right input region.
     // Again we should see a click.
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(49, 49));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(49, 49));
     fake_event_hub()->synthesize_event(
         mis::a_button_down_event()
             .of_button(BTN_LEFT)
@@ -427,9 +433,9 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
     InputClient client1{new_connection(), test_client_name_1};
     InputClient client2{new_connection(), test_client_name_2};
 
-    EXPECT_CALL(client1.handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
-    EXPECT_CALL(client1.handler, handle_input(mt::HoverExitEvent())).Times(AnyNumber());
-    EXPECT_CALL(client1.handler, handle_input(mt::MovementEvent())).Times(AnyNumber());
+    EXPECT_CALL(client1.handler, handle_input(mt::PointerEnterEvent())).Times(AnyNumber());
+    EXPECT_CALL(client1.handler, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
+    EXPECT_CALL(client1.handler, handle_input(mt::PointerMovementEvent())).Times(AnyNumber());
     {
         // We should only see one button event sequence.
         InSequence seq;
@@ -438,9 +444,9 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
             .WillOnce(mt::WakeUp(&client1.all_events_received));
     }
 
-    EXPECT_CALL(client2.handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
-    EXPECT_CALL(client2.handler, handle_input(mt::HoverExitEvent())).Times(AnyNumber());
-    EXPECT_CALL(client2.handler, handle_input(mt::MovementEvent())).Times(AnyNumber());
+    EXPECT_CALL(client2.handler, handle_input(mt::PointerEnterEvent())).Times(AnyNumber());
+    EXPECT_CALL(client2.handler, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
+    EXPECT_CALL(client2.handler, handle_input(mt::PointerMovementEvent())).Times(AnyNumber());
     {
         // Likewise we should only see one button sequence.
         InSequence seq;
@@ -453,12 +459,12 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
     client2.start();
 
     // First we will move the cursor in to the region where client 2 obscures client 1
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1, 1));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 1));
     fake_event_hub()->synthesize_event(
         mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_event_hub()->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
     // Now we move to the unobscured region of client 1
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(500, 0));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(500, 0));
     fake_event_hub()->synthesize_event(
         mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_event_hub()->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
@@ -476,14 +482,14 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     InputClient client1{new_connection(), test_client_name_1};
     InputClient client2{new_connection(), test_client_name_2};
 
-    EXPECT_CALL(client1.handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
-    EXPECT_CALL(client1.handler, handle_input(mt::HoverExitEvent())).Times(AnyNumber());
-    EXPECT_CALL(client1.handler, handle_input(mt::MotionEventWithPosition(2, 2)))
+    EXPECT_CALL(client1.handler, handle_input(mt::PointerEnterEvent())).Times(AnyNumber());
+    EXPECT_CALL(client1.handler, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
+    EXPECT_CALL(client1.handler, handle_input(mt::PointerEventWithPosition(2, 2)))
         .WillOnce(mt::WakeUp(&client1.all_events_received));
 
-    EXPECT_CALL(client2.handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
-    EXPECT_CALL(client2.handler, handle_input(mt::HoverExitEvent())).Times(AnyNumber());
-    EXPECT_CALL(client2.handler, handle_input(mt::MotionEventWithPosition(1, 1)))
+    EXPECT_CALL(client2.handler, handle_input(mt::PointerEnterEvent())).Times(AnyNumber());
+    EXPECT_CALL(client2.handler, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
+    EXPECT_CALL(client2.handler, handle_input(mt::PointerEventWithPosition(1, 1)))
         .WillOnce(DoAll(mt::WakeUp(&second_client_done),
                         mt::WakeUp(&client2.all_events_received)));
 
@@ -492,7 +498,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 
     // We send one event and then hide the surface on top before sending the next.
     // So we expect each of the two surfaces to receive one even
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1,1));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1,1));
     // We use a fence to ensure we do not hide the client
     // before event dispatch occurs
     second_client_done.wait_for_at_most_seconds(60);
@@ -508,10 +514,10 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     // See bug: https://bugs.launchpad.net/mir/+bug/1408168
     client1.wait_for_surface_to_become_focused_and_exposed();
 
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1,1));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1,1));
 }
 
-TEST_F(TestClientInput, clients_receive_motion_within_coordinate_system_of_window)
+TEST_F(TestClientInput, clients_receive_pointer_within_coordinate_system_of_window)
 {
     using namespace testing;
 
@@ -526,8 +532,8 @@ TEST_F(TestClientInput, clients_receive_motion_within_coordinate_system_of_windo
     InputClient client1{new_connection(), test_client_name_1};
 
     InSequence seq;
-    EXPECT_CALL(client1.handler, handle_input(mt::HoverEnterEvent()));
-    EXPECT_CALL(client1.handler, handle_input(mt::MotionEventWithPosition(80, 170)))
+    EXPECT_CALL(client1.handler, handle_input(mt::PointerEnterEvent()));
+    EXPECT_CALL(client1.handler, handle_input(mt::PointerEventWithPosition(80, 170)))
         .Times(AnyNumber())
         .WillOnce(mt::WakeUp(&client1.all_events_received));
 
@@ -541,7 +547,7 @@ TEST_F(TestClientInput, clients_receive_motion_within_coordinate_system_of_windo
         });
 
     fake_event_hub()->synthesize_event(
-        mis::a_motion_event().with_movement(screen_width / 2 + 40, screen_height / 2 + 90));
+        mis::a_pointer_event().with_movement(screen_width / 2 + 40, screen_height / 2 + 90));
 }
 
 // TODO: Consider tests for more input devices with custom mapping (i.e. joysticks...)
@@ -580,10 +586,10 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
     EXPECT_CALL(client1.handler, handle_input(
         mt::TouchEvent(expected_motion_x_1, expected_motion_y_1)));
     EXPECT_CALL(client1.handler, handle_input(
-        mt::MotionEventInDirection(expected_motion_x_1,
-                                   expected_motion_y_1,
-                                   expected_motion_x_2,
-                                   expected_motion_y_2)))
+        mt::TouchEventInDirection(expected_motion_x_1,
+                                  expected_motion_y_1,
+                                  expected_motion_x_2,
+                                  expected_motion_y_2)))
         .WillOnce(mt::WakeUp(&client1.all_events_received));
 
     client1.start();

@@ -1,3 +1,4 @@
+
 MIR_COMMON_3 {
  global: mir_*;
   extern "C++" {
@@ -31,6 +32,7 @@ MIR_COMMON_3 {
     mir::geometry::Rectangles::end*;
     mir::geometry::Rectangles::operator*;
     mir::geometry::Rectangles::Rectangles*;
+    mir::geometry::Rectangles::remove*;
     mir::geometry::Rectangles::size*;
     mir::geometry::Rectangle::top_right*;
     mir::geometry::Size::operator*;
@@ -100,8 +102,6 @@ MIR_COMMON_3 {
     typeinfo?for?mir::input::receiver::InputReceiverThread;
     typeinfo?for?mir::IntOwnedFd;
     typeinfo?for?MirKeyEvent;
-    typeinfo?for?MirMesaEGLNativeDisplay;
-    typeinfo?for?MirMesaEGLNativeSurface;
     typeinfo?for?MirMotionEvent;
     typeinfo?for?MirMotionPointer;
     typeinfo?for?MirOrientationEvent;
@@ -133,8 +133,6 @@ MIR_COMMON_3 {
     vtable?for?mir::input::receiver::InputReceiverThread;
     vtable?for?mir::IntOwnedFd;
     vtable?for?MirKeyEvent;
-    vtable?for?MirMesaEGLNativeDisplay;
-    vtable?for?MirMesaEGLNativeSurface;
     vtable?for?MirMotionEvent;
     vtable?for?MirMotionPointer;
     vtable?for?MirOrientationEvent;
@@ -215,3 +213,14 @@ MIR_COMMON_3.1 {
       mir::libraries_for_path*;
     };
 } MIR_COMMON_3;
+
+MIR_COMMON_3.2 {
+  global:
+    extern "C++" {
+      mir::dispatch::SimpleDispatchThread::SimpleDispatchThread*;
+      mir::dispatch::SimpleDispatchThread::?SimpleDispatchThread*;
+      typeinfo?for?mir::dispatch::SimpleDispatchThread;
+      vtable?for?mir::dispatch::SimpleDispatchThread;
+      mir::events::*
+    };
+} MIR_COMMON_3.1;

@@ -15,6 +15,9 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
+
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+
 #include "event_filter_dispatcher_policy.h"
 #include "mir/input/android/android_input_lexicon.h"
 
@@ -27,14 +30,14 @@ mia::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi
 {
 }
 
-void mia::EventFilterDispatcherPolicy::notifyConfigurationChanged(nsecs_t /* when */)
+void mia::EventFilterDispatcherPolicy::notifyConfigurationChanged(std::chrono::nanoseconds /* when */)
 {
 }
 
-nsecs_t mia::EventFilterDispatcherPolicy::notifyANR(droidinput::sp<droidinput::InputApplicationHandle> const& /* inputApplicationHandle */,
+std::chrono::nanoseconds mia::EventFilterDispatcherPolicy::notifyANR(droidinput::sp<droidinput::InputApplicationHandle> const& /* inputApplicationHandle */,
                                                     droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */)
 {
-    return 0;
+    return std::chrono::nanoseconds(0);
 }
 
 void mia::EventFilterDispatcherPolicy::notifyInputChannelBroken(droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */)
@@ -65,15 +68,15 @@ void mia::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const droidinp
     policy_flags |= droidinput::POLICY_FLAG_PASS_TO_USER;
 }
 
-void mia::EventFilterDispatcherPolicy::interceptMotionBeforeQueueing(nsecs_t /* when */, uint32_t& policy_flags)
+void mia::EventFilterDispatcherPolicy::interceptMotionBeforeQueueing(std::chrono::nanoseconds /* when */, uint32_t& policy_flags)
 {
     policy_flags |= droidinput::POLICY_FLAG_PASS_TO_USER;
 }
 
-nsecs_t mia::EventFilterDispatcherPolicy::interceptKeyBeforeDispatching(
+std::chrono::nanoseconds mia::EventFilterDispatcherPolicy::interceptKeyBeforeDispatching(
     droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */, droidinput::KeyEvent const* /* keyEvent */, uint32_t /* policyFlags */)
 {
-    return 0;
+    return std::chrono::nanoseconds(0);
 }
 
 bool mia::EventFilterDispatcherPolicy::dispatchUnhandledKey(droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */,
@@ -83,12 +86,12 @@ bool mia::EventFilterDispatcherPolicy::dispatchUnhandledKey(droidinput::sp<droid
     return false;
 }
 
-void mia::EventFilterDispatcherPolicy::notifySwitch(nsecs_t /* when */, int32_t /* switchCode */,
+void mia::EventFilterDispatcherPolicy::notifySwitch(std::chrono::nanoseconds /* when */, int32_t /* switchCode */,
                                                     int32_t /* switchValue */, uint32_t /* policyFlags */)
 {
 }
 
-void mia::EventFilterDispatcherPolicy::pokeUserActivity(nsecs_t /* eventTime */, int32_t /* eventType */)
+void mia::EventFilterDispatcherPolicy::pokeUserActivity(std::chrono::nanoseconds /* eventTime */, int32_t /* eventType */)
 {
 }
 

@@ -16,13 +16,14 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/legacy_surface_change_notification.h"
 
 #include "mir/frontend/event_sink.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/displacement.h"
-#include "mir/scene/surface_configurator.h"
 #include "mir/scene/null_surface_observer.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -78,13 +79,6 @@ public:
     void handle_display_config_change(mir::graphics::DisplayConfiguration const&) override {}
 };
 
-struct StubSurfaceConfigurator : ms::SurfaceConfigurator
-{
-    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int value) override { return value; }
-
-    void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override { }
-};
-
 void post_a_frame(ms::BasicSurface& surface)
 {
     /*
@@ -106,7 +100,6 @@ struct BasicSurfaceTest : public testing::Test
     std::function<void()> mock_change_cb{std::bind(&MockCallback::call, &mock_callback)};
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream =
         std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
-    std::shared_ptr<StubSurfaceConfigurator> const stub_configurator = std::make_shared<StubSurfaceConfigurator>();
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     void const* compositor_id{nullptr};
     std::shared_ptr<ms::LegacySurfaceChangeNotification> observer =
@@ -121,7 +114,6 @@ struct BasicSurfaceTest : public testing::Test
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
-        stub_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report};
 
@@ -151,7 +143,7 @@ TEST_F(BasicSurfaceTest, id_always_unique)
         surfaces[i].reset(new ms::BasicSurface(
                 name, rect, false, mock_buffer_stream,
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
-                stub_configurator, std::shared_ptr<mg::CursorImage>(), report)
+                std::shared_ptr<mg::CursorImage>(), report)
             );
 
         for (int j = 0; j < i; ++j)
@@ -171,7 +163,7 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
         surfaces[i].reset(new ms::BasicSurface(
                 name, rect, false, mock_buffer_stream,
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
-                stub_configurator, std::shared_ptr<mg::CursorImage>(), report)
+                std::shared_ptr<mg::CursorImage>(), report)
             );
 
         ASSERT_TRUE(surfaces[i]->compositor_snapshot(compositor_id)->id());
@@ -288,7 +280,6 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
-        stub_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report};
 
@@ -309,6 +300,9 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
 
     surface.set_hidden(false);
     EXPECT_TRUE(surface.visible());
+
+    surface.configure(mir_surface_attrib_state, mir_surface_state_hidden);
+    EXPECT_FALSE(surface.visible());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
@@ -353,7 +347,6 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
-        stub_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report};
 
@@ -392,7 +385,6 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
-        stub_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report};
 
@@ -521,6 +513,23 @@ TEST_F(BasicSurfaceTest, reception_mode_can_be_changed)
     surface.set_reception_mode(mi::InputReceptionMode::receives_all_input);
 
     EXPECT_EQ(mi::InputReceptionMode::receives_all_input, surface.reception_mode());
+}
+
+TEST_F(BasicSurfaceTest, stores_parent)
+{
+    auto parent = mt::fake_shared(surface);
+    ms::BasicSurface child{
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        parent,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
+        std::shared_ptr<mg::CursorImage>(),
+        report};
+
+    EXPECT_EQ(child.parent(), parent);
 }
 
 namespace
@@ -667,38 +676,6 @@ INSTANTIATE_TEST_CASE_P(SurfaceDPIAttributeTest, BasicSurfaceAttributeTest,
 INSTANTIATE_TEST_CASE_P(SurfaceFocusAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_focus_test_parameters));
 
-TEST_F(BasicSurfaceTest, configure_returns_value_set_by_configurator)
-{
-    using namespace testing;
-    
-    struct FocusSwappingConfigurator : public StubSurfaceConfigurator
-    {
-        int select_attribute_value(ms::Surface const&, MirSurfaceAttrib attrib, int value) override 
-        {
-            if (attrib != mir_surface_attrib_focus)
-                return value;
-            else if (value == mir_surface_focused)
-                return mir_surface_unfocused;
-            else
-                return mir_surface_focused;
-        }
-    };
-
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        mt::fake_shared(mock_sender),
-        std::make_shared<FocusSwappingConfigurator>(),
-        nullptr,
-        report};
-    
-    EXPECT_EQ(mir_surface_unfocused, surface.configure(mir_surface_attrib_focus, mir_surface_focused));
-    EXPECT_EQ(mir_surface_focused, surface.configure(mir_surface_attrib_focus, mir_surface_unfocused));
-}
-
 TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
 {
     using namespace ::testing;
@@ -710,7 +687,6 @@ TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         mt::fake_shared(mock_sender),
-        stub_configurator,
         nullptr,
         report};
 

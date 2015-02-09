@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
         size_t i = 0;
         while (gInputEvents[i].nsecs > 0)
         {
-            fakeEventHub->synthesize_event(gInputEvents[i].nsecs, DEVICE_ID,
+            fakeEventHub->synthesize_event(std::chrono::nanoseconds(gInputEvents[i].nsecs), DEVICE_ID,
                                            gInputEvents[i].type,
                                            gInputEvents[i].code,
                                            gInputEvents[i].value);

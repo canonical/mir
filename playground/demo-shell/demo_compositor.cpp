@@ -40,14 +40,12 @@ std::unordered_set<me::DemoCompositor*> me::DemoCompositor::instances;
 
 me::DemoCompositor::DemoCompositor(
     mg::DisplayBuffer& display_buffer,
-    mg::GLProgramFactory const& factory,
     std::shared_ptr<mc::CompositorReport> const& report) :
     display_buffer(display_buffer),
     report(report),
     viewport(display_buffer.view_area()),
     zoom_mag{1.0f},
     renderer(
-        factory,
         display_buffer.view_area(),
         destination_alpha(display_buffer),
         30.0f, //titlebar_height
@@ -87,7 +85,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         
         if (!it->is_a_surface())
             decoration_skip_list.insert(renderable->id());
-        if (renderable->visible() && any_part_drawn)
+        if (any_part_drawn)
         {
             renderable_list.push_back(renderable);
 
@@ -125,7 +123,6 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
-        report->finished_frame(true, this);
     }
     else
     {
@@ -137,7 +134,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         renderer.render(renderable_list);
 
         display_buffer.gl_swap_buffers();
-        report->finished_frame(false, this);
+        report->rendered_frame(this);
 
         // Release buffers back to the clients now that the swap has returned.
         // It's important to do this before starting on the potentially slow
@@ -147,6 +144,8 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
 
         display_buffer.flip();
     }
+
+    report->finished_frame(this);
 }
 
 void me::DemoCompositor::on_cursor_movement(
@@ -161,6 +160,11 @@ void me::DemoCompositor::zoom(float mag)
 {
     zoom_mag = mag;
     update_viewport();
+}
+
+void me::DemoCompositor::set_colour_effect(me::ColourEffect e)
+{
+    renderer.set_colour_effect(e);
 }
 
 void me::DemoCompositor::update_viewport()

@@ -19,8 +19,11 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
-#include "src/platforms/android/display_buffer_builder.h"
-#include "src/platforms/android/configurable_display_buffer.h"
+#include "src/platforms/android/server/framebuffer_bundle.h"
+#include "src/platforms/android/server/display_component_factory.h"
+#include "src/platforms/android/server/configurable_display_buffer.h"
+#include "src/platforms/android/server/hwc_configuration.h"
+#include "mock_display_device.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -30,40 +33,36 @@ namespace test
 namespace doubles
 {
 
-struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDisplayBuffer
+struct StubFramebufferBundle : public graphics::android::FramebufferBundle
 {
-    StubConfigurableDisplayBuffer(geometry::Rectangle rect)
-     : rect(rect)
-    {
-    }
-
-    geometry::Rectangle view_area() const { return rect; }
-    void make_current() {}
-    void release_current() {}
-    void gl_swap_buffers() {}
-    void flip() {}
-    bool post_renderables_if_optimizable(graphics::RenderableList const&) { return false; }
-    MirOrientation orientation() const override { return mir_orientation_normal; }
-    bool uses_alpha() const override { return false; };
-    void configure(graphics::DisplayConfigurationOutput const&) {} 
-    graphics::DisplayConfigurationOutput configuration() const
-    {
-        return graphics::DisplayConfigurationOutput{
-                   graphics::DisplayConfigurationOutputId{1},
-                   graphics::DisplayConfigurationCardId{0},
-                   graphics::DisplayConfigurationOutputType::vga,
-                   {}, {}, 0, {}, false, false, {}, 0, mir_pixel_format_abgr_8888, 
-                   mir_power_mode_off,
-                   mir_orientation_normal};
-    }
-private:
-    geometry::Rectangle rect;
+    MirPixelFormat fb_format() override { return mir_pixel_format_abgr_8888; }
+    geometry::Size fb_size() override { return {33, 34}; }
+    double fb_refresh_rate() override { return 53.45; };
+    std::shared_ptr<graphics::Buffer> buffer_for_render() { return nullptr; }
+    std::shared_ptr<graphics::Buffer> last_rendered_buffer() { return nullptr; }
 };
 
-struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
+struct MockHwcConfiguration : public graphics::android::HwcConfiguration
+{
+    MockHwcConfiguration()
+    {
+        using namespace testing;
+        ON_CALL(*this, subscribe_to_config_changes(_)).WillByDefault(Return(nullptr));
+        ON_CALL(*this, active_attribs_for(testing::_))
+            .WillByDefault(testing::Return(graphics::android::DisplayAttribs{
+                {0,0},{0,0}, 0.0, true, mir_pixel_format_abgr_8888, 2}));
+    }
+    MOCK_METHOD2(power_mode, void(graphics::android::DisplayName, MirPowerMode));
+    MOCK_METHOD1(active_attribs_for, graphics::android::DisplayAttribs(graphics::android::DisplayName));
+    MOCK_METHOD1(subscribe_to_config_changes,
+        graphics::android::ConfigChangeSubscription(std::function<void()> const&));
+};
+
+struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
 {
     StubDisplayBuilder(geometry::Size sz)
-        : sz(sz)
+        : sz(sz),
+          mock_config{new testing::NiceMock<MockHwcConfiguration>()}
     {
     }
 
@@ -72,20 +71,36 @@ struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
     {
     }
 
-    MirPixelFormat display_format()
+    std::unique_ptr<graphics::android::LayerList> create_layer_list()
     {
-        return mir_pixel_format_abgr_8888;
+        return std::unique_ptr<graphics::android::LayerList>(
+            new graphics::android::LayerList(std::make_shared<graphics::android::IntegerSourceCrop>(), {}));
     }
 
-    std::unique_ptr<graphics::android::ConfigurableDisplayBuffer> create_display_buffer(
-        graphics::GLProgramFactory const&,
-        graphics::android::GLContext const&)
+    std::unique_ptr<graphics::android::FramebufferBundle> create_framebuffers(graphics::android::DisplayAttribs const&) override
     {
-        return std::unique_ptr<graphics::android::ConfigurableDisplayBuffer>(
-                new StubConfigurableDisplayBuffer(geometry::Rectangle{{0,0},sz}));
+        return std::unique_ptr<graphics::android::FramebufferBundle>(new StubFramebufferBundle());
+    }
+
+    std::unique_ptr<graphics::android::DisplayDevice> create_display_device() override
+    {
+        return std::unique_ptr<graphics::android::DisplayDevice>(new testing::NiceMock<MockDisplayDevice>());
+    }
+
+    std::unique_ptr<graphics::android::HwcConfiguration> create_hwc_configuration() override
+    {
+        auto config = std::unique_ptr<MockHwcConfiguration>(new testing::NiceMock<MockHwcConfiguration>());
+        std::swap(config, mock_config);
+        return std::move(config);
     }
     
+    void with_next_config(std::function<void(MockHwcConfiguration& mock_config)> const& fn)
+    {
+        fn(*mock_config); 
+    }
+
     geometry::Size sz;
+    std::unique_ptr<MockHwcConfiguration> mock_config;
 };
 }
 }

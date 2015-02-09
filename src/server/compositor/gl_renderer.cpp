@@ -15,7 +15,7 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "GLRenderer"
+#define MIR_LOG_COMPONENT "GL"
 #include "mir/compositor/gl_renderer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/destination_alpha.h"
@@ -38,10 +38,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-namespace
-{
-
-const GLchar* vertex_shader_src =
+const GLchar* const mc::GLRenderer::vshader =
 {
     "attribute vec3 position;\n"
     "attribute vec2 texcoord;\n"
@@ -58,7 +55,7 @@ const GLchar* vertex_shader_src =
     "}\n"
 };
 
-const GLchar* fragment_shader_src =
+const GLchar* const mc::GLRenderer::alpha_fshader =
 {
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
@@ -69,30 +66,47 @@ const GLchar* fragment_shader_src =
     "   gl_FragColor = alpha*frag;\n"
     "}\n"
 };
+
+const GLchar* const mc::GLRenderer::default_fshader =
+{   // This is the fastest fragment shader. Use it when you can.
+    "precision mediump float;\n"
+    "uniform sampler2D tex;\n"
+    "varying vec2 v_texcoord;\n"
+    "void main() {\n"
+    "   gl_FragColor = texture2D(tex, v_texcoord);\n"
+    "}\n"
+};
+
+mc::GLRenderer::Program::Program(GLuint program_id)
+{
+    id = program_id;
+    position_attr = glGetAttribLocation(id, "position");
+    texcoord_attr = glGetAttribLocation(id, "texcoord");
+    tex_uniform = glGetUniformLocation(id, "tex");
+    centre_uniform = glGetUniformLocation(id, "centre");
+    display_transform_uniform = glGetUniformLocation(id, "display_transform");
+    transform_uniform = glGetUniformLocation(id, "transform");
+    screen_to_gl_coords_uniform = glGetUniformLocation(id, "screen_to_gl_coords");
+    alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
 mc::GLRenderer::GLRenderer(
-    mg::GLProgramFactory const& program_factory,
     std::unique_ptr<mg::GLTextureCache> && texture_cache, 
     geom::Rectangle const& display_area,
     DestinationAlpha dest_alpha)
     : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
-      program(program_factory.create_gl_program(vertex_shader_src, fragment_shader_src)),
+      default_program(family.add_program(vshader, default_fshader)),
+      alpha_program(family.add_program(vshader, alpha_fshader)),
       texture_cache(std::move(texture_cache)),
-      position_attr_loc(0),
-      texcoord_attr_loc(0),
-      centre_uniform_loc(0),
-      transform_uniform_loc(0),
-      alpha_uniform_loc(0),
       rotation(NAN), // ensure the first set_rotation succeeds
       dest_alpha(dest_alpha)
 {
     struct {GLenum id; char const* label;} const glstrings[] =
     {
-        {GL_VENDOR,   "GL vendor"},
-        {GL_RENDERER, "GL renderer"},
-        {GL_VERSION,  "GL version"},
-        {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
+        {GL_VENDOR,   "vendor"},
+        {GL_RENDERER, "renderer"},
+        {GL_VERSION,  "version"},
+        {GL_SHADING_LANGUAGE_VERSION,  "SL version"},
     };
 
     for (auto& s : glstrings)
@@ -101,22 +115,8 @@ mc::GLRenderer::GLRenderer(
         if (!val) val = "";
         mir::log_info("%s: %s", s.label, val);
     }
-             
-    glUseProgram(*program);
-
-    /* Set up program variables */
-    GLint tex_loc = glGetUniformLocation(*program, "tex");
-    display_transform_uniform_loc = glGetUniformLocation(*program, "display_transform");
-    transform_uniform_loc = glGetUniformLocation(*program, "transform");
-    alpha_uniform_loc = glGetUniformLocation(*program, "alpha");
-    position_attr_loc = glGetAttribLocation(*program, "position");
-    texcoord_attr_loc = glGetAttribLocation(*program, "texcoord");
-    centre_uniform_loc = glGetUniformLocation(*program, "centre");
-
-    glUniform1i(tex_loc, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glUseProgram(0);
 
     set_viewport(display_area);
     set_rotation(0.0f);
@@ -141,18 +141,17 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
     if (dest_alpha == DestinationAlpha::opaque)
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 
+    ++frameno;
     for (auto const& r : renderables)
-        render(*r);
+        draw(*r, r->alpha() < 1.0f ? alpha_program : default_program);
 
     texture_cache->drop_unused();
 }
 
-void mc::GLRenderer::render(mg::Renderable const& renderable) const
+void mc::GLRenderer::draw(mg::Renderable const& renderable,
+                          GLRenderer::Program const& prog) const
 {
-
-    glUseProgram(*program);
-
-    if (renderable.shaped() || renderable.alpha() < 1.0f)
+    if (renderable.alpha() < 1.0f || renderable.shaped())
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -161,6 +160,18 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     {
         glDisable(GL_BLEND);
     }
+
+    glUseProgram(prog.id);
+    if (prog.last_used_frameno != frameno)
+    {   // Avoid reloading the screen-global uniforms on every renderable
+        prog.last_used_frameno = frameno;
+        glUniform1i(prog.tex_uniform, 0);
+        glUniformMatrix4fv(prog.display_transform_uniform, 1, GL_FALSE,
+                           glm::value_ptr(screen_rotation));
+        glUniformMatrix4fv(prog.screen_to_gl_coords_uniform, 1, GL_FALSE,
+                           glm::value_ptr(screen_to_gl_coords));
+    }
+
     glActiveTexture(GL_TEXTURE0);
 
     auto const& rect = renderable.screen_position();
@@ -168,15 +179,17 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
                       rect.size.width.as_int() / 2.0f;
     GLfloat centrey = rect.top_left.y.as_int() +
                       rect.size.height.as_int() / 2.0f;
-    glUniform2f(centre_uniform_loc, centrex, centrey);
+    glUniform2f(prog.centre_uniform, centrex, centrey);
 
-    glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE,
+    glUniformMatrix4fv(prog.transform_uniform, 1, GL_FALSE,
                        glm::value_ptr(renderable.transformation()));
-    glUniform1f(alpha_uniform_loc, renderable.alpha());
+
+    if (prog.alpha_uniform >= 0)
+        glUniform1f(prog.alpha_uniform, renderable.alpha());
 
     /* Draw */
-    glEnableVertexAttribArray(position_attr_loc);
-    glEnableVertexAttribArray(texcoord_attr_loc);
+    glEnableVertexAttribArray(prog.position_attr);
+    glEnableVertexAttribArray(prog.texcoord_attr);
 
     primitives.clear();
     tessellate(primitives, renderable);
@@ -193,18 +206,18 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
         else
             surface_tex->bind();
 
-        glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
+        glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
                               GL_FALSE, sizeof(mg::GLVertex),
                               &p.vertices[0].position);
-        glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
+        glVertexAttribPointer(prog.texcoord_attr, 2, GL_FLOAT,
                               GL_FALSE, sizeof(mg::GLVertex),
                               &p.vertices[0].texcoord);
 
         glDrawArrays(p.type, 0, p.nvertices);
     }
 
-    glDisableVertexAttribArray(texcoord_attr_loc);
-    glDisableVertexAttribArray(position_attr_loc);
+    glDisableVertexAttribArray(prog.texcoord_attr);
+    glDisableVertexAttribArray(prog.position_attr);
 }
 
 void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
@@ -218,7 +231,7 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
      * (top-left is (0,0), bottom-right is (W,H)) to the normalized GL coordinate system
      * (top-left is (-1,1), bottom-right is (1,-1))
      */
-    glm::mat4 screen_to_gl_coords = glm::translate(glm::mat4(1.0f), glm::vec3{-1.0f, 1.0f, 0.0f});
+    screen_to_gl_coords = glm::translate(glm::mat4(1.0f), glm::vec3{-1.0f, 1.0f, 0.0f});
 
     /*
      * Perspective division is one thing that can't be done in a matrix
@@ -243,11 +256,6 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
                       -rect.top_left.y.as_float(),
                       0.0f});
 
-    glUseProgram(*program);
-    GLint mat_loc = glGetUniformLocation(*program, "screen_to_gl_coords");
-    glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
-    glUseProgram(0);
-
     viewport = rect;
 }
 
@@ -259,13 +267,10 @@ void mc::GLRenderer::set_rotation(float degrees)
     float rad = degrees * M_PI / 180.0f;
     GLfloat cos = cosf(rad);
     GLfloat sin = sinf(rad);
-    GLfloat rot[16] = {cos,  sin,  0.0f, 0.0f,
+    screen_rotation = {cos,  sin,  0.0f, 0.0f,
                        -sin, cos,  0.0f, 0.0f,
                        0.0f, 0.0f, 1.0f, 0.0f,
                        0.0f, 0.0f, 0.0f, 1.0f};
-    glUseProgram(*program);
-    glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_FALSE, rot);
-    glUseProgram(0);
 
     rotation = degrees;
 }

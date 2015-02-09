@@ -40,6 +40,7 @@ namespace droidinput = android;
 namespace mir
 {
 class ServerActionQueue;
+class SharedLibraryProberReport;
 
 namespace compositor
 {
@@ -75,6 +76,8 @@ class FocusSetter;
 class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
+class Shell;
+namespace detail { class FrontendShell; }
 }
 namespace time
 {
@@ -226,8 +229,8 @@ public:
     virtual std::shared_ptr<frontend::SessionMediatorReport>  the_session_mediator_report();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
-    // the_frontend_shell() is an adapter for the_session_coordinator().
-    // To customize this behaviour it is recommended you override wrap_session_coordinator().
+    // the_frontend_shell() is an adapter for the_shell().
+    // To customize this behaviour it is recommended you override wrap_shell().
     std::shared_ptr<frontend::Shell>                          the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
@@ -241,14 +244,13 @@ public:
     /** @} */
     /** @} */
 
-    // the_focus_controller() is an adapter for the_session_coordinator().
-    // To customize this behaviour it is recommended you override wrap_session_coordinator().
+    // the_focus_controller() is an interface for the_shell().
     std::shared_ptr<shell::FocusController> the_focus_controller();
 
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
      *  @{ */
-    virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
+    virtual auto the_shell() -> std::shared_ptr<shell::Shell>;
     virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
@@ -283,7 +285,6 @@ public:
     /** @name scene configuration - services
      * services provided by scene for the rest of Mir
      *  @{ */
-    // To customize this behaviour it is recommended you override wrap_session_coordinator().
     virtual std::shared_ptr<scene::SessionCoordinator>  the_session_coordinator();
     virtual std::shared_ptr<scene::CoordinateTranslator> the_coordinate_translator();
     /** @} */
@@ -315,6 +316,7 @@ public:
 
     virtual std::shared_ptr<time::Clock> the_clock();
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
+    virtual std::shared_ptr<SharedLibraryProberReport>  the_shared_library_prober_report();
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
@@ -340,11 +342,8 @@ protected:
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> wrap_display_configuration_policy(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const& wrapped);
 
-    virtual std::shared_ptr<scene::SurfaceCoordinator>  wrap_surface_coordinator(
-        std::shared_ptr<scene::SurfaceCoordinator> const& wrapped);
-
-    virtual std::shared_ptr<scene::SessionCoordinator>  wrap_session_coordinator(
-        std::shared_ptr<scene::SessionCoordinator> const& wrapped);
+    virtual std::shared_ptr<shell::Shell>  wrap_shell(
+        std::shared_ptr<shell::Shell> const& wrapped);
 
     virtual std::shared_ptr<input::CursorListener>  wrap_cursor_listener(
         std::shared_ptr<input::CursorListener> const& wrapped);
@@ -398,8 +397,7 @@ protected:
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<scene::SurfaceCoordinator> surface_coordinator;
-    CachedPtr<shell::FocusSetter>       shell_focus_setter;
-    CachedPtr<scene::PlacementStrategy> shell_placement_strategy;
+    CachedPtr<scene::PlacementStrategy> placement_strategy;
     CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
@@ -424,6 +422,8 @@ protected:
     CachedPtr<scene::CoordinateTranslator> coordinate_translator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
+    CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
+    CachedPtr<shell::Shell> shell;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
@@ -438,6 +438,8 @@ private:
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
+
+    CachedPtr<shell::detail::FrontendShell> frontend_shell;
 };
 }
 

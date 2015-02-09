@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_CLIENT_CONTEXT_H_
 
 #include "mir_toolkit/mir_client_library.h"
-#include "src/client/client_context.h"
+#include "mir/client_context.h"
 
 #include <gmock/gmock.h>
 
@@ -36,10 +36,10 @@ struct MockClientContext : public client::ClientContext
     {
         using namespace testing;
 
-        EXPECT_CALL(*this, populate(_)).Times(AtLeast(0));
+        EXPECT_CALL(*this, populate_server_package(_)).Times(AtLeast(0));
     }
 
-    MOCK_METHOD1(populate, void(MirPlatformPackage&));
+    MOCK_METHOD1(populate_server_package, void(MirPlatformPackage&));
 };
 
 }

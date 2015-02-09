@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
+#include <boost/filesystem.hpp>
 
 std::string mir_test_framework::executable_path()
 {
@@ -42,4 +43,30 @@ std::string mir_test_framework::executable_path()
 std::string mir_test_framework::library_path()
 {
     return executable_path() + "/../lib";
+}
+
+std::string mir_test_framework::server_platform(std::string const& name)
+{
+    for (auto const& option :
+         {library_path() + "/server-modules/", library_path() + "/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
+    {
+        auto path_to_test = option + name;
+        if (boost::filesystem::exists(path_to_test))
+            return path_to_test;
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform in standard search locations"));
+}
+
+std::string mir_test_framework::client_platform(std::string const& name)
+{
+    for (auto const& option :
+         {library_path() + "/client-modules/", library_path() + "/client-platform/", std::string(MIR_CLIENT_PLATFORM_PATH) + '/'})
+    {
+        auto path_to_test = option + name;
+        if (boost::filesystem::exists(path_to_test))
+            return path_to_test;
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform in standard search locations"));
 }

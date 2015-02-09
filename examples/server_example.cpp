@@ -83,10 +83,6 @@ try
 {
     mir::Server server;
 
-    // Create some input filters (we need to keep them or they deactivate)
-    auto const quit_filter = me::make_quit_filter_for(server);
-    auto const printing_filter = me::make_printing_input_filter_for(server);
-
     // Add example options for display layout, logging, launching clients and timeout
     me::add_display_configuration_options_to(server);
     me::add_log_host_lifecycle_option_to(server);
@@ -97,6 +93,10 @@ try
 
     std::atomic<bool> test_failed{false};
     me::add_test_client_option_to(server, test_failed);
+
+    // Create some input filters (we need to keep them or they deactivate)
+    auto const quit_filter = me::make_quit_filter_for(server);
+    auto const printing_filter = me::make_printing_input_filter_for(server);
 
     // Provide the command line and run the server
     server.set_command_line(argc, argv);

@@ -11,6 +11,11 @@ include_directories(
   ${ANDROID_HEADERS_INCLUDE_DIRS}
 )
 
+add_definitions(
+    -DMIR_CLIENT_PLATFORM_PATH="${MIR_CLIENT_PLATFORM_PATH}"
+    -DMIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}"
+    )
+
 set(
   TEST_FRAMEWORK_SRCS
 
@@ -34,6 +39,7 @@ set(
   process.cpp
   using_stub_client_platform.cpp
   stub_client_platform_factory.cpp
+  stub_server_platform_factory.cpp
   udev_environment.cpp
   declarative_placement_strategy.cpp
   fake_event_hub_server_configuration.cpp
@@ -59,8 +65,8 @@ uses_android_input(mir-test-framework)
 target_link_libraries(
   mir-test-framework
 
-  mirplatformstub
   3rd_party
+  mir-test-doubles
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -94,6 +100,31 @@ set_target_properties(
   LINK_FLAGS "-Wl,--version-script,${symbol_map}"
 )
 
+set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map)
+add_library(
+  mirplatformgraphicsstub MODULE
+
+  platform_graphics_dummy.cpp
+  stubbed_graphics_platform.cpp
+)
+
+target_link_libraries(
+  mirplatformgraphicsstub
+
+  mir-test
+  mir-test-framework
+  mir-test-doubles
+  ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
+)
+
+set_target_properties(
+  mirplatformgraphicsstub PROPERTIES;
+  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/server-modules
+  OUTPUT_NAME graphics-dummy
+  PREFIX ""
+  LINK_FLAGS "-Wl,--version-script,${server_symbol_map}"
+)
+
 add_custom_command(TARGET mir-test-framework POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
   ${CMAKE_CURRENT_SOURCE_DIR}/udev_recordings ${CMAKE_BINARY_DIR}/bin/udev_recordings
@@ -105,21 +136,8 @@ add_custom_command(TARGET mir-test-framework POST_BUILD
   COMMENT "Copying testing cursor themes to build dir..."
 )
 
-add_library(
-  mirplatformstub SHARED
-  stubbed_graphics_platform.cpp
-)
+string (REPLACE " -Wl,--no-undefined" " " CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 
-target_link_libraries(mirplatformstub 
-  mirplatform
-  mir-test-doubles
-  mir-test
-)
+install(TARGETS mirplatformgraphicsstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
 
-set_target_properties(mirplatformstub
-  PROPERTIES
-  LINK_FLAGS "-Wl,--exclude-libs=ALL"
-)
-
-install(TARGETS mirplatformstub LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(TARGETS mirclientplatformstub LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})

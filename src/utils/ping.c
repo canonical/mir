@@ -103,10 +103,10 @@ int main(int argc, char *argv[])
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
 
-    static const MirSurfaceType types[2] =
+    static const MirOrientationMode types[2] =
     {
-        mir_surface_type_normal,
-        mir_surface_type_utility
+        mir_orientation_mode_portrait_any,
+        mir_orientation_mode_landscape_any
     };
     int t = 1;
 
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
         long long start, duration;
 
         start = now();
-        mir_wait_for(mir_surface_set_type(surf, types[t]));
+        mir_wait_for(mir_surface_set_preferred_orientation(surf, types[t]));
         duration = now() - start;
         t ^= 1;
 

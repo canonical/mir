@@ -16,6 +16,8 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+
 #include "mir/input/input_dispatcher.h"
 
 #include "clients.h"
@@ -27,7 +29,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/event_factory.h"
-#include "mir_test/client_event_matchers.h"
+#include "mir_test/event_matchers.h"
 
 #include "mir/compositor/scene.h"
 #include "mir/shell/input_targeter.h"
@@ -110,7 +112,7 @@ TEST_F(CustomInputDispatcher, receives_input)
     {
         void inject_input() override
         {
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
+            fake_event_hub->synthesize_event(mis::a_pointer_event().with_movement(1, 1));
             fake_event_hub->synthesize_event(mis::a_key_down_event().of_scancode(KEY_ENTER));
         }
 
@@ -120,7 +122,7 @@ TEST_F(CustomInputDispatcher, receives_input)
             auto const dispatcher = the_input_dispatcher_mock();
 
             InSequence seq;
-            EXPECT_CALL(*dispatcher, dispatch(mt::MotionEventWithPosition(1, 1))).Times(1);
+            EXPECT_CALL(*dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1);
             EXPECT_CALL(*dispatcher, dispatch(mt::KeyDownEvent()))
                 .WillOnce(InvokeWithoutArgs([this]{ dispatching_done.signal_ready(); }));
         }

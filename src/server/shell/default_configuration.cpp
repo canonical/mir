@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -21,33 +21,57 @@
 
 
 #include "default_placement_strategy.h"
-#include "default_focus_mechanism.h"
+#include "default_shell.h"
+#include "frontend_shell.h"
 #include "graphics_display_layout.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
 
+
+auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
+{
+    return shell([this]
+        {
+            return wrap_shell(std::make_shared<msh::DefaultShell>(
+                the_input_targeter(),
+                the_surface_coordinator(),
+                the_session_coordinator(),
+                the_prompt_session_manager(),
+                the_placement_strategy(),
+                the_surface_configurator()));
+        });
+}
+
+auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) -> std::shared_ptr<msh::Shell>
+{
+    return wrapped;
+}
+
+std::shared_ptr<mf::Shell>
+mir::DefaultServerConfiguration::the_frontend_shell()
+{
+    return frontend_shell([this]
+        {
+            return std::make_shared<msh::detail::FrontendShell>(the_shell());
+        });
+}
+
+std::shared_ptr<msh::FocusController>
+mir::DefaultServerConfiguration::the_focus_controller()
+{
+    return the_shell();
+}
+
 std::shared_ptr<ms::PlacementStrategy>
 mir::DefaultServerConfiguration::the_placement_strategy()
 {
-    return shell_placement_strategy(
+    return placement_strategy(
         [this]
         {
             return std::make_shared<msh::DefaultPlacementStrategy>(
                 the_shell_display_layout());
-        });
-}
-
-std::shared_ptr<msh::FocusSetter>
-mir::DefaultServerConfiguration::the_shell_focus_setter()
-{
-    return shell_focus_setter(
-        [this]
-        {
-            return std::make_shared<msh::DefaultFocusMechanism>(
-                the_input_targeter(),
-                the_surface_coordinator());
         });
 }
 

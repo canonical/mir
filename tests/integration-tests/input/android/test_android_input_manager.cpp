@@ -17,6 +17,8 @@
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "src/server/input/android/android_input_targeter.h"
 #include "src/server/input/android/android_input_registrar.h"
 #include "src/server/input/event_filter_chain.h"
@@ -117,7 +119,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
 
     EXPECT_CALL(
         *event_filter,
-        handle(mt::ButtonDownEvent()))
+        handle(mt::ButtonDownEvent(0, 0)))
             .Times(1)
             .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
 
@@ -137,17 +139,17 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
       InSequence seq;
       EXPECT_CALL(
           *event_filter,
-          handle(mt::ButtonDownEvent()))
+          handle(mt::ButtonDownEvent(0, 0)))
               .Times(1)
               .WillOnce(Return(false));
       EXPECT_CALL(
           *event_filter,
-          handle(mt::ButtonUpEvent()))
+          handle(mt::ButtonUpEvent(0, 0)))
               .Times(1)
               .WillOnce(Return(false));
       EXPECT_CALL(
           *event_filter,
-          handle(mt::MotionEvent(0,0)))
+          handle(mt::PointerEventWithPosition(0,0)))
               .Times(1)
               .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
     }
@@ -158,7 +160,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
     wait_condition.wait_for_at_most_seconds(1);
 }
 
-TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_motion_events_to_filter)
+TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_pointer_events_to_filter)
 {
     using namespace ::testing;
 
@@ -169,15 +171,15 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
         InSequence seq;
 
         EXPECT_CALL(*event_filter,
-                    handle(mt::MotionEvent(100, 100)))
+                    handle(mt::PointerEventWithPosition(100, 100)))
             .WillOnce(Return(false));
         EXPECT_CALL(*event_filter,
-                    handle(mt::MotionEvent(200, 100)))
+                    handle(mt::PointerEventWithPosition(200, 100)))
             .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
     }
 
-    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(100, 100));
-    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(100, 0));
+    fake_event_hub->synthesize_event(mis::a_pointer_event().with_movement(100, 100));
+    fake_event_hub->synthesize_event(mis::a_pointer_event().with_movement(100, 0));
 
     wait_condition.wait_for_at_most_seconds(1);
 }
@@ -191,7 +193,7 @@ struct MockDispatcherPolicy : public mia::EventFilterDispatcherPolicy
       : EventFilterDispatcherPolicy(filter, false)
     {
     }
-    MOCK_METHOD3(interceptKeyBeforeDispatching, nsecs_t(droidinput::sp<droidinput::InputWindowHandle> const&,
+    MOCK_METHOD3(interceptKeyBeforeDispatching, std::chrono::nanoseconds(droidinput::sp<droidinput::InputWindowHandle> const&,
                                                         droidinput::KeyEvent const*, uint32_t));
 };
 
@@ -253,6 +255,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : testing::Test, mtf::FakeEve
         int fds[2];
         // Closed by droidinput InputChannel on shutdown
         socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds);
+        close(fds[1]);
         return fds[0];
     }
 };
@@ -277,7 +280,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_c
     EXPECT_CALL(event_filter, handle(_)).Times(1).WillOnce(Return(false));
     // We return -1 here to skip publishing of the event (to an unconnected test socket!).
     EXPECT_CALL(dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(surface.fd), _, _))
-        .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
+        .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(std::chrono::nanoseconds(-1))));
 
     input_registrar.add_window_handle_for_surface(&surface);
     the_input_targeter()->focus_changed(surface.input_channel());
@@ -306,11 +309,11 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
         InSequence seq;
 
         EXPECT_CALL(dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(surface1.fd), _, _))
-            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait1), Return(-1)));
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait1), Return(std::chrono::nanoseconds(-1))));
         EXPECT_CALL(dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(surface2.fd), _, _))
-            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait2), Return(-1)));
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait2), Return(std::chrono::nanoseconds(-1))));
         EXPECT_CALL(dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(surface1.fd), _, _))
-            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait3), Return(-1)));
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait3), Return(std::chrono::nanoseconds(-1))));
     }
 
     the_input_targeter()->focus_changed(surface1.input_channel());

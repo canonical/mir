@@ -124,6 +124,18 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_parent_id(mf:
     return *this;
 }
 
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_aux_rect(geometry::Rectangle const& rect)
+{
+    aux_rect = rect;
+    return *this;
+}
+
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_edge_attachment(MirEdgeAttachment edge)
+{
+    edge_attachment = edge;
+    return *this;
+}
+
 bool ms::operator==(
     const SurfaceCreationParameters& lhs,
     const ms::SurfaceCreationParameters& rhs)

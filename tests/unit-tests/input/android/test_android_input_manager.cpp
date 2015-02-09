@@ -69,7 +69,7 @@ struct MockEventHub : public droidinput::EventHubInterface
     MOCK_CONST_METHOD2(getVirtualKeyDefinitions, void(int32_t, droidinput::Vector<droidinput::VirtualKeyDefinition>&));
     MOCK_CONST_METHOD1(getKeyCharacterMap, droidinput::sp<droidinput::KeyCharacterMap>(int32_t));
     MOCK_METHOD2(setKeyboardLayoutOverlay, bool(int32_t, const droidinput::sp<droidinput::KeyCharacterMap>&));
-    MOCK_METHOD2(vibrate, void(int32_t, nsecs_t));
+    MOCK_METHOD2(vibrate, void(int32_t, std::chrono::nanoseconds));
     MOCK_METHOD1(cancelVibrate, void(int32_t));
     MOCK_METHOD0(requestReopenDevices, void());
     MOCK_METHOD0(wake, void());

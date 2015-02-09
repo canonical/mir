@@ -91,7 +91,7 @@ bool mia::InputWindowHandle::updateInfo()
     mInfo->hasFocus = true;
     mInfo->hasWallpaper = false;
     mInfo->paused = false;
-    mInfo->dispatchingTimeout = INT_MAX;
+    mInfo->dispatchingTimeout = std::chrono::nanoseconds(INT_MAX);
     mInfo->ownerPid = 0;
     mInfo->ownerUid = 0;
     mInfo->inputFeatures = 0;

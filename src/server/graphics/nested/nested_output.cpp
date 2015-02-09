@@ -16,6 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "nested_output.h"
 #include "host_connection.h"
 #include "mir/input/input_dispatcher.h"

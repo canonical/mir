@@ -54,7 +54,6 @@ class Surface;
 namespace scene
 {
 class SceneReport;
-class SurfaceConfigurator;
 
 class SurfaceObservers : public SurfaceObserver, BasicObservers<SurfaceObserver>
 {
@@ -85,7 +84,17 @@ public:
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<input::InputSender> const& sender,
-        std::shared_ptr<SurfaceConfigurator> const& configurator,
+        std::shared_ptr<graphics::CursorImage> const& cursor_image,
+        std::shared_ptr<SceneReport> const& report);
+
+    BasicSurface(
+        std::string const& name,
+        geometry::Rectangle rect,
+        std::weak_ptr<Surface> const& parent,
+        bool nonrectangular,
+        std::shared_ptr<compositor::BufferStream> const& buffer_stream,
+        std::shared_ptr<input::InputChannel> const& input_channel,
+        std::shared_ptr<input::InputSender> const& sender,
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
         std::shared_ptr<SceneReport> const& report);
 
@@ -128,6 +137,7 @@ public:
     bool visible() const override;
     
     std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const override;
+    int buffers_ready_for_compositor(void const* compositor_id) const override;
 
     void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec) override;
@@ -144,6 +154,8 @@ public:
     std::shared_ptr<graphics::CursorImage> cursor_image() const override;
 
     void request_client_surface_close() override;
+
+    std::shared_ptr<Surface> parent() const override;
 
     void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
@@ -174,9 +186,9 @@ private:
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<input::InputSender> const input_sender;
-    std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
+    std::weak_ptr<Surface> const parent_;
 
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;

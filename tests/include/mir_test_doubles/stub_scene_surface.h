@@ -63,6 +63,7 @@ public:
     bool input_area_contains(mir::geometry::Point const&) const override { return false; }
 
     virtual std::unique_ptr<graphics::Renderable> compositor_snapshot(void const*) const override { return nullptr; }
+    int buffers_ready_for_compositor(void const*) const override { return 0; }
 
     float alpha() const override { return 0.0f;}
     MirSurfaceType type() const override { return mir_surface_type_normal; }
@@ -101,6 +102,8 @@ public:
     int configure(MirSurfaceAttrib, int) override { return 0; }
     int query(MirSurfaceAttrib) override { return 0; }
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& ) override {}
+
+    std::shared_ptr<mir::scene::Surface> parent() const override { return nullptr; }
 };
 
 }

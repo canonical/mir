@@ -35,6 +35,7 @@ public:
     std::shared_ptr<frontend::SessionMediatorReport> create_session_mediator_report() override;
     std::shared_ptr<frontend::MessageProcessorReport> create_message_processor_report() override;
     std::shared_ptr<input::InputReport> create_input_report() override;
+    std::shared_ptr<SharedLibraryProberReport> create_shared_library_prober_report() override;
 };
 }
 }

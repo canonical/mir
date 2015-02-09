@@ -19,9 +19,9 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 
-#include "src/client/client_platform_factory.h"
-#include "src/client/client_platform.h"
-#include "src/client/client_buffer_factory.h"
+#include "src/include/client/mir/client_platform_factory.h"
+#include "src/include/client/mir/client_platform.h"
+#include "src/include/client/mir/client_buffer_factory.h"
 
 #include "mir_test/validity_matchers.h"
 
@@ -64,7 +64,7 @@ bool should_fail()
 template<Method failure_set>
 class ConfigurableFailurePlatform : public mir::client::ClientPlatform
 {
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mir::client::ClientSurface *)
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mir::client::EGLNativeSurface *)
     {
         if (should_fail<Method::create_egl_native_window, failure_set>())
         {
@@ -72,6 +72,16 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
         }
         return std::shared_ptr<EGLNativeWindowType>{};
     }
+
+    void populate(MirPlatformPackage&) const override
+    {
+    }
+
+    MirPlatformMessage* platform_operation(MirPlatformMessage const*) override
+    {
+        return nullptr;
+    }
+
     MirPlatformType platform_type() const
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});

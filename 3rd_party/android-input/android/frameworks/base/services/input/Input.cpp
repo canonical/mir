@@ -130,8 +130,8 @@ void KeyEvent::initialize(
         int32_t scanCode,
         int32_t metaState,
         int32_t repeatCount,
-        nsecs_t downTime,
-        nsecs_t eventTime) {
+        std::chrono::nanoseconds downTime,
+        std::chrono::nanoseconds eventTime) {
     InputEvent::initialize(deviceId, source);
     mAction = action;
     mFlags = flags;
@@ -294,8 +294,8 @@ void MotionEvent::initialize(
         float yOffset,
         float xPrecision,
         float yPrecision,
-        nsecs_t downTime,
-        nsecs_t eventTime,
+        std::chrono::nanoseconds downTime,
+        std::chrono::nanoseconds eventTime,
         size_t pointerCount,
         const PointerProperties* pointerProperties,
         const PointerCoords* pointerCoords) {
@@ -346,7 +346,7 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
 }
 
 void MotionEvent::addSample(
-        int64_t eventTime,
+        std::chrono::nanoseconds eventTime,
         const PointerCoords* pointerCoords) {
     mSampleEventTimes.push(eventTime);
     mSamplePointerCoords.appendArray(pointerCoords, getPointerCount());

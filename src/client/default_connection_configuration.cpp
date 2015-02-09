@@ -34,7 +34,7 @@
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
 #include "mir/shared_library.h"
-#include "client_platform_factory.h"
+#include "mir/client_platform_factory.h"
 #include "probing_client_platform_factory.h"
 #include "mir_event_distributor.h"
 #include "mir/shared_library_prober.h"
@@ -226,7 +226,7 @@ std::shared_ptr<mir::SharedLibraryProberReport> mir::client::DefaultConnectionCo
         [this] () -> std::shared_ptr<mir::SharedLibraryProberReport>
         {
             auto val_raw = getenv("MIR_CLIENT_SHARED_LIBRARY_PROBER_REPORT");
-            std::string const val{val_raw ? val_raw : off_opt_val};
+            std::string const val{val_raw ? val_raw : log_opt_val};
             if (val == log_opt_val)
                 return std::make_shared<mir::logging::SharedLibraryProberReport>(the_logger());
             else if (val == lttng_opt_val)

@@ -21,6 +21,20 @@
 #include <stdio.h>
 #include <unistd.h>
 
+static void appendenv(const char* varname, const char* append)
+{
+    char buf[1024] = "";
+    const char* value = append;
+    const char* old = getenv(varname);
+    if (old != NULL)
+    {
+        snprintf(buf, sizeof(buf)-1, "%s:%s", old, append);
+        buf[sizeof(buf)-1] = '\0';
+        value = buf;
+    }
+    setenv(varname, value, 1);
+}
+
 int main(int argc, char** argv)
 {
     char path[1024], *dest = path, *dest_max = path+sizeof(path)-1;
@@ -46,10 +60,13 @@ int main(int argc, char** argv)
     *dest_max = '\0';
     setenv("MIR_CLIENT_PLATFORM_PATH", path, 1);
     printf("MIR_CLIENT_PLATFORM_PATH=%s\n", path);
+    strncpy(pivot+7, "server-modules/", pivot_max-7);
+    setenv("MIR_SERVER_PLATFORM_PATH", path, 1);
+    printf("MIR_SERVER_PLATFORM_PATH=%s\n", path);
 
     pivot[6] = '\0';  /* truncate lib/client-modules to just lib */
-    setenv("LD_LIBRARY_PATH", path, 1);
-    printf("LD_LIBRARY_PATH=%s\n", path);
+    appendenv("LD_LIBRARY_PATH", path);
+    printf("LD_LIBRARY_PATH=%s\n", getenv("LD_LIBRARY_PATH"));
 
     snprintf(pivot, pivot_max, EXECUTABLE_FORMAT, name);
     *dest_max = '\0';

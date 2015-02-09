@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_RENDERABLE_LIST_COMPOSITOR_H_
 #define MIR_TEST_DOUBLES_MOCK_RENDERABLE_LIST_COMPOSITOR_H_
 
-#include "src/platforms/android/hwc_fallback_gl_renderer.h"
+#include "src/platforms/android/server/hwc_fallback_gl_renderer.h"
 #include <gmock/gmock.h>
 
 namespace mir

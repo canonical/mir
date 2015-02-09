@@ -68,7 +68,7 @@ static pthread_key_t gTLSKey = 0;
 
 Looper::Looper(bool allowNonCallbacks) :
         mAllowNonCallbacks(allowNonCallbacks), mSendingMessage(false),
-        mResponseIndex(0), mNextMessageUptime(LLONG_MAX) {
+        mResponseIndex(0), mNextMessageUptime(std::chrono::nanoseconds(LLONG_MAX)) {
     int wakeFds[2];
     int result = pipe(wakeFds);
     LOG_ALWAYS_FATAL_IF(result != 0, "Could not create wake pipe.  errno=%d", errno);
@@ -196,8 +196,8 @@ int Looper::pollInner(int timeoutMillis) {
 #endif
 
     // Adjust the timeout based on when the next message is due.
-    if (timeoutMillis != 0 && mNextMessageUptime != LLONG_MAX) {
-        nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+    if (timeoutMillis != 0 && mNextMessageUptime != std::chrono::nanoseconds(LLONG_MAX)) {
+        std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
         int messageTimeoutMillis = toMillisecondTimeoutDelay(now, mNextMessageUptime);
         if (messageTimeoutMillis >= 0
                 && (timeoutMillis < 0 || messageTimeoutMillis < timeoutMillis)) {
@@ -271,9 +271,9 @@ int Looper::pollInner(int timeoutMillis) {
 Done: ;
 
     // Invoke pending message callbacks.
-    mNextMessageUptime = LLONG_MAX;
+    mNextMessageUptime = std::chrono::nanoseconds(LLONG_MAX);
     while (mMessageEnvelopes.size() != 0) {
-        nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+        std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
         const MessageEnvelope& messageEnvelope = mMessageEnvelopes.itemAt(0);
         if (messageEnvelope.uptime <= now) {
             // Remove the envelope from the list.
@@ -339,8 +339,8 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
         } while (result == ALOOPER_POLL_CALLBACK);
         return result;
     } else {
-        nsecs_t endTime = systemTime(SYSTEM_TIME_MONOTONIC)
-                + milliseconds_to_nanoseconds(timeoutMillis);
+        std::chrono::nanoseconds endTime = systemTime(SYSTEM_TIME_MONOTONIC)
+            + std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeoutMillis));
 
         for (;;) {
             int result = pollOnce(timeoutMillis, outFd, outEvents, outData);
@@ -348,7 +348,7 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
                 return result;
             }
 
-            nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+            std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
             timeoutMillis = toMillisecondTimeoutDelay(now, endTime);
             if (timeoutMillis == 0) {
                 return ALOOPER_POLL_TIMEOUT;
@@ -479,17 +479,17 @@ int Looper::removeFd(int fd) {
 }
 
 void Looper::sendMessage(const sp<MessageHandler>& handler, const Message& message) {
-    nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+    std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
     sendMessageAtTime(now, handler, message);
 }
 
-void Looper::sendMessageDelayed(nsecs_t uptimeDelay, const sp<MessageHandler>& handler,
+void Looper::sendMessageDelayed(std::chrono::nanoseconds uptimeDelay, const sp<MessageHandler>& handler,
         const Message& message) {
-    nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+    std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
     sendMessageAtTime(now + uptimeDelay, handler, message);
 }
 
-void Looper::sendMessageAtTime(nsecs_t uptime, const sp<MessageHandler>& handler,
+void Looper::sendMessageAtTime(std::chrono::nanoseconds uptime, const sp<MessageHandler>& handler,
         const Message& message) {
 #if DEBUG_CALLBACKS
     ALOGD("%p ~ sendMessageAtTime - uptime=%lld, handler=%p, what=%d",

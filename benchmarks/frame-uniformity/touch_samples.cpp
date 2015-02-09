@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "touch_samples.h"
 
 void TouchSamples::record_frame_time(std::chrono::high_resolution_clock::time_point time)

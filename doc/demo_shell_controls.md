@@ -34,8 +34,11 @@ touch alternatives for phones/tablets:
  - Switch back to X: *Ctrl-Alt-F7*
  - Switch virtual terminals (VTs): *Ctrl-Alt-(F1-F12)*
  - Switch apps: *Alt-Tab* or *4-finger swipe left/right*
+ - Ask an app to close: *Alt-F4* (it may refuse or not understand)
  - Move window: *Alt-leftmousebutton* or *3-finger drag*
  - Resize window: *Alt-middlemousebutton* or *3-finger pinch/zoom*
+ - Toggle negative rendering: *Super-N*
+ - Toggle high-contrast rendering: *Super-C*
  - Sleep/wake all displays: *Alt-P* or *Android power button*
  - Rotate the focussed monitor: *Ctrl-Alt-(Left/Right/Up/Down)* or
    *Volume up/down while touching the screen*

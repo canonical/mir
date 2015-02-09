@@ -20,9 +20,10 @@
 #include "mir/graphics/event_handler_register.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
-#include "src/platforms/mesa/platform.h"
+#include "src/platforms/mesa/server/platform.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/emergency_cleanup_registry.h"
+#include "mir/shared_library.h"
 
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
@@ -33,6 +34,7 @@
 #include <gtest/gtest.h>
 
 #include "mir_test_framework/udev_environment.h"
+#include "mir_test_framework/executable_path.h"
 #include "mir_test/pipe.h"
 
 #include "mir_test_doubles/mock_drm.h"
@@ -54,6 +56,8 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
+
+const char probe_platform[] = "probe_graphics_platform";
 
 class MesaGraphicsPlatform : public ::testing::Test
 {
@@ -140,49 +144,6 @@ TEST_F(MesaGraphicsPlatform, fails_if_no_resources)
     EXPECT_THROW({
         auto platform = create_platform();
     }, std::runtime_error) << "Expected that c'tor of Platform throws";
-}
-
-/* ipc packaging tests */
-TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
-{
-    using namespace testing;
-
-    unsigned int const magic{0x10111213};
-
-    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
-        .WillOnce(Return(0));
-
-    mg::PlatformOperationMessage magic_msg;
-    magic_msg.data.resize(sizeof(unsigned int));
-    *(reinterpret_cast<unsigned int*>(magic_msg.data.data())) = magic;
-
-    int drm_opcode{44};
-    auto platform = create_platform();
-    auto ipc_ops = platform->make_ipc_operations();
-    auto response_msg = ipc_ops->platform_operation(drm_opcode, magic_msg);
-    ASSERT_THAT(response_msg.data.size(), Eq(sizeof(int)));
-    EXPECT_THAT(*(reinterpret_cast<int*>(response_msg.data.data())), Eq(0));
-}
-
-TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
-{
-    using namespace testing;
-
-    unsigned int const magic{0x10111213};
-
-    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
-        .WillOnce(Return(-1));
-
-    int drm_opcode{44};
-    auto platform = create_platform();
-    auto ipc_ops = platform->make_ipc_operations();
-    mg::PlatformOperationMessage magic_msg;
-    magic_msg.data.resize(sizeof(unsigned int));
-    *(reinterpret_cast<unsigned int*>(magic_msg.data.data())) = magic;
-
-    EXPECT_THROW({
-        ipc_ops->platform_operation(drm_opcode, magic_msg);
-    }, std::runtime_error);
 }
 
 TEST_F(MesaGraphicsPlatform, egl_native_display_is_gbm_device)
@@ -337,4 +298,24 @@ TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
     emergency_cleanup_registry.handler();
 
     Mock::VerifyAndClearExpectations(&mock_drm);
+}
+
+TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)
+{
+    mtf::UdevEnvironment udev_environment;
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa.so")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe());
+}
+
+TEST_F(MesaGraphicsPlatform, probe_returns_best_when_drm_devices_exist)
+{
+    mtf::UdevEnvironment udev_environment;
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa.so")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    EXPECT_EQ(mg::PlatformPriority::best, probe());
 }

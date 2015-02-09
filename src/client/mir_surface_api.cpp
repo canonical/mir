@@ -25,7 +25,7 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "error_connections.h"
-#include "uncaught.h"
+#include "mir/uncaught.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <functional>
@@ -49,6 +49,77 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
                                                               MirPixelFormat format)
 {
     return new MirSurfaceSpec{connection, width, height, format};
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_menu(MirConnection* connection,
+                                                    int width,
+                                                    int height,
+                                                    MirPixelFormat format,
+                                                    MirSurface* parent,
+                                                    MirRectangle* rect,
+                                                    MirEdgeAttachment edge)
+{
+    mir::require(mir_surface_is_valid(parent));
+    mir::require(rect != nullptr);
+
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_menu;
+    spec->parent = parent;
+    spec->aux_rect = *rect;
+    spec->edge_attachment = edge;
+    return spec;
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_tooltip(MirConnection* connection,
+                                                       int width,
+                                                       int height,
+                                                       MirPixelFormat format,
+                                                       MirSurface* parent,
+                                                       MirRectangle* rect)
+{
+    mir::require(mir_surface_is_valid(parent));
+    mir::require(rect != nullptr);
+
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_tip;
+    spec->parent = parent;
+    spec->aux_rect = *rect;
+    return spec;
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_dialog(MirConnection* connection,
+                                                      int width,
+                                                      int height,
+                                                      MirPixelFormat format)
+{
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_dialog;
+    return spec;
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
+                                                      int width,
+                                                      int height,
+                                                      MirPixelFormat format)
+{
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_inputmethod;
+    return spec;
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
+                                                           int width,
+                                                           int height,
+                                                           MirPixelFormat format,
+                                                           MirSurface* parent)
+{
+    mir::require(mir_surface_is_valid(parent));
+
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_dialog;
+    spec->parent = parent;
+
+    return spec;
 }
 
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)

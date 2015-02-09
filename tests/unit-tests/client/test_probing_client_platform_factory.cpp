@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "src/client/client_platform.h"
+#include "mir/client_platform.h"
 #include "src/client/probing_client_platform_factory.h"
 
 #include "mir_test_doubles/mock_client_context.h"
@@ -36,10 +36,10 @@ all_available_modules()
 {
     std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
 #ifdef MIR_BUILD_PLATFORM_MESA
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::library_path() + "/client-modules/mesa.so"));
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("mesa.so")));
 #endif
 #ifdef MIR_BUILD_PLATFORM_ANDROID
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::library_path() + "/client-modules/android.so"));
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("android.so")));
 #endif
     return modules;
 }
@@ -59,7 +59,7 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
     mir::client::ProbingClientPlatformFactory factory{all_available_modules()};
 
     mtd::MockClientContext context;
-    ON_CALL(context, populate(_))
+    ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke([](MirPlatformPackage& pkg)
                            {
                                ::memset(&pkg, 0, sizeof(MirPlatformPackage));
@@ -84,7 +84,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)
     mir::client::ProbingClientPlatformFactory factory{all_available_modules()};
 
     mtd::MockClientContext context;
-    ON_CALL(context, populate(_))
+    ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke([](MirPlatformPackage& pkg)
                            {
                                ::memset(&pkg, 0, sizeof(MirPlatformPackage));
@@ -108,7 +108,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesAndroidPlatformWhenAppropriat
     mir::client::ProbingClientPlatformFactory factory{all_available_modules()};
 
     mtd::MockClientContext context;
-    ON_CALL(context, populate(_))
+    ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke([](MirPlatformPackage& pkg)
                            {
                                // Mock up something that looks like a Android platform package,
@@ -127,12 +127,12 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
     auto modules = all_available_modules();
     // NOTE: For minimum fuss, load something that has minimal side-effects...
     modules.push_back(std::make_shared<mir::SharedLibrary>("libc.so.6"));
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::library_path() + "/client-modules/dummy.so"));
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("dummy.so")));
 
     mir::client::ProbingClientPlatformFactory factory{modules};
 
     mtd::MockClientContext context;
-    ON_CALL(context, populate(_))
+    ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke([](MirPlatformPackage& pkg)
                            {
                                mtf::create_stub_platform_package(pkg);

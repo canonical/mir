@@ -71,21 +71,11 @@ public:
         return glm::mat4();
     }
 
-    bool visible() const override
-    {
-        return true;
-    }
-    
     bool shaped() const override
     {
         return true;
     }
 
-    int buffers_ready_for_compositor() const override
-    {
-        return 1;
-    }
-    
 // TouchspotRenderable    
     void move_center_to(geom::Point pos)
     {

@@ -24,9 +24,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
-#include <mir/compositor/renderer.h>
 #include <mir/compositor/destination_alpha.h>
-#include "src/server/compositor/gl_renderer_factory.h"
 #include "src/server/graphics/program_factory.h"
 #include <mir_test/fake_shared.h>
 #include <mir_test_doubles/mock_buffer.h>
@@ -67,26 +65,22 @@ void ExpectShaderCompileFailure(const GLint shader, mtd::MockGL &mock_gl)
 void ExpectShaderCompileSuccess(const GLint shader, mtd::MockGL &mock_gl)
 {
     EXPECT_CALL(mock_gl, glGetShaderiv(shader, GL_COMPILE_STATUS, _))
-        .WillOnce(SetArgPointee<2>(GL_TRUE));
+        .WillRepeatedly(SetArgPointee<2>(GL_TRUE));
 }
 
 void SetUpMockVertexShader(mtd::MockGL &mock_gl, const std::function<void(const GLint, mtd::MockGL &)> &shader_compile_expectation)
 {
     /* Vertex Shader */
-    EXPECT_CALL(mock_gl, glCreateShader(GL_VERTEX_SHADER))
-        .WillOnce(Return(stub_v_shader));
-    EXPECT_CALL(mock_gl, glShaderSource(stub_v_shader, 1, _, 0));
-    EXPECT_CALL(mock_gl, glCompileShader(stub_v_shader));
+    ON_CALL(mock_gl, glCreateShader(GL_VERTEX_SHADER))
+        .WillByDefault(Return(stub_v_shader));
     shader_compile_expectation(stub_v_shader, mock_gl);
 }
 
 void SetUpMockFragmentShader(mtd::MockGL &mock_gl, const std::function<void(const GLint, mtd::MockGL &)> &shader_compile_expectation)
 {
     /* Fragment Shader */
-    EXPECT_CALL(mock_gl, glCreateShader(GL_FRAGMENT_SHADER))
-        .WillOnce(Return(stub_f_shader));
-    EXPECT_CALL(mock_gl, glShaderSource(stub_f_shader, 1, _, 0));
-    EXPECT_CALL(mock_gl, glCompileShader(stub_f_shader));
+    ON_CALL(mock_gl, glCreateShader(GL_FRAGMENT_SHADER))
+        .WillByDefault(Return(stub_f_shader));
     shader_compile_expectation(stub_f_shader, mock_gl);
 }
 
@@ -99,30 +93,22 @@ void ExpectProgramLinkFailure(const GLint program, mtd::MockGL &mock_gl)
 void ExpectProgramLinkSuccess(const GLint program, mtd::MockGL &mock_gl)
 {
     EXPECT_CALL(mock_gl, glGetProgramiv(program, GL_LINK_STATUS, _))
-        .WillOnce(SetArgPointee<2>(GL_TRUE));
+        .WillRepeatedly(SetArgPointee<2>(GL_TRUE));
 }
 
 void SetUpMockGraphicsProgram(mtd::MockGL &mock_gl, const std::function<void(const GLint, mtd::MockGL &)> &program_link_expectation)
 {
     /* Graphics Program */
-    EXPECT_CALL(mock_gl, glCreateProgram())
-            .WillOnce(Return(stub_program));
-    EXPECT_CALL(mock_gl, glAttachShader(stub_program, stub_v_shader));
-    EXPECT_CALL(mock_gl, glAttachShader(stub_program, stub_f_shader));
-    EXPECT_CALL(mock_gl, glLinkProgram(stub_program));
+    ON_CALL(mock_gl, glCreateProgram())
+        .WillByDefault(Return(stub_program));
     program_link_expectation(stub_program, mock_gl);
 }
 
 class ProgramFactory : public testing::Test
 {
 public:
-    ProgramFactory() :
-        gl_renderer_factory{std::make_shared<mg::ProgramFactory>()}
-    {
-    }
     testing::NiceMock<mtd::MockGL> mock_gl;
-    mc::GLRendererFactory gl_renderer_factory;
-    mir::geometry::Rectangle display_area;
+    mg::ProgramFactory factory;
 };
 
 ACTION_P2(CopyString, str, len)
@@ -152,7 +138,7 @@ TEST_F(ProgramFactory, vertex_shader_compiler_failure_recovers_and_throws)
                 stub_info_log.size()));
 
     EXPECT_THROW({
-        auto r = gl_renderer_factory.create_renderer_for(display_area, mc::DestinationAlpha::opaque);
+        auto p = factory.create_gl_program("foo", "bar");
     }, std::runtime_error);
 }
 
@@ -173,7 +159,7 @@ TEST_F(ProgramFactory, fragment_shader_compiler_failure_recovers_and_throw)
                 stub_info_log.size()));
 
     EXPECT_THROW({
-        auto r = gl_renderer_factory.create_renderer_for(display_area, mc::DestinationAlpha::opaque);
+        auto p = factory.create_gl_program("foo", "bar");
     }, std::runtime_error);
 }
 
@@ -195,7 +181,7 @@ TEST_F(ProgramFactory, graphics_program_linker_failure_recovers_and_throw)
                 stub_info_log.size()));
 
     EXPECT_THROW({
-        auto r = gl_renderer_factory.create_renderer_for(display_area, mc::DestinationAlpha::opaque);
+        auto p = factory.create_gl_program("foo", "bar");
     }, std::runtime_error);
 }
 
@@ -207,6 +193,6 @@ TEST_F(ProgramFactory, graphics_program_creation_success)
     SetUpMockFragmentShader(mock_gl, std::bind(ExpectShaderCompileSuccess, _1, _2));
     SetUpMockGraphicsProgram(mock_gl, std::bind(ExpectProgramLinkSuccess, _1, _2));
 
-    gl_renderer_factory.create_renderer_for(display_area, mc::DestinationAlpha::opaque);
+    auto p = factory.create_gl_program("foo", "bar");
 }
 }

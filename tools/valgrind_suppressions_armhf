@@ -70,6 +70,13 @@
 }
 
 {
+    libgcc_s_addr4
+    Memcheck:Addr4
+    ...
+    obj:/lib/arm-linux-gnueabihf/libgcc_s.so.1
+}
+
+{
     libgcc_s_cond
     Memcheck:Cond
     ...
@@ -125,6 +132,15 @@
 # Valgrind thinks that dlopen returns an uninitialized
 # value, so all checks using that value cause spurious
 # memory errors.
+
+{
+   spurious_strlen_addr4
+   Memcheck:Addr4
+   ...
+   fun:dlsym
+   ...
+   fun:_ZN50SharedLibrary_load_nonexistent_function_fails_Test8TestBodyEv
+}
 
 {
     mir_sharedlibrary_cond

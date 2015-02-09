@@ -21,7 +21,7 @@
 #include "mir_toolkit/mir_cursor_configuration.h"
 #include "cursor_configuration.h"
 
-#include "uncaught.h"
+#include "mir/uncaught.h"
 
 #include <memory>
 

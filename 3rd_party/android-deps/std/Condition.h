@@ -32,7 +32,7 @@ typedef std::condition_variable_any Condition;
 inline void broadcast(Condition& c) { c.notify_all(); }
 
 template <typename Lock>
-inline void waitRelative(Condition& c, Lock& l, nsecs_t reltime)
+inline void waitRelative(Condition& c, Lock& l, std::chrono::nanoseconds reltime)
 {
     c.wait_for(l, std::chrono::nanoseconds(reltime));
 }

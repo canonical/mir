@@ -45,6 +45,11 @@
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
 
+// Temporary include to ease client transition from mir_connection_drm* APIs
+// to mir_connection_platform_operation().
+// TODO: Remove when transition is complete
+#include "../../src/platforms/mesa/include/mir_toolkit/mesa/platform_operation.h"
+
 #include "mir/geometry/rectangles.h"
 #include "surface_tracker.h"
 #include "client_buffer_tracker.h"
@@ -198,15 +203,31 @@ void mf::SessionMediator::create_surface(
     if (request->has_parent_id())
         params.with_parent_id(SurfaceId{request->parent_id()});
 
-    auto const surf_id = session->create_surface(params);
+    if (request->has_aux_rect())
+    {
+        params.with_aux_rect(geom::Rectangle{
+            {request->aux_rect().left(), request->aux_rect().top()},
+            {request->aux_rect().width(), request->aux_rect().height()}
+        });
+    }
+
+    if (request->has_edge_attachment())
+        params.with_edge_attachment(static_cast<MirEdgeAttachment>(request->edge_attachment()));
+
+    auto const surf_id = shell->create_surface(session, params);
 
     auto surface = session->get_surface(surf_id);
     auto const& client_size = surface->client_size();
     response->mutable_id()->set_value(surf_id.as_value());
     response->set_width(client_size.width.as_uint32_t());
     response->set_height(client_size.height.as_uint32_t());
+
+    // TODO: Deprecate
     response->set_pixel_format((int)surface->pixel_format());
     response->set_buffer_usage(request->buffer_usage());
+
+    response->mutable_buffer_stream()->set_pixel_format((int)surface->pixel_format());
+    response->mutable_buffer_stream()->set_buffer_usage(request->buffer_usage());
 
     if (surface->supports_input())
         response->add_fd(surface->client_input_fd());
@@ -217,17 +238,20 @@ void mf::SessionMediator::create_surface(
         
         setting->mutable_surfaceid()->set_value(surf_id.as_value());
         setting->set_attrib(i);
-        setting->set_ivalue(surface->query(static_cast<MirSurfaceAttrib>(i)));
+        setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
     advance_buffer(surf_id, *surface,
-        [lock, this, response, done, session]
+        [lock, this, &surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
             lock->unlock();
 
-            auto buffer = response->mutable_buffer();
-            pack_protobuf_buffer(*buffer, client_buffer, msg_type);
+            response->mutable_buffer_stream()->mutable_id()->set_value(
+               surf_id.as_value());
+            pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(),
+                         client_buffer,
+                         msg_type);
 
             // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
             // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client.
@@ -322,7 +346,7 @@ void mf::SessionMediator::release_surface(
 
         auto const id = SurfaceId(request->value());
 
-        session->destroy_surface(id);
+        shell->destroy_surface(session, id);
         surface_tracker.remove_surface(id);
     }
 
@@ -377,8 +401,7 @@ void mf::SessionMediator::configure_surface(
 
         auto const id = mf::SurfaceId(request->surfaceid().value());
         int value = request->ivalue();
-        auto const surface = session->get_surface(id);
-        int newvalue = surface->configure(attrib, value);
+        int newvalue = shell->set_surface_attribute(session, id, attrib, value);
 
         response->set_ivalue(newvalue);
     }
@@ -452,7 +475,10 @@ void mf::SessionMediator::create_screencast(
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
-    pack_protobuf_buffer(*protobuf_screencast->mutable_buffer(),
+
+    protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
+        screencast_session_id.as_value());
+    pack_protobuf_buffer(*protobuf_screencast->mutable_buffer_stream()->mutable_buffer(),
                          buffer.get(),
                          msg_type);
 
@@ -608,34 +634,20 @@ void mf::SessionMediator::drm_auth_magic(
         report->session_drm_auth_magic_called(session->name());
     }
 
-    //TODO: the opcode should be provided as part of the request, and should be opaque to the server code.
-    unsigned int const made_up_opcode{0};
-    mg::PlatformOperationMessage platform_request;
-
     auto const magic = request->magic();
-    platform_request.data.resize(sizeof(int));
-    auto const data_ptr = reinterpret_cast<int*>(platform_request.data.data());
-    *data_ptr = magic;
 
-    try
-    {
-        auto platform_response = ipc_operations->platform_operation(made_up_opcode, platform_request);
-        if (platform_response.data.size() >= sizeof(int))
-        {
-            auto const status =
-                *reinterpret_cast<int const*>(platform_response.data.data());
-            response->set_status_code(status);
-        }
-    }
-    catch (std::exception const& e)
-    {
-        auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
+    mg::PlatformOperationMessage platform_request;
+    platform_request.data.resize(sizeof(MirMesaAuthMagicRequest));
+    auto const auth_magic_request_ptr =
+        reinterpret_cast<MirMesaAuthMagicRequest*>(platform_request.data.data());
+    *auth_magic_request_ptr = MirMesaAuthMagicRequest{magic};
 
-        if (errno_ptr != nullptr)
-            response->set_status_code(*errno_ptr);
-        else
-            throw;
-    }
+    auto const platform_response = ipc_operations->platform_operation(
+        MirMesaPlatformOperation::auth_magic, platform_request);
+
+    auto const auth_magic_response_ptr =
+        reinterpret_cast<MirMesaAuthMagicResponse const*>(platform_response.data.data());
+    response->set_status_code(auth_magic_response_ptr->status);
 
     done->Run();
 }

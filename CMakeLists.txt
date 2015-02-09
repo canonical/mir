@@ -27,8 +27,12 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 10) # This should change at least with every MIRSERVER_ABI
+set(MIR_VERSION_MINOR 11) # This should change at least with every MIRSERVER_ABI
 set(MIR_VERSION_PATCH 0)
+
+add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
+add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})
+add_definitions(-DMIR_VERSION_MICRO=${MIR_VERSION_PATCH})
 
 set(MIR_VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH})
 
@@ -48,7 +52,7 @@ include (cmake/MirCommon.cmake)
 include (cmake/PrePush.cmake)
 include (GNUInstallDirs)
 
-set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer")
+set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
 set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
 # Enable cmake-gui to display a drop down list for CMAKE_BUILD_TYPE
@@ -92,15 +96,31 @@ if(cmake_build_type_lower MATCHES "addresssanitizer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
+elseif(cmake_build_type_lower MATCHES "threadsanitizer")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
+  if (CMAKE_COMPILER_IS_GNUCXX)
+    # Work around GCC bug. It should automatically link to tsan when
+    # -fsanitize=thread is used, but doesn't.
+    #
+    # Linking everything with tsan is harmless and simple, so do that.
+    link_libraries(tsan)
+  endif()
 else()
   # AddressSanitizer builds fail if we disallow undefined symbols
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
 
+set(CMAKE_MODULE_LINKER_FLAGS_THREADSANITIZER "-fsanitize=thread")
+set(CMAKE_SHARED_LINKER_FLAGS_THREADSANITZIER "-fsanitize=thread")
+set(CMAKE_EXE_LINKER_FLAGS_THREADSANITIZER "-pie")
+
 # Define LOG_NDEBUG=1 to ensure Android ALOGV calls are not compiled in to
 # consume CPU time...
 add_definitions(-DLOG_NDEBUG=1)
+
+add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
 
 enable_testing()
 
