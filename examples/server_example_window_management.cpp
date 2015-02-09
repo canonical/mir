@@ -19,6 +19,7 @@
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
 
 #include "server_example_window_management.h"
+#include "server_example_basic_window_manager.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
@@ -26,10 +27,7 @@
 #include "mir/geometry/displacement.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
-#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_creation_parameters.h"
-#include "mir/shell/abstract_shell.h"
 #include "mir/shell/display_layout.h"
 
 #include <linux/input.h>
@@ -58,253 +56,6 @@ namespace
 char const* const wm_tiling = "tiling";
 char const* const wm_fullscreen = "fullscreen";
 
-template<typename Info>
-struct SurfaceTo
-{
-    using type = std::map<std::weak_ptr<ms::Surface>, Info, std::owner_less<std::weak_ptr<ms::Surface>>>;
-};
-
-template<typename Info>
-struct SessionTo
-{
-    using type = std::map<std::weak_ptr<ms::Session>, Info, std::owner_less<std::weak_ptr<ms::Session>>>;
-};
-
-template<typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManagerTools : public virtual msh::FocusController
-{
-public:
-    virtual auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
-    -> std::shared_ptr<ms::Session> = 0;
-
-    virtual auto info_for(std::weak_ptr<ms::Session> const& session) const -> SessionInfo& = 0;
-
-    virtual auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo& = 0;
-
-    /* TODO this is probably the only place the functions inherited from
-     * TODO FocusController makes any sense.
-    virtual std::weak_ptr<ms::Session> focussed_application() const = 0;
-    virtual void focus_next() = 0;
-    virtual void set_focus_to(std::shared_ptr<ms::Session> const& focus) = 0;
-     */
-
-    virtual void set_working_surface_to(std::weak_ptr<ms::Surface> const& surface) = 0;
-    virtual auto working_surface() const -> std::shared_ptr<ms::Surface> = 0;
-};
-
-template<typename SessionInfo, typename SurfaceInfo, typename WindowManagementPolicy>
-class BasicWindowManager : public virtual me::WindowManager,
-    private msh::AbstractShell,
-    private BasicWindowManagerTools<SessionInfo, SurfaceInfo>
-{
-public:
-    template <typename... PolicyArgs>
-    BasicWindowManager(
-        std::shared_ptr<msh::InputTargeter> const& input_targeter,
-        std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
-        PolicyArgs... policy_args) :
-        AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
-        policy{this, policy_args...}
-    {
-    }
-
-    std::shared_ptr<ms::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<mf::EventSink> const& sink) override
-    {
-        auto const result = msh::AbstractShell::open_session(client_pid, name, sink);
-        add_session(result);
-        return result;
-    }
-
-    void close_session(std::shared_ptr<ms::Session> const& session) override
-    {
-        remove_session(session);
-        msh::AbstractShell::close_session(session);
-    }
-
-    mf::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        ms::SurfaceCreationParameters const placed_params = policy.handle_place_new_surface(session, params);
-        auto const result = msh::AbstractShell::create_surface(session, placed_params);
-        add_surface(session->surface(result), session);
-        policy.handle_new_surface(session, session->surface(result));
-        return result;
-    }
-
-    void destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface) override
-    {
-        remove_surface(session->surface(surface), session);
-        msh::AbstractShell::destroy_surface(session, surface);
-    }
-
-    void click(Point cursor) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        policy.handle_click(cursor);
-        old_cursor = cursor;
-    }
-
-    void drag(Point cursor) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        policy.handle_drag(cursor, old_cursor);
-        old_cursor = cursor;
-    }
-
-    void resize(Point cursor) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        policy.handle_resize(cursor, old_cursor);
-        old_cursor = cursor;
-    }
-
-    int set_surface_attribute(
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& surface,
-        MirSurfaceAttrib attrib,
-        int value) override
-    {
-        switch (attrib)
-        {
-        case mir_surface_attrib_state:
-        {
-            std::lock_guard<decltype(mutex)> lock(mutex);
-            auto const state = policy.handle_set_state(surface, MirSurfaceState(value));
-            return msh::AbstractShell::set_surface_attribute(session, surface, attrib, state);
-        }
-        default:
-            return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
-        }
-    }
-
-    // I'm not sure this is generic, but it's in the WindowManager interface
-    // and I don't see any other sane implementation
-    void toggle(MirSurfaceState state) override
-    {
-        if (auto const focussed_session = msh::AbstractShell::focussed_application().lock())
-        {
-            if (auto const focussed_surface = focussed_session->default_surface())
-            {
-                std::lock_guard<decltype(mutex)> lock(mutex);
-
-                if (info_for(focussed_surface).state == state)
-                    state = mir_surface_state_restored;
-
-                policy.handle_set_state(focussed_surface, MirSurfaceState(state));
-            }
-        }
-    }
-
-    auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
-    -> std::shared_ptr<ms::Session> override
-    {
-        for(auto& info : session_info)
-        {
-            if (predicate(info.second))
-            {
-                return info.first.lock();
-            }
-        }
-
-        return std::shared_ptr<ms::Session>{};
-    }
-
-    auto info_for(std::weak_ptr<ms::Session> const& session) const -> SessionInfo& override
-    {
-        return const_cast<SessionInfo&>(session_info.at(session));
-    }
-
-    auto info_for(std::weak_ptr<ms::Surface> const& surface) const -> SurfaceInfo& override
-    {
-        return const_cast<SurfaceInfo&>(surface_info.at(surface));
-    }
-
-    void set_working_surface_to(std::weak_ptr<ms::Surface> const& surface) override
-    {
-        old_surface = surface;
-    }
-
-    auto working_surface() const -> std::shared_ptr<ms::Surface> override
-    {
-        return old_surface.lock();
-    }
-
-private:
-    WindowManagementPolicy policy;
-
-    std::mutex mutex;
-
-    void add_session(std::shared_ptr<ms::Session> const& session)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info[session] = SessionInfo();
-        policy.handle_session_info_updated(session_info, displays);
-    }
-
-    void remove_session(std::shared_ptr<ms::Session> const& session)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info.erase(session);
-        policy.handle_session_info_updated(session_info, displays);
-    }
-
-    void add_surface(
-        std::shared_ptr<ms::Surface> const& surface,
-        std::shared_ptr<ms::Session> const& session)
-    {
-        session_info[session].surfaces.push_back(surface);
-        surface_info.emplace(surface, SurfaceInfo{session, surface});
-    }
-
-    void remove_surface(
-        std::weak_ptr<ms::Surface> const& surface,
-        std::shared_ptr<ms::Session> const& session)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        auto& surfaces = session_info[session].surfaces;
-
-        for (auto i = begin(surfaces); i != end(surfaces); ++i)
-        {
-            if (surface.lock() == i->lock())
-            {
-                surfaces.erase(i);
-                break;
-            }
-        }
-
-        surface_info.erase(surface);
-    }
-
-    void add_display(Rectangle const& area) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        displays.add(area);
-        policy.handle_displays_updated(session_info, displays);
-    }
-
-    void remove_display(Rectangle const& area) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        displays.remove(area);
-        policy.handle_displays_updated(session_info, displays);
-    }
-
-    using SessionInfoMap = typename SessionTo<SessionInfo>::type;
-    using SurfaceInfoMap = typename SurfaceTo<SurfaceInfo>::type;
-
-    SessionInfoMap session_info;
-    SurfaceInfoMap surface_info;
-    Rectangles displays;
-
-    Point old_cursor{};
-    std::weak_ptr<ms::Surface> old_surface;
-};
-
 struct SessionInfo
 {
     Rectangle tile;
@@ -331,8 +82,8 @@ struct SurfaceInfo
 class FullscreenWindowManagerPolicy
 {
 public:
-    using Tools = BasicWindowManagerTools<SessionInfo, SurfaceInfo>;
-    using SessionInfoMap = typename SessionTo<SessionInfo>::type;
+    using Tools = me::BasicWindowManagerTools<SessionInfo, SurfaceInfo>;
+    using SessionInfoMap = typename me::SessionTo<SessionInfo>::type;
 
     FullscreenWindowManagerPolicy(Tools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
         display_layout{display_layout} {}
@@ -384,8 +135,8 @@ private:
 class TilingWindowManagerPolicy
 {
 public:
-    using Tools = BasicWindowManagerTools<SessionInfo, SurfaceInfo>;
-    using SessionInfoMap = typename SessionTo<SessionInfo>::type;
+    using Tools = me::BasicWindowManagerTools<SessionInfo, SurfaceInfo>;
+    using SessionInfoMap = typename me::SessionTo<SessionInfo>::type;
 
     TilingWindowManagerPolicy(Tools* const tools) :
         tools{tools} {}
@@ -691,8 +442,8 @@ private:
 };
 }
 
-using TilingWindowManager = BasicWindowManager<SessionInfo, SurfaceInfo, TilingWindowManagerPolicy>;
-using FullscreenWindowManager = BasicWindowManager<SessionInfo, SurfaceInfo, FullscreenWindowManagerPolicy>;
+using TilingWindowManager = me::BasicWindowManager<TilingWindowManagerPolicy, SessionInfo, SurfaceInfo>;
+using FullscreenWindowManager = me::BasicWindowManager<FullscreenWindowManagerPolicy, SessionInfo, SurfaceInfo>;
 
 class me::EventTracker : public mi::EventFilter
 {
