@@ -73,8 +73,6 @@ public:
     void wait_for_page_flip();
 
 private:
-    void flip();
-
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
     bool schedule_page_flip(BufferObject* bufobj);
