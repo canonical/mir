@@ -19,7 +19,6 @@
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
 
 #include "server_example_window_management.h"
-#include "server_example_fullscreen_placement_strategy.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
@@ -31,6 +30,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/abstract_shell.h"
+#include "mir/shell/display_layout.h"
 
 #include <linux/input.h>
 
@@ -57,43 +57,6 @@ namespace
 {
 char const* const wm_tiling = "tiling";
 char const* const wm_fullscreen = "fullscreen";
-
-// Very simple - make every surface fullscreen
-class FullscreenWindowManager : public me::WindowManager,
-    msh::AbstractShell,
-    me::FullscreenPlacementStrategy
-{
-public:
-    FullscreenWindowManager(
-        std::shared_ptr<msh::InputTargeter> const& input_targeter,
-        std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
-        std::shared_ptr<msh::DisplayLayout> const& display_layout) :
-        AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
-        FullscreenPlacementStrategy{display_layout}
-    {
-    }
-
-private:
-    mf::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params) override
-    {
-        ms::SurfaceCreationParameters const placed_params = place(*session, params);
-        return msh::AbstractShell::create_surface(session, placed_params);
-    }
-
-    void add_display(Rectangle const&) override {}
-
-    void remove_display(Rectangle const&) override {}
-
-    void click(Point) override {}
-
-    void drag(Point) override {}
-
-    void resize(Point) override {}
-
-    void toggle(MirSurfaceState) override {}
-};
 
 template<typename Info>
 struct SurfaceTo
@@ -135,13 +98,15 @@ class BasicWindowManager : public virtual me::WindowManager,
     private BasicWindowManagerTools<SessionInfo, SurfaceInfo>
 {
 public:
+    template <typename... PolicyArgs>
     BasicWindowManager(
         std::shared_ptr<msh::InputTargeter> const& input_targeter,
         std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager) :
+        std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
+        PolicyArgs... policy_args) :
         AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
-        policy{this}
+        policy{this, policy_args...}
     {
     }
 
@@ -360,6 +325,48 @@ struct SurfaceInfo
     MirSurfaceState state;
     Rectangle restore_rect;
 };
+
+// Very simple - make every surface fullscreen
+class FullscreenWindowManagerPolicy
+{
+public:
+    using Tools = BasicWindowManagerTools<SessionInfo, SurfaceInfo>;
+    using SessionInfoMap = typename SessionTo<SessionInfo>::type;
+
+    FullscreenWindowManagerPolicy(Tools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
+        display_layout{display_layout} {}
+
+    void handle_click(const Point& /*cursor*/) {}
+
+    void handle_session_info_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/) {}
+
+    void handle_displays_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/) {}
+
+    void handle_resize(Point const& /*cursor*/, Point const& /*old_cursor*/) {}
+
+    auto handle_place_new_surface(
+        std::shared_ptr<ms::Session> const& /*session*/,
+        ms::SurfaceCreationParameters const& request_parameters)
+    -> ms::SurfaceCreationParameters
+    {
+        auto placed_parameters = request_parameters;
+
+        Rectangle rect{request_parameters.top_left, request_parameters.size};
+        display_layout->size_to_output(rect);
+        placed_parameters.size = rect.size;
+
+        return placed_parameters;
+    }
+
+    int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value)
+        { return value; }
+
+    void handle_drag(Point const& /*cursor*/, Point const& /*old_cursor*/) {}
+
+private:
+    std::shared_ptr<msh::DisplayLayout> const display_layout;
+};
+
 
 // simple tiling algorithm:
 //  o Switch apps: tap or click on the corresponding tile
@@ -676,6 +683,7 @@ private:
 }
 
 using TilingWindowManager = BasicWindowManager<SessionInfo, SurfaceInfo, TilingWindowManagerPolicy>;
+using FullscreenWindowManager = BasicWindowManager<SessionInfo, SurfaceInfo, FullscreenWindowManagerPolicy>;
 
 class me::EventTracker : public mi::EventFilter
 {
