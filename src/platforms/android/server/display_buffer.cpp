@@ -88,14 +88,14 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     if (!needs_commit)
         return false;
 
-    display_device->commit(display_name, *layer_list, gl_context, overlay_program);
+//    display_device->commit(display_name, *layer_list, gl_context, overlay_program);
     return true;
 }
 
 void mga::DisplayBuffer::gl_swap_buffers()
 {
     layer_list->update_list({});
-    display_device->commit(display_name, *layer_list, gl_context, overlay_program);
+//    display_device->commit(display_name, *layer_list, gl_context, overlay_program);
 }
 
 MirOrientation mga::DisplayBuffer::orientation() const
@@ -114,6 +114,8 @@ bool mga::DisplayBuffer::uses_alpha() const
     return false;
 }
 
+std::tuple<LayerList&, 
+
 void mga::DisplayBuffer::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
     f(*this);
@@ -121,6 +123,15 @@ void mga::DisplayBuffer::for_each_display_buffer(std::function<void(mg::DisplayB
 
 void mga::DisplayBuffer::post()
 {
+    DisplayBuffer primary;
+    DisplayBuffer external;
+
+    device->post({
+        primary.display_content(),
+        external.display_content()});
+
+    displayContentx
+    device->post(std::list<>)
 }
 
 void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation)
