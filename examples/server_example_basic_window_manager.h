@@ -74,20 +74,23 @@ public:
 
 /// A policy based window manager.
 /// This takes care of the management of any meta implementation held for the sessions and surfaces.
-/// WindowManagementPolicy construction must take a pointer to BasicWindowManagerTools<> as its first
-/// parameter. Any additional parameters can be forwarded by BasicWindowManager::BasicWindowManager.
-/// In addition WindowManagementPolicy must implement the following methods:
-/// o void handle_click(const Point& cursor);
-/// o void handle_session_info_updated(SessionInfoMap& session_info, Rectangles const& displays);
-/// o void handle_displays_updated(SessionInfoMap& session_info, Rectangles const& displays);
-/// o auto handle_place_new_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& request_parameters) -> ms::SurfaceCreationParameters;
-/// o void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface);
-/// o int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value);
-/// o void handle_resize(Point const& cursor, Point const& old_cursor);
-/// o void handle_drag(Point const& cursor, Point const& old_cursor);
 ///
-/// SessionInfo must be default constructable
-/// SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
+/// \tparam WindowManagementPolicy the constructor must take a pointer to BasicWindowManagerTools<>
+/// as its first parameter. (Any additional parameters can be forwarded by
+/// BasicWindowManager::BasicWindowManager.)
+/// In addition WindowManagementPolicy must implement the following methods:
+/// - void handle_click(const Point& cursor);
+/// - void handle_session_info_updated(SessionInfoMap& session_info, Rectangles const& displays);
+/// - void handle_displays_updated(SessionInfoMap& session_info, Rectangles const& displays);
+/// - auto handle_place_new_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& request_parameters) -> ms::SurfaceCreationParameters;
+/// - void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface);
+/// - int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value);
+/// - void handle_resize(Point const& cursor, Point const& old_cursor);
+/// - void handle_drag(Point const& cursor, Point const& old_cursor);
+///
+/// \tparam SessionInfo must be default constructable.
+///
+/// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
 class BasicWindowManager : public virtual WindowManager,
     private shell::AbstractShell,
