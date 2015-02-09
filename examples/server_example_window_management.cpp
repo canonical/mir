@@ -56,15 +56,45 @@ namespace
 char const* const wm_tiling = "tiling";
 char const* const wm_fullscreen = "fullscreen";
 
+struct NullSessionInfo
+{
+    void add_surface(std::weak_ptr<ms::Surface> /*surface*/) {}
+
+    void remove_surface(std::weak_ptr<ms::Surface> /*surface*/) {}
+};
+
+struct NullSurfaceInfo
+{
+    NullSurfaceInfo(
+        std::shared_ptr<ms::Session> const& /*session*/,
+        std::shared_ptr<ms::Surface> const& /*surface*/) {}
+};
+
 struct SessionInfo
 {
     Rectangle tile;
     std::vector<std::weak_ptr<ms::Surface>> surfaces;
+
+    void add_surface(std::weak_ptr<ms::Surface> surface)
+    {
+        surfaces.push_back(surface);
+    }
+
+    void remove_surface(std::weak_ptr<ms::Surface> surface)
+    {
+        for (auto i = begin(surfaces); i != end(surfaces); ++i)
+        {
+            if (surface.lock() == i->lock())
+            {
+                surfaces.erase(i);
+                break;
+            }
+        }
+    }
 };
 
 struct SurfaceInfo
 {
-    SurfaceInfo() = default;
     SurfaceInfo(
         std::shared_ptr<ms::Session> const& session,
         std::shared_ptr<ms::Surface> const& surface) :
@@ -82,8 +112,8 @@ struct SurfaceInfo
 class FullscreenWindowManagerPolicy
 {
 public:
-    using Tools = me::BasicWindowManagerTools<SessionInfo, SurfaceInfo>;
-    using SessionInfoMap = typename me::SessionTo<SessionInfo>::type;
+    using Tools = me::BasicWindowManagerTools<NullSessionInfo, NullSurfaceInfo>;
+    using SessionInfoMap = typename me::SessionTo<NullSessionInfo>::type;
 
     FullscreenWindowManagerPolicy(Tools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
         display_layout{display_layout} {}
@@ -443,7 +473,7 @@ private:
 }
 
 using TilingWindowManager = me::BasicWindowManager<TilingWindowManagerPolicy, SessionInfo, SurfaceInfo>;
-using FullscreenWindowManager = me::BasicWindowManager<FullscreenWindowManagerPolicy, SessionInfo, SurfaceInfo>;
+using FullscreenWindowManager = me::BasicWindowManager<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
 
 class me::EventTracker : public mi::EventFilter
 {

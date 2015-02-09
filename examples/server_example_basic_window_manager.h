@@ -89,6 +89,10 @@ public:
 /// - void handle_drag(Point const& cursor, Point const& old_cursor);
 ///
 /// \tparam SessionInfo must be default constructable.
+/// In addition SessionInfo must implement the following methods:
+/// - void add_surface(std::weak_ptr<ms::Surface> surface);
+/// - void remove_surface(std::weak_ptr<ms::Surface> surface);
+
 ///
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
@@ -191,7 +195,7 @@ public:
             {
                 std::lock_guard<decltype(mutex)> lock(mutex);
 
-                if (info_for(focussed_surface).state == state)
+                if (focussed_surface->state() == state)
                     state = mir_surface_state_restored;
 
                 policy.handle_set_state(focussed_surface, MirSurfaceState(state));
@@ -255,7 +259,7 @@ private:
         std::shared_ptr<scene::Session> const& session)
     {
         // Called under lock
-        session_info[session].surfaces.push_back(surface);
+        session_info[session].add_surface(surface);
         surface_info.emplace(surface, SurfaceInfo{session, surface});
     }
 
@@ -264,16 +268,7 @@ private:
         std::shared_ptr<scene::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        auto& surfaces = session_info[session].surfaces;
-
-        for (auto i = begin(surfaces); i != end(surfaces); ++i)
-        {
-            if (surface.lock() == i->lock())
-            {
-                surfaces.erase(i);
-                break;
-            }
-        }
+        session_info[session].remove_surface(surface);
 
         surface_info.erase(surface);
     }
