@@ -109,16 +109,8 @@ public:
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
-    MirWaitHandle* next_buffer(mir_surface_callback callback, void * context);
+
     MirWaitHandle* get_create_wait_handle();
-
-    MirNativeBuffer* get_current_buffer_package();
-    MirPlatformType platform_type();
-    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
-    uint32_t get_current_buffer_id() const;
-    void get_cpu_region(MirGraphicsRegion& region);
-    EGLNativeWindowType generate_native_window();
-
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
 
     // TODO: Some sort of extension mechanism so that this can be moved
@@ -137,9 +129,9 @@ public:
     void set_event_handler(MirEventDelegate const* delegate);
     void handle_event(MirEvent const& e);
 
-    /* mir::client::EGLNativeSurface */
-    void request_and_wait_for_next_buffer();
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
+
+    mir::client::ClientBufferStream* get_buffer_stream();
 
     static bool is_valid(MirSurface* query);
 private:
@@ -147,7 +139,6 @@ private:
 
     void on_configured();
     void on_cursor_configured();
-    void process_incoming_buffer();
     void created(mir_surface_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 

@@ -157,7 +157,11 @@ int ms::SurfaceStack::frames_pending(mc::CompositorID id) const
     {
         for (auto const& surface : layer.second) 
         {
-            if (surface->visible())
+            // TODO: Rename mir_surface_attrib_visibility as it's obviously
+            //       confusing with visible()
+            if (surface->visible() &&
+                surface->query(mir_surface_attrib_visibility) ==
+                    mir_surface_visibility_exposed)
             {
                 // Note that we ask the surface and not a Renderable.
                 // This is because we don't want to waste time and resources
