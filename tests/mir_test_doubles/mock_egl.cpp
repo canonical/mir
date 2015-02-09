@@ -102,7 +102,16 @@ mtd::MockEGL::MockEGL()
     .WillByDefault(Return(fake_egl_context));
 
     ON_CALL(*this, eglMakeCurrent(_,_,_,_))
-    .WillByDefault(Return(EGL_TRUE));
+    .WillByDefault(Invoke(
+        [&] (EGLDisplay, EGLSurface, EGLSurface, EGLContext context)
+        {
+            current_contexts[std::this_thread::get_id()] = context;
+            return EGL_TRUE;
+        }));
+
+    ON_CALL(*this, eglGetCurrentContext())
+    .WillByDefault(Invoke(
+        [&] { return current_contexts[std::this_thread::get_id()]; }));
 
     ON_CALL(*this, eglSwapBuffers(_,_))
     .WillByDefault(Return(EGL_TRUE));

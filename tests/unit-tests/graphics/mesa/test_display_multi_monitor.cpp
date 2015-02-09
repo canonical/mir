@@ -296,6 +296,10 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
         /* The shared context is made current finally */
         EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,shared_context))
             .Times(1);
+
+        /* Contexts are released at teardown */
+        EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,EGL_NO_CONTEXT))
+            .Times(AtLeast(1));
     }
 
     auto display = create_display_cloned(create_platform());
