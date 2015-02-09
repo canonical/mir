@@ -131,7 +131,7 @@ public:
         std::lock_guard<decltype(mutex)> lock(mutex);
         scene::SurfaceCreationParameters const placed_params = policy.handle_place_new_surface(session, params);
         auto const result = shell::AbstractShell::create_surface(session, placed_params);
-        policy.handle_new_surface(session, session->surface(result));
+        add_surface(session->surface(result), session);
         return result;
     }
 
@@ -255,7 +255,7 @@ private:
         std::shared_ptr<scene::Session> const& session)
     {
         // Called under lock
-        session_info[session].add_surface(surface);
+        policy.handle_new_surface(session, surface);
         surface_info.emplace(surface, SurfaceInfo{session, surface});
     }
 
