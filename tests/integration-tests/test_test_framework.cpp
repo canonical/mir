@@ -122,6 +122,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
                 };
 
                 auto const surface = mir_connection_create_surface_sync(connection, &request_params);
+                EXPECT_TRUE(mir_surface_is_valid(surface));
                 mir_surface_release_sync(surface);
             }
 
@@ -129,6 +130,6 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
             connection_released.raise();
         }}.detach();
 
-    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{240}))
+    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{480}))
         << "Client hung, possibly because of fd leaks" << std::endl;
 }
