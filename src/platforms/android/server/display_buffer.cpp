@@ -114,8 +114,6 @@ bool mga::DisplayBuffer::uses_alpha() const
     return false;
 }
 
-std::tuple<LayerList&, 
-
 void mga::DisplayBuffer::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
     f(*this);
@@ -123,15 +121,6 @@ void mga::DisplayBuffer::for_each_display_buffer(std::function<void(mg::DisplayB
 
 void mga::DisplayBuffer::post()
 {
-    DisplayBuffer primary;
-    DisplayBuffer external;
-
-    device->post({
-        primary.display_content(),
-        external.display_content()});
-
-    displayContentx
-    device->post(std::list<>)
 }
 
 void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation)

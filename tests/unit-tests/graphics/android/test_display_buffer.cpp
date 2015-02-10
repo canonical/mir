@@ -85,6 +85,7 @@ struct DisplayBuffer : public ::testing::Test
 };
 }
 
+#if 0
 TEST_F(DisplayBuffer, can_post_update_with_gl_only)
 {
     using namespace testing;
@@ -105,7 +106,7 @@ TEST_F(DisplayBuffer, can_post_update_with_gl_only)
 
     db.gl_swap_buffers();
 }
-
+#endif
 TEST_F(DisplayBuffer, posts_overlay_list_returns_display_device_decision)
 {
     using namespace testing;
@@ -286,6 +287,7 @@ TEST_F(DisplayBuffer, reject_list_if_option_disabled)
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
 }
 
+#if 0
 TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
 {
     using namespace testing;
@@ -322,3 +324,4 @@ TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
     EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
 }
+#endif

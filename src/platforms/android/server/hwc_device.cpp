@@ -79,12 +79,10 @@ bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
     return it != onscreen_overlay_buffers.end();
 }
 
-void mga::HwcDevice::commit(
-    mga::DisplayName,
-    mga::LayerList& hwc_list,
-    SwappingGLContext const& context,
-    RenderableListCompositor const& list_compositor)
+void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
 {
+    (void) contents;
+#if 0
     hwc_list.setup_fb(context.last_rendered_buffer());
 
     hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
@@ -120,6 +118,7 @@ void mga::HwcDevice::commit(
         it.layer.release_buffer();
 
     mir::Fd retire_fd(hwc_list.retirement_fence());
+#endif
 }
 
 void mga::HwcDevice::content_cleared()
