@@ -636,8 +636,48 @@ private:
         return false;
     }
 
-    bool handle_touch_event(MirTouchInputEvent const* /*event*/)
+    bool handle_touch_event(MirTouchInputEvent const* event)
     {
+        auto const count = mir_touch_input_event_get_touch_count(event);
+
+        if (auto const wm = window_manager.lock())
+        {
+            long total_x = 0;
+            long total_y = 0;
+
+            for (auto i = 0U; i != count; ++i)
+            {
+                total_x += mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_x);
+                total_y += mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_y);
+            }
+
+            Point const cursor{total_x/count, total_y/count};
+
+            bool is_drag = true;
+            for (auto i = 0U; i != count; ++i)
+            {
+                switch (mir_touch_input_event_get_touch_action(event, i))
+                {
+                case mir_touch_input_event_action_up:
+                    return false;
+
+                case mir_touch_input_event_action_down:
+                    is_drag = false;
+
+                case mir_touch_input_event_action_change:
+                    continue;
+                }
+            }
+
+            if (is_drag && count == 3)
+            {
+                wm->drag(cursor);
+                return true;
+            }
+
+            wm->click(cursor);
+        }
+
         return false;
     }
 
