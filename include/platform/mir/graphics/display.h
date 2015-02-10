@@ -55,7 +55,6 @@ public:
     virtual ~DisplayGroup() = default;
 protected:
     DisplayGroup() = default;
-private:
     DisplayGroup(DisplayGroup const&) = delete;
     DisplayGroup& operator=(DisplayGroup const&) = delete;
 };
