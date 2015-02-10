@@ -71,7 +71,7 @@ public:
         std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
         std::shared_ptr<msh::DisplayLayout> const& display_layout) :
         AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
-        FullscreenPlacementStrategy{display_layout}
+        FullscreenPlacementStrategy(display_layout)
     {
     }
 

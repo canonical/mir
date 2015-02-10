@@ -80,14 +80,14 @@ md::GSourceHandle::GSourceHandle()
 md::GSourceHandle::GSourceHandle(
     GSource* gsource,
     std::function<void(GSource*)> const& pre_destruction_hook)
-    : gsource{gsource},
-      pre_destruction_hook{pre_destruction_hook}
+    : gsource(gsource),
+      pre_destruction_hook(pre_destruction_hook)
 {
 }
 
 md::GSourceHandle::GSourceHandle(GSourceHandle&& other)
-    : gsource{std::move(other.gsource)},
-      pre_destruction_hook{std::move(other.pre_destruction_hook)}
+    : gsource(std::move(other.gsource)),
+      pre_destruction_hook(std::move(other.pre_destruction_hook))
 {
     other.gsource = nullptr;
     other.pre_destruction_hook = [](GSource*){};
@@ -495,7 +495,7 @@ private:
 std::array<std::atomic<int>,10> md::SignalSources::SourceRegistration::write_fds;
 
 md::SignalSources::SignalSources(md::FdSources& fd_sources)
-    : fd_sources{fd_sources}
+    : fd_sources(fd_sources)
 {
     int pipefd[2];
 
