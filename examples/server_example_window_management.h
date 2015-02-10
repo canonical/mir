@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -22,7 +22,6 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/input/event_filter.h"
 #include "mir/shell/shell.h"
-#include "mir_toolkit/common.h"
 
 #include <memory>
 

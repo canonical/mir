@@ -38,7 +38,6 @@
 #include <vector>
 #include <mutex>
 
-namespace mc = mir::compositor;
 namespace me = mir::examples;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
