@@ -114,18 +114,14 @@ bool mga::DisplayBuffer::uses_alpha() const
     return false;
 }
 
-void mga::DisplayBuffer::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
-{
-    f(*this);
-}
-
-void mga::DisplayBuffer::post()
-{
-}
-
 void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation)
 {
     if (power_mode != mir_power_mode_on)
         display_device->content_cleared();
     orientation_ = orientation;
+}
+
+mga::DisplayContents mga::DisplayBuffer::contents() const
+{
+    return mga::DisplayContents{display_name, *layer_list, gl_context, overlay_program};
 }

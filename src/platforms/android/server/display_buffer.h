@@ -61,20 +61,18 @@ public:
     void gl_swap_buffers() override;
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
-    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override;
-    void post() override;
-
     MirOrientation orientation() const override;
     bool uses_alpha() const override;
     void configure(MirPowerMode power_mode, MirOrientation orientation) override;
+    DisplayContents contents() const override;
 private:
     DisplayName display_name;
     std::unique_ptr<LayerList> layer_list;
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;
-    FramebufferGLContext gl_context;
-    HWCFallbackGLRenderer overlay_program;
+    FramebufferGLContext mutable gl_context;
+    HWCFallbackGLRenderer mutable overlay_program;
     bool overlay_enabled;
     MirOrientation orientation_;
 };

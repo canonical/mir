@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_CONFIGURABLE_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/display_device.h"
+#include "display_device.h"
 
 namespace mir
 {
@@ -34,7 +34,7 @@ class ConfigurableDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
     virtual void configure(MirPowerMode power_mode, MirOrientation orientation) = 0;
-    virtual DisplayContent contents() const = 0;
+    virtual DisplayContents contents() const = 0;
 };
 
 }

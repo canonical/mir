@@ -17,6 +17,7 @@ add_library(mirplatformgraphicsandroidobjects OBJECT
   android_buffer_allocator.cpp
   buffer.cpp
   display.cpp
+  display_group.cpp
   display_configuration.cpp
   display_buffer.cpp
   hal_component_factory.cpp
