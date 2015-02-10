@@ -81,50 +81,57 @@ bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
 
 void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
 {
-    auto primary_contents = std::find_if(contents.begin(), contents.end(),
-        [](mga::DisplayContents const& c) {
-            return (c.name == mga::DisplayName::primary);
-    });
-    if (primary_contents == contents.end()) return;
-    auto& hwc_list = primary_contents->list;
-    auto& context = primary_contents->context;
-    auto& list_compositor = primary_contents->compositor;
-    
-    hwc_list.setup_fb(context.last_rendered_buffer());
+    std::array<hwc_display_contents_1*, HWC_NUM_DISPLAY_TYPES> lists{ nullptr, nullptr, nullptr };
+    std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
 
-    hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
-
-    if (hwc_list.needs_swapbuffers())
+    for (auto& content : contents)
     {
-        auto rejected_renderables = hwc_list.rejected_renderables();
-        if (rejected_renderables.empty())
-            context.swap_buffers();
-        else
-            list_compositor.render(std::move(rejected_renderables), context);
-        hwc_list.setup_fb(context.last_rendered_buffer());
-        hwc_list.swap_occurred();
+        if (content.name == mga::DisplayName::primary)
+            lists[HWC_DISPLAY_PRIMARY] = content.list.native_list();
+        else if (content.name == mga::DisplayName::external) 
+            lists[HWC_DISPLAY_EXTERNAL] = content.list.native_list();
+
+        content.list.setup_fb(content.context.last_rendered_buffer());
     }
 
-    //setup overlays
-    std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
-    for (auto& layer : hwc_list)
+    hwc_wrapper->prepare(lists);
+
+    for (auto& content : contents)
     {
-        auto buffer = layer.layer.buffer();
-        if (layer.layer.is_overlay() && buffer)
+        if (content.list.needs_swapbuffers())
         {
-            if (!buffer_is_onscreen(*buffer))
-                layer.layer.set_acquirefence();
-            next_onscreen_overlay_buffers.push_back(buffer);
+            auto rejected_renderables = content.list.rejected_renderables();
+            if (rejected_renderables.empty())
+                content.context.swap_buffers();
+            else
+                content.compositor.render(std::move(rejected_renderables), content.context);
+            content.list.setup_fb(content.context.last_rendered_buffer());
+            content.list.swap_occurred();
+        }
+    
+        //setup overlays
+        for (auto& layer : content.list)
+        {
+            auto buffer = layer.layer.buffer();
+            if (layer.layer.is_overlay() && buffer)
+            {
+                if (!buffer_is_onscreen(*buffer))
+                    layer.layer.set_acquirefence();
+                next_onscreen_overlay_buffers.push_back(buffer);
+            }
         }
     }
 
-    hwc_wrapper->set({{hwc_list.native_list(), nullptr, nullptr}});
+    hwc_wrapper->set(lists);
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
 
-    for (auto& it : hwc_list)
-        it.layer.release_buffer();
+    for (auto& content : contents)
+    {
+        for (auto& it : content.list)
+            it.layer.release_buffer();
 
-    mir::Fd retire_fd(hwc_list.retirement_fence());
+        mir::Fd retire_fd(content.list.retirement_fence());
+    }
 }
 
 void mga::HwcDevice::content_cleared()
