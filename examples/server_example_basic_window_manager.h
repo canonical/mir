@@ -141,25 +141,28 @@ public:
         shell::AbstractShell::destroy_surface(session, surface);
     }
 
-    void click(geometry::Point cursor) override
+    bool handle(MirEvent const& event) override
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        policy.handle_click(cursor);
-        old_cursor = cursor;
-    }
+        if (mir_event_get_type(&event) != mir_event_type_input)
+            return false;
 
-    void drag(geometry::Point cursor) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        policy.handle_drag(cursor, old_cursor);
-        old_cursor = cursor;
-    }
+        auto const input_event = mir_event_get_input_event(&event);
 
-    void resize(geometry::Point cursor) override
-    {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        policy.handle_resize(cursor, old_cursor);
-        old_cursor = cursor;
+
+        switch (mir_input_event_get_type(input_event))
+        {
+        case mir_input_event_type_key:
+            return policy.handle_key_event(mir_input_event_get_key_input_event(input_event));
+
+        case mir_input_event_type_touch:
+            return policy.handle_touch_event(mir_input_event_get_touch_input_event(input_event));
+
+        case mir_input_event_type_pointer:
+            return policy.handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
+        }
+
+        return false;
     }
 
     int set_surface_attribute(
@@ -178,25 +181,6 @@ public:
         }
         default:
             return shell::AbstractShell::set_surface_attribute(session, surface, attrib, value);
-        }
-    }
-
-    // I'm not sure this is generic, but it's in the WindowManager interface
-    // and I don't see any other sane implementation
-    void toggle(MirSurfaceState state) override
-    {
-        if (auto const session = shell::AbstractShell::focussed_application().lock())
-        {
-            if (auto const surface = session->default_surface())
-            {
-                std::lock_guard<decltype(mutex)> lock(mutex);
-
-                if (surface->state() == state)
-                    state = mir_surface_state_restored;
-
-                auto const value = policy.handle_set_state(surface, MirSurfaceState(state));
-                shell::AbstractShell::set_surface_attribute(session, surface, mir_surface_attrib_state, value);
-            }
         }
     }
 
@@ -290,7 +274,6 @@ private:
     typename SurfaceTo<SurfaceInfo>::type surface_info;
     geometry::Rectangles displays;
 
-    geometry::Point old_cursor{};
     std::weak_ptr<scene::Surface> old_surface;
 };
 }
