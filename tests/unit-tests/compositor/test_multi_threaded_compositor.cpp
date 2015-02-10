@@ -375,12 +375,12 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
     EXPECT_CALL(*mock_report, started())
         .Times(1);
 
-//    display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
-//    {
-//        EXPECT_CALL(mock_buf, make_current()).Times(1);
-//        EXPECT_CALL(mock_buf, view_area())
-//            .WillOnce(Return(geom::Rectangle()));
-//    });
+    display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
+    {
+        EXPECT_CALL(mock_buf, make_current()).Times(1);
+        EXPECT_CALL(mock_buf, view_area())
+            .WillOnce(Return(geom::Rectangle()));
+    });
 
     EXPECT_CALL(*mock_report, added_display(_,_,_,_,_))
         .Times(1);
