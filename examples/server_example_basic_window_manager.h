@@ -79,15 +79,15 @@ public:
 /// as its first parameter. (Any additional parameters can be forwarded by
 /// BasicWindowManager::BasicWindowManager.)
 /// In addition WindowManagementPolicy must implement the following methods:
-/// - void handle_click(const Point& cursor);
 /// - void handle_session_info_updated(SessionInfoMap& session_info, Rectangles const& displays);
 /// - void handle_displays_updated(SessionInfoMap& session_info, Rectangles const& displays);
 /// - auto handle_place_new_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& request_parameters) -> ms::SurfaceCreationParameters;
 /// - void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface);
 /// - void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/);
 /// - int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value);
-/// - void handle_resize(Point const& cursor, Point const& old_cursor);
-/// - void handle_drag(Point const& cursor, Point const& old_cursor);
+/// - bool handle_key_event(MirKeyInputEvent const* event);
+/// - bool handle_touch_event(MirTouchInputEvent const* event);
+/// - bool handle_pointer_event(MirPointerInputEvent const* event);
 ///
 /// \tparam SessionInfo must be default constructable.
 ///
