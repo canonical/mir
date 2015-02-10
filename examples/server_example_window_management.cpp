@@ -16,8 +16,6 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
 #include "server_example_window_management.h"
 #include "server_example_basic_window_manager.h"
 
@@ -29,6 +27,8 @@
 #include "mir/options/option.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/display_layout.h"
+
+#include "mir_toolkit/events/input/input_event.h"
 
 #include <linux/input.h>
 
@@ -480,44 +480,54 @@ public:
 
     bool handle(MirEvent const& event) override
     {
-        switch (event.type)
-        {
-        case mir_event_type_key:
-            return handle_key_event(event.key);
-
-        case mir_event_type_motion:
-            return handle_motion_event(event.motion);
-
-        default:
+        if (mir_event_get_type(&event) != mir_event_type_input)
             return false;
+
+        auto const input_event = mir_event_get_input_event(&event);
+
+        switch (mir_input_event_get_type(input_event))
+        {
+        case mir_input_event_type_key:
+            return handle_key_event(mir_input_event_get_key_input_event(input_event));
+
+        case mir_input_event_type_touch:
+            return handle_touch_event(mir_input_event_get_touch_input_event(input_event));
+
+        case mir_input_event_type_pointer:
+            return handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
         }
+
+        return false;
     }
 
 private:
-    bool handle_key_event(MirKeyEvent const& event)
-    {
-        static const int modifier_mask =
-            mir_key_modifier_alt |
-            mir_key_modifier_shift |
-            mir_key_modifier_sym |
-            mir_key_modifier_ctrl |
-            mir_key_modifier_meta;
+    static const int modifier_mask =
+        mir_input_event_modifier_alt |
+        mir_input_event_modifier_shift |
+        mir_input_event_modifier_sym |
+        mir_input_event_modifier_ctrl |
+        mir_input_event_modifier_meta;
 
-        if (event.action == mir_key_action_down &&
-            event.scan_code == KEY_F11)
+    bool handle_key_event(MirKeyInputEvent const* event)
+    {
+        auto const action = mir_key_input_event_get_action(event);
+        auto const scan_code = mir_key_input_event_get_scan_code(event);
+        auto const modifiers = mir_key_input_event_get_modifiers(event) & modifier_mask;
+
+        if (action == mir_key_input_event_action_down && scan_code == KEY_F11)
         {
             if (auto const wm = window_manager.lock())
-            switch (event.modifiers & modifier_mask)
+            switch (modifiers & modifier_mask)
             {
-            case mir_key_modifier_alt:
+            case mir_input_event_modifier_alt:
                 wm->toggle(mir_surface_state_maximized);
                 return true;
 
-            case mir_key_modifier_shift:
+            case mir_input_event_modifier_shift:
                 wm->toggle(mir_surface_state_vertmaximized);
                 return true;
 
-            case mir_key_modifier_ctrl:
+            case mir_input_event_modifier_ctrl:
                 wm->toggle(mir_surface_state_horizmaximized);
                 return true;
 
@@ -529,53 +539,84 @@ private:
         return false;
     }
 
-    bool handle_motion_event(MirMotionEvent const& event)
+    bool handle_touch_event(MirTouchInputEvent const* event)
     {
-        if (event.action == mir_motion_action_down ||
-            event.action == mir_motion_action_pointer_down)
+        auto const count = mir_touch_input_event_get_touch_count(event);
+
+        if (auto const wm = window_manager.lock())
         {
-            if (auto const wm = window_manager.lock())
+            long total_x = 0;
+            long total_y = 0;
+
+            for (auto i = 0U; i != count; ++i)
             {
-                wm->click(average_pointer(event.pointer_count, event.pointer_coordinates));
-                return false;
+                total_x += mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_x);
+                total_y += mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_y);
             }
-        }
-        else if (event.action == mir_motion_action_move &&
-                 event.modifiers & mir_key_modifier_alt)
-        {
-            if (auto const wm = window_manager.lock())
+
+            Point const cursor{total_x/count, total_y/count};
+
+            bool is_drag = true;
+            for (auto i = 0U; i != count; ++i)
             {
-                switch (event.button_state)
+                switch (mir_touch_input_event_get_touch_action(event, i))
                 {
-                case mir_motion_button_primary:
-                    wm->drag(average_pointer(event.pointer_count, event.pointer_coordinates));
-                    return true;
+                case mir_touch_input_event_action_up:
+                    return false;
 
-                case mir_motion_button_tertiary:
-                    wm->resize(average_pointer(event.pointer_count, event.pointer_coordinates));
-                    return true;
+                case mir_touch_input_event_action_down:
+                    is_drag = false;
 
-                default:
-                    ;// ignore
+                case mir_touch_input_event_action_change:
+                    continue;
                 }
             }
+
+            if (is_drag && count == 3)
+            {
+                wm->drag(cursor);
+                return true;
+            }
+
+            wm->click(cursor);
         }
 
         return false;
     }
 
-    static Point average_pointer(size_t pointer_count, MirMotionPointer const* pointer_coordinates)
+    bool handle_pointer_event(MirPointerInputEvent const* event)
     {
-        long total_x = 0;
-        long total_y = 0;
-
-        for (auto p = pointer_coordinates; p != pointer_coordinates + pointer_count; ++p)
+        if (auto const wm = window_manager.lock())
         {
-            total_x += p->x;
-            total_y += p->y;
+            auto const action = mir_pointer_input_event_get_action(event);
+            auto const modifiers = mir_pointer_input_event_get_modifiers(event) & modifier_mask;
+            Point const cursor{
+                mir_pointer_input_event_get_axis_value(event, mir_pointer_input_axis_x),
+                mir_pointer_input_event_get_axis_value(event, mir_pointer_input_axis_y)};
+
+            if (action == mir_pointer_input_event_action_button_down)
+            {
+                wm->click(cursor);
+                return false;
+            }
+            else if (action == mir_pointer_input_event_action_motion &&
+                     modifiers == mir_input_event_modifier_alt)
+            {
+                if (mir_pointer_input_event_get_button_state(event, mir_pointer_input_button_primary))
+                {
+                    wm->drag(cursor);
+                    return true;
+                }
+
+                if (mir_pointer_input_event_get_button_state(event, mir_pointer_input_button_tertiary))
+                {
+                    wm->resize(cursor);
+                    return true;
+                }
+            }
         }
 
-        return Point{total_x/pointer_count, total_y/pointer_count};
+        return false;
     }
 
     std::weak_ptr<me::WindowManager> const window_manager;
