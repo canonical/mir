@@ -782,3 +782,42 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
     list.update_list(renderlist2);
     device.commit({content});
 }
+
+TEST_F(HwcDevice, commits_external_list_with_both_force_gl)
+{
+    using namespace testing;
+    mtd::MockSwappingGLContext const mock_context1;
+    mtd::MockSwappingGLContext const mock_context2;
+    ON_CALL(mock_context1, last_rendered_buffer())
+        .WillByDefault(Return(stub_fb_buffer));
+    ON_CALL(mock_context2, last_rendered_buffer())
+        .WillByDefault(Return(stub_fb_buffer));
+    std::list<hwc_layer_1_t*> expected_list
+    {
+        &skip_layer,
+        &target_layer
+    };
+
+    //EXPECT_CALL(mock_context1, release_current())
+    //    .Times(2);
+    //EXPECT_CALL(mock_context1, make_current());
+    //EXPECT_CALL(mock_context2, release_current())
+    //    .Times(2);
+    //EXPECT_CALL(mock_context2, make_current());
+    
+    Sequence seq;
+    EXPECT_CALL(*mock_device, prepare(MatchesLists(expected_list, expected_list)))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_device, set(MatchesLists(expected_list, expected_list)))
+        .InSequence(seq);
+
+    mga::LayerList primary_list(layer_adapter, {});
+    mga::LayerList external_list(layer_adapter, {});
+
+    mga::HwcDevice device(mock_device);
+
+    mga::DisplayContents primary_content{primary, primary_list, stub_context, stub_compositor};
+    mga::DisplayContents external_content{mga::DisplayName::external, external_list, stub_context, stub_compositor};
+
+    device.commit({primary_content, external_content});
+}

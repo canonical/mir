@@ -81,8 +81,15 @@ bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
 
 void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
 {
-    (void) contents;
-#if 0
+    auto primary_contents = std::find_if(contents.begin(), contents.end(),
+        [](mga::DisplayContents const& c) {
+            return (c.name == mga::DisplayName::primary);
+    });
+    if (primary_contents == contents.end()) return;
+    auto& hwc_list = primary_contents->list;
+    auto& context = primary_contents->context;
+    auto& list_compositor = primary_contents->compositor;
+    
     hwc_list.setup_fb(context.last_rendered_buffer());
 
     hwc_wrapper->prepare({{hwc_list.native_list(), nullptr, nullptr}});
@@ -118,7 +125,6 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
         it.layer.release_buffer();
 
     mir::Fd retire_fd(hwc_list.retirement_fence());
-#endif
 }
 
 void mga::HwcDevice::content_cleared()
