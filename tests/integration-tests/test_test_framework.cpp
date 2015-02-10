@@ -141,7 +141,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
             connection_released.raise();
 
             auto new_fd_count = count_fds();
-            // Via manipulation of the test iteration number I found that the client library
+            // TODO: Via manipulation of the test iteration number I found that the client library
             // leaks 3 fds but that this number does not increase with the number of surfaces
             // you create.
             EXPECT_EQ(old_fd_count + 3, new_fd_count);
