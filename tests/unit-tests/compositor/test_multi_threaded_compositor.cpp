@@ -621,7 +621,6 @@ TEST(MultiThreadedCompositor, surface_update_from_render_doesnt_deadlock)
     compositor.stop();
 }
 
-#if 0
 TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
 {
     using namespace testing;
@@ -644,7 +643,6 @@ TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
     compositor.start();
     compositor.stop();
 }
-#endif
 
 TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
 {
