@@ -29,7 +29,6 @@ namespace graphics
 namespace android
 {
 
-//TODO: break this dependency, android displaybuffers shouldn't be their own DisplayGroups
 class ConfigurableDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
