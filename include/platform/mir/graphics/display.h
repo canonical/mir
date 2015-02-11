@@ -47,13 +47,14 @@ public:
     **/
     virtual void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) = 0;
 
-    /* post all DisplayBuffers associated with this DisplayGroup to their respective monitors.
-     * This may wait for based on hardware conditions and platform requirements */
+    /** Post all DisplayBuffers associated with this DisplayGroup to their respective monitors.
+     *  The content of all the DisplayBuffers in this DisplayGroup are guaranteed to be onscreen
+     *  in the near future. On some platforms, this may wait a potentially long time for vsync. 
+    **/
     virtual void post() = 0;
     virtual ~DisplayGroup() = default;
 protected:
     DisplayGroup() = default;
-private:
     DisplayGroup(DisplayGroup const&) = delete;
     DisplayGroup& operator=(DisplayGroup const&) = delete;
 };
