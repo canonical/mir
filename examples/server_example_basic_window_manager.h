@@ -61,8 +61,8 @@ public:
 
     virtual auto info_for(std::weak_ptr<scene::Surface> const& surface) const -> SurfaceInfo& = 0;
 
-    /* TODO this is probably the only place the functions inherited from
-     * TODO FocusController makes any sense.
+    /* TODO this is probably the only place these functions inherited from
+     * TODO FocusController makes any sense. FocusController can probably go.
     virtual std::weak_ptr<scene::Session> focussed_application() const = 0;
     virtual void focus_next() = 0;
     virtual void set_focus_to(std::shared_ptr<scene::Session> const& focus) = 0;
