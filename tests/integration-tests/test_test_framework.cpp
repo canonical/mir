@@ -29,6 +29,7 @@
 
 #include <thread>
 #include <list>
+#include <sys/types.h>
 #include <dirent.h>
 
 namespace mf = mir::frontend;
@@ -98,7 +99,7 @@ namespace
 unsigned count_fds()
 {
     unsigned count = 0;
-    auto dir = opendir("/proc/thread-self/fd");
+    DIR* dir = opendir("/proc/thread-self/fd");
     while (readdir(dir) != nullptr)
         count++;
     closedir(dir);
