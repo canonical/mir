@@ -248,18 +248,18 @@ private:
 };
 
 
-class GenericWindowManager : public virtual Shell,
+class GenericShell : public virtual Shell,
     private shell::AbstractShell
 {
 public:
-    GenericWindowManager(
+    GenericShell(
         std::shared_ptr<shell::InputTargeter> const& input_targeter,
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
-        std::shared_ptr<WindowManagerMetadataModel> const& metadatabase) :
+        std::shared_ptr<WindowManagerMetadataModel> const& window_manager) :
         AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
-        metadatabase{metadatabase}
+        window_manager{window_manager}
     {
     }
 
@@ -269,13 +269,13 @@ public:
         std::shared_ptr<frontend::EventSink> const& sink) override
     {
         auto const result = shell::AbstractShell::open_session(client_pid, name, sink);
-        metadatabase->add_session(result);
+        window_manager->add_session(result);
         return result;
     }
 
     void close_session(std::shared_ptr<scene::Session> const& session) override
     {
-        metadatabase->remove_session(session);
+        window_manager->remove_session(session);
         shell::AbstractShell::close_session(session);
     }
 
@@ -286,12 +286,12 @@ public:
                 return shell::AbstractShell::create_surface(session, placed_params);
             };
 
-        return metadatabase->add_surface(session, params, build);
+        return window_manager->add_surface(session, params, build);
     }
 
     void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override
     {
-        metadatabase->remove_surface(session->surface(surface), session);
+        window_manager->remove_surface(session->surface(surface), session);
         shell::AbstractShell::destroy_surface(session, surface);
     }
 
@@ -305,13 +305,13 @@ public:
         switch (mir_input_event_get_type(input_event))
         {
         case mir_input_event_type_key:
-            return metadatabase->handle_key_event(mir_input_event_get_key_input_event(input_event));
+            return window_manager->handle_key_event(mir_input_event_get_key_input_event(input_event));
 
         case mir_input_event_type_touch:
-            return metadatabase->handle_touch_event(mir_input_event_get_touch_input_event(input_event));
+            return window_manager->handle_touch_event(mir_input_event_get_touch_input_event(input_event));
 
         case mir_input_event_type_pointer:
-            return metadatabase->handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
+            return window_manager->handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
         }
 
         return false;
@@ -327,7 +327,7 @@ public:
         {
         case mir_surface_attrib_state:
         {
-            auto const state = metadatabase->handle_set_state(surface, MirSurfaceState(value));
+            auto const state = window_manager->handle_set_state(surface, MirSurfaceState(value));
             return shell::AbstractShell::set_surface_attribute(session, surface, attrib, state);
         }
         default:
@@ -338,15 +338,15 @@ public:
 private:
     void add_display(geometry::Rectangle const& area) override
     {
-        metadatabase->add_display(area);
+        window_manager->add_display(area);
     }
 
     void remove_display(geometry::Rectangle const& area) override
     {
-        metadatabase->remove_display(area);
+        window_manager->remove_display(area);
     }
 
-    std::shared_ptr<WindowManagerMetadataModel> const metadatabase;
+    std::shared_ptr<WindowManagerMetadataModel> const window_manager;
 };
 
 
@@ -371,17 +371,17 @@ private:
 ///
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManager : public GenericWindowManager
+class BasicShell : public GenericShell
 {
 public:
     template <typename... PolicyArgs>
-    BasicWindowManager(
+    BasicShell(
         std::shared_ptr<shell::InputTargeter> const& input_targeter,
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         PolicyArgs... policy_args) :
-        GenericWindowManager(
+        GenericShell(
             input_targeter,
             surface_coordinator,
             session_coordinator,

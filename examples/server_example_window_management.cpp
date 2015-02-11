@@ -600,8 +600,8 @@ private:
 };
 }
 
-using TilingWindowManager = me::BasicWindowManager<TilingWindowManagerPolicy, SessionInfo, SurfaceInfo>;
-using FullscreenWindowManager = me::BasicWindowManager<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
+using TilingShell = me::BasicShell<TilingWindowManagerPolicy, SessionInfo, SurfaceInfo>;
+using FullscreenShell = me::BasicShell<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
 
 auto me::ShellFactory::shell() -> std::shared_ptr<me::Shell>
 {
@@ -614,14 +614,14 @@ auto me::ShellFactory::shell() -> std::shared_ptr<me::Shell>
 
         if (selection == wm_tiling)
         {
-            tmp = std::make_shared<TilingWindowManager>(
+            tmp = std::make_shared<TilingShell>(
                 server.the_input_targeter(),
                 server.the_surface_coordinator(),
                 server.the_session_coordinator(),
                 server.the_prompt_session_manager());
         }
         else if (selection == wm_fullscreen)
-            tmp = std::make_shared<FullscreenWindowManager>(
+            tmp = std::make_shared<FullscreenShell>(
                 server.the_input_targeter(),
                 server.the_surface_coordinator(),
                 server.the_session_coordinator(),
