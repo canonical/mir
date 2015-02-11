@@ -43,7 +43,7 @@ public:
     DisplayTracker(
         std::unique_ptr<mc::DisplayBufferCompositor>&& wrapped,
         Rectangle const& area,
-        std::shared_ptr<me::WindowManager> const& window_manager) :
+        std::shared_ptr<me::Shell> const& window_manager) :
         wrapped{std::move(wrapped)},
         area{area},
         window_manager(window_manager)
@@ -65,7 +65,7 @@ private:
 
     std::unique_ptr<mc::DisplayBufferCompositor> const wrapped;
     Rectangle const area;
-    std::shared_ptr<me::WindowManager> const window_manager;
+    std::shared_ptr<me::Shell> const window_manager;
 };
 
 class DisplayTrackerFactory : public mc::DisplayBufferCompositorFactory
@@ -73,7 +73,7 @@ class DisplayTrackerFactory : public mc::DisplayBufferCompositorFactory
 public:
     DisplayTrackerFactory(
         std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped,
-        std::shared_ptr<me::WindowManager> const& window_manager) :
+        std::shared_ptr<me::Shell> const& window_manager) :
         wrapped{wrapped},
         window_manager(window_manager)
     {
@@ -88,7 +88,7 @@ private:
     }
 
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const wrapped;
-    std::shared_ptr<me::WindowManager> const window_manager;
+    std::shared_ptr<me::Shell> const window_manager;
 };
 }
 
@@ -96,7 +96,7 @@ void me::add_window_manager_option_to(Server& server)
 {
     server.add_configuration_option(me::wm_option, me::wm_description, mir::OptionType::string);
 
-    auto const factory = std::make_shared<me::WindowManagmentFactory>(server);
+    auto const factory = std::make_shared<me::ShellFactory>(server);
 
     server.override_the_shell([factory, &server]()
         -> std::shared_ptr<msh::Shell>
@@ -106,7 +106,7 @@ void me::add_window_manager_option_to(Server& server)
             if (!options->is_set(me::wm_option))
                 return std::shared_ptr<msh::Shell>{};
 
-            return factory->window_manager();
+            return factory->shell();
         });
 
     server.wrap_display_buffer_compositor_factory([factory, &server]
@@ -118,6 +118,6 @@ void me::add_window_manager_option_to(Server& server)
            if (!options->is_set(me::wm_option))
                return wrapped;
 
-           return std::make_shared<DisplayTrackerFactory>(wrapped, factory->window_manager());
+           return std::make_shared<DisplayTrackerFactory>(wrapped, factory->shell());
        });
 }

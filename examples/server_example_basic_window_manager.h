@@ -248,7 +248,7 @@ private:
 };
 
 
-class GenericWindowManager : public virtual WindowManager,
+class GenericWindowManager : public virtual Shell,
     private shell::AbstractShell
 {
 public:

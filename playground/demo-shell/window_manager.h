@@ -47,11 +47,11 @@ namespace scene { class Surface; }
 namespace examples
 {
 
-class WindowManager : public input::EventFilter
+class Shell : public input::EventFilter
 {
 public: 
-    WindowManager();
-    ~WindowManager() = default;
+    Shell();
+    ~Shell() = default;
 
     void set_focus_controller(std::shared_ptr<shell::FocusController> const& focus_controller);
     void set_display(std::shared_ptr<graphics::Display> const& display);
@@ -62,8 +62,8 @@ public:
     bool handle(MirEvent const& event) override;
 
 protected:
-    WindowManager(const WindowManager&) = delete;
-    WindowManager& operator=(const WindowManager&) = delete;
+    Shell(const Shell&) = delete;
+    Shell& operator=(const Shell&) = delete;
 
 private:
     std::shared_ptr<shell::FocusController> focus_controller;

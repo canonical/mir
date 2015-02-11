@@ -603,9 +603,9 @@ private:
 using TilingWindowManager = me::BasicWindowManager<TilingWindowManagerPolicy, SessionInfo, SurfaceInfo>;
 using FullscreenWindowManager = me::BasicWindowManager<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
 
-auto me::WindowManagmentFactory::window_manager() -> std::shared_ptr<me::WindowManager>
+auto me::ShellFactory::shell() -> std::shared_ptr<me::Shell>
 {
-    auto tmp = wm.lock();
+    auto tmp = shell_.lock();
 
     if (!tmp)
     {
@@ -631,7 +631,7 @@ auto me::WindowManagmentFactory::window_manager() -> std::shared_ptr<me::WindowM
             throw mir::AbnormalExit("Unknown window manager: " + selection);
 
         server.the_composite_event_filter()->prepend(tmp);
-        wm = tmp;
+        shell_ = tmp;
     }
 
     return tmp;

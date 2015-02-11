@@ -140,7 +140,7 @@ private:
 int main(int argc, char const* argv[])
 try
 {
-    auto wm = std::make_shared<me::WindowManager>();
+    auto wm = std::make_shared<me::Shell>();
     me::DemoServerConfiguration config(argc, argv, {wm});
 
     mir::run_mir(config, [&config, &wm](mir::DisplayServer&)

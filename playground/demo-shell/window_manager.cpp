@@ -46,32 +46,32 @@ namespace
 const int min_swipe_distance = 100;  // How long must a swipe be to act on?
 }
 
-me::WindowManager::WindowManager()
+me::Shell::Shell()
     : old_pinch_diam(0.0f), max_fingers(0)
 {
 }
 
-void me::WindowManager::set_focus_controller(std::shared_ptr<msh::FocusController> const& controller)
+void me::Shell::set_focus_controller(std::shared_ptr<msh::FocusController> const& controller)
 {
     focus_controller = controller;
 }
 
-void me::WindowManager::set_display(std::shared_ptr<mg::Display> const& dpy)
+void me::Shell::set_display(std::shared_ptr<mg::Display> const& dpy)
 {
     display = dpy;
 }
 
-void me::WindowManager::set_compositor(std::shared_ptr<mc::Compositor> const& cptor)
+void me::Shell::set_compositor(std::shared_ptr<mc::Compositor> const& cptor)
 {
     compositor = cptor;
 }
 
-void me::WindowManager::set_input_scene(std::shared_ptr<mi::Scene> const& s)
+void me::Shell::set_input_scene(std::shared_ptr<mi::Scene> const& s)
 {
     input_scene = s;
 }
 
-void me::WindowManager::force_redraw()
+void me::Shell::force_redraw()
 {
     // This is clumsy, but the only option our architecture allows us for now
     // Same hack as used in TouchspotController...
@@ -131,7 +131,7 @@ float measure_pinch(MirMotionEvent const& motion,
 } // namespace
 
 
-void me::WindowManager::toggle(ColourEffect which)
+void me::Shell::toggle(ColourEffect which)
 {
     colour_effect = (colour_effect == which) ? none : which;
     me::DemoCompositor::for_each([this](me::DemoCompositor& c)
@@ -141,7 +141,7 @@ void me::WindowManager::toggle(ColourEffect which)
     force_redraw();
 }
 
-void me::WindowManager::save_edges(scene::Surface& surf,
+void me::Shell::save_edges(scene::Surface& surf,
                                    geometry::Point const& p)
 {
     int width = surf.size().width.as_int();
@@ -168,7 +168,7 @@ void me::WindowManager::save_edges(scene::Surface& surf,
             vmiddle;
 }
 
-void me::WindowManager::resize(scene::Surface& surf,
+void me::Shell::resize(scene::Surface& surf,
                                geometry::Point const& cursor) const
 {
     int width = surf.size().width.as_int();
@@ -197,7 +197,7 @@ void me::WindowManager::resize(scene::Surface& surf,
     surf.resize({right-left, bottom-top});
 }
 
-bool me::WindowManager::handle(MirEvent const& event)
+bool me::Shell::handle(MirEvent const& event)
 {
     // TODO: Fix android configuration and remove static hack ~racarr
     static bool display_off = false;

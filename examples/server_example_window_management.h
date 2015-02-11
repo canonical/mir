@@ -34,7 +34,7 @@ class Server;
 
 namespace examples
 {
-class WindowManager :
+class Shell :
     public virtual shell::Shell,
     public virtual input::EventFilter
 {
@@ -44,16 +44,16 @@ public:
     virtual void remove_display(geometry::Rectangle const& area) = 0;
 };
 
-class WindowManagmentFactory
+class ShellFactory
 {
 public:
-    explicit WindowManagmentFactory(Server& server) : server(server) {}
+    explicit ShellFactory(Server& server) : server(server) {}
 
-    auto window_manager() -> std::shared_ptr<WindowManager>;
+    auto shell() -> std::shared_ptr<Shell>;
 
 private:
     Server& server;
-    std::weak_ptr<WindowManager> wm;
+    std::weak_ptr<Shell> shell_;
 };
 
 extern char const* const wm_option;
