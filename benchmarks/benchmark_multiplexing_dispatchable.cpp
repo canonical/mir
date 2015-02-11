@@ -1,5 +1,5 @@
-#include "include/common/mir/dispatch/multiplexing_dispatchable.h"
-#include "include/common/mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
+#include "mir/dispatch/simple_dispatch_thread.h"
 
 #include <iostream>
 #include <atomic>

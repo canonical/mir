@@ -28,6 +28,8 @@
 #include <tuple>
 #include <atomic>
 
+#include <pthread.h>
+
 namespace mir
 {
 namespace dispatch
@@ -94,13 +96,9 @@ public:
      */
     void remove_watch(Fd const& fd);
 private:
-    std::atomic<std::atomic<int>*> in_current_generation;
-    std::mutex lifetime_mutex;
+    pthread_rwlock_t lifetime_mutex;
     std::list<std::pair<std::shared_ptr<Dispatchable>, bool>> dispatchee_holder;
-    std::weak_ptr<Dispatchable>* last_gc_victim;
 
-    Fd gc_queue;
-    Fd gc_read_queue;
     Fd epoll_fd;
 };
 }
