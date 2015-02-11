@@ -247,6 +247,109 @@ private:
     geometry::Rectangles displays;
 };
 
+
+class GenericWindowManager : public virtual WindowManager,
+    private shell::AbstractShell
+{
+public:
+    GenericWindowManager(
+        std::shared_ptr<shell::InputTargeter> const& input_targeter,
+        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
+        std::shared_ptr<WindowManagerMetadataModel> const& metadatabase) :
+        AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
+        metadatabase{metadatabase}
+    {
+    }
+
+    std::shared_ptr<scene::Session> open_session(
+        pid_t client_pid,
+        std::string const& name,
+        std::shared_ptr<frontend::EventSink> const& sink) override
+    {
+        auto const result = shell::AbstractShell::open_session(client_pid, name, sink);
+        metadatabase->add_session(result);
+        return result;
+    }
+
+    void close_session(std::shared_ptr<scene::Session> const& session) override
+    {
+        metadatabase->remove_session(session);
+        shell::AbstractShell::close_session(session);
+    }
+
+    frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override
+    {
+        auto const build = [this](std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& placed_params)
+            {
+                return shell::AbstractShell::create_surface(session, placed_params);
+            };
+
+        return metadatabase->add_surface(session, params, build);
+    }
+
+    void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override
+    {
+        metadatabase->remove_surface(session->surface(surface), session);
+        shell::AbstractShell::destroy_surface(session, surface);
+    }
+
+    bool handle(MirEvent const& event) override
+    {
+        if (mir_event_get_type(&event) != mir_event_type_input)
+            return false;
+
+        auto const input_event = mir_event_get_input_event(&event);
+
+        switch (mir_input_event_get_type(input_event))
+        {
+        case mir_input_event_type_key:
+            return metadatabase->handle_key_event(mir_input_event_get_key_input_event(input_event));
+
+        case mir_input_event_type_touch:
+            return metadatabase->handle_touch_event(mir_input_event_get_touch_input_event(input_event));
+
+        case mir_input_event_type_pointer:
+            return metadatabase->handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
+        }
+
+        return false;
+    }
+
+    int set_surface_attribute(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        MirSurfaceAttrib attrib,
+        int value) override
+    {
+        switch (attrib)
+        {
+        case mir_surface_attrib_state:
+        {
+            auto const state = metadatabase->handle_set_state(surface, MirSurfaceState(value));
+            return shell::AbstractShell::set_surface_attribute(session, surface, attrib, state);
+        }
+        default:
+            return shell::AbstractShell::set_surface_attribute(session, surface, attrib, value);
+        }
+    }
+
+private:
+    void add_display(geometry::Rectangle const& area) override
+    {
+        metadatabase->add_display(area);
+    }
+
+    void remove_display(geometry::Rectangle const& area) override
+    {
+        metadatabase->remove_display(area);
+    }
+
+    std::shared_ptr<WindowManagerMetadataModel> const metadatabase;
+};
+
+
 /// A policy based window manager.
 /// This takes care of the management of any meta implementation held for the sessions and surfaces.
 ///
@@ -268,10 +371,8 @@ private:
 ///
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManager : public virtual WindowManager,
-    private shell::AbstractShell
+class BasicWindowManager : public GenericWindowManager
 {
-    using Metadatabase = WindowManagerMetadatabase<WindowManagementPolicy, SessionInfo, SurfaceInfo>;
 public:
     template <typename... PolicyArgs>
     BasicWindowManager(
@@ -280,95 +381,14 @@ public:
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         PolicyArgs... policy_args) :
-        AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
-        metadatabase{this, policy_args...}
+        GenericWindowManager(
+            input_targeter,
+            surface_coordinator,
+            session_coordinator,
+            prompt_session_manager,
+            std::make_shared<WindowManagerMetadatabase<WindowManagementPolicy, SessionInfo, SurfaceInfo>>(this, policy_args...))
     {
     }
-
-    std::shared_ptr<scene::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) override
-    {
-        auto const result = shell::AbstractShell::open_session(client_pid, name, sink);
-        metadatabase.add_session(result);
-        return result;
-    }
-
-    void close_session(std::shared_ptr<scene::Session> const& session) override
-    {
-        metadatabase.remove_session(session);
-        shell::AbstractShell::close_session(session);
-    }
-
-    frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override
-    {
-        auto const build = [this](std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& placed_params)
-            {
-                return shell::AbstractShell::create_surface(session, placed_params);
-            };
-
-        return metadatabase.add_surface(session, params, build);
-    }
-
-    void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override
-    {
-        metadatabase.remove_surface(session->surface(surface), session);
-        shell::AbstractShell::destroy_surface(session, surface);
-    }
-
-    bool handle(MirEvent const& event) override
-    {
-        if (mir_event_get_type(&event) != mir_event_type_input)
-            return false;
-
-        auto const input_event = mir_event_get_input_event(&event);
-
-        switch (mir_input_event_get_type(input_event))
-        {
-        case mir_input_event_type_key:
-            return metadatabase.handle_key_event(mir_input_event_get_key_input_event(input_event));
-
-        case mir_input_event_type_touch:
-            return metadatabase.handle_touch_event(mir_input_event_get_touch_input_event(input_event));
-
-        case mir_input_event_type_pointer:
-            return metadatabase.handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
-        }
-
-        return false;
-    }
-
-    int set_surface_attribute(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib,
-        int value) override
-    {
-        switch (attrib)
-        {
-        case mir_surface_attrib_state:
-        {
-            auto const state = metadatabase.handle_set_state(surface, MirSurfaceState(value));
-            return shell::AbstractShell::set_surface_attribute(session, surface, attrib, state);
-        }
-        default:
-            return shell::AbstractShell::set_surface_attribute(session, surface, attrib, value);
-        }
-    }
-
-private:
-    void add_display(geometry::Rectangle const& area) override
-    {
-        metadatabase.add_display(area);
-    }
-
-    void remove_display(geometry::Rectangle const& area) override
-    {
-        metadatabase.remove_display(area);
-    }
-
-    Metadatabase metadatabase;
 };
 }
 }
