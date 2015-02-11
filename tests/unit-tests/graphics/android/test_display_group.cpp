@@ -65,6 +65,7 @@ struct StubConfigurableDB : mga::ConfigurableDisplayBuffer
     {
         return mga::DisplayContents{name, list, context, compositor};
     }
+    MirPowerMode power_mode() const override { return mir_power_mode_on; }
 
     mga::DisplayName mutable name;
     mga::LayerList  mutable list{std::make_shared<mga::IntegerSourceCrop>(), {}};
@@ -96,10 +97,7 @@ TEST_F(DisplayGroup, db_additions_and_removals)
     group.add(primary_name, std::unique_ptr<StubConfigurableDB>(new StubConfigurableDB(primary_name)));
     group.add(external_name, std::unique_ptr<StubConfigurableDB>(new StubConfigurableDB(external_name)));
     group.remove(external_name);
-
-    EXPECT_THROW({
-        group.remove(external_name); //no external display
-    }, std::logic_error);
+    group.remove(external_name); //no external display, should be ignored
 }
 
 TEST_F(DisplayGroup, posts_content_of_dbs)

@@ -37,7 +37,8 @@ void mga::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBu
 {
     std::unique_lock<decltype(guard)> lk(guard);
     for(auto const& db : dbs)
-        f(*db.second);
+        if (db.second->power_mode() != mir_power_mode_off)
+            f(*db.second);
 }
 
 void mga::DisplayGroup::add(DisplayName name, std::unique_ptr<ConfigurableDisplayBuffer> buffer)
@@ -55,9 +56,6 @@ void mga::DisplayGroup::remove(DisplayName name)
     auto it = dbs.find(name);
     if (it != dbs.end())
         dbs.erase(it);
-    else
-        BOOST_THROW_EXCEPTION(std::logic_error("display name not present in map"));
-
 }
 
 void mga::DisplayGroup::configure(DisplayName name, MirPowerMode mode, MirOrientation orientation)

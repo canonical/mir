@@ -65,6 +65,7 @@ public:
     bool uses_alpha() const override;
     void configure(MirPowerMode power_mode, MirOrientation orientation) override;
     DisplayContents contents() const override;
+    MirPowerMode power_mode() const override;
 private:
     DisplayName display_name;
     std::unique_ptr<LayerList> layer_list;
@@ -75,6 +76,7 @@ private:
     HWCFallbackGLRenderer mutable overlay_program;
     bool overlay_enabled;
     MirOrientation orientation_;
+    MirPowerMode power_mode_;
 };
 
 }
