@@ -34,8 +34,8 @@ class ConfigurableDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
     virtual void configure(MirPowerMode power_mode, MirOrientation orientation) = 0;
+    virtual DisplayContents contents() = 0;
     virtual MirPowerMode power_mode() const = 0;
-    virtual DisplayContents contents() const = 0;
 };
 
 }

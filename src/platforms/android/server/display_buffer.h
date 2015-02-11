@@ -64,7 +64,7 @@ public:
     MirOrientation orientation() const override;
     bool uses_alpha() const override;
     void configure(MirPowerMode power_mode, MirOrientation orientation) override;
-    DisplayContents contents() const override;
+    DisplayContents contents() override;
     MirPowerMode power_mode() const override;
 private:
     DisplayName display_name;
@@ -72,8 +72,8 @@ private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;
-    FramebufferGLContext mutable gl_context;
-    HWCFallbackGLRenderer mutable overlay_program;
+    FramebufferGLContext gl_context;
+    HWCFallbackGLRenderer overlay_program;
     bool overlay_enabled;
     MirOrientation orientation_;
     MirPowerMode power_mode_;

@@ -20,7 +20,6 @@
 #include "configurable_display_buffer.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;

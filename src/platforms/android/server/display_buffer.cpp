@@ -121,7 +121,7 @@ void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orien
     orientation_ = orientation;
 }
 
-mga::DisplayContents mga::DisplayBuffer::contents() const
+mga::DisplayContents mga::DisplayBuffer::contents()
 {
     return mga::DisplayContents{display_name, *layer_list, gl_context, overlay_program};
 }

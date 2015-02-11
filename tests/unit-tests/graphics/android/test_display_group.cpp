@@ -61,7 +61,7 @@ struct StubConfigurableDB : mga::ConfigurableDisplayBuffer
     MirOrientation orientation() const override { return mir_orientation_normal; }
     bool uses_alpha() const override { return false; }
     void configure(MirPowerMode, MirOrientation) override {}
-    mga::DisplayContents contents() const override
+    mga::DisplayContents contents() override
     {
         return mga::DisplayContents{name, list, context, compositor};
     }

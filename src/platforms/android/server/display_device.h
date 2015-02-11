@@ -24,7 +24,6 @@
 #include "display_name.h"
 #include <EGL/egl.h>
 #include <list>
-#include <tuple>
 
 namespace mir
 {
