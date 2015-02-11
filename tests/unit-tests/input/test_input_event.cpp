@@ -130,11 +130,11 @@ TEST(KeyInputEventProperties, up_and_down_actions_copied_from_old_style_event)
     old_ev.key.action = mir_key_action_down;
     old_ev.key.repeat_count = 0;
     
-    auto new_kev = mir_input_event_get_key_input_event(mir_event_get_input_event(&old_ev));
-    EXPECT_EQ(mir_key_input_event_action_down, mir_key_input_event_get_action(new_kev));
+    auto new_kev = mir_input_event_get_keyboard_event(mir_event_get_input_event(&old_ev));
+    EXPECT_EQ(mir_keyboard_action_down, mir_keyboard_event_action(new_kev));
 
     old_ev.key.action = mir_key_action_up;
-    EXPECT_EQ(mir_key_input_event_action_up, mir_key_input_event_get_action(new_kev));
+    EXPECT_EQ(mir_keyboard_action_up, mir_keyboard_event_action(new_kev));
 }
 
 TEST(KeyInputEventProperties, repeat_action_produced_from_non_zero_repeat_count_in_old_style_event)
@@ -144,8 +144,8 @@ TEST(KeyInputEventProperties, repeat_action_produced_from_non_zero_repeat_count_
     old_ev.key.action = mir_key_action_down;
     old_ev.key.repeat_count = 1;
 
-    auto new_kev = mir_input_event_get_key_input_event(mir_event_get_input_event(&old_ev));
-    EXPECT_EQ(mir_key_input_event_action_repeat, mir_key_input_event_get_action(new_kev));
+    auto new_kev = mir_input_event_get_keyboard_event(mir_event_get_input_event(&old_ev));
+    EXPECT_EQ(mir_keyboard_action_repeat, mir_keyboard_event_action(new_kev));
 }
 
 TEST(KeyInputEventProperties, keycode_scancode_and_modifiers_taken_from_old_style_event)
@@ -159,10 +159,10 @@ TEST(KeyInputEventProperties, keycode_scancode_and_modifiers_taken_from_old_styl
     old_ev.key.scan_code = scan_code;
     old_ev.key.modifiers = old_modifiers;
 
-    auto new_kev = mir_input_event_get_key_input_event(mir_event_get_input_event(&old_ev));
-    EXPECT_EQ(key_code, mir_key_input_event_get_key_code(new_kev));
-    EXPECT_EQ(scan_code, mir_key_input_event_get_scan_code(new_kev));
-    EXPECT_EQ(mir_input_event_modifier_shift, mir_key_input_event_get_modifiers(new_kev));
+    auto new_kev = mir_input_event_get_keyboard_event(mir_event_get_input_event(&old_ev));
+    EXPECT_EQ(key_code, mir_keyboard_event_key_code(new_kev));
+    EXPECT_EQ(scan_code, mir_keyboard_event_scan_code(new_kev));
+    EXPECT_EQ(mir_input_event_modifier_shift, mir_keyboard_event_modifiers(new_kev));
 }
 
 TEST(TouchEventProperties, touch_count_taken_from_pointer_count)

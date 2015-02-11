@@ -58,14 +58,14 @@ inline MirEvent const& to_ref(MirEvent const& event)
     return event;
 }
 
-inline MirKeyInputEvent const* maybe_key_event(MirEvent const* event)
+inline MirKeyboardEvent const* maybe_key_event(MirEvent const* event)
 {
     if (mir_event_get_type(event) != mir_event_type_input)
         return nullptr;
     auto input_event = mir_event_get_input_event(event);
     if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
         return nullptr;
-    return mir_input_event_get_key_input_event(input_event);
+    return mir_input_event_get_keyboard_event(input_event);
 }
 
 inline MirTouchEvent const* maybe_touch_event(MirEvent const* event)
@@ -97,7 +97,7 @@ MATCHER(KeyDownEvent, "")
     if (kev == nullptr)
         return false;
     
-    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_down)
+    if (mir_keyboard_event_action(kev) != mir_keyboard_action_down)
         return false;
 
     return true;
@@ -109,7 +109,7 @@ MATCHER(KeyRepeatEvent, "")
     if (kev == nullptr)
         return false;
     
-    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_repeat)
+    if (mir_keyboard_event_action(kev) != mir_keyboard_action_repeat)
         return false;
 
     return true;
@@ -121,7 +121,7 @@ MATCHER(KeyUpEvent, "")
     if (kev == nullptr)
         return false;
     
-    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_up)
+    if (mir_keyboard_event_action(kev) != mir_keyboard_action_up)
         return false;
 
     return true;
@@ -133,9 +133,9 @@ MATCHER_P(KeyWithModifiers, modifiers, "")
     if (kev == nullptr)
         return false;
     
-    if(mir_key_input_event_get_modifiers(kev) != modifiers)
+    if(mir_keyboard_event_modifiers(kev) != modifiers)
         {
-            printf("modifiers: %d vs expected %d \n", mir_key_input_event_get_modifiers(kev), modifiers);
+            printf("modifiers: %d vs expected %d \n", mir_keyboard_event_modifiers(kev), modifiers);
         return false;
         }
     
@@ -148,7 +148,7 @@ MATCHER_P(KeyOfSymbol, keysym, "")
     if (kev == nullptr)
         return false;
 
-    if(mir_key_input_event_get_key_code(kev) != static_cast<xkb_keysym_t>(keysym))
+    if(mir_keyboard_event_key_code(kev) != static_cast<xkb_keysym_t>(keysym))
         return false;
 
     return true;
@@ -162,10 +162,10 @@ MATCHER_P(MirKeyEventMatches, event, "")
     if (expected == nullptr || actual == nullptr)
         return false;
     
-    return  mir_key_input_event_get_action(expected) == mir_key_input_event_get_action(actual) &&
-        mir_key_input_event_get_key_code(expected) == mir_key_input_event_get_key_code(actual) &&
-        mir_key_input_event_get_scan_code(expected) == mir_key_input_event_get_scan_code(actual) &&
-        mir_key_input_event_get_modifiers(expected) == mir_key_input_event_get_modifiers(actual);
+    return  mir_keyboard_event_action(expected) == mir_keyboard_event_action(actual) &&
+        mir_keyboard_event_key_code(expected) == mir_keyboard_event_key_code(actual) &&
+        mir_keyboard_event_scan_code(expected) == mir_keyboard_event_scan_code(actual) &&
+        mir_keyboard_event_modifiers(expected) == mir_keyboard_event_modifiers(actual);
 }
 
 MATCHER_P(MirTouchEventMatches, event, "")

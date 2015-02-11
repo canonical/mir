@@ -49,13 +49,13 @@ void mir::client::lttng::InputReceiverReport::received_event(MirEvent const& eve
 
 void mir::client::lttng::InputReceiverReport::report_key(MirInputEvent const* event) const
 {
-    auto kev = mir_input_event_get_key_input_event(event);
+    auto kev = mir_input_event_get_keyboard_event(event);
 
     mir_tracepoint(mir_client_input_receiver, key_event, mir_input_event_get_device_id(event),
-                   mir_key_input_event_get_action(kev),
-                   mir_key_input_event_get_modifiers(kev),
-                   mir_key_input_event_get_key_code(kev),
-                   mir_key_input_event_get_scan_code(kev),
+                   mir_keyboard_event_action(kev),
+                   mir_keyboard_event_modifiers(kev),
+                   mir_keyboard_event_key_code(kev),
+                   mir_keyboard_event_scan_code(kev),
                    mir_input_event_get_event_time(event));
 }
 

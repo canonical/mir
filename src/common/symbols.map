@@ -206,7 +206,7 @@ MIR_COMMON_3.1 {  # Mir 0.10
       mir_event_get*;
       mir_input_event_get_device_id;
       mir_input_event_get_event_time;
-      mir_input_event_get_key_input_event;
+      mir_input_event_get_keyboard_event;
       mir_input_event_get_pointer_input_event;
       mir_input_event_get_touch_input_event;
       mir_input_event_get_type;

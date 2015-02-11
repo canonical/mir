@@ -49,7 +49,7 @@ EventUPtr make_event(frontend::SurfaceId const& surface_id);
 
 // Key event
 EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
-    MirKeyInputEventAction action, xkb_keysym_t key_code,
+    MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers);
 
 // Touch event

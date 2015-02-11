@@ -44,14 +44,14 @@ namespace
 
 static void format_key_event(std::stringstream &ss, MirInputEvent const* ev)
 {
-    auto kev = mir_input_event_get_key_input_event(ev);
+    auto kev = mir_input_event_get_keyboard_event(ev);
     
-    ss << "MirKeyInputEvent {" << std::endl;
+    ss << "MirKeyboardEvent {" << std::endl;
     ss << "  device_id: " << mir_input_event_get_device_id(ev) << std::endl;
-    ss << "  action: " << mir_key_input_event_get_action(kev) << std::endl;
-    ss << "  modifiers: " << mir_key_input_event_get_modifiers(kev) << std::endl;
-    ss << "  key_code: " << mir_key_input_event_get_key_code(kev) << std::endl;
-    ss << "  scan_code: " << mir_key_input_event_get_scan_code(kev) << std::endl;
+    ss << "  action: " << mir_keyboard_event_action(kev) << std::endl;
+    ss << "  modifiers: " << mir_keyboard_event_modifiers(kev) << std::endl;
+    ss << "  key_code: " << mir_keyboard_event_key_code(kev) << std::endl;
+    ss << "  scan_code: " << mir_keyboard_event_scan_code(kev) << std::endl;
     ss << "  event_time: " << ml::input_timestamp(std::chrono::nanoseconds(mir_input_event_get_event_time(ev))) << std::endl;
     ss << "}";
 }

@@ -95,14 +95,14 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
 
 namespace
 {
-MirKeyAction old_action_from_new(MirKeyInputEventAction action)
+MirKeyAction old_action_from_new(MirKeyboardAction action)
 {
     switch (action)
     {
-    case mir_key_input_event_action_repeat:
-    case mir_key_input_event_action_up:
+    case mir_keyboard_action_repeat:
+    case mir_keyboard_action_up:
         return mir_key_action_up;
-    case mir_key_input_event_action_down:
+    case mir_keyboard_action_down:
         return mir_key_action_down;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid key action"));
@@ -154,7 +154,7 @@ MirKeyModifier old_modifiers_from_new(MirInputEventModifiers modifiers)
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
-    MirKeyInputEventAction action, xkb_keysym_t key_code,
+    MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers)
 {
     MirEvent *e = new MirEvent;
@@ -165,7 +165,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
     kev.device_id = device_id;
     kev.event_time = timestamp;
     kev.action = old_action_from_new(action);
-    if (action == mir_key_input_event_action_repeat)
+    if (action == mir_keyboard_action_repeat)
         kev.repeat_count = 1;
     kev.key_code = key_code;
     kev.scan_code = scan_code;

@@ -93,7 +93,7 @@ MirEvent const* old_ev_from_new(MirInputEvent const* ev)
     return reinterpret_cast<MirEvent const*>(ev);
 }
 
-MirKeyEvent const& old_kev_from_new(MirKeyInputEvent const* ev)
+MirKeyEvent const& old_kev_from_new(MirKeyboardEvent const* ev)
 {
     auto old_ev = reinterpret_cast<MirEvent const*>(ev);
     expect_old_event_type(old_ev, mir_event_type_key);
@@ -195,7 +195,13 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
 
 /* Key event accessors */
 
-MirKeyInputEvent const* mir_input_event_get_key_input_event(MirInputEvent const* ev)
+// ABI compat TODO
+MirKeyboardEvent const* mir_input_event_get_key_input_event(MirInputEvent const* ev)
+{
+    return mir_input_event_get_keyboard_event(ev);
+}
+
+MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* ev)
 {
     if (mir_input_event_get_type(ev) != mir_input_event_type_key)
     {
@@ -204,10 +210,10 @@ MirKeyInputEvent const* mir_input_event_get_key_input_event(MirInputEvent const*
         abort();
     }
     
-    return reinterpret_cast<MirKeyInputEvent const*>(ev);
+    return reinterpret_cast<MirKeyboardEvent const*>(ev);
 }
 
-MirKeyInputEventAction mir_key_input_event_get_action(MirKeyInputEvent const* kev)
+MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev)
 {
     auto const& old_kev = old_kev_from_new(kev);
     
@@ -215,26 +221,26 @@ MirKeyInputEventAction mir_key_input_event_get_action(MirKeyInputEvent const* ke
     {
     case mir_key_action_down:
         if (old_kev.repeat_count != 0)
-            return mir_key_input_event_action_repeat;
+            return mir_keyboard_action_repeat;
         else
-            return mir_key_input_event_action_down;
+            return mir_keyboard_action_down;
     case mir_key_action_up:
-        return mir_key_input_event_action_up;
+        return mir_keyboard_action_up;
     default:
         // TODO:? This means we got key_action_multiple which I dont think is 
         // actually emitted yet (and never will be as in the future it would fall under text
         // event in the new model).
-        return mir_key_input_event_action_down;
+        return mir_keyboard_action_down;
     }
 }
 
-xkb_keysym_t mir_key_input_event_get_key_code(MirKeyInputEvent const* kev)
+xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* kev)
 {
     auto const& old_kev = old_kev_from_new(kev);
     return old_kev.key_code;
 }
 
-int mir_key_input_event_get_scan_code(MirKeyInputEvent const* kev)
+int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev)
 {
     auto const& old_kev = old_kev_from_new(kev);
     return old_kev.scan_code;
@@ -288,7 +294,7 @@ MirInputEventModifiers old_modifiers_to_new(unsigned int old_modifier)
     return mir_input_event_modifier_none;
 }
 }
-MirInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* kev)
+MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev)
 {    
     auto const& old_kev = old_kev_from_new(kev);
     return old_modifiers_to_new(old_kev.modifiers);
