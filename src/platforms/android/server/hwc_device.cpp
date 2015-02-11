@@ -24,6 +24,7 @@
 #include "framebuffer_bundle.h"
 #include "buffer.h"
 #include "hwc_fallback_gl_renderer.h"
+#include "mir/raii.h"
 #include <limits>
 #include <algorithm>
 
@@ -101,6 +102,9 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
         if (content.list.needs_swapbuffers())
         {
             auto rejected_renderables = content.list.rejected_renderables();
+            auto current_context = mir::raii::paired_calls(
+                [&]{ content.context.make_current(); },
+                [&]{ content.context.release_current(); });
             if (rejected_renderables.empty())
                 content.context.swap_buffers();
             else

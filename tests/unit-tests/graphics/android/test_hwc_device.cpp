@@ -786,8 +786,8 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
 TEST_F(HwcDevice, commits_external_list_with_both_force_gl)
 {
     using namespace testing;
-    mtd::MockSwappingGLContext const mock_context1;
-    mtd::MockSwappingGLContext const mock_context2;
+    testing::NiceMock<mtd::MockSwappingGLContext> mock_context1;
+    testing::NiceMock<mtd::MockSwappingGLContext> mock_context2;
     ON_CALL(mock_context1, last_rendered_buffer())
         .WillByDefault(Return(stub_fb_buffer));
     ON_CALL(mock_context2, last_rendered_buffer())
@@ -811,8 +811,8 @@ TEST_F(HwcDevice, commits_external_list_with_both_force_gl)
 
     mga::HwcDevice device(mock_device);
 
-    mga::DisplayContents primary_content{primary, primary_list, stub_context, stub_compositor};
-    mga::DisplayContents external_content{mga::DisplayName::external, external_list, stub_context, stub_compositor};
+    mga::DisplayContents primary_content{primary, primary_list, mock_context1, stub_compositor};
+    mga::DisplayContents external_content{mga::DisplayName::external, external_list, mock_context2, stub_compositor};
 
     device.commit({primary_content, external_content});
 }
