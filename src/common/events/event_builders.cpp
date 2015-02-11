@@ -282,19 +282,19 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
 
 namespace
 {
-MirMotionAction old_action_from_pointer_action(MirPointerInputEventAction action)
+MirMotionAction old_action_from_pointer_action(MirPointerAction action)
 {
     switch (action)
     {
-    case mir_pointer_input_event_action_button_up:
+    case mir_pointer_action_button_up:
         return mir_motion_action_up;
-    case mir_pointer_input_event_action_button_down:
+    case mir_pointer_action_button_down:
         return mir_motion_action_down;
-    case mir_pointer_input_event_action_enter:
+    case mir_pointer_action_enter:
         return mir_motion_action_hover_enter;
-    case mir_pointer_input_event_action_leave:
+    case mir_pointer_action_leave:
         return mir_motion_action_hover_exit;
-    case mir_pointer_input_event_action_motion:
+    case mir_pointer_action_motion:
         return mir_motion_action_move;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid pointer action"));
@@ -303,8 +303,8 @@ MirMotionAction old_action_from_pointer_action(MirPointerInputEventAction action
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
-    MirInputEventModifiers modifiers, MirPointerInputEventAction action,
-    std::vector<MirPointerInputEventButton> const& buttons_pressed,
+    MirInputEventModifiers modifiers, MirPointerAction action,
+    std::vector<MirPointerButton> const& buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value)
 {
@@ -324,19 +324,19 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
     {
     switch (button)
     {
-    case mir_pointer_input_button_primary:
+    case mir_pointer_button_primary:
         button_state |= mir_motion_button_primary;
         break;
-    case mir_pointer_input_button_secondary:
+    case mir_pointer_button_secondary:
         button_state |= mir_motion_button_secondary;
         break;
-    case mir_pointer_input_button_tertiary:
+    case mir_pointer_button_tertiary:
         button_state |= mir_motion_button_tertiary;
         break;
-    case mir_pointer_input_button_back:
+    case mir_pointer_button_back:
         button_state |= mir_motion_button_back;
         break;
-    case mir_pointer_input_button_forward:
+    case mir_pointer_button_forward:
         button_state |= mir_motion_button_forward;
         break;
     }

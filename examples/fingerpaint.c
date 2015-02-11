@@ -216,7 +216,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 
         MirInputEvent const* input_event = mir_event_get_input_event(event);
         MirTouchEvent const* tev = NULL;
-        MirPointerInputEvent const* pev = NULL;
+        MirPointerEvent const* pev = NULL;
         unsigned touch_count = 0;
         bool ended = false;
         MirInputEventType type = mir_input_event_get_type(input_event);
@@ -230,11 +230,11 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                     (mir_touch_event_action(tev, 0) == mir_touch_action_up);
             break;
         case mir_input_event_type_pointer:
-            pev = mir_input_event_get_pointer_input_event(input_event);
-            ended = mir_pointer_input_event_get_action(pev) ==
-                mir_pointer_input_event_action_button_up;
-            touch_count = mir_pointer_input_event_get_button_state(pev,
-                               mir_pointer_input_button_primary) ? 1 : 0;
+            pev = mir_input_event_get_pointer_event(input_event);
+            ended = mir_pointer_event_action(pev) ==
+                    mir_pointer_action_button_up;
+            touch_count = mir_pointer_event_button_state(pev,
+                               mir_pointer_button_primary) ? 1 : 0;
         default:
             break;
         }
@@ -271,10 +271,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                 }
                 else if (pev != NULL)
                 {
-                    x = mir_pointer_input_event_get_axis_value(pev,
-                        mir_pointer_input_axis_x);
-                    y = mir_pointer_input_event_get_axis_value(pev,
-                        mir_pointer_input_axis_y);
+                    x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x);
+                    y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y);
                     pressure = 0.5f;
                     radius = 5;
                 }

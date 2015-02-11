@@ -242,5 +242,12 @@ MIR_COMMON_3.3 {  # Mir 0.12
       mir_touch_event_id;
       mir_touch_event_modifiers;
       mir_touch_event_tooltype;
+
+      mir_input_event_get_pointer_event;
+
+      mir_pointer_event_modifiers;
+      mir_pointer_event_action;
+      mir_pointer_event_button_state;
+      mir_pointer_event_axis_value;
     };
 } MIR_COMMON_3.2;

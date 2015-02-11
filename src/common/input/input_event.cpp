@@ -107,14 +107,14 @@ MirMotionEvent const& old_mev_from_new(MirTouchEvent const* ev)
     return old_ev->motion;
 }
 
-MirMotionEvent const& old_mev_from_new(MirPointerInputEvent const* ev)
+MirMotionEvent const& old_mev_from_new(MirPointerEvent const* ev)
 {
     auto old_ev = reinterpret_cast<MirEvent const*>(ev);
     expect_old_event_type(old_ev, mir_event_type_motion);
     return old_ev->motion;
 }
 
-// Differentiate between MirTouchEvents and MirPointerInputEvents based on old device class
+// Differentiate between MirTouchEvents and MirPointerEvents based on old device class
 MirInputEventType type_from_device_class(int32_t source_class)
 {
     switch (source_class)
@@ -488,7 +488,15 @@ float mir_touch_event_axis_value(MirTouchEvent const* event,
 }                                                                            
 
 /* Pointer event accessors */
-MirPointerInputEvent const* mir_input_event_get_pointer_input_event(MirInputEvent const* ev)
+
+// ABI-compatible with MIR_COMMON_3.1
+extern "C"
+MirPointerEvent const* mir_input_event_get_pointer_input_event(MirInputEvent const* ev)
+{
+    return mir_input_event_get_pointer_event(ev);
+}
+
+MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev)
 {
     if(mir_input_event_get_type(ev) != mir_input_event_type_pointer)
     {
@@ -497,16 +505,30 @@ MirPointerInputEvent const* mir_input_event_get_pointer_input_event(MirInputEven
         abort();
     }
 
-    return reinterpret_cast<MirPointerInputEvent const*>(ev);
+    return reinterpret_cast<MirPointerEvent const*>(ev);
 }
 
-MirInputEventModifiers mir_pointer_input_event_get_modifiers(MirPointerInputEvent const* pev)
+// ABI-compatible with MIR_COMMON_3.1
+extern "C"
+MirInputEventModifiers mir_pointer_input_event_get_modifiers(MirPointerEvent const* pev)
+{    
+    return mir_pointer_event_modifiers(pev);
+}
+
+MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev)
 {    
     auto const& old_mev = old_mev_from_new(pev);
     return old_modifiers_to_new(old_mev.modifiers);
 }
 
-MirPointerInputEventAction mir_pointer_input_event_get_action(MirPointerInputEvent const* pev)
+// ABI-compatible with MIR_COMMON_3.1
+extern "C"
+MirPointerAction mir_pointer_input_event_get_action(MirPointerEvent const* pev)
+{
+    return mir_pointer_event_action(pev);
+}
+
+MirPointerAction mir_pointer_event_action(MirPointerEvent const* pev)
 {    
     auto const& old_mev = old_mev_from_new(pev);
     auto masked_action = old_mev.action & MIR_EVENT_ACTION_MASK;
@@ -514,55 +536,70 @@ MirPointerInputEventAction mir_pointer_input_event_get_action(MirPointerInputEve
     {
     case mir_motion_action_up:
     case mir_motion_action_pointer_up:
-        return mir_pointer_input_event_action_button_up;
+        return mir_pointer_action_button_up;
     case mir_motion_action_down:
     case mir_motion_action_pointer_down:
-        return mir_pointer_input_event_action_button_down;
+        return mir_pointer_action_button_down;
     case mir_motion_action_hover_enter:
-        return mir_pointer_input_event_action_enter;
+        return mir_pointer_action_enter;
     case mir_motion_action_hover_exit:
-        return mir_pointer_input_event_action_leave;
+        return mir_pointer_action_leave;
     case mir_motion_action_move:
     case mir_motion_action_hover_move:
     case mir_motion_action_outside:
     default:
-        return mir_pointer_input_event_action_motion;
+        return mir_pointer_action_motion;
     }
 }
 
-bool mir_pointer_input_event_get_button_state(MirPointerInputEvent const* pev,
-    MirPointerInputEventButton button)
+// ABI-compatible with MIR_COMMON_3.1
+extern "C"
+bool mir_pointer_input_event_get_button_state(MirPointerEvent const* pev,
+    MirPointerButton button)
+{
+    return mir_pointer_event_button_state(pev, button);
+}
+
+bool mir_pointer_event_button_state(MirPointerEvent const* pev,
+    MirPointerButton button)
 {
    auto const& old_mev = old_mev_from_new(pev);
    switch (button)
    {
-   case mir_pointer_input_button_primary:
+   case mir_pointer_button_primary:
        return old_mev.button_state & mir_motion_button_primary;
-   case mir_pointer_input_button_secondary:
+   case mir_pointer_button_secondary:
        return old_mev.button_state & mir_motion_button_secondary;
-   case mir_pointer_input_button_tertiary:
+   case mir_pointer_button_tertiary:
        return old_mev.button_state & mir_motion_button_tertiary;
-   case mir_pointer_input_button_back:
+   case mir_pointer_button_back:
        return old_mev.button_state & mir_motion_button_back;
-   case mir_pointer_input_button_forward:
+   case mir_pointer_button_forward:
        return old_mev.button_state & mir_motion_button_forward;
    default:
        return false;
    }
 }
 
-float mir_pointer_input_event_get_axis_value(MirPointerInputEvent const* pev, MirPointerInputEventAxis axis)
+// ABI-compatible with MIR_COMMON_3.1
+extern "C"
+float mir_pointer_input_event_get_axis_value(MirPointerEvent const* pev, MirPointerAxis axis)
+{
+    return mir_pointer_event_axis_value(pev, axis);
+}
+
+float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis axis)
 {
    auto const& old_mev = old_mev_from_new(pev);
    switch (axis)
    {
-   case mir_pointer_input_axis_x:
+   case mir_pointer_axis_x:
        return old_mev.pointer_coordinates[0].x;
-   case mir_pointer_input_axis_y:
+   case mir_pointer_axis_y:
        return old_mev.pointer_coordinates[0].y;
-   case mir_pointer_input_axis_vscroll:
+   case mir_pointer_axis_vscroll:
        return old_mev.pointer_coordinates[0].vscroll;
-   case mir_pointer_input_axis_hscroll:
+   case mir_pointer_axis_hscroll:
        return old_mev.pointer_coordinates[0].hscroll;
    default:
        mir::log_critical("Invalid axis enumeration " + std::to_string(axis));

@@ -100,9 +100,9 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
 
 TEST_F(InputEventBuilder, makes_valid_pointer_event)
 {
-    MirPointerInputEventAction action = mir_pointer_input_event_action_enter;
-    std::vector<MirPointerInputEventButton> depressed_buttons = 
-        {mir_pointer_input_button_back, mir_pointer_input_button_tertiary};
+    MirPointerAction action = mir_pointer_action_enter;
+    std::vector<MirPointerButton> depressed_buttons = 
+        {mir_pointer_button_back, mir_pointer_button_tertiary};
     float x_axis_value = 3.9, y_axis_value = 7.4, hscroll_value = .9, vscroll_value = .3;
     auto ev = mev::make_event(device_id, timestamp, modifiers, 
         action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
@@ -111,16 +111,16 @@ TEST_F(InputEventBuilder, makes_valid_pointer_event)
     EXPECT_EQ(mir_event_type_input, mir_event_get_type(e));
     auto ie = mir_event_get_input_event(e);
     EXPECT_EQ(mir_input_event_type_pointer, mir_input_event_get_type(ie));
-    auto pev = mir_input_event_get_pointer_input_event(ie);
-    EXPECT_EQ(modifiers, mir_pointer_input_event_get_modifiers(pev));
-    EXPECT_EQ(action, mir_pointer_input_event_get_action(pev));
-    EXPECT_TRUE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_back));
-    EXPECT_TRUE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_tertiary));
-    EXPECT_FALSE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary));
-    EXPECT_FALSE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_secondary));
-    EXPECT_FALSE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_forward));
-    EXPECT_EQ(x_axis_value, mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x));
-    EXPECT_EQ(y_axis_value, mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_y));
-    EXPECT_EQ(hscroll_value, mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_hscroll));
-    EXPECT_EQ(vscroll_value, mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_vscroll));
+    auto pev = mir_input_event_get_pointer_event(ie);
+    EXPECT_EQ(modifiers, mir_pointer_event_modifiers(pev));
+    EXPECT_EQ(action, mir_pointer_event_action(pev));
+    EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_back));
+    EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_tertiary));
+    EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
+    EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_secondary));
+    EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_forward));
+    EXPECT_EQ(x_axis_value, mir_pointer_event_axis_value(pev, mir_pointer_axis_x));
+    EXPECT_EQ(y_axis_value, mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
+    EXPECT_EQ(hscroll_value, mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll));
+    EXPECT_EQ(vscroll_value, mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll));
 }

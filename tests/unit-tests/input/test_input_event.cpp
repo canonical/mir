@@ -302,8 +302,8 @@ TEST(PointerInputEventProperties, modifiers_taken_from_old_style_ev)
     old_ev.motion.modifiers = mir_key_modifier_shift;
     
     auto pointer_event = 
-        mir_input_event_get_pointer_input_event(mir_event_get_input_event(&old_ev));
-    EXPECT_EQ(mir_input_event_modifier_shift, mir_pointer_input_event_get_modifiers(pointer_event));
+        mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
+    EXPECT_EQ(mir_input_event_modifier_shift, mir_pointer_event_modifiers(pointer_event));
 }
 
 namespace
@@ -311,7 +311,7 @@ namespace
 struct ActionTestParameters
 {
     MirMotionAction old_action;
-    MirPointerInputEventAction new_action;
+    MirPointerAction new_action;
 };
 
 struct MotionToPointerActionTest : public testing::Test, testing::WithParamInterface<ActionTestParameters>
@@ -328,55 +328,55 @@ TEST_P(MotionToPointerActionTest, old_style_action_translated_to_new_style)
     auto shift = 0 << MIR_EVENT_ACTION_POINTER_INDEX_SHIFT;
     old_ev.motion.action = (shift & MIR_EVENT_ACTION_POINTER_INDEX_MASK) | params.old_action;
     EXPECT_EQ(params.new_action,
-        mir_pointer_input_event_get_action(mir_input_event_get_pointer_input_event(mir_event_get_input_event(&old_ev))));
+        mir_pointer_event_action(mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev))));
 }
 
 INSTANTIATE_TEST_CASE_P(MotionPointerUpTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_pointer_up, mir_pointer_input_event_action_button_up}));
+        ActionTestParameters{mir_motion_action_pointer_up, mir_pointer_action_button_up}));
 
 INSTANTIATE_TEST_CASE_P(MotionPointerDownTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_pointer_down, mir_pointer_input_event_action_button_down}));
+        ActionTestParameters{mir_motion_action_pointer_down, mir_pointer_action_button_down}));
 
 INSTANTIATE_TEST_CASE_P(MotionEnterTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_hover_enter, mir_pointer_input_event_action_enter}));
+        ActionTestParameters{mir_motion_action_hover_enter, mir_pointer_action_enter}));
 
 INSTANTIATE_TEST_CASE_P(MotionLeaveTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_hover_exit, mir_pointer_input_event_action_leave}));
+        ActionTestParameters{mir_motion_action_hover_exit, mir_pointer_action_leave}));
 
 INSTANTIATE_TEST_CASE_P(MotionPointerMoveTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_move, mir_pointer_input_event_action_motion}));
+        ActionTestParameters{mir_motion_action_move, mir_pointer_action_motion}));
 
 INSTANTIATE_TEST_CASE_P(MotionPointerHoverMoveTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_hover_move, mir_pointer_input_event_action_motion}));
+        ActionTestParameters{mir_motion_action_hover_move, mir_pointer_action_motion}));
 
 INSTANTIATE_TEST_CASE_P(MotionPointerOutsideMoveTest,
     MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_outside, mir_pointer_input_event_action_motion}));
+        ActionTestParameters{mir_motion_action_outside, mir_pointer_action_motion}));
 
 TEST(PointerInputEventProperties, button_state_translated)
 {
     auto old_ev = a_motion_ev(AINPUT_SOURCE_MOUSE);
 
     old_ev.motion.button_state = mir_motion_button_primary;
-    auto pev = mir_input_event_get_pointer_input_event(mir_event_get_input_event(&old_ev));
+    auto pev = mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
     
-    EXPECT_TRUE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary));
-    EXPECT_FALSE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_secondary));
+    EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
+    EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_secondary));
 
     old_ev.motion.button_state = static_cast<MirMotionButton>(old_ev.motion.button_state | (mir_motion_button_secondary));
 
-    EXPECT_TRUE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary));
-    EXPECT_TRUE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_secondary));
+    EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
+    EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_secondary));
 
-    EXPECT_FALSE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_tertiary));
-    EXPECT_FALSE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_back));
-    EXPECT_FALSE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_forward));
+    EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_tertiary));
+    EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_back));
+    EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_forward));
 }
 
 TEST(PointerInputEventProperties, axis_values_copied)
@@ -389,9 +389,9 @@ TEST(PointerInputEventProperties, axis_values_copied)
     old_ev.motion.pointer_coordinates[0].vscroll = vscroll;
     old_ev.motion.pointer_coordinates[0].hscroll = hscroll;
 
-    auto pev = mir_input_event_get_pointer_input_event(mir_event_get_input_event(&old_ev));
-    EXPECT_EQ(x, mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x));
-    EXPECT_EQ(y, mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_y));
-    EXPECT_EQ(vscroll, mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_vscroll));
-    EXPECT_EQ(hscroll, mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_hscroll));
+    auto pev = mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
+    EXPECT_EQ(x, mir_pointer_event_axis_value(pev, mir_pointer_axis_x));
+    EXPECT_EQ(y, mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
+    EXPECT_EQ(vscroll, mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll));
+    EXPECT_EQ(hscroll, mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll));
 }

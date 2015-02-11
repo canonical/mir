@@ -61,8 +61,8 @@ void add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
 
 // Pointer event
 EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
-    MirInputEventModifiers modifiers, MirPointerInputEventAction action,
-    std::vector<MirPointerInputEventButton> const& buttons_pressed,
+    MirInputEventModifiers modifiers, MirPointerAction action,
+    std::vector<MirPointerButton> const& buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value);
 }

@@ -78,14 +78,14 @@ inline MirTouchEvent const* maybe_touch_event(MirEvent const* event)
     return mir_input_event_get_touch_event(input_event);
 }
 
-inline MirPointerInputEvent const* maybe_pointer_event(MirEvent const* event)
+inline MirPointerEvent const* maybe_pointer_event(MirEvent const* event)
 {
     if (mir_event_get_type(event) != mir_event_type_input)
         return nullptr;
     auto input_event = mir_event_get_input_event(event);
     if (mir_input_event_get_type(input_event) != mir_input_event_type_pointer)
         return nullptr;
-    return mir_input_event_get_pointer_input_event(input_event);
+    return mir_input_event_get_pointer_event(input_event);
 }
 /**
  * \}
@@ -201,7 +201,7 @@ MATCHER(PointerEnterEvent, "")
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
-    if (mir_pointer_input_event_get_action(pev) == mir_pointer_input_event_action_enter)
+    if (mir_pointer_event_action(pev) == mir_pointer_action_enter)
         return true;
     return false;
 }
@@ -211,7 +211,7 @@ MATCHER(PointerLeaveEvent, "")
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
-    if (mir_pointer_input_event_get_action(pev) == mir_pointer_input_event_action_leave)
+    if (mir_pointer_event_action(pev) == mir_pointer_action_leave)
         return true;
     return false;
 }
@@ -221,13 +221,13 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
-    if (mir_pointer_input_event_get_action(pev) != mir_pointer_input_event_action_button_down)
+    if (mir_pointer_event_action(pev) != mir_pointer_action_button_down)
         return false;
-    if (mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary) == false)
+    if (mir_pointer_event_button_state(pev, mir_pointer_button_primary) == false)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x) != x)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_y) != y)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
         return false;
     return true;
 }
@@ -237,13 +237,13 @@ MATCHER_P2(ButtonUpEvent, x, y, "")
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
-    if (mir_pointer_input_event_get_action(pev) != mir_pointer_input_event_action_button_up)
+    if (mir_pointer_event_action(pev) != mir_pointer_action_button_up)
         return false;
-    if (mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary) == true)
+    if (mir_pointer_event_button_state(pev, mir_pointer_button_primary) == true)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x) != x)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_y) != y)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
         return false;
     return true;
 }
@@ -269,11 +269,11 @@ MATCHER_P2(PointerEventWithPosition, x, y, "")
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
-    if (mir_pointer_input_event_get_action(pev) != mir_pointer_input_event_action_motion)
+    if (mir_pointer_event_action(pev) != mir_pointer_action_motion)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x) != x)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_y) != y)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
         return false;
     return true;
 }
@@ -321,7 +321,7 @@ MATCHER(PointerMovementEvent, "")
     if (pev == nullptr)
         return false;
 
-    if (mir_pointer_input_event_get_action(pev) != mir_pointer_input_event_action_motion)
+    if (mir_pointer_event_action(pev) != mir_pointer_action_motion)
         return false;
 
     return true;
