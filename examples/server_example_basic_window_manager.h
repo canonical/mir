@@ -122,7 +122,6 @@ public:
     {
     }
 
-protected:
     void add_session(std::shared_ptr<scene::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -270,8 +269,7 @@ private:
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
 class BasicWindowManager : public virtual WindowManager,
-    private shell::AbstractShell,
-    private WindowManagerMetadatabase<WindowManagementPolicy, SessionInfo, SurfaceInfo>
+    private shell::AbstractShell
 {
     using Metadatabase = WindowManagerMetadatabase<WindowManagementPolicy, SessionInfo, SurfaceInfo>;
 public:
@@ -283,7 +281,7 @@ public:
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         PolicyArgs... policy_args) :
         AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
-        Metadatabase(this, policy_args...)
+        metadatabase{this, policy_args...}
     {
     }
 
@@ -293,13 +291,13 @@ public:
         std::shared_ptr<frontend::EventSink> const& sink) override
     {
         auto const result = shell::AbstractShell::open_session(client_pid, name, sink);
-        Metadatabase::add_session(result);
+        metadatabase.add_session(result);
         return result;
     }
 
     void close_session(std::shared_ptr<scene::Session> const& session) override
     {
-        Metadatabase::remove_session(session);
+        metadatabase.remove_session(session);
         shell::AbstractShell::close_session(session);
     }
 
@@ -310,12 +308,12 @@ public:
                 return shell::AbstractShell::create_surface(session, placed_params);
             };
 
-        return Metadatabase::add_surface(session, params, build);
+        return metadatabase.add_surface(session, params, build);
     }
 
     void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override
     {
-        Metadatabase::remove_surface(session->surface(surface), session);
+        metadatabase.remove_surface(session->surface(surface), session);
         shell::AbstractShell::destroy_surface(session, surface);
     }
 
@@ -329,13 +327,13 @@ public:
         switch (mir_input_event_get_type(input_event))
         {
         case mir_input_event_type_key:
-            return Metadatabase::handle_key_event(mir_input_event_get_key_input_event(input_event));
+            return metadatabase.handle_key_event(mir_input_event_get_key_input_event(input_event));
 
         case mir_input_event_type_touch:
-            return Metadatabase::handle_touch_event(mir_input_event_get_touch_input_event(input_event));
+            return metadatabase.handle_touch_event(mir_input_event_get_touch_input_event(input_event));
 
         case mir_input_event_type_pointer:
-            return Metadatabase::handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
+            return metadatabase.handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
         }
 
         return false;
@@ -351,7 +349,7 @@ public:
         {
         case mir_surface_attrib_state:
         {
-            auto const state = Metadatabase::handle_set_state(surface, MirSurfaceState(value));
+            auto const state = metadatabase.handle_set_state(surface, MirSurfaceState(value));
             return shell::AbstractShell::set_surface_attribute(session, surface, attrib, state);
         }
         default:
@@ -362,13 +360,15 @@ public:
 private:
     void add_display(geometry::Rectangle const& area) override
     {
-        Metadatabase::add_display(area);
+        metadatabase.add_display(area);
     }
 
     void remove_display(geometry::Rectangle const& area) override
     {
-        Metadatabase::remove_display(area);
+        metadatabase.remove_display(area);
     }
+
+    Metadatabase metadatabase;
 };
 }
 }
