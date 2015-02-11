@@ -51,7 +51,7 @@ enum class DispatchReentrancy
  * \brief An adaptor that combines multiple Dispatchables into a single Dispatchable
  * \note Instances are fully thread-safe.
  */
-class MultiplexingDispatchable : public Dispatchable
+class MultiplexingDispatchable final : public Dispatchable
 {
 public:
     MultiplexingDispatchable();
