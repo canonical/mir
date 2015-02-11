@@ -35,12 +35,14 @@ mga::DisplayGroup::DisplayGroup(
 
 void mga::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
+    std::unique_lock<decltype(guard)> lk(guard);
     for(auto const& db : dbs)
         f(*db.second);
 }
 
 void mga::DisplayGroup::add(DisplayName name, std::unique_ptr<ConfigurableDisplayBuffer> buffer)
 {
+    std::unique_lock<decltype(guard)> lk(guard);
     dbs.emplace(std::make_pair(name, std::move(buffer)));
 }
 
@@ -49,6 +51,7 @@ void mga::DisplayGroup::remove(DisplayName name)
     if (name == mga::DisplayName::primary)
         BOOST_THROW_EXCEPTION(std::logic_error("cannot remove primary display"));
 
+    std::unique_lock<decltype(guard)> lk(guard);
     auto it = dbs.find(name);
     if (it != dbs.end())
         dbs.erase(it);
@@ -59,6 +62,7 @@ void mga::DisplayGroup::remove(DisplayName name)
 
 void mga::DisplayGroup::configure(DisplayName name, MirPowerMode mode, MirOrientation orientation)
 {
+    std::unique_lock<decltype(guard)> lk(guard);
     auto it = dbs.find(name);
     if (it != dbs.end())
         it->second->configure(mode, orientation);
@@ -67,6 +71,7 @@ void mga::DisplayGroup::configure(DisplayName name, MirPowerMode mode, MirOrient
 void mga::DisplayGroup::post()
 {
     std::list<DisplayContents> contents;
+    std::unique_lock<decltype(guard)> lk(guard);
     for(auto const& db : dbs)
         contents.emplace_back(db.second->contents());
     device->commit(contents); 
