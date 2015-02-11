@@ -227,3 +227,18 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
     auto attribs = config.active_attribs_for(mga::DisplayName::external);
     EXPECT_THAT(attribs.vrefresh_hz, Eq(0.0f));
 }
+
+TEST_F(HwcConfiguration, subscribes_to_hotplug)
+{
+    using namespace testing;
+    std::function<void(mga::DisplayName, bool)> hotplug_fn([](mga::DisplayName, bool){});
+    EXPECT_CALL(*mock_hwc_wrapper, subscribe_to_events(_,_,_,_))
+        .WillOnce(SaveArg<2>(&hotplug_fn));
+    EXPECT_CALL(*mock_hwc_wrapper, unsubscribe_from_events_(_));
+
+    unsigned int call_count{0};
+    auto subscription = config.subscribe_to_config_changes([&]{ call_count++; });
+    hotplug_fn(mga::DisplayName::primary, true);
+    hotplug_fn(mga::DisplayName::primary, true);
+    EXPECT_THAT(call_count, Eq(2));
+}
