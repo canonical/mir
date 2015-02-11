@@ -145,7 +145,7 @@ md::MultiplexingDispatchable::MultiplexingDispatchable()
                                                  std::system_category(),
                                                  "Failed to init pthread attrs"}));
     }
-    // Set writer prefernce; otherwise remove_watch could block indefinitely
+    // Set writer preference; otherwise remove_watch could block indefinitely
     err = pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
     if (err != 0)
     {
