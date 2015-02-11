@@ -177,13 +177,13 @@ public:
             {
                 auto const& info = tools->info_for(session);
 
-                if (resize(tools->working_surface(), cursor, old_cursor, info.tile))
+                if (resize(old_surface.lock(), cursor, old_cursor, info.tile))
                 {
                     // Still dragging the same old_surface
                 }
                 else if (resize(session->default_surface(), cursor, old_cursor, info.tile))
                 {
-                    tools->set_working_surface_to(session->default_surface());
+                    old_surface = session->default_surface();
                 }
                 else
                 {
@@ -193,7 +193,7 @@ public:
 
                         if (resize(new_surface, cursor, old_cursor, info.tile))
                         {
-                            tools->set_working_surface_to(new_surface);
+                            old_surface = new_surface;
                             break;
                         }
                     }
@@ -300,13 +300,13 @@ public:
             if (session == session_under(old_cursor))
             {
                 const auto& info = tools->info_for(session);
-                if (drag(tools->working_surface(), cursor, old_cursor, info.tile))
+                if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
                 {
                     // Still dragging the same old_surface
                 }
                 else if (drag(session->default_surface(), cursor, old_cursor, info.tile))
                 {
-                    tools->set_working_surface_to(session->default_surface());
+                    old_surface = session->default_surface();
                 }
                 else
                 {
@@ -315,7 +315,7 @@ public:
                         const auto new_surface = ps.lock();
                         if (drag(new_surface, cursor, old_cursor, info.tile))
                         {
-                            tools->set_working_surface_to(new_surface);
+                            old_surface = new_surface;
                             break;
                         }
                     }
@@ -596,6 +596,7 @@ private:
 
     Tools* const tools;
     Point old_cursor{};
+    std::weak_ptr<ms::Surface> old_surface;
 };
 }
 

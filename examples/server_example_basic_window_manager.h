@@ -67,9 +67,6 @@ public:
     virtual void focus_next() = 0;
     virtual void set_focus_to(std::shared_ptr<scene::Session> const& focus) = 0;
      */
-
-    virtual void set_working_surface_to(std::weak_ptr<scene::Surface> const& surface) = 0;
-    virtual auto working_surface() const -> std::shared_ptr<scene::Surface> = 0;
 };
 
 /// A policy based window manager.
@@ -208,16 +205,6 @@ public:
         return const_cast<SurfaceInfo&>(surface_info.at(surface));
     }
 
-    void set_working_surface_to(std::weak_ptr<scene::Surface> const& surface) override
-    {
-        old_surface = surface;
-    }
-
-    auto working_surface() const -> std::shared_ptr<scene::Surface> override
-    {
-        return old_surface.lock();
-    }
-
 private:
     WindowManagementPolicy policy;
 
@@ -273,8 +260,6 @@ private:
     typename SessionTo<SessionInfo>::type session_info;
     typename SurfaceTo<SurfaceInfo>::type surface_info;
     geometry::Rectangles displays;
-
-    std::weak_ptr<scene::Surface> old_surface;
 };
 }
 }
