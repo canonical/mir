@@ -95,6 +95,8 @@ public:
 
     virtual bool handle_pointer_event(MirPointerInputEvent const* event) = 0;
 
+    virtual int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) = 0;
+
     virtual ~WindowManagerMetadataModel() = default;
     WindowManagerMetadataModel() = default;
     WindowManagerMetadataModel(WindowManagerMetadataModel const&) = delete;
@@ -184,6 +186,13 @@ protected:
         return policy.handle_pointer_event(event);
     }
 
+    int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        return policy.handle_set_state(surface, value);
+    }
+
+private:
     auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
     -> std::shared_ptr<scene::Session> override
     {
@@ -211,7 +220,6 @@ protected:
     WindowManagementPolicy policy;
 
     std::mutex mutex;
-private:
     typename SessionTo<SessionInfo>::type session_info;
     typename SurfaceTo<SurfaceInfo>::type surface_info;
     geometry::Rectangles displays;
@@ -320,8 +328,7 @@ public:
         {
         case mir_surface_attrib_state:
         {
-            std::lock_guard<decltype(Metadatabase::mutex)> lock(Metadatabase::mutex);
-            auto const state = Metadatabase::policy.handle_set_state(surface, MirSurfaceState(value));
+            auto const state = Metadatabase::handle_set_state(surface, MirSurfaceState(value));
             return shell::AbstractShell::set_surface_attribute(session, surface, attrib, state);
         }
         default:
