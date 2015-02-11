@@ -15,8 +15,7 @@ class TestDispatchable : public md::Dispatchable
 {
 public:
     TestDispatchable(uint64_t limit)
-        : dispatch_count{0},
-          dispatch_limit{limit}
+        : dispatch_limit{limit}
     {
         int pipefds[2];
         pipe(pipefds);
@@ -43,10 +42,12 @@ public:
     }
 
 private:
-    uint64_t dispatch_count;
+    static thread_local uint64_t dispatch_count;
     uint64_t const dispatch_limit;
     mir::Fd read_fd, write_fd;
 };
+
+thread_local uint64_t TestDispatchable::dispatch_count = 0;
 
 bool fd_is_readable(int fd)
 {
@@ -70,7 +71,7 @@ int main(int argc, char** argv)
     uint64_t const dispatch_count = std::atoll(argv[2]);
 
     auto dispatcher = std::make_shared<md::MultiplexingDispatchable>();
-    dispatcher->add_watch(std::make_shared<TestDispatchable>(dispatch_count), md::DispatchReentrancy::reentrant);
+    dispatcher->add_watch(std::make_shared<TestDispatchable>(dispatch_count / thread_count), md::DispatchReentrancy::reentrant);
 
     auto start = std::chrono::steady_clock::now();
 
