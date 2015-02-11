@@ -76,9 +76,10 @@ public:
 
     virtual void remove_session(std::shared_ptr<scene::Session> const& session) = 0;
 
-    virtual void add_surface(
-        std::shared_ptr<scene::Surface> const& surface,
-        std::shared_ptr<scene::Session> const& session) = 0;
+    virtual frontend::SurfaceId add_surface(
+        std::shared_ptr<scene::Session> const& session,
+        scene::SurfaceCreationParameters const& params,
+        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) = 0;
 
     virtual void remove_surface(
         std::weak_ptr<scene::Surface> const& surface,
@@ -87,6 +88,12 @@ public:
     virtual void add_display(geometry::Rectangle const& area) = 0;
 
     virtual void remove_display(geometry::Rectangle const& area) = 0;
+
+    virtual bool handle_key_event(MirKeyInputEvent const* event) = 0;
+
+    virtual bool handle_touch_event(MirTouchInputEvent const* event) = 0;
+
+    virtual bool handle_pointer_event(MirPointerInputEvent const* event) = 0;
 
     virtual ~WindowManagerMetadataModel() = default;
     WindowManagerMetadataModel() = default;
@@ -107,32 +114,37 @@ public:
     }
 
 protected:
-    void add_session(std::shared_ptr<scene::Session> const& session)
+    void add_session(std::shared_ptr<scene::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session] = SessionInfo();
         policy.handle_session_info_updated(session_info, displays);
     }
 
-    void remove_session(std::shared_ptr<scene::Session> const& session)
+    void remove_session(std::shared_ptr<scene::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info.erase(session);
         policy.handle_session_info_updated(session_info, displays);
     }
 
-    void add_surface(
-        std::shared_ptr<scene::Surface> const& surface,
-        std::shared_ptr<scene::Session> const& session)
+    frontend::SurfaceId add_surface(
+        std::shared_ptr<scene::Session> const& session,
+        scene::SurfaceCreationParameters const& params,
+        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) override
     {
-        // Called under lock
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        scene::SurfaceCreationParameters const placed_params = policy.handle_place_new_surface(session, params);
+        auto const result = build(session, placed_params);
+        auto const surface = session->surface(result);
         policy.handle_new_surface(session, surface);
         surface_info.emplace(surface, SurfaceInfo{session, surface});
+        return result;
     }
 
     void remove_surface(
         std::weak_ptr<scene::Surface> const& surface,
-        std::shared_ptr<scene::Session> const& session)
+        std::shared_ptr<scene::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         policy.handle_delete_surface(session, surface);
@@ -152,6 +164,24 @@ protected:
         std::lock_guard<decltype(mutex)> lock(mutex);
         displays.remove(area);
         policy.handle_displays_updated(session_info, displays);
+    }
+
+    bool handle_key_event(MirKeyInputEvent const* event) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        return policy.handle_key_event(event);
+    }
+
+    bool handle_touch_event(MirTouchInputEvent const* event) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        return policy.handle_touch_event(event);
+    }
+
+    bool handle_pointer_event(MirPointerInputEvent const* event) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        return policy.handle_pointer_event(event);
     }
 
     auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
@@ -181,7 +211,7 @@ protected:
     WindowManagementPolicy policy;
 
     std::mutex mutex;
-
+private:
     typename SessionTo<SessionInfo>::type session_info;
     typename SurfaceTo<SurfaceInfo>::type surface_info;
     geometry::Rectangles displays;
@@ -244,11 +274,12 @@ public:
 
     frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override
     {
-        std::lock_guard<decltype(Metadatabase::mutex)> lock(Metadatabase::mutex);
-        scene::SurfaceCreationParameters const placed_params = Metadatabase::policy.handle_place_new_surface(session, params);
-        auto const result = shell::AbstractShell::create_surface(session, placed_params);
-        Metadatabase::add_surface(session->surface(result), session);
-        return result;
+        auto const build = [this](std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& placed_params)
+            {
+                return shell::AbstractShell::create_surface(session, placed_params);
+            };
+
+        return Metadatabase::add_surface(session, params, build);
     }
 
     void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override
@@ -264,18 +295,16 @@ public:
 
         auto const input_event = mir_event_get_input_event(&event);
 
-        std::lock_guard<decltype(Metadatabase::mutex)> lock(Metadatabase::mutex);
-
         switch (mir_input_event_get_type(input_event))
         {
         case mir_input_event_type_key:
-            return Metadatabase::policy.handle_key_event(mir_input_event_get_key_input_event(input_event));
+            return Metadatabase::handle_key_event(mir_input_event_get_key_input_event(input_event));
 
         case mir_input_event_type_touch:
-            return Metadatabase::policy.handle_touch_event(mir_input_event_get_touch_input_event(input_event));
+            return Metadatabase::handle_touch_event(mir_input_event_get_touch_input_event(input_event));
 
         case mir_input_event_type_pointer:
-            return Metadatabase::policy.handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
+            return Metadatabase::handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
         }
 
         return false;
