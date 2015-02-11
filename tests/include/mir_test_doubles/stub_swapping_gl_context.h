@@ -40,6 +40,8 @@ struct StubSwappingGLContext : public graphics::android::SwappingGLContext
         StubSwappingGLContext(std::make_shared<StubBuffer>())
     {
     }
+    void make_current() const {}
+    void release_current() const {}
     void swap_buffers() const {}
     std::shared_ptr<graphics::Buffer> last_rendered_buffer() const
     {
