@@ -472,8 +472,7 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
 std::shared_ptr<mir::client::ClientBufferStreamFactory> MirConnection::get_client_buffer_stream_factory()
 {
     if (!buffer_stream_factory)
-        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(platform->create_buffer_factory(), 
-            platform, the_logger());
+        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(platform, the_logger());
     return buffer_stream_factory;
 }
 

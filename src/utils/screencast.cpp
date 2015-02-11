@@ -207,7 +207,7 @@ struct EGLSetup
 
         auto native_window =
             reinterpret_cast<EGLNativeWindowType>(
-                mir_screencast_egl_native_window(screencast));
+                mir_buffer_stream_get_egl_native_window(mir_screencast_get_buffer_stream(screencast)));
 
         egl_display = eglGetDisplay(native_display);
 
