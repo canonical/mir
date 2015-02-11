@@ -472,3 +472,16 @@ TEST(MultiplexingDispatchableTest, multiple_removals_are_threadsafe)
 
     EXPECT_TRUE(canary_killed->wait_for(std::chrono::seconds{2}));
 }
+
+TEST(MultiplexingDispatchableTest, automatic_removals_are_threadsafe)
+{
+    auto dispatcher = std::make_shared<md::MultiplexingDispatchable>();
+
+    auto dispatchee = std::make_shared<mt::TestDispatchable>([](md::FdEvents) { return false; });
+
+    dispatcher->add_watch(dispatchee, md::DispatchReentrancy::reentrant);
+
+    md::SimpleDispatchThread one{dispatcher}, two{dispatcher}, three{dispatcher}, four{dispatcher};
+
+    dispatchee->trigger();
+}

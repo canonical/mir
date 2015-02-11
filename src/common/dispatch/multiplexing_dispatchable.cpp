@@ -190,12 +190,12 @@ bool md::MultiplexingDispatchable::dispatch(md::FdEvents events)
         return false;
     }
 
-    decltype(dispatchee_holder)::pointer event_source;
-    bool remove_source{false};
+    std::shared_ptr<md::Dispatchable> source;
+    bool rearm_source{false};
+    epoll_event event;
+
     {
         ReadLock{lifetime_mutex};
-
-        epoll_event event;
 
         auto result = epoll_wait(epoll_fd, &event, 1, 0);
 
@@ -206,23 +206,29 @@ bool md::MultiplexingDispatchable::dispatch(md::FdEvents events)
                                                      "Failed to wait on fds"}));
         }
 
-        if (result > 0)
+        if (result == 0)
         {
-            event_source = reinterpret_cast<decltype(event_source)>(event.data.ptr);
-
-            remove_source = !event_source->first->dispatch(epoll_to_fd_event(event));
-
-            if (event_source->second && !remove_source)
-            {
-                event.events = fd_event_to_epoll(event_source->first->relevant_events()) | EPOLLONESHOT;
-                epoll_ctl(epoll_fd, EPOLL_CTL_MOD, event_source->first->watch_fd(), &event);
-            }
+            // Some other thread must have stolen the event we were woken for;
+            // that's ok, just return.
+            return true;
         }
+
+        auto event_source = reinterpret_cast<decltype(dispatchee_holder)::pointer>(event.data.ptr);
+
+        source = event_source->first;
+        rearm_source = event_source->second;
     }
-    if (remove_source)
+
+    if (!source->dispatch(epoll_to_fd_event(event)))
     {
-        remove_watch(event_source->first);
+        remove_watch(source);
     }
+    else if (rearm_source)
+    {
+        event.events = fd_event_to_epoll(source->relevant_events()) | EPOLLONESHOT;
+        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, source->watch_fd(), &event);
+    }
+
     return true;
 }
 
@@ -284,6 +290,15 @@ void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
 {
     if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr))
     {
+        if (errno == ENOENT)
+        {
+            // If reentrant dispatch returns false we can try to remove the same dispatchable twice.
+            //
+            // The reference-counting on mir::Fd should prevent the fd being closed, and
+            // hence the handle being reused, before we've processed all such removals,
+            // so this should not be racy with new Dispatchable creation + add_watch.
+            return;
+        }
         BOOST_THROW_EXCEPTION((std::system_error{errno,
                                                  std::system_category(),
                                                  "Failed to remove fd monitor"}));
