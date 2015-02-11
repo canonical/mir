@@ -51,7 +51,7 @@ struct SessionTo
 /// These functions assume that the BasicWindowManager data structures can be accessed freely.
 /// I.e. should only be invoked by the policy handle_... methods (where any necessary locks are held).
 template<typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManagerTools : public virtual shell::FocusController
+class BasicWindowManagerTools
 {
 public:
     virtual auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
@@ -61,12 +61,16 @@ public:
 
     virtual auto info_for(std::weak_ptr<scene::Surface> const& surface) const -> SurfaceInfo& = 0;
 
-    /* TODO this is probably the only place these functions inherited from
-     * TODO FocusController makes any sense. FocusController can probably go.
     virtual std::weak_ptr<scene::Session> focussed_application() const = 0;
+
     virtual void focus_next() = 0;
+
     virtual void set_focus_to(std::shared_ptr<scene::Session> const& focus) = 0;
-     */
+
+    virtual ~BasicWindowManagerTools() = default;
+    BasicWindowManagerTools() = default;
+    BasicWindowManagerTools(BasicWindowManagerTools const&) = delete;
+    BasicWindowManagerTools& operator=(BasicWindowManagerTools const&) = delete;
 };
 
 class WindowManagerMetadataModel
@@ -110,7 +114,10 @@ class WindowManagerMetadatabase :
 {
 public:
     template <typename... PolicyArgs>
-    WindowManagerMetadatabase(PolicyArgs... policy_args) :
+    WindowManagerMetadatabase(
+        shell::FocusController* focus_controller,
+        PolicyArgs... policy_args) :
+        focus_controller(focus_controller),
         policy(this, policy_args...)
     {
     }
@@ -217,6 +224,22 @@ private:
         return const_cast<SurfaceInfo&>(surface_info.at(surface));
     }
 
+    std::weak_ptr<scene::Session> focussed_application() const override
+    {
+        return focus_controller->focussed_application();
+    }
+
+    void focus_next() override
+    {
+        focus_controller->focus_next();
+    }
+
+    void set_focus_to(std::shared_ptr<scene::Session> const& focus) override
+    {
+        focus_controller->set_focus_to(focus);
+    }
+
+    shell::FocusController* const focus_controller;
     WindowManagementPolicy policy;
 
     std::mutex mutex;
@@ -260,7 +283,7 @@ public:
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         PolicyArgs... policy_args) :
         AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
-        Metadatabase(policy_args...)
+        Metadatabase(this, policy_args...)
     {
     }
 
