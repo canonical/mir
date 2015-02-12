@@ -196,6 +196,7 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
 /* Key event accessors */
 
 // ABI compatible MIR_COMMON_3.1
+extern "C"
 MirKeyboardEvent const* mir_input_event_get_key_input_event(MirInputEvent const* ev)
 {
     return mir_input_event_get_keyboard_event(ev);
