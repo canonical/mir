@@ -1,22 +1,85 @@
-mir (0.11.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.12.0-0ubuntu1) UNRELEASED; urgency=medium
 
-  * New upstream release 0.11.0 (https://launchpad.net/mir/+milestone/0.11.0)
+  * New upstream release 0.12.0 (https://launchpad.net/mir/+milestone/0.12.0)
     - Enhancements:
-      . Lots more major plumbing in the Android code, on the path to supporting
-        external displays.
+      . TODO
+    - ABI summary: Servers need rebuilding, but clients do not;
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI unchanged at 3 (TODO)
+      . Mirplatform ABI unchanged at 6 (TODO)
+      . Mirserver ABI unchanged at 29 (TODO)
+    - Bug fixes:
+      . TODO
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 12 Feb 2015 10:12:11 +0800
+
+mir (0.11.0+15.04.20150209.1-0ubuntu1) vivid; urgency=medium
+
+  [ Daniel van Vugt ]
+  * New upstream release 0.11.0 (https://launchpad.net/mir/+milestone/0.11.0)
+    - Packaging changes:
+      . Due to changes in the Mir driver model the client platforms are no
+        longer versioned by soname. Thusly libmirplatform5driver-(mesa|android) is
+        replaced by mir-client-platform-(mesa-android). A new package
+        mir-client-platform-mesa-dev is introduced containing headers
+        previously in mirplatform-dev.
+    - Enhancements:
+      . Lots more major plumbing in the Android code, on the path to
+        supporting external displays.
+      . Add support for clang 3.6.
+      . Major redesign of server classes in mir::shell,scene and friends
+        (still in progress).
+      . Added client API for creating dialogs and tooltips.
+      . Added new surface states: mir_surface_state_hidden and
+        mir_surface_state_horizmaximized.
       . Performance: Use optimally efficient fragment shading when possible.
       . Performance: (Desktop) Composite using double buffering instead of
         triple to reduce visible lag.
-      . TODO fill me in more
+      . mir_proving_server: Can now resize windows from any edge or corner
+        using the existing Alt+middlebuttondrag.
+      . mir_proving_server: Added some demo custom shaders (negative and
+        high contrast modes: Super+N/C).
+      . mir_proving_server: Can now close clients politely via Alt+F4.
+      . Added MirPointerInputEvent (part of the new input API, the old
+        MirMotionEvent is still supported also for now).
     - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8
       . Mircommon ABI unchanged at 3
       . Mirplatform ABI bumped to 6
       . Mirserver ABI bumped to 29
     - Bug fixes:
-      . TODO fill me in at release
+      . [regression] mir_demo_server exits immediately with boost
+        bad_any_cast exception (LP: #1414630)
+      . need way to position menus and tooltips (relative positioning to
+        parent) (LP: #1324101)
+      . GLibMainLoopTest failure seen in CI (LP: #1413748)
+      . Clang builds fail in CI (LP: #1416317)
+      . segfault in mir::compositor::GLProgramFamily::Shader::init()
+        (LP: #1416482)
+      . GLRenderer: The default fragment shader is sub-optimal for alpha=1.0
+        (LP: #1350674)
+      . mesa::DisplayBuffer::post_update is triple buffered - more laggy than
+        it needs to be (LP: #1350725)
+      . Cannot connect to nested server when started from a differen vt
+        (LP: #1379266)
+      . [testfail] AsioMainLoopAlarmTest fails in CI (LP: #1392256)
+      . Compositor report inconsistently reports frame time during bypass,
+        and render time otherwise (LP: #1408906)
+      . [regression] mir_demo_client_fingerpaint doesn't paint anything any
+        more (with the mouse) (LP: #1413139)
+      . Hardware cursor is always slightly ahead of the composited image
+        (LP: #1274408)
+      . integration tests are outputting (too many) DisplayServer log
+        messages (LP: #1408231)
+      . [regression] deploy-and-test.sh doesn't work any more (unless you
+        have umockdev installed already) (LP: #1413479)
+      . Color Inverse on display. Toggle Negative Image (LP: #1400580)
+      . mir-ubuntu-vivid-armhf-ci fails consistently (LP: #1407863)
+      . Double-buffered surfaces may lag or freeze if event driven and not
+        constantly redrawing (LP: #1395581)
+      . Pointer motion and crossing events are missing (LP: #1417650)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 14 Jan 2015 16:10:37 +0800
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 09 Feb 2015 21:27:35 +0000
 
 mir (0.10.0+15.04.20150107.2-0ubuntu1) vivid; urgency=medium
 
