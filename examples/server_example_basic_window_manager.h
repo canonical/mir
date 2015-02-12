@@ -100,9 +100,9 @@ public:
     template <typename... PolicyArgs>
     BasicWindowManager(
         shell::FocusController* focus_controller,
-        PolicyArgs... policy_args) :
+        PolicyArgs&&... policy_args) :
         focus_controller(focus_controller),
-        policy(this, policy_args...)
+        policy(this, std::forward<PolicyArgs>(policy_args)...)
     {
     }
 
