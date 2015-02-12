@@ -134,7 +134,6 @@ private:
     std::shared_ptr<msh::DisplayLayout> const display_layout;
 };
 
-
 // simple tiling algorithm:
 //  o Switch apps: tap or click on the corresponding tile
 //  o Move window: Alt-leftmousebutton drag
