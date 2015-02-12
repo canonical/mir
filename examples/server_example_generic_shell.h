@@ -96,19 +96,11 @@ public:
         MirSurfaceAttrib attrib,
         int value) override;
 
-protected:
-    // Ugly hack to ensure GenericShell is created before BasicShell creates the
-    // window manager (otherwise the shell::FocusController interface isn't initialised)
-    void init_window_manager(std::shared_ptr<WindowManager> const& new_window_manager)
-    {
-        window_manager = new_window_manager;
-    }
-
 private:
     void add_display(geometry::Rectangle const& area) override;
     void remove_display(geometry::Rectangle const& area) override;
 
-    std::shared_ptr<WindowManager> window_manager;
+    std::shared_ptr<WindowManager> const window_manager;
 };
 }
 }

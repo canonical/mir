@@ -612,36 +612,32 @@ auto me::ShellFactory::shell() -> std::shared_ptr<me::Shell>
         auto const options = server.get_options();
         auto const selection = options->get<std::string>(wm_option);
 
+        std::function<std::shared_ptr<WindowManager>(shell::FocusController* focus_controller)> wm_builder;
+
         if (selection == wm_tiling)
         {
-            auto const wm_builder = [this](msh::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
+            wm_builder = [this](msh::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
                 {
                     return std::make_shared<TilingWindowManager>(focus_controller);
                 };
-
-            tmp = std::make_shared<GenericShell>(
-                server.the_input_targeter(),
-                server.the_surface_coordinator(),
-                server.the_session_coordinator(),
-                server.the_prompt_session_manager(),
-                wm_builder);
         }
         else if (selection == wm_fullscreen)
         {
-            auto const wm_builder = [this](msh::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
+            wm_builder = [this](msh::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
                 {
                     return std::make_shared<FullscreenWindowManager>(focus_controller, server.the_shell_display_layout());
                 };
-
-            tmp = std::make_shared<GenericShell>(
-                server.the_input_targeter(),
-                server.the_surface_coordinator(),
-                server.the_session_coordinator(),
-                server.the_prompt_session_manager(),
-                wm_builder);
         }
         else
             throw mir::AbnormalExit("Unknown window manager: " + selection);
+
+
+        tmp = std::make_shared<GenericShell>(
+            server.the_input_targeter(),
+            server.the_surface_coordinator(),
+            server.the_session_coordinator(),
+            server.the_prompt_session_manager(),
+            wm_builder);
 
         server.the_composite_event_filter()->prepend(tmp);
         shell_ = tmp;
