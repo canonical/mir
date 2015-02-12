@@ -82,15 +82,9 @@ public:
         }
     }
 
-    ~ReadLock()
+    ~ReadLock() noexcept
     {
-        auto err = pthread_rwlock_unlock(mutex);
-        if (err != 0)
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{err,
-                                                     std::system_category(),
-                                                     "Failed to release read lock"}));
-        }
+        pthread_rwlock_unlock(mutex);
     }
 private:
     pthread_rwlock_t* mutex;
@@ -111,15 +105,9 @@ public:
         }
     }
 
-    ~WriteLock()
+    ~WriteLock() noexcept
     {
-        auto err = pthread_rwlock_unlock(mutex);
-        if (err != 0)
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{err,
-                                                     std::system_category(),
-                                                     "Failed to release write lock"}));
-        }
+        pthread_rwlock_unlock(mutex);
     }
 private:
     pthread_rwlock_t* mutex;
