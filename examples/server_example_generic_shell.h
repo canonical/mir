@@ -20,9 +20,8 @@
 #define MIR_EXAMPLE_GENERIC_SHELL_H_
 
 #include "server_example_shell.h"
+#include "server_example_window_manager.h"
 
-#include "mir/scene/session.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/abstract_shell.h"
 
 ///\example server_example_generic_shell.h
@@ -32,40 +31,6 @@ namespace mir
 {
 namespace examples
 {
-class WindowManager
-{
-public:
-    virtual void add_session(std::shared_ptr<scene::Session> const& session) = 0;
-
-    virtual void remove_session(std::shared_ptr<scene::Session> const& session) = 0;
-
-    virtual frontend::SurfaceId add_surface(
-        std::shared_ptr<scene::Session> const& session,
-        scene::SurfaceCreationParameters const& params,
-        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) = 0;
-
-    virtual void remove_surface(
-        std::weak_ptr<scene::Surface> const& surface,
-        std::shared_ptr<scene::Session> const& session) = 0;
-
-    virtual void add_display(geometry::Rectangle const& area) = 0;
-
-    virtual void remove_display(geometry::Rectangle const& area) = 0;
-
-    virtual bool handle_key_event(MirKeyInputEvent const* event) = 0;
-
-    virtual bool handle_touch_event(MirTouchInputEvent const* event) = 0;
-
-    virtual bool handle_pointer_event(MirPointerInputEvent const* event) = 0;
-
-    virtual int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) = 0;
-
-    virtual ~WindowManager() = default;
-    WindowManager() = default;
-    WindowManager(WindowManager const&) = delete;
-    WindowManager& operator=(WindowManager const&) = delete;
-};
-
 class GenericShell : public virtual Shell,
     private shell::AbstractShell
 {
