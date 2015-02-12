@@ -106,6 +106,7 @@ public:
     {
     }
 
+private:
     void add_session(std::shared_ptr<scene::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -182,7 +183,6 @@ public:
         return policy.handle_set_state(surface, value);
     }
 
-private:
     auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
     -> std::shared_ptr<scene::Session> override
     {
