@@ -16,24 +16,27 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+#include "mir_protobuf.pb.h"
+#include "mir_protobuf_wire.pb.h"
 
 #include "src/server/frontend/message_sender.h"
 #include "src/server/frontend/event_sender.h"
-#include "mir_test_doubles/stub_display_configuration.h"
+
+#include "mir/events/event_builders.h"
+
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/stub_display_configuration.h"
 
-#include "mir_protobuf.pb.h"
-#include "mir_protobuf_wire.pb.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mt=mir::test;
-namespace mtd=mir::test::doubles;
-namespace mf=mir::frontend;
-namespace mfd=mf::detail;
-namespace geom=mir::geometry;
+namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
+namespace mf = mir::frontend;
+namespace mfd = mf::detail;
+namespace mev = mir::events;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -41,14 +44,22 @@ struct MockMsgSender : public mfd::MessageSender
 {
     MOCK_METHOD3(send, void(char const*, size_t, mfd::FdSets const&));
 };
+struct EventSender : public testing::Test
+{
+    EventSender()
+        : event_sender(mt::fake_shared(mock_msg_sender))
+    {
+    }
+    MockMsgSender mock_msg_sender;
+    mfd::EventSender event_sender;
+};
 }
 
-TEST(TestEventSender, display_send)
+TEST_F(EventSender, display_send)
 {
     using namespace testing;
 
     mtd::StubDisplayConfig config;
-    MockMsgSender mock_msg_sender;
 
     auto msg_validator = [&config](char const* data, size_t len){
         mir::protobuf::wire::Result wire;
@@ -63,43 +74,30 @@ TEST(TestEventSender, display_send)
         .Times(1)
         .WillOnce(WithArgs<0,1>(Invoke(msg_validator)));
 
-    mfd::EventSender sender(mt::fake_shared(mock_msg_sender));
-
-    sender.handle_display_config_change(config);
+    event_sender.handle_display_config_change(config);
 }
 
-TEST(TestEventSender, sends_noninput_events)
+TEST_F(EventSender, sends_noninput_events)
 {
     using namespace testing;
 
-    auto msg_sender = std::make_shared<MockMsgSender>();
-    mfd::EventSender event_sender(msg_sender);
+    auto surface_ev = mev::make_event(mf::SurfaceId{1}, mir_surface_attrib_focus, mir_surface_focused);
+    auto resize_ev = mev::make_event(mf::SurfaceId{1}, {10, 10});
 
-    MirEvent event;
-    memset(&event, 0, sizeof event);
-
-    EXPECT_CALL(*msg_sender, send(_, _, _))
+    EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(2);
-    event.type = mir_event_type_surface;
-    event_sender.handle_event(event);
-    event.type = mir_event_type_resize;
-    event_sender.handle_event(event);
+    event_sender.handle_event(*surface_ev);
+    event_sender.handle_event(*resize_ev);
 }
 
-TEST(TestEventSender, never_sends_input_events)
+TEST_F(EventSender, never_sends_input_events)
 {
     using namespace testing;
 
-    auto msg_sender = std::make_shared<MockMsgSender>();
-    mfd::EventSender event_sender(msg_sender);
+    auto ev = mev::make_event(MirInputDeviceId(), 0, MirKeyInputEventAction(),
+                              0, 0, MirInputEventModifiers());
 
-    MirEvent event;
-    memset(&event, 0, sizeof event);
-
-    EXPECT_CALL(*msg_sender, send(_, _, _))
+    EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(0);
-    event.type = mir_event_type_key;
-    event_sender.handle_event(event);
-    event.type = mir_event_type_motion;
-    event_sender.handle_event(event);
+    event_sender.handle_event(*ev);
 }
