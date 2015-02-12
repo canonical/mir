@@ -25,6 +25,7 @@
 #include "mir/log.h"
 
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir/client_platform.h"
 #include "mir/egl_native_window_factory.h"
 
 #include "perf_report.h"
@@ -84,16 +85,15 @@ void populate_buffer_package(
 // connection can complicate unit tests ala MirSurface and test_client_mir_surface.cpp)
 mcl::BufferStream::BufferStream(mp::DisplayServer& server,
     mcl::BufferStreamMode mode,
-    std::shared_ptr<mcl::ClientBufferFactory> const& buffer_factory,
-    std::shared_ptr<mcl::EGLNativeWindowFactory> const& native_window_factory,
+    std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     mp::BufferStream const& protobuf_bs,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
     std::string const& surface_name)
     : display_server(server),
       mode(mode),
-      native_window_factory(native_window_factory),
+      client_platform(client_platform),
       protobuf_bs(protobuf_bs),
-      buffer_depository{buffer_factory, mir::frontend::client_buffer_cache_size},
+      buffer_depository{client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size},
       swap_interval_(1),
       perf_report(perf_report)
       
@@ -104,7 +104,7 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
         BOOST_THROW_EXCEPTION(std::runtime_error("Buffer stream did not come with a buffer"));
 
     process_buffer(protobuf_bs.buffer());
-    egl_native_window_ = native_window_factory->create_egl_native_window(this);
+    egl_native_window_ = client_platform->create_egl_native_window(this);
 
     perf_report->name_surface(surface_name.c_str());
 }
@@ -301,4 +301,16 @@ int mcl::BufferStream::swap_interval() const
 void mcl::BufferStream::set_swap_interval(int interval)
 {
     request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
+}
+
+MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()
+{
+    auto buffer = get_current_buffer();
+    auto handle = buffer->native_buffer_handle();
+    return client_platform->convert_native_buffer(handle.get());
+}
+
+MirPlatformType mcl::BufferStream::platform_type()
+{
+    return client_platform->platform_type();
 }

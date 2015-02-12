@@ -48,6 +48,7 @@ typedef struct MirSurface MirSurface;
 typedef struct MirSurfaceSpec MirSurfaceSpec;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirPromptSession MirPromptSession;
+typedef struct MirBufferStream MirBufferStream;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by
@@ -76,6 +77,15 @@ typedef void (*mir_connected_callback)(MirConnection *connection, void *client_c
  *                                   mir_connect
  */
 typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context);
+
+/**
+ * Callback to be passed when calling:
+ *  - mir_buffer_stream_* functions requiring a callback.
+ *   \param [in] surface             the buffer stream being updated
+ *   \param [in,out] client_context  context provided by client in calling
+ *                                   mir_connect
+ */
+typedef void (*mir_buffer_stream_callback)(MirBufferStream *surface, void *client_context);
 
 /**
  * Callback member of MirEventDelegate for handling of events.

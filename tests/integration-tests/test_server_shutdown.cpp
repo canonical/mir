@@ -58,7 +58,7 @@ public:
     }
 };
 
-void null_surface_callback(MirSurface*, void*)
+void null_buffer_stream_callback(MirBufferStream*, void*)
 {
 }
 
@@ -206,9 +206,9 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
             MirSurface* surf = mir_connection_create_surface_sync(connection, &request_params);
 
             /* Ask for the first buffer (should succeed) */
-            mir_surface_swap_buffers_sync(surf);
+            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surf));
             /* Ask for the first second buffer (should block) */
-            mir_surface_swap_buffers(surf, null_surface_callback, nullptr);
+            mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surf), null_buffer_stream_callback, nullptr);
 
             next_buffer_done.set();
             server_done.wait();

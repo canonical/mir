@@ -20,6 +20,7 @@
 #define MIR_CLIENT_CLIENT_BUFFER_STREAM_H_
 
 #include "mir_toolkit/client_types.h"
+#include "mir_toolkit/mir_native_buffer.h"
 #include "mir_wait_handle.h"
 
 #include <EGL/eglplatform.h>
@@ -47,6 +48,9 @@ public:
 
     virtual int swap_interval() const = 0;
     virtual void set_swap_interval(int interval) = 0;
+
+    virtual MirNativeBuffer* get_current_buffer_package() = 0;
+    virtual MirPlatformType platform_type() = 0;
     
 protected:
     ClientBufferStream() = default;

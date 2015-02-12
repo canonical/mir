@@ -19,10 +19,16 @@
 #ifndef MIR_CLIENT_API_HELPERS_H_
 #define MIR_CLIENT_API_HELPERS_H_
 
+#include <boost/exception/diagnostic_information.hpp> 
+
 #include "mir/log.h"
 
 #define MIR_LOG_UNCAUGHT_EXCEPTION(ex) { \
     mir::log_error("Caught exception at client library boundary (in %s): %s", \
-    __FUNCTION__, ex.what()); }
+                   __FUNCTION__, boost::diagnostic_information(ex).c_str()); }
+
+#define MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(ex) { \
+    mir::log_error("Caught exception at Mir/EGL driver boundary (in %s): %s", \
+                   __FUNCTION__, boost::diagnostic_information(ex).c_str()); }
 
 #endif // MIR_CLIENT_API_HELPERS_H_

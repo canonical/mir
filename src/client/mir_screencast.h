@@ -19,7 +19,6 @@
 #ifndef MIR_CLIENT_MIR_SCREENCAST_H_
 #define MIR_CLIENT_MIR_SCREENCAST_H_
 
-#include "mir/egl_native_surface.h"
 #include "mir_wait_handle.h"
 #include "mir_toolkit/client_types.h"
 #include "mir_protobuf.pb.h"
@@ -38,7 +37,7 @@ class ClientBufferStream;
 }
 }
 
-struct MirScreencast : public mir::client::EGLNativeSurface
+struct MirScreencast
 {
 public:
     MirScreencast(
@@ -55,16 +54,11 @@ public:
     MirWaitHandle* release(
         mir_screencast_callback callback, void* context);
 
-    MirWaitHandle* next_buffer(
-        mir_screencast_callback callback, void* context);
-
     EGLNativeWindowType egl_native_window();
 
-    /* mir::client::EGLNativeSurface */
-    MirSurfaceParameters get_parameters() const;
-    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
-    void request_and_wait_for_next_buffer();
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
+
+    mir::client::ClientBufferStream* get_buffer_stream();
 
 private:
     void screencast_created(
