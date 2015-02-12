@@ -66,8 +66,6 @@ public:
 
     virtual void gl_bind_to_texture() override;
 
-    bool can_bypass() const override;
-
     void write(unsigned char const* pixels, size_t size) override;
 
 private:
