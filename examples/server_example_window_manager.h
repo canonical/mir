@@ -22,8 +22,8 @@
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
 
-///\example server_example_generic_shell.h
-/// A generic shell that supports a window manager
+///\example server_example_window_manager.h
+/// A window manager interface
 
 namespace mir
 {

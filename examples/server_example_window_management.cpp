@@ -32,7 +32,7 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 using namespace mir::geometry;
 
-///\example server_example_window_manager.cpp
+///\example server_example_window_management.cpp
 /// Demonstrate introducing a window management strategy
 
 namespace
