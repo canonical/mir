@@ -489,6 +489,44 @@ TEST_F(BufferQueueTest, multiple_compositors_are_in_sync)
     }
 }
 
+TEST_F(BufferQueueTest, multiple_fast_compositors_are_in_sync)
+{  // Regression test for LP: #1420678
+    for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
+
+        // Client generates first frame
+        auto handle1 = client_acquire_async(q);
+        ASSERT_TRUE(handle1->has_acquired_buffer());
+        auto client_id1 = handle1->id();
+        handle1->release_buffer();
+
+        // Client generates second frame
+        auto handle2 = client_acquire_async(q);
+        ASSERT_TRUE(handle2->has_acquired_buffer());
+        auto client_id2 = handle2->id();
+        handle2->release_buffer();
+
+        // Many monitors... verify they all get the first frame.
+        for (int monitor = 0; monitor < 10; monitor++)
+        {
+            void const* user_id = reinterpret_cast<void const*>(monitor);
+            auto comp_buffer = q.compositor_acquire(user_id);
+            ASSERT_EQ(client_id1, comp_buffer->id());
+            q.compositor_release(comp_buffer);
+        }
+
+        // Still many monitors... verify they all get the second frame.
+        for (int monitor = 0; monitor < 10; monitor++)
+        {
+            void const* user_id = reinterpret_cast<void const*>(monitor);
+            auto comp_buffer = q.compositor_acquire(user_id);
+            ASSERT_EQ(client_id2, comp_buffer->id());
+            q.compositor_release(comp_buffer);
+        }
+    }
+}
+
 TEST_F(BufferQueueTest, compositor_acquires_frames_in_order)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
