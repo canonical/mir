@@ -20,28 +20,28 @@
 //#define LOG_NDEBUG 0
 
 // Log detailed debug messages about each inbound event notification to the dispatcher.
-#define DEBUG_INBOUND_EVENT_DETAILS 0
+#define DEBUG_INBOUND_EVENT_DETAILS 1
 
 // Log detailed debug messages about each outbound event processed by the dispatcher.
-#define DEBUG_OUTBOUND_EVENT_DETAILS 0
+#define DEBUG_OUTBOUND_EVENT_DETAILS 1
 
 // Log debug messages about the dispatch cycle.
-#define DEBUG_DISPATCH_CYCLE 0
+#define DEBUG_DISPATCH_CYCLE 1
 
 // Log debug messages about registrations.
-#define DEBUG_REGISTRATION 0
+#define DEBUG_REGISTRATION 1
 
 // Log debug messages about input event injection.
-#define DEBUG_INJECTION 0
+#define DEBUG_INJECTION 1
 
 // Log debug messages about input focus tracking.
-#define DEBUG_FOCUS 0
+#define DEBUG_FOCUS 1
 
 // Log debug messages about the app switch latency optimization.
-#define DEBUG_APP_SWITCH 0
+#define DEBUG_APP_SWITCH 1
 
 // Log debug messages about hover events.
-#define DEBUG_HOVER 0
+#define DEBUG_HOVER 1
 
 #include "InputDispatcher.h"
 
@@ -1224,36 +1224,36 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(std::chrono::nanoseconds
                             "eventually add a new window when it finishes starting up.");
                     goto Unresponsive;
                 }
-
-                ALOGI("Dropping event because there is no touched window.");
-                injectionResult = INPUT_EVENT_INJECTION_FAILED;
-                goto Failed;
             }
         }
 
-        // Set target flags.
-        int32_t targetFlags = InputTarget::FLAG_FOREGROUND | InputTarget::FLAG_DISPATCH_AS_IS;
-        if (isSplit) {
-            targetFlags |= InputTarget::FLAG_SPLIT;
-        }
-        if (isWindowObscuredAtPointLocked(newTouchedWindowHandle, x, y)) {
-            targetFlags |= InputTarget::FLAG_WINDOW_IS_OBSCURED;
-        }
+        // We may still not have a window handle but we can't just abort the dispatch
+        // cycle because there could be hover exits to dispatch.
+        if (newTouchedWindowHandle != NULL) {
+            // Set target flags.
+            int32_t targetFlags = InputTarget::FLAG_FOREGROUND | InputTarget::FLAG_DISPATCH_AS_IS;
+            if (isSplit) {
+                targetFlags |= InputTarget::FLAG_SPLIT;
+            }
+            if (isWindowObscuredAtPointLocked(newTouchedWindowHandle, x, y)) {
+                targetFlags |= InputTarget::FLAG_WINDOW_IS_OBSCURED;
+            }
 
-        // Update hover state.
-        if (isHoverAction) {
-            newHoverWindowHandle = newTouchedWindowHandle;
-        } else if (maskedAction == AMOTION_EVENT_ACTION_SCROLL) {
-            newHoverWindowHandle = mLastHoverWindowHandle;
+            // Update hover state.
+            if (isHoverAction) {
+                newHoverWindowHandle = newTouchedWindowHandle;
+            } else if (maskedAction == AMOTION_EVENT_ACTION_SCROLL) {
+                newHoverWindowHandle = mLastHoverWindowHandle;
+            }
+            
+            // Update the temporary touch state.
+            IntSet pointerIds;
+            if (isSplit) {
+                int32_t pointerId = entry->pointerProperties[pointerIndex].id;
+                pointerIds.insert(pointerId);
+            }
+            mTempTouchState.addOrUpdateWindow(newTouchedWindowHandle, targetFlags, pointerIds);
         }
-
-        // Update the temporary touch state.
-        IntSet pointerIds;
-        if (isSplit) {
-            int32_t pointerId = entry->pointerProperties[pointerIndex].id;
-            pointerIds.insert(pointerId);
-        }
-        mTempTouchState.addOrUpdateWindow(newTouchedWindowHandle, targetFlags, pointerIds);
     } else {
         /* Case 2: Pointer move, up, cancel or non-splittable pointer down. */
 
@@ -1277,6 +1277,9 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(std::chrono::nanoseconds
             sp<InputWindowHandle> oldTouchedWindowHandle =
                     mTempTouchState.getFirstForegroundWindowHandle();
             sp<InputWindowHandle> newTouchedWindowHandle = findTouchedWindowAtLocked(x, y);
+
+            newHoverWindowHandle = newTouchedWindowHandle;
+            
             if (oldTouchedWindowHandle != newTouchedWindowHandle
                     && newTouchedWindowHandle != NULL) {
 #if DEBUG_FOCUS
@@ -1339,7 +1342,9 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(std::chrono::nanoseconds
         bool haveForegroundWindow = false;
         for (size_t i = 0; i < mTempTouchState.windows.size(); i++) {
             const TouchedWindow& touchedWindow = mTempTouchState.windows[i];
-            if (touchedWindow.targetFlags & InputTarget::FLAG_FOREGROUND) {
+            if (touchedWindow.targetFlags & InputTarget::FLAG_FOREGROUND ||
+                // We allow dispatching hover exit events to non foreground windows.
+                touchedWindow.targetFlags & InputTarget::FLAG_DISPATCH_AS_HOVER_EXIT) {
                 haveForegroundWindow = true;
                 if (! checkInjectionPermission(touchedWindow.windowHandle,
                         entry->injectionState)) {
