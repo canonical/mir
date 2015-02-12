@@ -16,8 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_EXAMPLES_WINDOW_MANAGEMENT_H_
-#define MIR_EXAMPLES_WINDOW_MANAGEMENT_H_
+#ifndef MIR_EXAMPLES_SHELL_H_
+#define MIR_EXAMPLES_SHELL_H_
 
 #include "mir/geometry/rectangles.h"
 #include "mir/input/event_filter.h"
@@ -25,7 +25,7 @@
 
 #include <memory>
 
-///\example server_example_window_management.h
+///\example server_example_shell.h
 /// Demonstrate simple window management strategies
 
 namespace mir
@@ -34,6 +34,7 @@ class Server;
 
 namespace examples
 {
+/// For window management we need a shell that tracks input events and display changes
 class Shell :
     public virtual shell::Shell,
     public virtual input::EventFilter
@@ -44,6 +45,7 @@ public:
     virtual void remove_display(geometry::Rectangle const& area) = 0;
 };
 
+/// We need to hook into several places, a caching factory is simplifies this
 class ShellFactory
 {
 public:

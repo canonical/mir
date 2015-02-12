@@ -19,11 +19,7 @@
 #ifndef MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 #define MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 
-#include "server_example_window_management.h"
-
-#include "mir/scene/session.h"
-#include "mir/scene/surface_creation_parameters.h"
-#include "mir/shell/abstract_shell.h"
+#include "server_example_generic_shell.h"
 
 #include <map>
 #include <mutex>
@@ -73,48 +69,33 @@ public:
     BasicWindowManagerTools& operator=(BasicWindowManagerTools const&) = delete;
 };
 
-class WindowManagerMetadataModel
-{
-public:
-    virtual void add_session(std::shared_ptr<scene::Session> const& session) = 0;
-
-    virtual void remove_session(std::shared_ptr<scene::Session> const& session) = 0;
-
-    virtual frontend::SurfaceId add_surface(
-        std::shared_ptr<scene::Session> const& session,
-        scene::SurfaceCreationParameters const& params,
-        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) = 0;
-
-    virtual void remove_surface(
-        std::weak_ptr<scene::Surface> const& surface,
-        std::shared_ptr<scene::Session> const& session) = 0;
-
-    virtual void add_display(geometry::Rectangle const& area) = 0;
-
-    virtual void remove_display(geometry::Rectangle const& area) = 0;
-
-    virtual bool handle_key_event(MirKeyInputEvent const* event) = 0;
-
-    virtual bool handle_touch_event(MirTouchInputEvent const* event) = 0;
-
-    virtual bool handle_pointer_event(MirPointerInputEvent const* event) = 0;
-
-    virtual int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) = 0;
-
-    virtual ~WindowManagerMetadataModel() = default;
-    WindowManagerMetadataModel() = default;
-    WindowManagerMetadataModel(WindowManagerMetadataModel const&) = delete;
-    WindowManagerMetadataModel& operator=(WindowManagerMetadataModel const&) = delete;
-};
-
+/// A policy based window manager.
+/// This takes care of the management of any meta implementation held for the sessions and surfaces.
+///
+/// \tparam WindowManagementPolicy the constructor must take a pointer to BasicWindowManagerTools<>
+/// as its first parameter. (Any additional parameters can be forwarded by
+/// BasicWindowManager::BasicWindowManager.)
+/// In addition WindowManagementPolicy must implement the following methods:
+/// - void handle_session_info_updated(SessionInfoMap& session_info, Rectangles const& displays);
+/// - void handle_displays_updated(SessionInfoMap& session_info, Rectangles const& displays);
+/// - auto handle_place_new_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& request_parameters) -> ms::SurfaceCreationParameters;
+/// - void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface);
+/// - void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/);
+/// - int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value);
+/// - bool handle_key_event(MirKeyInputEvent const* event);
+/// - bool handle_touch_event(MirTouchInputEvent const* event);
+/// - bool handle_pointer_event(MirPointerInputEvent const* event);
+///
+/// \tparam SessionInfo must be default constructable.
+///
+/// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
-class WindowManagerMetadatabase :
-    public WindowManagerMetadataModel,
+class BasicWindowManager : public WindowManager,
     private BasicWindowManagerTools<SessionInfo, SurfaceInfo>
 {
 public:
     template <typename... PolicyArgs>
-    WindowManagerMetadatabase(
+    BasicWindowManager(
         shell::FocusController* focus_controller,
         PolicyArgs... policy_args) :
         focus_controller(focus_controller),
@@ -247,129 +228,8 @@ private:
     geometry::Rectangles displays;
 };
 
-
-class GenericShell : public virtual Shell,
-    private shell::AbstractShell
-{
-public:
-    GenericShell(
-        std::shared_ptr<shell::InputTargeter> const& input_targeter,
-        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
-        std::shared_ptr<WindowManagerMetadataModel> const& window_manager) :
-        AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
-        window_manager{window_manager}
-    {
-    }
-
-    std::shared_ptr<scene::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) override
-    {
-        auto const result = shell::AbstractShell::open_session(client_pid, name, sink);
-        window_manager->add_session(result);
-        return result;
-    }
-
-    void close_session(std::shared_ptr<scene::Session> const& session) override
-    {
-        window_manager->remove_session(session);
-        shell::AbstractShell::close_session(session);
-    }
-
-    frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override
-    {
-        auto const build = [this](std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& placed_params)
-            {
-                return shell::AbstractShell::create_surface(session, placed_params);
-            };
-
-        return window_manager->add_surface(session, params, build);
-    }
-
-    void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override
-    {
-        window_manager->remove_surface(session->surface(surface), session);
-        shell::AbstractShell::destroy_surface(session, surface);
-    }
-
-    bool handle(MirEvent const& event) override
-    {
-        if (mir_event_get_type(&event) != mir_event_type_input)
-            return false;
-
-        auto const input_event = mir_event_get_input_event(&event);
-
-        switch (mir_input_event_get_type(input_event))
-        {
-        case mir_input_event_type_key:
-            return window_manager->handle_key_event(mir_input_event_get_key_input_event(input_event));
-
-        case mir_input_event_type_touch:
-            return window_manager->handle_touch_event(mir_input_event_get_touch_input_event(input_event));
-
-        case mir_input_event_type_pointer:
-            return window_manager->handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
-        }
-
-        return false;
-    }
-
-    int set_surface_attribute(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib,
-        int value) override
-    {
-        switch (attrib)
-        {
-        case mir_surface_attrib_state:
-        {
-            auto const state = window_manager->handle_set_state(surface, MirSurfaceState(value));
-            return shell::AbstractShell::set_surface_attribute(session, surface, attrib, state);
-        }
-        default:
-            return shell::AbstractShell::set_surface_attribute(session, surface, attrib, value);
-        }
-    }
-
-private:
-    void add_display(geometry::Rectangle const& area) override
-    {
-        window_manager->add_display(area);
-    }
-
-    void remove_display(geometry::Rectangle const& area) override
-    {
-        window_manager->remove_display(area);
-    }
-
-    std::shared_ptr<WindowManagerMetadataModel> const window_manager;
-};
-
-
-/// A policy based window manager.
-/// This takes care of the management of any meta implementation held for the sessions and surfaces.
-///
-/// \tparam WindowManagementPolicy the constructor must take a pointer to BasicWindowManagerTools<>
-/// as its first parameter. (Any additional parameters can be forwarded by
-/// BasicWindowManager::BasicWindowManager.)
-/// In addition WindowManagementPolicy must implement the following methods:
-/// - void handle_session_info_updated(SessionInfoMap& session_info, Rectangles const& displays);
-/// - void handle_displays_updated(SessionInfoMap& session_info, Rectangles const& displays);
-/// - auto handle_place_new_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& request_parameters) -> ms::SurfaceCreationParameters;
-/// - void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface);
-/// - void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/);
-/// - int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value);
-/// - bool handle_key_event(MirKeyInputEvent const* event);
-/// - bool handle_touch_event(MirTouchInputEvent const* event);
-/// - bool handle_pointer_event(MirPointerInputEvent const* event);
-///
-/// \tparam SessionInfo must be default constructable.
-///
-/// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
+/// This is essentially a convenience constructor for initializing GenericShell.
+/// (In C++ we can't specify explicit template parameters to a constructor.)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
 class BasicShell : public GenericShell
 {
@@ -385,9 +245,10 @@ public:
             input_targeter,
             surface_coordinator,
             session_coordinator,
-            prompt_session_manager,
-            std::make_shared<WindowManagerMetadatabase<WindowManagementPolicy, SessionInfo, SurfaceInfo>>(this, policy_args...))
+            prompt_session_manager)
     {
+        init_window_manager(
+            std::make_shared<BasicWindowManager<WindowManagementPolicy, SessionInfo, SurfaceInfo>>(this, policy_args...));
     }
 };
 }

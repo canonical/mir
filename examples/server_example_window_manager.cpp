@@ -17,7 +17,7 @@
  */
 
 #include "server_example_window_manager.h"
-#include "server_example_window_management.h"
+#include "server_example_shell.h"
 
 #include "mir/server.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"

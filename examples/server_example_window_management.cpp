@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "server_example_window_management.h"
+#include "server_example_shell.h"
 #include "server_example_basic_window_manager.h"
 
 #include "mir/abnormal_exit.h"
