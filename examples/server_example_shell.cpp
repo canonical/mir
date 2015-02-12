@@ -22,13 +22,9 @@
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
-#include "mir/geometry/rectangles.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
-#include "mir/scene/surface.h"
 #include "mir/shell/display_layout.h"
-
-#include "mir_toolkit/events/input/input_event.h"
 
 namespace me = mir::examples;
 namespace mf = mir::frontend;
@@ -39,7 +35,7 @@ namespace msh = mir::shell;
 using namespace mir::geometry;
 
 ///\example server_example_shell.cpp
-/// Demonstrate simple window management strategies
+/// Demonstrate a shell supporting selection of a window manager
 
 char const* const me::wm_option = "window-manager";
 char const* const me::wm_description = "window management strategy [{tiling|fullscreen}]";
