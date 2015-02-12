@@ -271,17 +271,6 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (nbuffers <= 1)
         return;
 
-#if 0
-    /* Disabled to workaround/fix LP: #1420678.
-     * This old attempt at double-buffering support (LP: #1319765) is disabled
-     * for now. It's presently causing a worse bug when multiple monitors are
-     * present and you have non-overlapping compositor aqcuisitions (due to
-     * an optimization r2183 that we also want to keep).
-     * However, it's possible that optimization r2183 (and future double
-     * buffering work in progress) will eliminate the need for this section
-     * completely. So we may simply be able to delete it in future...
-     */
-
     /*
      * We can't release the current_compositor_buffer because we need to keep
      * a compositor buffer always-available. But there might be a new
@@ -290,6 +279,7 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
      * us to call back the client with a buffer where otherwise we couldn't.
      */
     if (current_compositor_buffer == buffer.get() &&
+        nbuffers == 2 &&  // Fix LP: #1319765 while avoiding LP: #1420678
         !ready_to_composite_queue.empty())
     {
         current_compositor_buffer = pop(ready_to_composite_queue);
@@ -300,7 +290,6 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
         void const* const impossible_user_id = this;
         current_buffer_users.push_back(impossible_user_id);
     }
-#endif
 
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
