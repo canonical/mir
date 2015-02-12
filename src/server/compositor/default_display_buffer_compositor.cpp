@@ -38,9 +38,9 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Renderer> const& renderer,
     std::shared_ptr<mc::CompositorReport> const& report) :
-    display_buffer{display_buffer},
-    renderer{renderer},
-    report{report}
+    display_buffer(display_buffer),
+    renderer(renderer),
+    report(report)
 {
 }
 

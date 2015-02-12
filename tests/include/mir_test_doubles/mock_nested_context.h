@@ -24,6 +24,21 @@
 
 namespace mir
 {
+namespace graphics
+{
+inline bool operator==(PlatformOperationMessage const& msg1,
+                       PlatformOperationMessage const& msg2)
+{
+    return msg1.data == msg2.data && msg1.fds == msg2.fds;
+}
+
+inline bool operator!=(PlatformOperationMessage const& msg1,
+                       PlatformOperationMessage const& msg2)
+{
+    return !(msg1 == msg2);
+}
+}
+
 namespace test
 {
 namespace doubles
@@ -33,7 +48,6 @@ struct MockNestedContext : graphics::NestedContext
 {
     MOCK_METHOD0(platform_fd_items, std::vector<int>());
     MOCK_METHOD1(drm_auth_magic, void(int magic));
-    MOCK_METHOD1(drm_set_gbm_device, void(struct gbm_device* dev));
     MOCK_METHOD2(platform_operation, graphics::PlatformOperationMessage(
         unsigned int, graphics::PlatformOperationMessage const&));
 };

@@ -7,7 +7,7 @@ So, what do I have to do?
 There are more detailed descriptions below, but as a general rule:
 
  - If you add a new symbol, add it to a _new_ dotted-decimal version stanza,
-   like `MIR_CLIENT_8.1`, `MIR_CLIENT_8.2`, etc.
+   like `MIR_CLIENT_8.1`, `MIR_CLIENT_8.2`, etc.
  - If you change the behaviour or signature of a symbol and not change SONAME,
    see "Change symbols without breaking ABI" below
  - If you change SONAME, collect all previous symbol version stanzas into a
@@ -135,7 +135,7 @@ For example, if you wanted to change the signature of
 
     __asm__(".symver old_mir_connection_create_surface,mir_connection_create_surface@MIR_CLIENT_8");
 
-    MirWaitHandle* old_mir_connection_create_surface(...)
+    extern "C" MirWaitHandle* old_mir_connection_create_surface(...)
     /* The old implementation */
 
     /* The @@ specifies that this is the default version */

@@ -31,6 +31,8 @@
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
+#include <cstring>
+
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 
@@ -89,8 +91,7 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
         MirMesaAuthMagicRequest auth_magic_request;
         if (request.data.size() == sizeof(auth_magic_request))
         {
-            auth_magic_request =
-                *reinterpret_cast<decltype(auth_magic_request) const*>(request.data.data());
+            std::memcpy(&auth_magic_request, request.data.data(), request.data.size());
         }
         else
         {
@@ -98,27 +99,27 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
                 std::runtime_error("Invalid request message for auth_magic platform operation"));
         }
 
-        mg::PlatformOperationMessage response;
-        response.data.resize(sizeof(MirMesaAuthMagicResponse));
-        auto const auth_magic_response_ptr =
-            reinterpret_cast<MirMesaAuthMagicResponse*>(response.data.data());
+        MirMesaAuthMagicResponse auth_magic_response{-1};
 
         try
         {
             drm_auth->auth_magic(auth_magic_request.magic);
-            auth_magic_response_ptr->status = 0;
+            auth_magic_response.status = 0;
         }
         catch (std::exception const& e)
         {
             auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
 
             if (errno_ptr != nullptr)
-                auth_magic_response_ptr->status = *errno_ptr;
+                auth_magic_response.status = *errno_ptr;
             else
                 throw;
         }
 
-        return response;
+        mg::PlatformOperationMessage response_msg;
+        response_msg.data.resize(sizeof(auth_magic_response));
+        std::memcpy(response_msg.data.data(), &auth_magic_response, sizeof(auth_magic_response));
+        return response_msg;
     }
     else if (op == MirMesaPlatformOperation::auth_fd)
     {

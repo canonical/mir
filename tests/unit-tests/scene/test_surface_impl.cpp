@@ -30,6 +30,7 @@
 #include "mir_test_doubles/mock_input_targeter.h"
 #include "mir_test_doubles/stub_input_sender.h"
 #include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/mock_event_sink.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_matchers.h"
 
@@ -51,14 +52,6 @@ namespace mr = mir::report;
 
 namespace
 {
-
-struct MockEventSink : public mf::EventSink
-{
-    ~MockEventSink() noexcept(true) {}
-    MOCK_METHOD1(handle_event, void(MirEvent const&));
-    MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
-    MOCK_METHOD1(handle_display_config_change, void(mg::DisplayConfiguration const&));
-};
 
 typedef testing::NiceMock<mtd::MockBufferStream> StubBufferStream;
 
@@ -179,7 +172,7 @@ TEST_F(Surface, emits_resize_events)
     using namespace testing;
 
     geom::Size const new_size{123, 456};
-    auto sink = std::make_shared<MockEventSink>();
+    auto sink = std::make_shared<mtd::MockEventSink>();
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, sink);
 
     surface->add_observer(observer);
@@ -203,7 +196,7 @@ TEST_F(Surface, emits_resize_events_only_on_change)
 
     geom::Size const new_size{123, 456};
     geom::Size const new_size2{789, 1011};
-    auto sink = std::make_shared<MockEventSink>();
+    auto sink = std::make_shared<mtd::MockEventSink>();
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, sink);
 
     surface->add_observer(observer);
@@ -241,7 +234,7 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
 {
     using namespace testing;
 
-    MockEventSink sink;
+    mtd::MockEventSink sink;
 
     {
         InSequence seq;
@@ -298,7 +291,7 @@ TEST_F(Surface, emits_client_close_events)
 {
     using namespace testing;
 
-    auto sink = std::make_shared<MockEventSink>();
+    auto sink = std::make_shared<mtd::MockEventSink>();
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, sink);
 
     surface->add_observer(observer);

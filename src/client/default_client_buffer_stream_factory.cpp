@@ -17,30 +17,49 @@
  */
 #include "default_client_buffer_stream_factory.h"
 #include "buffer_stream.h"
+#include "perf_report.h"
+#include "logging/perf_report.h"
 
 namespace mcl = mir::client;
 namespace ml = mir::logging;
 namespace mp = mir::protobuf;
 
-mcl::DefaultClientBufferStreamFactory::DefaultClientBufferStreamFactory(std::shared_ptr<mcl::ClientBufferFactory> const& client_buffer_factory,
-    std::shared_ptr<mcl::EGLNativeWindowFactory> const& native_window_factory,
+namespace
+{
+
+std::shared_ptr<mcl::PerfReport>
+make_perf_report(std::shared_ptr<ml::Logger> const& logger)
+{
+    // TODO: It seems strange that this directly uses getenv
+    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
+    if (report_target && !strncmp(report_target, "log", strlen(report_target)))
+    {
+        return std::make_shared<mcl::logging::PerfReport>(logger);
+    }
+    else
+    {
+        return std::make_shared<mcl::NullPerfReport>();
+    }
+}
+
+}
+
+mcl::DefaultClientBufferStreamFactory::DefaultClientBufferStreamFactory(
+    std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     std::shared_ptr<ml::Logger> const& logger)
-    : client_buffer_factory(client_buffer_factory),
-      native_window_factory(native_window_factory),
+    : client_platform(client_platform),
       logger(logger)
 {
 }
 
 std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_consumer_stream(mp::DisplayServer& server,
-    mp::BufferStream const& protobuf_bs)
+    mp::BufferStream const& protobuf_bs, std::string const& surface_name)
 {
-    return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Consumer, client_buffer_factory,
-        native_window_factory, protobuf_bs, logger);
+    return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Consumer, client_platform, protobuf_bs, make_perf_report(logger), surface_name);
 }
 
 std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_producer_stream(mp::DisplayServer& server,
-    mp::BufferStream const& protobuf_bs)
+    mp::BufferStream const& protobuf_bs, std::string const& surface_name)
 {
-    return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Producer, client_buffer_factory,
-        native_window_factory, protobuf_bs, logger);
+    return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Producer, client_platform, protobuf_bs, make_perf_report(logger), surface_name);
 }

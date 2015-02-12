@@ -20,6 +20,7 @@
 
 #include "src/server/input/event_filter_chain.h"
 #include "mir_test_doubles/mock_event_filter.h"
+#include "mir/events/event_builders.h"
 
 #include <androidfw/Input.h>
 
@@ -29,26 +30,38 @@
 namespace mi = mir::input;
 namespace mtd = mir::test::doubles;
 
-TEST(EventFilterChain, offers_events_to_filters)
-{
-    using namespace ::testing;
-    auto filter = std::make_shared<mtd::MockEventFilter>();
-    MirEvent ev;
+using namespace ::testing;
 
+namespace
+{
+std::shared_ptr<mtd::MockEventFilter> mock_filter()
+{
+    return std::make_shared<mtd::MockEventFilter>();
+}
+
+struct EventFilterChain : public ::testing::Test
+{
+    mir::EventUPtr const event = mir::events::make_event(MirInputDeviceId(), 0,
+        MirKeyInputEventAction(), xkb_keysym_t(), 0, MirInputEventModifiers());
+};
+}
+
+TEST_F(EventFilterChain, offers_events_to_filters)
+{
+    auto filter = mock_filter();
     mi::EventFilterChain filter_chain{filter, filter};
+    
     // Filter will pass the event on twice
     EXPECT_CALL(*filter, handle(_)).Times(2).WillRepeatedly(Return(false));
     // So the filter chain should also reject the event
-    EXPECT_FALSE(filter_chain.handle(ev));
+    EXPECT_FALSE(filter_chain.handle(*event));
 }
 
-TEST(EventFilterChain, prepends_appends_filters)
+TEST_F(EventFilterChain, prepends_appends_filters)
 {
-    using namespace ::testing;
-    auto filter1 = std::make_shared<mtd::MockEventFilter>();
-    auto filter2 = std::make_shared<mtd::MockEventFilter>();
-    auto filter3 = std::make_shared<mtd::MockEventFilter>();
-    MirEvent ev;
+    auto filter1 = mock_filter();
+    auto filter2 = mock_filter();
+    auto filter3 = mock_filter();
 
     mi::EventFilterChain filter_chain{filter2};
     filter_chain.append(filter3);
@@ -62,14 +75,12 @@ TEST(EventFilterChain, prepends_appends_filters)
     }
 
     // So the filter chain should also reject the event
-    EXPECT_FALSE(filter_chain.handle(ev));
+    EXPECT_FALSE(filter_chain.handle(*event));
 }
 
-TEST(EventFilterChain, accepting_event_halts_emission)
+TEST_F(EventFilterChain, accepting_event_halts_emission)
 {
-    using namespace ::testing;
-    auto filter = std::make_shared<mtd::MockEventFilter>();
-    MirEvent ev;
+    auto filter = mock_filter();
 
     mi::EventFilterChain filter_chain{filter, filter, filter};
 
@@ -80,19 +91,16 @@ TEST(EventFilterChain, accepting_event_halts_emission)
         EXPECT_CALL(*filter, handle(_)).Times(1).WillOnce(Return(true));
     }
     // So the chain should accept
-    EXPECT_TRUE(filter_chain.handle(ev));
+    EXPECT_TRUE(filter_chain.handle(*event));
 }
 
-TEST(EventFilterChain, does_not_own_event_filters)
+TEST_F(EventFilterChain, does_not_own_event_filters)
 {
-    using namespace ::testing;
-
-    auto filter = std::make_shared<mtd::MockEventFilter>();
-    MirEvent ev;
+    auto filter = mock_filter();
 
     mi::EventFilterChain filter_chain{filter};
     EXPECT_CALL(*filter, handle(_)).Times(1).WillOnce(Return(true));
-    EXPECT_TRUE(filter_chain.handle(ev));
+    EXPECT_TRUE(filter_chain.handle(*event));
     filter.reset();
-    EXPECT_FALSE(filter_chain.handle(ev));
+    EXPECT_FALSE(filter_chain.handle(*event));
 }

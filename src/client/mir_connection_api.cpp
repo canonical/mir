@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -29,7 +29,7 @@
 #include "default_connection_configuration.h"
 #include "display_configuration.h"
 #include "error_connections.h"
-#include "uncaught.h"
+#include "mir/uncaught.h"
 
 // Temporary include to ease client transition from mir_connection_drm* APIs.
 // to mir_connection_platform_operation().
@@ -305,7 +305,20 @@ void mir_connection_get_available_surface_formats(
         connection->available_surface_formats(formats, format_size, *num_valid_formats);
 }
 
-MirWaitHandle* mir_connection_platform_operation(
+extern "C"
+{
+MirWaitHandle* new_mir_connection_platform_operation(
+    MirConnection* connection,
+    MirPlatformMessage const* request,
+    mir_platform_operation_callback callback, void* context);
+MirWaitHandle* old_mir_connection_platform_operation(
+    MirConnection* connection, int /* opcode */,
+    MirPlatformMessage const* request,
+    mir_platform_operation_callback callback, void* context);
+}
+
+__asm__(".symver new_mir_connection_platform_operation,mir_connection_platform_operation@@MIR_CLIENT_8.3");
+MirWaitHandle* new_mir_connection_platform_operation(
     MirConnection* connection,
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context)
@@ -320,6 +333,16 @@ MirWaitHandle* mir_connection_platform_operation(
         return nullptr;
     }
 
+}
+
+// TODO: Remove when we bump so name
+__asm__(".symver old_mir_connection_platform_operation,mir_connection_platform_operation@MIR_CLIENT_8");
+MirWaitHandle* old_mir_connection_platform_operation(
+    MirConnection* connection, int /* opcode */,
+    MirPlatformMessage const* request,
+    mir_platform_operation_callback callback, void* context)
+{
+    return new_mir_connection_platform_operation(connection, request, callback, context);
 }
 
 /**************************
@@ -346,9 +369,12 @@ void platform_operation_to_auth_magic_callback(
             static_cast<AuthMagicPlatformOperationContext*>(context)};
 
     auto response_data = mir_platform_message_get_data(response_msg.get());
-    auto auth_response = reinterpret_cast<MirMesaAuthMagicResponse const*>(response_data.data);
+    MirMesaAuthMagicResponse auth_response{-1};
 
-    auth_magic_context->callback(auth_response->status, auth_magic_context->context);
+    if (response_data.size == sizeof(auth_response))
+        std::memcpy(&auth_response, response_data.data, response_data.size);
+
+    auth_magic_context->callback(auth_response.status, auth_magic_context->context);
 }
 
 void assign_set_gbm_device_status(
@@ -359,11 +385,13 @@ void assign_set_gbm_device_status(
         &mir_platform_message_release);
 
     auto const response_data = mir_platform_message_get_data(response_msg.get());
-    auto const set_gbm_device_response_ptr =
-        reinterpret_cast<MirMesaSetGBMDeviceResponse const*>(response_data.data);
+    MirMesaSetGBMDeviceResponse set_gbm_device_response{-1};
+
+    if (response_data.size == sizeof(set_gbm_device_response))
+        std::memcpy(&set_gbm_device_response, response_data.data, response_data.size);
 
     auto status_ptr = static_cast<int*>(context);
-    *status_ptr = set_gbm_device_response_ptr->status;
+    *status_ptr = set_gbm_device_response.status;
 }
 
 }
@@ -385,7 +413,7 @@ MirWaitHandle* mir_connection_drm_auth_magic(MirConnection* connection,
 
     mir_platform_message_set_data(msg.get(), &request, sizeof(request));
 
-    return mir_connection_platform_operation(
+    return new_mir_connection_platform_operation(
         connection,
         msg.get(),
         platform_operation_to_auth_magic_callback,
@@ -406,7 +434,7 @@ int mir_connection_drm_set_gbm_device(MirConnection* connection,
     static int const success{0};
     int status{-1};
 
-    auto wh = mir_connection_platform_operation(
+    auto wh = new_mir_connection_platform_operation(
         connection,
         msg.get(),
         assign_set_gbm_device_status,

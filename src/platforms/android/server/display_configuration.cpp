@@ -30,7 +30,8 @@ size_t const preferred_format_index{0};
 size_t const preferred_mode_index{0};
 
 mg::DisplayConfigurationOutput external_output(
-    mga::DisplayAttribs const& external_attribs)
+    mga::DisplayAttribs const& external_attribs,
+    MirPowerMode external_mode)
 {
     std::vector<mg::DisplayConfigurationMode> external_modes;
     if (external_attribs.connected)
@@ -53,7 +54,7 @@ mg::DisplayConfigurationOutput external_output(
         origin,
         preferred_format_index,
         external_attribs.display_format,
-        mir_power_mode_on,
+        external_mode,
         mir_orientation_normal
     };
 }
@@ -61,7 +62,9 @@ mg::DisplayConfigurationOutput external_output(
 
 mga::DisplayConfiguration::DisplayConfiguration(
     mga::DisplayAttribs const& primary_attribs,
-    mga::DisplayAttribs const& external_attribs) :
+    MirPowerMode primary_mode,
+    mga::DisplayAttribs const& external_attribs,
+    MirPowerMode external_mode) :
     configurations{{
         mg::DisplayConfigurationOutput{
             mg::DisplayConfigurationOutputId{primary_id},
@@ -76,10 +79,10 @@ mga::DisplayConfiguration::DisplayConfiguration(
             origin,
             preferred_format_index,
             primary_attribs.display_format,
-            mir_power_mode_on,
+            primary_mode,
             mir_orientation_normal
         }, 
-        external_output(external_attribs)
+        external_output(external_attribs, external_mode)
     }},
     card{mg::DisplayConfigurationCardId{0}, 1}
 {
@@ -122,9 +125,14 @@ void mga::DisplayConfiguration::for_each_output(std::function<void(mg::UserDispl
     }
 }
 
-mg::DisplayConfigurationOutput const& mga::DisplayConfiguration::primary_config()
+mg::DisplayConfigurationOutput& mga::DisplayConfiguration::primary()
 {
     return configurations[primary_id];
+}
+
+mg::DisplayConfigurationOutput& mga::DisplayConfiguration::external()
+{
+    return configurations[external_id];
 }
 
 mg::DisplayConfigurationOutput& mga::DisplayConfiguration::operator[](mg::DisplayConfigurationOutputId const& disp_id)

@@ -1,5 +1,7 @@
 MIR_CLIENT_8 {
- global: mir_*;
+ global:
+ mir_connection_platform_operation;
+ mir_*;
   extern "C++" { 
    # used by PrivateProtobuf
    mir::client::the_rpc_channel*;
@@ -37,12 +39,8 @@ MIR_CLIENT_8.2 {
 
 MIR_CLIENT_8.3 {
   global:
-    mir_input_event_get_pointer_input_event;
-    mir_pointer_input_event_get_modifiers;
-    mir_pointer_input_event_get_action;
-    mir_pointer_input_event_get_button_state;
-    mir_pointer_input_event_get_axis_value;
     mir_connection_create_spec_for_menu;
     mir_connection_create_spec_for_tooltip;
     mir_connection_create_spec_for_dialog;
+    mir_connection_platform_operation;
 } MIR_CLIENT_8.2;

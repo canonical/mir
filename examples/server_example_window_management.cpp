@@ -16,8 +16,6 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
 #include "server_example_window_management.h"
 #include "server_example_fullscreen_placement_strategy.h"
 
@@ -27,8 +25,12 @@
 #include "mir/geometry/displacement.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
-#include "mir/scene/session_listener.h"
-#include "mir/shell/focus_controller.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/surface_creation_parameters.h"
+#include "mir/shell/abstract_shell.h"
+
+#include "mir_toolkit/events/input/input_event.h"
 
 #include <linux/input.h>
 
@@ -36,8 +38,8 @@
 #include <vector>
 #include <mutex>
 
-namespace mc = mir::compositor;
 namespace me = mir::examples;
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace ms = mir::scene;
@@ -56,36 +58,34 @@ char const* const wm_tiling = "tiling";
 char const* const wm_fullscreen = "fullscreen";
 
 // Very simple - make every surface fullscreen
-class FullscreenWindowManager : public me::WindowManager, me::FullscreenPlacementStrategy
+class FullscreenWindowManager : public me::WindowManager,
+    msh::AbstractShell,
+    me::FullscreenPlacementStrategy
 {
 public:
-    using me::FullscreenPlacementStrategy::FullscreenPlacementStrategy;
+    FullscreenWindowManager(
+        std::shared_ptr<msh::InputTargeter> const& input_targeter,
+        std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
+        std::shared_ptr<msh::DisplayLayout> const& display_layout) :
+        AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
+        FullscreenPlacementStrategy(display_layout)
+    {
+    }
 
 private:
-    void add_surface(std::shared_ptr<ms::Surface> const&, ms::Session*) override {}
-
-    void remove_surface(std::weak_ptr<ms::Surface> const&, ms::Session*) override {}
-
-    void add_session(std::shared_ptr<ms::Session> const&) override {}
-
-    void remove_session(std::shared_ptr<ms::Session> const&) override {}
+    mf::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params) override
+    {
+        ms::SurfaceCreationParameters const placed_params = place(*session, params);
+        return msh::AbstractShell::create_surface(session, placed_params);
+    }
 
     void add_display(Rectangle const&) override {}
 
     void remove_display(Rectangle const&) override {}
 
-    void click(Point) override {}
-
-    void drag(Point) override {}
-
-    void resize(Point) override {}
-
-    void toggle(MirSurfaceState) override {}
-
-    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value) override
-        { return requested_value; }
-
-    void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override {}
+    bool handle(MirEvent const& /*event*/) override { return false; }
 };
 
 // simple tiling algorithm:
@@ -96,79 +96,13 @@ private:
 //  o Maximize/restore current window (to tile height): Shift-F11
 //  o Maximize/restore current window (to tile width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class TilingWindowManager : public me::WindowManager
+class TilingWindowManager : public me::WindowManager,
+    msh::AbstractShell
 {
 public:
-    // We can't take the msh::FocusController directly as we create a WindowManager
-    // in the_session_listener() and that is called when creating the focus controller
-    using FocusControllerFactory = std::function<std::shared_ptr<msh::FocusController>()>;
+    using msh::AbstractShell::AbstractShell;
 
-    explicit TilingWindowManager(FocusControllerFactory const& focus_controller) :
-        focus_controller{focus_controller}
-    {
-    }
-
-    auto place(ms::Session const& session, ms::SurfaceCreationParameters const& request_parameters)
-    -> ms::SurfaceCreationParameters override
-    {
-        auto parameters = request_parameters;
-
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        auto const ptile = session_info.find(&session);
-        if (ptile != end(session_info))
-        {
-            Rectangle const& tile = ptile->second.tile;
-            parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
-
-            clip_to_tile(parameters, tile);
-        }
-
-        return parameters;
-    }
-
-    void add_surface(
-        std::shared_ptr<ms::Surface> const& surface,
-        ms::Session* session) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info[session].surfaces.push_back(surface);
-        surface_info[surface].session = session_info[session].session;
-        surface_info[surface].state = mir_surface_state_restored;
-    }
-
-    void remove_surface(
-        std::weak_ptr<ms::Surface> const& surface,
-        ms::Session* session) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        auto& surfaces = session_info[session].surfaces;
-
-        for (auto i = begin(surfaces); i != end(surfaces); ++i)
-        {
-            if (surface.lock() == i->lock())
-            {
-                surfaces.erase(i);
-                break;
-            }
-        }
-
-        surface_info.erase(surface);
-    }
-
-    void add_session(std::shared_ptr<ms::Session> const& session) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info[session.get()] = session;
-        update_tiles();
-    }
-
-    void remove_session(std::shared_ptr<ms::Session> const& session) override
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        session_info.erase(session.get());
-        update_tiles();
-    }
-
+private:
     void add_display(Rectangle const& area) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -183,17 +117,151 @@ public:
         update_tiles();
     }
 
-    void click(Point cursor) override
+    bool handle(MirEvent const& event) override
+    {
+        if (mir_event_get_type(&event) != mir_event_type_input)
+            return false;
+
+        auto const input_event = mir_event_get_input_event(&event);
+
+        switch (mir_input_event_get_type(input_event))
+        {
+        case mir_input_event_type_key:
+            return handle_key_event(mir_input_event_get_key_input_event(input_event));
+
+        case mir_input_event_type_touch:
+            return handle_touch_event(mir_input_event_get_touch_input_event(input_event));
+
+        case mir_input_event_type_pointer:
+            return handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
+        }
+
+        return false;
+    }
+
+    static const int modifier_mask =
+        mir_input_event_modifier_alt |
+        mir_input_event_modifier_shift |
+        mir_input_event_modifier_sym |
+        mir_input_event_modifier_ctrl |
+        mir_input_event_modifier_meta;
+
+    bool handle_key_event(MirKeyInputEvent const* event)
+    {
+        auto const action = mir_key_input_event_get_action(event);
+        auto const scan_code = mir_key_input_event_get_scan_code(event);
+        auto const modifiers = mir_key_input_event_get_modifiers(event) & modifier_mask;
+
+        if (action == mir_key_input_event_action_down && scan_code == KEY_F11)
+        {
+            switch (modifiers & modifier_mask)
+            {
+            case mir_input_event_modifier_alt:
+                toggle(mir_surface_state_maximized);
+                return true;
+
+            case mir_input_event_modifier_shift:
+                toggle(mir_surface_state_vertmaximized);
+                return true;
+
+            case mir_input_event_modifier_ctrl:
+                toggle(mir_surface_state_horizmaximized);
+                return true;
+
+            default:
+                break;
+            }
+        }
+
+        return false;
+    }
+
+    bool handle_touch_event(MirTouchInputEvent const* event)
+    {
+        auto const count = mir_touch_input_event_get_touch_count(event);
+
+        long total_x = 0;
+        long total_y = 0;
+
+        for (auto i = 0U; i != count; ++i)
+        {
+            total_x += mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_x);
+            total_y += mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_y);
+        }
+
+        Point const cursor{total_x/count, total_y/count};
+
+        bool is_drag = true;
+        for (auto i = 0U; i != count; ++i)
+        {
+            switch (mir_touch_input_event_get_touch_action(event, i))
+            {
+            case mir_touch_input_event_action_up:
+                return false;
+
+            case mir_touch_input_event_action_down:
+                is_drag = false;
+
+            case mir_touch_input_event_action_change:
+                continue;
+            }
+        }
+
+        if (is_drag && count == 3)
+        {
+            drag(cursor);
+            return true;
+        }
+        else
+        {
+            click(cursor);
+            return false;
+        }
+    }
+
+    bool handle_pointer_event(MirPointerInputEvent const* event)
+    {
+        auto const action = mir_pointer_input_event_get_action(event);
+        auto const modifiers = mir_pointer_input_event_get_modifiers(event) & modifier_mask;
+        Point const cursor{
+            mir_pointer_input_event_get_axis_value(event, mir_pointer_input_axis_x),
+            mir_pointer_input_event_get_axis_value(event, mir_pointer_input_axis_y)};
+
+        if (action == mir_pointer_input_event_action_button_down)
+        {
+            click(cursor);
+            return false;
+        }
+        else if (action == mir_pointer_input_event_action_motion &&
+                 modifiers == mir_input_event_modifier_alt)
+        {
+            if (mir_pointer_input_event_get_button_state(event, mir_pointer_input_button_primary))
+            {
+                drag(cursor);
+                return true;
+            }
+
+            if (mir_pointer_input_event_get_button_state(event, mir_pointer_input_button_tertiary))
+            {
+                resize(cursor);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void click(Point cursor)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
         if (auto const session = session_under(cursor))
-            focus_controller()->set_focus_to(session);
+            set_focus_to(session);
 
         old_cursor = cursor;
     }
 
-    void drag(Point cursor) override
+    void drag(Point cursor)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -201,7 +269,7 @@ public:
         {
             if (session == session_under(old_cursor))
             {
-                auto const& info = session_info[session.get()];
+                auto const& info = session_info[session];
 
                 if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
                 {
@@ -230,7 +298,7 @@ public:
         old_cursor = cursor;
     }
 
-    void resize(Point cursor) override
+    void resize(Point cursor)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -238,7 +306,7 @@ public:
         {
             if (session == session_under(old_cursor))
             {
-                auto const& info = session_info[session.get()];
+                auto const& info = session_info[session];
 
                 if (resize(old_surface.lock(), cursor, old_cursor, info.tile))
                 {
@@ -267,9 +335,9 @@ public:
         old_cursor = cursor;
     }
 
-    void toggle(MirSurfaceState state) override
+    void toggle(MirSurfaceState state)
     {
-        if (auto const focussed_session = focus_controller()->focussed_application().lock())
+        if (auto const focussed_session = focussed_application().lock())
         {
             if (auto const focussed_surface = focussed_session->default_surface())
             {
@@ -280,31 +348,125 @@ public:
                         state = mir_surface_state_restored;
                 }
 
-                focussed_surface->configure(mir_surface_attrib_state, state);
-                attribute_set(*focussed_surface, mir_surface_attrib_state, state);
+                set_surface_attribute(focussed_session, focussed_surface, mir_surface_attrib_state, state);
             }
         }
     }
 
-    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value) override
-        { return requested_value; }
+    std::shared_ptr<ms::Session> open_session(
+        pid_t client_pid,
+        std::string const& name,
+        std::shared_ptr<mf::EventSink> const& sink) override
+    {
+        auto const result = msh::AbstractShell::open_session(client_pid, name, sink);
+        add_session(result);
+        return result;
+    }
 
-    void attribute_set(ms::Surface const& surface, MirSurfaceAttrib attrib, int value) override
+    void close_session(std::shared_ptr<ms::Session> const& session) override
+    {
+        remove_session(session);
+        msh::AbstractShell::close_session(session);
+    }
+
+    mf::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params) override
+    {
+        ms::SurfaceCreationParameters const placed_params = place_new_surface(session, params);
+        auto const result = msh::AbstractShell::create_surface(session, placed_params);
+        add_surface(session->surface(result), session);
+        return result;
+    }
+
+    void destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface) override
+    {
+        remove_surface(session->surface(surface), session);
+        msh::AbstractShell::destroy_surface(session, surface);
+    }
+
+    int set_surface_attribute(
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& surface,
+        MirSurfaceAttrib attrib,
+        int value) override
     {
         switch (attrib)
         {
         case mir_surface_attrib_state:
         {
             std::lock_guard<decltype(mutex)> lock(mutex);
-            set_state(surface, value);
+            set_state(surface, MirSurfaceState(value));
             break;
         }
         default:
             break;
         }
+
+        return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
     }
 
-private:
+    void add_session(std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        session_info[session] = SessionInfo();
+        update_tiles();
+    }
+
+    void remove_session(std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        session_info.erase(session);
+        update_tiles();
+    }
+
+    auto place_new_surface(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& request_parameters)
+    -> ms::SurfaceCreationParameters
+    {
+        auto parameters = request_parameters;
+
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto const ptile = session_info.find(session);
+        if (ptile != end(session_info))
+        {
+            Rectangle const& tile = ptile->second.tile;
+            parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
+
+            clip_to_tile(parameters, tile);
+        }
+
+        return parameters;
+    }
+
+    void add_surface(
+        std::shared_ptr<ms::Surface> const& surface,
+        std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        session_info[session].surfaces.push_back(surface);
+        surface_info[surface].session = session;
+        surface_info[surface].state = mir_surface_state_restored;
+    }
+
+    void remove_surface(
+        std::weak_ptr<ms::Surface> const& surface,
+        std::shared_ptr<ms::Session> const& session)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto& surfaces = session_info[session].surfaces;
+
+        for (auto i = begin(surfaces); i != end(surfaces); ++i)
+        {
+            if (surface.lock() == i->lock())
+            {
+                surfaces.erase(i);
+                break;
+            }
+        }
+
+        surface_info.erase(surface);
+    }
+
     void update_tiles()
     {
         if (session_info.size() < 1 || displays.size() < 1) return;
@@ -333,7 +495,7 @@ private:
         }
     }
 
-    void update_surfaces(ms::Session const* session, Rectangle const& old_tile, Rectangle const& new_tile)
+    void update_surfaces(std::weak_ptr<ms::Session> const& session, Rectangle const& old_tile, Rectangle const& new_tile)
     {
         auto displacement = new_tile.top_left - old_tile.top_left;
         auto& info = session_info[session];
@@ -447,83 +609,61 @@ private:
         Rectangle restore_rect;
     };
 
-    void set_state(ms::Surface const& surface, int value)
+    void set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
     {
-        auto new_state = mir_surface_state_restored;
-
         switch (value)
         {
         case mir_surface_state_restored:
-            new_state = mir_surface_state_restored;
-            break;
-
         case mir_surface_state_maximized:
-            new_state = mir_surface_state_maximized;
-            break;
-
         case mir_surface_state_vertmaximized:
-            new_state = mir_surface_state_vertmaximized;
-            break;
-
         case mir_surface_state_horizmaximized:
-            new_state = mir_surface_state_horizmaximized;
             break;
 
         default:
             return;
         }
 
-        for (auto& i : surface_info)
+        auto& info = surface_info[surface];
+
+        if (info.state == mir_surface_state_restored)
         {
-            if (auto const sp = i.first.lock())
-            {
-                if (sp.get() == &surface)
-                {
-                    auto& surface_info = i.second;
-
-                    if (surface_info.state == mir_surface_state_restored)
-                    {
-                        surface_info.restore_rect = {sp->top_left(), sp->size()};
-                    }
-
-                    if (surface_info.state == new_state)
-                    {
-                        return; // Nothing to do
-                    }
-
-                    auto const& session_info =
-                        this->session_info[surface_info.session.lock().get()];
-
-                    switch (new_state)
-                    {
-                    case mir_surface_state_restored:
-                        sp->move_to(surface_info.restore_rect.top_left);
-                        sp->resize(surface_info.restore_rect.size);
-                        break;
-
-                    case mir_surface_state_maximized:
-                        sp->move_to(session_info.tile.top_left);
-                        sp->resize(session_info.tile.size);
-                        break;
-
-                    case mir_surface_state_horizmaximized:
-                        sp->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
-                        sp->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
-                        break;
-
-                    case mir_surface_state_vertmaximized:
-                        sp->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
-                        sp->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
-                        break;
-
-                    default:
-                        break;
-                    }
-
-                    surface_info.state = new_state;
-                }
-            }
+            info.restore_rect = {surface->top_left(), surface->size()};
         }
+
+        if (info.state == value)
+        {
+            return; // Nothing to do
+        }
+
+        auto const& tile = this->session_info[info.session].tile;
+
+        switch (value)
+        {
+        case mir_surface_state_restored:
+            surface->move_to(info.restore_rect.top_left);
+            surface->resize(info.restore_rect.size);
+            break;
+
+        case mir_surface_state_maximized:
+            surface->move_to(tile.top_left);
+            surface->resize(tile.size);
+            break;
+
+        case mir_surface_state_horizmaximized:
+            surface->move_to({tile.top_left.x, info.restore_rect.top_left.y});
+            surface->resize({tile.size.width, info.restore_rect.size.height});
+            break;
+
+        case mir_surface_state_vertmaximized:
+            surface->move_to({info.restore_rect.top_left.x, tile.top_left.y});
+            surface->resize({info.restore_rect.size.width, tile.size.height});
+            break;
+
+        default:
+            break;
+        }
+
+        info.state = value;
     }
 
     std::shared_ptr<ms::Session> session_under(Point position)
@@ -532,7 +672,7 @@ private:
         {
             if (info.second.tile.contains(position))
             {
-                return info.second.session.lock();
+                return info.first.lock();
             }
         }
 
@@ -541,139 +681,20 @@ private:
 
     struct SessionInfo
     {
-        SessionInfo() = default;
-        SessionInfo& operator=(std::weak_ptr<ms::Session> const& session)
-        {
-            this->session = session;
-            surfaces.clear();
-            return *this;
-        }
-        std::weak_ptr<ms::Session> session;
         Rectangle tile;
         std::vector<std::weak_ptr<ms::Surface>> surfaces;
     };
 
-    FocusControllerFactory const focus_controller;
-
     std::mutex mutex;
     Rectangles displays;
 
-    std::map<ms::Session const*, SessionInfo> session_info;
+    std::map<std::weak_ptr<ms::Session>, SessionInfo, std::owner_less<std::weak_ptr<ms::Session>>> session_info;
     std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>> surface_info;
 
     Point old_cursor{};
     std::weak_ptr<ms::Surface> old_surface;
 };
 }
-
-class me::EventTracker : public mi::EventFilter
-{
-public:
-    explicit EventTracker(std::shared_ptr<me::WindowManager> const& window_manager) :
-        window_manager{window_manager} {}
-
-    bool handle(MirEvent const& event) override
-    {
-        switch (event.type)
-        {
-        case mir_event_type_key:
-            return handle_key_event(event.key);
-
-        case mir_event_type_motion:
-            return handle_motion_event(event.motion);
-
-        default:
-            return false;
-        }
-    }
-
-private:
-    bool handle_key_event(MirKeyEvent const& event)
-    {
-        static const int modifier_mask =
-            mir_key_modifier_alt |
-            mir_key_modifier_shift |
-            mir_key_modifier_sym |
-            mir_key_modifier_ctrl |
-            mir_key_modifier_meta;
-
-        if (event.action == mir_key_action_down &&
-            event.scan_code == KEY_F11)
-        {
-            if (auto const wm = window_manager.lock())
-            switch (event.modifiers & modifier_mask)
-            {
-            case mir_key_modifier_alt:
-                wm->toggle(mir_surface_state_maximized);
-                return true;
-
-            case mir_key_modifier_shift:
-                wm->toggle(mir_surface_state_vertmaximized);
-                return true;
-
-            case mir_key_modifier_ctrl:
-                wm->toggle(mir_surface_state_horizmaximized);
-                return true;
-
-            default:
-                break;
-            }
-        }
-
-        return false;
-    }
-
-    bool handle_motion_event(MirMotionEvent const& event)
-    {
-        if (event.action == mir_motion_action_down ||
-            event.action == mir_motion_action_pointer_down)
-        {
-            if (auto const wm = window_manager.lock())
-            {
-                wm->click(average_pointer(event.pointer_count, event.pointer_coordinates));
-                return false;
-            }
-        }
-        else if (event.action == mir_motion_action_move &&
-                 event.modifiers & mir_key_modifier_alt)
-        {
-            if (auto const wm = window_manager.lock())
-            {
-                switch (event.button_state)
-                {
-                case mir_motion_button_primary:
-                    wm->drag(average_pointer(event.pointer_count, event.pointer_coordinates));
-                    return true;
-
-                case mir_motion_button_tertiary:
-                    wm->resize(average_pointer(event.pointer_count, event.pointer_coordinates));
-                    return true;
-
-                default:
-                    ;// ignore
-                }
-            }
-        }
-
-        return false;
-    }
-
-    static Point average_pointer(size_t pointer_count, MirMotionPointer const* pointer_coordinates)
-    {
-        long total_x = 0;
-        long total_y = 0;
-
-        for (auto p = pointer_coordinates; p != pointer_coordinates + pointer_count; ++p)
-        {
-            total_x += p->x;
-            total_y += p->y;
-        }
-
-        return Point{total_x/pointer_count, total_y/pointer_count};
-    }
-
-    std::weak_ptr<me::WindowManager> const window_manager;
-};
 
 auto me::WindowManagmentFactory::window_manager() -> std::shared_ptr<me::WindowManager>
 {
@@ -686,16 +707,23 @@ auto me::WindowManagmentFactory::window_manager() -> std::shared_ptr<me::WindowM
 
         if (selection == wm_tiling)
         {
-            auto focus_controller_factory = [this] { return server.the_focus_controller(); };
-            tmp = std::make_shared<TilingWindowManager>(focus_controller_factory);
+            tmp = std::make_shared<TilingWindowManager>(
+                server.the_input_targeter(),
+                server.the_surface_coordinator(),
+                server.the_session_coordinator(),
+                server.the_prompt_session_manager());
         }
         else if (selection == wm_fullscreen)
-            tmp = std::make_shared<FullscreenWindowManager>(server.the_shell_display_layout());
+            tmp = std::make_shared<FullscreenWindowManager>(
+                server.the_input_targeter(),
+                server.the_surface_coordinator(),
+                server.the_session_coordinator(),
+                server.the_prompt_session_manager(),
+                server.the_shell_display_layout());
         else
             throw mir::AbnormalExit("Unknown window manager: " + selection);
 
-        et = std::make_shared<EventTracker>(tmp);
-        server.the_composite_event_filter()->prepend(et);
+        server.the_composite_event_filter()->prepend(tmp);
         wm = tmp;
     }
 
