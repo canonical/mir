@@ -600,8 +600,8 @@ private:
 };
 }
 
-using TilingShell = me::BasicShell<TilingWindowManagerPolicy, SessionInfo, SurfaceInfo>;
-using FullscreenShell = me::BasicShell<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
+using TilingWindowManager = me::BasicWindowManager<TilingWindowManagerPolicy, SessionInfo, SurfaceInfo>;
+using FullscreenWindowManager = me::BasicWindowManager<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
 
 auto me::ShellFactory::shell() -> std::shared_ptr<me::Shell>
 {
@@ -614,19 +614,32 @@ auto me::ShellFactory::shell() -> std::shared_ptr<me::Shell>
 
         if (selection == wm_tiling)
         {
-            tmp = std::make_shared<TilingShell>(
-                server.the_input_targeter(),
-                server.the_surface_coordinator(),
-                server.the_session_coordinator(),
-                server.the_prompt_session_manager());
-        }
-        else if (selection == wm_fullscreen)
-            tmp = std::make_shared<FullscreenShell>(
+            auto const wm_builder = [this](msh::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
+                {
+                    return std::make_shared<TilingWindowManager>(focus_controller);
+                };
+
+            tmp = std::make_shared<GenericShell>(
                 server.the_input_targeter(),
                 server.the_surface_coordinator(),
                 server.the_session_coordinator(),
                 server.the_prompt_session_manager(),
-                server.the_shell_display_layout());
+                wm_builder);
+        }
+        else if (selection == wm_fullscreen)
+        {
+            auto const wm_builder = [this](msh::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
+                {
+                    return std::make_shared<FullscreenWindowManager>(focus_controller, server.the_shell_display_layout());
+                };
+
+            tmp = std::make_shared<GenericShell>(
+                server.the_input_targeter(),
+                server.the_surface_coordinator(),
+                server.the_session_coordinator(),
+                server.the_prompt_session_manager(),
+                wm_builder);
+        }
         else
             throw mir::AbnormalExit("Unknown window manager: " + selection);
 

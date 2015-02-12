@@ -227,30 +227,6 @@ private:
     typename SurfaceTo<SurfaceInfo>::type surface_info;
     geometry::Rectangles displays;
 };
-
-/// This is essentially a convenience constructor for initializing GenericShell.
-/// (In C++ we can't specify explicit template parameters to a constructor.)
-template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
-class BasicShell : public GenericShell
-{
-public:
-    template <typename... PolicyArgs>
-    BasicShell(
-        std::shared_ptr<shell::InputTargeter> const& input_targeter,
-        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
-        PolicyArgs... policy_args) :
-        GenericShell(
-            input_targeter,
-            surface_coordinator,
-            session_coordinator,
-            prompt_session_manager)
-    {
-        init_window_manager(
-            std::make_shared<BasicWindowManager<WindowManagementPolicy, SessionInfo, SurfaceInfo>>(this, policy_args...));
-    }
-};
 }
 }
 

@@ -23,15 +23,17 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-///\example server_example_basic_window_manager.cpp
+///\example server_example_generic_shell.cpp
 /// A shell that accepts a WindowManager
 
 me::GenericShell::GenericShell(
     std::shared_ptr<msh::InputTargeter> const& input_targeter,
     std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
-    std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager) :
-    AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager)
+    std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
+    std::function<std::shared_ptr<WindowManager>(shell::FocusController* focus_controller)> const& wm_builder) :
+    AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
+    window_manager(wm_builder(this))
 {
 }
 

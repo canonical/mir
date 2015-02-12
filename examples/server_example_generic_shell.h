@@ -74,7 +74,8 @@ public:
         std::shared_ptr<shell::InputTargeter> const& input_targeter,
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager);
+        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
+        std::function<std::shared_ptr<WindowManager>(shell::FocusController* focus_controller)> const& wm_builder);
 
     std::shared_ptr<scene::Session> open_session(
         pid_t client_pid,
