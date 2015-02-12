@@ -36,13 +36,19 @@ public:
         : dispatch_limit{limit}
     {
         int pipefds[2];
-        pipe(pipefds);
+        if (pipe(pipefds) < 0)
+        {
+            throw std::system_error{errno, std::system_category(), "Failed to create pipe"};
+        }
 
         read_fd = mir::Fd{pipefds[0]};
         write_fd = mir::Fd{pipefds[1]};
 
         char dummy{0};
-        ::write(write_fd, &dummy, sizeof(dummy));
+        if (::write(write_fd, &dummy, sizeof(dummy)) != sizeof(dummy))
+        {
+            throw std::system_error{errno, std::system_category(), "Failed to mark dispatchable"};
+        }
     }
 
     mir::Fd watch_fd() const override
