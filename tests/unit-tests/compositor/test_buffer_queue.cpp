@@ -1257,7 +1257,8 @@ TEST_F(BufferQueueTest, with_single_buffer_compositor_acquires_resized_frames_ev
     q.compositor_release(buf);
 }
 
-TEST_F(BufferQueueTest, double_buffered_client_is_not_blocked_prematurely)
+// Regression tests for LP: #1319765 disabled to fix LP: #1420678
+TEST_F(BufferQueueTest, DISABLED_double_buffered_client_is_not_blocked_prematurely)
 {  // Regression test for LP: #1319765
     using namespace testing;
 
@@ -1280,7 +1281,8 @@ TEST_F(BufferQueueTest, double_buffered_client_is_not_blocked_prematurely)
     handle->release_buffer();
 }
 
-TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
+// Regression tests for LP: #1319765 disabled to fix LP: #1420678
+TEST_F(BufferQueueTest, DISABLED_composite_on_demand_never_deadlocks_with_2_buffers)
 {  // Extended regression test for LP: #1319765
     using namespace testing;
 
