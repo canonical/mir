@@ -47,9 +47,6 @@ struct StubGBMNativeBuffer : public graphics::mesa::GBMNativeBuffer
          *   GBM_BO_USE_CURSOR_64X64 = (1 << 1),
          *   GBM_BO_USE_RENDERING    = (1 << 2),
          *   GBM_BO_USE_WRITE        = (1 << 3),
-         *
-         * Note : Buffers are bypassable, i.e. GBM_BO_USE_SCANOUT is set.
-         *
          */
         flags = (bypassable ? GBM_BO_USE_SCANOUT : 0) |
                               GBM_BO_USE_CURSOR_64X64 |

@@ -393,7 +393,7 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
     auto fullscreen = std::make_shared<FakeRenderable>(display_area);
     auto nonbypassable = std::make_shared<testing::NiceMock<MockBuffer>>();
     auto nonbypassable_gbm_native_buffer =
-            std::make_shared<StubGBMNativeBuffer>(display_area.size, false);
+        std::make_shared<StubGBMNativeBuffer>(display_area.size, false);
     ON_CALL(*nonbypassable, native_buffer_handle())
         .WillByDefault(Return(nonbypassable_gbm_native_buffer));
     ON_CALL(*nonbypassable, size())
