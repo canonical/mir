@@ -195,7 +195,7 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
 
 /* Key event accessors */
 
-// ABI compat TODO
+// ABI compatible MIR_COMMON_3.1
 MirKeyboardEvent const* mir_input_event_get_key_input_event(MirInputEvent const* ev)
 {
     return mir_input_event_get_keyboard_event(ev);
@@ -211,6 +211,13 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
     }
     
     return reinterpret_cast<MirKeyboardEvent const*>(ev);
+}
+
+// ABI compatible MIR_COMMON_3.1
+extern "C"
+MirKeyboardAction mir_key_input_event_get_action(MirKeyboardEvent const* kev)
+{
+    return mir_keyboard_event_action(kev);
 }
 
 MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev)
@@ -234,10 +241,24 @@ MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev)
     }
 }
 
+// ABI compatible MIR_COMMON_3.1
+extern "C"
+xkb_keysym_t mir_key_input_event_get_key_code(MirKeyboardEvent const* kev)
+{
+    return mir_keyboard_event_key_code(kev);
+}
+
 xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* kev)
 {
     auto const& old_kev = old_kev_from_new(kev);
     return old_kev.key_code;
+}
+
+// ABI compatible MIR_COMMON_3.1
+extern "C"
+int mir_key_input_event_get_scan_code(MirKeyboardEvent const* kev)
+{
+    return mir_keyboard_event_scan_code(kev);
 }
 
 int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev)
@@ -294,6 +315,14 @@ MirInputEventModifiers old_modifiers_to_new(unsigned int old_modifier)
     return mir_input_event_modifier_none;
 }
 }
+
+// ABI compatible MIR_COMMON_3.1
+extern "C"
+MirInputEventModifiers mir_key_input_event_get_modifiers(MirKeyboardEvent const* kev)
+{
+    return mir_keyboard_event_modifiers(kev);
+}
+
 MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev)
 {    
     auto const& old_kev = old_kev_from_new(kev);
