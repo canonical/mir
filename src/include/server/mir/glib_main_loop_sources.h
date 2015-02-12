@@ -29,7 +29,16 @@
 #include <memory>
 #include <unordered_map>
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-register"
+#endif
+
 #include <glib.h>
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 namespace mir
 {

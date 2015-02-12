@@ -16,11 +16,14 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include <cstring>
-#include "mir/client_buffer.h"
-#include "native_surface.h"
+#define MIR_LOG_COMPONENT "Mesa/NativeSurface"
 
-#include <boost/exception/diagnostic_information.hpp> 
+#include <cstring>
+
+#include "mir/client_buffer.h"
+#include "mir/uncaught.h"
+
+#include "native_surface.h"
 
 namespace mclm=mir::client::mesa;
 
@@ -44,12 +47,6 @@ static int set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interva
 {
     auto s = static_cast<mclm::NativeSurface*>(surface);
     return s->set_swapinterval(interval);
-}
-
-void report_exception_at_driver_boundary(std::exception const& e)
-{
-    std::cerr << "Caught exception at Mir/EGL driver boundary: "
-              << boost::diagnostic_information(e) << std::endl;
 }
 }
 
@@ -83,7 +80,7 @@ try
 }
 catch (std::exception const& e)
 {
-    report_exception_at_driver_boundary(e);
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return MIR_MESA_FALSE;
 }
 
@@ -96,7 +93,7 @@ try
 }
 catch (std::exception const& e)
 {
-    report_exception_at_driver_boundary(e);
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return MIR_MESA_FALSE;
 }
 
@@ -111,6 +108,6 @@ try
 }
 catch (std::exception const& e)
 {
-    report_exception_at_driver_boundary(e);
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return MIR_MESA_FALSE;
 }
