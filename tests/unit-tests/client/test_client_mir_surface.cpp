@@ -495,7 +495,7 @@ TEST_F(MirClientSurfaceTest, replacing_delegate_with_nullptr_prevents_further_di
 
     mock_input_dispatcher->trigger();
 
-    EXPECT_FALSE(dispatched->wait_for(std::chrono::seconds{2}));
+    EXPECT_FALSE(dispatched->wait_for(std::chrono::seconds{1}));
 }
 
 
