@@ -76,11 +76,6 @@ public:
         return true;
     }
 
-    int buffers_ready_for_compositor() const override
-    {
-        return 1;
-    }
-    
 // TouchspotRenderable    
     void move_center_to(geom::Point pos)
     {

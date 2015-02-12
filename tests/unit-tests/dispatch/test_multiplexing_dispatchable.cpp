@@ -145,6 +145,11 @@ TEST(MultiplexingDispatchableTest, removed_dispatchables_are_no_longer_dispatche
     dispatcher.add_watch(dispatchable);
     dispatcher.remove_watch(dispatchable);
 
+    while (mt::fd_is_readable(dispatcher.watch_fd()))
+    {
+        dispatcher.dispatch(md::FdEvent::readable);
+    }
+
     dispatchable->trigger();
 
     EXPECT_FALSE(mt::fd_is_readable(dispatcher.watch_fd()));
@@ -275,6 +280,11 @@ TEST(MultiplexingDispatchableTest, raw_callback_can_be_removed)
     md::MultiplexingDispatchable dispatcher;
     dispatcher.add_watch(fd_source.read_fd(), dispatchee);
     dispatcher.remove_watch(fd_source.read_fd());
+
+    while (mt::fd_is_readable(dispatcher.watch_fd()))
+    {
+        dispatcher.dispatch(md::FdEvent::readable);
+    }
 
     char buffer{0};
     ASSERT_THAT(::write(fd_source.write_fd(), &buffer, sizeof(buffer)), Eq(sizeof(buffer)));
@@ -421,4 +431,57 @@ TEST(MultiplexingDispatchableTest, removes_dispatchable_that_returns_false_from_
     }
 
     EXPECT_FALSE(dispatched);
+}
+
+TEST(MultiplexingDispatchableTest, multiple_removals_are_threadsafe)
+{
+    using namespace testing;
+
+    auto canary_killed = std::make_shared<mt::Signal>();
+    auto canary = std::shared_ptr<int>(new int, [canary_killed](int* victim) { delete victim; canary_killed->raise(); });
+    auto in_dispatch = std::make_shared<mt::Signal>();
+    auto unblock_dispatchee = std::make_shared<mt::Signal>();
+
+    auto dispatcher = std::make_shared<md::MultiplexingDispatchable>();
+
+    auto first_dispatchee = std::make_shared<mt::TestDispatchable>([canary, in_dispatch, unblock_dispatchee]()
+    {
+        in_dispatch->raise();
+        EXPECT_TRUE(unblock_dispatchee->wait_for(std::chrono::seconds{5}));
+        EXPECT_THAT(canary.use_count(), Gt(0));
+    });
+    auto dummy_dispatchee = std::make_shared<mt::TestDispatchable>([](){});
+    dispatcher->add_watch(first_dispatchee);
+    dispatcher->add_watch(dummy_dispatchee);
+
+    first_dispatchee->trigger();
+
+    md::SimpleDispatchThread eventloop_one{dispatcher};
+    md::SimpleDispatchThread eventloop_two{dispatcher};
+
+    EXPECT_TRUE(in_dispatch->wait_for(std::chrono::seconds{1}));
+
+    dispatcher->remove_watch(dummy_dispatchee);
+    dispatcher->remove_watch(first_dispatchee);
+    dispatcher.reset();
+    first_dispatchee.reset();
+    dummy_dispatchee.reset();
+    canary.reset();
+
+    unblock_dispatchee->raise();
+
+    EXPECT_TRUE(canary_killed->wait_for(std::chrono::seconds{2}));
+}
+
+TEST(MultiplexingDispatchableTest, automatic_removals_are_threadsafe)
+{
+    auto dispatcher = std::make_shared<md::MultiplexingDispatchable>();
+
+    auto dispatchee = std::make_shared<mt::TestDispatchable>([](md::FdEvents) { return false; });
+
+    dispatcher->add_watch(dispatchee, md::DispatchReentrancy::reentrant);
+
+    md::SimpleDispatchThread one{dispatcher}, two{dispatcher}, three{dispatcher}, four{dispatcher};
+
+    dispatchee->trigger();
 }

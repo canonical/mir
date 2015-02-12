@@ -45,10 +45,12 @@ public:
 
     void release_client_buffer(graphics::Buffer*) override
     {
+        ++nready;
     }
 
     std::shared_ptr<graphics::Buffer> lock_compositor_buffer(void const*) override
     {
+        --nready;
         return stub_compositor_buffer;
     }
 
@@ -79,13 +81,14 @@ public:
     {
     }
 
-    int buffers_ready_for_compositor() const override { return 1; }
+    int buffers_ready_for_compositor(void const*) const override { return nready; }
 
     void drop_old_buffers() override {}
     void drop_client_requests() override {}
 
     StubBuffer stub_client_buffer;
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
+    int nready = 0;
 };
 
 }

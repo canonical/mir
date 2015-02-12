@@ -67,59 +67,55 @@ private:
     std::function<void()> const handler;
 };
 
-template<typename VictimReference>
-void add_to_gc_queue(mir::Fd const& queue, std::atomic<int>* generation, VictimReference victim)
+class ReadLock
 {
-    constexpr ssize_t gc_data_size{sizeof(generation) + sizeof(victim)};
-    static_assert(gc_data_size < PIPE_BUF,
-                  "Size of data for delayed GC must be less than PIPE_BUF for atomic guarantees");
-
-    std::unique_ptr<char[]> gc_data{new char[gc_data_size]};
-
-    memcpy(gc_data.get(), &generation, sizeof(generation));
-    memcpy(gc_data.get() + sizeof(generation), &victim, sizeof(victim));
-
-    // Loop to protect against interruption by signals
-    while (write(queue, gc_data.get(), gc_data_size) < gc_data_size)
+public:
+    ReadLock(pthread_rwlock_t& lock)
+        : mutex{&lock}
     {
-        if (errno != EINTR)
+        auto err = pthread_rwlock_rdlock(mutex);
+        if (err != 0)
         {
-            BOOST_THROW_EXCEPTION((std::system_error{errno,
+            BOOST_THROW_EXCEPTION((std::system_error{err,
                                                      std::system_category(),
-                                                     "Failed to write to delayed GC queue"}));
+                                                     "Failed to acquire read lock"}));
         }
     }
-}
 
-template<typename VictimReference>
-void pull_from_gc_queue(mir::Fd const& queue, std::atomic<int>*& generation, VictimReference& victim)
+    ~ReadLock() noexcept
+    {
+        pthread_rwlock_unlock(mutex);
+    }
+private:
+    pthread_rwlock_t* mutex;
+};
+
+class WriteLock
 {
-    while (read(queue, &generation, sizeof(generation)) <
-           static_cast<ssize_t>(sizeof(generation)))
+public:
+    WriteLock(pthread_rwlock_t& lock)
+        : mutex{&lock}
     {
-        if (errno != EINTR)
+        auto err = pthread_rwlock_wrlock(mutex);
+        if (err != 0)
         {
-            BOOST_THROW_EXCEPTION((std::system_error{errno,
+            BOOST_THROW_EXCEPTION((std::system_error{err,
                                                      std::system_category(),
-                                                     "Failed to read from delayed GC queue"}));
+                                                     "Failed to acquire write lock"}));
         }
     }
-    while (read(queue, &victim, sizeof(victim)) <
-           static_cast<ssize_t>(sizeof(victim)))
+
+    ~WriteLock() noexcept
     {
-        if (errno != EINTR)
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                     std::system_category(),
-                                                     "Failed to read from delayed GC queue"}));
-        }
+        pthread_rwlock_unlock(mutex);
     }
-}
+private:
+    pthread_rwlock_t* mutex;
+};
 }
 
 md::MultiplexingDispatchable::MultiplexingDispatchable()
-    : in_current_generation{new std::atomic<int>{0}},
-      epoll_fd{mir::Fd{::epoll_create1(EPOLL_CLOEXEC)}}
+    : epoll_fd{mir::Fd{::epoll_create1(EPOLL_CLOEXEC)}}
 {
     if (epoll_fd == mir::Fd::invalid)
     {
@@ -128,58 +124,37 @@ md::MultiplexingDispatchable::MultiplexingDispatchable()
                                                  "Failed to create epoll monitor"}));
     }
 
-    int pipefds[2];
-    if (pipe(pipefds) < 0)
+    pthread_rwlockattr_t attr;
+    int err;
+    err = pthread_rwlockattr_init(&attr);
+    if (err != 0)
     {
-        BOOST_THROW_EXCEPTION((std::system_error{errno,
+        BOOST_THROW_EXCEPTION((std::system_error{err,
                                                  std::system_category(),
-                                                 "Failed to create delayed-destroy pipe"}));
+                                                 "Failed to init pthread attrs"}));
     }
-    gc_queue = mir::Fd{pipefds[1]};
-    gc_read_queue = mir::Fd{pipefds[0]};
-    auto gc_dispatchable = std::make_shared<DispatchableAdaptor>(gc_read_queue,
-                                                                 [this]()
+    // Set writer preference; otherwise remove_watch could block indefinitely
+    err = pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
+    if (err != 0)
     {
-        std::atomic<int>* generation;
-        decltype(dispatchee_holder)::const_iterator victim;
+        BOOST_THROW_EXCEPTION((std::system_error{err,
+                                                 std::system_category(),
+                                                 "Failed to set preferred rw-lock mode"}));
+    }
+    err = pthread_rwlock_init(&lifetime_mutex, &attr);
+    if (err != 0)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{err,
+                                                 std::system_category(),
+                                                 "Failed to init rw-lock"}));
+    }
 
-        pull_from_gc_queue(gc_read_queue, generation, victim);
-
-        if (*generation == 0)
-        {
-            std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
-            dispatchee_holder.erase(victim);
-            delete generation;
-        }
-        else
-        {
-            add_to_gc_queue(gc_queue, generation, victim);
-        }
-    });
-
-    add_watch(gc_dispatchable, DispatchReentrancy::sequential);
+    pthread_rwlockattr_destroy(&attr);
 }
 
 md::MultiplexingDispatchable::~MultiplexingDispatchable() noexcept
 {
-    delete in_current_generation.load();
-
-    /*
-     * The dispatchee_holder destructor will clean up all the Dispatchables, but
-     * if we have any pending GC queued up we need to free the generation atomics.
-     */
-    pollfd pending_gc;
-    pending_gc.events = POLLIN;
-    pending_gc.fd = gc_read_queue;
-
-    while (poll(&pending_gc, 1, 0) > 0)
-    {
-        std::atomic<int>* generation;
-        decltype(dispatchee_holder)::const_iterator victim;
-
-        pull_from_gc_queue(gc_read_queue, generation, victim);
-        delete generation;
-    }
+    pthread_rwlock_destroy(&lifetime_mutex);
 }
 
 md::MultiplexingDispatchable::MultiplexingDispatchable(std::initializer_list<std::shared_ptr<Dispatchable>> dispatchees)
@@ -203,36 +178,45 @@ bool md::MultiplexingDispatchable::dispatch(md::FdEvents events)
         return false;
     }
 
-    std::atomic<int>* our_generation = in_current_generation.load();
-    auto count_handler = mir::raii::paired_calls([our_generation]() { ++(*our_generation); },
-                                                 [our_generation]() { --(*our_generation); });
-
+    std::shared_ptr<md::Dispatchable> source;
+    bool rearm_source{false};
     epoll_event event;
 
-    auto result = epoll_wait(epoll_fd, &event, 1, 0);
-
-    if (result < 0)
     {
-        BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                 std::system_category(),
-                                                 "Failed to wait on fds"}));
-    }
+        ReadLock lock{lifetime_mutex};
 
-    if (result > 0)
-    {
-        auto event_source = reinterpret_cast<std::pair<std::shared_ptr<Dispatchable>, bool>*>(event.data.ptr);
+        auto result = epoll_wait(epoll_fd, &event, 1, 0);
 
-        if (!event_source->first->dispatch(epoll_to_fd_event(event)))
+        if (result < 0)
         {
-            remove_watch(event_source->first);
+            BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                     std::system_category(),
+                                                     "Failed to wait on fds"}));
         }
 
-        if (event_source->second)
+        if (result == 0)
         {
-            event.events = fd_event_to_epoll(event_source->first->relevant_events()) | EPOLLONESHOT;
-            epoll_ctl(epoll_fd, EPOLL_CTL_MOD, event_source->first->watch_fd(), &event);
+            // Some other thread must have stolen the event we were woken for;
+            // that's ok, just return.
+            return true;
         }
+
+        auto event_source = reinterpret_cast<decltype(dispatchee_holder)::pointer>(event.data.ptr);
+
+        source = event_source->first;
+        rearm_source = event_source->second;
     }
+
+    if (!source->dispatch(epoll_to_fd_event(event)))
+    {
+        remove_watch(source);
+    }
+    else if (rearm_source)
+    {
+        event.events = fd_event_to_epoll(source->relevant_events()) | EPOLLONESHOT;
+        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, source->watch_fd(), &event);
+    }
+
     return true;
 }
 
@@ -251,7 +235,7 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
 {
     decltype(dispatchee_holder)::iterator new_holder;
     {
-        std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
+        WriteLock lock{lifetime_mutex};
         new_holder = dispatchee_holder.emplace(dispatchee_holder.begin(),
                                                dispatchee,
                                                reentrancy == DispatchReentrancy::sequential);
@@ -268,7 +252,7 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
     e.data.ptr = static_cast<void*>(&(*new_holder));
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, dispatchee->watch_fd(), &e) < 0)
     {
-        std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
+        WriteLock lock{lifetime_mutex};
         dispatchee_holder.erase(new_holder);
         if (errno == EEXIST)
         {
@@ -294,51 +278,23 @@ void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
 {
     if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr))
     {
+        if (errno == ENOENT)
+        {
+            // If reentrant dispatch returns false we can try to remove the same dispatchable twice.
+            //
+            // The reference-counting on mir::Fd should prevent the fd being closed, and
+            // hence the handle being reused, before we've processed all such removals,
+            // so this should not be racy with new Dispatchable creation + add_watch.
+            return;
+        }
         BOOST_THROW_EXCEPTION((std::system_error{errno,
                                                  std::system_category(),
                                                  "Failed to remove fd monitor"}));
     }
 
-    /*
-     * Theory of operation:
-     * The kernel guarantees that any call to epoll_wait at this point will not return an
-     * event from the fd we've just removed. That means all we need to do to safely destroy
-     * the Dispatchable is wait for all the dispatch()es that are currently running to finish.
-     *
-     * If there are no threads in dispatch() then we can delete immediately.
-     *
-     * If there is at least one thread in dispatch() then we:
-     * 1) Save a pointer to the current generation counter, x.
-     * 2) Replace the current generation counter with a fresh std::atomic<int>.
-     *    This means that any new threads will not change our saved counter.
-     * 3) Add the pair (x, victim) to the gc queue.
-     *
-     * When the GC queue is dispatched it checks if the old generation counter, x, is now
-     * zero. If so, it's safe to free the victim. If not, it re-queues (x, victim).
-     */
+    WriteLock lock{lifetime_mutex};
+    dispatchee_holder.remove_if([&fd](std::pair<std::shared_ptr<Dispatchable>,bool> const& candidate)
     {
-        std::lock_guard<decltype(lifetime_mutex)> lock{lifetime_mutex};
-
-        decltype(dispatchee_holder)::const_iterator victim;
-        victim = std::find_if(dispatchee_holder.begin(), dispatchee_holder.end(),
-                              [&fd](std::pair<std::shared_ptr<Dispatchable>,bool> const& candidate)
-        {
-            return candidate.first->watch_fd() == fd;
-        });
-
-        if (*in_current_generation == 0)
-        {
-            // No thread from before the removal of the fd is in dispatch(); safe to free.
-            dispatchee_holder.erase(victim);
-        }
-        else
-        {
-            // Punt the destruction to the delayed GC
-            auto next_generation = new std::atomic<int>{0};
-            std::atomic<int>* current_generation = in_current_generation.load();
-            in_current_generation = next_generation;
-
-            add_to_gc_queue(gc_queue, current_generation, victim);
-        }
-    }
+        return candidate.first->watch_fd() == fd;
+    });
 }

@@ -25,7 +25,7 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "error_connections.h"
-#include "uncaught.h"
+#include "mir/uncaught.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <functional>
@@ -94,6 +94,16 @@ MirSurfaceSpec* mir_connection_create_spec_for_dialog(MirConnection* connection,
 {
     auto spec = new MirSurfaceSpec{connection, width, height, format};
     spec->type = mir_surface_type_dialog;
+    return spec;
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
+                                                      int width,
+                                                      int height,
+                                                      MirPixelFormat format)
+{
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_inputmethod;
     return spec;
 }
 
@@ -223,7 +233,8 @@ void mir_surface_set_event_handler(MirSurface* surface,
 
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface* surface)
 {
-    return reinterpret_cast<MirEGLNativeWindowType>(surface->generate_native_window());
+    return mir_buffer_stream_get_egl_native_window(
+        mir_surface_get_buffer_stream(surface));
 }
 
 bool mir_surface_is_valid(MirSurface* surface)
@@ -243,17 +254,26 @@ void mir_surface_get_parameters(MirSurface* surface, MirSurfaceParameters* param
 
 MirPlatformType mir_surface_get_platform_type(MirSurface* surface)
 {
-    return surface->platform_type();
+    return mir_buffer_stream_get_platform_type(mir_surface_get_buffer_stream(surface));
 }
 
 void mir_surface_get_current_buffer(MirSurface* surface, MirNativeBuffer** buffer_package_out)
 {
-    *buffer_package_out = surface->get_current_buffer_package();
+    mir_buffer_stream_get_current_buffer(mir_surface_get_buffer_stream(surface), buffer_package_out);
 }
 
 void mir_surface_get_graphics_region(MirSurface* surface, MirGraphicsRegion* graphics_region)
 {
-    surface->get_cpu_region(*graphics_region);
+    mir_buffer_stream_get_graphics_region(mir_surface_get_buffer_stream(surface), graphics_region);
+}
+
+namespace
+{
+void buffer_to_surface_thunk(MirBufferStream* /* stream */, void* context)
+{
+    auto cb = static_cast<std::function<void()>*>(context);
+    (*cb)();
+}
 }
 
 MirWaitHandle* mir_surface_swap_buffers(
@@ -262,7 +282,14 @@ MirWaitHandle* mir_surface_swap_buffers(
     void* context)
 try
 {
-    return surface->next_buffer(callback, context);
+    auto shim_callback = new std::function<void()>;
+    *shim_callback = [surface, callback, context, shim_callback] ()
+    {
+        if (callback)
+            callback(surface, context);
+        delete shim_callback;
+    };
+    return mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), buffer_to_surface_thunk, shim_callback);
 }
 catch (std::exception const& ex)
 {
@@ -272,9 +299,8 @@ catch (std::exception const& ex)
 
 void mir_surface_swap_buffers_sync(MirSurface* surface)
 {
-    mir_wait_for(mir_surface_swap_buffers(surface,
-        reinterpret_cast<mir_surface_callback>(assign_result),
-        nullptr));
+    mir_buffer_stream_swap_buffers_sync(
+        mir_surface_get_buffer_stream(surface));
 }
 
 MirWaitHandle* mir_surface_release(
@@ -519,4 +545,15 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrient
     }
 
     return result;
+}
+
+MirBufferStream *mir_surface_get_buffer_stream(MirSurface *surface)
+try
+{
+    return reinterpret_cast<MirBufferStream*>(surface->get_buffer_stream());
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }

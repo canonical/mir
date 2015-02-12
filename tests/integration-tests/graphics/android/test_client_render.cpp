@@ -98,7 +98,7 @@ struct TestClient
         MirGraphicsRegion graphics_region;
         for(int i=0u; i < num_frames; i++)
         {
-            mir_surface_get_graphics_region(surface, &graphics_region);
+            mir_buffer_stream_get_graphics_region(mir_surface_get_buffer_stream(surface), &graphics_region);
             if (i % 2)
             {
                 draw_pattern1.draw(graphics_region);
@@ -107,7 +107,7 @@ struct TestClient
             {
                 draw_pattern0.draw(graphics_region);
             }
-            mir_surface_swap_buffers_sync(surface);
+            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
         }
 
         mir_surface_release_sync(surface);
@@ -144,7 +144,7 @@ struct TestClient
         EXPECT_THAT(mir_surface, IsValid());
 
         auto native_window = static_cast<EGLNativeWindowType>(
-            mir_surface_get_egl_native_window(mir_surface));
+            mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(mir_surface)));
 
         egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
         context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);

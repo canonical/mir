@@ -18,6 +18,8 @@
 
 #include "mir/compositor/gl_program_family.h"
 
+#include <mutex>
+
 namespace mir { namespace compositor {
 
 void GLProgramFamily::Shader::init(GLenum type, const GLchar* src)
@@ -73,6 +75,14 @@ GLProgramFamily::~GLProgramFamily() noexcept
 GLuint GLProgramFamily::add_program(const GLchar* const vshader_src,
                                     const GLchar* const fshader_src)
 {
+    // Serialize calls - avoids segfault on multimonitor (see lp:1416482)
+    // We need to serialize renderer creation because some GL calls used
+    // during renderer construction that create unique resource ids
+    // (e.g. glCreateProgram) are not thread-safe when the threads are
+    // have the same or shared EGL contexts.
+    static std::mutex lp1416482_mutex;
+    std::lock_guard<decltype(lp1416482_mutex)> lock{lp1416482_mutex};
+
     auto& v = vshader[vshader_src];
     if (!v.id) v.init(GL_VERTEX_SHADER, vshader_src);
 

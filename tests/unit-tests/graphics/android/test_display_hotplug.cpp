@@ -18,6 +18,7 @@
 
 #include "src/platforms/android/server/display.h"
 #include "src/platforms/android/server/hal_component_factory.h"
+#include "src/platforms/android/server/hwc_layerlist.h"
 #include "src/server/graphics/program_factory.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/glib_main_loop.h"
@@ -94,6 +95,12 @@ struct DisplayHotplug : ::testing::Test
         {
             return std::unique_ptr<mga::HwcConfiguration>(new WrappingConfig(stub_config));
         }
+
+        std::unique_ptr<mga::LayerList> create_layer_list() override
+        {
+            return std::unique_ptr<mga::LayerList>(new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
+        }
+
         StubHwcConfig stub_config;
     };
 

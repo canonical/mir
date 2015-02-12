@@ -20,6 +20,8 @@
 
 #include "mir/client_platform.h"
 
+struct gbm_device;
+
 namespace mir
 {
 namespace client
@@ -39,16 +41,19 @@ public:
                    std::shared_ptr<BufferFileOps> const& buffer_file_ops,
                    EGLNativeDisplayContainer& display_container);
 
-    MirPlatformType platform_type() const;
-    std::shared_ptr<ClientBufferFactory> create_buffer_factory();
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(EGLNativeSurface *surface);
-    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display();
-    MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const;
+    MirPlatformType platform_type() const override;
+    void populate(MirPlatformPackage& package) const override;
+    MirPlatformMessage* platform_operation(MirPlatformMessage const* request) override;
+    std::shared_ptr<ClientBufferFactory> create_buffer_factory() override;
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(EGLNativeSurface *surface) override;
+    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override;
+    MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
 
 private:
     ClientContext* const context;
     std::shared_ptr<BufferFileOps> const buffer_file_ops;
     EGLNativeDisplayContainer& display_container;
+    gbm_device* gbm_dev;
 };
 
 }

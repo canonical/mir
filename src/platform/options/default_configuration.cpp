@@ -32,6 +32,7 @@ namespace mo = mir::options;
 char const* const mo::server_socket_opt           = "file,f";
 char const* const mo::prompt_socket_opt           = "prompt-file,p";
 char const* const mo::no_server_socket_opt        = "no-file";
+char const* const mo::arw_server_socket_opt       = "arw-file";
 char const* const mo::enable_input_opt            = "enable-input,i";
 char const* const mo::session_mediator_report_opt = "session-mediator-report";
 char const* const mo::msg_processor_report_opt    = "msg-processor-report";
@@ -116,6 +117,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
             "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
+        (arw_server_socket_opt, "Make socket filename globally rw (equivalent to chmod a=rw)")
         (prompt_socket_opt, "Provide a \"..._trusted\" filename for prompt helper connections")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support (default: autodetect)")

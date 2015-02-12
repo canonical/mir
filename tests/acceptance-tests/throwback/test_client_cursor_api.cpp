@@ -127,7 +127,8 @@ struct CursorClient
                 auto const surface = mir_surface_create_sync(spec);
                 mir_surface_spec_release(spec);
 
-                mir_surface_swap_buffers_sync(surface);
+                mir_buffer_stream_swap_buffers_sync(
+                    mir_surface_get_buffer_stream(surface));
 
                 wait_for_surface_to_become_focused_and_exposed(surface);
 

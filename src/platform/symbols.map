@@ -255,7 +255,14 @@ MIRPLATFORM_6 {
     mir::graphics::red_channel_depth*;
     mir::graphics::SimpleGLProgram::SimpleGLProgram*;
     mir::graphics::tessellate_renderable_into_rectangle*;
-    mir::load_library*;
   };
  local: *;
 };
+
+MIRPLATFORM_6.1
+{
+global:
+  extern "C++" {
+    mir::options::arw_server_socket_opt*;
+  };
+} MIRPLATFORM_6;

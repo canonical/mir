@@ -28,6 +28,8 @@
 #include <tuple>
 #include <atomic>
 
+#include <pthread.h>
+
 namespace mir
 {
 namespace dispatch
@@ -49,7 +51,7 @@ enum class DispatchReentrancy
  * \brief An adaptor that combines multiple Dispatchables into a single Dispatchable
  * \note Instances are fully thread-safe.
  */
-class MultiplexingDispatchable : public Dispatchable
+class MultiplexingDispatchable final : public Dispatchable
 {
 public:
     MultiplexingDispatchable();
@@ -94,12 +96,9 @@ public:
      */
     void remove_watch(Fd const& fd);
 private:
-    std::atomic<std::atomic<int>*> in_current_generation;
-    std::mutex lifetime_mutex;
+    pthread_rwlock_t lifetime_mutex;
     std::list<std::pair<std::shared_ptr<Dispatchable>, bool>> dispatchee_holder;
 
-    Fd gc_queue;
-    Fd gc_read_queue;
     Fd epoll_fd;
 };
 }

@@ -39,7 +39,7 @@ struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
         MirPlatformMessage* reply;
 
         auto const platform_op_done = mir_connection_platform_operation(
-            connection, add_opcode, request, assign_reply, &reply);
+            connection, request, assign_reply, &reply);
         mir_wait_for(platform_op_done);
 
         mir_platform_message_release(request);
@@ -57,7 +57,7 @@ struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
         MirPlatformMessage* reply;
 
         auto const platform_op_done = mir_connection_platform_operation(
-                connection, echo_fd_opcode, request, assign_reply, &reply);
+                connection, request, assign_reply, &reply);
         mir_wait_for(platform_op_done);
 
         mir_platform_message_release(request);

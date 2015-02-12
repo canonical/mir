@@ -140,6 +140,8 @@ mgn::NestedDisplay::NestedDisplay(
 
 mgn::NestedDisplay::~NestedDisplay() noexcept
 {
+    if (eglGetCurrentContext() == egl_display.egl_context())
+        eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)

@@ -33,6 +33,7 @@
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
+#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_prompt_session_manager.h"
 #include "mir_test_doubles/stub_input_targeter.h"
 
@@ -118,7 +119,8 @@ struct DefaultShell : Test
         mt::fake_shared(surface_coordinator),
         mt::fake_shared(session_manager),
         std::make_shared<mtd::NullPromptSessionManager>(),
-        mt::fake_shared(placement_strategy)};
+        mt::fake_shared(placement_strategy),
+        std::make_shared<mtd::NullSurfaceConfigurator>()};
 
     void SetUp() override
     {
