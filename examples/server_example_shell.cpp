@@ -141,10 +141,12 @@ auto me::ShellFactory::shell() -> std::shared_ptr<me::Shell>
         {
             wm_builder = [this](msh::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
                 {
+                    std::shared_ptr<compositor::Compositor> const the_compositor{/*server.the_compositor()*/};
+
                     return std::make_shared<CanonicalWindowManager>(
                         focus_controller,
                         server.the_display(),
-                        server.the_compositor());
+                        the_compositor);
                 };
         }
         else
