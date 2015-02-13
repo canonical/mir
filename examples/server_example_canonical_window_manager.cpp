@@ -159,15 +159,14 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
 
     auto width = std::min(display_area.size.width.as_int(), parameters.size.width.as_int());
     auto height = std::min(display_area.size.height.as_int(), parameters.size.height.as_int());
-
     parameters.size = Size{width, height};
+
+    bool positioned = false;
 
     auto const parent = parameters.parent.lock();
 
     if (!parent) // No parent => client can't suggest positioning
     {
-        bool positioned = false;
-
         if (auto const default_surface = session->default_surface())
         {
             // "If an app does not suggest a position for a regular surface when opening
@@ -179,22 +178,59 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
 
             parameters.top_left = default_surface->top_left() + offset;
 
-            // If there is not room to do that, Mir should place it as if it was the app’s
+            // "If there is not room to do that, Mir should place it as if it was the app’s
             // only regular surface."
             positioned = display_area.contains(parameters.top_left + as_displacement(parameters.size));
         }
+    }
 
-        if (!positioned)
+    if (parent && parameters.aux_rect.is_set() && parameters.edge_attachment.is_set())
+    {
+        auto const edge_attachment = parameters.edge_attachment.value();
+        auto const aux_rect = parameters.aux_rect.value();
+        auto const top_left = aux_rect.top_left + (parent->top_left() - display_area.top_left);
+        auto const top_right= top_left + Displacement{aux_rect.size.width.as_int(), 0};
+        auto const bot_left = top_left + Displacement{0, aux_rect.size.height.as_int()};
+
+        if (edge_attachment && mir_edge_attachment_vertical)
         {
-            // "If an app does not suggest a position for its only regular surface when
-            // opening it, Mir should position it horizontally centered, and vertically
-            // such that the top margin is half the bottom margin. (Vertical centering
-            // would look too low, and would allow little room for cascading.)"
-            auto centred = display_area.top_left + 0.5*(
-                as_displacement(display_area.size) - as_displacement(parameters.size));
-
-            parameters.top_left = centred - Displacement{0, (display_area.size.height.as_int()-height)/6};
+            if (display_area.contains(top_right + Displacement{width, height}))
+            {
+                parameters.top_left = top_right;
+                positioned = true;
+            }
+            else if (display_area.contains(top_left + Displacement{-width, height}))
+            {
+                parameters.top_left = top_left + Displacement{-width, 0};
+                positioned = true;
+            }
         }
+
+        if (edge_attachment && mir_edge_attachment_horizontal)
+        {
+            if (display_area.contains(bot_left + Displacement{width, height}))
+            {
+                parameters.top_left = bot_left;
+                positioned = true;
+            }
+            else if (display_area.contains(top_left + Displacement{width, -height}))
+            {
+                parameters.top_left = top_left + Displacement{0, -height};
+                positioned = true;
+            }
+        }
+    }
+
+    if (!positioned)
+    {
+        // "If an app does not suggest a position for its only regular surface when
+        // opening it, Mir should position it horizontally centered, and vertically
+        // such that the top margin is half the bottom margin. (Vertical centering
+        // would look too low, and would allow little room for cascading.)"
+        auto centred = display_area.top_left + 0.5*(
+            as_displacement(display_area.size) - as_displacement(parameters.size));
+
+        parameters.top_left = centred - Displacement{0, (display_area.size.height.as_int()-height)/6};
     }
 
     return parameters;
