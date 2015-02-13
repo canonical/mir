@@ -28,7 +28,7 @@ namespace ms = mir::scene;
 using namespace mir::geometry;
 
 ///\example server_example_canonical_window_manager.cpp
-/// Demonstrate implementing a standard tiling algorithm
+// Based on "Mir and Unity: Surfaces, input, and displays (v0.3)"
 
 namespace
 {
@@ -148,8 +148,6 @@ void me::CanonicalWindowManagerPolicy::resize(Point cursor)
     old_cursor = cursor;
 }
 
-//
-// - Mir and Unity: Surfaces, input, and displays (v0.3)
 auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
     std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& request_parameters)

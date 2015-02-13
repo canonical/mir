@@ -22,7 +22,7 @@
 #include "server_example_basic_window_manager.h"
 
 ///\example server_example_canonical_window_manager.h
-/// Demonstrate implementing a standard tiling algorithm
+// Based on "Mir and Unity: Surfaces, input, and displays (v0.3)"
 
 namespace mir
 {
