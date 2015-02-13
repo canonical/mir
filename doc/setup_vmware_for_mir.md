@@ -18,7 +18,7 @@ Here is a quick-start guide for running Mir in VMware:
    see [1].
 
 6. If you are using Mesa drivers, stop the virtual machine, go to the folder
-   where the VM is saved and add the following file to the <vm-name>.vmx file
+   where the VM is saved and add the following line to the <vm-name>.vmx file
    there:
 
        mks.gl.allowBlacklistedDrivers = "TRUE"
