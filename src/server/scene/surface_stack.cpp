@@ -277,6 +277,29 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
     // TODO: error logging when surface not found
 }
 
+auto ms::SurfaceStack::surface_at(geometry::Point cursor)
+-> std::shared_ptr<Surface>
+{
+    std::shared_ptr<Surface> result;
+
+    std::lock_guard<decltype(guard)> lg(guard);
+    for (auto &layer : layers_by_depth)
+    {
+        for (auto const& surface : layer.second)
+        {
+            if (surface->query(mir_surface_attrib_visibility) ==
+                MirSurfaceVisibility::mir_surface_visibility_exposed)
+            {
+                if (surface->input_bounds().contains(cursor))
+                    result = surface;
+            }
+        }
+    }
+
+    return result;
+}
+
+
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback)
 {
     std::lock_guard<decltype(guard)> lg(guard);
