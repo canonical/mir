@@ -295,7 +295,7 @@ static void display_change_callback(MirConnection *connection, void *context)
     ctx->reconfigure = 1;
 }
 
-static void handle_key_input_event(struct ClientContext *ctx, MirKeyboardEvent const* event)
+static void handle_keyboard_event(struct ClientContext *ctx, MirKeyboardEvent const* event)
 {
     if (mir_keyboard_event_action(event) != mir_keyboard_action_up)
         return;
@@ -340,7 +340,7 @@ static void event_callback(
     if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
         return;
     
-    handle_key_input_event(ctx, mir_input_event_get_keyboard_event(input_event));
+    handle_keyboard_event(ctx, mir_input_event_get_keyboard_event(input_event));
 }
 
 int main(int argc, char *argv[])
