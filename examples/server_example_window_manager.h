@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,18 +16,55 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_EXAMPLES_WINDOW_MANAGER_H_
-#define MIR_EXAMPLES_WINDOW_MANAGER_H_
+#ifndef MIR_EXAMPLE_WINDOW_MANAGER_H_
+#define MIR_EXAMPLE_WINDOW_MANAGER_H_
+
+#include "mir/frontend/surface_id.h"
+#include "mir_toolkit/common.h"
+
+///\example server_example_window_manager.h
+/// A window manager interface
 
 namespace mir
 {
-class Server;
-
+namespace geometry { class Rectangle; }
+namespace scene { class Session; class Surface; class SurfaceCreationParameters; }
 namespace examples
 {
-void add_window_manager_option_to(Server& server);
+class WindowManager
+{
+public:
+    virtual void add_session(std::shared_ptr<scene::Session> const& session) = 0;
+
+    virtual void remove_session(std::shared_ptr<scene::Session> const& session) = 0;
+
+    virtual frontend::SurfaceId add_surface(
+        std::shared_ptr<scene::Session> const& session,
+        scene::SurfaceCreationParameters const& params,
+        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) = 0;
+
+    virtual void remove_surface(
+        std::weak_ptr<scene::Surface> const& surface,
+        std::shared_ptr<scene::Session> const& session) = 0;
+
+    virtual void add_display(geometry::Rectangle const& area) = 0;
+
+    virtual void remove_display(geometry::Rectangle const& area) = 0;
+
+    virtual bool handle_key_event(MirKeyInputEvent const* event) = 0;
+
+    virtual bool handle_touch_event(MirTouchInputEvent const* event) = 0;
+
+    virtual bool handle_pointer_event(MirPointerInputEvent const* event) = 0;
+
+    virtual int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) = 0;
+
+    virtual ~WindowManager() = default;
+    WindowManager() = default;
+    WindowManager(WindowManager const&) = delete;
+    WindowManager& operator=(WindowManager const&) = delete;
+};
 }
-} // namespace mir
+}
 
-
-#endif // MIR_EXAMPLES_WINDOW_MANAGER_H_
+#endif /* MIR_EXAMPLE_WINDOW_MANAGER_H_ */
