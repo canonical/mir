@@ -19,6 +19,7 @@
 #include "server_example_generic_shell.h"
 
 #include "mir/scene/session.h"
+#include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 
 namespace me = mir::examples;
@@ -123,3 +124,8 @@ void me::GenericShell::remove_display(geometry::Rectangle const& area)
     window_manager->remove_display(area);
 }
 
+void me::GenericShell::setting_focus_to(std::shared_ptr<ms::Surface> const& surface)
+{
+    if (surface)
+        surface_coordinator->raise(surface);
+}
