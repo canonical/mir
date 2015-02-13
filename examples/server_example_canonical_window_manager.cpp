@@ -32,15 +32,7 @@ using namespace mir::geometry;
 
 namespace
 {
-void clip_to_area(ms::SurfaceCreationParameters& parameters, Rectangle const& area)
-{
-    auto const displacement = parameters.top_left - area.top_left;
-
-    auto width = std::min(area.size.width.as_int()-displacement.dx.as_int(), parameters.size.width.as_int());
-    auto height = std::min(area.size.height.as_int()-displacement.dy.as_int(), parameters.size.height.as_int());
-
-    parameters.size = Size{width, height};
-}
+int const title_bar_height = 10;
 
 bool resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
@@ -156,16 +148,55 @@ void me::CanonicalWindowManagerPolicy::resize(Point cursor)
     old_cursor = cursor;
 }
 
+//
+// - Mir and Unity: Surfaces, input, and displays (v0.3)
 auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
-    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& request_parameters)
 -> ms::SurfaceCreationParameters
 {
     auto parameters = request_parameters;
 
-    // TODO position window
+    auto width = std::min(display_area.size.width.as_int(), parameters.size.width.as_int());
+    auto height = std::min(display_area.size.height.as_int(), parameters.size.height.as_int());
 
-    clip_to_area(parameters, display_area);
+    parameters.size = Size{width, height};
+
+    auto const parent = parameters.parent.lock();
+
+    if (!parent) // No parent => client can't suggest positioning
+    {
+        bool positioned = false;
+
+        if (auto const default_surface = session->default_surface())
+        {
+            // "If an app does not suggest a position for a regular surface when opening
+            // it, and the app has at least one regular surface already open, and there
+            // is room to do so, Mir should place it one title bar’s height below and to
+            // the right (in LTR languages) or to the left (in RTL languages) of the app’s
+            // most recently active window, so that you can see the title bars of both."
+            static Displacement const offset{title_bar_height, title_bar_height};
+
+            parameters.top_left = default_surface->top_left() + offset;
+
+            // If there is not room to do that, Mir should place it as if it was the app’s
+            // only regular surface."
+            positioned = display_area.contains(parameters.top_left + as_displacement(parameters.size));
+        }
+
+        if (!positioned)
+        {
+            // "If an app does not suggest a position for its only regular surface when
+            // opening it, Mir should position it horizontally centered, and vertically
+            // such that the top margin is half the bottom margin. (Vertical centering
+            // would look too low, and would allow little room for cascading.)"
+            auto centred = display_area.top_left + 0.5*(
+                as_displacement(display_area.size) - as_displacement(parameters.size));
+
+            parameters.top_left = centred - Displacement{0, (display_area.size.height.as_int()-height)/6};
+        }
+    }
+
     return parameters;
 }
 
