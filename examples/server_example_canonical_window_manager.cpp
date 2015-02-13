@@ -205,8 +205,6 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
         return info.state;
     }
 
-    auto const& tile = tools->info_for(info.session).tile;
-
     switch (value)
     {
     case mir_surface_state_restored:
@@ -215,18 +213,18 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
         break;
 
     case mir_surface_state_maximized:
-        surface->move_to(tile.top_left);
-        surface->resize(tile.size);
+        surface->move_to(display_area.top_left);
+        surface->resize(display_area.size);
         break;
 
     case mir_surface_state_horizmaximized:
-        surface->move_to({tile.top_left.x, info.restore_rect.top_left.y});
-        surface->resize({tile.size.width, info.restore_rect.size.height});
+        surface->move_to({display_area.top_left.x, info.restore_rect.top_left.y});
+        surface->resize({display_area.size.width, info.restore_rect.size.height});
         break;
 
     case mir_surface_state_vertmaximized:
-        surface->move_to({info.restore_rect.top_left.x, tile.top_left.y});
-        surface->resize({info.restore_rect.size.width, tile.size.height});
+        surface->move_to({info.restore_rect.top_left.x, display_area.top_left.y});
+        surface->resize({info.restore_rect.size.width, display_area.size.height});
         break;
 
     default:

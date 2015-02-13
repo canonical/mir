@@ -33,8 +33,6 @@ namespace examples
 {
 struct CanonicalSessionInfo
 {
-    geometry::Rectangle tile;
-    std::vector<std::weak_ptr<scene::Surface>> surfaces;
 };
 
 struct CanonicalSurfaceInfo
