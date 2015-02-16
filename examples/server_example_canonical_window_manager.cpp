@@ -146,7 +146,8 @@ me::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
     std::shared_ptr<scene::Surface> const& surface) :
     state{mir_surface_state_restored},
     restore_rect{surface->top_left(), surface->size()},
-    session{session}
+    session{session},
+    parent{surface->parent()}
 {
 }
 
@@ -272,14 +273,29 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
     return parameters;
 }
 
-void me::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& /*session*/, std::shared_ptr<ms::Surface> const& /*surface*/)
+void me::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& /*session*/, std::shared_ptr<ms::Surface> const& surface)
 {
-    // TODO
+    if (auto const parent = surface->parent())
+    {
+        tools->info_for(parent).children.push_back(surface);
+    }
 }
 
-void me::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/)
+void me::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& surface)
 {
-    // TODO
+    if (auto const parent = tools->info_for(surface).parent.lock())
+    {
+        auto& siblings = tools->info_for(parent).children;
+
+        for (auto i = begin(siblings); i != end(siblings); ++i)
+        {
+            if (surface.lock() == i->lock())
+            {
+                siblings.erase(i);
+                break;
+            }
+        }
+    }
 }
 
 int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
