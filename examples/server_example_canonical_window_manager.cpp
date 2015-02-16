@@ -416,22 +416,34 @@ bool me::CanonicalWindowManagerPolicy::handle_pointer_event(MirPointerInputEvent
 
 void me::CanonicalWindowManagerPolicy::toggle(MirSurfaceState state)
 {
-    if (auto const session = tools->focussed_application().lock())
+    if (auto const surface = select_surface())
     {
-        if (auto const surface = session->default_surface())
-        {
-            if (surface->state() == state)
-                state = mir_surface_state_restored;
+        if (surface->state() == state)
+            state = mir_surface_state_restored;
 
-            auto const value = handle_set_state(surface, MirSurfaceState(state));
-            surface->configure(mir_surface_attrib_state, value);
-        }
+        auto const value = handle_set_state(surface, MirSurfaceState(state));
+        surface->configure(mir_surface_attrib_state, value);
     }
 }
 
-void me::CanonicalWindowManagerPolicy::select_surface(std::shared_ptr<scene::Surface> const& surface)
+void me::CanonicalWindowManagerPolicy::select_surface(std::shared_ptr<ms::Surface> const& surface)
 {
     tools->set_focus_to(tools->info_for(surface).session.lock());
     surface_coordinator->raise(surface);
     selected_surface = surface;
+}
+
+auto me::CanonicalWindowManagerPolicy::select_surface() const
+-> std::shared_ptr<ms::Surface>
+{
+    if (auto const surface = selected_surface.lock())
+        return surface;
+
+    if (auto const session = tools->focussed_application().lock())
+    {
+        if (auto const surface = session->default_surface())
+            return surface;
+    }
+
+    return std::shared_ptr<ms::Surface>{};
 }

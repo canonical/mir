@@ -101,6 +101,7 @@ private:
     void toggle(MirSurfaceState state);
 
     void select_surface(std::shared_ptr<scene::Surface> const& surface);
+    auto select_surface() const -> std::shared_ptr<scene::Surface>;
 
     Tools* const tools;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
