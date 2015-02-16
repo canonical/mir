@@ -42,15 +42,14 @@ bool resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old
         auto const top_left = surface->top_left();
         auto anchor = top_left;
 
-        auto const corners = {
+        for (auto const& corner : {
             anchor + as_displacement(surface->size()),
             anchor + Displacement{surface->size().width.as_int(), 0},
-            anchor + Displacement{0, surface->size().height.as_int()}
-        };
-
-        for (auto const& corner : corners)
+            anchor + Displacement{0, surface->size().height.as_int()}})
+        {
             if ((old_cursor - anchor).length_squared() < (old_cursor - corner).length_squared())
                 anchor = corner;
+        }
 
         bool const left_resize = anchor.x != top_left.x;
         bool const top_resize  = anchor.y != top_left.y;
