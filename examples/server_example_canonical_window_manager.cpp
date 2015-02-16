@@ -35,7 +35,7 @@ namespace
 {
 int const title_bar_height = 10;
 
-bool resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle /*bounds*/)
+bool resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
     if (surface && surface->input_area_contains(old_cursor))
     {
@@ -63,12 +63,42 @@ bool resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old
 
         auto const delta = cursor-old_cursor;
 
-        Size const new_size{
+        Size new_size{
             old_size.width.as_int()  + x_sign*delta.dx.as_int(),
             old_size.height.as_int() + y_sign*delta.dy.as_int()};
 
-        Point const new_pos = top_left +
+        Point new_pos = top_left +
             Displacement{left_resize*delta.dx, top_resize*delta.dy};
+
+        if (left_resize)
+        {
+            if (new_pos.x < bounds.top_left.x)
+            {
+                new_size.width = Width{new_size.width.as_int() + (new_pos.x - bounds.top_left.x).as_int()};
+                new_pos.x = bounds.top_left.x;
+            }
+        }
+        else
+        {
+            auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
+            if (to_bottom_right.dx < DeltaX{0})
+                new_size.width = Width{new_size.width.as_int() + to_bottom_right.dx.as_int()};
+        }
+
+        if (top_resize)
+        {
+            if (new_pos.y < bounds.top_left.y)
+            {
+                new_size.height = Height{new_size.height.as_int() + (new_pos.y - bounds.top_left.y).as_int()};
+                new_pos.y = bounds.top_left.y;
+            }
+        }
+        else
+        {
+            auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
+            if (to_bottom_right.dy < DeltaY{0})
+                new_size.height = Height{new_size.height.as_int() + to_bottom_right.dy.as_int()};
+        }
 
         surface->resize(new_size);
         surface->move_to(new_pos);
