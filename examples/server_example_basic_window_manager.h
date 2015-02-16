@@ -21,6 +21,7 @@
 
 #include "server_example_generic_shell.h"
 
+#include "mir/geometry/rectangles.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface_creation_parameters.h"
 
