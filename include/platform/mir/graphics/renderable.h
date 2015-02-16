@@ -23,6 +23,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <list>
+#include <string>
 
 namespace mir
 {
@@ -69,6 +70,14 @@ public:
     virtual glm::mat4 transformation() const = 0;
 
     virtual bool shaped() const = 0;  // meaning the pixel format has alpha
+
+    /**
+     * Name of this renderable. For regular windows this is the string used
+     * as the titlebar. For other surfaces its purpose is more hidden as a
+     * debugging feature. The string is assumed to be UTF-8 encoded so that
+     * arbitrary Unicode can be represented.
+     */
+    virtual std::string name() const = 0;
 
 protected:
     Renderable() = default;

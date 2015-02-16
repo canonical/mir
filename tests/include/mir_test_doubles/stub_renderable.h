@@ -85,6 +85,10 @@ public:
     {
         return false;
     }
+    std::string name() const override
+    {
+        return "mir::test::doubles::StubRenderable";
+    }
 
 private:
     std::shared_ptr<graphics::Buffer> make_stub_buffer(geometry::Rectangle const& rect)

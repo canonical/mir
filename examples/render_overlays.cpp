@@ -162,6 +162,11 @@ public:
         return false;
     }
 
+    std::string name() const override
+    {
+        return "DemoRenderable";
+    }
+
 private:
     std::shared_ptr<DemoOverlayClient> const client;
     geom::Rectangle const position;

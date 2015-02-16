@@ -95,6 +95,11 @@ public:
         return rect;
     }
 
+    std::string name() const override
+    {
+        return "mir::test::doubles::FakeRenderable";
+    }
+
 private:
     std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;

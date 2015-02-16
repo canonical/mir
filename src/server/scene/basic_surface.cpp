@@ -669,6 +669,7 @@ public:
         glm::mat4 const& transform,
         float alpha,
         bool shaped,
+        std::string const& nam,
         mg::Renderable::ID id)
     : underlying_buffer_stream{stream},
       compositor_buffer{nullptr},
@@ -677,6 +678,7 @@ public:
       shaped_{shaped},
       screen_position_(position),
       transformation_(transform),
+      name_(nam),
       id_(id)
     {
     }
@@ -706,6 +708,10 @@ public:
  
     mg::Renderable::ID id() const override
     { return id_; }
+
+    std::string name() const override
+    { return name_; }
+
 private:
     std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
     std::shared_ptr<mg::Buffer> mutable compositor_buffer;
@@ -714,6 +720,7 @@ private:
     bool const shaped_;
     geom::Rectangle const screen_position_;
     glm::mat4 const transformation_;
+    std::string const name_;
     mg::Renderable::ID const id_; 
 };
 }
@@ -730,6 +737,7 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
             transformation_matrix,
             surface_alpha,
             nonrectangular, 
+            name(),
             this));
 }
 
