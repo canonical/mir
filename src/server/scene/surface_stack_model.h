@@ -47,7 +47,7 @@ public:
 
     virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
 
-    virtual auto surface_at(geometry::Point) -> std::shared_ptr<Surface> = 0;
+    virtual auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> = 0;
 
 protected:
     SurfaceStackModel() = default;
