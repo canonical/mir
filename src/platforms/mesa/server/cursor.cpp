@@ -24,6 +24,9 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/cursor_image.h"
 
+#include <xf86drm.h>
+#include <drm/drm.h>
+
 #include <boost/exception/errinfo_errno.hpp>
 
 #include <stdexcept>
@@ -35,7 +38,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-const uint64_t requested_cursor_size = 64;
+const uint64_t fallback_cursor_size = 64;
 
 // Transforms a relative position within the display bounds described by \a rect which is rotated with \a orientation
 geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement const& vector, MirOrientation orientation)
@@ -53,13 +56,38 @@ geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement con
         return vector;
     }
 }
+// support for older drm headers
+#ifndef DRM_CAP_CURSOR_WIDTH
+#define DRM_CAP_CURSOR_WIDTH            0x8
+#define DRM_CAP_CURSOR_HEIGHT           0x9
+#endif
+
+// In certain combinations of DRI backends and drivers GBM
+// returns a stride size that matches the requested buffers size,
+// instead of the underlying buffer:
+// https://bugs.freedesktop.org/show_bug.cgi?id=89164
+int get_drm_cursor_height(int fd)
+{
+   uint64_t height;
+   if (drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &height) < 0)
+       height = fallback_cursor_size;
+   return int(height);
+}
+
+int get_drm_cursor_width(int fd)
+{
+   uint64_t width;
+   if (drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width) < 0)
+       width = fallback_cursor_size;
+   return int(width);
+}
 }
 
 mgm::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm) :
     buffer(gbm_bo_create(
                 gbm,
-                requested_cursor_size,
-                requested_cursor_size,
+                get_drm_cursor_width(gbm_device_get_fd(gbm)),
+                get_drm_cursor_height(gbm_device_get_fd(gbm)),
                 GBM_FORMAT_ARGB8888,
                 GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE))
 {
