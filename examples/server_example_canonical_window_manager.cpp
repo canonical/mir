@@ -40,6 +40,8 @@ bool resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old
     if (surface && surface->input_area_contains(old_cursor))
     {
         auto const top_left = surface->top_left();
+        auto const old_size = surface->size();
+
         auto anchor = top_left;
 
         for (auto const& corner : {
@@ -47,24 +49,26 @@ bool resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old
             anchor + Displacement{surface->size().width.as_int(), 0},
             anchor + Displacement{0, surface->size().height.as_int()}})
         {
-            if ((old_cursor - anchor).length_squared() < (old_cursor - corner).length_squared())
+            if ((old_cursor - anchor).length_squared() <
+                (old_cursor - corner).length_squared())
+            {
                 anchor = corner;
+            }
         }
 
         bool const left_resize = anchor.x != top_left.x;
         bool const top_resize  = anchor.y != top_left.y;
         int const x_sign = left_resize? -1 : 1;
-        int const y_sign = top_resize? -1 : 1;
+        int const y_sign = top_resize?  -1 : 1;
 
         auto const delta = cursor-old_cursor;
 
-        auto const old_size = surface->size();
         Size const new_size{
             old_size.width.as_int()  + x_sign*delta.dx.as_int(),
             old_size.height.as_int() + y_sign*delta.dy.as_int()};
 
-        Point new_pos = top_left +
-            Displacement{left_resize * delta.dx, top_resize * delta.dy};
+        Point const new_pos = top_left +
+            Displacement{left_resize*delta.dx, top_resize*delta.dy};
 
         surface->resize(new_size);
         surface->move_to(new_pos);
