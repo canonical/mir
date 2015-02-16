@@ -159,6 +159,9 @@ struct ScreenRotationFilter : public mi::EventFilter
 
     void apply_orientation(MirOrientation orientation)
     {
+        // TODO This is too nuts & bolts for the public API.
+        // TODO There should be an interface onto MediatingDisplayChanger that
+        // TODO provides equivalent functionality wrapped nicely
         compositor->stop();
         auto conf = display->configuration();
 
