@@ -97,7 +97,7 @@ struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
     void remove_surface(std::weak_ptr<ms::Surface> const&) override
     {
     }
-    auto surface_at(mir::geometry::Point) -> std::shared_ptr<ms::Surface>
+    auto surface_at(mir::geometry::Point) const -> std::shared_ptr<ms::Surface>
     {
         return std::shared_ptr<ms::Surface>{};
     }
