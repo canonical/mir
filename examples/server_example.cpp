@@ -19,7 +19,6 @@
 #include "server_example_log_options.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
-#include "server_example_fullscreen_placement_strategy.h"
 #include "server_example_display_configuration_policy.h"
 #include "server_example_host_lifecycle_event_listener.h"
 #include "server_example_window_management.h"
@@ -97,6 +96,7 @@ try
     // Create some input filters (we need to keep them or they deactivate)
     auto const quit_filter = me::make_quit_filter_for(server);
     auto const printing_filter = me::make_printing_input_filter_for(server);
+    auto const screen_rotation_filter = me::make_screen_rotation_filter_for(server);
 
     // Provide the command line and run the server
     server.set_command_line(argc, argv);
