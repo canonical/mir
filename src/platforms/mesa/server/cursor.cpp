@@ -62,9 +62,10 @@ geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement con
 #define DRM_CAP_CURSOR_HEIGHT           0x9
 #endif
 
-// GBM seems to have no clue about the size of the created buffer
-// when the flag GBM_BO_USE_CURSOR is used. It blindly returns
-// the size provided on construction.
+// In certain combinations of DRI backends and drivers GBM
+// returns a stride size that matches the requested buffers size,
+// instead of the underlying buffer:
+// https://bugs.freedesktop.org/show_bug.cgi?id=89164
 int get_drm_cursor_height(int fd)
 {
    uint64_t height;
