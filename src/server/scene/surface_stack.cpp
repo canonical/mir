@@ -290,7 +290,7 @@ template <typename Container>
 InReverse<Container> in_reverse(Container& container) { return InReverse<Container>{container}; }
 }
 
-auto ms::SurfaceStack::surface_at(geometry::Point cursor)
+auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
 -> std::shared_ptr<Surface>
 {
     std::lock_guard<decltype(guard)> lg(guard);
