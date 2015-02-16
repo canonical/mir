@@ -64,7 +64,6 @@ public:
 private:
     void add_display(geometry::Rectangle const& area) override;
     void remove_display(geometry::Rectangle const& area) override;
-    void setting_focus_to(std::shared_ptr<scene::Surface> const& surface) override;
 
     std::shared_ptr<WindowManager> const window_manager;
 };
