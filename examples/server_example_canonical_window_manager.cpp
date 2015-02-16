@@ -19,6 +19,7 @@
 #include "server_example_canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_coordinator.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -109,15 +110,20 @@ me::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
 }
 
 me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(Tools* const tools,
-    std::shared_ptr<graphics::Display> const& display,
-    std::shared_ptr<compositor::Compositor> const& compositor) :
-    tools{tools}, display{display}, compositor{compositor}
+    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator) :
+    tools{tools}, surface_coordinator{surface_coordinator}
 {
 }
 
 void me::CanonicalWindowManagerPolicy::click(Point cursor)
 {
-    // TODO need to find the clicked surface & session and set the focus & old_surface
+    if (auto const surface = surface_coordinator->surface_at(cursor))
+    {
+        tools->set_focus_to(tools->info_for(surface).session.lock());
+        surface_coordinator->raise(surface);
+        old_surface = surface;
+    }
+
     old_cursor = cursor;
 }
 

@@ -26,9 +26,6 @@
 
 namespace mir
 {
-namespace graphics { class Display; }
-namespace compositor { class Compositor; }
-
 namespace examples
 {
 struct CanonicalSessionInfo
@@ -64,8 +61,7 @@ public:
 
     CanonicalWindowManagerPolicy(
         Tools* const tools,
-        std::shared_ptr<graphics::Display> const& display,
-        std::shared_ptr<compositor::Compositor> const& compositor);
+        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator);
 
     void click(geometry::Point cursor);
 
@@ -105,8 +101,7 @@ private:
     void toggle(MirSurfaceState state);
 
     Tools* const tools;
-    std::shared_ptr<graphics::Display> const display;
-    std::shared_ptr<compositor::Compositor> const compositor;
+    std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
 
     geometry::Rectangle display_area;
     geometry::Point old_cursor{};
