@@ -119,10 +119,11 @@ static void clear_region(const MirGraphicsRegion *region, const Color *color)
 static void draw_window(Window *win)
 {
     MirGraphicsRegion region;
+    MirBufferStream *bs = mir_surface_get_buffer_stream(win->surface);
 
-    mir_surface_get_graphics_region(win->surface, &region);
+    mir_buffer_stream_get_graphics_region(bs, &region);
     clear_region(&region, &win->fill);
-    mir_surface_swap_buffers_sync(win->surface);
+    mir_buffer_stream_swap_buffers_sync(bs);
 }
 
 static char const *socket_file = NULL;

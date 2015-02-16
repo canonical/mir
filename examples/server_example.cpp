@@ -22,7 +22,7 @@
 #include "server_example_fullscreen_placement_strategy.h"
 #include "server_example_display_configuration_policy.h"
 #include "server_example_host_lifecycle_event_listener.h"
-#include "server_example_window_manager.h"
+#include "server_example_window_management.h"
 #include "server_example_test_client.h"
 
 #include "mir/server.h"

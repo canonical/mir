@@ -352,15 +352,19 @@ void mc::BufferQueue::resize(geometry::Size const& new_size)
     the_properties.size = new_size;
 }
 
-int mc::BufferQueue::buffers_ready_for_compositor() const
+int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
 {
     std::lock_guard<decltype(guard)> lock(guard);
 
-    /*TODO: this api also needs to know the caller user id
-     * as the number of buffers that are truly ready
-     * vary depending on concurrent compositors.
-     */
-    return ready_to_composite_queue.size();
+    int count = ready_to_composite_queue.size();
+    if (!current_buffer_users.empty() && !is_a_current_buffer_user(user_id))
+    {
+        // The virtual front of the ready queue isn't actually in the ready
+        // queue, but is the current_compositor_buffer, so count that too:
+        ++count;
+    }
+
+    return count;
 }
 
 int mc::BufferQueue::buffers_free_for_client() const

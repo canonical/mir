@@ -44,6 +44,7 @@ class DisplayComponentFactory;
 class DisplaySupportProvider;
 class ConfigurableDisplayBuffer;
 class DisplayChangePipe;
+class DisplayDevice;
 
 class Display : public graphics::Display
 {
@@ -85,10 +86,16 @@ private:
     std::unique_ptr<HwcConfiguration> const hwc_config;
     ConfigChangeSubscription const hotplug_subscription;
     DisplayAttribs const primary_attribs; //TODO: could be removed, really only useful in construction
+    DisplayAttribs const external_attribs; //TODO: could be removed, really only useful in construction
     DisplayConfiguration mutable config;
     PbufferGLContext gl_context;
-    std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;
+    std::shared_ptr<DisplayDevice> display_device;
+    std::unique_ptr<ConfigurableDisplayBuffer> const primary_db;
+    std::unique_ptr<ConfigurableDisplayBuffer> mutable external_db;
     std::unique_ptr<DisplayChangePipe> display_change_pipe;
+    std::shared_ptr<GLProgramFactory> const gl_program_factory;
+
+    void update_configuration(std::lock_guard<decltype(configuration_mutex)> const&) const;
 };
 
 }

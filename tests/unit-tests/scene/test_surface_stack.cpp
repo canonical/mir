@@ -227,6 +227,67 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
             SceneElementFor(stub_surface2)));
 }
 
+TEST_F(SurfaceStack, scene_counts_pending_accurately)
+{
+    using namespace testing;
+
+    ms::SurfaceStack stack{report};
+    auto surface = std::make_shared<ms::BasicSurface>(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        std::make_shared<mtd::StubBufferStream>(),
+        std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+    stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    surface->configure(mir_surface_attrib_visibility,
+                       mir_surface_visibility_exposed);
+
+    EXPECT_EQ(0, stack.frames_pending(this));
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    EXPECT_EQ(3, stack.frames_pending(this));
+
+    for (int expect = 3; expect >= 0; --expect)
+    {
+        ASSERT_EQ(expect, stack.frames_pending(this));
+        auto snap = stack.scene_elements_for(compositor_id);
+        for (auto& element : snap)
+        {
+            auto consumed = element->renderable()->buffer();
+        }
+    }
+}
+
+TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
+{  // Regression test for LP: #1418081
+    using namespace testing;
+
+    ms::SurfaceStack stack{report};
+    auto surface = std::make_shared<ms::BasicSurface>(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        std::make_shared<mtd::StubBufferStream>(),
+        std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+
+    stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    surface->configure(mir_surface_attrib_visibility,
+                       mir_surface_visibility_occluded);
+
+    EXPECT_EQ(0, stack.frames_pending(this));
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    EXPECT_EQ(0, stack.frames_pending(this));
+}
+
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
 {
     using namespace testing;

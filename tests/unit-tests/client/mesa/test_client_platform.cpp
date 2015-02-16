@@ -29,6 +29,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <cstring>
+
 namespace mcl = mir::client;
 namespace mclm = mir::client::mesa;
 namespace mtf = mir_test_framework;
@@ -95,9 +97,10 @@ TEST_F(MesaClientPlatformTest, handles_set_gbm_device_platform_operation)
     ASSERT_THAT(response_msg, NotNull());
     auto const response_data = mir_platform_message_get_data(response_msg.get());
     ASSERT_THAT(response_data.size, Eq(sizeof(MirMesaSetGBMDeviceResponse)));
-    auto const response_ptr =
-        reinterpret_cast<MirMesaSetGBMDeviceResponse const*>(response_data.data);
-    EXPECT_THAT(response_ptr->status, Eq(success));
+
+    MirMesaSetGBMDeviceResponse response{-1};
+    std::memcpy(&response, response_data.data, response_data.size);
+    EXPECT_THAT(response.status, Eq(success));
 }
 
 TEST_F(MesaClientPlatformTest, appends_gbm_device_to_platform_package)
@@ -115,6 +118,10 @@ TEST_F(MesaClientPlatformTest, appends_gbm_device_to_platform_package)
 
     platform->populate(pkg);
     EXPECT_THAT(pkg.data_items, Eq(previous_data_count + (sizeof(gbm_dev_dummy) / sizeof(int))));
-    EXPECT_THAT(reinterpret_cast<struct gbm_device*>(pkg.data[previous_data_count]),
-                Eq(gbm_dev_dummy));
+
+    gbm_device* device_in_package{nullptr};
+    std::memcpy(&device_in_package, &pkg.data[previous_data_count],
+                sizeof(device_in_package));
+
+    EXPECT_THAT(device_in_package, Eq(gbm_dev_dummy));
 }
