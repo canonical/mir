@@ -100,12 +100,14 @@ private:
 
     void toggle(MirSurfaceState state);
 
+    void select_surface(std::shared_ptr<scene::Surface> const& surface);
+
     Tools* const tools;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
 
     geometry::Rectangle display_area;
     geometry::Point old_cursor{};
-    std::weak_ptr<scene::Surface> old_surface;
+    std::weak_ptr<scene::Surface> selected_surface;
 };
 }
 }
