@@ -381,10 +381,9 @@ protected:
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::InputManager>    new_input_manager; // currently not used by default
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
-    CachedPtr<MainLoop>    input_event_loop; // currently not used by default
     CachedPtr<input::Platform>    input_platform; // currently not used by default
     std::shared_ptr<SharedLibrary> platform_input_library; // currently not used by default // TODO find different solution for managing platform
-    CachedPtr<MainLoop> event_loop; // currently not used by default
+    CachedPtr<MainLoop> event_reading_loop; // currently not used by default
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
     CachedPtr<input::InputSendObserver> input_send_observer;

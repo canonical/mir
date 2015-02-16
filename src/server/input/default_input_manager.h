@@ -25,6 +25,7 @@
 
 #include <thread>
 #include <mutex>
+#include <atomic>
 
 namespace mir
 {
@@ -49,6 +50,13 @@ private:
     std::shared_ptr<MainLoop> const input_event_loop;
     std::shared_ptr<InputDeviceRegistry> const input_device_registry;
     MainLoopWrapper input_handler_register;
+
+    enum class State
+    {
+        starting, running, stopping, stopped
+    };
+
+    std::atomic<State> thread_state;
 
     std::thread input_thread;
 };

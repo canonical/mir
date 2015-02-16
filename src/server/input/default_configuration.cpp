@@ -408,7 +408,7 @@ mir::DefaultServerConfiguration::the_new_input_manager()
 std::shared_ptr<mir::MainLoop>
 mir::DefaultServerConfiguration::the_event_loop()
 {
-    return event_loop(
+    return event_reading_loop(
         [this]() -> std::shared_ptr<mir::MainLoop>
         {
             return std::make_shared<mir::GLibMainLoop>(the_clock());
