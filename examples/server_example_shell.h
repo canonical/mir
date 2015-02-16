@@ -19,18 +19,18 @@
 #ifndef MIR_EXAMPLES_SHELL_H_
 #define MIR_EXAMPLES_SHELL_H_
 
-#include "mir/geometry/rectangles.h"
 #include "mir/input/event_filter.h"
 #include "mir/shell/shell.h"
 
 #include <memory>
 
 ///\example server_example_shell.h
-/// Demonstrate simple window management strategies
+/// Demonstrate a shell supporting selection of a window manager
 
 namespace mir
 {
 class Server;
+namespace geometry { class Rectangle; }
 
 namespace examples
 {
