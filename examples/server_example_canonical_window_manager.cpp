@@ -35,32 +35,40 @@ namespace
 {
 int const title_bar_height = 10;
 
-bool resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
+bool resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle /*bounds*/)
 {
     if (surface && surface->input_area_contains(old_cursor))
     {
         auto const top_left = surface->top_left();
+        auto anchor = top_left;
 
-        auto const old_displacement = old_cursor - top_left;
-        auto const new_displacement = cursor - top_left;
+        auto const corners = {
+            anchor + as_displacement(surface->size()),
+            anchor + Displacement{surface->size().width.as_int(), 0},
+            anchor + Displacement{0, surface->size().height.as_int()}
+        };
 
-        auto const scale_x = new_displacement.dx.as_float()/std::max(1.0f, old_displacement.dx.as_float());
-        auto const scale_y = new_displacement.dy.as_float()/std::max(1.0f, old_displacement.dy.as_float());
+        for (auto const& corner : corners)
+            if ((old_cursor - anchor).length_squared() < (old_cursor - corner).length_squared())
+                anchor = corner;
 
-        if (scale_x <= 0.0f || scale_y <= 0.0f) return false;
+        bool const left_resize = anchor.x != top_left.x;
+        bool const top_resize  = anchor.y != top_left.y;
+        int const x_sign = left_resize? -1 : 1;
+        int const y_sign = top_resize? -1 : 1;
+
+        auto const delta = cursor-old_cursor;
 
         auto const old_size = surface->size();
-        Size new_size{scale_x*old_size.width, scale_y*old_size.height};
+        Size const new_size{
+            old_size.width.as_int()  + x_sign*delta.dx.as_int(),
+            old_size.height.as_int() + y_sign*delta.dy.as_int()};
 
-        auto const size_limits = as_size(bounds.bottom_right() - top_left);
-
-        if (new_size.width > size_limits.width)
-            new_size.width = size_limits.width;
-
-        if (new_size.height > size_limits.height)
-            new_size.height = size_limits.height;
+        Point new_pos = top_left +
+            Displacement{left_resize * delta.dx, top_resize * delta.dy};
 
         surface->resize(new_size);
+        surface->move_to(new_pos);
 
         return true;
     }
