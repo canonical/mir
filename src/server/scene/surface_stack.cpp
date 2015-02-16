@@ -277,28 +277,34 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
     // TODO: error logging when surface not found
 }
 
+namespace
+{
+template <typename Container>
+struct InReverse {
+    Container& container;
+    auto begin() -> decltype(container.rbegin()) { return container.rbegin(); }
+    auto end() -> decltype(container.rend()) { return container.rend(); }
+};
+
+template <typename Container>
+InReverse<Container> in_reverse(Container& container) { return InReverse<Container>{container}; }
+}
+
 auto ms::SurfaceStack::surface_at(geometry::Point cursor)
 -> std::shared_ptr<Surface>
 {
-    std::shared_ptr<Surface> result;
-
     std::lock_guard<decltype(guard)> lg(guard);
-    for (auto &layer : layers_by_depth)
+    for (auto &layer : in_reverse(layers_by_depth))
     {
-        for (auto const& surface : layer.second)
+        for (auto const& surface : in_reverse(layer.second))
         {
-            if (surface->query(mir_surface_attrib_visibility) ==
-                MirSurfaceVisibility::mir_surface_visibility_exposed)
-            {
-                if (surface->input_bounds().contains(cursor))
-                    result = surface;
-            }
+            if (surface->input_area_contains(cursor))
+                return surface;
         }
     }
 
-    return result;
+    return {};
 }
-
 
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback)
 {
