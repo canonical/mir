@@ -25,6 +25,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/displacement.h"
 #include "mir/scene/null_surface_observer.h"
+#include "mir/events/event_builders.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_input_sender.h"
@@ -46,6 +47,7 @@ namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
+namespace mev = mir::events;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace geom = mir::geometry;
@@ -69,14 +71,6 @@ class MockCloseObserver : public ms::NullSurfaceObserver
 {
 public:
     MOCK_METHOD0(client_surface_close_requested, void());
-};
-
-class StubEventSink : public mir::frontend::EventSink
-{
-public:
-    void handle_event(MirEvent const&) override {}
-    void handle_lifecycle_event(MirLifecycleState) override {}
-    void handle_display_config_change(mir::graphics::DisplayConfiguration const&) override {}
 };
 
 void post_a_frame(ms::BasicSurface& surface)
@@ -690,10 +684,9 @@ TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
         nullptr,
         report};
 
-    MirEvent event;
     EXPECT_CALL(mock_sender, send_event(_,_));
 
-    surface.consume(event);
+    surface.consume(*mev::make_event(mir_prompt_session_state_started));
 }
 
 TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)
