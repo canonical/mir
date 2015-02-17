@@ -37,8 +37,9 @@ void GLTextCache::Image::reserve(int w, int h)
 {
     width = w;
     height = h;
-    int const bpp = (format == GL_ALPHA || format == GL_LUMINANCE) ? 1 :
-                    (format == GL_LUMINANCE_ALPHA) ? 2 : 4;
+    int const bpp = (format == GL_ALPHA || format == GL_LUMINANCE) ? 1
+                  : (format == GL_LUMINANCE_ALPHA) ? 2
+                  : 4;
     stride = (((width * bpp) + align - 1) / align) * align;
     delete[] buf;
     buf = new GLubyte[stride * height];
