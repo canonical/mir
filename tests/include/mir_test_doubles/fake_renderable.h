@@ -95,11 +95,6 @@ public:
         return rect;
     }
 
-    int buffers_ready_for_compositor() const override
-    {
-        return 1;
-    }
-
 private:
     std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;

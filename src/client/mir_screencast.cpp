@@ -29,13 +29,6 @@ namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
 
-namespace
-{
-
-void null_callback(MirScreencast*, void*) {}
-
-}
-
 MirScreencast::MirScreencast(
     geom::Rectangle const& region,
     geom::Size const& size,
@@ -87,16 +80,6 @@ bool MirScreencast::valid()
     return !protobuf_screencast.has_error();
 }
 
-MirSurfaceParameters MirScreencast::get_parameters() const
-{
-    return buffer_stream->get_parameters();
-}
-
-std::shared_ptr<mcl::ClientBuffer> MirScreencast::get_current_buffer()
-{
-    return buffer_stream->get_current_buffer();
-}
-
 MirWaitHandle* MirScreencast::release(
         mir_screencast_callback callback, void* context)
 {
@@ -114,25 +97,6 @@ MirWaitHandle* MirScreencast::release(
     return &release_wait_handle;
 }
 
-MirWaitHandle* MirScreencast::next_buffer(
-    mir_screencast_callback callback, void* context)
-{
-    return buffer_stream->next_buffer([&, callback, context]() {
-        if (callback)
-            callback(this, context);
-    });
-}
-
-EGLNativeWindowType MirScreencast::egl_native_window()
-{
-    return buffer_stream->egl_native_window();
-}
-
-void MirScreencast::request_and_wait_for_next_buffer()
-{
-    next_buffer(null_callback, nullptr)->wait_for_all();
-}
-
 void MirScreencast::request_and_wait_for_configure(MirSurfaceAttrib, int)
 {
 }
@@ -143,7 +107,7 @@ void MirScreencast::screencast_created(
     if (!protobuf_screencast.has_error())
     {
         buffer_stream = buffer_stream_factory->make_consumer_stream(server,
-            protobuf_screencast.buffer_stream());
+            protobuf_screencast.buffer_stream(), "MirScreencast");
     }
 
     callback(this, context);
@@ -155,4 +119,9 @@ void MirScreencast::released(
 {
     callback(this, context);
     release_wait_handle.result_received();
+}
+
+mir::client::ClientBufferStream* MirScreencast::get_buffer_stream()
+{
+    return buffer_stream.get();
 }

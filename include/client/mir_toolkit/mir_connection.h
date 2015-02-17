@@ -178,14 +178,13 @@ void mir_connection_get_available_surface_formats(
  * until this operation finishes.
  *
  * \param [in] connection  The connection
- * \param [in] opcode      The opcode of the operation to perform
  * \param [in] request     The message used for this operation
  * \param [in] callback    The callback to call when the operation finishes
  * \param [in,out] context User data passed to the callback function
  * \return                 A handle that can be passed to mir_wait_for
  */
 MirWaitHandle* mir_connection_platform_operation(
-    MirConnection* connection, unsigned int opcode,
+    MirConnection* connection,
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context);
 
