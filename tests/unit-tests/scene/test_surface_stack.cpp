@@ -899,9 +899,6 @@ TEST_F(SurfaceStack, returns_top_surface_under_cursor)
     stub_surface1->resize({900, 900});
     stub_surface2->resize({500, 200});
     stub_surface3->resize({200, 500});
-    stub_surface1->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
-    stub_surface2->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
-    stub_surface3->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
 
     EXPECT_THAT(stack.surface_at(cursor_over_all),  Eq(stub_surface3));
     EXPECT_THAT(stack.surface_at(cursor_over_12),   Eq(stub_surface2));
@@ -925,9 +922,6 @@ TEST_F(SurfaceStack, returns_top_visible_surface_under_cursor)
     stub_surface2->resize({500, 200});
     stub_surface3->resize({200, 500});
     invisible_stub_surface->resize({999, 999});
-    stub_surface1->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
-    stub_surface2->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
-    stub_surface3->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
 
     EXPECT_THAT(stack.surface_at(cursor_over_all),  Eq(stub_surface3));
     EXPECT_THAT(stack.surface_at(cursor_over_12),   Eq(stub_surface2));
