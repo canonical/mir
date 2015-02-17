@@ -24,6 +24,7 @@ using mir::examples::GLTextCache;
 GLTextCache::Image::Image()
     : buf(nullptr), width(0), stride(0), height(0), bpp(1), align(4)
 {
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &align);
 }
 
 GLTextCache::Image::~Image()
