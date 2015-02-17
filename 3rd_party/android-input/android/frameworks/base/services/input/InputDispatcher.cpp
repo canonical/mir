@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-￼#define LOG_TAG "InputDispatcher"
+#define LOG_TAG "InputDispatcher"
 #define ATRACE_TAG ATRACE_TAG_INPUT
 
 //#define LOG_NDEBUG 0
