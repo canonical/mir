@@ -249,7 +249,7 @@ bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyboardEvent const* eve
             break;
         }
     }
-    else if (action == mir_key_input_event_action_down && scan_code == KEY_F4)
+    else if (action == mir_keyboard_action_down && scan_code == KEY_F4)
     {
         if (auto const session = tools->focussed_application().lock())
         {
