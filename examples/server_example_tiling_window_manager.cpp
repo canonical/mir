@@ -22,6 +22,7 @@
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
+#include <csignal>
 
 namespace me = mir::examples;
 namespace ms = mir::scene;
@@ -125,6 +126,11 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
             surfaces.erase(i);
             break;
         }
+    }
+
+    if (surfaces.empty() && session == tools->focussed_application().lock())
+    {
+        tools->focus_next();
     }
 }
 
@@ -241,6 +247,28 @@ bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* eve
 
         default:
             break;
+        }
+    }
+    else if (action == mir_key_input_event_action_down && scan_code == KEY_F4)
+    {
+        if (auto const session = tools->focussed_application().lock())
+        {
+            switch (modifiers & modifier_mask)
+            {
+            case mir_input_event_modifier_alt:
+                kill(session->process_id(), SIGTERM);
+                return true;
+
+            case mir_input_event_modifier_ctrl:
+                if (auto const surf = session->default_surface())
+                {
+                    surf->request_client_surface_close();
+                    return true;
+                }
+
+            default:
+                break;
+            }
         }
     }
 
