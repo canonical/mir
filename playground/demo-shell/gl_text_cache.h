@@ -22,6 +22,7 @@
 #include <GLES2/gl2.h>  // TODO: Support plain OpenGL too
 #include <string>
 #include <unordered_map>
+#include <functional>
 
 namespace mir { namespace examples {
 
@@ -36,18 +37,21 @@ public:
         // Note: Image is not stored in the cache. It's all on-GPU as tex.
     };
 
+    typedef GLfloat Colour[4];
+
     struct Image
     {
         Image();
         ~Image();
         void reserve(int w, int h);
         GLubyte *buf;
-        int width, stride, height, bpp, align;
+        int width, stride, height, align;
+        GLenum format;  // glTexImage2D format
     };
-    typedef void (*Render)(char const* str, Image& img);
+    typedef std::function<void(char const* str, Image& img)> Render;
 
     ~GLTextCache();
-    Entry const& insert(char const* str, Render const render);
+    Entry const& insert(char const* str, Render const& render);
     void clear();
 
 private:

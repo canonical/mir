@@ -22,7 +22,8 @@
 using mir::examples::GLTextCache;
 
 GLTextCache::Image::Image()
-    : buf(nullptr), width(0), stride(0), height(0), bpp(1), align(4)
+    : buf(nullptr), width(0), stride(0), height(0), align(4),
+      format(GL_LUMINANCE_ALPHA)
 {
     glGetIntegerv(GL_UNPACK_ALIGNMENT, &align);
 }
@@ -36,6 +37,8 @@ void GLTextCache::Image::reserve(int w, int h)
 {
     width = w;
     height = h;
+    int const bpp = (format == GL_ALPHA || format == GL_LUMINANCE) ? 1 :
+                    (format == GL_LUMINANCE_ALPHA) ? 2 : 4;
     stride = (((width * bpp) + align - 1) / align) * align;
     delete[] buf;
     buf = new GLubyte[stride * height];
@@ -60,7 +63,7 @@ bool GLTextCache::Entry::valid() const
 }
 
 GLTextCache::Entry const& GLTextCache::insert(char const* str,
-                                              Render const render)
+                                              Render const& render)
 {
     Entry& entry = map[str];
     if (!entry.valid())
@@ -77,8 +80,8 @@ GLTextCache::Entry const& GLTextCache::insert(char const* str,
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
-                         img.width, img.height, 0, GL_LUMINANCE_ALPHA,
+            glTexImage2D(GL_TEXTURE_2D, 0, img.format,
+                         img.width, img.height, 0, img.format,
                          GL_UNSIGNED_BYTE, img.buf);
         }
     }
