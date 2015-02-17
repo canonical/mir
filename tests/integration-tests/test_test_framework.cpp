@@ -99,7 +99,8 @@ namespace
 unsigned count_fds()
 {
     unsigned count = 0;
-    DIR* dir = opendir("/proc/thread-self/fd");
+    DIR* dir;
+    EXPECT_TRUE(dir = opendir("/proc/self/fd/"));
     while (readdir(dir) != nullptr)
         count++;
     closedir(dir);
