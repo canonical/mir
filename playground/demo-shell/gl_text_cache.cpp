@@ -37,7 +37,7 @@ void GLTextCache::Image::reserve(int w, int h)
     height = h;
     stride = (((width * bpp) + align - 1) / align) * align;
     delete[] buf;
-    buf = new GLubyte[bpp * stride * height];
+    buf = new GLubyte[stride * height];
 }
 
 GLTextCache::~GLTextCache()
