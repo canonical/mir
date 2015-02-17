@@ -96,7 +96,7 @@ void mcl::lttng::RpcReport::file_descriptors_received(
     google::protobuf::Message const& /*response*/,
     std::vector<Fd> const& fds)
 {
-    std::unique_ptr<int[]> handles{new int[fds.size()]};
+    auto handles = std::make_unique<int[]>(fds.size());
     for (unsigned i = 0 ; i < fds.size() ; ++i)
     {
         handles[i] = fds[i];

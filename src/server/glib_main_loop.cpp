@@ -253,8 +253,8 @@ std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::create_alarm(
             catch (...) { handle_exception(std::current_exception()); }
         };
 
-    return std::unique_ptr<mir::time::Alarm>{
-        new AlarmImpl(main_context, clock, callback_with_exception_handling)};
+    return std::make_unique<AlarmImpl>(
+        main_context, clock, callback_with_exception_handling);
 }
 
 void mir::GLibMainLoop::reprocess_all_sources()
