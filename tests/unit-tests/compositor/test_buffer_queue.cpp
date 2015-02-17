@@ -1274,6 +1274,14 @@ TEST_F(BufferQueueTest, double_buffered_client_is_not_blocked_prematurely)
     q.client_release(client_acquire_sync(q));
 
     q.compositor_release(b);
+
+    /*
+     * Update to the original test case; This additional compositor acquire
+     * represents the fixing of LP: #1395581 in the compositor logic.
+     */
+    if (q.buffers_ready_for_compositor(this))
+        q.compositor_release(q.compositor_acquire(this));
+
     auto handle = client_acquire_async(q);
     // With the fix, a buffer will be available instantaneously:
     ASSERT_TRUE(handle->has_acquired_buffer());
@@ -1309,6 +1317,13 @@ TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
         w->release_buffer();
     
         q.compositor_release(b);
+
+        /*
+         * Update to the original test case; This additional compositor acquire
+         * represents the fixing of LP: #1395581 in the compositor logic.
+         */
+        if (q.buffers_ready_for_compositor(this))
+            q.compositor_release(q.compositor_acquire(this));
 
         auto z = client_acquire_async(q);
         ASSERT_TRUE(z->has_acquired_buffer());
