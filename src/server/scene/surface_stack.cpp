@@ -298,8 +298,9 @@ auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
     {
         for (auto const& surface : in_reverse(layer.second))
         {
-            if (surface->input_area_contains(cursor))
-                return surface;
+            if (surface->visible() &&
+                geom::Rectangle{surface->top_left(), surface->size()}.contains(cursor))
+                    return surface;
         }
     }
 
