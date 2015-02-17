@@ -34,6 +34,7 @@ get the source and build it:
 Especially if you want to debug the shell without locking your system this might be a helpful setup:
 
 - \ref setup_kvm_for_mir
+- \ref setup_vmware_for_mir
 
 Using Mir
 ---------
