@@ -38,76 +38,77 @@ int const title_bar_height = 10;
 
 bool resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
-    if (surface && surface->input_area_contains(old_cursor))
+    if (!surface)
+        return false;
+
+    auto const top_left = surface->top_left();
+    auto const old_size = surface->size();
+
+    if (!surface->visible() || !Rectangle{top_left, old_size}.contains(cursor))
+        return false;
+
+    auto anchor = top_left;
+
+    for (auto const& corner : {
+        anchor + as_displacement(surface->size()),
+        anchor + Displacement{surface->size().width.as_int(), 0},
+        anchor + Displacement{0, surface->size().height.as_int()}})
     {
-        auto const top_left = surface->top_left();
-        auto const old_size = surface->size();
-
-        auto anchor = top_left;
-
-        for (auto const& corner : {
-            anchor + as_displacement(surface->size()),
-            anchor + Displacement{surface->size().width.as_int(), 0},
-            anchor + Displacement{0, surface->size().height.as_int()}})
+        if ((old_cursor - anchor).length_squared() <
+            (old_cursor - corner).length_squared())
         {
-            if ((old_cursor - anchor).length_squared() <
-                (old_cursor - corner).length_squared())
-            {
-                anchor = corner;
-            }
+            anchor = corner;
         }
-
-        bool const left_resize = anchor.x != top_left.x;
-        bool const top_resize  = anchor.y != top_left.y;
-        int const x_sign = left_resize? -1 : 1;
-        int const y_sign = top_resize?  -1 : 1;
-
-        auto const delta = cursor-old_cursor;
-
-        Size new_size{
-            old_size.width.as_int()  + x_sign*delta.dx.as_int(),
-            old_size.height.as_int() + y_sign*delta.dy.as_int()};
-
-        Point new_pos = top_left +
-            Displacement{left_resize*delta.dx, top_resize*delta.dy};
-
-        if (left_resize)
-        {
-            if (new_pos.x < bounds.top_left.x)
-            {
-                new_size.width = Width{new_size.width.as_int() + (new_pos.x - bounds.top_left.x).as_int()};
-                new_pos.x = bounds.top_left.x;
-            }
-        }
-        else
-        {
-            auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
-            if (to_bottom_right.dx < DeltaX{0})
-                new_size.width = Width{new_size.width.as_int() + to_bottom_right.dx.as_int()};
-        }
-
-        if (top_resize)
-        {
-            if (new_pos.y < bounds.top_left.y)
-            {
-                new_size.height = Height{new_size.height.as_int() + (new_pos.y - bounds.top_left.y).as_int()};
-                new_pos.y = bounds.top_left.y;
-            }
-        }
-        else
-        {
-            auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
-            if (to_bottom_right.dy < DeltaY{0})
-                new_size.height = Height{new_size.height.as_int() + to_bottom_right.dy.as_int()};
-        }
-
-        surface->resize(new_size);
-        surface->move_to(new_pos);
-
-        return true;
     }
 
-    return false;
+    bool const left_resize = anchor.x != top_left.x;
+    bool const top_resize  = anchor.y != top_left.y;
+    int const x_sign = left_resize? -1 : 1;
+    int const y_sign = top_resize?  -1 : 1;
+
+    auto const delta = cursor-old_cursor;
+
+    Size new_size{
+        old_size.width.as_int()  + x_sign*delta.dx.as_int(),
+        old_size.height.as_int() + y_sign*delta.dy.as_int()};
+
+    Point new_pos = top_left +
+        Displacement{left_resize*delta.dx, top_resize*delta.dy};
+
+    if (left_resize)
+    {
+        if (new_pos.x < bounds.top_left.x)
+        {
+            new_size.width = Width{new_size.width.as_int() + (new_pos.x - bounds.top_left.x).as_int()};
+            new_pos.x = bounds.top_left.x;
+        }
+    }
+    else
+    {
+        auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
+        if (to_bottom_right.dx < DeltaX{0})
+            new_size.width = Width{new_size.width.as_int() + to_bottom_right.dx.as_int()};
+    }
+
+    if (top_resize)
+    {
+        if (new_pos.y < bounds.top_left.y)
+        {
+            new_size.height = Height{new_size.height.as_int() + (new_pos.y - bounds.top_left.y).as_int()};
+            new_pos.y = bounds.top_left.y;
+        }
+    }
+    else
+    {
+        auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
+        if (to_bottom_right.dy < DeltaY{0})
+            new_size.height = Height{new_size.height.as_int() + to_bottom_right.dy.as_int()};
+    }
+
+    surface->resize(new_size);
+    surface->move_to(new_pos);
+
+    return true;
 }
 
 bool drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
