@@ -20,6 +20,7 @@
 #define MIR_EXAMPLES_DEMO_RENDERER_H_
 
 #include "mir/compositor/gl_renderer.h"
+#include "stub_gl_text_cache.h"
 
 #include <unordered_set>
 
@@ -81,6 +82,8 @@ private:
     Program inverse_program, contrast_program;
     
     mutable std::unordered_set<graphics::Renderable::ID> decoration_skip_list;
+
+    mutable StubGLTextCache text_cache;
 };
 
 } // namespace examples
