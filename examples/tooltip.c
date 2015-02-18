@@ -24,6 +24,9 @@
 #include <unistd.h>
 #include <GLES2/gl2.h>
 
+///\example tooltip.c
+/// A simple orange client surface with a simple grey tooltip
+
 static MirPixelFormat select_pixel_format(MirConnection* connection);
 static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* const parent, const MirPixelFormat format);
 
