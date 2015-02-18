@@ -349,10 +349,10 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
 
     auto& title_text = primitives[n++];
     title_text.tex_id = title.tex;
-    title_text.vertices[0] = {{title_left,  title_top, 0.0f}, {1.0f, 0.0f}};
+    title_text.vertices[0] = {{title_left,  title_top, 0.0f}, {0.0f, 0.0f}};
     title_text.vertices[1] = {{title_right, title_top, 0.0f}, {1.0f, 0.0f}};
     title_text.vertices[2] = {{title_right, title_bot, 0.0f}, {1.0f, 1.0f}};
-    title_text.vertices[3] = {{title_left,  title_bot, 0.0f}, {1.0f, 1.0f}};
+    title_text.vertices[3] = {{title_left,  title_bot, 0.0f}, {0.0f, 1.0f}};
 }
 
 bool DemoRenderer::would_embellish(

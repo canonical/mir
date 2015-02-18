@@ -24,9 +24,9 @@ using mir::examples::StubGLTextCache;
 void StubGLTextCache::render(char const* str, Image& img)
 {
     int const char_width = 8;
-    int const char_height = 12;
+    int const char_height = 16;
     int const char_space = 2;
-    int const tex_height = 16;
+    int const tex_height = 20;
     int const len = strlen(str);
     int const top = (tex_height - char_height) / 2;
 
