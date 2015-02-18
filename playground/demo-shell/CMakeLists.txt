@@ -6,8 +6,8 @@ add_library(demo-shell STATIC
   demo_compositor.cpp
   demo_renderer.cpp
   window_manager.cpp
-  gl_text_cache.cpp
-  stub_gl_text_cache.cpp
+  gltext.cpp
+  gltext_stub_renderer.cpp
 )
 
 mir_add_wrapped_executable(mir_proving_server

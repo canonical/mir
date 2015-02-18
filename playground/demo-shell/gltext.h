@@ -16,17 +16,34 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_GL_TEXT_CACHE_
-#define MIR_EXAMPLES_GL_TEXT_CACHE_
+#ifndef MIR_EXAMPLES_GLTEXT
+#define MIR_EXAMPLES_GLTEXT
 
 #include <GLES2/gl2.h>  // TODO: Support plain OpenGL too
 #include <string>
 #include <unordered_map>
-#include <functional>
+#include <memory>
 
-namespace mir { namespace examples {
+namespace mir { namespace examples { namespace gltext {
 
-class GLTextCache
+struct Image
+{
+    Image();
+    ~Image();
+    void reserve(int w, int h);
+    GLubyte *buf;
+    int width, stride, height, align;
+    GLenum format;  // glTexImage2D format
+};
+
+class Renderer
+{
+public:
+    virtual ~Renderer();
+    virtual void render(char const* str, Image& img) = 0;
+};
+
+class Cache
 {
 public:
     struct Entry
@@ -37,30 +54,19 @@ public:
         bool used = false;
     };
 
-    virtual ~GLTextCache();
+    explicit Cache(std::shared_ptr<Renderer> const&);
+    ~Cache();
     Entry const& get(char const* str);
     void clear();
     void mark_all_unused();
     void drop_unused();
 
-protected:
-    struct Image
-    {
-        Image();
-        ~Image();
-        void reserve(int w, int h);
-        GLubyte *buf;
-        int width, stride, height, align;
-        GLenum format;  // glTexImage2D format
-    };
-
-    virtual void render(char const* str, Image& img) = 0;
-
 private:
     typedef std::unordered_map<std::string, Entry> Map;
     Map map;
+    std::shared_ptr<Renderer> const renderer;
 };
 
-} } // namespace mir::examples
+} } } // namespace mir::examples::gltext
 
-#endif // MIR_EXAMPLES_GL_TEXT_CACHE_
+#endif // MIR_EXAMPLES_GLTEXT

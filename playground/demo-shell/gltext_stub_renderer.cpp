@@ -16,12 +16,12 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "stub_gl_text_cache.h"
+#include "gltext_stub_renderer.h"
 #include <cstring>
 
-using mir::examples::StubGLTextCache;
+using namespace mir::examples::gltext;
 
-void StubGLTextCache::render(char const* str, Image& img)
+void StubRenderer::render(char const* str, Image& img)
 {
     int const char_width = 8;
     int const char_height = 16;

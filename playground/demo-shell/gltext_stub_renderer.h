@@ -16,19 +16,19 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_STUB_GL_TEXT_CACHE_
-#define MIR_EXAMPLES_STUB_GL_TEXT_CACHE_
+#ifndef MIR_EXAMPLES_GLTEXT_STUB_RENDERER_
+#define MIR_EXAMPLES_GLTEXT_STUB_RENDERER_
 
-#include "gl_text_cache.h"
+#include "gltext.h"
 
-namespace mir { namespace examples {
+namespace mir { namespace examples { namespace gltext {
 
-class StubGLTextCache : public GLTextCache
+class StubRenderer : public Renderer
 {
 protected:
     void render(char const* str, Image& img) override;
 };
 
-} } // namespace mir::examples
+} } } // namespace mir::examples::gltext
 
-#endif // MIR_EXAMPLES_STUB_GL_TEXT_CACHE_
+#endif // MIR_EXAMPLES_GLTEXT_STUB_RENDERER

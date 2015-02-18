@@ -20,7 +20,7 @@
 #define MIR_EXAMPLES_DEMO_RENDERER_H_
 
 #include "mir/compositor/gl_renderer.h"
-#include "stub_gl_text_cache.h"
+#include "gltext.h"
 
 #include <unordered_set>
 
@@ -83,7 +83,7 @@ private:
     
     mutable std::unordered_set<graphics::Renderable::ID> decoration_skip_list;
 
-    mutable StubGLTextCache title_cache;
+    mutable gltext::Cache title_cache;
 };
 
 } // namespace examples
