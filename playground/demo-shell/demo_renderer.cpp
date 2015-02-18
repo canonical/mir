@@ -344,28 +344,26 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
     titlebar.vertices[3] = {{inleft,  top,  0.0f}, {1.0f, 1.0f}};
 
     auto str = title_cache.get(renderable.name().c_str());
-    GLfloat vin = titlebar_height / 5;
-    GLfloat title_top = htop + vin;
-    GLfloat title_bot = top - vin;
-    GLfloat title_height = title_bot - title_top;
-    GLfloat title_scale = title_height / str.height;
-    GLfloat title_left = inleft;
-    GLfloat title_right = title_left + title_scale * str.width;
-    if (title_left < inleft)
-        title_left = inleft;
-    GLfloat title_tex_right = 1.0f;
-    if (title_right > inright)
+    GLfloat text_vin = titlebar_height / 5;
+    GLfloat text_top = htop + text_vin;
+    GLfloat text_bot = top - text_vin;
+    GLfloat text_height = text_bot - text_top;
+    GLfloat text_scale = text_height / str.height;
+    GLfloat text_left = inleft;
+    GLfloat text_right = text_left + text_scale * str.width;
+    GLfloat text_u = 1.0f;
+    if (text_right > inright)  // Title too long for window
     {
-        title_tex_right = (inright - title_left) / (title_right - title_left);
-        title_right = inright;
+        text_u = (inright - text_left) / (text_right - text_left);
+        text_right = inright;
     }
 
-    auto& title_prim = primitives[n++];
-    title_prim.tex_id = str.tex;
-    title_prim.vertices[0] = {{title_left,  title_top, 0.0f}, {0.0f, 0.0f}};
-    title_prim.vertices[1] = {{title_right, title_top, 0.0f}, {title_tex_right, 0.0f}};
-    title_prim.vertices[2] = {{title_right, title_bot, 0.0f}, {title_tex_right, 1.0f}};
-    title_prim.vertices[3] = {{title_left,  title_bot, 0.0f}, {0.0f, 1.0f}};
+    auto& text_prim = primitives[n++];
+    text_prim.tex_id = str.tex;
+    text_prim.vertices[0] = {{text_left,  text_top, 0.0f}, {0.0f, 0.0f}};
+    text_prim.vertices[1] = {{text_right, text_top, 0.0f}, {text_u, 0.0f}};
+    text_prim.vertices[2] = {{text_right, text_bot, 0.0f}, {text_u, 1.0f}};
+    text_prim.vertices[3] = {{text_left,  text_bot, 0.0f}, {0.0f, 1.0f}};
 }
 
 bool DemoRenderer::would_embellish(
