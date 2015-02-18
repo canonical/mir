@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -132,11 +132,19 @@ mc::BufferQueue::BufferQueue(
     if (nbuffers == 1)
         free_buffers.push_back(current_compositor_buffer);
 
+    // A lock_guard will be created by the policy dispatcher invoking the given "lock" lambda
+    // before it acquires any internal locks of its own. Since we use a unique_lock
+    // object the guard will be automatically unlocked and hence why we use an empty "unlock" lambda.
     framedrop_policy = policy_provider.create_policy([this]
     {
-       std::unique_lock<decltype(guard)> lock{guard};
-       drop_frame(std::move(lock));
-    });
+        // We ignore any ongoing snapshotting as it could lead to deadlock.
+        // In order to wait the guard_lock needs to be released; a BufferQueue::release
+        // call can sneak in at that time from a different thread which
+        // can invoke framedrop_policy methods
+        drop_frame(std::move(guard_lock), ignore_snapshot);
+    },
+    [this] { guard_lock = std::move(std::unique_lock<decltype(guard)>{guard}); },
+    []{});
 }
 
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
@@ -169,7 +177,7 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
     /* Last resort, drop oldest buffer from the ready queue */
     if (frame_dropping_enabled)
     {
-        drop_frame(std::move(lock));
+        drop_frame(std::move(lock), wait_for_snapshot);
         return;
     }
 
@@ -323,7 +331,7 @@ void mc::BufferQueue::force_requests_to_complete()
         {
             free_buffers.push_back(pop(ready_to_composite_queue));
         }
-        give_buffer_to_client(buffer, std::move(lock));
+        give_buffer_to_client(buffer, std::move(lock), ignore_snapshot);
     }
 }
 
@@ -365,6 +373,14 @@ void mc::BufferQueue::give_buffer_to_client(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
+    give_buffer_to_client(buffer, std::move(lock), wait_for_snapshot);
+}
+
+void mc::BufferQueue::give_buffer_to_client(
+    mg::Buffer* buffer,
+    std::unique_lock<std::mutex> lock,
+    SnapshotWait wait_type)
+{
     /* Clears callback */
     auto give_to_client_cb = std::move(pending_client_notifications.front());
     pending_client_notifications.pop_front();
@@ -383,7 +399,7 @@ void mc::BufferQueue::give_buffer_to_client(
     }
 
     /* Don't give to the client just yet if there's a pending snapshot */
-    if (!resize_buffer && contains(buffer, pending_snapshots))
+    if (wait_type == wait_for_snapshot && !resize_buffer && contains(buffer, pending_snapshots))
     {
         snapshot_released.wait(lock,
             [&]{ return !contains(buffer, pending_snapshots); });
@@ -446,7 +462,7 @@ void mc::BufferQueue::release(
         free_buffers.push_back(buffer);
 }
 
-void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
+void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock, SnapshotWait wait_type)
 {
     // Make sure there is a client waiting for the frame before we drop it.
     // If not, then there's nothing to do.
@@ -498,7 +514,7 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
         buffer_to_give = buffer.get();
     }
         
-    give_buffer_to_client(buffer_to_give, std::move(lock));
+    give_buffer_to_client(buffer_to_give, std::move(lock), wait_type);
 }
 
 void mc::BufferQueue::drop_old_buffers()
