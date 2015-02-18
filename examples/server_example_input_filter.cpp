@@ -20,12 +20,19 @@
 
 #include "mir/server.h"
 
+#include "mir/compositor/compositor.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
+
+#include <linux/input.h>
 
 #include <iostream>
 
 namespace me = mir::examples;
+namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace mi = mir::input;
 
 ///\example server_example_input_filter.cpp
@@ -90,6 +97,86 @@ struct PrintingEventFilter : public mi::EventFilter
         return false;
     }
 };
+
+struct ScreenRotationFilter : public mi::EventFilter
+{
+    bool handle(MirEvent const& event) override
+    {
+        if (mir_event_get_type(&event) != mir_event_type_input)
+            return false;
+
+        auto const input_event = mir_event_get_input_event(&event);
+
+        if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
+            return false;
+
+        return handle_key_event(mir_input_event_get_key_input_event(input_event));
+    }
+
+    bool handle_key_event(MirKeyInputEvent const* event)
+    {
+        static const int modifier_mask =
+            mir_input_event_modifier_alt |
+            mir_input_event_modifier_shift |
+            mir_input_event_modifier_sym |
+            mir_input_event_modifier_ctrl |
+            mir_input_event_modifier_meta;
+
+        auto const action = mir_key_input_event_get_action(event);
+        auto const scan_code = mir_key_input_event_get_scan_code(event);
+        auto const modifiers = mir_key_input_event_get_modifiers(event) & modifier_mask;
+
+        if (action == mir_key_input_event_action_down &&
+            modifiers == (mir_input_event_modifier_alt | mir_input_event_modifier_ctrl))
+        {
+            switch (scan_code)
+            {
+            case KEY_UP:
+                apply_orientation(mir_orientation_normal);
+                break;
+
+            case KEY_DOWN:
+                apply_orientation(mir_orientation_inverted);
+                break;
+
+            case KEY_LEFT:
+                apply_orientation(mir_orientation_left);
+                break;
+
+            case KEY_RIGHT:
+                apply_orientation(mir_orientation_right);
+                break;
+
+            default:
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    void apply_orientation(MirOrientation orientation)
+    {
+        // TODO This is too nuts & bolts for the public API.
+        // TODO There should be an interface onto MediatingDisplayChanger that
+        // TODO provides equivalent functionality wrapped nicely
+        compositor->stop();
+        auto conf = display->configuration();
+
+        conf->for_each_output([orientation](mg::UserDisplayConfigurationOutput& output)
+            {
+                output.orientation = orientation;
+            });
+
+        display->configure(*conf);
+        compositor->start();
+    }
+
+    std::shared_ptr<mg::Display> display;
+    std::shared_ptr<mc::Compositor> compositor;
+};
 }
 
 auto me::make_printing_input_filter_for(mir::Server& server)
@@ -110,5 +197,29 @@ auto me::make_printing_input_filter_for(mir::Server& server)
         });
 
     return printing_filter;
+}
+
+auto me::make_screen_rotation_filter_for(mir::Server& server)
+-> std::shared_ptr<input::EventFilter>
+{
+    static const char* const screen_rotation = "screen-rotation";
+    static const char* const screen_rotation_descr = "Rotate screen on Ctrl-Alt-<Arrow>";
+
+    server.add_configuration_option(screen_rotation, screen_rotation_descr, mir::OptionType::null);
+
+    auto const screen_rotation_filter = std::make_shared<ScreenRotationFilter>();
+
+    server.add_init_callback([screen_rotation_filter, &server]
+        {
+            const auto options = server.get_options();
+            if (options->is_set(screen_rotation))
+            {
+                screen_rotation_filter->display = server.the_display();
+                screen_rotation_filter->compositor = server.the_compositor();
+                server.the_composite_event_filter()->prepend(screen_rotation_filter);
+            }
+        });
+
+    return screen_rotation_filter;
 }
 

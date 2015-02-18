@@ -66,8 +66,6 @@ struct MockBuffer : public graphics::Buffer
     MOCK_METHOD0(gl_bind_to_texture, void());
     MOCK_CONST_METHOD0(id, graphics::BufferID());
 
-    MOCK_CONST_METHOD0(can_bypass, bool());
-    
     MOCK_METHOD2(write, void(unsigned char const*, size_t));
 };
 

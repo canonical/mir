@@ -54,8 +54,6 @@ public:
     geometry::Stride stride() const override;
     MirPixelFormat pixel_format() const override;
     void gl_bind_to_texture() override;
-    bool can_bypass() const override;
-
     //note, you will get the native representation of an android buffer, including
     //the fences associated with the buffer. You must close these fences
     std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
