@@ -31,7 +31,6 @@ class GLTextCache
 public:
     struct Entry
     {
-        ~Entry();
         bool valid() const;
         GLuint tex = 0;
         int width = 0, height = 0;
