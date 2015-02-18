@@ -205,7 +205,7 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
         if (bypass_it != renderable_list.rend())
         {
             auto bypass_buf = (*bypass_it)->buffer();
-            if (bypass_buf->can_bypass() &&
+            if ((bypass_buf->native_buffer_handle()->flags & mir_buffer_flag_can_scanout) &&
                 bypass_buf->size() == geom::Size{fb_width,fb_height})
             {
                 return flip(bypass_buf);

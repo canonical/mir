@@ -85,11 +85,6 @@ std::shared_ptr<mg::NativeBuffer> mc::TemporaryBuffer::native_buffer_handle() co
     return buffer->native_buffer_handle();
 }
 
-bool mc::TemporaryBuffer::can_bypass() const
-{
-    return buffer->can_bypass();
-}
-
 void mc::TemporaryBuffer::write(unsigned char const*, size_t)
 {
     BOOST_THROW_EXCEPTION(

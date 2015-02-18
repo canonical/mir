@@ -100,8 +100,6 @@ public:
     virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override { return native_buffer; }
     virtual void gl_bind_to_texture() override {}
 
-    virtual bool can_bypass() const override { return true; }
-    
     void write(unsigned char const* pixels, size_t len) override
     {
         if (pixels) written_pixels.assign(pixels, pixels + len);

@@ -81,8 +81,6 @@ public:
 
         ON_CALL(*mock_bypassable_buffer, size())
             .WillByDefault(Return(display_area.size));
-        ON_CALL(*mock_bypassable_buffer, can_bypass())
-            .WillByDefault(Return(true));
         ON_CALL(*mock_bypassable_buffer, native_buffer_handle())
             .WillByDefault(Return(stub_gbm_native_buffer));
         fake_bypassable_renderable->set_buffer(mock_bypassable_buffer);
@@ -171,8 +169,8 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
 {  // Another regression test for LP: #1398296
     auto fullscreen = std::make_shared<FakeRenderable>(display_area);
     auto nonbypassable = std::make_shared<testing::NiceMock<MockBuffer>>();
-    ON_CALL(*nonbypassable, can_bypass())
-        .WillByDefault(Return(true));  // It has the scanout flag set
+    ON_CALL(*nonbypassable, native_buffer_handle())
+        .WillByDefault(Return(stub_gbm_native_buffer));
     ON_CALL(*nonbypassable, size())
         .WillByDefault(Return(mir::geometry::Size{12,34}));
 
@@ -394,8 +392,13 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
 {
     auto fullscreen = std::make_shared<FakeRenderable>(display_area);
     auto nonbypassable = std::make_shared<testing::NiceMock<MockBuffer>>();
-    ON_CALL(*nonbypassable, can_bypass())
-        .WillByDefault(Return(false));
+    auto nonbypassable_gbm_native_buffer =
+        std::make_shared<StubGBMNativeBuffer>(display_area.size, false);
+    ON_CALL(*nonbypassable, native_buffer_handle())
+        .WillByDefault(Return(nonbypassable_gbm_native_buffer));
+    ON_CALL(*nonbypassable, size())
+        .WillByDefault(Return(display_area.size));
+
     fullscreen->set_buffer(nonbypassable);
     graphics::RenderableList list{fullscreen};
 

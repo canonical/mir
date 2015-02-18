@@ -1,4 +1,4 @@
-MIRPLATFORM_6 {
+MIRPLATFORM_7 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -8,7 +8,6 @@ MIRPLATFORM_6 {
     mir::fatal_error_except*;
     mir::graphics::BufferBasic::BufferBasic*;
     mir::graphics::Buffer::Buffer*;
-    mir::graphics::Buffer::can_bypass*;
     mir::graphics::Buffer::gl_bind_to_texture*;
     mir::graphics::Buffer::id*;
     mir::graphics::Buffer::native_buffer_handle*;
@@ -103,6 +102,7 @@ MIRPLATFORM_6 {
     mir::graphics::Renderable::transformation*;
     mir::graphics::UserDisplayConfigurationOutput::extents*;
     mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
+    mir::options::arw_server_socket_opt*;
     mir::options::compositor_report_opt*;
     mir::options::Configuration::?Configuration*;
     mir::options::Configuration::Configuration*;
@@ -258,11 +258,3 @@ MIRPLATFORM_6 {
   };
  local: *;
 };
-
-MIRPLATFORM_6.1
-{
-global:
-  extern "C++" {
-    mir::options::arw_server_socket_opt*;
-  };
-} MIRPLATFORM_6;
