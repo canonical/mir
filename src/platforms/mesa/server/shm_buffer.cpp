@@ -87,11 +87,6 @@ std::shared_ptr<MirNativeBuffer> mgm::ShmBuffer::native_buffer_handle() const
     return native_buffer;
 }
 
-bool mgm::ShmBuffer::can_bypass() const
-{
-    return false;
-}
-
 void mgm::ShmBuffer::write(unsigned char const* data, size_t data_size)
 {
     if (data_size != stride_.as_uint32_t()*size().height.as_uint32_t())
