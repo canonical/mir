@@ -204,7 +204,7 @@ std::future<void> mt::BasicThreadPool::run(WorkerThread* worker_thread,
     if (worker_thread == nullptr)
     {
         // No idle threads available so create a new one
-        std::unique_ptr<WorkerThread> new_worker_thread{new WorkerThread{id}};
+        auto new_worker_thread = std::make_unique<WorkerThread>(id);
         threads.push_back(std::move(new_worker_thread));
         worker_thread = threads.back().get();
     }
