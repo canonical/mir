@@ -47,8 +47,6 @@ public:
     MirPixelFormat pixel_format() const override;
     std::shared_ptr<MirNativeBuffer> native_buffer_handle() const override;
     void gl_bind_to_texture() override;
-    bool can_bypass() const override;
-
     void write(unsigned char const* data, size_t size) override;
 
 private:

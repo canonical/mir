@@ -18,6 +18,7 @@
 
 #include "mir/dispatch/simple_dispatch_thread.h"
 #include "mir/dispatch/dispatchable.h"
+#include "utils.h"
 
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -29,49 +30,6 @@ namespace md = mir::dispatch;
 
 namespace
 {
-md::FdEvents epoll_to_fd_event(epoll_event const& event)
-{
-    md::FdEvents val{0};
-    if (event.events & EPOLLIN)
-    {
-        val |= md::FdEvent::readable;
-    }
-    if (event.events & EPOLLOUT)
-    {
-        val = md::FdEvent::writable;
-    }
-    if (event.events & (EPOLLHUP | EPOLLRDHUP))
-    {
-        val |= md::FdEvent::remote_closed;
-    }
-    if (event.events & EPOLLERR)
-    {
-        val = md::FdEvent::error;
-    }
-    return val;
-}
-
-int fd_event_to_epoll(md::FdEvents const& event)
-{
-    int epoll_value{0};
-    if (event & md::FdEvent::readable)
-    {
-        epoll_value |= EPOLLIN;
-    }
-    if (event & md::FdEvent::writable)
-    {
-        epoll_value |= EPOLLOUT;
-    }
-    if (event & md::FdEvent::remote_closed)
-    {
-        epoll_value |= EPOLLRDHUP | EPOLLHUP;
-    }
-    if (event & md::FdEvent::error)
-    {
-        epoll_value |= EPOLLERR;
-    }
-    return epoll_value;
-}
 
 void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee, mir::Fd shutdown_fd)
 {
@@ -97,7 +55,7 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
 
     // Ask the dispatchee what it events it's interested in...
     event.data.u32 = fd_names::dispatchee_fd;
-    event.events = fd_event_to_epoll(dispatchee->relevant_events());
+    event.events = md::fd_event_to_epoll(dispatchee->relevant_events());
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, dispatchee->watch_fd(), &event);
 
     for (;;)
@@ -105,7 +63,7 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
         epoll_wait(epoll_fd, &event, 1, -1);
         if (event.data.u32 == fd_names::dispatchee_fd)
         {
-            if (!dispatchee->dispatch(epoll_to_fd_event(event)))
+            if (!dispatchee->dispatch(md::epoll_to_fd_event(event)))
             {
                 // No need to keep looping, the Dispatchable's not going to produce any more events.
                 return;
