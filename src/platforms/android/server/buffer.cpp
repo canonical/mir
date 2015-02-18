@@ -70,11 +70,6 @@ MirPixelFormat mga::Buffer::pixel_format() const
     return mga::to_mir_format(anwb->format);
 }
 
-bool mga::Buffer::can_bypass() const
-{
-    return false;
-}
-
 void mga::Buffer::gl_bind_to_texture()
 {
     std::unique_lock<std::mutex> lk(content_lock);
