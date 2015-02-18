@@ -340,19 +340,25 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
     titlebar.vertices[3] = {{inleft,  top,  0.0f}, {1.0f, 1.0f}};
 
     auto title = text_cache.get(renderable.name().c_str());
-    GLfloat title_left = mid - title.width / 2;
+    GLfloat title_left = inleft;
     GLfloat title_right = title_left + title.width;
-    if (title_left < inleft) title_left = inleft;
-    if (title_right > inright) title_right = inright;
+    if (title_left < inleft)
+        title_left = inleft;
+    GLfloat title_tex_right = 1.0f;
+    if (title_right > inright)
+    {
+        title_right = inright;
+        title_tex_right = (title_right - title_left) / title.width;
+    }
     GLfloat title_top = htop + round((titlebar_height - title.height) / 2);
     GLfloat title_bot = title_top + title.height;
 
-    auto& title_text = primitives[n++];
-    title_text.tex_id = title.tex;
-    title_text.vertices[0] = {{title_left,  title_top, 0.0f}, {0.0f, 0.0f}};
-    title_text.vertices[1] = {{title_right, title_top, 0.0f}, {1.0f, 0.0f}};
-    title_text.vertices[2] = {{title_right, title_bot, 0.0f}, {1.0f, 1.0f}};
-    title_text.vertices[3] = {{title_left,  title_bot, 0.0f}, {0.0f, 1.0f}};
+    auto& title_prim = primitives[n++];
+    title_prim.tex_id = title.tex;
+    title_prim.vertices[0] = {{title_left,  title_top, 0.0f}, {0.0f, 0.0f}};
+    title_prim.vertices[1] = {{title_right, title_top, 0.0f}, {title_tex_right, 0.0f}};
+    title_prim.vertices[2] = {{title_right, title_bot, 0.0f}, {title_tex_right, 1.0f}};
+    title_prim.vertices[3] = {{title_left,  title_bot, 0.0f}, {0.0f, 1.0f}};
 }
 
 bool DemoRenderer::would_embellish(
