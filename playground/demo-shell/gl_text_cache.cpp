@@ -52,15 +52,35 @@ GLTextCache::~GLTextCache()
 
 void GLTextCache::clear()
 {
-    for (auto& e : map)
-        glDeleteTextures(1, &e.second.tex);
-
     map.clear();
+}
+
+void GLTextCache::mark_all_unused()
+{
+    for (auto& e : map)
+        e.second.used = false;
+}
+
+void GLTextCache::drop_unused()
+{
+    for (auto e = map.begin(); e != map.end();)
+    {
+        if (!e->second.used)
+            e = map.erase(e);
+        else
+            e++;
+    }
 }
 
 bool GLTextCache::Entry::valid() const
 {
     return width > 0 && height > 0;
+}
+
+GLTextCache::Entry::~Entry()
+{
+    if (valid())
+        glDeleteTextures(1, &tex);
 }
 
 GLTextCache::Entry const& GLTextCache::get(char const* str)
@@ -72,6 +92,7 @@ GLTextCache::Entry const& GLTextCache::get(char const* str)
         render(str, img);
         if (img.buf)
         {
+            entry.used = true;
             entry.width = img.width;
             entry.height = img.height;
             glGenTextures(1, &entry.tex);

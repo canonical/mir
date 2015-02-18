@@ -31,15 +31,18 @@ class GLTextCache
 public:
     struct Entry
     {
+        ~Entry();
         bool valid() const;
         GLuint tex = 0;
         int width = 0, height = 0;
-        // Note: Image is not stored in the cache. It's all on-GPU as tex.
+        bool used = false;
     };
 
     virtual ~GLTextCache();
     Entry const& get(char const* str);
     void clear();
+    void mark_all_unused();
+    void drop_unused();
 
 protected:
     struct Image

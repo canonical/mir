@@ -83,7 +83,7 @@ private:
     
     mutable std::unordered_set<graphics::Renderable::ID> decoration_skip_list;
 
-    mutable StubGLTextCache text_cache;
+    mutable StubGLTextCache title_cache;
 };
 
 } // namespace examples

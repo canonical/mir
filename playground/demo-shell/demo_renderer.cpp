@@ -205,6 +205,8 @@ DemoRenderer::~DemoRenderer()
 void DemoRenderer::begin(std::unordered_set<graphics::Renderable::ID> decoration_skip_list_) const
 {
     decoration_skip_list = decoration_skip_list_;
+    title_cache.drop_unused();
+    title_cache.mark_all_unused();
 }
 
 void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
@@ -339,7 +341,7 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
     titlebar.vertices[2] = {{inright, top,  0.0f}, {1.0f, 1.0f}};
     titlebar.vertices[3] = {{inleft,  top,  0.0f}, {1.0f, 1.0f}};
 
-    auto title = text_cache.get(renderable.name().c_str());
+    auto title = title_cache.get(renderable.name().c_str());
     GLfloat title_left = inleft;
     GLfloat title_right = title_left + title.width;
     if (title_left < inleft)
