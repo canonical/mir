@@ -91,7 +91,6 @@ GLTextCache::Entry const& GLTextCache::get(char const* str)
         render(str, img);
         if (img.buf)
         {
-            entry.used = true;
             entry.width = img.width;
             entry.height = img.height;
             glGenTextures(1, &entry.tex);
@@ -105,6 +104,7 @@ GLTextCache::Entry const& GLTextCache::get(char const* str)
                          GL_UNSIGNED_BYTE, img.buf);
         }
     }
+    entry.used = true;
     return entry;
 }
 
