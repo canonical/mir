@@ -357,12 +357,30 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
 
 void me::CanonicalWindowManagerPolicy::drag(Point cursor)
 {
-    if (!::drag(selected_surface.lock(), cursor, old_cursor, display_area))
+    auto const movement = cursor - old_cursor;
+
+    if (::drag(selected_surface.lock(), cursor, old_cursor, display_area))
+    {
+        for (auto const& child: tools->info_for(selected_surface).children)
+        {
+            auto const ss = child.lock();
+            ss->move_to(ss->top_left() + movement);
+        }
+    }
+    else
     {
         auto const surface = surface_coordinator->surface_at(cursor);
 
         if (::drag(surface, cursor, old_cursor, display_area))
+        {
+            for (auto const& child: tools->info_for(surface).children)
+            {
+                auto const ss = child.lock();
+                ss->move_to(ss->top_left() + movement);
+            }
+
             select_surface(surface);
+        }
     }
 
     old_cursor = cursor;
@@ -509,8 +527,15 @@ void me::CanonicalWindowManagerPolicy::toggle(MirSurfaceState state)
 
 void me::CanonicalWindowManagerPolicy::select_surface(std::shared_ptr<ms::Surface> const& surface)
 {
-    tools->set_focus_to(tools->info_for(surface).session.lock());
+    auto const& info_for = tools->info_for(surface);
+    tools->set_focus_to(info_for.session.lock());
+
+    // TODO There's currently no way to raise a surface and (transitive) children
+    // TODO while keeping the order stable. This is definitely a frig that needs rework
     surface_coordinator->raise(surface);
+    for (auto const& child : info_for.children)
+        surface_coordinator->raise(child);
+
     selected_surface = surface;
 }
 
