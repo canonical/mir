@@ -21,6 +21,10 @@
 
 using namespace mir::examples::gltext;
 
+namespace {
+    int const target_height = 128;
+}
+
 FreetypeRenderer::FreetypeRenderer()
     : lib(nullptr), face(nullptr)
 {
@@ -31,7 +35,7 @@ FreetypeRenderer::FreetypeRenderer()
                     &face))
         throw std::runtime_error("FreeType couldn't get face");
 
-    FT_Set_Pixel_Sizes(face, 0, 256);
+    FT_Set_Pixel_Sizes(face, 0, target_height);
 }
 
 FreetypeRenderer::~FreetypeRenderer()
@@ -70,10 +74,11 @@ void FreetypeRenderer::render(char const* str, Image& img)
         peny += slot->advance.y >> 6;
     }
 
-    int width = maxx - minx + 1;
-    int height = maxy - miny + 1;
-    penx = -minx;
-    peny = -miny;
+    int const padding = target_height / 8;  // Allow mipmapping to smear
+    int width = maxx - minx + 1 + 2*padding;
+    int height = maxy - miny + 1 + 2*padding;
+    penx = -minx + padding;
+    peny = -miny + padding;
 
     img.reserve(width, height, GL_ALPHA);
     //fprintf(stderr, "(%d,%d) -> (%d,%d)\n", minx,miny, maxx,maxy);

@@ -344,7 +344,7 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
     titlebar.vertices[3] = {{inleft,  top,  0.0f}, {1.0f, 1.0f}};
 
     auto str = title_cache.get(renderable.name().c_str());
-    GLfloat vin = titlebar_height / 4;
+    GLfloat vin = titlebar_height / 6;
     GLfloat title_top = htop + vin;
     GLfloat title_bot = top - vin;
     GLfloat title_height = title_bot - title_top;
