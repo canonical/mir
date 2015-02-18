@@ -21,32 +21,6 @@
 
 using namespace mir::examples::gltext;
 
-#if 0
-namespace {
-
-void draw_fake(FT_Bitmap* bitmap, FT_Int x, FT_Int y)
-{
-  FT_Int  i, j, p, q;
-  FT_Int  x_max = x + bitmap->width;
-  FT_Int  y_max = y + bitmap->rows;
-
-
-  for ( i = x, p = 0; i < x_max; i++, p++ )
-  {
-    for ( j = y, q = 0; j < y_max; j++, q++ )
-    {
-      if ( i < 0      || j < 0       ||
-           i >= WIDTH || j >= HEIGHT )
-        continue;
-
-      image[j][i] |= bitmap->buffer[q * bitmap->width + p];
-    }
-  }
-}
-
-} // namespace
-#endif
-
 FreetypeRenderer::FreetypeRenderer()
     : lib(nullptr), face(nullptr)
 {
@@ -76,8 +50,8 @@ void FreetypeRenderer::render(char const* str, Image& img)
     int minx = 0, maxx = 0, miny = 0, maxy = 0;
     int penx = 0, peny = 0;
     FT_GlyphSlot slot = face->glyph;
-
     int len = strlen(str);
+
     for (int i = 0; i < len; ++i)
     {
         FT_ULong unicode = str[i];  // TODO: Add UTF-8 decoding
@@ -85,18 +59,20 @@ void FreetypeRenderer::render(char const* str, Image& img)
         FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT);
         FT_Render_Glyph(slot, FT_RENDER_MODE_NORMAL);
 
-        int x = penx + slot->bitmap_left;
-        if (x < minx) minx = x;
-        x += slot->bitmap.width;
-        if (x > maxx) maxx = x;
+        int left = penx + slot->bitmap_left;
+        if (left < minx) minx = left;
 
-        int y = peny - slot->bitmap_top;
-        if (y < miny) miny = y;
-        y += slot->bitmap.rows;
-        if (y > maxy) maxy = y;
+        int right = left + slot->bitmap.width;
+        if (right > maxx) maxx = right;
+
+        int top = peny - slot->bitmap_top;
+        if (top < miny) miny = top;
+
+        int bottom = top + slot->bitmap.rows;
+        if (bottom > maxy) maxy = bottom;
 
         penx += slot->advance.x >> 6;
-        peny += slot->advance.y >> 6; // probably won't change
+        peny += slot->advance.y >> 6;
     }
 
     fprintf(stderr, "(%d,%d) -> (%d,%d)\n", minx,miny, maxx,maxy);
@@ -107,4 +83,40 @@ void FreetypeRenderer::render(char const* str, Image& img)
     peny = -miny;
 
     img.reserve(width, height, GL_ALPHA);
+    fprintf(stderr, "allocate %dx%d\n", width, height);
+    memset(img.buf, 0, img.stride * img.height);
+
+    for (int i = 0; i < len; ++i)
+    {
+        FT_ULong unicode = str[i];  // TODO: Add UTF-8 decoding
+        auto glyph = FT_Get_Char_Index(face, unicode);
+        FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT);
+        FT_Render_Glyph(slot, FT_RENDER_MODE_NORMAL);
+
+        auto& bitmap = slot->bitmap;
+        fprintf(stderr, "'%c': pixel mode %d, grays %hd\n",
+                str[i], bitmap.pixel_mode, bitmap.num_grays);
+
+        int x = penx + slot->bitmap_left;
+        int y = peny - slot->bitmap_top;
+
+        if (x >= 0 && x+bitmap.width <= img.width &&
+            y >= 0 && y+bitmap.rows <= img.height)
+        {
+            unsigned char* src = bitmap.buffer;
+            GLubyte* dest = img.buf + y*img.stride + x;
+
+            int ylimit = y + bitmap.rows;
+            for (; y < ylimit; ++y)
+            {
+                memcpy(dest, src, bitmap.width);
+                src += bitmap.pitch;
+                dest += img.stride;
+            }
+        }
+
+        penx += slot->advance.x >> 6;
+        peny += slot->advance.y >> 6;
+    }
+
 }
