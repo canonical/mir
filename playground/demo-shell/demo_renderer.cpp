@@ -17,7 +17,7 @@
  */
 
 #include "demo_renderer.h"
-#include "gltext_stub_renderer.h"
+#include "gltext_freetype_renderer.h"
 #include <mir/graphics/renderable.h>
 #include <mir/compositor/destination_alpha.h>
 #include <mir/compositor/recently_used_cache.h>
@@ -187,7 +187,7 @@ DemoRenderer::DemoRenderer(
     colour_effect{none},
     inverse_program(family.add_program(vshader, inverse_fshader)),
     contrast_program(family.add_program(vshader, contrast_fshader)),
-    title_cache(std::make_shared<gltext::StubRenderer>())
+    title_cache(std::make_shared<gltext::FreetypeRenderer>())
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
