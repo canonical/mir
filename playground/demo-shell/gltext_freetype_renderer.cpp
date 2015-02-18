@@ -31,12 +31,7 @@ FreetypeRenderer::FreetypeRenderer()
                     &face))
         throw std::runtime_error("FreeType couldn't get face");
 
-    FT_Set_Char_Size(
-          face,    /* handle to face object           */
-          0,       /* char_width in 1/64th of points  */
-          16*64,   /* char_height in 1/64th of points */
-          300,     /* horizontal device resolution    */
-          300);    /* vertical device resolution      */
+    FT_Set_Pixel_Sizes(face, 0, 256);
 }
 
 FreetypeRenderer::~FreetypeRenderer()
@@ -75,15 +70,14 @@ void FreetypeRenderer::render(char const* str, Image& img)
         peny += slot->advance.y >> 6;
     }
 
-    fprintf(stderr, "(%d,%d) -> (%d,%d)\n", minx,miny, maxx,maxy);
-
     int width = maxx - minx + 1;
     int height = maxy - miny + 1;
     penx = -minx;
     peny = -miny;
 
     img.reserve(width, height, GL_ALPHA);
-    fprintf(stderr, "allocate %dx%d\n", width, height);
+    //fprintf(stderr, "(%d,%d) -> (%d,%d)\n", minx,miny, maxx,maxy);
+    //fprintf(stderr, "allocate %dx%d\n", width, height);
     memset(img.buf, 0, img.stride * img.height);
 
     for (int i = 0; i < len; ++i)
@@ -94,9 +88,6 @@ void FreetypeRenderer::render(char const* str, Image& img)
         FT_Render_Glyph(slot, FT_RENDER_MODE_NORMAL);
 
         auto& bitmap = slot->bitmap;
-        fprintf(stderr, "'%c': pixel mode %d, grays %hd\n",
-                str[i], bitmap.pixel_mode, bitmap.num_grays);
-
         int x = penx + slot->bitmap_left;
         int y = peny - slot->bitmap_top;
 
@@ -118,5 +109,4 @@ void FreetypeRenderer::render(char const* str, Image& img)
         penx += slot->advance.x >> 6;
         peny += slot->advance.y >> 6;
     }
-
 }
