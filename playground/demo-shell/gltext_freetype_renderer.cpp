@@ -23,6 +23,7 @@ using namespace mir::examples::gltext;
 
 namespace {
     int const target_height = 128;
+    const char font_path[] = "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf";
 }
 
 FreetypeRenderer::FreetypeRenderer()
@@ -31,8 +32,7 @@ FreetypeRenderer::FreetypeRenderer()
     if (FT_Init_FreeType(&lib))
         throw std::runtime_error("FreeType init failed");
 
-    if (FT_New_Face(lib, "/usr/share/fonts/truetype/freefont/FreeSans.ttf", 0,
-                    &face))
+    if (FT_New_Face(lib, font_path, 0, &face))
         throw std::runtime_error("FreeType couldn't get face");
 
     FT_Set_Pixel_Sizes(face, 0, target_height);
