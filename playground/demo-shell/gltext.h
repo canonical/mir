@@ -30,7 +30,7 @@ struct Image
 {
     Image();
     ~Image();
-    void reserve(int w, int h);
+    void reserve(int w, int h, GLenum fmt);
     GLubyte *buf;
     int width, stride, height, align;
     GLenum format;  // glTexImage2D format

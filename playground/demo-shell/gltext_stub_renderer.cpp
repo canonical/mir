@@ -30,8 +30,8 @@ void StubRenderer::render(char const* str, Image& img)
     int const len = strlen(str);
     int const top = (tex_height - char_height) / 2;
 
-    img.format = GL_ALPHA;
-    img.reserve(len*(char_width+char_space) - char_space, tex_height);
+    img.reserve(len*(char_width+char_space) - char_space, tex_height,
+                GL_ALPHA);
 
     memset(img.buf, 0, img.stride*img.height);
 

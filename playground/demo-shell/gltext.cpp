@@ -33,10 +33,11 @@ Image::~Image()
     delete[] buf;
 }
 
-void Image::reserve(int w, int h)
+void Image::reserve(int w, int h, GLenum fmt)
 {
     width = w;
     height = h;
+    format = fmt;
     int const bpp = (format == GL_ALPHA || format == GL_LUMINANCE) ? 1
                   : (format == GL_LUMINANCE_ALPHA) ? 2
                   : 4;
