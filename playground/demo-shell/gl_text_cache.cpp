@@ -23,7 +23,7 @@ using mir::examples::GLTextCache;
 
 GLTextCache::Image::Image()
     : buf(nullptr), width(0), stride(0), height(0), align(4),
-      format(GL_LUMINANCE_ALPHA)
+      format(GL_ALPHA)
 {
     glGetIntegerv(GL_UNPACK_ALIGNMENT, &align);
 }
