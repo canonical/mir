@@ -37,8 +37,11 @@ public:
         // Note: Image is not stored in the cache. It's all on-GPU as tex.
     };
 
-    typedef GLfloat Colour[4];
+    virtual ~GLTextCache();
+    Entry const& get(char const* str);
+    void clear();
 
+protected:
     struct Image
     {
         Image();
@@ -48,11 +51,8 @@ public:
         int width, stride, height, align;
         GLenum format;  // glTexImage2D format
     };
-    typedef std::function<void(char const* str, Image& img)> Render;
 
-    ~GLTextCache();
-    Entry const& insert(char const* str, Render const& render);
-    void clear();
+    virtual void render(char const* str, Image& img) = 0;
 
 private:
     typedef std::unordered_map<std::string, Entry> Map;
@@ -60,4 +60,5 @@ private:
 };
 
 } } // namespace mir::examples
+
 #endif // MIR_EXAMPLES_GL_TEXT_CACHE_

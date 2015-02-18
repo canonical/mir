@@ -63,8 +63,7 @@ bool GLTextCache::Entry::valid() const
     return width > 0 && height > 0;
 }
 
-GLTextCache::Entry const& GLTextCache::insert(char const* str,
-                                              Render const& render)
+GLTextCache::Entry const& GLTextCache::get(char const* str)
 {
     Entry& entry = map[str];
     if (!entry.valid())
