@@ -19,7 +19,6 @@
 #include "server_example_generic_shell.h"
 
 #include "mir/scene/session.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 
 namespace me = mir::examples;
