@@ -16,10 +16,10 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "gltext_stub_renderer.h"
+#include "typo_stub_renderer.h"
 #include <cstring>
 
-using namespace mir::examples::gltext;
+using namespace mir::examples::typo;
 
 void StubRenderer::render(char const* str, Image& img)
 {

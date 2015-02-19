@@ -16,14 +16,14 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_GLTEXT_FREETYPE_RENDERER_
-#define MIR_EXAMPLES_GLTEXT_FREETYPE_RENDERER_
+#ifndef MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_
+#define MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_
 
-#include "gltext.h"
+#include "typo.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-namespace mir { namespace examples { namespace gltext {
+namespace mir { namespace examples { namespace typo {
 
 class FreetypeRenderer : public Renderer
 {
@@ -41,6 +41,6 @@ private:
     int preferred_height;
 };
 
-} } } // namespace mir::examples::gltext
+} } } // namespace mir::examples::typo
 
-#endif // MIR_EXAMPLES_GLTEXT_FREETYPE_RENDERER
+#endif // MIR_EXAMPLES_TYPO_FREETYPE_RENDERER

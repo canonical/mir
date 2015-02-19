@@ -16,10 +16,10 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "gltext_freetype_renderer.h"
+#include "typo_freetype_renderer.h"
 #include <cstring>
 
-using namespace mir::examples::gltext;
+using namespace mir::examples::typo;
 
 FreetypeRenderer::FreetypeRenderer()
     : lib(nullptr), face(nullptr), preferred_height(16)

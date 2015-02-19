@@ -18,9 +18,9 @@
 
 #define MIR_LOG_COMPONENT "DemoRenderer"
 
-#include "gltext_stub_renderer.h"
-#ifdef GLTEXT_SUPPORTS_FREETYPE
-#include "gltext_freetype_renderer.h"
+#include "typo_stub_renderer.h"
+#ifdef TYPO_SUPPORTS_FREETYPE
+#include "typo_freetype_renderer.h"
 #endif
 #include "demo_renderer.h"
 #include <mir/graphics/renderable.h>
@@ -193,7 +193,7 @@ DemoRenderer::DemoRenderer(
     colour_effect{none},
     inverse_program(family.add_program(vshader, inverse_fshader)),
     contrast_program(family.add_program(vshader, contrast_fshader)),
-    title_cache(std::make_shared<gltext::StubRenderer>())
+    title_cache(std::make_shared<typo::StubRenderer>())
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
@@ -203,9 +203,9 @@ DemoRenderer::DemoRenderer(
     clear_color[0] = clear_color[1] = clear_color[2] = 0.2f;
     clear_color[3] = 1.0f;
 
-#ifdef GLTEXT_SUPPORTS_FREETYPE
+#ifdef TYPO_SUPPORTS_FREETYPE
     const char title_font_path[] = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf";
-    auto ftrenderer = std::make_shared<gltext::FreetypeRenderer>();
+    auto ftrenderer = std::make_shared<typo::FreetypeRenderer>();
     if (ftrenderer->load(title_font_path, 128))
         title_cache.change_renderer(ftrenderer);
     else

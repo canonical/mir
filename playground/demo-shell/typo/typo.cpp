@@ -16,11 +16,11 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "gltext.h"
+#include "typo.h"
 #include <GLES2/gl2.h>  // TODO: Support plain OpenGL too
 #include <cstring>
 
-using namespace mir::examples::gltext;
+using namespace mir::examples::typo;
 
 Image::Image()
     : buf(nullptr), width(0), stride(0), height(0), align(4),

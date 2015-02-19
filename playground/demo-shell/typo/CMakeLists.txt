@@ -1,0 +1,21 @@
+find_package(PkgConfig)
+
+pkg_search_module(FREETYPE freetype2)
+if (FREETYPE_FOUND)
+  set(OPTIONAL_SRCS typo_freetype_renderer.cpp)
+endif ()
+
+add_library(typo STATIC
+  typo.cpp
+  typo_stub_renderer.cpp
+  ${OPTIONAL_SRCS}
+)
+
+target_include_directories(typo PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+if (FREETYPE_FOUND)
+  target_compile_definitions(typo PUBLIC -DTYPO_SUPPORTS_FREETYPE)
+  target_link_libraries(typo ${FREETYPE_LIBRARIES})
+  target_include_directories(typo PUBLIC ${FREETYPE_INCLUDE_DIRS})
+endif ()
+

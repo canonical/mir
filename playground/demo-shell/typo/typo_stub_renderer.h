@@ -16,12 +16,12 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_GLTEXT_STUB_RENDERER_
-#define MIR_EXAMPLES_GLTEXT_STUB_RENDERER_
+#ifndef MIR_EXAMPLES_TYPO_STUB_RENDERER_
+#define MIR_EXAMPLES_TYPO_STUB_RENDERER_
 
-#include "gltext.h"
+#include "typo.h"
 
-namespace mir { namespace examples { namespace gltext {
+namespace mir { namespace examples { namespace typo {
 
 class StubRenderer : public Renderer
 {
@@ -29,6 +29,6 @@ protected:
     void render(char const* str, Image& img) override;
 };
 
-} } } // namespace mir::examples::gltext
+} } } // namespace mir::examples::typo
 
-#endif // MIR_EXAMPLES_GLTEXT_STUB_RENDERER
+#endif // MIR_EXAMPLES_TYPO_STUB_RENDERER

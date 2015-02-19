@@ -16,15 +16,15 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_GLTEXT
-#define MIR_EXAMPLES_GLTEXT
+#ifndef MIR_EXAMPLES_TYPO
+#define MIR_EXAMPLES_TYPO
 
 #include <GLES2/gl2.h>  // TODO: Support plain OpenGL too
 #include <string>
 #include <unordered_map>
 #include <memory>
 
-namespace mir { namespace examples { namespace gltext {
+namespace mir { namespace examples { namespace typo {
 
 struct Image
 {
@@ -70,6 +70,6 @@ private:
     std::shared_ptr<Renderer> renderer;
 };
 
-} } } // namespace mir::examples::gltext
+} } } // namespace mir::examples::typo
 
-#endif // MIR_EXAMPLES_GLTEXT
+#endif // MIR_EXAMPLES_TYPO
