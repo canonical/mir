@@ -298,15 +298,11 @@ auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
     {
         for (auto const& surface : in_reverse(layer.second))
         {
-            // TODO this implementation is probably simplistic as the client area may,
-            // TODO in principle, have transparency. I don't think we have a mechanism
-            // TODO to track this yet.
-            // TODO Daniel has suggested using "surface->input_area_contains(cursor)"
-            // TODO here but has also (in the code that uses this) pointed out that
-            // TODO "the input area the client has designated is probably irrelevant.
-            // TODO Instead you want to consider the whole surface rectangle..."
-            if (surface->visible() &&
-                geom::Rectangle{surface->top_left(), surface->size()}.contains(cursor))
+            // TODO There's a lack of clarity about how the input area will
+            // TODO be maintained and whether this test will detect clicks on
+            // TODO decorations (it should) as these may be outside the area
+            // TODO known to the client.  But it works for now.
+            if (surface->input_area_contains(cursor))
                     return surface;
         }
     }
