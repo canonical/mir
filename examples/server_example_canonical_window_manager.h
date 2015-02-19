@@ -21,6 +21,8 @@
 
 #include "server_example_basic_window_manager.h"
 
+#include "mir/geometry/displacement.h"
+
 ///\example server_example_canonical_window_manager.h
 // Based on "Mir and Unity: Surfaces, input, and displays (v0.3)"
 
@@ -104,6 +106,7 @@ private:
     auto select_surface() const -> std::shared_ptr<scene::Surface>;
     bool resize(std::shared_ptr<scene::Surface> const& surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
     bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
+    void move_children(std::shared_ptr<scene::Surface> const& surface, geometry::Displacement movement) const;
 
     Tools* const tools;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;

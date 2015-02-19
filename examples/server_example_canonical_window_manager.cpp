@@ -500,14 +500,7 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
 
     surface->resize(new_size);
     surface->move_to(new_pos);
-
-    auto movement = new_pos - top_left;
-
-    for (auto const& child: tools->info_for(selected_surface).children)
-    {
-        auto const ss = child.lock();
-        ss->move_to(ss->top_left() + movement);
-    }
+    move_children(surface, new_pos-top_left);
 
     return true;
 }
@@ -537,15 +530,20 @@ bool me::CanonicalWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface
         auto new_pos = surface->top_left() + movement;
 
         surface->move_to(new_pos);
-
-        for (auto const& child: tools->info_for(selected_surface).children)
-        {
-            auto const ss = child.lock();
-            ss->move_to(ss->top_left() + movement);
-        }
+        move_children(surface, movement);
 
         return true;
     }
 
     return false;
+}
+
+void me::CanonicalWindowManagerPolicy::move_children(std::shared_ptr<ms::Surface> const& surface, Displacement movement) const
+{
+    for (auto const& child: tools->info_for(surface).children)
+    {
+        auto const ss = child.lock();
+        ss->move_to(ss->top_left() + movement);
+        move_children(ss, movement);
+    }
 }
