@@ -30,8 +30,7 @@ std::unique_ptr<mc::Renderer>
 mc::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect,
         DestinationAlpha dest_alpha)
 {
-    auto raw = new GLRenderer(
-        std::unique_ptr<mg::GLTextureCache>(new RecentlyUsedCache()),
+    return std::make_unique<GLRenderer>(
+        std::make_unique<RecentlyUsedCache>(),
         rect, dest_alpha);
-    return std::unique_ptr<mc::Renderer>(raw);
 }

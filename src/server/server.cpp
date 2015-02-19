@@ -173,7 +173,7 @@ public:
     auto create_renderer_for(mir::geometry::Rectangle const&, mir::compositor::DestinationAlpha)
     -> std::unique_ptr<mir::compositor::Renderer>
     {
-        return std::unique_ptr<mir::compositor::Renderer>(new StubRenderer());
+        return std::make_unique<StubRenderer>();
     }
 };
 }
