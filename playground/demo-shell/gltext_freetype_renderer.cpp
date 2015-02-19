@@ -81,9 +81,6 @@ void FreetypeRenderer::render(char const* str, Image& img)
     peny = -miny + padding;
 
     img.reserve(width, height, GL_ALPHA);
-    //fprintf(stderr, "(%d,%d) -> (%d,%d)\n", minx,miny, maxx,maxy);
-    //fprintf(stderr, "allocate %dx%d\n", width, height);
-    memset(img.buf, 0, img.stride * img.height);
 
     for (int i = 0; i < len; ++i)
     {

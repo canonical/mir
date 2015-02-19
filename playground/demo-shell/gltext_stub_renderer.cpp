@@ -33,8 +33,6 @@ void StubRenderer::render(char const* str, Image& img)
     img.reserve(len*(char_width+char_space) - char_space, tex_height,
                 GL_ALPHA);
 
-    memset(img.buf, 0, img.stride*img.height);
-
     for (int c = 0; c < len; ++c)
     {
         GLubyte* row = img.buf + top*img.stride + c*(char_width+char_space);

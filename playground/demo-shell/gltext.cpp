@@ -18,6 +18,7 @@
 
 #include "gltext.h"
 #include <GLES2/gl2.h>  // TODO: Support plain OpenGL too
+#include <cstring>
 
 using namespace mir::examples::gltext;
 
@@ -43,7 +44,9 @@ void Image::reserve(int w, int h, GLenum fmt)
                   : 4;
     stride = (((width * bpp) + align - 1) / align) * align;
     delete[] buf;
-    buf = new GLubyte[stride * height];
+    auto size = stride * height;
+    buf = new GLubyte[size];
+    memset(buf, 0, size);
 }
 
 Renderer::~Renderer()
