@@ -85,9 +85,9 @@ GLuint generate_shadow_corner_texture(float opacity)
     return corner;
 }
 
-GLuint generate_frame_corner_texture(float corner_radius,
-                                     Color const& color,
-                                     GLubyte highlight)
+void generate_frame_textures(float corner_radius, Color const& color,
+                             GLubyte highlight,
+                             GLuint& corner, GLuint& fade)
 {
     int const height = 256;
 /*
@@ -134,8 +134,6 @@ GLuint generate_frame_corner_texture(float corner_radius,
             image[y * width + x] = col;
         }
     }
-
-    GLuint corner;
     glGenTextures(1, &corner);
     glBindTexture(GL_TEXTURE_2D, corner);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
@@ -148,7 +146,31 @@ GLuint generate_frame_corner_texture(float corner_radius,
                  image);
     glGenerateMipmap(GL_TEXTURE_2D); // Antialiasing please
 
-    return corner;
+    for (int y = 0; y < height; ++y)
+    {
+        auto original = image[y * width + width - 1];
+        for (int x = 0; x < width-1; ++x)
+        {
+            auto& p = image[y * width + x];
+            p = original;
+            int inv = x;
+            p.r = p.r * inv / width;
+            p.g = p.g * inv / width;
+            p.b = p.b * inv / width;
+            p.a = p.a * inv / width;
+        }
+    }
+    glGenTextures(1, &fade);
+    glBindTexture(GL_TEXTURE_2D, fade);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                   GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                 width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 image);
+    glGenerateMipmap(GL_TEXTURE_2D); // Antialiasing please
 }
 
 static const GLchar inverse_fshader[] =
@@ -196,9 +218,9 @@ DemoRenderer::DemoRenderer(
     title_cache(std::make_shared<gltext::StubRenderer>())
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
-    titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
-                                                        {128,128,128,255},
-                                                        255);
+
+    generate_frame_textures(corner_radius, {128,128,128,255}, 255,
+                            titlebar_corner_tex, titlebar_fadeout_tex);
 
     clear_color[0] = clear_color[1] = clear_color[2] = 0.2f;
     clear_color[3] = 1.0f;
@@ -369,13 +391,27 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
         text_u = (inright - text_left) / (text_right - text_left);
         text_right = inright;
     }
-
     auto& text_prim = primitives[n++];
     text_prim.tex_id = str.tex;
     text_prim.vertices[0] = {{text_left,  text_top, 0.0f}, {0.0f, 0.0f}};
     text_prim.vertices[1] = {{text_right, text_top, 0.0f}, {text_u, 0.0f}};
     text_prim.vertices[2] = {{text_right, text_bot, 0.0f}, {text_u, 1.0f}};
     text_prim.vertices[3] = {{text_left,  text_bot, 0.0f}, {0.0f, 1.0f}};
+
+    if (text_u < 1.0f)
+    {
+        n = primitives.size();
+        primitives.resize(n+1);
+        GLfloat fadeout_left = inright - titlebar_height;
+        if (fadeout_left < inleft)
+            fadeout_left = inleft;
+        auto& fadeout = primitives[n++];
+        fadeout.tex_id = titlebar_fadeout_tex;
+        fadeout.vertices[0] = {{fadeout_left, htop, 0.0f}, {0.0f, 0.0f}};
+        fadeout.vertices[1] = {{inright,      htop, 0.0f}, {1.0f, 0.0f}};
+        fadeout.vertices[2] = {{inright,      top,  0.0f}, {1.0f, 1.0f}};
+        fadeout.vertices[3] = {{fadeout_left, top,  0.0f}, {0.0f, 1.0f}};
+    }
 }
 
 bool DemoRenderer::would_embellish(
