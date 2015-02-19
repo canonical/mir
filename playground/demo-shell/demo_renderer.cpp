@@ -20,7 +20,9 @@
 
 #include "demo_renderer.h"
 #include "gltext_stub_renderer.h"
+#ifdef GLTEXT_SUPPORTS_FREETYPE
 #include "gltext_freetype_renderer.h"
+#endif
 #include <mir/graphics/renderable.h>
 #include <mir/compositor/destination_alpha.h>
 #include <mir/compositor/recently_used_cache.h>
@@ -34,8 +36,6 @@ using namespace mir::compositor;
 
 namespace
 {
-
-const char title_font_path[] = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf";
 
 struct Color
 {
@@ -203,11 +203,14 @@ DemoRenderer::DemoRenderer(
     clear_color[0] = clear_color[1] = clear_color[2] = 0.2f;
     clear_color[3] = 1.0f;
 
+#ifdef GLTEXT_SUPPORTS_FREETYPE
+    const char title_font_path[] = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf";
     auto ftrenderer = std::make_shared<gltext::FreetypeRenderer>();
     if (ftrenderer->load(title_font_path, 128))
         title_cache.change_renderer(ftrenderer);
     else
         mir::log_error("Failed to load titlebar font: %s", title_font_path);
+#endif
 }
 
 DemoRenderer::~DemoRenderer()

@@ -14,6 +14,7 @@ add_library(gltext STATIC
 target_include_directories(gltext PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (FREETYPE_FOUND)
+  target_compile_definitions(gltext PUBLIC -DGLTEXT_SUPPORTS_FREETYPE)
   target_link_libraries(gltext ${FREETYPE_LIBRARIES})
   target_include_directories(gltext PUBLIC ${FREETYPE_INCLUDE_DIRS})
 endif ()
