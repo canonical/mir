@@ -163,8 +163,7 @@ mc::CompositingScreencast::create_session_context(
         [&] { gl_context_raw->release_current(); });
 
     auto buffer = buffer_allocator->alloc_buffer(buffer_properties);
-    auto display_buffer = std::unique_ptr<ScreencastDisplayBuffer>(
-        new ScreencastDisplayBuffer{rect, *buffer});
+    auto display_buffer = std::make_unique<ScreencastDisplayBuffer>(rect, *buffer);
     auto db_compositor = db_compositor_factory->create_compositor_for(*display_buffer);
 
     return std::shared_ptr<detail::ScreencastSessionContext>(

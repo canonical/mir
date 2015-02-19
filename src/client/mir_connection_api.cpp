@@ -77,7 +77,7 @@ public:
 
             auto const conf = configuration(sock);
 
-            std::unique_ptr<MirConnection> connection{new MirConnection(*conf)};
+            auto connection = std::make_unique<MirConnection>(*conf);
             auto const result = connection->connect(name, callback, context);
             connection.release();
             return result;
