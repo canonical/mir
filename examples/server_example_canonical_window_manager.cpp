@@ -72,14 +72,8 @@ void me::CanonicalWindowManagerPolicy::handle_displays_updated(CanonicalSessionI
 
 void me::CanonicalWindowManagerPolicy::resize(Point cursor)
 {
-    if (!resize(selected_surface.lock(), cursor, old_cursor, display_area))
-    {
-        auto const surface = surface_coordinator->surface_at(cursor);
-
-        if (resize(surface, cursor, old_cursor, display_area))
-            select_surface(surface);
-    }
-
+    select_surface(surface_coordinator->surface_at(old_cursor));
+    resize(selected_surface.lock(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
 
@@ -255,16 +249,8 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
 
 void me::CanonicalWindowManagerPolicy::drag(Point cursor)
 {
-    if (!drag(selected_surface.lock(), cursor, old_cursor, display_area))
-    {
-        auto const surface = surface_coordinator->surface_at(cursor);
-
-        if (drag(surface, cursor, old_cursor, display_area))
-        {
-            select_surface(surface);
-        }
-    }
-
+    select_surface(surface_coordinator->surface_at(old_cursor));
+    drag(selected_surface.lock(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
 
@@ -409,6 +395,12 @@ void me::CanonicalWindowManagerPolicy::toggle(MirSurfaceState state)
 
 void me::CanonicalWindowManagerPolicy::select_surface(std::shared_ptr<ms::Surface> const& surface)
 {
+    if (!surface)
+    {
+        selected_surface.reset();
+        return;
+    }
+
     auto const& info_for = tools->info_for(surface);
     tools->set_focus_to(info_for.session.lock());
 
@@ -418,7 +410,27 @@ void me::CanonicalWindowManagerPolicy::select_surface(std::shared_ptr<ms::Surfac
     for (auto const& child : info_for.children)
         surface_coordinator->raise(child);
 
-    selected_surface = surface;
+    switch (surface->type())
+    {
+    case mir_surface_type_normal:       /**< AKA "regular"                       */
+    case mir_surface_type_utility:      /**< AKA "floating"                      */
+    case mir_surface_type_dialog:
+    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+    case mir_surface_type_freestyle:
+    case mir_surface_type_menu:
+    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        // TODO set the input focus to this window
+        selected_surface = surface;
+        break;
+
+    case mir_surface_type_gloss:
+    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+    default:
+        // Cannot have input focus
+        if (auto const parent = info_for.parent.lock())
+            select_surface(parent);
+        break;
+    }
 }
 
 auto me::CanonicalWindowManagerPolicy::select_surface() const
