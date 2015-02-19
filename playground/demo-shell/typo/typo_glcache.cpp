@@ -74,7 +74,7 @@ GLCache::Entry const& GLCache::get(char const* str)
     Entry& entry = map[str];
     if (!entry.valid())
     {
-        Image img;
+        Renderer::Image img;
         renderer->render(str, img);
         if (img.buf)
         {

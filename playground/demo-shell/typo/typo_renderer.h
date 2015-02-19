@@ -16,32 +16,32 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_TYPO
-#define MIR_EXAMPLES_TYPO
+#ifndef MIR_EXAMPLES_TYPO_RENDERER
+#define MIR_EXAMPLES_TYPO_RENDERER
 
 namespace mir { namespace examples { namespace typo {
-
-struct Image
-{
-    typedef enum {alpha8} Format;
-
-    Image();
-    ~Image();
-    void reserve(int w, int h, Format f);
-    unsigned char* buf;
-    int width, stride, height, align;
-    Format format;
-};
 
 class Renderer
 {
 public:
+    struct Image
+    {
+        Image();
+        ~Image();
+        typedef enum {alpha8} Format;
+        void reserve(int w, int h, Format f);
+        unsigned char* buf;
+        int width, stride, height, align;
+        Format format;
+    };
+
     virtual ~Renderer();
     virtual void render(char const* str, Image& img) = 0;
+
 protected:
     static unsigned long unicode_from_utf8(char const** utf8);
 };
 
 } } } // namespace mir::examples::typo
 
-#endif // MIR_EXAMPLES_TYPO
+#endif // MIR_EXAMPLES_TYPO_RENDERER

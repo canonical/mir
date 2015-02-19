@@ -7,9 +7,9 @@ if (FREETYPE_FOUND)
 endif ()
 
 add_library(typo STATIC
-  typo.cpp
-  typo_glcache.cpp
+  typo_renderer.cpp
   typo_stub_renderer.cpp
+  typo_glcache.cpp
   ${OPTIONAL_SRCS}
 )
 

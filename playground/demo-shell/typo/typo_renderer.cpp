@@ -16,22 +16,22 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "typo.h"
+#include "typo_renderer.h"
 #include <cstring>
 
 using namespace mir::examples::typo;
 
-Image::Image()
+Renderer::Image::Image()
     : buf(nullptr), width(0), stride(0), height(0), align(4), format(alpha8)
 {
 }
 
-Image::~Image()
+Renderer::Image::~Image()
 {
     delete[] buf;
 }
 
-void Image::reserve(int w, int h, Format f)
+void Renderer::Image::reserve(int w, int h, Format f)
 {
     width = w;
     height = h;

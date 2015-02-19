@@ -19,7 +19,7 @@
 #ifndef MIR_EXAMPLES_TYPO_GLCACHE
 #define MIR_EXAMPLES_TYPO_GLCACHE
 
-#include "typo.h"
+#include "typo_renderer.h"
 #include <string>
 #include <unordered_map>
 #include <memory>

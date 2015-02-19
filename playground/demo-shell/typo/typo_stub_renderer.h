@@ -19,7 +19,7 @@
 #ifndef MIR_EXAMPLES_TYPO_STUB_RENDERER_
 #define MIR_EXAMPLES_TYPO_STUB_RENDERER_
 
-#include "typo.h"
+#include "typo_renderer.h"
 
 namespace mir { namespace examples { namespace typo {
 

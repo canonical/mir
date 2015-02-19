@@ -19,7 +19,7 @@
 #ifndef MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_
 #define MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_
 
-#include "typo.h"
+#include "typo_renderer.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
