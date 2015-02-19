@@ -18,11 +18,11 @@
 
 #define MIR_LOG_COMPONENT "DemoRenderer"
 
-#include "demo_renderer.h"
 #include "gltext_stub_renderer.h"
 #ifdef GLTEXT_SUPPORTS_FREETYPE
 #include "gltext_freetype_renderer.h"
 #endif
+#include "demo_renderer.h"
 #include <mir/graphics/renderable.h>
 #include <mir/compositor/destination_alpha.h>
 #include <mir/compositor/recently_used_cache.h>
