@@ -31,4 +31,4 @@ public:
 
 } } } // namespace mir::examples::typo
 
-#endif // MIR_EXAMPLES_TYPO_STUB_RENDERER
+#endif // MIR_EXAMPLES_TYPO_STUB_RENDERER_

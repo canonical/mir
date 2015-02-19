@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_TYPO_RENDERER
-#define MIR_EXAMPLES_TYPO_RENDERER
+#ifndef MIR_EXAMPLES_TYPO_RENDERER_
+#define MIR_EXAMPLES_TYPO_RENDERER_
 
 namespace mir { namespace examples { namespace typo {
 
@@ -44,4 +44,4 @@ protected:
 
 } } } // namespace mir::examples::typo
 
-#endif // MIR_EXAMPLES_TYPO_RENDERER
+#endif // MIR_EXAMPLES_TYPO_RENDERER_

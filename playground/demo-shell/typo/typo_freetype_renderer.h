@@ -41,4 +41,4 @@ private:
 
 } } } // namespace mir::examples::typo
 
-#endif // MIR_EXAMPLES_TYPO_FREETYPE_RENDERER
+#endif // MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_
