@@ -25,7 +25,7 @@ namespace mir { namespace examples { namespace typo {
 
 class StubRenderer : public Renderer
 {
-protected:
+public:
     void render(char const* str, Image& img) override;
 };
 

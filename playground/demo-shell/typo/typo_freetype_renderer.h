@@ -31,8 +31,6 @@ public:
     FreetypeRenderer();
     ~FreetypeRenderer();
     bool load(char const* font_path, int pref_height);
-
-protected:
     void render(char const* str, Image& img) override;
 
 private:
