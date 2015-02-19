@@ -77,7 +77,6 @@ private:
     float const corner_radius;
     GLuint shadow_corner_tex;
     GLuint titlebar_corner_tex;
-    GLuint titlebar_fadeout_tex;
 
     ColourEffect colour_effect;
     Program inverse_program, contrast_program;
