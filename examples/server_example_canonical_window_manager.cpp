@@ -220,6 +220,8 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
         return info.state;
     }
 
+    auto const old_pos = surface->top_left();
+
     switch (value)
     {
     case mir_surface_state_restored:
@@ -245,6 +247,8 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
     default:
         break;
     }
+
+    move_children(surface, surface->top_left()-old_pos);
 
     return info.state = value;
 }
