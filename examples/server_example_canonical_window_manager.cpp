@@ -542,6 +542,8 @@ bool me::CanonicalWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface
     return false;
 }
 
+// TODO It is rather simplistic to move children WRT the top_left of the parent.
+// TODO But for more sophistication we need to encode some sensible layout rules.
 void me::CanonicalWindowManagerPolicy::move_children(std::shared_ptr<ms::Surface> const& surface, Displacement movement) const
 {
     for (auto const& child: tools->info_for(surface).children)
