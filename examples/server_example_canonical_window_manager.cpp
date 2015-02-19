@@ -38,14 +38,11 @@ int const title_bar_height = 10;
 
 bool resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
-    if (!surface)
+    if (!surface || !surface->input_area_contains(cursor))
         return false;
 
     auto const top_left = surface->top_left();
     auto const old_size = surface->size();
-
-    if (!surface->visible() || !Rectangle{top_left, old_size}.contains(cursor))
-        return false;
 
     auto anchor = top_left;
 
