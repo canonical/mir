@@ -722,15 +722,14 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    return std::unique_ptr<mg::Renderable>(
-        new SurfaceSnapshot(
-            surface_buffer_stream,
-            compositor_id,
-            surface_rect,
-            transformation_matrix,
-            surface_alpha,
-            nonrectangular, 
-            this));
+    return std::make_unique<SurfaceSnapshot>(
+        surface_buffer_stream,
+        compositor_id,
+        surface_rect,
+        transformation_matrix,
+        surface_alpha,
+        nonrectangular,
+        this);
 }
 
 int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const

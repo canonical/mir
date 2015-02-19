@@ -106,9 +106,8 @@ void mgo::Display::for_each_display_buffer(
 std::unique_ptr<mg::DisplayConfiguration> mgo::Display::configuration() const
 {
     std::lock_guard<std::mutex> lock{configuration_mutex};
-    return std::unique_ptr<mg::DisplayConfiguration>(
-        new mgo::DisplayConfiguration(current_display_configuration)
-    );
+    return std::make_unique<mgo::DisplayConfiguration>(
+        current_display_configuration);
 }
 
 void mgo::Display::configure(mg::DisplayConfiguration const& conf)
@@ -165,6 +164,5 @@ std::shared_ptr<mg::Cursor> mgo::Display::create_hardware_cursor(std::shared_ptr
 
 std::unique_ptr<mg::GLContext> mgo::Display::create_gl_context()
 {
-    return std::unique_ptr<GLContext>{
-        new SurfacelessEGLContext{egl_display, egl_context_shared}};
+    return std::make_unique<SurfacelessEGLContext>(egl_display, egl_context_shared);
 }
