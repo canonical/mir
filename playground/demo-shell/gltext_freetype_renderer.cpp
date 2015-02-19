@@ -30,14 +30,19 @@ FreetypeRenderer::FreetypeRenderer()
 
 FreetypeRenderer::~FreetypeRenderer()
 {
-    FT_Done_Face(face);
-    FT_Done_FreeType(lib);
+    if (face) FT_Done_Face(face);
+    if (lib) FT_Done_FreeType(lib);
 }
 
 bool FreetypeRenderer::load(char const* font_path, int pref_height)
 {
     preferred_height = pref_height;
 
+    if (face)
+    {
+        FT_Done_Face(face);
+        face = nullptr;
+    }
     if (FT_New_Face(lib, font_path, 0, &face))
         return false;
 
