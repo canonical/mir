@@ -30,11 +30,15 @@ class FreetypeRenderer : public Renderer
 public:
     FreetypeRenderer();
     ~FreetypeRenderer();
+    bool load(char const* font_path, int pref_height);
+
 protected:
     void render(char const* str, Image& img) override;
+
 private:
     FT_Library lib;
     FT_Face face;
+    int preferred_height;
 };
 
 } } } // namespace mir::examples::gltext

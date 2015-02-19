@@ -56,6 +56,7 @@ public:
 
     explicit Cache(std::shared_ptr<Renderer> const&);
     ~Cache();
+    void change_renderer(std::shared_ptr<Renderer> const&);
     Entry const& get(char const* str);
     void clear();
     void mark_all_unused();
@@ -64,7 +65,7 @@ public:
 private:
     typedef std::unordered_map<std::string, Entry> Map;
     Map map;
-    std::shared_ptr<Renderer> const renderer;
+    std::shared_ptr<Renderer> renderer;
 };
 
 } } } // namespace mir::examples::gltext

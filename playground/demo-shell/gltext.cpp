@@ -63,6 +63,12 @@ Cache::~Cache()
     clear();
 }
 
+void Cache::change_renderer(std::shared_ptr<Renderer> const& r)
+{
+    clear();
+    renderer = r;
+}
+
 void Cache::clear()
 {
     for (auto& e : map)

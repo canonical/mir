@@ -21,27 +21,29 @@
 
 using namespace mir::examples::gltext;
 
-namespace {
-    int const target_height = 128;
-    const char font_path[] = "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf";
-}
-
 FreetypeRenderer::FreetypeRenderer()
-    : lib(nullptr), face(nullptr)
+    : lib(nullptr), face(nullptr), preferred_height(16)
 {
     if (FT_Init_FreeType(&lib))
         throw std::runtime_error("FreeType init failed");
-
-    if (FT_New_Face(lib, font_path, 0, &face))
-        throw std::runtime_error("FreeType couldn't get face");
-
-    FT_Set_Pixel_Sizes(face, 0, target_height);
 }
 
 FreetypeRenderer::~FreetypeRenderer()
 {
     FT_Done_Face(face);
     FT_Done_FreeType(lib);
+}
+
+bool FreetypeRenderer::load(char const* font_path, int pref_height)
+{
+    preferred_height = pref_height;
+
+    if (FT_New_Face(lib, font_path, 0, &face))
+        return false;
+
+    FT_Set_Pixel_Sizes(face, 0, preferred_height);
+
+    return true;
 }
 
 void FreetypeRenderer::render(char const* str, Image& img)
@@ -74,7 +76,7 @@ void FreetypeRenderer::render(char const* str, Image& img)
         peny += slot->advance.y >> 6;
     }
 
-    int const padding = target_height / 8;  // Allow mipmapping to smear
+    int const padding = preferred_height / 8;  // Allow mipmapping to smear
     int width = maxx - minx + 1 + 2*padding;
     int height = maxy - miny + 1 + 2*padding;
     penx = -minx + padding;

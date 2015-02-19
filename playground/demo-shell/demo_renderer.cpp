@@ -16,11 +16,15 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "DemoRenderer"
+
 #include "demo_renderer.h"
+#include "gltext_stub_renderer.h"
 #include "gltext_freetype_renderer.h"
 #include <mir/graphics/renderable.h>
 #include <mir/compositor/destination_alpha.h>
 #include <mir/compositor/recently_used_cache.h>
+#include <mir/log.h>
 #include <cmath>
 
 using namespace mir;
@@ -30,6 +34,8 @@ using namespace mir::compositor;
 
 namespace
 {
+
+const char title_font_path[] = "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf";
 
 struct Color
 {
@@ -187,7 +193,7 @@ DemoRenderer::DemoRenderer(
     colour_effect{none},
     inverse_program(family.add_program(vshader, inverse_fshader)),
     contrast_program(family.add_program(vshader, contrast_fshader)),
-    title_cache(std::make_shared<gltext::FreetypeRenderer>())
+    title_cache(std::make_shared<gltext::StubRenderer>())
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
@@ -196,6 +202,12 @@ DemoRenderer::DemoRenderer(
 
     clear_color[0] = clear_color[1] = clear_color[2] = 0.2f;
     clear_color[3] = 1.0f;
+
+    auto ftrenderer = std::make_shared<gltext::FreetypeRenderer>();
+    if (ftrenderer->load(title_font_path, 128))
+        title_cache.change_renderer(ftrenderer);
+    else
+        mir::log_error("Failed to load titlebar font: %s", title_font_path);
 }
 
 DemoRenderer::~DemoRenderer()
