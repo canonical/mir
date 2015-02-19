@@ -41,6 +41,8 @@ class Renderer
 public:
     virtual ~Renderer();
     virtual void render(char const* str, Image& img) = 0;
+protected:
+    static unsigned long unicode_from_utf8(char const** utf8);
 };
 
 class Cache

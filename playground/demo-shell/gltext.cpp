@@ -53,6 +53,15 @@ Renderer::~Renderer()
 {
 }
 
+unsigned long Renderer::unicode_from_utf8(char const** utf8)
+{
+    int char_len = 1; // TODO: Add support for non-ASCII UTF-8
+    unsigned long unicode = **utf8;
+    if (unicode)
+        *utf8 += char_len;
+    return unicode;
+}
+
 Cache::Cache(std::shared_ptr<Renderer> const& r)
     : renderer(r)
 {

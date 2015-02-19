@@ -51,12 +51,11 @@ void FreetypeRenderer::render(char const* str, Image& img)
     int minx = 0, maxx = 0, miny = 0, maxy = 0;
     int penx = 0, peny = 0;
     FT_GlyphSlot slot = face->glyph;
-    int len = strlen(str);
 
-    for (int i = 0; i < len; ++i)
+    char const* s = str;
+    while (unsigned long u = unicode_from_utf8(&s))
     {
-        FT_ULong unicode = str[i];  // TODO: Add UTF-8 decoding
-        auto glyph = FT_Get_Char_Index(face, unicode);
+        auto glyph = FT_Get_Char_Index(face, u);
         FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT);
         FT_Render_Glyph(slot, FT_RENDER_MODE_NORMAL);
 
@@ -91,10 +90,10 @@ void FreetypeRenderer::render(char const* str, Image& img)
      */
     img.reserve(width, height, GL_ALPHA);
 
-    for (int i = 0; i < len; ++i)
+    s = str;
+    while (unsigned long u = unicode_from_utf8(&s))
     {
-        FT_ULong unicode = str[i];  // TODO: Add UTF-8 decoding
-        auto glyph = FT_Get_Char_Index(face, unicode);
+        auto glyph = FT_Get_Char_Index(face, u);
         FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT);
         FT_Render_Glyph(slot, FT_RENDER_MODE_NORMAL);
 
