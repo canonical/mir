@@ -35,7 +35,7 @@ using namespace mir::compositor;
 namespace
 {
 
-const char title_font_path[] = "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf";
+const char title_font_path[] = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf";
 
 struct Color
 {
