@@ -21,6 +21,7 @@ target_link_libraries(demo-shell gltext)
 mir_add_wrapped_executable(mir_proving_server
   demo_shell.cpp
 )
+
 target_link_libraries(mir_proving_server
   demo-shell
   mirserver
