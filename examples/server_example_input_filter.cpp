@@ -108,10 +108,10 @@ struct ScreenRotationFilter : public mi::EventFilter
         if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
             return false;
 
-        return handle_key_event(mir_input_event_get_key_input_event(input_event));
+        return handle_key_event(mir_input_event_get_keyboard_event(input_event));
     }
 
-    bool handle_key_event(MirKeyInputEvent const* event)
+    bool handle_key_event(MirKeyboardEvent const* event)
     {
         static const int modifier_mask =
             mir_input_event_modifier_alt |
@@ -120,11 +120,11 @@ struct ScreenRotationFilter : public mi::EventFilter
             mir_input_event_modifier_ctrl |
             mir_input_event_modifier_meta;
 
-        auto const action = mir_key_input_event_get_action(event);
-        auto const scan_code = mir_key_input_event_get_scan_code(event);
-        auto const modifiers = mir_key_input_event_get_modifiers(event) & modifier_mask;
+        auto const action = mir_keyboard_event_action(event);
+        auto const scan_code = mir_keyboard_event_scan_code(event);
+        auto const modifiers = mir_keyboard_event_modifiers(event) & modifier_mask;
 
-        if (action == mir_key_input_event_action_down &&
+        if (action == mir_keyboard_action_down &&
             modifiers == (mir_input_event_modifier_alt | mir_input_event_modifier_ctrl))
         {
             switch (scan_code)
