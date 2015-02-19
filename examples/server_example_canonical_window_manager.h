@@ -102,6 +102,8 @@ private:
 
     void select_surface(std::shared_ptr<scene::Surface> const& surface);
     auto select_surface() const -> std::shared_ptr<scene::Surface>;
+    bool resize(std::shared_ptr<scene::Surface> const& surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
+    bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
 
     Tools* const tools;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
