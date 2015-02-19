@@ -86,14 +86,7 @@ void FreetypeRenderer::render(char const* str, Image& img)
     penx = -minx + padding;
     peny = -miny + padding;
 
-    /*
-     * TODO: Coloured text support
-     * GL_ALPHA means the colour is always black. But rather than changing
-     * the colour format here, we should apply colour during rendering
-     * by glBlendColor or texture modulation. That way we can render once
-     * and choose/vary colour many times. Also the texture is smaller.
-     */
-    img.reserve(width, height, GL_ALPHA);
+    img.reserve(width, height, Image::alpha8);
 
     s = str;
     while (unsigned long u = unicode_from_utf8(&s))

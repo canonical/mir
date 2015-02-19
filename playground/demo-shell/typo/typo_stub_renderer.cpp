@@ -31,7 +31,7 @@ void StubRenderer::render(char const* str, Image& img)
     int const top = (tex_height - char_height) / 2;
 
     img.reserve(len*(char_width+char_space) - char_space, tex_height,
-                GL_ALPHA);
+                Image::alpha8);
 
     char const* s = str;
     for (int n = 0; unicode_from_utf8(&s); ++n)

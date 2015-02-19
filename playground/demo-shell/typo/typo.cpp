@@ -23,10 +23,8 @@
 using namespace mir::examples::typo;
 
 Image::Image()
-    : buf(nullptr), width(0), stride(0), height(0), align(4),
-      format(GL_ALPHA)
+    : buf(nullptr), width(0), stride(0), height(0), align(4), format(alpha8)
 {
-    glGetIntegerv(GL_UNPACK_ALIGNMENT, &align);
 }
 
 Image::~Image()
@@ -34,18 +32,16 @@ Image::~Image()
     delete[] buf;
 }
 
-void Image::reserve(int w, int h, GLenum fmt)
+void Image::reserve(int w, int h, Format f)
 {
     width = w;
     height = h;
-    format = fmt;
-    int const bpp = (format == GL_ALPHA || format == GL_LUMINANCE) ? 1
-                  : (format == GL_LUMINANCE_ALPHA) ? 2
-                  : 4;
+    format = f;
+    int const bpp = 1;  // format is always alpha8
     stride = (((width * bpp) + align - 1) / align) * align;
     delete[] buf;
     auto size = stride * height;
-    buf = new GLubyte[size];
+    buf = new unsigned char[size];
     memset(buf, 0, size);
 }
 
@@ -128,8 +124,8 @@ Cache::Entry const& Cache::get(char const* str)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexImage2D(GL_TEXTURE_2D, 0, img.format,
-                         img.width, img.height, 0, img.format,
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA,
+                         img.width, img.height, 0, GL_ALPHA,
                          GL_UNSIGNED_BYTE, img.buf);
             glGenerateMipmap(GL_TEXTURE_2D); // Antialiasing shrinkage please
         }

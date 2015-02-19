@@ -28,12 +28,14 @@ namespace mir { namespace examples { namespace typo {
 
 struct Image
 {
+    typedef enum {alpha8} Format;
+
     Image();
     ~Image();
-    void reserve(int w, int h, GLenum fmt);
-    GLubyte *buf;
+    void reserve(int w, int h, Format f);
+    unsigned char* buf;
     int width, stride, height, align;
-    GLenum format;  // glTexImage2D format
+    Format format;
 };
 
 class Renderer
