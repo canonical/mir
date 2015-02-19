@@ -17,6 +17,7 @@
  */
 
 #include "typo_freetype_renderer.h"
+#include <stdexcept>
 #include <cstring>
 
 using namespace mir::examples::typo;
@@ -103,7 +104,7 @@ void FreetypeRenderer::render(char const* str, Image& img)
             y >= 0 && y+bitmap.rows <= img.height)
         {
             unsigned char* src = bitmap.buffer;
-            GLubyte* dest = img.buf + y*img.stride + x;
+            unsigned char* dest = img.buf + y*img.stride + x;
 
             int ylimit = y + bitmap.rows;
             for (; y < ylimit; ++y)

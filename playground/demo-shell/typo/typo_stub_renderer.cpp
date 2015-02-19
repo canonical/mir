@@ -36,7 +36,8 @@ void StubRenderer::render(char const* str, Image& img)
     char const* s = str;
     for (int n = 0; unicode_from_utf8(&s); ++n)
     {
-        GLubyte* row = img.buf + top*img.stride + n*(char_width+char_space);
+        unsigned char* row = img.buf + top*img.stride +
+                             n*(char_width+char_space);
         for (int y = 0; y < char_height; ++y)
         {
             memset(row, 255, char_width);

@@ -19,11 +19,6 @@
 #ifndef MIR_EXAMPLES_TYPO
 #define MIR_EXAMPLES_TYPO
 
-#include <GLES2/gl2.h>  // TODO: Support plain OpenGL too
-#include <string>
-#include <unordered_map>
-#include <memory>
-
 namespace mir { namespace examples { namespace typo {
 
 struct Image
@@ -45,31 +40,6 @@ public:
     virtual void render(char const* str, Image& img) = 0;
 protected:
     static unsigned long unicode_from_utf8(char const** utf8);
-};
-
-class Cache
-{
-public:
-    struct Entry
-    {
-        bool valid() const;
-        GLuint tex = 0;
-        int width = 0, height = 0;
-        bool used = false;
-    };
-
-    explicit Cache(std::shared_ptr<Renderer> const&);
-    ~Cache();
-    void change_renderer(std::shared_ptr<Renderer> const&);
-    Entry const& get(char const* str);
-    void clear();
-    void mark_all_unused();
-    void drop_unused();
-
-private:
-    typedef std::unordered_map<std::string, Entry> Map;
-    Map map;
-    std::shared_ptr<Renderer> renderer;
 };
 
 } } } // namespace mir::examples::typo

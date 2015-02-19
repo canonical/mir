@@ -17,7 +17,6 @@
  */
 
 #include "typo.h"
-#include <GLES2/gl2.h>  // TODO: Support plain OpenGL too
 #include <cstring>
 
 using namespace mir::examples::typo;
@@ -56,80 +55,4 @@ unsigned long Renderer::unicode_from_utf8(char const** utf8)
     if (unicode)
         *utf8 += char_len;
     return unicode;
-}
-
-Cache::Cache(std::shared_ptr<Renderer> const& r)
-    : renderer(r)
-{
-}
-
-Cache::~Cache()
-{
-    clear();
-}
-
-void Cache::change_renderer(std::shared_ptr<Renderer> const& r)
-{
-    clear();
-    renderer = r;
-}
-
-void Cache::clear()
-{
-    for (auto& e : map)
-        glDeleteTextures(1, &e.second.tex);
-    map.clear();
-}
-
-void Cache::mark_all_unused()
-{
-    for (auto& e : map)
-        e.second.used = false;
-}
-
-void Cache::drop_unused()
-{
-    for (auto e = map.begin(); e != map.end();)
-    {
-        if (!e->second.used)
-        {
-            glDeleteTextures(1, &e->second.tex);
-            e = map.erase(e);
-        }
-        else
-            e++;
-    }
-}
-
-bool Cache::Entry::valid() const
-{
-    return width > 0 && height > 0;
-}
-
-Cache::Entry const& Cache::get(char const* str)
-{
-    Entry& entry = map[str];
-    if (!entry.valid())
-    {
-        Image img;
-        renderer->render(str, img);
-        if (img.buf)
-        {
-            entry.width = img.width;
-            entry.height = img.height;
-            glGenTextures(1, &entry.tex);
-            glBindTexture(GL_TEXTURE_2D, entry.tex);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                                           GL_LINEAR_MIPMAP_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA,
-                         img.width, img.height, 0, GL_ALPHA,
-                         GL_UNSIGNED_BYTE, img.buf);
-            glGenerateMipmap(GL_TEXTURE_2D); // Antialiasing shrinkage please
-        }
-    }
-    entry.used = true;
-    return entry;
 }
