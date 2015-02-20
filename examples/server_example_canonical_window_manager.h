@@ -32,6 +32,7 @@ namespace examples
 {
 struct CanonicalSessionInfo
 {
+    int surfaces{0};
 };
 
 struct CanonicalSurfaceInfo
@@ -102,8 +103,11 @@ private:
 
     void toggle(MirSurfaceState state);
 
-    void select_surface(std::shared_ptr<scene::Surface> const& surface);
-    auto select_surface() const -> std::shared_ptr<scene::Surface>;
+    // "Mir and Unity: Surfaces, input, and displays (v0.3)" talks about active
+    //  *window*,but Mir really only understands surfaces
+    void select_active_surface(std::shared_ptr<scene::Surface> const& surface);
+    auto active_surface() const -> std::shared_ptr<scene::Surface>;
+
     bool resize(std::shared_ptr<scene::Surface> const& surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
     bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
     void move_children(std::shared_ptr<scene::Surface> const& surface, geometry::Displacement movement) const;
@@ -113,7 +117,7 @@ private:
 
     geometry::Rectangle display_area;
     geometry::Point old_cursor{};
-    std::weak_ptr<scene::Surface> selected_surface;
+    std::weak_ptr<scene::Surface> active_surface_;
 };
 }
 }

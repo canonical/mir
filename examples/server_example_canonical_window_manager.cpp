@@ -56,7 +56,7 @@ me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(Tools* const tool
 void me::CanonicalWindowManagerPolicy::click(Point cursor)
 {
     if (auto const surface = surface_coordinator->surface_at(cursor))
-        select_surface(surface);
+        select_active_surface(surface);
 
     old_cursor = cursor;
 }
@@ -72,8 +72,8 @@ void me::CanonicalWindowManagerPolicy::handle_displays_updated(CanonicalSessionI
 
 void me::CanonicalWindowManagerPolicy::resize(Point cursor)
 {
-    select_surface(surface_coordinator->surface_at(old_cursor));
-    resize(selected_surface.lock(), cursor, old_cursor, display_area);
+    select_active_surface(surface_coordinator->surface_at(old_cursor));
+    resize(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
 
@@ -163,15 +163,23 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
     return parameters;
 }
 
-void me::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& /*session*/, std::shared_ptr<ms::Surface> const& surface)
+void me::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = surface->parent())
     {
         tools->info_for(parent).children.push_back(surface);
     }
+
+    tools->info_for(session).surfaces++;
+
+    // TODO There's currently no way to insert surfaces into an active (or inactive)
+    // TODO window tree while keeping the order stable or consistent with spec.
+    // TODO Nor is there a way to update the "default surface" when appropriate!!
+    // TODO for now just give the surface's session focus.
+    tools->set_focus_to(session);
 }
 
-void me::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& surface)
+void me::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = tools->info_for(surface).parent.lock())
     {
@@ -185,6 +193,12 @@ void me::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms:
                 break;
             }
         }
+    }
+
+
+    if (!--tools->info_for(session).surfaces && session == tools->focussed_application().lock())
+    {
+        tools->focus_next();
     }
 }
 
@@ -249,8 +263,8 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
 
 void me::CanonicalWindowManagerPolicy::drag(Point cursor)
 {
-    select_surface(surface_coordinator->surface_at(old_cursor));
-    drag(selected_surface.lock(), cursor, old_cursor, display_area);
+    select_active_surface(surface_coordinator->surface_at(old_cursor));
+    drag(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
 
@@ -383,7 +397,7 @@ bool me::CanonicalWindowManagerPolicy::handle_pointer_event(MirPointerInputEvent
 
 void me::CanonicalWindowManagerPolicy::toggle(MirSurfaceState state)
 {
-    if (auto const surface = select_surface())
+    if (auto const surface = active_surface())
     {
         if (surface->state() == state)
             state = mir_surface_state_restored;
@@ -393,19 +407,20 @@ void me::CanonicalWindowManagerPolicy::toggle(MirSurfaceState state)
     }
 }
 
-void me::CanonicalWindowManagerPolicy::select_surface(std::shared_ptr<ms::Surface> const& surface)
+void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms::Surface> const& surface)
 {
     if (!surface)
     {
-        selected_surface.reset();
+        active_surface_.reset();
         return;
     }
 
     auto const& info_for = tools->info_for(surface);
     tools->set_focus_to(info_for.session.lock());
 
-    // TODO There's currently no way to raise a surface and (transitive) children
-    // TODO while keeping the order stable. This is definitely a frig that needs rework
+    // TODO There's currently no way to raise the active window tree while keeping
+    // TODO the order stable or consistent with spec.
+    // TODO This is definitely a frig that needs rework
     surface_coordinator->raise(surface);
     for (auto const& child : info_for.children)
         surface_coordinator->raise(child);
@@ -420,7 +435,7 @@ void me::CanonicalWindowManagerPolicy::select_surface(std::shared_ptr<ms::Surfac
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
         // TODO set the input focus to this window
-        selected_surface = surface;
+        active_surface_ = surface;
         break;
 
     case mir_surface_type_gloss:
@@ -428,15 +443,15 @@ void me::CanonicalWindowManagerPolicy::select_surface(std::shared_ptr<ms::Surfac
     default:
         // Cannot have input focus
         if (auto const parent = info_for.parent.lock())
-            select_surface(parent);
+            select_active_surface(parent);
         break;
     }
 }
 
-auto me::CanonicalWindowManagerPolicy::select_surface() const
+auto me::CanonicalWindowManagerPolicy::active_surface() const
 -> std::shared_ptr<ms::Surface>
 {
-    if (auto const surface = selected_surface.lock())
+    if (auto const surface = active_surface_.lock())
         return surface;
 
     if (auto const session = tools->focussed_application().lock())
