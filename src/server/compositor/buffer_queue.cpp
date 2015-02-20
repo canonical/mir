@@ -133,18 +133,17 @@ mc::BufferQueue::BufferQueue(
         free_buffers.push_back(current_compositor_buffer);
 
     // A lock_guard will be created by the policy dispatcher invoking the given "lock" lambda
-    // before it acquires any internal locks of its own. Since we use a unique_lock
-    // object the guard will be automatically unlocked and hence why we use an empty "unlock" lambda.
+    // before it acquires any internal locks of its own.
     framedrop_policy = policy_provider.create_policy([this]
     {
         // We ignore any ongoing snapshotting as it could lead to deadlock.
         // In order to wait the guard_lock needs to be released; a BufferQueue::release
         // call can sneak in at that time from a different thread which
         // can invoke framedrop_policy methods
-        drop_frame(std::move(guard_lock), ignore_snapshot);
+        drop_frame(guard_lock, ignore_snapshot);
     },
     [this] { guard_lock = std::move(std::unique_lock<decltype(guard)>{guard}); },
-    []{});
+    [this] { if (guard_lock.owns_lock()) guard_lock.unlock(); });
 }
 
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
@@ -157,7 +156,7 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
     {
         auto const buffer = free_buffers.back();
         free_buffers.pop_back();
-        give_buffer_to_client(buffer, std::move(lock));
+        give_buffer_to_client(buffer, lock);
         return;
     }
 
@@ -170,14 +169,14 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
     {
         auto const& buffer = gralloc->alloc_buffer(the_properties);
         buffers.push_back(buffer);
-        give_buffer_to_client(buffer.get(), std::move(lock));
+        give_buffer_to_client(buffer.get(), lock);
         return;
     }
 
     /* Last resort, drop oldest buffer from the ready queue */
     if (frame_dropping_enabled)
     {
-        drop_frame(std::move(lock), wait_for_snapshot);
+        drop_frame(lock, wait_for_snapshot);
         return;
     }
 
@@ -331,7 +330,7 @@ void mc::BufferQueue::force_requests_to_complete()
         {
             free_buffers.push_back(pop(ready_to_composite_queue));
         }
-        give_buffer_to_client(buffer, std::move(lock), ignore_snapshot);
+        give_buffer_to_client(buffer, lock, ignore_snapshot);
     }
 }
 
@@ -371,14 +370,14 @@ int mc::BufferQueue::buffers_free_for_client() const
 
 void mc::BufferQueue::give_buffer_to_client(
     mg::Buffer* buffer,
-    std::unique_lock<std::mutex> lock)
+    std::unique_lock<std::mutex>& lock)
 {
-    give_buffer_to_client(buffer, std::move(lock), wait_for_snapshot);
+    give_buffer_to_client(buffer, lock, wait_for_snapshot);
 }
 
 void mc::BufferQueue::give_buffer_to_client(
     mg::Buffer* buffer,
-    std::unique_lock<std::mutex> lock,
+    std::unique_lock<std::mutex>& lock,
     SnapshotWait wait_type)
 {
     /* Clears callback */
@@ -436,7 +435,7 @@ void mc::BufferQueue::release(
     if (!pending_client_notifications.empty())
     {
         framedrop_policy->swap_unblocked();
-        give_buffer_to_client(buffer, std::move(lock));
+        give_buffer_to_client(buffer, lock);
     }
     else if (!frame_dropping_enabled && buffers.size() > size_t(nbuffers))
     {
@@ -462,7 +461,7 @@ void mc::BufferQueue::release(
         free_buffers.push_back(buffer);
 }
 
-void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock, SnapshotWait wait_type)
+void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex>& lock, SnapshotWait wait_type)
 {
     // Make sure there is a client waiting for the frame before we drop it.
     // If not, then there's nothing to do.
@@ -514,7 +513,7 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock, SnapshotWait
         buffer_to_give = buffer.get();
     }
         
-    give_buffer_to_client(buffer_to_give, std::move(lock), wait_type);
+    give_buffer_to_client(buffer_to_give, lock, wait_type);
 }
 
 void mc::BufferQueue::drop_old_buffers()
