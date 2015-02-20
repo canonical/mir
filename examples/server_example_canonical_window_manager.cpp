@@ -229,26 +229,27 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
     }
 
     auto const old_pos = surface->top_left();
+    Displacement movement;
 
     switch (value)
     {
     case mir_surface_state_restored:
-        surface->move_to(info.restore_rect.top_left);
+        movement = info.restore_rect.top_left - old_pos;
         surface->resize(info.restore_rect.size);
         break;
 
     case mir_surface_state_maximized:
-        surface->move_to(display_area.top_left);
+        movement = display_area.top_left - old_pos;
         surface->resize(display_area.size);
         break;
 
     case mir_surface_state_horizmaximized:
-        surface->move_to({display_area.top_left.x, info.restore_rect.top_left.y});
+        movement = Point{display_area.top_left.x, info.restore_rect.top_left.y} - old_pos;
         surface->resize({display_area.size.width, info.restore_rect.size.height});
         break;
 
     case mir_surface_state_vertmaximized:
-        surface->move_to({info.restore_rect.top_left.x, display_area.top_left.y});
+        movement = Point{info.restore_rect.top_left.x, display_area.top_left.y} - old_pos;
         surface->resize({info.restore_rect.size.width, display_area.size.height});
         break;
 
@@ -256,7 +257,10 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
         break;
     }
 
-    move_children(surface, surface->top_left()-old_pos);
+    // TODO It is rather simplistic to move a tree WRT the top_left of the root
+    // TODO when resizing. But for more sophistication we would need to encode
+    // TODO some sensible layout rules.
+    move_tree(surface, movement);
 
     return info.state = value;
 }
@@ -530,8 +534,11 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
     }
 
     surface->resize(new_size);
-    surface->move_to(new_pos);
-    move_children(surface, new_pos-top_left);
+
+    // TODO It is rather simplistic to move a tree WRT the top_left of the root
+    // TODO when resizing. But for more sophistication we would need to encode
+    // TODO some sensible layout rules.
+    move_tree(surface, new_pos-top_left);
 
     return true;
 }
@@ -558,10 +565,7 @@ bool me::CanonicalWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface
         if (movement.dy > DeltaY{0})
             movement.dy = std::min(movement.dy, (bounds.bottom_right() - bottom_right).dy);
 
-        auto new_pos = surface->top_left() + movement;
-
-        surface->move_to(new_pos);
-        move_children(surface, movement);
+        move_tree(surface, movement);
 
         return true;
     }
@@ -569,14 +573,12 @@ bool me::CanonicalWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface
     return false;
 }
 
-// TODO It is rather simplistic to move children WRT the top_left of the parent.
-// TODO But for more sophistication we need to encode some sensible layout rules.
-void me::CanonicalWindowManagerPolicy::move_children(std::shared_ptr<ms::Surface> const& surface, Displacement movement) const
+void me::CanonicalWindowManagerPolicy::move_tree(std::shared_ptr<ms::Surface> const& root, Displacement movement) const
 {
-    for (auto const& child: tools->info_for(surface).children)
+    root->move_to(root->top_left() + movement);
+
+    for (auto const& child: tools->info_for(root).children)
     {
-        auto const ss = child.lock();
-        ss->move_to(ss->top_left() + movement);
-        move_children(ss, movement);
+        move_tree(child.lock(), movement);
     }
 }

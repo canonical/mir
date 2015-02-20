@@ -110,7 +110,7 @@ private:
 
     bool resize(std::shared_ptr<scene::Surface> const& surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
     bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
-    void move_children(std::shared_ptr<scene::Surface> const& surface, geometry::Displacement movement) const;
+    void move_tree(std::shared_ptr<scene::Surface> const& root, geometry::Displacement movement) const;
 
     Tools* const tools;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
