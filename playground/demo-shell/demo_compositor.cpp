@@ -83,7 +83,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         auto embellished = renderer.would_embellish(*renderable, viewport);
         auto any_part_drawn = (viewport.overlaps(renderable->screen_position()) || embellished);
         
-        mc::SceneElement::Decor decor;
+        mc::Decoration decor;
         if (it->is_a_surface(decor))
             decorated[renderable->id()] = decor;
         if (any_part_drawn)

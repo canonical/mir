@@ -71,9 +71,8 @@ public:
         tracker->occluded_in(cid);
     }
 
-    bool is_a_surface(Decor& d) const override
+    bool is_a_surface(mc::Decoration& d) const override
     {
-        d.type = Decor::window;  // TODO query surface type/state for this
         d.name = name_;
         return true;
     }
@@ -108,9 +107,8 @@ public:
     {
     }
     
-    bool is_a_surface(Decor& d) const override
+    bool is_a_surface(mc::Decoration&) const override
     {
-        d.type = Decor::none;
         return false;
     }
 
