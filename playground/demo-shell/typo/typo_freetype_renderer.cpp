@@ -83,7 +83,10 @@ void FreetypeRenderer::render(char const* str, Image& img)
 
     int const padding = preferred_height / 8;  // Allow mipmapping to smear
     int width = maxx - minx + 1 + 2*padding;
-    int height = maxy - miny + 1 + 2*padding;
+    int height = maxy - miny + 1;
+    if (height < preferred_height)  // e.g. str has no descenders, but make
+        height = preferred_height;  //      room so we get a consistent height
+    height += 2*padding;
     penx = -minx + padding;
     peny = -miny + padding;
 
