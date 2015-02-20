@@ -93,7 +93,7 @@ public:
         std::shared_ptr<scene::Surface> const& focus_surface);
 
     // The surface with focus
-    std::weak_ptr<scene::Surface> focused_surface() const;
+    std::shared_ptr<scene::Surface> focused_surface() const;
 
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;

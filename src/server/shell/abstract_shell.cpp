@@ -132,10 +132,10 @@ std::weak_ptr<ms::Session> msh::AbstractShell::focussed_application() const
     return focus_session;
 }
 
-std::weak_ptr<ms::Surface> msh::AbstractShell::focused_surface() const
+std::shared_ptr<ms::Surface> msh::AbstractShell::focused_surface() const
 {
     std::unique_lock<std::mutex> lock(focus_mutex);
-    return focus_surface;
+    return focus_surface.lock();
 }
 
 void msh::AbstractShell::set_focus_to(

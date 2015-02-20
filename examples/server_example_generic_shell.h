@@ -43,7 +43,7 @@ public:
         std::shared_ptr<scene::Session> const& focus_session,
         std::shared_ptr<scene::Surface> const& focus_surface) = 0;
 
-    virtual std::weak_ptr<scene::Surface> focused_surface() const = 0;
+    virtual std::shared_ptr<scene::Surface> focused_surface() const = 0;
 };
 
 class GenericShell : public virtual Shell, public virtual FocusController,
@@ -82,7 +82,7 @@ public:
         std::shared_ptr<scene::Surface> const& focus_surface) override;
 
     // The surface with focus
-    std::weak_ptr<scene::Surface> focused_surface() const override;
+    std::shared_ptr<scene::Surface> focused_surface() const override;
 
 private:
     void add_display(geometry::Rectangle const& area) override;

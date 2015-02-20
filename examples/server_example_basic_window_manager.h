@@ -63,9 +63,15 @@ public:
 
     virtual std::weak_ptr<scene::Session> focussed_application() const = 0;
 
+    virtual std::shared_ptr<scene::Surface> focused_surface() const = 0;
+
     virtual void focus_next() = 0;
 
     virtual void set_focus_to(std::shared_ptr<scene::Session> const& focus) = 0;
+
+    virtual void set_focus_to(
+        std::shared_ptr<scene::Session> const& focus,
+        std::shared_ptr<scene::Surface> const& surface) = 0;
 
     virtual ~BasicWindowManagerTools() = default;
     BasicWindowManagerTools() = default;
@@ -213,6 +219,11 @@ private:
         return focus_controller->focussed_application();
     }
 
+    std::shared_ptr<scene::Surface> focused_surface() const override
+    {
+        return focus_controller->focused_surface();
+    }
+
     void focus_next() override
     {
         focus_controller->focus_next();
@@ -223,7 +234,14 @@ private:
         focus_controller->set_focus_to(focus);
     }
 
-    shell::FocusController* const focus_controller;
+    void set_focus_to(
+        std::shared_ptr<scene::Session> const& focus,
+        std::shared_ptr<scene::Surface> const& surface) override
+    {
+        focus_controller->set_focus_to(focus, surface);
+    }
+
+    FocusController* const focus_controller;
     WindowManagementPolicy policy;
 
     std::mutex mutex;

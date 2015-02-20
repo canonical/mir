@@ -123,7 +123,7 @@ void me::GenericShell::remove_display(geometry::Rectangle const& area)
     window_manager->remove_display(area);
 }
 
-std::weak_ptr<ms::Surface> me::GenericShell::focused_surface() const
+std::shared_ptr<ms::Surface> me::GenericShell::focused_surface() const
 {
     return msh::AbstractShell::focused_surface();
 }

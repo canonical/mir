@@ -119,7 +119,6 @@ private:
     Tools* const tools;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
     geometry::Point old_cursor{};
-    std::weak_ptr<scene::Surface> old_surface;
 };
 }
 }
