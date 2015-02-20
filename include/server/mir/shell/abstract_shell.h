@@ -87,6 +87,11 @@ public:
     void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
 /** @} */
 
+    // More useful than FocusController::set_focus_to()!
+    void set_focus_to(
+        std::shared_ptr<scene::Session> const& focus_session,
+        std::shared_ptr<scene::Surface> const& focus_surface);
+
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;

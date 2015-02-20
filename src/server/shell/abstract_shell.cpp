@@ -139,6 +139,15 @@ void msh::AbstractShell::set_focus_to(
     set_focus_to_locked(lg, focus);
 }
 
+void msh::AbstractShell::set_focus_to(
+    std::shared_ptr<ms::Session> const& focus_session,
+    std::shared_ptr<ms::Surface> const& focus_surface)
+{
+    std::unique_lock<std::mutex> lock(focus_mutex);
+
+    set_focus_to_locked(lock, focus_session, focus_surface);
+}
+
 void msh::AbstractShell::set_focus_to_locked(
     std::unique_lock<std::mutex> const& /*lock*/,
     std::shared_ptr<ms::Surface> const& surface)
