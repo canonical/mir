@@ -31,7 +31,22 @@ namespace mir
 {
 namespace examples
 {
-class GenericShell : public virtual Shell,
+// TODO This interface keeps changes out of the Mir API (to explore the requirement)
+class FocusController : public virtual shell::FocusController
+{
+public:
+    using shell::FocusController::focus_next;
+    using shell::FocusController::focussed_application;
+    using shell::FocusController::set_focus_to;
+
+    virtual void set_focus_to(
+        std::shared_ptr<scene::Session> const& focus_session,
+        std::shared_ptr<scene::Surface> const& focus_surface) = 0;
+
+    virtual std::weak_ptr<scene::Surface> focused_surface() const = 0;
+};
+
+class GenericShell : public virtual Shell, public virtual FocusController,
     private shell::AbstractShell
 {
 public:
@@ -40,7 +55,7 @@ public:
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
-        std::function<std::shared_ptr<WindowManager>(shell::FocusController* focus_controller)> const& wm_builder);
+        std::function<std::shared_ptr<WindowManager>(FocusController* focus_controller)> const& wm_builder);
 
     std::shared_ptr<scene::Session> open_session(
         pid_t client_pid,
@@ -60,6 +75,14 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib,
         int value) override;
+
+    using FocusController::set_focus_to;
+    void set_focus_to(
+        std::shared_ptr<scene::Session> const& focus_session,
+        std::shared_ptr<scene::Surface> const& focus_surface) override;
+
+    // The surface with focus
+    std::weak_ptr<scene::Surface> focused_surface() const override;
 
 private:
     void add_display(geometry::Rectangle const& area) override;

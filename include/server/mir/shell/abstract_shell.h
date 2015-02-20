@@ -92,6 +92,9 @@ public:
         std::shared_ptr<scene::Session> const& focus_session,
         std::shared_ptr<scene::Surface> const& focus_surface);
 
+    // The surface with focus
+    std::weak_ptr<scene::Surface> focused_surface() const;
+
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
