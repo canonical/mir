@@ -47,10 +47,10 @@ std::vector<std::shared_ptr<mir::SharedLibrary>> available_platforms()
     std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
 
 #ifdef MIR_BUILD_PLATFORM_MESA
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-mesa.so")));
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-mesa")));
 #endif
 #ifdef MIR_BUILD_PLATFORM_ANDROID
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-android.so")));
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-android")));
 #endif
     return modules;
 }
