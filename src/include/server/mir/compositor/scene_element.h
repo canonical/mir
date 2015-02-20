@@ -19,6 +19,7 @@
 #ifndef MIR_COMPOSITOR_SCENE_ELEMENT_H_
 #define MIR_COMPOSITOR_SCENE_ELEMENT_H_
 
+#include <string>
 #include <memory>
 
 namespace mir
@@ -39,9 +40,17 @@ public:
     virtual void rendered() = 0;
     virtual void occluded() = 0;
     
-    // Query whether the SceneElement represents a window-surface, which at the discretion of the compositor
-    // may be eligible for window decoration.
-    virtual bool is_a_surface() const = 0;
+    /**
+     * Query whether the SceneElement represents a window-surface, which at the
+     * discretion of the compositor may be eligible for window decoration.
+     * If true, also returns some decoration info you may choose to use.
+     */
+    struct Decor
+    {
+        enum Type {none, window} type;
+        std::string name;
+    };
+    virtual bool is_a_surface(Decor& decor) const = 0;
 
 protected:
     SceneElement() = default;

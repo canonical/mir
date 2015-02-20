@@ -46,11 +46,12 @@ class SurfaceSceneElement : public mc::SceneElement
 {
 public:
     SurfaceSceneElement(
-        std::shared_ptr<mg::Renderable> renderable,
+        std::shared_ptr<ms::Surface> surface,
         std::shared_ptr<ms::RenderingTracker> const& tracker,
         mc::CompositorID id)
-        : renderable_{renderable},
-          tracker{tracker},
+        : renderable_{surface->compositor_snapshot(id)},
+          name_{surface->name()},  // <-^- slight risk these are out of sync
+          tracker{tracker},        //      but that's less than any buffer lag
           cid{id}
     {
     }
@@ -70,13 +71,16 @@ public:
         tracker->occluded_in(cid);
     }
 
-    bool is_a_surface() const override
+    bool is_a_surface(Decor& d) const override
     {
+        d.type = Decor::window;  // TODO query surface type/state for this
+        d.name = name_;
         return true;
     }
 
 private:
     std::shared_ptr<mg::Renderable> const renderable_;
+    std::string const name_;
     std::shared_ptr<ms::RenderingTracker> const tracker;
     mc::CompositorID cid;
 };
@@ -104,8 +108,9 @@ public:
     {
     }
     
-    bool is_a_surface() const override
+    bool is_a_surface(Decor& d) const override
     {
+        d.type = Decor::none;
         return false;
     }
 
@@ -134,7 +139,7 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
             if (surface->visible())
             {
                 auto element = std::make_shared<SurfaceSceneElement>(
-                    surface->compositor_snapshot(id),
+                    surface,
                     rendering_trackers[surface.get()],
                     id);
                 elements.emplace_back(element);

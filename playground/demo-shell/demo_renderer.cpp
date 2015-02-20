@@ -219,9 +219,9 @@ DemoRenderer::~DemoRenderer()
     glDeleteTextures(1, &titlebar_corner_tex);
 }
 
-void DemoRenderer::begin(std::unordered_set<graphics::Renderable::ID> decoration_skip_list_) const
+void DemoRenderer::begin(DecorMap&& d) const
 {
-    decoration_skip_list = decoration_skip_list_;
+    decor_map = d;
     title_cache.drop_unused();
     title_cache.mark_all_unused();
 }
@@ -230,10 +230,13 @@ void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
                               graphics::Renderable const& renderable) const
 {
     GLRenderer::tessellate(primitives, renderable);
-    if (decoration_skip_list.find(renderable.id()) == decoration_skip_list.end())
+    auto d = decor_map.find(renderable.id());
+    if (d != decor_map.end())
     {
+        auto& decor = d->second;
         tessellate_shadow(primitives, renderable, shadow_radius);
-        tessellate_frame(primitives, renderable, titlebar_height);
+        tessellate_frame(primitives, renderable, titlebar_height,
+                         decor.name.c_str());
     }
 }
 
@@ -318,7 +321,8 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
 
 void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitives,
                                     graphics::Renderable const& renderable,
-                                    float titlebar_height) const
+                                    float titlebar_height,
+                                    char const* name) const
 {
     auto const& rect = renderable.screen_position();
     GLfloat left = rect.top_left.x.as_int();
@@ -358,7 +362,7 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
     titlebar.vertices[2] = {{inright, top,  0.0f}, {1.0f, 1.0f}};
     titlebar.vertices[3] = {{inleft,  top,  0.0f}, {1.0f, 1.0f}};
 
-    auto str = title_cache.get(renderable.name().c_str());
+    auto str = title_cache.get(name);
     GLfloat text_vin = titlebar_height / 5;
     GLfloat text_top = htop + text_vin;
     GLfloat text_bot = top - text_vin;

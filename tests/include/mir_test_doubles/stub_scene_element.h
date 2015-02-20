@@ -55,7 +55,7 @@ public:
     {
     }
     
-    bool is_a_surface() const override
+    bool is_a_surface(Decor&) const override
     {
         return false;
     }

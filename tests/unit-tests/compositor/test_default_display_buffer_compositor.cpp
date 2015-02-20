@@ -62,7 +62,7 @@ struct StubSceneElement : mc::SceneElement
         return renderable_;
     }
 
-    bool is_a_surface() const
+    bool is_a_surface(Decor&) const
     {
         return true;
     }
@@ -323,14 +323,14 @@ struct MockSceneElement : mc::SceneElement
 {
     MockSceneElement(std::shared_ptr<mg::Renderable> const& renderable)
     {
-        ON_CALL(*this, is_a_surface())
+        ON_CALL(*this, is_a_surface(testing::_))
             .WillByDefault(testing::Return(true));
         ON_CALL(*this, renderable())
             .WillByDefault(testing::Return(renderable));
     }
 
     MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
-    MOCK_CONST_METHOD0(is_a_surface, bool());
+    MOCK_CONST_METHOD1(is_a_surface, bool(mc::SceneElement::Decor&));
     MOCK_METHOD0(rendered, void());
     MOCK_METHOD0(occluded, void());
 };
