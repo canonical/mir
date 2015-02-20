@@ -69,7 +69,6 @@ private:
 class MockFrameDroppingPolicyFactory : public mc::FrameDroppingPolicyFactory
 {
 public:
-    std::unique_ptr<mc::FrameDroppingPolicy> create_policy(std::function<void()> const& drop_frame) const override;
     std::unique_ptr<mc::FrameDroppingPolicy> create_policy(
         std::function<void()> const& drop_frame,
         std::function<void()> const& lock,
@@ -89,7 +88,6 @@ private:
 class FrameDroppingPolicyFactoryMock : public mc::FrameDroppingPolicyFactory
 {
 public:
-    MOCK_CONST_METHOD1(create_policy, std::unique_ptr<mc::FrameDroppingPolicy>(std::function<void()> const&));
     MOCK_CONST_METHOD3(create_policy, std::unique_ptr<mc::FrameDroppingPolicy>(
                      std::function<void()> const&,
                      std::function<void()> const&,

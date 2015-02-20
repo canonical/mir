@@ -45,8 +45,6 @@ public:
     TimeoutFrameDroppingPolicyFactory(std::shared_ptr<mir::time::Timer> const& timer,
                                       std::chrono::milliseconds timeout);
 
-    std::unique_ptr<FrameDroppingPolicy> create_policy(std::function<void()> const& drop_frame) const override;
-
     std::unique_ptr<FrameDroppingPolicy> create_policy(
         std::function<void()> const& drop_frame,
         std::function<void()> const& lock,

@@ -95,12 +95,6 @@ mc::TimeoutFrameDroppingPolicyFactory::TimeoutFrameDroppingPolicyFactory(
 }
 
 std::unique_ptr<mc::FrameDroppingPolicy>
-mc::TimeoutFrameDroppingPolicyFactory::create_policy(std::function<void()> const& drop_frame) const
-{
-    return std::make_unique<TimeoutFrameDroppingPolicy>(timer, timeout, drop_frame, []{}, []{});
-}
-
-std::unique_ptr<mc::FrameDroppingPolicy>
 mc::TimeoutFrameDroppingPolicyFactory::create_policy(std::function<void()> const& drop_frame,
     std::function<void()> const& lock,
     std::function<void()> const& unlock) const

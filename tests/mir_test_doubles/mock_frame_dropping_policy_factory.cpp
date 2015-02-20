@@ -52,14 +52,6 @@ void mtd::MockFrameDroppingPolicy::parent_destroyed()
 }
 
 std::unique_ptr<mc::FrameDroppingPolicy>
-mtd::MockFrameDroppingPolicyFactory::create_policy(std::function<void()> const& drop_frame) const
-{
-    auto policy = new ::testing::NiceMock<MockFrameDroppingPolicy>{drop_frame, []{}, []{}, this};
-    policies.insert(policy);
-    return std::unique_ptr<mc::FrameDroppingPolicy>{policy};
-}
-
-std::unique_ptr<mc::FrameDroppingPolicy>
 mtd::MockFrameDroppingPolicyFactory::create_policy(std::function<void()> const& drop_frame,
     std::function<void()> const& lock, std::function<void()> const& unlock) const
 {

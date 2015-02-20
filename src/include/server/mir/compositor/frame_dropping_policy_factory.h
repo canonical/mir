@@ -46,14 +46,6 @@ public:
 
     /**
      * \brief Create a FrameDroppingPolicy that will call \a drop_frame when it
-     *        decides to drop a frame
-     * \param drop_frame    Function to call when a frame needs to be dropped
-     * \return              The policy object.
-     */
-    virtual std::unique_ptr<FrameDroppingPolicy> create_policy(std::function<void()> const& drop_frame) const = 0;
-
-    /**
-     * \brief Create a FrameDroppingPolicy that will call \a drop_frame when it
      *       decides to drop a frame
      *
      * The lock/unlock functions allow the user to preserve lock ordering

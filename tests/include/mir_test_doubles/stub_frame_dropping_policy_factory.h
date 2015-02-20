@@ -47,10 +47,6 @@ public:
 class StubFrameDroppingPolicyFactory : public mc::FrameDroppingPolicyFactory
 {
 public:
-    std::unique_ptr<mc::FrameDroppingPolicy> create_policy(std::function<void()> const&) const override
-    {
-        return std::unique_ptr<mc::FrameDroppingPolicy>{new StubFrameDroppingPolicy};
-    }
     std::unique_ptr<mc::FrameDroppingPolicy> create_policy(
         std::function<void()> const&,
         std::function<void()> const&,

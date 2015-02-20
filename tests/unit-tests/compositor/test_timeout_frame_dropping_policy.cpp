@@ -42,7 +42,7 @@ TEST(TimeoutFrameDroppingPolicy, does_not_fire_before_notified_of_block)
     bool frame_dropped{false};
 
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     clock->advance_time(timeout + std::chrono::milliseconds{1});
     EXPECT_FALSE(frame_dropped);
@@ -56,7 +56,7 @@ TEST(TimeoutFrameDroppingPolicy, schedules_alarm_for_correct_timeout)
     bool frame_dropped{false};
 
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
     policy->swap_now_blocking();
 
     clock->advance_time(timeout - std::chrono::milliseconds{1});
@@ -73,7 +73,7 @@ TEST(TimeoutFrameDroppingPolicy, framedrop_callback_cancelled_by_unblock)
 
     bool frame_dropped{false};
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     policy->swap_now_blocking();
     policy->swap_unblocked();
@@ -91,7 +91,7 @@ TEST(TimeoutFrameDroppingPolicy, policy_drops_one_frame_per_blocking_swap)
 
     bool frame_dropped{false};
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     policy->swap_now_blocking();
     policy->swap_now_blocking();
@@ -121,7 +121,7 @@ TEST(TimeoutFrameDroppingPolicy, policy_drops_frames_no_more_frequently_than_tim
 
     bool frame_dropped{false};
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     policy->swap_now_blocking();
     policy->swap_now_blocking();
@@ -144,7 +144,7 @@ TEST(TimeoutFrameDroppingPolicy, newly_blocking_frame_doesnt_reset_timeout)
 
     bool frame_dropped{false};
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     policy->swap_now_blocking();
     clock->advance_time(timeout - std::chrono::milliseconds{1});
@@ -162,7 +162,7 @@ TEST(TimeoutFrameDroppingPolicy, interspersed_timeouts_and_unblocks)
 
     bool frame_dropped{false};
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     policy->swap_now_blocking();
     policy->swap_now_blocking();
