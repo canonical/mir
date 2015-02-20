@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_
-#define MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_
+#ifndef MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_H_
+#define MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_H_
 
 #include "typo_renderer.h"
 #include <ft2build.h>
@@ -41,4 +41,4 @@ private:
 
 } } } // namespace mir::examples::typo
 
-#endif // MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_
+#endif // MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_H_

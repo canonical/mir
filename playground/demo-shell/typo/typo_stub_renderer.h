@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_TYPO_STUB_RENDERER_
-#define MIR_EXAMPLES_TYPO_STUB_RENDERER_
+#ifndef MIR_EXAMPLES_TYPO_STUB_RENDERER_H_
+#define MIR_EXAMPLES_TYPO_STUB_RENDERER_H_
 
 #include "typo_renderer.h"
 
@@ -31,4 +31,4 @@ public:
 
 } } } // namespace mir::examples::typo
 
-#endif // MIR_EXAMPLES_TYPO_STUB_RENDERER_
+#endif // MIR_EXAMPLES_TYPO_STUB_RENDERER_H_

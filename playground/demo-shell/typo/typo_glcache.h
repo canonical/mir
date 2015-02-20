@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_TYPO_GLCACHE_
-#define MIR_EXAMPLES_TYPO_GLCACHE_
+#ifndef MIR_EXAMPLES_TYPO_GLCACHE_H_
+#define MIR_EXAMPLES_TYPO_GLCACHE_H_
 
 #include "typo_renderer.h"
 #include <string>
@@ -53,4 +53,4 @@ private:
 
 } } } // namespace mir::examples::typo
 
-#endif // MIR_EXAMPLES_TYPO_GLCACHE_
+#endif // MIR_EXAMPLES_TYPO_GLCACHE_H_
