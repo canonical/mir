@@ -40,8 +40,10 @@ me::TilingSurfaceInfo::TilingSurfaceInfo(
 {
 }
 
-me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(Tools* const tools) :
-    tools{tools}
+me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(
+    Tools* const tools,
+    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator) :
+    tools{tools}, surface_coordinator{surface_coordinator}
 {
 }
 
