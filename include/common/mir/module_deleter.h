@@ -42,7 +42,7 @@ inline char const* this_library()
 }
 }
 
-const struct ModuleDeleterTag {} from_this_library;
+const struct ModuleDeleterTag {} from_this_library{};
 
 template<typename T>
 struct ModuleDeleter : std::default_delete<T>

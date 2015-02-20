@@ -24,6 +24,10 @@ struct Implementation : SomeInterface
     {
         ++local_var;
     }
+    ~Implementation()
+    {
+        --local_var;
+    }
     int local_var{0};
 };
 
