@@ -20,6 +20,7 @@
 
 #include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
+#include "mir/library_shared_ptr.h"
 
 #include <memory>
 #include <string>
@@ -314,7 +315,6 @@ public:
 
     // new input reading related parts:
     virtual std::shared_ptr<input::Platform> the_input_platform();
-    virtual std::shared_ptr<SharedLibrary> the_input_platform_library();
     virtual std::shared_ptr<input::InputManager> the_new_input_manager();
     virtual std::shared_ptr<MainLoop> the_event_loop();
     virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
@@ -382,7 +382,6 @@ protected:
     CachedPtr<input::InputManager>    new_input_manager; // currently not used by default
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
     CachedPtr<input::Platform>    input_platform; // currently not used by default
-    std::shared_ptr<SharedLibrary> platform_input_library; // currently not used by default // TODO find different solution for managing platform
     CachedPtr<MainLoop> event_reading_loop; // currently not used by default
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;

@@ -362,28 +362,21 @@ mir::DefaultServerConfiguration::the_cursor_images()
         });
 }
 
-std::shared_ptr<mir::SharedLibrary>
-mir::DefaultServerConfiguration::the_input_platform_library()
-{
-    if (platform_input_library)
-        return platform_input_library;
-
-    platform_input_library = std::make_shared<mir::SharedLibrary>(
-        the_options()->get<std::string>(options::platform_input_lib));
-    return platform_input_library;
-}
-
 std::shared_ptr<mi::Platform>
 mir::DefaultServerConfiguration::the_input_platform()
 {
     return input_platform(
         [this]() -> std::shared_ptr<mi::Platform>
         {
-            auto create = the_input_platform_library()->load_function<mi::CreatePlatform>(
+            auto lib = std::make_shared<mir::SharedLibrary>(
+                the_options()->get<std::string>(options::platform_input_lib))
+            auto create = lib->load_function<mi::CreatePlatform>(
                 "create_input_platform",
                 MIR_SERVER_INPUT_PLATFORM_VERSION);
             return create(the_options(), the_emergency_cleanup(), the_input_report());
         });
+
+    dlopen
 }
 
 std::shared_ptr<mi::InputManager>

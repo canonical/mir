@@ -21,6 +21,7 @@
 #define MIR_INPUT_PLATFORM_H_
 
 #include <mir/options/option.h>
+#include <mir/module_deleter.h>
 
 #include <boost/program_options/options_description.hpp>
 
@@ -76,7 +77,7 @@ private:
     Platform& operator=(Platform const&) = delete;
 };
 
-extern "C" typedef std::unique_ptr<Platform>(*CreatePlatform)(
+extern "C" typedef mir::UniqueModulePtr<Platform>(*CreatePlatform)(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<InputReport> const& report);
@@ -91,7 +92,7 @@ extern "C" typedef std::unique_ptr<Platform>(*CreatePlatform)(
  *
  * \ingroup platform_enablement
  */
-extern "C" std::unique_ptr<Platform> create_input_platform(
+extern "C" std::UniqueModulePtr<Platform> create_input_platform(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<InputReport> const& report);

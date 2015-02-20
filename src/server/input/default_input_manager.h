@@ -22,6 +22,7 @@
 #include "main_loop_wrapper.h"
 
 #include "mir/input/input_manager.h"
+#include "mir/library_shared_ptr.h"
 
 #include <thread>
 #include <mutex>
