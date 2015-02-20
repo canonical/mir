@@ -29,7 +29,7 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_display_changer.h"
-#include "mir_test_doubles/null_display_group.h"
+#include "mir_test_doubles/null_display_sync_group.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test/display_config_matchers.h"
@@ -62,13 +62,13 @@ public:
     {
     }
 
-    void for_each_display_group(std::function<void(mg::DisplayGroup&)> const& f) override
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
-        f(display_group);
+        f(display_sync_group);
     }
 
 private:
-    mtd::NullDisplayGroup display_group;
+    mtd::NullDisplaySyncGroup display_sync_group;
 };
 
 class StubChanger : public mtd::NullDisplayChanger

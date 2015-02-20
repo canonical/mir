@@ -58,7 +58,7 @@ class StubDisplayWithMockBuffers : public mtd::NullDisplay
 public:
     StubDisplayWithMockBuffers(unsigned int nbuffers) : buffers{nbuffers} {}
 
-    void for_each_display_group(std::function<void(mg::DisplayGroup&)> const& f) override
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
         for (auto& db : buffers)
             f(db);
@@ -71,7 +71,7 @@ public:
     }
 
 private:
-    struct StubDisplayGroup : mg::DisplayGroup
+    struct StubDisplaySyncGroup : mg::DisplaySyncGroup
     {
         void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
         {
@@ -81,7 +81,7 @@ private:
         testing::NiceMock<mtd::MockDisplayBuffer> buffer; 
     };
 
-    std::vector<StubDisplayGroup> buffers;
+    std::vector<StubDisplaySyncGroup> buffers;
 };
 
 class StubScene : public mtd::StubScene

@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_GROUP_H_
-#define MIR_TEST_DOUBLES_NULL_DISPLAY_GROUP_H_
+#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_SYNC_GROUP_H_
+#define MIR_TEST_DOUBLES_NULL_DISPLAY_SYNC_GROUP_H_
 
 #include "mir/graphics/display.h"
 #include "mir/geometry/size.h"
@@ -32,16 +32,16 @@ namespace test
 namespace doubles
 {
 
-struct StubDisplayGroup : graphics::DisplayGroup
+struct StubDisplaySyncGroup : graphics::DisplaySyncGroup
 {
 public:
-    StubDisplayGroup(std::vector<geometry::Rectangle> const& output_rects)
+    StubDisplaySyncGroup(std::vector<geometry::Rectangle> const& output_rects)
         : output_rects{output_rects}
     {
         for (auto const& output_rect : output_rects)
             display_buffers.emplace_back(output_rect);
     }
-    StubDisplayGroup(geometry::Size sz) : StubDisplayGroup({{{0,0}, sz}}) {}
+    StubDisplaySyncGroup(geometry::Size sz) : StubDisplaySyncGroup({{{0,0}, sz}}) {}
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override
     {
@@ -60,7 +60,7 @@ private:
     std::vector<StubDisplayBuffer> display_buffers;
 };
 
-struct NullDisplayGroup : graphics::DisplayGroup
+struct NullDisplaySyncGroup : graphics::DisplaySyncGroup
 {
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override
     {
@@ -78,4 +78,4 @@ struct NullDisplayGroup : graphics::DisplayGroup
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_ */
+#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_SYNC_GROUP_H_ */

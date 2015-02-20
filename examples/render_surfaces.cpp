@@ -337,7 +337,7 @@ public:
 
         /* TODO: Get proper configuration */
         geom::Rectangles view_area;
-        display->for_each_display_group([&](mg::DisplayGroup& group)
+        display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group)
         {
             group.for_each_display_buffer([&](mg::DisplayBuffer& db)
             {

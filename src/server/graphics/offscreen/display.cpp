@@ -71,18 +71,18 @@ mgo::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
         eglTerminate(egl_display);
 }
 
-mgo::detail::DisplayGroup::DisplayGroup(std::unique_ptr<mg::DisplayBuffer> output) :
+mgo::detail::DisplaySyncGroup::DisplaySyncGroup(std::unique_ptr<mg::DisplayBuffer> output) :
     output(std::move(output))
 {
 }
 
-void mgo::detail::DisplayGroup::for_each_display_buffer(
+void mgo::detail::DisplaySyncGroup::for_each_display_buffer(
     std::function<void(mg::DisplayBuffer&)> const& f)
 {
     f(*output);
 }
 
-void mgo::detail::DisplayGroup::post()
+void mgo::detail::DisplaySyncGroup::post()
 {
 }
 
@@ -109,12 +109,12 @@ mgo::Display::~Display() noexcept
 {
 }
 
-void mgo::Display::for_each_display_group(
-    std::function<void(mg::DisplayGroup&)> const& f)
+void mgo::Display::for_each_display_sync_group(
+    std::function<void(mg::DisplaySyncGroup&)> const& f)
 {
     std::lock_guard<std::mutex> lock{configuration_mutex};
 
-    for (auto& dg_ptr : display_groups)
+    for (auto& dg_ptr : display_sync_groups)
         f(*dg_ptr);
 }
 
@@ -135,7 +135,7 @@ void mgo::Display::configure(mg::DisplayConfiguration const& conf)
 
     std::lock_guard<std::mutex> lock{configuration_mutex};
 
-    display_groups.clear();
+    display_sync_groups.clear();
 
     conf.for_each_output(
         [this] (DisplayConfigurationOutput const& output)
@@ -146,8 +146,8 @@ void mgo::Display::configure(mg::DisplayConfiguration const& conf)
                     SurfacelessEGLContext{egl_display, egl_context_shared},
                     output.extents()};
 
-                display_groups.emplace_back(
-                    new mgo::detail::DisplayGroup(std::unique_ptr<mg::DisplayBuffer>(raw_db)));
+                display_sync_groups.emplace_back(
+                    new mgo::detail::DisplaySyncGroup(std::unique_ptr<mg::DisplayBuffer>(raw_db)));
             }
         });
 }

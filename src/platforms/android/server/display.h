@@ -57,7 +57,7 @@ public:
         OverlayOptimization overlay_option);
     ~Display() noexcept;
 
-    void for_each_display_group(std::function<void(graphics::DisplayGroup&)> const& f) override;
+    void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override;
     void configure(graphics::DisplayConfiguration const&) override;

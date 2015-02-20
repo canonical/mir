@@ -22,7 +22,7 @@
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_display_group.h"
+#include "mir_test_doubles/null_display_sync_group.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
@@ -77,17 +77,17 @@ class StubDisplay : public mtd::NullDisplay
 {
 public:
     StubDisplay() :
-        display_group{geom::Size{1600,1600}}
+        display_sync_group{geom::Size{1600,1600}}
     {
     }
 
-    void for_each_display_group(std::function<void(mg::DisplayGroup&)> const& f) override
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
-        f(display_group);
+        f(display_sync_group);
     }
 
 private:
-    mtd::StubDisplayGroup display_group;
+    mtd::StubDisplaySyncGroup display_sync_group;
 };
 
 struct SurfaceSync

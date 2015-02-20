@@ -438,7 +438,7 @@ TEST_F(MesaDisplayTest, post_update)
 
     auto display = create_display(create_platform());
 
-    display->for_each_display_group([](mg::DisplayGroup& group) {
+    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([](mg::DisplayBuffer& db) {
             db.gl_swap_buffers();
         });
@@ -477,7 +477,7 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
     EXPECT_THROW(
     {
         auto display = create_display(create_platform());
-        display->for_each_display_group([](mg::DisplayGroup& group) {
+        display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
             group.for_each_display_buffer([](mg::DisplayBuffer& db) {
                 db.gl_swap_buffers();
             });
@@ -623,7 +623,7 @@ TEST_F(MesaDisplayTest, for_each_display_buffer_calls_callback)
 
     int callback_count{0};
 
-    display->for_each_display_group([&](mg::DisplayGroup& group) {
+    display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([&](mg::DisplayBuffer&) {
             callback_count++;
         });

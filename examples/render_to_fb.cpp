@@ -53,7 +53,7 @@ void render_loop(mir::Server& server)
 
     mir::draw::glAnimationBasic gl_animation;
 
-    display->for_each_display_group([&](mg::DisplayGroup& group)
+    display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group)
     {
         group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
@@ -64,7 +64,7 @@ void render_loop(mir::Server& server)
 
     while (running)
     {
-        display->for_each_display_group([&](mg::DisplayGroup& group)
+        display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group)
         {
             group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
             {

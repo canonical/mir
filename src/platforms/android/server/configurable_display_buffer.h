@@ -30,9 +30,9 @@ namespace graphics
 namespace android
 {
 
-//TODO: break this dependency, android displaybuffers shouldn't be their own DisplayGroups
+//TODO: break this dependency, android displaybuffers shouldn't be their own DisplaySyncGroups
 class ConfigurableDisplayBuffer : public graphics::DisplayBuffer,
-                                  public graphics::DisplayGroup
+                                  public graphics::DisplaySyncGroup
 {
 public:
     virtual void configure(MirPowerMode power_mode, MirOrientation orientation) = 0;

@@ -98,7 +98,7 @@ geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& 
     int max_area = -1;
     geometry::Rectangle best = rect;
 
-    display->for_each_display_group([&](mg::DisplayGroup& group) 
+    display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group) 
     {
         group.for_each_display_buffer([&](mg::DisplayBuffer const& db)
             {

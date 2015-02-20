@@ -22,7 +22,7 @@
 #include "mir/graphics/display.h"
 #include "null_gl_context.h"
 #include "null_display_configuration.h"
-#include "null_display_group.h"
+#include "null_display_sync_group.h"
 
 namespace mir
 {
@@ -34,7 +34,7 @@ namespace doubles
 class NullDisplay : public graphics::Display
 {
  public:
-    void for_each_display_group(std::function<void(graphics::DisplayGroup&)> const& f) override
+    void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override
     {
         f(group);
     }
@@ -65,7 +65,7 @@ class NullDisplay : public graphics::Display
     {
         return std::unique_ptr<NullGLContext>{new NullGLContext()};
     }
-    NullDisplayGroup group;
+    NullDisplaySyncGroup group;
 };
 
 }

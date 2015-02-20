@@ -68,7 +68,7 @@ TEST_F(OffscreenDisplayTest, orientation_normal)
         mr::null_display_report()};
 
     int count = 0;
-    display.for_each_display_group([&](mg::DisplayGroup& group) {
+    display.for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([&](mg::DisplayBuffer& db) {
             ++count;
             EXPECT_EQ(mir_orientation_normal, db.orientation());
@@ -107,7 +107,7 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
     Mock::VerifyAndClearExpectations(&mock_gl);
 
     /* Binds the GL framebuffer objects */
-    display.for_each_display_group([&](mg::DisplayGroup& group) {
+    display.for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([&](mg::DisplayBuffer& db) {
             EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,Ne(EGL_NO_CONTEXT)));
             EXPECT_CALL(mock_gl, glBindFramebuffer(_,Ne(0)));
@@ -120,7 +120,7 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
     });
 
     /* Contexts are released at teardown */
-    display.for_each_display_group([&](mg::DisplayGroup& group) {
+    display.for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([&](mg::DisplayBuffer&) {
             EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,EGL_NO_CONTEXT));
         });

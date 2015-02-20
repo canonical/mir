@@ -86,9 +86,9 @@ public:
     {
     }
 
-    void for_each_display_group(std::function<void(mg::DisplayGroup&)> const& f) override
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
-        display->for_each_display_group(f);
+        display->for_each_display_sync_group(f);
     }
 
     std::unique_ptr<mg::DisplayConfiguration> configuration() const
