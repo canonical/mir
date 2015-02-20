@@ -113,16 +113,16 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
 {
     mir::test::Signal connection_released;
 
+    int fd_count_after_one_surface_lifetime = 0;
+               
     std::thread{
         [&]
         {
             auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
             EXPECT_TRUE(mir_connection_is_valid(connection));
 
-            int fd_count_after_one_surface_lifetime = 0;
-
-            for (int i = 0; i < 16; ++i)
-            {
+             for (int i = 0; i < 16; ++i)
+             {
                 MirSurfaceParameters request_params =
                 {
                     __PRETTY_FUNCTION__,
@@ -142,12 +142,6 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
                 }
             }
 
-            auto new_fd_count = count_fds();
-            // Investigation revealed we leak a differing number of fds (3, 0) on Mesa/Android over the
-            // entire lifetime of the client library. So we verify here only that we don't leak any FDs beyond
-            // those created up to the lifetime of the first surface.
-            EXPECT_EQ(new_fd_count, fd_count_after_one_surface_lifetime);
-
             mir_connection_release(connection);
 
             connection_released.raise();
@@ -157,4 +151,12 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
 
     EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{480}))
         << "Client hung" << std::endl;
+
+    // Investigation revealed we leak a differing number of fds (3, 0) on Mesa/Android over the
+    // entire lifetime of the client library. So we verify here only that we don't leak any FDs beyond
+    // those created up to the lifetime of the first surface.
+    auto new_fd_count = count_fds();
+
+    EXPECT_LE(new_fd_count, fd_count_after_one_surface_lifetime);
+
 }
