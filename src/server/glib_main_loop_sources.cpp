@@ -20,6 +20,7 @@
 #include "mir/glib_main_loop_sources.h"
 #include "mir/recursive_read_write_mutex.h"
 #include "mir/thread_safe_list.h"
+#include "mir/raii.h"
 
 #include <algorithm>
 #include <atomic>
@@ -258,22 +259,6 @@ md::GSourceHandle md::add_timer_gsource(
         mir::RecursiveReadWriteMutex mutex;
     };
 
-    struct CallerAutoLock
-    {
-        CallerAutoLock(std::function<void()> const& lock,
-                       std::function<void()> const& unlock)
-            : unlock{unlock}
-        {
-            lock();
-        }
-
-        ~CallerAutoLock()
-        {
-            unlock();
-        }
-        std::function<void()> unlock;
-    };
-
     struct TimerGSource
     {
         GSource gsource;
@@ -310,7 +295,7 @@ md::GSourceHandle md::add_timer_gsource(
 
             // Caller may pass std::function objects to preserve locking
             // order during callback dispatching, so aquire them first.
-            CallerAutoLock caller_lock{ctx.lock, ctx.unlock};
+            auto caller_lock = mir::raii::paired_calls(std::ref(ctx.lock), std::ref(ctx.unlock));
             RecursiveReadLock lock{ctx.mutex};
             if (ctx.enabled)
                 ctx.handler();
