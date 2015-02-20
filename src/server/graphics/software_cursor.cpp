@@ -98,11 +98,6 @@ public:
         position = new_position;
     }
 
-    std::string name() const override
-    {
-        return "mir::graphics::SoftwareCursor";
-    }
-
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
     mutable std::mutex position_mutex;

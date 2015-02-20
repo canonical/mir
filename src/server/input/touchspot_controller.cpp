@@ -83,10 +83,6 @@ public:
         position = {pos.x.as_int() - touchspot_image.width/2, pos.y.as_int() - touchspot_image.height/2};
     }
 
-    std::string name() const override
-    {
-        return "mir::input::Touchspot";
-    }
     
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
