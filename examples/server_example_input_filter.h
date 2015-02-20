@@ -31,6 +31,9 @@ namespace examples
 {
 auto make_printing_input_filter_for(mir::Server& server)
 -> std::shared_ptr<input::EventFilter>;
+
+auto make_screen_rotation_filter_for(mir::Server& server)
+-> std::shared_ptr<input::EventFilter>;
 }
 }
 

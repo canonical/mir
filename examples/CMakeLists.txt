@@ -70,6 +70,13 @@ target_link_libraries(mir_demo_client_eglstateswitcher
   eglapp
 )
 
+mir_add_wrapped_executable(mir_demo_client_tooltip
+  tooltip.c
+)
+target_link_libraries(mir_demo_client_tooltip
+  eglapp
+)
+
 mir_add_wrapped_executable(mir_demo_client_basic
   basic.c
 )
