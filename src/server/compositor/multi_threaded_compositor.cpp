@@ -313,8 +313,8 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     /* Start the display buffer compositing threads */
     display->for_each_display_group([this](mg::DisplayGroup& group)
     {
-        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, group, scene, report};
-        auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(thread_functor_raw);
+        auto thread_functor = std::make_unique<mc::CompositingFunctor>(
+            display_buffer_compositor_factory, group, scene, report);
 
         futures.push_back(thread_pool.run(std::ref(*thread_functor), &group));
         thread_functors.push_back(std::move(thread_functor));

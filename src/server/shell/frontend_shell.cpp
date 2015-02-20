@@ -21,6 +21,7 @@
 
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/prompt_session.h"
 
 namespace mf = mir::frontend;
@@ -75,7 +76,13 @@ void msh::FrontendShell::stop_prompt_session(std::shared_ptr<mf::PromptSession> 
 mf::SurfaceId msh::FrontendShell::create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    return wrapped->create_surface(scene_session, params);
+
+    auto populated_params = params;
+
+    if (populated_params.parent_id.is_set())
+        populated_params.parent = scene_session->surface(populated_params.parent_id.value());
+
+    return wrapped->create_surface(scene_session, populated_params);
 }
 
 void msh::FrontendShell::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)

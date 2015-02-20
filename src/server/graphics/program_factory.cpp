@@ -29,12 +29,11 @@ mg::ProgramFactory::create_gl_program(
     std::string const& fragment_shader) const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    return std::unique_ptr<mg::GLProgram>(
-        new SimpleGLProgram(vertex_shader.c_str(), fragment_shader.c_str()));
+    return std::make_unique<SimpleGLProgram>(
+        vertex_shader.c_str(), fragment_shader.c_str());
 }
 
 std::unique_ptr<mg::GLTextureCache> mg::ProgramFactory::create_texture_cache() const
 {
-    return std::unique_ptr<mg::GLTextureCache>(
-        new mir::compositor::RecentlyUsedCache());
+    return std::make_unique<mir::compositor::RecentlyUsedCache>();
 }

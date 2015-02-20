@@ -109,15 +109,6 @@ private:
     mg::DisplayGroup& secondary;
 };
 
-class BypassStubBuffer : public mtd::StubBuffer
-{
-public:
-    bool can_bypass() const override
-    {
-        return true;
-    }
-};
-
 struct SurfaceStackCompositor : public testing::Test
 {
     SurfaceStackCompositor() :
@@ -145,7 +136,7 @@ struct SurfaceStackCompositor : public testing::Test
     std::shared_ptr<mtd::MockBufferStream> mock_buffer_stream;
     std::shared_ptr<ms::BasicSurface> stub_surface;
     ms::SurfaceCreationParameters default_params;
-    BypassStubBuffer stubbuf;
+    mtd::StubBuffer stubbuf;
     CountingDisplayGroup stub_primary_db;
     CountingDisplayGroup stub_secondary_db;
     StubDisplay stub_display{stub_primary_db, stub_secondary_db};
