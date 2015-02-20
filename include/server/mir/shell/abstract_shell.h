@@ -109,6 +109,10 @@ private:
 
     void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Surface> const& next_focus);
     void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Session> const& next_focus);
+    void set_focus_to_locked(
+        std::unique_lock<std::mutex> const& lock,
+        std::shared_ptr<scene::Session> const& focus_session,
+        std::shared_ptr<scene::Surface> const& focus_surface);
 };
 }
 }

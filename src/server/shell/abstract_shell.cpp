@@ -165,14 +165,22 @@ void msh::AbstractShell::set_focus_to_locked(
     std::unique_lock<std::mutex> const& lock,
     std::shared_ptr<ms::Session> const& session)
 {
-    setting_focus_to(session);
-
-    auto old_focus = focus_session.lock();
-
     std::shared_ptr<ms::Surface> surface;
 
     if (session)
         surface = session->default_surface();
+
+    set_focus_to_locked(lock, session, surface);
+}
+
+void msh::AbstractShell::set_focus_to_locked(
+    std::unique_lock<std::mutex> const& lock,
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface)
+{
+    setting_focus_to(session);
+
+    auto old_focus = focus_session.lock();
 
     set_focus_to_locked(lock, surface);
 
