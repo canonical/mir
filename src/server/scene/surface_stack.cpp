@@ -277,6 +277,39 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
     // TODO: error logging when surface not found
 }
 
+namespace
+{
+template <typename Container>
+struct InReverse {
+    Container& container;
+    auto begin() -> decltype(container.rbegin()) { return container.rbegin(); }
+    auto end() -> decltype(container.rend()) { return container.rend(); }
+};
+
+template <typename Container>
+InReverse<Container> in_reverse(Container& container) { return InReverse<Container>{container}; }
+}
+
+auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
+-> std::shared_ptr<Surface>
+{
+    std::lock_guard<decltype(guard)> lg(guard);
+    for (auto &layer : in_reverse(layers_by_depth))
+    {
+        for (auto const& surface : in_reverse(layer.second))
+        {
+            // TODO There's a lack of clarity about how the input area will
+            // TODO be maintained and whether this test will detect clicks on
+            // TODO decorations (it should) as these may be outside the area
+            // TODO known to the client.  But it works for now.
+            if (surface->input_area_contains(cursor))
+                    return surface;
+        }
+    }
+
+    return {};
+}
+
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback)
 {
     std::lock_guard<decltype(guard)> lg(guard);
