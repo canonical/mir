@@ -98,7 +98,6 @@ mc::BufferQueue::BufferQueue(
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
-      client_keeping_up{true},
       the_properties{props},
       force_new_compositor_buffer{false},
       callbacks_allowed{true},
@@ -147,17 +146,12 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
     pending_client_notifications.push_back(std::move(complete));
 
     /*
-     * Just because we have free buffers doesn't mean we want to give one to
-     * the client just yet. We need to balance supply and demand so that it's
-     * not permanently biased toward the ready queue being full (N-1 buffers)
-     * and creating visible lag.
-     * The important thing to remember here is to check
-     * ready_to_composite_queue is not empty, so as to guarantee we're not
-     * throttling the client so much as to starve it (and hence starve the
-     * compositor). This ensures the client will definitely get some buffer
-     * given to it within one frame still.
+     * If the client is keeping up and the ready queue is not empty, then
+     * don't give it another buffer just yet. Doing so would create unnecessary
+     * visible lag. This way we get the low latency of double buffers no matter
+     * what nbuffers is.
      */
-    if (client_keeping_up && !ready_to_composite_queue.empty())
+    if (!ready_to_composite_queue.empty())
         return;
 
     if (!free_buffers.empty())
@@ -213,6 +207,10 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
 
     auto const buffer = pop(buffers_owned_by_client);
     ready_to_composite_queue.push_back(buffer);
+
+    int size = ready_to_composite_queue.size();
+    if (size > 1)
+       fprintf(stderr, "Read size is now %d\n", size);
 }
 
 std::shared_ptr<mg::Buffer>
@@ -433,11 +431,9 @@ void mc::BufferQueue::release(
     std::unique_lock<std::mutex> lock)
 {
     /*
-     * Be careful to not oversupply the client with buffers, so that it can't
-     * over-produce ready frames (looks laggy). At the same time, be careful
-     * to not over-throttle the client: If there are no "ready" frames yet
-     * then we want it to try harder and don't care if it holds more than
-     * one in order to catch up...
+     * Only give a buffer to the client if it's failing to keep up (the
+     * ready queue is empty). If it is keeping up then we don't want the
+     * ready queue growing beyond one element (which is visible lag).
      */
     if (!pending_client_notifications.empty() &&
         ready_to_composite_queue.empty())
