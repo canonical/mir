@@ -19,6 +19,8 @@
 #include "src/client/mir_prompt_session.h"
 #include "src/client/mir_event_distributor.h"
 
+#include "mir/events/event_builders.h"
+
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -26,6 +28,7 @@
 #include <thread>
 
 namespace mcl = mir::client;
+namespace mev = mir::events;
 namespace mt = mir::test;
 
 namespace google
@@ -202,16 +205,11 @@ TEST_F(MirPromptSessionTest, notifies_event_callback)
         mt::fake_shared(event_distributor)};
     prompt_session.register_prompt_session_state_change_callback(&MirPromptSessionTest::prompt_session_state_change, this);
 
-    MirEvent e;
-    e.type = mir_event_type_prompt_session_state_change;
-
     InSequence seq;
     EXPECT_CALL(*this, state_updated(mir_prompt_session_state_started));
     EXPECT_CALL(*this, state_updated(mir_prompt_session_state_stopped));
 
-    e.prompt_session.new_state = mir_prompt_session_state_started;
-    event_distributor.handle_event(e);
-    e.prompt_session.new_state = mir_prompt_session_state_stopped;
-    event_distributor.handle_event(e);
+    event_distributor.handle_event(*mev::make_event(mir_prompt_session_state_started));
+    event_distributor.handle_event(*mev::make_event(mir_prompt_session_state_stopped));
 }
 

@@ -37,6 +37,7 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD1(create_surface, frontend::SurfaceId(scene::SurfaceCreationParameters const&));
     MOCK_METHOD1(destroy_surface, void(frontend::SurfaceId));
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
+    MOCK_CONST_METHOD1(surface, std::shared_ptr<scene::Surface>(frontend::SurfaceId));
 
     MOCK_METHOD1(take_snapshot, void(scene::SnapshotCallback const&));
     MOCK_CONST_METHOD0(default_surface, std::shared_ptr<scene::Surface>());
@@ -55,6 +56,8 @@ struct MockSceneSession : public scene::Session
 
     MOCK_METHOD0(start_prompt_session, void());
     MOCK_METHOD0(stop_prompt_session, void());
+    MOCK_METHOD0(suspend_prompt_session, void());
+    MOCK_METHOD0(resume_prompt_session, void());
 };
 
 }

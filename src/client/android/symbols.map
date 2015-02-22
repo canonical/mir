@@ -1,5 +1,0 @@
-MIR_CLIENTPLATFORM_1 {
-  global: 
-    create_client_platform_factory;
-  local: *;
-};

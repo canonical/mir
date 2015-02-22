@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirConnectionAPI"
+
 #include "mir_connection_api.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir_toolkit/mir_client_library_drm.h"
@@ -27,7 +29,12 @@
 #include "default_connection_configuration.h"
 #include "display_configuration.h"
 #include "error_connections.h"
+#include "mir/uncaught.h"
 
+// Temporary include to ease client transition from mir_connection_drm* APIs.
+// to mir_connection_platform_operation().
+// TODO: Remove when transition is complete
+#include "../platforms/mesa/include/mir_toolkit/mesa/platform_operation.h"
 
 #include <unordered_set>
 #include <cstddef>
@@ -42,11 +49,6 @@ void assign_result(void* result, void** context)
 {
     if (context)
         *context = result;
-}
-
-size_t division_ceiling(size_t a, size_t b)
-{
-    return ((a - 1) / b) + 1;
 }
 
 class DefaultMirConnectionAPI : public mcl::MirConnectionAPI
@@ -75,7 +77,7 @@ public:
 
             auto const conf = configuration(sock);
 
-            std::unique_ptr<MirConnection> connection{new MirConnection(*conf)};
+            auto connection = std::make_unique<MirConnection>(*conf);
             auto const result = connection->connect(name, callback, context);
             connection.release();
             return result;
@@ -98,11 +100,13 @@ public:
                 auto wait_handle = connection->disconnect();
                 wait_handle->wait_for_all();
             }
-            catch (std::exception const&)
+            catch (std::exception const& ex)
             {
                 // We're implementing a C API so no exceptions are to be
                 // propagated. And that's OK because if disconnect() fails,
                 // we don't care why. We're finished with the connection anyway.
+
+                MIR_LOG_UNCAUGHT_EXCEPTION(ex);
             }
         }
         else
@@ -142,8 +146,9 @@ MirWaitHandle* mir_connect(
                                                 callback,
                                                 context);
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
 }
@@ -176,8 +181,9 @@ void mir_connection_release(MirConnection* connection)
     {
         return mir_connection_api_impl->release(connection);
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     }
 }
 
@@ -276,8 +282,9 @@ MirWaitHandle* mir_connection_apply_display_config(
     {
         return connection ? connection->configure_display(display_configuration) : nullptr;
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
 }
@@ -298,25 +305,142 @@ void mir_connection_get_available_surface_formats(
         connection->available_surface_formats(formats, format_size, *num_valid_formats);
 }
 
+extern "C"
+{
+MirWaitHandle* new_mir_connection_platform_operation(
+    MirConnection* connection,
+    MirPlatformMessage const* request,
+    mir_platform_operation_callback callback, void* context);
+MirWaitHandle* old_mir_connection_platform_operation(
+    MirConnection* connection, int /* opcode */,
+    MirPlatformMessage const* request,
+    mir_platform_operation_callback callback, void* context);
+}
+
+__asm__(".symver new_mir_connection_platform_operation,mir_connection_platform_operation@@MIR_CLIENT_8.3");
+MirWaitHandle* new_mir_connection_platform_operation(
+    MirConnection* connection,
+    MirPlatformMessage const* request,
+    mir_platform_operation_callback callback, void* context)
+{
+    try
+    {
+        return connection->platform_operation(request, callback, context);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
+
+}
+
+// TODO: Remove when we bump so name
+__asm__(".symver old_mir_connection_platform_operation,mir_connection_platform_operation@MIR_CLIENT_8");
+MirWaitHandle* old_mir_connection_platform_operation(
+    MirConnection* connection, int /* opcode */,
+    MirPlatformMessage const* request,
+    mir_platform_operation_callback callback, void* context)
+{
+    return new_mir_connection_platform_operation(connection, request, callback, context);
+}
+
 /**************************
  * DRM specific functions *
  **************************/
+
+namespace
+{
+
+struct AuthMagicPlatformOperationContext
+{
+    mir_drm_auth_magic_callback callback;
+    void* context;
+};
+
+void platform_operation_to_auth_magic_callback(
+    MirConnection*, MirPlatformMessage* response, void* context)
+{
+    auto const response_msg = mir::raii::deleter_for(
+        response,
+        &mir_platform_message_release);
+    auto const auth_magic_context =
+        std::unique_ptr<AuthMagicPlatformOperationContext>{
+            static_cast<AuthMagicPlatformOperationContext*>(context)};
+
+    auto response_data = mir_platform_message_get_data(response_msg.get());
+    MirMesaAuthMagicResponse auth_response{-1};
+
+    if (response_data.size == sizeof(auth_response))
+        std::memcpy(&auth_response, response_data.data, response_data.size);
+
+    auth_magic_context->callback(auth_response.status, auth_magic_context->context);
+}
+
+void assign_set_gbm_device_status(
+    MirConnection*, MirPlatformMessage* response, void* context)
+{
+    auto const response_msg = mir::raii::deleter_for(
+        response,
+        &mir_platform_message_release);
+
+    auto const response_data = mir_platform_message_get_data(response_msg.get());
+    MirMesaSetGBMDeviceResponse set_gbm_device_response{-1};
+
+    if (response_data.size == sizeof(set_gbm_device_response))
+        std::memcpy(&set_gbm_device_response, response_data.data, response_data.size);
+
+    auto status_ptr = static_cast<int*>(context);
+    *status_ptr = set_gbm_device_response.status;
+}
+
+}
 
 MirWaitHandle* mir_connection_drm_auth_magic(MirConnection* connection,
                                              unsigned int magic,
                                              mir_drm_auth_magic_callback callback,
                                              void* context)
 {
-    return connection->drm_auth_magic(magic, callback, context);
+    auto const msg = mir::raii::deleter_for(
+        mir_platform_message_create(MirMesaPlatformOperation::auth_magic),
+        &mir_platform_message_release);
+
+    auto const auth_magic_op_context =
+        new AuthMagicPlatformOperationContext{callback, context};
+
+    MirMesaAuthMagicRequest request;
+    request.magic = magic;
+
+    mir_platform_message_set_data(msg.get(), &request, sizeof(request));
+
+    return new_mir_connection_platform_operation(
+        connection,
+        msg.get(),
+        platform_operation_to_auth_magic_callback,
+        auth_magic_op_context);
 }
 
 int mir_connection_drm_set_gbm_device(MirConnection* connection,
                                       struct gbm_device* gbm_dev)
 {
-    size_t const pointer_size_in_ints = division_ceiling(sizeof(gbm_dev), sizeof(int));
-    std::vector<int> extra_data(pointer_size_in_ints);
+    MirMesaSetGBMDeviceRequest const request{gbm_dev};
 
-    memcpy(extra_data.data(), &gbm_dev, sizeof(gbm_dev));
+    auto const msg = mir::raii::deleter_for(
+        mir_platform_message_create(MirMesaPlatformOperation::set_gbm_device),
+        &mir_platform_message_release);
 
-    return connection->set_extra_platform_data(extra_data);
+    mir_platform_message_set_data(msg.get(), &request, sizeof(request));
+
+    static int const success{0};
+    int status{-1};
+
+    auto wh = new_mir_connection_platform_operation(
+        connection,
+        msg.get(),
+        assign_set_gbm_device_status,
+        &status);
+
+    mir_wait_for(wh);
+
+    return status == success;
 }

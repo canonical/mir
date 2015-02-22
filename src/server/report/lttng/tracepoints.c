@@ -8,3 +8,4 @@
 #include "session_mediator_report_tp.h"
 #include "scene_report_tp.h"
 #include "message_processor_report_tp.h"
+#include "shared_library_prober_report_tp.h"

@@ -20,6 +20,7 @@
 #include "mir/scene/placement_strategy.h"
 
 #include "mir_test_framework/headless_test.h"
+#include "mir_test_framework/any_surface.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
@@ -105,14 +106,6 @@ public:
 
     MirConnection* connection{nullptr};
 
-    MirSurfaceParameters const creation_parameters{
-        "DebugAPI",
-        800, 600,
-        mir_pixel_format_argb_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
 private:
     std::shared_ptr<SimpleConfigurablePlacementStrategy> const placement_strategy
         {std::make_shared<SimpleConfigurablePlacementStrategy>()};
@@ -127,7 +120,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
 
     set_surface_placement(surface_location);
 
-    auto surf = mir_connection_create_surface_sync(connection, &creation_parameters);
+    auto surf = mtf::make_any_surface(connection);
     ASSERT_TRUE(mir_surface_is_valid(surf));
 
     int screen_x, screen_y, x, y;
@@ -143,7 +136,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
 
     set_surface_placement(surface_location);
 
-    surf = mir_connection_create_surface_sync(connection, &creation_parameters);
+    surf = mtf::make_any_surface(connection);
     ASSERT_TRUE(mir_surface_is_valid(surf));
 
     ASSERT_TRUE(mir_debug_surface_coords_to_screen(surf, x, y, &screen_x, &screen_y));
@@ -157,7 +150,7 @@ TEST_F(DebugAPI, is_unavaliable_when_server_not_started_with_debug)
 {
     start_server_with_debug(false);
 
-    auto surf = mir_connection_create_surface_sync(connection, &creation_parameters);
+    auto surf = mtf::make_any_surface(connection);
     ASSERT_TRUE(mir_surface_is_valid(surf));
 
     int screen_x, screen_y;

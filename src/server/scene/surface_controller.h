@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -36,7 +36,6 @@ class SurfaceController : public SurfaceCoordinator
 public:
     SurfaceController(
         std::shared_ptr<SurfaceFactory> const& surface_factory,
-        std::shared_ptr<PlacementStrategy> const& placement_strategy,
         std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
     std::shared_ptr<Surface> add_surface(
@@ -47,9 +46,10 @@ public:
 
     void raise(std::weak_ptr<Surface> const& surface) override;
 
+    auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> override;
+
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
-    std::shared_ptr<PlacementStrategy> const placement_strategy;
     std::shared_ptr<SurfaceStackModel> const surface_stack;
 };
 

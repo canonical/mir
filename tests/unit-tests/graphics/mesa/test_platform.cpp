@@ -19,10 +19,11 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/graphics/platform_ipc_operations.h"
-#include "src/platform/graphics/mesa/platform.h"
-#include "src/platform/graphics/mesa/internal_client.h"
+#include "mir/graphics/platform_operation_message.h"
+#include "src/platforms/mesa/server/platform.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/emergency_cleanup_registry.h"
+#include "mir/shared_library.h"
 
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
@@ -33,6 +34,7 @@
 #include <gtest/gtest.h>
 
 #include "mir_test_framework/udev_environment.h"
+#include "mir_test_framework/executable_path.h"
 #include "mir_test/pipe.h"
 
 #include "mir_test_doubles/mock_drm.h"
@@ -54,6 +56,8 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
+
+const char probe_platform[] = "probe_graphics_platform";
 
 class MesaGraphicsPlatform : public ::testing::Test
 {
@@ -140,57 +144,6 @@ TEST_F(MesaGraphicsPlatform, fails_if_no_resources)
     EXPECT_THROW({
         auto platform = create_platform();
     }, std::runtime_error) << "Expected that c'tor of Platform throws";
-}
-
-/* ipc packaging tests */
-TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
-{
-    using namespace testing;
-
-    unsigned int const magic{0x10111213};
-
-    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
-        .WillOnce(Return(0));
-
-    mg::PlatformIPCPackage magic_pkg{{magic}, {}};
-    int drm_opcode{44};
-    auto platform = create_platform();
-    auto ipc_ops = platform->make_ipc_operations();
-    auto response_pkg = ipc_ops->platform_operation(drm_opcode, magic_pkg);
-    ASSERT_THAT(response_pkg.ipc_data.size(), Eq(1));
-    EXPECT_THAT(response_pkg.ipc_data[0], Eq(0));
-}
-
-TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
-{
-    using namespace testing;
-
-    unsigned int const magic{0x10111213};
-
-    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
-        .WillOnce(Return(-1));
-
-    int drm_opcode{44};
-    auto platform = create_platform();
-    auto ipc_ops = platform->make_ipc_operations();
-    mg::PlatformIPCPackage magic_pkg{{magic}, {}};
-
-    EXPECT_THROW({
-        ipc_ops->platform_operation(drm_opcode, magic_pkg);
-    }, std::runtime_error);
-}
-
-TEST_F(MesaGraphicsPlatform, platform_provides_validation_of_display_for_internal_clients)
-{
-    MirMesaEGLNativeDisplay* native_display = nullptr;
-    EXPECT_EQ(MIR_MESA_FALSE, mgm::mir_server_mesa_egl_native_display_is_valid(native_display));
-    {
-        auto platform = create_platform();
-        auto client = platform->create_internal_client();
-        native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(client->egl_native_display());
-        EXPECT_EQ(MIR_MESA_TRUE, mgm::mir_server_mesa_egl_native_display_is_valid(native_display));
-    }
-    EXPECT_EQ(MIR_MESA_FALSE, mgm::mir_server_mesa_egl_native_display_is_valid(native_display));
 }
 
 TEST_F(MesaGraphicsPlatform, egl_native_display_is_gbm_device)
@@ -345,4 +298,24 @@ TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
     emergency_cleanup_registry.handler();
 
     Mock::VerifyAndClearExpectations(&mock_drm);
+}
+
+TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)
+{
+    mtf::UdevEnvironment udev_environment;
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa.so")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe());
+}
+
+TEST_F(MesaGraphicsPlatform, probe_returns_best_when_drm_devices_exist)
+{
+    mtf::UdevEnvironment udev_environment;
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa.so")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    EXPECT_EQ(mg::PlatformPriority::best, probe());
 }

@@ -46,11 +46,20 @@ void create_and_run_scroll_surface(MirConnection *connection)
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
 
-    MirSurfaceParameters const request_params =
-        {__PRETTY_FUNCTION__, 640, 480, pixel_format,
-         mir_buffer_usage_hardware, mir_display_output_id_invalid};
+    auto deleter = [](MirSurfaceSpec *spec) { mir_surface_spec_release(spec); };
+    std::unique_ptr<MirSurfaceSpec, decltype(deleter)> spec{
+        mir_connection_create_spec_for_normal_surface(connection, 640, 480, pixel_format),
+        deleter
+    };
 
-    surface = mir_connection_create_surface_sync(connection, &request_params);
+    assert(spec != nullptr);
+
+    mir_surface_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
+    mir_surface_spec_set_buffer_usage(spec.get(), mir_buffer_usage_hardware);
+
+    surface = mir_surface_create_sync(spec.get());
+    spec.reset();
+
     assert(surface != NULL);
     assert(mir_surface_is_valid(surface));
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
@@ -71,7 +80,7 @@ void create_and_run_scroll_surface(MirConnection *connection)
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
-    EGLNativeWindowType native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(surface);
+    EGLNativeWindowType native_window = (EGLNativeWindowType) mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface));
     assert(native_window != (EGLNativeWindowType)NULL);
 
     rc = eglInitialize(disp, &major, &minor);

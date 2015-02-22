@@ -37,8 +37,6 @@ public:
         std::shared_ptr<mir::graphics::GLProgramFactory> const&,
         std::shared_ptr<mir::graphics::GLConfig> const&) override;
 
-    std::shared_ptr<mir::graphics::BufferWriter> make_buffer_writer() override;
-
 private:
     std::vector<mir::geometry::Rectangle> const display_rects;
 };

@@ -18,7 +18,8 @@ protobuf_generate_cpp(
 set(
   INTEGRATION_TESTS_SRCS
   test_surface_stack_with_compositor.cpp
-  test_client_surface_swap_buffers.cpp
+  test_client_screencast.cpp
+  test_large_messages.cpp
   test_protobuf.cpp
   test_surfaceloop.cpp
   test_stale_frames.cpp
@@ -32,7 +33,7 @@ set(
   test_swapinterval.cpp
   test_server_client_types.cpp
   test_server_shutdown.cpp
-  test_session_manager.cpp
+  test_default_shell.cpp
   test_session.cpp
   session_management.cpp
   surface_composition.cpp
@@ -64,7 +65,7 @@ if(MIR_TEST_PLATFORM STREQUAL "mesa")
 endif()
 
 link_directories(${LIBRARY_OUTPUT_PATH})
-add_executable(
+mir_add_wrapped_executable(
   mir_integration_tests
   ${INTEGRATION_TESTS_SRCS}
   ${MIR_SERVER_OBJECTS}
@@ -98,6 +99,15 @@ target_link_libraries(
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
+  # Mesa platform dependencies
+  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
+  # Android platform dependencies
+  ${LIBHARDWARE_LIBRARIES}
+  ${ANDROID_PROPERTIES_LIBRARIES}
+  # Shared platform dependencies
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
@@ -107,7 +117,7 @@ target_link_libraries(
   ${MIR_SERVER_REFERENCES}
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "android")
+if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_integration_tests
   mirsharedandroid
   ${ANDROID_PROPERTIES_LDFLAGS}
@@ -124,8 +134,3 @@ CMAKE_DEPENDENT_OPTION(
 if (MIR_RUN_INTEGRATION_TESTS)
   mir_discover_tests(mir_integration_tests)
 endif (MIR_RUN_INTEGRATION_TESTS)
-
-install(
-    TARGETS mir_integration_tests
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)

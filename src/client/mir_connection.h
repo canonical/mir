@@ -22,6 +22,7 @@
 #include <memory>
 #include <unordered_set>
 #include <unordered_map>
+#include <atomic>
 
 #include <mutex>
 
@@ -30,8 +31,8 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 
-#include "client_platform.h"
-#include "client_context.h"
+#include "mir/client_platform.h"
+#include "mir/client_context.h"
 
 #include "mir_wait_handle.h"
 
@@ -44,6 +45,7 @@ namespace client
 {
 class ConnectionConfiguration;
 class ClientPlatformFactory;
+class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class LifecycleControl;
@@ -67,6 +69,11 @@ namespace logging
 {
 class Logger;
 }
+
+namespace dispatch
+{
+class SimpleDispatchThread;
+}
 }
 
 struct MirConnection : mir::client::ClientContext
@@ -81,7 +88,7 @@ public:
     MirConnection& operator=(MirConnection const &) = delete;
 
     MirWaitHandle* create_surface(
-        MirSurfaceParameters const & params,
+        MirSurfaceSpec const& spec,
         mir_surface_callback callback,
         void * context);
     MirWaitHandle* release_surface(
@@ -100,9 +107,9 @@ public:
 
     MirWaitHandle* disconnect();
 
-    MirWaitHandle* drm_auth_magic(unsigned int magic,
-                                  mir_drm_auth_magic_callback callback,
-                                  void* context);
+    MirWaitHandle* platform_operation(
+        MirPlatformMessage const* request,
+        mir_platform_operation_callback callback, void* context);
 
     void register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context);
 
@@ -114,10 +121,9 @@ public:
                                    unsigned int formats_size, unsigned int& valid_formats);
 
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
+    std::shared_ptr<mir::client::ClientBufferStreamFactory> get_client_buffer_stream_factory();
 
     static bool is_valid(MirConnection *connection);
-
-    MirConnection* mir_connection();
 
     EGLNativeDisplayType egl_native_display();
 
@@ -125,8 +131,6 @@ public:
 
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
-
-    bool set_extra_platform_data(std::vector<int> const& extra_platform_data);
 
     std::shared_ptr<google::protobuf::RpcChannel> rpc_channel() const
     {
@@ -137,6 +141,7 @@ public:
     std::shared_ptr<mir::logging::Logger> const& the_logger() const;
 
 private:
+    void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
     struct Deregisterer
     { MirConnection* const self; ~Deregisterer(); } deregisterer;
@@ -153,9 +158,10 @@ private:
     std::shared_ptr<mir::logging::Logger> const logger;
     mir::protobuf::Void void_response;
     mir::protobuf::Connection connect_result;
+    std::atomic<bool> connect_done;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
-    mir::protobuf::DRMAuthMagicStatus drm_auth_magic_status;
+    mir::protobuf::PlatformOperationMessage platform_operation_reply;
     mir::protobuf::DisplayConfiguration display_configuration_response;
     bool disconnecting{false};
 
@@ -169,7 +175,7 @@ private:
 
     MirWaitHandle connect_wait_handle;
     MirWaitHandle disconnect_wait_handle;
-    MirWaitHandle drm_auth_magic_wait_handle;
+    MirWaitHandle platform_operation_wait_handle;
     MirWaitHandle configure_display_wait_handle;
 
     std::mutex release_wait_handle_guard;
@@ -183,7 +189,9 @@ private:
 
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 
-    std::vector<int> extra_platform_data;
+    std::unique_ptr<mir::dispatch::SimpleDispatchThread> const eventloop;
+    
+    std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
 
     struct SurfaceRelease;
 
@@ -193,7 +201,7 @@ private:
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
-    void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
+    void done_platform_operation(mir_platform_operation_callback, void* context);
     bool validate_user_display_config(MirDisplayConfiguration* config);
 };
 

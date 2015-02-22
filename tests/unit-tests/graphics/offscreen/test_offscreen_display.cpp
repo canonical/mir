@@ -88,6 +88,17 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
         .Times(AtLeast(1))
         .WillRepeatedly(SetArgPointee<1>(fbo));
 
+    /* Provide unique EGL contexts */
+    std::vector<int> contexts;
+    EXPECT_CALL(mock_egl, eglCreateContext(_,_,_,_))
+        .Times(AtLeast(1))
+        .WillRepeatedly(WithoutArgs(Invoke(
+            [&] ()
+            {
+                contexts.push_back(0);
+                return reinterpret_cast<EGLContext>(&contexts.back());
+            })));
+
     mgo::Display display{
         native_display,
         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
@@ -106,6 +117,13 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
 
             Mock::VerifyAndClearExpectations(&mock_egl);
             Mock::VerifyAndClearExpectations(&mock_gl);
+        });
+
+    /* Contexts are released at teardown */
+    display.for_each_display_buffer(
+        [this](mg::DisplayBuffer&)
+        {
+            EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,EGL_NO_CONTEXT));
         });
 }
 

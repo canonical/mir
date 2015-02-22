@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platform/graphics/mesa/shm_buffer.h"
-#include "src/platform/graphics/mesa/shm_file.h"
+#include "src/platforms/mesa/server/shm_buffer.h"
+#include "src/platforms/mesa/server/shm_file.h"
 
 #include "mir_test_doubles/mock_gl.h"
 
@@ -87,7 +87,7 @@ TEST_F(ShmBufferTest, native_buffer_contains_correct_data)
 
 TEST_F(ShmBufferTest, cannot_be_used_for_bypass)
 {
-    EXPECT_FALSE(shm_buffer.can_bypass());
+    EXPECT_FALSE(shm_buffer.native_buffer_handle()->flags & mir_buffer_flag_can_scanout);
 }
 
 TEST_F(ShmBufferTest, uploads_pixels_to_texture)

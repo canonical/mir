@@ -1,6 +1,7 @@
 list(
   APPEND INTEGRATION_TESTS_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/test_screencast.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_mirsurface.cpp
 )
 
 set(

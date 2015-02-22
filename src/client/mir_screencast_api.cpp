@@ -16,10 +16,14 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirScreencastAPI"
+
 #include "mir_toolkit/mir_screencast.h"
 #include "mir_screencast.h"
 #include "mir_connection.h"
 #include "mir/raii.h"
+
+#include "mir/uncaught.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
@@ -44,8 +48,6 @@ MirScreencast* mir_connection_create_screencast_sync(
             mir_connection_create_display_config(connection),
             &mir_display_config_destroy);
 
-        auto const client_platform = connection->get_client_platform();
-
         mir::geometry::Rectangle const region{
             {parameters->region.left, parameters->region.top},
             {parameters->region.width, parameters->region.height}
@@ -58,8 +60,7 @@ MirScreencast* mir_connection_create_screencast_sync(
                 size,
                 parameters->pixel_format,
                 connection->display_server(),
-                client_platform,
-                client_platform->create_buffer_factory(),
+                connection->get_client_buffer_stream_factory(),
                 null_callback, nullptr}};
 
         screencast_uptr->creation_wait_handle()->wait_for_all();
@@ -70,8 +71,9 @@ MirScreencast* mir_connection_create_screencast_sync(
             screencast_uptr.release();
         }
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
 
@@ -86,5 +88,16 @@ void mir_screencast_release_sync(MirScreencast* screencast)
 
 MirEGLNativeWindowType mir_screencast_egl_native_window(MirScreencast* screencast)
 {
-    return reinterpret_cast<MirEGLNativeWindowType>(screencast->egl_native_window());
+    return reinterpret_cast<MirEGLNativeWindowType>(mir_buffer_stream_get_egl_native_window(mir_screencast_get_buffer_stream(screencast)));
+}
+
+MirBufferStream *mir_screencast_get_buffer_stream(MirScreencast *screencast)
+try
+{
+    return reinterpret_cast<MirBufferStream*>(screencast->get_buffer_stream());
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }

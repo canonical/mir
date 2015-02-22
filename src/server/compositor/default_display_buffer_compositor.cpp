@@ -38,9 +38,9 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Renderer> const& renderer,
     std::shared_ptr<mc::CompositorReport> const& report) :
-    display_buffer{display_buffer},
-    renderer{renderer},
-    report{report}
+    display_buffer(display_buffer),
+    renderer(renderer),
+    report(report)
 {
 }
 
@@ -52,10 +52,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     auto const& occlusions = mc::filter_occlusions_from(scene_elements, view_area);
 
     for (auto const& element : occlusions)
-    {
-        if (element->renderable()->visible())
-            element->occluded();
-    }
+        element->occluded();
 
     mg::RenderableList renderable_list;
     for (auto const& element : scene_elements)
@@ -72,11 +69,11 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
      *       Actually, there's a third reference held by the texture cache
      *       in GLRenderer, but that gets released earlier in render().
      */
+    scene_elements.clear();  // Those in use are still in renderable_list
 
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer->suspend();
-        report->finished_frame(true, this);
     }
     else
     {
@@ -85,8 +82,17 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->set_rotation(display_buffer.orientation());
 
         renderer->render(renderable_list);
-        display_buffer.post_update();
 
-        report->finished_frame(false, this);
+        display_buffer.gl_swap_buffers();
+        report->rendered_frame(this);
+
+        // Release the buffers we did use back to the clients, before starting
+        // on the potentially slow flip().
+        // FIXME: This clear() call is blocking a little (LP: #1395421)
+        renderable_list.clear();
+
+        display_buffer.flip();
     }
+
+    report->finished_frame(this);
 }

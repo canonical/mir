@@ -29,6 +29,22 @@ namespace doubles
 {
 class NullPromptSession : public scene::PromptSession
 {
+public:
+    void start(std::shared_ptr<scene::Session> const&) override
+    {
+    }
+
+    void stop(std::shared_ptr<scene::Session> const&) override
+    {
+    }
+
+    void suspend(std::shared_ptr<scene::Session> const&) override
+    {
+    }
+
+    void resume(std::shared_ptr<scene::Session> const&) override
+    {
+    }
 };
 }
 }

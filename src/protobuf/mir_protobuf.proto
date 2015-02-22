@@ -19,9 +19,21 @@ message SurfaceParameters {
   // TODO: Make required when we bump protobuf and server ABI
   optional string surface_name = 5;
   optional uint32 output_id = 6;
+
+  optional int32 type = 7;
+  optional int32 state = 8;
+  optional int32 pref_orientation = 9;
+  optional int32 parent_id = 10;
+  
+  optional Rectangle aux_rect = 11;
+  optional int32 edge_attachment = 12;
 }
 
 message SurfaceId {
+  required int32 value = 1;
+};
+
+message BufferStreamId {
   required int32 value = 1;
 };
 
@@ -98,6 +110,15 @@ message Connection {
   optional string error = 127;
 }
 
+message BufferStream {
+  optional BufferStreamId id = 1;
+  optional int32 pixel_format = 2;
+  optional int32 buffer_usage = 3;
+  optional Buffer buffer = 4;
+  
+  optional string error = 127;
+}
+
 message Surface {
   optional SurfaceId id = 1;
   optional int32 width = 2;
@@ -110,6 +131,8 @@ message Surface {
   optional int32 fds_on_side_channel = 8;
   
   repeated SurfaceSetting attributes = 9;
+  
+  optional BufferStream buffer_stream = 10;
 
   optional string error = 127;
 }
@@ -179,6 +202,7 @@ message ScreencastId {
 message Screencast {
   optional ScreencastId screencast_id = 1;
   optional Buffer buffer = 2;
+  optional BufferStream buffer_stream = 3;
   optional string error = 127;
 }
 
@@ -203,6 +227,15 @@ message PromptSessionParameters {
   required int32 application_pid = 1;
 }
 
+message PlatformOperationMessage {
+  optional uint32 opcode = 1;
+  optional bytes data = 2;
+  repeated sint32 fd = 3;
+  optional int32  fds_on_side_channel = 4;
+
+  optional string error = 127;
+}
+
 service DisplayServer {
   // Platform independent requests
   rpc connect(ConnectParameters) returns (Connection);
@@ -213,6 +246,7 @@ service DisplayServer {
 
   // Platform specific requests
   rpc drm_auth_magic(DRMMagic) returns (DRMAuthMagicStatus);
+  rpc platform_operation(PlatformOperationMessage) returns (PlatformOperationMessage);
 
   rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
   rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);

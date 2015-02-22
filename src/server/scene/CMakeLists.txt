@@ -21,6 +21,7 @@ ADD_LIBRARY(
   legacy_scene_change_notification.cpp
   legacy_surface_change_notification.cpp
   prompt_session_container.cpp
+  prompt_session_impl.cpp
   prompt_session_manager_impl.cpp
   rendering_tracker.cpp
   default_coordinate_translator.cpp

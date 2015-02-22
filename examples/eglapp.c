@@ -16,6 +16,8 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "eglapp.h"
 #include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>
@@ -90,18 +92,51 @@ void mir_eglapp_swap_buffers(void)
     }
 }
 
+static void mir_eglapp_handle_input_event(MirInputEvent const* event)
+{
+    if (mir_input_event_get_type(event) != mir_input_event_type_key)
+        return;
+    MirKeyInputEvent const* kev = mir_input_event_get_key_input_event(event);
+    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_up)
+        return;
+    if (mir_key_input_event_get_key_code(kev) != XKB_KEY_q)
+        return;
+    
+    running = 0;
+}
+
+static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
+{
+    MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sev);
+    if (attrib != mir_surface_attrib_visibility)
+        return;
+    switch (mir_surface_event_get_attribute_value(sev))
+    {
+    case mir_surface_visibility_exposed:
+        printf("Surface exposed\n");
+        break;
+    case mir_surface_visibility_occluded:
+        printf("Surface occluded\n");
+        break;
+    default:
+        break;
+    }
+}
+
 static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* context)
 {
     (void) surface;
     (void) context;
-    if (ev->type == mir_event_type_key &&
-        ev->key.key_code == XKB_KEY_q &&
-        ev->key.action == mir_key_action_up)
+    
+    switch (mir_event_get_type(ev))
     {
-        running = 0;
-    }
-    else if (ev->type == mir_event_type_resize)
-    {
+    case mir_event_type_input:
+        mir_eglapp_handle_input_event(mir_event_get_input_event(ev));
+        break;
+    case mir_event_type_surface:
+        mir_eglapp_handle_surface_event(mir_event_get_surface_event(ev));
+        break;
+    case mir_event_type_resize:
         /*
          * FIXME: https://bugs.launchpad.net/mir/+bug/1194384
          * It is unsafe to set the width and height here because we're in a
@@ -110,14 +145,13 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
          * full single-threaded callbacks. (LP: #1194384).
          */
         printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
-    }
-    else if (ev->type == mir_event_type_surface &&
-             ev->surface.attrib == mir_surface_attrib_visibility)
-    {
-        if (ev->surface.value == mir_surface_visibility_exposed)
-            printf("Surface exposed\n");
-        else if (ev->surface.value == mir_surface_visibility_occluded)
-            printf("Surface occluded\n");
+        break;
+    case mir_event_type_close_surface:
+        printf("Received close event from server.\n");
+        running = 0;
+        break;
+    default:
+        break;
     }
 }
 
@@ -152,14 +186,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
     };
-    MirSurfaceParameters surfaceparm =
-    {
-        "eglappsurface",
-        256, 256,
-        mir_pixel_format_xbgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
     MirEventDelegate delegate = 
     {
         mir_eglapp_handle_event,
@@ -170,6 +196,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     EGLContext eglctx;
     EGLBoolean ok;
     EGLint swapinterval = 1;
+    unsigned int output_id = mir_display_output_id_invalid;
     char *mir_socket = NULL;
     char const* cursor_name = mir_default_cursor_name;
 
@@ -210,16 +237,16 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                     break;
                 case 'o':
                     {
-                        unsigned int output_id = 0;
+                        unsigned int the_id = 0;
                         arg += 2;
                         if (!arg[0] && i < argc-1)
                         {
                             i++;
                             arg = argv[i];
                         }
-                        if (sscanf(arg, "%u", &output_id) == 1)
+                        if (sscanf(arg, "%u", &the_id) == 1)
                         {
-                            surfaceparm.output_id = output_id;
+                            output_id = the_id;
                         }
                         else
                         {
@@ -318,7 +345,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     mir_connection_get_available_surface_formats(connection,
         format, mir_pixel_formats, &nformats);
 
-    surfaceparm.pixel_format = format[0];
+    MirPixelFormat pixel_format = format[0];
     for (unsigned int f = 0; f < nformats; f++)
     {
         const int opaque = (format[f] == mir_pixel_format_xbgr_8888 ||
@@ -328,7 +355,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         if ((mir_eglapp_background_opacity == 1.0f && opaque) ||
             (mir_eglapp_background_opacity < 1.0f && !opaque))
         {
-            surfaceparm.pixel_format = format[f];
+            pixel_format = format[f];
             break;
         }
     }
@@ -337,14 +364,16 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
            mode->horizontal_resolution, mode->vertical_resolution,
            output->position_x, output->position_y);
 
-    surfaceparm.width = *width > 0 ? *width : mode->horizontal_resolution;
-    surfaceparm.height = *height > 0 ? *height : mode->vertical_resolution;
+    if (*width == 0)
+        *width = mode->horizontal_resolution;
+    if (*height == 0)
+        *height = mode->vertical_resolution;
 
     mir_display_config_destroy(display_config);
 
     printf("Server supports %d of %d surface pixel formats. Using format: %d\n",
-        nformats, mir_pixel_formats, surfaceparm.pixel_format);
-    unsigned int bpp = 8 * MIR_BYTES_PER_PIXEL(surfaceparm.pixel_format);
+        nformats, mir_pixel_formats, pixel_format);
+    unsigned int bpp = 8 * MIR_BYTES_PER_PIXEL(pixel_format);
     EGLint attribs[] =
     {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -354,7 +383,18 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         EGL_NONE
     };
 
-    surface = mir_connection_create_surface_sync(connection, &surfaceparm);
+    MirSurfaceSpec *spec =
+        mir_connection_create_spec_for_normal_surface(connection, *width, *height, pixel_format);
+
+    CHECK(spec != NULL, "Can't create a surface spec");
+
+    mir_surface_spec_set_name(spec, "eglappsurface");
+    if (output_id != mir_display_output_id_invalid)
+        mir_surface_spec_set_fullscreen_on_output(spec, output_id);
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");
 
     mir_surface_set_event_handler(surface, &delegate);
@@ -375,8 +415,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     CHECK(neglconfigs > 0, "No EGL config available");
 
     eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
-            (EGLNativeWindowType)mir_surface_get_egl_native_window(surface),
-            NULL);
+        (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface)), NULL);
+    
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
@@ -389,9 +429,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
-
-    *width = surfaceparm.width;
-    *height = surfaceparm.height;
 
     printf("Surface %d DPI\n", mir_surface_get_dpi(surface));
     eglSwapInterval(egldisplay, swapinterval);

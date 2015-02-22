@@ -30,7 +30,6 @@
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/null_surface_configurator.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -45,7 +44,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -54,6 +52,12 @@ namespace mr = mir::report;
 
 namespace
 {
+
+void post_a_frame(ms::Surface& s)
+{
+    mtd::StubBuffer old_buffer;
+    s.swap_buffers(&old_buffer, [](mg::Buffer*){});
+}
 
 MATCHER_P(SurfaceWithInputReceptionMode, mode, "")
 {
@@ -124,9 +128,10 @@ struct SurfaceStack : public ::testing::Test
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mir::input::InputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
+
+        post_a_frame(*stub_surface1);
 
         stub_surface2 = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
@@ -135,9 +140,10 @@ struct SurfaceStack : public ::testing::Test
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mir::input::InputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
+
+        post_a_frame(*stub_surface2);
 
         stub_surface3 = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
@@ -146,7 +152,18 @@ struct SurfaceStack : public ::testing::Test
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mir::input::InputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
+            std::shared_ptr<mg::CursorImage>(),
+            report);
+
+        post_a_frame(*stub_surface3);
+
+        invisible_stub_surface = std::make_shared<ms::BasicSurface>(
+            std::string("stub"),
+            geom::Rectangle{{},{}},
+            false,
+            std::make_shared<mtd::StubBufferStream>(),
+            std::shared_ptr<mir::input::InputChannel>(),
+            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
     }
@@ -155,6 +172,7 @@ struct SurfaceStack : public ::testing::Test
     std::shared_ptr<ms::BasicSurface> stub_surface1;
     std::shared_ptr<ms::BasicSurface> stub_surface2;
     std::shared_ptr<ms::BasicSurface> stub_surface3;
+    std::shared_ptr<ms::BasicSurface> invisible_stub_surface;
 
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     ms::SurfaceStack stack{report};
@@ -192,6 +210,82 @@ TEST_F(SurfaceStack, stacking_order)
             SceneElementFor(stub_surface1),
             SceneElementFor(stub_surface2),
             SceneElementFor(stub_surface3)));
+}
+
+TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
+{
+    using namespace testing;
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(invisible_stub_surface, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface2)));
+}
+
+TEST_F(SurfaceStack, scene_counts_pending_accurately)
+{
+    using namespace testing;
+
+    ms::SurfaceStack stack{report};
+    auto surface = std::make_shared<ms::BasicSurface>(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        std::make_shared<mtd::StubBufferStream>(),
+        std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+    stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    surface->configure(mir_surface_attrib_visibility,
+                       mir_surface_visibility_exposed);
+
+    EXPECT_EQ(0, stack.frames_pending(this));
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    EXPECT_EQ(3, stack.frames_pending(this));
+
+    for (int expect = 3; expect >= 0; --expect)
+    {
+        ASSERT_EQ(expect, stack.frames_pending(this));
+        auto snap = stack.scene_elements_for(compositor_id);
+        for (auto& element : snap)
+        {
+            auto consumed = element->renderable()->buffer();
+        }
+    }
+}
+
+TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
+{  // Regression test for LP: #1418081
+    using namespace testing;
+
+    ms::SurfaceStack stack{report};
+    auto surface = std::make_shared<ms::BasicSurface>(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        std::make_shared<mtd::StubBufferStream>(),
+        std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+
+    stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    surface->configure(mir_surface_attrib_visibility,
+                       mir_surface_visibility_occluded);
+
+    EXPECT_EQ(0, stack.frames_pending(this));
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    EXPECT_EQ(0, stack.frames_pending(this));
 }
 
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
@@ -306,9 +400,9 @@ TEST_F(SurfaceStack, generate_elementelements)
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mir::input::InputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
+        post_a_frame(*surface);
 
         surfaces.emplace_back(surface);
         stack.add_surface(surface, default_params.depth, default_params.input_mode);
@@ -436,7 +530,6 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mir::input::InputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
 
@@ -459,7 +552,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
 {
     using namespace testing;
 
-    auto mock_stream = std::make_shared<mtd::MockBufferStream>();
+    auto mock_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
         .Times(0);
 
@@ -470,9 +563,9 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
         mock_stream,
         std::shared_ptr<mir::input::InputChannel>(),
         std::shared_ptr<mir::input::InputSender>(),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
+    post_a_frame(*surface);
     stack.add_surface(surface, default_params.depth, default_params.input_mode);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -489,7 +582,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
 {
     using namespace testing;
 
-    auto mock_stream = std::make_shared<mtd::MockBufferStream>();
+    auto mock_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
         .Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
@@ -501,9 +594,9 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
         mock_stream,
         std::shared_ptr<mir::input::InputChannel>(),
         std::shared_ptr<mir::input::InputSender>(),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
+    post_a_frame(*surface);
     stack.add_surface(surface, default_params.depth, default_params.input_mode);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -526,7 +619,6 @@ struct MockConfigureSurface : public ms::BasicSurface
             {},
             {},
             {},
-            {},
             mir::report::null_scene_report())
     {
     }
@@ -543,10 +635,9 @@ TEST_F(SurfaceStack, occludes_not_rendered_surface)
     stack.register_compositor(compositor_id);
     stack.register_compositor(compositor_id2);
 
-    auto const old_buffer = reinterpret_cast<mg::Buffer*>(this);
     auto const mock_surface = std::make_shared<MockConfigureSurface>();
     mock_surface->show();
-    mock_surface->swap_buffers(old_buffer, [](mg::Buffer*){});
+    post_a_frame(*mock_surface);
 
     stack.add_surface(mock_surface, default_params.depth, default_params.input_mode);
 
@@ -571,6 +662,7 @@ TEST_F(SurfaceStack, exposes_rendered_surface)
     stack.register_compositor(compositor_id2);
 
     auto const mock_surface = std::make_shared<MockConfigureSurface>();
+    post_a_frame(*mock_surface);
     stack.add_surface(mock_surface, default_params.depth, default_params.input_mode);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -596,6 +688,7 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
     stack.register_compositor(compositor_id3);
 
     auto const mock_surface = std::make_shared<MockConfigureSurface>();
+    post_a_frame(*mock_surface);
     stack.add_surface(mock_surface, default_params.depth, default_params.input_mode);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -789,3 +882,50 @@ TEST_F(SurfaceStack, only_enumerates_exposed_input_surfaces)
     stack.for_each(count_exposed_surfaces);
     EXPECT_THAT(num_exposed_surfaces, Eq(1));
 }
+
+using namespace ::testing;
+
+TEST_F(SurfaceStack, returns_top_surface_under_cursor)
+{
+    geom::Point const cursor_over_all {100, 100};
+    geom::Point const cursor_over_12  {200, 100};
+    geom::Point const cursor_over_1   {600, 600};
+    geom::Point const cursor_over_none{999, 999};
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
+
+    stub_surface1->resize({900, 900});
+    stub_surface2->resize({500, 200});
+    stub_surface3->resize({200, 500});
+
+    EXPECT_THAT(stack.surface_at(cursor_over_all),  Eq(stub_surface3));
+    EXPECT_THAT(stack.surface_at(cursor_over_12),   Eq(stub_surface2));
+    EXPECT_THAT(stack.surface_at(cursor_over_1),    Eq(stub_surface1));
+    EXPECT_THAT(stack.surface_at(cursor_over_none).get(), IsNull());
+}
+
+TEST_F(SurfaceStack, returns_top_visible_surface_under_cursor)
+{
+    geom::Point const cursor_over_all {100, 100};
+    geom::Point const cursor_over_12  {200, 100};
+    geom::Point const cursor_over_1   {600, 600};
+    geom::Point const cursor_over_none{999, 999};
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
+    stack.add_surface(invisible_stub_surface, default_params.depth, default_params.input_mode);
+
+    stub_surface1->resize({900, 900});
+    stub_surface2->resize({500, 200});
+    stub_surface3->resize({200, 500});
+    invisible_stub_surface->resize({999, 999});
+
+    EXPECT_THAT(stack.surface_at(cursor_over_all),  Eq(stub_surface3));
+    EXPECT_THAT(stack.surface_at(cursor_over_12),   Eq(stub_surface2));
+    EXPECT_THAT(stack.surface_at(cursor_over_1),    Eq(stub_surface1));
+    EXPECT_THAT(stack.surface_at(cursor_over_none).get(), IsNull());
+}
+

@@ -16,19 +16,24 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/geometry/rectangle.h"
-#include "src/client/client_platform.h"
-#include "src/client/client_platform_factory.h"
 #include "src/client/mir_connection.h"
 #include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/display_configuration.h"
 #include "src/client/mir_surface.h"
-#include "src/client/client_buffer_factory.h"
+
+#include "mir/client_platform.h"
+#include "mir/client_platform_factory.h"
+#include "mir/client_buffer_factory.h"
+#include "mir/raii.h"
+#include "mir/dispatch/dispatchable.h"
+#include "mir/events/event_builders.h"
+#include "mir/geometry/rectangle.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/stub_server_tool.h"
+#include "mir_test_doubles/stub_client_buffer_factory.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -38,25 +43,31 @@
 #include <gmock/gmock.h>
 
 namespace mcl = mir::client;
+namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
+namespace mev = mir::events;
+namespace md = mir::dispatch;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
 
-struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
+struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
+                        public mir::dispatch::Dispatchable
 {
+    MockRpcChannel()
+    {
+        ON_CALL(*this, watch_fd()).WillByDefault(testing::Return(mir::Fd{}));
+    }
+
     void CallMethod(const google::protobuf::MethodDescriptor* method,
                     google::protobuf::RpcController*,
                     const google::protobuf::Message* parameters,
                     google::protobuf::Message* response,
                     google::protobuf::Closure* complete)
     {
-        if (method->name() == "drm_auth_magic")
-        {
-            drm_auth_magic(static_cast<const mp::DRMMagic*>(parameters));
-        }
-        else if (method->name() == "connect")
+        if (method->name() == "connect")
         {
             static_cast<mp::Connection*>(response)->clear_error();
             connect(static_cast<mp::ConnectParameters const*>(parameters),
@@ -66,24 +77,24 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
         {
             configure_display_sent(static_cast<mp::DisplayConfiguration const*>(parameters));
         }
+        else if (method->name() == "platform_operation")
+        {
+            platform_operation(static_cast<mp::PlatformOperationMessage const*>(parameters),
+                               static_cast<mp::PlatformOperationMessage*>(response));
+        }
 
         complete->Run();
     }
 
-    MOCK_METHOD1(drm_auth_magic, void(const mp::DRMMagic*));
     MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
     MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
-};
+    MOCK_METHOD2(platform_operation,
+                 void(mp::PlatformOperationMessage const*, mp::PlatformOperationMessage*));
 
-struct StubClientBufferFactory : public mcl::ClientBufferFactory
-{
-    std::shared_ptr<mcl::ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& /* package */,
-                                                     geom::Size /*size*/, MirPixelFormat /*pf*/) override
-    {
-        return std::shared_ptr<mcl::ClientBuffer>();
-    }
+    MOCK_CONST_METHOD0(watch_fd, mir::Fd());
+    MOCK_METHOD1(dispatch, bool(md::FdEvents));
+    MOCK_CONST_METHOD0(relevant_events, md::FdEvents());
 };
-
 
 struct MockClientPlatform : public mcl::ClientPlatform
 {
@@ -97,16 +108,31 @@ struct MockClientPlatform : public mcl::ClientPlatform
         ON_CALL(*this, create_egl_native_display())
             .WillByDefault(Return(native_display));
         ON_CALL(*this, create_buffer_factory())
-            .WillByDefault(Return(std::make_shared<StubClientBufferFactory>()));
+            .WillByDefault(Return(std::make_shared<mtd::StubClientBufferFactory>()));
         ON_CALL(*this, create_egl_native_window(_))
             .WillByDefault(Return(std::shared_ptr<EGLNativeWindowType>()));
+        ON_CALL(*this, platform_operation(_))
+            .WillByDefault(Return(nullptr));
+    }
+
+    void set_client_context(mcl::ClientContext* ctx)
+    {
+        client_context = ctx;
+    }
+
+    void populate(MirPlatformPackage& pkg) const override
+    {
+        client_context->populate_server_package(pkg);
     }
 
     MOCK_CONST_METHOD1(convert_native_buffer, MirNativeBuffer*(mir::graphics::NativeBuffer*));
     MOCK_CONST_METHOD0(platform_type, MirPlatformType());
+    MOCK_METHOD1(platform_operation, MirPlatformMessage*(MirPlatformMessage const*));
     MOCK_METHOD0(create_buffer_factory, std::shared_ptr<mcl::ClientBufferFactory>());
-    MOCK_METHOD1(create_egl_native_window, std::shared_ptr<EGLNativeWindowType>(mcl::ClientSurface*));
+    MOCK_METHOD1(create_egl_native_window, std::shared_ptr<EGLNativeWindowType>(mcl::EGLNativeSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
+
+    mcl::ClientContext* client_context = nullptr;
 };
 
 struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
@@ -126,12 +152,6 @@ struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
 
 void connected_callback(MirConnection* /*connection*/, void * /*client_context*/)
 {
-}
-
-void drm_auth_magic_callback(int status, void* client_context)
-{
-    auto status_ptr = static_cast<int*>(client_context);
-    *status_ptr = status;
 }
 
 class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
@@ -177,6 +197,7 @@ struct MirConnectionTest : public testing::Test
           conf{mock_platform, mock_channel},
           connection{std::make_shared<MirConnection>(conf)}
     {
+        mock_platform->set_client_context(connection.get());
     }
 
     std::shared_ptr<testing::NiceMock<MockClientPlatform>> const mock_platform;
@@ -203,33 +224,6 @@ TEST_F(MirConnectionTest, returns_correct_egl_native_display)
     EGLNativeDisplayType connection_native_display = connection->egl_native_display();
 
     ASSERT_EQ(native_display_raw, connection_native_display);
-}
-
-MATCHER_P(has_drm_magic, magic, "")
-{
-    return arg->magic() == magic;
-}
-
-TEST_F(MirConnectionTest, client_drm_auth_magic_calls_server_drm_auth_magic)
-{
-    using namespace testing;
-
-    unsigned int const drm_magic{0x10111213};
-
-    EXPECT_CALL(*mock_channel, drm_auth_magic(has_drm_magic(drm_magic)))
-        .Times(1);
-
-    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
-                                                     connected_callback, 0);
-    wait_handle->wait_for_all();
-
-    int const no_error{0};
-    int status{67};
-
-    wait_handle = connection->drm_auth_magic(drm_magic, drm_auth_magic_callback, &status);
-    wait_handle->wait_for_all();
-
-    EXPECT_EQ(no_error, status);
 }
 
 namespace
@@ -501,19 +495,22 @@ static void surface_callback(MirSurface* surf, void*)
 static bool unfocused_received;
 static void surface_event_callback(MirSurface *, MirEvent const *ev, void *)
 {
-    if (ev->type == mir_event_type_surface &&
-        ev->surface.attrib == mir_surface_attrib_focus &&
-        ev->surface.value == mir_surface_unfocused)
-        unfocused_received = true;
-
+    if (mir_event_type_surface != mir_event_get_type(ev))
+        return;
+    auto surface_ev = mir_event_get_surface_event(ev);
+    if (mir_surface_attrib_focus != mir_surface_event_get_attribute(surface_ev))
+        return;
+    if (mir_surface_unfocused != mir_surface_event_get_attribute_value(surface_ev))
+        return;
+    unfocused_received = true;
 }
 
 TEST_F(MirConnectionTest, focused_window_synthesises_unfocus_event_on_release)
 {
     using namespace testing;
 
-    MirSurfaceParameters params;
-    params.name = __PRETTY_FUNCTION__;
+    MirSurfaceSpec params{nullptr, 640, 480, mir_pixel_format_abgr_8888};
+    params.surface_name = __PRETTY_FUNCTION__;
 
     MirEventDelegate const event_delegate = {
         &surface_event_callback,
@@ -528,12 +525,7 @@ TEST_F(MirConnectionTest, focused_window_synthesises_unfocus_event_on_release)
     wait_handle = connection->create_surface(params, &surface_callback, nullptr);
     wait_handle->wait_for_all();
 
-    MirEvent focus_event;
-    focus_event.type = mir_event_type_surface;
-    focus_event.surface.id = surface->id();
-    focus_event.surface.attrib = mir_surface_attrib_focus;
-    focus_event.surface.value = mir_surface_focused;
-    surface->handle_event(focus_event);
+    surface->handle_event(*mev::make_event(mf::SurfaceId{surface->id()}, mir_surface_attrib_focus, mir_surface_focused));
 
     surface->set_event_handler(&event_delegate);
 
@@ -550,8 +542,8 @@ TEST_F(MirConnectionTest, unfocused_window_does_not_synthesise_unfocus_event_on_
 {
     using namespace testing;
 
-    MirSurfaceParameters params;
-    params.name = __PRETTY_FUNCTION__;
+    MirSurfaceSpec params{nullptr, 640, 480, mir_pixel_format_abgr_8888};
+    params.surface_name = __PRETTY_FUNCTION__;
 
     MirEventDelegate const event_delegate = {
         &surface_event_callback,
@@ -566,12 +558,7 @@ TEST_F(MirConnectionTest, unfocused_window_does_not_synthesise_unfocus_event_on_
     wait_handle = connection->create_surface(params, &surface_callback, nullptr);
     wait_handle->wait_for_all();
 
-    MirEvent focus_event;
-    focus_event.type = mir_event_type_surface;
-    focus_event.surface.id = surface->id();
-    focus_event.surface.attrib = mir_surface_attrib_focus;
-    focus_event.surface.value = mir_surface_unfocused;
-    surface->handle_event(focus_event);
+    surface->handle_event(*mev::make_event(mf::SurfaceId{surface->id()}, mir_surface_attrib_focus, mir_surface_unfocused));
 
     surface->set_event_handler(&event_delegate);
 
@@ -587,46 +574,72 @@ TEST_F(MirConnectionTest, unfocused_window_does_not_synthesise_unfocus_event_on_
 namespace
 {
 
-ACTION_P(FillPlatformDataWith, sample_data)
+void assign_response(MirConnection*, MirPlatformMessage* response, void* context)
 {
-    for (auto d : sample_data)
-        arg1->mutable_platform()->add_data(d);
+    auto response_ptr = static_cast<MirPlatformMessage**>(context);
+    *response_ptr = response;
 }
 
+ACTION(CopyRequestToResponse)
+{
+    *arg1 = *arg0;
+}
 }
 
-TEST_F(MirConnectionTest, sets_extra_platform_data)
+TEST_F(MirConnectionTest, uses_client_platform_for_platform_operation)
 {
     using namespace testing;
-    std::vector<int> const initial_data{0x66, 0x67, 0x68};
-    std::vector<int> const extra_data{0x11, 0x12, 0x13};
 
-    EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(FillPlatformDataWith(initial_data));
+    unsigned int const opcode{42};
+    auto const request = mir::raii::deleter_for(
+        mir_platform_message_create(opcode),
+        &mir_platform_message_release);
+    auto const response = mir::raii::deleter_for(
+        mir_platform_message_create(opcode),
+        &mir_platform_message_release);
 
-    MirWaitHandle *wait_handle =
+    EXPECT_CALL(*mock_platform, platform_operation(request.get()))
+        .WillOnce(Return(response.get()));
+    EXPECT_CALL(*mock_channel, platform_operation(_,_))
+        .Times(0);
+
+    auto connect_wh =
         connection->connect("MirClientSurfaceTest", &connected_callback, nullptr);
-    wait_handle->wait_for_all();
+    mir_wait_for(connect_wh);
 
-    MirPlatformPackage pkg;
+    MirPlatformMessage* returned_response{nullptr};
 
-    /* Check initial data */
-    connection->populate(pkg);
+    auto op_wh = connection->platform_operation(
+        request.get(), assign_response, &returned_response);
+    mir_wait_for(op_wh);
 
-    EXPECT_EQ(initial_data.size(), static_cast<size_t>(pkg.data_items));
-    for (size_t i = 0; i < initial_data.size(); i++)
-        EXPECT_EQ(initial_data[i], pkg.data[i]) << " i=" << i;
+    EXPECT_THAT(returned_response, Eq(response.get()));
+}
 
-    /* Check initial data plus extra data*/
-    connection->set_extra_platform_data(extra_data);
-    connection->populate(pkg);
+TEST_F(MirConnectionTest, contacts_server_if_client_platform_cannot_handle_platform_operation)
+{
+    using namespace testing;
 
-    EXPECT_EQ(initial_data.size() + extra_data.size(),
-              static_cast<size_t>(pkg.data_items));
+    unsigned int const opcode{42};
+    auto const request = mir::raii::deleter_for(
+        mir_platform_message_create(opcode),
+        &mir_platform_message_release);
 
-    for (size_t i = 0; i < initial_data.size(); i++)
-        EXPECT_EQ(initial_data[i], pkg.data[i]) << " i=" << i;
+    EXPECT_CALL(*mock_platform, platform_operation(_))
+        .WillOnce(Return(nullptr));
+    EXPECT_CALL(*mock_channel, platform_operation(_,_))
+        .WillOnce(CopyRequestToResponse());
 
-    for (size_t i = 0; i < extra_data.size(); i++)
-        EXPECT_EQ(extra_data[i], pkg.data[i + initial_data.size()]) << " i=" << i;
+    auto connect_wh =
+        connection->connect("MirClientSurfaceTest", &connected_callback, nullptr);
+    mir_wait_for(connect_wh);
+
+    MirPlatformMessage* returned_response{nullptr};
+
+    auto op_wh = connection->platform_operation(
+        request.get(), assign_response, &returned_response);
+    mir_wait_for(op_wh);
+
+    EXPECT_THAT(mir_platform_message_get_opcode(returned_response), Eq(opcode));
+    mir_platform_message_release(returned_response);
 }

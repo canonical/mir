@@ -20,7 +20,7 @@
 
 #include "demo_compositor.h"
 #include "window_manager.h"
-#include "fullscreen_placement_strategy.h"
+#include "server_example_fullscreen_placement_strategy.h"
 #include "../server_configuration.h"
 
 #include "mir/options/default_configuration.h"
@@ -31,7 +31,7 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/destination_alpha.h"
 #include "mir/compositor/renderer_factory.h"
-#include "mir/shell/host_lifecycle_event_listener.h"
+#include "server_example_host_lifecycle_event_listener.h"
 
 #include <iostream>
 
@@ -53,9 +53,7 @@ class DisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
     DisplayBufferCompositorFactory(
-        std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
         std::shared_ptr<mc::CompositorReport> const& report) :
-        gl_program_factory(gl_program_factory),
         report(report)
     {
     }
@@ -64,11 +62,10 @@ public:
         mg::DisplayBuffer& display_buffer) override
     {
         return std::unique_ptr<mc::DisplayBufferCompositor>(
-            new me::DemoCompositor{display_buffer, *gl_program_factory, report});
+            new me::DemoCompositor{display_buffer, report});
     }
 
 private:
-    std::shared_ptr<mg::GLProgramFactory> const gl_program_factory;
     std::shared_ptr<mc::CompositorReport> const report;
 };
 
@@ -99,14 +96,13 @@ public:
             [this]()
             {
                 return std::make_shared<me::DisplayBufferCompositorFactory>(
-                    the_gl_program_factory(),
                     the_compositor_report());
             });
     }
 
     std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
     {
-        return shell_placement_strategy(
+        return placement_strategy(
             [this]() -> std::shared_ptr<ms::PlacementStrategy>
             {
                 if (the_options()->is_set("fullscreen-surfaces"))
@@ -125,21 +121,12 @@ public:
         return composite_filter;
     }
 
-    class NestedLifecycleEventListener : public msh::HostLifecycleEventListener
-    {
-    public:
-        virtual void lifecycle_event_occurred(MirLifecycleState state) override
-        {
-            printf("Lifecycle event occurred : state = %d\n", state);
-        }
-    };
-
     std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override
     {
        return host_lifecycle_event_listener(
-           []()
+           [this]()
            {
-               return std::make_shared<NestedLifecycleEventListener>();
+               return std::make_shared<HostLifecycleEventListener>(the_logger());
            });
     }
 

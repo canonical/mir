@@ -16,15 +16,20 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/mesa/ipc_operations.h"
-#include "src/platform/graphics/mesa/drm_authentication.h"
+#include "src/platforms/mesa/server/ipc_operations.h"
+#include "src/platforms/mesa/server/drm_authentication.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/platform_operation_message.h"
+#include "mir_toolkit/mesa/platform_operation.h"
+
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
 #include "mir_test_doubles/fd_matcher.h"
 #include "mir_test_doubles/mock_drm.h"
 #include <gtest/gtest.h>
+
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mt = mir::test;
@@ -87,13 +92,43 @@ TEST_F(IpcOperations, packs_buffer_correctly)
     ipc_ops.pack_buffer(mock_buffer_msg, mock_buffer, mg::BufferIpcMsgType::update_msg);
 }
 
-TEST_F(IpcOperations, drm_auth_magic_called_for_platform_operation)
+TEST_F(IpcOperations, calls_drm_auth_magic_for_auth_magic_operation)
 {
-    int magic{112358};
-    EXPECT_CALL(mock_drm_ops, auth_magic(magic));
-    auto package = ipc_ops.platform_operation(0, mg::PlatformIPCPackage{{magic},{}});
-    ASSERT_THAT(package.ipc_data.size(), testing::Eq(1));
-    ASSERT_THAT(package.ipc_data[0], testing::Eq(0));
+    using namespace testing;
+
+    MirMesaAuthMagicRequest request;
+    request.magic = 0x10111213;
+
+    EXPECT_CALL(mock_drm_ops, auth_magic(request.magic));
+
+    mg::PlatformOperationMessage request_msg;
+    request_msg.data.resize(sizeof(request));
+    std::memcpy(request_msg.data.data(), &request, sizeof(request));
+
+    auto response_msg = ipc_ops.platform_operation(
+        MirMesaPlatformOperation::auth_magic, request_msg);
+
+    MirMesaAuthMagicResponse response{-1};
+    ASSERT_THAT(response_msg.data.size(), Eq(sizeof(response)));
+    std::memcpy(&response, response_msg.data.data(), response_msg.data.size());
+    EXPECT_THAT(response.status, Eq(0));
+}
+
+TEST_F(IpcOperations, gets_authentication_fd_for_auth_fd_operation)
+{
+    using namespace testing;
+
+    mir::Fd stub_fd(fileno(tmpfile()));
+    EXPECT_CALL(mock_drm_ops, authenticated_fd())
+        .WillOnce(Return(stub_fd));
+
+    mg::PlatformOperationMessage request_msg;
+
+    auto const response_msg = ipc_ops.platform_operation(
+        MirMesaPlatformOperation::auth_fd, request_msg);
+
+    EXPECT_THAT(response_msg.data, IsEmpty());
+    EXPECT_THAT(response_msg.fds, ElementsAre(stub_fd));
 }
 
 TEST_F(IpcOperations, gets_authentication_fd_for_connection_package)

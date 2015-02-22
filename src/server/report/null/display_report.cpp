@@ -28,6 +28,4 @@ void mrn::DisplayReport::report_successful_display_construction() {}
 void mrn::DisplayReport::report_drm_master_failure(int) {}
 void mrn::DisplayReport::report_vt_switch_away_failure() {}
 void mrn::DisplayReport::report_vt_switch_back_failure() {}
-void mrn::DisplayReport::report_hwc_composition_in_use(int, int) {}
-void mrn::DisplayReport::report_gpu_composition_in_use() {}
 void mrn::DisplayReport::report_egl_configuration(EGLDisplay, EGLConfig) {}

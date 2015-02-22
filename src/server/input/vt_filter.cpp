@@ -16,6 +16,8 @@
  * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir/input/vt_filter.h"
 
 #include <linux/input.h>

@@ -17,6 +17,8 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/events/input/input_event.h"
+
 #include <stdio.h>
 #include <signal.h>
 #include <stdint.h>
@@ -175,10 +177,13 @@ static void copy_region(const MirGraphicsRegion *dest,
 static void redraw(MirSurface *surface, const MirGraphicsRegion *canvas)
 {
     MirGraphicsRegion backbuffer;
+    MirBufferStream *bs = mir_surface_get_buffer_stream(surface);
 
-    mir_surface_get_graphics_region(surface, &backbuffer);
+    mir_buffer_stream_get_graphics_region(
+        bs, &backbuffer);
     copy_region(&backbuffer, canvas);
-    mir_surface_swap_buffers_sync(surface);
+    mir_buffer_stream_swap_buffers_sync(
+        bs);
 }
 
 static void on_event(MirSurface *surface, const MirEvent *event, void *context)
@@ -200,41 +205,86 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         {0x00, 0xff, 0x00, 0xff},
         {0x00, 0x00, 0xff, 0xff},
     };
+    
+    MirEventType event_type = mir_event_get_type(event);
 
-    if (event->type == mir_event_type_motion)
+    if (event_type == mir_event_type_input)
     {
         static size_t base_color = 0;
         static size_t max_fingers = 0;
         static float max_pressure = 1.0f;
-        
-        // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
-        MirMotionAction masked_action = event->motion.action & ~0xff00;
 
-        if (masked_action == mir_motion_action_up)
+        MirInputEvent const* input_event = mir_event_get_input_event(event);
+        MirTouchInputEvent const* tev = NULL;
+        MirPointerInputEvent const* pev = NULL;
+        unsigned touch_count = 0;
+        bool ended = false;
+        MirInputEventType type = mir_input_event_get_type(input_event);
+
+        switch (type)
+        {
+        case mir_input_event_type_touch:
+            tev = mir_input_event_get_touch_input_event(input_event);
+            touch_count = mir_touch_input_event_get_touch_count(tev);
+            ended = touch_count == 1 &&
+                    (mir_touch_input_event_get_touch_action(tev, 0) ==
+                     mir_touch_input_event_action_up);
+            break;
+        case mir_input_event_type_pointer:
+            pev = mir_input_event_get_pointer_input_event(input_event);
+            ended = mir_pointer_input_event_get_action(pev) ==
+                mir_pointer_input_event_action_button_up;
+            touch_count = mir_pointer_input_event_get_button_state(pev,
+                               mir_pointer_input_button_primary) ? 1 : 0;
+        default:
+            break;
+        }
+
+        if (ended)
         {
             base_color = (base_color + max_fingers) %
                          (sizeof(color)/sizeof(color[0]));
             max_fingers = 0;
         }
-
-        if (masked_action == mir_motion_action_move ||
-            masked_action == mir_motion_action_down)
+        else if (touch_count)
         {
             size_t p;
 
-            if (event->motion.pointer_count > max_fingers)
-                max_fingers = event->motion.pointer_count;
+            if (touch_count > max_fingers)
+                max_fingers = touch_count;
 
-            for (p = 0; p < event->motion.pointer_count; p++)
+            for (p = 0; p < touch_count; p++)
             {
-                int x = event->motion.pointer_coordinates[p].x;
-                int y = event->motion.pointer_coordinates[p].y;
-                int radius = event->motion.pointer_coordinates[p].size * 50.0f
-                             + 1.0f;
+                int x = 0;
+                int y = 0;
+                int radius = 1;
+                float pressure = 1.0f;
+
+                if (tev != NULL)
+                {
+                    x = mir_touch_input_event_get_touch_axis_value(tev, p,
+                        mir_touch_input_axis_x);
+                    y = mir_touch_input_event_get_touch_axis_value(tev, p,
+                        mir_touch_input_axis_y);
+                    float size = mir_touch_input_event_get_touch_axis_value(
+                        tev, p, mir_touch_input_axis_size);
+                    pressure = mir_touch_input_event_get_touch_axis_value(tev,
+                        p, mir_touch_input_axis_pressure);
+                    radius = size * 50.0f + 1.0f;
+                }
+                else if (pev != NULL)
+                {
+                    x = mir_pointer_input_event_get_axis_value(pev,
+                        mir_pointer_input_axis_x);
+                    y = mir_pointer_input_event_get_axis_value(pev,
+                        mir_pointer_input_axis_y);
+                    pressure = 0.5f;
+                    radius = 5;
+                }
+
                 size_t c = (base_color + p) %
                            (sizeof(color)/sizeof(color[0]));
                 Color tone = color[c];
-                float pressure = event->motion.pointer_coordinates[p].pressure;
 
                 if (pressure > max_pressure)
                     max_pressure = pressure;
@@ -247,7 +297,20 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             redraw(surface, canvas);
         }
     }
-    else if (event->type == mir_event_type_resize)
+    else if (event_type == mir_event_type_close_surface)
+    {
+        static int closing = 0;
+
+        ++closing;
+        if (closing == 1)
+            printf("Sure you don't want to save your work?\n");
+        else if (closing > 1)
+        {
+            printf("Oh I forgot you can't save your work. Quitting now...\n");
+            running = 0;
+        }
+    }
+    else if (event_type == mir_event_type_resize)
     {
         /* FIXME: https://bugs.launchpad.net/mir/+bug/1194384
          * mir_event_type_resize will arrive in a different thread to that of
@@ -288,7 +351,6 @@ int main(int argc, char *argv[])
 {
     static const Color background = {180, 180, 150, 255};
     MirConnection *conn;
-    MirSurfaceParameters parm;
     MirSurface *surf;
     MirGraphicsRegion canvas;
     MirEventDelegate delegate = {&on_event, &canvas};
@@ -356,47 +418,50 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    parm.buffer_usage = mir_buffer_usage_software;
-    parm.output_id = mir_display_output_id_invalid;
-
     unsigned int const pf_size = 32;
     MirPixelFormat formats[pf_size];
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
 
-    parm.pixel_format = mir_pixel_format_invalid;
+    MirPixelFormat pixel_format = mir_pixel_format_invalid;
     for (f = 0; f < valid_formats; f++)
     {
         if (BYTES_PER_PIXEL(formats[f]) == 4)
         {
-            parm.pixel_format = formats[f];
+            pixel_format = formats[f];
             break;
         }
     }
 
-    if (parm.pixel_format == mir_pixel_format_invalid)
+    if (pixel_format == mir_pixel_format_invalid)
     {
         fprintf(stderr, "Could not find a fast 32-bit pixel format\n");
         mir_connection_release(conn);
         return 1;
     }
 
-    parm.name = "Paint Canvas";
-    parm.width = dinfo->modes[dinfo->current_mode].horizontal_resolution;
-    parm.height = dinfo->modes[dinfo->current_mode].vertical_resolution;
+
+    int width = dinfo->modes[dinfo->current_mode].horizontal_resolution;
+    int height = dinfo->modes[dinfo->current_mode].vertical_resolution;
 
     mir_display_config_destroy(display_config);
 
-    surf = mir_connection_create_surface_sync(conn, &parm);
+    MirSurfaceSpec *spec = mir_connection_create_spec_for_normal_surface(conn, width, height, pixel_format);
+    mir_surface_spec_set_name(spec, "Paint Canvas");
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+
+    surf = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     if (surf != NULL)
     {
         mir_surface_set_swapinterval(surf, swap_interval);
         mir_surface_set_event_handler(surf, &delegate);
     
-        canvas.width = parm.width;
-        canvas.height = parm.height;
-        canvas.stride = canvas.width * BYTES_PER_PIXEL(parm.pixel_format);
-        canvas.pixel_format = parm.pixel_format;
+        canvas.width = width;
+        canvas.height = height;
+        canvas.stride = canvas.width * BYTES_PER_PIXEL(pixel_format);
+        canvas.pixel_format = pixel_format;
         canvas.vaddr = (char*)malloc(canvas.stride * canvas.height);
 
         if (canvas.vaddr != NULL)

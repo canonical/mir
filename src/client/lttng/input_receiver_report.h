@@ -34,8 +34,9 @@ class InputReceiverReport : public input::receiver::InputReceiverReport
 public:
     void received_event(MirEvent const& event) override;
 private:
-    void report(MirKeyEvent const& event) const;
-    void report(MirMotionEvent const& event) const;
+    void report_touch(MirInputEvent const* event) const;
+    void report_key(MirInputEvent const* event) const;
+    
     ClientTracepointProvider tp_provider;
 };
 

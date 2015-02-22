@@ -34,12 +34,256 @@ extern "C" {
 #endif
 
 /**
+ * Create a surface specification for a normal surface.
+ *
+ * A normal surface is suitable for most application windows. It has no special semantics.
+ * On a desktop shell it will typically have a title-bar, be movable, resizeable, etc.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \return                  A handle that can be passed to mir_surface_create() to complete construction.
+ */
+MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
+                                                              int width,
+                                                              int height,
+                                                              MirPixelFormat format);
+
+/**
+ * Create a surface specification for a menu surface.
+ *
+ * Positioning of the surface is specified with respect to the parent surface
+ * via an adjacency rectangle. The server will attempt to choose an edge of the
+ * adjacency rectangle on which to place the surface taking in to account
+ * screen-edge proximity or similar constraints. In addition, the server can use
+ * the edge affinity hint to consider only horizontal or only vertical adjacency
+ * edges in the given rectangle.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \param [in] parent       A valid parent surface for this menu.
+ * \param [in] rect         The adjacency rectangle. The server is not
+ *                          guaranteed to create a surface at the requested
+ *                          location.
+ * \param [in] edge         The preferred edge direction to attach to. Use
+ *                          mir_edge_attachment_any for no preference.
+ * \return                  A handle that can be passed to mir_surface_create()
+ *                          to complete construction.
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_menu(MirConnection* connection,
+                                    int width,
+                                    int height,
+                                    MirPixelFormat format,
+                                    MirSurface* parent,
+                                    MirRectangle* rect,
+                                    MirEdgeAttachment edge);
+
+/**
+ * Create a surface specification for a tooltip surface.
+ *
+ * A tooltip surface becomes visible when the pointer hovers the specified
+ * target zone. A tooltip surface has no input focus and will be closed when
+ * the pointer moves out of the target zone or the parent closes, moves or hides
+ *
+ * The tooltip parent cannot be another tooltip surface.
+ *
+ * The tooltip position is decided by the server but typically it will appear
+ * near the pointer.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \param [in] parent       A valid parent surface for this tooltip.
+ * \param [in] rect         A target zone relative to parent.
+ * \return                  A handle that can be passed to mir_surface_create()
+ *                          to complete construction.
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_tooltip(MirConnection* connection,
+                                       int width,
+                                       int height,
+                                       MirPixelFormat format,
+                                       MirSurface* parent,
+                                       MirRectangle* zone);
+
+/**
+ * Create a surface specification for a modal dialog surface.
+ *
+ * The dialog surface will have input focus; the parent can still be moved,
+ * resized or hidden/minimized but no interaction is possible until the dialog
+ * is dismissed.
+ *
+ * A dialog will typically have no close/maximize button decorations.
+ *
+ * During surface creation, if the specified parent is another dialog surface
+ * the server may choose to close the specified parent in order to show this
+ * new dialog surface.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \param [in] parent       A valid parent surface.
+ *
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
+                                            int width,
+                                            int height,
+                                            MirPixelFormat format,
+                                            MirSurface* parent);
+
+/**
+ * Create a surface specification for a parentless dialog surface.
+ *
+ * A parentless dialog surface is similar to a normal surface, but it cannot
+ * be fullscreen and typically won't have any maximize/close button decorations.
+ *
+ * A parentless dialog is not allowed to have other dialog children. The server
+ * may decide to close the parent and show the child dialog only.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ *
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_dialog(MirConnection* connection,
+                                      int width,
+                                      int height,
+                                      MirPixelFormat format);
+
+/**
+ * Create a surface from a given specification
+ *
+ *
+ * \param [in] requested_specification  Specification of the attributes for the created surface
+ * \param [in] callback                 Callback function to be invoked when creation is complete
+ * \param [in, out] context             User data passed to callback function.
+ *                                      This callback is guaranteed to be called, and called with a
+ *                                      non-null MirSurface*, but the surface may be invalid in
+ *                                      case of an error.
+ * \return                              A handle that can be passed to mir_wait_for()
+ */
+MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
+                                  mir_surface_callback callback, void* context);
+
+/**
+ * Create a surface from a given specification and wait for the result.
+ * \param [in] requested_specification  Specification of the attributes for the created surface
+ * \return                              The new surface. This is guaranteed non-null, but may be invalid
+ *                                      in the case of error.
+ */
+MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
+
+/**
+ * Set the requested name.
+ *
+ * The surface name helps the user to distinguish between multiple surfaces
+ * from the same application. A typical desktop shell may use it to provide
+ * text in the window titlebar, in an alt-tab switcher, or equivalent.
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] name     Requested name. This must be valid UTF-8.
+ *                      Copied into spec; clients can free the buffer passed after this call.
+ * \return              False if name is not a valid attribute of this surface type.
+ */
+bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
+
+/**
+ * Set the requested width, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    Requested width.
+ * \return              False if width is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
+
+/**
+ * Set the requested height, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] height   Requested height.
+ * \return              False if height is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
+
+/**
+ * Set the requested pixel format.
+ * \param [in] spec     Specification to mutate
+ * \param [in] format   Requested pixel format
+ * \return              False if format is not a valid pixel format for this surface type.
+ * \note    If this call returns %true then the server is guaranteed to honour this request.
+ *          If the server is unable to create a surface with this pixel format at
+ *          the point mir_surface_create() is called it will instead return an invalid surface.
+ */
+bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format);
+
+/**
+ * Set the requested buffer usage.
+ * \param [in] spec     Specification to mutate
+ * \param [in] usage    Requested buffer usage
+ * \return              False if the requested buffer usage is invalid for this surface.
+ * \note    If this call returns %true then the server is guaranteed to honour this request.
+ *          If the server is unable to create a surface with this buffer usage at
+ *          the point mir_surface_create() is called it will instead return an invalid surface.
+ */
+bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
+
+/**
+ * \param [in] spec         Specification to mutate
+ * \param [in] output_id    ID of output to place surface on. From MirDisplayOutput.output_id
+ * \return                  False if setting surface fullscreen is invalid for this surface.
+ * \note    If this call returns %true then a valid surface returned from mir_surface_create() is
+ *          guaranteed to be fullscreen on the specified output. An invalid surface is returned
+ *          if the server unable to, or policy prevents it from, honouring this request.
+ */
+bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
+
+/**
+ * Set the requested preferred orientation mode.
+ * \param [in] spec    Specification to mutate
+ * \param [in] mode    Requested preferred orientation
+ * \return             False if the mode is not valid for this surface type.
+ * \note    If the server is unable to create a surface with the preferred orientation at
+ *          the point mir_surface_create() is called it will instead return an invalid surface.
+ */
+bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode);
+
+/**
+ * Release the resources held by a MirSurfaceSpec.
+ *
+ * \param [in] spec     Specification to release
+ */
+void mir_surface_spec_release(MirSurfaceSpec* spec);
+
+/**
  * Request a new Mir surface on the supplied connection with the supplied
  * parameters. The returned handle remains valid until the surface has been
  * released.
  *   \warning callback could be called from another thread. You must do any
  *            locking appropriate to protect your data accessed in the
  *            callback.
+ *   \note    This will soon be deprecated. Use the *_spec_for_* / mir_surface_create()
+ *            two-stage process instead.
  *   \param [in] connection          The connection
  *   \param [in] surface_parameters  Request surface parameters
  *   \param [in] callback            Callback function to be invoked when
@@ -57,6 +301,8 @@ MirWaitHandle *mir_connection_create_surface(
 /**
  * Create a surface like in mir_connection_create_surface(), but also wait for
  * creation to complete and return the resulting surface.
+ *   \note    This will soon be deprecated. Use the create_spec_for/mir_surface_create()
+ *            two-stage process instead.
  *   \param [in] connection  The connection
  *   \param [in] params      Parameters describing the desired surface
  *   \return                 The resulting surface
@@ -79,11 +325,19 @@ void mir_surface_set_event_handler(MirSurface *surface,
                                    MirEventDelegate const *event_handler);
 
 /**
+ * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,
+ * obtain EGLNativeWindow, etc...)
+ * 
+ *   \param[in] surface The surface
+ */
+MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface);
+
+/**
  * Get a window type that can be used for OpenGL ES 2.0 acceleration.
  *   \param [in] surface  The surface
  *   \return              An EGLNativeWindowType that the client can use
  */
-MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface);
+MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
 
 /**
  * Test for a valid surface
@@ -119,7 +373,7 @@ void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *param
  *   \param [in] surface      The surface
  *   \return                  One of mir_platform_type_android or mir_platform_type_gbm
  */
-MirPlatformType mir_surface_get_platform_type(MirSurface *surface);
+MirPlatformType mir_surface_get_platform_type(MirSurface *surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
 
 /**
  * Get a surface's buffer in "raw" representation.
@@ -127,7 +381,7 @@ MirPlatformType mir_surface_get_platform_type(MirSurface *surface);
  *   \param [in] surface          The surface
  *   \param [out] buffer_package  Structure to be populated
  */
-void mir_surface_get_current_buffer(MirSurface *surface, MirNativeBuffer **buffer_package);
+void mir_surface_get_current_buffer(MirSurface *surface, MirNativeBuffer **buffer_package) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
 
 /**
  * Get a surface's graphics_region, i.e., map the graphics buffer to main
@@ -138,9 +392,8 @@ void mir_surface_get_current_buffer(MirSurface *surface, MirNativeBuffer **buffe
  */
 void mir_surface_get_graphics_region(
     MirSurface *surface,
-    MirGraphicsRegion *graphics_region);
-
-/**
+    MirGraphicsRegion *graphics_region) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
+                                                                          /**
  * Advance a surface's buffer. The returned handle remains valid until the next
  * call to mir_surface_swap_buffers, until the surface has been released or the
  * connection to the server has been released.
@@ -156,14 +409,14 @@ void mir_surface_get_graphics_region(
 MirWaitHandle *mir_surface_swap_buffers(
     MirSurface *surface,
     mir_surface_callback callback,
-    void *context);
+    void *context) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
 
 /**
  * Advance a surface's buffer as in mir_surface_swap_buffers(), but also wait
  * for the operation to complete.
  *   \param [in] surface  The surface whose buffer to advance
  */
-void mir_surface_swap_buffers_sync(MirSurface *surface);
+void mir_surface_swap_buffers_sync(MirSurface *surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
 
 /**
  * Release the supplied surface and any associated buffer. The returned wait
@@ -196,13 +449,9 @@ __attribute__((__deprecated__("Use mir_debug_surface_id()")))
 int mir_surface_get_id(MirSurface *surface);
 
 /**
- * Set the type (purpose) of a surface. This is not guaranteed to always work
- * with some shell types (e.g. phone/tablet UIs). As such, you may have to
- * wait on the function and check the result using mir_surface_get_type.
- *   \param [in] surface  The surface to operate on
- *   \param [in] type     The new type of the surface
- *   \return              A wait handle that can be passed to mir_wait_for
+ * \deprecated Use the mir_connection_create_spec_for_xxx family of APIs
  */
+__attribute__((__deprecated__("Use mir_connection_create_spec_for_xxx()")))
 MirWaitHandle* mir_surface_set_type(MirSurface *surface, MirSurfaceType type);
 
 /**
@@ -288,6 +537,39 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface *surface, MirCursorConfig
  *   \return              The orientation of the surface
  */
 MirOrientation mir_surface_get_orientation(MirSurface *surface);
+
+/**
+ * Request to set the preferred orientations of a surface.
+ * The request may be rejected by the server; to check wait on the
+ * result and check the applied value using mir_surface_get_preferred_orientation
+ *   \param [in] surface     The surface to operate on
+ *   \param [in] orientation The preferred orientation modes
+ *   \return                 A wait handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surface, MirOrientationMode orientation);
+
+/**
+ * Get the preferred orientation modes of a surface.
+ *   \param [in] surface  The surface to query
+ *   \return              The preferred orientation modes
+ */
+MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surface);
+
+/**
+ * Create a surface specification for an input method surface.
+ *
+ * Currently this is only appropriate for the Unity On-Screen-Keyboard.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \return                  A handle that can be passed to mir_surface_create() to complete construction.
+ */
+MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
+                                                            int width,
+                                                            int height,
+                                                            MirPixelFormat format);
 
 #ifdef __cplusplus
 }

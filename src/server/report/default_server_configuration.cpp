@@ -37,15 +37,15 @@ std::unique_ptr<mir::report::ReportFactory> mir::DefaultServerConfiguration::rep
 
     if (opt == options::log_opt_value)
     {
-        return std::unique_ptr<mir::report::ReportFactory>(new report::LoggingReportFactory(the_logger(), the_clock()));
+        return std::make_unique<report::LoggingReportFactory>(the_logger(), the_clock());
     }
     else if (opt == options::lttng_opt_value)
     {
-        return std::unique_ptr<mir::report::ReportFactory>(new report::LttngReportFactory());
+        return std::make_unique<report::LttngReportFactory>();
     }
     else if (opt == options::off_opt_value)
     {
-        return std::unique_ptr<mir::report::ReportFactory>(new report::NullReportFactory());
+        return std::make_unique<report::NullReportFactory>();
     }
     else
     {
@@ -115,5 +115,14 @@ auto mir::DefaultServerConfiguration::the_scene_report() -> std::shared_ptr<ms::
         [this]()->std::shared_ptr<ms::SceneReport>
         {
             return report_factory(options::scene_report_opt)->create_scene_report();
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_shared_library_prober_report() -> std::shared_ptr<SharedLibraryProberReport>
+{
+    return shared_library_prober_report(
+        [this]()->std::shared_ptr<SharedLibraryProberReport>
+        {
+            return report_factory(options::shared_library_prober_report_opt)->create_shared_library_prober_report();
         });
 }

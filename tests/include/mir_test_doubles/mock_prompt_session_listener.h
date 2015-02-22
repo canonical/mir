@@ -36,6 +36,8 @@ struct MockPromptSessionListener : public scene::PromptSessionListener
 
     MOCK_METHOD1(starting, void(std::shared_ptr<scene::PromptSession> const&));
     MOCK_METHOD1(stopping, void(std::shared_ptr<scene::PromptSession> const&));
+    MOCK_METHOD1(suspending, void(std::shared_ptr<scene::PromptSession> const&));
+    MOCK_METHOD1(resuming, void(std::shared_ptr<scene::PromptSession> const&));
 
     MOCK_METHOD2(prompt_provider_added, void(scene::PromptSession const&, std::shared_ptr<scene::Session> const&));
     MOCK_METHOD2(prompt_provider_removed, void(scene::PromptSession const&, std::shared_ptr<scene::Session> const&));

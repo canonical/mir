@@ -133,7 +133,7 @@ TEST_F(ScreencastDisplayBufferTest, renders_to_supplied_buffer)
     db.make_current();
 }
 
-TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_post_update)
+TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_swap)
 {
     using namespace testing;
 
@@ -145,7 +145,7 @@ TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_post_update)
     Mock::VerifyAndClearExpectations(&mock_gl);
     EXPECT_CALL(mock_gl, glFinish());
 
-    db.post_update();
+    db.gl_swap_buffers();
 }
 
 TEST_F(ScreencastDisplayBufferTest, rejects_attempt_to_optimize)

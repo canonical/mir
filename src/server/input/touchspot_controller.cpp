@@ -22,7 +22,6 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/buffer_writer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/input/scene.h"
@@ -72,21 +71,11 @@ public:
         return glm::mat4();
     }
 
-    bool visible() const override
-    {
-        return true;
-    }
-    
     bool shaped() const override
     {
         return true;
     }
 
-    int buffers_ready_for_compositor() const override
-    {
-        return 1;
-    }
-    
 // TouchspotRenderable    
     void move_center_to(geom::Point pos)
     {
@@ -104,7 +93,6 @@ private:
 
 
 mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<mg::BufferWriter> const& buffer_writer,
     std::shared_ptr<mi::Scene> const& scene)
     : touchspot_buffer(allocator->alloc_buffer({touchspot_size, touchspot_pixel_format, mg::BufferUsage::software})),
       scene(scene),
@@ -114,7 +102,7 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
     unsigned int const pixels_size = touchspot_size.width.as_uint32_t()*touchspot_size.height.as_uint32_t() *
         MIR_BYTES_PER_PIXEL(touchspot_pixel_format);
     
-    buffer_writer->write(*touchspot_buffer, touchspot_image.pixel_data, pixels_size);
+    touchspot_buffer->write(touchspot_image.pixel_data, pixels_size);
 }
 
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)

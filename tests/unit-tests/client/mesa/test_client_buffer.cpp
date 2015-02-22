@@ -17,9 +17,9 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "src/client/mesa/client_buffer.h"
-#include "src/client/mesa/client_buffer_factory.h"
-#include "src/client/mesa/buffer_file_ops.h"
+#include "src/platforms/mesa/client/client_buffer.h"
+#include "src/platforms/mesa/client/client_buffer_factory.h"
+#include "src/platforms/mesa/client/buffer_file_ops.h"
 
 #include <sys/mman.h>
 #include <gmock/gmock.h>

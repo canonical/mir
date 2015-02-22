@@ -27,7 +27,6 @@
 #include "mir/graphics/buffer.h"
 
 #include "mir/scene/scene_report.h"
-#include "mir/scene/surface_configurator.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -101,15 +100,21 @@ void ms::SurfaceObservers::reception_mode_set_to(mi::InputReceptionMode mode)
         { observer->reception_mode_set_to(mode); });
 }
 
+void ms::SurfaceObservers::client_surface_close_requested()
+{
+    for_each([](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->client_surface_close_requested(); });
+}
+
 
 ms::BasicSurface::BasicSurface(
     std::string const& name,
     geometry::Rectangle rect,
+    std::weak_ptr<Surface> const& parent,
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<mi::InputChannel> const& input_channel,
     std::shared_ptr<input::InputSender> const& input_sender,
-    std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
     surface_name(name),
@@ -123,24 +128,25 @@ ms::BasicSurface::BasicSurface(
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     input_sender(input_sender),
-    configurator(configurator),
     cursor_image_(cursor_image),
-    report(report)
+    report(report),
+    parent_(parent)
 {
-    initialize_attributes();
     report->surface_created(this, surface_name);
 }
 
-void ms::BasicSurface::initialize_attributes()
+ms::BasicSurface::BasicSurface(
+    std::string const& name,
+    geometry::Rectangle rect,
+    bool nonrectangular,
+    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::shared_ptr<mi::InputChannel> const& input_channel,
+    std::shared_ptr<input::InputSender> const& input_sender,
+    std::shared_ptr<mg::CursorImage> const& cursor_image,
+    std::shared_ptr<SceneReport> const& report) :
+    BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, nonrectangular,buffer_stream,
+                 input_channel, input_sender, cursor_image, report)
 {
-    std::lock_guard<std::mutex> lg(guard);
-
-    attrib_values[mir_surface_attrib_type] = mir_surface_type_normal;
-    attrib_values[mir_surface_attrib_state] = mir_surface_state_restored;
-    attrib_values[mir_surface_attrib_swapinterval] = 1;
-    attrib_values[mir_surface_attrib_focus] = mir_surface_unfocused;
-    attrib_values[mir_surface_attrib_dpi] = 0;
-    attrib_values[mir_surface_attrib_visibility] = mir_surface_visibility_exposed;
 }
 
 void ms::BasicSurface::force_requests_to_complete()
@@ -217,7 +223,12 @@ void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(m
             first_frame_posted = true;
         }
 
-        observers.frame_posted(surface_buffer_stream->buffers_ready_for_compositor());
+        /*
+         * TODO: In future frame_posted() could be made parameterless.
+         *       The new method of catching up on buffer backlogs is to
+         *       query buffers_ready_for_compositor() or Scene::frames_pending
+         */
+        observers.frame_posted(1);
     }
 
     surface_buffer_stream->acquire_client_buffer(complete);
@@ -300,7 +311,7 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (hidden)
+    if (!visible(lock))
         return false;
 
     // Restrict to bounding rectangle
@@ -384,7 +395,7 @@ void ms::BasicSurface::with_most_recent_buffer_do(
 MirSurfaceType ms::BasicSurface::type() const
 {    
     std::unique_lock<std::mutex> lg(guard);
-    return static_cast<MirSurfaceType>(attrib_values[mir_surface_attrib_type]);
+    return type_;
 }
 
 MirSurfaceType ms::BasicSurface::set_type(MirSurfaceType t)
@@ -397,12 +408,12 @@ MirSurfaceType ms::BasicSurface::set_type(MirSurfaceType t)
             "type."));
     }
 
-    if (attrib_values[mir_surface_attrib_type] != t)
+    if (type_ != t)
     {
-        attrib_values[mir_surface_attrib_type] = t;
+        type_ = t;
         lg.unlock();
 
-        observers.attrib_changed(mir_surface_attrib_type, attrib_values[mir_surface_attrib_type]); 
+        observers.attrib_changed(mir_surface_attrib_type, type_); 
     }
 
     return t;
@@ -411,7 +422,7 @@ MirSurfaceType ms::BasicSurface::set_type(MirSurfaceType t)
 MirSurfaceState ms::BasicSurface::state() const
 {
     std::unique_lock<std::mutex> lg(guard);
-    return static_cast<MirSurfaceState>(attrib_values[mir_surface_attrib_state]);
+    return state_;
 }
 
 MirSurfaceState ms::BasicSurface::set_state(MirSurfaceState s)
@@ -420,10 +431,11 @@ MirSurfaceState ms::BasicSurface::set_state(MirSurfaceState s)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
 
     std::unique_lock<std::mutex> lg(guard);
-    if (attrib_values[mir_surface_attrib_state] != s)
+    if (state_ != s)
     {
-        attrib_values[mir_surface_attrib_state] = s;
+        state_ = s;
         lg.unlock();
+        set_hidden(s == mir_surface_state_hidden);
         
         observers.attrib_changed(mir_surface_attrib_state, s);
     }
@@ -439,9 +451,9 @@ int ms::BasicSurface::set_swap_interval(int interval)
     }
 
     std::unique_lock<std::mutex> lg(guard);
-    if (attrib_values[mir_surface_attrib_swapinterval] != interval)
+    if (swapinterval_ != interval)
     {
-        attrib_values[mir_surface_attrib_swapinterval] = interval;
+        swapinterval_ = interval;
         bool allow_dropping = (interval == 0);
         allow_framedropping(allow_dropping);
 
@@ -461,15 +473,34 @@ MirSurfaceFocusState ms::BasicSurface::set_focus_state(MirSurfaceFocusState new_
     }
 
     std::unique_lock<std::mutex> lg(guard);
-    if (attrib_values[mir_surface_attrib_focus] != new_state)
+    if (focus_ != new_state)
     {
-        attrib_values[mir_surface_attrib_focus] = new_state;
+        focus_ = new_state;
 
         lg.unlock();
         observers.attrib_changed(mir_surface_attrib_focus, new_state);
     }
 
     return new_state;
+}
+
+MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMode new_orientation_mode)
+{
+    if ((new_orientation_mode & mir_orientation_mode_any) == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation mode"));
+    }
+
+    std::unique_lock<std::mutex> lg(guard);
+    if (pref_orientation_mode != new_orientation_mode)
+    {
+        pref_orientation_mode = new_orientation_mode;
+        lg.unlock();
+
+        observers.attrib_changed(mir_surface_attrib_preferred_orientation, new_orientation_mode);
+    }
+
+    return new_orientation_mode;
 }
 
 void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
@@ -479,7 +510,7 @@ void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> cons
 
 int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
 {
-    int result = configurator->select_attribute_value(*this, attrib, value);
+    int result = value;
     switch (attrib)
     {
     case mir_surface_attrib_type:
@@ -500,25 +531,33 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
     case mir_surface_attrib_visibility:
         result = set_visibility(static_cast<MirSurfaceVisibility>(result));
         break;
+    case mir_surface_attrib_preferred_orientation:
+        result = set_preferred_orientation(static_cast<MirOrientationMode>(result));
+        break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                "attribute."));
         break;
     }
 
-    configurator->attribute_set(*this, attrib, result);
-
     return result;
 }
 
 int ms::BasicSurface::query(MirSurfaceAttrib attrib)
 {
-    if (attrib < 0 || attrib > mir_surface_attribs)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
-                                               "attribute."));        
-
     std::unique_lock<std::mutex> lg(guard);
-    return attrib_values[attrib];
+    switch (attrib)
+    {
+        case mir_surface_attrib_type: return type_;
+        case mir_surface_attrib_state: return state_;
+        case mir_surface_attrib_swapinterval: return swapinterval_;
+        case mir_surface_attrib_focus: return focus_;
+        case mir_surface_attrib_dpi: return dpi_;
+        case mir_surface_attrib_visibility: return visibility_;
+        case mir_surface_attrib_preferred_orientation: return pref_orientation_mode;
+        default: BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
+                                                        "attribute."));
+    }
 }
 
 void ms::BasicSurface::hide()
@@ -548,11 +587,15 @@ std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
     return cursor_image_;
 }
 
+void ms::BasicSurface::request_client_surface_close()
+{
+    observers.client_surface_close_requested();
+}
 
 int ms::BasicSurface::dpi() const
 {
     std::unique_lock<std::mutex> lock(guard);
-    return attrib_values[mir_surface_attrib_dpi];
+    return dpi_;
 }
 
 int ms::BasicSurface::set_dpi(int new_dpi)
@@ -563,9 +606,9 @@ int ms::BasicSurface::set_dpi(int new_dpi)
     }
 
     std::unique_lock<std::mutex> lg(guard);
-    if (attrib_values[mir_surface_attrib_dpi] != new_dpi)
+    if (dpi_ != new_dpi)
     {
-        attrib_values[mir_surface_attrib_dpi] = new_dpi;
+        dpi_ = new_dpi;
         lg.unlock();
         observers.attrib_changed(mir_surface_attrib_dpi, new_dpi);
     }
@@ -582,13 +625,13 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
     }
 
     std::unique_lock<std::mutex> lg(guard);
-    if (attrib_values[mir_surface_attrib_visibility] != new_visibility)
+    if (visibility_ != new_visibility)
     {
-        attrib_values[mir_surface_attrib_visibility] = new_visibility;
+        visibility_ = new_visibility;
         lg.unlock();
         if (new_visibility == mir_surface_visibility_exposed)
             surface_buffer_stream->drop_old_buffers();
-        observers.attrib_changed(mir_surface_attrib_visibility, attrib_values[mir_surface_attrib_visibility]);
+        observers.attrib_changed(mir_surface_attrib_visibility, visibility_);
     }
 
     return new_visibility;
@@ -607,6 +650,12 @@ void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& obs
     observers.remove(o);
 }
 
+std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const
+{
+    std::lock_guard<std::mutex> lg(guard);
+    return parent_.lock();
+}
+
 namespace
 {
 //This class avoids locking for long periods of time by copying (or lazy-copying)
@@ -618,7 +667,6 @@ public:
         void const* compositor_id,
         geom::Rectangle const& position,
         glm::mat4 const& transform,
-        bool visible,
         float alpha,
         bool shaped,
         mg::Renderable::ID id)
@@ -627,7 +675,6 @@ public:
       compositor_id{compositor_id},
       alpha_{alpha},
       shaped_{shaped},
-      visible_{visible},
       screen_position_(position),
       transformation_(transform),
       id_(id)
@@ -638,18 +685,12 @@ public:
     {
     }
  
-    int buffers_ready_for_compositor() const override
-    { return underlying_buffer_stream->buffers_ready_for_compositor(); }
-
     std::shared_ptr<mg::Buffer> buffer() const override
     {
         if (!compositor_buffer)
             compositor_buffer = underlying_buffer_stream->lock_compositor_buffer(compositor_id);
         return compositor_buffer;
     }
-
-    bool visible() const override
-    { return visible_; }
 
     geom::Rectangle screen_position() const override
     { return screen_position_; }
@@ -671,7 +712,6 @@ private:
     void const*const compositor_id;
     float const alpha_;
     bool const shaped_;
-    bool const visible_;
     geom::Rectangle const screen_position_;
     glm::mat4 const transformation_;
     mg::Renderable::ID const id_; 
@@ -682,16 +722,20 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    return std::unique_ptr<mg::Renderable>(
-        new SurfaceSnapshot(
-            surface_buffer_stream,
-            compositor_id,
-            surface_rect,
-            transformation_matrix,
-            visible(lk),
-            surface_alpha,
-            nonrectangular, 
-            this));
+    return std::make_unique<SurfaceSnapshot>(
+        surface_buffer_stream,
+        compositor_id,
+        surface_rect,
+        transformation_matrix,
+        surface_alpha,
+        nonrectangular,
+        this);
+}
+
+int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
+{
+    std::unique_lock<std::mutex> lk(guard);
+    return surface_buffer_stream->buffers_ready_for_compositor(id);
 }
 
 void ms::BasicSurface::consume(MirEvent const& event)

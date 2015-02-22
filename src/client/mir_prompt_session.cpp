@@ -30,8 +30,8 @@ MirPromptSession::MirPromptSession(
     event_handler_register_id{event_handler_register->register_event_handler(
         [this](MirEvent const& event)
         {
-            if (event.type == mir_event_type_prompt_session_state_change)
-                set_state(event.prompt_session.new_state);
+            if (mir_event_get_type(&event) == mir_event_type_prompt_session_state_change)
+                set_state(mir_prompt_session_event_get_state(mir_event_get_prompt_session_event(&event)));
         })},
     state(mir_prompt_session_state_stopped),
     handle_prompt_session_state_change{[](MirPromptSessionState){}}

@@ -22,6 +22,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <locale>
 
 namespace mo = mir::options;
 namespace po = boost::program_options;
@@ -72,7 +73,7 @@ void mo::ProgramOption::parse_environment(
              for(auto& ch : result)
              {
                  if (ch == '_') ch = '-';
-                 else ch = tolower(ch);
+                 else ch = std::tolower(ch, std::locale::classic()); // avoid current locale
              }
 
              return result;

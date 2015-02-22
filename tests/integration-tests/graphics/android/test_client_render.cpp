@@ -19,9 +19,9 @@
 #include "mir_test_framework/process.h"
 
 #include "mir/graphics/buffer_properties.h"
-#include "src/platform/graphics/android/buffer.h"
+#include "src/platforms/android/server/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
-#include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
+#include "src/platforms/android/server/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
 #include "mir_test/stub_server_tool.h"
@@ -98,7 +98,7 @@ struct TestClient
         MirGraphicsRegion graphics_region;
         for(int i=0u; i < num_frames; i++)
         {
-            mir_surface_get_graphics_region(surface, &graphics_region);
+            mir_buffer_stream_get_graphics_region(mir_surface_get_buffer_stream(surface), &graphics_region);
             if (i % 2)
             {
                 draw_pattern1.draw(graphics_region);
@@ -107,7 +107,7 @@ struct TestClient
             {
                 draw_pattern0.draw(graphics_region);
             }
-            mir_surface_swap_buffers_sync(surface);
+            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
         }
 
         mir_surface_release_sync(surface);
@@ -144,7 +144,7 @@ struct TestClient
         EXPECT_THAT(mir_surface, IsValid());
 
         auto native_window = static_cast<EGLNativeWindowType>(
-            mir_surface_get_egl_native_window(mir_surface));
+            mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(mir_surface)));
 
         egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
         context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
@@ -199,27 +199,29 @@ struct StubServerGenerator : public mt::StubServerTool
                  google::protobuf::Closure* done)
     {
         response->mutable_id()->set_value(13);
+        response->mutable_buffer_stream()->mutable_id()->set_value(13);
         response->set_width(test_width);
         response->set_height(test_height);
         surface_pf = MirPixelFormat(request->pixel_format());
         response->set_pixel_format(request->pixel_format());
-        response->mutable_buffer()->set_buffer_id(client_buffer->id().as_value());
+        response->mutable_buffer_stream()->set_pixel_format(request->pixel_format());
+        response->mutable_buffer_stream()->mutable_buffer()->set_buffer_id(client_buffer->id().as_value());
 
         auto buf = client_buffer->native_buffer_handle();
         //note about the stride. Mir protocol sends stride in bytes, android uses stride in pixels
-        response->mutable_buffer()->set_stride(client_buffer->stride().as_uint32_t());
+        response->mutable_buffer_stream()->mutable_buffer()->set_stride(client_buffer->stride().as_uint32_t());
 
         auto const& size = client_buffer->size();
-        response->mutable_buffer()->set_width(size.width.as_int());
-        response->mutable_buffer()->set_height(size.height.as_int());
+        response->mutable_buffer_stream()->mutable_buffer()->set_width(size.width.as_int());
+        response->mutable_buffer_stream()->mutable_buffer()->set_height(size.height.as_int());
 
-        response->mutable_buffer()->set_fds_on_side_channel(1);
+        response->mutable_buffer_stream()->mutable_buffer()->set_fds_on_side_channel(1);
         native_handle_t const* native_handle = buf->handle();
         for (auto i = 0; i < native_handle->numFds; i++)
-            response->mutable_buffer()->add_fd(dup(native_handle->data[i]));
-        response->mutable_buffer()->add_data(static_cast<int>(mga::BufferFlag::unfenced));
+            response->mutable_buffer_stream()->mutable_buffer()->add_fd(dup(native_handle->data[i]));
+        response->mutable_buffer_stream()->mutable_buffer()->add_data(static_cast<int>(mga::BufferFlag::unfenced));
         for (auto i = 0; i < native_handle->numInts; i++)
-            response->mutable_buffer()->add_data(native_handle->data[native_handle->numFds+i]);
+            response->mutable_buffer_stream()->mutable_buffer()->add_data(native_handle->data[native_handle->numFds+i]);
 
         std::unique_lock<std::mutex> lock(guard);
         surface_name = request->surface_name();

@@ -28,38 +28,54 @@
 
 void mir::client::lttng::InputReceiverReport::received_event(MirEvent const& event)
 {
-    switch (event.type)
+    if (mir_event_get_type(&event) != mir_event_type_input)
+        return;
+    auto iev = mir_event_get_input_event(&event);
+    switch (mir_input_event_get_type(iev))
     {
-    case mir_event_type_key:
-        report(event.key);
+    case mir_input_event_type_key:
+        report_key(iev);
         break;
-    case mir_event_type_motion:
-        report(event.motion);
+    case mir_input_event_type_touch:
+        report_touch(iev);
+        break;
+    case mir_input_event_type_pointer:
+        // TODO: Print pointer events
         break;
     default:
         BOOST_THROW_EXCEPTION(std::runtime_error("Unexpected event type"));
     }
 }
 
-void mir::client::lttng::InputReceiverReport::report(MirKeyEvent const& event) const
+void mir::client::lttng::InputReceiverReport::report_key(MirInputEvent const* event) const
 {
-    mir_tracepoint(mir_client_input_receiver, key_event, event.device_id, event.source_id,
-                   static_cast<int>(event.action), static_cast<int>(event.flags), event.modifiers, event.key_code,
-                   event.scan_code, event.down_time, event.event_time);
+    auto kev = mir_input_event_get_key_input_event(event);
+
+    mir_tracepoint(mir_client_input_receiver, key_event, mir_input_event_get_device_id(event),
+                   mir_key_input_event_get_action(kev),
+                   mir_key_input_event_get_modifiers(kev),
+                   mir_key_input_event_get_key_code(kev),
+                   mir_key_input_event_get_scan_code(kev),
+                   mir_input_event_get_event_time(event));
 }
 
-void mir::client::lttng::InputReceiverReport::report(MirMotionEvent const& event) const
+void mir::client::lttng::InputReceiverReport::report_touch(MirInputEvent const* event) const
 {
-    mir_tracepoint(mir_client_input_receiver, motion_event, event.device_id, event.source_id, event.action,
-                   static_cast<int>(event.flags), event.modifiers, event.edge_flags,
-                   static_cast<int>(event.button_state), event.down_time, event.event_time);
-    for (unsigned int i = 0; i < event.pointer_count; i++)
+    auto tev = mir_input_event_get_touch_input_event(event);
+    
+    mir_tracepoint(mir_client_input_receiver, touch_event, mir_input_event_get_device_id(event),  
+                   mir_touch_input_event_get_modifiers(tev), mir_input_event_get_event_time(event));
+
+    for (unsigned int i = 0; i < mir_touch_input_event_get_touch_count(tev); i++)
     {
-        mir_tracepoint(mir_client_input_receiver, motion_event_coordinate,
-                       event.pointer_coordinates[i].id, event.pointer_coordinates[i].x, event.pointer_coordinates[i].y,
-                       event.pointer_coordinates[i].touch_major, event.pointer_coordinates[i].touch_minor,
-                       event.pointer_coordinates[i].size, event.pointer_coordinates[i].pressure,
-                       event.pointer_coordinates[i].orientation);
+        mir_tracepoint(mir_client_input_receiver, touch_event_coordinate,
+                       mir_touch_input_event_get_touch_id(tev, i),
+                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_x),
+                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_y),
+                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_touch_major),
+                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_touch_minor),
+                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_size),
+                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_pressure));
     }
 }
 

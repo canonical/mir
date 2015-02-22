@@ -24,6 +24,7 @@
 
 namespace mir
 {
+namespace geometry { class Point; }
 namespace scene
 {
 class Surface;
@@ -41,6 +42,9 @@ public:
     virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
 
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) = 0;
+
+    virtual auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> = 0;
+
 protected:
     SurfaceCoordinator() = default;
     virtual ~SurfaceCoordinator() = default;

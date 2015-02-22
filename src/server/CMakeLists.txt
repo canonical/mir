@@ -1,4 +1,7 @@
-add_definitions(-DMIR_LOGGING_COMPONENT_FALLBACK="mirserver")
+add_definitions(
+  -DMIR_LOG_COMPONENT_FALLBACK="mirserver"
+  -DMIR_VERSION="${MIR_VERSION}"
+)
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
@@ -7,6 +10,9 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${GLIB_INCLUDE_DIRS}
 )
+
+add_definitions(-DMIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
+add_definitions(-DMIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
 
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)
@@ -27,12 +33,16 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
 )
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+  ${PROJECT_SOURCE_DIR}/include/server/mir/version.h
+)
+
 add_library(mirserverobjects OBJECT
   run_mir.cpp
   report_exception.cpp
   display_server.cpp
   default_server_configuration.cpp
-  asio_main_loop.cpp
   glib_main_loop.cpp
   glib_main_loop_sources.cpp
   default_emergency_cleanup.cpp
@@ -71,8 +81,9 @@ add_library(mirserver SHARED
 )
 
 target_link_libraries(mirserver LINK_PUBLIC
-  mirplatform
+
   mirclient
+  mirplatform
   mircommon
   mirprotobuf
   3rd_party
@@ -95,7 +106,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 27) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 29) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

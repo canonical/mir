@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_FRAMEBUFFER_BUNDLE_H_
 #define MIR_TEST_DOUBLES_MOCK_FRAMEBUFFER_BUNDLE_H_
 
-#include "src/platform/graphics/android/framebuffer_bundle.h"
+#include "src/platforms/android/server/framebuffer_bundle.h"
 #include "stub_buffer.h"
 #include <gmock/gmock.h>
 
@@ -32,18 +32,28 @@ namespace doubles
 
 struct MockFBBundle : public graphics::android::FramebufferBundle
 {
-    MockFBBundle()
+    MockFBBundle(geometry::Size sz, double vsync_rate, MirPixelFormat pf)
     {
-        using namespace testing;
         ON_CALL(*this, last_rendered_buffer())
-            .WillByDefault(Return(std::make_shared<StubBuffer>()));
+            .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
+        ON_CALL(*this, fb_format())
+            .WillByDefault(testing::Return(pf));
+        ON_CALL(*this, fb_size())
+            .WillByDefault(testing::Return(sz));
+        ON_CALL(*this, fb_refresh_rate())
+            .WillByDefault(testing::Return(vsync_rate));
     }
+
+    MockFBBundle() :
+        MockFBBundle({0,0}, 0.0f, mir_pixel_format_abgr_8888)
+    {
+    }
+
     MOCK_METHOD0(fb_format, MirPixelFormat());
     MOCK_METHOD0(fb_size, geometry::Size());
     MOCK_METHOD0(fb_refresh_rate, double());
     MOCK_METHOD0(buffer_for_render, std::shared_ptr<graphics::Buffer>());
     MOCK_METHOD0(last_rendered_buffer, std::shared_ptr<graphics::Buffer>());
-    MOCK_METHOD1(wait_for_consumed_buffer, void(bool));
 };
 }
 }

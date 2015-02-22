@@ -165,6 +165,12 @@ public:
                         mir::protobuf::DRMAuthMagicStatus* response,
                         google::protobuf::Closure* done) override;
 
+    void platform_operation(
+        google::protobuf::RpcController* /*controller*/,
+        mir::protobuf::PlatformOperationMessage const* request,
+        mir::protobuf::PlatformOperationMessage* response,
+        google::protobuf::Closure* done) override;
+
     void new_fds_for_prompt_providers(
         ::google::protobuf::RpcController* controller,
         ::mir::protobuf::SocketFDRequest const* parameters,

@@ -19,10 +19,11 @@
 #ifndef MIR_TEST_DOUBLES_STUB_GBM_NATIVE_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_GBM_NATIVE_BUFFER_H_
 
-#include "src/platform/graphics/mesa/gbm_buffer.h"
+#include "src/platforms/mesa/server/gbm_buffer.h"
 #include "mir/geometry/size.h"
 #include <unistd.h>
 #include <fcntl.h>
+#include <gbm.h>
 
 namespace mir
 {
@@ -33,14 +34,23 @@ namespace doubles
 
 struct StubGBMNativeBuffer : public graphics::mesa::GBMNativeBuffer
 {
-    StubGBMNativeBuffer(geometry::Size const& size)
+    StubGBMNativeBuffer(geometry::Size const& size, bool bypassable = true)
     {
         data_items = 4;
         //note: the client platform will only close the 1st fd, so lets not put more than one in here
         fd_items = 1;
         width = size.width.as_int();
         height = size.height.as_int();
-        flags = 0x66;
+        /*
+         * From gbm.h
+         *   GBM_BO_USE_SCANOUT      = (1 << 0),
+         *   GBM_BO_USE_CURSOR_64X64 = (1 << 1),
+         *   GBM_BO_USE_RENDERING    = (1 << 2),
+         *   GBM_BO_USE_WRITE        = (1 << 3),
+         */
+        flags = (bypassable ? GBM_BO_USE_SCANOUT : 0) |
+                              GBM_BO_USE_CURSOR_64X64 |
+                              GBM_BO_USE_RENDERING;
         stride = 4390;
         bo = reinterpret_cast<gbm_bo*>(&fake_bo); //gbm_bo is opaque, so test code shouldn't dereference.
         for(auto i = 0; i < data_items; i++)

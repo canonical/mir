@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "src/client/aging_buffer.h"
+#include "mir/aging_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

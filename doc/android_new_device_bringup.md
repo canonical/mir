@@ -83,7 +83,7 @@ The demo servers provide a good way to check visually that clients can connect
 and display to the screen.
 In one terminal, run
 
-    mir_demo_server_shell
+    mir_proving_server
 
 and in another terminal, run
 
@@ -105,7 +105,7 @@ option is available with mir_demo_standalone_* and mir_demo_server_*
 
 If you run 
 
-    mir_demo_server_shell --hwc-report log
+    mir_proving_server --hwc-report log
 
 You will get output similar to this:
 
@@ -128,15 +128,34 @@ You will get output similar to this:
     HWC: display off
 
 This is the list that Mir submits to HWC, the decision of hwc (overlay or GLES),
-and the final handles submitted to HWC during the display post. The vsync signal
-and the blanking are also logged.
+and the final handles submitted to HWC during the display post. The HWC version
+vsync signal and the blanking are also logged.
+
+The "--hwc-report log" option should work with all android-based mir servers
+and demo standalone programs. If its more convenient, setting 
+MIR_SERVER_HWC_REPORT=log to the environment of the running server will give 
+the hwc report on stdout.
+
+###Note on HWC versions###
+The "--hwc-report log" will log the HWC version at the beginning of the report,
+ e.g.
+
+    HWC version 1.2
+
+If you see something like:
+
+    HWC version unknown (<version>)
+
+This means that Mir does not support the version of hwc on the device.
+As of Dec 2014, Mir supports the legacy FB module, as well as HWC versions
+1.0, 1.1, 1.2, and 1.3. 
 
 If you run
 
     mir_demo_standalone_render_overlays --display-report log
 
 You will get the EGL configuration that was selected for the framebuffer EGL
-context, as well as the HWC version. 
+context.
 
 Reporting Problems
 -----------------
@@ -148,3 +167,4 @@ Information".
  - A stacktrace from where Mir has crashed or hung.
  - The logcat from /system/bin/logcat at the time of the problem
  - The kernel log from dmesg at the time of the problem.
+ - A video of any visual glitches or corruption

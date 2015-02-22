@@ -1,5 +1,7 @@
 MIR_CLIENT_8 {
- global: mir_*;
+ global:
+ mir_connection_platform_operation;
+ mir_*;
   extern "C++" { 
    # used by PrivateProtobuf
    mir::client::the_rpc_channel*;
@@ -14,3 +16,31 @@ MIR_CLIENT_8 {
   }; 
  local: *;
 };
+
+MIR_CLIENT_8.1 {
+  global:
+    mir_connection_create_spec_for_normal_surface;
+    mir_surface_create;
+    mir_surface_create_sync;
+    mir_surface_spec_set_name;
+    mir_surface_spec_set_width;
+    mir_surface_spec_set_height;
+    mir_surface_spec_set_pixel_format;
+    mir_surface_spec_set_buffer_usage;
+    mir_surface_spec_set_fullscreen_on_output;
+} MIR_CLIENT_8;
+
+MIR_CLIENT_8.2 {
+  global:
+    mir_surface_set_preferred_orientation;
+    mir_surface_get_preferred_orientation;
+    mir_surface_spec_set_preferred_orientation;
+} MIR_CLIENT_8.1;
+
+MIR_CLIENT_8.3 {
+  global:
+    mir_connection_create_spec_for_menu;
+    mir_connection_create_spec_for_tooltip;
+    mir_connection_create_spec_for_dialog;
+    mir_connection_platform_operation;
+} MIR_CLIENT_8.2;

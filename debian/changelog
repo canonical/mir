@@ -1,3 +1,241 @@
+mir (0.12.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.12.0 (https://launchpad.net/mir/+milestone/0.12.0)
+    - Enhancements:
+      . TODO
+    - ABI summary: Servers need rebuilding, but clients do not;
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI unchanged at 3 (TODO)
+      . Mirplatform ABI unchanged at 6 (TODO)
+      . Mirserver ABI unchanged at 29 (TODO)
+    - Bug fixes:
+      . TODO
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 12 Feb 2015 10:12:11 +0800
+
+mir (0.11.0+15.04.20150209.1-0ubuntu1) vivid; urgency=medium
+
+  [ Daniel van Vugt ]
+  * New upstream release 0.11.0 (https://launchpad.net/mir/+milestone/0.11.0)
+    - Packaging changes:
+      . Due to changes in the Mir driver model the client platforms are no
+        longer versioned by soname. Thusly libmirplatform5driver-(mesa|android) is
+        replaced by mir-client-platform-(mesa-android). A new package
+        mir-client-platform-mesa-dev is introduced containing headers
+        previously in mirplatform-dev.
+    - Enhancements:
+      . Lots more major plumbing in the Android code, on the path to
+        supporting external displays.
+      . Add support for clang 3.6.
+      . Major redesign of server classes in mir::shell,scene and friends
+        (still in progress).
+      . Added client API for creating dialogs and tooltips.
+      . Added new surface states: mir_surface_state_hidden and
+        mir_surface_state_horizmaximized.
+      . Performance: Use optimally efficient fragment shading when possible.
+      . Performance: (Desktop) Composite using double buffering instead of
+        triple to reduce visible lag.
+      . mir_proving_server: Can now resize windows from any edge or corner
+        using the existing Alt+middlebuttondrag.
+      . mir_proving_server: Added some demo custom shaders (negative and
+        high contrast modes: Super+N/C).
+      . mir_proving_server: Can now close clients politely via Alt+F4.
+      . Added MirPointerInputEvent (part of the new input API, the old
+        MirMotionEvent is still supported also for now).
+    - ABI summary: Servers need rebuilding, but clients do not;
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI unchanged at 3
+      . Mirplatform ABI bumped to 6
+      . Mirserver ABI bumped to 29
+    - Bug fixes:
+      . [regression] mir_demo_server exits immediately with boost
+        bad_any_cast exception (LP: #1414630)
+      . need way to position menus and tooltips (relative positioning to
+        parent) (LP: #1324101)
+      . GLibMainLoopTest failure seen in CI (LP: #1413748)
+      . Clang builds fail in CI (LP: #1416317)
+      . segfault in mir::compositor::GLProgramFamily::Shader::init()
+        (LP: #1416482)
+      . GLRenderer: The default fragment shader is sub-optimal for alpha=1.0
+        (LP: #1350674)
+      . mesa::DisplayBuffer::post_update is triple buffered - more laggy than
+        it needs to be (LP: #1350725)
+      . Cannot connect to nested server when started from a differen vt
+        (LP: #1379266)
+      . [testfail] AsioMainLoopAlarmTest fails in CI (LP: #1392256)
+      . Compositor report inconsistently reports frame time during bypass,
+        and render time otherwise (LP: #1408906)
+      . [regression] mir_demo_client_fingerpaint doesn't paint anything any
+        more (with the mouse) (LP: #1413139)
+      . Hardware cursor is always slightly ahead of the composited image
+        (LP: #1274408)
+      . integration tests are outputting (too many) DisplayServer log
+        messages (LP: #1408231)
+      . [regression] deploy-and-test.sh doesn't work any more (unless you
+        have umockdev installed already) (LP: #1413479)
+      . Color Inverse on display. Toggle Negative Image (LP: #1400580)
+      . mir-ubuntu-vivid-armhf-ci fails consistently (LP: #1407863)
+      . Double-buffered surfaces may lag or freeze if event driven and not
+        constantly redrawing (LP: #1395581)
+      . Pointer motion and crossing events are missing (LP: #1417650)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 09 Feb 2015 21:27:35 +0000
+
+mir (0.10.0+15.04.20150107.2-0ubuntu1) vivid; urgency=medium
+
+  [ Daniel van Vugt ]
+  * New upstream release 0.10.0 (https://launchpad.net/mir/+milestone/0.10.0)
+    - Enhancements:
+      . Added support for Android HWC 1.3 devices.
+      . Plumbing/preparation to support external displays on Android devices.
+      . Reduced build dependencies.
+      . Client API: Added version macros.
+      . Began work on automatic driver probing, to intelligently choose the
+        best driver for you.
+      . Demo shell (mir_proving_server): Added desktop zoom feature using
+        Super + mouse wheel.
+      . Demo renamed: mir_demo_server_shell -> mir_proving_server
+      . Other demo servers merged into -> mir_demo_server
+      . Wider support for display buffer pixel formats in the mesa driver, for
+        wider hardware support.
+      . Performance: On mesa/desktop at least; only hold compositor buffers
+        for the duration of the render, instead of the duration of the frame.
+        Following this change the compositor report can now finally report
+        render time instead of frame time.
+      . Mir now starts reliably when a TV is connected by HDMI, and up to
+        4K resolution (2160p) is known to work.
+      . Plenty more enhancements logged in the bugs list below.
+    - ABI summary: Servers need rebuilding, but clients do not;
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI unchanged at 3
+      . Mirplatform ABI bumped to 5 
+      . Mirserver ABI bumped to 28
+    - Bug fixes:
+      . [regression] Mir servers (since 0.9) randomly crash in malloc due to
+        heap corruption (LP: #1401488)
+      . USC - mouse cursor on AMD graphics is drawing incorrectly
+        (LP: #1391975)
+      . Mir fails to start when a TV is connected by HDMI
+        [std::exception::what: Invalid or inconsistent display configuration]
+        (LP: #1395405)
+      . Input/event driven clients may freeze indefinitely (LP: #1396006)
+      . Mir server crashes with "std::exception::what: Failed to get front
+        buffer object" when trying to fullscreen a surface (LP: #1398296)
+      . Switching windows with a Trusted Prompt Session active loses the
+        trusted prompt session (LP: #1355173)
+      . CI test failure in multiple tests (LP: #1401364)
+      . dh_install: usr/bin/mir_demo_server exists in debian/tmp but is not
+        installed to anywhere (LP: #1401365)
+      . [regression] demo-shell: Instead of moving surfaces they now fly
+        off-screen (LP: #1403702)
+      . [regression] Binaries are no longer runnable on other machines (or in
+        other directories) (LP: #1406073)
+      . [i865] unity-system-compositor fails to start: Failed to choose ARGB
+        EGL config (LP: #1212753)
+      . Mir's compositor holds buffers (blocking clients) for the duration of
+        the frame, even when not necessary. (LP: #1264934)
+      . Screen goes blank (black) briefly during display config changes which
+        don't affect the display mode (LP: #1274359)
+      . [enhancement] There should be a quit signal sent to sessions instead
+        of killing them directly (LP: #1304257)
+      . MirMotionEvent.action needs stronger typing (to MirMotionAction etc)
+        (LP: #1311699)
+      . CompositorReport as used by DefaultDisplayBufferCompositor can't
+        measure render time (LP: #1350716)
+      . Full screen (bypassed) surfaces (e.g. GLMark2Test) are missing frames
+        and appear to freeze or judder with swap interval 0 (LP: #1379685)
+      . Trusted prompts need to be part of the lifecycle (LP: #1384950)
+      . [testfail] BasicThreadPool.recycles_threads in CI (LP: #1391488)
+      . acceptance_tests are too chatty (LP: #1394221)
+      . mir_connection_create_surface callback is sometimes called twice on
+        error (LP: #1394873)
+      . File descriptor leaks in tests using UsingStubClientPlatform
+        (LP: #1395762)
+      . DisplayLayout resizes a surface to 1x1 if you ask it to fullscreen a
+        surface that's partially offscreen (LP: #1398294)
+      . Surfaces can consume input events before they're visible.
+        (LP: #1400218)
+      . dpkg-shlibdeps: Lots of warnings about libmirplatformstub.so
+        (LP: #1401373)
+      . Leaks in death tests can cause subsequent tests in the same process to
+        fail (LP: #1402160)
+      . [regression] lintian: E: mir-demos: binary-or-shlib-defines-rpath ...
+        (LP: #1406098)
+      . [regression] Mir utils can't run from the build tree any more
+        (LP: #1407557)
+      . fd reception code is not exeception-safe when unexpected numbers of
+        fds are received (LP: #1394362)
+      . Mir reports vertical refresh rates slightly inaccurately (LP: #1407558)
+      . [Enhancement] Add an API to lock surface orientation (LP: #1382209)
+      . Bootloop with system language Turkish on the Nexus 4 (LP: #1398984)
+      . Remove the implicit assumption that there every surface can be mapped
+        to an input handle. (LP: #1216727)
+      . When revealing hidden surfaces wait for them to become exposed before
+        sending events which we expect them to receive (LP: #1407783)
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 07 Jan 2015 23:50:16 +0000
+
+mir (0.9.0+15.04.20141125-0ubuntu1) vivid; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.9.0 (https://launchpad.net/mir/+milestone/0.9.0)
+    - Enhancements:
+      . New simpler API to configure and run a mir server.
+      . The event loop is now based on GLib's main loop library instead of
+        Boost.Asio.
+      . For Android platforms, the server now sends buffer fence fds to its
+        clients instead of potentially stalling the compositor thread waiting
+        for them to be signalled.
+      . New client debug interface to translate from surface to screen
+        coordinates.
+    - ABI summary: Servers need rebuilding, but clients do not;
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI bumped to 3
+      . Mirplatform ABI bumped to 4
+      . Mirserver ABI bumped to 27
+    - Bug fixes:
+      . Add a debug interface to translate from surface to screen coordinates
+        (LP: #1346633)
+      . Ensure a buffer requested by a surface is not delivered 
+        after the surface is deleted (LP: #1376324)
+      . Overlays are not displayed onscreen in some positions (LP: #1378326)
+      . Server aborts when an exception is thrown from the main thread
+        (LP: #1378740)
+      . Fix race causing lost alarm notifications (LP: #1381925)
+      . Avoid lifecycle notifications racing with connection release
+        (LP: #1386646)
+      . Improve error checking and reporting for the client library
+       (LP: #1390388)
+      . Mir demo-shell now detects power button using proper Linux scan codes
+       (LP: #1303817)
+      . A prompt session with an invalid application pid should be an error
+        (LP: #1377968)
+      . When XDG_RUNTIME_DIR is defined but pointing to a non-existing 
+        directory use "/tmp" (LP: #1304873)
+      . [regression] demo-shell bypass is not used on fullscreen surfaces if 
+        there are windowed surfaces behind (LP: #1378706)
+      . Mir upgrade through dist-upgrade installs incorrect platform
+        (LP: #1378995)
+      . Fix Mir progressbar example using internal glibc defines(LP: #239272)
+      . Stop the default_lifecycle_event_handler raising SIGHUP while 
+        disconnecting (LP: #1386185)
+      . [regression] Mir fails to build with MIR_ENABLE_TESTS=OFF (LP: #1388539)
+      . [regression] mir_demo_server_basic does not start (LP: #1391923)
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 25 Nov 2014 17:49:24 +0000
+
+mir (0.8.0+14.10.20141010-0ubuntu2) vivid; urgency=medium
+
+  * No change rebuild to get debug symbols on all architectures.
+
+ -- Brian Murray <brian@ubuntu.com>  Wed, 19 Nov 2014 11:33:10 -0800
+
 mir (0.8.0+14.10.20141010-0ubuntu1) utopic; urgency=medium
 
   [ Daniel van Vugt ]

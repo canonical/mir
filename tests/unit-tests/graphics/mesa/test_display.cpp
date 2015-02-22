@@ -16,9 +16,9 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 #include <boost/throw_exception.hpp>
-#include "src/platform/graphics/mesa/platform.h"
-#include "src/platform/graphics/mesa/display.h"
-#include "src/platform/graphics/mesa/virtual_terminal.h"
+#include "src/platforms/mesa/server/platform.h"
+#include "src/platforms/mesa/server/display.h"
+#include "src/platforms/mesa/server/virtual_terminal.h"
 #include "src/server/report/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
@@ -147,15 +147,17 @@ public:
             .Times(Exactly(1))
             .WillOnce(Return(fake.bo_handle2));
 
-        EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                           _, _, _, _, _,
-                                           fake.bo_handle1.u32, _))
+        EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                            _, _, _,
+                                            Pointee(fake.bo_handle1.u32),
+                                            _, _, _, _))
             .Times(Exactly(1))
             .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id1), Return(0)));
 
-        EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                           _, _, _, _, _,
-                                           fake.bo_handle2.u32, _))
+        EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                            _, _, _,
+                                            Pointee(fake.bo_handle2.u32),
+                                            _, _, _, _))
             .Times(Exactly(1))
             .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id2), Return(0)));
     }
@@ -256,9 +258,10 @@ TEST_F(MesaDisplayTest, create_display)
         .WillOnce(Return(fake.bo_handle1));
 
     /* Create a a DRM FB with the DRM buffer attached */
-    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                       _, _, _, _, _,
-                                       fake.bo_handle1.u32, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                       _, _, _,
+                                       Pointee(fake.bo_handle1.u32),
+                                       _, _, _, _))
         .Times(Exactly(1))
         .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id1), Return(0)));
 
@@ -291,8 +294,8 @@ TEST_F(MesaDisplayTest, reset_crtc_on_destruction)
     uint32_t const fb_id{66};
 
     /* Create DRM FBs */
-    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                       _, _, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                        _, _, _, _, _, _, _, _))
         .WillRepeatedly(DoAll(SetArgPointee<7>(fb_id), Return(0)));
 
 
@@ -421,7 +424,8 @@ TEST_F(MesaDisplayTest, post_update)
 
         /* Handle the flip event */
         EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
-            .Times(0);
+            .Times(1)
+            .WillOnce(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
 
         /* Release last_flipped_bufobj (at destruction time) */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
@@ -436,7 +440,8 @@ TEST_F(MesaDisplayTest, post_update)
 
     display->for_each_display_buffer([](mg::DisplayBuffer& db)
     {
-        db.post_update();
+        db.gl_swap_buffers();
+        db.flip();
     });
 }
 
@@ -474,7 +479,8 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
 
         display->for_each_display_buffer([](mg::DisplayBuffer& db)
         {
-            db.post_update();
+            db.gl_swap_buffers();
+            db.flip();
         });
     }, std::runtime_error);
 }
@@ -798,5 +804,31 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         create_platform(),
         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
         mir::test::fake_shared(mock_gl_config),
+        null_report};
+}
+
+TEST_F(MesaDisplayTest, supports_as_low_as_15bit_colour)
+{  // Regression test for LP: #1212753
+    using namespace testing;
+
+    mtd::StubGLConfig stub_gl_config;
+
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    AllOf(mtd::EGLConfigContainsAttrib(EGL_RED_SIZE, 5),
+                          mtd::EGLConfigContainsAttrib(EGL_GREEN_SIZE, 5),
+                          mtd::EGLConfigContainsAttrib(EGL_BLUE_SIZE, 5),
+                          mtd::EGLConfigContainsAttrib(EGL_ALPHA_SIZE, 0)),
+                    _,_,_))
+        .Times(AtLeast(1))
+        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                        SetArgPointee<4>(1),
+                        Return(EGL_TRUE)));
+
+    mgm::Display display{
+        create_platform(),
+        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        mir::test::fake_shared(stub_gl_config),
         null_report};
 }

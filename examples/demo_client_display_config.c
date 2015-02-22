@@ -295,42 +295,52 @@ static void display_change_callback(MirConnection *connection, void *context)
     ctx->reconfigure = 1;
 }
 
+static void handle_key_input_event(struct ClientContext *ctx, MirKeyInputEvent const* event)
+{
+    if (mir_key_input_event_get_action(event) != mir_key_input_event_action_up)
+        return;
+    xkb_keysym_t key_code = mir_key_input_event_get_key_code(event);
+
+    if (key_code >= XKB_KEY_1 &&
+        key_code <= XKB_KEY_9)
+    {
+        configure_display(ctx, configuration_mode_single,
+                          key_code - XKB_KEY_0);
+    }
+
+    switch (key_code)
+    {
+    case XKB_KEY_q:
+        ctx->running = 0;
+        break;
+    case XKB_KEY_c:
+        configure_display(ctx, configuration_mode_clone, 0);
+        break;
+    case XKB_KEY_h:
+        configure_display(ctx, configuration_mode_horizontal, 0);
+        break;
+    case XKB_KEY_v:
+        configure_display(ctx, configuration_mode_vertical, 0);
+        break;
+    case XKB_KEY_p:
+        print_current_configuration(ctx->connection);
+        break;
+    }
+}
+
 static void event_callback(
     MirSurface* surface, MirEvent const* event, void* context)
 {
-    (void)surface;
+    (void) surface;
     struct ClientContext *ctx = (struct ClientContext*) context;
-
-    if (event->type == mir_event_type_key &&
-        event->key.action == mir_key_action_up)
-    {
-        if (event->key.key_code == XKB_KEY_q)
-        {
-            ctx->running = 0;
-        }
-        else if (event->key.key_code == XKB_KEY_c)
-        {
-            configure_display(ctx, configuration_mode_clone, 0);
-        }
-        else if (event->key.key_code == XKB_KEY_h)
-        {
-            configure_display(ctx, configuration_mode_horizontal, 0);
-        }
-        else if (event->key.key_code == XKB_KEY_v)
-        {
-            configure_display(ctx, configuration_mode_vertical, 0);
-        }
-        else if (event->key.key_code >= XKB_KEY_1 &&
-                 event->key.key_code <= XKB_KEY_9)
-        {
-            configure_display(ctx, configuration_mode_single,
-                              event->key.key_code - XKB_KEY_0);
-        }
-        else if (event->key.key_code == XKB_KEY_p)
-        {
-            print_current_configuration(ctx->connection);
-        }
-    }
+    
+    if (mir_event_get_type(event) != mir_event_type_input)
+        return;
+    MirInputEvent const* input_event = mir_event_get_input_event(event);
+    if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
+        return;
+    
+    handle_key_input_event(ctx, mir_input_event_get_key_input_event(input_event));
 }
 
 int main(int argc, char *argv[])

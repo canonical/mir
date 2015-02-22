@@ -124,16 +124,21 @@ ms::SurfaceStack::SurfaceStack(
 mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID id)
 {
     std::lock_guard<decltype(guard)> lg(guard);
+
+    scene_changed = false;
     mc::SceneElementSequence elements;
     for (auto const& layer : layers_by_depth)
     {
         for (auto const& surface : layer.second) 
         {
-            auto element = std::make_shared<SurfaceSceneElement>(
-                surface->compositor_snapshot(id),
-                rendering_trackers[surface.get()],
-                id);
-            elements.emplace_back(element);
+            if (surface->visible())
+            {
+                auto element = std::make_shared<SurfaceSceneElement>(
+                    surface->compositor_snapshot(id),
+                    rendering_trackers[surface.get()],
+                    id);
+                elements.emplace_back(element);
+            }
         }
     }
     for (auto const& renderable : overlays)
@@ -141,6 +146,33 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
         elements.emplace_back(std::make_shared<OverlaySceneElement>(renderable));
     }
     return elements;
+}
+
+int ms::SurfaceStack::frames_pending(mc::CompositorID id) const
+{
+    std::lock_guard<decltype(guard)> lg(guard);
+
+    int result = scene_changed ? 1 : 0;
+    for (auto const& layer : layers_by_depth)
+    {
+        for (auto const& surface : layer.second) 
+        {
+            // TODO: Rename mir_surface_attrib_visibility as it's obviously
+            //       confusing with visible()
+            if (surface->visible() &&
+                surface->query(mir_surface_attrib_visibility) ==
+                    mir_surface_visibility_exposed)
+            {
+                // Note that we ask the surface and not a Renderable.
+                // This is because we don't want to waste time and resources
+                // on a snapshot till we're sure we need it...
+                int ready = surface->buffers_ready_for_compositor(id);
+                if (ready > result)
+                    result = ready;
+            }
+        }
+    }
+    return result;
 }
 
 void ms::SurfaceStack::register_compositor(mc::CompositorID cid)
@@ -168,7 +200,7 @@ void ms::SurfaceStack::add_input_visualization(
         std::lock_guard<decltype(guard)> lg(guard);
         overlays.push_back(overlay);
     }
-    observers.scene_changed();
+    emit_scene_changed();
 }
 
 void ms::SurfaceStack::remove_input_visualization(
@@ -185,11 +217,15 @@ void ms::SurfaceStack::remove_input_visualization(
         overlays.erase(p);
     }
     
-    observers.scene_changed();
+    emit_scene_changed();
 }
 
 void ms::SurfaceStack::emit_scene_changed()
 {
+    {
+        std::lock_guard<decltype(guard)> lg(guard);
+        scene_changed = true;
+    }
     observers.scene_changed();
 }
 
@@ -239,6 +275,39 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
         report->surface_removed(keep_alive.get(), keep_alive.get()->name());
     }
     // TODO: error logging when surface not found
+}
+
+namespace
+{
+template <typename Container>
+struct InReverse {
+    Container& container;
+    auto begin() -> decltype(container.rbegin()) { return container.rbegin(); }
+    auto end() -> decltype(container.rend()) { return container.rend(); }
+};
+
+template <typename Container>
+InReverse<Container> in_reverse(Container& container) { return InReverse<Container>{container}; }
+}
+
+auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
+-> std::shared_ptr<Surface>
+{
+    std::lock_guard<decltype(guard)> lg(guard);
+    for (auto &layer : in_reverse(layers_by_depth))
+    {
+        for (auto const& surface : in_reverse(layer.second))
+        {
+            // TODO There's a lack of clarity about how the input area will
+            // TODO be maintained and whether this test will detect clicks on
+            // TODO decorations (it should) as these may be outside the area
+            // TODO known to the client.  But it works for now.
+            if (surface->input_area_contains(cursor))
+                    return surface;
+        }
+    }
+
+    return {};
 }
 
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback)

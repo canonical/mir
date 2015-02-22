@@ -101,7 +101,7 @@ droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_ch
 {
     std::unique_lock<std::mutex> lock(handles_mutex);
     if (window_handles.find(channel) == window_handles.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("Requesting handle for an unregistered channel"));
+        return droidinput::sp<droidinput::InputWindowHandle>{};
     return window_handles[channel];
 }
 

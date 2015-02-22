@@ -25,6 +25,7 @@
 #include "mir/geometry/rectangle.h"
 
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_display_buffer_compositor_factory.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -87,21 +88,6 @@ private:
 
 bool const StubDisplay::connected{true};
 bool const StubDisplay::used{true};
-
-class NullDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
-{
-public:
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer&)
-    {
-        struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
-        {
-            void composite(mc::SceneElementSequence&&) {}
-        };
-
-        auto raw = new NullDisplayBufferCompositor{};
-        return std::unique_ptr<NullDisplayBufferCompositor>(raw);
-    }
-};
 
 struct MockDisplayBufferCompositor : mc::DisplayBufferCompositor
 {
@@ -185,7 +171,7 @@ struct CompositingScreencastTest : testing::Test
     mtd::StubScene stub_scene;
     StubDisplay stub_display;
     mtd::StubBufferAllocator stub_buffer_allocator;
-    NullDisplayBufferCompositorFactory stub_db_compositor_factory;
+    mtd::NullDisplayBufferCompositorFactory stub_db_compositor_factory;
     mc::CompositingScreencast screencast;
     geom::Size const default_size;
     geom::Rectangle const default_region;

@@ -16,6 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+
 #include "mir/frontend/client_constants.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/variable_length_array.h"

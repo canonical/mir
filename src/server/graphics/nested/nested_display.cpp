@@ -140,6 +140,8 @@ mgn::NestedDisplay::NestedDisplay(
 
 mgn::NestedDisplay::~NestedDisplay() noexcept
 {
+    if (eglGetCurrentContext() == egl_display.egl_context())
+        eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
@@ -151,11 +153,8 @@ void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayB
 
 std::unique_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration() const
 {
-    return std::unique_ptr<mg::DisplayConfiguration>(
-        new NestedDisplayConfiguration(
-            connection->create_display_config()
-        )
-    );
+    return std::make_unique<NestedDisplayConfiguration>(
+        connection->create_display_config());
 }
 
 void mgn::NestedDisplay::complete_display_initialization(MirPixelFormat format)
@@ -265,5 +264,5 @@ auto mgn::NestedDisplay::create_hardware_cursor(std::shared_ptr<mg::CursorImage>
 
 std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
 {
-    return std::unique_ptr<mg::GLContext>{new SurfacelessEGLContext(egl_display, EGL_NO_CONTEXT)};
+    return std::make_unique<SurfacelessEGLContext>(egl_display, EGL_NO_CONTEXT);
 }

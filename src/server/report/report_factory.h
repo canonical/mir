@@ -23,6 +23,7 @@
 
 namespace mir
 {
+class SharedLibraryProberReport;
 namespace compositor
 {
 class CompositorReport;
@@ -59,6 +60,7 @@ public:
     virtual std::shared_ptr<frontend::SessionMediatorReport> create_session_mediator_report() = 0;
     virtual std::shared_ptr<frontend::MessageProcessorReport> create_message_processor_report() = 0;
     virtual std::shared_ptr<input::InputReport> create_input_report() = 0;
+    virtual std::shared_ptr<SharedLibraryProberReport> create_shared_library_prober_report() = 0;
 
 protected:
     ReportFactory() = default;

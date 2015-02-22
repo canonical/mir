@@ -80,3 +80,7 @@ Make sure to have a suitable cross compile toolchain (e.g., the
 To speed up the process for future branches you may wish to cache the files
 downloaded by setting environment variable MIR_NDK_PATH to point to a directory
 that cross-compile-chroot.sh should reuse each time.
+
+Copying the produced binaries correctly to the device requires good familiarity
+with the Mir codebase. For that reason, installing using the debian packaging is
+ recommended, and this compile method is mentioned for development purposes.

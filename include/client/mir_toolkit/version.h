@@ -18,6 +18,8 @@
 #ifndef MIR_TOOLKIT_VERSION_H_
 #define MIR_TOOLKIT_VERSION_H_
 
+#include "mir_toolkit/mir_version_number.h"
+
 /**
  * \addtogroup mir_toolkit
  * @{
@@ -53,22 +55,6 @@
  * This corresponds to the PATCH field of http://semver.org/
  */
 #define MIR_CLIENT_MICRO_VERSION (0)
-
-/**
- * MIR_VERSION_NUMBER
- * \param major [in]    The major version (eg: 3 for version 3.2.33)
- * \param minor [in]    The minor version (eg: 2 for version 3.2.33)
- * \param micro [in]    The micro version (eg: 33 for version 3.2.33)
- * 
- * Returns the combined version information as a single 32-bit value for
- * logical comparisons. For example:
- *     #if MIR_CLIENT_VERSION >= MIR_VERSION_NUMBER(2,3,4)
- *
- * This can be useful to conditionally build code depending on new features or
- * specific bugfixes in the Mir client library.
- */
-#define MIR_VERSION_NUMBER(major,minor,micro) \
-    (((major) << 22) + ((minor) << 12) + (micro))
 
 /**
  * MIR_CLIENT_VERSION

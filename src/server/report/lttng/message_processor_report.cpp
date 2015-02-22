@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "message_processor_report.h"
 
 #include "mir/report/lttng/mir_tracepoint.h"
@@ -52,10 +54,4 @@ void mir::report::lttng::MessageProcessorReport::exception_handled(
     void const* mediator, std::exception const& error)
 {
     mir_tracepoint(mir_server_msgproc, exception_handled_wo_invocation, mediator, error.what());
-}
-
-void mir::report::lttng::MessageProcessorReport::sent_event(
-    void const* mediator, MirSurfaceEvent const& event)
-{
-    mir_tracepoint(mir_server_msgproc, sent_event, mediator, event.id, event.attrib, event.value);
 }

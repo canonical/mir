@@ -16,7 +16,6 @@
  * Authored by: Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
-
 #include "src/server/graphics/nested/nested_output.h"
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/input/null_input_dispatcher.h"

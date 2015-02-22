@@ -52,8 +52,8 @@ class GLibMainLoop : public MainLoop
 public:
     GLibMainLoop(std::shared_ptr<time::Clock> const& clock);
 
-    void run();
-    void stop();
+    void run() override;
+    void stop() override;
 
     void register_signal_handler(
         std::initializer_list<int> signals,

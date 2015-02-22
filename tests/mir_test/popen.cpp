@@ -14,51 +14,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alberto Aguirre <alberto.aguirre@canonical.com>
+ *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include <mir_test/popen.h>
 
-#include <boost/throw_exception.hpp>
-#include <boost/exception/errinfo_errno.hpp>
-#include <boost/iostreams/device/file_descriptor.hpp>
-#include <boost/iostreams/stream_buffer.hpp>
-
 #include <system_error>
 
 namespace mt = mir::test;
-namespace io = boost::iostreams;
-
-namespace
-{
-std::unique_ptr<std::streambuf> create_stream_buffer(FILE* raw_stream)
-{
-    if (raw_stream == nullptr)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(std::system_error(errno, std::system_category(), "popen failed")));
-    }
-
-    int fd = fileno(raw_stream);
-    if (fd == -1)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::system_error(errno, std::system_category(), "invalid file stream")));
-    }
-    auto raw = new io::stream_buffer<io::file_descriptor_source>{
-        fd, io::never_close_handle};
-    return std::unique_ptr<std::streambuf>(raw);
-}
-}
 
 mt::Popen::Popen(std::string const& cmd)
-    : raw_stream{popen(cmd.c_str(), "r"), [](FILE* f){ pclose(f); }},
-      stream_buffer{create_stream_buffer(raw_stream.get())},
-      stream{stream_buffer.get()}
+    : raw_stream{popen(cmd.c_str(), "r"), [](FILE* f){ pclose(f); }}
 {
+    if (!raw_stream)
+        throw std::system_error(errno, std::system_category(),
+                                "popen failed for `"+cmd+"'");
 }
 
 bool mt::Popen::get_line(std::string& line)
 {
-    return std::getline(stream, line);
+    FILE* in = raw_stream.get();
+    if (!in)
+        return false;
+
+    char* got = 0;
+    char buf[1024];
+
+    line.clear();
+    do
+    {
+        got = fgets(buf, sizeof buf, in);
+        if (got)
+            line.append(got);
+    } while (got && !feof(in) && !line.empty() && line.back() != '\n');
+
+    if (line.back() == '\n')
+        line.pop_back();
+
+    return !line.empty() || !feof(in);
 }

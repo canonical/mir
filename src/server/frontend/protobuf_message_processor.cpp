@@ -62,6 +62,7 @@ template<> struct result_ptr_t<::mir::protobuf::Connection> { typedef ::mir::pro
 template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::protobuf::Surface* type; };
 template<> struct result_ptr_t<::mir::protobuf::Screencast> { typedef ::mir::protobuf::Screencast* type; };
 template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::protobuf::SocketFD* type; };
+template<> struct result_ptr_t<mir::protobuf::PlatformOperationMessage> { typedef ::mir::protobuf::PlatformOperationMessage* type; };
 
 //The exchange_buffer and next_buffer calls can complete on a different thread than the
 //one the invocation was called on. Make sure to preserve the result resource. 
@@ -73,25 +74,25 @@ ParameterMessage parse_parameter(Invocation const& invocation)
     return request;
 }
 
-template<typename RequestType>
+template<typename RequestType, typename ResponseType>
 void invoke(
     ProtobufMessageProcessor* self,
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
         ::google::protobuf::RpcController* controller,
         const RequestType* request,
-        protobuf::Buffer* response,
+        ResponseType* response,
         ::google::protobuf::Closure* done),
     unsigned int invocation_id,
     RequestType* request)
 {
-    auto const result_message = std::make_shared<protobuf::Buffer>();
+    auto const result_message = std::make_shared<ResponseType>();
 
     auto const callback =
         google::protobuf::NewCallback<
             ProtobufMessageProcessor,
             ::google::protobuf::uint32,
-             std::shared_ptr<protobuf::Buffer>>(
+             std::shared_ptr<ResponseType>>(
                 self,
                 &ProtobufMessageProcessor::send_response,
                 invocation_id,
@@ -196,6 +197,17 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::drm_auth_magic, invocation);
         }
+        else if ("platform_operation" == invocation.method_name())
+        {
+            auto request = parse_parameter<mir::protobuf::PlatformOperationMessage>(invocation);
+
+            request.clear_fd();
+            for (auto& fd : side_channel_fds)
+                request.add_fd(fd);
+
+            invoke(this, display_server.get(), &DisplayServer::platform_operation,
+                   invocation.id(), &request);
+        }
         else if ("configure_display" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::configure_display, invocation);
@@ -297,8 +309,9 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
 {
-    if (response->has_buffer())
-        sender->send_response(id, response, {extract_fds_from(response), extract_fds_from(response->mutable_buffer())});
+    if (response->has_buffer_stream())
+        sender->send_response(id, response,
+            {extract_fds_from(response), extract_fds_from(response->mutable_buffer_stream()->mutable_buffer())});
     else
         sender->send_response(id, response, {extract_fds_from(response)});
 }
@@ -306,8 +319,9 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id, mir::protobuf::Screencast* response)
 {
-    if (response->has_buffer())
-        sender->send_response(id, response, {extract_fds_from(response->mutable_buffer())});
+    if (response->has_buffer_stream())
+        sender->send_response(id, response,
+            {extract_fds_from(response->mutable_buffer_stream()->mutable_buffer())});
     else
         sender->send_response(id, response, {});
 }
@@ -315,4 +329,11 @@ void mfd::ProtobufMessageProcessor::send_response(
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::SocketFD* response)
 {
     sender->send_response(id, response, {extract_fds_from(response)});
+}
+
+void mfd::ProtobufMessageProcessor::send_response(
+    ::google::protobuf::uint32 id,
+    std::shared_ptr<mir::protobuf::PlatformOperationMessage> response)
+{
+    sender->send_response(id, response.get(), {extract_fds_from(response.get())});
 }

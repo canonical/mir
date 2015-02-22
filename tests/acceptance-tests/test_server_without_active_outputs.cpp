@@ -18,8 +18,10 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/connected_client_headless_server.h"
+#include "mir_test_framework/any_surface.h"
+
+#include "mir/geometry/rectangle.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -29,33 +31,21 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
-struct NoOutputsServerConfig : mtf::StubbedServerConfiguration
+struct ServerWithoutActiveOutputs : mtf::ConnectedClientHeadlessServer
 {
-    NoOutputsServerConfig()
-        : mtf::StubbedServerConfiguration(std::vector<geom::Rectangle>{})
+    void SetUp() override
     {
+        initial_display_layout(std::vector<geom::Rectangle>{});
+        mtf::ConnectedClientHeadlessServer::SetUp();
     }
 };
-
-using ServerWithoutActiveOutputs = mtf::BasicClientServerFixture<NoOutputsServerConfig>;
-
 }
 
 TEST_F(ServerWithoutActiveOutputs, creates_valid_client_surface)
 {
     using namespace testing;
 
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
-    auto const surface = mir_connection_create_surface_sync(connection, &request_params);
+    auto const surface = mtf::make_any_surface(connection);
 
     EXPECT_THAT(mir_surface_is_valid(surface), Eq(mir_true))
         << mir_surface_get_error_message(surface);

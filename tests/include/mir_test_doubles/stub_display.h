@@ -57,8 +57,8 @@ public:
         );
     }
 
-private:
     std::vector<geometry::Rectangle> const output_rects;
+private:
     std::vector<StubDisplayBuffer> display_buffers;
 };
 

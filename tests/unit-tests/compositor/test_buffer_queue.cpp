@@ -489,6 +489,44 @@ TEST_F(BufferQueueTest, multiple_compositors_are_in_sync)
     }
 }
 
+TEST_F(BufferQueueTest, multiple_fast_compositors_are_in_sync)
+{  // Regression test for LP: #1420678
+    for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
+
+        // Client generates first frame
+        auto handle1 = client_acquire_async(q);
+        ASSERT_TRUE(handle1->has_acquired_buffer());
+        auto client_id1 = handle1->id();
+        handle1->release_buffer();
+
+        // Client generates second frame
+        auto handle2 = client_acquire_async(q);
+        ASSERT_TRUE(handle2->has_acquired_buffer());
+        auto client_id2 = handle2->id();
+        handle2->release_buffer();
+
+        // Many monitors... verify they all get the first frame.
+        for (int monitor = 0; monitor < 10; monitor++)
+        {
+            void const* user_id = reinterpret_cast<void const*>(monitor);
+            auto comp_buffer = q.compositor_acquire(user_id);
+            ASSERT_EQ(client_id1, comp_buffer->id());
+            q.compositor_release(comp_buffer);
+        }
+
+        // Still many monitors... verify they all get the second frame.
+        for (int monitor = 0; monitor < 10; monitor++)
+        {
+            void const* user_id = reinterpret_cast<void const*>(monitor);
+            auto comp_buffer = q.compositor_acquire(user_id);
+            ASSERT_EQ(client_id2, comp_buffer->id());
+            q.compositor_release(comp_buffer);
+        }
+    }
+}
+
 TEST_F(BufferQueueTest, compositor_acquires_frames_in_order)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
@@ -806,7 +844,7 @@ TEST_F(BufferQueueTest, framedropping_clients_get_all_buffers)
             handle->release_buffer();
         }
 
-        EXPECT_THAT(ids_acquired.size(), Eq(nbuffers));
+        EXPECT_THAT(ids_acquired.size(), Ge(nbuffers));
     }
 }
 
@@ -1050,6 +1088,87 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
     }
 }
 
+TEST_F(BufferQueueTest, framedropping_policy_never_drops_newest_frame)
+{  // Regression test for LP: #1396006
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mtd::MockFrameDroppingPolicyFactory policy_factory;
+        mc::BufferQueue q(nbuffers,
+                          allocator,
+                          basic_properties,
+                          policy_factory);
+
+        auto first = client_acquire_sync(q);
+        q.client_release(first);
+
+        // Start rendering one (don't finish)
+        auto d = q.compositor_acquire(nullptr);
+        ASSERT_EQ(first, d.get());
+
+        auto second = client_acquire_sync(q);
+        q.client_release(second);
+
+        // Client waits for a new frame
+        auto end = client_acquire_async(q);
+
+        // Surface goes offscreen or occluded; trigger a timeout
+        policy_factory.trigger_policies();
+
+        // If the queue is still willing to drop under these difficult
+        // circumstances (and we don't mind if it doesn't), then ensure
+        // it's never the newest frame that's been discarded.
+        // That could be catastrophic as you never know if a client ever
+        // will produce another frame.
+        if (end->has_acquired_buffer())
+            ASSERT_NE(second, end->buffer());
+
+        q.compositor_release(d);
+    }
+}
+
+TEST_F(BufferQueueTest, framedropping_surface_never_drops_newest_frame)
+{  // Second regression test for LP: #1396006, LP: #1379685
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mc::BufferQueue q(nbuffers,
+                          allocator,
+                          basic_properties,
+                          policy_factory);
+
+        q.allow_framedropping(true);
+
+        // Fill 'er up
+        std::vector<mg::Buffer*> order;
+        for (int f = 0; f < nbuffers; ++f)
+        {
+            auto b = client_acquire_sync(q);
+            order.push_back(b);
+            q.client_release(b);
+        }
+
+        // Composite all but one
+        std::vector<std::shared_ptr<mg::Buffer>> compositing;
+        for (int n = 0; n < nbuffers-1; ++n)
+        {
+            auto c = q.compositor_acquire(nullptr);
+            compositing.push_back(c);
+            ASSERT_EQ(order[n], c.get());
+        }
+
+        // Ensure it's not the newest frame that gets dropped to satisfy the
+        // client.
+        auto end = client_acquire_async(q);
+
+        // The queue could solve this problem a few ways. It might choose to
+        // defer framedropping till it's safe, or even allocate additional
+        // buffers. We don't care which, just verify it's not losing the
+        // latest frame. Because the screen could be indefinitely out of date
+        // if that happens...
+        ASSERT_TRUE(!end->has_acquired_buffer() ||
+                    end->buffer() != order.back());
+    }
+}
+
 TEST_F(BufferQueueTest, uncomposited_client_swaps_when_policy_triggered)
 {
     for (int nbuffers = 2;
@@ -1155,6 +1274,14 @@ TEST_F(BufferQueueTest, double_buffered_client_is_not_blocked_prematurely)
     q.client_release(client_acquire_sync(q));
 
     q.compositor_release(b);
+
+    /*
+     * Update to the original test case; This additional compositor acquire
+     * represents the fixing of LP: #1395581 in the compositor logic.
+     */
+    if (q.buffers_ready_for_compositor(this))
+        q.compositor_release(q.compositor_acquire(this));
+
     auto handle = client_acquire_async(q);
     // With the fix, a buffer will be available instantaneously:
     ASSERT_TRUE(handle->has_acquired_buffer());
@@ -1191,6 +1318,13 @@ TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
     
         q.compositor_release(b);
 
+        /*
+         * Update to the original test case; This additional compositor acquire
+         * represents the fixing of LP: #1395581 in the compositor logic.
+         */
+        if (q.buffers_ready_for_compositor(this))
+            q.compositor_release(q.compositor_acquire(this));
+
         auto z = client_acquire_async(q);
         ASSERT_TRUE(z->has_acquired_buffer());
         z->release_buffer();
@@ -1201,12 +1335,12 @@ TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
 }
 
 TEST_F(BufferQueueTest, buffers_ready_is_not_underestimated)
-{
+{  // Regression test for LP: #1395581
     using namespace testing;
  
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q{2, allocator, basic_properties, policy_factory};
+        mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
     
         // Produce frame 1
         q.client_release(client_acquire_sync(q));
@@ -1226,13 +1360,43 @@ TEST_F(BufferQueueTest, buffers_ready_is_not_underestimated)
         q.compositor_release(b);
     
         // Verify frame 3 is ready for the first compositor
-        ASSERT_THAT(q.buffers_ready_for_compositor(), Ge(1));
+        ASSERT_THAT(q.buffers_ready_for_compositor(this), Ge(1));
         auto c = q.compositor_acquire(this);
 
         // Verify frame 3 is ready for a second compositor
-        ASSERT_THAT(q.buffers_ready_for_compositor(), Ge(1));
+        int const that = 0;
+        ASSERT_THAT(q.buffers_ready_for_compositor(&that), Ge(1));
 
         q.compositor_release(c);
+    }
+}
+
+TEST_F(BufferQueueTest, buffers_ready_eventually_reaches_zero)
+{
+    using namespace testing;
+ 
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
+    
+        const int nmonitors = 3;
+        int monitor[nmonitors];
+
+        for (int m = 0; m < nmonitors; ++m)
+        {
+            ASSERT_EQ(0, q.buffers_ready_for_compositor(&monitor[m]));
+        }
+
+        // Produce a frame
+        q.client_release(client_acquire_sync(q));
+
+        // Consume
+        for (int m = 0; m < nmonitors; ++m)
+        {
+            ASSERT_EQ(1, q.buffers_ready_for_compositor(&monitor[m]));
+            q.compositor_release(q.compositor_acquire(&monitor[m]));
+            ASSERT_EQ(0, q.buffers_ready_for_compositor(&monitor[m]));
+        }
     }
 }
 
@@ -1274,15 +1438,18 @@ TEST_F(BufferQueueTest, framedropping_client_acquire_does_not_block_when_no_avai
      * so the next client request should not be satisfied until
      * a compositor releases its buffers */
     auto handle = client_acquire_async(q);
-    EXPECT_THAT(handle->has_acquired_buffer(), Eq(false));
-
-    /* Release compositor buffers so that the client can get one */
-    for (auto const& buffer : buffers)
+    /* ... unless the BufferQueue is overallocating. In that case it will
+     * have succeeding in acquiring immediately.
+     */ 
+    if (!handle->has_acquired_buffer())
     {
-        q.compositor_release(buffer);
+        /* Release compositor buffers so that the client can get one */
+        for (auto const& buffer : buffers)
+        {
+            q.compositor_release(buffer);
+        }
+        EXPECT_THAT(handle->has_acquired_buffer(), Eq(true));
     }
-
-    EXPECT_THAT(handle->has_acquired_buffer(), Eq(true));
 }
 
 TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)

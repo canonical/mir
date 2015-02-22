@@ -33,6 +33,8 @@ class PromptSessionListener
 public:
     virtual void starting(std::shared_ptr<PromptSession> const& prompt_session) = 0;
     virtual void stopping(std::shared_ptr<PromptSession> const& prompt_session) = 0;
+    virtual void suspending(std::shared_ptr<PromptSession> const& prompt_session) = 0;
+    virtual void resuming(std::shared_ptr<PromptSession> const& prompt_session) = 0;
 
     virtual void prompt_provider_added(PromptSession const& prompt_session, std::shared_ptr<Session> const& prompt_provider) = 0;
     virtual void prompt_provider_removed(PromptSession const& prompt_session, std::shared_ptr<Session> const& prompt_provider) = 0;

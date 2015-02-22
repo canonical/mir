@@ -42,6 +42,7 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_focus,
     mir_surface_attrib_dpi,
     mir_surface_attrib_visibility,
+    mir_surface_attrib_preferred_orientation,
     /* Must be last */
     mir_surface_attribs
 } MirSurfaceAttrib;
@@ -73,6 +74,8 @@ typedef enum MirSurfaceState
        Omitted for now, since it's functionally a subset of vertmaximized and
        differs only in the X coordinate. */
     mir_surface_state_fullscreen,
+    mir_surface_state_horizmaximized,
+    mir_surface_state_hidden,
     mir_surface_states
 } MirSurfaceState;
 
@@ -108,7 +111,8 @@ typedef enum MirPowerMode
 typedef enum MirPromptSessionState
 {
     mir_prompt_session_state_stopped = 0,
-    mir_prompt_session_state_started
+    mir_prompt_session_state_started,
+    mir_prompt_session_state_suspended
 } MirPromptSessionState;
 
 /**
@@ -143,6 +147,27 @@ typedef enum MirOrientation
     mir_orientation_right = 270
 } MirOrientation;
 
+typedef enum MirOrientationMode
+{
+    mir_orientation_mode_portrait = 1 << 0,
+    mir_orientation_mode_landscape = 1 << 1,
+    mir_orientation_mode_portrait_inverted = 1 << 2,
+    mir_orientation_mode_landscape_inverted = 1 << 3,
+    mir_orientation_mode_portrait_any = mir_orientation_mode_portrait |
+                                        mir_orientation_mode_portrait_inverted,
+    mir_orientation_mode_landscape_any = mir_orientation_mode_landscape |
+                                         mir_orientation_mode_landscape_inverted,
+    mir_orientation_mode_any = mir_orientation_mode_portrait_any |
+                               mir_orientation_mode_landscape_any
+} MirOrientationMode;
+
+typedef enum MirEdgeAttachment
+{
+    mir_edge_attachment_vertical = 1 << 0,
+    mir_edge_attachment_horizontal = 1 << 1,
+    mir_edge_attachment_any = mir_edge_attachment_vertical |
+                              mir_edge_attachment_horizontal
+} MirEdgeAttachment;
 /**@}*/
 
 #endif

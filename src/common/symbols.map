@@ -1,5 +1,6 @@
+
 MIR_COMMON_3 {
- global:
+ global: mir_*;
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mircommon public" | sed "s/mircommon public: /    /" | sort  
@@ -31,6 +32,7 @@ MIR_COMMON_3 {
     mir::geometry::Rectangles::end*;
     mir::geometry::Rectangles::operator*;
     mir::geometry::Rectangles::Rectangles*;
+    mir::geometry::Rectangles::remove*;
     mir::geometry::Rectangles::size*;
     mir::geometry::Rectangle::top_right*;
     mir::geometry::Size::operator*;
@@ -100,8 +102,6 @@ MIR_COMMON_3 {
     typeinfo?for?mir::input::receiver::InputReceiverThread;
     typeinfo?for?mir::IntOwnedFd;
     typeinfo?for?MirKeyEvent;
-    typeinfo?for?MirMesaEGLNativeDisplay;
-    typeinfo?for?MirMesaEGLNativeSurface;
     typeinfo?for?MirMotionEvent;
     typeinfo?for?MirMotionPointer;
     typeinfo?for?MirOrientationEvent;
@@ -133,8 +133,6 @@ MIR_COMMON_3 {
     vtable?for?mir::input::receiver::InputReceiverThread;
     vtable?for?mir::IntOwnedFd;
     vtable?for?MirKeyEvent;
-    vtable?for?MirMesaEGLNativeDisplay;
-    vtable?for?MirMesaEGLNativeSurface;
     vtable?for?MirMotionEvent;
     vtable?for?MirMotionPointer;
     vtable?for?MirOrientationEvent;
@@ -201,3 +199,39 @@ MIR_COMMON_3 {
   };
  local: *;
 };
+
+MIR_COMMON_3.1 {
+  global:
+    extern "C++" {
+      mir_event_get*;
+      mir_event_get*;
+      mir_input_event_get*;
+      mir_key_input_event_get*;
+      mir_touch_input_event_get*;
+      mir::log*char*;
+      mir::logv*;
+      mir::libraries_for_path*;
+    };
+} MIR_COMMON_3;
+
+MIR_COMMON_3.2 {
+  global:
+    extern "C++" {
+      mir::dispatch::SimpleDispatchThread::SimpleDispatchThread*;
+      mir::dispatch::SimpleDispatchThread::?SimpleDispatchThread*;
+      typeinfo?for?mir::dispatch::SimpleDispatchThread;
+      vtable?for?mir::dispatch::SimpleDispatchThread;
+
+      mir::dispatch::MultiplexingDispatchable::MultiplexingDispatchable*;
+      mir::dispatch::MultiplexingDispatchable::?MultiplexingDispatchable*;
+      mir::dispatch::MultiplexingDispatchable::watch_fd*;
+      mir::dispatch::MultiplexingDispatchable::dispatch*;
+      mir::dispatch::MultiplexingDispatchable::relevant_events*;
+      mir::dispatch::MultiplexingDispatchable::add_watch*;
+
+      typeinfo?for?mir::dispatch::MultiplexingDispatchable;
+      vtable?for?mir::dispatch::MultiplexingDispatchable;
+
+      mir::events::*
+    };
+} MIR_COMMON_3.1;

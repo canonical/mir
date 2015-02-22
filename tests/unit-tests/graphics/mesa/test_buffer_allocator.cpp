@@ -16,9 +16,9 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "src/platform/graphics/mesa/platform.h"
+#include "src/platforms/mesa/server/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "src/platform/graphics/mesa/buffer_allocator.h"
+#include "src/platforms/mesa/server/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 
 #include "mir_test_doubles/mock_drm.h"
@@ -101,7 +101,7 @@ TEST_F(MesaBufferAllocatorTest, large_hardware_buffers_bypass)
 
     auto buf = allocator->alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
-    EXPECT_TRUE(buf->can_bypass());
+    EXPECT_TRUE(buf->native_buffer_handle()->flags & mir_buffer_flag_can_scanout);
 }
 
 TEST_F(MesaBufferAllocatorTest, small_buffers_dont_bypass)
@@ -116,7 +116,7 @@ TEST_F(MesaBufferAllocatorTest, small_buffers_dont_bypass)
 
     auto buf = allocator->alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
-    EXPECT_FALSE(buf->can_bypass());
+    EXPECT_FALSE(buf->native_buffer_handle()->flags & mir_buffer_flag_can_scanout);
 }
 
 TEST_F(MesaBufferAllocatorTest, software_buffers_dont_bypass)
@@ -129,7 +129,7 @@ TEST_F(MesaBufferAllocatorTest, software_buffers_dont_bypass)
 
     auto buf = allocator->alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
-    EXPECT_FALSE(buf->can_bypass());
+    EXPECT_FALSE(buf->native_buffer_handle()->flags & mir_buffer_flag_can_scanout);
 }
 
 TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
@@ -147,7 +147,7 @@ TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
         mgm::BypassOption::prohibited);
     auto buf = alloc.alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
-    EXPECT_FALSE(buf->can_bypass());
+    EXPECT_FALSE(buf->native_buffer_handle()->flags & mir_buffer_flag_can_scanout);
 }
 
 TEST_F(MesaBufferAllocatorTest, correct_buffer_format_translation_argb_8888)

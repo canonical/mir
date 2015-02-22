@@ -9,10 +9,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer_allocator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_device.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_fb_device.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_common_device.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_buffer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_internal_client_interpreter.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_internal_client.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_ipc_operations.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_resource_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_fb_simple_swapper.cpp
@@ -29,6 +26,8 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_device_detection.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_wrapper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_fallback_gl_renderer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_configuration.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_display_hotplug.cpp
   $<TARGET_OBJECTS:mirplatformgraphicsandroidobjects>
 )
 

@@ -73,6 +73,7 @@ public:
 
     // From Scene
     compositor::SceneElementSequence scene_elements_for(compositor::CompositorID id) override;
+    int frames_pending(compositor::CompositorID) const override;
     void register_compositor(compositor::CompositorID id) override;
     void unregister_compositor(compositor::CompositorID id) override;
 
@@ -88,6 +89,8 @@ public:
         DepthId depth,
         input::InputReceptionMode input_mode) override;
     
+    auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> override;
+
     void add_observer(std::shared_ptr<Observer> const& observer) override;
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
     
@@ -116,6 +119,7 @@ private:
     std::vector<std::shared_ptr<graphics::Renderable>> overlays;
 
     Observers observers;
+    bool scene_changed = false;
 };
 
 }

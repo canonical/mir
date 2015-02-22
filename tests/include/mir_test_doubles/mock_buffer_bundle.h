@@ -49,7 +49,7 @@ public:
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_METHOD1(resize, void(const geometry::Size &));
     MOCK_METHOD0(drop_old_buffers, void());
-    int buffers_ready_for_compositor() const override { return 1; }
+    int buffers_ready_for_compositor(void const*) const override { return 1; }
     int buffers_free_for_client() const override { return 1; }
     void drop_client_requests() override {}
 };

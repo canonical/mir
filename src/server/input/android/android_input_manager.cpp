@@ -17,6 +17,8 @@
  *              Daniel d'Andradra <daniel.dandrada@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir/input/input_dispatcher.h"
 #include "android_input_manager.h"
 #include "android_input_constants.h"

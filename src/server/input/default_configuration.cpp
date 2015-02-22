@@ -16,6 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir/default_server_configuration.h"
 
 #include "android/android_input_dispatcher.h"
@@ -305,7 +307,7 @@ mir::DefaultServerConfiguration::the_touch_visualizer()
     return touch_visualizer(
         [this]() -> std::shared_ptr<mi::TouchVisualizer>
         {
-            auto visualizer = std::make_shared<mi::TouchspotController>(the_buffer_allocator(), the_buffer_writer(),
+            auto visualizer = std::make_shared<mi::TouchspotController>(the_buffer_allocator(),
                 the_input_scene());
 
             // The visualizer is disabled by default and can be enabled statically via

@@ -17,11 +17,11 @@
  */
 
 #include "mir/graphics/display_buffer.h"
-#include "src/platform/graphics/android/display.h"
-#include "src/platform/graphics/android/hwc_loggers.h"
-#include "src/platform/graphics/android/resource_factory.h"
-#include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
-#include "src/platform/graphics/android/output_builder.h"
+#include "src/platforms/android/server/display.h"
+#include "src/platforms/android/server/hwc_loggers.h"
+#include "src/platforms/android/server/resource_factory.h"
+#include "src/platforms/android/server/android_graphic_buffer_allocator.h"
+#include "src/platforms/android/server/hal_component_factory.h"
 #include "src/server/graphics/program_factory.h"
 #include "src/server/report/null_report_factory.h"
 
@@ -59,15 +59,15 @@ protected:
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */
-        auto logger = std::make_shared<mga::NullHwcLogger>();
+        auto report = std::make_shared<mga::NullHwcReport>();
         auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
         auto null_display_report = mir::report::null_display_report();
         auto stub_gl_config = std::make_shared<mtd::StubGLConfig>();
-        auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
-            buffer_allocator, display_resource_factory, null_display_report, mga::OverlayOptimization::enabled, logger);
+        auto display_buffer_factory = std::make_shared<mga::HalComponentFactory>(
+            buffer_allocator, display_resource_factory, report);
         auto program_factory = std::make_shared<mg::ProgramFactory>();
         display = std::make_shared<mga::Display>(
-            display_buffer_factory, program_factory, stub_gl_config, null_display_report);
+            display_buffer_factory, program_factory, stub_gl_config, null_display_report, mga::OverlayOptimization::enabled);
     }
 
     static void TearDownTestCase()
@@ -88,10 +88,12 @@ TEST_F(AndroidDisplay, display_can_post)
         gl_animation.init_gl();
 
         gl_animation.render_gl();
-        buffer.post_update();
+        buffer.gl_swap_buffers();
+        buffer.flip();
 
         gl_animation.render_gl();
-        buffer.post_update();
+        buffer.gl_swap_buffers();
+        buffer.flip();
     });
 }
 

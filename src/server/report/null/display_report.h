@@ -42,8 +42,6 @@ public:
     void report_drm_master_failure(int error) override;
     void report_vt_switch_away_failure() override;
     void report_vt_switch_back_failure() override;
-    void report_hwc_composition_in_use(int major, int minor) override;
-    void report_gpu_composition_in_use() override;
     void report_egl_configuration(EGLDisplay disp, EGLConfig cfg) override;
 };
 }

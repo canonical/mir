@@ -18,97 +18,193 @@
 
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "src/platform/graphics/android/hwc_layerlist.h"
+#include "src/platforms/android/server/hwc_layerlist.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
+namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
+namespace geom=mir::geometry;
+
 namespace
 {
 struct LayerListTest : public testing::Test
 {
     LayerListTest() :
+        layer_adapter{std::make_shared<mga::IntegerSourceCrop>()},
         buffer1{std::make_shared<mtd::StubBuffer>()},
         buffer2{std::make_shared<mtd::StubBuffer>()},
         renderables{std::make_shared<mtd::StubRenderable>(buffer1),
                     std::make_shared<mtd::StubRenderable>(buffer2),
                     std::make_shared<mtd::StubRenderable>()}
-    {}
+    {
 
+        mt::fill_hwc_layer(fbtarget, &visible_rect, disp_frame, *stub_fb, HWC_FRAMEBUFFER_TARGET, 0);
+        mt::fill_hwc_layer(skip, &visible_rect, disp_frame, *stub_fb, HWC_FRAMEBUFFER, HWC_SKIP_LAYER);
+    }
+
+    std::shared_ptr<mga::LayerAdapter> layer_adapter;
     std::shared_ptr<mtd::StubBuffer> buffer1;
     std::shared_ptr<mtd::StubBuffer> buffer2;
     std::list<std::shared_ptr<mg::Renderable>> renderables;
+
+    geom::Rectangle const disp_frame{{0,0}, {44,22}};
+    std::shared_ptr<mtd::StubBuffer> stub_fb{
+        std::make_shared<mtd::StubBuffer>(
+            std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>(disp_frame.size), disp_frame.size)};
+    hwc_layer_1_t fbtarget;
+    hwc_layer_1_t skip;
+    hwc_rect_t visible_rect;
 };
 }
 
 TEST_F(LayerListTest, list_defaults)
 {
-    mga::LayerList layerlist{{}, 0};
+    mga::LayerList layerlist{layer_adapter, {}};
 
-    auto list = layerlist.native_list().lock();
+    auto list = layerlist.native_list();
     EXPECT_EQ(-1, list->retireFenceFd);
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
-    EXPECT_EQ(layerlist.begin(), layerlist.end());
-    EXPECT_EQ(layerlist.additional_layers_begin(), layerlist.end());
+    EXPECT_EQ(std::distance(layerlist.begin(), layerlist.end()), 2);
 }
 
 TEST_F(LayerListTest, list_iterators)
 {
     size_t additional_layers = 2;
-    mga::LayerList list(renderables, additional_layers);
-    EXPECT_EQ(std::distance(list.begin(), list.end()), additional_layers + renderables.size());
-    EXPECT_EQ(std::distance(list.additional_layers_begin(), list.end()), additional_layers);
-    EXPECT_EQ(std::distance(list.begin(), list.additional_layers_begin()), renderables.size());
+    mga::LayerList list(layer_adapter, {});
+    EXPECT_EQ(std::distance(list.begin(), list.end()), additional_layers);
 
-    mga::LayerList list2({}, additional_layers);
-    EXPECT_EQ(std::distance(list2.begin(), list2.end()), additional_layers);
-    EXPECT_EQ(std::distance(list2.additional_layers_begin(), list2.end()), additional_layers);
-    EXPECT_EQ(std::distance(list2.begin(), list2.additional_layers_begin()), 0);
+    additional_layers = 1;
+    mga::LayerList list2(layer_adapter, renderables);
+    EXPECT_EQ(std::distance(list2.begin(), list2.end()), additional_layers + renderables.size());
 
-    mga::LayerList list3(renderables, 0);
+    mga::LayerList list3(std::make_shared<mga::Hwc10Adapter>(), renderables);
     EXPECT_EQ(std::distance(list3.begin(), list3.end()), renderables.size());
-    EXPECT_EQ(std::distance(list3.additional_layers_begin(), list3.end()), 0);
-    EXPECT_EQ(std::distance(list3.begin(), list3.additional_layers_begin()), renderables.size());
 }
 
 TEST_F(LayerListTest, keeps_track_of_needs_commit)
 {
-    size_t additional_layers = 4;
-    mga::LayerList list(renderables, additional_layers);
+    size_t fb_target_size{1};
+    mga::LayerList list(layer_adapter, renderables);
 
-    for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
-        EXPECT_TRUE(it->needs_commit);
-    for(auto it = list.additional_layers_begin(); it != list.end(); it++)
-        EXPECT_FALSE(it->needs_commit);
+    auto i = 0;
+    for (auto& layer : list)
+    {
+        if (i == 3)
+            EXPECT_FALSE(layer.needs_commit);
+        else
+            EXPECT_TRUE(layer.needs_commit);
+        i++;
+    }
 
     mg::RenderableList list2{
         std::make_shared<mtd::StubRenderable>(buffer1),
         std::make_shared<mtd::StubRenderable>(buffer2),
         std::make_shared<mtd::StubRenderable>()
     };
-    list.update_list(list2, additional_layers);
+    list.update_list(list2);
 
-    //here, all should be needs_commit because they were all HWC_FRAMEBUFFER 
-    for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
-        EXPECT_TRUE(it->needs_commit);
-
-    ASSERT_THAT(list.native_list().lock()->numHwLayers, testing::Eq(list2.size() + additional_layers));
-    list.native_list().lock()->hwLayers[2].compositionType = HWC_OVERLAY;
-    list.update_list(list2, additional_layers);
-
-    auto i = 0;
-    for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
+    i = 0;
+    for (auto& layer : list)
     {
-        if (i == 2)
-            EXPECT_FALSE(it->needs_commit);
+        if (i == 3)
+            EXPECT_FALSE(layer.needs_commit);
         else
-            EXPECT_TRUE(it->needs_commit);
+            EXPECT_TRUE(layer.needs_commit);
         i++;
     }
-    for(auto it = list.additional_layers_begin(); it != list.end(); it++)
-        EXPECT_FALSE(it->needs_commit);
+
+    ASSERT_THAT(list.native_list()->numHwLayers, testing::Eq(list2.size() + fb_target_size));
+    list.native_list()->hwLayers[2].compositionType = HWC_OVERLAY;
+    list.update_list(list2);
+
+    i = 0;
+    for (auto& layer : list)
+    {
+        if ((i == 2) || (i == 3))
+            EXPECT_FALSE(layer.needs_commit);
+        else
+            EXPECT_TRUE(layer.needs_commit);
+        i++;
+    }
+}
+
+TEST_F(LayerListTest, setup_fb_hwc10)
+{
+    using namespace testing;
+    mga::LayerList list(std::make_shared<mga::Hwc10Adapter>(), {});
+    list.setup_fb(stub_fb);
+
+    auto l = list.native_list();
+    ASSERT_THAT(l->numHwLayers, Eq(1));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(skip));
+}
+
+TEST_F(LayerListTest, setup_fb_without_skip)
+{
+    using namespace testing;
+    mga::LayerList list(layer_adapter, renderables);
+    list.setup_fb(stub_fb);
+
+    auto l = list.native_list();
+    ASSERT_THAT(l->numHwLayers, Eq(1 + renderables.size()));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(fbtarget));
+}
+
+TEST_F(LayerListTest, setup_fb_with_skip)
+{
+    using namespace testing;
+    mga::LayerList list(layer_adapter, {});
+    list.setup_fb(stub_fb);
+    auto l = list.native_list();
+    ASSERT_THAT(l->numHwLayers, Eq(2));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(skip));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(fbtarget));
+}
+
+TEST_F(LayerListTest, generate_rejected_renderables)
+{
+    using namespace testing;
+    mga::LayerList list(layer_adapter, renderables);
+
+    auto l = list.native_list();
+    ASSERT_THAT(l->numHwLayers, Eq(4));
+    l->hwLayers[1].compositionType = HWC_OVERLAY;
+
+    EXPECT_THAT(list.rejected_renderables(), ElementsAre(renderables.front(), renderables.back())); 
+}
+
+TEST_F(LayerListTest, swap_not_needed_when_all_layers_overlay)
+{
+    using namespace testing;
+    mga::LayerList list(layer_adapter, renderables);
+    auto l = list.native_list();
+    ASSERT_THAT(l->numHwLayers, Eq(4));
+    for (auto i = 0u; i < 3; i++)
+        l->hwLayers[i].compositionType = HWC_OVERLAY;
+    l->hwLayers[3].compositionType = HWC_FRAMEBUFFER_TARGET;
+
+    EXPECT_FALSE(list.needs_swapbuffers());
+}
+
+TEST_F(LayerListTest, swap_needed_when_one_layer_is_gl_rendered)
+{
+    using namespace testing;
+    mga::LayerList list(layer_adapter, renderables);
+    auto l = list.native_list();
+    for (auto i = 0u; i < 3; i++)
+        l->hwLayers[i].compositionType = HWC_OVERLAY;
+    l->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+    EXPECT_TRUE(list.needs_swapbuffers());
+}
+
+TEST_F(LayerListTest, swap_needed_when_gl_is_forced)
+{
+    mga::LayerList list(layer_adapter, {});
+    EXPECT_TRUE(list.needs_swapbuffers());
 }

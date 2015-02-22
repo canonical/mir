@@ -21,8 +21,8 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/main_loop.h"
 
-#include "example_display_configuration_policy.h"
-#include "example_input_event_filter.h"
+#include "server_example_display_configuration_policy.h"
+#include "server_example_input_event_filter.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;

@@ -15,8 +15,8 @@
  *
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
-#include "src/platform/graphics/mesa/platform.h"
-#include "src/platform/graphics/mesa/display_buffer.h"
+#include "src/platforms/mesa/server/platform.h"
+#include "src/platforms/mesa/server/display_buffer.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -25,6 +25,7 @@
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/platform_factory.h"
+#include "mir_test_doubles/stub_gbm_native_buffer.h"
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_doubles/fake_renderable.h"
 #include "mock_kms_output.h"
@@ -46,7 +47,12 @@ class MesaDisplayBufferTest : public Test
 {
 public:
     MesaDisplayBufferTest()
-     : bypassable_list{std::make_shared<FakeRenderable>(display_area)}
+        : mock_bypassable_buffer{std::make_shared<NiceMock<MockBuffer>>()}
+        , fake_bypassable_renderable{
+             std::make_shared<FakeRenderable>(display_area)}
+        , stub_gbm_native_buffer{
+             std::make_shared<StubGBMNativeBuffer>(display_area.size)}
+        , bypassable_list{fake_bypassable_renderable}
     {
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
             .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
@@ -72,6 +78,12 @@ public:
             .WillByDefault(Return(true));
         ON_CALL(*mock_kms_output, schedule_page_flip(_))
             .WillByDefault(Return(true));
+
+        ON_CALL(*mock_bypassable_buffer, size())
+            .WillByDefault(Return(display_area.size));
+        ON_CALL(*mock_bypassable_buffer, native_buffer_handle())
+            .WillByDefault(Return(stub_gbm_native_buffer));
+        fake_bypassable_renderable->set_buffer(mock_bypassable_buffer);
     }
 
     // The platform has an implicit dependency on mock_gbm etc so must be
@@ -82,18 +94,21 @@ public:
     }
 
 protected:
+    int const width{56};
+    int const height{78};
+    mir::geometry::Rectangle const display_area{{12,34}, {width,height}};
     NiceMock<MockGBM> mock_gbm;
     NiceMock<MockEGL> mock_egl;
     NiceMock<MockGL>  mock_gl;
     NiceMock<MockDRM> mock_drm; 
+    std::shared_ptr<MockBuffer> mock_bypassable_buffer;
+    std::shared_ptr<FakeRenderable> fake_bypassable_renderable;
+    std::shared_ptr<mesa::GBMNativeBuffer> stub_gbm_native_buffer;
     gbm_bo*           fake_bo;
     gbm_bo_handle     fake_handle;
     UdevEnvironment   fake_devices;
     std::shared_ptr<MockKMSOutput> mock_kms_output;
     StubGLConfig gl_config;
-    int const width{56};
-    int const height{78};
-    mir::geometry::Rectangle const display_area{{12,34}, {width,height}};
     mir::graphics::RenderableList const bypassable_list;
 
 };
@@ -126,6 +141,53 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass
         mock_egl.fake_egl_context);
 
     EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+}
+
+TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
+{  // Regression test for LP: #1398296
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, _, _, _, _, _, _, _, _))
+        .WillOnce(Return(0))    // During the DisplayBuffer constructor
+        .WillOnce(Return(-22))  // Fail first bypass attempt
+        .WillOnce(Return(0));   // Succeed second bypass attempt
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.post_renderables_if_optimizable(bypassable_list));
+    // And then we recover. DRM finds enough resources to AddFB ...
+    EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+}
+
+TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
+{  // Another regression test for LP: #1398296
+    auto fullscreen = std::make_shared<FakeRenderable>(display_area);
+    auto nonbypassable = std::make_shared<testing::NiceMock<MockBuffer>>();
+    ON_CALL(*nonbypassable, native_buffer_handle())
+        .WillByDefault(Return(stub_gbm_native_buffer));
+    ON_CALL(*nonbypassable, size())
+        .WillByDefault(Return(mir::geometry::Size{12,34}));
+
+    fullscreen->set_buffer(nonbypassable);
+    graphics::RenderableList list{fullscreen};
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.post_renderables_if_optimizable(list));
 }
 
 TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
@@ -162,7 +224,7 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, width, height, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -180,7 +242,7 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, height, width, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -198,7 +260,7 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, width, height, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -216,7 +278,7 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, height, width, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -230,12 +292,35 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
         mock_egl.fake_egl_context);
 }
 
-TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
+TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
+{
+    // Ensure clone mode can do multiple page flips in parallel without
+    // blocking on either (at least till the second post)
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+        .Times(2);
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(0);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output, mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    db.gl_swap_buffers();
+    db.flip();
+}
+
+TEST_F(MesaDisplayBufferTest, single_mode_first_post_flips_with_wait)
 {
     EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
         .Times(1);
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
-        .Times(0);
+        .Times(1);
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
@@ -247,36 +332,40 @@ TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
         gl_config,
         mock_egl.fake_egl_context);
 
-    db.post_update();
+    db.gl_swap_buffers();
+    db.flip();
 }
 
-TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
+TEST_F(MesaDisplayBufferTest, clone_mode_waits_for_page_flip_on_second_flip)
 {
     InSequence seq;
 
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
         .Times(0);
     EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
-        .Times(1);
+        .Times(2);
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
-        .Times(1);
+        .Times(2);
     EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
-        .Times(1);
+        .Times(2);
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
         .Times(0);
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
         null_display_report(),
-        {mock_kms_output},
+        {mock_kms_output, mock_kms_output},
         nullptr,
         display_area,
         mir_orientation_normal,
         gl_config,
         mock_egl.fake_egl_context);
 
-    db.post_update();
-    db.post_update();
+    db.gl_swap_buffers();
+    db.flip();
+
+    db.gl_swap_buffers();
+    db.flip();
 }
 
 TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)
@@ -303,8 +392,13 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
 {
     auto fullscreen = std::make_shared<FakeRenderable>(display_area);
     auto nonbypassable = std::make_shared<testing::NiceMock<MockBuffer>>();
-    ON_CALL(*nonbypassable, can_bypass())
-        .WillByDefault(Return(false));
+    auto nonbypassable_gbm_native_buffer =
+        std::make_shared<StubGBMNativeBuffer>(display_area.size, false);
+    ON_CALL(*nonbypassable, native_buffer_handle())
+        .WillByDefault(Return(nonbypassable_gbm_native_buffer));
+    ON_CALL(*nonbypassable, size())
+        .WillByDefault(Return(display_area.size));
+
     fullscreen->set_buffer(nonbypassable);
     graphics::RenderableList list{fullscreen};
 

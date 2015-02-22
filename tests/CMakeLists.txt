@@ -26,9 +26,17 @@ if (HAS_W_INCONSISTENT_MISSING_OVERRIDE)
 endif()
 
 if (MIR_TEST_PLATFORM STREQUAL "android")
+  add_definitions(-DANDROID)
+endif()
+
+if (MIR_BUILD_PLATFORM_ANDROID)
   #avoid complaints about poor quality android headers
   include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
-  add_definitions(-DANDROID)
+  add_definitions(-DMIR_BUILD_PLATFORM_ANDROID)
+endif()
+
+if (MIR_BUILD_PLATFORM_MESA)
+  add_definitions(-DMIR_BUILD_PLATFORM_MESA)
 endif()
 
 include_directories(
@@ -36,6 +44,8 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
+  ${PROJECT_SOURCE_DIR}/include/common
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/include
 )
 
 option(MIR_BUILD_ACCEPTANCE_TESTS "Build acceptance tests" ON)

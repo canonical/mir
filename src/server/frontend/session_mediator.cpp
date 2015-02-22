@@ -37,12 +37,18 @@
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/platform_operation_message.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
+
+// Temporary include to ease client transition from mir_connection_drm* APIs
+// to mir_connection_platform_operation().
+// TODO: Remove when transition is complete
+#include "../../src/platforms/mesa/include/mir_toolkit/mesa/platform_operation.h"
 
 #include "mir/geometry/rectangles.h"
 #include "surface_tracker.h"
@@ -55,6 +61,7 @@
 
 #include <mutex>
 #include <functional>
+#include <cstring>
 
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
@@ -174,20 +181,54 @@ void mf::SessionMediator::create_surface(
 
     report->session_create_surface_called(session->name());
 
-    auto const surf_id = session->create_surface(ms::SurfaceCreationParameters()
-        .of_name(request->surface_name())
+    auto params = ms::SurfaceCreationParameters()
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
-        .of_pixel_format(static_cast<MirPixelFormat>(request->pixel_format()))
-        .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
+        .of_pixel_format(static_cast<MirPixelFormat>(request->pixel_format()));
+
+    if (request->has_surface_name())
+        params.of_name(request->surface_name());
+
+    if (request->has_output_id())
+        params.with_output_id(graphics::DisplayConfigurationOutputId(request->output_id()));
+
+    if (request->has_type())
+        params.of_type(static_cast<MirSurfaceType>(request->type()));
+
+    if (request->has_state())
+        params.with_state(static_cast<MirSurfaceState>(request->state()));
+
+    if (request->has_pref_orientation())
+        params.with_preferred_orientation(static_cast<MirOrientationMode>(request->pref_orientation()));
+
+    if (request->has_parent_id())
+        params.with_parent_id(SurfaceId{request->parent_id()});
+
+    if (request->has_aux_rect())
+    {
+        params.with_aux_rect(geom::Rectangle{
+            {request->aux_rect().left(), request->aux_rect().top()},
+            {request->aux_rect().width(), request->aux_rect().height()}
+        });
+    }
+
+    if (request->has_edge_attachment())
+        params.with_edge_attachment(static_cast<MirEdgeAttachment>(request->edge_attachment()));
+
+    auto const surf_id = shell->create_surface(session, params);
 
     auto surface = session->get_surface(surf_id);
     auto const& client_size = surface->client_size();
     response->mutable_id()->set_value(surf_id.as_value());
     response->set_width(client_size.width.as_uint32_t());
     response->set_height(client_size.height.as_uint32_t());
+
+    // TODO: Deprecate
     response->set_pixel_format((int)surface->pixel_format());
     response->set_buffer_usage(request->buffer_usage());
+
+    response->mutable_buffer_stream()->set_pixel_format((int)surface->pixel_format());
+    response->mutable_buffer_stream()->set_buffer_usage(request->buffer_usage());
 
     if (surface->supports_input())
         response->add_fd(surface->client_input_fd());
@@ -198,17 +239,20 @@ void mf::SessionMediator::create_surface(
         
         setting->mutable_surfaceid()->set_value(surf_id.as_value());
         setting->set_attrib(i);
-        setting->set_ivalue(surface->query(static_cast<MirSurfaceAttrib>(i)));
+        setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
     advance_buffer(surf_id, *surface,
-        [lock, this, response, done, session]
+        [lock, this, &surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
             lock->unlock();
 
-            auto buffer = response->mutable_buffer();
-            pack_protobuf_buffer(*buffer, client_buffer, msg_type);
+            response->mutable_buffer_stream()->mutable_id()->set_value(
+               surf_id.as_value());
+            pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(),
+                         client_buffer,
+                         msg_type);
 
             // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
             // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client.
@@ -303,7 +347,7 @@ void mf::SessionMediator::release_surface(
 
         auto const id = SurfaceId(request->value());
 
-        session->destroy_surface(id);
+        shell->destroy_surface(session, id);
         surface_tracker.remove_surface(id);
     }
 
@@ -358,8 +402,7 @@ void mf::SessionMediator::configure_surface(
 
         auto const id = mf::SurfaceId(request->surfaceid().value());
         int value = request->ivalue();
-        auto const surface = session->get_surface(id);
-        int newvalue = surface->configure(attrib, value);
+        int newvalue = shell->set_surface_attribute(session, id, attrib, value);
 
         response->set_ivalue(newvalue);
     }
@@ -433,7 +476,10 @@ void mf::SessionMediator::create_screencast(
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
-    pack_protobuf_buffer(*protobuf_screencast->mutable_buffer(),
+
+    protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
+        screencast_session_id.as_value());
+    pack_protobuf_buffer(*protobuf_screencast->mutable_buffer_stream()->mutable_buffer(),
                          buffer.get(),
                          msg_type);
 
@@ -589,23 +635,54 @@ void mf::SessionMediator::drm_auth_magic(
         report->session_drm_auth_magic_called(session->name());
     }
 
-    //TODO: the opcode should be provided as part of the request, and should be opaque to the server code.
-    unsigned int const made_up_opcode{0};
-    mg::PlatformIPCPackage platform_request{{static_cast<int32_t>(request->magic())},{}};
-    try
-    {
-        auto platform_response = ipc_operations->platform_operation(made_up_opcode, platform_request);
-        if (platform_response.ipc_data.size() > 0)
-            response->set_status_code(platform_response.ipc_data[0]);
-    }
-    catch (std::exception const& e)
-    {
-        auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
+    auto const magic = request->magic();
 
-        if (errno_ptr != nullptr)
-            response->set_status_code(*errno_ptr);
-        else
-            throw;
+    MirMesaAuthMagicRequest const auth_magic_request{magic};
+    mg::PlatformOperationMessage platform_request;
+    platform_request.data.resize(sizeof(auth_magic_request));
+    std::memcpy(platform_request.data.data(), &auth_magic_request, sizeof(auth_magic_request));
+
+    auto const platform_response = ipc_operations->platform_operation(
+        MirMesaPlatformOperation::auth_magic, platform_request);
+
+    MirMesaAuthMagicResponse auth_magic_response{-1};
+    std::memcpy(&auth_magic_response, platform_response.data.data(),
+                platform_response.data.size());
+    response->set_status_code(auth_magic_response.status);
+
+    done->Run();
+}
+
+void mf::SessionMediator::platform_operation(
+    google::protobuf::RpcController* /*controller*/,
+    mir::protobuf::PlatformOperationMessage const* request,
+    mir::protobuf::PlatformOperationMessage* response,
+    google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    }
+
+    mg::PlatformOperationMessage platform_request;
+    unsigned int const opcode = request->opcode();
+    platform_request.data.assign(request->data().begin(),
+                                 request->data().end());
+    platform_request.fds.assign(request->fd().begin(),
+                                request->fd().end());
+
+    auto const& platform_response = ipc_operations->platform_operation(opcode, platform_request);
+
+    response->set_opcode(opcode);
+    response->set_data(platform_response.data.data(),
+                       platform_response.data.size());
+    for (auto fd : platform_response.fds)
+    {
+        response->add_fd(fd);
+        resource_cache->save_fd(response, mir::Fd{fd});
     }
 
     done->Run();

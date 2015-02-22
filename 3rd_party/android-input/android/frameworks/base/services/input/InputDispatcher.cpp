@@ -88,7 +88,7 @@ const nsecs_t STREAM_AHEAD_EVENT_TIMEOUT = 500 * 1000000LL; // 0.5sec
 const nsecs_t SLOW_EVENT_PROCESSING_WARNING_TIMEOUT = 2000 * 1000000LL; // 2sec
 
 
-static inline nsecs_t now() {
+static inline std::chrono::nanoseconds now() {
     return systemTime(SYSTEM_TIME_MONOTONIC);
 }
 
@@ -203,7 +203,7 @@ InputDispatcher::~InputDispatcher() {
 }
 
 void InputDispatcher::dispatchOnce() {
-    nsecs_t nextWakeupTime = LONG_LONG_MAX;
+    std::chrono::nanoseconds nextWakeupTime(LONG_LONG_MAX);
     { // acquire lock
         AutoMutex _l(mLock);
         broadcast(mDispatcherIsAliveCondition);
@@ -211,18 +211,18 @@ void InputDispatcher::dispatchOnce() {
         dispatchOnceInnerLocked(&nextWakeupTime);
 
         if (runCommandsLockedInterruptible()) {
-            nextWakeupTime = LONG_LONG_MIN;  // force next poll to wake up immediately
+            nextWakeupTime = std::chrono::nanoseconds(0);
         }
     } // release lock
 
     // Wait for callback or timeout or wake.  (make sure we round up, not down)
-    nsecs_t currentTime = now();
+    std::chrono::nanoseconds currentTime = now();
     int timeoutMillis = toMillisecondTimeoutDelay(currentTime, nextWakeupTime);
     mLooper->pollOnce(timeoutMillis);
 }
 
-void InputDispatcher::dispatchOnceInnerLocked(nsecs_t* nextWakeupTime) {
-    nsecs_t currentTime = now();
+void InputDispatcher::dispatchOnceInnerLocked(std::chrono::nanoseconds* nextWakeupTime) {
+    std::chrono::nanoseconds currentTime = now();
 
     // Reset the key repeat timer whenever we disallow key events, even if the next event
     // is not a key.  This is to ensure that we abort a key repeat if the device is just coming
@@ -363,7 +363,7 @@ void InputDispatcher::dispatchOnceInnerLocked(nsecs_t* nextWakeupTime) {
         }
 
         releasePendingEventLocked();
-        *nextWakeupTime = LONG_LONG_MIN;  // force next poll to wake up immediately
+        *nextWakeupTime = std::chrono::nanoseconds(LONG_LONG_MIN);  // force next poll to wake up immediately
     }
 }
 
@@ -385,7 +385,7 @@ bool InputDispatcher::enqueueInboundEventLocked(EventEntry* entry) {
 #if DEBUG_APP_SWITCH
                     ALOGD("App switch is pending!");
 #endif
-                    mAppSwitchDueTime = keyEntry->eventTime + APP_SWITCH_TIMEOUT;
+                    mAppSwitchDueTime = keyEntry->eventTime + std::chrono::nanoseconds(APP_SWITCH_TIMEOUT);
                     mAppSwitchSawKeyDown = false;
                     needWake = true;
                 }
@@ -515,11 +515,11 @@ bool InputDispatcher::isAppSwitchKeyEventLocked(KeyEntry* keyEntry) {
 }
 
 bool InputDispatcher::isAppSwitchPendingLocked() {
-    return mAppSwitchDueTime != LONG_LONG_MAX;
+    return mAppSwitchDueTime != std::chrono::nanoseconds(LONG_LONG_MAX);
 }
 
 void InputDispatcher::resetPendingAppSwitchLocked(bool handled) {
-    mAppSwitchDueTime = LONG_LONG_MAX;
+    mAppSwitchDueTime = std::chrono::nanoseconds(LONG_LONG_MAX);
 
 #if DEBUG_APP_SWITCH
     if (handled) {
@@ -530,8 +530,8 @@ void InputDispatcher::resetPendingAppSwitchLocked(bool handled) {
 #endif
 }
 
-bool InputDispatcher::isStaleEventLocked(nsecs_t currentTime, EventEntry* entry) {
-    return currentTime - entry->eventTime >= STALE_EVENT_TIMEOUT;
+bool InputDispatcher::isStaleEventLocked(std::chrono::nanoseconds currentTime, EventEntry* entry) {
+    return currentTime - entry->eventTime >= std::chrono::nanoseconds(STALE_EVENT_TIMEOUT);
 }
 
 bool InputDispatcher::runCommandsLockedInterruptible() {
@@ -593,7 +593,7 @@ void InputDispatcher::resetKeyRepeatLocked() {
     }
 }
 
-InputDispatcher::KeyEntry* InputDispatcher::synthesizeKeyRepeatLocked(nsecs_t currentTime) {
+InputDispatcher::KeyEntry* InputDispatcher::synthesizeKeyRepeatLocked(std::chrono::nanoseconds currentTime) {
     KeyEntry* entry = mKeyRepeatState.lastKeyEntry;
 
     // Reuse the repeated key entry if it is otherwise unreferenced.
@@ -626,7 +626,7 @@ InputDispatcher::KeyEntry* InputDispatcher::synthesizeKeyRepeatLocked(nsecs_t cu
 }
 
 bool InputDispatcher::dispatchConfigurationChangedLocked(
-        nsecs_t currentTime, ConfigurationChangedEntry* entry) {
+        std::chrono::nanoseconds currentTime, ConfigurationChangedEntry* entry) {
 #if DEBUG_OUTBOUND_EVENT_DETAILS
     ALOGD("dispatchConfigurationChanged - eventTime=%lld", entry->eventTime);
 #endif
@@ -642,7 +642,7 @@ bool InputDispatcher::dispatchConfigurationChangedLocked(
 }
 
 bool InputDispatcher::dispatchDeviceResetLocked(
-        nsecs_t currentTime, DeviceResetEntry* entry) {
+        std::chrono::nanoseconds currentTime, DeviceResetEntry* entry) {
 #if DEBUG_OUTBOUND_EVENT_DETAILS
     ALOGD("dispatchDeviceReset - eventTime=%lld, deviceId=%d", entry->eventTime, entry->deviceId);
 #endif
@@ -654,8 +654,8 @@ bool InputDispatcher::dispatchDeviceResetLocked(
     return true;
 }
 
-bool InputDispatcher::dispatchKeyLocked(nsecs_t currentTime, KeyEntry* entry,
-        DropReason* dropReason, nsecs_t* nextWakeupTime) {
+bool InputDispatcher::dispatchKeyLocked(std::chrono::nanoseconds currentTime, KeyEntry* entry,
+        DropReason* dropReason, std::chrono::nanoseconds* nextWakeupTime) {
     // Preprocessing.
     if (! entry->dispatchInProgress) {
         if (entry->repeatCount == 0
@@ -670,7 +670,7 @@ bool InputDispatcher::dispatchKeyLocked(nsecs_t currentTime, KeyEntry* entry,
                 // we will not need to synthesize key repeats ourselves.
                 entry->repeatCount = mKeyRepeatState.lastKeyEntry->repeatCount + 1;
                 resetKeyRepeatLocked();
-                mKeyRepeatState.nextRepeatTime = LONG_LONG_MAX; // don't generate repeats ourselves
+                mKeyRepeatState.nextRepeatTime = std::chrono::nanoseconds(LONG_LONG_MAX); // don't generate repeats ourselves
             } else {
                 // Not a repeat.  Save key down state in case we do see a repeat later.
                 resetKeyRepeatLocked();
@@ -702,7 +702,7 @@ bool InputDispatcher::dispatchKeyLocked(nsecs_t currentTime, KeyEntry* entry,
             return false; // wait until next wakeup
         }
         entry->interceptKeyResult = KeyEntry::INTERCEPT_KEY_RESULT_UNKNOWN;
-        entry->interceptKeyWakeupTime = 0;
+        entry->interceptKeyWakeupTime = std::chrono::nanoseconds(0);
     }
 
     // Give the policy a chance to intercept the key.
@@ -765,7 +765,7 @@ void InputDispatcher::logOutboundKeyDetailsLocked(const char* prefix, const KeyE
 }
 
 bool InputDispatcher::dispatchMotionLocked(
-        nsecs_t currentTime, MotionEntry* entry, DropReason* dropReason, nsecs_t* nextWakeupTime) {
+        std::chrono::nanoseconds currentTime, MotionEntry* entry, DropReason* dropReason, std::chrono::nanoseconds* nextWakeupTime) {
     // Preprocessing.
     if (! entry->dispatchInProgress) {
         entry->dispatchInProgress = true;
@@ -851,7 +851,7 @@ void InputDispatcher::logOutboundMotionDetailsLocked(const char* prefix, const M
 #endif
 }
 
-void InputDispatcher::dispatchEventLocked(nsecs_t currentTime,
+void InputDispatcher::dispatchEventLocked(std::chrono::nanoseconds currentTime,
         EventEntry* eventEntry, const Vector<InputTarget>& inputTargets) {
 #if DEBUG_DISPATCH_CYCLE
     ALOGD("dispatchEventToCurrentInputTargets");
@@ -876,11 +876,11 @@ void InputDispatcher::dispatchEventLocked(nsecs_t currentTime,
     }
 }
 
-int32_t InputDispatcher::handleTargetsNotReadyLocked(nsecs_t currentTime,
+int32_t InputDispatcher::handleTargetsNotReadyLocked(std::chrono::nanoseconds currentTime,
         const EventEntry* entry,
         const sp<InputApplicationHandle>& applicationHandle,
         const sp<InputWindowHandle>& windowHandle,
-        nsecs_t* nextWakeupTime, const char* reason) {
+        std::chrono::nanoseconds* nextWakeupTime, const char* reason) {
     if (applicationHandle == NULL && windowHandle == NULL) {
         if (mInputTargetWaitCause != INPUT_TARGET_WAIT_CAUSE_SYSTEM_NOT_READY) {
 #if DEBUG_FOCUS
@@ -888,7 +888,7 @@ int32_t InputDispatcher::handleTargetsNotReadyLocked(nsecs_t currentTime,
 #endif
             mInputTargetWaitCause = INPUT_TARGET_WAIT_CAUSE_SYSTEM_NOT_READY;
             mInputTargetWaitStartTime = currentTime;
-            mInputTargetWaitTimeoutTime = LONG_LONG_MAX;
+            mInputTargetWaitTimeoutTime = std::chrono::nanoseconds(LONG_LONG_MAX);
             mInputTargetWaitTimeoutExpired = false;
             mInputTargetWaitApplicationHandle.clear();
         }
@@ -899,14 +899,14 @@ int32_t InputDispatcher::handleTargetsNotReadyLocked(nsecs_t currentTime,
                 c_str(getApplicationWindowLabelLocked(applicationHandle, windowHandle)),
                     reason);
 #endif
-            nsecs_t timeout;
+            std::chrono::nanoseconds timeout;
             if (windowHandle != NULL) {
-                timeout = windowHandle->getDispatchingTimeout(DEFAULT_INPUT_DISPATCHING_TIMEOUT);
+                timeout = windowHandle->getDispatchingTimeout(std::chrono::nanoseconds(DEFAULT_INPUT_DISPATCHING_TIMEOUT));
             } else if (applicationHandle != NULL) {
                 timeout = applicationHandle->getDispatchingTimeout(
-                        DEFAULT_INPUT_DISPATCHING_TIMEOUT);
+                    std::chrono::nanoseconds(DEFAULT_INPUT_DISPATCHING_TIMEOUT));
             } else {
-                timeout = DEFAULT_INPUT_DISPATCHING_TIMEOUT;
+                timeout = std::chrono::nanoseconds(DEFAULT_INPUT_DISPATCHING_TIMEOUT);
             }
 
             mInputTargetWaitCause = INPUT_TARGET_WAIT_CAUSE_APPLICATION_NOT_READY;
@@ -934,7 +934,7 @@ int32_t InputDispatcher::handleTargetsNotReadyLocked(nsecs_t currentTime,
 
         // Force poll loop to wake up immediately on next iteration once we get the
         // ANR response back from the policy.
-        *nextWakeupTime = LONG_LONG_MIN;
+        *nextWakeupTime = std::chrono::nanoseconds(LONG_LONG_MIN);
         return INPUT_EVENT_INJECTION_PENDING;
     } else {
         // Force poll loop to wake up when timeout is due.
@@ -945,9 +945,9 @@ int32_t InputDispatcher::handleTargetsNotReadyLocked(nsecs_t currentTime,
     }
 }
 
-void InputDispatcher::resumeAfterTargetsNotReadyTimeoutLocked(nsecs_t newTimeout,
+void InputDispatcher::resumeAfterTargetsNotReadyTimeoutLocked(std::chrono::nanoseconds newTimeout,
         const sp<InputChannel>& inputChannel) {
-    if (newTimeout > 0) {
+    if (newTimeout > std::chrono::nanoseconds(0)) {
         // Extend the timeout.
         mInputTargetWaitTimeoutTime = now() + newTimeout;
     } else {
@@ -975,12 +975,12 @@ void InputDispatcher::resumeAfterTargetsNotReadyTimeoutLocked(nsecs_t newTimeout
     }
 }
 
-nsecs_t InputDispatcher::getTimeSpentWaitingForApplicationLocked(
-        nsecs_t currentTime) {
+std::chrono::nanoseconds InputDispatcher::getTimeSpentWaitingForApplicationLocked(
+        std::chrono::nanoseconds currentTime) {
     if (mInputTargetWaitCause == INPUT_TARGET_WAIT_CAUSE_APPLICATION_NOT_READY) {
         return currentTime - mInputTargetWaitStartTime;
     }
-    return 0;
+    return std::chrono::nanoseconds(0);
 }
 
 void InputDispatcher::resetANRTimeoutsLocked() {
@@ -993,8 +993,8 @@ void InputDispatcher::resetANRTimeoutsLocked() {
     mInputTargetWaitApplicationHandle.clear();
 }
 
-int32_t InputDispatcher::findFocusedWindowTargetsLocked(nsecs_t currentTime,
-        const EventEntry* entry, Vector<InputTarget>& inputTargets, nsecs_t* nextWakeupTime) {
+int32_t InputDispatcher::findFocusedWindowTargetsLocked(std::chrono::nanoseconds currentTime,
+        const EventEntry* entry, Vector<InputTarget>& inputTargets, std::chrono::nanoseconds* nextWakeupTime) {
     int32_t injectionResult;
 
     // If there is no currently focused window and no focused application
@@ -1046,7 +1046,7 @@ int32_t InputDispatcher::findFocusedWindowTargetsLocked(nsecs_t currentTime,
     // Done.
 Failed:
 Unresponsive:
-    nsecs_t timeSpentWaitingForApplication = getTimeSpentWaitingForApplicationLocked(currentTime);
+    std::chrono::nanoseconds timeSpentWaitingForApplication = getTimeSpentWaitingForApplicationLocked(currentTime);
     updateDispatchStatisticsLocked(currentTime, entry,
             injectionResult, timeSpentWaitingForApplication);
 #if DEBUG_FOCUS
@@ -1057,8 +1057,8 @@ Unresponsive:
     return injectionResult;
 }
 
-int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
-        const MotionEntry* entry, Vector<InputTarget>& inputTargets, nsecs_t* nextWakeupTime,
+int32_t InputDispatcher::findTouchedWindowTargetsLocked(std::chrono::nanoseconds currentTime,
+        const MotionEntry* entry, Vector<InputTarget>& inputTargets, std::chrono::nanoseconds* nextWakeupTime,
         bool* outConflictingPointerActions) {
     enum InjectionPermission {
         INJECTION_PERMISSION_UNKNOWN,
@@ -1066,7 +1066,7 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
         INJECTION_PERMISSION_DENIED
     };
 
-    nsecs_t startTime = now();
+    std::chrono::nanoseconds startTime = now();
 
     // For security reasons, we defer updating the touch state until we are sure that
     // event injection will be allowed.
@@ -1224,36 +1224,36 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
                             "eventually add a new window when it finishes starting up.");
                     goto Unresponsive;
                 }
-
-                ALOGI("Dropping event because there is no touched window.");
-                injectionResult = INPUT_EVENT_INJECTION_FAILED;
-                goto Failed;
             }
         }
 
-        // Set target flags.
-        int32_t targetFlags = InputTarget::FLAG_FOREGROUND | InputTarget::FLAG_DISPATCH_AS_IS;
-        if (isSplit) {
-            targetFlags |= InputTarget::FLAG_SPLIT;
-        }
-        if (isWindowObscuredAtPointLocked(newTouchedWindowHandle, x, y)) {
-            targetFlags |= InputTarget::FLAG_WINDOW_IS_OBSCURED;
-        }
+        // We may still not have a window handle but we can't just abort the dispatch
+        // cycle because there could be hover exits to dispatch.
+        if (newTouchedWindowHandle != NULL) {
+            // Set target flags.
+            int32_t targetFlags = InputTarget::FLAG_FOREGROUND | InputTarget::FLAG_DISPATCH_AS_IS;
+            if (isSplit) {
+                targetFlags |= InputTarget::FLAG_SPLIT;
+            }
+            if (isWindowObscuredAtPointLocked(newTouchedWindowHandle, x, y)) {
+                targetFlags |= InputTarget::FLAG_WINDOW_IS_OBSCURED;
+            }
 
-        // Update hover state.
-        if (isHoverAction) {
-            newHoverWindowHandle = newTouchedWindowHandle;
-        } else if (maskedAction == AMOTION_EVENT_ACTION_SCROLL) {
-            newHoverWindowHandle = mLastHoverWindowHandle;
+            // Update hover state.
+            if (isHoverAction) {
+                newHoverWindowHandle = newTouchedWindowHandle;
+            } else if (maskedAction == AMOTION_EVENT_ACTION_SCROLL) {
+                newHoverWindowHandle = mLastHoverWindowHandle;
+            }
+            
+            // Update the temporary touch state.
+            IntSet pointerIds;
+            if (isSplit) {
+                int32_t pointerId = entry->pointerProperties[pointerIndex].id;
+                pointerIds.insert(pointerId);
+            }
+            mTempTouchState.addOrUpdateWindow(newTouchedWindowHandle, targetFlags, pointerIds);
         }
-
-        // Update the temporary touch state.
-        IntSet pointerIds;
-        if (isSplit) {
-            int32_t pointerId = entry->pointerProperties[pointerIndex].id;
-            pointerIds.insert(pointerId);
-        }
-        mTempTouchState.addOrUpdateWindow(newTouchedWindowHandle, targetFlags, pointerIds);
     } else {
         /* Case 2: Pointer move, up, cancel or non-splittable pointer down. */
 
@@ -1277,6 +1277,9 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
             sp<InputWindowHandle> oldTouchedWindowHandle =
                     mTempTouchState.getFirstForegroundWindowHandle();
             sp<InputWindowHandle> newTouchedWindowHandle = findTouchedWindowAtLocked(x, y);
+
+            newHoverWindowHandle = newTouchedWindowHandle;
+            
             if (oldTouchedWindowHandle != newTouchedWindowHandle
                     && newTouchedWindowHandle != NULL) {
 #if DEBUG_FOCUS
@@ -1339,7 +1342,9 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
         bool haveForegroundWindow = false;
         for (size_t i = 0; i < mTempTouchState.windows.size(); i++) {
             const TouchedWindow& touchedWindow = mTempTouchState.windows[i];
-            if (touchedWindow.targetFlags & InputTarget::FLAG_FOREGROUND) {
+            if (touchedWindow.targetFlags & InputTarget::FLAG_FOREGROUND ||
+                // We allow dispatching hover exit events to non foreground windows.
+                touchedWindow.targetFlags & InputTarget::FLAG_DISPATCH_AS_HOVER_EXIT) {
                 haveForegroundWindow = true;
                 if (! checkInjectionPermission(touchedWindow.windowHandle,
                         entry->injectionState)) {
@@ -1524,7 +1529,7 @@ Unresponsive:
     // Reset temporary touch state to ensure we release unnecessary references to input channels.
     mTempTouchState.reset();
 
-    nsecs_t timeSpentWaitingForApplication = getTimeSpentWaitingForApplicationLocked(currentTime);
+    std::chrono::nanoseconds timeSpentWaitingForApplication = getTimeSpentWaitingForApplicationLocked(currentTime);
     updateDispatchStatisticsLocked(currentTime, entry,
             injectionResult, timeSpentWaitingForApplication);
 #if DEBUG_FOCUS
@@ -1622,7 +1627,7 @@ bool InputDispatcher::isWindowObscuredAtPointLocked(
     return obscured;
 }
 
-bool InputDispatcher::isWindowReadyForMoreInputLocked(nsecs_t currentTime,
+bool InputDispatcher::isWindowReadyForMoreInputLocked(std::chrono::nanoseconds currentTime,
         const sp<InputWindowHandle>& windowHandle, const EventEntry* eventEntry) {
     ssize_t connectionIndex = getConnectionIndexLocked(windowHandle->getInputChannel());
     if (connectionIndex >= 0) {
@@ -1662,7 +1667,7 @@ bool InputDispatcher::isWindowReadyForMoreInputLocked(nsecs_t currentTime,
         // This condition ensures that ANRs are detected reliably.
         if (!connection->waitQueue.isEmpty()
                 && currentTime >= connection->waitQueue.head->eventEntry->eventTime
-                        + STREAM_AHEAD_EVENT_TIMEOUT) {
+            + std::chrono::nanoseconds(STREAM_AHEAD_EVENT_TIMEOUT)) {
             return false;
         }
     }
@@ -1688,7 +1693,7 @@ String8 InputDispatcher::getApplicationWindowLabelLocked(
     }
 }
 
-void InputDispatcher::prepareDispatchCycleLocked(nsecs_t currentTime,
+void InputDispatcher::prepareDispatchCycleLocked(std::chrono::nanoseconds currentTime,
         const sp<Connection>& connection, EventEntry* eventEntry, const InputTarget* inputTarget) {
 #if DEBUG_DISPATCH_CYCLE
     std::string pointerIdsString = inputTarget->pointerIds.toString();
@@ -1737,7 +1742,7 @@ void InputDispatcher::prepareDispatchCycleLocked(nsecs_t currentTime,
     enqueueDispatchEntriesLocked(currentTime, connection, eventEntry, inputTarget);
 }
 
-void InputDispatcher::enqueueDispatchEntriesLocked(nsecs_t currentTime,
+void InputDispatcher::enqueueDispatchEntriesLocked(std::chrono::nanoseconds currentTime,
         const sp<Connection>& connection, EventEntry* eventEntry, const InputTarget* inputTarget) {
     bool wasEmpty = connection->outboundQueue.isEmpty();
 
@@ -1847,7 +1852,7 @@ void InputDispatcher::enqueueDispatchEntryLocked(
     connection->outboundQueue.enqueueAtTail(dispatchEntry);
 }
 
-void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
+void InputDispatcher::startDispatchCycleLocked(std::chrono::nanoseconds currentTime,
         const sp<Connection>& connection) {
 #if DEBUG_DISPATCH_CYCLE
     ALOGD("channel '%s' ~ startDispatchCycle",
@@ -1875,7 +1880,7 @@ void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
                     keyEntry->eventTime);
             input_report->published_key_event(connection->inputChannel->getFd(),
                                               dispatchEntry->seq,
-                                              keyEntry->eventTime);
+                                              keyEntry->eventTime.count());
             break;
         }
 
@@ -1925,7 +1930,7 @@ void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
                     usingCoords);
             input_report->published_motion_event(connection->inputChannel->getFd(),
                                                  dispatchEntry->seq,
-                                                 motionEntry->eventTime);
+                                                 motionEntry->eventTime.count());
             break;
         }
 
@@ -1967,7 +1972,7 @@ void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
     }
 }
 
-void InputDispatcher::finishDispatchCycleLocked(nsecs_t currentTime,
+void InputDispatcher::finishDispatchCycleLocked(std::chrono::nanoseconds currentTime,
         const sp<Connection>& connection, uint32_t seq, bool handled) {
 #if DEBUG_DISPATCH_CYCLE
     ALOGD("channel '%s' ~ finishDispatchCycle - seq=%u, handled=%s",
@@ -1985,7 +1990,7 @@ void InputDispatcher::finishDispatchCycleLocked(nsecs_t currentTime,
     onDispatchCycleFinishedLocked(currentTime, connection, seq, handled);
 }
 
-void InputDispatcher::abortBrokenDispatchCycleLocked(nsecs_t currentTime,
+void InputDispatcher::abortBrokenDispatchCycleLocked(std::chrono::nanoseconds currentTime,
         const sp<Connection>& connection, bool notify) {
 #if DEBUG_DISPATCH_CYCLE
     ALOGD("channel '%s' ~ abortBrokenDispatchCycle - notify=%s",
@@ -2044,7 +2049,7 @@ int InputDispatcher::handleReceiveCallback(int fd, int events, void* data) {
                 return 1;
             }
 
-            nsecs_t currentTime = now();
+            std::chrono::nanoseconds currentTime = now();
             bool gotOne = false;
             status_t status;
             for (;;) {
@@ -2110,7 +2115,7 @@ void InputDispatcher::synthesizeCancelationEventsForConnectionLocked(
         return;
     }
 
-    nsecs_t currentTime = now();
+    std::chrono::nanoseconds currentTime = now();
 
     Vector<EventEntry*> cancelationEvents;
     connection->inputState.synthesizeCancelationEvents(currentTime,
@@ -2459,7 +2464,8 @@ int32_t InputDispatcher::injectInputEvent(const InputEvent* event,
             event->getType(), injectorPid, injectorUid, syncMode, timeoutMillis, policyFlags);
 #endif
 
-    nsecs_t endTime = now() + milliseconds_to_nanoseconds(timeoutMillis);
+    std::chrono::nanoseconds endTime =
+        now() + std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeoutMillis));
 
     policyFlags |= POLICY_FLAG_INJECTED;
     if (hasInjectionPermission(injectorPid, injectorUid)) {
@@ -2509,12 +2515,12 @@ int32_t InputDispatcher::injectInputEvent(const InputEvent* event,
         }
 
         if (!(policyFlags & POLICY_FLAG_FILTERED)) {
-            nsecs_t eventTime = motionEvent->getEventTime();
+            std::chrono::nanoseconds eventTime = motionEvent->getEventTime();
             mPolicy->interceptMotionBeforeQueueing(eventTime, /*byref*/ policyFlags);
         }
 
         mLock.lock();
-        const nsecs_t* sampleEventTimes = motionEvent->getSampleEventTimes();
+        const std::chrono::nanoseconds* sampleEventTimes = motionEvent->getSampleEventTimes();
         const PointerCoords* samplePointerCoords = motionEvent->getSamplePointerCoords();
         firstInjectedEntry = new MotionEntry(*sampleEventTimes,
                 motionEvent->getDeviceId(), motionEvent->getSource(), policyFlags,
@@ -2581,8 +2587,8 @@ int32_t InputDispatcher::injectInputEvent(const InputEvent* event,
                     break;
                 }
 
-                nsecs_t remainingTimeout = endTime - now();
-                if (remainingTimeout <= 0) {
+                std::chrono::nanoseconds remainingTimeout = endTime - now();
+                if (remainingTimeout <= std::chrono::nanoseconds(0)) {
 #if DEBUG_INJECTION
                     ALOGD("injectInputEvent - Timed out waiting for injection result "
                             "to become available.");
@@ -2601,8 +2607,8 @@ int32_t InputDispatcher::injectInputEvent(const InputEvent* event,
                     ALOGD("injectInputEvent - Waiting for %d pending foreground dispatches.",
                             injectionState->pendingForegroundDispatches);
 #endif
-                    nsecs_t remainingTimeout = endTime - now();
-                    if (remainingTimeout <= 0) {
+                    std::chrono::nanoseconds remainingTimeout = endTime - now();
+                    if (remainingTimeout <= std::chrono::nanoseconds(0)) {
 #if DEBUG_INJECTION
                     ALOGD("injectInputEvent - Timed out waiting for pending foreground "
                             "dispatches to finish.");
@@ -2990,7 +2996,7 @@ void InputDispatcher::dumpDispatchStateLocked(String8& dump) {
         appendFormat(dump, INDENT "FocusedApplication: name='%s', dispatchingTimeout=%0.3fms\n",
                 c_str(mFocusedApplicationHandle->getName()),
                 mFocusedApplicationHandle->getDispatchingTimeout(
-                        DEFAULT_INPUT_DISPATCHING_TIMEOUT) / 1000000.0);
+                    std::chrono::nanoseconds(DEFAULT_INPUT_DISPATCHING_TIMEOUT)) / 1000000.0);
     } else {
         dump.append(INDENT "FocusedApplication: <null>\n");
     }
@@ -3056,7 +3062,7 @@ void InputDispatcher::dumpDispatchStateLocked(String8& dump) {
         dump.append(INDENT "MonitoringChannels: <none>\n");
     }
 
-    nsecs_t currentTime = now();
+    std::chrono::nanoseconds currentTime = now();
 
     if (!mInboundQueue.isEmpty()) {
         appendFormat(dump, INDENT "InboundQueue: length=%u\n", mInboundQueue.count());
@@ -3200,7 +3206,7 @@ status_t InputDispatcher::unregisterInputChannelLocked(const sp<InputChannel>& i
 
     mLooper->removeFd(inputChannel->getFd());
 
-    nsecs_t currentTime = now();
+    std::chrono::nanoseconds currentTime = now();
     abortBrokenDispatchCycleLocked(currentTime, connection, notify);
 
     runCommandsLockedInterruptible();
@@ -3231,7 +3237,7 @@ ssize_t InputDispatcher::getConnectionIndexLocked(const sp<InputChannel>& inputC
 }
 
 void InputDispatcher::onDispatchCycleFinishedLocked(
-        nsecs_t currentTime, const sp<Connection>& connection, uint32_t seq, bool handled) {
+        std::chrono::nanoseconds currentTime, const sp<Connection>& connection, uint32_t seq, bool handled) {
     CommandEntry* commandEntry = postCommandLocked(
             & InputDispatcher::doDispatchCycleFinishedLockedInterruptible);
     commandEntry->connection = connection;
@@ -3241,7 +3247,7 @@ void InputDispatcher::onDispatchCycleFinishedLocked(
 }
 
 void InputDispatcher::onDispatchCycleBrokenLocked(
-        nsecs_t currentTime, const sp<Connection>& connection) {
+        std::chrono::nanoseconds currentTime, const sp<Connection>& connection) {
     ALOGE("channel '%s' ~ Channel is unrecoverably broken and will be disposed!",
             connection->getInputChannelName());
 
@@ -3251,11 +3257,11 @@ void InputDispatcher::onDispatchCycleBrokenLocked(
 }
 
 void InputDispatcher::onANRLocked(
-        nsecs_t currentTime, const sp<InputApplicationHandle>& applicationHandle,
+        std::chrono::nanoseconds currentTime, const sp<InputApplicationHandle>& applicationHandle,
         const sp<InputWindowHandle>& windowHandle,
-        nsecs_t eventTime, nsecs_t waitStartTime, const char* reason) {
-    float dispatchLatency = (currentTime - eventTime) * 0.000001f;
-    float waitDuration = (currentTime - waitStartTime) * 0.000001f;
+        std::chrono::nanoseconds eventTime, std::chrono::nanoseconds waitStartTime, const char* reason) {
+    float dispatchLatency = (currentTime - eventTime).count() * 0.000001f;
+    float waitDuration = (currentTime - waitStartTime).count() * 0.000001f;
     ALOGI("Application is not responding: %s.  "
             "It has been %0.1fms since event, %0.1fms since wait started.  Reason: %s",
             c_str(getApplicationWindowLabelLocked(applicationHandle, windowHandle)),
@@ -3309,7 +3315,7 @@ void InputDispatcher::doNotifyANRLockedInterruptible(
         CommandEntry* commandEntry) {
     mLock.unlock();
 
-    nsecs_t newTimeout = mPolicy->notifyANR(
+    std::chrono::nanoseconds newTimeout = mPolicy->notifyANR(
             commandEntry->inputApplicationHandle, commandEntry->inputWindowHandle);
 
     mLock.lock();
@@ -3328,14 +3334,14 @@ void InputDispatcher::doInterceptKeyBeforeDispatchingLockedInterruptible(
 
     mLock.unlock();
 
-    nsecs_t delay = mPolicy->interceptKeyBeforeDispatching(commandEntry->inputWindowHandle,
+    std::chrono::nanoseconds delay = mPolicy->interceptKeyBeforeDispatching(commandEntry->inputWindowHandle,
             &event, entry->policyFlags);
 
     mLock.lock();
 
-    if (delay < 0) {
+    if (delay < std::chrono::nanoseconds(0)) {
         entry->interceptKeyResult = KeyEntry::INTERCEPT_KEY_RESULT_SKIP;
-    } else if (!delay) {
+    } else if (!delay.count()) {
         entry->interceptKeyResult = KeyEntry::INTERCEPT_KEY_RESULT_CONTINUE;
     } else {
         entry->interceptKeyResult = KeyEntry::INTERCEPT_KEY_RESULT_TRY_AGAIN_LATER;
@@ -3347,15 +3353,15 @@ void InputDispatcher::doInterceptKeyBeforeDispatchingLockedInterruptible(
 void InputDispatcher::doDispatchCycleFinishedLockedInterruptible(
         CommandEntry* commandEntry) {
     sp<Connection> connection = commandEntry->connection;
-    nsecs_t finishTime = commandEntry->eventTime;
+    std::chrono::nanoseconds finishTime = commandEntry->eventTime;
     uint32_t seq = commandEntry->seq;
     bool handled = commandEntry->handled;
 
     // Handle post-event policy actions.
     DispatchEntry* dispatchEntry = connection->findWaitQueueEntry(seq);
     if (dispatchEntry) {
-        nsecs_t eventDuration = finishTime - dispatchEntry->deliveryTime;
-        if (eventDuration > SLOW_EVENT_PROCESSING_WARNING_TIMEOUT) {
+        std::chrono::nanoseconds eventDuration = finishTime - dispatchEntry->deliveryTime;
+        if (eventDuration > std::chrono::nanoseconds(SLOW_EVENT_PROCESSING_WARNING_TIMEOUT)) {
             String8 msg;
             appendFormat(msg, "Window '%s' spent %0.1fms processing the last input event: ",
                     connection->getWindowName(), eventDuration * 0.000001f);
@@ -3585,8 +3591,8 @@ void InputDispatcher::initializeKeyEvent(KeyEvent* event, const KeyEntry* entry)
             entry->downTime, entry->eventTime);
 }
 
-void InputDispatcher::updateDispatchStatisticsLocked(nsecs_t currentTime, const EventEntry* entry,
-        int32_t injectionResult, nsecs_t timeSpentWaitingForApplication) {
+void InputDispatcher::updateDispatchStatisticsLocked(std::chrono::nanoseconds currentTime, const EventEntry* entry,
+        int32_t injectionResult, std::chrono::nanoseconds timeSpentWaitingForApplication) {
     // TODO Write some statistics about how long we spend waiting.
 }
 
@@ -3646,7 +3652,7 @@ void InputDispatcher::InjectionState::release() {
 
 // --- InputDispatcher::EventEntry ---
 
-InputDispatcher::EventEntry::EventEntry(int32_t type, nsecs_t eventTime, uint32_t policyFlags) :
+InputDispatcher::EventEntry::EventEntry(int32_t type, std::chrono::nanoseconds eventTime, uint32_t policyFlags) :
         refCount(1), type(type), eventTime(eventTime), policyFlags(policyFlags),
         injectionState(NULL), dispatchInProgress(false) {
 }
@@ -3674,7 +3680,7 @@ void InputDispatcher::EventEntry::releaseInjectionState() {
 
 // --- InputDispatcher::ConfigurationChangedEntry ---
 
-InputDispatcher::ConfigurationChangedEntry::ConfigurationChangedEntry(nsecs_t eventTime) :
+InputDispatcher::ConfigurationChangedEntry::ConfigurationChangedEntry(std::chrono::nanoseconds eventTime) :
         EventEntry(TYPE_CONFIGURATION_CHANGED, eventTime, 0) {
 }
 
@@ -3688,7 +3694,7 @@ void InputDispatcher::ConfigurationChangedEntry::appendDescription(String8& msg)
 
 // --- InputDispatcher::DeviceResetEntry ---
 
-InputDispatcher::DeviceResetEntry::DeviceResetEntry(nsecs_t eventTime, int32_t deviceId) :
+InputDispatcher::DeviceResetEntry::DeviceResetEntry(std::chrono::nanoseconds eventTime, int32_t deviceId) :
         EventEntry(TYPE_DEVICE_RESET, eventTime, 0),
         deviceId(deviceId) {
 }
@@ -3703,10 +3709,10 @@ void InputDispatcher::DeviceResetEntry::appendDescription(String8& msg) const {
 
 // --- InputDispatcher::KeyEntry ---
 
-InputDispatcher::KeyEntry::KeyEntry(nsecs_t eventTime,
+InputDispatcher::KeyEntry::KeyEntry(std::chrono::nanoseconds eventTime,
         int32_t deviceId, uint32_t source, uint32_t policyFlags, int32_t action,
         int32_t flags, int32_t keyCode, int32_t scanCode, int32_t metaState,
-        int32_t repeatCount, nsecs_t downTime) :
+        int32_t repeatCount, std::chrono::nanoseconds downTime) :
         EventEntry(TYPE_KEY, eventTime, policyFlags),
         deviceId(deviceId), source(source), action(action), flags(flags),
         keyCode(keyCode), scanCode(scanCode), metaState(metaState),
@@ -3729,17 +3735,17 @@ void InputDispatcher::KeyEntry::recycle() {
     dispatchInProgress = false;
     syntheticRepeat = false;
     interceptKeyResult = KeyEntry::INTERCEPT_KEY_RESULT_UNKNOWN;
-    interceptKeyWakeupTime = 0;
+    interceptKeyWakeupTime = std::chrono::nanoseconds(0);
 }
 
 
 // --- InputDispatcher::MotionEntry ---
 
-InputDispatcher::MotionEntry::MotionEntry(nsecs_t eventTime,
+InputDispatcher::MotionEntry::MotionEntry(std::chrono::nanoseconds eventTime,
         int32_t deviceId, uint32_t source, uint32_t policyFlags, int32_t action, int32_t flags,
         int32_t metaState, int32_t buttonState,
         int32_t edgeFlags, float xPrecision, float yPrecision,
-        nsecs_t downTime, uint32_t pointerCount,
+        std::chrono::nanoseconds downTime, uint32_t pointerCount,
         const PointerProperties* pointerProperties, const PointerCoords* pointerCoords) :
         EventEntry(TYPE_MOTION, eventTime, policyFlags),
         eventTime(eventTime),
@@ -4005,7 +4011,7 @@ void InputDispatcher::InputState::MotionMemento::setPointers(const MotionEntry* 
     }
 }
 
-void InputDispatcher::InputState::synthesizeCancelationEvents(nsecs_t currentTime,
+void InputDispatcher::InputState::synthesizeCancelationEvents(std::chrono::nanoseconds currentTime,
         Vector<EventEntry*>& outEvents, const CancelationOptions& options) {
     for (size_t i = 0; i < mKeyMementos.size(); i++) {
         const KeyMemento& memento = mKeyMementos.itemAt(i);

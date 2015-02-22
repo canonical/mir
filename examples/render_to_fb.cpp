@@ -67,7 +67,8 @@ void render_loop(mir::Server& server)
 
             gl_animation.render_gl();
 
-            buffer.post_update();
+            buffer.gl_swap_buffers();
+            buffer.flip();
         });
 
         gl_animation.step();

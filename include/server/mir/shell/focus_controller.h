@@ -27,14 +27,17 @@ namespace scene { class Session; }
 
 namespace shell
 {
-
+// TODO I don't think this interface serves a meaningful purpose
+// TODO (It is referenced by a couple of example WindowManagers, and
+// TODO to get the active session in unity-system-compositor.)
+// TODO I think there's a better approach possible.
 class FocusController
 {
 public:
     virtual ~FocusController() = default;
 
-    virtual void focus_next() = 0;
     virtual std::weak_ptr<scene::Session> focussed_application() const = 0;
+    virtual void focus_next() = 0;
     virtual void set_focus_to(std::shared_ptr<scene::Session> const& focus) = 0;
 
 protected:

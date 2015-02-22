@@ -128,10 +128,20 @@ TEST_F(PromptSessionManager, notifies_provider_of_start_and_stop)
     auto const prompt_session = session_manager.start_prompt_session_for(helper, parameters);
 
     EXPECT_CALL(prompt_session_listener, stopping(Eq(prompt_session))).Times(1);
-    session_manager.stop_prompt_session(prompt_session);
 
-    // Need to verify explicitly as we see unmatched callbacks during teardown of fixture
-    Mock::VerifyAndClearExpectations(&prompt_session_listener);
+    session_manager.stop_prompt_session(prompt_session);
+}
+
+TEST_F(PromptSessionManager, notifies_provider_of_suspend_and_resume)
+{
+    InSequence seq;
+    EXPECT_CALL(prompt_session_listener, suspending(_)).Times(1);
+
+    session_manager.suspend_prompt_session(prompt_session);
+
+    EXPECT_CALL(prompt_session_listener, resuming(Eq(prompt_session))).Times(1);
+
+    session_manager.resume_prompt_session(prompt_session);
 }
 
 TEST_F(PromptSessionManager, sets_helper_for)

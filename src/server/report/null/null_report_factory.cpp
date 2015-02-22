@@ -25,6 +25,7 @@
 #include "display_report.h"
 #include "input_report.h"
 #include "scene_report.h"
+#include "mir/logging/null_shared_library_prober_report.h"
 
 std::shared_ptr<mir::compositor::CompositorReport> mir::report::NullReportFactory::create_compositor_report()
 {
@@ -61,9 +62,19 @@ std::shared_ptr<mir::input::InputReport> mir::report::NullReportFactory::create_
     return std::make_shared<null::InputReport>();
 }
 
+std::shared_ptr<mir::SharedLibraryProberReport> mir::report::NullReportFactory::create_shared_library_prober_report()
+{
+    return std::make_shared<logging::NullSharedLibraryProberReport>();
+}
+
 std::shared_ptr<mir::compositor::CompositorReport> mir::report::null_compositor_report()
 {
     return NullReportFactory{}.create_compositor_report();
+}
+
+std::shared_ptr<mir::SharedLibraryProberReport> mir::report::null_shared_library_prober_report()
+{
+    return NullReportFactory{}.create_shared_library_prober_report();
 }
 
 std::shared_ptr<mir::graphics::DisplayReport> mir::report::null_display_report()

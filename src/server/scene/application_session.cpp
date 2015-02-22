@@ -16,14 +16,19 @@
  * Authored by: Robert Carr <racarr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "application_session.h"
+#include "snapshot_strategy.h"
+#include "default_session_container.h"
+
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
 #include "mir/scene/surface_coordinator.h"
-#include "snapshot_strategy.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/session_listener.h"
+#include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
-#include "default_session_container.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -37,6 +42,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
+namespace mev = mir::events;
 
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
@@ -71,12 +77,25 @@ mf::SurfaceId ms::ApplicationSession::next_id()
     return mf::SurfaceId(next_surface_id.fetch_add(1));
 }
 
-mf::SurfaceId ms::ApplicationSession::create_surface(const SurfaceCreationParameters& params)
+mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters const& the_params)
 {
     auto const id = next_id();
 
+    auto params = the_params;
+
+    if (params.parent_id.is_set())
+        params.parent = checked_find(the_params.parent_id.value())->second;
+
     auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
     auto surf = surface_coordinator->add_surface(params, this);
+
+    if (params.state.is_set())
+        surf->configure(mir_surface_attrib_state, params.state.value());
+    if (params.type.is_set())
+        surf->configure(mir_surface_attrib_type, params.type.value());
+    if (params.preferred_orientation.is_set())
+        surf->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation.value());
+
     surf->add_observer(observer);
 
     {
@@ -99,6 +118,11 @@ ms::ApplicationSession::Surfaces::const_iterator ms::ApplicationSession::checked
 }
 
 std::shared_ptr<mf::Surface> ms::ApplicationSession::get_surface(mf::SurfaceId id) const
+{
+    return surface(id);
+}
+
+std::shared_ptr<ms::Surface> ms::ApplicationSession::surface(mf::SurfaceId id) const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 
@@ -187,18 +211,20 @@ void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 void ms::ApplicationSession::start_prompt_session()
 {
     // All sessions which are part of the prompt session get this event.
-    MirEvent start_event;
-    memset(&start_event, 0, sizeof start_event);
-    start_event.type = mir_event_type_prompt_session_state_change;
-    start_event.prompt_session.new_state = mir_prompt_session_state_started;
-    event_sink->handle_event(start_event);
+    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_started));
 }
 
 void ms::ApplicationSession::stop_prompt_session()
 {
-    MirEvent stop_event;
-    memset(&stop_event, 0, sizeof stop_event);
-    stop_event.type = mir_event_type_prompt_session_state_change;
-    stop_event.prompt_session.new_state = mir_prompt_session_state_stopped;
-    event_sink->handle_event(stop_event);
+    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_stopped));
+}
+
+void ms::ApplicationSession::suspend_prompt_session()
+{
+    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_suspended));
+}
+
+void ms::ApplicationSession::resume_prompt_session()
+{
+    start_prompt_session();
 }

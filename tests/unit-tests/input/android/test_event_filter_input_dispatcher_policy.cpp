@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir/input/event_filter.h"
 #include "src/server/input/android/event_filter_dispatcher_policy.h"
 
@@ -61,7 +63,7 @@ TEST(EventFilterDispatcherPolicy, motion_events_are_allowed_to_pass_to_clients)
     mia::EventFilterDispatcherPolicy policy(mt::fake_shared(filter), true);
 
     uint32_t policy_flags;
-    policy.interceptMotionBeforeQueueing(0, policy_flags);
+    policy.interceptMotionBeforeQueueing(std::chrono::nanoseconds(0), policy_flags);
 
     // All motion events are allowed. Of course they could later be removed by the input filter.
     EXPECT_TRUE(policy_flags & droidinput::POLICY_FLAG_PASS_TO_USER);

@@ -16,6 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test_doubles/mock_rpc_report.h"
 #include "mir_test_doubles/null_client_event_sink.h"
@@ -25,22 +27,27 @@
 #include "src/client/lifecycle_control.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
+#include "mir/dispatch/dispatchable.h"
+#include "mir/dispatch/simple_dispatch_thread.h"
 
 #include <thread>
 
 namespace mtd = mir::test::doubles;
+namespace mclr = mir::client::rpc;
+namespace md = mir::dispatch;
 
 mir::test::TestProtobufClient::TestProtobufClient(
     std::string socket_file,
     int timeout_ms) :
     rpc_report(std::make_shared<testing::NiceMock<doubles::MockRpcReport>>()),
-    channel(mir::client::rpc::make_rpc_channel(
+    channel(mclr::make_rpc_channel(
         socket_file,
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mtd::NullClientEventSink>())),
+    eventloop{std::make_shared<md::SimpleDispatchThread>(std::dynamic_pointer_cast<md::Dispatchable>(channel))},
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),

@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "android_input_receiver_thread.h"
 #include "android_input_receiver.h"
 
@@ -24,7 +26,7 @@
 namespace mircva = mir::input::receiver::android;
 
 mircva::InputReceiverThread::InputReceiverThread(std::shared_ptr<mircva::InputReceiver> const& receiver,
-                                                std::function<void(MirEvent*)> const& event_handling_callback)
+                                                 std::function<void(MirEvent*)> const& event_handling_callback)
   : receiver(receiver),
     handler(event_handling_callback),
     running(false)

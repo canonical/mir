@@ -19,15 +19,17 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 
-#include "src/client/client_platform_factory.h"
-#include "src/client/client_platform.h"
-#include "src/client/client_buffer_factory.h"
+#include "src/include/client/mir/client_platform_factory.h"
+#include "src/include/client/mir/client_platform.h"
+#include "src/include/client/mir/client_buffer_factory.h"
 
 #include "mir_test/validity_matchers.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_client_connection_configuration.h"
+#include "mir_test_framework/any_surface.h"
+#include "mir_test_doubles/stub_client_buffer_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -38,6 +40,7 @@
 
 namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -58,20 +61,10 @@ bool should_fail()
     return (name & failure_set);
 }
 
-class StubClientBufferFactory : public mir::client::ClientBufferFactory
-{
-    std::shared_ptr<mir::client::ClientBuffer> create_buffer(const std::shared_ptr<MirBufferPackage>&,
-                                                             mir::geometry::Size,
-                                                             MirPixelFormat)
-    {
-        return std::shared_ptr<mir::client::ClientBuffer>{};
-    }
-};
-
 template<Method failure_set>
 class ConfigurableFailurePlatform : public mir::client::ClientPlatform
 {
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mir::client::ClientSurface *)
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mir::client::EGLNativeSurface *)
     {
         if (should_fail<Method::create_egl_native_window, failure_set>())
         {
@@ -79,6 +72,16 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
         }
         return std::shared_ptr<EGLNativeWindowType>{};
     }
+
+    void populate(MirPlatformPackage&) const override
+    {
+    }
+
+    MirPlatformMessage* platform_operation(MirPlatformMessage const*) override
+    {
+        return nullptr;
+    }
+
     MirPlatformType platform_type() const
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
@@ -90,7 +93,7 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
-        return std::make_shared<StubClientBufferFactory>();
+        return std::make_shared<mtd::StubClientBufferFactory>();
     }
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
     {
@@ -184,16 +187,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
     ASSERT_THAT(connection, IsValid());
 
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
-    auto surface = mir_connection_create_surface_sync(connection, &request_params);
+    auto surface = mtf::make_any_surface(connection);
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
@@ -219,16 +213,8 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
     ASSERT_THAT(connection, IsValid());
 
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
+    auto surface = mtf::make_any_surface(connection);
 
-    auto surface = mir_connection_create_surface_sync(connection, &request_params);
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
@@ -248,16 +234,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
 
     ASSERT_THAT(connection, IsValid());
 
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
-    auto surface = mir_connection_create_surface_sync(connection, &request_params);
+    auto surface = mtf::make_any_surface(connection);
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
@@ -275,54 +252,34 @@ TEST_F(ClientLibraryErrorsDeathTest, createing_surface_on_garbage_connection_is_
 
     auto connection = mir_connect_sync("garbage", __PRETTY_FUNCTION__);
 
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
     ASSERT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_DEATH(mir_connection_create_surface_sync(connection, &request_params), "");
+    EXPECT_DEATH(
+        mtf::make_any_surface(connection), "");
+
+    mir_connection_release(connection);
 }
 
 
 TEST_F(ClientLibraryErrorsDeathTest, creating_surface_synchronosly_on_malconstructed_connection_is_fatal)
 {
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
     mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::the_client_platform_factory>> stubby;
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     ASSERT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_DEATH(mir_connection_create_surface_sync(connection, &request_params), "");
+    EXPECT_DEATH(mtf::make_any_surface(connection), "");
+
+    mir_connection_release(connection);
 }
 
 TEST_F(ClientLibraryErrorsDeathTest, creating_surface_synchronosly_on_invalid_connection_is_fatal)
 {
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
     mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_client_platform>> stubby;
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     ASSERT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_DEATH(mir_connection_create_surface_sync(connection, &request_params), "");
+    EXPECT_DEATH(mtf::make_any_surface(connection), "");
+
+    mir_connection_release(connection);
 }

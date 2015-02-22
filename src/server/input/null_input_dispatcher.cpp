@@ -16,15 +16,17 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include "null_input_dispatcher.h"
 
 namespace mi = mir::input;
 
-void mi::NullInputDispatcher::configuration_changed(nsecs_t /*when*/)
+void mi::NullInputDispatcher::configuration_changed(std::chrono::nanoseconds /*when*/)
 {
 }
 
-void mi::NullInputDispatcher::device_reset(int32_t /*device_id*/, nsecs_t /*when*/)
+void mi::NullInputDispatcher::device_reset(int32_t /*device_id*/, std::chrono::nanoseconds /*when*/)
 {
 }
 

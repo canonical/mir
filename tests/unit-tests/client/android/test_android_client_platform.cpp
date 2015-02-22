@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/client/client_platform.h"
-#include "src/client/android/client_platform_factory.h"
+#include "mir/client_platform.h"
 #include "mir_test_doubles/mock_client_context.h"
-#include "mir_test_doubles/mock_client_surface.h"
+#include "mir_test_doubles/mock_egl_native_surface.h"
+#include "mir_test_framework/client_platform_factory.h"
 
 #include <EGL/egl.h>
 
@@ -28,25 +28,22 @@
 namespace mcl = mir::client;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
+namespace mtf = mir_test_framework;
 
 TEST(AndroidClientPlatformTest, egl_native_display_is_egl_default_display)
 {
-    mtd::MockClientContext context;
-    mcl::android::ClientPlatformFactory factory;
-    mtd::MockClientSurface surface;
-    auto platform = factory.create_client_platform(&context);
-    auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
+    mtd::MockEGLNativeSurface surface;
+    auto platform = mtf::create_android_client_platform();
+    auto mock_egl_native_surface = std::make_shared<mtd::MockEGLNativeSurface>();
     auto native_display = platform->create_egl_native_display();
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, *native_display);
 }
 
 TEST(AndroidClientPlatformTest, egl_native_window_is_set)
 {
-    mtd::MockClientContext context;
-    mcl::android::ClientPlatformFactory factory;
-    mtd::MockClientSurface surface;
-    auto platform = factory.create_client_platform(&context);
-    auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
+    mtd::MockEGLNativeSurface surface;
+    auto platform = mtf::create_android_client_platform();
+    auto mock_egl_native_surface = std::make_shared<mtd::MockEGLNativeSurface>();
     auto egl_native_window = platform->create_egl_native_window(&surface);
     EXPECT_NE(nullptr, egl_native_window);
 }

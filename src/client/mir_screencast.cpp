@@ -17,70 +17,28 @@
  */
 
 #include "mir_screencast.h"
+#include "client_buffer_stream_factory.h"
+#include "client_buffer_stream.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
-#include "egl_native_window_factory.h"
+#include "mir/egl_native_window_factory.h"
 
 #include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
+namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
-
-namespace
-{
-
-void null_callback(MirScreencast*, void*) {}
-
-void populate_buffer_package(
-    MirBufferPackage& buffer_package,
-    mir::protobuf::Buffer const& protobuf_buffer)
-{
-    if (!protobuf_buffer.has_error())
-    {
-        buffer_package.data_items = protobuf_buffer.data_size();
-        for (int i = 0; i != protobuf_buffer.data_size(); ++i)
-        {
-            buffer_package.data[i] = protobuf_buffer.data(i);
-        }
-
-        buffer_package.fd_items = protobuf_buffer.fd_size();
-
-        for (int i = 0; i != protobuf_buffer.fd_size(); ++i)
-        {
-            buffer_package.fd[i] = protobuf_buffer.fd(i);
-        }
-
-        buffer_package.stride = protobuf_buffer.stride();
-        buffer_package.flags = protobuf_buffer.flags();
-        buffer_package.width = protobuf_buffer.width();
-        buffer_package.height = protobuf_buffer.height();
-    }
-    else
-    {
-        buffer_package.data_items = 0;
-        buffer_package.fd_items = 0;
-        buffer_package.stride = 0;
-        buffer_package.flags = 0;
-        buffer_package.width = 0;
-        buffer_package.height = 0;
-    }
-}
-
-}
 
 MirScreencast::MirScreencast(
     geom::Rectangle const& region,
     geom::Size const& size,
     MirPixelFormat pixel_format,
     mir::protobuf::DisplayServer& server,
-    std::shared_ptr<mcl::EGLNativeWindowFactory> const& egl_native_window_factory,
-    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
+    std::shared_ptr<mcl::ClientBufferStreamFactory> const& buffer_stream_factory,
     mir_screencast_callback callback, void* context)
     : server(server),
       output_size{size},
-      output_format{pixel_format},
-      egl_native_window_factory{egl_native_window_factory},
-      buffer_depository{factory, mir::frontend::client_buffer_cache_size}
+      buffer_stream_factory{buffer_stream_factory}
 {
     if (output_size.width.as_int()  == 0 ||
         output_size.height.as_int() == 0 ||
@@ -122,28 +80,12 @@ bool MirScreencast::valid()
     return !protobuf_screencast.has_error();
 }
 
-MirSurfaceParameters MirScreencast::get_parameters() const
-{
-    return MirSurfaceParameters{
-        "",
-        output_size.width.as_int(),
-        output_size.height.as_int(),
-        output_format,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid};
-}
-
-std::shared_ptr<mcl::ClientBuffer> MirScreencast::get_current_buffer()
-{
-    return buffer_depository.current_buffer();
-}
-
 MirWaitHandle* MirScreencast::release(
         mir_screencast_callback callback, void* context)
 {
     mir::protobuf::ScreencastId screencast_id;
     screencast_id.set_value(protobuf_screencast.screencast_id().value());
-
+    
     release_wait_handle.expect_result();
     server.release_screencast(
         nullptr,
@@ -155,53 +97,8 @@ MirWaitHandle* MirScreencast::release(
     return &release_wait_handle;
 }
 
-MirWaitHandle* MirScreencast::next_buffer(
-    mir_screencast_callback callback, void* context)
-{
-    mir::protobuf::ScreencastId screencast_id;
-    screencast_id.set_value(protobuf_screencast.screencast_id().value());
-
-    next_buffer_wait_handle.expect_result();
-    server.screencast_buffer(
-        nullptr,
-        &screencast_id,
-        &protobuf_buffer,
-        google::protobuf::NewCallback(
-            this, &MirScreencast::next_buffer_received,
-            callback, context));
-
-    return &next_buffer_wait_handle;
-}
-
-EGLNativeWindowType MirScreencast::egl_native_window()
-{
-    return *egl_native_window_;
-}
-
-void MirScreencast::request_and_wait_for_next_buffer()
-{
-    next_buffer(null_callback, nullptr)->wait_for_all();
-}
-
 void MirScreencast::request_and_wait_for_configure(MirSurfaceAttrib, int)
 {
-}
-
-void MirScreencast::process_buffer(mir::protobuf::Buffer const& buffer)
-{
-    auto buffer_package = std::make_shared<MirBufferPackage>();
-    populate_buffer_package(*buffer_package, buffer);
-
-    try
-    {
-        buffer_depository.deposit_package(buffer_package,
-                                          buffer.buffer_id(),
-                                          output_size, output_format);
-    }
-    catch (const std::runtime_error& err)
-    {
-        // TODO: Report the error
-    }
 }
 
 void MirScreencast::screencast_created(
@@ -209,8 +106,8 @@ void MirScreencast::screencast_created(
 {
     if (!protobuf_screencast.has_error())
     {
-        egl_native_window_ = egl_native_window_factory->create_egl_native_window(this);
-        process_buffer(protobuf_screencast.buffer());
+        buffer_stream = buffer_stream_factory->make_consumer_stream(server,
+            protobuf_screencast.buffer_stream(), "MirScreencast");
     }
 
     callback(this, context);
@@ -224,11 +121,7 @@ void MirScreencast::released(
     release_wait_handle.result_received();
 }
 
-void MirScreencast::next_buffer_received(
-    mir_screencast_callback callback, void* context)
+mir::client::ClientBufferStream* MirScreencast::get_buffer_stream()
 {
-    process_buffer(protobuf_buffer);
-
-    callback(this, context);
-    next_buffer_wait_handle.result_received();
+    return buffer_stream.get();
 }

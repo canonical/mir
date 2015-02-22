@@ -47,6 +47,7 @@ public:
     void attrib_changed(MirSurfaceAttrib, int) override;
     void reception_mode_set_to(input::InputReceptionMode mode) override;
     void cursor_image_set_to(graphics::CursorImage const& image) override;
+    void client_surface_close_requested() override;
 
 private:
     std::function<void()> const notify_scene_change;

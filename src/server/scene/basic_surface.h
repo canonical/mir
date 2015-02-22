@@ -54,7 +54,6 @@ class Surface;
 namespace scene
 {
 class SceneReport;
-class SurfaceConfigurator;
 
 class SurfaceObservers : public SurfaceObserver, BasicObservers<SurfaceObserver>
 {
@@ -72,6 +71,7 @@ public:
     void transformation_set_to(glm::mat4 const& t) override;
     void reception_mode_set_to(input::InputReceptionMode mode) override;
     void cursor_image_set_to(graphics::CursorImage const& image) override;
+    void client_surface_close_requested() override;
 };
 
 class BasicSurface : public Surface
@@ -84,7 +84,17 @@ public:
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<input::InputSender> const& sender,
-        std::shared_ptr<SurfaceConfigurator> const& configurator,
+        std::shared_ptr<graphics::CursorImage> const& cursor_image,
+        std::shared_ptr<SceneReport> const& report);
+
+    BasicSurface(
+        std::string const& name,
+        geometry::Rectangle rect,
+        std::weak_ptr<Surface> const& parent,
+        bool nonrectangular,
+        std::shared_ptr<compositor::BufferStream> const& buffer_stream,
+        std::shared_ptr<input::InputChannel> const& input_channel,
+        std::shared_ptr<input::InputSender> const& sender,
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
         std::shared_ptr<SceneReport> const& report);
 
@@ -124,9 +134,10 @@ public:
     void set_orientation(MirOrientation orientation) override;
     void set_transformation(glm::mat4 const&) override;
 
-    bool visible() const;
+    bool visible() const override;
     
     std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const override;
+    int buffers_ready_for_compositor(void const* compositor_id) const override;
 
     void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec) override;
@@ -142,6 +153,10 @@ public:
     void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override;
     std::shared_ptr<graphics::CursorImage> cursor_image() const override;
 
+    void request_client_surface_close() override;
+
+    std::shared_ptr<Surface> parent() const override;
+
     void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
 
@@ -155,6 +170,7 @@ private:
     MirSurfaceVisibility set_visibility(MirSurfaceVisibility v);
     int set_swap_interval(int);
     MirSurfaceFocusState set_focus_state(MirSurfaceFocusState f);
+    MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
 
     SurfaceObservers observers;
     std::mutex mutable guard;
@@ -170,12 +186,18 @@ private:
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<input::InputSender> const input_sender;
-    std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
+    std::weak_ptr<Surface> const parent_;
 
-    void initialize_attributes();
-    int attrib_values[mir_surface_attribs];
+    // Surface attributes:
+    MirSurfaceType type_ = mir_surface_type_normal;
+    MirSurfaceState state_ = mir_surface_state_restored;
+    int swapinterval_ = 1;
+    MirSurfaceFocusState focus_ = mir_surface_unfocused;
+    int dpi_ = 0;
+    MirSurfaceVisibility visibility_ = mir_surface_visibility_exposed;
+    MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
 };
 
 }

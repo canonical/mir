@@ -8,6 +8,7 @@ set(
   buffer_stream_surfaces.cpp
   gl_renderer.cpp
   gl_renderer_factory.cpp
+  gl_program_family.cpp
   multi_threaded_compositor.cpp
   occlusion.cpp
   default_configuration.cpp

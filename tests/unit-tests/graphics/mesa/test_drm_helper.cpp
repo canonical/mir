@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platform/graphics/mesa/display_helpers.h"
+#include "src/platforms/mesa/server/display_helpers.h"
 #include "mir/udev/wrapper.h"
 
 #include "mir_test_framework/udev_environment.h"
@@ -50,6 +50,7 @@ public:
 protected:       
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     mtf::UdevEnvironment fake_devices;
+    mgm::helpers::DRMHelper drm_helper;
 };
 
 }
@@ -60,6 +61,21 @@ TEST_F(DRMHelperTest, closes_drm_fd_on_exec)
 
     EXPECT_CALL(mock_drm, open(_, FlagSet(O_CLOEXEC), _));
 
-    mgm::helpers::DRMHelper drm_helper;
     drm_helper.setup(std::make_shared<mir::udev::Context>());
 }   
+
+TEST_F(DRMHelperTest, throws_if_drm_auth_magic_fails)
+{
+    using namespace testing;
+
+    drm_magic_t const magic{0x10111213};
+
+    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(), magic))
+        .WillOnce(Return(-1));
+
+    drm_helper.setup(std::make_shared<mir::udev::Context>());
+
+    EXPECT_THROW({
+        drm_helper.auth_magic(magic);
+    }, std::runtime_error);
+}

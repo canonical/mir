@@ -37,13 +37,13 @@
 namespace android {
 
 // Nanoseconds per milliseconds.
-static const nsecs_t NANOS_PER_MS = 1000000;
+static const int64_t NANOS_PER_MS = 1000000;
 
 // Threshold for determining that a pointer has stopped moving.
 // Some input devices do not send ACTION_MOVE events in the case where a pointer has
 // stopped.  We need to detect this case so that we can accurately predict the
 // velocity after the pointer starts moving again.
-static const nsecs_t ASSUME_POINTER_STOPPED_TIME = 40 * NANOS_PER_MS;
+static constexpr const std::chrono::nanoseconds ASSUME_POINTER_STOPPED_TIME = std::chrono::nanoseconds(40 * NANOS_PER_MS);
 
 
 static float vectorDot(const float* a, const float* b, uint32_t m) {
@@ -218,7 +218,7 @@ void VelocityTracker::clearPointers(const IntSet &ids) {
     mStrategy->clearPointers(ids);
 }
 
-void VelocityTracker::addMovement(nsecs_t eventTime, const IntSet &ids, const Position* positions) {
+void VelocityTracker::addMovement(std::chrono::nanoseconds eventTime, const IntSet &ids, const Position* positions) {
     if (!(mCurrentPointerIds & ids).isEmpty()
             && eventTime >= mLastEventTime + ASSUME_POINTER_STOPPED_TIME) {
 #if DEBUG_VELOCITY
@@ -305,7 +305,7 @@ void VelocityTracker::addMovement(const MotionEvent* event) {
         pointerIndex[i] = ids.indexOf(event->getPointerId(i));
     }
 
-    nsecs_t eventTime;
+    std::chrono::nanoseconds eventTime;
     Position positions[pointerCount];
 
     size_t historySize = event->getHistorySize();
@@ -347,7 +347,7 @@ bool VelocityTracker::getEstimator(uint32_t id, Estimator* outEstimator) const {
 
 // --- LeastSquaresVelocityTrackerStrategy ---
 
-const nsecs_t LeastSquaresVelocityTrackerStrategy::HORIZON;
+constexpr const std::chrono::nanoseconds LeastSquaresVelocityTrackerStrategy::HORIZON;
 const uint32_t LeastSquaresVelocityTrackerStrategy::HISTORY_SIZE;
 
 LeastSquaresVelocityTrackerStrategy::LeastSquaresVelocityTrackerStrategy(
@@ -368,7 +368,7 @@ void LeastSquaresVelocityTrackerStrategy::clearPointers(const IntSet &ids) {
     mMovements[mIndex].ids.remove(ids);
 }
 
-void LeastSquaresVelocityTrackerStrategy::addMovement(nsecs_t eventTime, const IntSet &ids,
+void LeastSquaresVelocityTrackerStrategy::addMovement(std::chrono::nanoseconds eventTime, const IntSet &ids,
         const VelocityTracker::Position* positions) {
     if (++mIndex == HISTORY_SIZE) {
         mIndex = 0;
@@ -567,7 +567,7 @@ bool LeastSquaresVelocityTrackerStrategy::getEstimator(uint32_t id,
             break;
         }
 
-        nsecs_t age = newestMovement.eventTime - movement.eventTime;
+        std::chrono::nanoseconds age = newestMovement.eventTime - movement.eventTime;
         if (age > HORIZON) {
             break;
         }
@@ -576,7 +576,7 @@ bool LeastSquaresVelocityTrackerStrategy::getEstimator(uint32_t id,
         x[m] = position.x;
         y[m] = position.y;
         w[m] = chooseWeight(index);
-        time[m] = -age * 0.000000001f;
+        time[m] = -age.count() * 0.000000001f;
         index = (index == 0 ? HISTORY_SIZE : index) - 1;
     } while (++m < HISTORY_SIZE);
 
@@ -628,7 +628,7 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(uint32_t index) const {
             return 1.0f;
         }
         uint32_t nextIndex = (index + 1) % HISTORY_SIZE;
-        float deltaMillis = (mMovements[nextIndex].eventTime- mMovements[index].eventTime)
+        float deltaMillis = (mMovements[nextIndex].eventTime- mMovements[index].eventTime).count()
                 * 0.000001f;
         if (deltaMillis < 0) {
             return 0.5f;
@@ -645,7 +645,7 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(uint32_t index) const {
         //   age 10ms: 1.0
         //   age 50ms: 1.0
         //   age 60ms: 0.5
-        float ageMillis = (mMovements[mIndex].eventTime - mMovements[index].eventTime)
+        float ageMillis = (mMovements[mIndex].eventTime - mMovements[index].eventTime).count()
                 * 0.000001f;
         if (ageMillis < 0) {
             return 0.5f;
@@ -667,7 +667,7 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(uint32_t index) const {
         //   age   0ms: 1.0
         //   age  50ms: 1.0
         //   age 100ms: 0.5
-        float ageMillis = (mMovements[mIndex].eventTime - mMovements[index].eventTime)
+        float ageMillis = (mMovements[mIndex].eventTime - mMovements[index].eventTime).count()
                 * 0.000001f;
         if (ageMillis < 50) {
             return 1.0f;
@@ -702,7 +702,7 @@ void IntegratingVelocityTrackerStrategy::clearPointers(const IntSet &ids) {
     mPointerIds.remove(ids);
 }
 
-void IntegratingVelocityTrackerStrategy::addMovement(nsecs_t eventTime, const IntSet &ids,
+void IntegratingVelocityTrackerStrategy::addMovement(std::chrono::nanoseconds eventTime, const IntSet &ids,
         const VelocityTracker::Position* positions) {
 
     {
@@ -741,7 +741,7 @@ bool IntegratingVelocityTrackerStrategy::getEstimator(uint32_t id,
 }
 
 void IntegratingVelocityTrackerStrategy::initState(State& state,
-        nsecs_t eventTime, float xpos, float ypos) const {
+        std::chrono::nanoseconds eventTime, float xpos, float ypos) const {
     state.updateTime = eventTime;
     state.degree = 0;
 
@@ -754,15 +754,15 @@ void IntegratingVelocityTrackerStrategy::initState(State& state,
 }
 
 void IntegratingVelocityTrackerStrategy::updateState(State& state,
-        nsecs_t eventTime, float xpos, float ypos) const {
-    const nsecs_t MIN_TIME_DELTA = 2 * NANOS_PER_MS;
+        std::chrono::nanoseconds eventTime, float xpos, float ypos) const {
+    const std::chrono::nanoseconds MIN_TIME_DELTA = std::chrono::nanoseconds(2 * NANOS_PER_MS);
     const float FILTER_TIME_CONSTANT = 0.010f; // 10 milliseconds
 
     if (eventTime <= state.updateTime + MIN_TIME_DELTA) {
         return;
     }
 
-    float dt = (eventTime - state.updateTime) * 0.000000001f;
+    float dt = (eventTime - state.updateTime).count() * 0.000000001f;
     state.updateTime = eventTime;
 
     float xvel = (xpos - state.xpos) / dt;
@@ -811,9 +811,9 @@ void IntegratingVelocityTrackerStrategy::populateEstimator(const State& state,
 
 // --- LegacyVelocityTrackerStrategy ---
 
-const nsecs_t LegacyVelocityTrackerStrategy::HORIZON;
+constexpr const std::chrono::nanoseconds LegacyVelocityTrackerStrategy::HORIZON;
 const uint32_t LegacyVelocityTrackerStrategy::HISTORY_SIZE;
-const nsecs_t LegacyVelocityTrackerStrategy::MIN_DURATION;
+constexpr const std::chrono::nanoseconds LegacyVelocityTrackerStrategy::MIN_DURATION;
 
 LegacyVelocityTrackerStrategy::LegacyVelocityTrackerStrategy() {
     clear();
@@ -831,7 +831,7 @@ void LegacyVelocityTrackerStrategy::clearPointers(const IntSet &ids) {
     mMovements[mIndex].ids.remove(ids);
 }
 
-void LegacyVelocityTrackerStrategy::addMovement(nsecs_t eventTime, const IntSet &ids,
+void LegacyVelocityTrackerStrategy::addMovement(std::chrono::nanoseconds eventTime, const IntSet &ids,
         const VelocityTracker::Position* positions) {
     if (++mIndex == HISTORY_SIZE) {
         mIndex = 0;
@@ -853,7 +853,7 @@ bool LegacyVelocityTrackerStrategy::getEstimator(uint32_t id,
     }
 
     // Find the oldest sample that contains the pointer and that is not older than HORIZON.
-    nsecs_t minTime = newestMovement.eventTime - HORIZON;
+    std::chrono::nanoseconds minTime = newestMovement.eventTime - HORIZON;
     uint32_t oldestIndex = mIndex;
     uint32_t numTouches = 1;
     do {
@@ -883,21 +883,21 @@ bool LegacyVelocityTrackerStrategy::getEstimator(uint32_t id,
     uint32_t samplesUsed = 0;
     const Movement& oldestMovement = mMovements[oldestIndex];
     const VelocityTracker::Position& oldestPosition = oldestMovement.getPosition(id);
-    nsecs_t lastDuration = 0;
+    std::chrono::nanoseconds lastDuration = std::chrono::nanoseconds(0);
 
     while (numTouches-- > 1) {
         if (++index == HISTORY_SIZE) {
             index = 0;
         }
         const Movement& movement = mMovements[index];
-        nsecs_t duration = movement.eventTime - oldestMovement.eventTime;
+        std::chrono::nanoseconds duration = movement.eventTime - oldestMovement.eventTime;
 
         // If the duration between samples is small, we may significantly overestimate
         // the velocity.  Consequently, we impose a minimum duration constraint on the
         // samples that we include in the calculation.
         if (duration >= MIN_DURATION) {
             const VelocityTracker::Position& position = movement.getPosition(id);
-            float scale = 1000000000.0f / duration; // one over time delta in seconds
+            float scale = 1000000000.0f / duration.count(); // one over time delta in seconds
             float vx = (position.x - oldestPosition.x) * scale;
             float vy = (position.y - oldestPosition.y) * scale;
             accumVx = (accumVx * lastDuration + vx * duration) / (duration + lastDuration);

@@ -26,7 +26,7 @@
 #include "mir/scene/legacy_scene_change_notification.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/scene/surface.h"
-#include "mir/run_mir.h"
+#include "mir/terminate_with_current_exception.h"
 #include "mir/raii.h"
 #include "mir/thread_name.h"
 
@@ -114,6 +114,7 @@ public:
         CurrentRenderingTarget target{buffer};
 
         auto display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
+        auto const comp_id = display_buffer_compositor.get();
 
         CompositorReport::SubCompositorId report_id =
             display_buffer_compositor.get();
@@ -150,9 +151,19 @@ public:
                 lock.unlock();
 
                 display_buffer_compositor->composite(
-                    scene->scene_elements_for(display_buffer_compositor.get()));
+                    scene->scene_elements_for(comp_id));
 
                 lock.lock();
+
+                /*
+                 * Note the compositor may have chosen to ignore any number
+                 * of renderables and not consumed buffers from them. So it's
+                 * important to re-count number of frames pending, separately
+                 * to the initial scene_elements_for()...
+                 */
+                int pending = scene->frames_pending(comp_id);
+                if (pending > frames_scheduled)
+                    frames_scheduled = pending;
             }
         }
     }
@@ -296,8 +307,8 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     /* Start the display buffer compositing threads */
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
-        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer, scene, report};
-        auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(thread_functor_raw);
+        auto thread_functor = std::make_unique<mc::CompositingFunctor>(
+            display_buffer_compositor_factory, buffer, scene, report);
 
         futures.push_back(thread_pool.run(std::ref(*thread_functor), &buffer));
         thread_functors.push_back(std::move(thread_functor));
