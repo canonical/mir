@@ -207,10 +207,6 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
 
     auto const buffer = pop(buffers_owned_by_client);
     ready_to_composite_queue.push_back(buffer);
-
-    int size = ready_to_composite_queue.size();
-    if (size > 1)
-       fprintf(stderr, "Read size is now %d\n", size);
 }
 
 std::shared_ptr<mg::Buffer>
