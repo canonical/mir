@@ -98,6 +98,7 @@ mc::BufferQueue::BufferQueue(
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
+      client_keeping_up{true},
       the_properties{props},
       force_new_compositor_buffer{false},
       callbacks_allowed{true},
@@ -145,13 +146,7 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
 
     pending_client_notifications.push_back(std::move(complete));
 
-    /*
-     * If the client is keeping up and the ready queue is not empty, then
-     * don't give it another buffer just yet. Doing so would create unnecessary
-     * visible lag. This way we get the low latency of double buffers no matter
-     * what nbuffers is.
-     */
-    if (!ready_to_composite_queue.empty())
+    if (client_keeping_up && !ready_to_composite_queue.empty())
         return;
 
     if (!free_buffers.empty())
@@ -221,7 +216,8 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_buffer_users.push_back(user_id);
     }
 
-    if (ready_to_composite_queue.empty())
+    client_keeping_up = !ready_to_composite_queue.empty();
+    if (!client_keeping_up)
     {
         use_current_buffer = true;
     }
@@ -230,6 +226,8 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         use_current_buffer = false;
         force_new_compositor_buffer = false;
     }
+
+    //fprintf(stderr, "Keeping up: %s\n", client_keeping_up?"Y":"n");
 
     mg::Buffer* buffer_to_release = nullptr;
     if (!use_current_buffer)
@@ -426,11 +424,6 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
-    /*
-     * Only give a buffer to the client if it's failing to keep up (the
-     * ready queue is empty). If it is keeping up then we don't want the
-     * ready queue growing beyond one element (which is visible lag).
-     */
     if (!pending_client_notifications.empty() &&
         ready_to_composite_queue.empty())
     {
