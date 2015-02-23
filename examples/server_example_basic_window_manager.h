@@ -219,7 +219,7 @@ private:
 
     std::shared_ptr<scene::Session> focused_session() const override
     {
-        return focus_controller->focussed_application().lock();
+        return focus_controller->focused_session();
     }
 
     std::shared_ptr<scene::Surface> focused_surface() const override

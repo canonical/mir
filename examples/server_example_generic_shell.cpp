@@ -147,3 +147,9 @@ void me::GenericShell::raise(std::weak_ptr<ms::Surface> const& surface)
 {
     return surface_coordinator->raise(surface);
 }
+
+auto me::GenericShell::focused_session() const
+-> std::shared_ptr<ms::Session>
+{
+    return focussed_application().lock();
+}

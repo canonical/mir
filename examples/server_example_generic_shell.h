@@ -34,11 +34,14 @@ namespace geometry { class Point; }
 namespace examples
 {
 // TODO This interface keeps changes out of the Mir API (to explore the requirement)
-class FocusController : private virtual shell::FocusController
+class FocusController :
+    // Yes, weird - but resolves common functions (Will fix when updating core Mir API)
+    private virtual shell::FocusController
 {
 public:
     using shell::FocusController::focus_next;
-    using shell::FocusController::focussed_application;
+
+    virtual auto focused_session() const -> std::shared_ptr<scene::Session> = 0;
 
     virtual void set_focus_to(
         std::shared_ptr<scene::Session> const& focus_session,
@@ -95,6 +98,8 @@ public:
     auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override;
 
     void raise(std::weak_ptr<scene::Surface> const& surface) override;
+
+    auto focused_session() const -> std::shared_ptr<scene::Session> override;
 
 private:
     void add_display(geometry::Rectangle const& area) override;
