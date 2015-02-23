@@ -32,12 +32,11 @@ namespace mir
 namespace examples
 {
 // TODO This interface keeps changes out of the Mir API (to explore the requirement)
-class FocusController : public virtual shell::FocusController
+class FocusController : private virtual shell::FocusController
 {
 public:
     using shell::FocusController::focus_next;
     using shell::FocusController::focussed_application;
-    using shell::FocusController::set_focus_to;
 
     virtual void set_focus_to(
         std::shared_ptr<scene::Session> const& focus_session,
