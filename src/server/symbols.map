@@ -1,4 +1,4 @@
-MIR_SERVER_29 {
+MIR_SERVER_30 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -226,6 +226,7 @@ MIR_SERVER_29 {
     mir::scene::SurfaceCoordinator::operator*;
     mir::scene::SurfaceCoordinator::raise*;
     mir::scene::SurfaceCoordinator::remove_surface*;
+    mir::scene::SurfaceCoordinator::surface_at*;
     mir::scene::SurfaceCoordinator::?SurfaceCoordinator*;
     mir::scene::SurfaceCoordinator::SurfaceCoordinator*;
     mir::scene::SurfaceCreationParameters::of_buffer_usage*;
@@ -735,9 +736,3 @@ MIR_SERVER_29 {
   };
  local: *;
 };
-
-MIR_SERVER_29.1 {
-  global:
-    mir::scene::SurfaceCoordinator::surface_at*;
-  local: *;
-} MIR_SERVER_29;
