@@ -48,6 +48,13 @@ struct ModuleDeleter : std::default_delete<T>
         : library{reinterpret_cast<void*>(function)}
     {
     }
+    template<typename U>
+    ModuleDeleter(ModuleDeleter<U> const& other)
+        : std::default_delete<T>{other},
+        library{other.library}
+    {
+    }
+
     detail::RefCountedLibrary library;
 };
 
@@ -55,7 +62,8 @@ struct ModuleDeleter : std::default_delete<T>
  * \brief Use UniqueModulePtr to ensure that your loadable libray outlives
  * instances created within it.
  *
- * Pass mir::from_this_library to the constructor, to increase the lifetime of your library:
+ * Use mir::make_module_ptr(...) or pass a function from your library to the
+ * constructor, to increase the lifetime of your library:
  * \code
  *  mir::UniqueModulePtr<ExampleInterface> library_entry_point()
  *  {
@@ -67,6 +75,16 @@ struct ModuleDeleter : std::default_delete<T>
  */
 template<typename T>
 using UniqueModulePtr = std::unique_ptr<T,ModuleDeleter<T>>;
+
+/*!
+ * \brief make_unique like creation function for UniqueModulePtr
+ */
+template<typename Type, typename... Args>
+auto make_module_ptr(Args&&... args)
+-> UniqueModulePtr<Type>
+{
+    return UniqueModulePtr<Type>(new Type(std::forward<Args>(args)...), &make_module_ptr<Type, Args...>);
+}
 }
 
 #endif
