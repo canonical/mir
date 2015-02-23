@@ -60,7 +60,7 @@ public:
         : display{display_},
           scene{s}
     {
-        display->for_each_display_group([this, &dbc_factory](mg::DisplayGroup& group)
+        display->for_each_display_sync_group([this, &dbc_factory](mg::DisplaySyncGroup& group)
         {
             group.for_each_display_buffer([this, &dbc_factory](mg::DisplayBuffer& display_buffer)
             {
@@ -72,7 +72,7 @@ public:
  
         auto notify = [this]()
         {
-            display->for_each_display_group([this](mg::DisplayGroup& group)
+            display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
             {
                 group.for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
                 {
@@ -84,7 +84,7 @@ public:
         };
         auto notify2 = [this](int)
         {
-            display->for_each_display_group([this](mg::DisplayGroup& group)
+            display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
             {
                 group.for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
                 {

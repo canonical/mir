@@ -352,3 +352,15 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
     
     return make_event_uptr(e);
 }
+
+mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, xkb_rule_names const& rules)
+{
+    MirEvent *e = new MirEvent;
+    memset(e, 0, sizeof (MirEvent));
+
+    e->type = mir_event_type_keymap;
+    e->keymap.surface_id = surface_id.as_value();
+    e->keymap.rules = rules;
+
+    return make_event_uptr(e);
+}

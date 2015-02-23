@@ -104,6 +104,8 @@ public:
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& ) override {}
 
     std::shared_ptr<mir::scene::Surface> parent() const override { return nullptr; }
+
+    void set_keymap(xkb_rule_names const&) {}
 };
 
 }

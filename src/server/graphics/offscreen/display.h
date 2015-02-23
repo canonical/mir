@@ -58,10 +58,10 @@ private:
     EGLDisplay egl_display;
 };
 
-class DisplayGroup : public graphics::DisplayGroup
+class DisplaySyncGroup : public graphics::DisplaySyncGroup
 {
 public:
-    DisplayGroup(std::unique_ptr<DisplayBuffer> output);
+    DisplaySyncGroup(std::unique_ptr<DisplayBuffer> output);
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const&) override;
     void post() override;
 private:
@@ -78,7 +78,7 @@ public:
             std::shared_ptr<DisplayReport> const& listener);
     ~Display() noexcept;
 
-    void for_each_display_group(std::function<void(DisplayGroup&)> const& f) override;
+    void for_each_display_sync_group(std::function<void(DisplaySyncGroup&)> const& f) override;
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override;
     void configure(graphics::DisplayConfiguration const& conf) override;
@@ -103,7 +103,7 @@ private:
     SurfacelessEGLContext const egl_context_shared;
     mutable std::mutex configuration_mutex;
     DisplayConfiguration current_display_configuration;
-    std::vector<std::unique_ptr<DisplayGroup>> display_groups;
+    std::vector<std::unique_ptr<DisplaySyncGroup>> display_sync_groups;
 };
 
 }

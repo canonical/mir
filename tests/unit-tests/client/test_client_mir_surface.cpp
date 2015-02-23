@@ -248,7 +248,7 @@ struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
 
 struct StubClientInputPlatform : public mircv::InputPlatform
 {
-    std::shared_ptr<mircv::InputReceiverThread> create_input_thread(int /* fd */, std::function<void(MirEvent*)> const& /* callback */)
+    std::shared_ptr<mircv::InputReceiverThread> create_input_thread(int /* fd */, std::shared_ptr<mircv::XKBMapper> const&, std::function<void(MirEvent*)> const& /* callback */)
     {
         return std::shared_ptr<mircv::InputReceiverThread>();
     }
@@ -256,7 +256,7 @@ struct StubClientInputPlatform : public mircv::InputPlatform
 
 struct MockClientInputPlatform : public mircv::InputPlatform
 {
-    MOCK_METHOD2(create_input_thread, std::shared_ptr<mircv::InputReceiverThread>(int, std::function<void(MirEvent*)> const&));
+    MOCK_METHOD3(create_input_thread, std::shared_ptr<mircv::InputReceiverThread>(int, std::shared_ptr<mircv::XKBMapper> const&, std::function<void(MirEvent*)> const&));
 };
 
 struct MockInputReceiverThread : public mircv::InputReceiverThread
@@ -451,7 +451,7 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_fd_when_delegate_sp
     auto mock_input_thread = std::make_shared<NiceMock<MockInputReceiverThread>>();
     MirEventDelegate delegate = {null_event_callback, nullptr};
 
-    EXPECT_CALL(*mock_input_platform, create_input_thread(_, _)).Times(1)
+    EXPECT_CALL(*mock_input_platform, create_input_thread(_, _, _)).Times(1)
         .WillOnce(Return(mock_input_thread));
     EXPECT_CALL(*mock_input_thread, start()).Times(1);
     EXPECT_CALL(*mock_input_thread, stop()).Times(1);
@@ -470,7 +470,7 @@ TEST_F(MirClientSurfaceTest, does_not_create_input_thread_when_no_delegate_speci
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
     auto mock_input_thread = std::make_shared<NiceMock<MockInputReceiverThread>>();
 
-    EXPECT_CALL(*mock_input_platform, create_input_thread(_, _)).Times(0);
+    EXPECT_CALL(*mock_input_platform, create_input_thread(_, _, _)).Times(0);
     EXPECT_CALL(*mock_input_thread, start()).Times(0);
     EXPECT_CALL(*mock_input_thread, stop()).Times(0);
 

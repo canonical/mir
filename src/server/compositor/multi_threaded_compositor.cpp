@@ -93,7 +93,7 @@ class CompositingFunctor
 public:
     CompositingFunctor(
         std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory,
-        mg::DisplayGroup& group,
+        mg::DisplaySyncGroup& group,
         std::shared_ptr<mc::Scene> const& scene,
         std::shared_ptr<CompositorReport> const& report) :
         compositor_factory{db_compositor_factory},
@@ -198,7 +198,7 @@ public:
 
 private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const compositor_factory;
-    mg::DisplayGroup& group;
+    mg::DisplaySyncGroup& group;
     std::shared_ptr<mc::Scene> const scene;
     bool running;
     int frames_scheduled;
@@ -311,10 +311,10 @@ void mc::MultiThreadedCompositor::stop()
 void mc::MultiThreadedCompositor::create_compositing_threads()
 {
     /* Start the display buffer compositing threads */
-    display->for_each_display_group([this](mg::DisplayGroup& group)
+    display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
     {
-        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, group, scene, report};
-        auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(thread_functor_raw);
+        auto thread_functor = std::make_unique<mc::CompositingFunctor>(
+            display_buffer_compositor_factory, group, scene, report);
 
         futures.push_back(thread_pool.run(std::ref(*thread_functor), &group));
         thread_functors.push_back(std::move(thread_functor));

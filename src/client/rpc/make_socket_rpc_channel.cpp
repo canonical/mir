@@ -52,11 +52,11 @@ mclr::make_rpc_channel(std::string const& name,
     if (fd_prefix.is_start_of(name))
     {
         auto const fd = atoi(name.c_str()+fd_prefix.size);
-        transport = std::unique_ptr<mclr::StreamTransport>{new mclr::StreamSocketTransport{mir::Fd{fd}}};
+        transport = std::make_unique<mclr::StreamSocketTransport>(mir::Fd{fd});
     }
     else
     {
-        transport = std::unique_ptr<mclr::StreamTransport>{new mclr::StreamSocketTransport{name}};
+        transport = std::make_unique<mclr::StreamSocketTransport>(name);
     }
     return std::make_shared<MirProtobufRpcChannel>(std::move(transport), map, disp_conf, rpc_report, lifecycle_control, event_sink);
 }

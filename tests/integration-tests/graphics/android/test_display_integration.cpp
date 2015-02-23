@@ -81,7 +81,7 @@ protected:
 
 TEST_F(AndroidDisplay, display_can_post)
 {
-    display->for_each_display_group([](mg::DisplayGroup& group) {
+    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([](mg::DisplayBuffer& buffer)
         {
             buffer.make_current();
@@ -100,7 +100,7 @@ TEST_F(AndroidDisplay, display_can_post)
 
 TEST_F(AndroidDisplay, display_can_post_overlay)
 {
-    display->for_each_display_group([](mg::DisplayGroup& group) {
+    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([](mg::DisplayBuffer& db)
         {
             db.make_current();

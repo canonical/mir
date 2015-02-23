@@ -208,7 +208,7 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
     }
 }
 
-void mga::Display::for_each_display_group(std::function<void(mg::DisplayGroup&)> const& f)
+void mga::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     update_configuration(lock);

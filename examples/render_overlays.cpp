@@ -204,7 +204,7 @@ void render_loop(mir::Server& server)
     {
         client1->update_green_channel();
         client2->update_green_channel();
-        display->for_each_display_group([&](mg::DisplayGroup& group)
+        display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group)
         {
             group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
             {

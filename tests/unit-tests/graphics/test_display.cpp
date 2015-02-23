@@ -191,7 +191,7 @@ TEST_F(DisplayTest, does_not_expose_display_buffer_for_output_with_power_mode_of
     auto display = create_display();
     int db_count{0};
 
-    display->for_each_display_group([&](mg::DisplayGroup& group) {
+    display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([&] (mg::DisplayBuffer&) { ++db_count; });
     });
     EXPECT_THAT(db_count, Eq(1));
@@ -206,7 +206,7 @@ TEST_F(DisplayTest, does_not_expose_display_buffer_for_output_with_power_mode_of
     display->configure(*conf);
 
     db_count = 0;
-    display->for_each_display_group([&](mg::DisplayGroup& group) {
+    display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([&] (mg::DisplayBuffer&) { ++db_count; });
     });
     EXPECT_THAT(db_count, Eq(0));

@@ -27,6 +27,8 @@
 
 namespace mir
 {
+namespace geometry { class Point; }
+
 namespace scene
 {
 class Surface;
@@ -34,7 +36,7 @@ class Surface;
 class SurfaceStackModel
 {
 public:
-    virtual ~SurfaceStackModel() {}
+    virtual ~SurfaceStackModel() = default;
 
     virtual void add_surface(
         std::shared_ptr<Surface> const& surface,
@@ -44,6 +46,8 @@ public:
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) = 0;
 
     virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
+
+    virtual auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> = 0;
 
 protected:
     SurfaceStackModel() = default;

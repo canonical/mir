@@ -34,7 +34,7 @@ namespace android
 class ConfigurableDisplayBuffer;
 class DisplayDevice;
 
-class DisplayGroup : public graphics::DisplayGroup
+class DisplayGroup : public graphics::DisplaySyncGroup
 {
 public:
     DisplayGroup(

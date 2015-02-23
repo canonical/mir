@@ -47,7 +47,7 @@ mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> con
         {
             // Tried to probe a SharedLibrary that isn't a platform module?
             ml::log(ml::Severity::warning,
-                    std::string{"Failed to probe module. Not a platform library? Error: "} + err.what(),
+                    std::string{"Failed to probe module. Not a platform library or incorrect ABI version? Error: "} + err.what(),
                     "Platform Probing");
         }
     }

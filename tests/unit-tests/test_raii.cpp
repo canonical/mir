@@ -179,3 +179,23 @@ TEST_F(RaiiTest, deleter_for_lambda_destroy_ptr)
 
     EXPECT_EQ(this, raii.get());
 }
+
+TEST_F(RaiiTest, paired_call_takes_std_function_refs)
+{
+    int creator_call_count = 0;
+    int deleter_call_count = 0;
+    int const expected_calls = 2;
+
+    std::function<void()> creator = [&creator_call_count] { creator_call_count++; };
+    std::function<void()> deleter = [&deleter_call_count] { deleter_call_count++; };
+
+    for (int i = 0; i < expected_calls; i++)
+    {
+        auto const raii = mir::raii::paired_calls(
+            std::ref(creator),
+            std::ref(deleter));
+    }
+
+    EXPECT_THAT(creator_call_count, Eq(expected_calls));
+    EXPECT_THAT(deleter_call_count, Eq(expected_calls));
+}

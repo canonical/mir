@@ -19,55 +19,15 @@
 #ifndef MIR_EXAMPLES_WINDOW_MANAGEMENT_H_
 #define MIR_EXAMPLES_WINDOW_MANAGEMENT_H_
 
-#include "mir/geometry/rectangles.h"
-#include "mir/shell/shell.h"
-#include "mir_toolkit/common.h"
-
-#include <memory>
-
-///\example server_example_window_management.h
-/// Demonstrate simple window management strategies
-
 namespace mir
 {
 class Server;
 
 namespace examples
 {
-class WindowManager : public virtual shell::Shell
-{
-public:
-    virtual void add_display(geometry::Rectangle const& area) = 0;
-
-    virtual void remove_display(geometry::Rectangle const& area) = 0;
-
-    virtual void click(geometry::Point cursor) = 0;
-
-    virtual void drag(geometry::Point cursor) = 0;
-
-    virtual void resize(geometry::Point cursor) = 0;
-
-    virtual void toggle(MirSurfaceState state) = 0;
-};
-
-class EventTracker;
-
-class WindowManagmentFactory
-{
-public:
-    explicit WindowManagmentFactory(Server& server) : server{server} {}
-
-    auto window_manager() -> std::shared_ptr<WindowManager>;
-
-private:
-    Server& server;
-    std::weak_ptr<WindowManager> wm;
-    std::shared_ptr<EventTracker> et;
-};
-
-extern char const* const wm_option;
-extern char const* const wm_description;
+void add_window_manager_option_to(Server& server);
 }
-}
+} // namespace mir
 
-#endif
+
+#endif // MIR_EXAMPLES_WINDOW_MANAGEMENT_H_

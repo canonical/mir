@@ -31,7 +31,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_input_sender.h"
 #include "mir_test_doubles/null_surface_configurator.h"
-#include "mir_test_doubles/null_display_group.h"
+#include "mir_test_doubles/null_display_sync_group.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -58,10 +58,10 @@ public:
     }
 };
 
-struct CountingDisplayGroup : public mtd::StubDisplayGroup
+struct CountingDisplaySyncGroup : public mtd::StubDisplaySyncGroup
 {
-    CountingDisplayGroup() :
-    mtd::StubDisplayGroup({100,100})
+    CountingDisplaySyncGroup() :
+    mtd::StubDisplaySyncGroup({100,100})
     {
     }
 
@@ -94,28 +94,19 @@ private:
 
 struct StubDisplay : public mtd::NullDisplay
 {
-    StubDisplay(mg::DisplayGroup& primary, mg::DisplayGroup& secondary)
+    StubDisplay(mg::DisplaySyncGroup& primary, mg::DisplaySyncGroup& secondary)
       : primary(primary),
         secondary(secondary)
     {
     } 
-    void for_each_display_group(std::function<void(mg::DisplayGroup&)> const& fn) override
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& fn) override
     {
         fn(primary);
         fn(secondary);
     }
 private:
-    mg::DisplayGroup& primary;
-    mg::DisplayGroup& secondary;
-};
-
-class BypassStubBuffer : public mtd::StubBuffer
-{
-public:
-    bool can_bypass() const override
-    {
-        return true;
-    }
+    mg::DisplaySyncGroup& primary;
+    mg::DisplaySyncGroup& secondary;
 };
 
 struct SurfaceStackCompositor : public testing::Test
@@ -145,9 +136,9 @@ struct SurfaceStackCompositor : public testing::Test
     std::shared_ptr<mtd::MockBufferStream> mock_buffer_stream;
     std::shared_ptr<ms::BasicSurface> stub_surface;
     ms::SurfaceCreationParameters default_params;
-    BypassStubBuffer stubbuf;
-    CountingDisplayGroup stub_primary_db;
-    CountingDisplayGroup stub_secondary_db;
+    mtd::StubBuffer stubbuf;
+    CountingDisplaySyncGroup stub_primary_db;
+    CountingDisplaySyncGroup stub_secondary_db;
     StubDisplay stub_display{stub_primary_db, stub_secondary_db};
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
         mt::fake_shared(renderer_factory),

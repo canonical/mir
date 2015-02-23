@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -29,7 +29,16 @@
 #include <memory>
 #include <unordered_map>
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-register"
+#endif
+
 #include <glib.h>
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 namespace mir
 {
@@ -65,6 +74,8 @@ GSourceHandle add_timer_gsource(
     GMainContext* main_context,
     std::shared_ptr<time::Clock> const& clock,
     std::function<void()> const& handler,
+    std::function<void()> const& lock,
+    std::function<void()> const& unlock,
     time::Timestamp target_time);
 
 class FdSources

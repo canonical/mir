@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_H_
 
 #include "null_display.h"
-#include "null_display_group.h"
+#include "null_display_sync_group.h"
 #include "stub_display_buffer.h"
 #include "stub_display_configuration.h"
 
@@ -42,7 +42,7 @@ public:
         output_rects(output_rects)
     {
         for (auto const& rect : output_rects)
-            groups.emplace_back(new StubDisplayGroup({rect}));
+            groups.emplace_back(new StubDisplaySyncGroup({rect}));
     }
 
     StubDisplay(unsigned int nbuffers) :
@@ -50,7 +50,7 @@ public:
     {
     }
 
-    void for_each_display_group(std::function<void(graphics::DisplayGroup&)> const& f) override
+    void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override
     {
         for (auto& group : groups)
             f(*group);
@@ -73,7 +73,7 @@ private:
         return rects;
     }
 
-    std::vector<std::unique_ptr<StubDisplayGroup>> groups;
+    std::vector<std::unique_ptr<StubDisplaySyncGroup>> groups;
 };
 
 }

@@ -113,8 +113,8 @@ mgm::Display::~Display()
 {
 }
 
-void mgm::Display::for_each_display_group(
-    std::function<void(graphics::DisplayGroup&)> const& f)
+void mgm::Display::for_each_display_sync_group(
+    std::function<void(graphics::DisplaySyncGroup&)> const& f)
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 

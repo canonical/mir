@@ -36,9 +36,9 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct StubDisplayGroup : mg::DisplayGroup
+struct StubDisplaySyncGroup : mg::DisplaySyncGroup
 {
-    StubDisplayGroup(geom::Size output_size, int vsync_rate_in_hz) :
+    StubDisplaySyncGroup(geom::Size output_size, int vsync_rate_in_hz) :
         vsync_rate_in_hz(vsync_rate_in_hz),
         last_sync(std::chrono::high_resolution_clock::now()),
         buffer({{0, 0}, output_size})
@@ -76,12 +76,12 @@ struct StubDisplay : public mtd::StubDisplay
     {
     }
     
-    void for_each_display_group(std::function<void(mg::DisplayGroup&)> const& exec) override
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& exec) override
     {
         exec(group);
     }
 
-    StubDisplayGroup group;
+    StubDisplaySyncGroup group;
 };
 
 }

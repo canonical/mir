@@ -43,7 +43,7 @@ class BufferObject;
 class KMSOutput;
 
 class DisplayBuffer : public graphics::DisplayBuffer,
-                      public graphics::DisplayGroup
+                      public graphics::DisplaySyncGroup
 {
 public:
     DisplayBuffer(std::shared_ptr<Platform> const& platform,

@@ -658,11 +658,11 @@ TEST_F(Display, returns_correct_dbs_with_external_and_primary_output_at_start)
 
     auto group_count = 0;
     auto db_count = 0;
-    auto db_group_counter = [&](mg::DisplayGroup& group) {
+    auto db_group_counter = [&](mg::DisplaySyncGroup& group) {
         group_count++;
         group.for_each_display_buffer([&](mg::DisplayBuffer&) {db_count++;});
     };
-    display.for_each_display_group(db_group_counter);
+    display.for_each_display_sync_group(db_group_counter);
     EXPECT_THAT(group_count, Eq(1));
     EXPECT_THAT(db_count, Eq(2));
 
@@ -672,7 +672,7 @@ TEST_F(Display, returns_correct_dbs_with_external_and_primary_output_at_start)
 
     group_count = 0;
     db_count = 0;
-    display.for_each_display_group(db_group_counter);
+    display.for_each_display_sync_group(db_group_counter);
     EXPECT_THAT(group_count, Eq(1));
     EXPECT_THAT(db_count, Eq(1));
 
@@ -682,7 +682,7 @@ TEST_F(Display, returns_correct_dbs_with_external_and_primary_output_at_start)
 
     group_count = 0;
     db_count = 0;
-    display.for_each_display_group(db_group_counter);
+    display.for_each_display_sync_group(db_group_counter);
     EXPECT_THAT(group_count, Eq(1));
     EXPECT_THAT(db_count, Eq(2));
 }
@@ -725,12 +725,12 @@ TEST_F(Display, turns_external_display_on_with_hotplug)
     //hotplug external away
     external_connected = false;
     hotplug_fn();
-    display.for_each_display_group([](mg::DisplayGroup&){});
+    display.for_each_display_sync_group([](mg::DisplaySyncGroup&){});
 
     //hotplug external back 
     external_connected = true;
     hotplug_fn();
-    display.for_each_display_group([](mg::DisplayGroup&){});
+    display.for_each_display_sync_group([](mg::DisplaySyncGroup&){});
 }
 
 TEST_F(Display, configures_external_display)

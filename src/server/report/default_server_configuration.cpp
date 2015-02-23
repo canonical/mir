@@ -37,15 +37,15 @@ std::unique_ptr<mir::report::ReportFactory> mir::DefaultServerConfiguration::rep
 
     if (opt == options::log_opt_value)
     {
-        return std::unique_ptr<mir::report::ReportFactory>(new report::LoggingReportFactory(the_logger(), the_clock()));
+        return std::make_unique<report::LoggingReportFactory>(the_logger(), the_clock());
     }
     else if (opt == options::lttng_opt_value)
     {
-        return std::unique_ptr<mir::report::ReportFactory>(new report::LttngReportFactory());
+        return std::make_unique<report::LttngReportFactory>();
     }
     else if (opt == options::off_opt_value)
     {
-        return std::unique_ptr<mir::report::ReportFactory>(new report::NullReportFactory());
+        return std::make_unique<report::NullReportFactory>();
     }
     else
     {
