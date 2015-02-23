@@ -202,12 +202,16 @@ void render_loop(mir::Server& server)
 
     while (running)
     {
-        display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
+        client1->update_green_channel();
+        client2->update_green_channel();
+        display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group)
         {
-            buffer.make_current();
-            client1->update_green_channel();
-            client2->update_green_channel();
-            buffer.post_renderables_if_optimizable(renderlist);
+            group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
+            {
+                buffer.make_current();
+                buffer.post_renderables_if_optimizable(renderlist);
+            });
+            group.post();
         });
     }
 }
