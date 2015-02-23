@@ -67,8 +67,6 @@ public:
 
     virtual void focus_next() = 0;
 
-    virtual void set_focus_to(std::shared_ptr<scene::Session> const& focus) = 0;
-
     virtual void set_focus_to(
         std::shared_ptr<scene::Session> const& focus,
         std::shared_ptr<scene::Surface> const& surface) = 0;
@@ -227,11 +225,6 @@ private:
     void focus_next() override
     {
         focus_controller->focus_next();
-    }
-
-    void set_focus_to(std::shared_ptr<scene::Session> const& focus) override
-    {
-        focus_controller->set_focus_to(focus);
     }
 
     void set_focus_to(
