@@ -114,4 +114,4 @@ f8d415af54b4a477338fb9dbe20db01aa4544029  include/server/mir/shell/host_lifecycl
 e4786cdcd111bd6270db25d40129c4e415cb4347  include/server/mir/shell/shell_wrapper.h
 114cc8c0b12ee4fd78d86c8f3309546e4dc68c9f  include/server/mir/terminate_with_current_exception.h
 1b8c2a763c8f5f00b737c3a187db2304676f8076  include/server/mir/time/alarm.h
-a134c7b86e9c3b191f1004abe7bbdceed8ac42ee  include/server/mir/time/timer.h
+1a42680df4952714537e4e7c6bb5a03bc7fa3f38  include/server/mir/time/timer.h
