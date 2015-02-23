@@ -47,6 +47,9 @@ public:
     virtual std::shared_ptr<scene::Surface> focused_surface() const = 0;
 
     virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
+private:
+    // yes clang, I mean what I said!
+    using shell::FocusController::set_focus_to;
 };
 
 class GenericShell : public virtual Shell, public virtual FocusController,
@@ -79,7 +82,7 @@ public:
         MirSurfaceAttrib attrib,
         int value) override;
 
-    using FocusController::set_focus_to;
+    using shell::FocusController::set_focus_to;
     void set_focus_to(
         std::shared_ptr<scene::Session> const& focus_session,
         std::shared_ptr<scene::Surface> const& focus_surface) override;
