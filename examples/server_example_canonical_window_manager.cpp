@@ -445,7 +445,13 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
     case mir_surface_type_freestyle:
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+    {
         tools->set_focus_to(info_for.session.lock(), surface);
+
+        SurfaceSet surfaces{begin(info_for.children), end(info_for.children)};
+        surfaces.insert(surface);
+
+        tools->raise(surfaces);
 
         // TODO There's currently no way to raise the active window tree while keeping
         // TODO the order stable or consistent with spec.
@@ -456,7 +462,7 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
 
         active_surface_ = surface;
         break;
-
+    }
     case mir_surface_type_gloss:
     case mir_surface_type_tip:          /**< AKA "tooltip"                       */
     default:

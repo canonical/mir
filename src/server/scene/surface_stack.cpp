@@ -353,6 +353,31 @@ void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
     BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
 }
 
+void ms::SurfaceStack::raise(SurfaceSet const& ss)
+{
+    bool surfaces_reordered{false};
+
+    {
+        std::unique_lock<decltype(guard)> ul(guard);
+
+        for (auto &layer : layers_by_depth)
+        {
+            auto &surfaces = layer.second;
+
+            auto const part =
+                std::stable_partition(
+                    begin(surfaces), end(surfaces),
+                    [&](std::weak_ptr<Surface> const& s) { return ss.count(s); });
+
+            if (part != end(surfaces))
+                surfaces_reordered = true;
+        }
+    }
+
+    if (surfaces_reordered)
+        observers.surfaces_reordered();
+}
+
 void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)
 {
     auto const tracker = std::make_shared<RenderingTracker>(surface);
