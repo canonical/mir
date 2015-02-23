@@ -52,6 +52,7 @@ struct MockSurfaceStackModel : public ms::SurfaceStackModel
         mir::input::InputReceptionMode input_mode));
     MOCK_METHOD1(remove_surface, void(std::weak_ptr<ms::Surface> const&));
     MOCK_METHOD1(raise, void(std::weak_ptr<ms::Surface> const&));
+    MOCK_CONST_METHOD1(surface_at, std::shared_ptr<ms::Surface>(geom::Point));
 };
 
 struct SurfaceController : testing::Test

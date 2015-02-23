@@ -122,4 +122,3 @@ void me::GenericShell::remove_display(geometry::Rectangle const& area)
 {
     window_manager->remove_display(area);
 }
-
