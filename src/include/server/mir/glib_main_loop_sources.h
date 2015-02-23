@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -74,6 +74,8 @@ GSourceHandle add_timer_gsource(
     GMainContext* main_context,
     std::shared_ptr<time::Clock> const& clock,
     std::function<void()> const& handler,
+    std::function<void()> const& lock,
+    std::function<void()> const& unlock,
     time::Timestamp target_time);
 
 class FdSources

@@ -133,6 +133,13 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
     return &ev->close_surface;
 }
 
+MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_keymap);
+
+    return &ev->keymap;
+}
+
 /* Surface event accessors */
 
 MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev)
@@ -179,6 +186,13 @@ MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev
     return ev->direction;
 }
 
+/* Keymap event accessors */
+
+void mir_keymap_event_get_rules(MirKeymapEvent const* ev, xkb_rule_names *out_names)
+{
+    expect_event_type(ev, mir_event_type_keymap);
+    *out_names = ev->rules;
+}
 
 // TODO: Until we opaquify the MirEvent structure and add
 // a ref count ref is implemented as copy.

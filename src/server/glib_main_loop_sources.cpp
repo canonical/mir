@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,11 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ *              Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
 #include "mir/glib_main_loop_sources.h"
 #include "mir/recursive_read_write_mutex.h"
 #include "mir/thread_safe_list.h"
+#include "mir/raii.h"
 
 #include <algorithm>
 #include <atomic>
@@ -233,18 +235,25 @@ md::GSourceHandle md::add_timer_gsource(
     GMainContext* main_context,
     std::shared_ptr<time::Clock> const& clock,
     std::function<void()> const& handler,
+    std::function<void()> const& lock,
+    std::function<void()> const& unlock,
     time::Timestamp target_time)
 {
     struct TimerContext
     {
         TimerContext(std::shared_ptr<time::Clock> const& clock,
                      std::function<void()> const& handler,
+                     std::function<void()> const& lock,
+                     std::function<void()> const& unlock,
                      time::Timestamp target_time)
-            : clock{clock}, handler{handler}, target_time{target_time}, enabled{true}
+            : clock{clock}, handler{handler}, lock{lock}, unlock{unlock},
+              target_time{target_time}, enabled{true}
         {
         }
         std::shared_ptr<time::Clock> clock;
         std::function<void()> handler;
+        std::function<void()> lock;
+        std::function<void()> unlock;
         time::Timestamp target_time;
         bool enabled;
         mir::RecursiveReadWriteMutex mutex;
@@ -284,6 +293,9 @@ md::GSourceHandle md::add_timer_gsource(
         {
             auto& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
 
+            // Caller may pass std::function objects to preserve locking
+            // order during callback dispatching, so aquire them first.
+            auto caller_lock = mir::raii::paired_calls(std::ref(ctx.lock), std::ref(ctx.unlock));
             RecursiveReadLock lock{ctx.mutex};
             if (ctx.enabled)
                 ctx.handler();
@@ -321,7 +333,7 @@ md::GSourceHandle md::add_timer_gsource(
     auto const timer_gsource = reinterpret_cast<TimerGSource*>(static_cast<GSource*>(gsource));
 
     timer_gsource->ctx_constructed = false;
-    new (&timer_gsource->ctx) TimerContext{clock, handler, target_time};
+    new (&timer_gsource->ctx) TimerContext{clock, handler, lock, unlock, target_time};
     timer_gsource->ctx_constructed = true;
 
     g_source_attach(gsource, main_context);

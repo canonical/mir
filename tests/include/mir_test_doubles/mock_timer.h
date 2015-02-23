@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,6 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ *              Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
 #ifndef MIR_TEST_DOUBLES_MOCK_TIMER_H_
@@ -36,11 +37,12 @@ public:
     FakeTimer(std::shared_ptr<FakeClock> const& clock);
 
     std::unique_ptr<time::Alarm> notify_in(std::chrono::milliseconds delay,
-                                           std::function<void(void)> callback) override;
+                                           std::function<void()> const& callback) override;
     std::unique_ptr<time::Alarm> notify_at(time::Timestamp time_point,
-                                           std::function<void(void)> callback) override;
-    std::unique_ptr<time::Alarm> create_alarm(std::function<void ()> callback) override;
-
+                                           std::function<void()> const& callback) override;
+    std::unique_ptr<time::Alarm> create_alarm(std::function<void()> const& callback) override;
+    std::unique_ptr<time::Alarm> create_alarm(std::function<void()> const& callback,
+        std::function<void()> const& lock, std::function<void()> const& unlock) override;
 private:
     std::shared_ptr<FakeClock> const clock;
 };

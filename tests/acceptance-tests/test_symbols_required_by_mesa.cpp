@@ -28,7 +28,7 @@ namespace mtf = mir_test_framework;
 
 TEST(SymbolsRequiredByMesa, are_exported_by_client_platform_mesa)
 {
-    auto const handle = dlopen(mtf::client_platform("mesa.so").c_str(), RTLD_LAZY);
+    auto const handle = dlopen(mtf::client_platform("mesa").c_str(), RTLD_LAZY);
     ASSERT_THAT(handle, NotNull());
 
     auto const sym = dlsym(handle, "mir_client_mesa_egl_native_display_is_valid");
