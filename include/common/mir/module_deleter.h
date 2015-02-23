@@ -76,6 +76,8 @@ struct ModuleDeleter : std::default_delete<T>
 template<typename T>
 using UniqueModulePtr = std::unique_ptr<T,ModuleDeleter<T>>;
 
+namespace
+{
 /*!
  * \brief make_unique like creation function for UniqueModulePtr
  */
@@ -84,6 +86,7 @@ auto make_module_ptr(Args&&... args)
 -> UniqueModulePtr<Type>
 {
     return UniqueModulePtr<Type>(new Type(std::forward<Args>(args)...), &make_module_ptr<Type, Args...>);
+}
 }
 }
 
