@@ -22,7 +22,7 @@
 #include "mir/input/surface.h"
 #include "mir/graphics/cursor.h"
 #include "mir/scene/observer.h"
-#include "mir/scene/surface_observer.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
 
 #include <functional>
@@ -39,7 +39,7 @@ namespace geom = mir::geometry;
 namespace
 {
 
-struct UpdateCursorOnSurfaceChanges : ms::SurfaceObserver
+struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
 {
     UpdateCursorOnSurfaceChanges(mi::CursorController* cursor_controller)
         : cursor_controller(cursor_controller)

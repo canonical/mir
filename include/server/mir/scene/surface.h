@@ -105,6 +105,8 @@ public:
     virtual int configure(MirSurfaceAttrib attrib, int value) = 0;
     // TODO a legacy of old interactions and needs removing
     virtual int query(MirSurfaceAttrib attrib) = 0;
+
+    virtual void set_keymap(xkb_rule_names const& rules) = 0;
 };
 }
 }
