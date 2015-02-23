@@ -46,6 +46,8 @@ EventUPtr make_event(frontend::SurfaceId const& surface_id, geometry::Size const
 EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value);
 // Close surface event
 EventUPtr make_event(frontend::SurfaceId const& surface_id);
+// Keymap event
+EventUPtr make_event(frontend::SurfaceId const& surface_id, xkb_rule_names const& names);
 
 // Key event
 EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
