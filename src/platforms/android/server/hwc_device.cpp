@@ -82,7 +82,7 @@ bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
 
 void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
 {
-    std::array<hwc_display_contents_1*, HWC_NUM_DISPLAY_TYPES> lists{ nullptr, nullptr, nullptr };
+    std::array<hwc_display_contents_1*, HWC_NUM_DISPLAY_TYPES> lists{{ nullptr, nullptr, nullptr }};
     std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
 
     for (auto& content : contents)
