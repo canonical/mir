@@ -142,3 +142,8 @@ auto me::GenericShell::surface_at(geometry::Point cursor) const
 {
     return surface_coordinator->surface_at(cursor);
 }
+
+void me::GenericShell::raise(std::weak_ptr<ms::Surface> const& surface)
+{
+    return surface_coordinator->raise(surface);
+}

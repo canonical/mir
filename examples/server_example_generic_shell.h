@@ -47,6 +47,8 @@ public:
     virtual std::shared_ptr<scene::Surface> focused_surface() const = 0;
 
     virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
+
+    virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
 private:
     // yes clang, I mean what I said!
     using shell::FocusController::set_focus_to;
@@ -91,6 +93,8 @@ public:
     std::shared_ptr<scene::Surface> focused_surface() const override;
 
     auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override;
+
+    void raise(std::weak_ptr<scene::Surface> const& surface) override;
 
 private:
     void add_display(geometry::Rectangle const& area) override;

@@ -19,7 +19,6 @@
 #include "server_example_canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -47,9 +46,8 @@ me::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
 {
 }
 
-me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(Tools* const tools,
-    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator) :
-    tools{tools}, surface_coordinator{surface_coordinator}
+me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(Tools* const tools) :
+    tools{tools}
 {
 }
 
@@ -452,9 +450,9 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
         // TODO There's currently no way to raise the active window tree while keeping
         // TODO the order stable or consistent with spec.
         // TODO This is definitely a frig that needs rework
-        surface_coordinator->raise(surface);
+        tools->raise(surface);
         for (auto const& child : info_for.children)
-            surface_coordinator->raise(child);
+            tools->raise(child);
 
         active_surface_ = surface;
         break;
