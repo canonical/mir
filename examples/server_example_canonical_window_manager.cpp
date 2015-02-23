@@ -19,7 +19,6 @@
 #include "server_example_canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -47,15 +46,14 @@ me::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
 {
 }
 
-me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(Tools* const tools,
-    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator) :
-    tools{tools}, surface_coordinator{surface_coordinator}
+me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(Tools* const tools) :
+    tools{tools}
 {
 }
 
 void me::CanonicalWindowManagerPolicy::click(Point cursor)
 {
-    if (auto const surface = surface_coordinator->surface_at(cursor))
+    if (auto const surface = tools->surface_at(cursor))
         select_active_surface(surface);
 
     old_cursor = cursor;
@@ -72,7 +70,7 @@ void me::CanonicalWindowManagerPolicy::handle_displays_updated(CanonicalSessionI
 
 void me::CanonicalWindowManagerPolicy::resize(Point cursor)
 {
-    select_active_surface(surface_coordinator->surface_at(old_cursor));
+    select_active_surface(tools->surface_at(old_cursor));
     resize(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
@@ -172,11 +170,28 @@ void me::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Se
 
     tools->info_for(session).surfaces++;
 
-    // TODO There's currently no way to insert surfaces into an active (or inactive)
-    // TODO window tree while keeping the order stable or consistent with spec.
-    // TODO Nor is there a way to update the "default surface" when appropriate!!
-    // TODO for now just give the surface's session focus.
-    tools->set_focus_to(session);
+    switch (surface->type())
+    {
+    case mir_surface_type_normal:       /**< AKA "regular"                       */
+    case mir_surface_type_utility:      /**< AKA "floating"                      */
+    case mir_surface_type_dialog:
+    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+    case mir_surface_type_freestyle:
+    case mir_surface_type_menu:
+    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        // TODO There's currently no way to insert surfaces into an active (or inactive)
+        // TODO window tree while keeping the order stable or consistent with spec.
+        // TODO Nor is there a way to update the "default surface" when appropriate!!
+        tools->set_focus_to(session, surface);
+        active_surface_ = surface;
+        break;
+
+    case mir_surface_type_gloss:
+    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+    default:
+        // Cannot have input focus
+        break;
+    }
 }
 
 void me::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
@@ -196,7 +211,7 @@ void me::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms:
     }
 
 
-    if (!--tools->info_for(session).surfaces && session == tools->focussed_application().lock())
+    if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
         tools->focus_next();
     }
@@ -267,7 +282,7 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
 
 void me::CanonicalWindowManagerPolicy::drag(Point cursor)
 {
-    select_active_surface(surface_coordinator->surface_at(old_cursor));
+    select_active_surface(tools->surface_at(old_cursor));
     drag(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
@@ -300,7 +315,7 @@ bool me::CanonicalWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* 
     }
     else if (action == mir_key_input_event_action_down && scan_code == KEY_F4)
     {
-        if (auto const session = tools->focussed_application().lock())
+        if (auto const session = tools->focused_session())
         {
             switch (modifiers & modifier_mask)
             {
@@ -420,14 +435,6 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
     }
 
     auto const& info_for = tools->info_for(surface);
-    tools->set_focus_to(info_for.session.lock());
-
-    // TODO There's currently no way to raise the active window tree while keeping
-    // TODO the order stable or consistent with spec.
-    // TODO This is definitely a frig that needs rework
-    surface_coordinator->raise(surface);
-    for (auto const& child : info_for.children)
-        surface_coordinator->raise(child);
 
     switch (surface->type())
     {
@@ -438,14 +445,22 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
     case mir_surface_type_freestyle:
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
-        // TODO set the input focus to this window
+        tools->set_focus_to(info_for.session.lock(), surface);
+
+        // TODO There's currently no way to raise the active window tree while keeping
+        // TODO the order stable or consistent with spec.
+        // TODO This is definitely a frig that needs rework
+        tools->raise(surface);
+        for (auto const& child : info_for.children)
+            tools->raise(child);
+
         active_surface_ = surface;
         break;
 
     case mir_surface_type_gloss:
     case mir_surface_type_tip:          /**< AKA "tooltip"                       */
     default:
-        // Cannot have input focus
+        // Cannot have input focus - try the parent
         if (auto const parent = info_for.parent.lock())
             select_active_surface(parent);
         break;
@@ -458,7 +473,7 @@ auto me::CanonicalWindowManagerPolicy::active_surface() const
     if (auto const surface = active_surface_.lock())
         return surface;
 
-    if (auto const session = tools->focussed_application().lock())
+    if (auto const session = tools->focused_session())
     {
         if (auto const surface = session->default_surface())
             return surface;

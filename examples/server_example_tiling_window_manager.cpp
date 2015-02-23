@@ -47,8 +47,9 @@ me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(Tools* const tools) :
 
 void me::TilingWindowManagerPolicy::click(Point cursor)
 {
-    if (const auto session = session_under(cursor))
-        tools->set_focus_to(session);
+    const auto session = session_under(cursor);
+    const auto surface = tools->surface_at(cursor);
+    tools->set_focus_to(session, surface);
     old_cursor = cursor;
 }
 
@@ -70,29 +71,25 @@ void me::TilingWindowManagerPolicy::resize(Point cursor)
         {
             auto const& info = tools->info_for(session);
 
-            if (resize(old_surface.lock(), cursor, old_cursor, info.tile))
+            if (resize(tools->focused_surface(), cursor, old_cursor, info.tile))
             {
-                // Still dragging the same old_surface
-            }
-            else if (resize(session->default_surface(), cursor, old_cursor, info.tile))
-            {
-                old_surface = session->default_surface();
+                // Still dragging the same surface
             }
             else
             {
-                for (auto const& ps : info.surfaces)
-                {
-                    auto const new_surface = ps.lock();
+                auto const new_surface = tools->surface_at(old_cursor);
 
+                if (new_surface && tools->info_for(new_surface).session.lock() == session)
+                {
                     if (resize(new_surface, cursor, old_cursor, info.tile))
                     {
-                        old_surface = new_surface;
-                        break;
+                        tools->set_focus_to(session, new_surface);
                     }
                 }
             }
         }
     }
+
     old_cursor = cursor;
 }
 
@@ -128,7 +125,7 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
         }
     }
 
-    if (surfaces.empty() && session == tools->focussed_application().lock())
+    if (surfaces.empty() && session == tools->focused_session())
     {
         tools->focus_next();
     }
@@ -198,28 +195,25 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
         if (session == session_under(old_cursor))
         {
             const auto& info = tools->info_for(session);
-            if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
+            if (drag(tools->focused_surface(), cursor, old_cursor, info.tile))
             {
-                // Still dragging the same old_surface
-            }
-            else if (drag(session->default_surface(), cursor, old_cursor, info.tile))
-            {
-                old_surface = session->default_surface();
+                // Still dragging the same surface
             }
             else
             {
-                for (const auto& ps : info.surfaces)
+                auto const new_surface = tools->surface_at(old_cursor);
+
+                if (new_surface && tools->info_for(new_surface).session.lock() == session)
                 {
-                    const auto new_surface = ps.lock();
-                    if (drag(new_surface, cursor, old_cursor, info.tile))
+                    if (resize(new_surface, cursor, old_cursor, info.tile))
                     {
-                        old_surface = new_surface;
-                        break;
+                        tools->set_focus_to(session, new_surface);
                     }
                 }
             }
         }
     }
+
     old_cursor = cursor;
 }
 
@@ -251,7 +245,7 @@ bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* eve
     }
     else if (action == mir_key_input_event_action_down && scan_code == KEY_F4)
     {
-        if (auto const session = tools->focussed_application().lock())
+        if (auto const session = tools->focused_session())
         {
             switch (modifiers & modifier_mask)
             {
@@ -352,7 +346,7 @@ bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerInputEvent co
 
 void me::TilingWindowManagerPolicy::toggle(MirSurfaceState state)
 {
-    if (auto const session = tools->focussed_application().lock())
+    if (auto const session = tools->focused_session())
     {
         if (auto const surface = session->default_surface())
         {
