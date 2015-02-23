@@ -24,11 +24,10 @@ include_directories(
 )
 
 set(MIRCLIENT_ABI 8)
-set(CLIENT_PLATFORM_VERSION "MIR_CLIENT_PLATFORM_2")
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/client/symbols.map)
 
 add_definitions(-DMIR_CLIENT_PLATFORM_PATH="${MIR_CLIENT_PLATFORM_PATH}/")
-add_definitions(-DCLIENT_PLATFORM_VERSION="${CLIENT_PLATFORM_VERSION}")
+add_definitions(-DCLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}")
 add_definitions(-DMIR_LOGGING_COMPONENT_FALLBACK="mirclient")
 
 add_subdirectory(rpc/)

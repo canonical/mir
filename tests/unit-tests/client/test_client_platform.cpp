@@ -79,7 +79,7 @@ struct ClientPlatformTest : public ::testing::TestWithParam<ClientPlatformTraits
 };
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
-ClientPlatformTraits const android_platform{"android.so",
+ClientPlatformTraits const android_platform{"android",
                                             [](MirPlatformPackage& pkg)
                                             {
                                                 ::memset(&pkg, 0, sizeof(pkg));
@@ -94,7 +94,7 @@ INSTANTIATE_TEST_CASE_P(Android,
 #endif
 
 #ifdef MIR_BUILD_PLATFORM_MESA
-ClientPlatformTraits const mesa_platform{"mesa.so",
+ClientPlatformTraits const mesa_platform{"mesa",
                                          [](MirPlatformPackage& pkg)
                                          {
                                              ::memset(&pkg, 0, sizeof(pkg));
