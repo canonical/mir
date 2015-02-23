@@ -128,7 +128,7 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
         }
     }
 
-    if (surfaces.empty() && session == tools->focussed_application().lock())
+    if (surfaces.empty() && session == tools->focused_session())
     {
         tools->focus_next();
     }
@@ -248,7 +248,7 @@ bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* eve
     }
     else if (action == mir_key_input_event_action_down && scan_code == KEY_F4)
     {
-        if (auto const session = tools->focussed_application().lock())
+        if (auto const session = tools->focused_session())
         {
             switch (modifiers & modifier_mask)
             {
@@ -349,7 +349,7 @@ bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerInputEvent co
 
 void me::TilingWindowManagerPolicy::toggle(MirSurfaceState state)
 {
-    if (auto const session = tools->focussed_application().lock())
+    if (auto const session = tools->focused_session())
     {
         if (auto const surface = session->default_surface())
         {

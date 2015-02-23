@@ -213,7 +213,7 @@ void me::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms:
     }
 
 
-    if (!--tools->info_for(session).surfaces && session == tools->focussed_application().lock())
+    if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
         tools->focus_next();
     }
@@ -317,7 +317,7 @@ bool me::CanonicalWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* 
     }
     else if (action == mir_key_input_event_action_down && scan_code == KEY_F4)
     {
-        if (auto const session = tools->focussed_application().lock())
+        if (auto const session = tools->focused_session())
         {
             switch (modifiers & modifier_mask)
             {
@@ -475,7 +475,7 @@ auto me::CanonicalWindowManagerPolicy::active_surface() const
     if (auto const surface = active_surface_.lock())
         return surface;
 
-    if (auto const session = tools->focussed_application().lock())
+    if (auto const session = tools->focused_session())
     {
         if (auto const surface = session->default_surface())
             return surface;

@@ -61,7 +61,7 @@ public:
 
     virtual auto info_for(std::weak_ptr<scene::Surface> const& surface) const -> SurfaceInfo& = 0;
 
-    virtual std::weak_ptr<scene::Session> focussed_application() const = 0;
+    virtual std::shared_ptr<scene::Session> focused_session() const = 0;
 
     virtual std::shared_ptr<scene::Surface> focused_surface() const = 0;
 
@@ -212,9 +212,9 @@ private:
         return const_cast<SurfaceInfo&>(surface_info.at(surface));
     }
 
-    std::weak_ptr<scene::Session> focussed_application() const override
+    std::shared_ptr<scene::Session> focused_session() const override
     {
-        return focus_controller->focussed_application();
+        return focus_controller->focussed_application().lock();
     }
 
     std::shared_ptr<scene::Surface> focused_surface() const override
