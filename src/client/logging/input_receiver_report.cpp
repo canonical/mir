@@ -41,14 +41,62 @@ mcll::InputReceiverReport::InputReceiverReport(std::shared_ptr<ml::Logger> const
 
 namespace
 {
+std::string to_string(MirKeyInputEventAction action)
+{
+    switch (action)
+    {
+    case mir_key_input_event_action_up:
+        return "mir_key_input_event_action_up";
+    case mir_key_input_event_action_down:
+        return "mir_key_input_event_action_down";
+    case mir_key_input_event_action_repeat:
+        return "mir_key_input_event_action_repeat";
+    default:
+        return std::to_string(action) + "<INVALID>";
+    }
+}
 
-static void format_key_event(std::stringstream &ss, MirInputEvent const* ev)
+std::string to_string(MirTouchInputEventTouchAction action)
+{
+    switch (action)
+    {
+    case mir_touch_input_event_action_up:
+        return "mir_touch_input_event_action_up";
+    case mir_touch_input_event_action_down:
+        return "mir_touch_input_event_action_down";
+    case mir_touch_input_event_action_change:
+        return "mir_touch_input_event_action_change";
+    default:
+        return std::to_string(action) + "<INVALID>";
+    }
+}
+
+std::string to_string(MirPointerInputEventAction action)
+{
+    switch (action)
+    {
+    case mir_pointer_input_event_action_button_up:
+        return "mir_pointer_input_event_action_button_up";
+    case mir_pointer_input_event_action_button_down:
+        return "mir_pointer_input_event_action_button_down";
+    case mir_pointer_input_event_action_enter:
+        return "mir_pointer_input_event_action_enter";
+    case mir_pointer_input_event_action_leave:
+        return "mir_pointer_input_event_action_leave";
+    case mir_pointer_input_event_action_motion:
+        return "mir_pointer_input_event_action_motion";
+    default:
+        return std::to_string(action) + "<INVALID>";
+    }
+}
+
+void format_key_event(std::stringstream &ss, MirInputEvent const* ev)
 {
     auto kev = mir_input_event_get_key_input_event(ev);
     
     ss << "MirKeyInputEvent {" << std::endl;
     ss << "  device_id: " << mir_input_event_get_device_id(ev) << std::endl;
-    ss << "  action: " << mir_key_input_event_get_action(kev) << std::endl;
+    ss << "  action: " << to_string(mir_key_input_event_get_action(kev)) << std::endl;
     ss << "  modifiers: " << mir_key_input_event_get_modifiers(kev) << std::endl;
     ss << "  key_code: " << mir_key_input_event_get_key_code(kev) << std::endl;
     ss << "  scan_code: " << mir_key_input_event_get_scan_code(kev) << std::endl;
@@ -56,7 +104,7 @@ static void format_key_event(std::stringstream &ss, MirInputEvent const* ev)
     ss << "}";
 }
 
-static void format_touch_event(std::stringstream &ss, MirInputEvent const* ev)
+void format_touch_event(std::stringstream &ss, MirInputEvent const* ev)
 {
     auto tev = mir_input_event_get_touch_input_event(ev);
     
@@ -73,6 +121,7 @@ static void format_touch_event(std::stringstream &ss, MirInputEvent const* ev)
         ss << "    id: " << mir_touch_input_event_get_touch_id(tev, i) << std::endl;
         ss << "    x: " << mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_x) << std::endl;
         ss << "    y: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_y) << std::endl;
+        ss << "    action: " << to_string(mir_touch_input_event_get_touch_action(tev, i)) << std::endl;
         ss << "    touch_major: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_touch_major) << std::endl;
         ss << "    touch_minor: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_touch_minor) << std::endl;
         ss << "    size: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_size) << std::endl;
@@ -83,19 +132,19 @@ static void format_touch_event(std::stringstream &ss, MirInputEvent const* ev)
     ss << "}";
 }
 
-static void format_pointer_event(std::stringstream &ss, MirInputEvent const* ev)
+void format_pointer_event(std::stringstream &ss, MirInputEvent const* ev)
 {
     auto pev = mir_input_event_get_pointer_input_event(ev);
 
     // TODO: Could be expanded
     ss << "MirPointerInputEvent {" << std::endl;
     ss << "  device_id: " << mir_input_event_get_device_id(ev) << std::endl;
-    ss << "  action: " << mir_pointer_input_event_get_action(pev) << std::endl;
+    ss << "  action: " << to_string(mir_pointer_input_event_get_action(pev)) << std::endl;
     ss << "  event_time: " << ml::input_timestamp(std::chrono::nanoseconds(mir_input_event_get_event_time(ev))) << std::endl;
     ss << "}";
 }
 
-static void format_event(std::stringstream &ss, MirEvent const& ev)
+void format_event(std::stringstream &ss, MirEvent const& ev)
 {
     if (mir_event_get_type(&ev) != mir_event_type_input)
         return;
