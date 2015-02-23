@@ -19,6 +19,7 @@
 #include "server_example_tiling_window_manager.h"
 
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_coordinator.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -40,15 +41,18 @@ me::TilingSurfaceInfo::TilingSurfaceInfo(
 {
 }
 
-me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(Tools* const tools) :
-    tools{tools}
+me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(
+    Tools* const tools,
+    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator) :
+    tools{tools}, surface_coordinator{surface_coordinator}
 {
 }
 
 void me::TilingWindowManagerPolicy::click(Point cursor)
 {
-    if (const auto session = session_under(cursor))
-        tools->set_focus_to(session);
+    const auto session = session_under(cursor);
+    const auto surface = surface_coordinator->surface_at(cursor);
+    tools->set_focus_to(session, surface);
     old_cursor = cursor;
 }
 
@@ -70,29 +74,25 @@ void me::TilingWindowManagerPolicy::resize(Point cursor)
         {
             auto const& info = tools->info_for(session);
 
-            if (resize(old_surface.lock(), cursor, old_cursor, info.tile))
+            if (resize(tools->focused_surface(), cursor, old_cursor, info.tile))
             {
-                // Still dragging the same old_surface
-            }
-            else if (resize(session->default_surface(), cursor, old_cursor, info.tile))
-            {
-                old_surface = session->default_surface();
+                // Still dragging the same surface
             }
             else
             {
-                for (auto const& ps : info.surfaces)
-                {
-                    auto const new_surface = ps.lock();
+                auto const new_surface = surface_coordinator->surface_at(old_cursor);
 
+                if (new_surface && tools->info_for(new_surface).session.lock() == session)
+                {
                     if (resize(new_surface, cursor, old_cursor, info.tile))
                     {
-                        old_surface = new_surface;
-                        break;
+                        tools->set_focus_to(session, new_surface);
                     }
                 }
             }
         }
     }
+
     old_cursor = cursor;
 }
 
@@ -198,28 +198,25 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
         if (session == session_under(old_cursor))
         {
             const auto& info = tools->info_for(session);
-            if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
+            if (drag(tools->focused_surface(), cursor, old_cursor, info.tile))
             {
-                // Still dragging the same old_surface
-            }
-            else if (drag(session->default_surface(), cursor, old_cursor, info.tile))
-            {
-                old_surface = session->default_surface();
+                // Still dragging the same surface
             }
             else
             {
-                for (const auto& ps : info.surfaces)
+                auto const new_surface = surface_coordinator->surface_at(old_cursor);
+
+                if (new_surface && tools->info_for(new_surface).session.lock() == session)
                 {
-                    const auto new_surface = ps.lock();
-                    if (drag(new_surface, cursor, old_cursor, info.tile))
+                    if (resize(new_surface, cursor, old_cursor, info.tile))
                     {
-                        old_surface = new_surface;
-                        break;
+                        tools->set_focus_to(session, new_surface);
                     }
                 }
             }
         }
     }
+
     old_cursor = cursor;
 }
 
