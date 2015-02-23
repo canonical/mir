@@ -55,7 +55,7 @@ me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(Tools* const tool
 
 void me::CanonicalWindowManagerPolicy::click(Point cursor)
 {
-    if (auto const surface = surface_coordinator->surface_at(cursor))
+    if (auto const surface = tools->surface_at(cursor))
         select_active_surface(surface);
 
     old_cursor = cursor;
@@ -72,7 +72,7 @@ void me::CanonicalWindowManagerPolicy::handle_displays_updated(CanonicalSessionI
 
 void me::CanonicalWindowManagerPolicy::resize(Point cursor)
 {
-    select_active_surface(surface_coordinator->surface_at(old_cursor));
+    select_active_surface(tools->surface_at(old_cursor));
     resize(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
@@ -284,7 +284,7 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
 
 void me::CanonicalWindowManagerPolicy::drag(Point cursor)
 {
-    select_active_surface(surface_coordinator->surface_at(old_cursor));
+    select_active_surface(tools->surface_at(old_cursor));
     drag(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }

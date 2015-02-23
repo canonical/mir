@@ -71,6 +71,8 @@ public:
         std::shared_ptr<scene::Session> const& focus,
         std::shared_ptr<scene::Surface> const& surface) = 0;
 
+    virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
+
     virtual ~BasicWindowManagerTools() = default;
     BasicWindowManagerTools() = default;
     BasicWindowManagerTools(BasicWindowManagerTools const&) = delete;
@@ -232,6 +234,11 @@ private:
         std::shared_ptr<scene::Surface> const& surface) override
     {
         focus_controller->set_focus_to(focus, surface);
+    }
+
+    auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override
+    {
+        return focus_controller->surface_at(cursor);
     }
 
     FocusController* const focus_controller;

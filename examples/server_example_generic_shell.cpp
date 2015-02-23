@@ -18,7 +18,9 @@
 
 #include "server_example_generic_shell.h"
 
+#include "mir/geometry/point.h"
 #include "mir/scene/session.h"
+#include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 
 namespace me = mir::examples;
@@ -133,4 +135,10 @@ void me::GenericShell::set_focus_to(
     std::shared_ptr<ms::Surface> const& focus_surface)
 {
     msh::AbstractShell::set_focus_to(focus_session, focus_surface);
+}
+
+auto me::GenericShell::surface_at(geometry::Point cursor) const
+-> std::shared_ptr<scene::Surface>
+{
+    return surface_coordinator->surface_at(cursor);
 }

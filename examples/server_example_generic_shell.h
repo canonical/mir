@@ -29,6 +29,8 @@
 
 namespace mir
 {
+namespace geometry { class Point; }
+
 namespace examples
 {
 // TODO This interface keeps changes out of the Mir API (to explore the requirement)
@@ -43,6 +45,8 @@ public:
         std::shared_ptr<scene::Surface> const& focus_surface) = 0;
 
     virtual std::shared_ptr<scene::Surface> focused_surface() const = 0;
+
+    virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
 };
 
 class GenericShell : public virtual Shell, public virtual FocusController,
@@ -82,6 +86,8 @@ public:
 
     // The surface with focus
     std::shared_ptr<scene::Surface> focused_surface() const override;
+
+    auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override;
 
 private:
     void add_display(geometry::Rectangle const& area) override;

@@ -19,7 +19,6 @@
 #include "server_example_tiling_window_manager.h"
 
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -51,7 +50,7 @@ me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(
 void me::TilingWindowManagerPolicy::click(Point cursor)
 {
     const auto session = session_under(cursor);
-    const auto surface = surface_coordinator->surface_at(cursor);
+    const auto surface = tools->surface_at(cursor);
     tools->set_focus_to(session, surface);
     old_cursor = cursor;
 }
@@ -80,7 +79,7 @@ void me::TilingWindowManagerPolicy::resize(Point cursor)
             }
             else
             {
-                auto const new_surface = surface_coordinator->surface_at(old_cursor);
+                auto const new_surface = tools->surface_at(old_cursor);
 
                 if (new_surface && tools->info_for(new_surface).session.lock() == session)
                 {
@@ -204,7 +203,7 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
             }
             else
             {
-                auto const new_surface = surface_coordinator->surface_at(old_cursor);
+                auto const new_surface = tools->surface_at(old_cursor);
 
                 if (new_surface && tools->info_for(new_surface).session.lock() == session)
                 {
