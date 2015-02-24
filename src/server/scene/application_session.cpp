@@ -21,12 +21,14 @@
 #include "application_session.h"
 #include "snapshot_strategy.h"
 #include "default_session_container.h"
+#include "surfaceless_buffer_stream.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/session_listener.h"
+#include "mir/scene/buffer_stream_factory.h"
 #include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
 
@@ -66,7 +68,7 @@ ms::ApplicationSession::ApplicationSession(
 
 ms::ApplicationSession::~ApplicationSession()
 {
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     for (auto const& pair_id_surface : surfaces)
     {
         session_listener->destroying_surface(*this, pair_id_surface.second);
@@ -101,7 +103,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
     surf->add_observer(observer);
 
     {
-        std::unique_lock<std::mutex> lock(surfaces_mutex);
+        std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
         surfaces[id] = surf;
     }
 
@@ -126,7 +128,7 @@ std::shared_ptr<mf::Surface> ms::ApplicationSession::get_surface(mf::SurfaceId i
 
 std::shared_ptr<ms::Surface> ms::ApplicationSession::surface(mf::SurfaceId id) const
 {
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
 
     return checked_find(id)->second;
 }
@@ -141,7 +143,7 @@ void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_take
 
 std::shared_ptr<ms::Surface> ms::ApplicationSession::default_surface() const
 {
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
 
     if (surfaces.size())
         return surfaces.begin()->second;
@@ -151,7 +153,7 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::default_surface() const
 
 void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     auto p = checked_find(id);
     auto const surface = p->second;
 
@@ -175,7 +177,7 @@ pid_t ms::ApplicationSession::process_id() const
 
 void ms::ApplicationSession::force_requests_to_complete()
 {
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     for (auto& id_s : surfaces)
     {
         id_s.second->force_requests_to_complete();
@@ -184,7 +186,7 @@ void ms::ApplicationSession::force_requests_to_complete()
 
 void ms::ApplicationSession::hide()
 {
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     for (auto& id_s : surfaces)
     {
         id_s.second->hide();
@@ -193,7 +195,7 @@ void ms::ApplicationSession::hide()
 
 void ms::ApplicationSession::show()
 {
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     for (auto& id_s : surfaces)
     {
         id_s.second->show();
@@ -231,19 +233,37 @@ void ms::ApplicationSession::resume_prompt_session()
     start_prompt_session();
 }
 
-std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::BufferStreamId stream) const
+std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::BufferStreamId id) const
 {
-    (void) stream;
-    return nullptr;
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+
+    auto p = streams.find(id);
+    if (p == streams.end())
+        return checked_find(mf::SurfaceId(id.as_value()))->second;
+    else 
+        return p->second;
 }
 
 mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
 {
-    (void) props;
-    return mf::BufferStreamId();
+    auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
+    auto stream = std::make_shared<ms::SurfacelessBufferStream>(buffer_stream_factory->create_buffer_stream(props));
+    
+    {
+        std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+        streams[id] = stream;
+    }
+
+    return id;
 }
 
-void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId stream)
+void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
 {
-    (void) stream;
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    auto p = streams.find(id);
+    if (p == streams.end())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid buffer stream id"));
+    auto const stream = p->second;
+
+    streams.erase(p);
 }

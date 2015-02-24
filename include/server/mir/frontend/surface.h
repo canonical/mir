@@ -20,7 +20,9 @@
 #ifndef MIR_FRONTEND_SURFACE_H_
 #define MIR_FRONTEND_SURFACE_H_
 
+#include "mir/frontend/buffer_stream.h"
 #include "mir/geometry/size.h"
+
 #include "mir_toolkit/common.h"
 
 #include <memory>
@@ -37,7 +39,7 @@ namespace frontend
 {
 class ClientBufferTracker;
 
-class Surface
+class Surface : public BufferStream
 {
 public:
     virtual ~Surface() = default;
