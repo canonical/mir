@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -52,11 +52,19 @@ public:
     MOCK_METHOD1(pause_processing_for,void (void const*));
     MOCK_METHOD1(resume_processing_for,void (void const*));
 
-    MOCK_METHOD2(notify_in, std::unique_ptr<time::Alarm>(std::chrono::milliseconds delay,
-                                           std::function<void(void)> callback));
-    MOCK_METHOD2(notify_at, std::unique_ptr<time::Alarm>(time::Timestamp time_point,
-                                           std::function<void(void)> callback));
-    MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(std::function<void ()> callback));
+    MOCK_METHOD2(notify_in,
+                 std::unique_ptr<time::Alarm>(std::chrono::milliseconds delay,
+                                              std::function<void()> const& callback));
+    MOCK_METHOD2(notify_at,
+                 std::unique_ptr<time::Alarm>(time::Timestamp time_point,
+                                              std::function<void()> const& callback));
+    MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(std::function<void()> const& callback));
+    MOCK_METHOD3(create_alarm,
+                 std::unique_ptr<time::Alarm>(
+                     std::function<void()> const& callback,
+                     std::function<void()> const& lock,
+                     std::function<void()> const& unlock));
+
 };
 
 }

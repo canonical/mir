@@ -81,34 +81,38 @@ protected:
 
 TEST_F(AndroidDisplay, display_can_post)
 {
-    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
-    {
-        buffer.make_current();
-        md::glAnimationBasic gl_animation;
-        gl_animation.init_gl();
+    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([](mg::DisplayBuffer& buffer)
+        {
+            buffer.make_current();
+            md::glAnimationBasic gl_animation;
+            gl_animation.init_gl();
 
-        gl_animation.render_gl();
-        buffer.gl_swap_buffers();
-        buffer.flip();
+            gl_animation.render_gl();
+            buffer.gl_swap_buffers();
 
-        gl_animation.render_gl();
-        buffer.gl_swap_buffers();
-        buffer.flip();
+            gl_animation.render_gl();
+            buffer.gl_swap_buffers();
+        });
+        group.post();
     });
 }
 
 TEST_F(AndroidDisplay, display_can_post_overlay)
 {
-    display->for_each_display_buffer([](mg::DisplayBuffer& db)
-    {
-        db.make_current();
-        auto area = db.view_area();
-        auto buffer = buffer_allocator->alloc_buffer_platform(
-            area.size, mir_pixel_format_abgr_8888, mga::BufferUsage::use_hardware);
-        mg::RenderableList list{
-            std::make_shared<mtd::StubRenderable>(buffer, area)
-        };
+    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([](mg::DisplayBuffer& db)
+        {
+            db.make_current();
+            auto area = db.view_area();
+            auto buffer = buffer_allocator->alloc_buffer_platform(
+                area.size, mir_pixel_format_abgr_8888, mga::BufferUsage::use_hardware);
+            mg::RenderableList list{
+                std::make_shared<mtd::StubRenderable>(buffer, area)
+            };
 
-        db.post_renderables_if_optimizable(list);
+            db.post_renderables_if_optimizable(list);
+        });
+        group.post();
     });
 }

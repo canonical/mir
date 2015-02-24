@@ -72,6 +72,7 @@ public:
     void reception_mode_set_to(input::InputReceptionMode mode) override;
     void cursor_image_set_to(graphics::CursorImage const& image) override;
     void client_surface_close_requested() override;
+    void keymap_changed(xkb_rule_names const& names) override;
 };
 
 class BasicSurface : public Surface
@@ -161,6 +162,8 @@ public:
     void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
 
     int dpi() const;
+
+    void set_keymap(xkb_rule_names const& rules) override;
 
 private:
     bool visible(std::unique_lock<std::mutex>&) const;

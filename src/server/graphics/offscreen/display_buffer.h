@@ -66,7 +66,6 @@ public:
     void make_current() override;
     void release_current() override;
     void gl_swap_buffers() override;
-    void flip() override;
 
     MirOrientation orientation() const override;
     bool uses_alpha() const override;

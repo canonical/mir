@@ -56,32 +56,42 @@ class SynchronousCompositor : public mc::Compositor
 public:
     SynchronousCompositor(std::shared_ptr<mg::Display> const& display_,
                           std::shared_ptr<mc::Scene> const& s,
-                          std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory)
+                          std::shared_ptr<mc::DisplayBufferCompositorFactory> const& dbc_factory)
         : display{display_},
           scene{s}
     {
-        display->for_each_display_buffer(
-            [this, &db_compositor_factory](mg::DisplayBuffer& display_buffer)
+        display->for_each_display_sync_group([this, &dbc_factory](mg::DisplaySyncGroup& group)
+        {
+            group.for_each_display_buffer([this, &dbc_factory](mg::DisplayBuffer& display_buffer)
             {
-                auto dbc = db_compositor_factory->create_compositor_for(display_buffer);
+                auto dbc = dbc_factory->create_compositor_for(display_buffer);
                 scene->register_compositor(dbc.get());
                 display_buffer_compositor_map[&display_buffer] = std::move(dbc);
             });
-       
+        });
+ 
         auto notify = [this]()
         {
-            display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
+            display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
             {
-                auto& dbc = display_buffer_compositor_map[&display_buffer];
-                dbc->composite(scene->scene_elements_for(dbc.get()));
+                group.for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
+                {
+                    auto& dbc = display_buffer_compositor_map[&display_buffer];
+                    dbc->composite(scene->scene_elements_for(dbc.get()));
+                });
+                group.post();
             });
         };
         auto notify2 = [this](int)
         {
-            display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
+            display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
             {
-                auto& dbc = display_buffer_compositor_map[&display_buffer];
-                dbc->composite(scene->scene_elements_for(dbc.get()));
+                group.for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
+                {
+                    auto& dbc = display_buffer_compositor_map[&display_buffer];
+                    dbc->composite(scene->scene_elements_for(dbc.get()));
+                });
+                group.post();
             });
         };
         observer = std::make_shared<ms::LegacySceneChangeNotification>(notify, notify2);

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -1739,4 +1739,13 @@ TEST_F(BufferQueueTest, gives_new_compositor_the_newest_buffer_after_dropping_ol
 
     auto comp2 = q.compositor_acquire(new_compositor_id);
     ASSERT_THAT(comp2->id(), Eq(handle2->id()));
+}
+
+TEST_F(BufferQueueTest, creates_policy_with_lock_unlock_functions)
+{
+    int const nbuffers = 3;
+
+    mtd::FrameDroppingPolicyFactoryMock mock_policy_factory;
+    EXPECT_CALL(mock_policy_factory, create_policy(_, _, _));
+    mc::BufferQueue q(nbuffers, allocator, basic_properties, mock_policy_factory);
 }
