@@ -22,16 +22,26 @@
 namespace mir
 {
 
+enum class ModuleType : uint32_t
+{
+    server_graphics_platform = 1,
+    server_input_platform = server_graphics_platform << 1,
+};
+
 /**
  * Describes a platform module
  */
 struct ModuleProperties
 {
     char const* name;
+    ModuleType type;
     int major_version;
     int minor_version;
     int micro_version;
 };
+
+extern "C" typedef ModuleProperties const*(*DescribeModule)();
+extern "C" ModuleProperties const* describe_module();
 }
 
 #endif /* MIR_PLATFORM_MODULE_PROPERTIES_H_ */
