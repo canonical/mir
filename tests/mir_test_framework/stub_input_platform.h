@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -37,8 +37,6 @@ class FakeInputDevice;
 class StubInputPlatform : public mir::input::Platform
 {
 public:
-    StubInputPlatform();
-    ~StubInputPlatform();
     void start(mir::input::InputEventHandlerRegister& loop,
                std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry);
     void stop(mir::input::InputEventHandlerRegister& loop) override;

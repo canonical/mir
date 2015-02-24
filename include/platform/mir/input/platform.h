@@ -92,7 +92,7 @@ extern "C" typedef mir::UniqueModulePtr<Platform>(*CreatePlatform)(
  *
  * \ingroup platform_enablement
  */
-extern "C" std::UniqueModulePtr<Platform> create_input_platform(
+extern "C" mir::UniqueModulePtr<Platform> create_input_platform(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<InputReport> const& report);

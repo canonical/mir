@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -34,17 +34,18 @@ void mtf::StubInputPlatform::start(mi::InputEventHandlerRegister& loop,
     event_handler = &loop;
 }
 
-mtf::StubInputPlatform::StubInputPlatform()
-{
-}
-
-mtf::StubInputPlatform::~StubInputPlatform()
-{
-}
-
 void mtf::StubInputPlatform::stop(mi::InputEventHandlerRegister&)
 {
     std::unique_lock<std::mutex> lock(platform_mutex);
+
+    if (registry)
+    {
+        for (auto const & dev : registered_devs)
+            registry->remove_device(dev);
+    }
+
+    registered_devs.clear();
+
     registry.reset();
     event_handler = nullptr;
 }

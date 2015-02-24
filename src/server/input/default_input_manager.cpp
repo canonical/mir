@@ -79,7 +79,6 @@ void mi::DefaultInputManager::start()
     std::unique_lock<std::mutex> lock(m);
     cv.wait(lock, [&startup_done]{return startup_done;});
     thread_state = State::running;
-    std::cout << "survived startup " << this << std::endl;
 }
 
 void mi::DefaultInputManager::stop()
@@ -102,6 +101,5 @@ void mi::DefaultInputManager::stop()
         input_thread.join();
     }
     thread_state = State::stopped;
-    std::cout << "survived shutdown " << this << std::endl;
 }
 

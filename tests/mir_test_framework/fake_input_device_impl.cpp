@@ -97,7 +97,6 @@ mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
 
 mtf::FakeInputDeviceImpl::~FakeInputDeviceImpl()
 {
-    mtf::StubInputPlatform::remove(device);
 }
 
 void mtf::FakeInputDeviceImpl::emit_event(synthesis::KeyParameters const& key)

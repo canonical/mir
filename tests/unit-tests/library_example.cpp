@@ -33,5 +33,5 @@ struct Implementation : SomeInterface
 
 mir::UniqueModulePtr<SomeInterface> module_create_instance()
 {
-    return mir::UniqueModulePtr<SomeInterface>(new Implementation, mir::from_this_library);
+    return mir::UniqueModulePtr<SomeInterface>(new Implementation, &module_create_instance);
 }

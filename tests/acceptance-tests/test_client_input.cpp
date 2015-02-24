@@ -119,7 +119,7 @@ TEST_F(TestClientInputNew, new_clients_receive_us_english_mapped_keys)
         .WillOnce(mt::WakeUp(&all_events_received));
 
     //client.start();
-
+    ready_to_accept_events.wait_for_at_most_seconds(5);
     fake_keyboard->emit_event(
         mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
     fake_keyboard->emit_event(
@@ -128,4 +128,6 @@ TEST_F(TestClientInputNew, new_clients_receive_us_english_mapped_keys)
         mis::a_key_down_event().of_scancode(KEY_I));
     fake_keyboard->emit_event(
         mis::a_key_down_event().of_scancode(KEY_R));
+
+    all_events_received.wait_for_at_most_seconds(10);
 }

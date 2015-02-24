@@ -19,42 +19,36 @@
 #ifndef MIR_MODULE_DELETER_H_
 #define MIR_MODULE_DELETER_H_
 
-#include "mir/shared_library.h"
-
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-#include <dlfcn.h>
 #include <memory>
 
 namespace mir
 {
+class SharedLibrary;
+
 namespace detail
 {
-namespace
+class RefCountedLibrary
 {
-inline char const* this_library()
-{
-    Dl_info info{nullptr, nullptr, nullptr, nullptr};
-    dladdr(reinterpret_cast<void*>(&this_library), &info);
-    return info.dli_fname;
+public:
+    RefCountedLibrary(void* adrress);
+    RefCountedLibrary(RefCountedLibrary const&);
+    ~RefCountedLibrary();
+    RefCountedLibrary& operator=(RefCountedLibrary const&);
+private:
+    std::shared_ptr<mir::SharedLibrary> internal_state;
+};
 }
-}
-}
-
-const struct ModuleDeleterTag {} from_this_library{};
 
 template<typename T>
 struct ModuleDeleter : std::default_delete<T>
 {
-    ModuleDeleter(ModuleDeleterTag /*from_this_library*/)
-        : library_closer{std::make_shared<SharedLibrary>(detail::this_library())}
-    {}
-    ModuleDeleter()
-        : library_closer()
+    ModuleDeleter() : library(nullptr) {}
+    template<typename R, typename... Rs>
+    ModuleDeleter(R (*function)(Rs...))
+        : library{reinterpret_cast<void*>(function)}
     {
     }
-    std::shared_ptr<SharedLibrary> library_closer;
+    detail::RefCountedLibrary library;
 };
 
 /*!
@@ -65,7 +59,7 @@ struct ModuleDeleter : std::default_delete<T>
  * \code
  *  mir::UniqueModulePtr<ExampleInterface> library_entry_point()
  *  {
- *      return mir::UniqueModulePtr<SomeInterface>(new Implementation, mir::from_this_library);
+ *      return mir::UniqueModulePtr<SomeInterface>(new Implementation, &library_entry_point);
  *  }
  * \endcode
  *
