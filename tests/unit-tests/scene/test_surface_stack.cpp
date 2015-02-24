@@ -251,7 +251,7 @@ TEST_F(SurfaceStack, decor_name_is_surface_name)
 
     auto& element = elements.front();
     mc::Decoration decor;
-    EXPECT_TRUE(element->is_a_surface(decor));
+    EXPECT_TRUE(element->get_decoration(decor));
     EXPECT_EQ("Mary had a little lamb", decor.name);
 }
 

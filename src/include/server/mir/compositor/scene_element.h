@@ -39,13 +39,7 @@ public:
     virtual std::shared_ptr<graphics::Renderable> renderable() const = 0;
     virtual void rendered() = 0;
     virtual void occluded() = 0;
-    
-    /**
-     * Query whether the SceneElement represents a window-surface, which at the
-     * discretion of the compositor may be eligible for window decoration.
-     * If true, also returns some decoration info you may choose to use.
-     */
-    virtual bool is_a_surface(Decoration& decor) const = 0;
+    virtual bool get_decoration(Decoration& decor) const = 0;
 
 protected:
     SceneElement() = default;

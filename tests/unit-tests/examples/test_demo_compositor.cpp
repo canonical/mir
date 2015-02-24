@@ -48,12 +48,12 @@ struct MockSceneElement : mc::SceneElement
 {
     MockSceneElement()
     {
-        ON_CALL(*this, is_a_surface(testing::_))
+        ON_CALL(*this, get_decoration(testing::_))
             .WillByDefault(testing::Return(true));
     }
 
     MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
-    MOCK_CONST_METHOD1(is_a_surface, bool(mc::Decoration&));
+    MOCK_CONST_METHOD1(get_decoration, bool(mc::Decoration&));
     MOCK_METHOD0(rendered, void());
     MOCK_METHOD0(occluded, void());
 };

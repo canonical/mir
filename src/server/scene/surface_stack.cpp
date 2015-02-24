@@ -71,7 +71,7 @@ public:
         tracker->occluded_in(cid);
     }
 
-    bool is_a_surface(mc::Decoration& d) const override
+    bool get_decoration(mc::Decoration& d) const override
     {
         d.name = name_;
         return true;
@@ -107,7 +107,7 @@ public:
     {
     }
     
-    bool is_a_surface(mc::Decoration&) const override
+    bool get_decoration(mc::Decoration&) const override
     {
         return false;
     }

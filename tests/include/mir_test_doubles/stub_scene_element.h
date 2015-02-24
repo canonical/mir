@@ -55,7 +55,7 @@ public:
     {
     }
     
-    bool is_a_surface(compositor::Decoration&) const override
+    bool get_decoration(compositor::Decoration&) const override
     {
         return false;
     }
