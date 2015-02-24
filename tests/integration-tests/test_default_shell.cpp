@@ -90,6 +90,8 @@ struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
 };
 }
 
+using MatchSurface = Matcher<std::weak_ptr<ms::Surface> const&>;
+
 TEST_F(TestDefaultShellAndFocusSelectionStrategy, cycle_focus)
 {
     EXPECT_CALL(session_manager, set_focus_to(_)).Times(3);
@@ -156,9 +158,9 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, mechanism_notifies_default_sur
     ON_CALL(app2, default_surface()).WillByDefault(Return(mock_surface2));
 
     InSequence seq;
-    EXPECT_CALL(surface_coordinator, raise(_)).Times(1);
+    EXPECT_CALL(surface_coordinator, raise(MatchSurface(_))).Times(1);
     EXPECT_CALL(*mock_surface1, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
-    EXPECT_CALL(surface_coordinator, raise(_)).Times(1);
+    EXPECT_CALL(surface_coordinator, raise(MatchSurface(_))).Times(1);
     EXPECT_CALL(*mock_surface1, configure(mir_surface_attrib_focus, mir_surface_unfocused)).Times(1);
     EXPECT_CALL(*mock_surface2, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
 
@@ -187,7 +189,7 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, sets_input_focus)
         // When we have no session.
         EXPECT_CALL(input_targeter, focus_cleared()).Times(1);
     }
-    EXPECT_CALL(surface_coordinator, raise(_)).Times(1);
+    EXPECT_CALL(surface_coordinator, raise(MatchSurface(_))).Times(1);
 
     shell.set_focus_to(mt::fake_shared(app1));
     shell.set_focus_to(mt::fake_shared(app1));
