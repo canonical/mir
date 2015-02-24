@@ -358,18 +358,16 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
     auto display = create_display_cloned(create_platform());
 
     /* First frame: Page flips are scheduled, but not waited for */
-    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group)
     {
-        buffer.gl_swap_buffers();
-        buffer.flip();
+        group.post();
     });
 
     /* Second frame: Previous page flips finish (drmHandleEvent) and new ones
        are scheduled */
-    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group)
     {
-        buffer.gl_swap_buffers();
-        buffer.flip();
+        group.post();
     });
 }
 

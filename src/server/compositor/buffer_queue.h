@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -66,13 +66,21 @@ public:
     void drop_client_requests() override;
 
 private:
+    enum SnapshotWait
+    {
+        wait_for_snapshot,
+        ignore_snapshot
+    };
     void give_buffer_to_client(graphics::Buffer* buffer,
-        std::unique_lock<std::mutex> lock);
+        std::unique_lock<std::mutex>& lock);
+    void give_buffer_to_client(graphics::Buffer* buffer,
+        std::unique_lock<std::mutex>& lock, SnapshotWait wait_type);
     void release(graphics::Buffer* buffer,
         std::unique_lock<std::mutex> lock);
-    void drop_frame(std::unique_lock<std::mutex> lock);
+    void drop_frame(std::unique_lock<std::mutex>& lock, SnapshotWait wait_type);
 
     mutable std::mutex guard;
+    std::unique_lock<decltype(guard)> guard_lock;
 
     std::vector<std::shared_ptr<graphics::Buffer>> buffers;
     std::deque<graphics::Buffer*> ready_to_composite_queue;
