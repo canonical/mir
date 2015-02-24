@@ -18,6 +18,7 @@
 
 #include "stub_input_platform.h"
 #include "fake_input_device_impl.h"
+#include "mir/module_properties.h"
 
 namespace mtf = mir_test_framework;
 namespace mo = mir::options;
@@ -28,7 +29,7 @@ extern "C" mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mi::InputReport> const& /*report*/)
 {
-    return mir::UniqueModulePtr<mi::Platform>(new mtf::StubInputPlatform, &create_input_platform);
+    return mir::make_module_ptr<mtf::StubInputPlatform>();
 }
 
 
@@ -42,6 +43,22 @@ extern "C" mi::PlatformPriority probe_input_platform(
     mo::Option const& /*options*/)
 {
     return mi::PlatformPriority::supported;
+}
+
+namespace
+{
+mir::ModuleProperties const description = {
+    "stub-input",
+    mir::ModuleType::server_input_platform,
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO
+};
+}
+
+extern "C" mir::ModuleProperties const* describe_module()
+{
+    return &description;
 }
 
 extern "C" std::unique_ptr<mtf::FakeInputDevice> add_fake_input_device(mi::InputDeviceInfo const& info)

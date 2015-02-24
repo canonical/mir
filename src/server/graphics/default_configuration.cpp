@@ -99,9 +99,9 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             auto create_guest_platform = platform_library->load_function<mg::CreateGuestPlatform>(
                 "create_guest_platform",
                 MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-            auto describe_module = platform_library->load_function<mg::DescribeModule>(
-                "describe_graphics_module",
-                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            auto describe_module = platform_library->load_function<mir::DescribeModule>(
+                "describe_module",
+                MIR_SERVER_PLATFORM_VERSION);
             auto description = describe_module();
             ml::log(ml::Severity::informational,
                     std::string{"Selected driver: "} + description->name + " (version " +

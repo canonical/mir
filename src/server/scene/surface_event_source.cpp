@@ -56,3 +56,8 @@ void ms::SurfaceEventSource::client_surface_close_requested()
 {
     event_sink->handle_event(*mev::make_event(id));
 }
+
+void ms::SurfaceEventSource::keymap_changed(xkb_rule_names const& names)
+{
+    event_sink->handle_event(*mev::make_event(id, names));
+}

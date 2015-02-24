@@ -337,9 +337,12 @@ public:
 
         /* TODO: Get proper configuration */
         geom::Rectangles view_area;
-        display->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)
+        display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group)
         {
-            view_area.add(db.view_area());
+            group.for_each_display_buffer([&](mg::DisplayBuffer& db)
+            {
+                view_area.add(db.view_area());
+            });
         });
         geom::Size const display_size{view_area.bounding_rectangle().size};
         uint32_t const surface_side{300};

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,16 +14,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ *              Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
 #include "src/server/compositor/timeout_frame_dropping_policy_factory.h"
 #include "mir/compositor/frame_dropping_policy.h"
 
 #include "mir_test_doubles/mock_timer.h"
-
+#include "mir_test/auto_unblock_thread.h"
 #include "mir_test/gmock_fixes.h"
 
 #include <stdexcept>
+#include <mutex>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -40,7 +42,7 @@ TEST(TimeoutFrameDroppingPolicy, does_not_fire_before_notified_of_block)
     bool frame_dropped{false};
 
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     clock->advance_time(timeout + std::chrono::milliseconds{1});
     EXPECT_FALSE(frame_dropped);
@@ -54,7 +56,7 @@ TEST(TimeoutFrameDroppingPolicy, schedules_alarm_for_correct_timeout)
     bool frame_dropped{false};
 
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
     policy->swap_now_blocking();
 
     clock->advance_time(timeout - std::chrono::milliseconds{1});
@@ -71,7 +73,7 @@ TEST(TimeoutFrameDroppingPolicy, framedrop_callback_cancelled_by_unblock)
 
     bool frame_dropped{false};
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     policy->swap_now_blocking();
     policy->swap_unblocked();
@@ -89,7 +91,7 @@ TEST(TimeoutFrameDroppingPolicy, policy_drops_one_frame_per_blocking_swap)
 
     bool frame_dropped{false};
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     policy->swap_now_blocking();
     policy->swap_now_blocking();
@@ -119,7 +121,7 @@ TEST(TimeoutFrameDroppingPolicy, policy_drops_frames_no_more_frequently_than_tim
 
     bool frame_dropped{false};
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     policy->swap_now_blocking();
     policy->swap_now_blocking();
@@ -142,7 +144,7 @@ TEST(TimeoutFrameDroppingPolicy, newly_blocking_frame_doesnt_reset_timeout)
 
     bool frame_dropped{false};
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     policy->swap_now_blocking();
     clock->advance_time(timeout - std::chrono::milliseconds{1});
@@ -160,7 +162,7 @@ TEST(TimeoutFrameDroppingPolicy, interspersed_timeouts_and_unblocks)
 
     bool frame_dropped{false};
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; }, []{}, []{});
 
     policy->swap_now_blocking();
     policy->swap_now_blocking();
@@ -183,4 +185,29 @@ TEST(TimeoutFrameDroppingPolicy, interspersed_timeouts_and_unblocks)
     frame_dropped = false;
     clock->advance_time(timeout + std::chrono::milliseconds{1});
     EXPECT_FALSE(frame_dropped);
+}
+
+TEST(TimeoutFrameDroppingPolicy, policy_calls_lock_unlock_functions)
+{
+    using namespace testing;
+
+    auto clock = std::make_shared<mt::FakeClock>();
+    auto timer = std::make_shared<mtd::FakeTimer>(clock);
+    std::chrono::milliseconds const timeout{1000};
+
+    mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
+
+    std::mutex m;
+    std::unique_lock<std::mutex> handler_guard{m, std::defer_lock};
+
+    auto policy = factory.create_policy([&]
+    {
+        EXPECT_THAT(handler_guard.owns_lock(), Eq(true));
+    },
+    [&] { handler_guard.lock(); },
+    [&] { handler_guard.unlock(); });
+
+
+    policy->swap_now_blocking();
+    clock->advance_time(timeout + std::chrono::milliseconds{1});
 }

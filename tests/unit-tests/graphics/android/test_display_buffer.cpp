@@ -104,7 +104,6 @@ TEST_F(DisplayBuffer, can_post_update_with_gl_only)
         mga::OverlayOptimization::enabled};
 
     db.gl_swap_buffers();
-    db.flip();
 }
 
 TEST_F(DisplayBuffer, posts_overlay_list_returns_display_device_decision)
