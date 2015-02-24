@@ -22,7 +22,7 @@
 #define MIR_COMPOSITOR_TIMEOUT_FRAME_DROPPING_POLICY_FACTORY_H_
 
 #include "mir/compositor/frame_dropping_policy_factory.h"
-#include "mir/time/timer.h"
+#include "mir/time/alarm_factory.h"
 
 #include <memory>
 #include <chrono>
@@ -39,18 +39,17 @@ class TimeoutFrameDroppingPolicyFactory : public FrameDroppingPolicyFactory
 {
 public:
     /**
-     * \param timer     Timer that the policies constructed will schedule alarms on
-     * \param timeout   Milliseconds that the policies will wait before dropping a frame
+     * \param factory Timer that the policies constructed will schedule alarms on
+     * \param timeout Milliseconds that the policies will wait before dropping a frame
      */
-    TimeoutFrameDroppingPolicyFactory(std::shared_ptr<mir::time::Timer> const& timer,
-                                      std::chrono::milliseconds timeout);
+    TimeoutFrameDroppingPolicyFactory(
+        std::shared_ptr<mir::time::AlarmFactory> const& factory,
+        std::chrono::milliseconds timeout);
 
     std::unique_ptr<FrameDroppingPolicy> create_policy(
-        std::function<void()> const& drop_frame,
-        std::function<void()> const& lock,
-        std::function<void()> const& unlock) const override;
+        std::shared_ptr<LockableCallback> const& drop_frame) const override;
 private:
-    std::shared_ptr<mir::time::Timer> const timer;
+    std::shared_ptr<mir::time::AlarmFactory> const factory;
     std::chrono::milliseconds timeout;
 };
 
