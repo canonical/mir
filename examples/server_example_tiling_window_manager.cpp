@@ -19,6 +19,7 @@
 #include "server_example_tiling_window_manager.h"
 
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_coordinator.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -40,15 +41,16 @@ me::TilingSurfaceInfo::TilingSurfaceInfo(
 {
 }
 
-me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(Tools* const tools) :
+me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(
+    Tools* const tools) :
     tools{tools}
 {
 }
 
 void me::TilingWindowManagerPolicy::click(Point cursor)
 {
-    const auto session = session_under(cursor);
-    const auto surface = tools->surface_at(cursor);
+    auto const session = session_under(cursor);
+    auto const surface = tools->surface_at(cursor);
     tools->set_focus_to(session, surface);
     old_cursor = cursor;
 }
@@ -190,11 +192,11 @@ int me::TilingWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surface>
 
 void me::TilingWindowManagerPolicy::drag(Point cursor)
 {
-    if (const auto session = session_under(cursor))
+    if (auto const session = session_under(cursor))
     {
         if (session == session_under(old_cursor))
         {
-            const auto& info = tools->info_for(session);
+            auto const& info = tools->info_for(session);
             if (drag(tools->focused_surface(), cursor, old_cursor, info.tile))
             {
                 // Still dragging the same surface
