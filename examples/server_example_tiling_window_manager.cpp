@@ -50,8 +50,8 @@ me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(
 
 void me::TilingWindowManagerPolicy::click(Point cursor)
 {
-    const auto session = session_under(cursor);
-    const auto surface = surface_coordinator->surface_at(cursor);
+    auto const session = session_under(cursor);
+    auto const surface = surface_coordinator->surface_at(cursor);
     tools->set_focus_to(session, surface);
     old_cursor = cursor;
 }
@@ -193,11 +193,11 @@ int me::TilingWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surface>
 
 void me::TilingWindowManagerPolicy::drag(Point cursor)
 {
-    if (const auto session = session_under(cursor))
+    if (auto const session = session_under(cursor))
     {
         if (session == session_under(old_cursor))
         {
-            const auto& info = tools->info_for(session);
+            auto const& info = tools->info_for(session);
             if (drag(tools->focused_surface(), cursor, old_cursor, info.tile))
             {
                 // Still dragging the same surface
