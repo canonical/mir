@@ -172,11 +172,28 @@ void me::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Se
 
     tools->info_for(session).surfaces++;
 
-    // TODO There's currently no way to insert surfaces into an active (or inactive)
-    // TODO window tree while keeping the order stable or consistent with spec.
-    // TODO Nor is there a way to update the "default surface" when appropriate!!
-    // TODO for now just give the surface's session focus.
-    tools->set_focus_to(session);
+    switch (surface->type())
+    {
+    case mir_surface_type_normal:       /**< AKA "regular"                       */
+    case mir_surface_type_utility:      /**< AKA "floating"                      */
+    case mir_surface_type_dialog:
+    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+    case mir_surface_type_freestyle:
+    case mir_surface_type_menu:
+    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        // TODO There's currently no way to insert surfaces into an active (or inactive)
+        // TODO window tree while keeping the order stable or consistent with spec.
+        // TODO Nor is there a way to update the "default surface" when appropriate!!
+        tools->set_focus_to(session, surface);
+        active_surface_ = surface;
+        break;
+
+    case mir_surface_type_gloss:
+    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+    default:
+        // Cannot have input focus
+        break;
+    }
 }
 
 void me::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
@@ -420,14 +437,6 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
     }
 
     auto const& info_for = tools->info_for(surface);
-    tools->set_focus_to(info_for.session.lock());
-
-    // TODO There's currently no way to raise the active window tree while keeping
-    // TODO the order stable or consistent with spec.
-    // TODO This is definitely a frig that needs rework
-    surface_coordinator->raise(surface);
-    for (auto const& child : info_for.children)
-        surface_coordinator->raise(child);
 
     switch (surface->type())
     {
@@ -438,14 +447,22 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
     case mir_surface_type_freestyle:
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
-        // TODO set the input focus to this window
+        tools->set_focus_to(info_for.session.lock(), surface);
+
+        // TODO There's currently no way to raise the active window tree while keeping
+        // TODO the order stable or consistent with spec.
+        // TODO This is definitely a frig that needs rework
+        surface_coordinator->raise(surface);
+        for (auto const& child : info_for.children)
+            surface_coordinator->raise(child);
+
         active_surface_ = surface;
         break;
 
     case mir_surface_type_gloss:
     case mir_surface_type_tip:          /**< AKA "tooltip"                       */
     default:
-        // Cannot have input focus
+        // Cannot have input focus - try the parent
         if (auto const parent = info_for.parent.lock())
             select_active_surface(parent);
         break;
