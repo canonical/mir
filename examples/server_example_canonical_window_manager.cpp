@@ -451,14 +451,9 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
         SurfaceSet surfaces{begin(info_for.children), end(info_for.children)};
         surfaces.insert(surface);
 
-        tools->raise(surfaces);
+        // TODO grandchildren and further generations
 
-        // TODO There's currently no way to raise the active window tree while keeping
-        // TODO the order stable or consistent with spec.
-        // TODO This is definitely a frig that needs rework
-        tools->raise(surface);
-        for (auto const& child : info_for.children)
-            tools->raise(child);
+        tools->raise(surfaces);
 
         active_surface_ = surface;
         break;
