@@ -31,7 +31,7 @@ struct Implementation : SomeInterface
     int local_var{0};
 };
 
-mir::UniqueModulePtr<SomeInterface> module_create_instance()
+extern "C" mir::UniqueModulePtr<SomeInterface> module_create_instance()
 {
     return mir::make_module_ptr<Implementation>();
 }
