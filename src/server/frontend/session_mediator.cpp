@@ -42,6 +42,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
+#include "mir/frontend/buffer_stream.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
 
@@ -54,6 +55,8 @@
 #include "surface_tracker.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
+
+#include "mir_toolkit/client_types.h"
 
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -515,6 +518,61 @@ void mf::SessionMediator::screencast_buffer(
                          msg_type);
 
     done->Run();
+}
+
+void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
+    mir::protobuf::BufferStreamParameters const* request,
+    mir::protobuf::BufferStream* response,
+    google::protobuf::Closure* done)
+{
+    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
+
+    auto const session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    report->session_create_surface_called(session->name());
+    
+    mg::BufferUsage usage = mg::BufferUsage::undefined;
+    auto client_usage = request->buffer_usage();
+    if (client_usage == mir_buffer_usage_hardware)
+    {
+        usage = mg::BufferUsage::hardware;
+    }
+    else
+    {
+        usage = mg::BufferUsage::software;
+    }
+
+    auto stream_size = geom::Size{geom::Width{request->width()}, geom::Height{request->height()}};
+    mg::BufferProperties props(stream_size,
+        static_cast<MirPixelFormat>(request->pixel_format()),
+        usage);
+    
+    auto const buffer_stream_id = session->create_buffer_stream(props);
+    auto stream = session->get_buffer_stream(buffer_stream_id);
+    
+    response->mutable_id()->set_value(buffer_stream_id.as_value());
+    response->set_pixel_format(stream->pixel_format());
+
+    // TODO: Is it guaranteed we get the buffer usage we want?
+    response->set_buffer_usage(request->buffer_usage());
+
+    // TODO : Port
+    /*
+    advance_buffer(buffer_stream_id, *stream,
+        [lock, this, response, done, session]
+        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
+        {
+            lock->unlock();
+
+            auto buffer = response->mutable_buffer();
+            pack_protobuf_buffer(*buffer, client_buffer, msg_type);
+
+            done->Run();
+            });*/
+    (void) done;
 }
 
 std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::prompt_session_connect_handler() const

@@ -38,12 +38,14 @@ class SessionListener;
 class Surface;
 class SurfaceCoordinator;
 class SnapshotStrategy;
+class BufferStreamFactory;
 
 class ApplicationSession : public Session
 {
 public:
     ApplicationSession(
         std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
         pid_t pid,
         std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
@@ -77,12 +79,17 @@ public:
     void suspend_prompt_session() override;
     void resume_prompt_session() override;
 
+    std::shared_ptr<frontend::BufferStream> get_buffer_stream(frontend::BufferStreamId stream) const override;
+    frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const& params) override;
+    void release_buffer_stream(frontend::BufferStreamId stream) override;
+
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;
 
 private:
     std::shared_ptr<SurfaceCoordinator> const surface_coordinator;
+    std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     pid_t const pid;
     std::string const session_name;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;

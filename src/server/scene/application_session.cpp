@@ -46,12 +46,14 @@ namespace mev = mir::events;
 
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<ms::BufferStreamFactory> const& buffer_stream_factory,
     pid_t pid,
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<mf::EventSink> const& sink) :
     surface_coordinator(surface_coordinator),
+    buffer_stream_factory(buffer_stream_factory),
     pid(pid),
     session_name(session_name),
     snapshot_strategy(snapshot_strategy),
@@ -227,4 +229,21 @@ void ms::ApplicationSession::suspend_prompt_session()
 void ms::ApplicationSession::resume_prompt_session()
 {
     start_prompt_session();
+}
+
+std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::BufferStreamId stream) const
+{
+    (void) stream;
+    return nullptr;
+}
+
+mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
+{
+    (void) props;
+    return mf::BufferStreamId();
+}
+
+void ms::ApplicationSession::release_buffer_stream(mf::BufferStreamId stream)
+{
+    (void) stream;
 }

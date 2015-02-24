@@ -144,6 +144,11 @@ public:
                            mir::protobuf::Buffer*,
                            google::protobuf::Closure* done) override;
 
+    void create_buffer_stream(google::protobuf::RpcController*,
+                              mir::protobuf::BufferStreamParameters const*,
+                              mir::protobuf::BufferStream*,
+                              google::protobuf::Closure* done) override;
+
     void configure_cursor(google::protobuf::RpcController*,
                           mir::protobuf::CursorSetting const*,
                           mir::protobuf::Void*,
