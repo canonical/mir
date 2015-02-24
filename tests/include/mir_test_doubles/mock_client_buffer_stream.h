@@ -40,6 +40,7 @@ struct MockClientBufferStream : public client::ClientBufferStream
     MOCK_METHOD1(set_swap_interval, void(int));
     MOCK_METHOD0(platform_type, MirPlatformType(void));
     MOCK_METHOD0(get_current_buffer_package, MirNativeBuffer*(void));
+    MOCK_METHOD0(get_create_wait_handle, MirWaitHandle*(void));
 };
 
 }

@@ -21,7 +21,8 @@
 #include "mir_screencast.h"
 #include "mir_surface.h"
 #include "mir_connection.h"
-#include "client_buffer_stream.h"
+#include "buffer_stream.h"
+#include "client_buffer_stream_factory.h"
 
 #include "mir/client_buffer.h"
 
@@ -31,6 +32,61 @@
 #include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
+namespace mp = mir::protobuf;
+
+bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream)
+{
+    (void) buffer_stream;
+    return true;
+}
+
+// TODO: Async creation
+MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connection,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage)
+try
+{
+    MirBufferStream *buffer_stream = nullptr;
+    
+    mp::BufferStreamParameters params;
+    params.set_width(width);
+    params.set_height(height);
+    params.set_pixel_format(format);
+    params.set_buffer_usage(buffer_usage);
+
+    auto bs_uptr =
+        connection->get_client_buffer_stream_factory()->make_producer_stream(connection->display_server(), params, nullptr, nullptr);
+    bs_uptr->get_create_wait_handle()->wait_for_all();
+    buffer_stream = reinterpret_cast<MirBufferStream*>(bs_uptr.get());
+    bs_uptr.release();
+
+    // TODO: Check valid
+    //if (bs_uptr->valid())
+
+    return buffer_stream;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+MirWaitHandle *mir_buffer_stream_release(
+    MirBufferStream * buffer_stream,
+    mir_buffer_stream_callback callback,
+    void *context)
+{
+    (void) buffer_stream;
+    (void) callback;
+    (void) context;
+    return nullptr;
+}
+
+void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
+{
+    (void) buffer_stream;
+}
 
 void mir_buffer_stream_get_current_buffer(MirBufferStream* buffer_stream, MirNativeBuffer** buffer_package_out)
 try

@@ -37,6 +37,13 @@ message BufferStreamId {
   required int32 value = 1;
 };
 
+message BufferStreamParameters {
+    required int32 width = 1;
+    required int32 height = 2;
+    required int32 pixel_format = 3;
+    required int32 buffer_usage = 4;
+};
+
 message BufferRequest {
   optional SurfaceId id = 1;
   optional Buffer buffer = 2;
@@ -254,6 +261,8 @@ service DisplayServer {
   rpc create_screencast(ScreencastParameters) returns (Screencast);
   rpc screencast_buffer(ScreencastId) returns (Buffer);
   rpc release_screencast(ScreencastId) returns (Void);
+
+  rpc create_buffer_stream(BufferStreamParameters) returns (BufferStream);
 
   rpc configure_cursor(CursorSetting) returns (Void);
   rpc new_fds_for_prompt_providers(SocketFDRequest) returns (SocketFD);

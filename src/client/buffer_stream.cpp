@@ -32,6 +32,7 @@
 #include "logging/perf_report.h"
 
 #include <boost/throw_exception.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 #include <stdexcept>
 
@@ -39,6 +40,8 @@ namespace mcl = mir::client;
 namespace ml = mir::logging;
 namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
+
+namespace gp = google::protobuf;
 
 namespace
 {
@@ -98,6 +101,41 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
       perf_report(perf_report)
       
 {
+    created(nullptr, nullptr);
+    perf_report->name_surface(surface_name.c_str());
+}
+
+mcl::BufferStream::BufferStream(mp::DisplayServer& server,
+    std::shared_ptr<mcl::ClientPlatform> const& client_platform,
+    mp::BufferStreamParameters const& parameters,
+    std::shared_ptr<mcl::PerfReport> const& perf_report,
+    mir_buffer_stream_callback callback,
+    void *context)
+    : display_server(server),
+      mode(BufferStreamMode::Producer),
+      client_platform(client_platform),
+      buffer_depository{client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size},
+      swap_interval_(1),
+      perf_report(perf_report)
+{
+    perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
+
+    create_wait_handle.expect_result();
+    try
+    {
+        server.create_buffer_stream(0, &parameters, &protobuf_bs, gp::NewCallback(this, &mcl::BufferStream::created, callback,
+            context));
+    }
+    catch (std::exception const& ex)
+    {
+        protobuf_bs.set_error(std::string{"Error invoking create buffer stream: "} +
+                              boost::diagnostic_information(ex));
+    }
+        
+}
+
+void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *context)
+{
     if (!protobuf_bs.has_id() || protobuf_bs.has_error())
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs.error())));
     if (!protobuf_bs.has_buffer())
@@ -106,7 +144,9 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
     process_buffer(protobuf_bs.buffer());
     egl_native_window_ = client_platform->create_egl_native_window(this);
 
-    perf_report->name_surface(surface_name.c_str());
+    if (callback)
+        callback(reinterpret_cast<MirBufferStream*>(this), context);
+    create_wait_handle.result_received();
 }
 
 mcl::BufferStream::~BufferStream()
@@ -313,4 +353,9 @@ MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()
 MirPlatformType mcl::BufferStream::platform_type()
 {
     return client_platform->platform_type();
+}
+
+MirWaitHandle* mcl::BufferStream::get_create_wait_handle()
+{
+    return &create_wait_handle;
 }

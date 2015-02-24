@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_CLIENT_BUFFER_STREAM_FACTORY_H_
 
 #include "src/client/client_buffer_stream_factory.h"
+#include "src/client/buffer_stream.h"
 
 namespace mir
 {
@@ -34,6 +35,14 @@ struct MockClientBufferStreamFactory : public client::ClientBufferStreamFactory
         protobuf::BufferStream const&, std::string const&));
     MOCK_METHOD3(make_producer_stream, std::shared_ptr<client::ClientBufferStream>(protobuf::DisplayServer&,
         protobuf::BufferStream const&, std::string const&));
+    // TODO: Why can't we mock this?
+    //    MOCK_METHOD4(make_producer_stream, std::unique_ptr<client::BufferStream>(protobuf::DisplayServer&,
+    //        protobuf::BufferStreamParameters const&, mir_buffer_stream_callback callback, void* context));
+    std::unique_ptr<client::BufferStream> make_producer_stream(protobuf::DisplayServer&, protobuf::BufferStreamParameters const&,
+        mir_buffer_stream_callback, void*) override
+    {
+        return nullptr;
+    }
 };
 
 }

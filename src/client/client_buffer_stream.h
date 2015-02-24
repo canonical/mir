@@ -38,6 +38,8 @@ class MemoryRegion;
 class ClientBufferStream
 {
 public:
+    virtual MirWaitHandle* get_create_wait_handle() = 0;
+    
     virtual MirSurfaceParameters get_parameters() const = 0;
     virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
     virtual uint32_t get_current_buffer_id() = 0;

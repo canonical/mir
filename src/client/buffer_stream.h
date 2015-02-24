@@ -63,7 +63,17 @@ public:
         protobuf::BufferStream const& protobuf_bs,
         std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name);
+    // For surfaceless buffer streams
+    BufferStream(mir::protobuf::DisplayServer& server,
+        std::shared_ptr<ClientPlatform> const& native_window_factory,
+        mir::protobuf::BufferStreamParameters const& parameters,
+        std::shared_ptr<PerfReport> const& perf_report,
+        mir_buffer_stream_callback callback,
+        void *context);
+        
     virtual ~BufferStream();
+
+    MirWaitHandle *get_create_wait_handle();
     
     MirWaitHandle* next_buffer(std::function<void()> const& done) override;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override;
@@ -91,6 +101,7 @@ protected:
     BufferStream& operator=(BufferStream const&) = delete;
 
 private:
+    void created(mir_buffer_stream_callback callback, void* context);
     void process_buffer(protobuf::Buffer const& buffer);
     void next_buffer_received(
         std::function<void()> done);
@@ -113,6 +124,7 @@ private:
     
     std::shared_ptr<EGLNativeWindowType> egl_native_window_;
 
+    MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;
     
