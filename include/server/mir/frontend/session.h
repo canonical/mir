@@ -48,7 +48,7 @@ public:
 
     virtual std::shared_ptr<BufferStream> get_buffer_stream(BufferStreamId stream) const = 0;
     virtual BufferStreamId create_buffer_stream(graphics::BufferProperties const& props) = 0;
-    virtual void release_buffer_stream(BufferStreamId stream) = 0;
+    virtual void destroy_buffer_stream(BufferStreamId stream) = 0;
 
     virtual std::string name() const = 0;
 

@@ -243,7 +243,7 @@ mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProper
     return mf::BufferStreamId();
 }
 
-void ms::ApplicationSession::release_buffer_stream(mf::BufferStreamId stream)
+void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId stream)
 {
     (void) stream;
 }

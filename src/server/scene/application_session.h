@@ -81,7 +81,7 @@ public:
 
     std::shared_ptr<frontend::BufferStream> get_buffer_stream(frontend::BufferStreamId stream) const override;
     frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const& params) override;
-    void release_buffer_stream(frontend::BufferStreamId stream) override;
+    void destroy_buffer_stream(frontend::BufferStreamId stream) override;
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;

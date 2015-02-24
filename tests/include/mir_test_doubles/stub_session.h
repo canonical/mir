@@ -43,7 +43,7 @@ struct StubSession : public frontend::Session
     {
         return nullptr;
     }
-    void release_buffer_stream(frontend::BufferStreamId) override
+    void destroy_buffer_stream(frontend::BufferStreamId) override
     {
     }
     frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const&) override

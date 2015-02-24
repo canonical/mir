@@ -60,7 +60,7 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD0(resume_prompt_session, void());
 
     MOCK_CONST_METHOD1(get_buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
-    MOCK_METHOD1(release_buffer_stream, void(frontend::BufferStreamId));
+    MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
     MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
     
 };

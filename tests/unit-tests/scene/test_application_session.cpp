@@ -28,6 +28,7 @@
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer_stream_factory.h"
+#include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/mock_event_sink.h"
@@ -40,8 +41,10 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mi = mir::input;
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 namespace mt = mir::test;
-namespace mtd = mir::test::doubles;
+namespace mtd = mt::doubles;
 
 namespace
 {
@@ -170,6 +173,7 @@ struct ApplicationSession : public testing::Test
     std::shared_ptr<ms::NullSessionListener> const stub_session_listener;
     std::shared_ptr<StubSurfaceCoordinator> const stub_surface_coordinator;
     std::shared_ptr<ms::SnapshotStrategy> const null_snapshot_strategy;
+    std::shared_ptr<mtd::StubBufferStreamFactory> const stub_buffer_stream_factory = std::make_shared<mtd::StubBufferStreamFactory>();
     
     pid_t pid;
     std::string name;

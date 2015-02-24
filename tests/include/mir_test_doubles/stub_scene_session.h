@@ -104,7 +104,7 @@ struct StubSceneSession : public scene::Session
     {
         return nullptr;
     }
-    void release_buffer_stream(frontend::BufferStreamId) override
+    void destroy_buffer_stream(frontend::BufferStreamId) override
     {
     }
     
