@@ -18,8 +18,8 @@
  */
 
 
-#ifndef MIR_TIME_TIMER_H_
-#define MIR_TIME_TIMER_H_
+#ifndef MIR_TIME_ALARM_FACTORY_H_
+#define MIR_TIME_ALARM_FACTORY_H_
 
 #include "mir/time/alarm.h"
 
@@ -29,36 +29,16 @@
 
 namespace mir
 {
+class LockableCallback;
+
 namespace time
 {
 
 class Alarm;
-
-class Timer
+class AlarmFactory
 {
 public:
-    Timer() = default;
-    virtual ~Timer() = default;
-    /**
-     * \brief Create an Alarm that calls the callback after the specified delay
-     *
-     * \param delay     Time from now, in milliseconds, that the callback will fire
-     * \param callback  Function to call when the Alarm signals
-     *
-     * \return A handle to an Alarm that will fire after delay ms.
-     */
-    virtual std::unique_ptr<Alarm> notify_in(std::chrono::milliseconds delay,
-                                             std::function<void()> const& callback) = 0;
-    /**
-     * \brief Create an Alarm that calls the callback at the specified time
-     *
-     * \param time_point Time point when the alarm should be triggered
-     * \param callback  Function to call when the Alarm signals
-     *
-     * \return A handle to an Alarm that will fire after delay ms.
-     */
-    virtual std::unique_ptr<Alarm> notify_at(Timestamp time_point,
-                                             std::function<void()> const& callback) = 0;
+    virtual ~AlarmFactory() = default;
     /**
      * \brief Create an Alarm that will not fire until scheduled
      *
@@ -80,22 +60,17 @@ public:
      * any internal locks are acquired.
      *
      * \param callback Function to call when the Alarm signals
-     * \param lock     Function called within callback dispatching context
-     *                 before the alarm implementation acquires any internal
-     *                 lock
-     * \param unlock   Function called within callback dispatching context after
-     *                 the alarm implementation releases any internal lock
-     *
      * \return A handle to an Alarm that can later be scheduled
      */
-    virtual std::unique_ptr<Alarm> create_alarm(std::function<void()> const& callback,
-        std::function<void()> const& lock, std::function<void()> const& unlock) = 0;
+    virtual std::unique_ptr<Alarm> create_alarm(std::shared_ptr<LockableCallback> const& callback) = 0;
 
-    Timer(Timer const&) = delete;
-    Timer& operator=(Timer const&) = delete;
+protected:
+    AlarmFactory() = default;
+    AlarmFactory(AlarmFactory const&) = delete;
+    AlarmFactory& operator=(AlarmFactory const&) = delete;
 };
 
 }
 }
 
-#endif // MIR_TIME_TIMER_H_
+#endif // MIR_TIME_ALARM_FACTORY_H_
