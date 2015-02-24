@@ -367,9 +367,9 @@ void ms::SurfaceStack::raise(SurfaceSet const& ss)
             auto const part =
                 std::stable_partition(
                     begin(surfaces), end(surfaces),
-                    [&](std::weak_ptr<Surface> const& s) { return ss.count(s); });
+                    [&](std::weak_ptr<Surface> const& s) { return !ss.count(s); });
 
-            if (part != end(surfaces))
+            if (part != end(surfaces) && part != begin(surfaces))
                 surfaces_reordered = true;
         }
     }
