@@ -24,6 +24,8 @@
 
 namespace mir
 {
+class LockableCallback;
+
 namespace compositor
 {
 class FrameDroppingPolicy;
@@ -63,9 +65,7 @@ public:
      *                   after any internal locks are released.
      */
     virtual std::unique_ptr<FrameDroppingPolicy> create_policy(
-        std::function<void()> const& drop_frame,
-        std::function<void()> const& lock,
-        std::function<void()> const& unlock) const = 0;
+        std::shared_ptr<LockableCallback> const& drop_frame) const = 0;
 };
 
 }
