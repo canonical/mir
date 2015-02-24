@@ -87,6 +87,16 @@ private:
 
 class NestedOutput;
 
+class DisplaySyncGroup : public graphics::DisplaySyncGroup
+{
+public:
+    DisplaySyncGroup(std::shared_ptr<detail::NestedOutput> const& output);
+    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const&) override;
+    void post() override;
+private:
+    std::shared_ptr<detail::NestedOutput> const output;
+};
+
 extern EGLint const nested_egl_context_attribs[];
 }
 
@@ -105,7 +115,7 @@ public:
 
     ~NestedDisplay() noexcept;
 
-    void for_each_display_buffer(std::function<void(DisplayBuffer&)>const& f) override;
+    void for_each_display_sync_group(std::function<void(DisplaySyncGroup&)>const& f) override;
 
     std::unique_ptr<DisplayConfiguration> configuration() const override;
     void configure(DisplayConfiguration const&) override;
@@ -133,7 +143,7 @@ private:
     detail::EGLDisplayHandle egl_display;
 
     std::mutex outputs_mutex;
-    std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
+    std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::DisplaySyncGroup>> outputs;
     DisplayConfigurationChangeHandler my_conf_change_handler;
     void create_surfaces(mir::graphics::DisplayConfiguration const& configuration);
     void apply_to_connection(mir::graphics::DisplayConfiguration const& configuration);

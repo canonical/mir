@@ -24,7 +24,7 @@
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_display_buffer.h"
+#include "mir_test_doubles/null_display_sync_group.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test/display_config_matchers.h"
 #include "mir_test_doubles/stub_display_configuration.h"
@@ -64,9 +64,9 @@ public:
     {
     }
 
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
-        f(display_buffer);
+        f(display_sync_group);
     }
 
     std::unique_ptr<mg::DisplayConfiguration> configuration() const override
@@ -111,7 +111,7 @@ public:
 
 private:
     std::shared_ptr<mtd::StubDisplayConfig> config;
-    mtd::NullDisplayBuffer display_buffer;
+    mtd::NullDisplaySyncGroup display_sync_group;
     mt::Pipe p;
     std::atomic<bool> handler_called;
 };

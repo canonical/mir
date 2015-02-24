@@ -61,8 +61,8 @@ public:
     ~Display();
 
     geometry::Rectangle view_area() const;
-    void for_each_display_buffer(
-        std::function<void(graphics::DisplayBuffer&)> const& f) override;
+    void for_each_display_sync_group(
+        std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
 
     std::unique_ptr<DisplayConfiguration> configuration() const override;
     void configure(DisplayConfiguration const& conf) override;

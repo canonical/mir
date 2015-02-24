@@ -438,10 +438,11 @@ TEST_F(MesaDisplayTest, post_update)
 
     auto display = create_display(create_platform());
 
-    display->for_each_display_buffer([](mg::DisplayBuffer& db)
-    {
-        db.gl_swap_buffers();
-        db.flip();
+    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([](mg::DisplayBuffer& db) {
+            db.gl_swap_buffers();
+        });
+        group.post();
     });
 }
 
@@ -476,11 +477,11 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
     EXPECT_THROW(
     {
         auto display = create_display(create_platform());
-
-        display->for_each_display_buffer([](mg::DisplayBuffer& db)
-        {
-            db.gl_swap_buffers();
-            db.flip();
+        display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
+            group.for_each_display_buffer([](mg::DisplayBuffer& db) {
+                db.gl_swap_buffers();
+            });
+            group.post();
         });
     }, std::runtime_error);
 }
@@ -622,9 +623,10 @@ TEST_F(MesaDisplayTest, for_each_display_buffer_calls_callback)
 
     int callback_count{0};
 
-    display->for_each_display_buffer([&](mg::DisplayBuffer&)
-    {
-        callback_count++;
+    display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([&](mg::DisplayBuffer&) {
+            callback_count++;
+        });
     });
 
     EXPECT_NE(0, callback_count);

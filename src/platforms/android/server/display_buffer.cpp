@@ -98,10 +98,6 @@ void mga::DisplayBuffer::gl_swap_buffers()
     display_device->commit(display_name, *layer_list, gl_context, overlay_program);
 }
 
-void mga::DisplayBuffer::flip()
-{
-}
-
 MirOrientation mga::DisplayBuffer::orientation() const
 {
     /*
@@ -116,6 +112,15 @@ MirOrientation mga::DisplayBuffer::orientation() const
 bool mga::DisplayBuffer::uses_alpha() const
 {
     return false;
+}
+
+void mga::DisplayBuffer::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+{
+    f(*this);
+}
+
+void mga::DisplayBuffer::post()
+{
 }
 
 void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation)
