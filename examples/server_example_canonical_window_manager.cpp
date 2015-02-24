@@ -445,14 +445,11 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
     case mir_surface_type_freestyle:
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
-    {
         tools->set_focus_to(info_for.session.lock(), surface);
-
         raise_tree(surface);
-
         active_surface_ = surface;
         break;
-    }
+
     case mir_surface_type_gloss:
     case mir_surface_type_tip:          /**< AKA "tooltip"                       */
     default:

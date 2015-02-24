@@ -43,7 +43,6 @@ class FocusController :
     private virtual shell::FocusController
 {
 public:
-
     using shell::FocusController::focus_next;
 
     virtual auto focused_session() const -> std::shared_ptr<scene::Session> = 0;

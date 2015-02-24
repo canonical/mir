@@ -158,4 +158,3 @@ auto me::GenericShell::focused_session() const
 {
     return focussed_application().lock();
 }
-
