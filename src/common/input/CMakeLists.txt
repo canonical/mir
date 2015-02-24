@@ -16,7 +16,6 @@
 
 set(
   ANDROID_SHARED_INPUT_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
 )
 
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
@@ -28,6 +27,7 @@ add_library(mirsharedinput OBJECT
   ${ANDROID_SHARED_INPUT_SOURCES}
   udev_wrapper.cpp
   input_event.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
 )
 
 list(APPEND MIR_COMMON_SOURCES

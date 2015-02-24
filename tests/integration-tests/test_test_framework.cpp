@@ -29,7 +29,8 @@
 
 #include <thread>
 #include <list>
-#include <sys/resource.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 namespace mf = mir::frontend;
 
@@ -93,25 +94,35 @@ TEST_F(DemoInProcessServer, client_can_connect)
     mir_connection_release(connection);
 }
 
+namespace
+{
+unsigned count_fds()
+{
+    unsigned count = 0;
+    DIR* dir;
+    EXPECT_TRUE(dir = opendir("/proc/self/fd/"));
+    while (readdir(dir) != nullptr)
+        count++;
+    closedir(dir);
+    return count;
+}
+}
+
 // Regression test for https://bugs.launchpad.net/mir/+bug/1395762
 TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak_fds)
 {
     mir::test::Signal connection_released;
 
+    int fd_count_after_one_surface_lifetime = 0;
+               
     std::thread{
         [&]
         {
             auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
             EXPECT_TRUE(mir_connection_is_valid(connection));
 
-            // Use the number of allowed open files to ensure we exercise the system properly
-            struct rlimit rlim;
-            getrlimit(RLIMIT_NOFILE, &rlim);
-            rlim_t fd_limit = rlim.rlim_cur;
-            if (fd_limit == RLIM_INFINITY) fd_limit = 1024;
-
-            for (rlim_t i = 0; i < fd_limit; ++i)
-            {
+             for (int i = 0; i < 16; ++i)
+             {
                 MirSurfaceParameters request_params =
                 {
                     __PRETTY_FUNCTION__,
@@ -122,13 +133,30 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
                 };
 
                 auto const surface = mir_connection_create_surface_sync(connection, &request_params);
+                EXPECT_TRUE(mir_surface_is_valid(surface));
                 mir_surface_release_sync(surface);
+
+                if (i == 0)
+                {
+                    fd_count_after_one_surface_lifetime = count_fds();
+                }
             }
 
             mir_connection_release(connection);
-            connection_released.raise();
-        }}.detach();
 
-    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{60}))
-        << "Client hung, possibly because of fd leaks" << std::endl;
+            connection_released.raise();
+
+        }}.detach();
+    
+
+    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{480}))
+        << "Client hung" << std::endl;
+
+    // Investigation revealed we leak a differing number of fds (3, 0) on Mesa/Android over the
+    // entire lifetime of the client library. So we verify here only that we don't leak any FDs beyond
+    // those created up to the lifetime of the first surface.
+    auto new_fd_count = count_fds();
+
+    EXPECT_LE(new_fd_count, fd_count_after_one_surface_lifetime);
+
 }

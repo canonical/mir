@@ -16,8 +16,6 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "android_input_receiver.h"
 
 #include "mir/input/xkb_mapper.h"
@@ -33,27 +31,29 @@ namespace mircva = mircv::android;
 namespace mia = mir::input::android;
 
 mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
+                                     std::shared_ptr<mircv::XKBMapper> const& keymapper,
                                      std::shared_ptr<mircv::InputReceiverReport> const& report,
                                      AndroidClock clock)
   : input_channel(input_channel),
+    xkb_mapper(keymapper),
     report(report),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
     fd_added(false),
-    xkb_mapper(std::make_shared<mircv::XKBMapper>()),
     android_clock(clock)
 {
 }
 
 mircva::InputReceiver::InputReceiver(int fd,
+                                     std::shared_ptr<mircv::XKBMapper> const& keymapper,
                                      std::shared_ptr<mircv::InputReceiverReport> const& report,
                                      AndroidClock clock)
   : input_channel(new droidinput::InputChannel(droidinput::String8(""), fd)),
+    xkb_mapper(keymapper),
     report(report),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
     fd_added(false),
-    xkb_mapper(std::make_shared<mircv::XKBMapper>()),
     android_clock(clock)
 {
 }
@@ -74,10 +74,13 @@ static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, M
 {
     // TODO: As XKBMapper is used to track modifier state we need to use a seperate instance
     // of XKBMapper per device id (or modify XKBMapper semantics)
-    if (ev.type != mir_event_type_key)
+    if (mir_event_get_type(&ev) != mir_event_type_input)
+        return;
+    if (mir_input_event_get_type(mir_event_get_input_event(&ev)) !=
+        mir_input_event_type_key)
         return;
 
-    xkb_mapper->update_state_and_map_event(ev.key);
+    xkb_mapper->update_state_and_map_event(ev);
 }
 
 }

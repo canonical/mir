@@ -22,6 +22,7 @@
 #include "src/common/input/android/android_input_receiver.h"
 
 #include "mir/input/null_input_receiver_report.h"
+#include "mir/input/xkb_mapper.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -48,7 +49,7 @@ struct MockEventHandler
 struct MockInputReceiver : public mircva::InputReceiver
 {
     MockInputReceiver(int fd)
-      : InputReceiver(fd, std::make_shared<mircv::NullInputReceiverReport>())
+        : InputReceiver(fd, std::make_shared<mircv::XKBMapper>(), std::make_shared<mircv::NullInputReceiverReport>())
     {
     }
     MOCK_METHOD1(next_event, bool(MirEvent &));

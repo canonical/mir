@@ -63,6 +63,7 @@ set_target_properties(
   OUTPUT_NAME graphics-android
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/server-modules
   PREFIX ""
+  SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 

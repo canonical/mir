@@ -124,8 +124,6 @@ TEST_F(DefaultDisplayBufferCompositor, render)
         .Times(1);
     EXPECT_CALL(display_buffer, gl_swap_buffers())
         .Times(1);
-    EXPECT_CALL(display_buffer, flip())
-        .Times(1);
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
@@ -205,8 +203,6 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
         .InSequence(render_seq);
     EXPECT_CALL(display_buffer, gl_swap_buffers())
         .InSequence(render_seq);
-    EXPECT_CALL(display_buffer, flip())
-        .InSequence(render_seq);
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
@@ -242,8 +238,6 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
         .InSequence(seq);
     EXPECT_CALL(display_buffer, gl_swap_buffers())
         .InSequence(seq);
-    EXPECT_CALL(display_buffer, flip())
-        .InSequence(seq);
 
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .InSequence(seq)
@@ -262,8 +256,6 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
     EXPECT_CALL(mock_renderer, render(IsEmpty()))
         .InSequence(seq);
     EXPECT_CALL(display_buffer, gl_swap_buffers())
-        .InSequence(seq);
-    EXPECT_CALL(display_buffer, flip())
         .InSequence(seq);
 
     mc::DefaultDisplayBufferCompositor compositor(
@@ -301,8 +293,6 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
     EXPECT_CALL(mock_renderer, render(ContainerEq(visible)))
         .InSequence(seq);
     EXPECT_CALL(display_buffer, gl_swap_buffers())
-        .InSequence(seq);
-    EXPECT_CALL(display_buffer, flip())
         .InSequence(seq);
 
     mc::DefaultDisplayBufferCompositor compositor(

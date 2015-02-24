@@ -144,10 +144,6 @@ void mgo::DisplayBuffer::gl_swap_buffers()
     glFinish();
 }
 
-void mgo::DisplayBuffer::flip()
-{
-}
-
 bool mgo::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
 {
     return false;
