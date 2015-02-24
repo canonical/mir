@@ -38,7 +38,7 @@ mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> con
                                                                               MIR_SERVER_PLATFORM_VERSION);
             auto info = describe_module();
 
-            if (info->type != ModuleType::server_graphics_platform)
+            if (!contains(info->type, ModuleType::server_graphics_platform))
             {
                 ml::log(ml::Severity::informational,
                     std::string{"Not considering "} + info->name +  " as a graphics platform module",

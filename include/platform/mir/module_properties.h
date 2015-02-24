@@ -19,6 +19,8 @@
 #ifndef MIR_PLATFORM_MODULE_PROPERTIES_H_
 #define MIR_PLATFORM_MODULE_PROPERTIES_H_
 
+#include "mir/flags.h"
+
 namespace mir
 {
 
@@ -28,13 +30,15 @@ enum class ModuleType : uint32_t
     server_input_platform = server_graphics_platform << 1,
 };
 
+void mir_enable_enum_bit_operators(ModuleType);
+
 /**
  * Describes a platform module
  */
 struct ModuleProperties
 {
     char const* name;
-    ModuleType type;
+    mir::Flags<ModuleType> type;
     int major_version;
     int minor_version;
     int micro_version;
