@@ -364,12 +364,13 @@ void ms::SurfaceStack::raise(SurfaceSet const& ss)
         {
             auto &surfaces = layer.second;
 
-            auto const part =
-                std::stable_partition(
-                    begin(surfaces), end(surfaces),
-                    [&](std::weak_ptr<Surface> const& s) { return !ss.count(s); });
+            auto const old_surfaces = surfaces;
 
-            if (part != end(surfaces) && part != begin(surfaces))
+            std::stable_partition(
+                begin(surfaces), end(surfaces),
+                [&](std::weak_ptr<Surface> const& s) { return !ss.count(s); });
+
+            if (old_surfaces != surfaces)
                 surfaces_reordered = true;
         }
     }
