@@ -491,14 +491,14 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
         return false;
 
     auto const top_left = surface->top_left();
-    auto const old_size = surface->size();
+    Rectangle const old_pos{top_left, surface->size()};
 
     auto anchor = top_left;
 
     for (auto const& corner : {
-        anchor + as_displacement(surface->size()),
-        anchor + DeltaX{surface->size().width.as_int()},
-        anchor + DeltaY{surface->size().height.as_int()}})
+        old_pos.top_right(),
+        old_pos.bottom_left(),
+        old_pos.bottom_right()})
     {
         if ((old_cursor - anchor).length_squared() <
             (old_cursor - corner).length_squared())
@@ -514,18 +514,15 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
 
     auto const delta = cursor-old_cursor;
 
-    Size new_size{
-        old_size.width.as_int()  + x_sign*delta.dx.as_int(),
-        old_size.height.as_int() + y_sign*delta.dy.as_int()};
+    Size new_size{old_pos.size.width + x_sign*delta.dx, old_pos.size.height + y_sign*delta.dy};
 
-    Point new_pos = top_left +
-        Displacement{left_resize*delta.dx, top_resize*delta.dy};
+    Point new_pos = top_left + left_resize*delta.dx + top_resize*delta.dy;
 
     if (left_resize)
     {
         if (new_pos.x < bounds.top_left.x)
         {
-            new_size.width = Width{new_size.width.as_int() + (new_pos.x - bounds.top_left.x).as_int()};
+            new_size.width = new_size.width + (new_pos.x - bounds.top_left.x);
             new_pos.x = bounds.top_left.x;
         }
     }
@@ -533,14 +530,14 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
     {
         auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
         if (to_bottom_right.dx < DeltaX{0})
-            new_size.width = Width{new_size.width.as_int() + to_bottom_right.dx.as_int()};
+            new_size.width = new_size.width + to_bottom_right.dx;
     }
 
     if (top_resize)
     {
         if (new_pos.y < bounds.top_left.y)
         {
-            new_size.height = Height{new_size.height.as_int() + (new_pos.y - bounds.top_left.y).as_int()};
+            new_size.height = new_size.height + (new_pos.y - bounds.top_left.y);
             new_pos.y = bounds.top_left.y;
         }
     }
@@ -548,7 +545,7 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
     {
         auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
         if (to_bottom_right.dy < DeltaY{0})
-            new_size.height = Height{new_size.height.as_int() + to_bottom_right.dy.as_int()};
+            new_size.height = new_size.height + to_bottom_right.dy;
     }
 
     surface->resize(new_size);
