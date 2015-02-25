@@ -51,7 +51,6 @@ struct IdCollectingDB : mtd::NullDisplayBuffer
         //the surface will be the frontmost of the renderables
         if (!renderables.empty())
             last = renderables.front()->buffer()->id();
-        printf("last %i\n", (int) last.as_value());
         return true;
     }
     mg::BufferID last_id()
@@ -129,7 +128,6 @@ TEST_F(ClientLatency, does_not_exceed_one_frame_double_buffered)
         mir_buffer_stream_swap_buffers_sync(stream);
     }
     //Default is double buffered
-    printf("LATENCY %f\n",display.group.average_latency());
     EXPECT_THAT(display.group.average_latency(), Lt(1.0));
 }
 
