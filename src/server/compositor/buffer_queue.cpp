@@ -98,6 +98,7 @@ mc::BufferQueue::BufferQueue(
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
+      current_compositor_buffer_valid{false},
       the_properties{props},
       force_new_compositor_buffer{false},
       callbacks_allowed{true},
@@ -213,7 +214,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     std::unique_lock<decltype(guard)> lock(guard);
 
     bool use_current_buffer = false;
-    if (!current_buffer_users.empty() && !is_a_current_buffer_user(user_id))
+    if (!is_a_current_buffer_user(user_id))
     {
         use_current_buffer = true;
         current_buffer_users.push_back(user_id);
@@ -244,6 +245,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_buffer_users.clear();
         current_buffer_users.push_back(user_id);
         current_compositor_buffer = pop(ready_to_composite_queue);
+        current_compositor_buffer_valid = true;
     }
     else if (current_buffer_users.empty())
     {   // current_buffer_users and ready_to_composite_queue both empty
@@ -345,7 +347,7 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
     std::lock_guard<decltype(guard)> lock(guard);
 
     int count = ready_to_composite_queue.size();
-    if (!current_buffer_users.empty() && !is_a_current_buffer_user(user_id))
+    if (!is_a_current_buffer_user(user_id))
     {
         // The virtual front of the ready queue isn't actually in the ready
         // queue, but is the current_compositor_buffer, so count that too:
@@ -422,6 +424,7 @@ void mc::BufferQueue::give_buffer_to_client(
 
 bool mc::BufferQueue::is_a_current_buffer_user(void const* user_id) const
 {
+    if (!current_compositor_buffer_valid) return true;
     int const size = current_buffer_users.size();
     int i = 0;
     while (i < size && current_buffer_users[i] != user_id) ++i;
@@ -483,8 +486,7 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex>& lock, SnapshotWai
         buffer_to_give = current_compositor_buffer;
         current_compositor_buffer = pop(ready_to_composite_queue);
         current_buffer_users.clear();
-        void const* const impossible_user_id = this;
-        current_buffer_users.push_back(impossible_user_id);
+        current_compositor_buffer_valid = true;
     }
     else if (ready_to_composite_queue.size() > 1)
     {

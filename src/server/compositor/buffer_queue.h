@@ -96,6 +96,7 @@ private:
 
     int nbuffers;
     bool frame_dropping_enabled;
+    bool current_compositor_buffer_valid;
     graphics::BufferProperties the_properties;
     bool force_new_compositor_buffer;
     bool callbacks_allowed;

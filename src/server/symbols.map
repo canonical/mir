@@ -357,6 +357,7 @@ MIR_SERVER_29 {
     mir::shell::AbstractShell::create_surface*;
     mir::shell::AbstractShell::destroy_surface*;
     mir::shell::AbstractShell::focus_next*;
+    mir::shell::AbstractShell::focused_surface*;
     mir::shell::AbstractShell::focussed_application*;
     mir::shell::AbstractShell::get_surface_attribute*;
     mir::shell::AbstractShell::handle_surface_created*;
