@@ -66,6 +66,7 @@ public:
     void drop_client_requests() override;
 
 private:
+    class LockableCallback;
     enum SnapshotWait
     {
         wait_for_snapshot,
@@ -80,7 +81,6 @@ private:
     void drop_frame(std::unique_lock<std::mutex>& lock, SnapshotWait wait_type);
 
     mutable std::mutex guard;
-    std::unique_lock<decltype(guard)> guard_lock;
 
     std::vector<std::shared_ptr<graphics::Buffer>> buffers;
     std::deque<graphics::Buffer*> ready_to_composite_queue;

@@ -19,6 +19,7 @@
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/lockable_callback.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -91,6 +92,46 @@ void replace(mg::Buffer const* item, std::shared_ptr<mg::Buffer> const& new_buff
 }
 }
 
+namespace mir
+{
+namespace compositor
+{
+class BufferQueue::LockableCallback : public mir::LockableCallback
+{
+public:
+    LockableCallback(BufferQueue* const q)
+        : q{q}
+    {
+    }
+
+    void operator()() override
+    {
+        // We ignore any ongoing snapshotting as it could lead to deadlock.
+       // In order to wait the guard_lock needs to be released; a BufferQueue::release
+       // call can sneak in at that time from a different thread which
+       // can invoke framedrop_policy methods
+        q->drop_frame(guard_lock, BufferQueue::ignore_snapshot);
+    }
+
+    void lock() override
+    {
+        // This lock is aquired before the framedrop policy acquires any locks of its own.
+        guard_lock = std::move(std::unique_lock<std::mutex>{q->guard});
+    }
+
+    void unlock() override
+    {
+        if (guard_lock.owns_lock())
+            guard_lock.unlock();
+    }
+
+private:
+    BufferQueue* const q;
+    std::unique_lock<std::mutex> guard_lock;
+};
+}
+}
+
 mc::BufferQueue::BufferQueue(
     int nbuffers,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
@@ -132,18 +173,8 @@ mc::BufferQueue::BufferQueue(
     if (nbuffers == 1)
         free_buffers.push_back(current_compositor_buffer);
 
-    // A lock_guard will be created by the policy dispatcher invoking the given "lock" lambda
-    // before it acquires any internal locks of its own.
-    framedrop_policy = policy_provider.create_policy([this]
-    {
-        // We ignore any ongoing snapshotting as it could lead to deadlock.
-        // In order to wait the guard_lock needs to be released; a BufferQueue::release
-        // call can sneak in at that time from a different thread which
-        // can invoke framedrop_policy methods
-        drop_frame(guard_lock, ignore_snapshot);
-    },
-    [this] { guard_lock = std::move(std::unique_lock<decltype(guard)>{guard}); },
-    [this] { if (guard_lock.owns_lock()) guard_lock.unlock(); });
+    framedrop_policy = policy_provider.create_policy(
+        std::make_shared<BufferQueue::LockableCallback>(this));
 }
 
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
