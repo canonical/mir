@@ -25,6 +25,7 @@
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_sender.h"
 #include "mir/graphics/buffer.h"
+#include "mir/geometry/displacement.h"
 
 #include "mir/scene/scene_report.h"
 
@@ -329,8 +330,7 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
         return true;
 
     // TODO: Perhaps creates some issues with transformation.
-    auto local_point = geom::Point{geom::X{point.x.as_uint32_t()-surface_rect.top_left.x.as_uint32_t()},
-                                   geom::Y{point.y.as_uint32_t()-surface_rect.top_left.y.as_uint32_t()}};
+    auto local_point = geom::Point{0, 0} + (point-surface_rect.top_left);
 
     for (auto const& rectangle : custom_input_rectangles)
     {

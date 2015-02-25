@@ -115,9 +115,10 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
     {
         auto const edge_attachment = parameters.edge_attachment.value();
         auto const aux_rect = parameters.aux_rect.value();
-        auto const top_left = aux_rect.top_left + (parent->top_left() - display_area.top_left);
-        auto const top_right= top_left + Displacement{aux_rect.size.width.as_int(), 0};
-        auto const bot_left = top_left + Displacement{0, aux_rect.size.height.as_int()};
+        auto const parent_top_left = parent->top_left();
+        auto const top_left = aux_rect.top_left     -Point{} + parent_top_left;
+        auto const top_right= aux_rect.top_right()  -Point{} + parent_top_left;
+        auto const bot_left = aux_rect.bottom_left()-Point{} + parent_top_left;
 
         if (edge_attachment && mir_edge_attachment_vertical)
         {
@@ -157,7 +158,7 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
         auto centred = display_area.top_left + 0.5*(
             as_displacement(display_area.size) - as_displacement(parameters.size));
 
-        parameters.top_left = centred - Displacement{0, (display_area.size.height.as_int()-height)/6};
+        parameters.top_left = centred - DeltaY{(display_area.size.height.as_int()-height)/6};
     }
 
     return parameters;
@@ -496,8 +497,8 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
 
     for (auto const& corner : {
         anchor + as_displacement(surface->size()),
-        anchor + Displacement{surface->size().width.as_int(), 0},
-        anchor + Displacement{0, surface->size().height.as_int()}})
+        anchor + DeltaX{surface->size().width.as_int()},
+        anchor + DeltaY{surface->size().height.as_int()}})
     {
         if ((old_cursor - anchor).length_squared() <
             (old_cursor - corner).length_squared())
