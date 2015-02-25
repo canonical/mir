@@ -381,7 +381,8 @@ MirWaitHandle* mcl::BufferStream::release(
 void mcl::BufferStream::released(
     mir_buffer_stream_callback callback, void* context)
 {
-    callback(reinterpret_cast<MirBufferStream*>(this), context);
+    if (callback)
+        callback(reinterpret_cast<MirBufferStream*>(this), context);
     release_wait_handle.result_received();
 }
 

@@ -58,7 +58,7 @@ try
     auto bs_uptr =
         connection->get_client_buffer_stream_factory()->make_producer_stream(connection->display_server(), params, nullptr, nullptr);
     bs_uptr->get_create_wait_handle()->wait_for_all();
-    buffer_stream = reinterpret_cast<MirBufferStream*>(bs_uptr.get());
+    buffer_stream = reinterpret_cast<MirBufferStream*>(static_cast<mcl::ClientBufferStream*>(bs_uptr.get()));
     bs_uptr.release();
 
     // TODO: Check valid
