@@ -34,6 +34,7 @@ set(
   test_debug_api.cpp
   test_unresponsive_client.cpp
   test_client_platform_operation.cpp
+  test_latency.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")
