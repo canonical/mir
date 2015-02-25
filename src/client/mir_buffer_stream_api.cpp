@@ -34,12 +34,6 @@
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 
-bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream)
-{
-    (void) buffer_stream;
-    return true;
-}
-
 // TODO: Async creation
 MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connection,
     int width, int height,
@@ -179,3 +173,18 @@ catch (std::exception const& ex)
     return MirPlatformType();
 }
 
+bool mir_buffer_stream_is_valid(MirBufferStream* opaque_stream)
+{
+    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
+    
+    auto surface = dynamic_cast<MirSurface*>(buffer_stream);
+    if (surface)
+        return MirSurface::is_valid(surface);
+    auto screencast = dynamic_cast<MirScreencast*>(buffer_stream);
+    if(screencast)
+        return screencast->valid();
+    auto bs = dynamic_cast<mcl::BufferStream*>(buffer_stream);
+    if(bs)
+        return bs->valid();
+    return false;  
+}

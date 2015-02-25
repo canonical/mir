@@ -392,3 +392,9 @@ mf::BufferStreamId mcl::BufferStream::rpc_id() const
     
     return mf::BufferStreamId(protobuf_bs.id().value());
 }
+
+bool mcl::BufferStream::valid() const
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    return protobuf_bs.has_id() && !protobuf_bs.has_error();
+}

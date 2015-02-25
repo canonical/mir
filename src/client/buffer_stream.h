@@ -98,6 +98,7 @@ public:
     MirPlatformType platform_type() override;
 
     frontend::BufferStreamId rpc_id() const override;
+    bool valid() const override;
     
 protected:
     BufferStream(BufferStream const&) = delete;
