@@ -25,8 +25,12 @@ namespace mir { namespace compositor {
 
 struct Decoration
 {
-    // TODO enum class Type {none, window} type;  ...
+    enum class Type {none, surface} type;
     std::string name;
+
+    Decoration() : type{Type::none} {}
+    Decoration(Type t, std::string const& n) : type{t}, name{n} {}
+    operator bool() const { return type != Type::none; }
 };
 
 } } // namespace mir::compositor

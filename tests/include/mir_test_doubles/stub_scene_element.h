@@ -54,11 +54,6 @@ public:
     void occluded() override
     {
     }
-    
-    bool get_decoration(compositor::Decoration&) const override
-    {
-        return false;
-    }
 
 private:
     std::shared_ptr<graphics::Renderable> const renderable_;

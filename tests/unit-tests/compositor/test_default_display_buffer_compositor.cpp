@@ -62,11 +62,6 @@ struct StubSceneElement : mc::SceneElement
         return renderable_;
     }
 
-    bool get_decoration(mc::Decoration&) const
-    {
-        return true;
-    }
-
     void rendered()
     {
     }
@@ -313,14 +308,12 @@ struct MockSceneElement : mc::SceneElement
 {
     MockSceneElement(std::shared_ptr<mg::Renderable> const& renderable)
     {
-        ON_CALL(*this, get_decoration(testing::_))
-            .WillByDefault(testing::Return(true));
         ON_CALL(*this, renderable())
             .WillByDefault(testing::Return(renderable));
     }
 
     MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
-    MOCK_CONST_METHOD1(get_decoration, bool(mc::Decoration&));
+    MOCK_CONST_METHOD0(decoration, mc::Decoration const&());
     MOCK_METHOD0(rendered, void());
     MOCK_METHOD0(occluded, void());
 };

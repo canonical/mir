@@ -50,9 +50,9 @@ public:
         std::shared_ptr<ms::RenderingTracker> const& tracker,
         mc::CompositorID id)
         : renderable_{surface->compositor_snapshot(id)},
-          name_{surface->name()},  // <-^- slight risk these are out of sync
-          tracker{tracker},        //      but that's less than any buffer lag
-          cid{id}
+          tracker{tracker},
+          cid{id},
+          decor(mc::Decoration::Type::surface, surface->name())
     {
     }
 
@@ -71,17 +71,16 @@ public:
         tracker->occluded_in(cid);
     }
 
-    bool get_decoration(mc::Decoration& d) const override
+    mc::Decoration const& decoration() const override
     {
-        d.name = name_;
-        return true;
+        return decor;
     }
 
 private:
     std::shared_ptr<mg::Renderable> const renderable_;
-    std::string const name_;
     std::shared_ptr<ms::RenderingTracker> const tracker;
     mc::CompositorID cid;
+    mc::Decoration const decor;
 };
 
 //note: something different than a 2D/HWC overlay
@@ -105,11 +104,6 @@ public:
 
     void occluded() override
     {
-    }
-    
-    bool get_decoration(mc::Decoration&) const override
-    {
-        return false;
     }
 
 private:

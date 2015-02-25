@@ -39,7 +39,12 @@ public:
     virtual std::shared_ptr<graphics::Renderable> renderable() const = 0;
     virtual void rendered() = 0;
     virtual void occluded() = 0;
-    virtual bool get_decoration(Decoration& decor) const = 0;
+
+    virtual Decoration const& decoration() const
+    {
+        static const Decoration none;
+        return none;
+    }
 
 protected:
     SceneElement() = default;
