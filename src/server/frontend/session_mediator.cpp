@@ -52,7 +52,7 @@
 #include "../../src/platforms/mesa/include/mir_toolkit/mesa/platform_operation.h"
 
 #include "mir/geometry/rectangles.h"
-#include "surface_tracker.h"
+#include "buffer_stream_tracker.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
@@ -97,7 +97,7 @@ mf::SessionMediator::SessionMediator(
     connection_context(connection_context),
     cursor_images(cursor_images),
     translator{translator},
-    surface_tracker{static_cast<size_t>(client_buffer_cache_size)}
+    buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
 
@@ -156,16 +156,12 @@ void mf::SessionMediator::advance_buffer(
     BufferStream& stream,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    // TODO: Reorg tracker
-    auto surface_id = mf::SurfaceId(stream_id.as_value());
-    auto client_buffer = surface_tracker.last_buffer(surface_id);
+    auto client_buffer = buffer_stream_tracker.last_buffer(stream_id);
     stream.swap_buffers(
         client_buffer, 
         [this, stream_id, complete](mg::Buffer* new_buffer)
         {
-            // TODO:  Reorg surface tracker
-            auto surf_id = mf::SurfaceId(stream_id.as_value());
-            if (surface_tracker.track_buffer(surf_id, new_buffer))
+            if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
                 complete(new_buffer, mg::BufferIpcMsgType::full_msg);
@@ -290,7 +286,6 @@ void mf::SessionMediator::next_buffer(
 
     auto surface = session->get_surface(surf_id);
 
-    // TODO: ID cast
     auto stream_id = mf::BufferStreamId{surf_id.as_value()};
 
     advance_buffer(stream_id, *surface,
@@ -312,14 +307,11 @@ void mf::SessionMediator::exchange_buffer(
     google::protobuf::Closure* done)
 {
     mf::BufferStreamId const stream_id{request->id().value()};
-    // TODO:  Reorg surface tracker
-    auto surface_id = mf::SurfaceId(stream_id.as_value());
-                                            
 
     mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    ipc_operations->unpack_buffer(request_msg, *surface_tracker.last_buffer(surface_id));
+    ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
 
     auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
     auto const session = weak_session.lock();
@@ -330,15 +322,12 @@ void mf::SessionMediator::exchange_buffer(
 
     auto const& surface = session->get_buffer_stream(stream_id);
     surface->swap_buffers(
-        surface_tracker.buffer_from(buffer_id),
+        buffer_stream_tracker.buffer_from(buffer_id),
         [this, stream_id, lock, response, done](mg::Buffer* new_buffer)
         {
             lock->unlock();
 
-            // TODO: Reorg surfacetracker
-            auto surface_id = mf::SurfaceId(stream_id.as_value());
-
-            if (surface_tracker.track_buffer(surface_id, new_buffer))
+            if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
                 pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::update_msg);
             else
                 pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::full_msg);
@@ -366,7 +355,7 @@ void mf::SessionMediator::release_surface(
         auto const id = SurfaceId(request->value());
 
         shell->destroy_surface(session, id);
-        surface_tracker.remove_surface(id);
+        buffer_stream_tracker.remove_buffer_stream(BufferStreamId(request->value()));
     }
 
     // TODO: We rely on this sending responses synchronously.
@@ -574,7 +563,6 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
     // TODO: Is it guaranteed we get the buffer usage we want?
     response->set_buffer_usage(request->buffer_usage());
 
-    // TODO : Port
     advance_buffer(buffer_stream_id, *stream,
         [lock, this, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
@@ -606,7 +594,7 @@ void mf::SessionMediator::release_buffer_stream(google::protobuf::RpcController*
         auto const id = BufferStreamId(request->value());
 
         session->destroy_buffer_stream(id);
-        surface_tracker.remove_surface(mf::SurfaceId(id.as_value()));
+        buffer_stream_tracker.remove_buffer_stream(id);
     }
 
     done->Run();

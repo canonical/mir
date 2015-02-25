@@ -25,7 +25,7 @@
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir_toolkit/common.h"
-#include "surface_tracker.h"
+#include "buffer_stream_tracker.h"
 
 #include <functional>
 #include <memory>
@@ -222,7 +222,7 @@ private:
     std::shared_ptr<input::CursorImages> const cursor_images;
     std::shared_ptr<scene::CoordinateTranslator> const translator;
 
-    SurfaceTracker surface_tracker;
+    BufferStreamTracker buffer_stream_tracker;
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;

@@ -65,8 +65,8 @@ std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::
 }
 
 
-std::unique_ptr<mcl::BufferStream> mcl::DefaultClientBufferStreamFactory::make_producer_stream(mp::DisplayServer& server,
+mcl::ClientBufferStream* mcl::DefaultClientBufferStreamFactory::make_producer_stream(mp::DisplayServer& server,
     mp::BufferStreamParameters const& params, mir_buffer_stream_callback callback, void* context)
 {
-    return std::unique_ptr<mcl::BufferStream>{new mcl::BufferStream(server, client_platform, params, make_perf_report(logger), callback, context)};
+    return new mcl::BufferStream(server, client_platform, params, make_perf_report(logger), callback, context);
 }

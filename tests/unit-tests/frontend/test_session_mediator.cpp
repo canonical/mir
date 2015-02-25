@@ -20,7 +20,6 @@
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/frontend/resource_cache.h"
-#include "src/server/frontend/surface_tracker.h"
 #include "src/server/scene/application_session.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"

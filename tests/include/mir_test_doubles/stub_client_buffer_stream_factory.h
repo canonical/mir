@@ -47,7 +47,7 @@ struct StubClientBufferStreamFactory : public client::ClientBufferStreamFactory
         return nullptr;
     }
 
-    std::unique_ptr<client::BufferStream> make_producer_stream(protobuf::DisplayServer& /* server */,
+    client::ClientBufferStream* make_producer_stream(protobuf::DisplayServer& /* server */,
        protobuf::BufferStreamParameters const& /* params */,
        mir_buffer_stream_callback /* callback */, void* /* context */) override
     {

@@ -48,6 +48,26 @@ bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
  * \param [in] height                   Requested buffer height
  * \param [in] buffer_usage             Requested buffer usage, use mir_buffer_usage_software
  *                                      for cursor image streams
+ * \param [in] callback                 Callback to be invoked when the request completes
+ * \param [in] context                  Userdata to pass to callback function
+ *
+ * \return                              A handle that can be supplied to mir_wait_for
+ */
+MirBufferStream* mir_connection_create_buffer_stream(MirConnection *connection,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage);
+
+/**
+ * Create a new buffer stream unattached to a surface and wair for the result. The resulting buffer stream may be used
+ * with mir_cursor_configuration_from_buffer_stream in order to post images to the system
+ * cursor.
+ *
+ * \param [in] connection               A valid connection
+ * \param [in] width                    Requested buffer width
+ * \param [in] height                   Requested buffer height
+ * \param [in] buffer_usage             Requested buffer usage, use mir_buffer_usage_software
+ *                                      for cursor image streams
  *
  * \return                              The new buffer stream. This is guaranteed non-null, but may be invalid
  *                                      in the case of error.
@@ -58,7 +78,6 @@ MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connect
     MirBufferUsage buffer_usage);
 
 /**
- * TODO: Notes about BS owned by server
  * Release the supplied stream and any associated buffer. The returned wait
  * handle remains valid until the connection to the server is released.
  *   \warning callback could be called from another thread. You must do any
