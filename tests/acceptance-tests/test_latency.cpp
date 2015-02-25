@@ -51,6 +51,7 @@ struct IdCollectingDB : mtd::NullDisplayBuffer
         //the surface will be the frontmost of the renderables
         if (!renderables.empty())
             last = renderables.front()->buffer()->id();
+        printf("last %i\n", (int) last.as_value());
         return true;
     }
     mg::BufferID last_id()
@@ -72,8 +73,8 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
 
     void post() override
     {
-        post_count++;
         latency.push_back(post_count - timestamps[db.last_id().as_value()]);
+        post_count++;
     }
 
     float average_latency()
@@ -128,7 +129,8 @@ TEST_F(ClientLatency, does_not_exceed_one_frame_double_buffered)
         mir_buffer_stream_swap_buffers_sync(stream);
     }
     //Default is double buffered
-    EXPECT_THAT(display.group.average_latency(), Lt(1.5));
+    printf("LATENCY %f\n",display.group.average_latency());
+    EXPECT_THAT(display.group.average_latency(), Lt(1.0));
 }
 
 //TODO: configure and add test for triple buffer
