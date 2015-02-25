@@ -34,31 +34,67 @@
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 
-// TODO: Async creation
-MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connection,
+namespace
+{
+struct ReleaseData
+{
+    mir_buffer_stream_callback callback;
+    void *context;
+};
+void finish_release(MirBufferStream *stream, void *context)
+{
+    auto data = reinterpret_cast<ReleaseData*>(context);
+    data->callback(stream, data->context);
+    delete data;
+    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
+    delete bs;
+}
+// assign_result is compatible with all 2-parameter callbacks
+void assign_result(void* result, void** context)
+{
+    if (context)
+        *context = result;
+}
+
+}
+
+
+
+MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
-    MirBufferUsage buffer_usage)
+    MirBufferUsage buffer_usage,
+    mir_buffer_stream_callback callback,
+    void *context)
 try
 {
-    MirBufferStream *buffer_stream = nullptr;
-    
     mp::BufferStreamParameters params;
     params.set_width(width);
     params.set_height(height);
     params.set_pixel_format(format);
     params.set_buffer_usage(buffer_usage);
 
-    auto bs_uptr =
-        connection->get_client_buffer_stream_factory()->make_producer_stream(connection->display_server(), params, nullptr, nullptr);
-    bs_uptr->get_create_wait_handle()->wait_for_all();
-    buffer_stream = reinterpret_cast<MirBufferStream*>(static_cast<mcl::ClientBufferStream*>(bs_uptr.get()));
-    bs_uptr.release();
+    // TODO: Woho
+    auto uptr = connection->get_client_buffer_stream_factory()->make_producer_stream(connection->display_server(), params, callback, context);
+    auto ptr = uptr.release();
+    return ptr->get_create_wait_handle();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
 
-    // TODO: Check valid
-    //if (bs_uptr->valid())
-
-    return buffer_stream;
+MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connection,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage)
+try
+{
+    mcl::BufferStream *stream = nullptr;
+    mir_connection_create_buffer_stream(connection, width, height, format, buffer_usage,
+        reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
+    return reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream));
 }
 catch (std::exception const& ex)
 {
@@ -71,11 +107,9 @@ MirWaitHandle *mir_buffer_stream_release(
     mir_buffer_stream_callback callback,
     void *context)
 {
-    // TODO: Impl
-    (void) buffer_stream;
-    (void) callback;
-    (void) context;
-    return nullptr;
+    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    auto data = new ReleaseData{callback, context};
+    return bs->release(finish_release, data);
 }
 
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
@@ -112,15 +146,6 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
-}
-
-namespace
-{
-void assign_result(void* result, void** context)
-{
-    if (context)
-        *context = result;
-}
 }
 
 void mir_buffer_stream_swap_buffers_sync(MirBufferStream* buffer_stream)
