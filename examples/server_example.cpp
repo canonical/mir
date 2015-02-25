@@ -64,14 +64,13 @@ void add_timeout_option_to(mir::Server& server)
 
     server.add_configuration_option(timeout_opt, timeout_descr, mir::OptionType::integer);
 
-    server.add_init_callback([&]
+    server.add_init_callback([&server]
     {
         const auto options = server.get_options();
         if (options->is_set(timeout_opt))
         {
-            static auto const exit_action = server.the_main_loop()->notify_in(
-                std::chrono::seconds(options->get<int>(timeout_opt)),
-                [&] { server.stop(); });
+            static auto const exit_action = server.the_main_loop()->create_alarm([&server] { server.stop(); });
+            exit_action->reschedule_in(std::chrono::seconds(options->get<int>(timeout_opt)));
         }
     });
 }
