@@ -17,7 +17,7 @@
  */
 
 #include "mir_test_doubles/triggered_main_loop.h"
-#include "mir_test_doubles/stub_timer.h"
+#include "mir_test_doubles/stub_alarm.h"
 
 #include <algorithm>
 #include <sys/select.h>
