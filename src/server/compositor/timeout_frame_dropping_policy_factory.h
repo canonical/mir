@@ -39,8 +39,8 @@ class TimeoutFrameDroppingPolicyFactory : public FrameDroppingPolicyFactory
 {
 public:
     /**
-     * \param factory Timer that the policies constructed will schedule alarms on
-     * \param timeout Milliseconds that the policies will wait before dropping a frame
+     * \param factory Factory which can create alarms used to schedule frame drops.
+     * \param timeout Number of milliseconds to wait before dropping a frame
      */
     TimeoutFrameDroppingPolicyFactory(
         std::shared_ptr<mir::time::AlarmFactory> const& factory,

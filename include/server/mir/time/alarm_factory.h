@@ -51,12 +51,12 @@ public:
     /**
      * \brief Create an Alarm that will not fire until scheduled
      *
-     * The lock/unlock functions allow the user to preserve lock ordering
+     * A LockableCallback allows the user to preserve lock ordering
      * in situations where Alarm methods need to be called under external lock
      * and the callback implementation needs to run code protected by the same
      * lock. An alarm implementation may have internal locks of its own, which
      * maybe acquired during callback dispatching; to preserve lock ordering
-     * the given lock function will be invoked during callback dispatch before
+     * LockableCallback::lock is invoked during callback dispatch before
      * any internal locks are acquired.
      *
      * \param callback Function to call when the Alarm signals
