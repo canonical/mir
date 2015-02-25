@@ -625,6 +625,15 @@ std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::pr
     };
 }
 
+namespace
+{
+void throw_if_unsuitable_for_cursor(mf::BufferStream& stream)
+{
+    if (stream.pixel_format() != mir_pixel_format_argb_8888)
+        BOOST_THROW_EXCEPTION(std::logic_error("Only argb8888 buffer streams may currently be attached to the cursor"));
+}
+}
+
 void mf::SessionMediator::configure_cursor(
     google::protobuf::RpcController*,
     mir::protobuf::CursorSetting const* cursor_request,
@@ -648,7 +657,17 @@ void mf::SessionMediator::configure_cursor(
         {
             auto const& image = cursor_images->image(cursor_request->name(), mi::default_cursor_size);
             surface->set_cursor_image(image);
-        }
+        } 
+        else if (cursor_request->has_buffer_stream())
+        {
+            auto const& stream_id = mf::BufferStreamId(cursor_request->buffer_stream().value());
+            auto hotspot = geom::Displacement{cursor_request->hotspot_x(), cursor_request->hotspot_y()};
+            auto stream = session->get_buffer_stream(stream_id);
+
+            throw_if_unsuitable_for_cursor(*stream);
+
+            surface->set_cursor_stream(stream, hotspot);
+        } 
         else
         {
             surface->set_cursor_image({});

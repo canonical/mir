@@ -64,7 +64,7 @@ MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name);
  *            to_mir_cursor_configuration_destroy
  */
 MirCursorConfiguration *mir_cursor_configuration_from_buffer_stream(MirBufferStream const* stream, int hotspot_x,
- int hotspot_y);
+    int hotspot_y);
 
 #ifdef __cplusplus
 }

@@ -96,6 +96,8 @@ public:
     MirNativeBuffer* get_current_buffer_package() override;
 
     MirPlatformType platform_type() override;
+
+    frontend::BufferStreamId rpc_id() const override;
     
 protected:
     BufferStream(BufferStream const&) = delete;

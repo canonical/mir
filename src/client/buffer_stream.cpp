@@ -37,6 +37,7 @@
 #include <stdexcept>
 
 namespace mcl = mir::client;
+namespace mf = mir::frontend;
 namespace ml = mir::logging;
 namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
@@ -382,4 +383,11 @@ void mcl::BufferStream::released(
 {
     callback(reinterpret_cast<MirBufferStream*>(this), context);
     release_wait_handle.result_received();
+}
+
+mf::BufferStreamId mcl::BufferStream::rpc_id() const
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    
+    return mf::BufferStreamId(protobuf_bs.id().value());
 }

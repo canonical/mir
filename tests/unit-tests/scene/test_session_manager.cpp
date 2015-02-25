@@ -144,6 +144,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
 
     ms::SessionManager session_manager{
         mt::fake_shared(surface_coordinator),
+        std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(container),
         std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<mtd::NullSessionEventSink>(),
@@ -179,6 +180,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
 
     ms::SessionManager session_manager{
         mt::fake_shared(surface_coordinator),
+        std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(container),
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),

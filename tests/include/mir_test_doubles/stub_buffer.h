@@ -104,6 +104,10 @@ public:
     {
         if (pixels) written_pixels.assign(pixels, pixels + len);
     }
+    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override
+    {
+        do_with_pixels(written_pixels.data());
+    }
 
     std::shared_ptr<graphics::NativeBuffer> const native_buffer;
     geometry::Size const buf_size;

@@ -328,7 +328,8 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
                 take_snapshot_of(default_surface_buffer_access, _));
 
     ms::ApplicationSession app_session(
-        mt::fake_shared(surface_coordinator),                                       
+        mt::fake_shared(surface_coordinator),
+        stub_buffer_stream_factory,
         pid, name,
         snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
@@ -348,6 +349,7 @@ TEST_F(ApplicationSession, returns_null_snapshot_if_no_default_surface)
 
     ms::ApplicationSession app_session(
         stub_surface_coordinator,
+        stub_buffer_stream_factory,
         pid, name,
         snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
@@ -367,6 +369,7 @@ TEST_F(ApplicationSession, process_id)
 
     ms::ApplicationSession app_session(
         stub_surface_coordinator,
+        stub_buffer_stream_factory,
         session_pid, name,
         null_snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
@@ -410,12 +413,12 @@ TEST_F(ApplicationSession, surface_ids_are_bufferstream_ids)
     ms::SurfaceCreationParameters params;
 
     auto id1 = app_session->create_surface(params);
-    EXPECT_TRUE(app_session->get_buffer_stream(id1) != nullptr);
+    EXPECT_TRUE(app_session->get_buffer_stream(mf::BufferStreamId(id1.as_value())) != nullptr);
 
     app_session->destroy_surface(id1);
 
     EXPECT_THROW({
-            app_session->get_buffer_stream(id1);
+            app_session->get_buffer_stream(mf::BufferStreamId(id1.as_value()));
     }, std::runtime_error);
 }
 
@@ -450,7 +453,7 @@ namespace
 struct ApplicationSessionSender : public ApplicationSession
 {
     ApplicationSessionSender()
-        : app_session(stub_surface_coordinator,pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
+        : app_session(stub_surface_coordinator, stub_buffer_stream_factory, pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
     {
     }
 

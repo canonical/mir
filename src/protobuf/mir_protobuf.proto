@@ -217,6 +217,10 @@ message CursorSetting {
   required SurfaceId surfaceid = 1;
   // No name is interpreted as disabled cursor.
   optional string name = 2;
+  // If we supply a buffer stream we must supply hotspot x and y
+  optional BufferStreamId buffer_stream = 3;
+  optional int32 hotspot_x = 4;
+  optional int32 hotspot_y = 5;
 }
 
 message SocketFDRequest {

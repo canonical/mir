@@ -19,6 +19,8 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_STREAM_H_
 #define MIR_CLIENT_CLIENT_BUFFER_STREAM_H_
 
+#include "mir/frontend/buffer_stream_id.h"
+
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir_wait_handle.h"
@@ -56,7 +58,9 @@ public:
     virtual MirNativeBuffer* get_current_buffer_package() = 0;
     virtual MirPlatformType platform_type() = 0;
 
-    virtual MirWaitHandle* release(mir_buffer_stream_callback callback, void* context);
+    virtual frontend::BufferStreamId rpc_id() const = 0;
+    
+    virtual MirWaitHandle* release(mir_buffer_stream_callback callback, void* context) = 0;
     
 protected:
     ClientBufferStream() = default;
