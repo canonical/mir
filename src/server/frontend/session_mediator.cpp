@@ -152,15 +152,19 @@ void mf::SessionMediator::connect(
 }
 
 void mf::SessionMediator::advance_buffer(
-    SurfaceId surf_id,
-    Surface& surface,
+    BufferStreamId stream_id,
+    BufferStream& stream,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto client_buffer = surface_tracker.last_buffer(surf_id);
-    surface.swap_buffers(
+    // TODO: Reorg tracker
+    auto surface_id = mf::SurfaceId(stream_id.as_value());
+    auto client_buffer = surface_tracker.last_buffer(surface_id);
+    stream.swap_buffers(
         client_buffer, 
-        [this, surf_id, complete](mg::Buffer* new_buffer)
+        [this, stream_id, complete](mg::Buffer* new_buffer)
         {
+            // TODO:  Reorg surface tracker
+            auto surf_id = mf::SurfaceId(stream_id.as_value());
             if (surface_tracker.track_buffer(surf_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
@@ -245,7 +249,8 @@ void mf::SessionMediator::create_surface(
         setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
-    advance_buffer(surf_id, *surface,
+    auto stream_id = mf::BufferStreamId(surf_id.as_value());
+    advance_buffer(stream_id, *surface,
         [lock, this, &surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -285,7 +290,10 @@ void mf::SessionMediator::next_buffer(
 
     auto surface = session->get_surface(surf_id);
 
-    advance_buffer(surf_id, *surface,
+    // TODO: ID cast
+    auto stream_id = mf::BufferStreamId{surf_id.as_value()};
+
+    advance_buffer(stream_id, *surface,
         [lock, this, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -303,7 +311,11 @@ void mf::SessionMediator::exchange_buffer(
     mir::protobuf::Buffer* response,
     google::protobuf::Closure* done)
 {
-    mf::SurfaceId const surface_id{request->id().value()};
+    mf::BufferStreamId const stream_id{request->id().value()};
+    // TODO:  Reorg surface tracker
+    auto surface_id = mf::SurfaceId(stream_id.as_value());
+                                            
+
     mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
@@ -316,12 +328,15 @@ void mf::SessionMediator::exchange_buffer(
 
     report->session_exchange_buffer_called(session->name());
 
-    auto const& surface = session->get_surface(surface_id);
+    auto const& surface = session->get_buffer_stream(stream_id);
     surface->swap_buffers(
         surface_tracker.buffer_from(buffer_id),
-        [this, surface_id, lock, response, done](mg::Buffer* new_buffer)
+        [this, stream_id, lock, response, done](mg::Buffer* new_buffer)
         {
             lock->unlock();
+
+            // TODO: Reorg surfacetracker
+            auto surface_id = mf::SurfaceId(stream_id.as_value());
 
             if (surface_tracker.track_buffer(surface_id, new_buffer))
                 pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::update_msg);
@@ -560,7 +575,6 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
     response->set_buffer_usage(request->buffer_usage());
 
     // TODO : Port
-    /*
     advance_buffer(buffer_stream_id, *stream,
         [lock, this, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
@@ -571,9 +585,33 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
             pack_protobuf_buffer(*buffer, client_buffer, msg_type);
 
             done->Run();
-            });*/
-    (void) done;
+        });
 }
+
+void mf::SessionMediator::release_buffer_stream(google::protobuf::RpcController*,
+    const mir::protobuf::BufferStreamId* request,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        report->session_create_surface_called(session->name());
+
+        auto const id = BufferStreamId(request->value());
+
+        session->destroy_buffer_stream(id);
+        surface_tracker.remove_surface(mf::SurfaceId(id.as_value()));
+    }
+
+    done->Run();
+}
+
 
 std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::prompt_session_connect_handler() const
 {

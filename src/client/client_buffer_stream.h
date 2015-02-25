@@ -38,6 +38,8 @@ class MemoryRegion;
 class ClientBufferStream
 {
 public:
+    virtual ~ClientBufferStream() = default;
+
     virtual MirWaitHandle* get_create_wait_handle() = 0;
     
     virtual MirSurfaceParameters get_parameters() const = 0;
@@ -53,10 +55,11 @@ public:
 
     virtual MirNativeBuffer* get_current_buffer_package() = 0;
     virtual MirPlatformType platform_type() = 0;
+
+    virtual MirWaitHandle* release(mir_buffer_stream_callback callback, void* context);
     
 protected:
     ClientBufferStream() = default;
-    virtual ~ClientBufferStream() = default;
     ClientBufferStream(const ClientBufferStream&) = delete;
     ClientBufferStream& operator=(const ClientBufferStream&) = delete;
 };

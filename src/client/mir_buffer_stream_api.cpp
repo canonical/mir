@@ -77,6 +77,7 @@ MirWaitHandle *mir_buffer_stream_release(
     mir_buffer_stream_callback callback,
     void *context)
 {
+    // TODO: Impl
     (void) buffer_stream;
     (void) callback;
     (void) context;
@@ -85,7 +86,9 @@ MirWaitHandle *mir_buffer_stream_release(
 
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
 {
-    (void) buffer_stream;
+    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    bs->release(nullptr, nullptr)->wait_for_all();
+    delete bs;
 }
 
 void mir_buffer_stream_get_current_buffer(MirBufferStream* buffer_stream, MirNativeBuffer** buffer_package_out)

@@ -22,6 +22,7 @@
 #include "display_server.h"
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/frontend/buffer_stream_id.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir_toolkit/common.h"
 #include "surface_tracker.h"
@@ -63,6 +64,7 @@ class EventSink;
 class DisplayChanger;
 class Screencast;
 class PromptSession;
+class BufferStream;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public detail::DisplayServer, public mir::protobuf::Debug
@@ -148,6 +150,10 @@ public:
                               mir::protobuf::BufferStreamParameters const*,
                               mir::protobuf::BufferStream*,
                               google::protobuf::Closure* done) override;
+    void release_buffer_stream(google::protobuf::RpcController*,
+                               mir::protobuf::BufferStreamId const*,
+                               mir::protobuf::Void*,
+                               google::protobuf::Closure* done) override;
 
     void configure_cursor(google::protobuf::RpcController*,
                           mir::protobuf::CursorSetting const*,
@@ -195,8 +201,8 @@ private:
                               graphics::BufferIpcMsgType msg_type);
 
     void advance_buffer(
-        SurfaceId surf_id,
-        Surface& surface,
+        BufferStreamId surf_id,
+        BufferStream& surface,
         std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete);
 
     virtual std::function<void(std::shared_ptr<Session> const&)> prompt_session_connect_handler() const;

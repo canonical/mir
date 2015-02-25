@@ -359,3 +359,27 @@ MirWaitHandle* mcl::BufferStream::get_create_wait_handle()
 {
     return &create_wait_handle;
 }
+
+MirWaitHandle* mcl::BufferStream::release(
+        mir_buffer_stream_callback callback, void* context)
+{
+    mir::protobuf::BufferStreamId buffer_stream_id;
+    buffer_stream_id.set_value(protobuf_bs.id().value());
+    
+    release_wait_handle.expect_result();
+    display_server.release_buffer_stream(
+        nullptr,
+        &buffer_stream_id,
+        &protobuf_void,
+        google::protobuf::NewCallback(
+            this, &mcl::BufferStream::released, callback, context));
+
+    return &release_wait_handle;
+}
+
+void mcl::BufferStream::released(
+    mir_buffer_stream_callback callback, void* context)
+{
+    callback(reinterpret_cast<MirBufferStream*>(this), context);
+    release_wait_handle.result_received();
+}
