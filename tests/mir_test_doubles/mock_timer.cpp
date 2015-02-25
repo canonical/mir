@@ -19,6 +19,11 @@
 
 #include "mir_test_doubles/mock_timer.h"
 
+#include "mir/lockable_callback.h"
+#include "mir/basic_callback.h"
+
+#include <mutex>
+
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
@@ -28,9 +33,7 @@ namespace
 class FakeAlarm : public mir::time::Alarm
 {
 public:
-    FakeAlarm(std::function<void()> const& callback,
-              std::function<void()> const& lock,
-              std::function<void()> const& unlock,
+    FakeAlarm(std::shared_ptr<mir::LockableCallback> const& callback,
               std::shared_ptr<mt::FakeClock> const& clock);
     ~FakeAlarm() override;
 
@@ -43,13 +46,9 @@ public:
 private:    
     struct InternalState
     {
-        explicit InternalState(std::function<void()> const& callback,
-                               std::function<void()> const& lock,
-                               std::function<void()> const& unlock);
+        explicit InternalState(std::shared_ptr<mir::LockableCallback> const& callback);
         State state;
-        std::function<void()> const callback;
-        std::function<void()> const lock;
-        std::function<void()> const unlock;
+        std::shared_ptr<mir::LockableCallback> callback;
         mt::FakeClock::time_point threshold;
     };
 
@@ -60,19 +59,15 @@ private:
 };
 
 FakeAlarm::InternalState::InternalState(
-    std::function<void()> const& callback,
-    std::function<void()> const& lock,
-    std::function<void()> const& unlock)
-    : state{mir::time::Alarm::pending}, callback{callback}, lock{lock}, unlock{unlock}
+    std::shared_ptr<mir::LockableCallback> const& callback)
+    : state{mir::time::Alarm::pending}, callback{callback}
 {
 }
 
 FakeAlarm::FakeAlarm(
-    std::function<void()> const& callback,
-    std::function<void()> const& lock,
-    std::function<void()> const& unlock,
+    std::shared_ptr<mir::LockableCallback> const& callback,
     std::shared_ptr<mt::FakeClock> const& clock)
-    : internal_state{std::make_shared<InternalState>(callback, lock, unlock)}, clock{clock}
+    : internal_state{std::make_shared<InternalState>(callback)}, clock{clock}
 {
 }
 
@@ -103,9 +98,9 @@ bool FakeAlarm::handle_time_change(InternalState& state,
         if (now > state.threshold)
         {
             state.state = triggered;
-            state.lock();
-            state.callback();
-            state.unlock();
+            auto& handler = *state.callback;
+            std::lock_guard<mir::LockableCallback> guard{handler};
+            handler();
             return false;
         }
         return true;
@@ -144,29 +139,13 @@ mtd::FakeTimer::FakeTimer(std::shared_ptr<FakeClock> const& clock) : clock{clock
 {
 }
 
-std::unique_ptr<mir::time::Alarm> mtd::FakeTimer::notify_in(std::chrono::milliseconds delay,
-                                                            std::function<void()> const& callback)
-{
-    auto alarm = std::unique_ptr<mir::time::Alarm>{new FakeAlarm{callback, []{}, []{}, clock}};
-    alarm->reschedule_in(delay);
-    return std::move(alarm);
-}
-
-std::unique_ptr<mir::time::Alarm> mtd::FakeTimer::notify_at(time::Timestamp time_point,
-                                                            std::function<void()> const& callback)
-{
-    auto alarm = std::unique_ptr<mir::time::Alarm>{new FakeAlarm{callback, []{}, []{}, clock}};
-    alarm->reschedule_for(time_point);
-    return std::move(alarm);
-}
-
 std::unique_ptr<mir::time::Alarm> mir::test::doubles::FakeTimer::create_alarm(std::function<void()> const& callback)
 {
-    return std::unique_ptr<mir::time::Alarm>{new FakeAlarm{callback, []{}, []{}, clock}};
+    auto const handler = std::make_shared<BasicCallback>(callback);
+    return std::unique_ptr<mir::time::Alarm>{new FakeAlarm{handler, clock}};
 }
 
-std::unique_ptr<mir::time::Alarm> mir::test::doubles::FakeTimer::create_alarm(std::function<void()> const& callback,
-    std::function<void()> const& lock, std::function<void()> const& unlock)
+std::unique_ptr<mir::time::Alarm> mir::test::doubles::FakeTimer::create_alarm(std::shared_ptr<LockableCallback> const& callback)
 {
-    return std::unique_ptr<mir::time::Alarm>{new FakeAlarm{callback, lock, unlock, clock}};
+    return std::unique_ptr<mir::time::Alarm>{new FakeAlarm{callback, clock}};
 }

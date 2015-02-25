@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_TIMER_H_
 
 #include "mir/time/alarm.h"
-#include "mir/time/timer.h"
+#include "mir/time/alarm_factory.h"
 
 namespace mir
 {
@@ -49,17 +49,8 @@ class StubAlarm : public mir::time::Alarm
     }
 };
 
-class StubTimer : public mir::time::Timer
+class StubTimer : public mir::time::AlarmFactory
 {
-    std::unique_ptr<mir::time::Alarm> notify_in(std::chrono::milliseconds, std::function<void()> const&) override
-    {
-        return std::unique_ptr<mir::time::Alarm>{new StubAlarm};
-    }
-
-    std::unique_ptr<mir::time::Alarm> notify_at(mir::time::Timestamp, std::function<void()> const&) override
-    {
-        return std::unique_ptr<mir::time::Alarm>{new StubAlarm};
-    }
 };
 
 }

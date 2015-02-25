@@ -86,10 +86,9 @@ void mtd::TriggeredMainLoop::trigger_server_actions()
 }
 
 std::unique_ptr<mir::time::Alarm>
-mtd::TriggeredMainLoop::notify_in(std::chrono::milliseconds delay,
-                                  callback const& call)
+mtd::TriggeredMainLoop::create_alarm(callback const& call)
 {
-    base::notify_in(delay, call);
+    base::create_alarm(call);
     timeout_callbacks.push_back(call);
     return std::unique_ptr<mir::time::Alarm>{new mtd::StubAlarm};
 }

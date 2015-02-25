@@ -18,7 +18,7 @@
 
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/time/timer.h"
+
 #include "src/server/compositor/buffer_queue.h"
 #include "src/server/compositor/timeout_frame_dropping_policy_factory.h"
 

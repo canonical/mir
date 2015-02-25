@@ -323,7 +323,7 @@ TEST_F(AndroidInputSender, alarm_created_for_input_send)
 
     register_surface();
 
-    EXPECT_CALL(loop, notify_in(_,_));
+    EXPECT_CALL(loop, create_alarm(An<std::function<void()> const&>()));
     sender.send_event(key_event, channel);
 }
 
