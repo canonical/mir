@@ -19,7 +19,6 @@
 #include "server_example_canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -47,15 +46,14 @@ me::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
 {
 }
 
-me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(Tools* const tools,
-    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator) :
-    tools{tools}, surface_coordinator{surface_coordinator}
+me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(Tools* const tools) :
+    tools{tools}
 {
 }
 
 void me::CanonicalWindowManagerPolicy::click(Point cursor)
 {
-    if (auto const surface = surface_coordinator->surface_at(cursor))
+    if (auto const surface = tools->surface_at(cursor))
         select_active_surface(surface);
 
     old_cursor = cursor;
@@ -72,7 +70,7 @@ void me::CanonicalWindowManagerPolicy::handle_displays_updated(CanonicalSessionI
 
 void me::CanonicalWindowManagerPolicy::resize(Point cursor)
 {
-    select_active_surface(surface_coordinator->surface_at(old_cursor));
+    select_active_surface(tools->surface_at(old_cursor));
     resize(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
@@ -115,9 +113,10 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
     {
         auto const edge_attachment = parameters.edge_attachment.value();
         auto const aux_rect = parameters.aux_rect.value();
-        auto const top_left = aux_rect.top_left + (parent->top_left() - display_area.top_left);
-        auto const top_right= top_left + Displacement{aux_rect.size.width.as_int(), 0};
-        auto const bot_left = top_left + Displacement{0, aux_rect.size.height.as_int()};
+        auto const parent_top_left = parent->top_left();
+        auto const top_left = aux_rect.top_left     -Point{} + parent_top_left;
+        auto const top_right= aux_rect.top_right()  -Point{} + parent_top_left;
+        auto const bot_left = aux_rect.bottom_left()-Point{} + parent_top_left;
 
         if (edge_attachment && mir_edge_attachment_vertical)
         {
@@ -157,7 +156,7 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
         auto centred = display_area.top_left + 0.5*(
             as_displacement(display_area.size) - as_displacement(parameters.size));
 
-        parameters.top_left = centred - Displacement{0, (display_area.size.height.as_int()-height)/6};
+        parameters.top_left = centred - DeltaY{(display_area.size.height.as_int()-height)/6};
     }
 
     return parameters;
@@ -172,11 +171,28 @@ void me::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Se
 
     tools->info_for(session).surfaces++;
 
-    // TODO There's currently no way to insert surfaces into an active (or inactive)
-    // TODO window tree while keeping the order stable or consistent with spec.
-    // TODO Nor is there a way to update the "default surface" when appropriate!!
-    // TODO for now just give the surface's session focus.
-    tools->set_focus_to(session);
+    switch (surface->type())
+    {
+    case mir_surface_type_normal:       /**< AKA "regular"                       */
+    case mir_surface_type_utility:      /**< AKA "floating"                      */
+    case mir_surface_type_dialog:
+    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+    case mir_surface_type_freestyle:
+    case mir_surface_type_menu:
+    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        // TODO There's currently no way to insert surfaces into an active (or inactive)
+        // TODO window tree while keeping the order stable or consistent with spec.
+        // TODO Nor is there a way to update the "default surface" when appropriate!!
+        tools->set_focus_to(session, surface);
+        active_surface_ = surface;
+        break;
+
+    case mir_surface_type_gloss:
+    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+    default:
+        // Cannot have input focus
+        break;
+    }
 }
 
 void me::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
@@ -196,7 +212,7 @@ void me::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms:
     }
 
 
-    if (!--tools->info_for(session).surfaces && session == tools->focussed_application().lock())
+    if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
         tools->focus_next();
     }
@@ -267,7 +283,7 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
 
 void me::CanonicalWindowManagerPolicy::drag(Point cursor)
 {
-    select_active_surface(surface_coordinator->surface_at(old_cursor));
+    select_active_surface(tools->surface_at(old_cursor));
     drag(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
@@ -300,7 +316,7 @@ bool me::CanonicalWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* 
     }
     else if (action == mir_key_input_event_action_down && scan_code == KEY_F4)
     {
-        if (auto const session = tools->focussed_application().lock())
+        if (auto const session = tools->focused_session())
         {
             switch (modifiers & modifier_mask)
             {
@@ -420,14 +436,6 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
     }
 
     auto const& info_for = tools->info_for(surface);
-    tools->set_focus_to(info_for.session.lock());
-
-    // TODO There's currently no way to raise the active window tree while keeping
-    // TODO the order stable or consistent with spec.
-    // TODO This is definitely a frig that needs rework
-    surface_coordinator->raise(surface);
-    for (auto const& child : info_for.children)
-        surface_coordinator->raise(child);
 
     switch (surface->type())
     {
@@ -438,14 +446,15 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
     case mir_surface_type_freestyle:
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
-        // TODO set the input focus to this window
+        tools->set_focus_to(info_for.session.lock(), surface);
+        raise_tree(surface);
         active_surface_ = surface;
         break;
 
     case mir_surface_type_gloss:
     case mir_surface_type_tip:          /**< AKA "tooltip"                       */
     default:
-        // Cannot have input focus
+        // Cannot have input focus - try the parent
         if (auto const parent = info_for.parent.lock())
             select_active_surface(parent);
         break;
@@ -458,7 +467,7 @@ auto me::CanonicalWindowManagerPolicy::active_surface() const
     if (auto const surface = active_surface_.lock())
         return surface;
 
-    if (auto const session = tools->focussed_application().lock())
+    if (auto const session = tools->focused_session())
     {
         if (auto const surface = session->default_surface())
             return surface;
@@ -473,14 +482,14 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
         return false;
 
     auto const top_left = surface->top_left();
-    auto const old_size = surface->size();
+    Rectangle const old_pos{top_left, surface->size()};
 
     auto anchor = top_left;
 
     for (auto const& corner : {
-        anchor + as_displacement(surface->size()),
-        anchor + Displacement{surface->size().width.as_int(), 0},
-        anchor + Displacement{0, surface->size().height.as_int()}})
+        old_pos.top_right(),
+        old_pos.bottom_left(),
+        old_pos.bottom_right()})
     {
         if ((old_cursor - anchor).length_squared() <
             (old_cursor - corner).length_squared())
@@ -496,18 +505,15 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
 
     auto const delta = cursor-old_cursor;
 
-    Size new_size{
-        old_size.width.as_int()  + x_sign*delta.dx.as_int(),
-        old_size.height.as_int() + y_sign*delta.dy.as_int()};
+    Size new_size{old_pos.size.width + x_sign*delta.dx, old_pos.size.height + y_sign*delta.dy};
 
-    Point new_pos = top_left +
-        Displacement{left_resize*delta.dx, top_resize*delta.dy};
+    Point new_pos = top_left + left_resize*delta.dx + top_resize*delta.dy;
 
     if (left_resize)
     {
         if (new_pos.x < bounds.top_left.x)
         {
-            new_size.width = Width{new_size.width.as_int() + (new_pos.x - bounds.top_left.x).as_int()};
+            new_size.width = new_size.width + (new_pos.x - bounds.top_left.x);
             new_pos.x = bounds.top_left.x;
         }
     }
@@ -515,14 +521,14 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
     {
         auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
         if (to_bottom_right.dx < DeltaX{0})
-            new_size.width = Width{new_size.width.as_int() + to_bottom_right.dx.as_int()};
+            new_size.width = new_size.width + to_bottom_right.dx;
     }
 
     if (top_resize)
     {
         if (new_pos.y < bounds.top_left.y)
         {
-            new_size.height = Height{new_size.height.as_int() + (new_pos.y - bounds.top_left.y).as_int()};
+            new_size.height = new_size.height + (new_pos.y - bounds.top_left.y);
             new_pos.y = bounds.top_left.y;
         }
     }
@@ -530,7 +536,7 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
     {
         auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
         if (to_bottom_right.dy < DeltaY{0})
-            new_size.height = Height{new_size.height.as_int() + to_bottom_right.dy.as_int()};
+            new_size.height = new_size.height + to_bottom_right.dy;
     }
 
     surface->resize(new_size);
@@ -581,4 +587,22 @@ void me::CanonicalWindowManagerPolicy::move_tree(std::shared_ptr<ms::Surface> co
     {
         move_tree(child.lock(), movement);
     }
+}
+
+void me::CanonicalWindowManagerPolicy::raise_tree(std::shared_ptr<scene::Surface> const& root) const
+{
+    SurfaceSet surfaces;
+    std::function<void(std::weak_ptr<scene::Surface> const& surface)> const add_children =
+        [&,this](std::weak_ptr<scene::Surface> const& surface)
+        {
+            auto const& info_for = tools->info_for(surface);
+            surfaces.insert(begin(info_for.children), end(info_for.children));
+            for (auto const& child : info_for.children)
+                add_children(child);
+        };
+
+    surfaces.insert(root);
+    add_children(root);
+
+    tools->raise(surfaces);
 }

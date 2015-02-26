@@ -1,15 +1,19 @@
-mir (0.12.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
 
-  * New upstream release 0.12.0 (https://launchpad.net/mir/+milestone/0.12.0)
+  * New upstream release 0.13.0 (https://launchpad.net/mir/+milestone/0.13.0)
     - Enhancements:
-      . TODO
+      . Switched from always triple buffers to always double buffers. This
+        visibly reduces latency and resource usage. It only just became
+        possible to make this switch recently after bug fixes that landed.
+      . TODO: mention more enhancements
     - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8
-      . Mircommon ABI unchanged at 3 (TODO)
-      . Mirplatform ABI unchanged at 6 (TODO)
-      . Mirserver ABI unchanged at 29 (TODO)
+      . Mircommon ABI unchanged at 3
+      . Mirplatform ABI bumped to 7
+      . Mirserver ABI bumped to 31  (TODO 30 is in series 0.12)
     - Bug fixes:
-      . TODO
+      . TODO: insert bug fix info at time of release.
+    - TODO: Merge final 0.12.0 changelog entry below this one when ready.
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 12 Feb 2015 10:12:11 +0800
 

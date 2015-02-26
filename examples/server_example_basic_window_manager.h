@@ -50,6 +50,7 @@ struct SessionTo
 /// The interface through which the policy instructs the controller.
 /// These functions assume that the BasicWindowManager data structures can be accessed freely.
 /// I.e. should only be invoked by the policy handle_... methods (where any necessary locks are held).
+// TODO extract commonality with FocusController (once that's separated from shell::FocusController)
 template<typename SessionInfo, typename SurfaceInfo>
 class BasicWindowManagerTools
 {
@@ -61,11 +62,21 @@ public:
 
     virtual auto info_for(std::weak_ptr<scene::Surface> const& surface) const -> SurfaceInfo& = 0;
 
-    virtual std::weak_ptr<scene::Session> focussed_application() const = 0;
+    virtual std::shared_ptr<scene::Session> focused_session() const = 0;
+
+    virtual std::shared_ptr<scene::Surface> focused_surface() const = 0;
 
     virtual void focus_next() = 0;
 
-    virtual void set_focus_to(std::shared_ptr<scene::Session> const& focus) = 0;
+    virtual void set_focus_to(
+        std::shared_ptr<scene::Session> const& focus,
+        std::shared_ptr<scene::Surface> const& surface) = 0;
+
+    virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
+
+    virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
+
+    virtual void raise(SurfaceSet const& surfaces) = 0;
 
     virtual ~BasicWindowManagerTools() = default;
     BasicWindowManagerTools() = default;
@@ -100,7 +111,7 @@ class BasicWindowManager : public WindowManager,
 public:
     template <typename... PolicyArgs>
     BasicWindowManager(
-        shell::FocusController* focus_controller,
+        FocusController* focus_controller,
         PolicyArgs&&... policy_args) :
         focus_controller(focus_controller),
         policy(this, std::forward<PolicyArgs>(policy_args)...)
@@ -208,9 +219,14 @@ private:
         return const_cast<SurfaceInfo&>(surface_info.at(surface));
     }
 
-    std::weak_ptr<scene::Session> focussed_application() const override
+    std::shared_ptr<scene::Session> focused_session() const override
     {
-        return focus_controller->focussed_application();
+        return focus_controller->focused_session();
+    }
+
+    std::shared_ptr<scene::Surface> focused_surface() const override
+    {
+        return focus_controller->focused_surface();
     }
 
     void focus_next() override
@@ -218,12 +234,29 @@ private:
         focus_controller->focus_next();
     }
 
-    void set_focus_to(std::shared_ptr<scene::Session> const& focus) override
+    void set_focus_to(
+        std::shared_ptr<scene::Session> const& focus,
+        std::shared_ptr<scene::Surface> const& surface) override
     {
-        focus_controller->set_focus_to(focus);
+        focus_controller->set_focus_to(focus, surface);
     }
 
-    shell::FocusController* const focus_controller;
+    auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override
+    {
+        return focus_controller->surface_at(cursor);
+    }
+
+    void raise(std::weak_ptr<scene::Surface> const& surface) override
+    {
+        focus_controller->raise(surface);
+    }
+
+    void raise(SurfaceSet const& surfaces) override
+    {
+        focus_controller->raise(surfaces);
+    }
+
+    FocusController* const focus_controller;
     WindowManagementPolicy policy;
 
     std::mutex mutex;

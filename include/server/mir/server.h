@@ -29,7 +29,7 @@ namespace mir
 {
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
 namespace frontend { class SessionAuthorizer; class Session; class SessionMediatorReport; }
-namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
+namespace graphics { class Cursor; class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
 namespace logging { class Logger; }
 namespace options { class Option; }
@@ -285,6 +285,9 @@ public:
 
     /// \return the cursor listener.
     auto the_cursor_listener() const -> std::shared_ptr<input::CursorListener>;
+
+    /// \return the cursor
+    auto the_cursor() const -> std::shared_ptr<graphics::Cursor>;
 
     /// \return the focus controller.
     auto the_focus_controller() const -> std::shared_ptr<shell::FocusController>;

@@ -18,6 +18,7 @@
 
 #include "frame_uniformity_test.h"
 #include "mir_test_framework/executable_path.h"
+#include "mir/geometry/displacement.h"
 
 #include <assert.h>
 #include <cmath>
@@ -46,9 +47,7 @@ geom::Point interpolated_touch_at_time(geom::Point touch_start, geom::Point touc
 
     double alpha = elapsed_interval / total_interval;
     
-    auto ix = touch_start.x.as_int() + (touch_end.x.as_int()-touch_start.x.as_int())*alpha;
-    auto iy = touch_start.y.as_int() + (touch_end.y.as_int()-touch_start.y.as_int())*alpha;
-    return {ix, iy};
+    return touch_start + alpha*(touch_end-touch_start);
 }
 
 double pixel_lag_for_sample_at_time(geom::Point touch_start_point, geom::Point touch_end_point,
@@ -58,10 +57,12 @@ double pixel_lag_for_sample_at_time(geom::Point touch_start_point, geom::Point t
 {
     auto expected_point = interpolated_touch_at_time(touch_start_point, touch_end_point, touch_start_time,
         touch_end_time, sample.frame_time);
-    auto dx = sample.x - expected_point.x.as_int();
-    auto dy = sample.y - expected_point.y.as_int();
-    auto distance = std::sqrt(dx*dx+dy*dy);
-    return distance;
+
+    geom::Displacement const displacement{
+        sample.x - expected_point.x.as_int(),
+        sample.y - expected_point.y.as_int()};
+
+    return std::sqrt(displacement.length_squared());
 }
 
 double compute_average_frame_offset(std::vector<TouchSamples::Sample> const& results,
