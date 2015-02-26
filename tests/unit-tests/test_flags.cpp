@@ -90,5 +90,4 @@ TEST(MirFlags, toggling_bits)
 
     EXPECT_THAT(contains(negative,arb::Character::Paranoid),Eq(true));
     EXPECT_THAT(contains(negative^arb::Character::Paranoid,arb::Character::Paranoid),Eq(false));
-    EXPECT_THAT(contains(~negative,arb::Character::Positive),Eq(true));
 }

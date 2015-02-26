@@ -59,21 +59,6 @@ struct Flags
         return Flags<Enum>(flag_value ^ other.flag_value);
     }
 
-    constexpr Flags<Enum> operator~() const noexcept
-    {
-        return Flags<Enum>(~flag_value);
-    }
-
-    constexpr Flags<Enum> operator<<(int shift) const noexcept
-    {
-        return Flags<Enum>{flag_value << shift};
-    }
-
-    constexpr Flags<Enum> operator>>(int shift) const noexcept
-    {
-        return Flags<Enum>{flag_value >> shift};
-    }
-
     // those mutating operators could be trated as constexpr with c++14
     Flags<Enum>& operator|=(Flags<Enum> other) noexcept
     {
@@ -90,18 +75,6 @@ struct Flags
     Flags<Enum> operator^=(Flags<Enum> other) noexcept
     {
         flag_value ^= other.flag_value;
-        return *this;
-    }
-
-    Flags<Enum>& operator<<=(int shift) noexcept
-    {
-        flag_value <<= shift;
-        return *this;
-    }
-
-    Flags<Enum>& operator>>=(int shift) noexcept
-    {
-        flag_value >>= shift;
         return *this;
     }
 
@@ -177,6 +150,7 @@ operator&(Enum lhs, Enum rhs) noexcept
     return mir::Flags<Enum>(lhs) & mir::Flags<Enum>(rhs);
 }
 
+
 template<typename Enum>
 constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
 operator^(Enum lhs, Enum rhs) noexcept
@@ -189,20 +163,6 @@ constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)
 operator~(Enum val) noexcept
 {
     return ~mir::Flags<Enum>(val);
-}
-
-template<typename Enum>
-constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
-operator>>(Enum val, int shift) noexcept
-{
-    return mir::Flags<Enum>(val) >> shift;
-}
-
-template<typename Enum>
-constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
-operator<<(Enum val, int shift) noexcept
-{
-    return mir::Flags<Enum>(val) << shift;
 }
 
 #endif
