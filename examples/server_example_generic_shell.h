@@ -62,7 +62,7 @@ private:
     using shell::FocusController::set_focus_to;
 };
 
-class GenericShell : public virtual Shell, public virtual FocusController,
+class GenericShell : public virtual shell::Shell, public virtual FocusController,
     private shell::AbstractShell
 {
 public:

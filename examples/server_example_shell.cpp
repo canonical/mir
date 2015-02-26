@@ -112,7 +112,7 @@ using TilingWindowManager = me::BasicWindowManager<me::TilingWindowManagerPolicy
 using FullscreenWindowManager = me::BasicWindowManager<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
 using CanonicalWindowManager = me::BasicWindowManager<me::CanonicalWindowManagerPolicy, me::CanonicalSessionInfo, me::CanonicalSurfaceInfo>;
 
-auto me::ShellFactory::shell() -> std::shared_ptr<me::Shell>
+auto me::ShellFactory::shell() -> std::shared_ptr<msh::Shell>
 {
     auto tmp = shell_.lock();
 

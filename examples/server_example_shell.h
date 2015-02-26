@@ -19,7 +19,6 @@
 #ifndef MIR_EXAMPLES_SHELL_H_
 #define MIR_EXAMPLES_SHELL_H_
 
-#include "mir/input/event_filter.h"
 #include "mir/shell/shell.h"
 
 #include <memory>
@@ -30,32 +29,20 @@
 namespace mir
 {
 class Server;
-namespace geometry { class Rectangle; }
 
 namespace examples
 {
-/// For window management we need a shell that tracks input events and display changes
-class Shell :
-    public virtual shell::Shell,
-    public virtual input::EventFilter
-{
-public:
-    virtual void add_display(geometry::Rectangle const& area) = 0;
-
-    virtual void remove_display(geometry::Rectangle const& area) = 0;
-};
-
 /// We need to hook into several places, a caching factory is simplifies this
 class ShellFactory
 {
 public:
     explicit ShellFactory(Server& server) : server(server) {}
 
-    auto shell() -> std::shared_ptr<Shell>;
+    auto shell() -> std::shared_ptr<shell::Shell>;
 
 private:
     Server& server;
-    std::weak_ptr<Shell> shell_;
+    std::weak_ptr<shell::Shell> shell_;
 };
 
 extern char const* const wm_option;

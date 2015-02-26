@@ -20,6 +20,7 @@
 #define MIR_SHELL_SHELL_H_
 
 #include "mir/shell/focus_controller.h"
+#include "mir/input/event_filter.h"
 #include "mir/frontend/surface_id.h"
 
 #include "mir_toolkit/common.h"
@@ -29,6 +30,7 @@
 namespace mir
 {
 namespace frontend { class EventSink; }
+namespace geometry { class Rectangle; }
 namespace scene
 {
 class PromptSession;
@@ -45,8 +47,8 @@ namespace shell
 class InputTargeter;
 
 class Shell :
-// TODO public virtual graphics::DisplayConfigurationPolicy,
-    public virtual FocusController
+    public virtual FocusController,
+    public virtual input::EventFilter
 {
 public:
 /** @name these functions support frontend requests
@@ -83,6 +85,13 @@ public:
     virtual int get_surface_attribute(
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib) = 0;
+/** @} */
+
+/** @name track display changes
+ *  @{ */
+    virtual void add_display(geometry::Rectangle const& area) = 0;
+
+    virtual void remove_display(geometry::Rectangle const& area) = 0;
 /** @} */
 };
 }

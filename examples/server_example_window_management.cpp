@@ -43,7 +43,7 @@ public:
     DisplayTracker(
         std::unique_ptr<mc::DisplayBufferCompositor>&& wrapped,
         Rectangle const& area,
-        std::shared_ptr<me::Shell> const& window_manager) :
+        std::shared_ptr<msh::Shell> const& window_manager) :
         wrapped{std::move(wrapped)},
         area{area},
         window_manager(window_manager)
@@ -65,7 +65,7 @@ private:
 
     std::unique_ptr<mc::DisplayBufferCompositor> const wrapped;
     Rectangle const area;
-    std::shared_ptr<me::Shell> const window_manager;
+    std::shared_ptr<msh::Shell> const window_manager;
 };
 
 class DisplayTrackerFactory : public mc::DisplayBufferCompositorFactory
@@ -73,7 +73,7 @@ class DisplayTrackerFactory : public mc::DisplayBufferCompositorFactory
 public:
     DisplayTrackerFactory(
         std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped,
-        std::shared_ptr<me::Shell> const& window_manager) :
+        std::shared_ptr<msh::Shell> const& window_manager) :
         wrapped{wrapped},
         window_manager(window_manager)
     {
@@ -88,7 +88,7 @@ private:
     }
 
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const wrapped;
-    std::shared_ptr<me::Shell> const window_manager;
+    std::shared_ptr<msh::Shell> const window_manager;
 };
 }
 

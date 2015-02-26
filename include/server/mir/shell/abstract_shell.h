@@ -95,6 +95,11 @@ public:
     // The surface with focus
     std::shared_ptr<scene::Surface> focused_surface() const;
 
+    void add_display(geometry::Rectangle const& area) override;
+    void remove_display(geometry::Rectangle const& area) override;
+
+    bool handle(MirEvent const& event) override;
+
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;

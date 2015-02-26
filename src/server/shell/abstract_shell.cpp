@@ -218,3 +218,16 @@ void msh::AbstractShell::setting_focus_to(std::shared_ptr<ms::Surface> const& /*
 void msh::AbstractShell::setting_focus_to(std::shared_ptr<ms::Session> const& /*session*/)
 {
 }
+
+void msh::AbstractShell::add_display(geometry::Rectangle const& /*area*/)
+{
+}
+
+void msh::AbstractShell::remove_display(geometry::Rectangle const& /*area*/)
+{
+}
+
+bool msh::AbstractShell::handle(MirEvent const& /*event*/)
+{
+    return false;
+}
