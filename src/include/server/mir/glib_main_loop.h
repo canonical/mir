@@ -70,21 +70,11 @@ public:
     void pause_processing_for(void const* owner) override;
     void resume_processing_for(void const* owner) override;
 
-    std::unique_ptr<mir::time::Alarm> notify_in(
-        std::chrono::milliseconds delay,
-        std::function<void()> const& callback) override;
-
-    std::unique_ptr<mir::time::Alarm> notify_at(
-        mir::time::Timestamp t,
-        std::function<void()> const& callback) override;
-
     std::unique_ptr<mir::time::Alarm> create_alarm(
         std::function<void()> const& callback) override;
 
     std::unique_ptr<mir::time::Alarm> create_alarm(
-        std::function<void()> const& callback,
-        std::function<void()> const& lock,
-        std::function<void()> const& unlock) override;
+        std::shared_ptr<LockableCallback> const& callback) override;
 
     void reprocess_all_sources();
 

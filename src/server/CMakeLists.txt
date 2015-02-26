@@ -47,6 +47,8 @@ add_library(mirserverobjects OBJECT
   glib_main_loop_sources.cpp
   default_emergency_cleanup.cpp
   server.cpp
+  lockable_callback_wrapper.cpp
+  basic_callback.cpp
 )
 
 set(MIR_SERVER_OBJECTS
