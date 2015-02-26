@@ -446,14 +446,7 @@ void me::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms:
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
         tools->set_focus_to(info_for.session.lock(), surface);
-
-        // TODO There's currently no way to raise the active window tree while keeping
-        // TODO the order stable or consistent with spec.
-        // TODO This is definitely a frig that needs rework
-        tools->raise(surface);
-        for (auto const& child : info_for.children)
-            tools->raise(child);
-
+        raise_tree(surface);
         active_surface_ = surface;
         break;
 
@@ -596,4 +589,22 @@ void me::CanonicalWindowManagerPolicy::move_tree(std::shared_ptr<ms::Surface> co
     {
         move_tree(child.lock(), movement);
     }
+}
+
+void me::CanonicalWindowManagerPolicy::raise_tree(std::shared_ptr<scene::Surface> const& root) const
+{
+    SurfaceSet surfaces;
+    std::function<void(std::weak_ptr<scene::Surface> const& surface)> const add_children =
+        [&,this](std::weak_ptr<scene::Surface> const& surface)
+        {
+            auto const& info_for = tools->info_for(surface);
+            surfaces.insert(begin(info_for.children), end(info_for.children));
+            for (auto const& child : info_for.children)
+                add_children(child);
+        };
+
+    surfaces.insert(root);
+    add_children(root);
+
+    tools->raise(surfaces);
 }

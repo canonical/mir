@@ -76,6 +76,8 @@ public:
 
     virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
 
+    virtual void raise(SurfaceSet const& surfaces) = 0;
+
     virtual ~BasicWindowManagerTools() = default;
     BasicWindowManagerTools() = default;
     BasicWindowManagerTools(BasicWindowManagerTools const&) = delete;
@@ -247,6 +249,11 @@ private:
     void raise(std::weak_ptr<scene::Surface> const& surface) override
     {
         focus_controller->raise(surface);
+    }
+
+    void raise(SurfaceSet const& surfaces) override
+    {
+        focus_controller->raise(surfaces);
     }
 
     FocusController* const focus_controller;

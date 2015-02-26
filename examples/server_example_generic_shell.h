@@ -24,6 +24,8 @@
 
 #include "mir/shell/abstract_shell.h"
 
+#include <set>
+
 ///\example server_example_generic_shell.h
 /// A generic shell that supports a window manager
 
@@ -33,6 +35,8 @@ namespace geometry { class Point; }
 
 namespace examples
 {
+using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
+
 // TODO This interface keeps changes out of the Mir API (to explore the requirement)
 class FocusController :
     // Yes, weird - but resolves common functions (Will fix when updating core Mir API)
@@ -52,6 +56,9 @@ public:
     virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
 
     virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
+
+    virtual void raise(SurfaceSet const& surfaces) = 0;
+
 private:
     // yes clang, I mean what I said!
     using shell::FocusController::set_focus_to;
@@ -98,6 +105,8 @@ public:
     auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override;
 
     void raise(std::weak_ptr<scene::Surface> const& surface) override;
+
+    void raise(SurfaceSet const& surfaces) override;
 
     auto focused_session() const -> std::shared_ptr<scene::Session> override;
 
