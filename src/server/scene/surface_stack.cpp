@@ -358,7 +358,7 @@ void ms::SurfaceStack::raise(SurfaceSet const& ss)
     bool surfaces_reordered{false};
 
     {
-        std::unique_lock<decltype(guard)> ul(guard);
+        std::lock_guard<decltype(guard)> ul(guard);
 
         for (auto &layer : layers_by_depth)
         {
@@ -398,7 +398,7 @@ void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observe
 
     // Notify observer of existing surfaces
     {
-        std::unique_lock<decltype(guard)> ul(guard);
+        std::lock_guard<decltype(guard)> ul(guard);
         for (auto &layer : layers_by_depth)
         {
             for (auto &surface : layer.second)
