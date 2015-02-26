@@ -55,8 +55,6 @@ public:
 
     virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
 
-    virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
-
     virtual void raise(SurfaceSet const& surfaces) = 0;
 
 private:
@@ -103,8 +101,6 @@ public:
     std::shared_ptr<scene::Surface> focused_surface() const override;
 
     auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override;
-
-    void raise(std::weak_ptr<scene::Surface> const& surface) override;
 
     void raise(SurfaceSet const& surfaces) override;
 
