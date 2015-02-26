@@ -59,9 +59,7 @@ public:
     using Tools = BasicWindowManagerTools<TilingSessionInfo, TilingSurfaceInfo>;
     using TilingSessionInfoMap = typename SessionTo<TilingSessionInfo>::type;
 
-    TilingWindowManagerPolicy(
-        Tools* const tools,
-        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator);
+    explicit TilingWindowManagerPolicy(Tools* const tools);
 
     void click(geometry::Point cursor);
 
@@ -117,7 +115,7 @@ private:
     static bool resize(std::shared_ptr<scene::Surface> surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
 
     Tools* const tools;
-    std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
+
     geometry::Point old_cursor{};
 };
 }
