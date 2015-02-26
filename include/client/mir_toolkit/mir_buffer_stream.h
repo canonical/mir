@@ -53,10 +53,12 @@ bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
  *
  * \return                              A handle that can be supplied to mir_wait_for
  */
-MirBufferStream* mir_connection_create_buffer_stream(MirConnection *connection,
+MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
-    MirBufferUsage buffer_usage);
+    MirBufferUsage buffer_usage,
+    mir_buffer_stream_callback callback,
+    void* context);
 
 /**
  * Create a new buffer stream unattached to a surface and wair for the result. The resulting buffer stream may be used
