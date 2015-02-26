@@ -1,4 +1,4 @@
-MIR_SERVER_29 {
+MIR_SERVER_31 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -226,6 +226,7 @@ MIR_SERVER_29 {
     mir::scene::SurfaceCoordinator::operator*;
     mir::scene::SurfaceCoordinator::raise*;
     mir::scene::SurfaceCoordinator::remove_surface*;
+    mir::scene::SurfaceCoordinator::surface_at*;
     mir::scene::SurfaceCoordinator::?SurfaceCoordinator*;
     mir::scene::SurfaceCoordinator::SurfaceCoordinator*;
     mir::scene::SurfaceCreationParameters::of_buffer_usage*;
@@ -328,6 +329,7 @@ MIR_SERVER_29 {
     mir::Server::supported_pixel_formats*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
+    mir::Server::the_cursor*;
     mir::Server::the_cursor_listener*;
     mir::Server::the_display*;
     mir::Server::the_focus_controller*;
@@ -357,6 +359,7 @@ MIR_SERVER_29 {
     mir::shell::AbstractShell::create_surface*;
     mir::shell::AbstractShell::destroy_surface*;
     mir::shell::AbstractShell::focus_next*;
+    mir::shell::AbstractShell::focused_surface*;
     mir::shell::AbstractShell::focussed_application*;
     mir::shell::AbstractShell::get_surface_attribute*;
     mir::shell::AbstractShell::handle_surface_created*;
@@ -735,9 +738,3 @@ MIR_SERVER_29 {
   };
  local: *;
 };
-
-MIR_SERVER_29.1 {
-  global:
-    mir::scene::SurfaceCoordinator::surface_at*;
-  local: *;
-} MIR_SERVER_29;

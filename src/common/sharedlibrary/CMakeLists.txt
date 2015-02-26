@@ -15,6 +15,7 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 add_library(mirsharedsharedlibrary OBJECT
+  module_deleter.cpp
   shared_library.cpp
   shared_library_prober.cpp
 )
