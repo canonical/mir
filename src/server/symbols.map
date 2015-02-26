@@ -329,6 +329,7 @@ MIR_SERVER_31 {
     mir::Server::supported_pixel_formats*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
+    mir::Server::the_cursor*;
     mir::Server::the_cursor_listener*;
     mir::Server::the_display*;
     mir::Server::the_focus_controller*;
