@@ -419,7 +419,9 @@ void me::CanonicalWindowManagerPolicy::toggle(MirSurfaceState state)
 {
     if (auto const surface = active_surface())
     {
-        if (surface->state() == state)
+        auto& info = tools->info_for(surface);
+
+        if (info.state == state)
             state = mir_surface_state_restored;
 
         auto const value = handle_set_state(surface, MirSurfaceState(state));
@@ -539,7 +541,19 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
             new_size.height = new_size.height + to_bottom_right.dy;
     }
 
-    surface->resize(new_size);
+    auto& info = tools->info_for(surface);
+
+    if (info.state == mir_surface_state_restored)
+    {
+        surface->resize(new_size);
+    }
+    else
+    {
+        info.restore_rect.top_left = new_pos;
+        info.restore_rect.size = new_size;
+        auto const value = handle_set_state(surface, MirSurfaceState(mir_surface_state_restored));
+        surface->configure(mir_surface_attrib_state, value);
+    }
 
     // TODO It is rather simplistic to move a tree WRT the top_left of the root
     // TODO when resizing. But for more sophistication we would need to encode
