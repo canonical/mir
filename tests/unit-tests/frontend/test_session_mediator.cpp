@@ -144,6 +144,11 @@ public:
         return mock_surfaces.at(surface);
     }
 
+    std::shared_ptr<mf::BufferStream> get_buffer_stream(mf::BufferStreamId stream) const override
+    {
+        return get_surface(mf::SurfaceId(stream.as_value()));
+    }
+
     std::shared_ptr<mtd::MockFrontendSurface> mock_surface_at(mf::SurfaceId id)
     {
         if (mock_surfaces.end() == mock_surfaces.find(id))
