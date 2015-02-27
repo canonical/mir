@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,13 +20,13 @@
 #define MIR_MAIN_LOOP_H_
 
 #include "mir/graphics/event_handler_register.h"
-#include "mir/time/timer.h"
+#include "mir/time/alarm_factory.h"
 #include "mir/server_action_queue.h"
 
 namespace mir
 {
 
-class MainLoop : public graphics::EventHandlerRegister, public time::Timer,
+class MainLoop : public graphics::EventHandlerRegister, public time::AlarmFactory,
                  public ServerActionQueue
 {
 public:

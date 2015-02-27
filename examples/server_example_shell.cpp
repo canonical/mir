@@ -127,9 +127,7 @@ auto me::ShellFactory::shell() -> std::shared_ptr<me::Shell>
         {
             wm_builder = [this](me::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
                 {
-                    return std::make_shared<TilingWindowManager>(
-                        focus_controller,
-                        server.the_surface_coordinator());
+                    return std::make_shared<TilingWindowManager>(focus_controller);
                 };
         }
         else if (selection == wm_fullscreen)
@@ -143,9 +141,7 @@ auto me::ShellFactory::shell() -> std::shared_ptr<me::Shell>
         {
             wm_builder = [this](me::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
                 {
-                    return std::make_shared<CanonicalWindowManager>(
-                        focus_controller,
-                        server.the_surface_coordinator());
+                    return std::make_shared<CanonicalWindowManager>(focus_controller);
                 };
         }
         else

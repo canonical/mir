@@ -54,9 +54,7 @@ void msh::GraphicsDisplayLayout::clip_to_output(geometry::Rectangle& rect)
         rectangles.confine(br_closed);
 
         rect.top_left = tl_closed;
-        rect.size =
-            geom::Size{br_closed.x.as_int() - tl_closed.x.as_int() + 1,
-                       br_closed.y.as_int() - tl_closed.y.as_int() + 1};
+        rect.size = as_size(br_closed - tl_closed + geom::Displacement{1, 1});
     }
     else
     {
