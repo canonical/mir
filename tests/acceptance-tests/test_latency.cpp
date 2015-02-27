@@ -143,7 +143,7 @@ struct ClientLatency : mtf::ConnectedClientWithASurface
 };
 }
 
-TEST_F(ClientLatency, does_not_exceed_one_frame_double_buffered)
+TEST_F(ClientLatency, double_buffered)
 {
     using namespace testing;
 
@@ -172,6 +172,9 @@ TEST_F(ClientLatency, does_not_exceed_one_frame_double_buffered)
     auto observed_latency = display.group.average_latency();
     EXPECT_LT(expected_latency-error_margin, observed_latency);
     EXPECT_GT(expected_latency+error_margin, observed_latency);
+
+    std::cout << "Expected latency " << expected_latency << " frames "
+              << "and measured latency " << observed_latency << " frames.\n";
 }
 
 //TODO: configure and add test for triple buffer
