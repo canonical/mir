@@ -197,9 +197,11 @@ void mircva::InputReceiver::process_and_maybe_send_event()
         /* TODO: Feed in vsync-ish events (or work out when consume() would
          *       actually generate an event) rather than polling at 1000Hz
          */
+        using namespace std::chrono;
+        using namespace std::literals::chrono_literals;
         struct itimerspec const msec_delay = {
             { 0, 0 },
-            { 0, 1000000 /* 10⁶ ns is 1ms */}
+            { 0, duration_cast<nanoseconds>(1ms).count() }
         };
         if (timerfd_settime(timer_fd, 0, &msec_delay, NULL) < 0)
         {
