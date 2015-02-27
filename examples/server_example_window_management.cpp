@@ -20,9 +20,6 @@
 #include "server_example_shell.h"
 
 #include "mir/server.h"
-#include "mir/compositor/display_buffer_compositor_factory.h"
-#include "mir/compositor/display_buffer_compositor.h"
-#include "mir/graphics/display_buffer.h"
 #include "mir/options/option.h"
 
 namespace mc = mir::compositor;
