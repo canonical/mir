@@ -102,9 +102,10 @@ void FreetypeRenderer::render(char const* str, Image& img)
         auto& bitmap = slot->bitmap;
         int x = penx + slot->bitmap_left;
         int y = peny - slot->bitmap_top;
+        int right = x + bitmap.width;
+        int bottom = y + bitmap.rows;
 
-        if (x >= 0 && x+bitmap.width <= img.width &&
-            y >= 0 && y+bitmap.rows <= img.height)
+        if (x >= 0 && right <= img.width && y >= 0 && bottom <= img.height)
         {
             unsigned char* src = bitmap.buffer;
             unsigned char* dest = img.buf + y*img.stride + x;
