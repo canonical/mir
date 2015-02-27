@@ -153,6 +153,9 @@ TEST_F(ClientLatency, does_not_exceed_one_frame_double_buffered)
     for(auto i = 0u; i < test_submissions; i++) {
         auto submission_id = mir_debug_surface_current_buffer_id(surface);
         timestamps[submission_id] = render_time;
+
+        // Block for pretty much a whole frame, waiting for the display
+        // to drain the queue. It will also update post_time when it's done.
         mir_buffer_stream_swap_buffers_sync(stream);
 
         // Clients generally render quickly, in under a millisecond. So
