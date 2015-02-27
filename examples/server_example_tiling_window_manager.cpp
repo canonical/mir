@@ -41,8 +41,7 @@ me::TilingSurfaceInfo::TilingSurfaceInfo(
 {
 }
 
-me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(
-    Tools* const tools) :
+me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(Tools* const tools) :
     tools{tools}
 {
 }
