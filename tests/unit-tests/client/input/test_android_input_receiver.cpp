@@ -271,10 +271,10 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 
     // Verify we timed out in under a frame (LP: #1372300)
     // Sadly using real time as droidinput::Looper doesn't use a mocked clock.
-    ASSERT_LT(duration_cast<nanoseconds>(duration), one_frame);
+    ASSERT_LT(duration, one_frame);
 
     // Verify we don't use all the CPU by not sleeping (LP: #1373809)
-    EXPECT_GT(duration_cast<nanoseconds>(duration), 1ms);
+    EXPECT_GT(duration, 1ms);
 
     // But later in a frame or so, the motion will be reported:
     t += 2 * one_frame;  // Account for the new slower 55Hz event rate
