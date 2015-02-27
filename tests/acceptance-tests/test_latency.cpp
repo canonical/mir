@@ -35,6 +35,8 @@ namespace mt = mir::test;
 namespace mg = mir::graphics;
 namespace
 {
+unsigned int const display_nbuffers = 2;
+
 /*
  * Note: we're not aiming to check performance in terms of CPU or GPU time processing
  * the incoming buffers. Rather, we're checking that we don't have any intrinsic
@@ -42,12 +44,23 @@ namespace
  */
 struct IdCollectingDB : mtd::NullDisplayBuffer
 {
+    IdCollectingDB(unsigned int& count) : post_time{count} {}
+
     mir::geometry::Rectangle view_area() const override
     {
         return {{0,0}, {1920, 1080}};
     } 
     bool post_renderables_if_optimizable(mg::RenderableList const& renderables) override
     {
+        /*
+         * Clients are blocked only until the below buffer() goes out of
+         * scope. Thereafter we'll be racing the client thread. So we need
+         * to increment the post_time (represents universal time) here
+         * where the client thread is predictably blocked in its call to
+         * mir_buffer_stream_swap_buffers_sync().
+         */
+        ++post_time;
+
         //the surface will be the frontmost of the renderables
         if (!renderables.empty())
             last = renderables.front()->buffer()->id();
@@ -57,14 +70,16 @@ struct IdCollectingDB : mtd::NullDisplayBuffer
     {
         return last;
     }
+
 private:
+    unsigned int& post_time;
     mg::BufferID last{0};
 };
 
 struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
 {
     TimeTrackingGroup(unsigned int& count, std::unordered_map<uint32_t, uint32_t>& map) :
-        post_count(count), timestamps(map) {}
+        post_time(count), timestamps(map), db(count) {}
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
         f(db);
@@ -75,19 +90,16 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
         auto consume_id = db.last_id().as_value();
         auto it = timestamps.find(consume_id);
 
-        // XXX The test platform seems to insert artificial buffers we didn't
+        // XXX The test framework seems to insert artificial buffers we didn't
         //     introduce ourselves. So identify and ignore those.
         if (it != timestamps.end())
         {
-            auto timestamp = it->second;
-            auto lag_client_to_post = post_count - timestamp;
-            unsigned const display_nbuffers = 2;
+            auto render_time = it->second;
+            auto lag_client_to_post = post_time - render_time;
             auto lag_post_to_eye = display_nbuffers - 1;
-            auto lag = lag_client_to_post + lag_post_to_eye;
+            auto total_lag = lag_client_to_post + lag_post_to_eye;
 
-            fprintf(stderr, "consume %u, lag %u\n", consume_id, lag);
-            latency.push_back(lag);
-            post_count++;
+            latency.push_back(total_lag);
         }
     }
 
@@ -101,7 +113,7 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
     }
 
     std::vector<int> latency;
-    unsigned int& post_count;
+    unsigned int& post_time;
     std::unordered_map<uint32_t, uint32_t>& timestamps;
     IdCollectingDB db;
 };
@@ -125,10 +137,10 @@ struct ClientLatency : mtf::ConnectedClientWithASurface
         preset_display(mt::fake_shared(display));
         mtf::ConnectedClientWithASurface::SetUp();
     }
-    unsigned int post_count{0};
+    unsigned int post_time{0};
     std::unordered_map<uint32_t, uint32_t> timestamps;
-    TimeTrackingDisplay display{post_count, timestamps};
-    unsigned int test_submissions{10};
+    TimeTrackingDisplay display{post_time, timestamps};
+    unsigned int test_submissions{100};
 };
 }
 
@@ -136,15 +148,28 @@ TEST_F(ClientLatency, does_not_exceed_one_frame_double_buffered)
 {
     using namespace testing;
 
+    auto render_time = post_time;
+
     auto stream = mir_surface_get_buffer_stream(surface);
     for(auto i = 0u; i < test_submissions; i++) {
         auto submission_id = mir_debug_surface_current_buffer_id(surface);
-        timestamps[submission_id] = post_count; 
-        fprintf(stderr, "produce %u\n", submission_id);
+        timestamps[submission_id] = render_time;
         mir_buffer_stream_swap_buffers_sync(stream);
+
+        // Clients generally render quickly, in under a millisecond. So
+        // you can safely say the render occurred (began and finished) at the
+        // start of the frame interval...
+        render_time = post_time;
     }
-    //Default is double buffered
-    EXPECT_THAT(display.group.average_latency(), Lt(0.0));
+
+    unsigned int const expected_client_buffers = 2;
+    unsigned int const expected_latency =
+        (expected_client_buffers - 1) + (display_nbuffers - 1);
+
+    float const error_margin = 0.1f;
+    auto observed_latency = display.group.average_latency();
+    EXPECT_LT(expected_latency-error_margin, observed_latency);
+    EXPECT_GT(expected_latency+error_margin, observed_latency);
 }
 
 //TODO: configure and add test for triple buffer
