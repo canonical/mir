@@ -189,7 +189,14 @@ void mircva::InputReceiver::process_and_maybe_send_event()
     }
     if (input_consumer->hasDeferredEvent())
     {
-        // Ensure we get called again.
+        // input_consumer->consume() can read an event from the fd and find that the event cannot
+        // be added to the current batch.
+        //
+        // In this case, it emits the current batch and leaves the new event pending.
+        // This means we have an event we need to dispatch, but as it has already been read from
+        // the fd we cannot rely on being woken by the fd being readable.
+        //
+        // So, we ensure we'll appear dispatchable by pushing an event to the wakeup pipe.
         wake();
     }
     else if (input_consumer->hasPendingBatch())
