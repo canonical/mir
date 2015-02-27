@@ -19,7 +19,6 @@
 #ifndef MIR_EXAMPLE_GENERIC_SHELL_H_
 #define MIR_EXAMPLE_GENERIC_SHELL_H_
 
-#include "server_example_shell.h"
 #include "server_example_window_manager.h"
 
 #include "mir/shell/abstract_shell.h"
