@@ -29,8 +29,10 @@ namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory(
     std::shared_ptr<mc::RendererFactory> const& renderer_factory,
+    std::shared_ptr<DisplayListener> const& display_listener,
     std::shared_ptr<mc::CompositorReport> const& report) :
     renderer_factory{renderer_factory},
+    display_listener{display_listener},
     report{report}
 {
 }

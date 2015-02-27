@@ -20,6 +20,11 @@ MIR_SERVER_31 {
     mir::compositor::DisplayBufferCompositorFactory::DisplayBufferCompositorFactory*;
     mir::compositor::DisplayBufferCompositorFactory::operator*;
     mir::compositor::DisplayBufferCompositor::operator*;
+    mir::compositor::DisplayListener::add_display*;
+    mir::compositor::DisplayListener::?DisplayListener*;
+    mir::compositor::DisplayListener::DisplayListener*;
+    mir::compositor::DisplayListener::operator*;
+    mir::compositor::DisplayListener::remove_display*;
     mir::compositor::Scene::add_observer*;
     mir::compositor::Scene::register_compositor*;
     mir::compositor::Scene::remove_observer*;
@@ -638,7 +643,9 @@ MIR_SERVER_31 {
     virtual?thunk?to?mir::shell::AbstractShell::setting_focus_to*;
     virtual?thunk?to?mir::shell::AbstractShell::start_prompt_session_for*;
     virtual?thunk?to?mir::shell::AbstractShell::stop_prompt_session*;
+    virtual?thunk?to?mir::shell::ShellWrapper::add_display*;
     virtual?thunk?to?mir::shell::ShellWrapper::handle*;
+    virtual?thunk?to?mir::shell::ShellWrapper::remove_display*;
 
 # these symbols are needed by mir_proving_server but are not intended to be public
     mir::compositor::GLProgramFamily::*;

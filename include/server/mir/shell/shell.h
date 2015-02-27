@@ -22,6 +22,7 @@
 #include "mir/shell/focus_controller.h"
 #include "mir/input/event_filter.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/compositor/display_listener.h"
 
 #include "mir_toolkit/common.h"
 
@@ -48,7 +49,8 @@ class InputTargeter;
 
 class Shell :
     public virtual FocusController,
-    public virtual input::EventFilter
+    public virtual input::EventFilter,
+    public virtual compositor::DisplayListener
 {
 public:
 /** @name these functions support frontend requests
@@ -85,13 +87,6 @@ public:
     virtual int get_surface_attribute(
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib) = 0;
-/** @} */
-
-/** @name track display changes
- *  @{ */
-    virtual void add_display(geometry::Rectangle const& area) = 0;
-
-    virtual void remove_display(geometry::Rectangle const& area) = 0;
 /** @} */
 };
 }
