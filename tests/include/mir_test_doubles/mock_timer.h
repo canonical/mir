@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_TIMER_H_
 #define MIR_TEST_DOUBLES_MOCK_TIMER_H_
 
-#include "mir/time/timer.h"
+#include "mir/time/alarm_factory.h"
 #include "mir_test/fake_clock.h"
 #include <memory>
 
@@ -31,18 +31,12 @@ namespace test
 namespace doubles
 {
 
-class FakeTimer : public mir::time::Timer
+class FakeTimer : public mir::time::AlarmFactory
 {
 public:
     FakeTimer(std::shared_ptr<FakeClock> const& clock);
-
-    std::unique_ptr<time::Alarm> notify_in(std::chrono::milliseconds delay,
-                                           std::function<void()> const& callback) override;
-    std::unique_ptr<time::Alarm> notify_at(time::Timestamp time_point,
-                                           std::function<void()> const& callback) override;
     std::unique_ptr<time::Alarm> create_alarm(std::function<void()> const& callback) override;
-    std::unique_ptr<time::Alarm> create_alarm(std::function<void()> const& callback,
-        std::function<void()> const& lock, std::function<void()> const& unlock) override;
+    std::unique_ptr<time::Alarm> create_alarm(std::shared_ptr<LockableCallback> const& callback) override;
 private:
     std::shared_ptr<FakeClock> const clock;
 };

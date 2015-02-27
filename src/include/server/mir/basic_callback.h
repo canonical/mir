@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2015 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,27 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
-#ifndef MIR_MAIN_LOOP_H_
-#define MIR_MAIN_LOOP_H_
+#ifndef MIR_BASIC_CALLBACK_H_
+#define MIR_BASIC_CALLBACK_H_
 
-#include "mir/graphics/event_handler_register.h"
-#include "mir/time/alarm_factory.h"
-#include "mir/server_action_queue.h"
+#include "mir/lockable_callback.h"
+
+#include <functional>
 
 namespace mir
 {
 
-class MainLoop : public graphics::EventHandlerRegister, public time::AlarmFactory,
-                 public ServerActionQueue
+class BasicCallback : public mir::LockableCallback
 {
 public:
-    virtual void run() = 0;
-    virtual void stop() = 0;
+    BasicCallback(std::function<void()> const& callback);
+
+    void operator()() override;
+    void lock() override;
+    void unlock() override;
+
+private:
+    std::function<void()> callback;
 };
 
 }
 
-#endif /* MIR_MAIN_LOOP_H_ */
+#endif
