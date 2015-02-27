@@ -147,21 +147,11 @@ TEST_F(ClientLatency, double_buffered)
 {
     using namespace testing;
 
-    auto render_time = post_time;
-
     auto stream = mir_surface_get_buffer_stream(surface);
     for(auto i = 0u; i < test_submissions; i++) {
         auto submission_id = mir_debug_surface_current_buffer_id(surface);
-        timestamps[submission_id] = render_time;
-
-        // Block for pretty much a whole frame, waiting for the display
-        // to drain the queue. It will also update post_time when it's done.
+        timestamps[submission_id] = post_time;
         mir_buffer_stream_swap_buffers_sync(stream);
-
-        // Clients generally render quickly, in under a millisecond. So
-        // you can safely say the render occurred (began and finished) at the
-        // start of the frame interval...
-        render_time = post_time;
     }
 
     unsigned int const expected_client_buffers = 2;
