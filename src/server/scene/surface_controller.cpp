@@ -49,3 +49,14 @@ void ms::SurfaceController::raise(std::weak_ptr<Surface> const& surface)
 {
     surface_stack->raise(surface);
 }
+
+void ms::SurfaceController::raise(SurfaceSet const& surfaces)
+{
+    surface_stack->raise(surfaces);
+}
+
+auto ms::SurfaceController::surface_at(geometry::Point cursor) const
+-> std::shared_ptr<Surface>
+{
+    return surface_stack->surface_at(cursor);
+}

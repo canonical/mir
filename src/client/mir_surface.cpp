@@ -25,6 +25,7 @@
 #include "mir_connection.h"
 #include "mir/dispatch/simple_dispatch_thread.h"
 #include "mir/input/input_platform.h"
+#include "mir/input/xkb_mapper.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -119,7 +120,8 @@ MirSurface::MirSurface(
       name{spec.surface_name.value()},
       connection(allocating_connection),
       buffer_stream_factory(buffer_stream_factory),
-      input_platform(input_platform)
+      input_platform(input_platform),
+      keymapper(std::make_shared<mircv::XKBMapper>())
 {
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
@@ -426,7 +428,8 @@ void MirSurface::set_event_handler(MirEventDelegate const* delegate)
         if (surface.fd_size() > 0 && handle_event_callback)
         {
             auto input_dispatcher = input_platform->create_input_receiver(surface.fd(0),
-                                                                            handle_event_callback);
+                                                                          keymapper,
+                                                                          handle_event_callback);
             input_thread = std::make_shared<md::SimpleDispatchThread>(input_dispatcher);
         }
     }
@@ -449,6 +452,13 @@ void MirSurface::handle_event(MirEvent const& e)
     case mir_event_type_orientation:
         orientation = mir_orientation_event_get_direction(mir_event_get_orientation_event(&e));
         break;
+    case mir_event_type_keymap:
+    {
+        xkb_rule_names names;
+        mir_keymap_event_get_rules(mir_event_get_keymap_event(&e), &names);
+        keymapper->set_rules(names);
+        break;
+    }
     default:
         break;
     };

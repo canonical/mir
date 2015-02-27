@@ -42,7 +42,8 @@ typedef enum
     mir_event_type_close_surface,
     /* Type for new style input event will be returned from mir_event_get_type
        when old style event type was mir_event_type_key or mir_event_type_motion */
-    mir_event_type_input
+    mir_event_type_input,
+    mir_event_type_keymap
 } MirEventType;
 
 typedef struct MirSurfaceEvent MirSurfaceEvent;
@@ -51,6 +52,7 @@ typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
 typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent;
 typedef struct MirInputEvent MirInputEvent;
+typedef struct MirKeymapEvent MirKeymapEvent;
 
 typedef union MirEvent MirEvent;
 
@@ -73,6 +75,7 @@ typedef union MirEvent MirEvent;
 #include "mir_toolkit/events/surface_event.h"
 #include "mir_toolkit/events/orientation_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"
+#include "mir_toolkit/events/keymap_event.h"
 
 #ifdef __cplusplus
 /**
@@ -151,6 +154,16 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev);
  * \return           The associated MirCloseSurfaceEvent
  */
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev);
+
+/*
+ * Retrieve the MirKeymapEvent associated with a MirEvent of
+ * type mir_event_type_keymap. The event signifies that the keymap
+ * applied for the relevant surface has changed.
+ *
+ * \param [in] event The event
+ * \return           The associated MirKeymapEvent
+ */
+MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev);
 
 /*
  * 

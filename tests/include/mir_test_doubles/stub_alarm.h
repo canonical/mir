@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,11 +16,10 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_TIMER_H_
-#define MIR_TEST_DOUBLES_STUB_TIMER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_ALARM_H_
+#define MIR_TEST_DOUBLES_STUB_ALARM_H_
 
 #include "mir/time/alarm.h"
-#include "mir/time/timer.h"
 
 namespace mir
 {
@@ -49,22 +48,9 @@ class StubAlarm : public mir::time::Alarm
     }
 };
 
-class StubTimer : public mir::time::Timer
-{
-    std::unique_ptr<mir::time::Alarm> notify_in(std::chrono::milliseconds, std::function<void(void)>) override
-    {
-        return std::unique_ptr<mir::time::Alarm>{new StubAlarm};
-    }
-
-    std::unique_ptr<mir::time::Alarm> notify_at(mir::time::Timestamp, std::function<void(void)>) override
-    {
-        return std::unique_ptr<mir::time::Alarm>{new StubAlarm};
-    }
-};
-
 }
 }
 }
 
 
-#endif // MIR_TEST_DOUBLES_STUB_TIMER_H_
+#endif // MIR_TEST_DOUBLES_STUB_ALARM_H_

@@ -29,6 +29,7 @@
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/mock_event_sink.h"
 #include "mir_test_doubles/null_prompt_session.h"
 
 #include <gmock/gmock.h>
@@ -88,6 +89,9 @@ struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
     void raise(std::weak_ptr<ms::Surface> const&) override
     {
     }
+    void raise(SurfaceSet const&) override
+    {
+    }
     std::shared_ptr<ms::Surface> add_surface(ms::SurfaceCreationParameters const&,
         ms::Session*) override
     {
@@ -95,6 +99,10 @@ struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
     }
     void remove_surface(std::weak_ptr<ms::Surface> const&) override
     {
+    }
+    auto surface_at(mir::geometry::Point) const -> std::shared_ptr<ms::Surface>
+    {
+        return std::shared_ptr<ms::Surface>{};
     }
 };
 
@@ -374,13 +382,6 @@ TEST_F(ApplicationSession, fowards_parent_info_to_coordinator)
 }
 namespace
 {
-class MockEventSink : public mf::EventSink
-{
-public:
-    MOCK_METHOD1(handle_event, void(MirEvent const&));
-    MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
-    MOCK_METHOD1(handle_display_config_change, void(mir::graphics::DisplayConfiguration const&));
-};
 struct ApplicationSessionSender : public ApplicationSession
 {
     ApplicationSessionSender()
@@ -388,7 +389,7 @@ struct ApplicationSessionSender : public ApplicationSession
     {
     }
 
-    MockEventSink sender;
+    mtd::MockEventSink sender;
     ms::ApplicationSession app_session;
 };
 }

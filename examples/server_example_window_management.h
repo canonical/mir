@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2015 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,46 +19,15 @@
 #ifndef MIR_EXAMPLES_WINDOW_MANAGEMENT_H_
 #define MIR_EXAMPLES_WINDOW_MANAGEMENT_H_
 
-#include "mir/geometry/rectangles.h"
-#include "mir/input/event_filter.h"
-#include "mir/shell/shell.h"
-
-#include <memory>
-
-///\example server_example_window_management.h
-/// Demonstrate simple window management strategies
-
 namespace mir
 {
 class Server;
 
 namespace examples
 {
-class WindowManager :
-    public virtual shell::Shell,
-    public virtual input::EventFilter
-{
-public:
-    virtual void add_display(geometry::Rectangle const& area) = 0;
-
-    virtual void remove_display(geometry::Rectangle const& area) = 0;
-};
-
-class WindowManagmentFactory
-{
-public:
-    explicit WindowManagmentFactory(Server& server) : server(server) {}
-
-    auto window_manager() -> std::shared_ptr<WindowManager>;
-
-private:
-    Server& server;
-    std::weak_ptr<WindowManager> wm;
-};
-
-extern char const* const wm_option;
-extern char const* const wm_description;
+void add_window_manager_option_to(Server& server);
 }
-}
+} // namespace mir
 
-#endif
+
+#endif // MIR_EXAMPLES_WINDOW_MANAGEMENT_H_

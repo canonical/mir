@@ -39,7 +39,7 @@ public:
 
     void register_fd_handler(std::initializer_list<int> fds, void const* owner, fd_callback const& handler) override;
     void unregister_fd_handler(void const* owner) override;
-    std::unique_ptr<mir::time::Alarm> notify_in(std::chrono::milliseconds delay, callback call) override;
+    std::unique_ptr<mir::time::Alarm> create_alarm(callback const& call) override;
     void enqueue(void const* owner, ServerAction const& action) override;
 
     void trigger_pending_fds();

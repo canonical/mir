@@ -59,10 +59,12 @@ public:
     typedef std::function<std::chrono::nanoseconds(int)> AndroidClock;
 
     InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
+                  std::shared_ptr<XKBMapper> const& keymapper,
                   std::function<void(MirEvent*)> const& event_handling_callback,
                   std::shared_ptr<InputReceiverReport> const& report,
                   AndroidClock clock = systemTime);
     InputReceiver(int fd,
+                  std::shared_ptr<XKBMapper> const& keymapper,
                   std::function<void(MirEvent*)> const& event_handling_callback,
                   std::shared_ptr<InputReceiverReport> const& report,
                   AndroidClock clock = systemTime);
@@ -85,12 +87,11 @@ private:
 
     droidinput::sp<droidinput::InputChannel> input_channel;
     std::function<void(MirEvent*)> const handler;
+    std::shared_ptr<XKBMapper> const xkb_mapper;
     std::shared_ptr<InputReceiverReport> const report;
 
     std::shared_ptr<droidinput::InputConsumer> input_consumer;
     droidinput::PreallocatedInputEventFactory event_factory;
-
-    std::shared_ptr<XKBMapper> xkb_mapper;
 
     AndroidClock const android_clock;
 

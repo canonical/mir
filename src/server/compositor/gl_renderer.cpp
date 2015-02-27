@@ -116,6 +116,20 @@ mc::GLRenderer::GLRenderer(
         mir::log_info("%s: %s", s.label, val);
     }
 
+    GLint max_texture_size = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+    mir::log_info("max texture size = %d", max_texture_size);
+
+    GLint rbits = 0, gbits = 0, bbits = 0, abits = 0, dbits = 0, sbits = 0;
+    glGetIntegerv(GL_RED_BITS, &rbits);
+    glGetIntegerv(GL_GREEN_BITS, &gbits);
+    glGetIntegerv(GL_BLUE_BITS, &bbits);
+    glGetIntegerv(GL_ALPHA_BITS, &abits);
+    glGetIntegerv(GL_DEPTH_BITS, &dbits);
+    glGetIntegerv(GL_STENCIL_BITS, &sbits);
+    mir::log_info("framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
+                  rbits, gbits, bbits, abits, dbits, sbits);
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     set_viewport(display_area);

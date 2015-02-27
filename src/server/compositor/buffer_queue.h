@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -66,11 +66,19 @@ public:
     void drop_client_requests() override;
 
 private:
+    class LockableCallback;
+    enum SnapshotWait
+    {
+        wait_for_snapshot,
+        ignore_snapshot
+    };
     void give_buffer_to_client(graphics::Buffer* buffer,
-        std::unique_lock<std::mutex> lock);
+        std::unique_lock<std::mutex>& lock);
+    void give_buffer_to_client(graphics::Buffer* buffer,
+        std::unique_lock<std::mutex>& lock, SnapshotWait wait_type);
     void release(graphics::Buffer* buffer,
         std::unique_lock<std::mutex> lock);
-    void drop_frame(std::unique_lock<std::mutex> lock);
+    void drop_frame(std::unique_lock<std::mutex>& lock, SnapshotWait wait_type);
 
     mutable std::mutex guard;
 
@@ -88,6 +96,7 @@ private:
 
     int nbuffers;
     bool frame_dropping_enabled;
+    bool current_compositor_buffer_valid;
     graphics::BufferProperties the_properties;
     bool force_new_compositor_buffer;
     bool callbacks_allowed;

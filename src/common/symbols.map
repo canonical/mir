@@ -222,6 +222,13 @@ MIR_COMMON_3.2 {
       typeinfo?for?mir::dispatch::SimpleDispatchThread;
       vtable?for?mir::dispatch::SimpleDispatchThread;
 
+      mir::events::*;
+      mir::input::receiver::XKBMapper::XKBMapper*;
+      mir::input::receiver::XKBMapper::XKBMapper*;        
+      mir::input::receiver::XKBMapper::set_rules*;
+      typeinfo?for?mir::input::receiver::XKBMapper;
+      vtable?for?mir::input::receiver::XKBMapper;
+
       mir::dispatch::MultiplexingDispatchable::MultiplexingDispatchable*;
       mir::dispatch::MultiplexingDispatchable::?MultiplexingDispatchable*;
       mir::dispatch::MultiplexingDispatchable::watch_fd*;
@@ -231,6 +238,12 @@ MIR_COMMON_3.2 {
 
       typeinfo?for?mir::dispatch::MultiplexingDispatchable;
       vtable?for?mir::dispatch::MultiplexingDispatchable;
+
+      mir::detail::RefCountedLibrary::operator*;
+      mir::detail::RefCountedLibrary::?RefCountedLibrary*;
+      mir::detail::RefCountedLibrary::RefCountedLibrary*;
+      vtable?for?mir::detail::RefCountedLibrary;
+      typeinfo?for?mir::detail::RefCountedLibrary;
 
       mir::events::*
     };

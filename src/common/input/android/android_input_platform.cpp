@@ -37,9 +37,9 @@ mircva::AndroidInputPlatform::~AndroidInputPlatform()
 }
 
 std::shared_ptr<md::Dispatchable> mircva::AndroidInputPlatform::create_input_receiver(
-    int fd, std::function<void(MirEvent*)> const& callback)
+    int fd, std::shared_ptr<mircv::XKBMapper> const& keymapper, std::function<void(MirEvent*)> const& callback)
 {
-    return std::make_shared<mircva::InputReceiver>(fd, callback, report);
+    return std::make_shared<mircva::InputReceiver>(fd, keymapper, callback, report);
 }
 
 std::shared_ptr<mircv::InputPlatform> mircv::InputPlatform::create()
@@ -47,7 +47,8 @@ std::shared_ptr<mircv::InputPlatform> mircv::InputPlatform::create()
     return create(std::make_shared<mircv::NullInputReceiverReport>());
 }
 
-std::shared_ptr<mircv::InputPlatform> mircv::InputPlatform::create(std::shared_ptr<mircv::InputReceiverReport> const& report)
+std::shared_ptr<mircv::InputPlatform> mircv::InputPlatform::create(
+    std::shared_ptr<mircv::InputReceiverReport> const& report)
 {
     return std::make_shared<mircva::AndroidInputPlatform>(report);
 }

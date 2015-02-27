@@ -16,19 +16,19 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
-#include "mir/geometry/rectangle.h"
-#include "mir/client_platform.h"
-#include "mir/client_platform_factory.h"
 #include "src/client/mir_connection.h"
 #include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/display_configuration.h"
 #include "src/client/mir_surface.h"
+
+#include "mir/client_platform.h"
+#include "mir/client_platform_factory.h"
 #include "mir/client_buffer_factory.h"
-#include "mir/dispatch/dispatchable.h"
 #include "mir/raii.h"
+#include "mir/dispatch/dispatchable.h"
+#include "mir/events/event_builders.h"
+#include "mir/geometry/rectangle.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"
@@ -43,10 +43,12 @@
 #include <gmock/gmock.h>
 
 namespace mcl = mir::client;
+namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
+namespace mev = mir::events;
+namespace md = mir::dispatch;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace md = mir::dispatch;
 
 namespace
 {
@@ -493,11 +495,14 @@ static void surface_callback(MirSurface* surf, void*)
 static bool unfocused_received;
 static void surface_event_callback(MirSurface *, MirEvent const *ev, void *)
 {
-    if (ev->type == mir_event_type_surface &&
-        ev->surface.attrib == mir_surface_attrib_focus &&
-        ev->surface.value == mir_surface_unfocused)
-        unfocused_received = true;
-
+    if (mir_event_type_surface != mir_event_get_type(ev))
+        return;
+    auto surface_ev = mir_event_get_surface_event(ev);
+    if (mir_surface_attrib_focus != mir_surface_event_get_attribute(surface_ev))
+        return;
+    if (mir_surface_unfocused != mir_surface_event_get_attribute_value(surface_ev))
+        return;
+    unfocused_received = true;
 }
 
 TEST_F(MirConnectionTest, focused_window_synthesises_unfocus_event_on_release)
@@ -520,12 +525,7 @@ TEST_F(MirConnectionTest, focused_window_synthesises_unfocus_event_on_release)
     wait_handle = connection->create_surface(params, &surface_callback, nullptr);
     wait_handle->wait_for_all();
 
-    MirEvent focus_event;
-    focus_event.type = mir_event_type_surface;
-    focus_event.surface.id = surface->id();
-    focus_event.surface.attrib = mir_surface_attrib_focus;
-    focus_event.surface.value = mir_surface_focused;
-    surface->handle_event(focus_event);
+    surface->handle_event(*mev::make_event(mf::SurfaceId{surface->id()}, mir_surface_attrib_focus, mir_surface_focused));
 
     surface->set_event_handler(&event_delegate);
 
@@ -558,12 +558,7 @@ TEST_F(MirConnectionTest, unfocused_window_does_not_synthesise_unfocus_event_on_
     wait_handle = connection->create_surface(params, &surface_callback, nullptr);
     wait_handle->wait_for_all();
 
-    MirEvent focus_event;
-    focus_event.type = mir_event_type_surface;
-    focus_event.surface.id = surface->id();
-    focus_event.surface.attrib = mir_surface_attrib_focus;
-    focus_event.surface.value = mir_surface_unfocused;
-    surface->handle_event(focus_event);
+    surface->handle_event(*mev::make_event(mf::SurfaceId{surface->id()}, mir_surface_attrib_focus, mir_surface_unfocused));
 
     surface->set_event_handler(&event_delegate);
 

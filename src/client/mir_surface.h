@@ -46,6 +46,7 @@ namespace input
 namespace receiver
 {
 class InputPlatform;
+class XKBMapper;
 }
 }
 namespace client
@@ -162,6 +163,7 @@ private:
     std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
+    std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 
     mir::protobuf::SurfaceSetting configure_result;
 

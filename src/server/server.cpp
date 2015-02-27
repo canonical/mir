@@ -67,6 +67,7 @@ namespace mo = mir::options;
     MACRO(the_compositor)\
     MACRO(the_composite_event_filter)\
     MACRO(the_cursor_listener)\
+    MACRO(the_cursor)\
     MACRO(the_display)\
     MACRO(the_focus_controller)\
     MACRO(the_gl_config)\
@@ -173,7 +174,7 @@ public:
     auto create_renderer_for(mir::geometry::Rectangle const&, mir::compositor::DestinationAlpha)
     -> std::unique_ptr<mir::compositor::Renderer>
     {
-        return std::unique_ptr<mir::compositor::Renderer>(new StubRenderer());
+        return std::make_unique<StubRenderer>();
     }
 };
 }

@@ -36,6 +36,7 @@ namespace receiver
 {
 class InputReceiverThread;
 class InputReceiverReport;
+class XKBMapper;
 
 // Interface for MirSurface to construct input dispatcher threads.
 class InputPlatform
@@ -43,7 +44,8 @@ class InputPlatform
 public:
     virtual ~InputPlatform() = default;
 
-    virtual std::shared_ptr<dispatch::Dispatchable> create_input_receiver(int fd, std::function<void(MirEvent*)> const& callback) = 0;
+    virtual std::shared_ptr<dispatch::Dispatchable> create_input_receiver(
+        int fd, std::shared_ptr<XKBMapper> const& xkb_mapper, std::function<void(MirEvent*)> const& callback) = 0;
 
     static std::shared_ptr<InputPlatform> create();
     static std::shared_ptr<InputPlatform> create(std::shared_ptr<InputReceiverReport> const& report);
@@ -53,9 +55,8 @@ protected:
     InputPlatform(const InputPlatform&) = delete;
     InputPlatform& operator=(const InputPlatform&) = delete;
 };
-
 }
 }
-} // namespace mir
+}  // namespace mir
 
-#endif // MIR_INPUT_RECEIVER_PLATFORM_H_
+#endif  // MIR_INPUT_RECEIVER_PLATFORM_H_
