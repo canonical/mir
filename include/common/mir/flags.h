@@ -158,11 +158,4 @@ operator^(Enum lhs, Enum rhs) noexcept
     return mir::Flags<Enum>(lhs) ^ mir::Flags<Enum>(rhs);
 }
 
-template<typename Enum>
-constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
-operator~(Enum val) noexcept
-{
-    return ~mir::Flags<Enum>(val);
-}
-
 #endif
