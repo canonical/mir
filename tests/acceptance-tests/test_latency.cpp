@@ -35,7 +35,7 @@ namespace mt = mir::test;
 namespace mg = mir::graphics;
 namespace
 {
-unsigned int const display_nbuffers = 2;
+unsigned int const hardware_framebuffers = 2;
 
 /*
  * Note: we're not aiming to check performance in terms of CPU or GPU time processing
@@ -70,7 +70,6 @@ struct IdCollectingDB : mtd::NullDisplayBuffer
     {
         return last;
     }
-
 private:
     unsigned int& post_time;
     mg::BufferID last{0};
@@ -96,7 +95,7 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
         {
             auto render_time = it->second;
             auto lag_client_to_post = post_time - render_time;
-            auto lag_post_to_eye = display_nbuffers - 1;
+            auto lag_post_to_eye = hardware_framebuffers - 1;
             auto total_lag = lag_client_to_post + lag_post_to_eye;
 
             latency.push_back(total_lag);
@@ -164,7 +163,7 @@ TEST_F(ClientLatency, does_not_exceed_one_frame_double_buffered)
 
     unsigned int const expected_client_buffers = 2;
     unsigned int const expected_latency =
-        (expected_client_buffers - 1) + (display_nbuffers - 1);
+        (expected_client_buffers - 1) + (hardware_framebuffers - 1);
 
     float const error_margin = 0.1f;
     auto observed_latency = display.group.average_latency();
