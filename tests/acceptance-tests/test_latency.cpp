@@ -44,7 +44,7 @@ unsigned int const hardware_framebuffers = 2;
  */
 struct IdCollectingDB : mtd::NullDisplayBuffer
 {
-    IdCollectingDB(unsigned int& count) : post_time{count} {}
+    IdCollectingDB(unsigned int& count) : post_count{count} {}
 
     mir::geometry::Rectangle view_area() const override
     {
@@ -55,11 +55,11 @@ struct IdCollectingDB : mtd::NullDisplayBuffer
         /*
          * Clients are blocked only until the below buffer() goes out of
          * scope. Thereafter we'll be racing the client thread. So we need
-         * to increment the post_time (represents universal time) here
+         * to increment the post_count (represents universal time) here
          * where the client thread is predictably blocked in its call to
          * mir_buffer_stream_swap_buffers_sync().
          */
-        ++post_time;
+        ++post_count;
 
         //the surface will be the frontmost of the renderables
         if (!renderables.empty())
@@ -71,14 +71,14 @@ struct IdCollectingDB : mtd::NullDisplayBuffer
         return last;
     }
 private:
-    unsigned int& post_time;
+    unsigned int& post_count;
     mg::BufferID last{0};
 };
 
 struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
 {
     TimeTrackingGroup(unsigned int& count, std::unordered_map<uint32_t, uint32_t>& map) :
-        post_time(count), timestamps(map), db(count) {}
+        post_count(count), timestamps(map), db(count) {}
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
         f(db);
@@ -94,7 +94,7 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
         if (it != timestamps.end())
         {
             auto render_time = it->second;
-            auto lag_client_to_post = post_time - render_time;
+            auto lag_client_to_post = post_count - render_time;
             auto lag_post_to_eye = hardware_framebuffers - 1;
             auto total_lag = lag_client_to_post + lag_post_to_eye;
 
@@ -112,7 +112,7 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
     }
 
     std::vector<int> latency;
-    unsigned int& post_time;
+    unsigned int& post_count;
     std::unordered_map<uint32_t, uint32_t>& timestamps;
     IdCollectingDB db;
 };
@@ -136,9 +136,9 @@ struct ClientLatency : mtf::ConnectedClientWithASurface
         preset_display(mt::fake_shared(display));
         mtf::ConnectedClientWithASurface::SetUp();
     }
-    unsigned int post_time{0};
+    unsigned int post_count{0};
     std::unordered_map<uint32_t, uint32_t> timestamps;
-    TimeTrackingDisplay display{post_time, timestamps};
+    TimeTrackingDisplay display{post_count, timestamps};
     unsigned int test_submissions{100};
 };
 }
@@ -150,7 +150,7 @@ TEST_F(ClientLatency, double_buffered)
     auto stream = mir_surface_get_buffer_stream(surface);
     for(auto i = 0u; i < test_submissions; i++) {
         auto submission_id = mir_debug_surface_current_buffer_id(surface);
-        timestamps[submission_id] = post_time;
+        timestamps[submission_id] = post_count; 
         mir_buffer_stream_swap_buffers_sync(stream);
     }
 
