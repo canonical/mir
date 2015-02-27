@@ -45,6 +45,7 @@ public:
         std::shared_ptr<input::Scene> const& scene);
     ~SoftwareCursor();
 
+    void show() override;
     void show(CursorImage const& cursor_image) override;
     void hide() override;
     void move_to(geometry::Point position) override;
@@ -58,6 +59,7 @@ private:
     MirPixelFormat const format;
     std::mutex guard;
     std::shared_ptr<detail::CursorRenderable> renderable;
+    bool visible;
     geometry::Displacement hotspot;
 };
 

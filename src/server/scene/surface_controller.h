@@ -46,6 +46,8 @@ public:
 
     void raise(std::weak_ptr<Surface> const& surface) override;
 
+    void raise(SurfaceSet const& surfaces) override;
+
     auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> override;
 
 private:
