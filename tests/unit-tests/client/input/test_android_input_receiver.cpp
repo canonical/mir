@@ -245,7 +245,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
                                    }};
     TestingInputProducer producer(server_fd);
 
-    auto const one_frame = nanoseconds{duration_cast<nanoseconds>(1s).count() / 60};
+    nanoseconds const one_frame = duration_cast<nanoseconds>(1s) / 60;
 
     producer.produce_a_pointer_event(123, 456, t);
     producer.produce_a_key_event();
@@ -288,6 +288,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
 {
     using namespace testing;
+    using namespace std::chrono;
     using namespace std::literals::chrono_literals;
 
     std::chrono::nanoseconds t;
@@ -307,8 +308,8 @@ TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
                                    }};
     TestingInputProducer producer(server_fd);
 
-    std::chrono::nanoseconds const device_sample_interval = 1s / 250;
-    std::chrono::nanoseconds const frame_interval = 1s / 60;
+    std::chrono::nanoseconds const device_sample_interval = duration_cast<nanoseconds>(1s) / 250;
+    std::chrono::nanoseconds const frame_interval = duration_cast<nanoseconds>(1s) / 60;
     std::chrono::nanoseconds const gesture_duration = 1s;
 
     std::chrono::nanoseconds last_produced = 0ns;
