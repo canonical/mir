@@ -72,8 +72,23 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
 
     void post() override
     {
-        latency.push_back(post_count - timestamps[db.last_id().as_value()]);
-        post_count++;
+        auto consume_id = db.last_id().as_value();
+        auto it = timestamps.find(consume_id);
+
+        // XXX The test platform seems to insert artificial buffers we didn't
+        //     introduce ourselves. So identify and ignore those.
+        if (it != timestamps.end())
+        {
+            auto timestamp = it->second;
+            auto lag_client_to_post = post_count - timestamp;
+            unsigned const display_nbuffers = 2;
+            auto lag_post_to_eye = display_nbuffers - 1;
+            auto lag = lag_client_to_post + lag_post_to_eye;
+
+            fprintf(stderr, "consume %u, lag %u\n", consume_id, lag);
+            latency.push_back(lag);
+            post_count++;
+        }
     }
 
     float average_latency()
@@ -113,7 +128,7 @@ struct ClientLatency : mtf::ConnectedClientWithASurface
     unsigned int post_count{0};
     std::unordered_map<uint32_t, uint32_t> timestamps;
     TimeTrackingDisplay display{post_count, timestamps};
-    unsigned int test_submissions{100};
+    unsigned int test_submissions{10};
 };
 }
 
@@ -125,10 +140,11 @@ TEST_F(ClientLatency, does_not_exceed_one_frame_double_buffered)
     for(auto i = 0u; i < test_submissions; i++) {
         auto submission_id = mir_debug_surface_current_buffer_id(surface);
         timestamps[submission_id] = post_count; 
+        fprintf(stderr, "produce %u\n", submission_id);
         mir_buffer_stream_swap_buffers_sync(stream);
     }
     //Default is double buffered
-    EXPECT_THAT(display.group.average_latency(), Lt(1.0));
+    EXPECT_THAT(display.group.average_latency(), Lt(0.0));
 }
 
 //TODO: configure and add test for triple buffer
