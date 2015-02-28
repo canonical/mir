@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ *              Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
 #include "mir/glib_main_loop.h"
@@ -960,43 +961,45 @@ TEST_F(GLibMainLoopAlarmTest, rescheduled_alarm_cancels_previous_scheduling)
 }
 
 TEST_F(GLibMainLoopAlarmTest, alarm_callback_cannot_deadlock)
-{   // Regression test for deadlock bug LP: #1339700
-    std::timed_mutex m;
-    std::atomic_bool failed(false);
+{
+    using namespace testing;
+
+    std::mutex m;
+    std::unique_lock<std::mutex> handler_guard{m, std::defer_lock};
+    std::atomic_bool exit{false};
     int i = 0;
     int const loops = 5;
 
-    auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [&]()
+    auto alarm = ml.create_alarm([&]()
     {
-        // From this angle, ensure we can lock m (alarm should be unlocked)
-        failed = !m.try_lock_for(std::chrono::seconds{5});
-        ASSERT_FALSE(failed);
+        //In this handler context, the alarm dispatcher should have
+        //acquired the handler guard
+        EXPECT_THAT(handler_guard.owns_lock(), Eq(true));
         ++i;
-        m.unlock();
-    });
+    },
+    [&] { handler_guard.lock(); },
+    [&] { handler_guard.unlock(); });
 
-    std::thread t([&]()
+    mt::AutoUnblockThread t([&]{ exit = true; }, [&]()
+    {
+        std::unique_lock<std::mutex> guard{m};
+        while (i < loops && !exit)
         {
-            m.lock();
-            while (i < loops && !failed)
-            {
-                // From this angle, ensure we can lock alarm while holding m
-                (void)alarm->state();
-                m.unlock();
-                std::this_thread::yield();
-                m.lock();
-            }
-            m.unlock();
-        });
+            // It's safe to call cancel now because lock ordering is enforced
+            // by passing the lock/unlock lambdas to alarm above
+            alarm->cancel();
+            guard.unlock();
+            std::this_thread::yield();
+            guard.lock();
+        }
+    });
 
     UnblockMainLoop unblocker(ml);
     for (int j = 0; j < loops; ++j)
     {
-        clock->advance_by(std::chrono::milliseconds{11}, ml);
         alarm->reschedule_in(std::chrono::milliseconds{10});
+        clock->advance_by(std::chrono::milliseconds{11}, ml);
     }
-
-    t.join();
 }
 
 TEST_F(GLibMainLoopAlarmTest, alarm_fires_at_correct_time_point)
