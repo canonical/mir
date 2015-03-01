@@ -1,5 +1,6 @@
-mir (0.12.0) UNRELEASED; urgency=medium
+mir (0.12.0+15.04.20150228-0ubuntu1) vivid; urgency=medium
 
+  [ Alberto Aguirre ]
   * New upstream release 0.12.0 (https://launchpad.net/mir/+milestone/0.12.0)
     - Packaging changes:
       . Client platform packages now include the Mir client platform ABI 
@@ -18,7 +19,10 @@ mir (0.12.0) UNRELEASED; urgency=medium
         are not installable in parallel (LP: #1423591)
       . [regression] Deadlock in TimeoutFrameDroppingPolicy logic (LP: #1421255)
  
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Mon, 23 Feb 2015 14:22:40 -0600
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Sat, 28 Feb 2015 10:30:53 +0000
 
 mir (0.11.0+15.04.20150209.1-0ubuntu1) vivid; urgency=medium
 
