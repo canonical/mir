@@ -313,8 +313,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: mir-client-platform-mesa (= ${binary:Version}),
-         libmircommon-dev,
+Depends: libmircommon-dev,
          ${misc:Depends},
 Description: Display server for Ubuntu - client platform library for Mesa development files
  Mir is a display server running on linux systems, with a focus on efficiency,
