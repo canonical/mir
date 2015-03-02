@@ -31,7 +31,7 @@ class DisplayBuffer;
 }
 namespace compositor
 {
-
+class DisplayListener;
 class Scene;
 class Renderer;
 
@@ -41,13 +41,17 @@ public:
     DefaultDisplayBufferCompositor(
         graphics::DisplayBuffer& display_buffer,
         std::shared_ptr<Renderer> const& renderer,
+        std::shared_ptr<DisplayListener> const& display_listener,
         std::shared_ptr<CompositorReport> const& report);
+
+    ~DefaultDisplayBufferCompositor() noexcept;
 
     void composite(SceneElementSequence&& scene_sequence) override;
 
 private:
     graphics::DisplayBuffer& display_buffer;
     std::shared_ptr<Renderer> const renderer;
+    std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
 };
 
