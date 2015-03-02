@@ -75,6 +75,11 @@ inline Point operator+(Point const& lhs, Displacement const& rhs)
     return Point{lhs.x + rhs.dx, lhs.y + rhs.dy};
 }
 
+inline Point operator+(Displacement const& lhs, Point const& rhs)
+{
+    return Point{rhs.x + lhs.dx, rhs.y + lhs.dy};
+}
+
 inline Point operator-(Point const& lhs, Displacement const& rhs)
 {
     return Point{lhs.x - rhs.dx, lhs.y - rhs.dy};
