@@ -16,8 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_EXAMPLE_WINDOW_MANAGER_H_
-#define MIR_EXAMPLE_WINDOW_MANAGER_H_
+#ifndef MIR_SHELL_WINDOW_MANAGER_H_
+#define MIR_SHELL_WINDOW_MANAGER_H_
 
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
@@ -25,15 +25,13 @@
 
 #include <memory>
 
-///\example server_example_window_manager.h
-/// A window manager interface
-
 namespace mir
 {
 namespace geometry { class Rectangle; }
 namespace scene { class Session; class Surface; class SurfaceCreationParameters; }
-namespace examples
+namespace shell
 {
+/// interface to provide window management logic
 class WindowManager
 {
 public:
@@ -70,4 +68,4 @@ public:
 }
 }
 
-#endif /* MIR_EXAMPLE_WINDOW_MANAGER_H_ */
+#endif /* MIR_SHELL_WINDOW_MANAGER_H_ */

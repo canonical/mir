@@ -105,7 +105,7 @@ public:
 ///
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManager : public WindowManager,
+class BasicWindowManager : public shell::WindowManager,
     private BasicWindowManagerTools<SessionInfo, SurfaceInfo>
 {
 public:

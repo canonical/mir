@@ -19,9 +19,8 @@
 #ifndef MIR_EXAMPLE_GENERIC_SHELL_H_
 #define MIR_EXAMPLE_GENERIC_SHELL_H_
 
-#include "server_example_window_manager.h"
-
 #include "mir/shell/abstract_shell.h"
+#include "mir/shell/window_manager.h"
 
 ///\example server_example_generic_shell.h
 /// A generic shell that supports a window manager
@@ -41,7 +40,7 @@ public:
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
-        std::function<std::shared_ptr<WindowManager>(FocusController* focus_controller)> const& wm_builder);
+        std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder);
 
     std::shared_ptr<scene::Session> open_session(
         pid_t client_pid,
@@ -66,7 +65,7 @@ private:
     void add_display(geometry::Rectangle const& area) override;
     void remove_display(geometry::Rectangle const& area) override;
 
-    std::shared_ptr<WindowManager> const window_manager;
+    std::shared_ptr<shell::WindowManager> const window_manager;
 };
 }
 }
