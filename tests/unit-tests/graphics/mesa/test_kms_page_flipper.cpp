@@ -49,7 +49,7 @@ public:
     {
     }
 
-    mtd::MockDisplayReport report;
+    testing::NiceMock<mtd::MockDisplayReport> report;
     testing::NiceMock<mtd::MockDRM> mock_drm;
     mgm::KMSPageFlipper page_flipper;
 };

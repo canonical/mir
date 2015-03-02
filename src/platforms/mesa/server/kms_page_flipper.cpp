@@ -93,7 +93,10 @@ void mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 
         /* If the page flip we are waiting for has arrived we are done. */
         if (page_flip_is_done(crtc_id))
+        {
+            report->report_vsync(std::to_string(crtc_id));
             return;
+        }
 
         /* ...otherwise we become the worker */
         worker_tid = std::this_thread::get_id();
@@ -143,6 +146,7 @@ void mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
          */
         pf_cv.notify_all();
     }
+    report->report_vsync(std::to_string(crtc_id));
 }
 
 std::thread::id mgm::KMSPageFlipper::debug_get_worker_tid()
