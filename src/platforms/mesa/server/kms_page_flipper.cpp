@@ -42,10 +42,13 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
 
 }
 
-mgm::KMSPageFlipper::KMSPageFlipper(int drm_fd)
-    : drm_fd{drm_fd},
-      pending_page_flips(),
-      worker_tid()
+mgm::KMSPageFlipper::KMSPageFlipper(
+    int drm_fd,
+    std::shared_ptr<DisplayReport> const& report) :
+    drm_fd{drm_fd},
+    report{report},
+    pending_page_flips(),
+    worker_tid()
 {
 }
 
