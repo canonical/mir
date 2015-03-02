@@ -40,7 +40,8 @@ bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
 
 /**
  * Create a new buffer stream. BufferStreams provide a way
- * to exchange buffers with the server unattached to a surface. 
+ * to exchange buffers with the server without directly
+ * posting them to a surface. 
  * For example, the resulting buffer stream may be used
  * with mir_cursor_configuration_from_buffer_stream in order to post images to the system
  * cursor.
