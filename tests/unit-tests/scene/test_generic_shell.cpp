@@ -192,22 +192,6 @@ TEST_F(GenericShell, close_session_notifies_session_event_sink)
     shell.close_session(session);
 }
 
-TEST_F(GenericShell, focus_controller_set_focus_to_notifies_session_event_sink)
-{
-    auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
-    auto session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
-
-    InSequence s;
-    EXPECT_CALL(session_event_sink, handle_focus_change(session1));
-    EXPECT_CALL(session_event_sink, handle_focus_change(session));
-    EXPECT_CALL(session_event_sink, handle_no_focus());
-
-    msh::FocusController& focus_controller = shell;
-    focus_controller.set_focus_to(session1, {});
-    focus_controller.set_focus_to(session, {});
-    focus_controller.set_focus_to({}, {});
-}
-
 TEST_F(GenericShell, create_surface_provides_create_parameters_to_window_manager)
 {
     std::shared_ptr<ms::Session> session =
@@ -346,11 +330,10 @@ TEST_F(GenericShell, pointer_input_events_are_handled_by_window_manager)
 
 TEST_F(GenericShell, setting_surface_state_is_handled_by_window_manager)
 {
-    auto const params = ms::a_surface();
     std::shared_ptr<ms::Session> const session =
         shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
 
-    auto const surface_id = shell.create_surface(session, params);
+    auto const surface_id = shell.create_surface(session, ms::a_surface());
     auto const surface = session->surface(surface_id);
 
     MirSurfaceState const state{mir_surface_state_fullscreen};
@@ -362,3 +345,83 @@ TEST_F(GenericShell, setting_surface_state_is_handled_by_window_manager)
 
     shell.set_surface_attribute(session, surface, mir_surface_attrib_state, mir_surface_state_fullscreen);
 }
+
+TEST_F(GenericShell, as_focus_controller_set_focus_to_notifies_session_event_sink)
+{
+    auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
+
+    InSequence s;
+    EXPECT_CALL(session_event_sink, handle_focus_change(session1));
+    EXPECT_CALL(session_event_sink, handle_focus_change(session));
+    EXPECT_CALL(session_event_sink, handle_no_focus());
+
+    msh::FocusController& focus_controller = shell;
+    focus_controller.set_focus_to(session1, {});
+    focus_controller.set_focus_to(session, {});
+    focus_controller.set_focus_to({}, {});
+}
+
+TEST_F(GenericShell, as_focus_controller_focus_next_notifies_session_event_sink)
+{
+    msh::FocusController& focus_controller = shell;
+    auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
+    focus_controller.set_focus_to(session, {});
+
+    EXPECT_CALL(session_container, successor_of(session)).
+        WillOnce(Return(session1));
+
+    EXPECT_CALL(session_event_sink, handle_focus_change(session1));
+
+    focus_controller.focus_next();
+}
+
+TEST_F(GenericShell, as_focus_controller_focused_session_follows_focus)
+{
+    auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
+    EXPECT_CALL(session_container, successor_of(session1)).
+        WillOnce(Return(session));
+
+    msh::FocusController& focus_controller = shell;
+
+    focus_controller.set_focus_to(session, {});
+    EXPECT_THAT(focus_controller.focused_session(), Eq(session));
+    focus_controller.set_focus_to(session1, {});
+    EXPECT_THAT(focus_controller.focused_session(), Eq(session1));
+    focus_controller.focus_next();
+    EXPECT_THAT(focus_controller.focused_session(), Eq(session));
+}
+
+//TEST_F(GenericShell, as_focus_controller_focused_surface_follows_focus)
+//{
+//    auto const session0 = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+//    auto const session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
+//    NiceMock<mtd::MockSurface> dummy_surface;
+//
+//    EXPECT_CALL(surface_coordinator, add_surface(_,_)).Times(AnyNumber())
+//        .WillOnce(Return(mt::fake_shared(dummy_surface)))
+//        .WillOnce(Return(mt::fake_shared(mock_surface)));
+//    EXPECT_CALL(session_container, successor_of(session1)).
+//        WillOnce(Return(session0));
+//
+//    auto const surface0 = session0->surface(shell.create_surface(session0, ms::a_surface()));
+//    auto const surface1 = session1->surface(shell.create_surface(session1, ms::a_surface()));
+//
+//    msh::FocusController& focus_controller = shell;
+//
+//    focus_controller.set_focus_to(session0, surface0);
+//    EXPECT_THAT(focus_controller.focused_surface(), Eq(surface0));
+//    focus_controller.set_focus_to(session1, surface1);
+//    EXPECT_THAT(focus_controller.focused_surface(), Eq(surface1));
+//    focus_controller.focus_next();
+//    EXPECT_THAT(focus_controller.focused_surface(), Eq(surface0));
+//
+//    shell.close_session(session1);
+//    shell.close_session(session0);
+//}
+//
+//virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
+//
+//virtual void raise(SurfaceSet const& surfaces) = 0;
