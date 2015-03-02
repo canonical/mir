@@ -70,7 +70,9 @@ TEST(DisplayGroup, db_additions_and_removals)
         group.remove(mga::DisplayName::primary);
     }, std::logic_error);
 
+    EXPECT_FALSE(group.display_present(mga::DisplayName::external));
     group.add(mga::DisplayName::external, std::unique_ptr<StubConfigurableDB>(new StubConfigurableDB));
+    EXPECT_TRUE(group.display_present(mga::DisplayName::external));
     group.post();
 
     //can replace primary or external

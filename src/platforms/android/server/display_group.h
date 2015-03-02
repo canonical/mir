@@ -47,9 +47,10 @@ public:
     void add(DisplayName name, std::unique_ptr<ConfigurableDisplayBuffer> buffer);
     void remove(DisplayName name);
     void configure(DisplayName name, MirPowerMode, MirOrientation);
+    bool display_present(DisplayName name) const;
 
 private:
-    std::mutex guard;
+    std::mutex mutable guard;
     std::shared_ptr<DisplayDevice> const device;
     std::map<DisplayName, std::unique_ptr<ConfigurableDisplayBuffer>> dbs;
 };

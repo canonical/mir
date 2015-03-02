@@ -212,7 +212,7 @@ void mga::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     update_configuration(lock);
-    if (config.external().connected)
+    if ((config.external().connected) && !displays.display_present(mga::DisplayName::external))
         displays.add(mga::DisplayName::external,
             create_display_buffer(
                 display_device,
@@ -222,7 +222,7 @@ void mga::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
                 gl_program_factory,
                 gl_context,
                 mga::OverlayOptimization::disabled));
-    else
+    if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
         displays.remove(mga::DisplayName::external);
 
     f(displays);

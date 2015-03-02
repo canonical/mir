@@ -57,6 +57,12 @@ void mga::DisplayGroup::remove(DisplayName name)
         dbs.erase(it);
 }
 
+bool mga::DisplayGroup::display_present(DisplayName name) const
+{
+    std::unique_lock<decltype(guard)> lk(guard);
+    return (dbs.end() != dbs.find(name));
+}
+
 void mga::DisplayGroup::configure(DisplayName name, MirPowerMode mode, MirOrientation orientation)
 {
     std::unique_lock<decltype(guard)> lk(guard);
