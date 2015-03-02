@@ -68,7 +68,9 @@ mga::DisplayAttribs mga::FbControl::active_attribs_for(DisplayName)
       fb_num};
 }
 
-mga::ConfigChangeSubscription mga::FbControl::subscribe_to_config_changes(std::function<void()> const&)
+mga::ConfigChangeSubscription mga::FbControl::subscribe_to_config_changes(
+        std::function<void()> const&,
+        std::function<void(DisplayName)> const&)
 {
     return nullptr;
 }

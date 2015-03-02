@@ -146,8 +146,10 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
 }
 
 mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_changes(
-    std::function<void()> const& hotplug)
+    std::function<void()> const& hotplug,
+    std::function<void(DisplayName)> const& vsync_cb)
 {
+    (void) vsync_cb;
     return std::make_shared<
         mir::raii::PairedCalls<std::function<void()>, std::function<void()>>>(
         [hotplug, this]{
