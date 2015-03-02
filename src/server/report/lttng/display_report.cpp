@@ -35,19 +35,19 @@ DISPLAY_REPORT_TRACE_CALL(report_successful_display_construction)
 DISPLAY_REPORT_TRACE_CALL(report_successful_drm_mode_set_crtc_on_construction)
 DISPLAY_REPORT_TRACE_CALL(report_vt_switch_away_failure)
 DISPLAY_REPORT_TRACE_CALL(report_vt_switch_back_failure)
+
 #undef DISPLAY_REPORT_TRACE_CALL
 
 void mir::report::lttng::DisplayReport::report_egl_configuration(EGLDisplay /*disp*/, EGLConfig /*config*/)
 {
 }
 
-
 void mir::report::lttng::DisplayReport::report_drm_master_failure(int error)
 {
     mir_tracepoint(mir_server_display, report_drm_master_failure, strerror(error));
 }
 
-void mir::report::lttng::DisplayReport::report_vsync(std::string const& display_name)
+void mir::report::lttng::DisplayReport::report_vsync(std::string const& name)
 {
-    mir_tracepoint(mir_server_display, report_vsync, display_name.c_str());
+    mir_tracepoint(mir_server_display, report_vsync, name.c_str());
 }
