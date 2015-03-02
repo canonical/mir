@@ -22,7 +22,6 @@
 #include "mir_test/fake_shared.h"
 
 #include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_display_report.h"
 
 #include <stdexcept>
 
@@ -104,7 +103,6 @@ public:
     testing::NiceMock<mtd::MockDRM> mock_drm;
     MockPageFlipper mock_page_flipper;
     NullPageFlipper null_page_flipper;
-    mtd::MockDisplayReport mock_report;
 
     std::vector<drmModeModeInfo> modes_empty;
     uint32_t const invalid_id;
@@ -127,8 +125,7 @@ TEST_F(RealKMSOutputTest, construction_queries_connector)
         .Times(1);
 
     mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(null_page_flipper),
-                              mt::fake_shared(mock_report)};
+                              mt::fake_shared(null_page_flipper)};
 }
 
 TEST_F(RealKMSOutputTest, operations_use_existing_crtc)
@@ -159,8 +156,7 @@ TEST_F(RealKMSOutputTest, operations_use_existing_crtc)
     }
 
     mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper),
-                              mt::fake_shared(mock_report)};
+                              mt::fake_shared(mock_page_flipper)};
 
     EXPECT_TRUE(output.set_crtc(fb_id));
     EXPECT_TRUE(output.schedule_page_flip(fb_id));
@@ -195,23 +191,8 @@ TEST_F(RealKMSOutputTest, operations_use_possible_crtc)
     }
 
     mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper),
-                              mt::fake_shared(mock_report)};
+                              mt::fake_shared(mock_page_flipper)};
 
-    EXPECT_TRUE(output.set_crtc(fb_id));
-    EXPECT_TRUE(output.schedule_page_flip(fb_id));
-    output.wait_for_page_flip();
-}
-
-TEST_F(RealKMSOutputTest, reports_vsync)
-{
-    uint32_t const fb_id{67};
-    EXPECT_CALL(mock_report, report_vsync(std::to_string(connector_ids[0])));
-    setup_outputs_no_connected_crtc();
-
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper),
-                              mt::fake_shared(mock_report)};
     EXPECT_TRUE(output.set_crtc(fb_id));
     EXPECT_TRUE(output.schedule_page_flip(fb_id));
     output.wait_for_page_flip();
@@ -243,8 +224,7 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
     }
 
     mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper),
-                              mt::fake_shared(mock_report)};
+                              mt::fake_shared(mock_page_flipper)};
 
     EXPECT_FALSE(output.set_crtc(fb_id));
     EXPECT_THROW({
@@ -262,8 +242,7 @@ TEST_F(RealKMSOutputTest, clear_crtc_gets_crtc_if_none_is_current)
     setup_outputs_connected_crtc();
 
     mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper),
-                              mt::fake_shared(mock_report)};
+                              mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
         .Times(1)
@@ -289,8 +268,7 @@ TEST_F(RealKMSOutputTest, clear_crtc_does_not_throw_if_no_crtc_is_found)
     resources.prepare();
 
     mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper),
-                              mt::fake_shared(mock_report)};
+                              mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, _, 0, 0, 0, nullptr, 0, nullptr))
         .Times(0);
@@ -305,8 +283,7 @@ TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
     setup_outputs_connected_crtc();
 
     mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper),
-                              mt::fake_shared(mock_report)};
+                              mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
         .Times(1)
