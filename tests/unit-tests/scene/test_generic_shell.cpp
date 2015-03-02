@@ -19,6 +19,7 @@
 #include "mir/shell/generic_shell.h"
 #include "mir/shell/window_manager.h"
 
+#include "mir/events/event_builders.h"
 #include "mir/scene/session.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/scene/surface_creation_parameters.h"
@@ -84,38 +85,7 @@ struct MockSessionManager : ms::SessionManager
     { ms::SessionManager::set_focus_to(focus); }
 };
 
-struct StubWindowManager : msh::WindowManager
-{
-//    void add_session(std::shared_ptr<ms::Session> const&) override {}
-//
-//    void remove_session(std::shared_ptr<ms::Session> const&) override {}
-//
-//    mf::SurfaceId add_surface(
-//        std::shared_ptr<ms::Session> const& session,
-//        ms::SurfaceCreationParameters const& params,
-//        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build) override
-//    {
-//        return build(session, params);
-//    }
-//
-    void remove_surface(
-        std::shared_ptr<ms::Session> const&,
-        std::weak_ptr<ms::Surface> const&) override {}
-
-    void add_display(geom::Rectangle const&) override {}
-
-    void remove_display(geom::Rectangle const&) override {}
-
-    bool handle_key_event(MirKeyInputEvent const*) override { return false; }
-
-    bool handle_touch_event(MirTouchInputEvent const*) override { return false; }
-
-    bool handle_pointer_event(MirPointerInputEvent const*) override { return false; }
-
-    int handle_set_state(std::shared_ptr<ms::Surface> const&, MirSurfaceState value) override { return value; }
-};
-
-struct MockWindowManager : StubWindowManager
+struct MockWindowManager : msh::WindowManager
 {
     MockWindowManager()
     {
@@ -135,6 +105,15 @@ struct MockWindowManager : StubWindowManager
         std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build));
 
     MOCK_METHOD2(remove_surface, void(std::shared_ptr<ms::Session> const&, std::weak_ptr<ms::Surface> const&));
+
+    MOCK_METHOD1(add_display, void(geom::Rectangle const&));
+    MOCK_METHOD1(remove_display, void(geom::Rectangle const&));
+
+    MOCK_METHOD1(handle_key_event, bool(MirKeyInputEvent const*));
+    MOCK_METHOD1(handle_touch_event, bool(MirTouchInputEvent const*));
+    MOCK_METHOD1(handle_pointer_event, bool(MirPointerInputEvent const*));
+
+    int handle_set_state(std::shared_ptr<ms::Surface> const&, MirSurfaceState value) override { return value; }
 };
 
 using NiceMockWindowManager = NiceMock<MockWindowManager>;
@@ -273,4 +252,94 @@ TEST_F(GenericShell, destroy_surface_removes_surface_from_window_manager)
     EXPECT_CALL(*wm, remove_surface(session, WeakPtrTo(weak_surface)));
 
     shell.destroy_surface(session, surface_id);
+}
+
+TEST_F(GenericShell, add_display_adds_display_to_window_manager)
+{
+    geom::Rectangle const arbitrary_area{{0,0}, {__LINE__,__LINE__}};
+
+    EXPECT_CALL(*wm, add_display(arbitrary_area));
+
+    shell.add_display(arbitrary_area);
+}
+
+TEST_F(GenericShell, remove_display_adds_display_to_window_manager)
+{
+    geom::Rectangle const arbitrary_area{{0,0}, {__LINE__,__LINE__}};
+
+    EXPECT_CALL(*wm, remove_display(arbitrary_area));
+
+    shell.remove_display(arbitrary_area);
+}
+
+TEST_F(GenericShell, key_input_events_are_handled_by_window_manager)
+{
+    int64_t const timestamp{0};
+    MirKeyInputEventAction const action{mir_key_input_event_action_down};
+    xkb_keysym_t const key_code{0};
+    int const scan_code{0};
+    MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
+
+    auto const event = mir::events::make_event(
+        mir_input_event_type_key,
+        timestamp,
+        action,
+        key_code,
+        scan_code,
+        modifiers);
+
+    EXPECT_CALL(*wm, handle_key_event(_))
+        .WillOnce(Return(false))
+        .WillOnce(Return(true));
+
+    EXPECT_FALSE(shell.handle(*event));
+    EXPECT_TRUE(shell.handle(*event));
+}
+
+TEST_F(GenericShell, touch_input_events_are_handled_by_window_manager)
+{
+    int64_t const timestamp{0};
+    MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
+
+    auto const event = mir::events::make_event(
+        mir_input_event_type_touch,
+        timestamp,
+        modifiers);
+
+    EXPECT_CALL(*wm, handle_touch_event(_))
+        .WillOnce(Return(false))
+        .WillOnce(Return(true));
+
+    EXPECT_FALSE(shell.handle(*event));
+    EXPECT_TRUE(shell.handle(*event));
+}
+
+TEST_F(GenericShell, pointer_input_events_are_handled_by_window_manager)
+{
+    int64_t const timestamp{0};
+    MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
+    MirPointerInputEventAction const action{mir_pointer_input_event_action_button_down};
+    std::vector<MirPointerInputEventButton> const buttons_pressed{mir_pointer_input_button_primary};
+    float const x_axis_value{0.0};
+    float const y_axis_value{0.0};
+    float const hscroll_value{0.0};
+    float const vscroll_value{0.0};
+
+    auto const event = mir::events::make_event(
+        mir_input_event_type_pointer,
+        timestamp,
+        modifiers,
+        action,
+        buttons_pressed,
+        x_axis_value,
+        y_axis_value,
+        hscroll_value,
+        vscroll_value);
+
+    EXPECT_CALL(*wm, handle_pointer_event(_))
+        .WillOnce(Return(false))
+        .WillOnce(Return(true));
+
+    EXPECT_FALSE(shell.handle(*event));
+    EXPECT_TRUE(shell.handle(*event));
 }

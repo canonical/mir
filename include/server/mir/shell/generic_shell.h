@@ -59,10 +59,10 @@ public:
         MirSurfaceAttrib attrib,
         int value) override;
 
-private:
     void add_display(geometry::Rectangle const& area) override;
     void remove_display(geometry::Rectangle const& area) override;
 
+private:
     std::shared_ptr<WindowManager> const window_manager;
 };
 }
