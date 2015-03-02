@@ -19,6 +19,7 @@
 #include "touchspot_controller.h"
 #include "touchspot_image.c"
 
+#include "mir/geometry/displacement.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer.h"
@@ -80,7 +81,7 @@ public:
     void move_center_to(geom::Point pos)
     {
         std::lock_guard<std::mutex> lg(guard);
-        position = {pos.x.as_int() - touchspot_image.width/2, pos.y.as_int() - touchspot_image.height/2};
+        position = pos - geom::Displacement{0.5*touchspot_image.width, 0.5*touchspot_image.height};
     }
 
     

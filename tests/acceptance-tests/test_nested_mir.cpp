@@ -27,7 +27,9 @@
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/nested_mir_runner.h"
 #include "mir_test/wait_condition.h"
+#include "mir_test/fake_shared.h"
 
 #include "mir_test_doubles/mock_egl.h"
 
@@ -40,6 +42,7 @@
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 namespace msh = mir::shell;
 using namespace testing;
@@ -74,23 +77,6 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     void session_configure_surface_cursor_called(std::string const&) override {};
     void session_configure_display_called(std::string const&) override {};
     void session_error(const std::string&, const char*, const std::string&) override {};
-};
-
-struct FakeCommandLine
-{
-    static int const argc = 7;
-    char const* argv[argc];
-
-    FakeCommandLine(std::string const& host_socket)
-    {
-        char const** to = argv;
-        for(auto from : { "dummy-exe-name", "--file", "NestedServer", "--host-socket", host_socket.c_str(), "--enable-input", "off"})
-        {
-            *to++ = from;
-        }
-
-        EXPECT_THAT(to - argv, Eq(argc)); // Check the array size matches parameter list
-    }
 };
 
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
@@ -149,92 +135,18 @@ std::vector<geom::Rectangle> const display_geometry
     {{480, 0}, {1920, 1080}}
 };
 
-std::chrono::seconds const timeout{10};
-
-class NestedMirRunner : mir::Server
+struct NestedMirRunner : public mtf::NestedMirRunner
 {
-public:
     NestedMirRunner(std::string const& connection_string)
-    {
-        FakeCommandLine nested_command_line(connection_string);
-
-        set_command_line(nested_command_line.argc, nested_command_line.argv);
-
-        override_the_host_lifecycle_event_listener([this]
-           {
-               return the_mock_host_lifecycle_event_listener();
-           });
-
-        add_init_callback([&]
-            {
-                auto const main_loop = the_main_loop();
-                // By enqueuing the notification code in the main loop, we are
-                // ensuring that the server has really and fully started before
-                // leaving start_mir_server().
-                main_loop->enqueue(
-                    this,
-                    [&]
-                    {
-                        std::lock_guard<std::mutex> lock(nested_mutex);
-                        nested_server_running = true;
-                        nested_started.notify_one();
-                    });
-            });
-
-        apply_settings();
-
-        nested_server_thread = std::thread([&]
-            {
-                try
+        : mtf::NestedMirRunner([this](mir::Server& server){
+                server.override_the_host_lifecycle_event_listener([this]
                 {
-                    run();
-                }
-                catch (std::exception const& e)
-                {
-                    FAIL() << e.what();
-                }
-                std::lock_guard<std::mutex> lock(nested_mutex);
-                nested_server_running = false;
-                nested_started.notify_one();
-            });
-
-        std::unique_lock<std::mutex> lock(nested_mutex);
-        nested_started.wait_for(lock, timeout, [&] { return nested_server_running; });
-
-        if (!nested_server_running)
-        {
-            throw std::runtime_error{"Failed to start nested server"};
-        }
-    }
-
-    ~NestedMirRunner()
+                    return mt::fake_shared(listener);
+                });}, connection_string)
     {
-        stop();
-
-        std::unique_lock<std::mutex> lock(nested_mutex);
-        nested_started.wait_for(lock, timeout, [&] { return !nested_server_running; });
-
-        EXPECT_FALSE(nested_server_running);
-
-        if (nested_server_thread.joinable()) nested_server_thread.join();
     }
 
-    using mir::Server::the_display;
-
-    std::shared_ptr<MockHostLifecycleEventListener> the_mock_host_lifecycle_event_listener()
-    {
-        return mock_host_lifecycle_event_listener([this]
-            {
-                return std::make_shared<NiceMock<MockHostLifecycleEventListener>>();
-            });
-    }
-
-private:
-    std::thread nested_server_thread;
-    std::mutex nested_mutex;
-    std::condition_variable nested_started;
-    bool nested_server_running{false};
-    mir::CachedPtr<MockHostLifecycleEventListener> mock_host_lifecycle_event_listener;
+    MockHostLifecycleEventListener listener;
 };
 
 struct NestedServer : mtf::HeadlessInProcessServer
@@ -322,12 +234,12 @@ TEST_F(NestedServer, receives_lifecycle_events_from_host)
     mir::test::WaitCondition events_processed;
 
     InSequence seq;
-    EXPECT_CALL(*(nested_mir.the_mock_host_lifecycle_event_listener()),
+    EXPECT_CALL(nested_mir.listener,
         lifecycle_event_occurred(mir_lifecycle_state_resumed)).Times(1);
-    EXPECT_CALL(*(nested_mir.the_mock_host_lifecycle_event_listener()),
+    EXPECT_CALL(nested_mir.listener,
         lifecycle_event_occurred(mir_lifecycle_state_will_suspend))
         .WillOnce(WakeUp(&events_processed));
-    EXPECT_CALL(*(nested_mir.the_mock_host_lifecycle_event_listener()),
+    EXPECT_CALL(nested_mir.listener,
         lifecycle_event_occurred(mir_lifecycle_connection_lost)).Times(AtMost(1));
 
     trigger_lifecycle_event(mir_lifecycle_state_resumed);

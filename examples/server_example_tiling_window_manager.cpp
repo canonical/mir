@@ -41,17 +41,15 @@ me::TilingSurfaceInfo::TilingSurfaceInfo(
 {
 }
 
-me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(
-    Tools* const tools,
-    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator) :
-    tools{tools}, surface_coordinator{surface_coordinator}
+me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(Tools* const tools) :
+    tools{tools}
 {
 }
 
 void me::TilingWindowManagerPolicy::click(Point cursor)
 {
     auto const session = session_under(cursor);
-    auto const surface = surface_coordinator->surface_at(cursor);
+    auto const surface = tools->surface_at(cursor);
     tools->set_focus_to(session, surface);
     old_cursor = cursor;
 }
@@ -80,7 +78,7 @@ void me::TilingWindowManagerPolicy::resize(Point cursor)
             }
             else
             {
-                auto const new_surface = surface_coordinator->surface_at(old_cursor);
+                auto const new_surface = tools->surface_at(old_cursor);
 
                 if (new_surface && tools->info_for(new_surface).session.lock() == session)
                 {
@@ -128,7 +126,7 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
         }
     }
 
-    if (surfaces.empty() && session == tools->focussed_application().lock())
+    if (surfaces.empty() && session == tools->focused_session())
     {
         tools->focus_next();
     }
@@ -204,7 +202,7 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
             }
             else
             {
-                auto const new_surface = surface_coordinator->surface_at(old_cursor);
+                auto const new_surface = tools->surface_at(old_cursor);
 
                 if (new_surface && tools->info_for(new_surface).session.lock() == session)
                 {
@@ -248,7 +246,7 @@ bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* eve
     }
     else if (action == mir_key_input_event_action_down && scan_code == KEY_F4)
     {
-        if (auto const session = tools->focussed_application().lock())
+        if (auto const session = tools->focused_session())
         {
             switch (modifiers & modifier_mask)
             {
@@ -349,7 +347,7 @@ bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerInputEvent co
 
 void me::TilingWindowManagerPolicy::toggle(MirSurfaceState state)
 {
-    if (auto const session = tools->focussed_application().lock())
+    if (auto const session = tools->focused_session())
     {
         if (auto const surface = session->default_surface())
         {

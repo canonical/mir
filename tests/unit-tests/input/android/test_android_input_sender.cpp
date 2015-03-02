@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -323,7 +323,7 @@ TEST_F(AndroidInputSender, alarm_created_for_input_send)
 
     register_surface();
 
-    EXPECT_CALL(loop, notify_in(_,_));
+    EXPECT_CALL(loop, create_alarm(An<std::function<void()> const&>()));
     sender.send_event(key_event, channel);
 }
 
