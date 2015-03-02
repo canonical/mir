@@ -113,7 +113,7 @@ struct MockWindowManager : msh::WindowManager
     MOCK_METHOD1(handle_touch_event, bool(MirTouchInputEvent const*));
     MOCK_METHOD1(handle_pointer_event, bool(MirPointerInputEvent const*));
 
-    int handle_set_state(std::shared_ptr<ms::Surface> const&, MirSurfaceState value) override { return value; }
+    MOCK_METHOD2(handle_set_state, int(std::shared_ptr<ms::Surface> const&, MirSurfaceState value));
 };
 
 using NiceMockWindowManager = NiceMock<MockWindowManager>;
@@ -247,9 +247,9 @@ TEST_F(GenericShell, destroy_surface_removes_surface_from_window_manager)
         shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
 
     auto const surface_id = shell.create_surface(session, params);
-    auto const weak_surface = session->surface(surface_id);
+    auto const surface = session->surface(surface_id);
 
-    EXPECT_CALL(*wm, remove_surface(session, WeakPtrTo(weak_surface)));
+    EXPECT_CALL(*wm, remove_surface(session, WeakPtrTo(surface)));
 
     shell.destroy_surface(session, surface_id);
 }
@@ -342,4 +342,23 @@ TEST_F(GenericShell, pointer_input_events_are_handled_by_window_manager)
 
     EXPECT_FALSE(shell.handle(*event));
     EXPECT_TRUE(shell.handle(*event));
+}
+
+TEST_F(GenericShell, setting_surface_state_is_handled_by_window_manager)
+{
+    auto const params = ms::a_surface();
+    std::shared_ptr<ms::Session> const session =
+        shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    auto const surface_id = shell.create_surface(session, params);
+    auto const surface = session->surface(surface_id);
+
+    MirSurfaceState const state{mir_surface_state_fullscreen};
+
+    EXPECT_CALL(*wm, handle_set_state(surface, state))
+        .WillOnce(Return(mir_surface_state_maximized));
+
+    EXPECT_CALL(mock_surface, configure(mir_surface_attrib_state, mir_surface_state_maximized));
+
+    shell.set_surface_attribute(session, surface, mir_surface_attrib_state, mir_surface_state_fullscreen);
 }
