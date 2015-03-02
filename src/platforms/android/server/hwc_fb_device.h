@@ -42,11 +42,7 @@ public:
                 std::shared_ptr<framebuffer_device_t> const& fb_device);
 
     bool compatible_renderlist(RenderableList const& renderlist) override;
-    void commit(
-        DisplayName,
-        LayerList&,
-        SwappingGLContext const& context,
-        RenderableListCompositor const& list_compositor) override;
+    void commit(std::list<DisplayContents> const& contents) override;
 
 private:
     void content_cleared() override;
