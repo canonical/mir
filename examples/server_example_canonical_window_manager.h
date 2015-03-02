@@ -62,9 +62,7 @@ public:
     using Tools = BasicWindowManagerTools<CanonicalSessionInfo, CanonicalSurfaceInfo>;
     using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfo>::type;
 
-    CanonicalWindowManagerPolicy(
-        Tools* const tools,
-        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator);
+    explicit CanonicalWindowManagerPolicy(Tools* const tools);
 
     void click(geometry::Point cursor);
 
@@ -111,9 +109,9 @@ private:
     bool resize(std::shared_ptr<scene::Surface> const& surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
     bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
     void move_tree(std::shared_ptr<scene::Surface> const& root, geometry::Displacement movement) const;
+    void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
 
     Tools* const tools;
-    std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
 
     geometry::Rectangle display_area;
     geometry::Point old_cursor{};

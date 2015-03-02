@@ -21,6 +21,7 @@
 
 #include "mir_test/event_factory.h"
 #include "mir_test/fake_event_hub.h"
+#include "mir/geometry/displacement.h"
 
 #include <functional>
 
@@ -101,8 +102,7 @@ void TouchProducingServer::thread_function()
         touch_end_time = now;
         
         double alpha = (now.time_since_epoch().count()-start.time_since_epoch().count()) / static_cast<double>(end.time_since_epoch().count()-start.time_since_epoch().count());
-        auto point = geom::Point{touch_start.x.as_int()+(touch_end.x.as_int()-touch_start.x.as_int())*alpha,
-            touch_start.y.as_int()+(touch_end.y.as_int()-touch_start.y.as_int())*alpha};
+        auto point = touch_start + alpha*(touch_end-touch_start);
         synthesize_event_at(point);
     }
 }

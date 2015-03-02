@@ -87,6 +87,14 @@ public:
     void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
 /** @} */
 
+    // More useful than FocusController::set_focus_to()!
+    void set_focus_to(
+        std::shared_ptr<scene::Session> const& focus_session,
+        std::shared_ptr<scene::Surface> const& focus_surface);
+
+    // The surface with focus
+    std::shared_ptr<scene::Surface> focused_surface() const;
+
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
@@ -109,6 +117,10 @@ private:
 
     void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Surface> const& next_focus);
     void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Session> const& next_focus);
+    void set_focus_to_locked(
+        std::unique_lock<std::mutex> const& lock,
+        std::shared_ptr<scene::Session> const& focus_session,
+        std::shared_ptr<scene::Surface> const& focus_surface);
 };
 }
 }

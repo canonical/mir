@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -404,10 +404,10 @@ mia::InputSendEntry mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t seq
 
 void mia::InputSender::ActiveTransfer::update_timer()
 {
-    if (send_timer)
-        send_timer->reschedule_in(input_send_timeout);
-    else
-        send_timer = state.main_loop->notify_in(input_send_timeout, [this](){on_response_timeout();});
+    if (send_timer == nullptr)
+        send_timer = state.main_loop->create_alarm([this]{ on_response_timeout(); });
+
+    send_timer->reschedule_in(input_send_timeout);
 }
 
 void mia::InputSender::ActiveTransfer::cancel_timer()

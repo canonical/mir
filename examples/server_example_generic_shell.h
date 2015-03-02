@@ -24,14 +24,47 @@
 
 #include "mir/shell/abstract_shell.h"
 
+#include <set>
+
 ///\example server_example_generic_shell.h
 /// A generic shell that supports a window manager
 
 namespace mir
 {
+namespace geometry { class Point; }
+
 namespace examples
 {
-class GenericShell : public virtual Shell,
+using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
+
+// TODO This interface keeps changes out of the Mir API (to explore the requirement)
+class FocusController :
+    // Yes, weird - but resolves common functions (Will fix when updating core Mir API)
+    private virtual shell::FocusController
+{
+public:
+    using shell::FocusController::focus_next;
+
+    virtual auto focused_session() const -> std::shared_ptr<scene::Session> = 0;
+
+    virtual void set_focus_to(
+        std::shared_ptr<scene::Session> const& focus_session,
+        std::shared_ptr<scene::Surface> const& focus_surface) = 0;
+
+    virtual std::shared_ptr<scene::Surface> focused_surface() const = 0;
+
+    virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
+
+    virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
+
+    virtual void raise(SurfaceSet const& surfaces) = 0;
+
+private:
+    // yes clang, I mean what I said!
+    using shell::FocusController::set_focus_to;
+};
+
+class GenericShell : public virtual Shell, public virtual FocusController,
     private shell::AbstractShell
 {
 public:
@@ -40,7 +73,7 @@ public:
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
-        std::function<std::shared_ptr<WindowManager>(shell::FocusController* focus_controller)> const& wm_builder);
+        std::function<std::shared_ptr<WindowManager>(FocusController* focus_controller)> const& wm_builder);
 
     std::shared_ptr<scene::Session> open_session(
         pid_t client_pid,
@@ -60,6 +93,22 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib,
         int value) override;
+
+    using shell::FocusController::set_focus_to;
+    void set_focus_to(
+        std::shared_ptr<scene::Session> const& focus_session,
+        std::shared_ptr<scene::Surface> const& focus_surface) override;
+
+    // The surface with focus
+    std::shared_ptr<scene::Surface> focused_surface() const override;
+
+    auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override;
+
+    void raise(std::weak_ptr<scene::Surface> const& surface) override;
+
+    void raise(SurfaceSet const& surfaces) override;
+
+    auto focused_session() const -> std::shared_ptr<scene::Session> override;
 
 private:
     void add_display(geometry::Rectangle const& area) override;

@@ -18,7 +18,9 @@
 
 #include "server_example_generic_shell.h"
 
+#include "mir/geometry/point.h"
 #include "mir/scene/session.h"
+#include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 
 namespace me = mir::examples;
@@ -34,7 +36,7 @@ me::GenericShell::GenericShell(
     std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
-    std::function<std::shared_ptr<WindowManager>(shell::FocusController* focus_controller)> const& wm_builder) :
+    std::function<std::shared_ptr<WindowManager>(FocusController* focus_controller)> const& wm_builder) :
     AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
     window_manager(wm_builder(this))
 {
@@ -121,4 +123,38 @@ void me::GenericShell::add_display(geometry::Rectangle const& area)
 void me::GenericShell::remove_display(geometry::Rectangle const& area)
 {
     window_manager->remove_display(area);
+}
+
+std::shared_ptr<ms::Surface> me::GenericShell::focused_surface() const
+{
+    return msh::AbstractShell::focused_surface();
+}
+
+void me::GenericShell::set_focus_to(
+    std::shared_ptr<ms::Session> const& focus_session,
+    std::shared_ptr<ms::Surface> const& focus_surface)
+{
+    msh::AbstractShell::set_focus_to(focus_session, focus_surface);
+}
+
+auto me::GenericShell::surface_at(geometry::Point cursor) const
+-> std::shared_ptr<scene::Surface>
+{
+    return surface_coordinator->surface_at(cursor);
+}
+
+void me::GenericShell::raise(std::weak_ptr<ms::Surface> const& surface)
+{
+    surface_coordinator->raise(surface);
+}
+
+void me::GenericShell::raise(SurfaceSet const& surfaces)
+{
+    surface_coordinator->raise(surfaces);
+}
+
+auto me::GenericShell::focused_session() const
+-> std::shared_ptr<ms::Session>
+{
+    return focussed_application().lock();
 }

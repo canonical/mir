@@ -19,6 +19,7 @@
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/lockable_callback.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -91,6 +92,46 @@ void replace(mg::Buffer const* item, std::shared_ptr<mg::Buffer> const& new_buff
 }
 }
 
+namespace mir
+{
+namespace compositor
+{
+class BufferQueue::LockableCallback : public mir::LockableCallback
+{
+public:
+    LockableCallback(BufferQueue* const q)
+        : q{q}
+    {
+    }
+
+    void operator()() override
+    {
+        // We ignore any ongoing snapshotting as it could lead to deadlock.
+       // In order to wait the guard_lock needs to be released; a BufferQueue::release
+       // call can sneak in at that time from a different thread which
+       // can invoke framedrop_policy methods
+        q->drop_frame(guard_lock, BufferQueue::ignore_snapshot);
+    }
+
+    void lock() override
+    {
+        // This lock is aquired before the framedrop policy acquires any locks of its own.
+        guard_lock = std::move(std::unique_lock<std::mutex>{q->guard});
+    }
+
+    void unlock() override
+    {
+        if (guard_lock.owns_lock())
+            guard_lock.unlock();
+    }
+
+private:
+    BufferQueue* const q;
+    std::unique_lock<std::mutex> guard_lock;
+};
+}
+}
+
 mc::BufferQueue::BufferQueue(
     int nbuffers,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
@@ -98,6 +139,7 @@ mc::BufferQueue::BufferQueue(
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
+      current_compositor_buffer_valid{false},
       the_properties{props},
       force_new_compositor_buffer{false},
       callbacks_allowed{true},
@@ -132,18 +174,8 @@ mc::BufferQueue::BufferQueue(
     if (nbuffers == 1)
         free_buffers.push_back(current_compositor_buffer);
 
-    // A lock_guard will be created by the policy dispatcher invoking the given "lock" lambda
-    // before it acquires any internal locks of its own.
-    framedrop_policy = policy_provider.create_policy([this]
-    {
-        // We ignore any ongoing snapshotting as it could lead to deadlock.
-        // In order to wait the guard_lock needs to be released; a BufferQueue::release
-        // call can sneak in at that time from a different thread which
-        // can invoke framedrop_policy methods
-        drop_frame(guard_lock, ignore_snapshot);
-    },
-    [this] { guard_lock = std::move(std::unique_lock<decltype(guard)>{guard}); },
-    [this] { if (guard_lock.owns_lock()) guard_lock.unlock(); });
+    framedrop_policy = policy_provider.create_policy(
+        std::make_shared<BufferQueue::LockableCallback>(this));
 }
 
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
@@ -213,7 +245,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     std::unique_lock<decltype(guard)> lock(guard);
 
     bool use_current_buffer = false;
-    if (!current_buffer_users.empty() && !is_a_current_buffer_user(user_id))
+    if (!is_a_current_buffer_user(user_id))
     {
         use_current_buffer = true;
         current_buffer_users.push_back(user_id);
@@ -244,6 +276,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_buffer_users.clear();
         current_buffer_users.push_back(user_id);
         current_compositor_buffer = pop(ready_to_composite_queue);
+        current_compositor_buffer_valid = true;
     }
     else if (current_buffer_users.empty())
     {   // current_buffer_users and ready_to_composite_queue both empty
@@ -345,7 +378,7 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
     std::lock_guard<decltype(guard)> lock(guard);
 
     int count = ready_to_composite_queue.size();
-    if (!current_buffer_users.empty() && !is_a_current_buffer_user(user_id))
+    if (!is_a_current_buffer_user(user_id))
     {
         // The virtual front of the ready queue isn't actually in the ready
         // queue, but is the current_compositor_buffer, so count that too:
@@ -422,6 +455,7 @@ void mc::BufferQueue::give_buffer_to_client(
 
 bool mc::BufferQueue::is_a_current_buffer_user(void const* user_id) const
 {
+    if (!current_compositor_buffer_valid) return true;
     int const size = current_buffer_users.size();
     int i = 0;
     while (i < size && current_buffer_users[i] != user_id) ++i;
@@ -483,8 +517,7 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex>& lock, SnapshotWai
         buffer_to_give = current_compositor_buffer;
         current_compositor_buffer = pop(ready_to_composite_queue);
         current_buffer_users.clear();
-        void const* const impossible_user_id = this;
-        current_buffer_users.push_back(impossible_user_id);
+        current_compositor_buffer_valid = true;
     }
     else if (ready_to_composite_queue.size() > 1)
     {
