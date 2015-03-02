@@ -37,11 +37,7 @@ class MockDisplayDevice : public graphics::android::DisplayDevice
 public:
     ~MockDisplayDevice() noexcept {}
     MOCK_METHOD0(content_cleared, void());
-    MOCK_METHOD4(commit, void(
-        graphics::android::DisplayName,
-        graphics::android::LayerList&,
-        graphics::android::SwappingGLContext const&,
-        graphics::android::RenderableListCompositor const&));
+    MOCK_METHOD1(commit, void(std::list<graphics::android::DisplayContents> const&));
     MOCK_METHOD1(compatible_renderlist, bool(
         graphics::RenderableList const&));
 };
