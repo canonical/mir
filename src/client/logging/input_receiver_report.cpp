@@ -50,7 +50,7 @@ std::ostream& operator<<(std::ostream& out, MirKeyInputEventAction action)
     CASE(mir_key_input_event_action_down);
     CASE(mir_key_input_event_action_repeat);
     default:
-        out << std::to_string(action) + "<INVALID>";
+        out << static_cast<int>(action) << "<INVALID>";
         return out;
     }
 }
@@ -63,7 +63,7 @@ std::ostream& operator<<(std::ostream& out, MirTouchInputEventTouchAction action
     CASE(mir_touch_input_event_action_down);
     CASE(mir_touch_input_event_action_change);
     default:
-        out << std::to_string(action) + "<INVALID>";
+        out << static_cast<int>(action) << "<INVALID>";
         return out;
     }
 }
@@ -78,7 +78,7 @@ std::ostream& operator<<(std::ostream& out, MirPointerInputEventAction action)
     CASE(mir_pointer_input_event_action_leave);
     CASE(mir_pointer_input_event_action_motion);
     default:
-        out << std::to_string(action) + "<INVALID>";
+        out << static_cast<int>(action) << "<INVALID>";
         return out;
     }
 }
