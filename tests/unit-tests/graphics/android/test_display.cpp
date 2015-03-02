@@ -772,3 +772,24 @@ TEST_F(Display, configures_external_display)
     });
     display.configure(*configuration);
 }
+
+TEST_F(Display, reports_vsync)
+{
+    std::function<void()> vsync_fn = []{};
+    mtd::MockDisplayReport report;
+    EXPECT_CALL(report, vsync_report(_));
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        EXPECT_CALL(mock_config, subscribe_to_events(_,_))
+            .WillOnce(DoAll(SaveArg<1>(&vsync_fn), Return(std::make_shared<char>('2'))));
+    });
+
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        mt::fake_shared(report),
+        mga::OverlayOptimization::enabled);
+
+    vsync_fn();
+}
