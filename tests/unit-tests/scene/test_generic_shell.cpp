@@ -51,6 +51,11 @@ using namespace ::testing;
 
 namespace
 {
+MATCHER_P(WeakPtrTo, p, "")
+{
+  return !arg.owner_before(p) && !p.owner_before(arg);
+}
+
 struct MockSessionContainer : public ms::SessionContainer
 {
     MOCK_METHOD1(insert_session, void(std::shared_ptr<ms::Session> const&));
@@ -81,21 +86,21 @@ struct MockSessionManager : ms::SessionManager
 
 struct StubWindowManager : msh::WindowManager
 {
-    void add_session(std::shared_ptr<ms::Session> const&) override {}
-
-    void remove_session(std::shared_ptr<ms::Session> const&) override {}
-
-    mf::SurfaceId add_surface(
-        std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& params,
-        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build) override 
-    {
-        return build(session, params);
-    }
-
+//    void add_session(std::shared_ptr<ms::Session> const&) override {}
+//
+//    void remove_session(std::shared_ptr<ms::Session> const&) override {}
+//
+//    mf::SurfaceId add_surface(
+//        std::shared_ptr<ms::Session> const& session,
+//        ms::SurfaceCreationParameters const& params,
+//        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build) override
+//    {
+//        return build(session, params);
+//    }
+//
     void remove_surface(
-        std::weak_ptr<ms::Surface> const&,
-        std::shared_ptr<ms::Session> const&) override {}
+        std::shared_ptr<ms::Session> const&,
+        std::weak_ptr<ms::Surface> const&) override {}
 
     void add_display(geom::Rectangle const&) override {}
 
@@ -115,10 +120,10 @@ struct MockWindowManager : StubWindowManager
     MockWindowManager()
     {
         ON_CALL(*this, add_surface(_,_,_)).WillByDefault(Invoke(
-            [this](std::shared_ptr<ms::Session> const& session,
+            [](std::shared_ptr<ms::Session> const& session,
                 ms::SurfaceCreationParameters const& params,
                 std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
-                { return StubWindowManager::add_surface(session, params, build); }));
+                { return build(session, params); }));
     }
 
     MOCK_METHOD1(add_session, void (std::shared_ptr<ms::Session> const&));
@@ -128,6 +133,8 @@ struct MockWindowManager : StubWindowManager
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& params,
         std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build));
+
+    MOCK_METHOD2(remove_surface, void(std::shared_ptr<ms::Session> const&, std::weak_ptr<ms::Surface> const&));
 };
 
 using NiceMockWindowManager = NiceMock<MockWindowManager>;
@@ -252,4 +259,18 @@ TEST_F(GenericShell, create_surface_allows_window_manager_to_set_create_paramete
             { return build(session, placed_params); }));
 
     shell.create_surface(session, params);
+}
+
+TEST_F(GenericShell, destroy_surface_removes_surface_from_window_manager)
+{
+    auto const params = ms::a_surface();
+    std::shared_ptr<ms::Session> const session =
+        shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    auto const surface_id = shell.create_surface(session, params);
+    auto const weak_surface = session->surface(surface_id);
+
+    EXPECT_CALL(*wm, remove_surface(session, WeakPtrTo(weak_surface)));
+
+    shell.destroy_surface(session, surface_id);
 }

@@ -67,7 +67,7 @@ auto msh::GenericShell::create_surface(std::shared_ptr<ms::Session> const& sessi
 
 void msh::GenericShell::destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface)
 {
-    window_manager->remove_surface(session->surface(surface), session);
+    window_manager->remove_surface(session, session->surface(surface));
     AbstractShell::destroy_surface(session, surface);
 }
 

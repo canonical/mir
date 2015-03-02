@@ -45,8 +45,8 @@ public:
         std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) = 0;
 
     virtual void remove_surface(
-        std::weak_ptr<scene::Surface> const& surface,
-        std::shared_ptr<scene::Session> const& session) = 0;
+        std::shared_ptr<scene::Session> const& session,
+        std::weak_ptr<scene::Surface> const& surface) = 0;
 
     virtual void add_display(geometry::Rectangle const& area) = 0;
 

@@ -147,8 +147,8 @@ private:
     }
 
     void remove_surface(
-        std::weak_ptr<scene::Surface> const& surface,
-        std::shared_ptr<scene::Session> const& session) override
+        std::shared_ptr<scene::Session> const& session,
+        std::weak_ptr<scene::Surface> const& surface) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         policy.handle_delete_surface(session, surface);
