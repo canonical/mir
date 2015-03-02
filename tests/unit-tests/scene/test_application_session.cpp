@@ -89,6 +89,9 @@ struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
     void raise(std::weak_ptr<ms::Surface> const&) override
     {
     }
+    void raise(SurfaceSet const&) override
+    {
+    }
     std::shared_ptr<ms::Surface> add_surface(ms::SurfaceCreationParameters const&,
         ms::Session*) override
     {

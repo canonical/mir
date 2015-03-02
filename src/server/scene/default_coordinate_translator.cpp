@@ -18,6 +18,7 @@
 
 #include "default_coordinate_translator.h"
 #include "mir/scene/surface.h"
+#include "mir/geometry/displacement.h"
 
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
@@ -28,5 +29,5 @@ geom::Point ms::DefaultCoordinateTranslator::surface_to_screen(std::shared_ptr<m
 {
     auto const scene_surface = std::dynamic_pointer_cast<ms::Surface>(surface);
 
-    return geom::Point{x + scene_surface->top_left().x.as_int(), y + scene_surface->top_left().y.as_int()};
+    return scene_surface->top_left() + geom::Displacement{x, y};
 }

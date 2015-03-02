@@ -1369,16 +1369,17 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(std::chrono::nanoseconds
     // Check whether windows listening for outside touches are owned by the same UID. If it is
     // set the policy flag that we will not reveal coordinate information to this window.
     if (maskedAction == AMOTION_EVENT_ACTION_DOWN) {
-        sp<InputWindowHandle> foregroundWindowHandle =
-                mTempTouchState.getFirstForegroundWindowHandle();
-        const int32_t foregroundWindowUid = foregroundWindowHandle->getInfo()->ownerUid;
-        for (size_t i = 0; i < mTempTouchState.windows.size(); i++) {
-            const TouchedWindow& touchedWindow = mTempTouchState.windows[i];
-            if (touchedWindow.targetFlags & InputTarget::FLAG_DISPATCH_AS_OUTSIDE) {
-                sp<InputWindowHandle> inputWindowHandle = touchedWindow.windowHandle;
-                if (inputWindowHandle->getInfo()->ownerUid != foregroundWindowUid) {
-                    mTempTouchState.addOrUpdateWindow(inputWindowHandle,
+        auto const foregroundWindowHandle = mTempTouchState.getFirstForegroundWindowHandle();
+        if (foregroundWindowHandle != nullptr) {
+            const int32_t foregroundWindowUid = foregroundWindowHandle->getInfo()->ownerUid;
+            for (size_t i = 0; i < mTempTouchState.windows.size(); i++) {
+                const TouchedWindow& touchedWindow = mTempTouchState.windows[i];
+                if (touchedWindow.targetFlags & InputTarget::FLAG_DISPATCH_AS_OUTSIDE) {
+                    sp<InputWindowHandle> inputWindowHandle = touchedWindow.windowHandle;
+                    if (inputWindowHandle->getInfo()->ownerUid != foregroundWindowUid) {
+                        mTempTouchState.addOrUpdateWindow(inputWindowHandle,
                             InputTarget::FLAG_ZERO_COORDS, IntSet());
+                    }
                 }
             }
         }
@@ -1417,7 +1418,7 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(std::chrono::nanoseconds
     if (maskedAction == AMOTION_EVENT_ACTION_DOWN) {
         sp<InputWindowHandle> foregroundWindowHandle =
                 mTempTouchState.getFirstForegroundWindowHandle();
-        if (foregroundWindowHandle->getInfo()->hasWallpaper) {
+        if (foregroundWindowHandle != nullptr && foregroundWindowHandle->getInfo()->hasWallpaper) {
             mEnumerator->for_each([&](sp<InputWindowHandle> const& windowHandle){
                 if (windowHandle->getInfo()->layoutParamsType
                         == InputWindowInfo::TYPE_WALLPAPER) {
