@@ -44,15 +44,16 @@ class DisplayReport : public graphics::DisplayReport
     DisplayReport(const std::shared_ptr<mir::logging::Logger>& logger);
     virtual ~DisplayReport();
 
-    virtual void report_successful_setup_of_native_resources();
-    virtual void report_successful_egl_make_current_on_construction();
-    virtual void report_successful_egl_buffer_swap_on_construction();
-    virtual void report_successful_drm_mode_set_crtc_on_construction();
-    virtual void report_successful_display_construction();
-    virtual void report_drm_master_failure(int error);
-    virtual void report_vt_switch_away_failure();
-    virtual void report_vt_switch_back_failure();
-    virtual void report_egl_configuration(EGLDisplay disp, EGLConfig cfg);
+    virtual void report_successful_setup_of_native_resources() override;
+    virtual void report_successful_egl_make_current_on_construction() override;
+    virtual void report_successful_egl_buffer_swap_on_construction() override;
+    virtual void report_successful_drm_mode_set_crtc_on_construction() override;
+    virtual void report_successful_display_construction() override;
+    virtual void report_vsync(std::string const& display_name) override;
+    virtual void report_drm_master_failure(int error) override;
+    virtual void report_vt_switch_away_failure() override;
+    virtual void report_vt_switch_back_failure() override;
+    virtual void report_egl_configuration(EGLDisplay disp, EGLConfig cfg) override;
 
   protected:
     DisplayReport(const DisplayReport&) = delete;

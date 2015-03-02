@@ -39,7 +39,6 @@ DISPLAY_REPORT_TRACE_POINT(report_successful_display_construction)
 DISPLAY_REPORT_TRACE_POINT(report_successful_drm_mode_set_crtc_on_construction)
 DISPLAY_REPORT_TRACE_POINT(report_vt_switch_away_failure)
 DISPLAY_REPORT_TRACE_POINT(report_vt_switch_back_failure)
-DISPLAY_REPORT_TRACE_POINT(report_gpu_composition_in_use)
 
 #undef DISPLAY_REPORT_TRACE_POINT
 
@@ -54,11 +53,10 @@ TRACEPOINT_EVENT(
 
 TRACEPOINT_EVENT(
     mir_server_display,
-    report_hwc_composition_in_use,
-    TP_ARGS(int, major, int, minor),
+    report_vsync,
+    TP_ARGS(char const*, name),
     TP_FIELDS(
-        ctf_integer(int, major, major)
-        ctf_integer(int, minor, minor)
+        ctf_string(char const*, name)
     )
 )
 
