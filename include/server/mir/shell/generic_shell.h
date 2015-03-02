@@ -22,25 +22,23 @@
 #include "mir/shell/abstract_shell.h"
 #include "mir/shell/window_manager.h"
 
-///\example server_example_generic_shell.h
-/// A generic shell that supports a window manager
-
 namespace mir
 {
 namespace geometry { class Point; }
 
-namespace examples
+namespace shell
 {
-class GenericShell : public virtual shell::Shell, public virtual shell::FocusController,
-    private shell::AbstractShell
+/// A generic shell that supports a window manager
+class GenericShell : public virtual Shell, public virtual FocusController,
+    private AbstractShell
 {
 public:
     GenericShell(
-        std::shared_ptr<shell::InputTargeter> const& input_targeter,
+        std::shared_ptr<InputTargeter> const& input_targeter,
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
-        std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder);
+        std::function<std::shared_ptr<WindowManager>(FocusController* focus_controller)> const& wm_builder);
 
     std::shared_ptr<scene::Session> open_session(
         pid_t client_pid,
@@ -65,7 +63,7 @@ private:
     void add_display(geometry::Rectangle const& area) override;
     void remove_display(geometry::Rectangle const& area) override;
 
-    std::shared_ptr<shell::WindowManager> const window_manager;
+    std::shared_ptr<WindowManager> const window_manager;
 };
 }
 }

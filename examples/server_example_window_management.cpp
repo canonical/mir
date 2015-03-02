@@ -154,7 +154,7 @@ void me::add_window_manager_option_to(Server& server)
                 throw mir::AbnormalExit("Unknown window manager: " + selection);
 
 
-            auto tmp = std::make_shared<GenericShell>(
+            auto tmp = std::make_shared<msh::GenericShell>(
                 server.the_input_targeter(),
                 server.the_surface_coordinator(),
                 server.the_session_coordinator(),

@@ -19,11 +19,10 @@
 #ifndef MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 #define MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 
-#include "server_example_generic_shell.h"
-
 #include "mir/geometry/rectangles.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/shell/generic_shell.h"
 
 #include <map>
 #include <mutex>
