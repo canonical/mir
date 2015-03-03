@@ -30,6 +30,7 @@
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir_test/wait_condition.h"
+#include "mir_test/spin_wait.h"
 
 #include "mir_test_doubles/mock_egl.h"
 
@@ -288,6 +289,18 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
 
     auto c = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(c);
+    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+
+    bool became_exposed_and_focused = mir::test::spin_wait_for_condition_or_timeout(
+        [surface]
+        {
+            return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed
+                && mir_surface_get_focus(surface) == mir_surface_focused;
+        },
+        std::chrono::seconds{10});
+
+    EXPECT_TRUE(became_exposed_and_focused);  
+
     mir_surface_release_sync(surface);
     mir_connection_release(c);
 }
