@@ -171,6 +171,8 @@ TEST_F(DefaultDisplayBufferCompositor, rendering_reports_everything)
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .InSequence(seq)
         .WillOnce(Return(false));
+    EXPECT_CALL(*report, renderables_in_frame(_,_))
+        .InSequence(seq);
     EXPECT_CALL(*report, rendered_frame(_))
         .InSequence(seq);
     EXPECT_CALL(*report, finished_frame(_))
