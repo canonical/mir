@@ -72,7 +72,9 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
 
     void post() override
     {
-        latency.push_back(post_count - timestamps[db.last_id().as_value()]);
+        auto const it = timestamps.find(db.last_id().as_value());
+        if (it != timestamps.end())
+            latency.push_back(post_count - it->second);
         post_count++;
     }
 
