@@ -37,8 +37,8 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
                        void* data)
 {
     auto page_flip_data = static_cast<mgm::PageFlipEventData*>(data);
-    page_flip_data->pending->erase(page_flip_data->crtc_id);
     page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id);
+    page_flip_data->pending->erase(page_flip_data->crtc_id);
 }
 
 }
