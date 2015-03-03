@@ -47,7 +47,7 @@ void mir::report::lttng::DisplayReport::report_drm_master_failure(int error)
     mir_tracepoint(mir_server_display, report_drm_master_failure, strerror(error));
 }
 
-void mir::report::lttng::DisplayReport::report_vsync(std::string const& name)
+void mir::report::lttng::DisplayReport::report_vsync(unsigned int display_id)
 {
-    mir_tracepoint(mir_server_display, report_vsync, name.c_str());
+    mir_tracepoint(mir_server_display, report_vsync, display_id);
 }

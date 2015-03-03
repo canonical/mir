@@ -129,11 +129,12 @@ TEST_F(DisplayReport, eglconfig)
 
 TEST_F(DisplayReport, reports_vsync)
 {
-    std::string display_name("omegadisplay");
+    unsigned int display_id {1223};
+    std::string display_name(std::to_string(display_id));
     EXPECT_CALL(*logger, log(
         ml::Severity::informational,
         "vsync event on [" + display_name + "]",
         component));
     mrl::DisplayReport report(logger);
-    report.report_vsync(display_name);
+    report.report_vsync(display_id);
 }

@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_DISPLAY_REPORT_H_
 
 #include <EGL/egl.h>
-#include <string>
 
 namespace mir
 {
@@ -36,7 +35,7 @@ public:
     virtual void report_successful_egl_buffer_swap_on_construction() = 0;
     virtual void report_successful_display_construction() = 0;
     virtual void report_egl_configuration(EGLDisplay disp, EGLConfig cfg) = 0;
-    virtual void report_vsync(std::string const& display_name) = 0;
+    virtual void report_vsync(unsigned int display_id) = 0;
 
     /* gbm specific */
     virtual void report_successful_drm_mode_set_crtc_on_construction() = 0;

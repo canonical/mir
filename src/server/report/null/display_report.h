@@ -43,7 +43,7 @@ public:
     void report_vt_switch_away_failure() override;
     void report_vt_switch_back_failure() override;
     void report_egl_configuration(EGLDisplay disp, EGLConfig cfg) override;
-    void report_vsync(std::string const& display_name) override;
+    void report_vsync(unsigned int display_id) override;
 };
 }
 }

@@ -65,9 +65,9 @@ TRACEPOINT_EVENT(
 TRACEPOINT_EVENT(
     mir_server_display,
     report_vsync,
-    TP_ARGS(char const*, name),
+    TP_ARGS(int, id),
     TP_FIELDS(
-        ctf_string(name, name)
+        ctf_integer(int, id, id)
      )
 )
 

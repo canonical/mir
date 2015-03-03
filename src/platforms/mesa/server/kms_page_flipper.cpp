@@ -161,5 +161,5 @@ bool mgm::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
 
 void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id)
 {
-    report->report_vsync(std::to_string(crtc_id));
+    report->report_vsync(crtc_id);
 }

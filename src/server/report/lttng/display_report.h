@@ -45,7 +45,7 @@ public:
     virtual void report_drm_master_failure(int error) override;
     virtual void report_vt_switch_away_failure() override;
     virtual void report_vt_switch_back_failure() override;
-    virtual void report_vsync(std::string const& name) override;
+    virtual void report_vsync(unsigned int display_id) override;
 
 private:
     ServerTracepointProvider tp_provider;

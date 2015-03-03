@@ -142,7 +142,7 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
     }
 }
 
-void mrl::DisplayReport::report_vsync(std::string const& display_name)
+void mrl::DisplayReport::report_vsync(unsigned int display_id)
 {
-    logger->log(ml::Severity::informational, "vsync event on [" + display_name + "]", component());
+    logger->log(ml::Severity::informational, "vsync event on [" + std::to_string(display_id) + "]", component());
 }

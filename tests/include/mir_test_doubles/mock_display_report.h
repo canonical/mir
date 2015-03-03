@@ -42,7 +42,7 @@ public:
     MOCK_METHOD0(report_vt_switch_away_failure, void());
     MOCK_METHOD0(report_vt_switch_back_failure, void());
     MOCK_METHOD2(report_egl_configuration, void(EGLDisplay,EGLConfig));
-    MOCK_METHOD1(report_vsync, void(std::string const&));
+    MOCK_METHOD1(report_vsync, void(unsigned int));
 };
 
 }

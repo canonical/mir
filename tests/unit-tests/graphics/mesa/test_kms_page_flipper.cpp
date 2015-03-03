@@ -133,7 +133,7 @@ TEST_F(KMSPageFlipperTest, wait_for_flip_reports_vsync)
     ON_CALL(mock_drm, drmHandleEvent(_, _))
         .WillByDefault(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
 
-    EXPECT_CALL(report, report_vsync(std::to_string(crtc_id)));
+    EXPECT_CALL(report, report_vsync(crtc_id));
 
     page_flipper.schedule_flip(crtc_id, fb_id);
     EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
