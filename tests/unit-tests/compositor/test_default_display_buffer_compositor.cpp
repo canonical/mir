@@ -147,6 +147,8 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
         .InSequence(seq);
     EXPECT_CALL(*report, rendered_frame(_))
         .Times(0);
+    EXPECT_CALL(*report, renderables_in_frame(_,_))
+        .InSequence(seq);
     EXPECT_CALL(*report, finished_frame(_))
         .InSequence(seq);
 

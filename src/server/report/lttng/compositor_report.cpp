@@ -42,6 +42,11 @@ void mir::report::lttng::CompositorReport::began_frame(SubCompositorId id)
     mir_tracepoint(mir_server_compositor, began_frame, id);
 }
 
+void mir::report::lttng::CompositorReport::renderables_in_frame(
+    SubCompositorId, graphics::RenderableList const&)
+{
+}
+
 void mir::report::lttng::CompositorReport::rendered_frame(SubCompositorId id)
 {
     mir_tracepoint(mir_server_compositor, rendered_frame, id);

@@ -134,6 +134,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         renderer.render(renderable_list);
 
         display_buffer.gl_swap_buffers();
+        report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);
 
         // Release buffers back to the clients now that the swap has returned.
