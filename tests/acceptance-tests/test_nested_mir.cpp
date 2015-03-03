@@ -28,6 +28,7 @@
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
+#include "mir_test_framework/any_surface.h"
 #include "mir_test/wait_condition.h"
 
 #include "mir_test_doubles/mock_egl.h"
@@ -279,4 +280,14 @@ TEST_F(NestedServer, receives_lifecycle_events_from_host)
     trigger_lifecycle_event(mir_lifecycle_state_will_suspend);
 
     events_processed.wait_for_at_most_seconds(5);
+}
+
+TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    auto c = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto surface = mtf::make_any_surface(c);
+    mir_surface_release_sync(surface);
+    mir_connection_release(c);
 }
