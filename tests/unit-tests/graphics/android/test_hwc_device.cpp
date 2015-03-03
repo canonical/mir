@@ -546,7 +546,7 @@ TEST_F(HwcDevice, does_not_own_framebuffer_buffers_past_set)
 TEST_F(HwcDevice, rejects_empty_list)
 {
     mga::HwcDevice device(mock_device);
-    std::list<std::shared_ptr<mg::Renderable>> renderlist{};
+    mg::RenderableList renderlist{};
     EXPECT_FALSE(device.compatible_renderlist(renderlist));
 }
 

@@ -21,11 +21,15 @@
 
 #include "mir_toolkit/event.h"
 
+#include "mir/dispatch/dispatchable.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
+
 #include <utils/StrongPointer.h>
 #include <androidfw/Input.h>
 
 #include <memory>
 #include <chrono>
+#include <functional>
 
 namespace droidinput = android;
 
@@ -49,49 +53,51 @@ namespace android
 {
 
 /// Synchronously receives input events in a blocking manner
-class InputReceiver
+class InputReceiver : public dispatch::Dispatchable
 {
 public:
     typedef std::function<std::chrono::nanoseconds(int)> AndroidClock;
 
     InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
                   std::shared_ptr<XKBMapper> const& keymapper,
+                  std::function<void(MirEvent*)> const& event_handling_callback,
                   std::shared_ptr<InputReceiverReport> const& report,
                   AndroidClock clock = systemTime);
     InputReceiver(int fd,
                   std::shared_ptr<XKBMapper> const& keymapper,
+                  std::function<void(MirEvent*)> const& event_handling_callback,
                   std::shared_ptr<InputReceiverReport> const& report,
                   AndroidClock clock = systemTime);
 
     virtual ~InputReceiver();
-    int fd() const;
 
-    /// Synchronously receive an event with millisecond timeout. A negative timeout value
-    /// is used to request indefinite polling.
-    virtual bool next_event(std::chrono::milliseconds const& timeout, MirEvent &ev);
-    virtual bool next_event(MirEvent &ev) { return next_event(std::chrono::milliseconds(-1), ev); }
-
-    /// May be used from any thread to wake an InputReceiver blocked in next_event
-    virtual void wake();
+    Fd watch_fd() const override;
+    bool dispatch(dispatch::FdEvents events) override;
+    dispatch::FdEvents relevant_events() const override;
 
 protected:
     InputReceiver(const InputReceiver&) = delete;
     InputReceiver& operator=(const InputReceiver&) = delete;
 
 private:
+    dispatch::MultiplexingDispatchable dispatcher;
+    Fd notify_receiver_fd;
+    Fd notify_sender_fd;
+    Fd timer_fd;
+
     droidinput::sp<droidinput::InputChannel> input_channel;
+    std::function<void(MirEvent*)> const handler;
     std::shared_ptr<XKBMapper> const xkb_mapper;
     std::shared_ptr<InputReceiverReport> const report;
 
     std::shared_ptr<droidinput::InputConsumer> input_consumer;
     droidinput::PreallocatedInputEventFactory event_factory;
-    droidinput::sp<droidinput::Looper> looper;
-
-    bool fd_added;
 
     AndroidClock const android_clock;
 
-    bool try_next_event(MirEvent &ev);
+    void process_and_maybe_send_event();
+    static void consume_wake_notification(mir::Fd const& fd);
+    void wake();
 };
 
 }
