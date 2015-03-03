@@ -150,7 +150,6 @@ struct SurfaceStackCompositor : public testing::Test
     StubDisplayListener stub_display_listener;
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
         mt::fake_shared(renderer_factory),
-        mt::fake_shared(stub_display_listener),
         null_comp_report};
 };
 }
