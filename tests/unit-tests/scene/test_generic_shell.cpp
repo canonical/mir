@@ -426,3 +426,41 @@ TEST_F(GenericShell, as_focus_controller_focused_surface_follows_focus)
     shell.close_session(session1);
     shell.close_session(session0);
 }
+
+TEST_F(GenericShell, as_focus_controller_delegates_surface_at_to_surface_coordinator)
+{
+    auto const surface = mt::fake_shared(mock_surface);
+    geom::Point const cursor{__LINE__, __LINE__};
+
+    EXPECT_CALL(surface_coordinator, surface_at(cursor)).
+        WillOnce(Return(surface));
+
+    msh::FocusController& focus_controller = shell;
+
+    EXPECT_THAT(focus_controller.surface_at(cursor), Eq(surface));
+}
+
+namespace mir
+{
+namespace scene
+{
+// The next test is easier to write if we can compare std::weak_ptr<ms::Surface>
+inline bool operator==(
+    std::weak_ptr<ms::Surface> const& lhs,
+    std::weak_ptr<ms::Surface> const& rhs)
+{
+    return !lhs.owner_before(rhs) && !rhs.owner_before(lhs);
+}
+}
+}
+
+TEST_F(GenericShell, as_focus_controller_delegates_raise_to_surface_coordinator)
+{
+    msh::SurfaceSet const surfaces{mt::fake_shared(mock_surface)};
+
+    EXPECT_CALL(surface_coordinator, raise(surfaces));
+
+    msh::FocusController& focus_controller = shell;
+
+    focus_controller.raise(surfaces);
+}
