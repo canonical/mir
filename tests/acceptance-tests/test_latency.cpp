@@ -35,8 +35,6 @@ namespace mt = mir::test;
 namespace mg = mir::graphics;
 namespace
 {
-unsigned int const hardware_framebuffers = 2;
-
 /*
  * Note: we're not aiming to check performance in terms of CPU or GPU time processing
  * the incoming buffers. Rather, we're checking that we don't have any intrinsic
@@ -95,15 +93,19 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
         {
             auto render_time = it->second;
             auto lag_client_to_post = post_count - render_time;
-            auto lag_post_to_eye = hardware_framebuffers - 1;
-            auto total_lag = lag_client_to_post + lag_post_to_eye;
+            // ^^ note this excludes the additional lag in the
+            //    DisplayBuffer's queue after post().
 
-            latency.push_back(total_lag);
+            latency.push_back(lag_client_to_post);
         }
     }
 
     float average_latency()
     {
+        // FIXME(kdub): `latency' only ever has size 2, because the client
+        //              only ever ever encounters two different buffer IDs.
+        //              This means many iterations is pointless and we're only
+        //              averaging the last two frames right now.
         unsigned int sum {0};
         for(auto& s : latency)
             sum += s;
@@ -143,7 +145,7 @@ struct ClientLatency : mtf::ConnectedClientWithASurface
 };
 }
 
-TEST_F(ClientLatency, double_buffered)
+TEST_F(ClientLatency, double_buffered_client_uses_all_buffers)
 {
     using namespace testing;
 
@@ -155,16 +157,12 @@ TEST_F(ClientLatency, double_buffered)
     }
 
     unsigned int const expected_client_buffers = 2;
-    unsigned int const expected_latency =
-        (expected_client_buffers - 1) + (hardware_framebuffers - 1);
+    unsigned int const expected_latency = expected_client_buffers - 1;
 
     float const error_margin = 0.1f;
     auto observed_latency = display.group.average_latency();
-    EXPECT_LT(expected_latency-error_margin, observed_latency);
-    EXPECT_GT(expected_latency+error_margin, observed_latency);
-
-    std::cout << "Expected latency " << expected_latency << " frames "
-              << "and measured latency " << observed_latency << " frames.\n";
+    EXPECT_THAT(observed_latency, AllOf(Gt(expected_latency-error_margin),
+                                        Lt(expected_latency+error_margin)));
 }
 
 //TODO: configure and add test for triple buffer
