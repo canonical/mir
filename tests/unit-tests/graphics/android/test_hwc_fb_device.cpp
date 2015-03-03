@@ -122,7 +122,7 @@ TEST_F(HwcFbDevice, hwc10_rejects_overlays)
     mtd::StubRenderableListCompositor stub_compositor;
     auto renderable1 = std::make_shared<mtd::StubRenderable>();
     auto renderable2 = std::make_shared<mtd::StubRenderable>();
-    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    mg::RenderableList renderlist
     {
         renderable1,
         renderable2
