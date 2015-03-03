@@ -5,6 +5,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer_allocator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_tex_bind.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_display_group.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_alloc_adaptor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer_allocator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_device.cpp

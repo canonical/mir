@@ -153,7 +153,7 @@ TEST_F(ScreencastDisplayBufferTest, rejects_attempt_to_optimize)
     geom::Rectangle const rect{{100,100}, {800,600}};
     mtd::StubBuffer stub_buffer;
 
-    std::list<std::shared_ptr<mg::Renderable>> renderables{
+    mg::RenderableList renderables{
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()};

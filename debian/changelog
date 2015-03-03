@@ -17,6 +17,32 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 12 Feb 2015 10:12:11 +0800
 
+mir (0.12.0+15.04.20150228-0ubuntu1) vivid; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.12.0 (https://launchpad.net/mir/+milestone/0.12.0)
+    - Packaging changes:
+      . Client platform packages now include the Mir client platform ABI 
+        number. Thusly, mir-client-platform-(mesa|android) is replaced by 
+        mir-client-platform-(mesa|android)2
+      . Server graphics platform packages now include the Mir graphics
+        platform ABI number. Thusly, mir-platform-graphics-(mesa|android)
+        is replaced by mir-platform-graphics-(mesa|android)1
+    - ABI summary: Servers need rebuilding, but clients do not;
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI unchanged at 3
+      . Mirplatform ABI unchanged at 6
+      . Mirserver ABI bumped to 30
+    - Bug fixes:
+      . [regression] Platform libraries and packages are not versioned thus
+        are not installable in parallel (LP: #1423591)
+      . [regression] Deadlock in TimeoutFrameDroppingPolicy logic (LP: #1421255)
+ 
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Sat, 28 Feb 2015 10:30:53 +0000
+
 mir (0.11.0+15.04.20150209.1-0ubuntu1) vivid; urgency=medium
 
   [ Daniel van Vugt ]
