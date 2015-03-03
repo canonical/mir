@@ -27,9 +27,9 @@
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
-#include "mir_test_framework/nested_mir_runner.h"
+#include "mir_test_framework/headless_nested_server_runner.h"
+#include "mir_test_framework/any_surface.h"
 #include "mir_test/wait_condition.h"
-#include "mir_test/fake_shared.h"
 
 #include "mir_test_doubles/mock_egl.h"
 
@@ -42,7 +42,6 @@
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 namespace msh = mir::shell;
 using namespace testing;
@@ -77,6 +76,23 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     void session_configure_surface_cursor_called(std::string const&) override {};
     void session_configure_display_called(std::string const&) override {};
     void session_error(const std::string&, const char*, const std::string&) override {};
+};
+
+struct FakeCommandLine
+{
+    static int const argc = 7;
+    char const* argv[argc];
+
+    FakeCommandLine(std::string const& host_socket)
+    {
+        char const** to = argv;
+        for(auto from : { "dummy-exe-name", "--file", "NestedServer", "--host-socket", host_socket.c_str(), "--enable-input", "off"})
+        {
+            *to++ = from;
+        }
+
+        EXPECT_THAT(to - argv, Eq(argc)); // Check the array size matches parameter list
+    }
 };
 
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
@@ -135,18 +151,36 @@ std::vector<geom::Rectangle> const display_geometry
     {{480, 0}, {1920, 1080}}
 };
 
-struct NestedMirRunner : public mtf::NestedMirRunner
+std::chrono::seconds const timeout{10};
+
+class NestedMirRunner : public mtf::HeadlessNestedServerRunner
 {
+public:
     NestedMirRunner(std::string const& connection_string)
-        : mtf::NestedMirRunner([this](mir::Server& server){
-                server.override_the_host_lifecycle_event_listener([this]
-                {
-                    return mt::fake_shared(listener);
-                });}, connection_string)
+        : mtf::HeadlessNestedServerRunner(connection_string)
     {
+        server.override_the_host_lifecycle_event_listener([this]
+           {
+               return the_mock_host_lifecycle_event_listener();
+           });
+        start_server();
     }
 
-    MockHostLifecycleEventListener listener;
+    ~NestedMirRunner()
+    {
+        stop_server();
+    }
+
+    std::shared_ptr<MockHostLifecycleEventListener> the_mock_host_lifecycle_event_listener()
+    {
+        return mock_host_lifecycle_event_listener([this]
+            {
+                return std::make_shared<NiceMock<MockHostLifecycleEventListener>>();
+            });
+    }
+
+private:
+    mir::CachedPtr<MockHostLifecycleEventListener> mock_host_lifecycle_event_listener;
 };
 
 struct NestedServer : mtf::HeadlessInProcessServer
@@ -195,7 +229,7 @@ TEST_F(NestedServer, sees_expected_outputs)
 {
     NestedMirRunner nested_mir{new_connection()};
 
-    auto const display = nested_mir.the_display();
+    auto const display = nested_mir.server.the_display();
     auto const display_config = display->configuration();
 
     std::vector<geom::Rectangle> outputs;
@@ -221,7 +255,7 @@ TEST_F(NestedServer, on_exit_display_objects_should_be_destroyed)
     {
         NestedMirRunner nested_mir{new_connection()};
 
-        my_display = nested_mir.the_display();
+        my_display = nested_mir.server.the_display();
     }
 
     EXPECT_FALSE(my_display.lock()) << "after run_mir() exits the display should be released";
@@ -234,16 +268,26 @@ TEST_F(NestedServer, receives_lifecycle_events_from_host)
     mir::test::WaitCondition events_processed;
 
     InSequence seq;
-    EXPECT_CALL(nested_mir.listener,
+    EXPECT_CALL(*(nested_mir.the_mock_host_lifecycle_event_listener()),
         lifecycle_event_occurred(mir_lifecycle_state_resumed)).Times(1);
-    EXPECT_CALL(nested_mir.listener,
+    EXPECT_CALL(*(nested_mir.the_mock_host_lifecycle_event_listener()),
         lifecycle_event_occurred(mir_lifecycle_state_will_suspend))
         .WillOnce(WakeUp(&events_processed));
-    EXPECT_CALL(nested_mir.listener,
+    EXPECT_CALL(*(nested_mir.the_mock_host_lifecycle_event_listener()),
         lifecycle_event_occurred(mir_lifecycle_connection_lost)).Times(AtMost(1));
 
     trigger_lifecycle_event(mir_lifecycle_state_resumed);
     trigger_lifecycle_event(mir_lifecycle_state_will_suspend);
 
     events_processed.wait_for_at_most_seconds(5);
+}
+
+TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    auto c = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto surface = mtf::make_any_surface(c);
+    mir_surface_release_sync(surface);
+    mir_connection_release(c);
 }
