@@ -503,6 +503,24 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_fd_handler)
         });
 }
 
+TEST_F(GLibMainLoopTest, can_unregister_fd_from_within_fd_handler)
+{
+    mt::Pipe p1;
+
+    ml.register_fd_handler(
+        {p1.read_fd()},
+        this,
+        [this](int)
+        {
+            ml.unregister_fd_handler(this);
+            ml.stop();
+        });
+
+    EXPECT_EQ(1, write(p1.write_fd(), "a", 1));
+
+    ml.run();
+}
+
 TEST_F(GLibMainLoopTest, dispatches_action)
 {
     using namespace testing;
@@ -1018,6 +1036,29 @@ TEST_F(GLibMainLoopAlarmTest, propagates_exception_from_alarm)
 
             EXPECT_THROW({ ml.run(); }, std::runtime_error);
         });
+}
+
+TEST_F(GLibMainLoopAlarmTest, can_reschedule_alarm_from_within_alarm_callback)
+{
+    using namespace testing;
+
+    int num_triggers = 0;
+    int const expected_triggers = 3;
+
+    std::shared_ptr<mir::time::Alarm> alarm = ml.create_alarm(
+        [&]
+        {
+            if (++num_triggers == expected_triggers)
+                ml.stop();
+            else
+                alarm->reschedule_in(std::chrono::milliseconds{0});
+        });
+
+    alarm->reschedule_in(std::chrono::milliseconds{0});
+
+    ml.run();
+
+    EXPECT_THAT(num_triggers, Eq(expected_triggers));
 }
 
 // More targeted regression test for LP: #1381925

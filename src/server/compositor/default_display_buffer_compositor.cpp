@@ -55,6 +55,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         element->occluded();
 
     mg::RenderableList renderable_list;
+    renderable_list.reserve(scene_elements.size());
     for (auto const& element : scene_elements)
     {
         element->rendered();

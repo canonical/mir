@@ -18,6 +18,7 @@
 
 #include "hwc_configuration.h"
 #include "hwc_wrapper.h"
+#include "mir/raii.h"
 #include "android_format_conversion-inl.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -145,7 +146,17 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
 }
 
 mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_changes(
-    std::function<void()> const&)
+    std::function<void()> const& hotplug)
 {
-    return nullptr;
+    return std::make_shared<
+        mir::raii::PairedCalls<std::function<void()>, std::function<void()>>>(
+        [hotplug, this]{
+            hwc_device->subscribe_to_events(this,
+                [](DisplayName, std::chrono::nanoseconds){},
+                [hotplug](DisplayName, bool){ hotplug(); },
+                []{});
+        },
+        [this]{
+            hwc_device->unsubscribe_from_events(this);
+        });
 }
