@@ -36,11 +36,12 @@ namespace graphics
 class DisplayReport;
 namespace mesa
 {
-
+class KMSPageFlipper;
 struct PageFlipEventData
 {
     std::unordered_map<uint32_t,PageFlipEventData>* pending;
     uint32_t crtc_id;
+    KMSPageFlipper* flipper;
 };
 
 class KMSPageFlipper : public PageFlipper
@@ -53,6 +54,7 @@ public:
 
     std::thread::id debug_get_worker_tid();
 
+    void notify_page_flip(uint32_t crtc_id); 
 private:
     bool page_flip_is_done(uint32_t crtc_id);
 
