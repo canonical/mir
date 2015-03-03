@@ -74,6 +74,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
+        report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
     }
     else
