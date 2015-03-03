@@ -33,9 +33,12 @@ namespace mir
 {
 namespace graphics
 {
+
 class DisplayReport;
+
 namespace mesa
 {
+
 class KMSPageFlipper;
 struct PageFlipEventData
 {
