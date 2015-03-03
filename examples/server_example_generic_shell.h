@@ -19,7 +19,6 @@
 #ifndef MIR_EXAMPLE_GENERIC_SHELL_H_
 #define MIR_EXAMPLE_GENERIC_SHELL_H_
 
-#include "server_example_shell.h"
 #include "server_example_window_manager.h"
 
 #include "mir/shell/abstract_shell.h"
@@ -55,8 +54,6 @@ public:
 
     virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
 
-    virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
-
     virtual void raise(SurfaceSet const& surfaces) = 0;
 
 private:
@@ -64,7 +61,7 @@ private:
     using shell::FocusController::set_focus_to;
 };
 
-class GenericShell : public virtual Shell, public virtual FocusController,
+class GenericShell : public virtual shell::Shell, public virtual FocusController,
     private shell::AbstractShell
 {
 public:
@@ -103,8 +100,6 @@ public:
     std::shared_ptr<scene::Surface> focused_surface() const override;
 
     auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override;
-
-    void raise(std::weak_ptr<scene::Surface> const& surface) override;
 
     void raise(SurfaceSet const& surfaces) override;
 
