@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "gl_context.h"
+#include "display_group.h"
 #include "hwc_configuration.h"
 #include "display_configuration.h"
 #include "overlay_optimization.h"
@@ -86,14 +87,13 @@ private:
     std::unique_ptr<HwcConfiguration> const hwc_config;
     ConfigChangeSubscription const hotplug_subscription;
     DisplayAttribs const primary_attribs; //TODO: could be removed, really only useful in construction
-    DisplayAttribs const external_attribs; //TODO: could be removed, really only useful in construction
+    DisplayAttribs mutable external_attribs; //TODO: could be removed, really only useful in construction
     DisplayConfiguration mutable config;
     PbufferGLContext gl_context;
     std::shared_ptr<DisplayDevice> display_device;
-    std::unique_ptr<ConfigurableDisplayBuffer> const primary_db;
-    std::unique_ptr<ConfigurableDisplayBuffer> mutable external_db;
     std::unique_ptr<DisplayChangePipe> display_change_pipe;
     std::shared_ptr<GLProgramFactory> const gl_program_factory;
+    DisplayGroup mutable displays;
 
     void update_configuration(std::lock_guard<decltype(configuration_mutex)> const&) const;
 };

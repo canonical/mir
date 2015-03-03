@@ -254,7 +254,7 @@ md::GSourceHandle md::add_timer_gsource(
         std::function<void()> exception_handler;
         time::Timestamp target_time;
         bool enabled;
-        mir::RecursiveReadWriteMutex mutex;
+        std::recursive_mutex mutex;
     };
 
     struct TimerGSource
@@ -296,7 +296,7 @@ md::GSourceHandle md::add_timer_gsource(
                 // so we acquire the caller's lock before our own.
                 auto& handler = *ctx.handler;
                 std::lock_guard<LockableCallback> handler_lock{handler};
-                RecursiveReadLock lock{ctx.mutex};
+                std::lock_guard<decltype(ctx.mutex)> lock{ctx.mutex};
                 if (ctx.enabled)
                     handler();
             }
@@ -318,7 +318,7 @@ md::GSourceHandle md::add_timer_gsource(
         static void disable(GSource* source)
         {
             auto& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
-            RecursiveWriteLock lock{ctx.mutex};
+            std::lock_guard<decltype(ctx.mutex)> lock{ctx.mutex};
             ctx.enabled = false;
         }
     };
@@ -359,13 +359,13 @@ struct md::FdSources::FdContext
 
     void disable_callback()
     {
-        RecursiveWriteLock lock{mutex};
+        std::lock_guard<decltype(mutex)> lock{mutex};
         enabled = false;
     }
 
     static gboolean static_call(int fd, GIOCondition, FdContext* ctx)
     {
-        RecursiveReadLock lock{ctx->mutex};
+        std::lock_guard<decltype(ctx->mutex)> lock{ctx->mutex};
 
         if (ctx->enabled)
             ctx->handler(fd);
@@ -381,7 +381,7 @@ struct md::FdSources::FdContext
 private:
     std::function<void(int)> handler;
     bool enabled;
-    mir::RecursiveReadWriteMutex mutex;
+    std::recursive_mutex mutex;
 };
 
 struct md::FdSources::FdSource
