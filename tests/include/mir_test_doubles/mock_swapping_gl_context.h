@@ -31,6 +31,8 @@ namespace doubles
 struct MockSwappingGLContext : public graphics::android::SwappingGLContext
 {
     MOCK_CONST_METHOD0(swap_buffers, void());
+    MOCK_CONST_METHOD0(make_current, void());
+    MOCK_CONST_METHOD0(release_current, void());
     MOCK_CONST_METHOD0(last_rendered_buffer, std::shared_ptr<graphics::Buffer>());
 };
 

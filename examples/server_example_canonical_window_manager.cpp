@@ -419,7 +419,9 @@ void me::CanonicalWindowManagerPolicy::toggle(MirSurfaceState state)
 {
     if (auto const surface = active_surface())
     {
-        if (surface->state() == state)
+        auto& info = tools->info_for(surface);
+
+        if (info.state == state)
             state = mir_surface_state_restored;
 
         auto const value = handle_set_state(surface, MirSurfaceState(state));
@@ -537,6 +539,33 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
         auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
         if (to_bottom_right.dy < DeltaY{0})
             new_size.height = new_size.height + to_bottom_right.dy;
+    }
+
+    switch (tools->info_for(surface).state)
+    {
+    case mir_surface_state_restored:
+        break;
+
+    // "A vertically maximised surface is anchored to the top and bottom of
+    // the available workspace and can have any width."
+    case mir_surface_state_vertmaximized:
+        new_pos.y = old_pos.top_left.y;
+        new_size.height = old_pos.size.height;
+        break;
+
+    // "A horizontally maximised surface is anchored to the left and right of
+    // the available workspace and can have any height"
+    case mir_surface_state_horizmaximized:
+        new_pos.x = old_pos.top_left.x;
+        new_size.width = old_pos.size.width;
+        break;
+
+    // "A maximised surface is anchored to the top, bottom, left and right of the
+    // available workspace. For example, if the launcher is always-visible then
+    // the left-edge of the surface is anchored to the right-edge of the launcher."
+    case mir_surface_state_maximized:
+    default:
+        return true;
     }
 
     surface->resize(new_size);
