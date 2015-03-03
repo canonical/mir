@@ -239,6 +239,12 @@ MIR_COMMON_3.2 {
       typeinfo?for?mir::dispatch::MultiplexingDispatchable;
       vtable?for?mir::dispatch::MultiplexingDispatchable;
 
+      mir::detail::RefCountedLibrary::operator*;
+      mir::detail::RefCountedLibrary::?RefCountedLibrary*;
+      mir::detail::RefCountedLibrary::RefCountedLibrary*;
+      vtable?for?mir::detail::RefCountedLibrary;
+      typeinfo?for?mir::detail::RefCountedLibrary;
+
       mir::events::*
     };
 } MIR_COMMON_3.1;

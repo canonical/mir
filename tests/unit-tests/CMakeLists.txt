@@ -29,6 +29,15 @@ include_directories(
 # TODO: Aim to remove
 include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
 
+add_library(example SHARED library_example.cpp)
+target_link_libraries(example mircommon)
+set_target_properties(
+  example PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+  OUTPUT_NAME example
+  PREFIX ""
+)
+
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
@@ -47,7 +56,10 @@ set(
   test_thread_safe_list.cpp
   test_fatal.cpp
   test_fd.cpp
+  test_flags.cpp
   test_shared_library_prober.cpp
+  test_lockable_callback.cpp
+  test_module_deleter.cpp
 )
 
 add_subdirectory(options/)

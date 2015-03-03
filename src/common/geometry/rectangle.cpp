@@ -17,6 +17,7 @@
  */
 
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
 
 #include <algorithm>
 
@@ -24,8 +25,7 @@ namespace geom = mir::geometry;
 
 geom::Point geom::Rectangle::bottom_right() const
 {
-    return {top_left.x.as_int() + size.width.as_int(),
-            top_left.y.as_int() + size.height.as_int()};
+    return top_left + as_displacement(size);
 }
 
 geom::Point geom::Rectangle::top_right() const

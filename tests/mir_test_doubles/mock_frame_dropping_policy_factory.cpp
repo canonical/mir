@@ -19,17 +19,18 @@
 
 #include "mir_test_doubles/mock_frame_dropping_policy_factory.h"
 
+#include "mir/lockable_callback.h"
+
+#include <mutex>
+
 namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
 
-mtd::MockFrameDroppingPolicy::MockFrameDroppingPolicy(std::function<void()> const& callback,
-                                                      std::function<void()> const& lock,
-                                                      std::function<void()> const& unlock,
-                                                      MockFrameDroppingPolicyFactory const* parent)
-        : callback{callback},
-          lock{lock},
-          unlock{unlock},
-          parent{parent}
+mtd::MockFrameDroppingPolicy::MockFrameDroppingPolicy(
+    std::shared_ptr<mir::LockableCallback> const& callback,
+    MockFrameDroppingPolicyFactory const* parent)
+    : callback{callback},
+      parent{parent}
 {
 }
 
@@ -41,9 +42,9 @@ mtd::MockFrameDroppingPolicy::~MockFrameDroppingPolicy()
 
 void mtd::MockFrameDroppingPolicy::trigger()
 {
-    lock();
-    callback();
-    unlock();
+    auto& handler = *callback;
+    std::lock_guard<LockableCallback> lock{handler};
+    handler();
 }
 
 void mtd::MockFrameDroppingPolicy::parent_destroyed()
@@ -52,10 +53,9 @@ void mtd::MockFrameDroppingPolicy::parent_destroyed()
 }
 
 std::unique_ptr<mc::FrameDroppingPolicy>
-mtd::MockFrameDroppingPolicyFactory::create_policy(std::function<void()> const& drop_frame,
-    std::function<void()> const& lock, std::function<void()> const& unlock) const
+mtd::MockFrameDroppingPolicyFactory::create_policy(std::shared_ptr<mir::LockableCallback> const& callback) const
 {
-    auto policy = new ::testing::NiceMock<MockFrameDroppingPolicy>{drop_frame, lock, unlock, this};
+    auto policy = new ::testing::NiceMock<MockFrameDroppingPolicy>{callback, this};
     policies.insert(policy);
     return std::unique_ptr<mc::FrameDroppingPolicy>{policy};
 }

@@ -24,6 +24,8 @@
 
 namespace mir
 {
+class LockableCallback;
+
 namespace compositor
 {
 class FrameDroppingPolicy;
@@ -48,12 +50,12 @@ public:
      * \brief Create a FrameDroppingPolicy that will call \a drop_frame when it
      *       decides to drop a frame
      *
-     * The lock/unlock functions allow the user to preserve lock ordering
+     * A LockableCallback allows the user to preserve lock ordering
      * in situations where FrameDroppingPolicy methods need to be called under
      * external lock and the callback implementation needs to run code protected
      * by the same lock. A FrameDroppingPolicy implementation may have internal
      * locks of its own, which maybe acquired during callback dispatching;
-     * to preserve lock ordering the given lock function will be invoked during
+     * to preserve lock ordering LockableCallback::lock will be invoked during
      * callback dispatch before any internal locks are acquired.
      *
      * \param drop_frame Function to call when a frame needs to be dropped
@@ -63,9 +65,7 @@ public:
      *                   after any internal locks are released.
      */
     virtual std::unique_ptr<FrameDroppingPolicy> create_policy(
-        std::function<void()> const& drop_frame,
-        std::function<void()> const& lock,
-        std::function<void()> const& unlock) const = 0;
+        std::shared_ptr<LockableCallback> const& drop_frame) const = 0;
 };
 
 }
