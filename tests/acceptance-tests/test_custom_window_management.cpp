@@ -17,24 +17,22 @@
  */
 
 #include "mir/shell/generic_shell.h"
-#include "mir/shell/window_manager.h"
-#include "mir/scene/surface_creation_parameters.h"
 
 #include "mir/geometry/rectangle.h"
 
 #include "mir_test_framework/headless_test.h"
+#include "mir_test_doubles/mock_window_manager.h"
 
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mf = mir::frontend;
-namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 using namespace testing;
 
@@ -46,38 +44,8 @@ std::vector<geom::Rectangle> const display_geometry
     {{480, 0}, {1920, 1080}}
 };
 
-struct MockWindowManager : msh::WindowManager
-{
-    MockWindowManager()
-    {
-        ON_CALL(*this, add_surface(_,_,_)).WillByDefault(Invoke(
-            [](std::shared_ptr<ms::Session> const& session,
-                ms::SurfaceCreationParameters const& params,
-                std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
-                { return build(session, params); }));
-    }
 
-    MOCK_METHOD1(add_session, void (std::shared_ptr<ms::Session> const&));
-    MOCK_METHOD1(remove_session, void (std::shared_ptr<ms::Session> const&));
-
-    MOCK_METHOD3(add_surface, mf::SurfaceId(
-        std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& params,
-        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build));
-
-    MOCK_METHOD2(remove_surface, void(std::shared_ptr<ms::Session> const&, std::weak_ptr<ms::Surface> const&));
-
-    MOCK_METHOD1(add_display, void(geom::Rectangle const&));
-    MOCK_METHOD1(remove_display, void(geom::Rectangle const&));
-
-    MOCK_METHOD1(handle_key_event, bool(MirKeyInputEvent const*));
-    MOCK_METHOD1(handle_touch_event, bool(MirTouchInputEvent const*));
-    MOCK_METHOD1(handle_pointer_event, bool(MirPointerInputEvent const*));
-
-    MOCK_METHOD2(handle_set_state, int(std::shared_ptr<ms::Surface> const&, MirSurfaceState value));
-};
-
-using NiceMockWindowManager = NiceMock<MockWindowManager>;
+using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
 
 struct CustomWindowManagement : mtf::HeadlessTest
 {

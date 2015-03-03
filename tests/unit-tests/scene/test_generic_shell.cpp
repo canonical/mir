@@ -17,7 +17,6 @@
  */
 
 #include "mir/shell/generic_shell.h"
-#include "mir/shell/window_manager.h"
 
 #include "mir/events/event_builders.h"
 #include "mir/scene/session.h"
@@ -28,6 +27,7 @@
 #include "src/server/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
 
+#include "mir_test_doubles/mock_window_manager.h"
 #include "mir_test_doubles/mock_surface_coordinator.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/mock_surface.h"
@@ -85,38 +85,7 @@ struct MockSessionManager : ms::SessionManager
     { ms::SessionManager::set_focus_to(focus); }
 };
 
-struct MockWindowManager : msh::WindowManager
-{
-    MockWindowManager()
-    {
-        ON_CALL(*this, add_surface(_,_,_)).WillByDefault(Invoke(
-            [](std::shared_ptr<ms::Session> const& session,
-                ms::SurfaceCreationParameters const& params,
-                std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
-                { return build(session, params); }));
-    }
-
-    MOCK_METHOD1(add_session, void (std::shared_ptr<ms::Session> const&));
-    MOCK_METHOD1(remove_session, void (std::shared_ptr<ms::Session> const&));
-
-    MOCK_METHOD3(add_surface, mf::SurfaceId(
-        std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& params,
-        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build));
-
-    MOCK_METHOD2(remove_surface, void(std::shared_ptr<ms::Session> const&, std::weak_ptr<ms::Surface> const&));
-
-    MOCK_METHOD1(add_display, void(geom::Rectangle const&));
-    MOCK_METHOD1(remove_display, void(geom::Rectangle const&));
-
-    MOCK_METHOD1(handle_key_event, bool(MirKeyInputEvent const*));
-    MOCK_METHOD1(handle_touch_event, bool(MirTouchInputEvent const*));
-    MOCK_METHOD1(handle_pointer_event, bool(MirPointerInputEvent const*));
-
-    MOCK_METHOD2(handle_set_state, int(std::shared_ptr<ms::Surface> const&, MirSurfaceState value));
-};
-
-using NiceMockWindowManager = NiceMock<MockWindowManager>;
+using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
 
 struct GenericShell : Test
 {
@@ -134,7 +103,7 @@ struct GenericShell : Test
         mt::fake_shared(session_listener)};
 
     mtd::StubInputTargeter input_targeter;
-    std::shared_ptr<MockWindowManager> wm;
+    std::shared_ptr<NiceMockWindowManager> wm;
 
     msh::GenericShell shell{
         mt::fake_shared(input_targeter),
