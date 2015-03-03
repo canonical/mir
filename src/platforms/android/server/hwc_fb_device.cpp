@@ -30,6 +30,7 @@
 #include <boost/throw_exception.hpp>
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
@@ -55,12 +56,16 @@ mga::HwcFbDevice::HwcFbDevice(
 {
 }
 
-void mga::HwcFbDevice::commit(
-    mga::DisplayName,
-    mga::LayerList& layer_list,
-    SwappingGLContext const& context,
-    RenderableListCompositor const&)
+void mga::HwcFbDevice::commit(std::list<DisplayContents> const& contents)
 {
+    auto primary_contents = std::find_if(contents.begin(), contents.end(),
+        [](mga::DisplayContents const& c) {
+            return (c.name == mga::DisplayName::primary);
+    });
+    if (primary_contents == contents.end()) return;
+    auto& layer_list = primary_contents->list;
+    auto& context = primary_contents->context;
+
     layer_list.setup_fb(context.last_rendered_buffer());
 
     if (auto display_list = layer_list.native_list())
