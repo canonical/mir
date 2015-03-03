@@ -43,11 +43,12 @@ typedef std::function<void()> DisplayConfigurationChangeHandler;
  * DisplaySyncGroup represents a group of displays that need to be output
  * in unison as a single post() call.
  * This is only appropriate for platforms whose post() calls are non-blocking
- * and not directly attached to screen hardware (e.g. virtual machines or
- * Android which virtualizes page flipping).
- * Using a DisplaySyncGroup on a platform with native display hardware will
- * result in stuttering, and so should be avoided in most cases. Although
- * using DisplaySyncGroup with a single DisplayBuffer remains safe always.
+ * and not synchronous with the screen hardware (e.g. virtual machines or
+ * Android).
+ * Using a DisplaySyncGroup with multiple screens on a platform with native
+ * screen access (post() blocks for vsync) _will_ result in stuttering, and so
+ * should be avoided. Although using DisplaySyncGroup with a single
+ * DisplayBuffer remains safe for any platform.
  */
 class DisplaySyncGroup
 {
