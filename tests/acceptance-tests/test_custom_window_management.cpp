@@ -75,14 +75,17 @@ struct CustomWindowManagement : mtf::HeadlessTest
 };
 }
 
-TEST_F(CustomWindowManagement, display_layout_is_notified)
+TEST_F(CustomWindowManagement, display_layout_is_notified_on_startup)
 {
     for(auto const& rect : display_geometry)
         EXPECT_CALL(window_manager, add_display(rect));
 
     start_server();
+}
 
-    Mock::VerifyAndClearExpectations(&window_manager);
+TEST_F(CustomWindowManagement, display_layout_is_notified_on_shutdown)
+{
+    start_server();
 
     for(auto const& rect : display_geometry)
         EXPECT_CALL(window_manager, remove_display(rect));
