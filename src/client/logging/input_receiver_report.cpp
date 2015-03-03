@@ -42,41 +42,41 @@ mcll::InputReceiverReport::InputReceiverReport(std::shared_ptr<ml::Logger> const
 #define CASE(action) case action: return out << #action
 namespace
 {
-std::ostream& operator<<(std::ostream& out, MirKeyInputEventAction action)
+std::ostream& operator<<(std::ostream& out, MirKeyboardAction action)
 {
     switch (action)
     {
-    CASE(mir_key_input_event_action_up);
-    CASE(mir_key_input_event_action_down);
-    CASE(mir_key_input_event_action_repeat);
+    CASE(mir_keyboard_action_up);
+    CASE(mir_keyboard_action_down);
+    CASE(mir_keyboard_action_repeat);
     default:
         out << static_cast<int>(action) << "<INVALID>";
         return out;
     }
 }
 
-std::ostream& operator<<(std::ostream& out, MirTouchInputEventTouchAction action)
+std::ostream& operator<<(std::ostream& out, MirTouchAction action)
 {
     switch (action)
     {
-    CASE(mir_touch_input_event_action_up);
-    CASE(mir_touch_input_event_action_down);
-    CASE(mir_touch_input_event_action_change);
+    CASE(mir_touch_action_up);
+    CASE(mir_touch_action_down);
+    CASE(mir_touch_action_change);
     default:
         out << static_cast<int>(action) << "<INVALID>";
         return out;
     }
 }
 
-std::ostream& operator<<(std::ostream& out, MirPointerInputEventAction action)
+std::ostream& operator<<(std::ostream& out, MirPointerAction action)
 {
     switch (action)
     {
-    CASE(mir_pointer_input_event_action_button_up);
-    CASE(mir_pointer_input_event_action_button_down);
-    CASE(mir_pointer_input_event_action_enter);
-    CASE(mir_pointer_input_event_action_leave);
-    CASE(mir_pointer_input_event_action_motion);
+    CASE(mir_pointer_action_button_up);
+    CASE(mir_pointer_action_button_down);
+    CASE(mir_pointer_action_enter);
+    CASE(mir_pointer_action_leave);
+    CASE(mir_pointer_action_motion);
     default:
         out << static_cast<int>(action) << "<INVALID>";
         return out;
