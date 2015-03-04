@@ -131,13 +131,14 @@ public:
 
     void pause() override;
     void resume() override;
+    void stop() override;
 
     std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
     std::shared_ptr<Platform> const platform;
-    std::shared_ptr<HostConnection> const connection;
+    std::shared_ptr<HostConnection> connection;
     std::shared_ptr<input::InputDispatcher> const dispatcher;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;
@@ -153,5 +154,6 @@ private:
 }
 }
 }
+
 
 #endif // MIR_GRAPHICS_NESTED_NESTED_DISPLAY_H_

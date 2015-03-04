@@ -18,6 +18,8 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/egl_native_surface.h"
+
 #include "mir_test_doubles/mock_egl.h"
 #include <gtest/gtest.h>
 
@@ -92,8 +94,13 @@ mtd::MockEGL::MockEGL()
             return EGL_TRUE;
         }));
 
+    // TODO: Comment
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
-    .WillByDefault(Return(fake_egl_surface));
+        .WillByDefault(Invoke(
+            [&] (EGLDisplay,EGLConfig,NativeWindowType nw, EGLint const*) -> EGLSurface
+            {
+                return reinterpret_cast<EGLSurface>(nw);
+            }));
 
     ON_CALL(*this, eglCreatePbufferSurface(_,_,_))
     .WillByDefault(Return(fake_egl_surface));
@@ -114,7 +121,14 @@ mtd::MockEGL::MockEGL()
         [&] { return current_contexts[std::this_thread::get_id()]; }));
 
     ON_CALL(*this, eglSwapBuffers(_,_))
-    .WillByDefault(Return(EGL_TRUE));
+        .WillByDefault(Invoke(
+            [&](EGLDisplay,EGLSurface surface) -> EGLBoolean
+            {
+                auto mir_surf = reinterpret_cast<mir::client::EGLNativeSurface*>(surface);
+                mir_surf->request_and_wait_for_next_buffer();
+                return true;
+            }));
+                              
 
     ON_CALL(*this, eglGetCurrentDisplay())
     .WillByDefault(Return(fake_egl_display));

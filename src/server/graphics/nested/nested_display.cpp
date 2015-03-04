@@ -156,8 +156,17 @@ mgn::NestedDisplay::NestedDisplay(
 
 mgn::NestedDisplay::~NestedDisplay() noexcept
 {
+    stop();
+}
+
+void mgn::NestedDisplay::stop()
+{
     if (eglGetCurrentContext() == egl_display.egl_context())
         eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
+    std::unique_lock<std::mutex> lock(outputs_mutex);
+    outputs.clear();
+    connection.reset();
 }
 
 void mgn::NestedDisplay::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)

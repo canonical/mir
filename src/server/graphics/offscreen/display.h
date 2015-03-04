@@ -94,6 +94,8 @@ public:
 
     void pause() override;
     void resume() override;
+    // TODO: Fix
+    void stop() override {};
 
     std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
     std::unique_ptr<GLContext> create_gl_context() override;

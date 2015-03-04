@@ -26,6 +26,7 @@
 #include "mir_test_framework/declarative_placement_strategy.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/spin_wait.h"
@@ -37,12 +38,15 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mt = mir::test;
-namespace mtf = mir_test_framework;
-namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mis = mir::input::synthesis;
+namespace geom = mir::geometry;
+
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
+namespace mtf = mir_test_framework;
+
 
 namespace
 {
@@ -129,6 +133,8 @@ struct CursorClient
                 auto const surface = mir_surface_create_sync(spec);
                 mir_surface_spec_release(spec);
 
+                mir_buffer_stream_swap_buffers_sync(
+                    mir_surface_get_buffer_stream(surface));
                 mir_buffer_stream_swap_buffers_sync(
                     mir_surface_get_buffer_stream(surface));
 
@@ -232,6 +238,10 @@ struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
 
 struct TestClientCursorAPI : mtf::InProcessServer
 {
+    TestClientCursorAPI()
+    {
+        mock_egl.provide_egl_extensions();
+    }
     mir::DefaultServerConfiguration& server_config() override
     {
         return server_configuration_;
@@ -247,7 +257,7 @@ struct TestClientCursorAPI : mtf::InProcessServer
         return server_configuration_.fake_event_hub;
     }
 
-    void client_shutdown_expectations()
+    void expect_client_shutdown()
     {
         using namespace testing;
         Mock::VerifyAndClearExpectations(&test_server_config().cursor);
@@ -265,6 +275,8 @@ struct TestClientCursorAPI : mtf::InProcessServer
     TestServerConfiguration server_configuration_;
     mir::test::WaitCondition expectations_satisfied;
     mtf::UsingStubClientPlatform using_stub_client_platform;
+
+    ::testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
 }
@@ -289,7 +301,7 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
 }
 
 TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
@@ -312,7 +324,7 @@ TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
 }
 
 TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
@@ -339,7 +351,7 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
 }
 
 TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
@@ -363,7 +375,7 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
 }
 
 TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
@@ -401,7 +413,7 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
 }
 
 TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
@@ -449,26 +461,32 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
 
     expectations_satisfied.wait_for_at_most_seconds(500);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
 }
 
 TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
 {
     using namespace ::testing;
 
+    {
     mtf::HeadlessNestedServerRunner nested_mir(new_connection());
     nested_mir.start_server();
+
+    EXPECT_CALL(test_server_config().cursor, hide())
+        .WillOnce(mt::WakeUp(&expectations_satisfied));
     
     DisabledCursorClient client{nested_mir.new_connection(), client_name_1};
     client.run();
 
-    EXPECT_CALL(test_server_config().cursor, hide())
-        .WillOnce(mt::WakeUp(&expectations_satisfied));
-
     // Really required?
     fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
 
-    expectations_satisfied.wait_for_at_most_seconds(5);
-
-    client_shutdown_expectations();
+    expectations_satisfied.wait_for_at_most_seconds(60);
+    printf("Foo\n");
+    expect_client_shutdown();
+        printf("Foo2\n");
+        nested_mir.stop_server();
+                printf("Foo3\n");
+    }
+                    printf("Foo4\n");
 }

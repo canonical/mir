@@ -89,6 +89,7 @@ public:
     MockEGL();
     ~MockEGL();
 
+    void expect_nested_egl_usage();
     void provide_egl_extensions();
 
     typedef void (*generic_function_pointer_t)(void);

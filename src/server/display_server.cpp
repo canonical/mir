@@ -229,6 +229,7 @@ void mir::DisplayServer::run()
     p->input_dispatcher->stop();
     p->input_manager->stop();
     p->compositor->stop();
+    p->display->stop();
     p->prompt_connector->stop();
     p->connector->stop();
 }
