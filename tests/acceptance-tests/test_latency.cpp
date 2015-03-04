@@ -91,10 +91,6 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
 
     float average_latency()
     {
-        // FIXME(kdub): `latency' only ever has size 2, because the client
-        //              only ever ever encounters two different buffer IDs.
-        //              This means many iterations is pointless and we're only
-        //              averaging the last two frames right now.
         unsigned int sum {0};
         for(auto& s : latency)
             sum += s;
