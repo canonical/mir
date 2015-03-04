@@ -41,9 +41,8 @@ public:
     MOCK_METHOD1(report_drm_master_failure, void(int));
     MOCK_METHOD0(report_vt_switch_away_failure, void());
     MOCK_METHOD0(report_vt_switch_back_failure, void());
-    MOCK_METHOD2(report_hwc_composition_in_use, void(int,int));
-    MOCK_METHOD0(report_gpu_composition_in_use, void());
     MOCK_METHOD2(report_egl_configuration, void(EGLDisplay,EGLConfig));
+    MOCK_METHOD1(report_vsync, void(unsigned int));
 };
 
 }

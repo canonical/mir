@@ -80,7 +80,9 @@ public:
 
 private:
     void on_hotplug();
+    void on_vsync(DisplayName) const;
 
+    std::shared_ptr<DisplayReport> const display_report;
     std::shared_ptr<DisplayComponentFactory> const display_buffer_builder;
     std::mutex mutable configuration_mutex;
     bool mutable configuration_dirty{false};
