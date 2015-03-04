@@ -127,25 +127,25 @@ void me::add_window_manager_option_to(Server& server)
 
             auto const selection = options->get<std::string>(wm_option);
 
-            std::function<std::shared_ptr<WindowManager>(me::FocusController* focus_controller)> wm_builder;
+            std::function<std::shared_ptr<WindowManager>(msh::FocusController* focus_controller)> wm_builder;
 
             if (selection == wm_tiling)
             {
-                wm_builder = [&server](me::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
+                wm_builder = [&server](msh::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
                     {
                         return std::make_shared<TilingWindowManager>(focus_controller);
                     };
             }
             else if (selection == wm_fullscreen)
             {
-                wm_builder = [&server](me::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
+                wm_builder = [&server](msh::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
                     {
                         return std::make_shared<FullscreenWindowManager>(focus_controller, server.the_shell_display_layout());
                     };
             }
             else if (selection == wm_canonical)
             {
-                wm_builder = [&server](me::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
+                wm_builder = [&server](msh::FocusController* focus_controller) -> std::shared_ptr<WindowManager>
                     {
                         return std::make_shared<CanonicalWindowManager>(focus_controller);
                     };
