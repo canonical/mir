@@ -42,12 +42,23 @@ namespace
  */
 struct IdCollectingDB : mtd::NullDisplayBuffer
 {
+    IdCollectingDB(unsigned int& count) : post_count{count} {}
+
     mir::geometry::Rectangle view_area() const override
     {
         return {{0,0}, {1920, 1080}};
     } 
     bool post_renderables_if_optimizable(mg::RenderableList const& renderables) override
     {
+        /*
+         * Clients are blocked only until the below buffer() goes out of
+         * scope. Thereafter we'll be racing the client thread. So we need
+         * to increment the post_count (represents universal time) here
+         * where the client thread is predictably blocked in its call to
+         * mir_buffer_stream_swap_buffers_sync().
+         */
+        ++post_count;
+
         //the surface will be the frontmost of the renderables
         if (!renderables.empty())
             last = renderables.front()->buffer()->id();
@@ -58,13 +69,14 @@ struct IdCollectingDB : mtd::NullDisplayBuffer
         return last;
     }
 private:
+    unsigned int& post_count;
     mg::BufferID last{0};
 };
 
 struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
 {
     TimeTrackingGroup(unsigned int& count, std::unordered_map<uint32_t, uint32_t>& map) :
-        post_count(count), timestamps(map) {}
+        post_count(count), timestamps(map), db(count) {}
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
         f(db);
@@ -75,7 +87,6 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
         auto const it = timestamps.find(db.last_id().as_value());
         if (it != timestamps.end())
             latency.push_back(post_count - it->second);
-        post_count++;
     }
 
     float average_latency()
@@ -119,7 +130,7 @@ struct ClientLatency : mtf::ConnectedClientWithASurface
 };
 }
 
-TEST_F(ClientLatency, does_not_exceed_one_frame_double_buffered)
+TEST_F(ClientLatency, double_buffered_client_uses_all_buffers)
 {
     using namespace testing;
 
@@ -129,8 +140,14 @@ TEST_F(ClientLatency, does_not_exceed_one_frame_double_buffered)
         timestamps[submission_id] = post_count; 
         mir_buffer_stream_swap_buffers_sync(stream);
     }
-    //Default is double buffered
-    EXPECT_THAT(display.group.average_latency(), Lt(1.0));
+
+    unsigned int const expected_client_buffers = 2;
+    unsigned int const expected_latency = expected_client_buffers - 1;
+
+    float const error_margin = 0.1f;
+    auto observed_latency = display.group.average_latency();
+    EXPECT_THAT(observed_latency, AllOf(Gt(expected_latency-error_margin),
+                                        Lt(expected_latency+error_margin)));
 }
 
 //TODO: configure and add test for triple buffer
