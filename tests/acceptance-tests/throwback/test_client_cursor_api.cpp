@@ -474,7 +474,7 @@ TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
 
     EXPECT_CALL(test_server_config().cursor, hide())
         .WillOnce(mt::WakeUp(&expectations_satisfied));
-    
+    {    
     DisabledCursorClient client{nested_mir.new_connection(), client_name_1};
     client.run();
 
@@ -482,11 +482,8 @@ TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
     fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
 
     expectations_satisfied.wait_for_at_most_seconds(60);
-    printf("Foo\n");
     expect_client_shutdown();
-        printf("Foo2\n");
-        nested_mir.stop_server();
-                printf("Foo3\n");
     }
-                    printf("Foo4\n");
+    nested_mir.stop_server();
+    }
 }

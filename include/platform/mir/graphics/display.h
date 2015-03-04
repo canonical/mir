@@ -123,12 +123,6 @@ public:
      */
     virtual void resume() = 0;
 
-    //TODO: Comment
-    /**
-     * Stop 
-     */
-     virtual void stop() = 0;
-
     /**
      * Create a hardware cursor object.
      */
