@@ -30,7 +30,6 @@
 #include <gtest/gtest.h>
 
 #include <vector>
-#include <tuple>
 #include <algorithm>
 
 namespace mf = mir::frontend;
