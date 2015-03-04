@@ -27,12 +27,6 @@ class HeadlessNestedServerRunner : public AsyncServerRunner
 {
 public:
     HeadlessNestedServerRunner(std::string const& connect_string);
-    ~HeadlessNestedServerRunner() = default;
-
-    using AsyncServerRunner::start_server;
-    using AsyncServerRunner::stop_server;
-    using AsyncServerRunner::wait_for_server_exit;
-    using AsyncServerRunner::new_connection;
 };
 }
 
