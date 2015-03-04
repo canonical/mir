@@ -121,7 +121,7 @@ public:
             graphics::DisplayConfigurationOutput output
             {
                 graphics::DisplayConfigurationOutputId{id},
-                graphics::DisplayConfigurationCardId{0},
+                graphics::DisplayConfigurationCardId{1},
                 graphics::DisplayConfigurationOutputType::vga,
                 std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
                 {{rect.size, 60.0}},
