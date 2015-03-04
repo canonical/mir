@@ -74,7 +74,7 @@ struct FBDevice : public ::testing::Test
 
 TEST_F(FBDevice, rejects_renderables)
 {
-    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    mg::RenderableList renderlist
     {
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()

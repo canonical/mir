@@ -69,6 +69,11 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib) override;
 
+    void add_display(geometry::Rectangle const& area) override;
+    void remove_display(geometry::Rectangle const& area) override;
+
+    bool handle(MirEvent const& event) override;
+
 protected:
     std::shared_ptr<Shell> const wrapped;
 };
