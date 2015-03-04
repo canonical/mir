@@ -27,10 +27,14 @@ namespace client
 class PerfReport
 {
 public:
-    virtual ~PerfReport() = default;
+    PerfReport() = default;
     virtual void name_surface(char const*) = 0;
     virtual void begin_frame(int buffer_id) = 0;
     virtual void end_frame(int buffer_id) = 0;
+protected:
+    virtual ~PerfReport() = default;
+    PerfReport(PerfReport const&) = delete;
+    PerfReport& operator=(PerfReport const&) = delete;
 };
 
 class NullPerfReport : public PerfReport
