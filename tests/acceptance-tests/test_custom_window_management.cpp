@@ -51,8 +51,8 @@ using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
 
 struct Client
 {
-    explicit Client(mtf::AsyncServerRunner& server_runner) :
-        connection{mir_connect_sync(server_runner.new_connection().c_str(), __PRETTY_FUNCTION__)}
+    explicit Client(char const* connect_string) :
+        connection{mir_connect_sync(connect_string, __PRETTY_FUNCTION__)}
     {
     }
 
@@ -114,7 +114,7 @@ struct CustomWindowManagement : mtf::HeadlessTest
 
     Client connect_client()
     {
-        return Client(*this);
+        return Client(new_connection().c_str());
     }
 
     NiceMockWindowManager window_manager;
@@ -184,32 +184,37 @@ TEST_F(CustomWindowManagement, surface_release_removes_surface)
 
 TEST_F(CustomWindowManagement, surface_is_associated_with_correct_client)
 {
+    const int no_of_clients = 10;
     start_server();
 
-    std::shared_ptr<ms::Session> session1;
-    std::shared_ptr<ms::Session> session2;
+    std::shared_ptr<ms::Session> session[no_of_clients];
+    std::vector<Client> client; client.reserve(no_of_clients);
 
-    EXPECT_CALL(window_manager, add_session(_))
-        .WillOnce(SaveArg<0>(&session1))
-        .WillOnce(SaveArg<0>(&session2));
+    for (int i = 0; i != no_of_clients; ++i)
+    {
+        EXPECT_CALL(window_manager, add_session(_))
+            .WillOnce(SaveArg<0>(&session[i]));
+        client.emplace_back(connect_client());
+    }
 
-    auto const client1 = connect_client();
-    auto const client2 = connect_client();
+    for (int i = 0; i != no_of_clients; ++i)
+    {
+        Mock::VerifyAndClearExpectations(&window_manager);
 
-    std::shared_ptr<ms::Session> session_for_add;
-    std::shared_ptr<ms::Session> session_for_remove;
+        std::shared_ptr<ms::Session> session_for_add;
+        std::shared_ptr<ms::Session> session_for_remove;
 
-    EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(DoAll(
-        SaveArg<0>(&session_for_add),
-        Invoke(NiceMockWindowManager::add_surface_default)));
+        EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(DoAll(
+            SaveArg<0>(&session_for_add),
+            Invoke(NiceMockWindowManager::add_surface_default)));
 
-    EXPECT_CALL(window_manager, remove_surface(_,_))
-        .WillOnce(SaveArg<0>(&session_for_remove));
+        EXPECT_CALL(window_manager, remove_surface(_,_))
+            .WillOnce(SaveArg<0>(&session_for_remove));
 
-    auto const surface = client1.surface_create();
-    mir_surface_release_sync(surface);
+        auto const surface = client[i].surface_create();
+        mir_surface_release_sync(surface);
 
-    EXPECT_THAT(session1, Ne(session2));
-    EXPECT_THAT(session_for_add, Eq(session1));
-    EXPECT_THAT(session_for_remove, Eq(session1));
+        EXPECT_THAT(session_for_add, Eq(session[i])) << "i=" << i;
+        EXPECT_THAT(session_for_remove, Eq(session[i])) << "i=" << i;
+    }
 }
