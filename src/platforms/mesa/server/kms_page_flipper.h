@@ -42,7 +42,6 @@ namespace mesa
 class KMSPageFlipper;
 struct PageFlipEventData
 {
-    std::unordered_map<uint32_t,PageFlipEventData>* pending;
     uint32_t crtc_id;
     KMSPageFlipper* flipper;
 };
