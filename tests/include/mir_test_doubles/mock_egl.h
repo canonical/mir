@@ -91,6 +91,7 @@ public:
 
     void expect_nested_egl_usage();
     void provide_egl_extensions();
+    void provide_stub_platform_buffer_swapping();
 
     typedef void (*generic_function_pointer_t)(void);
 

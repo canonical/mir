@@ -241,6 +241,7 @@ struct TestClientCursorAPI : mtf::InProcessServer
     TestClientCursorAPI()
     {
         mock_egl.provide_egl_extensions();
+        mock_egl.provide_stub_platform_buffer_swapping();
     }
     mir::DefaultServerConfiguration& server_config() override
     {

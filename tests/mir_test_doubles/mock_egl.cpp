@@ -96,11 +96,7 @@ mtd::MockEGL::MockEGL()
 
     // TODO: Comment
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
-        .WillByDefault(Invoke(
-            [&] (EGLDisplay,EGLConfig,NativeWindowType nw, EGLint const*) -> EGLSurface
-            {
-                return reinterpret_cast<EGLSurface>(nw);
-            }));
+        .WillByDefault(Return(fake_egl_surface));
 
     ON_CALL(*this, eglCreatePbufferSurface(_,_,_))
     .WillByDefault(Return(fake_egl_surface));
@@ -121,14 +117,7 @@ mtd::MockEGL::MockEGL()
         [&] { return current_contexts[std::this_thread::get_id()]; }));
 
     ON_CALL(*this, eglSwapBuffers(_,_))
-        .WillByDefault(Invoke(
-            [&](EGLDisplay,EGLSurface surface) -> EGLBoolean
-            {
-                auto mir_surf = reinterpret_cast<mir::client::EGLNativeSurface*>(surface);
-                mir_surf->request_and_wait_for_next_buffer();
-                return true;
-            }));
-                              
+        .WillByDefault(Return(true));                              
 
     ON_CALL(*this, eglGetCurrentDisplay())
     .WillByDefault(Return(fake_egl_display));
@@ -152,6 +141,27 @@ void mtd::MockEGL::provide_egl_extensions()
     const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap";
     ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
         .WillByDefault(Return(egl_exts));
+}
+
+void mtd::MockEGL::provide_stub_platform_buffer_swapping()
+{
+    using namespace ::testing;
+    // TODO: Comment
+    ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
+        .WillByDefault(Invoke(
+            [&] (EGLDisplay,EGLConfig,NativeWindowType nw, EGLint const*) -> EGLSurface
+            {
+                return reinterpret_cast<EGLSurface>(nw);
+            }));
+
+    ON_CALL(*this, eglSwapBuffers(_,_))
+        .WillByDefault(Invoke(
+            [&](EGLDisplay,EGLSurface surface) -> EGLBoolean
+            {
+                auto mir_surf = reinterpret_cast<mir::client::EGLNativeSurface*>(surface);
+                mir_surf->request_and_wait_for_next_buffer();
+                return true;
+            }));
 }
 
 mtd::MockEGL::~MockEGL()
