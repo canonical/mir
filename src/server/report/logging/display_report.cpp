@@ -25,7 +25,12 @@
 namespace ml=mir::logging;
 namespace mrl=mir::report::logging;
 
-mrl::DisplayReport::DisplayReport(const std::shared_ptr<ml::Logger>& logger) : logger(logger)
+mrl::DisplayReport::DisplayReport(
+    std::shared_ptr<ml::Logger> const& logger,
+    std::shared_ptr<time::Clock> const& clock) :
+    logger(logger),
+    clock(clock),
+    last_report(clock->now())
 {
 }
 
@@ -144,5 +149,19 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
 
 void mrl::DisplayReport::report_vsync(unsigned int display_id)
 {
-    logger->log(ml::Severity::informational, "vsync event on [" + std::to_string(display_id) + "]", component());
+    using namespace std::chrono;
+    seconds const static report_interval{1};
+    auto now = clock->now();
+    event_map[display_id]++;
+    if (now > last_report + report_interval)
+    {
+        for(auto const& event : event_map)
+            logger->log(ml::Severity::informational,
+                std::to_string(event.second) + " vsync events on [" +
+                std::to_string(event.first) + "] over " +
+                std::to_string(duration_cast<milliseconds>(now - last_report).count()) + "ms",
+                component());
+        event_map.clear();
+        last_report = now;
+    }
 }

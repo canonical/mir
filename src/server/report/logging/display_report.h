@@ -21,7 +21,9 @@
 #define MIR_REPORT_LOGGING_DISPLAY_REPORTER_H_
 
 #include "mir/graphics/display_report.h"
+#include "mir/time/clock.h"
 
+#include <unordered_map>
 #include <memory>
 
 namespace mir
@@ -41,7 +43,10 @@ class DisplayReport : public graphics::DisplayReport
 
     static const char* component();
 
-    DisplayReport(const std::shared_ptr<mir::logging::Logger>& logger);
+    DisplayReport(
+        std::shared_ptr<mir::logging::Logger> const& logger,
+        std::shared_ptr<time::Clock> const& clock);
+
     virtual ~DisplayReport();
 
     virtual void report_successful_setup_of_native_resources() override;
@@ -56,11 +61,14 @@ class DisplayReport : public graphics::DisplayReport
     virtual void report_egl_configuration(EGLDisplay disp, EGLConfig cfg) override;
 
   protected:
-    DisplayReport(const DisplayReport&) = delete;
-    DisplayReport& operator=(const DisplayReport&) = delete;
+    DisplayReport(DisplayReport const&) = delete;
+    DisplayReport& operator=(DisplayReport const&) = delete;
 
   private:
-    std::shared_ptr<mir::logging::Logger> logger;
+    std::shared_ptr<mir::logging::Logger> const logger;
+    std::shared_ptr<time::Clock> const clock;
+    mir::time::Timestamp last_report;
+    std::unordered_map<unsigned int, unsigned int> event_map;
 };
 }
 }
