@@ -28,6 +28,7 @@
 
 #include <unordered_set>
 #include <functional>
+#include <memory>
 
 #include <gmock/gmock.h>
 
@@ -35,6 +36,8 @@ namespace mc = mir::compositor;
 
 namespace mir
 {
+class LockableCallback;
+
 namespace test
 {
 namespace doubles
@@ -45,9 +48,7 @@ class MockFrameDroppingPolicyFactory;
 class MockFrameDroppingPolicy : public mc::FrameDroppingPolicy
 {
 public:
-    MockFrameDroppingPolicy(std::function<void()> const& callback,
-                            std::function<void()> const& lock,
-                            std::function<void()> const& unlock,
+    MockFrameDroppingPolicy(std::shared_ptr<mir::LockableCallback> const& callback,
                             MockFrameDroppingPolicyFactory const* parent);
     ~MockFrameDroppingPolicy();
 
@@ -60,9 +61,7 @@ private:
     friend class MockFrameDroppingPolicyFactory;
     void parent_destroyed();
 
-    std::function<void()> callback;
-    std::function<void()> lock;
-    std::function<void()> unlock;
+    std::shared_ptr<mir::LockableCallback> callback;
     MockFrameDroppingPolicyFactory const* parent;
 };
 
@@ -70,9 +69,7 @@ class MockFrameDroppingPolicyFactory : public mc::FrameDroppingPolicyFactory
 {
 public:
     std::unique_ptr<mc::FrameDroppingPolicy> create_policy(
-        std::function<void()> const& drop_frame,
-        std::function<void()> const& lock,
-        std::function<void()> const& unlock) const override;
+        std::shared_ptr<mir::LockableCallback> const& callback) const override;
 
     ~MockFrameDroppingPolicyFactory();
 
@@ -88,10 +85,9 @@ private:
 class FrameDroppingPolicyFactoryMock : public mc::FrameDroppingPolicyFactory
 {
 public:
-    MOCK_CONST_METHOD3(create_policy, std::unique_ptr<mc::FrameDroppingPolicy>(
-                     std::function<void()> const&,
-                     std::function<void()> const&,
-                     std::function<void()> const&));
+    MOCK_CONST_METHOD1(create_policy,
+                       std::unique_ptr<mc::FrameDroppingPolicy>(
+                           std::shared_ptr<mir::LockableCallback> const& callback));
 };
 
 }

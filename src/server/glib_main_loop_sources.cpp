@@ -19,6 +19,7 @@
 
 #include "mir/glib_main_loop_sources.h"
 #include "mir/recursive_read_write_mutex.h"
+#include "mir/lockable_callback.h"
 #include "mir/thread_safe_list.h"
 #include "mir/raii.h"
 
@@ -234,29 +235,26 @@ void md::add_server_action_gsource(
 md::GSourceHandle md::add_timer_gsource(
     GMainContext* main_context,
     std::shared_ptr<time::Clock> const& clock,
-    std::function<void()> const& handler,
-    std::function<void()> const& lock,
-    std::function<void()> const& unlock,
+    std::shared_ptr<LockableCallback> const& handler,
+    std::function<void()> const& exception_handler,
     time::Timestamp target_time)
 {
     struct TimerContext
     {
         TimerContext(std::shared_ptr<time::Clock> const& clock,
-                     std::function<void()> const& handler,
-                     std::function<void()> const& lock,
-                     std::function<void()> const& unlock,
+                     std::shared_ptr<LockableCallback> const& handler,
+                     std::function<void()> const& exception_handler,
                      time::Timestamp target_time)
-            : clock{clock}, handler{handler}, lock{lock}, unlock{unlock},
+            : clock{clock}, handler{handler}, exception_handler{exception_handler},
               target_time{target_time}, enabled{true}
         {
         }
         std::shared_ptr<time::Clock> clock;
-        std::function<void()> handler;
-        std::function<void()> lock;
-        std::function<void()> unlock;
+        std::shared_ptr<LockableCallback> handler;
+        std::function<void()> exception_handler;
         time::Timestamp target_time;
         bool enabled;
-        mir::RecursiveReadWriteMutex mutex;
+        std::recursive_mutex mutex;
     };
 
     struct TimerGSource
@@ -292,13 +290,20 @@ md::GSourceHandle md::add_timer_gsource(
         static gboolean dispatch(GSource* source, GSourceFunc, gpointer)
         {
             auto& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
-
-            // Caller may pass std::function objects to preserve locking
-            // order during callback dispatching, so aquire them first.
-            auto caller_lock = mir::raii::paired_calls(std::ref(ctx.lock), std::ref(ctx.unlock));
-            RecursiveReadLock lock{ctx.mutex};
-            if (ctx.enabled)
-                ctx.handler();
+            try
+            {
+                // Attempt to preserve locking order during callback dispatching
+                // so we acquire the caller's lock before our own.
+                auto& handler = *ctx.handler;
+                std::lock_guard<LockableCallback> handler_lock{handler};
+                std::lock_guard<decltype(ctx.mutex)> lock{ctx.mutex};
+                if (ctx.enabled)
+                    handler();
+            }
+            catch(...)
+            {
+                ctx.exception_handler();
+            }
 
             return FALSE;
         }
@@ -313,7 +318,7 @@ md::GSourceHandle md::add_timer_gsource(
         static void disable(GSource* source)
         {
             auto& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
-            RecursiveWriteLock lock{ctx.mutex};
+            std::lock_guard<decltype(ctx.mutex)> lock{ctx.mutex};
             ctx.enabled = false;
         }
     };
@@ -333,7 +338,7 @@ md::GSourceHandle md::add_timer_gsource(
     auto const timer_gsource = reinterpret_cast<TimerGSource*>(static_cast<GSource*>(gsource));
 
     timer_gsource->ctx_constructed = false;
-    new (&timer_gsource->ctx) TimerContext{clock, handler, lock, unlock, target_time};
+    new (&timer_gsource->ctx) TimerContext{clock, handler, exception_handler, target_time};
     timer_gsource->ctx_constructed = true;
 
     g_source_attach(gsource, main_context);
@@ -354,13 +359,13 @@ struct md::FdSources::FdContext
 
     void disable_callback()
     {
-        RecursiveWriteLock lock{mutex};
+        std::lock_guard<decltype(mutex)> lock{mutex};
         enabled = false;
     }
 
     static gboolean static_call(int fd, GIOCondition, FdContext* ctx)
     {
-        RecursiveReadLock lock{ctx->mutex};
+        std::lock_guard<decltype(ctx->mutex)> lock{ctx->mutex};
 
         if (ctx->enabled)
             ctx->handler(fd);
@@ -376,7 +381,7 @@ struct md::FdSources::FdContext
 private:
     std::function<void(int)> handler;
     bool enabled;
-    mir::RecursiveReadWriteMutex mutex;
+    std::recursive_mutex mutex;
 };
 
 struct md::FdSources::FdSource

@@ -74,7 +74,7 @@ struct FBDevice : public ::testing::Test
 
 TEST_F(FBDevice, rejects_renderables)
 {
-    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    mg::RenderableList renderlist
     {
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()
@@ -93,12 +93,13 @@ TEST_F(FBDevice, commits_frame)
         .WillOnce(Return(0));
 
     mga::FBDevice fbdev(fb_hal_mock);
+    mga::DisplayContents content{primary, list, mock_context, stub_compositor};
 
     EXPECT_THROW({
-        fbdev.commit(primary, list, mock_context, stub_compositor);
+        fbdev.commit({content});
     }, std::runtime_error);
 
-    fbdev.commit(primary, list, mock_context, stub_compositor);
+    fbdev.commit({content});
 }
 
 //not all fb devices provide a swap interval hook. make sure we don't explode if thats the case

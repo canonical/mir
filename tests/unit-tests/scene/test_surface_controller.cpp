@@ -53,6 +53,7 @@ struct MockSurfaceStackModel : public ms::SurfaceStackModel
     MOCK_METHOD1(remove_surface, void(std::weak_ptr<ms::Surface> const&));
     MOCK_METHOD1(raise, void(std::weak_ptr<ms::Surface> const&));
     MOCK_CONST_METHOD1(surface_at, std::shared_ptr<ms::Surface>(geom::Point));
+    void raise(SurfaceSet const&) override {}
 };
 
 struct SurfaceController : testing::Test

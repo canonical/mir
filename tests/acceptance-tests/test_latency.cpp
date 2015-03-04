@@ -84,20 +84,9 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
 
     void post() override
     {
-        auto consume_id = db.last_id().as_value();
-        auto it = timestamps.find(consume_id);
-
-        // XXX The test framework seems to insert artificial buffers we didn't
-        //     introduce ourselves. So identify and ignore those.
+        auto const it = timestamps.find(db.last_id().as_value());
         if (it != timestamps.end())
-        {
-            auto render_time = it->second;
-            auto lag_client_to_post = post_count - render_time;
-            // ^^ note this excludes the additional lag in the
-            //    DisplayBuffer's queue after post().
-
-            latency.push_back(lag_client_to_post);
-        }
+            latency.push_back(post_count - it->second);
     }
 
     float average_latency()

@@ -39,10 +39,51 @@ mcll::InputReceiverReport::InputReceiverReport(std::shared_ptr<ml::Logger> const
 {
 }
 
+#define CASE(action) case action: return out << #action
 namespace
 {
+std::ostream& operator<<(std::ostream& out, MirKeyInputEventAction action)
+{
+    switch (action)
+    {
+    CASE(mir_key_input_event_action_up);
+    CASE(mir_key_input_event_action_down);
+    CASE(mir_key_input_event_action_repeat);
+    default:
+        out << static_cast<int>(action) << "<INVALID>";
+        return out;
+    }
+}
 
-static void format_key_event(std::stringstream &ss, MirInputEvent const* ev)
+std::ostream& operator<<(std::ostream& out, MirTouchInputEventTouchAction action)
+{
+    switch (action)
+    {
+    CASE(mir_touch_input_event_action_up);
+    CASE(mir_touch_input_event_action_down);
+    CASE(mir_touch_input_event_action_change);
+    default:
+        out << static_cast<int>(action) << "<INVALID>";
+        return out;
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, MirPointerInputEventAction action)
+{
+    switch (action)
+    {
+    CASE(mir_pointer_input_event_action_button_up);
+    CASE(mir_pointer_input_event_action_button_down);
+    CASE(mir_pointer_input_event_action_enter);
+    CASE(mir_pointer_input_event_action_leave);
+    CASE(mir_pointer_input_event_action_motion);
+    default:
+        out << static_cast<int>(action) << "<INVALID>";
+        return out;
+    }
+}
+
+void format_key_event(std::stringstream &ss, MirInputEvent const* ev)
 {
     auto kev = mir_input_event_get_key_input_event(ev);
     
@@ -56,7 +97,7 @@ static void format_key_event(std::stringstream &ss, MirInputEvent const* ev)
     ss << "}";
 }
 
-static void format_touch_event(std::stringstream &ss, MirInputEvent const* ev)
+void format_touch_event(std::stringstream &ss, MirInputEvent const* ev)
 {
     auto tev = mir_input_event_get_touch_input_event(ev);
     
@@ -73,6 +114,7 @@ static void format_touch_event(std::stringstream &ss, MirInputEvent const* ev)
         ss << "    id: " << mir_touch_input_event_get_touch_id(tev, i) << std::endl;
         ss << "    x: " << mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_x) << std::endl;
         ss << "    y: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_y) << std::endl;
+        ss << "    action: " << mir_touch_input_event_get_touch_action(tev, i) << std::endl;
         ss << "    touch_major: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_touch_major) << std::endl;
         ss << "    touch_minor: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_touch_minor) << std::endl;
         ss << "    size: " <<  mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_size) << std::endl;
@@ -83,7 +125,7 @@ static void format_touch_event(std::stringstream &ss, MirInputEvent const* ev)
     ss << "}";
 }
 
-static void format_pointer_event(std::stringstream &ss, MirInputEvent const* ev)
+void format_pointer_event(std::stringstream &ss, MirInputEvent const* ev)
 {
     auto pev = mir_input_event_get_pointer_input_event(ev);
 
@@ -95,7 +137,7 @@ static void format_pointer_event(std::stringstream &ss, MirInputEvent const* ev)
     ss << "}";
 }
 
-static void format_event(std::stringstream &ss, MirEvent const& ev)
+void format_event(std::stringstream &ss, MirEvent const& ev)
 {
     if (mir_event_get_type(&ev) != mir_event_type_input)
         return;

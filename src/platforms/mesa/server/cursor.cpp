@@ -161,6 +161,16 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
     write_buffer_data_locked(lg, &padded[0], padded_size);
 }
 
+void mgm::Cursor::show()
+{
+    if (!visible)
+    {
+        std::lock_guard<std::mutex> lg(guard);
+        visible = true;
+        place_cursor_at_locked(lg, current_position, ForceState);
+    }
+}
+
 void mgm::Cursor::show(CursorImage const& cursor_image)
 {
     std::lock_guard<std::mutex> lg(guard);
@@ -262,7 +272,7 @@ void mgm::Cursor::place_cursor_at_locked(
             // drmModeSetCursor2 with hotspot support. However it appears to not actually
             // work on radeon and intel. There also seems to be precedent in weston for
             // implementing hotspot in this fashion.
-            output.move_cursor(geom::Point{dp.dx.as_int(), dp.dy.as_int()} - hotspot);
+            output.move_cursor(geom::Point{} + dp - hotspot);
             if (force_state || !output.has_cursor()) // TODO - or if orientation had changed - then set buffer..
             {
                 output.set_cursor(buffer);
