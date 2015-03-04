@@ -177,9 +177,7 @@ TEST_F(CustomWindowManagement, surface_release_removes_surface)
 
     EXPECT_CALL(window_manager, remove_surface(_,_));
 
-    EXPECT_TRUE(mir_surface_is_valid(surface));
     mir_surface_release_sync(surface);
-    Mock::VerifyAndClearExpectations(&window_manager);
 }
 
 TEST_F(CustomWindowManagement, surface_is_associated_with_correct_client)
