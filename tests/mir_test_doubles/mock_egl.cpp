@@ -94,7 +94,6 @@ mtd::MockEGL::MockEGL()
             return EGL_TRUE;
         }));
 
-    // TODO: Comment
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
         .WillByDefault(Return(fake_egl_surface));
 

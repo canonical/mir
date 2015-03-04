@@ -162,7 +162,7 @@ struct CursorClient
             [surface]
             {
                 return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed &&
-                   mir_surface_get_focus(surface) == mir_surface_focused;
+                    mir_surface_get_focus(surface) == mir_surface_focused;
             },
             std::chrono::seconds{5});
 
@@ -217,8 +217,8 @@ struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
     std::shared_ptr<mir::scene::PlacementStrategy> the_placement_strategy() override
     {
         return std::make_shared<mtf::DeclarativePlacementStrategy>(
-               FakeEventHubServerConfiguration::the_placement_strategy(),
-               client_geometries, client_depths);
+            FakeEventHubServerConfiguration::the_placement_strategy(),
+            client_geometries, client_depths);
     }
 
     std::shared_ptr<mg::Cursor> the_cursor() override
@@ -469,22 +469,19 @@ TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
 {
     using namespace ::testing;
 
-    {
     mtf::HeadlessNestedServerRunner nested_mir(new_connection());
     nested_mir.start_server();
 
     EXPECT_CALL(test_server_config().cursor, hide())
         .WillOnce(mt::WakeUp(&expectations_satisfied));
-    {    
+
+    { // Ensure we finalize the client prior stopping the nested server
     DisabledCursorClient client{nested_mir.new_connection(), client_name_1};
     client.run();
-
-    // Really required?
-    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
 
     expectations_satisfied.wait_for_at_most_seconds(60);
     expect_client_shutdown();
     }
+    
     nested_mir.stop_server();
-    }
 }

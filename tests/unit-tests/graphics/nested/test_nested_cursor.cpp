@@ -36,7 +36,6 @@ namespace
 {
 struct MockHostConnection : public mtd::StubHostConnection
 {
-    // TODO: Make override
     MOCK_METHOD1(set_cursor_image, void(mg::CursorImage const&));
     MOCK_METHOD0(hide_cursor, void());
 };
