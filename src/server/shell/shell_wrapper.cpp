@@ -104,3 +104,18 @@ int msh::ShellWrapper::get_surface_attribute(
 {
     return wrapped->get_surface_attribute(surface, attrib);
 }
+
+void msh::ShellWrapper::add_display(geometry::Rectangle const& area)
+{
+    wrapped->add_display(area);
+}
+
+void msh::ShellWrapper::remove_display(geometry::Rectangle const& area)
+{
+    wrapped->remove_display(area);
+}
+
+bool msh::ShellWrapper::handle(MirEvent const& event)
+{
+    return wrapped->handle(event);
+}

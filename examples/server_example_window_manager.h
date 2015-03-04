@@ -21,6 +21,9 @@
 
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
+#include "mir_toolkit/event.h"
+
+#include <memory>
 
 ///\example server_example_window_manager.h
 /// A window manager interface

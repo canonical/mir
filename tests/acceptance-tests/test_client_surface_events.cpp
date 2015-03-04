@@ -59,7 +59,7 @@ struct MockShell : msh::ShellWrapper
         return surface;
     }
 
-    std::shared_ptr<ms::Surface> latest_surface;
+    std::weak_ptr<ms::Surface> latest_surface;
 };
 
 struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
@@ -113,7 +113,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 
     std::shared_ptr<ms::Surface> the_latest_surface() const
     {
-        return the_mock_shell()->latest_surface;
+        return the_mock_shell()->latest_surface.lock();
     }
 
     void SetUp() override

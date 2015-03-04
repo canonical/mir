@@ -74,8 +74,6 @@ public:
 
     virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
 
-    virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
-
     virtual void raise(SurfaceSet const& surfaces) = 0;
 
     virtual ~BasicWindowManagerTools() = default;
@@ -244,11 +242,6 @@ private:
     auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override
     {
         return focus_controller->surface_at(cursor);
-    }
-
-    void raise(std::weak_ptr<scene::Surface> const& surface) override
-    {
-        focus_controller->raise(surface);
     }
 
     void raise(SurfaceSet const& surfaces) override

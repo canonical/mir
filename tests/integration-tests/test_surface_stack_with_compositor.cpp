@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/compositor/display_listener.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
@@ -109,6 +110,12 @@ private:
     mg::DisplaySyncGroup& secondary;
 };
 
+struct StubDisplayListener : mc::DisplayListener
+{
+    virtual void add_display(geom::Rectangle const& /*area*/) override {}
+    virtual void remove_display(geom::Rectangle const& /*area*/) override {}
+};
+
 struct SurfaceStackCompositor : public testing::Test
 {
     SurfaceStackCompositor() :
@@ -140,8 +147,10 @@ struct SurfaceStackCompositor : public testing::Test
     CountingDisplaySyncGroup stub_primary_db;
     CountingDisplaySyncGroup stub_secondary_db;
     StubDisplay stub_display{stub_primary_db, stub_secondary_db};
+    StubDisplayListener stub_display_listener;
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
         mt::fake_shared(renderer_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report};
 };
 }

@@ -28,20 +28,21 @@ namespace mir
 namespace compositor
 {
 class RendererFactory;
+class DisplayListener;
 
-// TODO this is ideally an implementation class. It is only in a public header
-// TODO because it is used in some example code (which probably needs rethinking).
 class DefaultDisplayBufferCompositorFactory : public DisplayBufferCompositorFactory
 {
 public:
     DefaultDisplayBufferCompositorFactory(
         std::shared_ptr<RendererFactory> const& renderer_factory,
+        std::shared_ptr<DisplayListener> const& display_listener,
         std::shared_ptr<CompositorReport> const& report);
 
     std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer);
 
 private:
     std::shared_ptr<RendererFactory> const renderer_factory;
+    std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
 };
 

@@ -19,6 +19,7 @@
 
 #include "default_display_buffer_compositor.h"
 
+#include "mir/compositor/display_listener.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/renderer.h"
@@ -37,11 +38,19 @@ namespace mg = mir::graphics;
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Renderer> const& renderer,
+    std::shared_ptr<DisplayListener> const& display_listener,
     std::shared_ptr<mc::CompositorReport> const& report) :
     display_buffer(display_buffer),
     renderer(renderer),
+    display_listener{display_listener},
     report(report)
 {
+    display_listener->add_display(display_buffer.view_area());
+}
+
+mc::DefaultDisplayBufferCompositor::~DefaultDisplayBufferCompositor() noexcept
+{
+    display_listener->remove_display(display_buffer.view_area());
 }
 
 void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
@@ -55,6 +64,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         element->occluded();
 
     mg::RenderableList renderable_list;
+    renderable_list.reserve(scene_elements.size());
     for (auto const& element : scene_elements)
     {
         element->rendered();
