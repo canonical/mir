@@ -28,6 +28,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
@@ -77,12 +78,15 @@ mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev) :
 {
 }
 
-void mga::FBDevice::commit(
-    DisplayName,
-    LayerList&,
-    SwappingGLContext const& context,
-    RenderableListCompositor const&)
+void mga::FBDevice::commit(std::list<DisplayContents> const& contents)
 {
+    auto primary_contents = std::find_if(contents.begin(), contents.end(),
+        [](mga::DisplayContents const& c) {
+            return (c.name == mga::DisplayName::primary);
+    });
+    if (primary_contents == contents.end()) return;
+    auto& context = primary_contents->context;
+    
     context.swap_buffers();
     auto const& buffer = context.last_rendered_buffer();
     auto native_buffer = buffer->native_buffer_handle();
