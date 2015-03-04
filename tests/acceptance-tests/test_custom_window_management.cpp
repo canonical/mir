@@ -184,37 +184,28 @@ TEST_F(CustomWindowManagement, surface_release_removes_surface)
 
 TEST_F(CustomWindowManagement, surface_is_associated_with_correct_client)
 {
-    const int no_of_clients = 10;
     start_server();
 
+    const int no_of_clients = 17;
     std::shared_ptr<ms::Session> session[no_of_clients];
     std::vector<Client> client; client.reserve(no_of_clients);
 
     for (int i = 0; i != no_of_clients; ++i)
     {
-        EXPECT_CALL(window_manager, add_session(_))
-            .WillOnce(SaveArg<0>(&session[i]));
+        EXPECT_CALL(window_manager, add_session(_)).WillOnce(SaveArg<0>(&session[i]));
+
         client.emplace_back(connect_client());
     }
 
     for (int i = 0; i != no_of_clients; ++i)
     {
+        // verify expectations for each client in turn
         Mock::VerifyAndClearExpectations(&window_manager);
 
-        std::shared_ptr<ms::Session> session_for_add;
-        std::shared_ptr<ms::Session> session_for_remove;
-
-        EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(DoAll(
-            SaveArg<0>(&session_for_add),
-            Invoke(NiceMockWindowManager::add_surface_default)));
-
-        EXPECT_CALL(window_manager, remove_surface(_,_))
-            .WillOnce(SaveArg<0>(&session_for_remove));
+        EXPECT_CALL(window_manager, add_surface(session[i],_,_));
+        EXPECT_CALL(window_manager, remove_surface(session[i],_));
 
         auto const surface = client[i].surface_create();
         mir_surface_release_sync(surface);
-
-        EXPECT_THAT(session_for_add, Eq(session[i])) << "i=" << i;
-        EXPECT_THAT(session_for_remove, Eq(session[i])) << "i=" << i;
     }
 }
