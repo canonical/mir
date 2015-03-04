@@ -26,8 +26,6 @@
 #include "mir_test_framework/declarative_placement_strategy.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
-#include "mir_test_framework/executable_path.h"
-#include "mir_test_framework/temporary_environment_value.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/spin_wait.h"
@@ -157,8 +155,8 @@ struct CursorClient
         bool success = mt::spin_wait_for_condition_or_timeout(
             [surface]
             {
-                return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed
-                   && mir_surface_get_focus(surface) == mir_surface_focused;
+                return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed &&
+                   mir_surface_get_focus(surface) == mir_surface_focused;
             },
             std::chrono::seconds{5});
 
@@ -181,10 +179,9 @@ struct DisabledCursorClient : CursorClient
 
     void setup_cursor(MirSurface* surface) override
     {
-        (void) surface;
-        //        auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
-        //        mir_wait_for(mir_surface_configure_cursor(surface, conf));
-        //        mir_cursor_configuration_destroy(conf);
+        auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+        mir_wait_for(mir_surface_configure_cursor(surface, conf));
+        mir_cursor_configuration_destroy(conf);
     }
 };
 
@@ -235,10 +232,6 @@ struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
 
 struct TestClientCursorAPI : mtf::InProcessServer
 {
-    TestClientCursorAPI()
-    {
-    }
-    
     mir::DefaultServerConfiguration& server_config() override
     {
         return server_configuration_;
