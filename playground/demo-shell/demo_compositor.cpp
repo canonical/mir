@@ -122,6 +122,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         viewport == display_buffer.view_area() &&  // no bypass while zoomed
         display_buffer.post_renderables_if_optimizable(renderable_list))
     {
+        report->renderables_in_frame(this, renderable_list);
         renderer.suspend();
     }
     else
@@ -134,6 +135,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         renderer.render(renderable_list);
 
         display_buffer.gl_swap_buffers();
+        report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);
 
         // Release buffers back to the clients now that the swap has returned.
