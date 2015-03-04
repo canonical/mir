@@ -18,6 +18,7 @@
 
 #include "mir/shell/generic_shell.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/scene/session.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -25,10 +26,12 @@
 #include "mir_test_doubles/mock_window_manager.h"
 
 #include "mir_test/fake_shared.h"
+#include "mir_test/signal.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -37,6 +40,7 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 using namespace testing;
+using namespace std::literals::chrono_literals;
 
 namespace
 {
@@ -206,4 +210,55 @@ TEST_F(CustomWindowManagement, surface_is_associated_with_correct_client)
         auto const surface = client[i].surface_create();
         mir_surface_release_sync(surface);
     }
+}
+
+// TODO enable this (Currently causes a segfault after test "passes")
+TEST_F(CustomWindowManagement, DISABLED_state_change_requests_are_associated_with_correct_surface)
+{
+    start_server();
+    auto const client = connect_client();
+
+    const int no_of_surfaces = 17;
+    std::shared_ptr<ms::Surface> server_surface[no_of_surfaces];
+    MirSurface* client_surface[no_of_surfaces] = {};
+
+    for (int i = 0; i != no_of_surfaces; ++i)
+    {
+        auto const grab_server_surface = [i, &server_surface](
+            std::shared_ptr<ms::Session> const& session,
+            ms::SurfaceCreationParameters const& params,
+            std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
+            {
+                auto const result = build(session, params);
+                server_surface[i] = session->surface(result);
+                return result;
+            };
+
+        EXPECT_CALL(window_manager, add_surface(_,_,_))
+            .WillOnce(Invoke(grab_server_surface));
+
+        client_surface[i] = client.surface_create();
+    }
+
+    for (int i = 0; i != no_of_surfaces; ++i)
+    {
+        // verify expectations for each surface in turn
+        Mock::VerifyAndClearExpectations(&window_manager);
+
+        mt::Signal received;
+
+        EXPECT_CALL(window_manager, handle_set_state(server_surface[i],_))
+            .WillOnce(Invoke([&](std::shared_ptr<ms::Surface> const&, MirSurfaceState value)
+                { received.raise(); return value; }));
+
+        mir_surface_set_state(client_surface[i], mir_surface_state_maximized);
+
+        received.wait_for(400ms);
+    }
+
+    for (auto surface: server_surface)
+        surface.reset();
+
+    for (auto surface: client_surface)
+        mir_surface_release_sync(surface);
 }
