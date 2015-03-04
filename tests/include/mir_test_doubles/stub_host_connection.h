@@ -66,6 +66,13 @@ public:
     {
         return {{},{}};
     }
+
+    void set_cursor_image(graphics::CursorImage const&)
+    {
+    }
+    void hide_cursor()
+    {
+    }
 };
 
 

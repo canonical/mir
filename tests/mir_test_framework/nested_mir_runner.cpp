@@ -17,6 +17,7 @@
  */
 
 #include "mir/main_loop.h"
+#include "mir/fd.h"
 
 #include "mir_test_framework/nested_mir_runner.h"
 
@@ -103,5 +104,17 @@ mtf::NestedMirRunner::~NestedMirRunner()
 
     EXPECT_FALSE(nested_server_running);
 
+    connections.clear();
+
     if (nested_server_thread.joinable()) nested_server_thread.join();
+}
+
+std::string mtf::NestedMirRunner::new_connection()
+{
+    auto fd = open_client_socket();
+    connections.push_back(fd);
+
+    char connect_string[64] = {0};
+    sprintf(connect_string, "fd://%d", fd.operator int());
+    return connect_string;
 }

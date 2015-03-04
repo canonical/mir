@@ -23,6 +23,7 @@
 #include "default_display_configuration_policy.h"
 #include "nested/mir_client_host_connection.h"
 #include "nested/nested_display.h"
+#include "nested/nested_cursor.h"
 #include "offscreen/display.h"
 #include "software_cursor.h"
 
@@ -168,6 +169,9 @@ mir::DefaultServerConfiguration::the_cursor()
     return cursor(
         [this]() -> std::shared_ptr<mg::Cursor>
         {
+            if (the_options()->is_set(options::host_socket_opt))
+                return std::make_shared<mgn::Cursor>(the_host_connection(), the_default_cursor_image());
+            
             // We try to create a hardware cursor, if this fails we use a software cursor
             auto hardware_cursor = the_display()->create_hardware_cursor(the_default_cursor_image());
             if (hardware_cursor)

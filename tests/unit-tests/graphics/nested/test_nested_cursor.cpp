@@ -19,6 +19,7 @@
 #include "src/server/graphics/nested/nested_cursor.h"
 #include "mir/graphics/cursor_image.h"
 
+#include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_host_connection.h"
 
 #include <gtest/gtest.h>
@@ -28,7 +29,8 @@ namespace mg = mir::graphics;
 namespace mgn = mg::nested;
 namespace geom = mir::geometry;
 
-namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
 
 namespace
 {
@@ -62,7 +64,7 @@ TEST_F(NestedCursor, sets_default_cursor_image)
 {
     EXPECT_CALL(*connection, set_cursor_image(CursorImageEquals(a_cursor_image.as_argb_8888()))).Times(1);
 
-    mgn::Cursor cursor(connection, a_cursor_image);
+    mgn::Cursor cursor(connection, mt::fake_shared(a_cursor_image));
 }
 
 TEST_F(NestedCursor, can_set_other_images)
@@ -70,7 +72,7 @@ TEST_F(NestedCursor, can_set_other_images)
     EXPECT_CALL(*connection, set_cursor_image(CursorImageEquals(a_cursor_image.as_argb_8888()))).Times(1);
     EXPECT_CALL(*connection, set_cursor_image(CursorImageEquals(another_cursor_image.as_argb_8888()))).Times(1);
 
-    mgn::Cursor cursor(connection, a_cursor_image);
+    mgn::Cursor cursor(connection, mt::fake_shared(a_cursor_image));
     cursor.show(another_cursor_image);
 }
 
@@ -81,7 +83,7 @@ TEST_F(NestedCursor, hides_cursor)
     EXPECT_CALL(*connection, hide_cursor()).Times(1);
     EXPECT_CALL(*connection, set_cursor_image(CursorImageEquals(another_cursor_image.as_argb_8888()))).Times(1);
 
-    mgn::Cursor cursor(connection, a_cursor_image);
+    mgn::Cursor cursor(connection, mt::fake_shared(a_cursor_image));
     cursor.hide();
     cursor.show(another_cursor_image);
 }

@@ -1,3 +1,4 @@
+
 include_directories(
     ${PROJECT_SOURCE_DIR}/include/client
 )
@@ -9,5 +10,6 @@ add_library(
   nested_display_configuration.cpp
   nested_output.cpp
   mir_client_host_connection.cpp
+  nested_cursor.cpp
 )
 
