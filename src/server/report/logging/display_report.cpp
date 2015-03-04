@@ -151,6 +151,7 @@ void mrl::DisplayReport::report_vsync(unsigned int display_id)
 {
     using namespace std::chrono;
     seconds const static report_interval{1};
+    std::unique_lock<decltype(vsync_event_mutex)> lk(vsync_event_mutex);
     auto now = clock->now();
     event_map[display_id]++;
     if (now > last_report + report_interval)

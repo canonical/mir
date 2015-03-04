@@ -25,6 +25,7 @@
 
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -67,6 +68,7 @@ class DisplayReport : public graphics::DisplayReport
   private:
     std::shared_ptr<mir::logging::Logger> const logger;
     std::shared_ptr<time::Clock> const clock;
+    std::mutex vsync_event_mutex;
     mir::time::Timestamp last_report;
     std::unordered_map<unsigned int, unsigned int> event_map;
 };
