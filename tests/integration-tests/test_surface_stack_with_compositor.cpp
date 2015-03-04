@@ -150,7 +150,6 @@ struct SurfaceStackCompositor : public testing::Test
     StubDisplayListener stub_display_listener;
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
         mt::fake_shared(renderer_factory),
-        mt::fake_shared(stub_display_listener),
         null_comp_report};
 };
 }
@@ -161,6 +160,7 @@ TEST_F(SurfaceStackCompositor, composes_on_start_if_told_to_in_constructor)
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, true);
     mt_compositor.start();
 
@@ -174,6 +174,7 @@ TEST_F(SurfaceStackCompositor, does_not_composes_on_start_if_told_not_to_in_cons
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
     mt_compositor.start();
 
@@ -187,6 +188,7 @@ TEST_F(SurfaceStackCompositor, adding_a_surface_that_has_been_swapped_triggers_a
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
     mt_compositor.start();
 
@@ -208,6 +210,7 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
     mt_compositor.start();
 
@@ -230,6 +233,7 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
     mt_compositor.start();
 
@@ -250,6 +254,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
     mt_compositor.start();
 
@@ -274,6 +279,7 @@ TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
 
     mt_compositor.start();
@@ -292,6 +298,7 @@ TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
 
     mt_compositor.start();
@@ -313,6 +320,7 @@ TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
 
     mt_compositor.start();

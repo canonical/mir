@@ -17,7 +17,6 @@ add_library(eglapp STATIC
 
 add_library(exampleserverconfig STATIC
   server_example_canonical_window_manager.cpp
-  server_example_generic_shell.cpp
   server_example_display_configuration_policy.cpp
   server_example_input_event_filter.cpp
   server_example_log_options.cpp
