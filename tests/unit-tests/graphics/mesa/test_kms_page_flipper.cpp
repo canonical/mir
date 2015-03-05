@@ -45,10 +45,11 @@ class KMSPageFlipperTest : public ::testing::Test
 {
 public:
     KMSPageFlipperTest()
-        : page_flipper{mock_drm.fake_drm.fd()}
+        : page_flipper{mock_drm.fake_drm.fd(), mt::fake_shared(report)}
     {
     }
 
+    testing::NiceMock<mtd::MockDisplayReport> report;
     testing::NiceMock<mtd::MockDRM> mock_drm;
     mgm::KMSPageFlipper page_flipper;
 };
@@ -118,6 +119,24 @@ TEST_F(KMSPageFlipperTest, wait_for_flip_handles_drm_event)
     /* Fake a DRM event */
     EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
 
+    page_flipper.wait_for_flip(crtc_id);
+}
+
+TEST_F(KMSPageFlipperTest, wait_for_flip_reports_vsync)
+{
+    using namespace testing;
+    uint32_t const crtc_id{10};
+    uint32_t const fb_id{101};
+    void* user_data{nullptr};
+    ON_CALL(mock_drm, drmModePageFlip(_, _, _, _, _))
+        .WillByDefault(DoAll(SaveArg<4>(&user_data), Return(0)));
+    ON_CALL(mock_drm, drmHandleEvent(_, _))
+        .WillByDefault(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
+
+    EXPECT_CALL(report, report_vsync(crtc_id));
+
+    page_flipper.schedule_flip(crtc_id, fb_id);
+    EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
     page_flipper.wait_for_flip(crtc_id);
 }
 

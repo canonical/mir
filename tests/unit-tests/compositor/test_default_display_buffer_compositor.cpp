@@ -62,11 +62,6 @@ struct StubSceneElement : mc::SceneElement
         return renderable_;
     }
 
-    bool is_a_surface() const
-    {
-        return true;
-    }
-
     void rendered()
     {
     }
@@ -143,6 +138,8 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .InSequence(seq)
         .WillOnce(Return(true));
+    EXPECT_CALL(*report, renderables_in_frame(_,_))
+        .InSequence(seq);
     EXPECT_CALL(mock_renderer, suspend())
         .InSequence(seq);
     EXPECT_CALL(*report, rendered_frame(_))
@@ -171,6 +168,8 @@ TEST_F(DefaultDisplayBufferCompositor, rendering_reports_everything)
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .InSequence(seq)
         .WillOnce(Return(false));
+    EXPECT_CALL(*report, renderables_in_frame(_,_))
+        .InSequence(seq);
     EXPECT_CALL(*report, rendered_frame(_))
         .InSequence(seq);
     EXPECT_CALL(*report, finished_frame(_))
@@ -313,14 +312,12 @@ struct MockSceneElement : mc::SceneElement
 {
     MockSceneElement(std::shared_ptr<mg::Renderable> const& renderable)
     {
-        ON_CALL(*this, is_a_surface())
-            .WillByDefault(testing::Return(true));
         ON_CALL(*this, renderable())
             .WillByDefault(testing::Return(renderable));
     }
 
     MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
-    MOCK_CONST_METHOD0(is_a_surface, bool());
+    MOCK_CONST_METHOD0(decoration, mc::Decoration const&());
     MOCK_METHOD0(rendered, void());
     MOCK_METHOD0(occluded, void());
 };
