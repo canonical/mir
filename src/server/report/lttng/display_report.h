@@ -36,17 +36,16 @@ public:
     DisplayReport() = default;
     virtual ~DisplayReport() noexcept(true) = default;
 
-    virtual void report_successful_setup_of_native_resources();
-    virtual void report_successful_egl_make_current_on_construction();
-    virtual void report_successful_egl_buffer_swap_on_construction();
-    virtual void report_successful_display_construction();
-    virtual void report_egl_configuration(EGLDisplay disp, EGLConfig cfg);
-    virtual void report_successful_drm_mode_set_crtc_on_construction();
-    virtual void report_drm_master_failure(int error);
-    virtual void report_vt_switch_away_failure();
-    virtual void report_vt_switch_back_failure();
-    virtual void report_hwc_composition_in_use(int major, int minor);
-    virtual void report_gpu_composition_in_use();
+    virtual void report_successful_setup_of_native_resources() override;
+    virtual void report_successful_egl_make_current_on_construction() override;
+    virtual void report_successful_egl_buffer_swap_on_construction() override;
+    virtual void report_successful_display_construction() override;
+    virtual void report_egl_configuration(EGLDisplay disp, EGLConfig cfg) override;
+    virtual void report_successful_drm_mode_set_crtc_on_construction() override;
+    virtual void report_drm_master_failure(int error) override;
+    virtual void report_vt_switch_away_failure() override;
+    virtual void report_vt_switch_back_failure() override;
+    virtual void report_vsync(unsigned int display_id) override;
 
 private:
     ServerTracepointProvider tp_provider;

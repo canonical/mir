@@ -135,9 +135,12 @@ mga::Display::Display(
     std::shared_ptr<GLConfig> const& gl_config,
     std::shared_ptr<DisplayReport> const& display_report,
     mga::OverlayOptimization overlay_option) :
+    display_report{display_report},
     display_buffer_builder{display_buffer_builder},
     hwc_config{display_buffer_builder->create_hwc_configuration()},
-    hotplug_subscription{hwc_config->subscribe_to_config_changes(std::bind(&mga::Display::on_hotplug, this))},
+    hotplug_subscription{hwc_config->subscribe_to_config_changes(
+        std::bind(&mga::Display::on_hotplug, this),
+        std::bind(&mga::Display::on_vsync, this, std::placeholders::_1))},
     primary_attribs(hwc_config->active_attribs_for(mga::DisplayName::primary)),
     external_attribs(hwc_config->active_attribs_for(mga::DisplayName::external)),
     config(
@@ -147,30 +150,33 @@ mga::Display::Display(
         mir_power_mode_off),
     gl_context{config.primary().current_format, *gl_config, *display_report},
     display_device(display_buffer_builder->create_display_device()),
-    primary_db{create_display_buffer(
-        display_device,
-        mga::DisplayName::primary,
-        *display_buffer_builder,
-        primary_attribs,
-        gl_program_factory,
-        gl_context,
-        overlay_option)},
     display_change_pipe(new DisplayChangePipe),
-    gl_program_factory(gl_program_factory)
+    gl_program_factory(gl_program_factory),
+    displays(
+        display_device,
+        create_display_buffer(
+            display_device,
+            mga::DisplayName::primary,
+            *display_buffer_builder,
+            primary_attribs,
+            gl_program_factory,
+            gl_context,
+            overlay_option))
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
     set_powermode_all_displays(*hwc_config, config, mir_power_mode_on);
 
     if (config.external().connected)
     {
-        external_db = create_display_buffer(
-            display_device,
-            mga::DisplayName::external,
-            *display_buffer_builder,
-            external_attribs,
-            gl_program_factory,
-            gl_context,
-            mga::OverlayOptimization::disabled);
+        displays.add(mga::DisplayName::external,
+            create_display_buffer(
+                display_device,
+                mga::DisplayName::external,
+                *display_buffer_builder,
+                external_attribs,
+                gl_program_factory,
+                gl_context,
+                mga::OverlayOptimization::disabled));
     }
 
     display_report->report_successful_setup_of_native_resources();
@@ -190,8 +196,8 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
 {
     if (configuration_dirty)
     {
-        auto attribs = hwc_config->active_attribs_for(mga::DisplayName::external);
-        if (attribs.connected)
+        external_attribs = hwc_config->active_attribs_for(mga::DisplayName::external);
+        if (external_attribs.connected)
             power_mode(mga::DisplayName::external, *hwc_config, config.external(), mir_power_mode_on);
         else
             config.external().power_mode = mir_power_mode_off;
@@ -199,34 +205,30 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
         config = mga::DisplayConfiguration(
             hwc_config->active_attribs_for(mga::DisplayName::primary),
             config.primary().power_mode,
-            attribs,
+            external_attribs,
             config.external().power_mode);
         configuration_dirty = false;
-
-        if (config.external().connected)
-            external_db = create_display_buffer(
-                display_device,
-                mga::DisplayName::external,
-                *display_buffer_builder,
-                attribs,
-                gl_program_factory,
-                gl_context,
-                mga::OverlayOptimization::disabled);
-        else
-            external_db.reset();
     }
-
 }
 
 void mga::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     update_configuration(lock);
+    if ((config.external().connected) && !displays.display_present(mga::DisplayName::external))
+        displays.add(mga::DisplayName::external,
+            create_display_buffer(
+                display_device,
+                mga::DisplayName::external,
+                *display_buffer_builder,
+                external_attribs,
+                gl_program_factory,
+                gl_context,
+                mga::OverlayOptimization::disabled));
+    if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
+        displays.remove(mga::DisplayName::external);
 
-    if (external_db && config.external().power_mode == mir_power_mode_on)
-        f(*external_db);
-    if (config.primary().power_mode == mir_power_mode_on)
-        f(*primary_db);
+    f(displays);
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
@@ -252,12 +254,12 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
         if (config.primary().id == output.id)
         {
             power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
-            primary_db->configure(output.power_mode, output.orientation);
+            displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation);
         }
         else if (config.external().connected)
         {
             power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
-            if (external_db) external_db->configure(output.power_mode, output.orientation);
+            displays.configure(mga::DisplayName::external, output.power_mode, output.orientation);
         }
     });
 }
@@ -268,6 +270,11 @@ void mga::Display::on_hotplug()
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     configuration_dirty = true;
     display_change_pipe->notify_change();
+}
+
+void mga::Display::on_vsync(DisplayName name) const
+{
+    display_report->report_vsync(name);
 }
 
 void mga::Display::register_configuration_change_handler(

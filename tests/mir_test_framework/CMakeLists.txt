@@ -46,6 +46,7 @@ set(
   declarative_placement_strategy.cpp
   fake_event_hub_server_configuration.cpp
   any_surface.cpp
+  headless_nested_server_runner.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS

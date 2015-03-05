@@ -19,6 +19,7 @@
 #include "src/server/compositor/default_display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "src/server/report/null_report_factory.h"
+#include "mir/compositor/display_listener.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/renderer.h"
 #include "mir/geometry/rectangle.h"
@@ -62,11 +63,6 @@ struct StubSceneElement : mc::SceneElement
         return renderable_;
     }
 
-    bool is_a_surface() const
-    {
-        return true;
-    }
-
     void rendered()
     {
     }
@@ -87,6 +83,12 @@ auto make_scene_elements(std::initializer_list<std::shared_ptr<mg::Renderable>> 
         elements.push_back(std::make_shared<StubSceneElement>(entry));
     return elements;
 }
+
+struct StubDisplayListener : mc::DisplayListener
+{
+    virtual void add_display(geom::Rectangle const& /*area*/) override {}
+    virtual void remove_display(geom::Rectangle const& /*area*/) override {}
+};
 
 struct DefaultDisplayBufferCompositor : public testing::Test
 {
@@ -110,6 +112,7 @@ struct DefaultDisplayBufferCompositor : public testing::Test
     std::shared_ptr<mtd::FakeRenderable> small;
     std::shared_ptr<mtd::FakeRenderable> big;
     std::shared_ptr<mtd::FakeRenderable> fullscreen;
+    StubDisplayListener stub_display_listener;
 };
 }
 
@@ -128,6 +131,7 @@ TEST_F(DefaultDisplayBufferCompositor, render)
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(mock_renderer),
+        mt::fake_shared(stub_display_listener),
         mr::null_compositor_report());
     compositor.composite(make_scene_elements({}));
 }
@@ -143,6 +147,8 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .InSequence(seq)
         .WillOnce(Return(true));
+    EXPECT_CALL(*report, renderables_in_frame(_,_))
+        .InSequence(seq);
     EXPECT_CALL(mock_renderer, suspend())
         .InSequence(seq);
     EXPECT_CALL(*report, rendered_frame(_))
@@ -156,6 +162,7 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(mock_renderer),
+        mt::fake_shared(stub_display_listener),
         report);
     compositor.composite(make_scene_elements({}));
 }
@@ -171,6 +178,8 @@ TEST_F(DefaultDisplayBufferCompositor, rendering_reports_everything)
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .InSequence(seq)
         .WillOnce(Return(false));
+    EXPECT_CALL(*report, renderables_in_frame(_,_))
+        .InSequence(seq);
     EXPECT_CALL(*report, rendered_frame(_))
         .InSequence(seq);
     EXPECT_CALL(*report, finished_frame(_))
@@ -182,6 +191,7 @@ TEST_F(DefaultDisplayBufferCompositor, rendering_reports_everything)
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(mock_renderer),
+        mt::fake_shared(stub_display_listener),
         report);
     compositor.composite(make_scene_elements({}));
 }
@@ -207,6 +217,7 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(mock_renderer),
+        mt::fake_shared(stub_display_listener),
         mr::null_compositor_report());
 
     compositor.composite(make_scene_elements({
@@ -261,6 +272,7 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(mock_renderer),
+        mt::fake_shared(stub_display_listener),
         mr::null_compositor_report());
 
     compositor.composite(make_scene_elements({}));
@@ -298,6 +310,7 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(mock_renderer),
+        mt::fake_shared(stub_display_listener),
         mr::null_compositor_report());
     compositor.composite(make_scene_elements({
         window0, //not occluded
@@ -313,14 +326,12 @@ struct MockSceneElement : mc::SceneElement
 {
     MockSceneElement(std::shared_ptr<mg::Renderable> const& renderable)
     {
-        ON_CALL(*this, is_a_surface())
-            .WillByDefault(testing::Return(true));
         ON_CALL(*this, renderable())
             .WillByDefault(testing::Return(renderable));
     }
 
     MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
-    MOCK_CONST_METHOD0(is_a_surface, bool());
+    MOCK_CONST_METHOD0(decoration, mc::Decoration const&());
     MOCK_METHOD0(rendered, void());
     MOCK_METHOD0(occluded, void());
 };
@@ -341,6 +352,7 @@ TEST_F(DefaultDisplayBufferCompositor, marks_rendered_scene_elements)
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(mock_renderer),
+        mt::fake_shared(stub_display_listener),
         mr::null_compositor_report());
 
     compositor.composite({element0_rendered, element1_rendered});
@@ -364,6 +376,7 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(mock_renderer),
+        mt::fake_shared(stub_display_listener),
         mr::null_compositor_report());
 
     compositor.composite({element0_occluded, element1_rendered, element2_occluded});

@@ -35,10 +35,11 @@ class CompositorReport : public compositor::CompositorReport
 public:
     CompositorReport() = default;
     virtual ~CompositorReport() = default;
-    void added_display(int width, int height, int x, int y, SubCompositorId id = 0) override;
-    void began_frame(SubCompositorId id = 0) override;
-    void rendered_frame(SubCompositorId id = 0) override;
-    void finished_frame(SubCompositorId id = 0) override;
+    void added_display(int width, int height, int x, int y, SubCompositorId id) override;
+    void began_frame(SubCompositorId id) override;
+    void renderables_in_frame(SubCompositorId id, graphics::RenderableList const& renderables) override;
+    void rendered_frame(SubCompositorId id) override;
+    void finished_frame(SubCompositorId id) override;
     void started() override;
     void stopped() override;
     void scheduled() override;

@@ -554,7 +554,7 @@ TEST_F(Display, keeps_subscription_to_hotplug)
     auto use_count_before = subscription.use_count();
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
     {
-        EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
+        EXPECT_CALL(mock_config, subscribe_to_config_changes(_,_))
             .WillOnce(Return(subscription));
     });
     {
@@ -596,7 +596,7 @@ TEST_F(Display, will_requery_display_configuration_after_hotplug)
 
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
     {
-        EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
+        EXPECT_CALL(mock_config, subscribe_to_config_changes(_,_))
             .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(subscription)));
         EXPECT_CALL(mock_config, active_attribs_for(mga::DisplayName::primary))
             .Times(2)
@@ -645,7 +645,7 @@ TEST_F(Display, returns_correct_dbs_with_external_and_primary_output_at_start)
                 return mga::DisplayAttribs{
                     {20,20}, {4,4}, 50.0f, external_connected, mir_pixel_format_abgr_8888, 2};
             }));
-        EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
+        EXPECT_CALL(mock_config, subscribe_to_config_changes(_,_))
             .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(std::make_shared<char>('2'))));
     });
 
@@ -656,28 +656,35 @@ TEST_F(Display, returns_correct_dbs_with_external_and_primary_output_at_start)
         null_display_report,
         mga::OverlayOptimization::enabled);
 
-    auto group_count = 0; 
-    auto db_group_counter = [&](mg::DisplaySyncGroup&) {
+    auto group_count = 0;
+    auto db_count = 0;
+    auto db_group_counter = [&](mg::DisplaySyncGroup& group) {
         group_count++;
+        group.for_each_display_buffer([&](mg::DisplayBuffer&) {db_count++;});
     };
     display.for_each_display_sync_group(db_group_counter);
-    EXPECT_THAT(group_count, Eq(2));
+    EXPECT_THAT(group_count, Eq(1));
+    EXPECT_THAT(db_count, Eq(2));
 
     //hotplug external away
     external_connected = false;
     hotplug_fn();
 
     group_count = 0;
+    db_count = 0;
     display.for_each_display_sync_group(db_group_counter);
     EXPECT_THAT(group_count, Eq(1));
+    EXPECT_THAT(db_count, Eq(1));
 
     //hotplug external back 
     external_connected = true;
     hotplug_fn();
 
     group_count = 0;
+    db_count = 0;
     display.for_each_display_sync_group(db_group_counter);
-    EXPECT_THAT(group_count, Eq(2));
+    EXPECT_THAT(group_count, Eq(1));
+    EXPECT_THAT(db_count, Eq(2));
 }
 
 TEST_F(Display, turns_external_display_on_with_hotplug)
@@ -687,7 +694,7 @@ TEST_F(Display, turns_external_display_on_with_hotplug)
     bool external_connected = true;
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
     {
-        EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
+        EXPECT_CALL(mock_config, subscribe_to_config_changes(_,_))
             .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(std::make_shared<char>('2'))));
         ON_CALL(mock_config, active_attribs_for(mga::DisplayName::primary))
             .WillByDefault(Return(
@@ -771,4 +778,26 @@ TEST_F(Display, configures_external_display)
         output.power_mode = mir_power_mode_off;
     });
     display.configure(*configuration);
+}
+
+TEST_F(Display, reports_vsync)
+{
+    using namespace testing;
+    std::function<void(mga::DisplayName)> vsync_fn = [](mga::DisplayName){};
+    auto report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
+    EXPECT_CALL(*report, report_vsync(_));
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        EXPECT_CALL(mock_config, subscribe_to_config_changes(_,_))
+            .WillOnce(DoAll(SaveArg<1>(&vsync_fn), Return(std::make_shared<char>('2'))));
+    });
+
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        report,
+        mga::OverlayOptimization::enabled);
+
+    vsync_fn(mga::DisplayName::primary);
 }

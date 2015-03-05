@@ -122,7 +122,7 @@ TEST_F(HwcFbDevice, hwc10_rejects_overlays)
     mtd::StubRenderableListCompositor stub_compositor;
     auto renderable1 = std::make_shared<mtd::StubRenderable>();
     auto renderable2 = std::make_shared<mtd::StubRenderable>();
-    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    mg::RenderableList renderlist
     {
         renderable1,
         renderable2
@@ -172,5 +172,6 @@ TEST_F(HwcFbDevice, hwc10_post)
     EXPECT_CALL(*mock_fb_device, post_interface(mock_fb_device.get(), &stub_native_buffer->native_handle))
         .InSequence(seq);
 
-    device.commit(primary, list, mock_context, stub_compositor);
+    mga::DisplayContents content{primary, list, mock_context, stub_compositor};
+    device.commit({content});
 }

@@ -27,7 +27,10 @@
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/headless_nested_server_runner.h"
+#include "mir_test_framework/any_surface.h"
 #include "mir_test/wait_condition.h"
+#include "mir_test/spin_wait.h"
 
 #include "mir_test_doubles/mock_egl.h"
 
@@ -151,75 +154,23 @@ std::vector<geom::Rectangle> const display_geometry
 
 std::chrono::seconds const timeout{10};
 
-class NestedMirRunner : mir::Server
+class NestedMirRunner : public mtf::HeadlessNestedServerRunner
 {
 public:
     NestedMirRunner(std::string const& connection_string)
+        : mtf::HeadlessNestedServerRunner(connection_string)
     {
-        FakeCommandLine nested_command_line(connection_string);
-
-        set_command_line(nested_command_line.argc, nested_command_line.argv);
-
-        override_the_host_lifecycle_event_listener([this]
+        server.override_the_host_lifecycle_event_listener([this]
            {
                return the_mock_host_lifecycle_event_listener();
            });
-
-        add_init_callback([&]
-            {
-                auto const main_loop = the_main_loop();
-                // By enqueuing the notification code in the main loop, we are
-                // ensuring that the server has really and fully started before
-                // leaving start_mir_server().
-                main_loop->enqueue(
-                    this,
-                    [&]
-                    {
-                        std::lock_guard<std::mutex> lock(nested_mutex);
-                        nested_server_running = true;
-                        nested_started.notify_one();
-                    });
-            });
-
-        apply_settings();
-
-        nested_server_thread = std::thread([&]
-            {
-                try
-                {
-                    run();
-                }
-                catch (std::exception const& e)
-                {
-                    FAIL() << e.what();
-                }
-                std::lock_guard<std::mutex> lock(nested_mutex);
-                nested_server_running = false;
-                nested_started.notify_one();
-            });
-
-        std::unique_lock<std::mutex> lock(nested_mutex);
-        nested_started.wait_for(lock, timeout, [&] { return nested_server_running; });
-
-        if (!nested_server_running)
-        {
-            throw std::runtime_error{"Failed to start nested server"};
-        }
+        start_server();
     }
 
     ~NestedMirRunner()
     {
-        stop();
-
-        std::unique_lock<std::mutex> lock(nested_mutex);
-        nested_started.wait_for(lock, timeout, [&] { return !nested_server_running; });
-
-        EXPECT_FALSE(nested_server_running);
-
-        if (nested_server_thread.joinable()) nested_server_thread.join();
+        stop_server();
     }
-
-    using mir::Server::the_display;
 
     std::shared_ptr<MockHostLifecycleEventListener> the_mock_host_lifecycle_event_listener()
     {
@@ -230,10 +181,6 @@ public:
     }
 
 private:
-    std::thread nested_server_thread;
-    std::mutex nested_mutex;
-    std::condition_variable nested_started;
-    bool nested_server_running{false};
     mir::CachedPtr<MockHostLifecycleEventListener> mock_host_lifecycle_event_listener;
 };
 
@@ -258,7 +205,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
     void trigger_lifecycle_event(MirLifecycleState const lifecycle_state)
     {
-        auto const app = server.the_focus_controller()->focussed_application().lock();
+        auto const app = server.the_focus_controller()->focused_session();
 
         EXPECT_TRUE(app != nullptr) << "Nested server not connected";
 
@@ -283,7 +230,7 @@ TEST_F(NestedServer, sees_expected_outputs)
 {
     NestedMirRunner nested_mir{new_connection()};
 
-    auto const display = nested_mir.the_display();
+    auto const display = nested_mir.server.the_display();
     auto const display_config = display->configuration();
 
     std::vector<geom::Rectangle> outputs;
@@ -309,7 +256,7 @@ TEST_F(NestedServer, on_exit_display_objects_should_be_destroyed)
     {
         NestedMirRunner nested_mir{new_connection()};
 
-        my_display = nested_mir.the_display();
+        my_display = nested_mir.server.the_display();
     }
 
     EXPECT_FALSE(my_display.lock()) << "after run_mir() exits the display should be released";
@@ -334,4 +281,26 @@ TEST_F(NestedServer, receives_lifecycle_events_from_host)
     trigger_lifecycle_event(mir_lifecycle_state_will_suspend);
 
     events_processed.wait_for_at_most_seconds(5);
+}
+
+TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    auto c = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto surface = mtf::make_any_surface(c);
+    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+
+    bool became_exposed_and_focused = mir::test::spin_wait_for_condition_or_timeout(
+        [surface]
+        {
+            return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed
+                && mir_surface_get_focus(surface) == mir_surface_focused;
+        },
+        std::chrono::seconds{10});
+
+    EXPECT_TRUE(became_exposed_and_focused);  
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(c);
 }
