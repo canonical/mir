@@ -35,6 +35,8 @@ namespace mir
 {
 namespace examples
 {
+using shell::SurfaceSet;
+
 template<typename Info>
 struct SurfaceTo
 {
@@ -109,7 +111,7 @@ class BasicWindowManager : public WindowManager,
 public:
     template <typename... PolicyArgs>
     BasicWindowManager(
-        FocusController* focus_controller,
+        shell::FocusController* focus_controller,
         PolicyArgs&&... policy_args) :
         focus_controller(focus_controller),
         policy(this, std::forward<PolicyArgs>(policy_args)...)
@@ -249,7 +251,7 @@ private:
         focus_controller->raise(surfaces);
     }
 
-    FocusController* const focus_controller;
+    shell::FocusController* const focus_controller;
     WindowManagementPolicy policy;
 
     std::mutex mutex;

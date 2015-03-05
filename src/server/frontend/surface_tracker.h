@@ -22,7 +22,6 @@
 #include "mir/frontend/surface_id.h"
 #include "client_buffer_tracker.h"
 #include <unordered_map>
-#include <tuple>
 #include <memory>
 
 namespace mir

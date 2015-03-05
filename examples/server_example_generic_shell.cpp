@@ -124,32 +124,3 @@ void me::GenericShell::remove_display(geometry::Rectangle const& area)
 {
     window_manager->remove_display(area);
 }
-
-std::shared_ptr<ms::Surface> me::GenericShell::focused_surface() const
-{
-    return msh::AbstractShell::focused_surface();
-}
-
-void me::GenericShell::set_focus_to(
-    std::shared_ptr<ms::Session> const& focus_session,
-    std::shared_ptr<ms::Surface> const& focus_surface)
-{
-    msh::AbstractShell::set_focus_to(focus_session, focus_surface);
-}
-
-auto me::GenericShell::surface_at(geometry::Point cursor) const
--> std::shared_ptr<scene::Surface>
-{
-    return surface_coordinator->surface_at(cursor);
-}
-
-void me::GenericShell::raise(SurfaceSet const& surfaces)
-{
-    surface_coordinator->raise(surfaces);
-}
-
-auto me::GenericShell::focused_session() const
--> std::shared_ptr<ms::Session>
-{
-    return focussed_application().lock();
-}
