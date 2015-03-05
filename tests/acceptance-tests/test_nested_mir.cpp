@@ -205,7 +205,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
     void trigger_lifecycle_event(MirLifecycleState const lifecycle_state)
     {
-        auto const app = server.the_focus_controller()->focussed_application().lock();
+        auto const app = server.the_focus_controller()->focused_session();
 
         EXPECT_TRUE(app != nullptr) << "Nested server not connected";
 

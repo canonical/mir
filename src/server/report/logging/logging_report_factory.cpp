@@ -45,7 +45,7 @@ std::shared_ptr<mir::compositor::CompositorReport> mr::LoggingReportFactory::cre
 
 std::shared_ptr<mir::graphics::DisplayReport> mr::LoggingReportFactory::create_display_report()
 {
-    return std::make_shared<logging::DisplayReport>(logger);
+    return std::make_shared<logging::DisplayReport>(logger, clock);
 }
 
 std::shared_ptr<mir::scene::SceneReport> mr::LoggingReportFactory::create_scene_report()

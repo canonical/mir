@@ -126,23 +126,16 @@ void msh::AbstractShell::focus_next()
     set_focus_to_locked(lock, focus);
 }
 
-std::weak_ptr<ms::Session> msh::AbstractShell::focussed_application() const
+std::shared_ptr<ms::Session> msh::AbstractShell::focused_session() const
 {
     std::unique_lock<std::mutex> lg(focus_mutex);
-    return focus_session;
+    return focus_session.lock();
 }
 
 std::shared_ptr<ms::Surface> msh::AbstractShell::focused_surface() const
 {
     std::unique_lock<std::mutex> lock(focus_mutex);
     return focus_surface.lock();
-}
-
-void msh::AbstractShell::set_focus_to(
-    std::shared_ptr<scene::Session> const& focus)
-{
-    std::unique_lock<std::mutex> lg(focus_mutex);
-    set_focus_to_locked(lg, focus);
 }
 
 void msh::AbstractShell::set_focus_to(
@@ -218,3 +211,28 @@ void msh::AbstractShell::setting_focus_to(std::shared_ptr<ms::Surface> const& /*
 void msh::AbstractShell::setting_focus_to(std::shared_ptr<ms::Session> const& /*session*/)
 {
 }
+
+void msh::AbstractShell::add_display(geometry::Rectangle const& /*area*/)
+{
+}
+
+void msh::AbstractShell::remove_display(geometry::Rectangle const& /*area*/)
+{
+}
+
+bool msh::AbstractShell::handle(MirEvent const& /*event*/)
+{
+    return false;
+}
+
+auto msh::AbstractShell::surface_at(geometry::Point cursor) const
+-> std::shared_ptr<scene::Surface>
+{
+    return surface_coordinator->surface_at(cursor);
+}
+
+void msh::AbstractShell::raise(SurfaceSet const& surfaces)
+{
+    surface_coordinator->raise(surfaces);
+}
+

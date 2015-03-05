@@ -20,7 +20,9 @@
 #define MIR_SHELL_SHELL_H_
 
 #include "mir/shell/focus_controller.h"
+#include "mir/input/event_filter.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/compositor/display_listener.h"
 
 #include "mir_toolkit/common.h"
 
@@ -29,6 +31,7 @@
 namespace mir
 {
 namespace frontend { class EventSink; }
+namespace geometry { class Rectangle; }
 namespace scene
 {
 class PromptSession;
@@ -45,8 +48,9 @@ namespace shell
 class InputTargeter;
 
 class Shell :
-// TODO public virtual graphics::DisplayConfigurationPolicy,
-    public virtual FocusController
+    public virtual FocusController,
+    public virtual input::EventFilter,
+    public virtual compositor::DisplayListener
 {
 public:
 /** @name these functions support frontend requests
