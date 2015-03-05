@@ -227,6 +227,36 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
             SceneElementFor(stub_surface2)));
 }
 
+TEST_F(SurfaceStack, decor_name_is_surface_name)
+{
+    using namespace testing;
+
+    ms::SurfaceStack stack{report};
+    auto surface = std::make_shared<ms::BasicSurface>(
+        std::string("Mary had a little lamb"),
+        geom::Rectangle{{},{}},
+        false,
+        std::make_shared<mtd::StubBufferStream>(),
+        std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+    stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    surface->configure(mir_surface_attrib_visibility,
+                       mir_surface_visibility_exposed);
+    post_a_frame(*surface);
+
+    auto elements = stack.scene_elements_for(compositor_id);
+    ASSERT_EQ(1, elements.size());
+
+    auto& element = elements.front();
+
+    auto const& decor = element->decoration();
+    EXPECT_TRUE(decor);
+    EXPECT_EQ(mc::Decoration::Type::surface, decor.type);
+    EXPECT_EQ("Mary had a little lamb", decor.name);
+}
+
 TEST_F(SurfaceStack, scene_counts_pending_accurately)
 {
     using namespace testing;

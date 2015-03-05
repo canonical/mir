@@ -62,6 +62,10 @@ void mrl::CompositorReport::began_frame(SubCompositorId id)
     inst.bypassed = true;
 }
 
+void mrl::CompositorReport::renderables_in_frame(SubCompositorId, mir::graphics::RenderableList const&)
+{
+}
+
 void mrl::CompositorReport::rendered_frame(SubCompositorId id)
 {
     std::lock_guard<std::mutex> lock(mutex);

@@ -77,6 +77,16 @@ TRACEPOINT_EVENT(
     )
 )
 
+TRACEPOINT_EVENT(
+    mir_server_compositor,
+    buffers_in_frame,
+    TP_ARGS(void const*, id, unsigned int*, buffer_ids, size_t, buffer_ids_len),
+    TP_FIELDS(
+        ctf_integer_hex(uintptr_t, id, (uintptr_t)(id))
+        ctf_sequence(unsigned int, buffer_ids, buffer_ids, size_t, buffer_ids_len)
+    )
+)
+
 #endif /* MIR_LTTNG_COMPOSITOR_REPORT_TP_H_ */
 
 #include <lttng/tracepoint-event.h>

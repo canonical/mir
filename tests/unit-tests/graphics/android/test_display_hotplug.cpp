@@ -47,7 +47,7 @@ struct DisplayHotplug : ::testing::Test
             return mga::DisplayAttribs{{0,0}, {0,0}, 0.0, true, mir_pixel_format_abgr_8888, 2};
         } 
         mga::ConfigChangeSubscription subscribe_to_config_changes(
-            std::function<void()> const& cb) override
+            std::function<void()> const& cb, std::function<void(mga::DisplayName)> const&) override
         {
             hotplug_fn = cb;
             return {};
@@ -72,9 +72,9 @@ struct DisplayHotplug : ::testing::Test
             return wrapped.active_attribs_for(d);
         } 
         mga::ConfigChangeSubscription subscribe_to_config_changes(
-            std::function<void()> const& cb) override
+            std::function<void()> const& hotplug, std::function<void(mga::DisplayName)> const& vsync) override
         {
-            return wrapped.subscribe_to_config_changes(cb);
+            return wrapped.subscribe_to_config_changes(hotplug, vsync);
         }
         mga::HwcConfiguration& wrapped;
     };

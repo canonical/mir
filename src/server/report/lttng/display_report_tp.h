@@ -62,6 +62,15 @@ TRACEPOINT_EVENT(
     )
 )
 
+TRACEPOINT_EVENT(
+    mir_server_display,
+    report_vsync,
+    TP_ARGS(int, id),
+    TP_FIELDS(
+        ctf_integer(int, id, id)
+     )
+)
+
 #endif /* MIR_LTTNG_DISPLAY_REPORT_TP_H_ */
 
 #include <lttng/tracepoint-event.h>
