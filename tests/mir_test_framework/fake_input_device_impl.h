@@ -24,10 +24,18 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 
-#include <mutex>
 #include <map>
+#include <chrono>
 
 namespace mi = mir::input;
+namespace mir
+{
+namespace dispatch
+{
+class ActionQueue;
+}
+}
+
 namespace mir_test_framework
 {
 class FakeInputDeviceImpl : public FakeInputDevice
@@ -40,27 +48,26 @@ private:
     class InputDevice : public mi::InputDevice
     {
     public:
-        InputDevice(mi::InputDeviceInfo const& info);
-        void start(mi::InputEventHandlerRegister& registry, mi::InputSink& destination) override;
-        void stop(mi::InputEventHandlerRegister& registry) override;
+        InputDevice(mi::InputDeviceInfo const& info,
+                    std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable);
+        std::shared_ptr<mir::dispatch::Dispatchable> get_dispatchable() override;
+        void start(mi::InputSink& destination) override;
+        void stop() override;
 
-        // implemented as template to soon also slope through the other types like ButtonParameters, MotionParameter, ...
-        template<typename T>
-        void emit_event(T const& parameters);
         void synthesize_events(synthesis::KeyParameters const& key_params);
         mi::InputDeviceInfo get_device_info() override
         {
             return info;
         }
 
-        std::mutex mutex;
         mi::InputSink* sink{nullptr};
-        mi::InputEventHandlerRegister* event_handler{nullptr};
         mi::InputDeviceInfo info;
+        std::shared_ptr<mir::dispatch::Dispatchable> const dispatchable;
 
-        uint32_t modifiers; // not unified accross devices, yet
+        uint32_t modifiers{0};
         std::map<int32_t, std::chrono::nanoseconds> down_times;
     };
+    std::shared_ptr<mir::dispatch::ActionQueue> queue;
     std::shared_ptr<InputDevice> device;
 };
 

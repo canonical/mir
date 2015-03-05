@@ -44,6 +44,10 @@ class ServerActionQueue;
 class SharedLibrary;
 class SharedLibraryProberReport;
 
+namespace dispatch
+{
+class MultiplexingDispatchable;
+}
 namespace compositor
 {
 class Renderer;
@@ -316,7 +320,7 @@ public:
     // new input reading related parts:
     virtual std::shared_ptr<input::Platform> the_input_platform();
     virtual std::shared_ptr<input::InputManager> the_new_input_manager();
-    virtual std::shared_ptr<MainLoop> the_event_loop();
+    virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
     virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
     virtual std::shared_ptr<input::InputDeviceHub> the_input_device_hub();
     /** @} */
@@ -382,7 +386,7 @@ protected:
     CachedPtr<input::InputManager>    new_input_manager; // currently not used by default
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
     CachedPtr<input::Platform>    input_platform; // currently not used by default
-    CachedPtr<MainLoop> event_reading_loop; // currently not used by default
+    CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer; // currently not used by default
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
     CachedPtr<input::InputSendObserver> input_send_observer;

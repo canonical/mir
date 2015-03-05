@@ -29,24 +29,12 @@ namespace mir
 namespace input
 {
 
-#if 0
-struct MotionRange
-{
-    uint32_t axis;
-};
-#endif
-
 struct InputDeviceInfo
 {
     int32_t id;
     std::string name;
     std::string unique_id;
-    mir::input::DeviceCapability capabilities; // see mir::input::DeviceCapability
-    // DeviceLocation location; builtin or external through usb or bt
-    // std::vector<MotionRange> value_ranges; // declar joystick action ranges
-    // std::vector<Button> buttons; // available buttons ?// keys?
-    // std::vector<Switch> switches; // available ?
-    // std::vector<KeyData> keys; // available ?
+    mir::input::DeviceCapabilities capabilities;
 };
 
 inline bool operator==(InputDeviceInfo const& lhs, InputDeviceInfo const& rhs)

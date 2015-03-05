@@ -24,9 +24,12 @@
 
 namespace mir
 {
+namespace dispatch
+{
+class Dispatchable;
+}
 namespace input
 {
-class InputEventHandlerRegister;
 class InputSink;
 class InputDeviceInfo;
 
@@ -39,14 +42,15 @@ public:
     InputDevice() = default;
     virtual ~InputDevice() = default;
 
+    virtual std::shared_ptr<dispatch::Dispatchable> get_dispatchable() = 0;
     /*!
      * Allow the input device to provide its input events to the given InputSink
      */
-    virtual void start(InputEventHandlerRegister& registry, InputSink& destination) = 0;
+    virtual void start(InputSink& destination) = 0;
     /*!
      * Stop the input device from sending input events, to the InputSink.
      */
-    virtual void stop(InputEventHandlerRegister& registry) = 0;
+    virtual void stop() = 0;
 
     virtual InputDeviceInfo get_device_info() = 0;
 

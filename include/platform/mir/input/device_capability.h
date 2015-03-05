@@ -19,7 +19,7 @@
 #ifndef MIR_INPUT_DEVICE_CAPABILITY_H_
 #define MIR_INPUT_DEVICE_CAPABILITY_H_
 
-//#include "mir/flags.h"
+#include "mir/flags.h"
 
 #include <cstdint>
 
@@ -42,7 +42,7 @@ enum class DeviceCapability : uint32_t
     alpha_numeric = 1<<9 // enough keys for text entry
 };
 
-//using DeviceCapabilities = mir::Flags<DeviceCapability>;
+using DeviceCapabilities = mir::Flags<DeviceCapability>;
 
 }
 }

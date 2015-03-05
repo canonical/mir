@@ -27,9 +27,10 @@ namespace mi = mir::input;
 extern "C" mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
+    std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::InputReport> const& /*report*/)
 {
-    return mir::make_module_ptr<mtf::StubInputPlatform>();
+    return mir::make_module_ptr<mtf::StubInputPlatform>(input_device_registry);
 }
 
 

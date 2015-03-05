@@ -19,18 +19,20 @@
 #ifndef MIR_INPUT_DEFAULT_INPUT_MANAGER_H_
 #define MIR_INPUT_DEFAULT_INPUT_MANAGER_H_
 
-#include "main_loop_wrapper.h"
-
 #include "mir/input/input_manager.h"
-#include "mir/library_shared_ptr.h"
 
+#include <vector>
 #include <thread>
-#include <mutex>
 #include <atomic>
 
 namespace mir
 {
-class MainLoop;
+namespace dispatch
+{
+class MultiplexingDispatchable;
+class SimpleDispatchThread;
+class ActionQueue;
+}
 namespace input
 {
 class Platform;
@@ -40,26 +42,21 @@ class InputDeviceRegistry;
 class DefaultInputManager : public InputManager
 {
 public:
-    DefaultInputManager(std::shared_ptr<Platform> const& input_platform,
-                        std::shared_ptr<InputDeviceRegistry> const& registry,
-                        std::shared_ptr<MainLoop> const& input_event_loop);
+    DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer);
     ~DefaultInputManager();
+    void add_platform(std::shared_ptr<Platform> const& platform) override;
     void start() override;
     void stop() override;
 private:
-    std::shared_ptr<Platform> const input_platform;
-    std::shared_ptr<MainLoop> const input_event_loop;
-    std::shared_ptr<InputDeviceRegistry> const input_device_registry;
-    MainLoopWrapper input_handler_register;
+    std::vector<std::shared_ptr<Platform>> platforms;
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
+    std::shared_ptr<dispatch::ActionQueue> const queue;
+    std::unique_ptr<dispatch::SimpleDispatchThread> input_thread;
 
     enum class State
     {
-        starting, running, stopping, stopped
-    };
-
-    std::atomic<State> thread_state;
-
-    std::thread input_thread;
+        running, stopped
+    } state;
 };
 
 }

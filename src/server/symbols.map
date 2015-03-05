@@ -687,15 +687,14 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_display_report*;
     mir::DefaultServerConfiguration::the_emergency_cleanup*;
     mir::DefaultServerConfiguration::the_event_hub*;
-    mir::DefaultServerConfiguration::the_event_loop*;
     mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     mir::DefaultServerConfiguration::the_focus_controller*;
     mir::DefaultServerConfiguration::the_frame_dropping_policy_factory*;
     mir::DefaultServerConfiguration::the_frontend_display_changer*;
     mir::DefaultServerConfiguration::the_frontend_shell*;
     mir::DefaultServerConfiguration::the_gl_config*;
-    mir::DefaultServerConfiguration::the_gl_program_factory*;
     mir::DefaultServerConfiguration::the_global_event_sink*;
+    mir::DefaultServerConfiguration::the_gl_program_factory*;
     mir::DefaultServerConfiguration::the_graphics_platform*;
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
@@ -708,12 +707,13 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_input_reader*;
     mir::DefaultServerConfiguration::the_input_reader_policy*;
     mir::DefaultServerConfiguration::the_input_reader_thread*;
+    mir::DefaultServerConfiguration::the_input_reading_multiplexer*;
     mir::DefaultServerConfiguration::the_input_region*;
     mir::DefaultServerConfiguration::the_input_registrar*;
     mir::DefaultServerConfiguration::the_input_report*;
     mir::DefaultServerConfiguration::the_input_scene*;
-    mir::DefaultServerConfiguration::the_input_send_observer*;
     mir::DefaultServerConfiguration::the_input_sender*;
+    mir::DefaultServerConfiguration::the_input_send_observer*;
     mir::DefaultServerConfiguration::the_input_target_enumerator*;
     mir::DefaultServerConfiguration::the_input_targeter*;
     mir::DefaultServerConfiguration::the_input_translator*;
@@ -762,9 +762,3 @@ MIR_SERVER_31 {
   };
  local: *;
 };
-
-MIR_SERVER_29.1 {
-  global:
-    mir::scene::SurfaceCoordinator::surface_at*;
-  local: *;
-} MIR_SERVER_29;

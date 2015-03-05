@@ -21,14 +21,19 @@
 #include "fake_input_device_impl.h"
 #include "stub_input_platform.h"
 
-#include "mir/input/input_event_handler_register.h"
 #include "mir/input/input_device.h"
+#include "mir/input/input_device_info.h"
 #include "mir/input/input_sink.h"
+#include "mir/dispatch/action_queue.h"
+
+#include "boost/throw_exception.hpp"
+
 #include "linux/input.h"
 
 #include "mir_toolkit/events/event.h"
 
 namespace mi = mir::input;
+namespace md = mir::dispatch;
 namespace mtf = mir_test_framework;
 
 namespace
@@ -90,7 +95,8 @@ uint32_t expand_modifier(uint32_t modifiers)
 }
 
 mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
-    : device{std::make_shared<InputDevice>(info)}
+    : queue{std::make_shared<md::ActionQueue>()},
+    device{std::make_shared<InputDevice>(info, queue)}
 {
     mtf::StubInputPlatform::add(device);
 }
@@ -101,23 +107,16 @@ mtf::FakeInputDeviceImpl::~FakeInputDeviceImpl()
 
 void mtf::FakeInputDeviceImpl::emit_event(synthesis::KeyParameters const& key)
 {
-    device->emit_event(key);
+    queue->enqueue([this, key]()
+                   {
+                       device->synthesize_events(key);
+                   });
 }
 
-template<typename T>
-void mtf::FakeInputDeviceImpl::InputDevice::emit_event(T const& input_params)
+mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& info,
+                                                   std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable)
+    : info(info), dispatchable{dispatchable}
 {
-    std::unique_lock<std::mutex> lock(mutex);
-    if (!event_handler)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Fake Input Device not yet registered"));
-    }
-
-    event_handler->register_handler(
-        [this, input_params]()
-        {
-            synthesize_events(input_params);
-        });
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyParameters const& key_params)
@@ -148,25 +147,22 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     key_event.key.event_time = event_time.count();
     key_event.key.is_system_key = 0;
 
-    std::unique_lock<std::mutex> lock(mutex);
+    if (!sink)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
     sink->handle_input(key_event);
 }
 
-mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& info)
-    : info(info)
+std::shared_ptr<md::Dispatchable> mtf::FakeInputDeviceImpl::InputDevice::get_dispatchable()
 {
+    return dispatchable;
 }
 
-void mtf::FakeInputDeviceImpl::InputDevice::start(mi::InputEventHandlerRegister& registry, mi::InputSink& destination)
+void mtf::FakeInputDeviceImpl::InputDevice::start(mi::InputSink& destination)
 {
-    std::unique_lock<std::mutex> lock(mutex);
-    event_handler = &registry;
     sink = &destination;
 }
 
-void mtf::FakeInputDeviceImpl::InputDevice::stop(mi::InputEventHandlerRegister&)
+void mtf::FakeInputDeviceImpl::InputDevice::stop()
 {
-    std::unique_lock<std::mutex> lock(mutex);
-    event_handler = nullptr;
     sink = nullptr;
 }

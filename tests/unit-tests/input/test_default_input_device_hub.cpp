@@ -26,6 +26,7 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -57,8 +58,9 @@ struct MockInputDeviceObserver : public mi::InputDeviceObserver
 
 struct MockInputDevice : public mi::InputDevice
 {
-    MOCK_METHOD2(start, void(mi::InputEventHandlerRegister& registry, mi::InputSink& destination));
-    MOCK_METHOD1(stop, void(mi::InputEventHandlerRegister& registry));
+    MOCK_METHOD0(get_dispatchable, std::shared_ptr<mir::dispatch::Dispatchable>());
+    MOCK_METHOD1(start, void(mi::InputSink& destination));
+    MOCK_METHOD0(stop, void());
     MOCK_METHOD0(get_device_info, mi::InputDeviceInfo());
 };
 
@@ -67,10 +69,10 @@ using Nice = ::testing::NiceMock<Type>;
 
 struct InputDeviceHubTest : ::testing::Test
 {
-    mtd::TriggeredMainLoop input_loop;
     mtd::TriggeredMainLoop observer_loop;
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
-    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_dispatcher), mt::fake_shared(input_loop),
+    mir::dispatch::MultiplexingDispatchable multiplexer;
+    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_dispatcher), mt::fake_shared(multiplexer),
                                   mt::fake_shared(observer_loop)};
     Nice<MockInputDeviceObserver> mock_observer;
     Nice<MockInputDevice> device;
@@ -95,7 +97,7 @@ TEST_F(InputDeviceHubTest, input_device_hub_starts_device)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(device,start(_,_));
+    EXPECT_CALL(device,start(_));
 
     hub.add_device(mt::fake_shared(device));
 }
@@ -104,7 +106,7 @@ TEST_F(InputDeviceHubTest, input_device_hub_stops_device_on_removal)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(device,stop(_));
+    EXPECT_CALL(device,stop());
 
     hub.add_device(mt::fake_shared(device));
     hub.remove_device(mt::fake_shared(device));
@@ -114,8 +116,8 @@ TEST_F(InputDeviceHubTest, input_device_hub_ignores_removal_of_unknown_devices)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(device,start(_,_)).Times(0);
-    EXPECT_CALL(device,stop(_)).Times(0);
+    EXPECT_CALL(device,start(_)).Times(0);
+    EXPECT_CALL(device,stop()).Times(0);
 
     hub.remove_device(mt::fake_shared(device));
 }
@@ -125,12 +127,12 @@ TEST_F(InputDeviceHubTest, input_device_hub_start_stop_happens_in_order)
     using namespace ::testing;
 
     InSequence seq;
-    EXPECT_CALL(device, start(_,_));
-    EXPECT_CALL(another_device, start(_,_));
-    EXPECT_CALL(third_device, start(_,_));
-    EXPECT_CALL(another_device, stop(_));
-    EXPECT_CALL(device, stop(_));
-    EXPECT_CALL(third_device, stop(_));
+    EXPECT_CALL(device, start(_));
+    EXPECT_CALL(another_device, start(_));
+    EXPECT_CALL(third_device, start(_));
+    EXPECT_CALL(another_device, stop());
+    EXPECT_CALL(device, stop());
+    EXPECT_CALL(third_device, stop());
 
     hub.add_device(mt::fake_shared(device));
     hub.add_device(mt::fake_shared(another_device));
@@ -195,8 +197,8 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
     mi::InputDeviceInfo info;
     MirEvent dispatched_event;
 
-    EXPECT_CALL(device,start(_,_))
-        .WillOnce(Invoke([&sink](mi::InputEventHandlerRegister&, mi::InputSink& input_sink)
+    EXPECT_CALL(device,start(_))
+        .WillOnce(Invoke([&sink](mi::InputSink& input_sink)
                          {
                              sink = &input_sink;
                          }

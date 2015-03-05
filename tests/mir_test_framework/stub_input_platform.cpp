@@ -18,75 +18,65 @@
 
 #include "stub_input_platform.h"
 
-#include "mir/input/input_event_handler_register.h"
 #include "mir/input/input_device_registry.h"
+#include "mir/dispatch/action_queue.h"
 
 #include <algorithm>
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;
 
-void mtf::StubInputPlatform::start(mi::InputEventHandlerRegister& loop,
-           std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry)
+mtf::StubInputPlatform::StubInputPlatform(
+    std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry)
 {
-    std::unique_lock<std::mutex> lock(platform_mutex);
     registry = input_device_registry;
-    event_handler = &loop;
 }
 
-void mtf::StubInputPlatform::stop(mi::InputEventHandlerRegister&)
+mtf::StubInputPlatform::~StubInputPlatform()
 {
-    std::unique_lock<std::mutex> lock(platform_mutex);
+    registry.reset();
+}
 
-    if (registry)
-    {
-        for (auto const & dev : registered_devs)
-            registry->remove_device(dev);
-    }
+void mtf::StubInputPlatform::start()
+{
+    for (auto const & dev : registered_devs)
+        registry->add_device(dev);
+}
+
+std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::get_dispatchable()
+{
+    return platform_queue;
+}
+
+void mtf::StubInputPlatform::stop()
+{
+    for (auto const & dev : registered_devs)
+        registry->remove_device(dev);
 
     registered_devs.clear();
-
-    registry.reset();
-    event_handler = nullptr;
 }
 
 void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    std::unique_lock<std::mutex> lock(platform_mutex);
-    registered_devs.push_back(dev);
-
-    if (event_handler)
-    {
-        event_handler->register_handler(
-            [dev]()
-            {
-                registry->add_device(dev);
-            });
-    }
+    platform_queue->enqueue([dev]
+                            {
+                                registry->add_device(dev);
+                                registered_devs.push_back(dev);
+                            });
 }
 void mtf::StubInputPlatform::remove(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    std::unique_lock<std::mutex> lock(platform_mutex);
-    if (event_handler)
-    {
-        event_handler->register_handler(
-            [dev]()
-            {
-                registry->remove_device(dev);
-            });
-    }
-
-
-    registered_devs.erase(
-        std::remove(
-            begin(registered_devs),
-            end(registered_devs), dev),
-        end(registered_devs)
-        );
+    platform_queue->enqueue([dev]
+                            {
+                                registry->remove_device(dev);
+                                registered_devs.erase(
+                                    std::remove(begin(registered_devs),
+                                           end(registered_devs),
+                                           dev));
+                            });
 }
 
-std::mutex mtf::StubInputPlatform::platform_mutex;
 std::vector<std::shared_ptr<mi::InputDevice>> mtf::StubInputPlatform::registered_devs;
 std::shared_ptr<mi::InputDeviceRegistry> mtf::StubInputPlatform::registry;
-mi::InputEventHandlerRegister* mtf::StubInputPlatform::event_handler = nullptr;
+std::shared_ptr<mir::dispatch::ActionQueue> mtf::StubInputPlatform::platform_queue = std::make_shared<mir::dispatch::ActionQueue>();
 

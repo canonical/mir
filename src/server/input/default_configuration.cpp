@@ -50,6 +50,7 @@
 #include "mir/input/platform.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/compositor/scene.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/report/legacy_input_report.h"
@@ -386,23 +387,24 @@ mir::DefaultServerConfiguration::the_new_input_manager()
             auto const options = the_options();
             bool input_reading_required =
                 options->get<bool>(options::enable_input_opt) &&
-                !options->is_set(options::host_socket_opt); // TODO nested input handling (== host_socket) should fold into a platform
+                !options->is_set(options::host_socket_opt);
+                // TODO nested input handling (== host_socket) should fold into a platform
 
             if (input_reading_required)
-                return std::make_shared<mi::DefaultInputManager>(the_input_platform(), the_input_device_registry(), the_event_loop());
+                return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
             else
                 return std::make_shared<mi::NullInputManager>();
         }
     );
 }
 
-std::shared_ptr<mir::MainLoop>
-mir::DefaultServerConfiguration::the_event_loop()
+std::shared_ptr<mir::dispatch::MultiplexingDispatchable>
+mir::DefaultServerConfiguration::the_input_reading_multiplexer()
 {
-    return event_reading_loop(
-        [this]() -> std::shared_ptr<mir::MainLoop>
+    return input_reading_multiplexer(
+        [this]() -> std::shared_ptr<mir::dispatch::MultiplexingDispatchable>
         {
-            return std::make_shared<mir::GLibMainLoop>(the_clock());
+            return std::make_shared<mir::dispatch::MultiplexingDispatchable>();
         }
     );
 }
@@ -410,21 +412,19 @@ mir::DefaultServerConfiguration::the_event_loop()
 std::shared_ptr<mi::InputDeviceRegistry>
 mir::DefaultServerConfiguration::the_input_device_registry()
 {
-    return default_input_device_hub(
-        [this]()
-        {
-            return std::make_shared<mi::DefaultInputDeviceHub>(the_input_dispatcher(), the_event_loop(), the_main_loop());
-        }
-    );
+    return default_input_device_hub([this]()
+                                    {
+                                        return std::make_shared<mi::DefaultInputDeviceHub>(
+                                            the_input_dispatcher(), the_input_reading_multiplexer(), the_main_loop());
+                                    });
 }
 
 std::shared_ptr<mi::InputDeviceHub>
 mir::DefaultServerConfiguration::the_input_device_hub()
 {
-    return default_input_device_hub(
-        [this]()
-        {
-            return std::make_shared<mi::DefaultInputDeviceHub>(the_input_dispatcher(), the_event_loop(), the_main_loop());
-        }
-    );
+    return default_input_device_hub([this]()
+                                    {
+                                        return std::make_shared<mi::DefaultInputDeviceHub>(
+                                            the_input_dispatcher(), the_input_reading_multiplexer(), the_main_loop());
+                                    });
 }

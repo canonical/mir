@@ -25,10 +25,13 @@
 
 namespace mir
 {
+namespace dispatch
+{
+class ActionQueue;
+}
 namespace input
 {
 class InputDevice;
-class InputDeviceInfo;
 }
 }
 namespace mir_test_framework
@@ -37,16 +40,20 @@ class FakeInputDevice;
 class StubInputPlatform : public mir::input::Platform
 {
 public:
-    void start(mir::input::InputEventHandlerRegister& loop,
-               std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry);
-    void stop(mir::input::InputEventHandlerRegister& loop) override;
+    explicit StubInputPlatform(std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry);
+    ~StubInputPlatform();
+
+    std::shared_ptr<mir::dispatch::Dispatchable> get_dispatchable() override;
+    void start() override;
+    void stop() override;
 
     static void add(std::shared_ptr<mir::input::InputDevice> const& dev);
     static void remove(std::shared_ptr<mir::input::InputDevice> const& dev);
-    static std::mutex platform_mutex;
+
+private:
     static std::vector<std::shared_ptr<mir::input::InputDevice>> registered_devs;
     static std::shared_ptr<mir::input::InputDeviceRegistry> registry;
-    static mir::input::InputEventHandlerRegister* event_handler;
+    static std::shared_ptr<mir::dispatch::ActionQueue> platform_queue;
 };
 
 }

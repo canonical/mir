@@ -34,9 +34,10 @@ namespace mi = mir::input;
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::InputDispatcher> const& input_dispatcher,
-    std::shared_ptr<mir::MainLoop> const& input_loop,
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue)
-    : input_dispatcher(input_dispatcher), input_handler_register(input_loop),
+    : input_dispatcher(input_dispatcher),
+    input_dispatchable{input_multiplexer},
     observer_queue(observer_queue)
 {
 }
@@ -67,7 +68,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
 
         // TODO let shell decide if device should be observed / exposed to clients.
-        devices.back()->start(input_handler_register);
+        devices.back()->start();
     }
 }
 
@@ -81,7 +82,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
             {
                 if (item->device_matches(device))
                 {
-                    item->stop(input_handler_register);
+                    item->stop();
                     auto const && info = item->get_device_info();
 
                     // send input device info to observer queue..
@@ -143,14 +144,14 @@ bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr
     return dev == device;
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::start(mi::InputEventHandlerRegister& registry)
+void mi::DefaultInputDeviceHub::RegisteredDevice::start()
 {
-    device->start(registry, *this);
+    device->start(*this);
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::stop(mi::InputEventHandlerRegister& registry)
+void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
 {
-    device->stop(registry);
+    device->stop();
 }
 
 
