@@ -9,16 +9,6 @@ then
     exit 1
 fi
 
-abi_vars="\
-    MIRCLIENT_ABI \
-    MIRCLIENT_DEBUG_EXTENSION_ABI \
-    MIR_CLIENT_PLATFORM_ABI \
-    MIRCOMMON_ABI \
-    MIRPLATFORM_ABI \
-    MIRPROTOBUF_ABI \
-    MIRSERVER_ABI \
-    MIR_SERVER_GRAPHICS_PLATFORM_ABI"
-
 packages="\
     libmirclient:MIRCLIENT_ABI \
     libmirclient-debug-extension:MIRCLIENT_DEBUG_EXTENSION_ABI \
@@ -30,6 +20,16 @@ packages="\
     mir-client-platform-mesa:MIR_CLIENT_PLATFORM_ABI \
     mir-platform-graphics-android:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-graphics-mesa:MIR_SERVER_GRAPHICS_PLATFORM_ABI"
+
+package_name()
+{
+    echo "${1%%:*}"
+}
+
+package_abi_var()
+{
+    echo "${1##*:}"
+}
 
 print_help_and_exit()
 {
@@ -81,8 +81,14 @@ get_abi_number()
 
 populate_abi_variables()
 {
-    for abi_var in $abi_vars;
+    for p in $packages;
     do
+        local abi_var=$(package_abi_var $p)
+        if $(eval "[ -n \"\${$abi_var}\" ]");
+        then
+            continue;
+        fi
+
         local abi=$(get_abi_number $abi_var)
         if [ -z "$abi" ];
         then
@@ -99,8 +105,8 @@ update_control_file()
 {
     for p in $packages;
     do
-        local pkg=${p%%:*}
-        local abi_var=${p##*:}
+        local pkg=$(package_name $p)
+        local abi_var=$(package_abi_var $p)
         local abi=$(eval "echo \$${abi_var}")
         sed -i "s/${pkg}[[:digit:]]\+/${pkg}$abi/" debian/control
     done
@@ -131,8 +137,8 @@ update_install_files()
 {
     for p in $packages;
     do
-        local pkg=${p%%:*}
-        local abi_var=${p##*:}
+        local pkg=$(package_name $p)
+        local abi_var=$(package_abi_var $p)
         local abi=$(eval "echo \$${abi_var}")
         local current_file="debian/$(get_current_install_file $pkg)"
         local new_file="debian/${pkg}${abi}.install"
@@ -155,8 +161,8 @@ check_control_file()
 {
     for p in $packages;
     do
-        local pkg=${p%%:*}
-        local abi_var=${p##*:}
+        local pkg=$(package_name $p)
+        local abi_var=$(package_abi_var $p)
         local abi=$(eval "echo \$${abi_var}")
         local result=$(grep -o "${pkg}[[:digit:]]\+" debian/control | uniq | sed -e "/\b${pkg}${abi}\b/ d" | tr '\n' ' ')
         if [ -n "$result" ];
@@ -170,16 +176,16 @@ check_install_files()
 {
     for p in $packages;
     do
-        local pkg=${p%%:*}
-        local abi_var=${p##*:}
+        local pkg=$(package_name $p)
+        local abi_var=$(package_abi_var $p)
         local abi=$(eval "echo \$${abi_var}")
-        local current_file=debian/$(get_current_install_file $pkg)
+        local current_file="debian/$(get_current_install_file $pkg)"
         local expected_file="debian/${pkg}${abi}.install"
         local expected_suffix=".so.${abi}"
 
         if [ "$current_file" != "$expected_file" ];
         then
-            report_abi_mismatch "debian/$current_file found, but $pkg ABI is $abi"
+            report_abi_mismatch "$current_file found, but $pkg ABI is $abi"
         else
             local suffix=$(grep -o ".so.[[:digit:]]\+" $expected_file)
             if [ "$suffix" != "$expected_suffix" ];
