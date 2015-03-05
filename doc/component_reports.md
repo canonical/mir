@@ -41,6 +41,7 @@ Report                | Handlers
 --------------------- | --------
 rpc-report            | log,lttng
 input-receiver-report | log,lttng
+perf-report           | log,lttng
 
 For example, to enable the logging RPC report, one should set the
 `MIR_CLIENT_RPC_REPORT=log` environment variable.
