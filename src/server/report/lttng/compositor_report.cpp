@@ -18,6 +18,7 @@
 
 #include "compositor_report.h"
 
+#include "mir/graphics/buffer.h"
 #include "mir/report/lttng/mir_tracepoint.h"
 
 #define TRACEPOINT_DEFINE
@@ -42,6 +43,16 @@ void mir::report::lttng::CompositorReport::began_frame(SubCompositorId id)
     mir_tracepoint(mir_server_compositor, began_frame, id);
 }
 
+void mir::report::lttng::CompositorReport::renderables_in_frame(
+    SubCompositorId id, graphics::RenderableList const& list)
+{
+    std::vector<uint32_t> ids(list.size());
+    auto it = list.begin();
+    for(auto& id : ids)
+        id = (*it++)->buffer()->id().as_value();
+    mir_tracepoint(mir_server_compositor, buffers_in_frame, id, ids.data(), ids.size());
+}
+
 void mir::report::lttng::CompositorReport::rendered_frame(SubCompositorId id)
 {
     mir_tracepoint(mir_server_compositor, rendered_frame, id);
@@ -51,4 +62,3 @@ void mir::report::lttng::CompositorReport::finished_frame(SubCompositorId id)
 {
     mir_tracepoint(mir_server_compositor, finished_frame, id);
 }
-
