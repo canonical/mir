@@ -35,6 +35,8 @@ namespace mir
 {
 namespace examples
 {
+using shell::SurfaceSet;
+
 template<typename Info>
 struct SurfaceTo
 {
@@ -74,8 +76,6 @@ public:
 
     virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
 
-    virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
-
     virtual void raise(SurfaceSet const& surfaces) = 0;
 
     virtual ~BasicWindowManagerTools() = default;
@@ -111,7 +111,7 @@ class BasicWindowManager : public WindowManager,
 public:
     template <typename... PolicyArgs>
     BasicWindowManager(
-        FocusController* focus_controller,
+        shell::FocusController* focus_controller,
         PolicyArgs&&... policy_args) :
         focus_controller(focus_controller),
         policy(this, std::forward<PolicyArgs>(policy_args)...)
@@ -246,17 +246,12 @@ private:
         return focus_controller->surface_at(cursor);
     }
 
-    void raise(std::weak_ptr<scene::Surface> const& surface) override
-    {
-        focus_controller->raise(surface);
-    }
-
     void raise(SurfaceSet const& surfaces) override
     {
         focus_controller->raise(surfaces);
     }
 
-    FocusController* const focus_controller;
+    shell::FocusController* const focus_controller;
     WindowManagementPolicy policy;
 
     std::mutex mutex;

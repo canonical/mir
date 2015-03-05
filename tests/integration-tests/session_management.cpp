@@ -138,7 +138,7 @@ TEST_F(SessionManagement, focus_on_a_session_raises_its_surface)
 
     EXPECT_CALL(*test_surface_stack, raise(WeakPtrTo(session1->get_surface(surface1)))).Times(1);
 
-    focus_controller->set_focus_to(shell_session);
+    focus_controller->set_focus_to(shell_session, shell_session->default_surface());
 
     session_manager->destroy_surface(session1, surface1);
     session_manager->destroy_surface(session2, surface2);

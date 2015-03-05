@@ -16,10 +16,17 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "DemoRenderer"
+
+#include "typo_stub_renderer.h"
+#ifdef TYPO_SUPPORTS_FREETYPE
+#include "typo_freetype_renderer.h"
+#endif
 #include "demo_renderer.h"
 #include <mir/graphics/renderable.h>
 #include <mir/compositor/destination_alpha.h>
 #include <mir/compositor/recently_used_cache.h>
+#include <mir/log.h>
 #include <cmath>
 
 using namespace mir;
@@ -185,7 +192,8 @@ DemoRenderer::DemoRenderer(
     corner_radius{0.5f},
     colour_effect{none},
     inverse_program(family.add_program(vshader, inverse_fshader)),
-    contrast_program(family.add_program(vshader, contrast_fshader))
+    contrast_program(family.add_program(vshader, contrast_fshader)),
+    title_cache(std::make_shared<typo::StubRenderer>())
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
@@ -194,6 +202,15 @@ DemoRenderer::DemoRenderer(
 
     clear_color[0] = clear_color[1] = clear_color[2] = 0.2f;
     clear_color[3] = 1.0f;
+
+#ifdef TYPO_SUPPORTS_FREETYPE
+    const char title_font_path[] = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf";
+    auto ftrenderer = std::make_shared<typo::FreetypeRenderer>();
+    if (ftrenderer->load(title_font_path, 128))
+        title_cache.change_renderer(ftrenderer);
+    else
+        mir::log_error("Failed to load titlebar font: %s", title_font_path);
+#endif
 }
 
 DemoRenderer::~DemoRenderer()
@@ -202,19 +219,24 @@ DemoRenderer::~DemoRenderer()
     glDeleteTextures(1, &titlebar_corner_tex);
 }
 
-void DemoRenderer::begin(std::unordered_set<graphics::Renderable::ID> decoration_skip_list_) const
+void DemoRenderer::begin(DecorMap&& d) const
 {
-    decoration_skip_list = decoration_skip_list_;
+    decor_map = d;
+    title_cache.drop_unused();
+    title_cache.mark_all_unused();
 }
 
 void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
                               graphics::Renderable const& renderable) const
 {
     GLRenderer::tessellate(primitives, renderable);
-    if (decoration_skip_list.find(renderable.id()) == decoration_skip_list.end())
+    auto d = decor_map.find(renderable.id());
+    if (d != decor_map.end())
     {
+        auto& decor = d->second;
         tessellate_shadow(primitives, renderable, shadow_radius);
-        tessellate_frame(primitives, renderable, titlebar_height);
+        tessellate_frame(primitives, renderable, titlebar_height,
+                         decor.name.c_str());
     }
 }
 
@@ -299,7 +321,8 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
 
 void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitives,
                                     graphics::Renderable const& renderable,
-                                    float titlebar_height) const
+                                    float titlebar_height,
+                                    char const* name) const
 {
     auto const& rect = renderable.screen_position();
     GLfloat left = rect.top_left.x.as_int();
@@ -307,7 +330,7 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
     GLfloat top = rect.top_left.y.as_int();
 
     auto n = primitives.size();
-    primitives.resize(n + 3);
+    primitives.resize(n + 4);
 
     GLfloat htop = top - titlebar_height;
     GLfloat in = titlebar_height * corner_radius;
@@ -338,6 +361,28 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
     titlebar.vertices[1] = {{inright, htop, 0.0f}, {1.0f, 0.0f}};
     titlebar.vertices[2] = {{inright, top,  0.0f}, {1.0f, 1.0f}};
     titlebar.vertices[3] = {{inleft,  top,  0.0f}, {1.0f, 1.0f}};
+
+    auto str = title_cache.get(name);
+    GLfloat text_vin = titlebar_height / 5;
+    GLfloat text_top = htop + text_vin;
+    GLfloat text_bot = top - text_vin;
+    GLfloat text_height = text_bot - text_top;
+    GLfloat text_scale = text_height / str.height;
+    GLfloat text_left = inleft;
+    GLfloat text_right = text_left + text_scale * str.width;
+    GLfloat text_u = 1.0f;
+    if (text_right > inright)  // Title too long for window
+    {
+        text_u = (inright - text_left) / (text_right - text_left);
+        text_right = inright;
+    }
+
+    auto& text_prim = primitives[n++];
+    text_prim.tex_id = str.tex;
+    text_prim.vertices[0] = {{text_left,  text_top, 0.0f}, {0.0f, 0.0f}};
+    text_prim.vertices[1] = {{text_right, text_top, 0.0f}, {text_u, 0.0f}};
+    text_prim.vertices[2] = {{text_right, text_bot, 0.0f}, {text_u, 1.0f}};
+    text_prim.vertices[3] = {{text_left,  text_bot, 0.0f}, {0.0f, 1.0f}};
 }
 
 bool DemoRenderer::would_embellish(

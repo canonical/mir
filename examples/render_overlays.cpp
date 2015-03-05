@@ -194,7 +194,7 @@ void render_loop(mir::Server& server)
     auto client2 = std::make_shared<DemoOverlayClient>(
         *buffer_allocator, buffer_properties, 0xFFFFFF00);
 
-    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    mg::RenderableList renderlist
     {
         std::make_shared<DemoRenderable>(client1, geom::Rectangle{{0,0} , buffer_properties.size}),
         std::make_shared<DemoRenderable>(client2, geom::Rectangle{{80,80} , buffer_properties.size})
