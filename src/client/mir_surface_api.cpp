@@ -557,3 +557,30 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
+
+MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
+{
+    mir::require(mir_surface_is_valid(surf));
+
+    MirSurfaceSpec* spec = nullptr;
+    try
+    {
+        spec = new MirSurfaceSpec(surf);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return spec;
+}
+
+MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
+{
+    if (!spec->preexisting.is_set())
+        return nullptr;
+
+    auto surface = spec->preexisting.value();
+    surface->modify(*spec);
+    return nullptr;  // TODO wait handle
+}

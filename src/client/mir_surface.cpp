@@ -72,6 +72,11 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
     }
 }
 
+MirSurfaceSpec::MirSurfaceSpec(MirSurface* to_modify)
+{
+    preexisting = to_modify;
+}
+
 mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
 {
     mir::protobuf::SurfaceParameters message;
@@ -493,4 +498,9 @@ mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
     std::lock_guard<decltype(mutex)> lock(mutex);
     
     return buffer_stream.get();
+}
+
+void MirSurface::modify(MirSurfaceSpec const& spec)
+{
+    (void)spec; // TODO
 }
