@@ -16,7 +16,6 @@ message SurfaceParameters {
   required int32 height = 2;
   required int32 pixel_format = 3;
   required int32 buffer_usage = 4;
-  // TODO: Make required when we bump protobuf and server ABI
   optional string surface_name = 5;
   optional uint32 output_id = 6;
 
@@ -27,6 +26,23 @@ message SurfaceParameters {
   
   optional Rectangle aux_rect = 11;
   optional int32 edge_attachment = 12;
+}
+
+// If and when we break our protocol backward-compatibility, this could be
+// merged with SurfaceParameters...
+message SurfaceModification {
+  required SurfaceId surface_id = 1;
+
+  optional string name = 2;
+
+  // TODO: Client API for resizing (LP: #1420573)
+  // optional int32 width = 3;
+  // optional int32 height = 4;
+
+  // TODO: We could use these to replace SurfaceSetting
+  // optional int32 type = 5;
+  // optional int32 state = 6;
+  // ...
 }
 
 message SurfaceId {
@@ -241,6 +257,7 @@ service DisplayServer {
   rpc connect(ConnectParameters) returns (Connection);
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
+  rpc modify_surface(SurfaceModification) returns (Void);
   rpc next_buffer(SurfaceId) returns (Buffer);
   rpc release_surface(SurfaceId) returns (Void);
 
