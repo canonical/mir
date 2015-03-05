@@ -50,7 +50,9 @@ public:
     virtual ~HwcConfiguration() = default;
     virtual void power_mode(DisplayName, MirPowerMode) = 0;
     virtual DisplayAttribs active_attribs_for(DisplayName) = 0; 
-    virtual ConfigChangeSubscription subscribe_to_config_changes(std::function<void()> const& cb) = 0;
+    virtual ConfigChangeSubscription subscribe_to_config_changes(
+        std::function<void()> const& hotplug_cb,
+        std::function<void(DisplayName)> const& vsync_cb) = 0;
 
 protected:
     HwcConfiguration() = default;
@@ -65,7 +67,9 @@ public:
     HwcBlankingControl(std::shared_ptr<HwcWrapper> const&);
     void power_mode(DisplayName, MirPowerMode) override;
     DisplayAttribs active_attribs_for(DisplayName) override;
-    ConfigChangeSubscription subscribe_to_config_changes(std::function<void()> const& cb) override;
+    ConfigChangeSubscription subscribe_to_config_changes(
+        std::function<void()> const& hotplug_cb,
+        std::function<void(DisplayName)> const& vsync_cb) override;
 
 private:
     DeviceQuirks quirks{PropertiesOps{}};

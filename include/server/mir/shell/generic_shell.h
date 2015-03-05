@@ -16,8 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_EXAMPLE_GENERIC_SHELL_H_
-#define MIR_EXAMPLE_GENERIC_SHELL_H_
+#ifndef MIR_SHELL_GENERIC_SHELL_H_
+#define MIR_SHELL_GENERIC_SHELL_H_
 
 #include "mir/shell/abstract_shell.h"
 
@@ -69,4 +69,4 @@ private:
 }
 }
 
-#endif /* MIR_EXAMPLE_GENERIC_SHELL_H_ */
+#endif /* MIR_SHELL_GENERIC_SHELL_H_ */

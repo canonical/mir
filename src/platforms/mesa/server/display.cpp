@@ -88,7 +88,7 @@ mgm::Display::Display(std::shared_ptr<Platform> const& platform,
       monitor(mir::udev::Context()),
       shared_egl{*gl_config},
       output_container{platform->drm->fd,
-                       std::make_shared<KMSPageFlipper>(platform->drm->fd)},
+                       std::make_shared<KMSPageFlipper>(platform->drm->fd, listener)},
       current_display_configuration{platform->drm->fd},
       gl_config{gl_config}
 {

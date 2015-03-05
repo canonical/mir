@@ -228,17 +228,23 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
     EXPECT_THAT(attribs.vrefresh_hz, Eq(0.0f));
 }
 
-TEST_F(HwcConfiguration, subscribes_to_hotplug)
+TEST_F(HwcConfiguration, subscribes_to_hotplug_and_vsync)
 {
     using namespace testing;
     std::function<void(mga::DisplayName, bool)> hotplug_fn([](mga::DisplayName, bool){});
+    std::function<void(mga::DisplayName, std::chrono::nanoseconds)> vsync_fn(
+        [](mga::DisplayName, std::chrono::nanoseconds){});
     EXPECT_CALL(*mock_hwc_wrapper, subscribe_to_events(_,_,_,_))
-        .WillOnce(SaveArg<2>(&hotplug_fn));
+        .WillOnce(DoAll(SaveArg<1>(&vsync_fn), SaveArg<2>(&hotplug_fn)));
     EXPECT_CALL(*mock_hwc_wrapper, unsubscribe_from_events_(_));
 
-    unsigned int call_count{0};
-    auto subscription = config.subscribe_to_config_changes([&]{ call_count++; });
+    unsigned int hotplug_call_count{0};
+    unsigned int vsync_call_count{0};
+    auto subscription = config.subscribe_to_config_changes(
+        [&]{ hotplug_call_count++; }, [&](mga::DisplayName){ vsync_call_count++; });
     hotplug_fn(mga::DisplayName::primary, true);
     hotplug_fn(mga::DisplayName::primary, true);
-    EXPECT_THAT(call_count, Eq(2));
+    vsync_fn(mga::DisplayName::primary, std::chrono::nanoseconds(33));
+    EXPECT_THAT(hotplug_call_count, Eq(2));
+    EXPECT_THAT(vsync_call_count, Eq(1));
 }
