@@ -4,6 +4,9 @@ add_library(demo-shell STATIC
   window_manager.cpp
 )
 
+add_subdirectory(typo)
+target_link_libraries(demo-shell typo)
+
 mir_add_wrapped_executable(mir_proving_server
   demo_shell.cpp
 )
