@@ -39,12 +39,11 @@ extern "C" {
 bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
 
 /**
- * Create a new buffer stream. BufferStreams provide a way
- * to exchange buffers with the server without directly
- * posting them to a surface. 
+ * Create a new buffer stream. 
+ *
  * For example, the resulting buffer stream may be used
- * with mir_cursor_configuration_from_buffer_stream in order to post images to the system
- * cursor.
+ * with mir_cursor_configuration_from_buffer_stream, 
+ * in order to post images to the system cursor.
  *
  * \param [in] connection               A valid connection
  * \param [in] width                    Requested buffer width
