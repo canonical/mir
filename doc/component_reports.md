@@ -16,15 +16,17 @@ either command-line options or environment variables. The environment variables
 are prefixed with `MIR_SERVER_` and contain underscores ('_') instead of dashes
 ('-').  The available component reports and handlers for the server are:
 
-Report                  | Handlers
------------------------ | --------
-connector-report        | log,lttng
-display-report          | log,lttng
-input-report            | log,lttng
-legacy-input-report     | log
-msg-processor-report    | log,lttng
-session-mediator-report | log,lttng
-scene-report            | log,lttng
+Report                       | Handlers
+---------------------------- | --------
+connector-report             | log,lttng
+compositor-report            | log,lttng
+display-report               | log,lttng
+input-report                 | log,lttng
+legacy-input-report          | log
+msg-processor-report         | log,lttng
+session-mediator-report      | log,lttng
+scene-report                 | log,lttng
+shared-library-prober-report | log,lttng
 
 For example, to enable the LTTng input report, one could either use the
 `--input-report=lttng` command-line option to the server, or set the
@@ -41,6 +43,8 @@ Report                | Handlers
 --------------------- | --------
 rpc-report            | log,lttng
 input-receiver-report | log,lttng
+shared-library-prober-report | log,lttng
+perf-report           | log,lttng
 
 For example, to enable the logging RPC report, one should set the
 `MIR_CLIENT_RPC_REPORT=log` environment variable.
