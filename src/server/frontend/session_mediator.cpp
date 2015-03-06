@@ -168,17 +168,11 @@ void mf::SessionMediator::advance_buffer(
             if (tid == std::this_thread::get_id())
                 lock.unlock();
 
-            mg::BufferIpcMsgType msg_type;
-            {
-                // We need to acquire a new lock - this may be executing on a
-                // different thread
-                std::lock_guard<decltype(session_mutex)> lock{session_mutex};
-                if (surface_tracker.track_buffer(surf_id, new_buffer))
-                    msg_type = mg::BufferIpcMsgType::update_msg;
-                else
-                    msg_type = mg::BufferIpcMsgType::full_msg;
-            }
-            complete(new_buffer, msg_type);
+            if (surface_tracker.track_buffer(surf_id, new_buffer))
+                complete(new_buffer, mg::BufferIpcMsgType::update_msg);
+            else
+                complete(new_buffer, mg::BufferIpcMsgType::full_msg);
+
         });
 }
 
