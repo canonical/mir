@@ -72,9 +72,9 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
     }
 }
 
-MirSurfaceSpec::MirSurfaceSpec(MirSurface* to_modify)
+MirSurfaceSpec::MirSurfaceSpec(MirSurface* preexisting)
 {
-    preexisting = to_modify;
+    self = preexisting;
 }
 
 mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
@@ -500,7 +500,9 @@ mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
     return buffer_stream.get();
 }
 
-void MirSurface::modify(MirSurfaceSpec const& spec)
+MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 {
     (void)spec; // TODO
+
+    return &modify_wait_handle;
 }

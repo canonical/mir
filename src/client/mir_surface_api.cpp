@@ -558,6 +558,9 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
+namespace {
+// TODO: Private functions to become public in future
+
 MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
 {
     mir::require(mir_surface_is_valid(surf));
@@ -575,12 +578,28 @@ MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
     return spec;
 }
 
+// TODO: Add error reporting without resorting to callbacks.
+// Idea: Embed an error code/string into MirWaitHandle and then:
+//       errorcode = mir_wait_handle_result(w)
 MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
 {
-    if (!spec->preexisting.is_set())
+    if (!spec->self.is_set())
         return nullptr;
 
-    auto surface = spec->preexisting.value();
-    surface->modify(*spec);
-    return nullptr;  // TODO wait handle
+    auto surface = spec->self.value();
+    return surface->modify(*spec);
+}
+
+} // namespace
+
+MirWaitHandle* mir_surface_rename(MirSurface* surf, char const* name)
+{
+    MirWaitHandle* result = nullptr;
+    if (auto spec = mir_surface_begin_changes(surf))
+    {
+        mir_surface_spec_set_name(spec, name);
+        result = mir_surface_spec_commit_changes(spec);
+        mir_surface_spec_release(spec);
+    }
+    return result;
 }
