@@ -47,8 +47,6 @@ public:
 
     void handle_surface_created(std::shared_ptr<scene::Session> const& session) override;
 
-    frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override;
-
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
@@ -61,7 +59,6 @@ public:
     void set_focus_to(std::shared_ptr<scene::Session> const& focus_session);
 
 private:
-    std::shared_ptr<scene::PlacementStrategy> const placement_strategy;
     std::shared_ptr<scene::SurfaceConfigurator> const surface_configurator;
 
     void setting_focus_to(std::shared_ptr<scene::Surface> const& surface) override;
