@@ -19,6 +19,7 @@
 #include "default_window_manager.h"
 
 #include "mir/scene/placement_strategy.h"
+#include "mir/scene/session.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/focus_controller.h"
 
@@ -49,7 +50,9 @@ auto msh::DefaultWindowManager::add_surface(
     std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
 -> frontend::SurfaceId
 {
-    return build(session, placement_strategy->place(*session, params));
+    auto const result = build(session, placement_strategy->place(*session, params));
+    focus_controller->set_focus_to(session, session->surface(result));
+    return result;
 }
 
 void msh::DefaultWindowManager::remove_surface(

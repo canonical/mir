@@ -182,6 +182,8 @@ TEST_F(DefaultShell, offers_create_surface_parameters_to_placement_strategy)
     EXPECT_CALL(session_manager, set_focus_to(_)).WillOnce(SaveArg<0>(&session));
     shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
 
+    Mock::VerifyAndClearExpectations(&session_manager);
+
     auto params = ms::a_surface();
     EXPECT_CALL(placement_strategy, place(Ref(*session), Ref(params)));
 
@@ -193,6 +195,8 @@ TEST_F(DefaultShell, forwards_create_surface_parameters_from_placement_strategy_
     std::shared_ptr<ms::Session> session;
     EXPECT_CALL(session_manager, set_focus_to(_)).WillOnce(SaveArg<0>(&session));
     shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    Mock::VerifyAndClearExpectations(&session_manager);
 
     auto params = ms::a_surface();
     auto placed_params = params;

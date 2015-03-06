@@ -96,11 +96,6 @@ void msh::AbstractShell::destroy_surface(
     session->destroy_surface(surface);
 }
 
-void msh::AbstractShell::handle_surface_created(
-    std::shared_ptr<ms::Session> const& /*session*/)
-{
-}
-
 std::shared_ptr<ms::PromptSession> msh::AbstractShell::start_prompt_session_for(
     std::shared_ptr<ms::Session> const& session,
     scene::PromptSessionCreationParameters const& params)

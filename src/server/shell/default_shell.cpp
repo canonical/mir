@@ -51,13 +51,6 @@ void msh::DefaultShell::close_session(
     set_focus_to(session_coordinator->successor_of(std::shared_ptr<ms::Session>()));
 }
 
-void msh::DefaultShell::handle_surface_created(
-    std::shared_ptr<ms::Session> const& session)
-{
-    AbstractShell::handle_surface_created(session);
-    set_focus_to(session);
-}
-
 int msh::DefaultShell::set_surface_attribute(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface,

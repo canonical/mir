@@ -45,8 +45,6 @@ public:
  *  @{ */
     void close_session(std::shared_ptr<scene::Session> const& session) override;
 
-    void handle_surface_created(std::shared_ptr<scene::Session> const& session) override;
-
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
