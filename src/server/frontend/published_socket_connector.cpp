@@ -115,7 +115,6 @@ mf::PublishedSocketConnector::PublishedSocketConnector(
 mf::PublishedSocketConnector::~PublishedSocketConnector() noexcept
 {
     std::remove(socket_file.c_str());
-    puts(__PRETTY_FUNCTION__);
 }
 
 void mf::PublishedSocketConnector::start_accept()
@@ -196,8 +195,6 @@ void mf::BasicConnector::stop()
         }
     }
 
-    puts("DEBUG: threads stopped\n");
-
     /* Prepare for a potential restart */
     io_service.reset();
 }
@@ -241,6 +238,5 @@ int mf::BasicConnector::client_socket_fd(std::function<void(std::shared_ptr<Sess
 mf::BasicConnector::~BasicConnector() noexcept
 {
     stop();
-    puts(__PRETTY_FUNCTION__);
 }
 

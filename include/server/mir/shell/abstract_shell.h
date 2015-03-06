@@ -112,7 +112,6 @@ public:
     bool handle(MirEvent const& event) override;
 
 protected:
-
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;

@@ -275,7 +275,6 @@ bool msh::AbstractShell::handle(MirEvent const& event)
     return false;
 }
 
-
 auto msh::AbstractShell::surface_at(geometry::Point cursor) const
 -> std::shared_ptr<scene::Surface>
 {
