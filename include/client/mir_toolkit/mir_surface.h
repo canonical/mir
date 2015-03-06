@@ -571,6 +571,8 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
                                                             int height,
                                                             MirPixelFormat format);
 
+MirWaitHandle* mir_surface_rename(MirSurface* surf, char const* name);
+
 #ifdef __cplusplus
 }
 /**@}*/

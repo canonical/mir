@@ -395,6 +395,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
+    mir_surface_rename(surface, "I am a surface");
+
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");
 
     mir_surface_set_event_handler(surface, &delegate);
