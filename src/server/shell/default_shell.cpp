@@ -47,16 +47,6 @@ msh::DefaultShell::DefaultShell(
 {
 }
 
-std::shared_ptr<ms::Session> msh::DefaultShell::open_session(
-    pid_t client_pid,
-    std::string const& name,
-    std::shared_ptr<mf::EventSink> const& sink)
-{
-    auto const new_session = AbstractShell::open_session(client_pid, name, sink);
-    set_focus_to(new_session);
-    return new_session;
-}
-
 void msh::DefaultShell::close_session(
     std::shared_ptr<ms::Session> const& session)
 {

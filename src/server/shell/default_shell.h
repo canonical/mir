@@ -43,11 +43,6 @@ public:
 
 /** @name these come from frontend::Shell
  *  @{ */
-    std::shared_ptr<scene::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
-
     void close_session(std::shared_ptr<scene::Session> const& session) override;
 
     void handle_surface_created(std::shared_ptr<scene::Session> const& session) override;

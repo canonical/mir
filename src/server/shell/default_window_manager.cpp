@@ -18,6 +18,8 @@
 
 #include "default_window_manager.h"
 
+#include "mir/shell/focus_controller.h"
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -27,8 +29,9 @@ msh::DefaultWindowManager::DefaultWindowManager(FocusController* focus_controlle
 {
 }
 
-void msh::DefaultWindowManager::add_session(std::shared_ptr<scene::Session> const& /*session*/)
+void msh::DefaultWindowManager::add_session(std::shared_ptr<scene::Session> const& session)
 {
+    focus_controller->set_focus_to(session, {});
 }
 
 void msh::DefaultWindowManager::remove_session(std::shared_ptr<scene::Session> const& /*session*/)
