@@ -28,21 +28,18 @@ namespace mir
 namespace compositor
 {
 class RendererFactory;
-class DisplayListener;
 
 class DefaultDisplayBufferCompositorFactory : public DisplayBufferCompositorFactory
 {
 public:
     DefaultDisplayBufferCompositorFactory(
         std::shared_ptr<RendererFactory> const& renderer_factory,
-        std::shared_ptr<DisplayListener> const& display_listener,
         std::shared_ptr<CompositorReport> const& report);
 
     std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer);
 
 private:
     std::shared_ptr<RendererFactory> const renderer_factory;
-    std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
 };
 

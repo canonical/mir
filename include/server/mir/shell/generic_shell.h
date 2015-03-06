@@ -20,7 +20,6 @@
 #define MIR_SHELL_GENERIC_SHELL_H_
 
 #include "mir/shell/abstract_shell.h"
-#include "mir/shell/window_manager.h"
 
 namespace mir
 {
@@ -28,6 +27,8 @@ namespace geometry { class Point; }
 
 namespace shell
 {
+class WindowManager;
+
 /// A generic shell that supports a window manager
 class GenericShell : public virtual Shell, public virtual FocusController,
     private AbstractShell

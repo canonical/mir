@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -21,6 +21,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
+#include "mir/compositor/display_listener.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositor_report.h"
 #include "mir/scene/legacy_scene_change_notification.h"
@@ -95,12 +96,14 @@ public:
         std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory,
         mg::DisplaySyncGroup& group,
         std::shared_ptr<mc::Scene> const& scene,
+        std::shared_ptr<DisplayListener> const& display_listener,
         std::shared_ptr<CompositorReport> const& report) :
         compositor_factory{db_compositor_factory},
         group(group),
         scene(scene),
         running{true},
         frames_scheduled{0},
+        display_listener{display_listener},
         report{report}
     {
     }
@@ -125,6 +128,12 @@ public:
                                   r.top_left.x.as_int(), r.top_left.y.as_int(),
                                   CompositorReport::SubCompositorId{comp_id});
         });
+
+        auto display_registration = mir::raii::paired_calls(
+            [this]{group.for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+                { display_listener->add_display(buffer.view_area()); });},
+            [this]{group.for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+                { display_listener->remove_display(buffer.view_area()); });});
 
         auto compositor_registration = mir::raii::paired_calls(
             [this,&comp_id]{scene->register_compositor(comp_id);},
@@ -204,6 +213,7 @@ private:
     int frames_scheduled;
     std::mutex run_mutex;
     std::condition_variable run_cv;
+    std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
 };
 
@@ -214,11 +224,13 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Scene> const& scene,
     std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
+    std::shared_ptr<DisplayListener> const& display_listener,
     std::shared_ptr<CompositorReport> const& compositor_report,
     bool compose_on_start)
     : display{display},
       scene{scene},
       display_buffer_compositor_factory{db_compositor_factory},
+      display_listener{display_listener},
       report{compositor_report},
       state{CompositorState::stopped},
       compose_on_start{compose_on_start},
@@ -314,7 +326,7 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
     {
         auto thread_functor = std::make_unique<mc::CompositingFunctor>(
-            display_buffer_compositor_factory, group, scene, report);
+            display_buffer_compositor_factory, group, scene, display_listener, report);
 
         futures.push_back(thread_pool.run(std::ref(*thread_functor), &group));
         thread_functors.push_back(std::move(thread_functor));
