@@ -164,7 +164,7 @@ check_control_file()
         local pkg=$(package_name $p)
         local abi_var=$(package_abi_var $p)
         local abi=$(eval "echo \$${abi_var}")
-        local result=$(grep -o "${pkg}[[:digit:]]\+" debian/control | sort | uniq | sed -e "/\b${pkg}${abi}\b/ d" | tr '\n' ' ')
+        local result="$(grep -o "${pkg}[[:digit:]]\+" debian/control | sort | uniq | sed -e "/\b${pkg}${abi}\b/ d" | tr '\n' ' ')"
         if [ -n "$result" ];
         then
             report_abi_mismatch "debian/control contains $result, but $pkg ABI is $abi"
@@ -196,6 +196,31 @@ check_install_files()
     done
 }
 
+report_unknown_package()
+{
+    echo "Unknown package: $1" >&2
+    has_unknown_packages=yes
+}
+
+check_for_unknown_packages()
+{
+    local control_pkgs="$(grep "Package:" debian/control | cut -d ":" -f 2 | grep "[[:digit:]]" | tr -d ' [0-9]' | tr '\n' ' ')"
+    for p in $control_pkgs;
+    do
+        local result="$(echo "${packages}" | grep -v "\b${p}:")"
+        if [ -n "$result" ];
+        then
+            report_unknown_package "debian/control contains versioned package ${p} but it is unknown to this script"
+        fi
+    done
+
+    if [ "$has_unknown_packages" = "yes" ];
+    then
+        echo "The package list in this script needs to be updated" >&2
+        exit 1
+    fi
+}
+
 option_vcs=yes
 option_verbose=no
 option_check=no
@@ -216,6 +241,7 @@ populate_abi_variables
 
 if [ "$option_check" = "yes" ];
 then
+    check_for_unknown_packages
     check_control_file
     check_install_files
     if [ "$has_check_error" = "yes" ];
@@ -224,6 +250,7 @@ then
         exit 1
     fi
 else
+    check_for_unknown_packages
     update_control_file
     update_install_files
 fi
