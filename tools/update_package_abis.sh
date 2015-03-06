@@ -164,7 +164,7 @@ check_control_file()
         local pkg=$(package_name $p)
         local abi_var=$(package_abi_var $p)
         local abi=$(eval "echo \$${abi_var}")
-        local result=$(grep -o "${pkg}[[:digit:]]\+" debian/control | uniq | sed -e "/\b${pkg}${abi}\b/ d" | tr '\n' ' ')
+        local result=$(grep -o "${pkg}[[:digit:]]\+" debian/control | sort | uniq | sed -e "/\b${pkg}${abi}\b/ d" | tr '\n' ' ')
         if [ -n "$result" ];
         then
             report_abi_mismatch "debian/control contains $result, but $pkg ABI is $abi"
