@@ -42,6 +42,7 @@ namespace compositor
 {
 
 class DisplayBufferCompositorFactory;
+class DisplayListener;
 class CompositingFunctor;
 class Scene;
 class CompositorReport;
@@ -57,11 +58,13 @@ enum class CompositorState
 class MultiThreadedCompositor : public Compositor
 {
 public:
-    MultiThreadedCompositor(std::shared_ptr<graphics::Display> const& display,
-                            std::shared_ptr<Scene> const& scene,
-                            std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
-                            std::shared_ptr<CompositorReport> const& compositor_report,
-                            bool compose_on_start);
+    MultiThreadedCompositor(
+        std::shared_ptr<graphics::Display> const& display,
+        std::shared_ptr<Scene> const& scene,
+        std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
+        std::shared_ptr<DisplayListener> const& display_listener,
+        std::shared_ptr<CompositorReport> const& compositor_report,
+        bool compose_on_start);
     ~MultiThreadedCompositor();
 
     void start();
@@ -74,6 +77,7 @@ private:
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
+    std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
