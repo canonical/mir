@@ -65,7 +65,7 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
         [this]()
         {
             return wrap_display_buffer_compositor_factory(std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                the_renderer_factory(), the_shell(), the_compositor_report()));
+                the_renderer_factory(), the_compositor_report()));
         });
 }
 
@@ -86,6 +86,7 @@ mir::DefaultServerConfiguration::the_compositor()
                 the_display(),
                 the_scene(),
                 the_display_buffer_compositor_factory(),
+                the_shell(),
                 the_compositor_report(),
                 !the_options()->is_set(options::host_socket_opt));
         });
