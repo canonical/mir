@@ -94,3 +94,11 @@ void msh::DefaultShell::setting_focus_to(std::shared_ptr<ms::Surface> const& sur
     if (surface)
         surface_coordinator->raise(surface);
 }
+
+void msh::DefaultShell::set_focus_to(std::shared_ptr<scene::Session> const& focus_session)
+{
+    if (focus_session)
+        set_focus_to(focus_session, focus_session->default_surface());
+    else
+        set_focus_to(focus_session, {});
+}

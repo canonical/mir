@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,38 +16,23 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "compositor_report.h"
+#ifndef MIR_COMPOSITOR_DECORATION_H_
+#define MIR_COMPOSITOR_DECORATION_H_
 
-namespace mrn = mir::report::null;
+#include <string>
 
-void mrn::CompositorReport::added_display(int, int, int, int, SubCompositorId)
+namespace mir { namespace compositor {
+
+struct Decoration
 {
-}
+    enum class Type {none, surface} type;
+    std::string name;
 
-void mrn::CompositorReport::began_frame(SubCompositorId)
-{
-}
+    Decoration() : type{Type::none} {}
+    Decoration(Type t, std::string const& n) : type{t}, name{n} {}
+    operator bool() const { return type != Type::none; }
+};
 
-void mrn::CompositorReport::renderables_in_frame(SubCompositorId, mir::graphics::RenderableList const&)
-{
-}
+} } // namespace mir::compositor
 
-void mrn::CompositorReport::rendered_frame(SubCompositorId)
-{
-}
-
-void mrn::CompositorReport::finished_frame(SubCompositorId)
-{
-}
-
-void mrn::CompositorReport::started()
-{
-}
-
-void mrn::CompositorReport::stopped()
-{
-}
-
-void mrn::CompositorReport::scheduled()
-{
-}
+#endif // MIR_COMPOSITOR_DECORATION_H_

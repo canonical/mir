@@ -46,14 +46,8 @@ namespace
 
 struct MockSceneElement : mc::SceneElement
 {
-    MockSceneElement()
-    {
-        ON_CALL(*this, is_a_surface())
-            .WillByDefault(testing::Return(true));
-    }
-
     MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
-    MOCK_CONST_METHOD0(is_a_surface, bool());
+    MOCK_CONST_METHOD0(decoration, mc::Decoration const&());
     MOCK_METHOD0(rendered, void());
     MOCK_METHOD0(occluded, void());
 };

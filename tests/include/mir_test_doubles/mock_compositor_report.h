@@ -37,6 +37,8 @@ public:
                       compositor::CompositorReport::SubCompositorId));
     MOCK_METHOD1(began_frame,
                  void(compositor::CompositorReport::SubCompositorId));
+    MOCK_METHOD2(renderables_in_frame,
+                 void(compositor::CompositorReport::SubCompositorId, graphics::RenderableList const&));
     MOCK_METHOD1(rendered_frame,
                  void(compositor::CompositorReport::SubCompositorId));
     MOCK_METHOD1(finished_frame,

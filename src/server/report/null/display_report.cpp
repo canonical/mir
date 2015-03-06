@@ -29,3 +29,4 @@ void mrn::DisplayReport::report_drm_master_failure(int) {}
 void mrn::DisplayReport::report_vt_switch_away_failure() {}
 void mrn::DisplayReport::report_vt_switch_back_failure() {}
 void mrn::DisplayReport::report_egl_configuration(EGLDisplay, EGLConfig) {}
+void mrn::DisplayReport::report_vsync(unsigned int) {}
