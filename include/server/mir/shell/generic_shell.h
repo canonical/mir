@@ -27,11 +27,8 @@ namespace geometry { class Point; }
 
 namespace shell
 {
-class WindowManager;
-
 /// A generic shell that supports a window manager
-class GenericShell : public virtual Shell, public virtual FocusController,
-    private AbstractShell
+class GenericShell : public AbstractShell
 {
 public:
     GenericShell(
@@ -40,31 +37,6 @@ public:
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         std::function<std::shared_ptr<WindowManager>(FocusController* focus_controller)> const& wm_builder);
-
-    std::shared_ptr<scene::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
-
-    void close_session(std::shared_ptr<scene::Session> const& session) override;
-
-    frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override;
-
-    void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override;
-
-    bool handle(MirEvent const& event) override;
-
-    int set_surface_attribute(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib,
-        int value) override;
-
-    void add_display(geometry::Rectangle const& area) override;
-    void remove_display(geometry::Rectangle const& area) override;
-
-private:
-    std::shared_ptr<WindowManager> const window_manager;
 };
 }
 }

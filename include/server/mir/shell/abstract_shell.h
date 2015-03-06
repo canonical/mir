@@ -27,8 +27,10 @@ namespace mir
 {
 namespace shell
 {
+class WindowManager;
+
 /// Minimal Shell implementation with none of the necessary window management logic
-class AbstractShell : public virtual Shell
+class AbstractShell : public virtual Shell, public virtual FocusController
 {
 public:
     AbstractShell(
@@ -103,10 +105,18 @@ public:
     bool handle(MirEvent const& event) override;
 
 protected:
+    AbstractShell(
+        std::shared_ptr<InputTargeter> const& input_targeter,
+        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
+        std::function<std::shared_ptr<WindowManager>(FocusController* focus_controller)> const& wm_builder);
+
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
     std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
+    std::shared_ptr<WindowManager> const window_manager;
 
 private:
 /** @name callbacks from FocusController methods
