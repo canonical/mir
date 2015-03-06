@@ -3,3 +3,4 @@
 
 #include "rpc_report_tp.h"
 #include "input_receiver_report_tp.h"
+#include "perf_report_tp.h"
