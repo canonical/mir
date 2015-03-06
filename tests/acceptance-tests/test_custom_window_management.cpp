@@ -44,6 +44,11 @@ using namespace std::literals::chrono_literals;
 
 namespace
 {
+MATCHER_P(WeakPtrEq, p, "")
+{
+    return !arg.owner_before(p) && !p.owner_before(arg);
+}
+
 std::vector<geom::Rectangle> const display_geometry
 {
     {{  0, 0}, { 640,  480}},
@@ -184,13 +189,12 @@ TEST_F(CustomWindowManagement, surface_release_removes_surface)
     mir_surface_release_sync(surface);
 }
 
-// TODO enable this (Currently causes valgrind errors that need to be sorted)
-TEST_F(CustomWindowManagement, DISABLED_surface_is_associated_with_correct_client)
+TEST_F(CustomWindowManagement, surface_is_associated_with_correct_client)
 {
     start_server();
 
     const int no_of_clients = 17;
-    std::shared_ptr<ms::Session> session[no_of_clients];
+    std::weak_ptr<ms::Session> session[no_of_clients];
     std::vector<Client> client; client.reserve(no_of_clients);
 
     for (int i = 0; i != no_of_clients; ++i)
@@ -205,22 +209,21 @@ TEST_F(CustomWindowManagement, DISABLED_surface_is_associated_with_correct_clien
         // verify expectations for each client in turn
         Mock::VerifyAndClearExpectations(&window_manager);
 
-        EXPECT_CALL(window_manager, add_surface(session[i],_,_));
-        EXPECT_CALL(window_manager, remove_surface(session[i],_));
+        EXPECT_CALL(window_manager, add_surface(WeakPtrEq(session[i]),_,_));
+        EXPECT_CALL(window_manager, remove_surface(WeakPtrEq(session[i]),_));
 
         auto const surface = client[i].surface_create();
         mir_surface_release_sync(surface);
     }
 }
 
-// TODO enable this (Currently causes a segfault after test "passes")
-TEST_F(CustomWindowManagement, DISABLED_state_change_requests_are_associated_with_correct_surface)
+TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct_surface)
 {
     start_server();
     auto const client = connect_client();
 
     const int no_of_surfaces = 17;
-    std::shared_ptr<ms::Surface> server_surface[no_of_surfaces];
+    std::weak_ptr<ms::Surface> server_surface[no_of_surfaces];
     MirSurface* client_surface[no_of_surfaces] = {};
 
     for (int i = 0; i != no_of_surfaces; ++i)
@@ -248,7 +251,7 @@ TEST_F(CustomWindowManagement, DISABLED_state_change_requests_are_associated_wit
 
         mt::Signal received;
 
-        EXPECT_CALL(window_manager, handle_set_state(server_surface[i],_))
+        EXPECT_CALL(window_manager, handle_set_state(WeakPtrEq(server_surface[i]),_))
             .WillOnce(Invoke([&](std::shared_ptr<ms::Surface> const&, MirSurfaceState value)
                 { received.raise(); return value; }));
 
@@ -256,10 +259,4 @@ TEST_F(CustomWindowManagement, DISABLED_state_change_requests_are_associated_wit
 
         received.wait_for(400ms);
     }
-
-    for (auto surface: server_surface)
-        surface.reset();
-
-    for (auto surface: client_surface)
-        mir_surface_release_sync(surface);
 }
