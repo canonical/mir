@@ -1,0 +1,4 @@
+race:libglib*
+race:testing::internal::FunctionMockerBase
+race:~posix_event
+
