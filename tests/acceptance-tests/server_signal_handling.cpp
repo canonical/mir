@@ -61,7 +61,7 @@ TEST_F(ServerSignal, terminate_handler_is_called_for_SIGTERM)
         {
             EXPECT_CALL(*this, terminate_handler(SIGTERM));
             kill(getpid(), SIGTERM);
-            AsyncServerRunner::stop_server();
+            wait_for_server_exit();
         });
 }
 
@@ -71,7 +71,7 @@ TEST_F(ServerSignal, terminate_handler_is_called_for_SIGINT)
         {
             EXPECT_CALL(*this, terminate_handler(SIGINT));
             kill(getpid(), SIGINT);
-            AsyncServerRunner::stop_server();
+            wait_for_server_exit();
         });
 }
 

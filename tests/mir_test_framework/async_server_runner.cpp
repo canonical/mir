@@ -110,7 +110,6 @@ void mtf::AsyncServerRunner::stop_server()
 {
     connections.clear();
     server.stop();
-    server_thread.stop();
     wait_for_server_exit();
 }
 
@@ -123,6 +122,7 @@ void mtf::AsyncServerRunner::wait_for_server_exit()
     {
         BOOST_THROW_EXCEPTION(std::logic_error{"stop_server() failed to stop server"});
     }
+    server_thread.stop();
 }
 
 mtf::AsyncServerRunner::~AsyncServerRunner() noexcept = default;
