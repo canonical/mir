@@ -228,7 +228,7 @@ TEST_F(GenericShell, remove_display_adds_display_to_window_manager)
 TEST_F(GenericShell, key_input_events_are_handled_by_window_manager)
 {
     int64_t const timestamp{0};
-    MirKeyInputEventAction const action{mir_key_input_event_action_down};
+    MirKeyboardAction const action{mir_keyboard_action_down};
     xkb_keysym_t const key_code{0};
     int const scan_code{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
@@ -271,8 +271,8 @@ TEST_F(GenericShell, pointer_input_events_are_handled_by_window_manager)
 {
     int64_t const timestamp{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
-    MirPointerInputEventAction const action{mir_pointer_input_event_action_button_down};
-    std::vector<MirPointerInputEventButton> const buttons_pressed{mir_pointer_input_button_primary};
+    MirPointerAction const action{mir_pointer_action_button_down};
+    std::vector<MirPointerButton> const buttons_pressed{mir_pointer_button_primary};
     float const x_axis_value{0.0};
     float const y_axis_value{0.0};
     float const hscroll_value{0.0};
