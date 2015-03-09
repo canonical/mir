@@ -71,9 +71,9 @@ std::shared_ptr<ms::Session> msh::AbstractShell::open_session(
 void msh::AbstractShell::close_session(
     std::shared_ptr<ms::Session> const& session)
 {
-    window_manager->remove_session(session);
     prompt_session_manager->remove_session(session);
     session_coordinator->close_session(session);
+    window_manager->remove_session(session);
 }
 
 mf::SurfaceId msh::AbstractShell::create_surface(

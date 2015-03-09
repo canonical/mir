@@ -39,16 +39,9 @@ msh::DefaultShell::DefaultShell(
     std::shared_ptr<ms::PlacementStrategy> const& placement_strategy,
     std::shared_ptr<ms::SurfaceConfigurator> const& surface_configurator) :
     AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager,
-        [&](FocusController* focus_controller) { return std::make_shared<DefaultWindowManager>(focus_controller, placement_strategy); }),
+        [&](FocusController* focus_controller) { return std::make_shared<DefaultWindowManager>(focus_controller, placement_strategy, session_coordinator); }),
     surface_configurator{surface_configurator}
 {
-}
-
-void msh::DefaultShell::close_session(
-    std::shared_ptr<ms::Session> const& session)
-{
-    AbstractShell::close_session(session);
-    set_focus_to(session_coordinator->successor_of(std::shared_ptr<ms::Session>()));
 }
 
 int msh::DefaultShell::set_surface_attribute(

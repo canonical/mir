@@ -23,7 +23,7 @@
 
 namespace mir
 {
-namespace scene { class PlacementStrategy; class SurfaceConfigurator; }
+namespace scene { class PlacementStrategy; class SurfaceConfigurator; class SessionCoordinator; }
 
 namespace shell
 {
@@ -33,7 +33,8 @@ class DefaultWindowManager : public WindowManager
 {
 public:
     explicit DefaultWindowManager(FocusController* focus_controller,
-        std::shared_ptr<scene::PlacementStrategy> const& placement_strategy);
+        std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
 
     void add_session(std::shared_ptr<scene::Session> const& session) override;
 
@@ -63,6 +64,7 @@ public:
 private:
     FocusController* const focus_controller;
     std::shared_ptr<scene::PlacementStrategy> const placement_strategy;
+    std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
 };
 }
 }

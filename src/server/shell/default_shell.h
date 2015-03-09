@@ -43,8 +43,6 @@ public:
 
 /** @name these come from frontend::Shell
  *  @{ */
-    void close_session(std::shared_ptr<scene::Session> const& session) override;
-
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,

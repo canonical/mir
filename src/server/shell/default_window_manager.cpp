@@ -21,6 +21,7 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/placement_strategy.h"
 #include "mir/scene/session.h"
+#include "mir/scene/session_coordinator.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/focus_controller.h"
@@ -31,9 +32,11 @@ namespace msh = mir::shell;
 
 msh::DefaultWindowManager::DefaultWindowManager(
     FocusController* focus_controller,
-    std::shared_ptr<scene::PlacementStrategy> const& placement_strategy) :
+    std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
+    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator) :
     focus_controller{focus_controller},
-    placement_strategy{placement_strategy}
+    placement_strategy{placement_strategy},
+    session_coordinator{session_coordinator}
 {
 }
 
@@ -44,6 +47,11 @@ void msh::DefaultWindowManager::add_session(std::shared_ptr<scene::Session> cons
 
 void msh::DefaultWindowManager::remove_session(std::shared_ptr<scene::Session> const& /*session*/)
 {
+    auto const next_session = session_coordinator->successor_of({});
+    if (next_session)
+        focus_controller->set_focus_to(next_session, next_session->default_surface());
+    else
+        focus_controller->set_focus_to(next_session, {});
 }
 
 namespace
