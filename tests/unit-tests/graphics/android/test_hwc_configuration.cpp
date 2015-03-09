@@ -212,10 +212,10 @@ TEST_F(HwcConfiguration, display_attributes_failure_indicates_problem_for_primar
     EXPECT_FALSE(external_attribs.connected);
 }
 
-TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh_or_dpi)
+TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_hwc_wrapper, display_attributes( _, _, _, _))
+    EXPECT_CALL(*mock_hwc_wrapper, display_attributes(_,_,_,_))
             .WillOnce(Invoke([]
             (mga::DisplayName, mga::ConfigId, uint32_t const* attribute_list, int32_t* values)
             {
@@ -226,6 +226,21 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh_or_dpi)
             }));
     auto attribs = config.active_attribs_for(mga::DisplayName::external);
     EXPECT_THAT(attribs.vrefresh_hz, Eq(0.0f));
+}
+
+TEST_F(HwcConfiguration, no_fpe_from_malformed_dpi)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_hwc_wrapper, display_attributes(_,_,_,_))
+            .WillOnce(Invoke([]
+            (mga::DisplayName, mga::ConfigId, uint32_t const* attribute_list, int32_t* values)
+            {
+                int i = 0;
+                while(attribute_list[i] != HWC_DISPLAY_NO_ATTRIBUTE)
+                    values[i++] = 0;
+                return 0;
+            }));
+    auto attribs = config.active_attribs_for(mga::DisplayName::external);
     EXPECT_THAT(attribs.mm_size, Eq(geom::Size{0,0}));
 }
 
