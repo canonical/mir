@@ -26,7 +26,7 @@
 
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_scene_session.h"
+#include "mir_test_doubles/stub_scene_session.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_surface_coordinator.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
@@ -152,7 +152,7 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, closing_applications_transfers
 
 TEST_F(TestDefaultShellAndFocusSelectionStrategy, sets_input_focus)
 {
-    NiceMock<mtd::MockSceneSession> app1;
+    mtd::StubSceneSession app1;
     NiceMock<mtd::MockSurface> mock_surface;
 
     {
@@ -172,7 +172,7 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, sets_input_focus)
 
 TEST_F(TestDefaultShellAndFocusSelectionStrategy, notifies_surface_of_focus_change_after_it_has_taken_the_focus)
 {
-    NiceMock<mtd::MockSceneSession> app;
+    mtd::StubSceneSession app;
     auto const mock_surface = std::make_shared<NiceMock<mtd::MockSurface>>();
 
     InSequence seq;
@@ -184,7 +184,7 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, notifies_surface_of_focus_chan
 
 TEST_F(TestDefaultShellAndFocusSelectionStrategy, configurator_selects_attribute_values)
 {
-    NiceMock<mtd::MockSceneSession> app;
+    mtd::StubSceneSession app;
     auto const session = mt::fake_shared(app);
     auto const surface = std::make_shared<NiceMock<mtd::MockSurface>>();
     ON_CALL(*surface, configure(_, _)).WillByDefault(ReturnArg<1>());
@@ -205,7 +205,7 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, configurator_selects_attribute
 
 TEST_F(TestDefaultShellAndFocusSelectionStrategy, set_surface_attribute_returns_value_set_by_configurator)
 {
-    NiceMock<mtd::MockSceneSession> app;
+    mtd::StubSceneSession app;
     auto const session = mt::fake_shared(app);
     auto const surface = std::make_shared<NiceMock<mtd::MockSurface>>();
     ON_CALL(*surface, configure(_, _)).WillByDefault(ReturnArg<1>());
