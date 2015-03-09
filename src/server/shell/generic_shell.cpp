@@ -16,66 +16,63 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "server_example_generic_shell.h"
+#include "mir/shell/generic_shell.h"
+#include "mir/shell/window_manager.h"
 
 #include "mir/geometry/point.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 
-namespace me = mir::examples;
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-///\example server_example_generic_shell.cpp
-/// A shell that accepts a WindowManager
-
-me::GenericShell::GenericShell(
-    std::shared_ptr<msh::InputTargeter> const& input_targeter,
+msh::GenericShell::GenericShell(
+    std::shared_ptr<InputTargeter> const& input_targeter,
     std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
-    std::function<std::shared_ptr<WindowManager>(FocusController* focus_controller)> const& wm_builder) :
+    std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder) :
     AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
     window_manager(wm_builder(this))
 {
 }
 
-std::shared_ptr<ms::Session> me::GenericShell::open_session(
+std::shared_ptr<ms::Session> msh::GenericShell::open_session(
     pid_t client_pid,
     std::string const& name,
     std::shared_ptr<mf::EventSink> const& sink)
 {
-    auto const result = msh::AbstractShell::open_session(client_pid, name, sink);
+    auto const result = AbstractShell::open_session(client_pid, name, sink);
     window_manager->add_session(result);
     return result;
 }
 
-void me::GenericShell::close_session(std::shared_ptr<ms::Session> const& session)
+void msh::GenericShell::close_session(std::shared_ptr<ms::Session> const& session)
 {
     window_manager->remove_session(session);
-    msh::AbstractShell::close_session(session);
+    AbstractShell::close_session(session);
 }
 
-auto me::GenericShell::create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
+auto msh::GenericShell::create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
 -> mf::SurfaceId
 {
     auto const build = [this](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& placed_params)
         {
-            return msh::AbstractShell::create_surface(session, placed_params);
+            return AbstractShell::create_surface(session, placed_params);
         };
 
     return window_manager->add_surface(session, params, build);
 }
 
-void me::GenericShell::destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface)
+void msh::GenericShell::destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface)
 {
-    window_manager->remove_surface(session->surface(surface), session);
-    msh::AbstractShell::destroy_surface(session, surface);
+    window_manager->remove_surface(session, session->surface(surface));
+    AbstractShell::destroy_surface(session, surface);
 }
 
-bool me::GenericShell::handle(MirEvent const& event)
+bool msh::GenericShell::handle(MirEvent const& event)
 {
     if (mir_event_get_type(&event) != mir_event_type_input)
         return false;
@@ -97,7 +94,7 @@ bool me::GenericShell::handle(MirEvent const& event)
     return false;
 }
 
-int me::GenericShell::set_surface_attribute(
+int msh::GenericShell::set_surface_attribute(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface,
     MirSurfaceAttrib attrib,
@@ -108,19 +105,19 @@ int me::GenericShell::set_surface_attribute(
     case mir_surface_attrib_state:
     {
         auto const state = window_manager->handle_set_state(surface, MirSurfaceState(value));
-        return msh::AbstractShell::set_surface_attribute(session, surface, attrib, state);
+        return AbstractShell::set_surface_attribute(session, surface, attrib, state);
     }
     default:
-        return msh::AbstractShell::set_surface_attribute(session, surface, attrib, value);
+        return AbstractShell::set_surface_attribute(session, surface, attrib, value);
     }
 }
 
-void me::GenericShell::add_display(geometry::Rectangle const& area)
+void msh::GenericShell::add_display(geometry::Rectangle const& area)
 {
     window_manager->add_display(area);
 }
 
-void me::GenericShell::remove_display(geometry::Rectangle const& area)
+void msh::GenericShell::remove_display(geometry::Rectangle const& area)
 {
     window_manager->remove_display(area);
 }
