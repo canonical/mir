@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,8 +17,11 @@
  */
 
 #include "buffer_stream_tracker.h"
+#include "client_buffer_tracker.h"
+
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
+
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -32,7 +35,9 @@ mf::BufferStreamTracker::BufferStreamTracker(size_t client_cache_size) :
 
 bool mf::BufferStreamTracker::track_buffer(BufferStreamId buffer_stream_id, mg::Buffer* buffer)
 {
+    std::lock_guard<decltype(mutex)> lock{mutex};
     auto& tracker = client_buffer_tracker[buffer_stream_id];
+
     if (!tracker)
         tracker = std::make_shared<ClientBufferTracker>(client_cache_size);
 
@@ -53,7 +58,9 @@ bool mf::BufferStreamTracker::track_buffer(BufferStreamId buffer_stream_id, mg::
 
 void mf::BufferStreamTracker::remove_buffer_stream(BufferStreamId buffer_stream_id)
 {
+    std::lock_guard<decltype(mutex)> lock{mutex};
     auto it = client_buffer_tracker.find(buffer_stream_id);
+
     if (it != client_buffer_tracker.end())
         client_buffer_tracker.erase(it);
 
@@ -64,7 +71,10 @@ void mf::BufferStreamTracker::remove_buffer_stream(BufferStreamId buffer_stream_
 
 mg::Buffer* mf::BufferStreamTracker::last_buffer(BufferStreamId buffer_stream_id) const
 {
+
+    std::lock_guard<decltype(mutex)> lock{mutex};
     auto it = client_buffer_resource.find(buffer_stream_id);
+
     if (it != client_buffer_resource.end())
         return it->second;
     else
@@ -74,6 +84,7 @@ mg::Buffer* mf::BufferStreamTracker::last_buffer(BufferStreamId buffer_stream_id
 
 mg::Buffer* mf::BufferStreamTracker::buffer_from(mg::BufferID buffer_id) const
 {
+    std::lock_guard<decltype(mutex)> lock{mutex};
     for (auto const& tracker : client_buffer_tracker)
     {
         auto buffer = tracker.second->buffer_from(buffer_id);

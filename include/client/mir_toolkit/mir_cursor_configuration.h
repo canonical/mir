@@ -55,7 +55,7 @@ MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name);
 
 /**
  * Returns a new cursor configuration tied to a given buffer stream.
- * If the configuration successfully applied buffers from the stream will be used 
+ * If the configuration is successfully applied buffers from the stream will be used 
  * to fill the system cursor.
  *    \param [in] name      The buffer stream
  *    \param [in] hotspot_x The x-coordinate displacement within the image to place on the cursor.

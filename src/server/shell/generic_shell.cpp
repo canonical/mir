@@ -17,6 +17,7 @@
  */
 
 #include "mir/shell/generic_shell.h"
+#include "mir/shell/window_manager.h"
 
 #include "mir/geometry/point.h"
 #include "mir/scene/session.h"

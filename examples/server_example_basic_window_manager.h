@@ -23,6 +23,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/generic_shell.h"
+#include "mir/shell/window_manager.h"
 
 #include <map>
 #include <mutex>

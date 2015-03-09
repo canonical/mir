@@ -63,6 +63,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <mutex>
+#include <thread>
 #include <functional>
 #include <cstring>
 
@@ -154,17 +155,27 @@ void mf::SessionMediator::connect(
 void mf::SessionMediator::advance_buffer(
     BufferStreamId stream_id,
     BufferStream& stream,
+    graphics::Buffer* old_buffer,
+    std::unique_lock<std::mutex>& lock,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto client_buffer = buffer_stream_tracker.last_buffer(stream_id);
+    auto const tid = std::this_thread::get_id();
+
     stream.swap_buffers(
-        client_buffer, 
-        [this, stream_id, complete](mg::Buffer* new_buffer)
+        old_buffer,
+        // Note: We assume that the lambda will be executed within swap_buffers
+        // (in which case the lock reference is valid) or in a different thread
+        // altogether (in which case the dangling reference is not accessed)
+        [this, tid, &lock, stream_id, complete](mg::Buffer* new_buffer)
         {
+            if (tid == std::this_thread::get_id())
+                lock.unlock();
+
             if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
                 complete(new_buffer, mg::BufferIpcMsgType::full_msg);
+
         });
 }
 
@@ -175,7 +186,7 @@ void mf::SessionMediator::create_surface(
     google::protobuf::Closure* done)
 {
 
-    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
+    std::unique_lock<std::mutex> lock{session_mutex};
 
     auto const session = weak_session.lock();
 
@@ -245,13 +256,12 @@ void mf::SessionMediator::create_surface(
         setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
+
     auto stream_id = mf::BufferStreamId(surf_id.as_value());
-    advance_buffer(stream_id, *surface,
-        [lock, this, &surf_id, response, done, session]
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id), lock,
+        [this, surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
-            lock->unlock();
-
             response->mutable_buffer_stream()->mutable_id()->set_value(
                surf_id.as_value());
             pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(),
@@ -275,7 +285,7 @@ void mf::SessionMediator::next_buffer(
 {
     SurfaceId const surf_id{request->value()};
 
-    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
+    std::unique_lock<std::mutex> lock{session_mutex};
 
     auto const session = weak_session.lock();
 
@@ -285,17 +295,13 @@ void mf::SessionMediator::next_buffer(
     report->session_next_buffer_called(session->name());
 
     auto surface = session->get_surface(surf_id);
-
     auto stream_id = mf::BufferStreamId{surf_id.as_value()};
 
-    advance_buffer(stream_id, *surface,
-        [lock, this, response, done, session]
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id), lock,
+        [this, response, done]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
-            lock->unlock();
-
             pack_protobuf_buffer(*response, client_buffer, msg_type);
-
             done->Run();
         });
 }
@@ -313,7 +319,7 @@ void mf::SessionMediator::exchange_buffer(
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
     ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
 
-    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
+    std::unique_lock<std::mutex> lock{session_mutex};
     auto const session = weak_session.lock();
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
@@ -321,17 +327,11 @@ void mf::SessionMediator::exchange_buffer(
     report->session_exchange_buffer_called(session->name());
 
     auto const& surface = session->get_buffer_stream(stream_id);
-    surface->swap_buffers(
-        buffer_stream_tracker.buffer_from(buffer_id),
-        [this, stream_id, lock, response, done](mg::Buffer* new_buffer)
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.buffer_from(buffer_id), lock,
+        [this, response, done]
+        (graphics::Buffer* new_buffer, graphics::BufferIpcMsgType msg_type)
         {
-            lock->unlock();
-
-            if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::update_msg);
-            else
-                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::full_msg);
-
+            pack_protobuf_buffer(*response, new_buffer, msg_type);
             done->Run();
         });
 }
@@ -529,7 +529,7 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
     mir::protobuf::BufferStream* response,
     google::protobuf::Closure* done)
 {
-    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
+    auto lock = std::unique_lock<std::mutex>(session_mutex);
 
     auto const session = weak_session.lock();
 
@@ -563,12 +563,10 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
     // TODO: Is it guaranteed we get the buffer usage we want?
     response->set_buffer_usage(request->buffer_usage());
 
-    advance_buffer(buffer_stream_id, *stream,
-        [lock, this, response, done, session]
+    advance_buffer(buffer_stream_id, *stream, buffer_stream_tracker.last_buffer(buffer_stream_id), lock,
+        [this, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
-            lock->unlock();
-
             auto buffer = response->mutable_buffer();
             pack_protobuf_buffer(*buffer, client_buffer, msg_type);
 
