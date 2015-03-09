@@ -104,8 +104,10 @@ namespace
 {
 int dpi_to_mm(uint32_t dpi, int pixel_num)
 {
-    printf("DPI %i %i\n", (int) dpi, pixel_num);
-    return (int)( ((float)pixel_num / (float) dpi) * 2.54);
+    using mm_to_inch = std::ratio<254, 10>;
+    using factor = std::ratio_multiply<std::kilo, mm_to_inch>; //android multiplies by 1000
+    if (dpi == 0) return 0;
+    return (pixel_num * factor::num) / (factor::den * dpi);
 }
 }
 
@@ -146,7 +148,7 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
 
     return {
         {values[0], values[1]},
-        {dpi_to_mm(values[3], values[0]), dpi_to_mm(values[4], values[1])}, //TODO: convert DPI to MM and return
+        {dpi_to_mm(values[3], values[0]), dpi_to_mm(values[4], values[1])},
         period_to_hz(std::chrono::nanoseconds{values[2]}),
         true,
         format,

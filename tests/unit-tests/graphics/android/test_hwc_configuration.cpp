@@ -212,7 +212,7 @@ TEST_F(HwcConfiguration, display_attributes_failure_indicates_problem_for_primar
     EXPECT_FALSE(external_attribs.connected);
 }
 
-TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
+TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh_or_dpi)
 {
     using namespace testing;
     EXPECT_CALL(*mock_hwc_wrapper, display_attributes( _, _, _, _))
@@ -221,21 +221,12 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
             {
                 int i = 0;
                 while(attribute_list[i] != HWC_DISPLAY_NO_ATTRIBUTE)
-                {
-                    switch(attribute_list[i])
-                    {
-                        case HWC_DISPLAY_VSYNC_PERIOD:
-                            values[i] = 0;
-                            break;
-                        default:
-                            break;
-                    }
-                    i++;
-                }
+                    values[i++] = 0;
                 return 0;
             }));
     auto attribs = config.active_attribs_for(mga::DisplayName::external);
     EXPECT_THAT(attribs.vrefresh_hz, Eq(0.0f));
+    EXPECT_THAT(attribs.mm_size, Eq(geom::Size{0,0}));
 }
 
 TEST_F(HwcConfiguration, subscribes_to_hotplug_and_vsync)
