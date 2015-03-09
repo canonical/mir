@@ -150,40 +150,10 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, closing_applications_transfers
     EXPECT_CALL(session_manager, set_focus_to(_)).Times(AtLeast(0));
 }
 
-TEST_F(TestDefaultShellAndFocusSelectionStrategy, mechanism_notifies_default_surface_of_focus_changes)
-{
-    using namespace ::testing;
-
-    NiceMock<mtd::MockSceneSession> app1, app2;
-    auto const mock_surface1 = std::make_shared<NiceMock<mtd::MockSurface>>();
-    auto const mock_surface2 = std::make_shared<NiceMock<mtd::MockSurface>>();
-
-    ON_CALL(app1, default_surface()).WillByDefault(Return(mock_surface1));
-    ON_CALL(app2, default_surface()).WillByDefault(Return(mock_surface2));
-
-    InSequence seq;
-    EXPECT_CALL(surface_coordinator, raise(AnySurface())).Times(1);
-    EXPECT_CALL(*mock_surface1, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
-    EXPECT_CALL(surface_coordinator, raise(AnySurface())).Times(1);
-    EXPECT_CALL(*mock_surface1, configure(mir_surface_attrib_focus, mir_surface_unfocused)).Times(1);
-    EXPECT_CALL(*mock_surface2, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
-
-    shell.set_focus_to(mt::fake_shared(app1));
-    shell.set_focus_to(mt::fake_shared(app2));
-}
-
 TEST_F(TestDefaultShellAndFocusSelectionStrategy, sets_input_focus)
 {
     NiceMock<mtd::MockSceneSession> app1;
     NiceMock<mtd::MockSurface> mock_surface;
-
-    {
-        InSequence seq;
-        EXPECT_CALL(app1, default_surface()).Times(1)
-            .WillOnce(Return(mt::fake_shared(mock_surface)));
-        EXPECT_CALL(app1, default_surface()).Times(1)
-            .WillOnce(Return(std::shared_ptr<ms::Surface>()));
-    }
 
     {
         InSequence seq;
@@ -195,9 +165,9 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, sets_input_focus)
     }
     EXPECT_CALL(surface_coordinator, raise(AnySurface())).Times(1);
 
-    shell.set_focus_to(mt::fake_shared(app1));
-    shell.set_focus_to(mt::fake_shared(app1));
-    shell.set_focus_to(std::shared_ptr<ms::Session>());
+    shell.set_focus_to(mt::fake_shared(app1), mt::fake_shared(mock_surface));
+    shell.set_focus_to(mt::fake_shared(app1), std::shared_ptr<ms::Surface>());
+    shell.set_focus_to(std::shared_ptr<ms::Session>(), std::shared_ptr<ms::Surface>());
 }
 
 TEST_F(TestDefaultShellAndFocusSelectionStrategy, notifies_surface_of_focus_change_after_it_has_taken_the_focus)
@@ -205,13 +175,11 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, notifies_surface_of_focus_chan
     NiceMock<mtd::MockSceneSession> app;
     auto const mock_surface = std::make_shared<NiceMock<mtd::MockSurface>>();
 
-    ON_CALL(app, default_surface()).WillByDefault(Return(mock_surface));
-
     InSequence seq;
     EXPECT_CALL(*mock_surface, take_input_focus(_));
     EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
 
-    shell.set_focus_to(mt::fake_shared(app));
+    shell.set_focus_to(mt::fake_shared(app), mock_surface);
 }
 
 TEST_F(TestDefaultShellAndFocusSelectionStrategy, configurator_selects_attribute_values)

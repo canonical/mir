@@ -48,11 +48,7 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib,
         int value) override;
-
-    using AbstractShell::set_focus_to;
 /** @} */
-
-    void set_focus_to(std::shared_ptr<scene::Session> const& focus_session);
 
 private:
     std::shared_ptr<scene::SurfaceConfigurator> const surface_configurator;
