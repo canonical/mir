@@ -49,6 +49,7 @@ class Surface;
 }
 namespace input
 {
+class InputSender;
 namespace android
 {
 class InputConfiguration;
@@ -57,7 +58,8 @@ class InputTargeter;
 class InputRegistrar : public WindowHandleRepository
 {
 public:
-    explicit InputRegistrar(std::shared_ptr<mir::compositor::Scene> const& scene);
+    explicit InputRegistrar(std::shared_ptr<mir::compositor::Scene> const& scene,
+                            std::shared_ptr<InputSender> const& input_sender);
     virtual ~InputRegistrar() noexcept(true);
 
     virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_channel(std::shared_ptr<input::InputChannel const> const& channel);
@@ -84,6 +86,7 @@ private:
 
     std::mutex handles_mutex;
     std::shared_ptr<compositor::Scene> const scene;
+    std::shared_ptr<InputSender> const input_sender;
     std::shared_ptr<SceneObserver> const observer;
 };
 

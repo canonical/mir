@@ -108,9 +108,9 @@ mia::InputSender::InputSenderState::InputSenderState(std::shared_ptr<mir::MainLo
 {
 }
 
-void mia::InputSender::send_event(MirEvent const& event, std::shared_ptr<InputChannel> const& channel)
+mi::TransportSequenceID mia::InputSender::send_event(MirEvent const& event, std::shared_ptr<InputChannel> const& channel)
 {
-    state.send_event(channel, event);
+    return state.send_event(channel, event);
 }
 
 std::shared_ptr<mia::InputSender::ActiveTransfer> mia::InputSender::InputSenderState::get_transfer(int fd)
@@ -123,7 +123,7 @@ std::shared_ptr<mia::InputSender::ActiveTransfer> mia::InputSender::InputSenderS
     return pos->second;
 }
 
-void mia::InputSender::InputSenderState::send_event(std::shared_ptr<InputChannel> const& channel, MirEvent const& event)
+mi::TransportSequenceID mia::InputSender::InputSenderState::send_event(std::shared_ptr<InputChannel> const& channel, MirEvent const& event)
 {
     std::unique_lock<std::mutex> lock(sender_mutex);
     auto transfer = get_transfer(channel->server_fd());
@@ -131,10 +131,12 @@ void mia::InputSender::InputSenderState::send_event(std::shared_ptr<InputChannel
     if (!transfer)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failure sending input event : Unknown channel provided"));
 
-    mia::InputSendEntry entry{next_seq(), event, channel};
+    auto seq = next_seq();
+    mia::InputSendEntry entry{seq, event, channel};
     lock.unlock();
 
     transfer->send(std::move(entry));
+    return seq;
 }
 
 void mia::InputSender::InputSenderState::add_transfer(int fd, mi::Surface * surface)
@@ -163,7 +165,7 @@ void mia::InputSender::InputSenderState::remove_transfer(int fd)
     }
 }
 
-uint32_t mia::InputSender::InputSenderState::next_seq()
+mi::TransportSequenceID mia::InputSender::InputSenderState::next_seq()
 {
     while(!++seq);
     return seq;
@@ -198,11 +200,11 @@ void mia::InputSender::ActiveTransfer::send(InputSendEntry && event)
     {
     case droidinput::WOULD_BLOCK:
         if (state.observer)
-            state.observer->client_blocked(event.event, surface);
+            state.observer->client_blocked(event.event, event.sequence_id, surface);
         break;
     case droidinput::DEAD_OBJECT:
         if (state.observer)
-            state.observer->send_failed(event.event, surface, InputSendObserver::socket_error);
+            state.observer->send_failed(event.event, event.sequence_id, surface, InputSendObserver::socket_error);
         break;
     default:
         BOOST_THROW_EXCEPTION(boost::enable_error_info(std::runtime_error("Failure sending input event : ")) << boost::errinfo_errno(errno));
@@ -314,7 +316,7 @@ void mia::InputSender::ActiveTransfer::on_surface_disappeared()
                       release_pending_responses.rend(),
                       [observer,this](InputSendEntry const& entry)
                       {
-                          observer->send_failed(entry.event, surface, InputSendObserver::surface_disappeared);
+                          observer->send_failed(entry.event, entry.sequence_id, surface, InputSendObserver::surface_disappeared);
                       });
     }
 }
@@ -336,6 +338,7 @@ void mia::InputSender::ActiveTransfer::on_finish_signal()
 
             if (entry.sequence_id == sequence && observer)
                 observer->send_suceeded(entry.event,
+                                        entry.sequence_id,
                                         surface,
                                         handled ? InputSendObserver::consumed : InputSendObserver::not_consumed);
         }
@@ -361,7 +364,7 @@ void mia::InputSender::ActiveTransfer::on_response_timeout()
     mia::InputSendEntry timedout_entry{unqueue_entry(top_sequence_id)};
 
     if (state.observer)
-        state.observer->send_failed(timedout_entry.event, surface, InputSendObserver::no_response_received);
+        state.observer->send_failed(timedout_entry.event, timedout_entry.sequence_id, surface, InputSendObserver::no_response_received);
 }
 
 void mia::InputSender::ActiveTransfer::enqueue_entry(mia::InputSendEntry && entry)

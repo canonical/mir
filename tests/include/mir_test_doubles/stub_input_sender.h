@@ -30,8 +30,9 @@ namespace doubles
 
 struct StubInputSender : mir::input::InputSender
 {
-    void send_event(MirEvent const& /*event*/, std::shared_ptr<mir::input::InputChannel> const& /*channel*/) override
+    input::TransportSequenceID send_event(MirEvent const& /*event*/, std::shared_ptr<mir::input::InputChannel> const& /*channel*/) override
     {
+        return input::TransportSequenceID();
     }
 };
 

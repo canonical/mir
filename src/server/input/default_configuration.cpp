@@ -115,7 +115,7 @@ mir::DefaultServerConfiguration::the_input_registrar()
     return input_registrar(
         [this]()
         {
-            return std::make_shared<mia::InputRegistrar>(the_scene());
+            return std::make_shared<mia::InputRegistrar>(the_scene(), the_input_sender());
         });
 }
 

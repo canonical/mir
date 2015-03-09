@@ -254,11 +254,12 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_consumed)
 {
     register_surface();
 
-    sender.send_event(motion_event, channel);
+    auto id = sender.send_event(motion_event, channel);
 
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
     EXPECT_CALL(observer,
                 send_suceeded(mt::MirTouchEventMatches(motion_event),
+                              id,
                               &stub_surface,
                               mi::InputSendObserver::consumed));
 
@@ -269,12 +270,13 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_consumed)
 TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_not_consumed)
 {
     register_surface();
-
-    sender.send_event(motion_event, channel);
+    
+    auto id = sender.send_event(motion_event, channel);
 
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
     EXPECT_CALL(observer,
                 send_suceeded(mt::MirTouchEventMatches(motion_event),
+                              id,
                               &stub_surface,
                               mi::InputSendObserver::not_consumed));
 
@@ -295,10 +297,12 @@ TEST_F(AndroidInputSender, unordered_finish_signal_triggers_the_right_callback)
 
     EXPECT_CALL(observer,
                 send_suceeded(mt::MirKeyEventMatches(key_event),
+                              first_sequence,
                               &stub_surface,
                               mi::InputSendObserver::consumed));
     EXPECT_CALL(observer,
                 send_suceeded(mt::MirTouchEventMatches(motion_event),
+                              second_sequence,
                               &stub_surface,
                               mi::InputSendObserver::not_consumed));
     consumer.sendFinishedSignal(second_sequence, true);
@@ -310,10 +314,10 @@ TEST_F(AndroidInputSender, observer_notified_on_disapeared_surface )
 {
     register_surface();
 
-    sender.send_event(key_event, channel);
+    auto id = sender.send_event(key_event, channel);
     EXPECT_CALL(
         observer,
-        send_failed(mt::MirKeyEventMatches(key_event), &stub_surface, mir::input::InputSendObserver::surface_disappeared));
+        send_failed(mt::MirKeyEventMatches(key_event), id, &stub_surface, mir::input::InputSendObserver::surface_disappeared));
     deregister_surface();
 }
 
@@ -331,21 +335,23 @@ TEST_F(AndroidInputSender, observer_informed_on_response_timeout)
 {
     register_surface();
 
-    sender.send_event(key_event, channel);
+    auto id = sender.send_event(key_event, channel);
     EXPECT_CALL(
         observer,
-        send_failed(mt::MirKeyEventMatches(key_event), &stub_surface, mir::input::InputSendObserver::no_response_received));
+        send_failed(mt::MirKeyEventMatches(key_event), id, &stub_surface, mir::input::InputSendObserver::no_response_received));
 
     loop.fire_all_alarms();
 }
 
 TEST_F(AndroidInputSender, observer_informed_about_closed_socket_on_send_event)
 {
+    using namespace ::testing;
+    
     register_surface();
 
     EXPECT_CALL(
         observer,
-        send_failed(mt::MirKeyEventMatches(key_event), &stub_surface, mir::input::InputSendObserver::socket_error));
+        send_failed(mt::MirKeyEventMatches(key_event), _, &stub_surface, mir::input::InputSendObserver::socket_error));
     ::close(channel->client_fd());
     sender.send_event(key_event, channel);
 }

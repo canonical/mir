@@ -46,6 +46,8 @@
 #include "InputDispatcher.h"
 
 #include "mir/input/input_report.h"
+#include "mir/input/surface.h"
+#include "mir/input/input_channel.h"
 
 #include <cutils/log.h>
 #include <android/keycodes.h>
@@ -2028,9 +2030,74 @@ void InputDispatcher::releaseDispatchEntryLocked(DispatchEntry* dispatchEntry) {
     delete dispatchEntry;
 }
 
+void InputDispatcher::handleEventSendStatusLocked(uint32_t seq, sp<Connection> connection, bool success, bool handled, bool socket_dead)
+{
+    if (success)
+    {
+        std::chrono::nanoseconds currentTime = now();
+
+        input_report->received_event_finished_signal(connection->inputChannel->getFd(), seq);
+        finishDispatchCycleLocked(currentTime, connection, seq, handled);
+        runCommandsLockedInterruptible();
+    }
+    else
+    {
+        ALOGW("channel '%s' ~ Consumer closed input channel or an error occurred.  ",
+              connection->getInputChannelName());
+        // Unregister the channel.
+        bool notify = !socket_dead || !connection->monitor;
+        unregisterInputChannelLocked(connection->inputChannel, notify);
+    }
+}
+
+void InputDispatcher::send_failed(MirEvent const& event, mir::input::TransportSequenceID id,
+    mir::input::Surface* surface, FailureReason reason)
+{
+    AutoMutex _l(mLock);
+    auto fd = surface->input_channel()->server_fd();
+
+    ssize_t connectionIndex = mConnectionsByFd.indexOfKey(fd);
+    if (connectionIndex < 0) {
+        ALOGE("Received spurious receive callback for unknown input channel.  "
+              "fd=%d", fd);
+        return;
+    }
+    
+    sp<Connection> connection = mConnectionsByFd.valueAt(connectionIndex);
+    handleEventSendStatusLocked(static_cast<uint32_t>(id), connection, false, false,
+                                reason == mir::input::InputSendObserver::FailureReason::socket_error);
+}
+    
+void InputDispatcher::send_suceeded(MirEvent const& event, mir::input::TransportSequenceID id,
+                                    mir::input::Surface* surface, InputResponse response)
+{
+    AutoMutex _l(mLock);
+    auto fd = surface->input_channel()->server_fd();
+
+    ssize_t connectionIndex = mConnectionsByFd.indexOfKey(fd);
+    if (connectionIndex < 0) {
+        ALOGE("Received spurious receive callback for unknown input channel.  "
+              "fd=%d", fd);
+        return;
+    }
+
+    bool handled = response == mir::input::InputSendObserver::InputResponse::consumed;
+    
+    sp<Connection> connection = mConnectionsByFd.valueAt(connectionIndex);
+    handleEventSendStatusLocked(static_cast<uint32_t>(id), connection, true, handled,
+                                false);
+}
+void InputDispatcher::client_blocked(MirEvent const& event, mir::input::TransportSequenceID id,
+                                     mir::input::Surface* surface)
+{
+    // TODO?
+    (void) event;
+    (void) id;
+    (void) surface;
+}
+
 int InputDispatcher::handleReceiveCallback(int fd, int events, void* data) {
     InputDispatcher* d = static_cast<InputDispatcher*>(data);
-
     { // acquire lock
         AutoMutex _l(d->mLock);
 
@@ -2050,47 +2117,24 @@ int InputDispatcher::handleReceiveCallback(int fd, int events, void* data) {
                 return 1;
             }
 
-            std::chrono::nanoseconds currentTime = now();
             bool gotOne = false;
-            status_t status;
-            for (;;) {
+            status_t status = 0;
+            while (!status) {
                 uint32_t seq;
                 bool handled;
                 status = connection->inputPublisher.receiveFinishedSignal(&seq, &handled);
-                if (status) {
-                    break;
-                }
-                d->input_report->received_event_finished_signal(connection->inputChannel->getFd(), seq);
-                d->finishDispatchCycleLocked(currentTime, connection, seq, handled);
-                gotOne = true;
-            }
-            if (gotOne) {
-                d->runCommandsLockedInterruptible();
-                if (status == WOULD_BLOCK) {
+                if (status != WOULD_BLOCK)
+                    d->handleEventSendStatusLocked(seq, connection, !status, handled, status == DEAD_OBJECT);
+                else
                     return 1;
-                }
-            }
-
-            notify = status != DEAD_OBJECT || !connection->monitor;
-            if (notify) {
-                ALOGE("channel '%s' ~ Failed to receive finished signal.  status=%d",
-                        connection->getInputChannelName(), status);
-            }
-        } else {
-            // Monitor channels are never explicitly unregistered.
-            // We do it automatically when the remote endpoint is closed so don't warn
-            // about them.
-            notify = !connection->monitor;
-            if (notify) {
-                ALOGW("channel '%s' ~ Consumer closed input channel or an error occurred.  "
-                        "events=0x%x", connection->getInputChannelName(), events);
             }
         }
+    }
+    // TODO: Logging
+    // Error, unregister the callback
 
-        // Unregister the channel.
-        d->unregisterInputChannelLocked(connection->inputChannel, notify);
-        return 0; // remove the callback
-    } // release lock
+    return 0;
+
 }
 
 void InputDispatcher::synthesizeCancelationEventsForAllConnectionsLocked(
