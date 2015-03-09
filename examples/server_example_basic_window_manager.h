@@ -19,11 +19,11 @@
 #ifndef MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 #define MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 
-#include "server_example_generic_shell.h"
-
 #include "mir/geometry/rectangles.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/shell/generic_shell.h"
+#include "mir/shell/window_manager.h"
 
 #include <map>
 #include <mutex>
@@ -105,7 +105,7 @@ public:
 ///
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManager : public WindowManager,
+class BasicWindowManager : public shell::WindowManager,
     private BasicWindowManagerTools<SessionInfo, SurfaceInfo>
 {
 public:
@@ -148,8 +148,8 @@ private:
     }
 
     void remove_surface(
-        std::weak_ptr<scene::Surface> const& surface,
-        std::shared_ptr<scene::Session> const& session) override
+        std::shared_ptr<scene::Session> const& session,
+        std::weak_ptr<scene::Surface> const& surface) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         policy.handle_delete_surface(session, surface);

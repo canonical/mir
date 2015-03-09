@@ -39,11 +39,12 @@ Client side reports can be configured only using environment variables.  The
 environment variables are prefixed with `MIR_CLIENT_` and contain only
 underscores. The available reports and handlers for the client are:
 
-Report                       | Handlers
----------------------------  | --------
-rpc-report                   | log,lttng
-input-receiver-report        | log,lttng
+Report                | Handlers
+--------------------- | --------
+rpc-report            | log,lttng
+input-receiver-report | log,lttng
 shared-library-prober-report | log,lttng
+perf-report           | log,lttng
 
 For example, to enable the logging RPC report, one should set the
 `MIR_CLIENT_RPC_REPORT=log` environment variable.
