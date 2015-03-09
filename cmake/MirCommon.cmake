@@ -93,7 +93,8 @@ function (mir_discover_tests EXECUTABLE)
     if(cmake_build_type_lower MATCHES "threadsanitizer")
         list(APPEND EXTRA_ENV_FLAGS "--add-environment" "TSAN_OPTIONS='suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7'")
         # TSan does not support multi-threaded fork
-        set(EXCLUDED_TESTS "--gtest_filter=-UnresponsiveClient.does_not_hang_server")
+        # TSan may open fds so "surface_creation_does_not_leak_fds" will not work as written
+        set(EXCLUDED_TESTS "--gtest_filter=-UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds")
     endif()
 
     add_custom_target(
