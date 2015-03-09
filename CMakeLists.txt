@@ -227,7 +227,8 @@ if (MIR_ENABLE_TESTS)
   add_test(GPL-required
     /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/src/include/server ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
   )
-  
+
+  add_test(package-abis /bin/sh -c "cd ${PROJECT_SOURCE_DIR} && tools/update_package_abis.sh --check --verbose")
 endif ()
 
 enable_coverage_report(mirserver)
