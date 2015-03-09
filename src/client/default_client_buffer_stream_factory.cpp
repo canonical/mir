@@ -19,6 +19,7 @@
 #include "buffer_stream.h"
 #include "perf_report.h"
 #include "logging/perf_report.h"
+#include "lttng/perf_report.h"
 
 namespace mcl = mir::client;
 namespace ml = mir::logging;
@@ -35,6 +36,10 @@ make_perf_report(std::shared_ptr<ml::Logger> const& logger)
     if (report_target && !strncmp(report_target, "log", strlen(report_target)))
     {
         return std::make_shared<mcl::logging::PerfReport>(logger);
+    }
+    else if (report_target && !strncmp(report_target, "lttng", strlen(report_target)))
+    {
+        return std::make_shared<mcl::lttng::PerfReport>();
     }
     else
     {

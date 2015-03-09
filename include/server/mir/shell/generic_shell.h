@@ -16,28 +16,26 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_EXAMPLE_GENERIC_SHELL_H_
-#define MIR_EXAMPLE_GENERIC_SHELL_H_
-
-#include "server_example_window_manager.h"
+#ifndef MIR_SHELL_GENERIC_SHELL_H_
+#define MIR_SHELL_GENERIC_SHELL_H_
 
 #include "mir/shell/abstract_shell.h"
-
-///\example server_example_generic_shell.h
-/// A generic shell that supports a window manager
 
 namespace mir
 {
 namespace geometry { class Point; }
 
-namespace examples
+namespace shell
 {
-class GenericShell : public virtual shell::Shell, public virtual shell::FocusController,
-    private shell::AbstractShell
+class WindowManager;
+
+/// A generic shell that supports a window manager
+class GenericShell : public virtual Shell, public virtual FocusController,
+    private AbstractShell
 {
 public:
     GenericShell(
-        std::shared_ptr<shell::InputTargeter> const& input_targeter,
+        std::shared_ptr<InputTargeter> const& input_targeter,
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
@@ -62,13 +60,13 @@ public:
         MirSurfaceAttrib attrib,
         int value) override;
 
-private:
     void add_display(geometry::Rectangle const& area) override;
     void remove_display(geometry::Rectangle const& area) override;
 
+private:
     std::shared_ptr<WindowManager> const window_manager;
 };
 }
 }
 
-#endif /* MIR_EXAMPLE_GENERIC_SHELL_H_ */
+#endif /* MIR_SHELL_GENERIC_SHELL_H_ */

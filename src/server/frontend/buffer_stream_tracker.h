@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,8 +21,11 @@
 
 #include "mir/frontend/buffer_stream_id.h"
 #include "client_buffer_tracker.h"
+#include "mir/graphics/buffer_id.h"
+
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -32,7 +35,7 @@ class Buffer;
 }
 namespace frontend
 {
-
+class ClientBufferTracker;
 class BufferStreamTracker
 {
 public:
@@ -64,6 +67,7 @@ public:
     /* accesses the last buffer given to track_buffer() for the given BufferStreamId */
     graphics::Buffer* last_buffer(BufferStreamId) const;
 private:
+    mutable std::mutex mutex;
     std::unordered_map<BufferStreamId, graphics::Buffer*> client_buffer_resource;
 };
 

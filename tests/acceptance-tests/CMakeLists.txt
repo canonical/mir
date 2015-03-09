@@ -18,6 +18,7 @@ set(
   test_client_surface_swap_buffers.cpp
   test_command_line_handling.cpp
   test_client_surfaces.cpp
+  test_custom_window_management.cpp
   test_server_shutdown.cpp
   test_client_focus_notification.cpp
   test_client_authorization.cpp

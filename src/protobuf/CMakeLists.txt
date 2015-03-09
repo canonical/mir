@@ -25,11 +25,13 @@ target_link_libraries(
   ${PROTOBUF_LIBRARIES}
 )
 
+set(MIRPROTOBUF_ABI 0)
+
 set_target_properties(
   mirprotobuf
 
   PROPERTIES
-  SOVERSION 0
+  SOVERSION ${MIRPROTOBUF_ABI}
 )
 
 # Export the include directories
