@@ -69,10 +69,8 @@ add_library(mirclientobjects OBJECT
 # trying to compile mirclientobjects
 add_dependencies(mirclientobjects mirprotobuf)
 
-add_library(mirclient SHARED
-
-  $<TARGET_OBJECTS:mirclientobjects>
-)
+add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects>)
+add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects>)
 
 set_target_properties(mirclient
 
@@ -107,22 +105,15 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
-# TODO: Extension apparatus so that mirclient-debug-extension can be a MODULE and not
-#       duplicate (almost) the entirity of mirclient
-
 set(MIRCLIENT_DEBUG_EXTENSION_ABI 1)
 
-add_library(
-  mirclient-debug-extension SHARED
-
+add_library(mirclient-debug-extension SHARED
   mir_debug_api.cpp
-  $<TARGET_OBJECTS:mirclientobjects>
 )
 
-target_link_libraries(
-  mirclient-debug-extension
-
-  mirclient
+target_link_libraries(mirclient-debug-extension
+  mirclient         # Link dynamically to public members and dependencies
+  mirclient-static  # Link statically to private members (copy them)
 )
 
 set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
