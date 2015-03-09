@@ -128,9 +128,10 @@ TEST_F(HwcConfiguration, turns_screen_off_for_off_suspend_and_standby)
 TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
 {
     using namespace testing;
-    geom::Size px_size {343, 254};
-    geom::Size mm_size {1123, 329};
-    double conversion_mm_to_inch{0.3937};
+    auto android_reported_dpi_x = 390000u;
+    auto android_reported_dpi_y = 400000u;
+    geom::Size px_size {768, 1280};
+    geom::Size mm_size {50, 81};
 
     std::vector<mga::ConfigId> hwc_config {mga::ConfigId{0xA1}, mga::ConfigId{0xBEE}};
     std::chrono::milliseconds vrefresh_period {16};
@@ -156,10 +157,10 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
                             values[i] = std::chrono::duration_cast<std::chrono::nanoseconds>(vrefresh_period).count();
                             break;
                         case HWC_DISPLAY_DPI_X:
-                            values[i] = conversion_mm_to_inch * mm_size.width.as_int(); 
+                            values[i] = android_reported_dpi_x;
                             break;
                         case HWC_DISPLAY_DPI_Y:
-                            values[i] = conversion_mm_to_inch * mm_size.height.as_int(); 
+                            values[i] = android_reported_dpi_y;
                             break;
                         default:
                             break;

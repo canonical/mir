@@ -100,6 +100,15 @@ void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode 
     }
 }
 
+namespace
+{
+int dpi_to_mm(uint32_t dpi, int pixel_num)
+{
+    printf("DPI %i %i\n", (int) dpi, pixel_num);
+    return (int)( ((float)pixel_num / (float) dpi) * 2.54);
+}
+}
+
 mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName display_name)
 {
     auto configs = hwc_device->display_configs(display_name);
@@ -137,7 +146,7 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
 
     return {
         {values[0], values[1]},
-        {0, 0}, //TODO: convert DPI to MM and return
+        {dpi_to_mm(values[3], values[0]), dpi_to_mm(values[4], values[1])}, //TODO: convert DPI to MM and return
         period_to_hz(std::chrono::nanoseconds{values[2]}),
         true,
         format,
