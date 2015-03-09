@@ -37,6 +37,8 @@ namespace test
 class AutoUnblockThread
 {
 public:
+    AutoUnblockThread() = default;
+
     template<typename Callable, typename... Args>
     explicit AutoUnblockThread(std::function<void(void)> const& unblock,
         Callable&& f,
@@ -50,9 +52,13 @@ public:
         stop();
     }
 
+    AutoUnblockThread(AutoUnblockThread&& t) = default;
+    AutoUnblockThread& operator=(AutoUnblockThread&& t) = default;
+
     void stop()
     {
-        unblock();
+        if (unblock)
+            unblock();
         if (thread.joinable())
             thread.join();
     }
@@ -73,11 +79,15 @@ private:
 class AutoJoinThread : public AutoUnblockThread
 {
 public:
+    AutoJoinThread() = default;
     template<typename Callable, typename... Args>
     explicit AutoJoinThread(Callable&& f,
         Args&&... args)
         : AutoUnblockThread{[]{}, std::forward<Callable>(f), std::forward<Args>(args)...}
     {}
+
+    AutoJoinThread(AutoJoinThread&& t) = default;
+    AutoJoinThread& operator=(AutoJoinThread&& t) = default;
 };
 
 }
