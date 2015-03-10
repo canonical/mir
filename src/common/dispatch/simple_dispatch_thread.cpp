@@ -60,16 +60,24 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
 
     for (;;)
     {
-        epoll_wait(epoll_fd, &event, 1, -1);
-        if (event.data.u32 == fd_names::dispatchee_fd)
+        epoll_event events[2];
+        if (epoll_wait(epoll_fd, events, sizeof(events), -1) > 1)
         {
-            if (!dispatchee->dispatch(md::epoll_to_fd_event(event)))
+            // Because we only have two fds in the epoll, if there is more than one
+            // event pending then one of them must be a shutdown event.
+            // So, shutdown.
+            return;
+        }
+
+        if (events[0].data.u32 == fd_names::dispatchee_fd)
+        {
+            if (!dispatchee->dispatch(md::epoll_to_fd_event(events[0])))
             {
                 // No need to keep looping, the Dispatchable's not going to produce any more events.
                 return;
             }
         }
-        else if (event.data.u32 == fd_names::shutdown)
+        else if (events[0].data.u32 == fd_names::shutdown)
         {
             // The only thing we do with the shutdown fd is to close it.
             return;
@@ -109,7 +117,13 @@ md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable>
 md::SimpleDispatchThread::~SimpleDispatchThread() noexcept
 {
     shutdown_fd = mir::Fd{};
-    if (eventloop.joinable())
+    if (eventloop.get_id() == std::this_thread::get_id())
+    {
+        // We're being destroyed from within the dispatch callback
+        // That's OK; we'll exit once we return back to wait_for_events_forever
+        eventloop.detach();
+    }
+    else if (eventloop.joinable())
     {
         eventloop.join();
     }

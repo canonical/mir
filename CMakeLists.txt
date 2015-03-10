@@ -216,7 +216,7 @@ add_subdirectory(guides/)
 add_subdirectory(cmake/)
 
 if (MIR_ENABLE_TESTS)
-  find_package(Gtest REQUIRED)
+  find_package(GtestGmock REQUIRED)
   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
   add_subdirectory(tests/)
 

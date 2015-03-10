@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_BUFFER_H_
+#ifndef MIR_GRAPHICS_BUFFER_H_
+#define MIR_GRAPHICS_BUFFER_H_
 
 #include "mir/graphics/native_buffer.h"
 #include "mir/graphics/buffer_id.h"
@@ -50,4 +50,4 @@ protected:
 
 }
 }
-#endif // MIR_COMPOSITOR_BUFFER_H_
+#endif // MIR_GRAPHICS_BUFFER_H_
