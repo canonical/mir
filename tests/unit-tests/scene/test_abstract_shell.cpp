@@ -16,7 +16,7 @@
  * Authored by: ALan Griffiths <alan.griffiths@canonical.com>
  */
 
-#include "mir/shell/generic_shell.h"
+#include "mir/shell/abstract_shell.h"
 
 #include "mir/events/event_builders.h"
 #include "mir/scene/session.h"
@@ -87,7 +87,7 @@ struct MockSessionManager : ms::SessionManager
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
 
-struct GenericShell : Test
+struct AbstractShell : Test
 {
     NiceMock<mtd::MockSurface> mock_surface;
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
@@ -105,7 +105,7 @@ struct GenericShell : Test
     mtd::StubInputTargeter input_targeter;
     std::shared_ptr<NiceMockWindowManager> wm;
 
-    msh::GenericShell shell{
+    msh::AbstractShell shell{
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_coordinator),
         mt::fake_shared(session_manager),
@@ -123,7 +123,7 @@ struct GenericShell : Test
 };
 }
 
-TEST_F(GenericShell, open_session_adds_session_to_window_manager)
+TEST_F(AbstractShell, open_session_adds_session_to_window_manager)
 {
     std::shared_ptr<ms::Session> new_session;
 
@@ -135,7 +135,7 @@ TEST_F(GenericShell, open_session_adds_session_to_window_manager)
     EXPECT_EQ(session, new_session);
 }
 
-TEST_F(GenericShell, close_session_removes_session_from_window_manager)
+TEST_F(AbstractShell, close_session_removes_session_from_window_manager)
 {
     std::shared_ptr<ms::Session> old_session;
 
@@ -148,7 +148,7 @@ TEST_F(GenericShell, close_session_removes_session_from_window_manager)
     EXPECT_EQ(session, old_session);
 }
 
-TEST_F(GenericShell, close_session_notifies_session_event_sink)
+TEST_F(AbstractShell, close_session_notifies_session_event_sink)
 {
     auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
     auto session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
@@ -161,7 +161,7 @@ TEST_F(GenericShell, close_session_notifies_session_event_sink)
     shell.close_session(session);
 }
 
-TEST_F(GenericShell, create_surface_provides_create_parameters_to_window_manager)
+TEST_F(AbstractShell, create_surface_provides_create_parameters_to_window_manager)
 {
     std::shared_ptr<ms::Session> session =
         shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
@@ -173,7 +173,7 @@ TEST_F(GenericShell, create_surface_provides_create_parameters_to_window_manager
     shell.create_surface(session, params);
 }
 
-TEST_F(GenericShell, create_surface_allows_window_manager_to_set_create_parameters)
+TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_parameters)
 {
     std::shared_ptr<ms::Session> const session =
         shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
@@ -193,7 +193,7 @@ TEST_F(GenericShell, create_surface_allows_window_manager_to_set_create_paramete
     shell.create_surface(session, params);
 }
 
-TEST_F(GenericShell, destroy_surface_removes_surface_from_window_manager)
+TEST_F(AbstractShell, destroy_surface_removes_surface_from_window_manager)
 {
     auto const params = ms::a_surface();
     std::shared_ptr<ms::Session> const session =
@@ -207,7 +207,7 @@ TEST_F(GenericShell, destroy_surface_removes_surface_from_window_manager)
     shell.destroy_surface(session, surface_id);
 }
 
-TEST_F(GenericShell, add_display_adds_display_to_window_manager)
+TEST_F(AbstractShell, add_display_adds_display_to_window_manager)
 {
     geom::Rectangle const arbitrary_area{{0,0}, {__LINE__,__LINE__}};
 
@@ -216,7 +216,7 @@ TEST_F(GenericShell, add_display_adds_display_to_window_manager)
     shell.add_display(arbitrary_area);
 }
 
-TEST_F(GenericShell, remove_display_adds_display_to_window_manager)
+TEST_F(AbstractShell, remove_display_adds_display_to_window_manager)
 {
     geom::Rectangle const arbitrary_area{{0,0}, {__LINE__,__LINE__}};
 
@@ -225,7 +225,7 @@ TEST_F(GenericShell, remove_display_adds_display_to_window_manager)
     shell.remove_display(arbitrary_area);
 }
 
-TEST_F(GenericShell, key_input_events_are_handled_by_window_manager)
+TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 {
     int64_t const timestamp{0};
     MirKeyInputEventAction const action{mir_key_input_event_action_down};
@@ -249,7 +249,7 @@ TEST_F(GenericShell, key_input_events_are_handled_by_window_manager)
     EXPECT_TRUE(shell.handle(*event));
 }
 
-TEST_F(GenericShell, touch_input_events_are_handled_by_window_manager)
+TEST_F(AbstractShell, touch_input_events_are_handled_by_window_manager)
 {
     int64_t const timestamp{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
@@ -267,7 +267,7 @@ TEST_F(GenericShell, touch_input_events_are_handled_by_window_manager)
     EXPECT_TRUE(shell.handle(*event));
 }
 
-TEST_F(GenericShell, pointer_input_events_are_handled_by_window_manager)
+TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
 {
     int64_t const timestamp{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
@@ -297,7 +297,7 @@ TEST_F(GenericShell, pointer_input_events_are_handled_by_window_manager)
     EXPECT_TRUE(shell.handle(*event));
 }
 
-TEST_F(GenericShell, setting_surface_state_is_handled_by_window_manager)
+TEST_F(AbstractShell, setting_surface_state_is_handled_by_window_manager)
 {
     std::shared_ptr<ms::Session> const session =
         shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
@@ -315,7 +315,7 @@ TEST_F(GenericShell, setting_surface_state_is_handled_by_window_manager)
     shell.set_surface_attribute(session, surface, mir_surface_attrib_state, mir_surface_state_fullscreen);
 }
 
-TEST_F(GenericShell, as_focus_controller_set_focus_to_notifies_session_event_sink)
+TEST_F(AbstractShell, as_focus_controller_set_focus_to_notifies_session_event_sink)
 {
     auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
     auto session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
@@ -331,7 +331,7 @@ TEST_F(GenericShell, as_focus_controller_set_focus_to_notifies_session_event_sin
     focus_controller.set_focus_to({}, {});
 }
 
-TEST_F(GenericShell, as_focus_controller_focus_next_notifies_session_event_sink)
+TEST_F(AbstractShell, as_focus_controller_focus_next_notifies_session_event_sink)
 {
     msh::FocusController& focus_controller = shell;
     auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
@@ -346,7 +346,7 @@ TEST_F(GenericShell, as_focus_controller_focus_next_notifies_session_event_sink)
     focus_controller.focus_next();
 }
 
-TEST_F(GenericShell, as_focus_controller_focused_session_follows_focus)
+TEST_F(AbstractShell, as_focus_controller_focused_session_follows_focus)
 {
     auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
     auto session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
@@ -363,7 +363,7 @@ TEST_F(GenericShell, as_focus_controller_focused_session_follows_focus)
     EXPECT_THAT(focus_controller.focused_session(), Eq(session));
 }
 
-TEST_F(GenericShell, as_focus_controller_focused_surface_follows_focus)
+TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
 {
     auto const session0 = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
     auto const session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
@@ -396,7 +396,7 @@ TEST_F(GenericShell, as_focus_controller_focused_surface_follows_focus)
     shell.close_session(session0);
 }
 
-TEST_F(GenericShell, as_focus_controller_delegates_surface_at_to_surface_coordinator)
+TEST_F(AbstractShell, as_focus_controller_delegates_surface_at_to_surface_coordinator)
 {
     auto const surface = mt::fake_shared(mock_surface);
     geom::Point const cursor{__LINE__, __LINE__};
@@ -423,7 +423,7 @@ inline bool operator==(
 }
 }
 
-TEST_F(GenericShell, as_focus_controller_delegates_raise_to_surface_coordinator)
+TEST_F(AbstractShell, as_focus_controller_delegates_raise_to_surface_coordinator)
 {
     msh::SurfaceSet const surfaces{mt::fake_shared(mock_surface)};
 

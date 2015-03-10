@@ -35,11 +35,7 @@ struct MockWindowManager : shell::WindowManager
     MockWindowManager()
     {
         using namespace ::testing;
-        ON_CALL(*this, add_surface(_,_,_)).WillByDefault(Invoke(
-            [](std::shared_ptr<scene::Session> const& session,
-                scene::SurfaceCreationParameters const& params,
-                std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
-                { return build(session, params); }));
+        ON_CALL(*this, add_surface(_,_,_)).WillByDefault(Invoke(add_surface_default));
     }
 
     MOCK_METHOD1(add_session, void (std::shared_ptr<scene::Session> const&));
@@ -60,6 +56,12 @@ struct MockWindowManager : shell::WindowManager
     MOCK_METHOD1(handle_pointer_event, bool(MirPointerInputEvent const*));
 
     MOCK_METHOD2(handle_set_state, int(std::shared_ptr<scene::Surface> const&, MirSurfaceState value));
+
+    static frontend::SurfaceId add_surface_default(
+        std::shared_ptr<scene::Session> const& session,
+        scene::SurfaceCreationParameters const& params,
+        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
+        { return build(session, params); }
 };
 
 }

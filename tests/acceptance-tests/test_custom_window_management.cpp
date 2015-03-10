@@ -16,18 +16,23 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/shell/generic_shell.h"
-
+#include "mir/shell/abstract_shell.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/scene/session.h"
+
+#include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/headless_test.h"
 #include "mir_test_doubles/mock_window_manager.h"
 
 #include "mir_test/fake_shared.h"
+#include "mir_test/signal.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
@@ -35,9 +40,15 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 using namespace testing;
+using namespace std::literals::chrono_literals;
 
 namespace
 {
+MATCHER_P(WeakPtrEq, p, "")
+{
+    return !arg.owner_before(p) && !p.owner_before(arg);
+}
+
 std::vector<geom::Rectangle> const display_geometry
 {
     {{  0, 0}, { 640,  480}},
@@ -46,6 +57,45 @@ std::vector<geom::Rectangle> const display_geometry
 
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
+
+struct Client
+{
+    explicit Client(char const* connect_string) :
+        connection{mir_connect_sync(connect_string, __PRETTY_FUNCTION__)}
+    {
+    }
+
+    Client(Client&& source) :
+        connection{nullptr}
+    {
+        std::swap(connection, source.connection);
+    }
+
+    auto surface_create() const -> MirSurface*
+    {
+        auto spec = mir_connection_create_spec_for_normal_surface(
+            connection, 800, 600, mir_pixel_format_bgr_888);
+        auto surface = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+
+        return surface;
+    }
+
+    void disconnect()
+    {
+        if (connection)
+            mir_connection_release(connection);
+
+        connection = nullptr;
+    }
+
+    ~Client() noexcept
+    {
+        disconnect();
+    }
+
+    MirConnection* connection{nullptr};
+};
 
 struct CustomWindowManagement : mtf::HeadlessTest
 {
@@ -57,7 +107,7 @@ struct CustomWindowManagement : mtf::HeadlessTest
 
         server.override_the_shell([this]
            {
-                return std::make_shared<msh::GenericShell>(
+                return std::make_shared<msh::AbstractShell>(
                     server.the_input_targeter(),
                     server.the_surface_coordinator(),
                     server.the_session_coordinator(),
@@ -69,6 +119,11 @@ struct CustomWindowManagement : mtf::HeadlessTest
     void TearDown() override
     {
         stop_server();
+    }
+
+    Client connect_client()
+    {
+        return Client(new_connection().c_str());
     }
 
     NiceMockWindowManager window_manager;
@@ -89,4 +144,119 @@ TEST_F(CustomWindowManagement, display_layout_is_notified_on_shutdown)
 
     for(auto const& rect : display_geometry)
         EXPECT_CALL(window_manager, remove_display(rect));
+}
+
+TEST_F(CustomWindowManagement, client_connect_adds_session)
+{
+    start_server();
+
+    EXPECT_CALL(window_manager, add_session(_));
+    connect_client();
+}
+
+TEST_F(CustomWindowManagement, client_disconnect_removes_session)
+{
+    start_server();
+    auto client = connect_client();
+
+    EXPECT_CALL(window_manager, remove_session(_));
+
+    client.disconnect();
+}
+
+TEST_F(CustomWindowManagement, surface_create_adds_surface)
+{
+    start_server();
+
+    auto const client = connect_client();
+
+    EXPECT_CALL(window_manager, add_surface(_,_,_));
+
+    auto const surface = client.surface_create();
+
+    mir_surface_release_sync(surface);
+}
+
+TEST_F(CustomWindowManagement, surface_release_removes_surface)
+{
+    start_server();
+
+    auto const client = connect_client();
+    auto const surface = client.surface_create();
+
+    EXPECT_CALL(window_manager, remove_surface(_,_));
+
+    mir_surface_release_sync(surface);
+}
+
+TEST_F(CustomWindowManagement, surface_is_associated_with_correct_client)
+{
+    start_server();
+
+    const int no_of_clients = 17;
+    std::weak_ptr<ms::Session> session[no_of_clients];
+    std::vector<Client> client; client.reserve(no_of_clients);
+
+    for (int i = 0; i != no_of_clients; ++i)
+    {
+        EXPECT_CALL(window_manager, add_session(_)).WillOnce(SaveArg<0>(&session[i]));
+
+        client.emplace_back(connect_client());
+    }
+
+    for (int i = 0; i != no_of_clients; ++i)
+    {
+        // verify expectations for each client in turn
+        Mock::VerifyAndClearExpectations(&window_manager);
+
+        EXPECT_CALL(window_manager, add_surface(WeakPtrEq(session[i]),_,_));
+        EXPECT_CALL(window_manager, remove_surface(WeakPtrEq(session[i]),_));
+
+        auto const surface = client[i].surface_create();
+        mir_surface_release_sync(surface);
+    }
+}
+
+TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct_surface)
+{
+    start_server();
+    auto const client = connect_client();
+
+    const int no_of_surfaces = 17;
+    std::weak_ptr<ms::Surface> server_surface[no_of_surfaces];
+    MirSurface* client_surface[no_of_surfaces] = {};
+
+    for (int i = 0; i != no_of_surfaces; ++i)
+    {
+        auto const grab_server_surface = [i, &server_surface](
+            std::shared_ptr<ms::Session> const& session,
+            ms::SurfaceCreationParameters const& params,
+            std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
+            {
+                auto const result = build(session, params);
+                server_surface[i] = session->surface(result);
+                return result;
+            };
+
+        EXPECT_CALL(window_manager, add_surface(_,_,_))
+            .WillOnce(Invoke(grab_server_surface));
+
+        client_surface[i] = client.surface_create();
+    }
+
+    for (int i = 0; i != no_of_surfaces; ++i)
+    {
+        // verify expectations for each surface in turn
+        Mock::VerifyAndClearExpectations(&window_manager);
+
+        mt::Signal received;
+
+        EXPECT_CALL(window_manager, handle_set_state(WeakPtrEq(server_surface[i]),_))
+            .WillOnce(Invoke([&](std::shared_ptr<ms::Surface> const&, MirSurfaceState value)
+                { received.raise(); return value; }));
+
+        mir_surface_set_state(client_surface[i], mir_surface_state_maximized);
+
+        received.wait_for(400ms);
+    }
 }
