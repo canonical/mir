@@ -130,8 +130,6 @@ private:
     std::weak_ptr<scene::Surface> focus_surface;
     std::weak_ptr<scene::Session> focus_session;
 
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Surface> const& next_focus);
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Session> const& next_focus);
     void set_focus_to_locked(
         std::unique_lock<std::mutex> const& lock,
         std::shared_ptr<scene::Session> const& focus_session,
