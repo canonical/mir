@@ -20,7 +20,6 @@
 
 #include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
-#include "mir/library_shared_ptr.h"
 
 #include <memory>
 #include <string>
