@@ -30,7 +30,7 @@ mir::ModuleProperties const description {
     MIR_VERSION_MICRO
 };
 
-extern "C" mir::ModuleProperties const* describe_module()
+extern "C" mir::ModuleProperties const* describe_graphics_module()
 {
     return &description;
 }

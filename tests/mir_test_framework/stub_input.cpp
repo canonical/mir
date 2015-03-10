@@ -56,7 +56,7 @@ mir::ModuleProperties const description = {
 };
 }
 
-extern "C" mir::ModuleProperties const* describe_module()
+extern "C" mir::ModuleProperties const* describe_input_module()
 {
     return &description;
 }
