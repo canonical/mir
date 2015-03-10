@@ -196,6 +196,7 @@ private:
         MirSurfaceAttrib attrib,
         int value) override
     {
+        std::lock_guard<decltype(mutex)> lock(mutex);
         switch (attrib)
         {
         case mir_surface_attrib_state:
