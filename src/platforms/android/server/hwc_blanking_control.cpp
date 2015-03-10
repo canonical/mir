@@ -20,6 +20,7 @@
 #include "hwc_wrapper.h"
 #include "mir/raii.h"
 #include "android_format_conversion-inl.h"
+#include "mir/geometry/length.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
@@ -27,6 +28,7 @@
 #include <chrono>
 
 namespace mga = mir::graphics::android;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -104,10 +106,10 @@ namespace
 {
 int dpi_to_mm(uint32_t dpi, int pixel_num)
 {
-    using mm_to_inch = std::ratio<254, 10>;
-    using factor = std::ratio_multiply<std::kilo, mm_to_inch>; //android multiplies by 1000
     if (dpi == 0) return 0;
-    return (pixel_num * factor::num) / (factor::den * dpi);
+    float dpi_inches = dpi / 1000.0f; //android multiplies by 1000
+    geom::Length length(pixel_num / dpi_inches, geom::Length::Units::inches);
+    return length.as(geom::Length::Units::millimetres);
 }
 }
 
