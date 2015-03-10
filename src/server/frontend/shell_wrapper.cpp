@@ -33,12 +33,6 @@ void mf::ShellWrapper::close_session(std::shared_ptr<Session> const& session)
     wrapped->close_session(session);
 }
 
-void mf::ShellWrapper::handle_surface_created(
-    std::shared_ptr<Session> const& session)
-{
-    wrapped->handle_surface_created(session);
-}
-
 std::shared_ptr<mf::PromptSession> mf::ShellWrapper::start_prompt_session_for(
     std::shared_ptr<Session> const& session,
     scene::PromptSessionCreationParameters const& params)
