@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,9 +20,11 @@
 #define MIR_FRONTEND_SURFACE_TRACKER_H_
 
 #include "mir/frontend/surface_id.h"
-#include "client_buffer_tracker.h"
+#include "mir/graphics/buffer_id.h"
+
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -32,7 +34,7 @@ class Buffer;
 }
 namespace frontend
 {
-
+class ClientBufferTracker;
 class SurfaceTracker
 {
 public:
@@ -64,6 +66,7 @@ public:
     /* accesses the last buffer given to track_buffer() for the given SurfaceId */
     graphics::Buffer* last_buffer(SurfaceId) const;
 private:
+    mutable std::mutex mutex;
     std::unordered_map<SurfaceId, graphics::Buffer*> client_buffer_resource;
 };
 
