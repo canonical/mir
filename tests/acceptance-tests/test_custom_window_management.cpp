@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/shell/generic_shell.h"
+#include "mir/shell/abstract_shell.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/session.h"
 
@@ -107,7 +107,7 @@ struct CustomWindowManagement : mtf::HeadlessTest
 
         server.override_the_shell([this]
            {
-                return std::make_shared<msh::GenericShell>(
+                return std::make_shared<msh::AbstractShell>(
                     server.the_input_targeter(),
                     server.the_surface_coordinator(),
                     server.the_session_coordinator(),

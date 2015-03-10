@@ -18,6 +18,7 @@
 
 #include "mir/shell/abstract_shell.h"
 #include "mir/shell/input_targeter.h"
+#include "mir/shell/null_window_manager.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session_coordinator.h"
@@ -31,13 +32,25 @@ namespace msh = mir::shell;
 
 msh::AbstractShell::AbstractShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
-    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-    std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager) :
+    std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
+    std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
+    std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder) :
     input_targeter(input_targeter),
     surface_coordinator(surface_coordinator),
     session_coordinator(session_coordinator),
-    prompt_session_manager(prompt_session_manager)
+    prompt_session_manager(prompt_session_manager),
+    window_manager(wm_builder(this))
+{
+}
+
+msh::AbstractShell::AbstractShell(
+    std::shared_ptr<InputTargeter> const& input_targeter,
+    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+    std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager) :
+    AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager,
+        [](FocusController*) { return std::make_shared<NullWindowManager>(); })
 {
 }
 
@@ -50,12 +63,15 @@ std::shared_ptr<ms::Session> msh::AbstractShell::open_session(
     std::string const& name,
     std::shared_ptr<mf::EventSink> const& sink)
 {
-    return session_coordinator->open_session(client_pid, name, sink);
+    auto const result = session_coordinator->open_session(client_pid, name, sink);
+    window_manager->add_session(result);
+    return result;
 }
 
 void msh::AbstractShell::close_session(
     std::shared_ptr<ms::Session> const& session)
 {
+    window_manager->remove_session(session);
     prompt_session_manager->remove_session(session);
     session_coordinator->close_session(session);
 }
@@ -64,13 +80,19 @@ mf::SurfaceId msh::AbstractShell::create_surface(
     std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& params)
 {
-    return session->create_surface(params);
+    auto const build = [this](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& placed_params)
+        {
+            return session->create_surface(placed_params);
+        };
+
+    return window_manager->add_surface(session, params, build);
 }
 
 void msh::AbstractShell::destroy_surface(
     std::shared_ptr<ms::Session> const& session,
     mf::SurfaceId surface)
 {
+    window_manager->remove_surface(session, session->surface(surface));
     session->destroy_surface(surface);
 }
 
@@ -105,7 +127,16 @@ int msh::AbstractShell::set_surface_attribute(
     MirSurfaceAttrib attrib,
     int value)
 {
-    return surface->configure(attrib, value);
+    switch (attrib)
+    {
+    case mir_surface_attrib_state:
+    {
+        auto const state = window_manager->handle_set_state(surface, MirSurfaceState(value));
+        return surface->configure(attrib, state);
+    }
+    default:
+        return surface->configure(attrib, value);
+    }
 }
 
 int msh::AbstractShell::get_surface_attribute(
@@ -212,16 +243,35 @@ void msh::AbstractShell::setting_focus_to(std::shared_ptr<ms::Session> const& /*
 {
 }
 
-void msh::AbstractShell::add_display(geometry::Rectangle const& /*area*/)
+void msh::AbstractShell::add_display(geometry::Rectangle const& area)
 {
+    window_manager->add_display(area);
 }
 
-void msh::AbstractShell::remove_display(geometry::Rectangle const& /*area*/)
+void msh::AbstractShell::remove_display(geometry::Rectangle const& area)
 {
+    window_manager->remove_display(area);
 }
 
-bool msh::AbstractShell::handle(MirEvent const& /*event*/)
+bool msh::AbstractShell::handle(MirEvent const& event)
 {
+    if (mir_event_get_type(&event) != mir_event_type_input)
+        return false;
+
+    auto const input_event = mir_event_get_input_event(&event);
+
+    switch (mir_input_event_get_type(input_event))
+    {
+    case mir_input_event_type_key:
+        return window_manager->handle_key_event(mir_input_event_get_key_input_event(input_event));
+
+    case mir_input_event_type_touch:
+        return window_manager->handle_touch_event(mir_input_event_get_touch_input_event(input_event));
+
+    case mir_input_event_type_pointer:
+        return window_manager->handle_pointer_event(mir_input_event_get_pointer_input_event(input_event));
+    }
+
     return false;
 }
 
