@@ -235,6 +235,7 @@ MIR_COMMON_3.2 {
       mir::dispatch::MultiplexingDispatchable::dispatch*;
       mir::dispatch::MultiplexingDispatchable::relevant_events*;
       mir::dispatch::MultiplexingDispatchable::add_watch*;
+      mir::dispatch::MultiplexingDispatchable::remove_watch*;
 
       typeinfo?for?mir::dispatch::MultiplexingDispatchable;
       vtable?for?mir::dispatch::MultiplexingDispatchable;

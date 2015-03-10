@@ -65,6 +65,7 @@ struct DefaultInputManagerTest : ::testing::Test
 TEST_F(DefaultInputManagerTest, starts_platforms_on_start)
 {
     EXPECT_CALL(platform, start()).Times(1);
+    EXPECT_CALL(platform, get_dispatchable()).Times(1);
 
     input_manager.add_platform(mt::fake_shared(platform));
     input_manager.start();
@@ -75,6 +76,7 @@ TEST_F(DefaultInputManagerTest, starts_platforms_on_start)
 TEST_F(DefaultInputManagerTest, starts_platforms_after_start)
 {
     EXPECT_CALL(platform, start()).Times(1);
+    EXPECT_CALL(platform, get_dispatchable()).Times(1);
 
     input_manager.start();
     input_manager.add_platform(mt::fake_shared(platform));

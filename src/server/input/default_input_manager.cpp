@@ -52,6 +52,7 @@ void mi::DefaultInputManager::add_platform(std::shared_ptr<Platform> const& plat
                               {
                                   platforms.push_back(platform);
                                   platform->start();
+                                  multiplexer->add_watch(platform->get_dispatchable());
                               });
     else
         queue->enqueue([this, platform]()
@@ -71,7 +72,10 @@ void mi::DefaultInputManager::start()
                    {
                        mir::set_thread_name("Mir/Input");
                        for (auto const platform : platforms)
+                       {
                            platform->start();
+                           multiplexer->add_watch(platform->get_dispatchable());
+                       }
                    });
 
     input_thread = std::make_unique<dispatch::SimpleDispatchThread>(multiplexer);
@@ -89,7 +93,10 @@ void mi::DefaultInputManager::stop()
     queue->enqueue([&]()
                    {
                        for (auto const platform : platforms)
+                       {
+                           multiplexer->remove_watch(platform->get_dispatchable());
                            platform->stop();
+                       }
 
                        std::unique_lock<std::mutex> lock(m);
                        done = true;
