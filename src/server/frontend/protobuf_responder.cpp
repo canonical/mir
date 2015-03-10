@@ -43,11 +43,15 @@ void mfd::ProtobufResponder::send_response(
 
     response->SerializeWithCachedSizesToArray(send_response_buffer.data());
 
-    send_response_result.set_id(id);
-    send_response_result.set_response(send_response_buffer.data(), send_response_buffer.size());
+    {
+        std::lock_guard<decltype(result_guard)> lock{result_guard};
 
-    send_response_buffer.resize(send_response_result.ByteSize());
-    send_response_result.SerializeWithCachedSizesToArray(send_response_buffer.data());
+        send_response_result.set_id(id);
+        send_response_result.set_response(send_response_buffer.data(), send_response_buffer.size());
+
+        send_response_buffer.resize(send_response_result.ByteSize());
+        send_response_result.SerializeWithCachedSizesToArray(send_response_buffer.data());
+    }
 
     sender->send(reinterpret_cast<char*>(send_response_buffer.data()), send_response_buffer.size(), fd_sets);
     resource_cache->free_resource(response);

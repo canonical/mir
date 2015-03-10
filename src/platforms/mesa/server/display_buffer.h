@@ -77,9 +77,9 @@ private:
     BufferObject* get_buffer_object(struct gbm_bo *bo);
     bool schedule_page_flip(BufferObject* bufobj);
 
-    BufferObject* last_flipped_bufobj;
-    BufferObject* scheduled_bufobj;
-    std::shared_ptr<graphics::Buffer> last_flipped_bypass_buf;
+    BufferObject* visible_composite_frame;
+    BufferObject* scheduled_composite_frame;
+    std::shared_ptr<graphics::Buffer> visible_bypass_frame;
     std::shared_ptr<Buffer> bypass_buf{nullptr};
     BufferObject* bypass_bufobj{nullptr};
     std::shared_ptr<Platform> const platform;
