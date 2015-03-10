@@ -27,8 +27,10 @@ namespace mir
 {
 namespace shell
 {
+class WindowManager;
+
 /// Minimal Shell implementation with none of the necessary window management logic
-class AbstractShell : public virtual Shell
+class AbstractShell : public virtual Shell, public virtual FocusController
 {
 public:
     AbstractShell(
@@ -36,6 +38,13 @@ public:
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager);
+
+    AbstractShell(
+        std::shared_ptr<InputTargeter> const& input_targeter,
+        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
+        std::function<std::shared_ptr<WindowManager>(FocusController* focus_controller)> const& wm_builder);
 
     ~AbstractShell() noexcept;
 
@@ -49,8 +58,6 @@ public:
     frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override;
 
     void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override;
-
-    void handle_surface_created(std::shared_ptr<scene::Session> const& session) override;
 
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
@@ -107,6 +114,7 @@ protected:
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
     std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
+    std::shared_ptr<WindowManager> const window_manager;
 
 private:
 /** @name callbacks from FocusController methods
