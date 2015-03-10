@@ -173,9 +173,6 @@ void msh::AbstractShell::set_focus_to_locked(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface)
 {
-    setting_focus_to(session);
-    setting_focus_to(surface);
-
     if (surface)
     {
         // Ensure the surface has really taken the focus before notifying it that it is focused
@@ -201,14 +198,6 @@ void msh::AbstractShell::set_focus_to_locked(
     {
         session_coordinator->unset_focus();
     }
-}
-
-void msh::AbstractShell::setting_focus_to(std::shared_ptr<ms::Surface> const& /*surface*/)
-{
-}
-
-void msh::AbstractShell::setting_focus_to(std::shared_ptr<ms::Session> const& /*session*/)
-{
 }
 
 void msh::AbstractShell::add_display(geometry::Rectangle const& area)

@@ -19,9 +19,6 @@
 #include "default_shell.h"
 #include "default_window_manager.h"
 
-#include "mir/scene/surface_coordinator.h"
-
-namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
@@ -35,10 +32,4 @@ msh::DefaultShell::DefaultShell(
     AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager,
         [&](FocusController* focus_controller) { return std::make_shared<DefaultWindowManager>(focus_controller, placement_strategy, session_coordinator, surface_configurator); })
 {
-}
-
-void msh::DefaultShell::setting_focus_to(std::shared_ptr<ms::Surface> const& surface)
-{
-    if (surface)
-        surface_coordinator->raise(surface);
 }

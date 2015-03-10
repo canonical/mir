@@ -88,12 +88,6 @@ struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
         std::make_shared<NullPlacementStrategy>(),
         mt::fake_shared(surface_configurator)};
 };
-
-inline auto AnySurface()
--> Matcher<std::weak_ptr<ms::Surface> const&>
-{
-    return Matcher<std::weak_ptr<ms::Surface> const&>(_);
-}
 }
 
 TEST_F(TestDefaultShellAndFocusSelectionStrategy, cycle_focus)
@@ -163,7 +157,6 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, sets_input_focus)
         // When we have no session.
         EXPECT_CALL(input_targeter, focus_cleared()).Times(1);
     }
-    EXPECT_CALL(surface_coordinator, raise(AnySurface())).Times(1);
 
     shell.set_focus_to(mt::fake_shared(app1), mt::fake_shared(mock_surface));
     shell.set_focus_to(mt::fake_shared(app1), std::shared_ptr<ms::Surface>());

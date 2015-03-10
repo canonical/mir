@@ -117,15 +117,6 @@ protected:
     std::shared_ptr<WindowManager> const window_manager;
 
 private:
-/** @name callbacks from FocusController methods
- * These functions are called while the input focus is locked.
- * \warning DO NOT allow recursive calls to focus_next(), focussed_application() or set_focus_to()
- * as these will deadlock.
- * @{ */
-    virtual void setting_focus_to(std::shared_ptr<scene::Surface> const& next_focus);
-    virtual void setting_focus_to(std::shared_ptr<scene::Session> const& next_focus);
-/** @} */
-
     std::mutex mutable focus_mutex;
     std::weak_ptr<scene::Surface> focus_surface;
     std::weak_ptr<scene::Session> focus_session;
