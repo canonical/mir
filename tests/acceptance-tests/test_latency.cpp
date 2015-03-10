@@ -43,13 +43,13 @@ public:
     void post()
     {
         std::lock_guard<std::mutex> lock{mutex};
-        post_count_++;
+        post_count++;
     }
 
     void record_submission(uint32_t submission_id)
     {
         std::lock_guard<std::mutex> lock{mutex};
-        timestamps[submission_id] = post_count_;
+        timestamps[submission_id] = post_count;
     }
 
     auto latency_for(uint32_t submission_id)
@@ -60,14 +60,14 @@ public:
         auto const it = timestamps.find(submission_id);
 
         if (it != timestamps.end())
-            latency = post_count_ - it->second;
+            latency = post_count - it->second;
 
         return latency;
     }
 
 private:
     std::mutex mutex;
-    unsigned int post_count_{0};
+    unsigned int post_count{0};
     std::unordered_map<uint32_t, uint32_t> timestamps;
 };
 /*
