@@ -134,7 +134,12 @@ int64_t mia::InputWindowHandle::publishMotionEvent(int32_t deviceId,
 
     MirEvent mir_event;
     mia::Lexicon::translate(&droid_event, mir_event);
-    return input_sender->send_event(mir_event, input_channel);
+    try {
+        return input_sender->send_event(mir_event, input_channel);
+    } catch (std::exception const&) {
+        // TODO: Log
+        return -1;
+    }
 }
 
 int64_t mia::InputWindowHandle::publishKeyEvent(
@@ -154,5 +159,12 @@ int64_t mia::InputWindowHandle::publishKeyEvent(
 
     MirEvent mir_event;
     mia::Lexicon::translate(&droid_event, mir_event);
-    return input_sender->send_event(mir_event, input_channel);
+    try
+    {
+        return input_sender->send_event(mir_event, input_channel);
+    }
+    catch (std::exception const&)
+    {
+        return -1;
+    }
 }

@@ -34,6 +34,10 @@ struct StubInputSender : mir::input::InputSender
     {
         return input::TransportSequenceID();
     }
+    void set_observer(std::shared_ptr<input::InputSendObserver> const& /* observer */) override
+    {
+        
+    }
 };
 
 }

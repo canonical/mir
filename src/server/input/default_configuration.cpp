@@ -105,6 +105,7 @@ mir::DefaultServerConfiguration::the_android_input_dispatcher()
                 the_input_report(),
                 the_input_target_enumerator());
             the_input_registrar()->set_dispatcher(dispatcher);
+            the_input_sender()->set_observer(dispatcher);
             return dispatcher;
         });
 }
@@ -125,7 +126,9 @@ mir::DefaultServerConfiguration::the_input_sender()
     return input_sender(
         [this]()
         {
-            return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), the_input_send_observer(), the_input_report());
+            // TODO
+            //            return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), the_input_send_observer(), the_input_report());
+            return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), nullptr, the_input_report());
         });
 }
 
@@ -135,7 +138,7 @@ mir::DefaultServerConfiguration::the_input_send_observer()
     return input_send_observer(
         [this]()
         {
-            return std::make_shared<mi::NullInputSendObserver>();
+            return the_android_input_dispatcher();
         });
 }
 

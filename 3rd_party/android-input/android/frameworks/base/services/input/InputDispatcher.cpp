@@ -20,28 +20,28 @@
 //#define LOG_NDEBUG 0
 
 // Log detailed debug messages about each inbound event notification to the dispatcher.
-#define DEBUG_INBOUND_EVENT_DETAILS 0
+#define DEBUG_INBOUND_EVENT_DETAILS 1
 
 // Log detailed debug messages about each outbound event processed by the dispatcher.
-#define DEBUG_OUTBOUND_EVENT_DETAILS 0
+#define DEBUG_OUTBOUND_EVENT_DETAILS 1
 
 // Log debug messages about the dispatch cycle.
-#define DEBUG_DISPATCH_CYCLE 0
+#define DEBUG_DISPATCH_CYCLE 1
 
 // Log debug messages about registrations.
-#define DEBUG_REGISTRATION 0
+#define DEBUG_REGISTRATION 1
 
 // Log debug messages about input event injection.
-#define DEBUG_INJECTION 0
+#define DEBUG_INJECTION 1
 
 // Log debug messages about input focus tracking.
-#define DEBUG_FOCUS 0
+#define DEBUG_FOCUS 1
 
 // Log debug messages about the app switch latency optimization.
-#define DEBUG_APP_SWITCH 0
+#define DEBUG_APP_SWITCH 1
 
 // Log debug messages about hover events.
-#define DEBUG_HOVER 0
+#define DEBUG_HOVER 1
 
 #include "InputDispatcher.h"
 
@@ -365,7 +365,7 @@ void InputDispatcher::dispatchOnceInnerLocked(std::chrono::nanoseconds* nextWake
         }
 
         releasePendingEventLocked();
-        *nextWakeupTime = std::chrono::nanoseconds(LONG_LONG_MIN);  // force next poll to wake up immediately
+        *nextWakeupTime = std::chrono::nanoseconds(-1);  // force next poll to wake up immediately
     }
 }
 
@@ -1861,21 +1861,20 @@ void InputDispatcher::startDispatchCycleLocked(std::chrono::nanoseconds currentT
     ALOGD("channel '%s' ~ startDispatchCycle",
             connection->getInputChannelName());
 #endif
-
     while (connection->status == Connection::STATUS_NORMAL
             && !connection->outboundQueue.isEmpty()) {
         DispatchEntry* dispatchEntry = connection->outboundQueue.head;
         dispatchEntry->deliveryTime = currentTime;
 
         // Publish the event.
-        status_t status;
+        status_t status = 0;
         EventEntry* eventEntry = dispatchEntry->eventEntry;
         switch (eventEntry->type) {
         case EventEntry::TYPE_KEY: {
             KeyEntry* keyEntry = static_cast<KeyEntry*>(eventEntry);
 
             // Publish the key event.
-            status = connection->inputPublisher.publishKeyEvent(dispatchEntry->seq,
+            dispatchEntry->seq = connection->inputWindowHandle->publishKeyEvent(
                     keyEntry->deviceId, keyEntry->source,
                     dispatchEntry->resolvedAction, dispatchEntry->resolvedFlags,
                     keyEntry->keyCode, keyEntry->scanCode,
@@ -1922,7 +1921,7 @@ void InputDispatcher::startDispatchCycleLocked(std::chrono::nanoseconds currentT
             }
 
             // Publish the motion event.
-            status = connection->inputPublisher.publishMotionEvent(dispatchEntry->seq,
+            dispatchEntry->seq = connection->inputWindowHandle->publishMotionEvent(
                     motionEntry->deviceId, motionEntry->source,
                     dispatchEntry->resolvedAction, dispatchEntry->resolvedFlags,
                     motionEntry->edgeFlags, motionEntry->metaState, motionEntry->buttonState,
@@ -2036,9 +2035,8 @@ void InputDispatcher::handleEventSendStatusLocked(uint32_t seq, sp<Connection> c
     {
         std::chrono::nanoseconds currentTime = now();
 
-        input_report->received_event_finished_signal(connection->inputChannel->getFd(), seq);
         finishDispatchCycleLocked(currentTime, connection, seq, handled);
-        runCommandsLockedInterruptible();
+        input_report->received_event_finished_signal(connection->inputChannel->getFd(), seq);
     }
     else
     {
@@ -2048,11 +2046,14 @@ void InputDispatcher::handleEventSendStatusLocked(uint32_t seq, sp<Connection> c
         bool notify = !socket_dead || !connection->monitor;
         unregisterInputChannelLocked(connection->inputChannel, notify);
     }
+    resetANRTimeoutsLocked();
+    //    runCommandsLockedInterruptible();
 }
 
 void InputDispatcher::send_failed(MirEvent const& event, mir::input::TransportSequenceID id,
     mir::input::Surface* surface, FailureReason reason)
 {
+    {
     AutoMutex _l(mLock);
     auto fd = surface->input_channel()->server_fd();
 
@@ -2066,11 +2067,15 @@ void InputDispatcher::send_failed(MirEvent const& event, mir::input::TransportSe
     sp<Connection> connection = mConnectionsByFd.valueAt(connectionIndex);
     handleEventSendStatusLocked(static_cast<uint32_t>(id), connection, false, false,
                                 reason == mir::input::InputSendObserver::FailureReason::socket_error);
+    }
+    if (reason != mir::input::InputSendObserver::FailureReason::socket_error)
+        mLooper->wake();
 }
     
 void InputDispatcher::send_suceeded(MirEvent const& event, mir::input::TransportSequenceID id,
                                     mir::input::Surface* surface, InputResponse response)
 {
+    {
     AutoMutex _l(mLock);
     auto fd = surface->input_channel()->server_fd();
 
@@ -2086,11 +2091,15 @@ void InputDispatcher::send_suceeded(MirEvent const& event, mir::input::Transport
     sp<Connection> connection = mConnectionsByFd.valueAt(connectionIndex);
     handleEventSendStatusLocked(static_cast<uint32_t>(id), connection, true, handled,
                                 false);
+    }
+    // TODO: Wake on failure too
+    mLooper->wake();
 }
 void InputDispatcher::client_blocked(MirEvent const& event, mir::input::TransportSequenceID id,
                                      mir::input::Surface* surface)
 {
     // TODO?
+
     (void) event;
     (void) id;
     (void) surface;
@@ -3206,7 +3215,8 @@ status_t InputDispatcher::registerInputChannel(const sp<InputChannel>& inputChan
             mMonitoringChannels.push(inputChannel);
         }
 
-        mLooper->addFd(fd, 0, ALOOPER_EVENT_INPUT, handleReceiveCallback, this);
+        // TODO: Investigate!
+        //        mLooper->addFd(fd, 0, ALOOPER_EVENT_INPUT, handleReceiveCallback, this);
 
         runCommandsLockedInterruptible();
     } // release lock
@@ -3249,7 +3259,7 @@ status_t InputDispatcher::unregisterInputChannelLocked(const sp<InputChannel>& i
         removeMonitorChannelLocked(inputChannel);
     }
 
-    mLooper->removeFd(inputChannel->getFd());
+    //    mLooper->removeFd(inputChannel->getFd());
 
     std::chrono::nanoseconds currentTime = now();
     abortBrokenDispatchCycleLocked(currentTime, connection, notify);

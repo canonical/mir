@@ -5,7 +5,7 @@
  * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful,
+n * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -57,6 +57,11 @@ mia::InputSender::InputSender(std::shared_ptr<mir::compositor::Scene> const& sce
     : state{main_loop, observer, report}, scene{scene}
 {
     scene->add_observer(std::make_shared<SceneObserver>(state));
+}
+
+void mia::InputSender::set_observer(std::shared_ptr<mir::input::InputSendObserver> const& observer)
+{
+    state.observer = observer;
 }
 
 mia::InputSender::SceneObserver::SceneObserver(InputSenderState & state)
@@ -133,9 +138,10 @@ mi::TransportSequenceID mia::InputSender::InputSenderState::send_event(std::shar
 
     auto seq = next_seq();
     mia::InputSendEntry entry{seq, event, channel};
-    lock.unlock();
 
+    lock.unlock();
     transfer->send(std::move(entry));
+
     return seq;
 }
 
@@ -157,9 +163,10 @@ void mia::InputSender::InputSenderState::remove_transfer(int fd)
 
     if (transfer)
     {
-        transfer->unsubscribe();
         transfers.erase(fd);
+        // TODO Inestigtesafety/necessity
         lock.unlock();
+        transfer->unsubscribe();
 
         transfer->on_surface_disappeared();
     }
@@ -177,6 +184,7 @@ mia::InputSender::ActiveTransfer::ActiveTransfer(InputSenderState & state, int s
             new droidinput::InputChannel(droidinput::String8(surface->name()), server_fd))},
     surface{surface}
 {
+    subscribe();
 }
 
 void mia::InputSender::ActiveTransfer::send(InputSendEntry && event)
@@ -325,13 +333,16 @@ void mia::InputSender::ActiveTransfer::on_finish_signal()
 {
     uint32_t sequence;
     bool handled;
+    printf("on Finish signal\n");
 
     while(true)
     {
         droidinput::status_t status = publisher.receiveFinishedSignal(&sequence, &handled);
+        printf("Status is :%d %s \n", (int)status, strerror((int)-status));
 
         if (status == droidinput::OK)
         {
+            printf("stauts ok oninish signal\n");
             state.report->received_event_finished_signal(publisher.getChannel()->getFd(), sequence);
             InputSendEntry entry = unqueue_entry(sequence);
             auto observer = state.observer;
@@ -344,8 +355,10 @@ void mia::InputSender::ActiveTransfer::on_finish_signal()
         }
         else
         {
+            InputSendEntry entry = unqueue_entry(sequence);
+            observer->send_failed(entry.event, entry.sequence_id, surface, InputSendObserver::socket_error);
             return;
-            // TODO find a better way to handle communication errors, droidinput::InputDispatcher just ignores them
+            //            // TODO find a better way to handle communication errors, droidinput::InputDispatcher just ignores them
         }
     }
 }

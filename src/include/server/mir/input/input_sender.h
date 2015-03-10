@@ -39,6 +39,9 @@ public:
     InputSender() = default;
     virtual ~InputSender() = default;
     virtual TransportSequenceID send_event(MirEvent const& event, std::shared_ptr<InputChannel> const& channel) = 0;
+
+    virtual void set_observer(std::shared_ptr<InputSendObserver> const& observer) = 0;
+    
 protected:
     InputSender& operator=(InputSender const&) = delete;
     InputSender(InputSender const&) = delete;

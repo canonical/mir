@@ -560,7 +560,7 @@ private:
 
     // Tracks the progress of dispatching a particular event to a particular connection.
     struct DispatchEntry : Link<DispatchEntry> {
-        const uint32_t seq; // unique sequence number, never 0
+        uint32_t seq; // unique sequence number, never 0
 
         EventEntry* eventEntry; // the event to dispatch
         int32_t targetFlags;

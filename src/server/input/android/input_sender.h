@@ -64,6 +64,7 @@ public:
                 std::shared_ptr<InputReport> const& report);
 
     TransportSequenceID send_event(MirEvent const& event, std::shared_ptr<InputChannel> const& channel) override;
+    void set_observer(std::shared_ptr<InputSendObserver> const& observer) override;
 
 private:
     struct InputSenderState;
@@ -127,7 +128,7 @@ private:
 
         std::shared_ptr<MainLoop> const main_loop;
         std::shared_ptr<InputReport> const report;
-        std::shared_ptr<InputSendObserver> const observer;
+        std::shared_ptr<InputSendObserver> observer;
 
     private:
         std::shared_ptr<ActiveTransfer> get_transfer(int fd);
