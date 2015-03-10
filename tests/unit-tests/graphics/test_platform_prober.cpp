@@ -120,11 +120,10 @@ TEST(ServerPlatformProbe, LoadsMesaPlatformWhenDrmDevicePresent)
     auto module = mir::graphics::module_for_device(modules);
     ASSERT_NE(nullptr, module);
 
-    auto descriptor = module->load_function<mir::DescribeModule>(describe_module);
+    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
     EXPECT_THAT(description->name, HasSubstr("mesa"));
-    EXPECT_THAT(description->type, Eq(mir::ModuleType::server_graphics_platform));
 }
 #endif
 
@@ -141,11 +140,10 @@ TEST(ServerPlatformProbe, LoadsAndroidPlatformWhenHwaccessSucceeds)
     auto module = mir::graphics::module_for_device(modules);
     ASSERT_NE(nullptr, module);
 
-    auto descriptor = module->load_function<mir::DescribeModule>(describe_module);
+    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
     EXPECT_THAT(description->name, HasSubstr("android"));
-    EXPECT_THAT(description->type, Eq(mir::ModuleType::server_graphics_platform));
 }
 #endif
 
@@ -172,7 +170,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     auto module = mir::graphics::module_for_device(modules);
     ASSERT_NE(nullptr, module);
 
-    auto descriptor = module->load_function<mir::DescribeModule>(describe_module);
+    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
     EXPECT_THAT(description->name, HasSubstr("dummy"));
@@ -191,7 +189,7 @@ TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
     auto module = mir::graphics::module_for_device(modules);
     ASSERT_NE(nullptr, module);
 
-    auto descriptor = module->load_function<mir::DescribeModule>(describe_module);
+    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
     EXPECT_THAT(description->name, Not(HasSubstr("dummy")));

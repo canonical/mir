@@ -50,7 +50,6 @@ namespace
 {
 mir::ModuleProperties const description = {
     "stub-input",
-    mir::ModuleType::server_input_platform,
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO

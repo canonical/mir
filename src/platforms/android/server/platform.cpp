@@ -179,13 +179,12 @@ extern "C" mg::PlatformPriority probe_graphics_platform()
 
 mir::ModuleProperties const description = {
     "android",
-    mir::ModuleType::server_graphics_platform,
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO
 };
 
-extern "C" mir::ModuleProperties const* describe_module()
+extern "C" mir::ModuleProperties const* describe_graphics_module()
 {
     return &description;
 }

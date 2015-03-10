@@ -4,13 +4,9 @@ MIR_GRAPHICS_PLATFORM_2 {
     create_host_platform;
     create_guest_platform;
     probe_graphics_platform;
+    describe_graphics_module;
   local:
     *;
-};
-
-MIR_PLATFORM_1 {
-  global:
-    describe_module;
 };
 
 # Mesa EGL platform requires this, because madness.

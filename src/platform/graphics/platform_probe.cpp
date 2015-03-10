@@ -34,28 +34,6 @@ mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> con
     {
         try
         {
-            auto describe_module = module->load_function<mir::DescribeModule>("describe_module",
-                                                                              MIR_SERVER_PLATFORM_VERSION);
-            auto info = describe_module();
-
-            if (!contains(info->type, ModuleType::server_graphics_platform))
-            {
-                ml::log(ml::Severity::informational,
-                    std::string{"Not considering "} + info->name +  " as a graphics platform module",
-                    "Platform Probing");
-                continue;
-            }
-        }
-        catch (std::runtime_error const& err)
-        {
-            // Tried to probe a SharedLibrary that isn't a platform module?
-            ml::log(ml::Severity::warning,
-                    std::string{"Failed to probe module. Not a platform library or incorrect ABI version? Error: "} + err.what(),
-                    "Platform Probing");
-        }
-
-        try
-        {
             auto probe = module->load_function<mir::graphics::PlatformProbe>("probe_graphics_platform",
                                                                              MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
             auto module_priority = probe();
@@ -69,7 +47,7 @@ mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> con
         {
             // Tried to probe a SharedLibrary that isn't a platform module?
             ml::log(ml::Severity::warning,
-                    std::string{"Failed to probe server graphics module. Incorrect ABI version? Error: "} + err.what(),
+                    std::string{"Failed to probe module. Not a platform library or incorrect ABI version? Error: "} + err.what(),
                     "Platform Probing");
         }
     }

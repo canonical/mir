@@ -172,6 +172,8 @@ extern "C" void add_graphics_platform_options(
 extern "C" typedef PlatformPriority(*PlatformProbe)();
 extern "C" PlatformPriority probe_graphcis_platform();
 
+extern "C" typedef ModuleProperties const*(*DescribeModule)();
+extern "C" ModuleProperties const* describe_graphics_module();
 }
 }
 

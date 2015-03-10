@@ -391,7 +391,14 @@ mir::DefaultServerConfiguration::the_new_input_manager()
                 // TODO nested input handling (== host_socket) should fold into a platform
 
             if (input_reading_required)
-                return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
+            {
+                auto ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
+
+                auto platform = the_input_platform();
+                if (platform)
+                    ret->add_platform(platform);
+                return ret;
+            }
             else
                 return std::make_shared<mi::NullInputManager>();
         }
