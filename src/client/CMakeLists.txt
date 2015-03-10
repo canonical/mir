@@ -79,7 +79,7 @@ set_target_properties(mirclient
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
-target_link_libraries(mirclient
+set(LINKS
   mirclientrpc
   mirclientlttngstatic
   mircommon
@@ -89,6 +89,8 @@ target_link_libraries(mirclient
   ${CMAKE_THREAD_LIBS_INIT}
   ${XKBCOMMON_LIBRARIES}
 )
+target_link_libraries(mirclient ${LINKS})
+target_link_libraries(mirclient-static ${LINKS})
 
 install(
   TARGETS mirclient
@@ -112,8 +114,9 @@ add_library(mirclient-debug-extension SHARED
 )
 
 target_link_libraries(mirclient-debug-extension
-  mirclient         # Link dynamically to public members and dependencies
-  mirclient-static  # Link statically to private members (copy them)
+  mirclient-static  # Link statically; only copy what you need.
+                    # This allows access to private symbols normally hidden
+                    # in the shared version of libmirclient.
 )
 
 set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
