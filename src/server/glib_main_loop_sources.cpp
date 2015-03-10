@@ -27,7 +27,6 @@
 #include <atomic>
 #include <system_error>
 #include <sstream>
-#include <iostream>
 
 #include <csignal>
 #include <unistd.h>
@@ -512,56 +511,6 @@ private:
 
 std::array<std::atomic<int>,10> md::SignalSources::SourceRegistration::write_fds;
 
-struct md::SignalSources::RegisteredSigAction
-{
-    int sig;
-    struct sigaction old_action;
-
-    RegisteredSigAction(RegisteredSigAction const&) = delete;
-    RegisteredSigAction& operator=(RegisteredSigAction const&) = delete;
-
-    RegisteredSigAction(int sig)
-        : sig{sig}
-    {
-        int const no_flags{0};
-        struct sigaction new_action;
-
-        new_action.sa_handler = SourceRegistration::notify_sources_of_signal;
-        sigfillset(&new_action.sa_mask);
-        new_action.sa_flags = no_flags;
-
-        if (sigaction(sig, &new_action, &old_action) == -1)
-        {
-            std::stringstream msg;
-            msg << "Failed to register action for signal " << sig;
-            BOOST_THROW_EXCEPTION(
-                std::system_error(errno, std::system_category(), msg.str()));
-        }
-    }
-    ~RegisteredSigAction()
-    {
-        std::unique_lock<std::mutex> lock(sig_registry_mutex);
-
-        sigaction(sig, &old_action, nullptr);
-    }
-    static std::shared_ptr<RegisteredSigAction> register_action(int sig)
-    {
-        std::unique_lock<std::mutex> lock(sig_registry_mutex);
-
-        auto & entry = sig_registry[sig];
-        auto ret = entry.lock();
-        if (!ret)
-            entry = ret = std::make_shared<RegisteredSigAction>(sig);
-
-        return ret;
-    }
-    static std::mutex sig_registry_mutex;
-    static std::unordered_map<int, std::weak_ptr<RegisteredSigAction>> sig_registry;
-};
-
-std::mutex md::SignalSources::RegisteredSigAction::sig_registry_mutex;
-std::unordered_map<int, std::weak_ptr<md::SignalSources::RegisteredSigAction>> md::SignalSources::RegisteredSigAction::sig_registry;
-
 md::SignalSources::SignalSources(md::FdSources& fd_sources)
     : fd_sources(fd_sources)
 {
@@ -589,6 +538,9 @@ md::SignalSources::SignalSources(md::FdSources& fd_sources)
 
 md::SignalSources::~SignalSources()
 {
+    for (auto const& handled : handled_signals)
+        sigaction(handled.first, &handled.second, nullptr);
+
     fd_sources.remove_all_owned_by(this);
 }
 
@@ -638,7 +590,26 @@ void md::SignalSources::ensure_signal_is_handled(int sig)
 {
     std::lock_guard<std::mutex> lock{handled_signals_mutex};
 
-    handled_signals.emplace_back(RegisteredSigAction::register_action(sig));
+    if (handled_signals.find(sig) != handled_signals.end())
+        return;
+
+    static int const no_flags{0};
+    struct sigaction old_action;
+    struct sigaction new_action;
+
+    new_action.sa_handler = SourceRegistration::notify_sources_of_signal;
+    sigfillset(&new_action.sa_mask);
+    new_action.sa_flags = no_flags;
+
+    if (sigaction(sig, &new_action, &old_action) == -1)
+    {
+        std::stringstream msg;
+        msg << "Failed to register action for signal " << sig;
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), msg.str()));
+    }
+
+    handled_signals.emplace(sig, old_action);
 }
 
 void md::SignalSources::dispatch_signal(int sig)

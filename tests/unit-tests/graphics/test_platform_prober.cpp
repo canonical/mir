@@ -40,7 +40,7 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-const char describe_module[] = "describe_module";
+const char describe_module[] = "describe_graphics_module";
 
 std::vector<std::shared_ptr<mir::SharedLibrary>> available_platforms()
 {

@@ -4,9 +4,5 @@ MIR_GRAPHICS_PLATFORM_2 {
     create_host_platform;
     create_guest_platform;
     probe_graphics_platform;
-};
-
-MIR_PLATFORM_1 {
-  global:
-    describe_module;
+    describe_graphics_module;
 };

@@ -24,7 +24,6 @@
 #include <stdexcept>
 #include <algorithm>
 #include <condition_variable>
-#include <iostream>
 
 #include <boost/throw_exception.hpp>
 
@@ -105,9 +104,7 @@ mir::detail::GMainContextHandle::GMainContextHandle()
 mir::detail::GMainContextHandle::~GMainContextHandle()
 {
     if (main_context)
-    {
         g_main_context_unref(main_context);
-    }
 }
 
 mir::detail::GMainContextHandle::operator GMainContext*() const
