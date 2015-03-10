@@ -192,6 +192,8 @@ private:
     void advance_buffer(
         SurfaceId surf_id,
         Surface& surface,
+        graphics::Buffer* old_buffer,
+        std::unique_lock<std::mutex>& lock,
         std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete);
 
     virtual std::function<void(std::shared_ptr<Session> const&)> prompt_session_connect_handler() const;
