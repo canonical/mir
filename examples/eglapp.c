@@ -388,7 +388,14 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     CHECK(spec != NULL, "Can't create a surface spec");
 
-    mir_surface_spec_set_name(spec, "eglappsurface");
+    char const* name = argv[0];
+    for (char const* p = name; *p; p++)
+    {
+        if (*p == '/')
+            name = p + 1;
+    }
+    mir_surface_spec_set_name(spec, name);
+
     if (output_id != mir_display_output_id_invalid)
         mir_surface_spec_set_fullscreen_on_output(spec, output_id);
 

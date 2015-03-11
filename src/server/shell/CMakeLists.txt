@@ -7,6 +7,7 @@ set(
   graphics_display_layout.cpp
   default_configuration.cpp
   default_shell.cpp
+  null_window_manager.cpp
   shell_wrapper.cpp
 )
 

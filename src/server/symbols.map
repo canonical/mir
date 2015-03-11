@@ -392,6 +392,16 @@ MIR_SERVER_31 {
     mir::shell::FocusController::focused_session*;
     mir::shell::FocusController::operator*;
     mir::shell::FocusController::set_focus_to*;
+    mir::shell::FocusController::surface_at*;
+    mir::shell::GenericShell::add_display*;
+    mir::shell::GenericShell::close_session*;
+    mir::shell::GenericShell::create_surface*;
+    mir::shell::GenericShell::destroy_surface*;
+    mir::shell::GenericShell::GenericShell*;
+    mir::shell::GenericShell::handle*;
+    mir::shell::GenericShell::open_session*;
+    mir::shell::GenericShell::remove_display*;
+    mir::shell::GenericShell::set_surface_attribute*;
     mir::shell::HostLifecycleEventListener::?HostLifecycleEventListener*;
     mir::shell::HostLifecycleEventListener::HostLifecycleEventListener*;
     mir::shell::HostLifecycleEventListener::lifecycle_event_occurred*;

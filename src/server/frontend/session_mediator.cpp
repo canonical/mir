@@ -60,6 +60,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <mutex>
+#include <thread>
 #include <functional>
 #include <cstring>
 
@@ -151,17 +152,27 @@ void mf::SessionMediator::connect(
 void mf::SessionMediator::advance_buffer(
     SurfaceId surf_id,
     Surface& surface,
+    graphics::Buffer* old_buffer,
+    std::unique_lock<std::mutex>& lock,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto client_buffer = surface_tracker.last_buffer(surf_id);
+    auto const tid = std::this_thread::get_id();
+
     surface.swap_buffers(
-        client_buffer, 
-        [this, surf_id, complete](mg::Buffer* new_buffer)
+        old_buffer,
+        // Note: We assume that the lambda will be executed within swap_buffers
+        // (in which case the lock reference is valid) or in a different thread
+        // altogether (in which case the dangling reference is not accessed)
+        [this, tid, &lock, surf_id, complete](mg::Buffer* new_buffer)
         {
+            if (tid == std::this_thread::get_id())
+                lock.unlock();
+
             if (surface_tracker.track_buffer(surf_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
                 complete(new_buffer, mg::BufferIpcMsgType::full_msg);
+
         });
 }
 
@@ -172,7 +183,7 @@ void mf::SessionMediator::create_surface(
     google::protobuf::Closure* done)
 {
 
-    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
+    std::unique_lock<std::mutex> lock{session_mutex};
 
     auto const session = weak_session.lock();
 
@@ -242,12 +253,10 @@ void mf::SessionMediator::create_surface(
         setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
-    advance_buffer(surf_id, *surface,
-        [lock, this, &surf_id, response, done, session]
+    advance_buffer(surf_id, *surface, surface_tracker.last_buffer(surf_id), lock,
+        [this, surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
-            lock->unlock();
-
             response->mutable_buffer_stream()->mutable_id()->set_value(
                surf_id.as_value());
             pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(),
@@ -271,7 +280,7 @@ void mf::SessionMediator::next_buffer(
 {
     SurfaceId const surf_id{request->value()};
 
-    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
+    std::unique_lock<std::mutex> lock{session_mutex};
 
     auto const session = weak_session.lock();
 
@@ -281,15 +290,11 @@ void mf::SessionMediator::next_buffer(
     report->session_next_buffer_called(session->name());
 
     auto surface = session->get_surface(surf_id);
-
-    advance_buffer(surf_id, *surface,
-        [lock, this, response, done, session]
+    advance_buffer(surf_id, *surface, surface_tracker.last_buffer(surf_id), lock,
+        [this, response, done]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
-            lock->unlock();
-
             pack_protobuf_buffer(*response, client_buffer, msg_type);
-
             done->Run();
         });
 }
@@ -306,7 +311,7 @@ void mf::SessionMediator::exchange_buffer(
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
     ipc_operations->unpack_buffer(request_msg, *surface_tracker.last_buffer(surface_id));
 
-    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
+    std::unique_lock<std::mutex> lock{session_mutex};
     auto const session = weak_session.lock();
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
@@ -314,17 +319,11 @@ void mf::SessionMediator::exchange_buffer(
     report->session_exchange_buffer_called(session->name());
 
     auto const& surface = session->get_surface(surface_id);
-    surface->swap_buffers(
-        surface_tracker.buffer_from(buffer_id),
-        [this, surface_id, lock, response, done](mg::Buffer* new_buffer)
+    advance_buffer(surface_id, *surface, surface_tracker.buffer_from(buffer_id), lock,
+        [this, response, done]
+        (graphics::Buffer* new_buffer, graphics::BufferIpcMsgType msg_type)
         {
-            lock->unlock();
-
-            if (surface_tracker.track_buffer(surface_id, new_buffer))
-                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::update_msg);
-            else
-                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::full_msg);
-
+            pack_protobuf_buffer(*response, new_buffer, msg_type);
             done->Run();
         });
 }
