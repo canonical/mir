@@ -20,6 +20,7 @@
 #include "hwc_wrapper.h"
 #include "mir/raii.h"
 #include "android_format_conversion-inl.h"
+#include "mir/geometry/length.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
@@ -27,6 +28,7 @@
 #include <chrono>
 
 namespace mga = mir::graphics::android;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -100,6 +102,17 @@ void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode 
     }
 }
 
+namespace
+{
+int dpi_to_mm(uint32_t dpi, int pixel_num)
+{
+    if (dpi == 0) return 0;
+    float dpi_inches = dpi / 1000.0f; //android multiplies by 1000
+    geom::Length length(pixel_num / dpi_inches, geom::Length::Units::inches);
+    return length.as(geom::Length::Units::millimetres);
+}
+}
+
 mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName display_name)
 {
     auto configs = hwc_device->display_configs(display_name);
@@ -137,7 +150,7 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
 
     return {
         {values[0], values[1]},
-        {0, 0}, //TODO: convert DPI to MM and return
+        {dpi_to_mm(values[3], values[0]), dpi_to_mm(values[4], values[1])},
         period_to_hz(std::chrono::nanoseconds{values[2]}),
         true,
         format,
