@@ -191,6 +191,7 @@ InputDispatcher::InputDispatcher(std::shared_ptr<InputDispatcherPolicyInterface>
 }
 
 InputDispatcher::~InputDispatcher() {
+    printf("Destroying dispatcher \n");
     { // acquire lock
         AutoMutex _l(mLock);
 

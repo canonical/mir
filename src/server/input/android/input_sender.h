@@ -128,7 +128,7 @@ private:
 
         std::shared_ptr<MainLoop> const main_loop;
         std::shared_ptr<InputReport> const report;
-        std::shared_ptr<InputSendObserver> observer;
+        std::weak_ptr<InputSendObserver> observer;
 
     private:
         std::shared_ptr<ActiveTransfer> get_transfer(int fd);

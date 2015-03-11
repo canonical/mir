@@ -207,12 +207,12 @@ void mia::InputSender::ActiveTransfer::send(InputSendEntry && event)
     switch(error_status)
     {
     case droidinput::WOULD_BLOCK:
-        if (state.observer)
-            state.observer->client_blocked(event.event, event.sequence_id, surface);
+        if (auto observer = state.observer.lock())
+            observer->client_blocked(event.event, event.sequence_id, surface);
         break;
     case droidinput::DEAD_OBJECT:
-        if (state.observer)
-            state.observer->send_failed(event.event, event.sequence_id, surface, InputSendObserver::socket_error);
+        if (auto observer = state.observer.lock())
+            observer->send_failed(event.event, event.sequence_id, surface, InputSendObserver::socket_error);
         break;
     default:
         BOOST_THROW_EXCEPTION(boost::enable_error_info(std::runtime_error("Failure sending input event : ")) << boost::errinfo_errno(errno));
@@ -317,7 +317,7 @@ void mia::InputSender::ActiveTransfer::on_surface_disappeared()
 
     lock.unlock();
 
-    auto observer = state.observer;
+    auto observer = state.observer.lock();
     if (observer)
     {
         std::for_each(release_pending_responses.rbegin(),
@@ -345,8 +345,8 @@ void mia::InputSender::ActiveTransfer::on_finish_signal()
             printf("stauts ok oninish signal\n");
             state.report->received_event_finished_signal(publisher.getChannel()->getFd(), sequence);
             InputSendEntry entry = unqueue_entry(sequence);
-            auto observer = state.observer;
-
+            auto observer = state.observer.lock();
+            
             if (entry.sequence_id == sequence && observer)
                 observer->send_suceeded(entry.event,
                                         entry.sequence_id,
@@ -355,8 +355,8 @@ void mia::InputSender::ActiveTransfer::on_finish_signal()
         }
         else
         {
-            InputSendEntry entry = unqueue_entry(sequence);
-            observer->send_failed(entry.event, entry.sequence_id, surface, InputSendObserver::socket_error);
+            if (status != droidinput::WOULD_BLOCK)
+                unsubscribe();
             return;
             //            // TODO find a better way to handle communication errors, droidinput::InputDispatcher just ignores them
         }
@@ -376,8 +376,8 @@ void mia::InputSender::ActiveTransfer::on_response_timeout()
 
     mia::InputSendEntry timedout_entry{unqueue_entry(top_sequence_id)};
 
-    if (state.observer)
-        state.observer->send_failed(timedout_entry.event, timedout_entry.sequence_id, surface, InputSendObserver::no_response_received);
+    if (auto observer = state.observer.lock())
+        observer->send_failed(timedout_entry.event, timedout_entry.sequence_id, surface, InputSendObserver::no_response_received);
 }
 
 void mia::InputSender::ActiveTransfer::enqueue_entry(mia::InputSendEntry && entry)

@@ -471,13 +471,13 @@ public:
 private:
     void init_write_fds()
     {
-        static std::once_flag once;
-        std::call_once(once,
-            [&]
-            {
+        //        static std::once_flag once;
+        //        std::call_once(once,
+        //            [&]
+        //            {
                 for (auto& wfd : write_fds)
                     wfd = -1;
-            });
+                //            });
     }
 
     void add_write_fd()
@@ -504,12 +504,12 @@ private:
         }
     }
 
-    static int const max_write_fds{10};
+    static int const max_write_fds{100};
     static std::array<std::atomic<int>, max_write_fds> write_fds;
     int const write_fd;
 };
 
-std::array<std::atomic<int>,10> md::SignalSources::SourceRegistration::write_fds;
+std::array<std::atomic<int>,100> md::SignalSources::SourceRegistration::write_fds;
 
 md::SignalSources::SignalSources(md::FdSources& fd_sources)
     : fd_sources(fd_sources)
