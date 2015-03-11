@@ -111,7 +111,7 @@ public:
 
         auto conf = mir_cursor_configuration_from_buffer_stream(bs, image.hotspot().dx.as_int(),
                                                                 image.hotspot().dy.as_int());
-        mir_wait_for(mir_surface_configure_cursor(mir_surface, conf));
+        mir_surface_configure_cursor(mir_surface, conf);
         mir_cursor_configuration_destroy(conf);
         mir_buffer_stream_release_sync(bs);
     }
@@ -119,7 +119,7 @@ public:
     void hide_cursor()
     {
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
-        mir_wait_for(mir_surface_configure_cursor(mir_surface, conf));
+        mir_surface_configure_cursor(mir_surface, conf);
         mir_cursor_configuration_destroy(conf);
     }
 
