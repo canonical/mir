@@ -58,8 +58,8 @@ MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name);
  * If the configuration is successfully applied buffers from the stream will be used 
  * to fill the system cursor.
  *    \param [in] name      The buffer stream
- *    \param [in] hotspot_x The x-coordinate displacement within the image to place on the cursor.
- *    \param [in] hotspot_y The y-coordinate displacement within the image to place on the cursor.
+ *    \param [in] hotspot_x The x-coordinate to use as the cursor's hotspot.
+ *    \param [in] hotspot_y The y-coordinate to use as the cursor's hotspot.
  *    \return A cursor parameters object which must be passed
  *            to_mir_cursor_configuration_destroy
  */

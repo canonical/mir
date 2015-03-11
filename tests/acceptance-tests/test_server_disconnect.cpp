@@ -79,7 +79,7 @@ TEST_F(ServerDisconnect, is_detected_by_client)
 
             using clock = std::chrono::high_resolution_clock;
 
-            auto time_limit = clock::now() + std::chrono::seconds(10);
+            auto time_limit = clock::now() + std::chrono::seconds(1);
 
             while (!signalled.load() && clock::now() < time_limit)
             {
