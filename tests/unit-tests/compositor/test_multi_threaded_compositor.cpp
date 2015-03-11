@@ -88,6 +88,11 @@ private:
 class StubScene : public mtd::StubScene
 {
 public:
+    StubScene()
+        : pending{0}, throw_on_add_observer_{false}
+    {
+    }
+
     void add_observer(std::shared_ptr<ms::Observer> const& observer_)
     {
         std::lock_guard<std::mutex> lock{observer_mutex};
@@ -135,7 +140,7 @@ public:
     }
 
 private:
-    int pending = 0;
+    std::atomic<int> pending;
     std::mutex observer_mutex;
     std::shared_ptr<ms::Observer> observer;
     bool throw_on_add_observer_;
@@ -296,6 +301,7 @@ public:
         scene->emit_change_event();
         ++render_count;
     }
+
     bool enough_renders_happened()
     {
         unsigned int const enough_renders{1000};
@@ -304,7 +310,7 @@ public:
 
 private:
     std::shared_ptr<StubScene> const scene;
-    unsigned int render_count;
+    std::atomic<unsigned int> render_count;
 };
 
 class ThreadNameDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory

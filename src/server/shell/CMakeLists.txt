@@ -4,10 +4,10 @@ set(
   abstract_shell.cpp
   default_placement_strategy.cpp
   frontend_shell.cpp
-  generic_shell.cpp
   graphics_display_layout.cpp
   default_configuration.cpp
   default_shell.cpp
+  null_window_manager.cpp
   shell_wrapper.cpp
 )
 

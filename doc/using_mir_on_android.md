@@ -1,23 +1,28 @@
 Using Mir on an Android device {#using_mir_on_android}
 ==============================
 
-After installing mir on your device (see \ref installing_prebuilt_on_android)
-switch off SurfaceFlinger (see: https://wiki.ubuntu.com/Touch/Testing/Mir#Switch_from_SurfaceFlinger_to_Mir).
-(Alternatively, you can install a mir based image as described here: https://wiki.ubuntu.com/Touch/Testing/Mir#Easiest_way)
+Mir is the default on Ubuntu Touch images, so if you're using Ubuntu Touch,
+you're already using mir.
 
-Open a shell on the device:
+If you would like to run a pre-release version of mir on your device, you'll
+need to recompile our downstream dependencies (unity-system-compositor and 
+qtmir) to ensure ABI compatibility with the pre-release version of mir.
 
-    $ adb shell
+Using some demo applications
+----------------------------
 
-Now, start Mir and a client application:
+Simpler demos are available in the `mir-demos` package.
 
-    # mir_demo_server &
-    # mir_demo_client_something   # take your pick of something
+First install the demos:
 
-Getting some example client applications
-----------------------------------------
+    $ apt-get install mir-demos
 
-You can get some example programs by installing the `mir-demos` package
-inside the Ubuntu touch chroot shell (see above):
+Next unsure that the Unity8 session is ended:
 
-    # apt-get install mir-demos
+    $ service lightdm stop
+
+Finally, start mir and a client application:
+
+    $ mir_demo_server --test-client mir_demo_client_egltriangle
+
+and you should see a triangle on screen.

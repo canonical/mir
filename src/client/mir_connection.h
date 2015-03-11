@@ -163,7 +163,7 @@ private:
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::PlatformOperationMessage platform_operation_reply;
     mir::protobuf::DisplayConfiguration display_configuration_response;
-    bool disconnecting{false};
+    std::atomic<bool> disconnecting{false};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;

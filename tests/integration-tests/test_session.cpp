@@ -39,6 +39,7 @@
 
 #include <gtest/gtest.h>
 #include <condition_variable>
+#include <atomic>
 
 namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
@@ -122,8 +123,8 @@ TEST(ApplicationSession, stress_test_take_snapshot)
         {
             for (int i = 0; i < 500; ++i)
             {
-                bool snapshot_taken1 = false;
-                bool snapshot_taken2 = false;
+                std::atomic<bool> snapshot_taken1{false};
+                std::atomic<bool> snapshot_taken2{false};
 
                 session.take_snapshot(
                     [&](ms::Snapshot const&) { snapshot_taken1 = true; });
