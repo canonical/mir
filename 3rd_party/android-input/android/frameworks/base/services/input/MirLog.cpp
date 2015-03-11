@@ -42,6 +42,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <atomic>
+
 #define kMaxTagLen  16      /* from the long-dead utils/Log.cpp */
 #define kTagSetSize 16      /* arbitrary */
 
@@ -49,14 +51,14 @@ namespace
 {
     struct LogState {
         /* global minimum priority */
-        int     globalMinPriority;
+        std::atomic<int> globalMinPriority{ANDROID_LOG_UNKNOWN};
 
         /* tags and priorities */
         struct {
             char    tag[kMaxTagLen];
-            int     minPriority;
+            std::atomic<int> minPriority;
         } tagSet[kTagSetSize];
-    } gLogState = { .globalMinPriority = ANDROID_LOG_UNKNOWN };
+    } gLogState = {};
 }
 
 /*

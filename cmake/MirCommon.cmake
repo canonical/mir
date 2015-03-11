@@ -89,10 +89,17 @@ function (mir_discover_tests EXECUTABLE)
         list(APPEND EXTRA_ENV_FLAGS "--add-environment" "${env}")
       endforeach()
     endif()
+    
+    if(cmake_build_type_lower MATCHES "threadsanitizer")
+        list(APPEND EXTRA_ENV_FLAGS "--add-environment" "TSAN_OPTIONS='suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7'")
+        # TSan does not support multi-threaded fork
+        # TSan may open fds so "surface_creation_does_not_leak_fds" will not work as written
+        set(EXCLUDED_TESTS "--gtest_filter=-UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds")
+    endif()
 
     add_custom_target(
       ${TEST_DISCOVERY_TARGET_NAME} ALL
-      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${DISCOVER_FLAGS}
+      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests ${EXCLUDED_TESTS} | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${DISCOVER_FLAGS}
       ${EXTRA_ENV_FLAGS}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       COMMENT "Discovering Tests in ${EXECUTABLE}" VERBATIM)

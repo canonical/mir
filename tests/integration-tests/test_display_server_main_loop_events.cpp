@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -28,6 +28,7 @@
 
 #include "mir_test/pipe.h"
 #include "mir_test/wait_condition.h"
+#include "mir_test/auto_unblock_thread.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_doubles/mock_input_manager.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
@@ -415,17 +416,18 @@ TEST(DisplayServerMainLoopEvents, display_server_components_pause_and_resume)
         EXPECT_CALL(*mock_connector, stop()).Times(1);
     }
 
+    mt::AutoJoinThread t;
     mir::run_mir(server_config,
-                 [&server_config](mir::DisplayServer&)
+                 [&server_config, &t](mir::DisplayServer&)
                  {
-                    std::thread t{
+                    mt::AutoJoinThread killing_thread{
                         [&]
                         {
                             server_config.emit_pause_event_and_wait_for_handler();
                             server_config.emit_resume_event_and_wait_for_handler();
                             kill(getpid(), SIGTERM);
                         }};
-                    t.detach();
+                    t = std::move(killing_thread);
                  });
 }
 
@@ -464,16 +466,17 @@ TEST(DisplayServerMainLoopEvents, display_server_quits_when_paused)
         EXPECT_CALL(*mock_connector, stop()).Times(1);
     }
 
+    mt::AutoJoinThread t;
     mir::run_mir(server_config,
-                 [&server_config](mir::DisplayServer&)
+                 [&server_config, &t](mir::DisplayServer&)
                  {
-                    std::thread t{
+                    mt::AutoJoinThread killing_thread{
                         [&]
                         {
                             server_config.emit_pause_event_and_wait_for_handler();
                             kill(getpid(), SIGTERM);
                         }};
-                    t.detach();
+                    t = std::move(killing_thread);
                  });
 }
 
@@ -519,16 +522,17 @@ TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_f
         EXPECT_CALL(*mock_connector, stop()).Times(1);
     }
 
+    mt::AutoJoinThread t;
     mir::run_mir(server_config,
-                 [&server_config](mir::DisplayServer&)
+                 [&server_config, &t](mir::DisplayServer&)
                  {
-                    std::thread t{
+                    mt::AutoJoinThread killing_thread{
                         [&]
                         {
                             server_config.emit_pause_event_and_wait_for_handler();
                             kill(getpid(), SIGTERM);
                         }};
-                    t.detach();
+                    t = std::move(killing_thread);
                  });
 }
 
@@ -565,17 +569,18 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
         EXPECT_CALL(*mock_connector, stop()).Times(1);
     }
 
+    mt::AutoJoinThread t;
     mir::run_mir(server_config,
                  [&](mir::DisplayServer&)
                  {
-                    std::thread t{
+                    mt::AutoJoinThread killing_thread{
                         [&]
                         {
                             server_config.emit_configuration_change_event_and_wait_for_handler();
                             server_config.wait_for_server_actions_to_finish();
                             kill(getpid(), SIGTERM);
                         }};
-                    t.detach();
+                    t = std::move(killing_thread);
                  });
 }
 
@@ -626,10 +631,11 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
         EXPECT_CALL(*mock_connector, stop()).Times(1);
     }
 
+    mt::AutoJoinThread t;
     mir::run_mir(server_config,
                  [&](mir::DisplayServer&)
                  {
-                    std::thread t{
+                    mt::AutoJoinThread killing_thread{
                         [&]
                         {
                             server_config.emit_pause_event_and_wait_for_handler();
@@ -639,7 +645,7 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
 
                             kill(getpid(), SIGTERM);
                         }};
-                    t.detach();
+                    t = std::move(killing_thread);
                  });
 }
 
@@ -689,16 +695,17 @@ TEST(DisplayServerMainLoopEvents, server_status_listener)
         EXPECT_CALL(*mock_connector, stop()).Times(1);
     }
 
+    mt::AutoJoinThread t;
     mir::run_mir(server_config,
-                 [&server_config](mir::DisplayServer&)
+                 [&server_config, &t](mir::DisplayServer&)
                  {
-                    std::thread t{
+                    mt::AutoJoinThread killing_thread{
                         [&]
                         {
                             server_config.emit_pause_event_and_wait_for_handler();
                             server_config.emit_resume_event_and_wait_for_handler();
                             kill(getpid(), SIGTERM);
                         }};
-                    t.detach();
+                    t = std::move(killing_thread);
                  });
 }
