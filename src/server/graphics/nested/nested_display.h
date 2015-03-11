@@ -137,7 +137,7 @@ public:
 
 private:
     std::shared_ptr<Platform> const platform;
-    std::shared_ptr<HostConnection> connection;
+    std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<input::InputDispatcher> const dispatcher;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;
@@ -153,6 +153,5 @@ private:
 }
 }
 }
-
 
 #endif // MIR_GRAPHICS_NESTED_NESTED_DISPLAY_H_
