@@ -204,7 +204,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
     std::lock_guard<std::mutex> lg(surfaces_mutex);
     auto surf = std::shared_ptr<MirClientHostSurface>(
         new MirClientHostSurface(mir_connection, surface_parameters),
-        [&](MirClientHostSurface *surf)
+        [this](MirClientHostSurface *surf)
         {
             std::lock_guard<std::mutex> lg(surfaces_mutex);
             auto it = std::find(surfaces.begin(), surfaces.end(), surf);
