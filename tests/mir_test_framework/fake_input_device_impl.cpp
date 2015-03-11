@@ -122,7 +122,9 @@ mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& in
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyParameters const& key_params)
 {
     MirEvent key_event;
+    key_event.type = mir_event_type_key;
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch());
+    key_event.key.modifiers = expand_modifier(modifiers);
     if (key_params.action == synthesis::EventAction::Down)
     {
         down_times[key_params.scancode] = event_time;
@@ -141,7 +143,6 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     }
     key_event.key.source_id = android_source_keyboard;
     key_event.key.flags = MirKeyFlag(0);
-    key_event.key.modifiers = expand_modifier(modifiers);
     key_event.key.scan_code = key_params.scancode;
     key_event.key.repeat_count = 0;
     key_event.key.event_time = event_time.count();

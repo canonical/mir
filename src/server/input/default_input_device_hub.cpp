@@ -29,7 +29,6 @@
 
 #include <algorithm>
 #include <atomic>
-#include <iostream>
 
 namespace mi = mir::input;
 

@@ -66,9 +66,9 @@ TEST(ActionQueue, executes_action_only_once)
 
     queue.enqueue([&](){++count_executed;});
     queue.dispatch(md::FdEvent::readable);
-    queue.dispatch(md::FdEvent::readable);
-    queue.dispatch(md::FdEvent::readable);
-    EXPECT_THAT(count_executed, Eq(1) );
+    EXPECT_THROW(queue.dispatch(md::FdEvent::readable),std::system_error);
+    EXPECT_THROW(queue.dispatch(md::FdEvent::readable),std::system_error);
+    EXPECT_THAT(count_executed, Eq(1));
 }
 
 

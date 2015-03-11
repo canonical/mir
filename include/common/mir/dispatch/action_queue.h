@@ -39,11 +39,11 @@ public:
     void enqueue(std::function<void()> const& action);
 
     bool dispatch(FdEvents events) override;
-    virtual FdEvents relevant_events() const override;
+    FdEvents relevant_events() const override;
 private:
     void consume();
     void wake();
-    mir::Fd read_fd, trigger_fd;
+    mir::Fd event_fd;
     std::mutex list_lock;
     std::list<std::function<void()>> actions;
 };

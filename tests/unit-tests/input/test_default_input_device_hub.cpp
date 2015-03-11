@@ -27,6 +27,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
+#include "mir/dispatch/action_queue.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -58,7 +59,8 @@ struct MockInputDeviceObserver : public mi::InputDeviceObserver
 
 struct MockInputDevice : public mi::InputDevice
 {
-    MOCK_METHOD0(get_dispatchable, std::shared_ptr<mir::dispatch::Dispatchable>());
+    mir::dispatch::ActionQueue queue;
+    std::shared_ptr<mir::dispatch::Dispatchable> get_dispatchable() { return mt::fake_shared(queue);}
     MOCK_METHOD1(start, void(mi::InputSink& destination));
     MOCK_METHOD0(stop, void());
     MOCK_METHOD0(get_device_info, mi::InputDeviceInfo());

@@ -69,9 +69,7 @@ struct TestClientInputNew : mtf::ConnectedClientWithASurface
     {
         auto const client = static_cast<TestClientInputNew*>(context);
         auto type = mir_event_get_type(ev);
-
-        if (type == mir_event_type_key ||
-            type == mir_event_type_motion )
+        if (type == mir_event_type_input)
             client->handler.handle_input(ev);
     }
 
@@ -90,7 +88,7 @@ struct TestClientInputNew : mtf::ConnectedClientWithASurface
     }
 
 
-    MockInputHandler handler;
+    ::testing::NiceMock<MockInputHandler> handler;
     mir::test::WaitCondition all_events_received;
     mir::test::WaitCondition ready_to_accept_events;
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
@@ -106,28 +104,25 @@ TEST_F(TestClientInputNew, new_clients_receive_us_english_mapped_keys)
     using namespace testing;
 
     InSequence seq;
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_R))));
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyRepeatEvent(), mt::KeyOfSymbol(XKB_KEY_M))));
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyUpEvent(), mt::KeyOfSymbol(XKB_KEY_M))));
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyUpEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_R))));
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_i))));
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyUpEvent(), mt::KeyOfSymbol(XKB_KEY_i))));
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_r))));
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyUpEvent(), mt::KeyOfSymbol(XKB_KEY_r)))).WillOnce(
+        mt::WakeUp(&all_events_received));
 
-    EXPECT_CALL(handler,
-                handle_input(
-                    AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_M))));
-    EXPECT_CALL(handler,
-                handle_input(
-                    AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_I))));
-    EXPECT_CALL(handler,
-                handle_input(
-                    AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_R))))
-        .WillOnce(mt::WakeUp(&all_events_received));
-
-    //client.start();
     ready_to_accept_events.wait_for_at_most_seconds(5);
-    fake_keyboard->emit_event(
-        mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
-    fake_keyboard->emit_event(
-        mis::a_key_down_event().of_scancode(KEY_M));
-    fake_keyboard->emit_event(
-        mis::a_key_down_event().of_scancode(KEY_I));
-    fake_keyboard->emit_event(
-        mis::a_key_down_event().of_scancode(KEY_R));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
+    fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
+    fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_RIGHTSHIFT));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_I));
+    fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_I));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_R));
+    fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_R));
 
     all_events_received.wait_for_at_most_seconds(10);
 }

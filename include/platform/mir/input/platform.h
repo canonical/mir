@@ -89,12 +89,14 @@ private:
 extern "C" typedef mir::UniqueModulePtr<Platform>(*CreatePlatform)(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<InputReport> const& report);
 /**
  * Function used to initialize an input platform.
  *
  * \param [in] options options to use for this platform
  * \param [in] emergency_cleanup_registry object to register emergency shutdown handlers with
+ * \param [in] input_device_registry object to register input devices handled by this platform
  * \param [in] report the object to use to report interesting events from the input subsystem
  *
  * This factory function needs to be implemented by each platform.

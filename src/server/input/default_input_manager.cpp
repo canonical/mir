@@ -28,7 +28,6 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <iostream>
 
 namespace mi = mir::input;
 
