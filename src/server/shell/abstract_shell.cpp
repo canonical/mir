@@ -44,16 +44,6 @@ msh::AbstractShell::AbstractShell(
 {
 }
 
-msh::AbstractShell::AbstractShell(
-    std::shared_ptr<InputTargeter> const& input_targeter,
-    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-    std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager) :
-    AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager,
-        [](FocusController*) { return std::make_shared<NullWindowManager>(); })
-{
-}
-
 msh::AbstractShell::~AbstractShell() noexcept
 {
 }
