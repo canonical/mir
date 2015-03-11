@@ -500,9 +500,28 @@ mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
     return buffer_stream.get();
 }
 
+void MirSurface::on_modified()
+{
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (modify_result.has_error())
+            {} // TODO
+    }
+    modify_wait_handle.result_received();
+}
+
 MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 {
-    (void)spec; // TODO
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    mp::SurfaceModification mod;
+    mod.mutable_surface_id()->set_value(surface.id().value());
+    if (spec.surface_name.is_set())
+        mod.set_name(spec.surface_name.value());
+    lock.unlock();
+
+    modify_wait_handle.expect_result();
+    server->modify_surface(0, &mod, &modify_result,
+              google::protobuf::NewCallback(this, &MirSurface::on_modified));
 
     return &modify_wait_handle;
 }

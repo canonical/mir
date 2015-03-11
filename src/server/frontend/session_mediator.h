@@ -124,6 +124,11 @@ public:
                            mir::protobuf::SurfaceSetting*,
                            google::protobuf::Closure* done) override;
 
+    void modify_surface(google::protobuf::RpcController* controller,
+                        const mir::protobuf::SurfaceModification* mod,
+                        mir::protobuf::Void* result,
+                        google::protobuf::Closure* done) override;
+
     void configure_display(::google::protobuf::RpcController* controller,
                            const ::mir::protobuf::DisplayConfiguration* request,
                            ::mir::protobuf::DisplayConfiguration* response,

@@ -558,8 +558,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-namespace {
-// TODO: Private functions to become public in future
+namespace { // TODO: Private functions to become public in future
 
 MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
 {
@@ -579,8 +578,7 @@ MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
 }
 
 // TODO: Add error reporting without resorting to callbacks.
-// Idea: Embed an error code/string into MirWaitHandle and then:
-//       errorcode = mir_wait_handle_result(w)
+//       Proposed separately in lp:~vanvugt/mir/wait-result
 MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
 {
     if (!spec->self.is_set())
@@ -590,7 +588,7 @@ MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
     return surface->modify(*spec);
 }
 
-} // namespace
+} // TODO remove namespace when functions are ready to be public
 
 MirWaitHandle* mir_surface_rename(MirSurface* surf, char const* name)
 {

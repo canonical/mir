@@ -409,6 +409,33 @@ void mf::SessionMediator::configure_surface(
     done->Run();
 }
 
+void mf::SessionMediator::modify_surface(
+    google::protobuf::RpcController*, // controller,
+    const mir::protobuf::SurfaceModification* mod,
+    mir::protobuf::Void* response,
+    google::protobuf::Closure* done)
+{
+    response->clear_error(); // TODO
+
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+
+        auto session = weak_session.lock();
+
+        if (!session.get())
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        auto const id = mf::SurfaceId(mod->surface_id().value());
+        (void)id;
+        //int value = request->ivalue();
+        //int newvalue = shell->set_surface_attribute(session, id, attrib, value);
+
+        // TODO response->set_error("");
+    }
+
+    done->Run();
+}
+
 void mf::SessionMediator::configure_display(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::DisplayConfiguration* request,
