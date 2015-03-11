@@ -19,31 +19,26 @@
 #include "mir/dispatch/action_queue.h"
 
 #include <boost/throw_exception.hpp>
+#include <sys/eventfd.h>
 
 mir::dispatch::ActionQueue::ActionQueue()
+    : event_fd{eventfd(0, EFD_CLOEXEC|EFD_NONBLOCK)}
 {
-    int pipefds[2];
-    if (pipe(pipefds) < 0)
-    {
+    if (event_fd < 0)
         BOOST_THROW_EXCEPTION((std::system_error{errno,
                                                  std::system_category(),
-                                                 "Failed to create notification pipe for IO"}));
-    }
-    read_fd = mir::Fd{pipefds[0]};
-    trigger_fd = mir::Fd{pipefds[1]};
+                                                 "Failed to create event fd for action queue"}));
 }
 
 mir::Fd mir::dispatch::ActionQueue::watch_fd() const
 {
-    return read_fd;
+    return event_fd;
 }
 
 void mir::dispatch::ActionQueue::enqueue(std::function<void()> const& action)
 {
-    {
-        std::unique_lock<std::mutex> lock(list_lock);
-        actions.push_back(action);
-    }
+    std::unique_lock<std::mutex> lock(list_lock);
+    actions.push_back(action);
     wake();
 }
 
@@ -56,12 +51,12 @@ bool mir::dispatch::ActionQueue::dispatch(FdEvents events)
 
     {
         std::unique_lock<std::mutex> lock(list_lock);
+        consume();
         std::swap(actions_to_process, actions);
     }
 
     while(!actions_to_process.empty())
     {
-        consume();
         actions_to_process.front()();
         actions_to_process.pop_front();
     }
@@ -70,27 +65,23 @@ bool mir::dispatch::ActionQueue::dispatch(FdEvents events)
 
 mir::dispatch::FdEvents mir::dispatch::ActionQueue::relevant_events() const
 {
-    return FdEvent::readable|FdEvent::error;
+    return FdEvent::readable;
 }
 
 void mir::dispatch::ActionQueue::consume()
 {
-    uint64_t dummy;
-    if (read(read_fd, &dummy, sizeof(dummy)) != sizeof(dummy))
-    {
+    uint64_t num_actions;
+    if (read(event_fd, &num_actions, sizeof num_actions) != sizeof num_actions)
         BOOST_THROW_EXCEPTION((std::system_error{errno,
                                                  std::system_category(),
                                                  "Failed to consume action queue notification"}));
-    }
 }
 
 void mir::dispatch::ActionQueue::wake()
 {
-    uint64_t dummy{0};
-    if (write(trigger_fd, &dummy, sizeof(dummy)) != sizeof(dummy))
-    {
+    uint64_t one_more{1};
+    if (write(event_fd, &one_more, sizeof one_more) != sizeof one_more)
         BOOST_THROW_EXCEPTION((std::system_error{errno,
                                                  std::system_category(),
                                                  "Failed to wake action queue"}));
-    }
 }
