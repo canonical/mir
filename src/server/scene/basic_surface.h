@@ -165,6 +165,8 @@ public:
 
     void set_keymap(xkb_rule_names const& rules) override;
 
+    bool respecify(Spec const&) override;
+
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
     MirSurfaceType set_type(MirSurfaceType t);  // Use configure() to make public changes
@@ -177,7 +179,7 @@ private:
 
     SurfaceObservers observers;
     std::mutex mutable guard;
-    std::string const surface_name;
+    std::string surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;
     float surface_alpha;

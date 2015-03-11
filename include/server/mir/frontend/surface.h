@@ -22,7 +22,9 @@
 
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
+#include "mir/optional_value.h"
 
+#include <string>
 #include <memory>
 
 namespace mir
@@ -40,6 +42,12 @@ class ClientBufferTracker;
 class Surface
 {
 public:
+    struct Spec
+    {
+        optional_value<std::string> name;
+        // TODO: type/state/size etc for morphing
+    };
+
     virtual ~Surface() = default;
 
     /// Size of the client area of the surface (excluding any decorations)
@@ -52,6 +60,7 @@ public:
     virtual int client_input_fd() const = 0;
 
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
+    virtual bool respecify(Spec const&) { return false; } // TODO pure
 
 protected:
     Surface() = default;

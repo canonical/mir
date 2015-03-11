@@ -753,3 +753,22 @@ void ms::BasicSurface::set_keymap(xkb_rule_names const& rules)
 {
     observers.keymap_changed(rules);
 }
+
+bool ms::BasicSurface::respecify(frontend::Surface::Spec const& spec)
+{
+    bool valid = true;
+    bool changed = false;
+
+    if (spec.name.is_set())
+    {
+        surface_name = spec.name.value();
+        changed = true;
+    }
+
+    if (changed)
+        observers.frame_posted(1); // TODO different message
+
+    // TODO: In future more complex combinations might not be valid
+
+    return valid;
+}

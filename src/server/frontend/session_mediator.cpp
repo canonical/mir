@@ -415,7 +415,7 @@ void mf::SessionMediator::modify_surface(
     mir::protobuf::Void* response,
     google::protobuf::Closure* done)
 {
-    response->clear_error(); // TODO
+    response->clear_error();
 
     {
         std::unique_lock<std::mutex> lock(session_mutex);
@@ -426,11 +426,15 @@ void mf::SessionMediator::modify_surface(
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         auto const id = mf::SurfaceId(mod->surface_id().value());
-        (void)id;
-        //int value = request->ivalue();
-        //int newvalue = shell->set_surface_attribute(session, id, attrib, value);
+        auto const surface = session->get_surface(id);
 
-        // TODO response->set_error("");
+        mf::Surface::Spec spec;
+        if (mod->has_name())
+            spec.name = mod->name();
+        // TODO: More fields for generalized morphing
+
+        if (!surface->respecify(spec))
+            response->set_error("Unsupported or invalid surface spec");
     }
 
     done->Run();
