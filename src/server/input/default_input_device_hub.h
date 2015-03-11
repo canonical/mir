@@ -69,7 +69,7 @@ private:
     struct RegisteredDevice : public InputSink
     {
     public:
-        RegisteredDevice(std::shared_ptr<InputDevice> const& dev, std::shared_ptr<InputDispatcher> const& dispatcher);
+        RegisteredDevice(std::shared_ptr<InputDevice> const& dev, std::shared_ptr<InputDispatcher> const& dispatcher, std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer);
         void handle_input(MirEvent& event) override;
         bool device_matches(std::shared_ptr<InputDevice> const& dev) const;
         void start();
@@ -80,6 +80,7 @@ private:
         int32_t device_id;
         std::shared_ptr<InputDevice> device; // weak instead?
         std::shared_ptr<InputDispatcher> dispatcher;
+        std::shared_ptr<dispatch::MultiplexingDispatchable> multiplexer;
     };
 
     // DeviceInfo ~ and device id? ~

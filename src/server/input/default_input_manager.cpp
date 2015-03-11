@@ -71,7 +71,7 @@ void mi::DefaultInputManager::start()
     queue->enqueue([this]()
                    {
                        mir::set_thread_name("Mir/Input");
-                       for (auto const platform : platforms)
+                       for (auto const& platform : platforms)
                        {
                            platform->start();
                            multiplexer->add_watch(platform->get_dispatchable());

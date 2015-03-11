@@ -24,6 +24,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_sink.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/server_action_queue.h"
 
 #include <algorithm>
@@ -54,7 +55,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
     if (it == end(devices))
     {
-        devices.push_back(std::unique_ptr<RegisteredDevice>(new RegisteredDevice{device, input_dispatcher}));
+        devices.push_back(std::unique_ptr<RegisteredDevice>(new RegisteredDevice{device, input_dispatcher, input_dispatchable}));
 
         auto info = devices.back()->get_device_info();
 
@@ -100,9 +101,9 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
         );
 }
 
-mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(std::shared_ptr<InputDevice> const& dev, std::shared_ptr<InputDispatcher> const& dispatcher)
+mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(std::shared_ptr<InputDevice> const& dev, std::shared_ptr<InputDispatcher> const& dispatcher, std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer)
     : device_id(create_new_device_id()),
-    device(dev), dispatcher(dispatcher)
+    device(dev), dispatcher(dispatcher), multiplexer(multiplexer)
 {
 }
 
@@ -116,7 +117,6 @@ mi::InputDeviceInfo mi::DefaultInputDeviceHub::RegisteredDevice::get_device_info
 
 int32_t mi::DefaultInputDeviceHub::RegisteredDevice::create_new_device_id()
 {
-    // TODO come up with a reasonable solution..
     static int32_t device_id{0};
     return ++device_id;
 }
@@ -147,10 +147,12 @@ bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr
 void mi::DefaultInputDeviceHub::RegisteredDevice::start()
 {
     device->start(*this);
+    multiplexer->add_watch(device->get_dispatchable());
 }
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
 {
+    multiplexer->remove_watch(device->get_dispatchable());
     device->stop();
 }
 

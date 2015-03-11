@@ -41,8 +41,15 @@ namespace
 struct DefaultInputManagerTest : ::testing::Test
 {
     md::MultiplexingDispatchable multiplexer;
+    md::ActionQueue platform_dispatchable;
     NiceMock<mtd::MockInputPlatform> platform;
     mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer)};
+
+    DefaultInputManagerTest()
+    {
+        ON_CALL(platform, get_dispatchable())
+            .WillByDefault(Return(mt::fake_shared(platform_dispatchable)));
+    }
 
     bool wait_for_multiplexer_dispatch()
     {
@@ -50,7 +57,7 @@ struct DefaultInputManagerTest : ::testing::Test
         auto queue_done = std::make_shared<mt::Signal>();
         queue->enqueue([queue_done]()
                        {
-                       queue_done->raise();
+                           queue_done->raise();
                        });
         multiplexer.add_watch(queue);
         bool ret = queue_done->wait_for(std::chrono::seconds{2});
@@ -59,13 +66,13 @@ struct DefaultInputManagerTest : ::testing::Test
     }
 };
 
-
 }
 
 TEST_F(DefaultInputManagerTest, starts_platforms_on_start)
 {
     EXPECT_CALL(platform, start()).Times(1);
-    EXPECT_CALL(platform, get_dispatchable()).Times(1);
+    EXPECT_CALL(platform, get_dispatchable()).Times(2);
+    EXPECT_CALL(platform, stop()).Times(1);
 
     input_manager.add_platform(mt::fake_shared(platform));
     input_manager.start();
@@ -76,7 +83,8 @@ TEST_F(DefaultInputManagerTest, starts_platforms_on_start)
 TEST_F(DefaultInputManagerTest, starts_platforms_after_start)
 {
     EXPECT_CALL(platform, start()).Times(1);
-    EXPECT_CALL(platform, get_dispatchable()).Times(1);
+    EXPECT_CALL(platform, get_dispatchable()).Times(2);
+    EXPECT_CALL(platform, stop()).Times(1);
 
     input_manager.start();
     input_manager.add_platform(mt::fake_shared(platform));
