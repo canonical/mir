@@ -21,6 +21,7 @@
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test/signal.h"
+#include "mir_test/auto_unblock_thread.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -115,7 +116,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
 
     int fd_count_after_one_surface_lifetime = 0;
                
-    std::thread{
+    mir::test::AutoJoinThread t{
         [&]
         {
             auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -146,7 +147,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
 
             connection_released.raise();
 
-        }}.detach();
+        }};
     
 
     EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{480}))

@@ -20,6 +20,7 @@
 #define MIR_TESTS_INCLUDE_MIR_TEST_FRAMEWORK_ASYNC_SERVER_RUNNER_H_
 
 #include "mir_test_framework/temporary_environment_value.h"
+#include "mir_test/auto_unblock_thread.h"
 
 #include "mir/server.h"
 
@@ -57,7 +58,7 @@ public:
 
 private:
     std::list<TemporaryEnvironmentValue> env;
-    std::thread server_thread;
+    mir::test::AutoJoinThread server_thread;
 
     std::list<mir::Fd> connections;
 
