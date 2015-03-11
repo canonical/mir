@@ -5,3 +5,10 @@
    fun:ioctl
    fun:ioctl
 }
+{
+   Supress incorrect unaddressable memory warning ioctl
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   fun:_ZN7android8EventHub16openDeviceLockedEPKc
+}
