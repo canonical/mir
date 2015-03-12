@@ -12,6 +12,7 @@ message ConnectParameters {
 }
 
 message SurfaceParameters {
+  // TODO: width/height may be optional if state == fullscreen or maximized
   required int32 width = 1;
   required int32 height = 2;
   required int32 pixel_format = 3;
