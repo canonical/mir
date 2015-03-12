@@ -146,7 +146,6 @@ private:
     mutable std::mutex mutex; // Protects all members of *this
 
     void on_configured();
-    void on_modified();
     void on_cursor_configured();
     void created(mir_surface_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
@@ -159,12 +158,15 @@ private:
     std::string name;
     mir::protobuf::Void void_response;
 
+    void on_modified();
+    MirWaitHandle modify_wait_handle;
+    mir::protobuf::Void modify_result;
+
     MirConnection* const connection{nullptr};
 
     MirWaitHandle create_wait_handle;
     MirWaitHandle configure_wait_handle;
     MirWaitHandle configure_cursor_wait_handle;
-    MirWaitHandle modify_wait_handle;
 
     std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
@@ -172,7 +174,6 @@ private:
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 
     mir::protobuf::SurfaceSetting configure_result;
-    mir::protobuf::Void modify_result;
 
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_surface_attribs];
