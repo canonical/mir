@@ -282,14 +282,25 @@ public:
     {
         if (mir_event_get_type(ev) != mir_event_type_input)
             return;
+        float x{0.0f};
+        float y{0.0f};
         auto ievent = mir_event_get_input_event(ev);
-        if (mir_input_event_get_type(ievent) != mir_input_event_type_touch)
+        if (mir_input_event_get_type(ievent) == mir_input_event_type_touch)
+        {
+            auto tev = mir_input_event_get_touch_input_event(ievent);
+            x = mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_x);
+            y = mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_y);
+        }
+        else if (mir_input_event_get_type(ievent) == mir_input_event_type_pointer)
+        {
+            auto pev = mir_input_event_get_pointer_input_event(ievent);
+            x = mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x);
+            y = mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_y);
+        }
+        else
+        {
             return;
-        auto tev = mir_input_event_get_touch_input_event(ievent);
-        auto x = mir_touch_input_event_get_touch_axis_value(tev, 0,
-            mir_touch_input_axis_x);
-        auto y = mir_touch_input_event_get_touch_axis_value(tev, 0,
-            mir_touch_input_axis_y);
+        }
         context.make_current();
         program.draw(
             x/static_cast<float>(dimensions.width)*2.0 - 1.0,
