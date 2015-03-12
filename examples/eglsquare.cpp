@@ -1,19 +1,24 @@
 #include "mir_toolkit/mir_client_library.h"
-#include <memory>
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
-#include <assert.h>
+#include <atomic>
 #include <thread>
+#include <memory>
 #include <chrono>
+#include <tuple>
+#include <cstring>
+#include <unistd.h>
+#include <signal.h>
 
 namespace
 {
 class Connection
 {
 public:
-    Connection()
-    : connection(mir_connect_sync(nullptr, __PRETTY_FUNCTION__))
+    Connection(char const* socket_file)
+    : connection(mir_connect_sync(socket_file, __PRETTY_FUNCTION__))
     {
+        if (!mir_connection_is_valid(connection)) throw std::runtime_error("could not connect to server");
     }
     ~Connection()
     {
@@ -302,15 +307,67 @@ private:
 };
 }
 
+std::tuple<unsigned int, unsigned int> active_output_width_and_height(MirConnection* connection)
+{
+    unsigned int width{0};
+    unsigned int height{0};
+    auto display_config = mir_connection_create_display_config(connection);
+    for (auto i = 0u; i < display_config->num_outputs; i++)
+    {
+        MirDisplayOutput const* out = display_config->outputs + i;
+        if (out->used &&
+            out->connected &&
+            out->num_modes &&
+            out->current_mode < out->num_modes)
+        {
+            width = out->modes[out->current_mode].horizontal_resolution;
+            height = out->modes[out->current_mode].vertical_resolution;
+            break;
+        }
+    }
+    mir_display_config_destroy(display_config);
+    if (width == 0 || height == 0)
+        throw std::logic_error("could not determine display size");
+    return std::tuple<unsigned int, unsigned int>{width, height};
+}
+
+std::atomic<bool> running{true};
+void signal_handler(int)
+{
+    running = false;
+}
+
 int main(int argc, char *argv[])
 try
 {
-    (void) argc; (void) argv;
-    auto connection = std::make_shared<Connection>();
-    Surface surface(connection, 768, 1280);
-    while (true){ std::this_thread::sleep_for(std::chrono::seconds(1)); }
+    struct sigaction action;
+    std::memset(&action, 0, sizeof(action));
+    action.sa_handler = signal_handler;
+    sigaction(SIGTERM, &action, nullptr);
+
+    auto arg = 0;
+    char const* socket_file = nullptr;
+    while ((arg = getopt (argc, argv, "m:")) != -1)
+    {
+        switch (arg)
+        {
+        case 'm':
+            socket_file = optarg;
+            break;
+        default:
+            throw std::invalid_argument("invalid command line argument");
+        }
+    }
+
+    auto connection = std::make_shared<Connection>(socket_file);
+    auto width_height = active_output_width_and_height(*connection);
+    Surface surface(connection, std::get<0>(width_height), std::get<1>(width_height));
+
+    while (running){ std::this_thread::sleep_for(std::chrono::seconds(1)); }
+    return 0;
 }
 catch(std::runtime_error& e)
 {
-    printf("ERR. %s\n", e.what());
+    printf("error: %s\n", e.what());
+    return 1;
 }
