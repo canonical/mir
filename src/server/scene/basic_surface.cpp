@@ -113,6 +113,12 @@ void ms::SurfaceObservers::keymap_changed(xkb_rule_names const& rules)
         { observer->keymap_changed(rules); });
 }
 
+void ms::SurfaceObservers::renamed(char const* name)
+{
+    for_each([name](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->renamed(name); });
+}
+
 
 ms::BasicSurface::BasicSurface(
     std::string const& name,
@@ -761,10 +767,7 @@ bool ms::BasicSurface::respecify(frontend::Surface::Spec const& spec)
     if (spec.name.is_set())
     {
         surface_name = spec.name.value();
-
-        // TODO: Notify SurfaceObserver properly.
-        // But instead of extending it;  lp:~vanvugt/mir/simpler-observer
-        observers.frame_posted(1);
+        observers.renamed(surface_name.c_str());
     }
 
     // TODO: In future some specs might not be valid (LP: #1422522)

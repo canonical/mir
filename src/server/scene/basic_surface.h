@@ -73,6 +73,7 @@ public:
     void cursor_image_set_to(graphics::CursorImage const& image) override;
     void client_surface_close_requested() override;
     void keymap_changed(xkb_rule_names const& names) override;
+    void renamed(char const*) override;
 };
 
 class BasicSurface : public Surface
