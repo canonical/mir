@@ -428,7 +428,7 @@ void mf::SessionMediator::modify_surface(
             spec.name = mod->name();
         // TODO: More fields soon (LP: #1422522) (LP: #1420573)
 
-        // TODO use shell instead. When the design settles.
+        // TODO: Route this through shell after the dust settles (alan_g):
         if (!surface->respecify(spec))
             response->set_error("Unsupported or invalid surface spec");
     }
