@@ -33,8 +33,6 @@ namespace test
 class Signal
 {
 public:
-    Signal();
-
     void raise();
     bool raised();
 
@@ -55,7 +53,7 @@ public:
 private:
     std::mutex mutex;
     std::condition_variable cv;
-    bool signalled;
+    bool signalled{false};
 };
 }
 }

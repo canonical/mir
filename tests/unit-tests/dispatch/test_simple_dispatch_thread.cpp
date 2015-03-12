@@ -56,7 +56,6 @@ public:
     MOCK_METHOD1(dispatch, bool(md::FdEvents));
     MOCK_CONST_METHOD0(relevant_events, md::FdEvents());
 };
-
 }
 
 TEST_F(SimpleDispatchThreadTest, calls_dispatch_when_fd_is_readable)
@@ -64,7 +63,10 @@ TEST_F(SimpleDispatchThreadTest, calls_dispatch_when_fd_is_readable)
     using namespace testing;
 
     auto dispatched = std::make_shared<mt::Signal>();
-    auto dispatchable = std::make_shared<mt::TestDispatchable>([dispatched]() { dispatched->raise(); });
+    auto dispatchable = std::make_shared<mt::TestDispatchable>([dispatched]()
+                                                               {
+                                                                   dispatched->raise();
+                                                               });
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -78,7 +80,10 @@ TEST_F(SimpleDispatchThreadTest, stops_calling_dispatch_once_fd_is_not_readable)
     using namespace testing;
 
     std::atomic<int> dispatch_count{0};
-    auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatch_count]() { ++dispatch_count; });
+    auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatch_count]()
+                                                               {
+                                                                   ++dispatch_count;
+                                                               });
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -108,7 +113,8 @@ TEST_F(SimpleDispatchThreadTest, passes_dispatch_events_through)
         }
         return true;
     };
-    auto dispatchable = std::make_shared<mt::TestDispatchable>(delegate, md::FdEvent::readable | md::FdEvent::remote_closed);
+    auto dispatchable =
+        std::make_shared<mt::TestDispatchable>(delegate, md::FdEvent::readable | md::FdEvent::remote_closed);
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -163,17 +169,17 @@ TEST_F(SimpleDispatchThreadTest, only_calls_dispatch_with_remote_closed_when_rel
     auto dispatched_closed = std::make_shared<mt::Signal>();
 
     ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([=](md::FdEvents events)
-    {
-        if (events & md::FdEvent::writable)
-        {
-            dispatched_writable->raise();
-        }
-        if (events & md::FdEvent::remote_closed)
-        {
-            dispatched_closed->raise();
-        }
-        return true;
-    }));
+                                                             {
+                                                                 if (events & md::FdEvent::writable)
+                                                                 {
+                                                                     dispatched_writable->raise();
+                                                                 }
+                                                                 if (events & md::FdEvent::remote_closed)
+                                                                 {
+                                                                     dispatched_closed->raise();
+                                                                 }
+                                                                 return true;
+                                                             }));
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -182,4 +188,30 @@ TEST_F(SimpleDispatchThreadTest, only_calls_dispatch_with_remote_closed_when_rel
     // Make the fd remote-closed...
     watch_fd = mir::Fd{};
     EXPECT_FALSE(dispatched_closed->wait_for(std::chrono::seconds{1}));
+}
+
+TEST_F(SimpleDispatchThreadTest, handles_destruction_from_dispatch_callback)
+{
+    using namespace testing;
+    using namespace std::chrono_literals;
+
+    auto dispatched = std::make_shared<mt::Signal>();
+    auto assignment_made = std::make_shared<mt::Signal>();
+    md::SimpleDispatchThread* dispatcher{nullptr};
+
+    auto dispatchable = std::make_shared<mt::TestDispatchable>([dispatched, &dispatcher, assignment_made]()
+                                                               {
+                                                                   assignment_made->wait_for(10s);
+                                                                   delete dispatcher;
+                                                                   dispatched->raise();
+                                                               });
+
+    dispatchable->trigger();
+    dispatchable->trigger();
+
+    dispatcher = new md::SimpleDispatchThread{dispatchable};
+
+    assignment_made->raise();
+
+    EXPECT_TRUE(dispatched->wait_for(10s));
 }
