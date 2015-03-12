@@ -51,9 +51,10 @@ public:
     static void remove(std::shared_ptr<mir::input::InputDevice> const& dev);
 
 private:
-    static std::vector<std::shared_ptr<mir::input::InputDevice>> registered_devs;
-    static std::shared_ptr<mir::input::InputDeviceRegistry> registry;
-    static std::shared_ptr<mir::dispatch::ActionQueue> platform_queue;
+    std::shared_ptr<mir::dispatch::ActionQueue> const platform_queue;
+    std::shared_ptr<mir::input::InputDeviceRegistry> const registry;
+    static StubInputPlatform* stub_input_platform;
+    static std::vector<std::weak_ptr<mir::input::InputDevice>> device_store;
 };
 
 }

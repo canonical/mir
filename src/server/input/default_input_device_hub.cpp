@@ -54,7 +54,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
     if (it == end(devices))
     {
-        devices.push_back(std::unique_ptr<RegisteredDevice>(new RegisteredDevice{device, input_dispatcher, input_dispatchable}));
+        devices.push_back(std::make_unique<RegisteredDevice>(device, input_dispatcher, input_dispatchable));
 
         auto info = devices.back()->get_device_info();
 

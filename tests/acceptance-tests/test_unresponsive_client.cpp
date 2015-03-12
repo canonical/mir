@@ -77,7 +77,7 @@ TEST_F(UnresponsiveClient, does_not_hang_server)
 
     run_in_server([&]
         {
-            std::thread {
+            mt::AutoJoinThread t{
                 [&] {
                     server_send_events.exec([&]
                         {
@@ -90,7 +90,7 @@ TEST_F(UnresponsiveClient, does_not_hang_server)
                                     });
                             }
                         });
-                }}.detach();
+                }};
 
             server_finish.exec([]{});
         });

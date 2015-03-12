@@ -77,12 +77,12 @@ void mtf::set_next_preset_display(std::shared_ptr<mir::graphics::Display> const&
     display_setter(display);
 }
 
-std::unique_ptr<mtf::FakeInputDevice> mtf::add_fake_input_device(mir::input::InputDeviceInfo const& info)
+mir::UniqueModulePtr<mtf::FakeInputDevice> mtf::add_fake_input_device(mir::input::InputDeviceInfo const& info)
 {
     ensure_platform_library();
 
     auto add_device = platform_input_lib->load_function<
-        std::unique_ptr<mtf::FakeInputDevice>(*)(mir::input::InputDeviceInfo const&)
+        mir::UniqueModulePtr<mtf::FakeInputDevice>(*)(mir::input::InputDeviceInfo const&)
         >("add_fake_input_device");
 
     return add_device(info);

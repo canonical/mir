@@ -63,7 +63,7 @@ private:
     void add_device_info(InputDeviceInfo const& info);
     void remove_device_info(InputDeviceInfo const& info);
     std::shared_ptr<InputDispatcher> const input_dispatcher;
-    std::shared_ptr<dispatch::MultiplexingDispatchable> input_dispatchable;
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
     std::shared_ptr<ServerActionQueue> const observer_queue;
 
     struct RegisteredDevice : public InputSink
@@ -78,9 +78,9 @@ private:
     private:
         static int32_t create_new_device_id();
         int32_t device_id;
-        std::shared_ptr<InputDevice> device; // weak instead?
-        std::shared_ptr<InputDispatcher> dispatcher;
-        std::shared_ptr<dispatch::MultiplexingDispatchable> multiplexer;
+        std::shared_ptr<InputDevice> const device; // weak instead?
+        std::shared_ptr<InputDispatcher> const dispatcher;
+        std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     };
 
     // DeviceInfo ~ and device id? ~

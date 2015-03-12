@@ -124,8 +124,7 @@ struct mir::DisplayServer::Private
                 [this] { compositor->start(); }};
 
             TryButRevertIfUnwinding prompt{
-                [this] { prompt_connector->stop(); },
-                [this] { prompt_connector->start(); }};
+                [this] { prompt_connector->stop(); }, [this] { prompt_connector->start(); }};
 
             TryButRevertIfUnwinding comm{
                 [this] { connector->stop(); },
@@ -234,7 +233,6 @@ void mir::DisplayServer::run()
     p->input_dispatcher->start();
 
     p->server_status_listener->started();
-
     p->main_loop->run();
 
     p->input_dispatcher->stop();

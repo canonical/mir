@@ -42,7 +42,6 @@ class FakeInputDeviceImpl : public FakeInputDevice
 {
 public:
     FakeInputDeviceImpl(mi::InputDeviceInfo const& info);
-    ~FakeInputDeviceImpl();
     void emit_event(synthesis::KeyParameters const& key_params) override;
 private:
     class InputDevice : public mi::InputDevice

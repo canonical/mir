@@ -168,8 +168,8 @@ TEST_F(ServerShutdown, mir_fatal_error_during_init_removes_endpoint)
 
         auto result = server_process->wait_for_termination();
 
-        EXPECT_EQ(mtf::TerminationReason::child_terminated_normally, result.reason);
         EXPECT_FALSE(file_exists(mir_test_socket));
+        EXPECT_EQ(mtf::TerminationReason::child_terminated_normally, result.reason);
     }
     else
     {

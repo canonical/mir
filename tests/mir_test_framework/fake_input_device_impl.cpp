@@ -25,6 +25,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_sink.h"
 #include "mir/dispatch/action_queue.h"
+#include "mir/module_deleter.h"
 
 #include "boost/throw_exception.hpp"
 
@@ -95,14 +96,10 @@ uint32_t expand_modifier(uint32_t modifiers)
 }
 
 mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
-    : queue{std::make_shared<md::ActionQueue>()},
-    device{std::make_shared<InputDevice>(info, queue)}
+    : queue{mir::make_module_ptr<md::ActionQueue>()},
+    device{mir::make_module_ptr<InputDevice>(info, queue)}
 {
     mtf::StubInputPlatform::add(device);
-}
-
-mtf::FakeInputDeviceImpl::~FakeInputDeviceImpl()
-{
 }
 
 void mtf::FakeInputDeviceImpl::emit_event(synthesis::KeyParameters const& key)

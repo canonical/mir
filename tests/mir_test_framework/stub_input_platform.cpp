@@ -20,6 +20,7 @@
 
 #include "mir/input/input_device_registry.h"
 #include "mir/dispatch/action_queue.h"
+#include "mir/module_deleter.h"
 
 #include <algorithm>
 
@@ -28,19 +29,26 @@ namespace mi = mir::input;
 
 mtf::StubInputPlatform::StubInputPlatform(
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry)
+    : platform_queue{mir::make_module_ptr<mir::dispatch::ActionQueue>()},
+    registry(input_device_registry)
 {
-    registry = input_device_registry;
+    stub_input_platform = this;
 }
 
 mtf::StubInputPlatform::~StubInputPlatform()
 {
-    registry.reset();
+    device_store.clear();
+    stub_input_platform = nullptr;
 }
 
 void mtf::StubInputPlatform::start()
 {
-    for (auto const & dev : registered_devs)
-        registry->add_device(dev);
+    for (auto const& dev : device_store)
+    {
+        auto device = dev.lock();
+        registry->add_device(device);
+    }
+    device_store.clear();
 }
 
 std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::get_dispatchable()
@@ -50,33 +58,34 @@ std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::get_dispatc
 
 void mtf::StubInputPlatform::stop()
 {
-    for (auto const & dev : registered_devs)
-        registry->remove_device(dev);
-
-    registered_devs.clear();
 }
 
 void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    platform_queue->enqueue([dev]
-                            {
-                                registry->add_device(dev);
-                                registered_devs.push_back(dev);
-                            });
+    if (!stub_input_platform)
+    {
+        device_store.push_back(dev);
+        return;
+    }
+
+    stub_input_platform->platform_queue->enqueue(
+        [registry=stub_input_platform->registry,dev]
+        {
+            registry->add_device(dev);
+        });
 }
+
 void mtf::StubInputPlatform::remove(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    platform_queue->enqueue([dev]
-                            {
-                                registry->remove_device(dev);
-                                registered_devs.erase(
-                                    std::remove(begin(registered_devs),
-                                           end(registered_devs),
-                                           dev));
-                            });
+    if (!stub_input_platform)
+        BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
+
+    stub_input_platform->platform_queue->enqueue(
+        [registry=stub_input_platform->registry,dev]
+        {
+            registry->remove_device(dev);
+        });
 }
 
-std::vector<std::shared_ptr<mi::InputDevice>> mtf::StubInputPlatform::registered_devs;
-std::shared_ptr<mi::InputDeviceRegistry> mtf::StubInputPlatform::registry;
-std::shared_ptr<mir::dispatch::ActionQueue> mtf::StubInputPlatform::platform_queue = std::make_shared<mir::dispatch::ActionQueue>();
-
+mtf::StubInputPlatform* mtf::StubInputPlatform::stub_input_platform = nullptr;
+std::vector<std::weak_ptr<mir::input::InputDevice>> mtf::StubInputPlatform::device_store;

@@ -61,9 +61,7 @@ extern "C" mir::ModuleProperties const* describe_input_module()
     return &description;
 }
 
-extern "C" std::unique_ptr<mtf::FakeInputDevice> add_fake_input_device(mi::InputDeviceInfo const& info)
+extern "C" mir::UniqueModulePtr<mtf::FakeInputDevice> add_fake_input_device(mi::InputDeviceInfo const& info)
 {
-    return std::unique_ptr<mtf::FakeInputDevice>(new mtf::FakeInputDeviceImpl(info));
+    return mir::make_module_ptr<mtf::FakeInputDeviceImpl>(info);
 }
-
-

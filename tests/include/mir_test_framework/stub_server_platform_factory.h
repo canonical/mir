@@ -22,6 +22,7 @@
 #include "mir/geometry/rectangle.h"
 
 #include "mir/graphics/platform.h"
+#include "mir/module_deleter.h"
 #include <vector>
 #include <memory>
 #include <string>
@@ -52,6 +53,6 @@ void set_next_display_rects(std::unique_ptr<std::vector<geom::Rectangle>>&& disp
 
 void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display);
 
-std::unique_ptr<FakeInputDevice> add_fake_input_device(mir::input::InputDeviceInfo const& info);
+mir::UniqueModulePtr<FakeInputDevice> add_fake_input_device(mir::input::InputDeviceInfo const& info);
 }
 #endif /* MIR_TEST_FRAMEWORK_STUB_SERVER_PLATFORM_FACTORY_ */

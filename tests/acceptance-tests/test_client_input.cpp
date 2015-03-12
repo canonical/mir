@@ -87,13 +87,13 @@ struct TestClientInputNew : mtf::ConnectedClientWithASurface
             throw std::runtime_error("Timeout waiting for surface to become focused and exposed");
     }
 
-
-    ::testing::NiceMock<MockInputHandler> handler;
-    mir::test::WaitCondition all_events_received;
-    mir::test::WaitCondition ready_to_accept_events;
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
         };
+    ::testing::NiceMock<MockInputHandler> handler;
+    mir::test::WaitCondition all_events_received;
+    mir::test::WaitCondition ready_to_accept_events;
+
 };
 
 }
@@ -115,6 +115,7 @@ TEST_F(TestClientInputNew, new_clients_receive_us_english_mapped_keys)
         mt::WakeUp(&all_events_received));
 
     ready_to_accept_events.wait_for_at_most_seconds(5);
+
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));

@@ -34,25 +34,23 @@ namespace mir
 namespace test
 {
 
-class AutoUnblockThread
+class AutoJoinThread
 {
 public:
+    AutoJoinThread() = default;
     template<typename Callable, typename... Args>
-    explicit AutoUnblockThread(std::function<void(void)> const& unblock,
-        Callable&& f,
+    explicit AutoJoinThread(Callable&& f,
         Args&&... args)
-        : unblock{unblock},
-          thread{std::forward<Callable>(f), std::forward<Args>(args)...}
+        : thread{std::forward<Callable>(f), std::forward<Args>(args)...}
     {}
 
-    ~AutoUnblockThread()
+    ~AutoJoinThread()
     {
         stop();
     }
 
     void stop()
     {
-        unblock();
         if (thread.joinable())
             thread.join();
     }
@@ -62,22 +60,43 @@ public:
         return thread.native_handle();
     }
 
+    AutoJoinThread(AutoJoinThread&& t) = default;
+    AutoJoinThread& operator=(AutoJoinThread&& t) = default;
+
 private:
-    std::function<void(void)> unblock;
     std::thread thread;
 };
 
-/** AutoJoinThread is a convenience AutoUnblockThread when there is
- *  no need for unblocking anything to join the thread.
- */
-class AutoJoinThread : public AutoUnblockThread
+class AutoUnblockThread : public AutoJoinThread
 {
 public:
+    AutoUnblockThread() = default;
+
     template<typename Callable, typename... Args>
-    explicit AutoJoinThread(Callable&& f,
+    explicit AutoUnblockThread(std::function<void(void)> const& unblock,
+        Callable&& f,
         Args&&... args)
-        : AutoUnblockThread{[]{}, std::forward<Callable>(f), std::forward<Args>(args)...}
+        : AutoJoinThread{std::forward<Callable>(f), std::forward<Args>(args)...},
+          unblock{unblock}
     {}
+
+    ~AutoUnblockThread()
+    {
+        stop();
+    }
+
+    AutoUnblockThread(AutoUnblockThread&& t) = default;
+    AutoUnblockThread& operator=(AutoUnblockThread&& t) = default;
+
+    void stop()
+    {
+        if (unblock)
+            unblock();
+        AutoJoinThread::stop();
+    }
+
+private:
+    std::function<void(void)> unblock;
 };
 
 }
