@@ -117,21 +117,12 @@ void msh::AbstractShell::stop_prompt_session(
 }
 
 int msh::AbstractShell::set_surface_attribute(
-    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface,
     MirSurfaceAttrib attrib,
     int value)
 {
-    switch (attrib)
-    {
-    case mir_surface_attrib_state:
-    {
-        auto const state = window_manager->handle_set_state(surface, MirSurfaceState(value));
-        return surface->configure(attrib, state);
-    }
-    default:
-        return surface->configure(attrib, value);
-    }
+    return window_manager->set_surface_attribute(session, surface, attrib, value);
 }
 
 int msh::AbstractShell::get_surface_attribute(

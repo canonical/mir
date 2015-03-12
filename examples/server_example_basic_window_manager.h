@@ -21,6 +21,7 @@
 
 #include "mir/geometry/rectangles.h"
 #include "mir/scene/session.h"
+#include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/abstract_shell.h"
 #include "mir/shell/window_manager.h"
@@ -189,10 +190,23 @@ private:
         return policy.handle_pointer_event(event);
     }
 
-    int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) override
+    int set_surface_attribute(
+        std::shared_ptr<scene::Session> const& /*session*/,
+        std::shared_ptr<scene::Surface> const& surface,
+        MirSurfaceAttrib attrib,
+        int value) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        return policy.handle_set_state(surface, value);
+        switch (attrib)
+        {
+        case mir_surface_attrib_state:
+        {
+            auto const state = policy.handle_set_state(surface, MirSurfaceState(value));
+            return surface->configure(attrib, state);
+        }
+        default:
+            return surface->configure(attrib, value);
+        }
     }
 
     auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)

@@ -307,8 +307,9 @@ TEST_F(AbstractShell, setting_surface_state_is_handled_by_window_manager)
 
     MirSurfaceState const state{mir_surface_state_fullscreen};
 
-    EXPECT_CALL(*wm, handle_set_state(surface, state))
-        .WillOnce(Return(mir_surface_state_maximized));
+    EXPECT_CALL(*wm, set_surface_attribute(session, surface, mir_surface_attrib_state, state))
+        .WillOnce(WithArg<1>(Invoke([](std::shared_ptr<ms::Surface> const& surface)
+             { surface->configure(mir_surface_attrib_state, mir_surface_state_maximized); return mir_surface_state_maximized; })));
 
     EXPECT_CALL(mock_surface, configure(mir_surface_attrib_state, mir_surface_state_maximized));
 
