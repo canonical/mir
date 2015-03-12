@@ -348,13 +348,28 @@ private:
 
     MirSurface* create_surface(MirConnection* connection, OutputDimensions const& dim)
     {
-        MirPixelFormat pixel_format;
-        unsigned int valid_formats;
-        mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
+        MirPixelFormat selected_format;
+        unsigned int valid_formats{0};
+        MirPixelFormat pixel_formats[mir_pixel_formats];
+        mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
+        if (valid_formats == 0)
+            throw std::runtime_error("no pixel formats for surface");
+        selected_format = pixel_formats[0]; 
+        //select an 8 bit opaque format if we can
+        for(auto i = 0u; i < valid_formats; i++)
+            if (pixel_formats[i] == mir_pixel_format_xbgr_8888 ||
+                pixel_formats[i] == mir_pixel_format_xrgb_8888 ||
+                pixel_formats[i] == mir_pixel_format_bgr_888)
+        {
+            selected_format = pixel_formats[i];
+            break;
+        }
 
         auto deleter = [](MirSurfaceSpec *spec) { mir_surface_spec_release(spec); };
         std::unique_ptr<MirSurfaceSpec, decltype(deleter)> spec{
-            mir_connection_create_spec_for_normal_surface(connection, dim.width, dim.height, pixel_format), deleter };
+            mir_connection_create_spec_for_normal_surface(connection, dim.width, dim.height, selected_format),
+            deleter
+        };
 
         mir_surface_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
         mir_surface_spec_set_buffer_usage(spec.get(), mir_buffer_usage_hardware);
