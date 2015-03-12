@@ -17,8 +17,8 @@
  */
 
 #include "default_shell.h"
+#include "default_window_manager.h"
 #include "mir/shell/input_targeter.h"
-#include "mir/scene/placement_strategy.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session_coordinator.h"
@@ -26,7 +26,6 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_configurator.h"
 #include "mir/scene/surface_coordinator.h"
-#include "mir/scene/surface_creation_parameters.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -39,39 +38,10 @@ msh::DefaultShell::DefaultShell(
     std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<ms::PlacementStrategy> const& placement_strategy,
     std::shared_ptr<ms::SurfaceConfigurator> const& surface_configurator) :
-    AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
-    placement_strategy{placement_strategy},
+    AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager,
+        [&](FocusController* focus_controller) { return std::make_shared<DefaultWindowManager>(focus_controller, placement_strategy, session_coordinator); }),
     surface_configurator{surface_configurator}
 {
-}
-
-std::shared_ptr<ms::Session> msh::DefaultShell::open_session(
-    pid_t client_pid,
-    std::string const& name,
-    std::shared_ptr<mf::EventSink> const& sink)
-{
-    auto const new_session = AbstractShell::open_session(client_pid, name, sink);
-    set_focus_to(new_session);
-    return new_session;
-}
-
-void msh::DefaultShell::close_session(
-    std::shared_ptr<ms::Session> const& session)
-{
-    AbstractShell::close_session(session);
-    set_focus_to(session_coordinator->successor_of(std::shared_ptr<ms::Session>()));
-}
-
-void msh::DefaultShell::handle_surface_created(
-    std::shared_ptr<ms::Session> const& session)
-{
-    AbstractShell::handle_surface_created(session);
-    set_focus_to(session);
-}
-
-mf::SurfaceId msh::DefaultShell::create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
-{
-    return AbstractShell::create_surface(session, placement_strategy->place(*session, params));
 }
 
 int msh::DefaultShell::set_surface_attribute(
@@ -93,12 +63,4 @@ void msh::DefaultShell::setting_focus_to(std::shared_ptr<ms::Surface> const& sur
 {
     if (surface)
         surface_coordinator->raise(surface);
-}
-
-void msh::DefaultShell::set_focus_to(std::shared_ptr<scene::Session> const& focus_session)
-{
-    if (focus_session)
-        set_focus_to(focus_session, focus_session->default_surface());
-    else
-        set_focus_to(focus_session, {});
 }

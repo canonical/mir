@@ -43,12 +43,6 @@ void msh::FrontendShell::close_session(std::shared_ptr<mf::Session> const& sessi
     wrapped->close_session(scene_session);
 }
 
-void msh::FrontendShell::handle_surface_created(std::shared_ptr<mf::Session> const& session)
-{
-    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    wrapped->handle_surface_created(scene_session);
-}
-
 std::shared_ptr<mf::PromptSession> msh::FrontendShell::start_prompt_session_for(
     std::shared_ptr<mf::Session> const& session,
     ms::PromptSessionCreationParameters const& params)

@@ -43,30 +43,14 @@ public:
 
 /** @name these come from frontend::Shell
  *  @{ */
-    std::shared_ptr<scene::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
-
-    void close_session(std::shared_ptr<scene::Session> const& session) override;
-
-    void handle_surface_created(std::shared_ptr<scene::Session> const& session) override;
-
-    frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override;
-
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib,
         int value) override;
-
-    using AbstractShell::set_focus_to;
 /** @} */
 
-    void set_focus_to(std::shared_ptr<scene::Session> const& focus_session);
-
 private:
-    std::shared_ptr<scene::PlacementStrategy> const placement_strategy;
     std::shared_ptr<scene::SurfaceConfigurator> const surface_configurator;
 
     void setting_focus_to(std::shared_ptr<scene::Surface> const& surface) override;
