@@ -757,18 +757,16 @@ void ms::BasicSurface::set_keymap(xkb_rule_names const& rules)
 bool ms::BasicSurface::respecify(frontend::Surface::Spec const& spec)
 {
     bool valid = true;
-    bool changed = false;
 
     if (spec.name.is_set())
     {
         surface_name = spec.name.value();
-        changed = true;
+
+        // TODO: Notify SurfaceObserver properly.
+        // But instead of extending it;  lp:~vanvugt/mir/simpler-observer
+        observers.frame_posted(1);
     }
 
-    if (changed)
-        observers.frame_posted(1); // TODO different message
-
-    // TODO: In future more complex combinations might not be valid
-
+    // TODO: In future some specs might not be valid (LP: #1422522)
     return valid;
 }

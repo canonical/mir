@@ -505,7 +505,9 @@ void MirSurface::on_modified()
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         if (modify_result.has_error())
-            {} // TODO
+        {
+            // TODO return errors  lp:~vanvugt/mir/wait-result
+        }
     }
     modify_wait_handle.result_received();
 }

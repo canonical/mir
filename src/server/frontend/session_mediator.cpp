@@ -426,7 +426,7 @@ void mf::SessionMediator::modify_surface(
         mf::Surface::Spec spec;
         if (mod->has_name())
             spec.name = mod->name();
-        // TODO: More fields for generalized morphing
+        // TODO: More fields soon (LP: #1422522) (LP: #1420573)
 
         if (!surface->respecify(spec))
             response->set_error("Unsupported or invalid surface spec");

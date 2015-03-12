@@ -558,7 +558,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-namespace { // TODO: Private functions to become public in future
+namespace { // TODO: Finalize and publish later (LP: #1422522)
 
 MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
 {
@@ -577,8 +577,6 @@ MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
     return spec;
 }
 
-// TODO: Add error reporting without resorting to callbacks.
-//       Proposed separately in lp:~vanvugt/mir/wait-result
 MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
 {
     if (!spec->self.is_set())
@@ -588,7 +586,7 @@ MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
     return surface->modify(*spec);
 }
 
-} // TODO remove namespace when functions are ready to be public
+} // namespace TODO
 
 MirWaitHandle* mir_surface_rename(MirSurface* surf, char const* name)
 {
