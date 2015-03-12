@@ -1,5 +1,5 @@
 
-MIR_COMMON_3 {
+MIR_COMMON_4 {
  global: mir_*;
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -59,6 +59,8 @@ MIR_COMMON_3 {
     mir::geometry::Size::Size*;
     mir_horizontal_resize_cursor_name*;
     mir_hsplit_resize_cursor_name*;
+    mir::log*char*;
+    mir::logv*;
     mir::logging::log*;
     mir::logging::Logger::?Logger*;
     mir::logging::Logger::Logger*;
@@ -110,6 +112,7 @@ MIR_COMMON_3 {
     # These symbols are supposed to be "private" (they're under src/include)
     # but they are used by libmirplatform, libmirclient or libmirserver
     mir::default_server_socket;
+    mir::libraries_for_path*;
     mir::logging::input_timestamp*;
     mir::logging::log*;
     mir::logging::SharedLibraryProberReport::SharedLibraryProberReport*;
@@ -160,52 +163,3 @@ MIR_COMMON_3 {
   };
  local: *;
 };
-
-MIR_COMMON_3.1 {
-  global:
-    extern "C++" {
-      mir_event_get*;
-      mir_event_get*;
-      mir_input_event_get*;
-      mir_key_input_event_get*;
-      mir_touch_input_event_get*;
-      mir::log*char*;
-      mir::logv*;
-      mir::libraries_for_path*;
-    };
-} MIR_COMMON_3;
-
-MIR_COMMON_3.2 {
-  global:
-    extern "C++" {
-      mir::dispatch::SimpleDispatchThread::SimpleDispatchThread*;
-      mir::dispatch::SimpleDispatchThread::?SimpleDispatchThread*;
-      typeinfo?for?mir::dispatch::SimpleDispatchThread;
-      vtable?for?mir::dispatch::SimpleDispatchThread;
-
-      mir::events::*;
-      mir::input::receiver::XKBMapper::XKBMapper*;
-      mir::input::receiver::XKBMapper::XKBMapper*;        
-      mir::input::receiver::XKBMapper::set_rules*;
-      typeinfo?for?mir::input::receiver::XKBMapper;
-      vtable?for?mir::input::receiver::XKBMapper;
-
-      mir::dispatch::MultiplexingDispatchable::MultiplexingDispatchable*;
-      mir::dispatch::MultiplexingDispatchable::?MultiplexingDispatchable*;
-      mir::dispatch::MultiplexingDispatchable::watch_fd*;
-      mir::dispatch::MultiplexingDispatchable::dispatch*;
-      mir::dispatch::MultiplexingDispatchable::relevant_events*;
-      mir::dispatch::MultiplexingDispatchable::add_watch*;
-
-      typeinfo?for?mir::dispatch::MultiplexingDispatchable;
-      vtable?for?mir::dispatch::MultiplexingDispatchable;
-
-      mir::detail::RefCountedLibrary::operator*;
-      mir::detail::RefCountedLibrary::?RefCountedLibrary*;
-      mir::detail::RefCountedLibrary::RefCountedLibrary*;
-      vtable?for?mir::detail::RefCountedLibrary;
-      typeinfo?for?mir::detail::RefCountedLibrary;
-
-      mir::events::*
-    };
-} MIR_COMMON_3.1;
