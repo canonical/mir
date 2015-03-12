@@ -39,11 +39,8 @@ private:
 };
 }
 
-//namespace
-//{
 template<typename T>
 struct ModuleDeleter;
-//}
 
 /*!
  * \brief Use UniqueModulePtr to ensure that your loadable libray outlives
@@ -63,8 +60,6 @@ struct ModuleDeleter;
 template<typename T>
 using UniqueModulePtr = std::unique_ptr<T,ModuleDeleter<T>>;
 
-//namespace
-////{
 /*!
  * \brief make_unique like creation function for UniqueModulePtr
  */
@@ -110,7 +105,6 @@ private:
     template<typename Type, typename... Args>
     friend std::unique_ptr<Type, ModuleDeleter<Type>> make_module_ptr(Args&&... args);
 };
-////}
 
 }
 
