@@ -558,7 +558,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-namespace { // TODO: Finalize and publish later (LP: #1422522)
+namespace { // Private for now. TODO: Finalize and publish later (LP: #1422522)
 
 MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
 {
