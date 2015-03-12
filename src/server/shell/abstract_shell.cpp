@@ -71,9 +71,9 @@ std::shared_ptr<ms::Session> msh::AbstractShell::open_session(
 void msh::AbstractShell::close_session(
     std::shared_ptr<ms::Session> const& session)
 {
-    window_manager->remove_session(session);
     prompt_session_manager->remove_session(session);
     session_coordinator->close_session(session);
+    window_manager->remove_session(session);
 }
 
 mf::SurfaceId msh::AbstractShell::create_surface(
@@ -94,11 +94,6 @@ void msh::AbstractShell::destroy_surface(
 {
     window_manager->remove_surface(session, session->surface(surface));
     session->destroy_surface(surface);
-}
-
-void msh::AbstractShell::handle_surface_created(
-    std::shared_ptr<ms::Session> const& /*session*/)
-{
 }
 
 std::shared_ptr<ms::PromptSession> msh::AbstractShell::start_prompt_session_for(
@@ -122,21 +117,12 @@ void msh::AbstractShell::stop_prompt_session(
 }
 
 int msh::AbstractShell::set_surface_attribute(
-    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface,
     MirSurfaceAttrib attrib,
     int value)
 {
-    switch (attrib)
-    {
-    case mir_surface_attrib_state:
-    {
-        auto const state = window_manager->handle_set_state(surface, MirSurfaceState(value));
-        return surface->configure(attrib, state);
-    }
-    default:
-        return surface->configure(attrib, value);
-    }
+    return window_manager->set_surface_attribute(session, surface, attrib, value);
 }
 
 int msh::AbstractShell::get_surface_attribute(
