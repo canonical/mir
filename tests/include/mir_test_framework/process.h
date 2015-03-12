@@ -71,7 +71,7 @@ public:
     ~Process();
 
     // Wait for the process to terminate, and return the results.
-    Result wait_for_termination(const std::chrono::milliseconds& timeout = std::chrono::minutes(60));
+    Result wait_for_termination(const std::chrono::milliseconds& timeout = std::chrono::milliseconds(60 * 1000));
 
     void kill();
     void terminate();
