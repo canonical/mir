@@ -4,17 +4,9 @@ MIR_COMMON_4 {
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mircommon public" | sed "s/mircommon public: /    /" | sort  
-    mir_arrow_cursor_name*;
-    mir_busy_cursor_name*;
-    mir_caret_cursor_name*;
-    mir_closed_hand_cursor_name*;
-    mir_default_cursor_name*;
     mir::detail::RefCountedLibrary::operator*;
     mir::detail::RefCountedLibrary::?RefCountedLibrary*;
     mir::detail::RefCountedLibrary::RefCountedLibrary*;
-    mir_diagonal_resize_bottom_to_top_cursor_name*;
-    mir_diagonal_resize_top_to_bottom_cursor_name*;
-    mir_disabled_cursor_name*;
     mir::dispatch::Dispatchable::?Dispatchable*;
     mir::dispatch::Dispatchable::Dispatchable*;
     mir::dispatch::Dispatchable::operator*;
@@ -57,23 +49,12 @@ MIR_COMMON_4 {
     mir::geometry::Rectangle::top_right*;
     mir::geometry::Size::operator*;
     mir::geometry::Size::Size*;
-    mir_horizontal_resize_cursor_name*;
-    mir_hsplit_resize_cursor_name*;
-    mir::log*char*;
-    mir::logv*;
+    mir::log*;
     mir::logging::log*;
     mir::logging::Logger::?Logger*;
     mir::logging::Logger::Logger*;
     mir::logging::Logger::operator*;
     mir::logging::set_logger*;
-    mir_omnidirectional_resize_cursor_name*;
-    mir_open_hand_cursor_name*;
-    mir_pointing_hand_cursor_name*;
-    mir::time::Clock::?Clock*;
-    mir::time::Clock::Clock*;
-    mir::time::Clock::sample*;
-    mir_vertical_resize_cursor_name*;
-    mir_vsplit_resize_cursor_name*;
     non-virtual?thunk?to?mir::dispatch::Dispatchable::?Dispatchable*;
     non-virtual?thunk?to?mir::dispatch::MultiplexingDispatchable::dispatch*;
     non-virtual?thunk?to?mir::dispatch::MultiplexingDispatchable::?MultiplexingDispatchable*;
