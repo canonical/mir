@@ -34,5 +34,6 @@ void mtf::SurfaceCreatingClient::exec()
         __PRETTY_FUNCTION__);
     ASSERT_TRUE(connection != NULL);
     surface = mtf::make_any_surface(connection);
+    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     mir_connection_release(connection);
 }

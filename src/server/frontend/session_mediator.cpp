@@ -263,12 +263,7 @@ void mf::SessionMediator::create_surface(
                          client_buffer,
                          msg_type);
 
-            // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
-            // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client.
-            // To achieve this order we rely on done->Run() sending messages synchronously. As documented in mfd::SocketMessenger::send.
-            // this will require additional synchronization if mfd::SocketMessenger::send changes.
             done->Run();
-            shell->handle_surface_created(session);
         });
 }
 
