@@ -24,7 +24,6 @@
 #include <dlfcn.h>
 
 #include <stdexcept>
-#include <iostream>
 
 mir::SharedLibrary::SharedLibrary(char const* library_name) :
     so(dlopen(library_name, RTLD_NOW | RTLD_GLOBAL))
