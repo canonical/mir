@@ -318,7 +318,7 @@ public:
 
     // new input reading related parts:
     virtual std::shared_ptr<input::Platform> the_input_platform();
-    virtual std::shared_ptr<input::InputManager> the_new_input_manager();
+    virtual std::shared_ptr<input::InputManager> the_new_input_manager() override;
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
     virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
     virtual std::shared_ptr<input::InputDeviceHub> the_input_device_hub();
