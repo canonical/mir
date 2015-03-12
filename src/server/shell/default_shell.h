@@ -41,18 +41,7 @@ public:
         std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
         std::shared_ptr<scene::SurfaceConfigurator> const& surface_configurator);
 
-/** @name these come from frontend::Shell
- *  @{ */
-    int set_surface_attribute(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib,
-        int value) override;
-/** @} */
-
 private:
-    std::shared_ptr<scene::SurfaceConfigurator> const surface_configurator;
-
     void setting_focus_to(std::shared_ptr<scene::Surface> const& surface) override;
 };
 }
