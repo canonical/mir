@@ -100,6 +100,7 @@ mir::DefaultServerConfiguration::the_android_input_dispatcher()
     return android_input_dispatcher(
         [this]()
         {
+            auto sender= the_input_sender();
             auto dispatcher = std::make_shared<droidinput::InputDispatcher>(
                 the_dispatcher_policy(),
                 the_input_report(),

@@ -1862,6 +1862,7 @@ void InputDispatcher::startDispatchCycleLocked(std::chrono::nanoseconds currentT
     ALOGD("channel '%s' ~ startDispatchCycle",
             connection->getInputChannelName());
 #endif
+    mir::input::TransportSequenceID seq = -1;
     while (connection->status == Connection::STATUS_NORMAL
             && !connection->outboundQueue.isEmpty()) {
         DispatchEntry* dispatchEntry = connection->outboundQueue.head;
@@ -1875,7 +1876,7 @@ void InputDispatcher::startDispatchCycleLocked(std::chrono::nanoseconds currentT
             KeyEntry* keyEntry = static_cast<KeyEntry*>(eventEntry);
 
             // Publish the key event.
-            dispatchEntry->seq = connection->inputWindowHandle->publishKeyEvent(
+            seq = connection->inputWindowHandle->publishKeyEvent(
                     keyEntry->deviceId, keyEntry->source,
                     dispatchEntry->resolvedAction, dispatchEntry->resolvedFlags,
                     keyEntry->keyCode, keyEntry->scanCode,
@@ -1922,7 +1923,7 @@ void InputDispatcher::startDispatchCycleLocked(std::chrono::nanoseconds currentT
             }
 
             // Publish the motion event.
-            dispatchEntry->seq = connection->inputWindowHandle->publishMotionEvent(
+            seq = connection->inputWindowHandle->publishMotionEvent(
                     motionEntry->deviceId, motionEntry->source,
                     dispatchEntry->resolvedAction, dispatchEntry->resolvedFlags,
                     motionEntry->edgeFlags, motionEntry->metaState, motionEntry->buttonState,
@@ -1943,31 +1944,13 @@ void InputDispatcher::startDispatchCycleLocked(std::chrono::nanoseconds currentT
         }
 
         // Check the result.
-        if (status) {
-            if (status == WOULD_BLOCK) {
-                if (connection->waitQueue.isEmpty()) {
-                    ALOGE("channel '%s' ~ Could not publish event because the pipe is full. "
-                            "This is unexpected because the wait queue is empty, so the pipe "
-                            "should be empty and we shouldn't have any problems writing an "
-                            "event to it, status=%d", connection->getInputChannelName(), status);
-                    abortBrokenDispatchCycleLocked(currentTime, connection, true /*notify*/);
-                } else {
-                    // Pipe is full and we are waiting for the app to finish process some events
-                    // before sending more events to it.
-#if DEBUG_DISPATCH_CYCLE
-                    ALOGD("channel '%s' ~ Could not publish event because the pipe is full, "
-                            "waiting for the application to catch up",
-                            connection->getInputChannelName());
-#endif
-                    connection->inputPublisherBlocked = true;
-                }
-            } else {
-                ALOGE("channel '%s' ~ Could not publish event due to an unexpected error, "
-                        "status=%d", connection->getInputChannelName(), status);
-                abortBrokenDispatchCycleLocked(currentTime, connection, true /*notify*/);
-            }
+        if (seq < 0) {
+            ALOGE("channel '%s' ~ Could not publish event due to an unexpected error, ",
+                  connection->getInputChannelName());
+            abortBrokenDispatchCycleLocked(currentTime, connection, true /*notify*/);
             return;
         }
+        dispatchEntry->seq = seq;
 
         // Re-enqueue the event on the wait queue.
         connection->outboundQueue.dequeue(dispatchEntry);
@@ -2076,6 +2059,7 @@ void InputDispatcher::send_failed(MirEvent const& event, mir::input::TransportSe
 void InputDispatcher::send_suceeded(MirEvent const& event, mir::input::TransportSequenceID id,
                                     mir::input::Surface* surface, InputResponse response)
 {
+    sp<Connection> connection;
     {
     AutoMutex _l(mLock);
     auto fd = surface->input_channel()->server_fd();
@@ -2086,10 +2070,10 @@ void InputDispatcher::send_suceeded(MirEvent const& event, mir::input::Transport
               "fd=%d", fd);
         return;
     }
-
-    bool handled = response == mir::input::InputSendObserver::InputResponse::consumed;
     
-    sp<Connection> connection = mConnectionsByFd.valueAt(connectionIndex);
+    bool handled = response == mir::input::InputSendObserver::InputResponse::consumed;
+    connection = mConnectionsByFd.valueAt(connectionIndex);
+    
     handleEventSendStatusLocked(static_cast<uint32_t>(id), connection, true, handled,
                                 false);
     }
@@ -2099,11 +2083,33 @@ void InputDispatcher::send_suceeded(MirEvent const& event, mir::input::Transport
 void InputDispatcher::client_blocked(MirEvent const& event, mir::input::TransportSequenceID id,
                                      mir::input::Surface* surface)
 {
-    // TODO?
+    AutoMutex _l(mLock);
+    auto fd = surface->input_channel()->server_fd();
 
-    (void) event;
-    (void) id;
-    (void) surface;
+    ssize_t connectionIndex = mConnectionsByFd.indexOfKey(fd);
+    if (connectionIndex < 0) {
+        ALOGE("Received spurious receive callback for unknown input channel.  "
+              "fd=%d", fd);
+        return;
+    }
+    auto connection = mConnectionsByFd.valueAt(connectionIndex);
+
+    if (connection->waitQueue.isEmpty()) {
+        ALOGE("channel '%s' ~ Could not publish event because the pipe is full. "
+              "This is unexpected because the wait queue is empty, so the pipe "
+              "should be empty and we shouldn't have any problems writing an "
+              "event to it", connection->getInputChannelName());
+        abortBrokenDispatchCycleLocked(now(), connection, true /*notify*/);
+    } else {
+        // Pipe is full and we are waiting for the app to finish process some events
+        // before sending more events to it.
+#if DEBUG_DISPATCH_CYCLE
+        ALOGD("channel '%s' ~ Could not publish event because the pipe is full, "
+              "waiting for the application to catch up",
+              connection->getInputChannelName());
+#endif
+        connection->inputPublisherBlocked = true;
+    }
 }
 
 int InputDispatcher::handleReceiveCallback(int fd, int events, void* data) {
