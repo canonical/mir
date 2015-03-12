@@ -506,7 +506,7 @@ void MirSurface::on_modified()
         std::lock_guard<decltype(mutex)> lock(mutex);
         if (modify_result.has_error())
         {
-            // TODO return errors  lp:~vanvugt/mir/wait-result
+            // TODO return errors like lp:~vanvugt/mir/wait-result
         }
     }
     modify_wait_handle.result_received();
@@ -514,12 +514,14 @@ void MirSurface::on_modified()
 
 MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
     mp::SurfaceModification mod;
-    mod.mutable_surface_id()->set_value(surface.id().value());
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        mod.mutable_surface_id()->set_value(surface.id().value());
+    }
+
     if (spec.surface_name.is_set())
         mod.set_name(spec.surface_name.value());
-    lock.unlock();
 
     modify_wait_handle.expect_result();
     server->modify_surface(0, &mod, &modify_result,
