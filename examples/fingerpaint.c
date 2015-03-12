@@ -455,6 +455,7 @@ int main(int argc, char *argv[])
 
     if (surf != NULL)
     {
+        mir_surface_rename(surf, "Mir Fingerpaint");
         mir_surface_set_swapinterval(surf, swap_interval);
         mir_surface_set_event_handler(surf, &delegate);
     
