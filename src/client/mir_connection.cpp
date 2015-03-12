@@ -252,14 +252,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
          */
         auto default_lifecycle_event_handler = [this](MirLifecycleState transition)
             {
-                bool const expect_connection_lost = [&]
-                    {
-                        std::lock_guard<decltype(mutex)> lock(mutex);
-                        return disconnecting;
-                    }();
-
-                if (transition == mir_lifecycle_connection_lost &&
-                    !expect_connection_lost)
+                if (transition == mir_lifecycle_connection_lost && !disconnecting)
                 {
                     /*
                      * We need to use kill() instead of raise() to ensure the signal

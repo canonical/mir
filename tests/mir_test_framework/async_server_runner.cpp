@@ -33,6 +33,7 @@ namespace geom = mir::geometry;
 namespace ml = mir::logging;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
+namespace mt = mir::test;
 
 namespace
 {
@@ -80,7 +81,7 @@ void mtf::AsyncServerRunner::start_server()
 
     server.apply_settings();
 
-    server_thread = std::thread([&]
+    mt::AutoJoinThread t([&]
         {
             try
             {
@@ -102,6 +103,7 @@ void mtf::AsyncServerRunner::start_server()
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to start server thread"});
     }
+    server_thread = std::move(t);
 }
 
 void mtf::AsyncServerRunner::stop_server()
@@ -120,12 +122,10 @@ void mtf::AsyncServerRunner::wait_for_server_exit()
     {
         BOOST_THROW_EXCEPTION(std::logic_error{"stop_server() failed to stop server"});
     }
+    server_thread.stop();
 }
 
-mtf::AsyncServerRunner::~AsyncServerRunner() noexcept
-{
-    if (server_thread.joinable()) server_thread.join();
-}
+mtf::AsyncServerRunner::~AsyncServerRunner() noexcept = default;
 
 auto mtf::AsyncServerRunner::new_connection() -> std::string
 {
