@@ -78,15 +78,13 @@ private:
     private:
         static int32_t create_new_device_id();
         int32_t device_id;
-        std::shared_ptr<InputDevice> const device; // weak instead?
+        std::shared_ptr<InputDevice> const device;
         std::shared_ptr<InputDispatcher> const dispatcher;
         std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     };
 
-    // DeviceInfo ~ and device id? ~
     std::vector<InputDeviceInfo> infos;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
-    // weak?
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
 };
 

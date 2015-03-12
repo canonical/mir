@@ -31,7 +31,6 @@ class InputSink
 public:
     InputSink() = default;
     virtual ~InputSink() = default;
-    // TODO change to the new mir input event structures
     virtual void handle_input(MirEvent& event) = 0;
 private:
     InputSink(InputSink const&) = delete;
