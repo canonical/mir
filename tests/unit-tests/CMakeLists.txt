@@ -82,8 +82,6 @@ link_directories(${LIBRARY_OUTPUT_PATH})
 mir_add_wrapped_executable(mir_unit_tests
   ${UNIT_TEST_SOURCES}
   ${MIR_SERVER_OBJECTS}
-  $<TARGET_OBJECTS:mirclientobjects>
-  $<TARGET_OBJECTS:mirsharedinput>
   ${MIR_PLATFORM_OBJECTS}
   ${MIR_COMMON_OBJECTS}
 )
@@ -101,6 +99,7 @@ target_link_libraries(
   mirclientrpc
   mirclientlttngstatic
   demo-shell
+  mirclient-static
   mircommon
 
   mir-test
