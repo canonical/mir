@@ -51,11 +51,9 @@ int main(int argc, char *argv[])
 {
     const char vshadersrc[] =
         "attribute vec4 vPosition;            \n"
-        "uniform float theta;                 \n"
+        "uniform vec2 pos;                    \n"
         "void main()                          \n"
         "{                                    \n"
-        "    float c = cos(theta);            \n"
-        "    float s = sin(theta);            \n"
         "    mat2 m;                          \n"
         "    m[0] = vec2(c, s);               \n"
         "    m[1] = vec2(-s, c);              \n"
