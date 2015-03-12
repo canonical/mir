@@ -61,6 +61,7 @@ struct ClientFocusNotification : mtf::InterprocessClientServerTest
 
         mir_wait_for(mir_surface_create(spec, surface_created, this));
         mir_surface_spec_release(spec);
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
 
         all_events_received.wait_for_at_most_seconds(60);
         mir_surface_release_sync(surface);
