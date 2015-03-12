@@ -60,7 +60,7 @@ public:
     virtual int client_input_fd() const = 0;
 
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
-    virtual bool respecify(Spec const&) { return false; } // TODO pure
+    virtual bool respecify(Spec const&) = 0;
 
 protected:
     Surface() = default;
