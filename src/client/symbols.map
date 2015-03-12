@@ -119,6 +119,7 @@ MIR_CLIENT_9 {
     mir_surface_set_event_handler*;
     mir_surface_set_preferred_orientation*;
     mir_surface_set_state*;
+    mir_surface_set_type*;
     mir_surface_set_swapinterval*;
     mir_surface_spec_release*;
     mir_surface_spec_set_buffer_usage*;
@@ -150,7 +151,6 @@ MIR_CLIENT_DETAIL_9 {
       # used by test framework - see lp:1349788
       MirConnection::MirConnection*;
       MirConnection::connect*;
-      MirConnection::disconnect*;
       mir::client::DefaultConnectionConfiguration::*;
       vtable?for?mir::client::DefaultConnectionConfiguration;
       typeinfo?for?mir::client::DefaultConnectionConfiguration;

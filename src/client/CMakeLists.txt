@@ -122,7 +122,7 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
-set(MIRCLIENT_DEBUG_EXTENSION_ABI 1)
+set(MIRCLIENT_DEBUG_EXTENSION_ABI 2)
 
 add_library(mirclient-debug-extension SHARED
   mir_debug_api.cpp
