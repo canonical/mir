@@ -189,7 +189,7 @@ public:
      */
     virtual bool updateInfo() = 0;
 
-    // TODO: Document
+    // Returns seq_id or -1 in case of failure
     virtual int64_t publishMotionEvent(int32_t deviceId,
         int32_t source,
         int32_t action,
@@ -207,6 +207,7 @@ public:
         const PointerProperties* pointerProperties,
         const PointerCoords* pointerCoords) = 0;
 
+    // Returns seq_id or -1 in case of failure
     virtual int64_t publishKeyEvent(
         int32_t deviceId,
         int32_t source,

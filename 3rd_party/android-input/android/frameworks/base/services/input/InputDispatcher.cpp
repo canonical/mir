@@ -20,28 +20,28 @@
 //#define LOG_NDEBUG 0
 
 // Log detailed debug messages about each inbound event notification to the dispatcher.
-#define DEBUG_INBOUND_EVENT_DETAILS 1
+#define DEBUG_INBOUND_EVENT_DETAILS 0
 
 // Log detailed debug messages about each outbound event processed by the dispatcher.
-#define DEBUG_OUTBOUND_EVENT_DETAILS 1
+#define DEBUG_OUTBOUND_EVENT_DETAILS 0
 
 // Log debug messages about the dispatch cycle.
-#define DEBUG_DISPATCH_CYCLE 1
+#define DEBUG_DISPATCH_CYCLE 0
 
 // Log debug messages about registrations.
-#define DEBUG_REGISTRATION 1
+#define DEBUG_REGISTRATION 0
 
 // Log debug messages about input event injection.
-#define DEBUG_INJECTION 1
+#define DEBUG_INJECTION 0
 
 // Log debug messages about input focus tracking.
-#define DEBUG_FOCUS 1
+#define DEBUG_FOCUS 0
 
 // Log debug messages about the app switch latency optimization.
-#define DEBUG_APP_SWITCH 1
+#define DEBUG_APP_SWITCH 0
 
 // Log debug messages about hover events.
-#define DEBUG_HOVER 1
+#define DEBUG_HOVER 0
 
 #include "InputDispatcher.h"
 
@@ -191,7 +191,6 @@ InputDispatcher::InputDispatcher(std::shared_ptr<InputDispatcherPolicyInterface>
 }
 
 InputDispatcher::~InputDispatcher() {
-    printf("Destroying dispatcher \n");
     { // acquire lock
         AutoMutex _l(mLock);
 
@@ -366,7 +365,7 @@ void InputDispatcher::dispatchOnceInnerLocked(std::chrono::nanoseconds* nextWake
         }
 
         releasePendingEventLocked();
-        *nextWakeupTime = std::chrono::nanoseconds(-1);  // force next poll to wake up immediately
+        *nextWakeupTime = std::chrono::nanoseconds(LONG_LONG_MIN);  // force next poll to wake up immediately
     }
 }
 
@@ -2031,7 +2030,6 @@ void InputDispatcher::handleEventSendStatusLocked(uint32_t seq, sp<Connection> c
         unregisterInputChannelLocked(connection->inputChannel, notify);
     }
     resetANRTimeoutsLocked();
-    //    runCommandsLockedInterruptible();
 }
 
 void InputDispatcher::send_failed(MirEvent const& event, mir::input::TransportSequenceID id,
@@ -2077,7 +2075,7 @@ void InputDispatcher::send_suceeded(MirEvent const& event, mir::input::Transport
     handleEventSendStatusLocked(static_cast<uint32_t>(id), connection, true, handled,
                                 false);
     }
-    // TODO: Wake on failure too
+
     mLooper->wake();
 }
 void InputDispatcher::client_blocked(MirEvent const& event, mir::input::TransportSequenceID id,
@@ -2110,47 +2108,6 @@ void InputDispatcher::client_blocked(MirEvent const& event, mir::input::Transpor
 #endif
         connection->inputPublisherBlocked = true;
     }
-}
-
-int InputDispatcher::handleReceiveCallback(int fd, int events, void* data) {
-    InputDispatcher* d = static_cast<InputDispatcher*>(data);
-    { // acquire lock
-        AutoMutex _l(d->mLock);
-
-        ssize_t connectionIndex = d->mConnectionsByFd.indexOfKey(fd);
-        if (connectionIndex < 0) {
-            ALOGE("Received spurious receive callback for unknown input channel.  "
-                    "fd=%d, events=0x%x", fd, events);
-            return 0; // remove the callback
-        }
-
-        bool notify;
-        sp<Connection> connection = d->mConnectionsByFd.valueAt(connectionIndex);
-        if (!(events & (ALOOPER_EVENT_ERROR | ALOOPER_EVENT_HANGUP))) {
-            if (!(events & ALOOPER_EVENT_INPUT)) {
-                ALOGW("channel '%s' ~ Received spurious callback for unhandled poll event.  "
-                        "events=0x%x", connection->getInputChannelName(), events);
-                return 1;
-            }
-
-            bool gotOne = false;
-            status_t status = 0;
-            while (!status) {
-                uint32_t seq;
-                bool handled;
-                status = connection->inputPublisher.receiveFinishedSignal(&seq, &handled);
-                if (status != WOULD_BLOCK)
-                    d->handleEventSendStatusLocked(seq, connection, !status, handled, status == DEAD_OBJECT);
-                else
-                    return 1;
-            }
-        }
-    }
-    // TODO: Logging
-    // Error, unregister the callback
-
-    return 0;
-
 }
 
 void InputDispatcher::synthesizeCancelationEventsForAllConnectionsLocked(
@@ -3222,9 +3179,6 @@ status_t InputDispatcher::registerInputChannel(const sp<InputChannel>& inputChan
             mMonitoringChannels.push(inputChannel);
         }
 
-        // TODO: Investigate!
-        //        mLooper->addFd(fd, 0, ALOOPER_EVENT_INPUT, handleReceiveCallback, this);
-
         runCommandsLockedInterruptible();
     } // release lock
     return OK;
@@ -3265,8 +3219,6 @@ status_t InputDispatcher::unregisterInputChannelLocked(const sp<InputChannel>& i
     if (connection->monitor) {
         removeMonitorChannelLocked(inputChannel);
     }
-
-    //    mLooper->removeFd(inputChannel->getFd());
 
     std::chrono::nanoseconds currentTime = now();
     abortBrokenDispatchCycleLocked(currentTime, connection, notify);

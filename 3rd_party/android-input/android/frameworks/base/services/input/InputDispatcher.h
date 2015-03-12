@@ -1064,7 +1064,6 @@ private:
 
     void handleEventSendStatusLocked(uint32_t seq_id, sp<Connection>connection, bool success,
                                      bool handled, bool socket_dead);
-    static int handleReceiveCallback(int fd, int events, void* data);
 
     void synthesizeCancelationEventsForAllConnectionsLocked(
             const CancelationOptions& options);
