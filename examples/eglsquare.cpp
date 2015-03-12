@@ -36,7 +36,8 @@ public:
     Connection(char const* socket_file) :
         connection(mir_connect_sync(socket_file, __PRETTY_FUNCTION__))
     {
-        if (!mir_connection_is_valid(connection)) throw std::runtime_error("could not connect to server");
+        if (!mir_connection_is_valid(connection))
+            throw std::runtime_error("could not connect to server");
     }
     ~Connection()
     {
@@ -102,7 +103,8 @@ private:
             disp(eglGetDisplay(native))
         {
             int major{0}, minor{0};
-            if (disp == EGL_NO_DISPLAY) throw std::runtime_error("no egl display");
+            if (disp == EGL_NO_DISPLAY)
+                throw std::runtime_error("no egl display");
             if (eglInitialize(disp, &major, &minor) != EGL_TRUE || major != 1 || minor != 4)
                 throw std::runtime_error("could not init egl");
         }
@@ -119,7 +121,8 @@ private:
             disp(display),
             surface(eglCreateWindowSurface(disp, config, native_window, NULL))
         {
-            if (surface == EGL_NO_SURFACE) throw std::runtime_error("could not create egl surface");
+            if (surface == EGL_NO_SURFACE)
+                throw std::runtime_error("could not create egl surface");
         }
         ~Surface() { eglDestroySurface(disp, surface); }
         EGLDisplay disp;
@@ -131,7 +134,8 @@ private:
             disp(disp),
             context(eglCreateContext(disp, config, EGL_NO_CONTEXT, context_attribs))
         {
-            if (context == EGL_NO_CONTEXT) throw std::runtime_error("could not create egl context");
+            if (context == EGL_NO_CONTEXT)
+                throw std::runtime_error("could not create egl context");
         }
         ~EglContext()
         {
@@ -389,7 +393,7 @@ try
     while (running){ std::this_thread::sleep_for(std::chrono::seconds(1)); }
     return 0;
 }
-catch(std::runtime_error& e)
+catch(std::exception& e)
 {
     std::cerr << "error : " << e.what() << std::endl;
     return 1;
