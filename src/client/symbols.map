@@ -17,6 +17,22 @@ MIR_CLIENT_8 {
  local: *;
 };
 
+MIR_CLIENT_DETAIL_8.4 {
+  global:
+    extern "C++" { 
+      mir::events::make_event*;
+      mir::input::android::Lexicon::translate*;
+   
+      # used by test framework - see lp:1349788
+      MirConnection::MirConnection*;
+      MirConnection::connect*;
+      MirConnection::disconnect*;
+      mir::client::DefaultConnectionConfiguration::*;
+      vtable?for?mir::client::DefaultConnectionConfiguration;
+      typeinfo?for?mir::client::DefaultConnectionConfiguration;
+    }; 
+};
+
 MIR_CLIENT_8.1 {
   global:
     mir_connection_create_spec_for_normal_surface;
@@ -44,12 +60,3 @@ MIR_CLIENT_8.3 {
     mir_connection_create_spec_for_dialog;
     mir_connection_platform_operation;
 } MIR_CLIENT_8.2;
-
-MIR_CLIENT_8.4{
-  global:
-  extern "C++" { 
-   mir::events::make_event*;
-   mir::input::android::Lexicon::translate*;
-  }; 
-} MIR_CLIENT_8.3;
-
