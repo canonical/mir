@@ -58,7 +58,11 @@ public:
 
     virtual bool handle_pointer_event(MirPointerInputEvent const* event) = 0;
 
-    virtual int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) = 0;
+    virtual int set_surface_attribute(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        MirSurfaceAttrib attrib,
+        int value) = 0;
 
     virtual ~WindowManager() = default;
     WindowManager() = default;

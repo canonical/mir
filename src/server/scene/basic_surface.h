@@ -148,7 +148,7 @@ public:
     MirSurfaceState state() const override;
     void take_input_focus(std::shared_ptr<shell::InputTargeter> const& targeter) override;
     int configure(MirSurfaceAttrib attrib, int value) override;
-    int query(MirSurfaceAttrib attrib) override;
+    int query(MirSurfaceAttrib attrib) const override;
     void hide() override;
     void show() override;
     

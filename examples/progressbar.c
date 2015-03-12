@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
     unsigned int const pf_size = 32;
     MirPixelFormat formats[pf_size];
     unsigned int valid_formats;
-    int sleep_usec = 50000;
+    int hz = 20;
 
     if (argc > 1)
     {
@@ -209,13 +209,13 @@ int main(int argc, char *argv[])
 
         if (sscanf(argv[1], "%d", &rate) == 1 && rate > 0)
         {
-            sleep_usec = 1000000 / rate;
+            hz = rate;
         }
         else
         {
             fprintf(stderr, "Usage: %s [repeat rate in Hz]\n"
                             "Default repeat rate is %d\n",
-                    argv[0], 1000000 / sleep_usec);
+                    argv[0], hz);
 
             return 1;
         }
@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
                 draw_box(&canvas, x, y, box_width, foreground);
 
                 redraw(surf, &canvas);
-                usleep(sleep_usec);
+                usleep(1000000 / hz);
             }
 
             free(canvas.vaddr);

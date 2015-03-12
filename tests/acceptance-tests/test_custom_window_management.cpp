@@ -251,9 +251,8 @@ TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct
 
         mt::Signal received;
 
-        EXPECT_CALL(window_manager, handle_set_state(WeakPtrEq(server_surface[i]),_))
-            .WillOnce(Invoke([&](std::shared_ptr<ms::Surface> const&, MirSurfaceState value)
-                { received.raise(); return value; }));
+        EXPECT_CALL(window_manager, set_surface_attribute(_, WeakPtrEq(server_surface[i]), mir_surface_attrib_state,_))
+            .WillOnce(WithArg<3>(Invoke([&](int value) { received.raise(); return value; })));
 
         mir_surface_set_state(client_surface[i], mir_surface_state_maximized);
 

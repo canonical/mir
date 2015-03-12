@@ -6,7 +6,7 @@ set(
   frontend_shell.cpp
   graphics_display_layout.cpp
   default_configuration.cpp
-  default_shell.cpp
+  default_window_manager.cpp
   null_window_manager.cpp
   shell_wrapper.cpp
 )

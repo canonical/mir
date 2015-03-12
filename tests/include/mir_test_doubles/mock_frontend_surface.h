@@ -67,7 +67,8 @@ struct MockFrontendSurface : public frontend::Surface
     MOCK_METHOD2(set_cursor_stream, void(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&));
 
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
-    MOCK_METHOD1(query, int(MirSurfaceAttrib));
+
+    MOCK_CONST_METHOD1(query, int(MirSurfaceAttrib));
 
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));
