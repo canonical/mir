@@ -83,6 +83,7 @@ mir_add_wrapped_executable(mir_unit_tests
   ${UNIT_TEST_SOURCES}
   ${MIR_SERVER_OBJECTS}
   $<TARGET_OBJECTS:mirclientobjects>
+  $<TARGET_OBJECTS:mirsharedinput>
   ${MIR_PLATFORM_OBJECTS}
   ${MIR_COMMON_OBJECTS}
 )
@@ -130,6 +131,7 @@ target_link_libraries(
   ${MIR_PLATFORM_REFERENCES}
   ${MIR_COMMON_REFERENCES}
   ${MIR_SERVER_REFERENCES}
+  ${XKBCOMMON_LIBRARIES}
 )
 
 if (MIR_BUILD_PLATFORM_ANDROID)

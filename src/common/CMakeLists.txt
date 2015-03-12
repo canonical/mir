@@ -10,7 +10,6 @@ endif()
 
 add_subdirectory(fd)
 add_subdirectory(geometry)
-add_subdirectory(input)
 add_subdirectory(logging)
 add_subdirectory(report/lttng)
 add_subdirectory(env)
@@ -18,12 +17,12 @@ add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(time)
 add_subdirectory(dispatch)
+add_subdirectory(udev)
 
 list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirtime>
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
   )
-add_subdirectory(events)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -34,14 +33,6 @@ set(
   MIR_GENERATED_INCLUDE_DIRECTORIES
   ${MIR_GENERATED_INCLUDE_DIRECTORIES}
   PARENT_SCOPE)
-
-
-MESSAGE( STATUS "MIR_COMMON_SOURCES. . . : ${MIR_COMMON_SOURCES}" )
-MESSAGE( STATUS "MIR_COMMON_REFERENCES . : ${MIR_COMMON_REFERENCES}" )
-
-list(APPEND MIR_COMMON_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/event.cpp
-)
 
 add_library(mircommon
   SHARED

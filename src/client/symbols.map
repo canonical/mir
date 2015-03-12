@@ -44,3 +44,12 @@ MIR_CLIENT_8.3 {
     mir_connection_create_spec_for_dialog;
     mir_connection_platform_operation;
 } MIR_CLIENT_8.2;
+
+MIR_CLIENT_8.4{
+  global:
+  extern "C++" { 
+   mir::events::make_event*;
+   mir::input::android::Lexicon::translate*;
+  }; 
+} MIR_CLIENT_8.3;
+

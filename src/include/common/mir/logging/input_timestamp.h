@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -18,10 +18,6 @@
 
 #ifndef MIR_LOGGING_INPUT_TIMESTAMP_H_
 #define MIR_LOGGING_INPUT_TIMESTAMP_H_
-
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
-#include "mir_toolkit/event.h"
 
 #include <string>
 #include <chrono>
