@@ -69,7 +69,11 @@ bool msh::NullWindowManager::handle_pointer_event(MirPointerInputEvent const* /*
     return false;
 }
 
-int msh::NullWindowManager::handle_set_state(std::shared_ptr<scene::Surface> const& /*surface*/, MirSurfaceState value)
+int msh::NullWindowManager::set_surface_attribute(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& /*surface*/,
+    MirSurfaceAttrib /*attrib*/,
+    int value)
 {
     return value;
 }

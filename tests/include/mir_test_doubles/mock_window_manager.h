@@ -55,7 +55,11 @@ struct MockWindowManager : shell::WindowManager
     MOCK_METHOD1(handle_touch_event, bool(MirTouchInputEvent const*));
     MOCK_METHOD1(handle_pointer_event, bool(MirPointerInputEvent const*));
 
-    MOCK_METHOD2(handle_set_state, int(std::shared_ptr<scene::Surface> const&, MirSurfaceState value));
+    MOCK_METHOD4(set_surface_attribute,
+        int(std::shared_ptr<scene::Session> const& session,
+            std::shared_ptr<scene::Surface> const& surface,
+            MirSurfaceAttrib attrib,
+            int value));
 
     static frontend::SurfaceId add_surface_default(
         std::shared_ptr<scene::Session> const& session,
