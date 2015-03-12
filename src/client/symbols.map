@@ -147,12 +147,5 @@ MIR_CLIENT_DETAIL_9 {
     extern "C++" { 
       mir::events::make_event*;
       mir::input::android::Lexicon::translate*;
-   
-      # used by test framework - see lp:1349788
-      MirConnection::MirConnection*;
-      MirConnection::connect*;
-      mir::client::DefaultConnectionConfiguration::*;
-      vtable?for?mir::client::DefaultConnectionConfiguration;
-      typeinfo?for?mir::client::DefaultConnectionConfiguration;
     }; 
 };

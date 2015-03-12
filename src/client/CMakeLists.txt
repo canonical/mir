@@ -38,10 +38,6 @@ add_subdirectory(lttng/)
 add_subdirectory(events)
 add_subdirectory(input)
 
-MESSAGE( STATUS "MIR_CLIENT_SOURCES. . . : ${MIR_CLIENT_SOURCES}" )
-MESSAGE( STATUS "MIR_CLIENT_REFERENCES . : ${MIR_CLIENT_REFERENCES}" )
-
-
 add_library(mirclientobjects OBJECT
 
   client_buffer_depository.cpp
