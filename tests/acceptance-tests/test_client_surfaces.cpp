@@ -306,11 +306,11 @@ TEST_F(ClientSurfaces, can_be_renamed)
 
     /*
      * Generally no windowing system ever censors window names. They are
-     * free-form strings set by the app.
+     * freeform strings set by the app.
      *
-     * We do lack client API to be able to read the name back and verify
-     * these, but really don't care -- such client functions are not required
-     * right now.
+     * We do lack a getter to be able to read the name back and verify
+     * these, but really don't care -- such a function is not required
+     * right now. Although might be in future to support some toolkits.
      *
      * At least verify the rename completes without blocking and that
      * NULL is supported...
