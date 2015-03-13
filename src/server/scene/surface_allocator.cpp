@@ -54,7 +54,9 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(SurfaceCreatio
     mg::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
                                            params.buffer_usage};
-    auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
+    auto buffer_stream = buffer_stream_factory->create_buffer_stream(
+        2, // TODO
+        buffer_properties);
     auto actual_size = geom::Rectangle{params.top_left, buffer_stream->stream_size()};
 
     bool nonrectangular = has_alpha(params.pixel_format);
