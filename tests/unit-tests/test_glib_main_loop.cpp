@@ -78,14 +78,14 @@ TEST_F(GLibMainLoopTest, stops_from_within_handler)
 {
     mt::Signal loop_finished;
 
-    std::thread{
+    mt::AutoJoinThread t{
         [&]
         {
             int const owner{0};
             ml.enqueue(&owner, [&] { ml.stop(); });
             ml.run();
             loop_finished.raise();
-        }}.detach();
+        }};
 
     EXPECT_TRUE(loop_finished.wait_for(std::chrono::seconds{5}));
 }
@@ -95,20 +95,20 @@ TEST_F(GLibMainLoopTest, stops_from_outside_handler)
     mt::Signal loop_running;
     mt::Signal loop_finished;
 
-    std::thread{
+    mt::AutoJoinThread t{
         [&]
         {
             int const owner{0};
             ml.enqueue(&owner, [&] { loop_running.raise(); });
             ml.run();
             loop_finished.raise();
-        }}.detach();
+        }};
 
     ASSERT_TRUE(loop_running.wait_for(std::chrono::seconds{5}));
 
     ml.stop();
 
-    EXPECT_TRUE(loop_finished.wait_for(std::chrono::seconds{5}));
+    EXPECT_TRUE(loop_finished.wait_for(std::chrono::seconds{10}));
 }
 
 TEST_F(GLibMainLoopTest, ignores_handler_added_after_stop)

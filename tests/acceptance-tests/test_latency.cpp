@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/buffer.h"
+#include "mir/optional_value.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
@@ -35,19 +36,55 @@ namespace mt = mir::test;
 namespace mg = mir::graphics;
 namespace
 {
+
+class Stats
+{
+public:
+    void post()
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        post_count++;
+    }
+
+    void record_submission(uint32_t submission_id)
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        timestamps[submission_id] = post_count;
+    }
+
+    auto latency_for(uint32_t submission_id)
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+
+        mir::optional_value<uint32_t> latency;
+        auto const it = timestamps.find(submission_id);
+
+        if (it != timestamps.end())
+            latency = post_count - it->second;
+
+        return latency;
+    }
+
+private:
+    std::mutex mutex;
+    unsigned int post_count{0};
+    std::unordered_map<uint32_t, uint32_t> timestamps;
+};
 /*
  * Note: we're not aiming to check performance in terms of CPU or GPU time processing
  * the incoming buffers. Rather, we're checking that we don't have any intrinsic
  * latency introduced by the swapping algorithms.
  */
-struct IdCollectingDB : mtd::NullDisplayBuffer
+class IdCollectingDB : public mtd::NullDisplayBuffer
 {
-    IdCollectingDB(unsigned int& count) : post_count{count} {}
+public:
+    IdCollectingDB(Stats& stats) : stats{stats} {}
 
     mir::geometry::Rectangle view_area() const override
     {
         return {{0,0}, {1920, 1080}};
-    } 
+    }
+
     bool post_renderables_if_optimizable(mg::RenderableList const& renderables) override
     {
         /*
@@ -57,11 +94,12 @@ struct IdCollectingDB : mtd::NullDisplayBuffer
          * where the client thread is predictably blocked in its call to
          * mir_buffer_stream_swap_buffers_sync().
          */
-        ++post_count;
+        stats.post();
 
         //the surface will be the frontmost of the renderables
         if (!renderables.empty())
             last = renderables.front()->buffer()->id();
+
         return true;
     }
     mg::BufferID last_id()
@@ -69,14 +107,15 @@ struct IdCollectingDB : mtd::NullDisplayBuffer
         return last;
     }
 private:
-    unsigned int& post_count;
+    Stats& stats;
     mg::BufferID last{0};
 };
 
-struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
+class TimeTrackingGroup : public mtd::NullDisplaySyncGroup
 {
-    TimeTrackingGroup(unsigned int& count, std::unordered_map<uint32_t, uint32_t>& map) :
-        post_count(count), timestamps(map), db(count) {}
+public:
+    TimeTrackingGroup(Stats& stats) : stats{stats}, db{stats} {}
+
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
         f(db);
@@ -84,30 +123,38 @@ struct TimeTrackingGroup : mtd::NullDisplaySyncGroup
 
     void post() override
     {
-        auto const it = timestamps.find(db.last_id().as_value());
-        if (it != timestamps.end())
-            latency.push_back(post_count - it->second);
+        auto latency = stats.latency_for(db.last_id().as_value());
+        if (latency.is_set())
+        {
+            std::lock_guard<std::mutex> lock{mutex};
+            latency_list.push_back(latency.value());
+        }
     }
 
     float average_latency()
     {
+        std::lock_guard<std::mutex> lock{mutex};
+
         unsigned int sum {0};
-        for(auto& s : latency)
+        for(auto& s : latency_list)
             sum += s;
 
-        return static_cast<float>(sum) / latency.size();
+        return static_cast<float>(sum) / latency_list.size();
     }
 
-    std::vector<int> latency;
-    unsigned int& post_count;
-    std::unordered_map<uint32_t, uint32_t>& timestamps;
+private:
+    std::mutex mutex;
+    std::vector<int> latency_list;
+    Stats& stats;
     IdCollectingDB db;
 };
 
 struct TimeTrackingDisplay : mtd::NullDisplay
 {
-    TimeTrackingDisplay(unsigned int& count, std::unordered_map<uint32_t, uint32_t>& map) :
-        group(count, map) {}
+    TimeTrackingDisplay(Stats& stats)
+        : group{stats}
+    {
+    }
 
     void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
@@ -123,9 +170,9 @@ struct ClientLatency : mtf::ConnectedClientWithASurface
         preset_display(mt::fake_shared(display));
         mtf::ConnectedClientWithASurface::SetUp();
     }
-    unsigned int post_count{0};
-    std::unordered_map<uint32_t, uint32_t> timestamps;
-    TimeTrackingDisplay display{post_count, timestamps};
+
+    Stats stats;
+    TimeTrackingDisplay display{stats};
     unsigned int test_submissions{100};
 };
 }
@@ -137,7 +184,7 @@ TEST_F(ClientLatency, double_buffered_client_uses_all_buffers)
     auto stream = mir_surface_get_buffer_stream(surface);
     for(auto i = 0u; i < test_submissions; i++) {
         auto submission_id = mir_debug_surface_current_buffer_id(surface);
-        timestamps[submission_id] = post_count; 
+        stats.record_submission(submission_id);
         mir_buffer_stream_swap_buffers_sync(stream);
     }
 
