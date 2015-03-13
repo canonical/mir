@@ -406,7 +406,7 @@ void mf::SessionMediator::configure_surface(
 
 void mf::SessionMediator::modify_surface(
     google::protobuf::RpcController*, // controller,
-    const mir::protobuf::SurfaceModification* mod,
+    const mir::protobuf::SurfaceModification* request,
     mir::protobuf::Void* response,
     google::protobuf::Closure* done)
 {
@@ -416,21 +416,19 @@ void mf::SessionMediator::modify_surface(
         std::unique_lock<std::mutex> lock(session_mutex);
 
         auto session = weak_session.lock();
-
-        if (!session.get())
+        if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        auto const id = mf::SurfaceId(mod->surface_id().value());
-        auto const surface = session->get_surface(id);
-
-        mf::Surface::Spec spec;
-        if (mod->has_name())
-            spec.name = mod->name();
+        mf::Surface::Modifications mods;
+        if (request->has_name())
+            mods.name = request->name();
         // TODO: More fields soon (LP: #1422522) (LP: #1420573)
 
+        auto const id = mf::SurfaceId(request->surface_id().value());
+        auto const surface = session->get_surface(id);
         // TODO: Route this through shell after the dust settles (alan_g):
-        if (!surface->respecify(spec))
-            response->set_error("Unsupported or invalid surface spec");
+        if (!surface->modify(mods))
+            response->set_error("Unsupported surface modifications");
     }
 
     done->Run();

@@ -42,7 +42,7 @@ class ClientBufferTracker;
 class Surface
 {
 public:
-    struct Spec
+    struct Modifications
     {
         optional_value<std::string> name;
         // TODO: type/state/size etc (LP: #1422522) (LP: #1420573)
@@ -60,7 +60,12 @@ public:
     virtual int client_input_fd() const = 0;
 
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
-    virtual bool respecify(Spec const&) = 0;
+
+    /**
+     * Applies a bunch of modifications to the surface, all at once or
+     * not at all.
+     */
+    virtual bool modify(Modifications const&) = 0;
 
 protected:
     Surface() = default;

@@ -760,13 +760,13 @@ void ms::BasicSurface::set_keymap(xkb_rule_names const& rules)
     observers.keymap_changed(rules);
 }
 
-bool ms::BasicSurface::respecify(frontend::Surface::Spec const& spec)
+bool ms::BasicSurface::modify(frontend::Surface::Modifications const& mods)
 {
     bool valid = true;
 
-    if (spec.name.is_set())
+    if (mods.name.is_set())
     {
-        surface_name = spec.name.value();
+        surface_name = mods.name.value();
         observers.renamed(surface_name.c_str());
     }
 

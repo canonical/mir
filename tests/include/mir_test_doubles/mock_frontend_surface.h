@@ -67,7 +67,7 @@ struct MockFrontendSurface : public frontend::Surface
 
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
     MOCK_CONST_METHOD1(query, int(MirSurfaceAttrib));
-    MOCK_METHOD1(respecify, bool(Spec const&));
+    MOCK_METHOD1(modify, bool(Modifications const&));
 };
 }
 }
