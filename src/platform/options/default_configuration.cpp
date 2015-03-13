@@ -50,6 +50,7 @@ char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt               = "enable-touchspots";
 char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
 char const* const mo::debug_opt                   = "debug";
+char const* const mo::nbuffers_opt                = "nbuffers";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
@@ -61,6 +62,7 @@ char const* const mo::platform_path = "platform-path";
 namespace
 {
 int const default_ipc_threads          = 1;
+int const default_nbuffers             = 2;
 bool const enable_input_default        = true;
 
 // Hack around the way Qt loads mir:
@@ -145,6 +147,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
             "threads in frontend thread pool.")
+        (nbuffers_opt, po::value<int>()->default_value(default_nbuffers),
+            "Number of buffers per surface.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,

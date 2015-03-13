@@ -37,6 +37,8 @@
 #include "threaded_snapshot_strategy.h"
 #include "prompt_session_manager_impl.h"
 #include "default_coordinate_translator.h"
+#include "mir/options/program_option.h"
+#include "mir/options/default_configuration.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -72,7 +74,7 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
         {
             return std::make_shared<ms::SurfaceAllocator>(
                 the_buffer_stream_factory(),
-                2, // TODO
+                the_options()->get<int>(options::nbuffers_opt),
                 the_input_channel_factory(),
                 the_input_sender(),
                 the_default_cursor_image(),

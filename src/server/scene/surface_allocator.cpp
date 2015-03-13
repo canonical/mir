@@ -49,6 +49,8 @@ ms::SurfaceAllocator::SurfaceAllocator(
     default_cursor_image(default_cursor_image),
     report(report)
 {
+    if (nbuffers < 2)
+        throw std::logic_error("nbuffers must be at least 2");
 }
 
 std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(SurfaceCreationParameters const& params)
