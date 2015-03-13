@@ -33,7 +33,7 @@ set(
   test_swapinterval.cpp
   test_server_client_types.cpp
   test_server_shutdown.cpp
-  test_default_shell.cpp
+  test_default_window_manager.cpp
   test_session.cpp
   session_management.cpp
   surface_composition.cpp

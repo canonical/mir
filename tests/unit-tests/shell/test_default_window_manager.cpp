@@ -16,8 +16,9 @@
  * Authored by: ALan Griffiths <alan.griffiths@canonical.com>
  */
 
-#include "src/server/shell/default_shell.h"
+#include "src/server/shell/default_window_manager.h"
 
+#include "mir/shell/abstract_shell.h"
 #include "mir/scene/session.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/scene/placement_strategy.h"
@@ -97,7 +98,7 @@ struct MockSessionManager : ms::SessionManager
     { ms::SessionManager::set_focus_to(focus); }
 };
 
-struct DefaultShell : Test
+struct DefaultWindowManager : Test
 {
     NiceMock<mtd::MockSurface> mock_surface;
     MockPlacementStrategy placement_strategy;
@@ -114,13 +115,19 @@ struct DefaultShell : Test
         mt::fake_shared(session_listener)};
 
     mtd::StubInputTargeter input_targeter;
-    msh::DefaultShell shell{
+
+    msh::AbstractShell shell{
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_coordinator),
         mt::fake_shared(session_manager),
         std::make_shared<mtd::NullPromptSessionManager>(),
-        mt::fake_shared(placement_strategy),
-        std::make_shared<mtd::NullSurfaceConfigurator>()};
+        [this](msh::FocusController* focus_controller)
+            { return std::make_shared<msh::DefaultWindowManager>(
+                focus_controller,
+                mt::fake_shared(placement_strategy),
+                mt::fake_shared(session_manager),
+                std::make_shared<mtd::NullSurfaceConfigurator>());
+            }};
 
     void SetUp() override
     {
@@ -133,7 +140,7 @@ struct DefaultShell : Test
 };
 }
 
-TEST_F(DefaultShell, new_applications_receive_focus)
+TEST_F(DefaultWindowManager, new_applications_receive_focus)
 {
     std::shared_ptr<ms::Session> new_session;
 
@@ -144,7 +151,7 @@ TEST_F(DefaultShell, new_applications_receive_focus)
     EXPECT_EQ(session, new_session);
 }
 
-TEST_F(DefaultShell, session_listener_is_notified_of_focus)
+TEST_F(DefaultWindowManager, session_listener_is_notified_of_focus)
 {
     EXPECT_CALL(session_listener, focused(_)).Times(1);
     EXPECT_CALL(session_listener, unfocused()).Times(1);
@@ -153,7 +160,7 @@ TEST_F(DefaultShell, session_listener_is_notified_of_focus)
     shell.close_session(session);
 }
 
-TEST_F(DefaultShell, session_event_sink_is_notified_of_focus)
+TEST_F(DefaultWindowManager, session_event_sink_is_notified_of_focus)
 {
     EXPECT_CALL(session_event_sink, handle_focus_change(_)).Times(2);
 
@@ -176,7 +183,7 @@ TEST_F(DefaultShell, session_event_sink_is_notified_of_focus)
     shell.close_session(session);
 }
 
-TEST_F(DefaultShell, offers_create_surface_parameters_to_placement_strategy)
+TEST_F(DefaultWindowManager, offers_create_surface_parameters_to_placement_strategy)
 {
     std::shared_ptr<ms::Session> session;
     EXPECT_CALL(session_manager, set_focus_to(_)).WillOnce(SaveArg<0>(&session));
@@ -188,7 +195,7 @@ TEST_F(DefaultShell, offers_create_surface_parameters_to_placement_strategy)
     shell.create_surface(session, params);
 }
 
-TEST_F(DefaultShell, forwards_create_surface_parameters_from_placement_strategy_to_model)
+TEST_F(DefaultWindowManager, forwards_create_surface_parameters_from_placement_strategy_to_model)
 {
     std::shared_ptr<ms::Session> session;
     EXPECT_CALL(session_manager, set_focus_to(_)).WillOnce(SaveArg<0>(&session));

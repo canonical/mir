@@ -34,12 +34,6 @@
 extern "C" {
 #endif
 
-typedef enum MirBool
-{
-    mir_false = 0,
-    mir_true = 1
-} MirBool;
-
 /* Display server connection API */
 typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
