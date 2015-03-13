@@ -51,6 +51,8 @@ void me::TilingWindowManagerPolicy::click(Point cursor)
     auto const session = session_under(cursor);
     auto const surface = tools->surface_at(cursor);
     tools->set_focus_to(session, surface);
+    if (auto const surface = tools->focused_surface())
+        tools->raise({surface});
     old_cursor = cursor;
 }
 
@@ -85,6 +87,8 @@ void me::TilingWindowManagerPolicy::resize(Point cursor)
                     if (resize(new_surface, cursor, old_cursor, info.tile))
                     {
                         tools->set_focus_to(session, new_surface);
+                        if (auto const surface = tools->focused_surface())
+                            tools->raise({surface});
                     }
                 }
             }
@@ -129,6 +133,8 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
     if (surfaces.empty() && session == tools->focused_session())
     {
         tools->focus_next();
+        if (auto const surface = tools->focused_surface())
+            tools->raise({surface});
     }
 }
 
@@ -209,6 +215,8 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
                     if (resize(new_surface, cursor, old_cursor, info.tile))
                     {
                         tools->set_focus_to(session, new_surface);
+                        if (auto const surface = tools->focused_surface())
+                            tools->raise({surface});
                     }
                 }
             }
