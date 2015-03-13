@@ -33,6 +33,8 @@
 
 #include "mir_toolkit/events/event.h"
 
+#include <cstring>
+
 namespace mi = mir::input;
 namespace md = mir::dispatch;
 namespace mtf = mir_test_framework;
@@ -119,6 +121,7 @@ mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& in
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyParameters const& key_params)
 {
     MirEvent key_event;
+    std::memset(&key_event, 0, sizeof key_event);
     key_event.type = mir_event_type_key;
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch());
     key_event.key.modifiers = expand_modifier(modifiers);
