@@ -77,7 +77,7 @@ TEST_F(MesaClientPlatformTest, egl_native_display_is_valid_until_released)
         std::shared_ptr<EGLNativeDisplayType> native_display = platform->create_egl_native_display();
 
         nd = reinterpret_cast<MirMesaEGLNativeDisplay*>(*native_display);
-        auto validate = platform_lib->load_function<MirBool(*)(MirMesaEGLNativeDisplay*)>("mir_client_mesa_egl_native_display_is_valid");
+        auto validate = platform_lib->load_function<int(*)(MirMesaEGLNativeDisplay*)>("mir_client_mesa_egl_native_display_is_valid");
         EXPECT_EQ(MIR_MESA_TRUE, validate(nd));
     }
     EXPECT_EQ(MIR_MESA_FALSE, mclm::mir_client_mesa_egl_native_display_is_valid(nd));
