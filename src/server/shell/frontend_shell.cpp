@@ -17,7 +17,7 @@
  */
 
 #include "frontend_shell.h"
-#include "default_shell.h"
+#include "mir/shell/shell.h"
 
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
