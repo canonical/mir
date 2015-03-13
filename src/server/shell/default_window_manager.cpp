@@ -23,6 +23,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_configurator.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/focus_controller.h"
 
@@ -33,10 +34,12 @@ namespace msh = mir::shell;
 msh::DefaultWindowManager::DefaultWindowManager(
     FocusController* focus_controller,
     std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
-    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator) :
+    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+    std::shared_ptr<scene::SurfaceConfigurator> const& surface_configurator) :
     focus_controller{focus_controller},
     placement_strategy{placement_strategy},
-    session_coordinator{session_coordinator}
+    session_coordinator{session_coordinator},
+    surface_configurator{surface_configurator}
 {
 }
 
@@ -129,7 +132,17 @@ bool msh::DefaultWindowManager::handle_pointer_event(MirPointerInputEvent const*
     return false;
 }
 
-int msh::DefaultWindowManager::handle_set_state(std::shared_ptr<scene::Surface> const& /*surface*/, MirSurfaceState value)
+int msh::DefaultWindowManager::set_surface_attribute(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& surface,
+    MirSurfaceAttrib attrib,
+    int value)
 {
-    return value;
+    auto const configured_value = surface_configurator->select_attribute_value(*surface, attrib, value);
+
+    auto const result = surface->configure(attrib, configured_value);
+
+    surface_configurator->attribute_set(*surface, attrib, result);
+
+    return result;
 }
