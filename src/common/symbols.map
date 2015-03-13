@@ -235,9 +235,20 @@ MIR_COMMON_3.2 {
       mir::dispatch::MultiplexingDispatchable::dispatch*;
       mir::dispatch::MultiplexingDispatchable::relevant_events*;
       mir::dispatch::MultiplexingDispatchable::add_watch*;
+      mir::dispatch::MultiplexingDispatchable::remove_watch*;
 
       typeinfo?for?mir::dispatch::MultiplexingDispatchable;
       vtable?for?mir::dispatch::MultiplexingDispatchable;
+
+      mir::dispatch::ActionQueue::ActionQueue*;
+      mir::dispatch::ActionQueue::?ActionQueue*;
+      mir::dispatch::ActionQueue::watch_fd*;
+      mir::dispatch::ActionQueue::dispatch*;
+      mir::dispatch::ActionQueue::relevant_events*;
+      mir::dispatch::ActionQueue::enqueue*;
+
+      typeinfo?for?mir::dispatch::ActionQueue;
+      vtable?for?mir::dispatch::ActionQueue;
 
       mir::detail::RefCountedLibrary::operator*;
       mir::detail::RefCountedLibrary::?RefCountedLibrary*;

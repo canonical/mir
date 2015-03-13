@@ -16,11 +16,12 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mir/shell/abstract_shell.h"
 #include "mir/scene/session.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/scene/placement_strategy.h"
 
-#include "src/server/shell/default_shell.h"
+#include "src/server/shell/default_window_manager.h"
 #include "src/server/scene/session_manager.h"
 #include "src/server/scene/default_session_container.h"
 
@@ -62,7 +63,7 @@ struct NullPlacementStrategy : ms::PlacementStrategy
     -> ms::SurfaceCreationParameters  override { return params; }
 };
 
-struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
+struct TestDefaultWindowManager : public testing::Test
 {
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
     ms::DefaultSessionContainer container;
@@ -80,23 +81,22 @@ struct TestDefaultShellAndFocusSelectionStrategy : public testing::Test
 
     NiceMock<mtd::MockSurfaceConfigurator> surface_configurator;
 
-    msh::DefaultShell shell{
+    msh::AbstractShell shell{
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_coordinator),
         mt::fake_shared(session_manager),
         std::make_shared<mtd::NullPromptSessionManager>(),
-        std::make_shared<NullPlacementStrategy>(),
-        mt::fake_shared(surface_configurator)};
+        [this](msh::FocusController* focus_controller)
+            { return std::make_shared<msh::DefaultWindowManager>(
+                focus_controller,
+                std::make_shared<NullPlacementStrategy>(),
+                mt::fake_shared(session_manager),
+                mt::fake_shared(surface_configurator));
+            }};
 };
-
-inline auto AnySurface()
--> Matcher<std::weak_ptr<ms::Surface> const&>
-{
-    return Matcher<std::weak_ptr<ms::Surface> const&>(_);
-}
 }
 
-TEST_F(TestDefaultShellAndFocusSelectionStrategy, cycle_focus)
+TEST_F(TestDefaultWindowManager, cycle_focus)
 {
     EXPECT_CALL(session_manager, set_focus_to(_)).Times(3);
 
@@ -123,7 +123,7 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, cycle_focus)
     EXPECT_CALL(session_manager, set_focus_to(_)).Times(AnyNumber());
 }
 
-TEST_F(TestDefaultShellAndFocusSelectionStrategy, closing_applications_transfers_focus)
+TEST_F(TestDefaultWindowManager, closing_applications_transfers_focus)
 {
     using namespace ::testing;
 
@@ -150,7 +150,7 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, closing_applications_transfers
     EXPECT_CALL(session_manager, set_focus_to(_)).Times(AtLeast(0));
 }
 
-TEST_F(TestDefaultShellAndFocusSelectionStrategy, sets_input_focus)
+TEST_F(TestDefaultWindowManager, sets_input_focus)
 {
     mtd::StubSceneSession app1;
     NiceMock<mtd::MockSurface> mock_surface;
@@ -163,14 +163,13 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, sets_input_focus)
         // When we have no session.
         EXPECT_CALL(input_targeter, focus_cleared()).Times(1);
     }
-    EXPECT_CALL(surface_coordinator, raise(AnySurface())).Times(1);
 
     shell.set_focus_to(mt::fake_shared(app1), mt::fake_shared(mock_surface));
     shell.set_focus_to(mt::fake_shared(app1), std::shared_ptr<ms::Surface>());
     shell.set_focus_to(std::shared_ptr<ms::Session>(), std::shared_ptr<ms::Surface>());
 }
 
-TEST_F(TestDefaultShellAndFocusSelectionStrategy, notifies_surface_of_focus_change_after_it_has_taken_the_focus)
+TEST_F(TestDefaultWindowManager, notifies_surface_of_focus_change_after_it_has_taken_the_focus)
 {
     mtd::StubSceneSession app;
     auto const mock_surface = std::make_shared<NiceMock<mtd::MockSurface>>();
@@ -182,7 +181,7 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, notifies_surface_of_focus_chan
     shell.set_focus_to(mt::fake_shared(app), mock_surface);
 }
 
-TEST_F(TestDefaultShellAndFocusSelectionStrategy, configurator_selects_attribute_values)
+TEST_F(TestDefaultWindowManager, configurator_selects_attribute_values)
 {
     mtd::StubSceneSession app;
     auto const session = mt::fake_shared(app);
@@ -203,7 +202,7 @@ TEST_F(TestDefaultShellAndFocusSelectionStrategy, configurator_selects_attribute
         Eq(mir_surface_state_minimized));
 }
 
-TEST_F(TestDefaultShellAndFocusSelectionStrategy, set_surface_attribute_returns_value_set_by_configurator)
+TEST_F(TestDefaultWindowManager, set_surface_attribute_returns_value_set_by_configurator)
 {
     mtd::StubSceneSession app;
     auto const session = mt::fake_shared(app);
