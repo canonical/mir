@@ -1,3 +1,4 @@
 usr/include/mirclient/mir_toolkit/*.h
+usr/include/mirclient/mir_toolkit/events
 usr/lib/*/pkgconfig/mirclient.pc
 usr/lib/*/libmirclient.so
