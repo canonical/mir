@@ -296,3 +296,29 @@ TEST_F(ClientSurfaces, can_be_input_methods)
     mir_surface_release_sync(im);
 }
 
+TEST_F(ClientSurfaces, can_be_renamed)
+{
+    auto spec = mir_connection_create_spec_for_normal_surface(
+                   connection, 123, 456, mir_pixel_format_abgr_8888);
+    ASSERT_THAT(spec, NotNull());
+    auto surf = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    /*
+     * Generally no windowing system ever censors window names. They are
+     * free-form strings set by the app.
+     *
+     * We do lack client API to be able to read the name back and verify
+     * these, but really don't care -- such client functions are not required
+     * right now.
+     *
+     * At least verify the rename completes without blocking and that
+     * NULL is supported...
+     */
+    mir_wait_for_one(mir_surface_rename(surf, "New Name"));
+    mir_wait_for_one(mir_surface_rename(surf, nullptr));  // alias for ""
+    mir_wait_for_one(mir_surface_rename(surf, ""));
+    mir_wait_for_one(mir_surface_rename(surf, "Alice"));
+
+    mir_surface_release_sync(surf);
+}
