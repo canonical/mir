@@ -406,7 +406,7 @@ void mf::SessionMediator::configure_surface(
 
 void mf::SessionMediator::modify_surface(
     google::protobuf::RpcController*, // controller,
-    const mir::protobuf::SurfaceModification* request,
+    const mir::protobuf::SurfaceModifications* request,
     mir::protobuf::Void* response,
     google::protobuf::Closure* done)
 {

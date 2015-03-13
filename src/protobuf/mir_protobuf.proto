@@ -31,7 +31,7 @@ message SurfaceParameters {
 
 // If and when we break our protocol backward-compatibility, this could be
 // merged with SurfaceParameters...
-message SurfaceModification {
+message SurfaceModifications {
   required SurfaceId surface_id = 1;
 
   optional string name = 2;
@@ -258,7 +258,7 @@ service DisplayServer {
   rpc connect(ConnectParameters) returns (Connection);
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
-  rpc modify_surface(SurfaceModification) returns (Void);
+  rpc modify_surface(SurfaceModifications) returns (Void);
   rpc next_buffer(SurfaceId) returns (Buffer);
   rpc release_surface(SurfaceId) returns (Void);
 
