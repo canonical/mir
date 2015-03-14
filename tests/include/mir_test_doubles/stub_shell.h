@@ -41,9 +41,6 @@ struct StubShell : public frontend::Shell
     void close_session(std::shared_ptr<frontend::Session> const& /* session */) override
     {
     }
-    void handle_surface_created(std::shared_ptr<frontend::Session> const& /* session */) override
-    {
-    }
     std::shared_ptr<frontend::PromptSession> start_prompt_session_for(std::shared_ptr<frontend::Session> const& /* session */,
         scene::PromptSessionCreationParameters const& /* params */)
     {

@@ -37,12 +37,6 @@ public:
         std::shared_ptr<InputTargeter> const& input_targeter,
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager);
-
-    AbstractShell(
-        std::shared_ptr<InputTargeter> const& input_targeter,
-        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         std::function<std::shared_ptr<WindowManager>(FocusController* focus_controller)> const& wm_builder);
 
@@ -58,8 +52,6 @@ public:
     frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override;
 
     void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override;
-
-    void handle_surface_created(std::shared_ptr<scene::Session> const& session) override;
 
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
@@ -119,21 +111,10 @@ protected:
     std::shared_ptr<WindowManager> const window_manager;
 
 private:
-/** @name callbacks from FocusController methods
- * These functions are called while the input focus is locked.
- * \warning DO NOT allow recursive calls to focus_next(), focussed_application() or set_focus_to()
- * as these will deadlock.
- * @{ */
-    virtual void setting_focus_to(std::shared_ptr<scene::Surface> const& next_focus);
-    virtual void setting_focus_to(std::shared_ptr<scene::Session> const& next_focus);
-/** @} */
-
     std::mutex mutable focus_mutex;
     std::weak_ptr<scene::Surface> focus_surface;
     std::weak_ptr<scene::Session> focus_session;
 
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Surface> const& next_focus);
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<scene::Session> const& next_focus);
     void set_focus_to_locked(
         std::unique_lock<std::mutex> const& lock,
         std::shared_ptr<scene::Session> const& focus_session,

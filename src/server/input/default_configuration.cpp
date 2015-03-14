@@ -369,8 +369,13 @@ mir::DefaultServerConfiguration::the_input_platform()
     return input_platform(
         [this]() -> std::shared_ptr<mi::Platform>
         {
+            auto options = the_options();
+
+            if (!options->is_set(options::platform_input_lib))
+                return nullptr;
+
             auto lib = std::make_shared<mir::SharedLibrary>(
-                the_options()->get<std::string>(options::platform_input_lib));
+                options->get<std::string>(options::platform_input_lib));
             auto create = lib->load_function<mi::CreatePlatform>(
                 "create_input_platform",
                 MIR_SERVER_INPUT_PLATFORM_VERSION);

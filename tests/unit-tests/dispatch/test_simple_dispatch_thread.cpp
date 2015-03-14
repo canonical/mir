@@ -22,7 +22,6 @@
 #include "mir_test/pipe.h"
 #include "mir_test/signal.h"
 #include "mir_test/test_dispatchable.h"
-#include "mir_test_doubles/mock_dispatchable.h"
 
 #include <fcntl.h>
 
@@ -33,7 +32,6 @@
 
 namespace md = mir::dispatch;
 namespace mt = mir::test;
-namespace mtd = mt::doubles;
 
 namespace
 {
@@ -51,6 +49,13 @@ public:
     mir::Fd test_fd;
 };
 
+class MockDispatchable : public md::Dispatchable
+{
+public:
+    MOCK_CONST_METHOD0(watch_fd, mir::Fd());
+    MOCK_METHOD1(dispatch, bool(md::FdEvents));
+    MOCK_CONST_METHOD0(relevant_events, md::FdEvents());
+};
 }
 
 TEST_F(SimpleDispatchThreadTest, calls_dispatch_when_fd_is_readable)
@@ -157,7 +162,7 @@ TEST_F(SimpleDispatchThreadTest, only_calls_dispatch_with_remote_closed_when_rel
 {
     using namespace testing;
 
-    auto dispatchable = std::make_shared<NiceMock<mtd::MockDispatchable>>();
+    auto dispatchable = std::make_shared<NiceMock<MockDispatchable>>();
     ON_CALL(*dispatchable, watch_fd()).WillByDefault(Return(test_fd));
     ON_CALL(*dispatchable, relevant_events()).WillByDefault(Return(md::FdEvent::writable));
     auto dispatched_writable = std::make_shared<mt::Signal>();
