@@ -205,7 +205,7 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
     return true;
 }
 
-string prepareMemcheckTestLine(string const& exe, vector<string> const& suppressions)
+string prepareMemcheckTestLine(string const& exe, vector<string> const& suppressions, std::string const& exclusions)
 {
     stringstream ss;
 
@@ -219,19 +219,20 @@ string prepareMemcheckTestLine(string const& exe, vector<string> const& suppress
              sizeof(cmd_line),
              ss.str().c_str(),
              exe.c_str(),
-             "*"
+             "*",
+             exclusions.c_str()
              );
 
     return cmd_line;
 }
 
-void emitMemcheckTest(string const& exe, vector<string> const& suppressions)
+void emitMemcheckTest(string const& exe, vector<string> const& suppressions, std::string const& exclusions)
 {
     ifstream CTestTestfile("CTestTestfile.cmake", ifstream::in);
     bool need_memcheck_test = true;
     string line;
 
-    string memcheckTestLine = prepareMemcheckTestLine(exe, suppressions);
+    string memcheckTestLine = prepareMemcheckTestLine(exe, suppressions, exclusions);
 
     if (CTestTestfile.is_open())
     {
@@ -290,7 +291,7 @@ int main (int argc, char **argv)
 
     if (config.memcheck_test)
     {
-        emitMemcheckTest(config.executable, config.suppressions);
+        emitMemcheckTest(config.executable, config.suppressions, config.exclusions);
         return 0;
     }
 
