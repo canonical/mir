@@ -59,7 +59,7 @@ int get_output_width()
 
 string ordinary_cmd_line_pattern()
 {
-    static const char* pattern = "ADD_TEST(\"%s.%s\" \"%s\" \"--gtest_filter=%s%s%s\")\n";
+    static const char* pattern = "ADD_TEST(\"%s.%s\" \"%s\" \"--gtest_filter=%s:-%s\")\n";
     return pattern;
 }
 
@@ -77,7 +77,7 @@ vector<string> valgrind_cmd_patterns(vector<string> const& suppressions)
     vector<string> gtest_patterns{
         "%s",
         "--gtest_death_test_use_fork",
-        "--gtest_filter=%s%s%s"
+        "--gtest_filter=%s:-%s"
     };
 
     patterns.insert(patterns.end(), gtest_patterns.begin(), gtest_patterns.end());
@@ -219,14 +219,8 @@ string prepareMemcheckTestLine(string const& exe, vector<string> const& suppress
              sizeof(cmd_line),
              ss.str().c_str(),
              exe.c_str(),
-<<<<<<< TREE
-             "*",
-             "",
-             ""
-=======
              "*",
              exclusions.c_str()
->>>>>>> MERGE-SOURCE
              );
 
     return cmd_line;
@@ -364,7 +358,6 @@ int main (int argc, char **argv)
                 elide_string_left(*test, output_width/2).c_str(),
                 config.executable,
                 test->c_str(),
-                ":-",
                 config.exclusions_for(*test).c_str());
 
             if (testfilecmake.good())
