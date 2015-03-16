@@ -353,8 +353,7 @@ private:
         for(auto i = 0u; i < valid_formats; i++)
         {
             if (pixel_formats[i] == mir_pixel_format_xbgr_8888 ||
-                pixel_formats[i] == mir_pixel_format_xrgb_8888 ||
-                pixel_formats[i] == mir_pixel_format_bgr_888)
+                pixel_formats[i] == mir_pixel_format_xrgb_8888)
             {
                 selected_format = pixel_formats[i];
                 break;
