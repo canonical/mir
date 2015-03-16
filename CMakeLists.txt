@@ -156,8 +156,11 @@ set(
 
 if(cmake_build_type_lower MATCHES "snappy")
   set(MIR_PLATFORM mesa)
-  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/snappy)
+  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/snappy-install)
   add_subdirectory(snappy)
+  add_custom_target(snap
+    COMMAND sh -c "make install/strip ; snappy snappy-install"
+  )
 endif()
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
@@ -243,4 +246,3 @@ endif ()
 enable_coverage_report(mirserver)
 include (cmake/Doxygen.cmake)
 include (cmake/ABICheck.cmake)
-

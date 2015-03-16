@@ -1,2 +1,6 @@
 configure_file(package.yaml.in package.yaml)
-install(FILES package.yaml readme.md DESTINATION meta/)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/package.yaml
+  readme.md
+  DESTINATION meta/
+)
