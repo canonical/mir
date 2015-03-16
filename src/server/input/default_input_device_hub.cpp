@@ -36,9 +36,7 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::InputDispatcher> const& input_dispatcher,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue)
-    : input_dispatcher(input_dispatcher),
-    input_dispatchable{input_multiplexer},
-    observer_queue(observer_queue)
+    : input_dispatcher(input_dispatcher), input_dispatchable{input_multiplexer}, observer_queue(observer_queue)
 {
 }
 
@@ -83,15 +81,15 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
                 if (item->device_matches(device))
                 {
                     item->stop();
-                    auto const && info = item->get_device_info();
 
                     // send input device info to observer queue..
-                    observer_queue->enqueue(this,
-                                            [this,info]()
-                                            {
-                                                remove_device_info(info);
-                                            }
-                                           );
+                    observer_queue->enqueue(
+                        this,
+                        [this,info = item->get_device_info()]()
+                        {
+                            remove_device_info(info);
+                        }
+                        );
                     return true;
                 }
                 return false;
@@ -100,9 +98,11 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
         );
 }
 
-mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(std::shared_ptr<InputDevice> const& dev, std::shared_ptr<InputDispatcher> const& dispatcher, std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer)
-    : device_id(create_new_device_id()),
-    device(dev), dispatcher(dispatcher), multiplexer(multiplexer)
+mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
+    std::shared_ptr<InputDevice> const& dev,
+    std::shared_ptr<InputDispatcher> const& dispatcher,
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer)
+    : device_id(create_new_device_id()), device(dev), dispatcher(dispatcher), multiplexer(multiplexer)
 {
 }
 
@@ -163,7 +163,7 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
         [observer,this]
         {
             observers.push_back(observer);
-            for(auto const& item : infos)
+            for (auto const& item : infos)
             {
                 observer->device_added(item);
             }
@@ -176,27 +176,18 @@ void mi::DefaultInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserve
 {
     auto observer = element.lock();
 
-    observer_queue->enqueue(
-        this,
-        [observer,this]
-        {
-            observers.erase(
-                remove(
-                    begin(observers),
-                    end(observers),
-                    observer
-                    ),
-                end(observers)
-                );
-        }
-        );
+    observer_queue->enqueue(this,
+                            [observer, this]
+                            {
+                                observers.erase(remove(begin(observers), end(observers), observer), end(observers));
+                            });
 }
 
 void mi::DefaultInputDeviceHub::add_device_info(InputDeviceInfo const& info)
 {
     infos.push_back(info);
 
-    for(auto const& observer : observers)
+    for (auto const& observer : observers)
     {
         observer->device_added(infos.back());
         observer->changes_complete();
@@ -205,18 +196,12 @@ void mi::DefaultInputDeviceHub::add_device_info(InputDeviceInfo const& info)
 
 void mi::DefaultInputDeviceHub::remove_device_info(InputDeviceInfo const& info)
 {
-    for(auto const& observer : observers)
+    for (auto const& observer : observers)
     {
         observer->device_removed(info);
         observer->changes_complete();
     }
 
-    infos.erase(
-        remove(
-            begin(infos),
-            end(infos),
-            info),
-        end(infos)
-        );
+    infos.erase(remove(begin(infos), end(infos), info), end(infos));
 }
 

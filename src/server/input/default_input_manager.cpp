@@ -32,9 +32,7 @@
 namespace mi = mir::input;
 
 mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer)
-    : multiplexer{multiplexer},
-    queue{std::make_shared<mir::dispatch::ActionQueue>()},
-    state{State::stopped}
+    : multiplexer{multiplexer}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
 {
     multiplexer->add_watch(queue);
 }
@@ -47,17 +45,21 @@ mi::DefaultInputManager::~DefaultInputManager()
 void mi::DefaultInputManager::add_platform(std::shared_ptr<Platform> const& platform)
 {
     if (state == State::running)
+    {
         queue->enqueue([this, platform]()
-                              {
-                                  platforms.push_back(platform);
-                                  platform->start();
-                                  multiplexer->add_watch(platform->get_dispatchable());
-                              });
+                       {
+                           platforms.push_back(platform);
+                           platform->start();
+                           multiplexer->add_watch(platform->get_dispatchable());
+                       });
+    }
     else
+    {
         queue->enqueue([this, platform]()
-                              {
-                                  platforms.push_back(platform);
-                              });
+                       {
+                           platforms.push_back(platform);
+                       });
+    }
 
 }
 
