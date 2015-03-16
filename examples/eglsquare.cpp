@@ -164,12 +164,7 @@ public:
         glUseProgram(program.program);
         vPositionAttr = glGetAttribLocation(program.program, "vPosition");
         glVertexAttribPointer(vPositionAttr, 4, GL_FLOAT, GL_FALSE, 0, vertex_data);
-        uvCoord = glGetAttribLocation(program.program, "uvCoord");
-        glVertexAttribPointer(uvCoord, 4, GL_FLOAT, GL_FALSE, 0, uv_data);
         posUniform = glGetUniformLocation(program.program, "pos");
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &blue_pixel);
         glClearColor(0.1, 0.1, 0.4, 1.0); //light blue
         glClear(GL_COLOR_BUFFER_BIT);
         auto scaleUniform = glGetUniformLocation(program.program, "scale");
@@ -185,11 +180,8 @@ public:
         glUseProgram(program.program);
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
         glUniform2fv(posUniform, 1, pos);
-        glActiveTexture(GL_TEXTURE0);
         glEnableVertexAttribArray(vPositionAttr);
-        glEnableVertexAttribArray(uvCoord);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glDisableVertexAttribArray(uvCoord);
         glDisableVertexAttribArray(vPositionAttr);
     }
 
@@ -199,16 +191,13 @@ private:
     GLchar const*const frag_shader_src =
     {
         "precision mediump float;"
-        "uniform sampler2D tex;"
-        "varying vec2 texcoord;"
         "void main() {"
-        "   gl_FragColor = texture2D(tex, texcoord);"
+        "   gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);"
         "}"
     };
     GLchar const*const vtex_shader_src =
     {
         "attribute vec4 vPosition;"
-        "attribute vec4 uvCoord;"
         "varying vec2 texcoord;"
         "uniform vec2 pos;"
         "uniform vec2 scale;"
@@ -219,7 +208,6 @@ private:
         "    m[2] = vec4(    0.0,     0.0, 1.0, 0.0);"
         "    m[3] = vec4(    0.0,     0.0, 0.0, 1.0);"
         "   gl_Position = vPosition * m;"
-        "   texcoord = uvCoord.xy;"
         "}"
     };
     struct Shader
@@ -266,9 +254,7 @@ private:
         0.0f, 0.0f, 0.0f, 0.0f
 
     };
-    unsigned int const blue_pixel{0xFFFF0000};
     GLuint vPositionAttr;
-    GLuint uvCoord; 
     GLuint posUniform; 
     GLuint texture;
 };
