@@ -52,7 +52,7 @@ include (cmake/MirCommon.cmake)
 include (cmake/PrePush.cmake)
 include (GNUInstallDirs)
 
-set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer")
+set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;Snappy")
 # Change informational string for CMAKE_BUILD_TYPE
 set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
 # Enable cmake-gui to display a drop down list for CMAKE_BUILD_TYPE
@@ -154,6 +154,12 @@ set(
   "a list of graphics backends to build (options are 'mesa' or 'android')"
 )
 
+if(cmake_build_type_lower MATCHES "snappy")
+  set(MIR_PLATFORM mesa)
+  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/snappy)
+  add_subdirectory(snappy)
+endif()
+
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
 foreach(platform IN LISTS MIR_PLATFORM)
@@ -207,6 +213,9 @@ add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 option(MIR_ENABLE_TESTS "Build tests" ON)
+if(cmake_build_type_lower MATCHES "snappy")
+  set(MIR_ENABLE_TESTS OFF)
+endif()
 
 add_subdirectory(benchmarks/)
 add_subdirectory(tools/)

@@ -1,0 +1,5 @@
+name: mir-demos
+version: @MIR_VERSION@
+binaries:
+ - name: bin/mir_proving_server
+ - name: bin/mir_demo_client_egltriangle
