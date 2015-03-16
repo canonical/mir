@@ -305,20 +305,7 @@ void mir_connection_get_available_surface_formats(
         connection->available_surface_formats(formats, format_size, *num_valid_formats);
 }
 
-extern "C"
-{
-MirWaitHandle* new_mir_connection_platform_operation(
-    MirConnection* connection,
-    MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context);
-MirWaitHandle* old_mir_connection_platform_operation(
-    MirConnection* connection, int /* opcode */,
-    MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context);
-}
-
-__asm__(".symver new_mir_connection_platform_operation,mir_connection_platform_operation@@MIR_CLIENT_8.3");
-MirWaitHandle* new_mir_connection_platform_operation(
+extern "C" MirWaitHandle* mir_connection_platform_operation(
     MirConnection* connection,
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context)
@@ -333,16 +320,6 @@ MirWaitHandle* new_mir_connection_platform_operation(
         return nullptr;
     }
 
-}
-
-// TODO: Remove when we bump so name
-__asm__(".symver old_mir_connection_platform_operation,mir_connection_platform_operation@MIR_CLIENT_8");
-MirWaitHandle* old_mir_connection_platform_operation(
-    MirConnection* connection, int /* opcode */,
-    MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context)
-{
-    return new_mir_connection_platform_operation(connection, request, callback, context);
 }
 
 /**************************
@@ -413,7 +390,7 @@ MirWaitHandle* mir_connection_drm_auth_magic(MirConnection* connection,
 
     mir_platform_message_set_data(msg.get(), &request, sizeof(request));
 
-    return new_mir_connection_platform_operation(
+    return mir_connection_platform_operation(
         connection,
         msg.get(),
         platform_operation_to_auth_magic_callback,
@@ -434,7 +411,7 @@ int mir_connection_drm_set_gbm_device(MirConnection* connection,
     static int const success{0};
     int status{-1};
 
-    auto wh = new_mir_connection_platform_operation(
+    auto wh = mir_connection_platform_operation(
         connection,
         msg.get(),
         assign_set_gbm_device_status,
