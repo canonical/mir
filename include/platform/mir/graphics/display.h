@@ -45,10 +45,10 @@ typedef std::function<void()> DisplayConfigurationChangeHandler;
  * This is only appropriate for platforms whose post() calls are non-blocking
  * and not synchronous with the screen hardware (e.g. virtual machines or
  * Android).
- * Using a DisplaySyncGroup with multiple screens on a platform with native
- * screen access (post() blocks for vsync) _will_ result in stuttering, and so
- * should be avoided. Although using DisplaySyncGroup with a single
- * DisplayBuffer remains safe for any platform.
+ * Using a DisplaySyncGroup with multiple screens on a platform whose post()
+ * blocks for vsync often results in stuttering, and so should be avoided.
+ * Although using DisplaySyncGroup with a single DisplayBuffer remains safe
+ * for any platform.
  */
 class DisplaySyncGroup
 {
