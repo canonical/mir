@@ -44,6 +44,8 @@ public:
         mir_connection_release(connection);
     }
     operator MirConnection*() { return connection; }
+    Connection(Connection const&) = delete;
+    Connection& operator=(Connection const&) = delete;
 private:
     MirConnection* connection;
 };
@@ -78,6 +80,8 @@ public:
         if (eglSwapBuffers(display.disp, surface.surface) == EGL_FALSE)
             throw(std::runtime_error("could not swapbuffers"));
     }
+    Context(Context const&) = delete;
+    Context& operator=(Context const&) = delete;
 private:
     EGLConfig chooseconfig(EGLDisplay disp)
     {
@@ -189,6 +193,8 @@ public:
         glDisableVertexAttribArray(vPositionAttr);
     }
 
+    RenderProgram(RenderProgram const&) = delete;
+    RenderProgram& operator=(RenderProgram const&) = delete; 
 private:
     GLchar const*const frag_shader_src =
     {
@@ -312,6 +318,8 @@ public:
     {
         mir_surface_release_sync(surface);
     }
+    Surface(Surface const&) = delete;
+    Surface& operator=(Surface const&) = delete;
 private:
     struct OutputDimensions
     {
@@ -357,12 +365,14 @@ private:
         selected_format = pixel_formats[0]; 
         //select an 8 bit opaque format if we can
         for(auto i = 0u; i < valid_formats; i++)
+        {
             if (pixel_formats[i] == mir_pixel_format_xbgr_8888 ||
                 pixel_formats[i] == mir_pixel_format_xrgb_8888 ||
                 pixel_formats[i] == mir_pixel_format_bgr_888)
-        {
-            selected_format = pixel_formats[i];
-            break;
+            {
+                selected_format = pixel_formats[i];
+                break;
+            }
         }
 
         auto deleter = [](MirSurfaceSpec *spec) { mir_surface_spec_release(spec); };
