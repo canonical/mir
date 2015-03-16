@@ -68,12 +68,6 @@ public:
         return surfaces[index].lock();
     }
 
-    void handle_surface_created(std::shared_ptr<ms::Session> const& /*session*/) override
-    {
-         // We get some racy "raise" requests from the DefaultShell
-         // so we ignore any raise requests that we don't issue ourselves
-    }
-
     void raise(int index)
     {
         surface_coordinator->raise(surface(index));

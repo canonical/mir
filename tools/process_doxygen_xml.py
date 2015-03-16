@@ -138,6 +138,9 @@ def parse_member_def(context_name, node, is_class):
     if publish and prot == 'private':
         if is_function: publish = node.attributes['virt'].value == 'virtual'
         else: publish =  False
+
+    if publish and has_element(node, ['argsstring']): 
+        publish = not get_text_for_element(node, 'argsstring').endswith('=0')
     
     if is_function: print_debug_info(node, ['kind', 'prot', 'static', 'virt'])
     else: print_debug_info(node, ['kind', 'prot', 'static'])

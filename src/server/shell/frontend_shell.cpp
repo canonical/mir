@@ -17,7 +17,7 @@
  */
 
 #include "frontend_shell.h"
-#include "default_shell.h"
+#include "mir/shell/shell.h"
 
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -41,12 +41,6 @@ void msh::FrontendShell::close_session(std::shared_ptr<mf::Session> const& sessi
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
 
     wrapped->close_session(scene_session);
-}
-
-void msh::FrontendShell::handle_surface_created(std::shared_ptr<mf::Session> const& session)
-{
-    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    wrapped->handle_surface_created(scene_session);
 }
 
 std::shared_ptr<mf::PromptSession> msh::FrontendShell::start_prompt_session_for(

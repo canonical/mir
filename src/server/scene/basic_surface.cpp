@@ -554,7 +554,7 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
     return result;
 }
 
-int ms::BasicSurface::query(MirSurfaceAttrib attrib)
+int ms::BasicSurface::query(MirSurfaceAttrib attrib) const
 {
     std::unique_lock<std::mutex> lg(guard);
     switch (attrib)

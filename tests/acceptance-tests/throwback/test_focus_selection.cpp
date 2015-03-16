@@ -54,17 +54,12 @@ struct MockShell : msh::ShellWrapper
         ON_CALL(*this, open_session(_, _, _)).
             WillByDefault(Invoke(this, &MockShell::unmocked_open_session));
 
-        ON_CALL(*this, handle_surface_created(_)).
-            WillByDefault(Invoke(this, &MockShell::unmocked_handle_surface_created));
-
         ON_CALL(*this, close_session(_)).
             WillByDefault(Invoke(this, &MockShell::unmocked_close_session));
     }
 
     MOCK_METHOD3(open_session, std::shared_ptr<ms::Session>(
         pid_t, std::string const&, std::shared_ptr<mf::EventSink> const&));
-
-    MOCK_METHOD1(handle_surface_created, void (std::shared_ptr<ms::Session> const&));
 
     MOCK_METHOD1(close_session, void (std::shared_ptr<ms::Session> const&));
 
@@ -78,9 +73,6 @@ private:
 
     void unmocked_close_session(std::shared_ptr<ms::Session> const& session)
     { msh::ShellWrapper::close_session(session); }
-
-    void unmocked_handle_surface_created(std::shared_ptr<ms::Session> const& session)
-    { msh::ShellWrapper::handle_surface_created(session); }
 };
 }
 
@@ -97,7 +89,6 @@ TEST_F(FocusSelection, when_surface_created_shell_is_notified_of_session)
 
             InSequence seq;
             EXPECT_CALL(*sm, open_session(_, _, _));
-            EXPECT_CALL(*sm, handle_surface_created(NonNullSession()));
             EXPECT_CALL(*sm, close_session(NonNullSession()));
 
             return sm;
