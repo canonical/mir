@@ -156,10 +156,12 @@ set(
 
 if(cmake_build_type_lower MATCHES "snappy")
   set(MIR_PLATFORM mesa)
-  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/snappy-install)
+  set(SNAPPY_IMAGE ${CMAKE_BINARY_DIR}/snappy-install)
+  set(CMAKE_INSTALL_PREFIX ${SNAPPY_IMAGE})
   add_subdirectory(snappy)
   add_custom_target(snap
-    COMMAND sh -c "make install/strip ; snappy snappy-install"
+    COMMAND make install/strip
+    COMMAND snappy build ${SNAPPY_IMAGE}
   )
 endif()
 
