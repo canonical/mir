@@ -231,7 +231,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                     the_event_hub(),
                     the_input_reader_thread());
             }
-            else
+            else if (options->get<bool>(options::enable_input_opt))
                 return std::make_shared<CursorControllingInputManager>(the_cursor_listener());
         });
 }
