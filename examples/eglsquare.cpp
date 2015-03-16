@@ -390,6 +390,7 @@ static void signal_handler(int)
 int main(int argc, char *argv[])
 try
 {
+    using namespace std::literals::chrono_literals;
     struct sigaction action;
     std::memset(&action, 0, sizeof(action));
     action.sa_handler = signal_handler;
@@ -411,7 +412,7 @@ try
 
     Connection connection(socket_file);
     Surface surface(connection);
-    while (running){ std::this_thread::sleep_for(std::chrono::seconds(1)); }
+    while (running){ std::this_thread::sleep_for(400ms); }
     return 0;
 }
 catch(std::exception& e)
