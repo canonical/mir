@@ -168,7 +168,7 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to develop against Mir.
 
-Package: libmirclient-debug-extension2
+Package: libmirclient-debug-extension1
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -194,7 +194,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirclient-debug-extension2 (= ${binary:Version}),
+Depends: libmirclient-debug-extension1 (= ${binary:Version}),
 	 ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - client debug interface headers
