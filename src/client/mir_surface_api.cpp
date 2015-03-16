@@ -586,7 +586,7 @@ MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
     return surface->modify(*spec);
 }
 
-} // namespace TODO
+} // Private namespace. TODO: finalize morphing API and publish.
 
 MirWaitHandle* mir_surface_rename(MirSurface* surf, char const* name)
 {
