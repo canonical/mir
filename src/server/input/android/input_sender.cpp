@@ -163,10 +163,9 @@ void mia::InputSender::InputSenderState::remove_transfer(int fd)
 
     if (transfer)
     {
-        transfers.erase(fd);
-        // TODO Inestigtesafety/necessity
-        lock.unlock();
         transfer->unsubscribe();
+        transfers.erase(fd);
+        lock.unlock();
 
         transfer->on_surface_disappeared();
     }
@@ -333,16 +332,13 @@ void mia::InputSender::ActiveTransfer::on_finish_signal()
 {
     uint32_t sequence;
     bool handled;
-    printf("on Finish signal\n");
 
     while(true)
     {
         droidinput::status_t status = publisher.receiveFinishedSignal(&sequence, &handled);
-        printf("Status is :%d %s \n", (int)status, strerror((int)-status));
 
         if (status == droidinput::OK)
         {
-            printf("stauts ok oninish signal\n");
             state.report->received_event_finished_signal(publisher.getChannel()->getFd(), sequence);
             InputSendEntry entry = unqueue_entry(sequence);
             auto observer = state.observer.lock();
@@ -355,10 +351,10 @@ void mia::InputSender::ActiveTransfer::on_finish_signal()
         }
         else
         {
+            // TODO find a better way to handle communication errors, droidinput::InputDispatcher just ignores them
             if (status != droidinput::WOULD_BLOCK)
                 unsubscribe();
             return;
-            //            // TODO find a better way to handle communication errors, droidinput::InputDispatcher just ignores them
         }
     }
 }

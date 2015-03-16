@@ -16,6 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "AndroidWindowHandle"
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
 #include "android_input_window_handle.h"
@@ -25,6 +26,8 @@
 #include "mir/input/input_sender.h"
 #include "mir/input/surface.h"
 #include "mir/input/android/android_input_lexicon.h"
+
+#include "mir/log.h"
 
 #include <androidfw/InputTransport.h>
 
@@ -136,8 +139,9 @@ int64_t mia::InputWindowHandle::publishMotionEvent(int32_t deviceId,
     mia::Lexicon::translate(&droid_event, mir_event);
     try {
         return input_sender->send_event(mir_event, input_channel);
-    } catch (std::exception const&) {
-        // TODO: Log
+    } catch (std::exception const& ex) {
+        mir::log_error("Exception sending event to surface (%s): %s", surface->name().c_str(),
+                 ex.what());
         return -1;
     }
 }
@@ -163,8 +167,10 @@ int64_t mia::InputWindowHandle::publishKeyEvent(
     {
         return input_sender->send_event(mir_event, input_channel);
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
+        mir::log_error("Exception sending event to surface (%s): %s", surface->name().c_str(),
+                 ex.what());
         return -1;
     }
 }

@@ -1868,7 +1868,6 @@ void InputDispatcher::startDispatchCycleLocked(std::chrono::nanoseconds currentT
         dispatchEntry->deliveryTime = currentTime;
 
         // Publish the event.
-        status_t status = 0;
         EventEntry* eventEntry = dispatchEntry->eventEntry;
         switch (eventEntry->type) {
         case EventEntry::TYPE_KEY: {
@@ -2016,9 +2015,7 @@ void InputDispatcher::handleEventSendStatusLocked(uint32_t seq, sp<Connection> c
 {
     if (success)
     {
-        std::chrono::nanoseconds currentTime = now();
-
-        finishDispatchCycleLocked(currentTime, connection, seq, handled);
+        finishDispatchCycleLocked(now(), connection, seq, handled);
         input_report->received_event_finished_signal(connection->inputChannel->getFd(), seq);
     }
     else
@@ -2029,18 +2026,18 @@ void InputDispatcher::handleEventSendStatusLocked(uint32_t seq, sp<Connection> c
         bool notify = !socket_dead || !connection->monitor;
         unregisterInputChannelLocked(connection->inputChannel, notify);
     }
-    resetANRTimeoutsLocked();
 }
 
 void InputDispatcher::send_failed(MirEvent const& event, mir::input::TransportSequenceID id,
     mir::input::Surface* surface, FailureReason reason)
 {
-    {
+    { // acquire lock
     AutoMutex _l(mLock);
     auto fd = surface->input_channel()->server_fd();
 
     ssize_t connectionIndex = mConnectionsByFd.indexOfKey(fd);
-    if (connectionIndex < 0) {
+    if (connectionIndex < 0)
+    {
         ALOGE("Received spurious receive callback for unknown input channel.  "
               "fd=%d", fd);
         return;
@@ -2049,7 +2046,8 @@ void InputDispatcher::send_failed(MirEvent const& event, mir::input::TransportSe
     sp<Connection> connection = mConnectionsByFd.valueAt(connectionIndex);
     handleEventSendStatusLocked(static_cast<uint32_t>(id), connection, false, false,
                                 reason == mir::input::InputSendObserver::FailureReason::socket_error);
-    }
+    } // release lock
+    
     if (reason != mir::input::InputSendObserver::FailureReason::socket_error)
         mLooper->wake();
 }
@@ -2057,24 +2055,24 @@ void InputDispatcher::send_failed(MirEvent const& event, mir::input::TransportSe
 void InputDispatcher::send_suceeded(MirEvent const& event, mir::input::TransportSequenceID id,
                                     mir::input::Surface* surface, InputResponse response)
 {
-    sp<Connection> connection;
-    {
+    { // acquire lock
     AutoMutex _l(mLock);
     auto fd = surface->input_channel()->server_fd();
 
     ssize_t connectionIndex = mConnectionsByFd.indexOfKey(fd);
-    if (connectionIndex < 0) {
+    if (connectionIndex < 0)
+    {
         ALOGE("Received spurious receive callback for unknown input channel.  "
               "fd=%d", fd);
         return;
     }
     
     bool handled = response == mir::input::InputSendObserver::InputResponse::consumed;
-    connection = mConnectionsByFd.valueAt(connectionIndex);
+    auto connection = mConnectionsByFd.valueAt(connectionIndex);
     
     handleEventSendStatusLocked(static_cast<uint32_t>(id), connection, true, handled,
                                 false);
-    }
+    } // release lock
 
     mLooper->wake();
 }
