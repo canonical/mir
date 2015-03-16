@@ -72,6 +72,11 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
     }
 }
 
+MirSurfaceSpec::MirSurfaceSpec(MirSurface* preexisting)
+{
+    self = preexisting;
+}
+
 mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
 {
     mir::protobuf::SurfaceParameters message;
