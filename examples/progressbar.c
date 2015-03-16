@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
         char name[128];
         snprintf(name, sizeof(name)-1, "Progress Bars (%dHz)", hz);
         name[sizeof(name)-1] = '\0';
-        mir_surface_rename(surf, name);
+        mir_surface_set_title(surf, name);
 
         canvas.width = width;
         canvas.height = height;

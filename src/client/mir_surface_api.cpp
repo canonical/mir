@@ -588,7 +588,7 @@ MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
 
 } // Private namespace. TODO: finalize morphing API and publish.
 
-MirWaitHandle* mir_surface_rename(MirSurface* surf, char const* name)
+MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name)
 {
     MirWaitHandle* result = nullptr;
     if (auto spec = mir_surface_begin_changes(surf))

@@ -315,10 +315,10 @@ TEST_F(ClientSurfaces, can_be_renamed)
      * At least verify the rename completes without blocking and that
      * NULL is supported...
      */
-    mir_wait_for_one(mir_surface_rename(surf, "New Name"));
-    mir_wait_for_one(mir_surface_rename(surf, nullptr));  // alias for ""
-    mir_wait_for_one(mir_surface_rename(surf, ""));
-    mir_wait_for_one(mir_surface_rename(surf, "Alice"));
+    mir_wait_for_one(mir_surface_set_title(surf, "New Name"));
+    mir_wait_for_one(mir_surface_set_title(surf, nullptr));  // alias for ""
+    mir_wait_for_one(mir_surface_set_title(surf, ""));
+    mir_wait_for_one(mir_surface_set_title(surf, "Alice"));
 
     mir_surface_release_sync(surf);
 }
