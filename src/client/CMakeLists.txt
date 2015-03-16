@@ -23,7 +23,7 @@ include_directories(
   ${DRM_INCLUDE_DIRS}
 )
 
-set(MIRCLIENT_ABI 9)
+set(MIRCLIENT_ABI 8)
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/client/symbols.map)
 
 add_definitions(-DMIR_CLIENT_PLATFORM_PATH="${MIR_CLIENT_PLATFORM_PATH}/")
@@ -31,7 +31,7 @@ add_definitions(-DCLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}")
 add_definitions(-DMIR_LOGGING_COMPONENT_FALLBACK="mirclient")
 
 set(MIR_CLIENT_SOURCES)
-set(MIR_CLIENT_REFERENCES)
+set(MIR_CLIENT_REFERENCES mircommon)
 
 add_subdirectory(rpc/)
 add_subdirectory(lttng/)
@@ -118,7 +118,7 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
-set(MIRCLIENT_DEBUG_EXTENSION_ABI 2)
+set(MIRCLIENT_DEBUG_EXTENSION_ABI 1)
 
 add_library(mirclient-debug-extension SHARED
   mir_debug_api.cpp
