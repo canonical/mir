@@ -6,8 +6,8 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
         visibly reduces latency and resource usage. It only just became
         possible to make this switch recently after bug fixes that landed.
       . TODO: mention more enhancements
-    - ABI summary: Servers and clients need rebuilding;
-      . Mirclient ABI bumped to 9
+    - ABI summary: Servers need rebuilding, but clients do not;
+      . Mirclient ABI unchanged at 8
       . Mircommon ABI bumped to 4
       . Mirplatform ABI bumped to 7
       . Mirserver ABI bumped to 31  (TODO 30 is in series 0.12)
