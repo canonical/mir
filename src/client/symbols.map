@@ -107,11 +107,9 @@ MIR_CLIENT_8 {
  local: *;
 };
 MIR_CLIENT_8.1 {
- global:
 } MIR_CLIENT_8;
 
 MIR_CLIENT_8.2 {
- global:
 } MIR_CLIENT_8.1;
 
 MIR_CLIENT_8.3 {
@@ -120,7 +118,6 @@ MIR_CLIENT_8.3 {
 } MIR_CLIENT_8.2;
 
 MIR_CLIENT_8.4 {
- global:
 } MIR_CLIENT_8.3;
 
 MIR_CLIENT_8.5 {
