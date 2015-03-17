@@ -33,7 +33,6 @@
 #include <sys/timerfd.h>
 #include <system_error>
 #include <cstdlib>
-#include <mutex>
 
 namespace mircv = mir::input::receiver;
 namespace mircva = mircv::android;
@@ -53,6 +52,11 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     android_clock(clock)
 {
+    event_rate_hz = 55;
+    auto env = getenv("MIR_CLIENT_INPUT_RATE");
+    if (env != NULL)
+        event_rate_hz = atoi(env);
+
     timer_fd = mir::Fd{timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC)};
     if (timer_fd == mir::Fd::invalid)
     {
@@ -165,15 +169,6 @@ void mircva::InputReceiver::process_and_maybe_send_event()
      * would otherwise never catch up to if the event rate was exactly the same
      * as the display refresh rate.
      */
-
-    static int event_rate_hz = 55;
-    static std::once_flag read_env;
-    std::call_once(read_env, []()
-    {
-        auto env = getenv("MIR_CLIENT_INPUT_RATE");
-        if (env != NULL)
-            event_rate_hz = atoi(env);
-    });
 
     auto frame_time = std::chrono::nanoseconds(-1);
     if (event_rate_hz > 0)

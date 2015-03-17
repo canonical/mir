@@ -94,6 +94,7 @@ private:
     droidinput::PreallocatedInputEventFactory event_factory;
 
     AndroidClock const android_clock;
+    int event_rate_hz;
 
     void process_and_maybe_send_event();
     static void consume_wake_notification(mir::Fd const& fd);
