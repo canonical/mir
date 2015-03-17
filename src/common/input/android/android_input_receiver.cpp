@@ -20,7 +20,6 @@
 
 #include "android_input_receiver.h"
 
-#include "mir/log.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/input/xkb_mapper.h"
 #include "mir/input/input_receiver_report.h"
@@ -174,11 +173,6 @@ void mircva::InputReceiver::process_and_maybe_send_event()
         auto env = getenv("MIR_INPUT_RATE");
         if (env != NULL)
             event_rate_hz = atoi(env);
-
-        if (event_rate_hz)
-            mir::log_info("Input resampling rate set to %dHz.", event_rate_hz);
-        else
-            mir::log_info("Input resampling disabled.");
     });
 
     auto frame_time = std::chrono::nanoseconds(-1);
