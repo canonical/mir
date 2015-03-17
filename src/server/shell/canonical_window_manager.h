@@ -114,6 +114,8 @@ private:
     geometry::Point old_cursor{};
     std::weak_ptr<scene::Surface> active_surface_;
 };
+
+using CanonicalWindowManager = BasicWindowManager<CanonicalWindowManagerPolicy, CanonicalSessionInfo, CanonicalSurfaceInfo>;
 }
 }
 
