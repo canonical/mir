@@ -170,7 +170,7 @@ void mircva::InputReceiver::process_and_maybe_send_event()
     static std::once_flag read_env;
     std::call_once(read_env, []()
     {
-        auto env = getenv("MIR_INPUT_RATE");
+        auto env = getenv("MIR_CLIENT_INPUT_RATE");
         if (env != NULL)
             event_rate_hz = atoi(env);
     });
