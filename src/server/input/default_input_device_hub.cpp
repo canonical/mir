@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -27,6 +27,8 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/server_action_queue.h"
 
+#include "boost/throw_exception.hpp"
+
 #include <algorithm>
 #include <atomic>
 
@@ -43,12 +45,11 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
 void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& device)
 {
     auto it = find_if(devices.cbegin(),
-            devices.cend(),
-            [&device](std::unique_ptr<RegisteredDevice> const& item)
-            {
-                return item->device_matches(device);
-            }
-            );
+                      devices.cend(),
+                      [&device](std::unique_ptr<RegisteredDevice> const& item)
+                      {
+                          return item->device_matches(device);
+                      });
 
     if (it == end(devices))
     {
@@ -58,12 +59,10 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
         // send input device info to observer loop..
         observer_queue->enqueue(this,
-                               [this,info]()
-                               {
-                                   add_device_info(info);
-                               }
-                              );
-
+                                [this,info]()
+                                {
+                                    add_device_info(info);
+                                });
 
         // TODO let shell decide if device should be observed / exposed to clients.
         devices.back()->start();
@@ -88,8 +87,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
                         [this,info = item->get_device_info()]()
                         {
                             remove_device_info(info);
-                        }
-                        );
+                        });
                     return true;
                 }
                 return false;
@@ -132,10 +130,9 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
     }
     auto type = mir_event_get_type(&event);
 
-    if (type == mir_event_type_input)
-    {
-        dispatcher->dispatch(event);
-    }
+    if (type != mir_event_type_input)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input event receivd from device"));
+    dispatcher->dispatch(event);
 }
 
 bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr<InputDevice> const& dev) const
@@ -145,16 +142,15 @@ bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::start()
 {
-    device->start(*this);
-    multiplexer->add_watch(device->get_dispatchable());
+    device->start(this);
+    multiplexer->add_watch(device->dispatchable());
 }
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
 {
-    multiplexer->remove_watch(device->get_dispatchable());
+    multiplexer->remove_watch(device->dispatchable());
     device->stop();
 }
-
 
 void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver> const& observer)
 {
@@ -204,4 +200,3 @@ void mi::DefaultInputDeviceHub::remove_device_info(InputDeviceInfo const& info)
 
     infos.erase(remove(begin(infos), end(infos), info), end(infos));
 }
-

@@ -47,7 +47,7 @@ struct DefaultInputManagerTest : ::testing::Test
 
     DefaultInputManagerTest()
     {
-        ON_CALL(platform, get_dispatchable())
+        ON_CALL(platform, dispatchable())
             .WillByDefault(Return(mt::fake_shared(platform_dispatchable)));
     }
 
@@ -71,7 +71,7 @@ struct DefaultInputManagerTest : ::testing::Test
 TEST_F(DefaultInputManagerTest, starts_platforms_on_start)
 {
     EXPECT_CALL(platform, start()).Times(1);
-    EXPECT_CALL(platform, get_dispatchable()).Times(2);
+    EXPECT_CALL(platform, dispatchable()).Times(2);
     EXPECT_CALL(platform, stop()).Times(1);
 
     input_manager.add_platform(mt::fake_shared(platform));
@@ -83,7 +83,7 @@ TEST_F(DefaultInputManagerTest, starts_platforms_on_start)
 TEST_F(DefaultInputManagerTest, starts_platforms_after_start)
 {
     EXPECT_CALL(platform, start()).Times(1);
-    EXPECT_CALL(platform, get_dispatchable()).Times(2);
+    EXPECT_CALL(platform, dispatchable()).Times(2);
     EXPECT_CALL(platform, stop()).Times(1);
 
     input_manager.start();

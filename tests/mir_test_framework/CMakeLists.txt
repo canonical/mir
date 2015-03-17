@@ -103,7 +103,6 @@ set_target_properties(
   LINK_FLAGS "-Wl,--version-script,${symbol_map}"
 )
 
-
 add_library(
   mirplatforminputstub MODULE
   
@@ -123,7 +122,6 @@ set_target_properties(
 install(TARGETS mirplatforminputstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
 
 set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map)
-
 add_library(
   mirplatformgraphicsstub MODULE
 

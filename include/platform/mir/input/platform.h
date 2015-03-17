@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -67,7 +67,7 @@ public:
     /*!
      * The dispatchable of the platform shall be used to monitor for devices.
      */
-    virtual std::shared_ptr<mir::dispatch::Dispatchable> get_dispatchable() = 0;
+    virtual std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() = 0;
 
     /*!
      * Request the platform to start monitoring for devices.

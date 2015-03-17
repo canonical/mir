@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -42,11 +42,11 @@ public:
     InputDevice() = default;
     virtual ~InputDevice() = default;
 
-    virtual std::shared_ptr<dispatch::Dispatchable> get_dispatchable() = 0;
+    virtual std::shared_ptr<dispatch::Dispatchable> dispatchable() = 0;
     /*!
      * Allow the input device to provide its input events to the given InputSink
      */
-    virtual void start(InputSink& destination) = 0;
+    virtual void start(InputSink* destination) = 0;
     /*!
      * Stop the input device from sending input events, to the InputSink.
      */
@@ -63,4 +63,3 @@ protected:
 }
 
 #endif
-

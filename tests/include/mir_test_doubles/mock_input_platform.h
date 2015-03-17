@@ -31,8 +31,7 @@ namespace doubles
 
 struct MockInputPlatform : input::Platform
 {
-    MOCK_METHOD0(get_dispatchable, std::shared_ptr<mir::dispatch::Dispatchable>());
-
+    MOCK_METHOD0(dispatchable, std::shared_ptr<mir::dispatch::Dispatchable>());
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());
 };
@@ -42,4 +41,3 @@ struct MockInputPlatform : input::Platform
 }
 
 #endif
-

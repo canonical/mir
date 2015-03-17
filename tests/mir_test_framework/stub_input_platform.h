@@ -43,7 +43,7 @@ public:
     explicit StubInputPlatform(std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry);
     ~StubInputPlatform();
 
-    std::shared_ptr<mir::dispatch::Dispatchable> get_dispatchable() override;
+    std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;
 
