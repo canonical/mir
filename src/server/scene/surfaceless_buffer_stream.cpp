@@ -32,8 +32,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 
-// TODO: Locking?
-
 ms::SurfacelessBufferStream::SurfacelessBufferStream(std::shared_ptr<mc::BufferStream> const& buffer_stream)
     : buffer_stream(buffer_stream)
 {
@@ -45,7 +43,7 @@ void ms::SurfacelessBufferStream::swap_buffers(mg::Buffer* old_buffer, std::func
     if (old_buffer)
     {
         buffer_stream->release_client_buffer(old_buffer);
-        
+
         comp_buffer = buffer_stream->lock_compositor_buffer(this);
         if (observer)
         {
@@ -58,6 +56,9 @@ void ms::SurfacelessBufferStream::swap_buffers(mg::Buffer* old_buffer, std::func
 
 void ms::SurfacelessBufferStream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& exec)
 {
+    // If we supported multiple observers we would need some sort oflock here but as it stands a single observer can only
+    // access comp_buffer by calling with_most_recent_buffer_do in the scope of a frames_posted callback so there is
+    // no potential for race.
     if (comp_buffer)
         exec(*comp_buffer);
 }
@@ -65,7 +66,7 @@ void ms::SurfacelessBufferStream::with_most_recent_buffer_do(std::function<void(
 void ms::SurfacelessBufferStream::add_observer(std::shared_ptr<ms::SurfaceObserver> const& new_observer)
 {
     // TODO: Could utilize ms::SurfaceObservers to enable situations like setting multiple surfaces
-    // cursor requests from one buffer stream ~racarr
+    // cursor requests from one buffer stream (We would then need some locking here) ~racarr
     if (observer)
         BOOST_THROW_EXCEPTION(std::runtime_error("Simple buffer stream only supports one observer"));
     observer = new_observer;
