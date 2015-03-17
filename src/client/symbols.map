@@ -32,8 +32,7 @@ MIR_CLIENT_8 {
     mir_connection_get_error_message;
     mir_connection_get_platform;
     mir_connection_is_valid;
-    mir_connection_platform_operation@MIR_CLIENT_8;
-    mir_connection_platform_operation@@MIR_CLIENT_8.3;
+    mir_connection_platform_operation;
     mir_connection_release;
     mir_connection_set_display_config_change_callback;
     mir_connection_set_lifecycle_event_callback;
@@ -117,6 +116,7 @@ MIR_CLIENT_8.2 {
 
 MIR_CLIENT_8.3 {
  global:
+    mir_connection_platform_operation;
 } MIR_CLIENT_8.2;
 
 MIR_CLIENT_8.4 {
