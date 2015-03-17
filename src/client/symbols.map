@@ -1,7 +1,7 @@
 MIR_CLIENT_8 {
  global:
  mir_connection_platform_operation;
- mir_*;
+ mir_*;     # FIXME: This automatically matches new functions. It shouldn't.
   extern "C++" { 
    # used by PrivateProtobuf
    mir::client::the_rpc_channel*;
@@ -37,10 +37,15 @@ MIR_CLIENT_8.2 {
     mir_surface_spec_set_preferred_orientation;
 } MIR_CLIENT_8.1;
 
-MIR_CLIENT_8.3 {
+MIR_CLIENT_8.3 {  # Mir 0.12
   global:
     mir_connection_create_spec_for_menu;
     mir_connection_create_spec_for_tooltip;
     mir_connection_create_spec_for_dialog;
     mir_connection_platform_operation;
 } MIR_CLIENT_8.2;
+
+MIR_CLIENT_8.4 {  # Mir 0.13
+  global:
+    mir_surface_set_title;
+} MIR_CLIENT_8.3;
