@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -50,7 +50,7 @@ void mi::DefaultInputManager::add_platform(std::shared_ptr<Platform> const& plat
                        {
                            platforms.push_back(platform);
                            platform->start();
-                           multiplexer->add_watch(platform->get_dispatchable());
+                           multiplexer->add_watch(platform->dispatchable());
                        });
     }
     else
@@ -75,7 +75,7 @@ void mi::DefaultInputManager::start()
                        for (auto const& platform : platforms)
                        {
                            platform->start();
-                           multiplexer->add_watch(platform->get_dispatchable());
+                           multiplexer->add_watch(platform->dispatchable());
                        }
                    });
 
@@ -95,7 +95,7 @@ void mi::DefaultInputManager::stop()
                    {
                        for (auto const platform : platforms)
                        {
-                           multiplexer->remove_watch(platform->get_dispatchable());
+                           multiplexer->remove_watch(platform->dispatchable());
                            platform->stop();
                        }
 
@@ -108,4 +108,3 @@ void mi::DefaultInputManager::stop()
 
     input_thread.reset();
 }
-

@@ -51,7 +51,7 @@ void mtf::StubInputPlatform::start()
     device_store.clear();
 }
 
-std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::get_dispatchable()
+std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::dispatchable()
 {
     return platform_queue;
 }

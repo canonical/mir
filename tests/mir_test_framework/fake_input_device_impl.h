@@ -24,9 +24,6 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 
-#include <map>
-#include <chrono>
-
 namespace mi = mir::input;
 namespace mir
 {
@@ -49,8 +46,8 @@ private:
     public:
         InputDevice(mi::InputDeviceInfo const& info,
                     std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable);
-        std::shared_ptr<mir::dispatch::Dispatchable> get_dispatchable() override;
-        void start(mi::InputSink& destination) override;
+        std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
+        void start(mi::InputSink* destination) override;
         void stop() override;
 
         void synthesize_events(synthesis::KeyParameters const& key_params);
@@ -61,10 +58,8 @@ private:
 
         mi::InputSink* sink{nullptr};
         mi::InputDeviceInfo info;
-        std::shared_ptr<mir::dispatch::Dispatchable> const dispatchable;
-
+        std::shared_ptr<mir::dispatch::Dispatchable> const queue;
         uint32_t modifiers{0};
-        std::map<int32_t, std::chrono::nanoseconds> down_times;
     };
     std::shared_ptr<mir::dispatch::ActionQueue> queue;
     std::shared_ptr<InputDevice> device;

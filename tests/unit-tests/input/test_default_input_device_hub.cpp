@@ -60,8 +60,8 @@ struct MockInputDeviceObserver : public mi::InputDeviceObserver
 struct MockInputDevice : public mi::InputDevice
 {
     mir::dispatch::ActionQueue queue;
-    std::shared_ptr<mir::dispatch::Dispatchable> get_dispatchable() { return mt::fake_shared(queue);}
-    MOCK_METHOD1(start, void(mi::InputSink& destination));
+    std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() { return mt::fake_shared(queue);}
+    MOCK_METHOD1(start, void(mi::InputSink* destination));
     MOCK_METHOD0(stop, void());
     MOCK_METHOD0(get_device_info, mi::InputDeviceInfo());
 };
@@ -200,9 +200,9 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
     MirEvent dispatched_event;
 
     EXPECT_CALL(device,start(_))
-        .WillOnce(Invoke([&sink](mi::InputSink& input_sink)
+        .WillOnce(Invoke([&sink](mi::InputSink* input_sink)
                          {
-                             sink = &input_sink;
+                             sink = input_sink;
                          }
                         ));
 
@@ -220,4 +220,3 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
     EXPECT_THAT(dispatched_event.key.device_id, Eq(info.id));
     EXPECT_THAT(dispatched_event.type, Eq(event.type));
 }
-
