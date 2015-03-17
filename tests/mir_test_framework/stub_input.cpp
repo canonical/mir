@@ -33,7 +33,6 @@ extern "C" mir::UniqueModulePtr<mi::Platform> create_input_platform(
     return mir::make_module_ptr<mtf::StubInputPlatform>(input_device_registry);
 }
 
-
 extern "C" void add_input_platform_options(
     boost::program_options::options_description& /*config*/)
 {

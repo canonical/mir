@@ -108,4 +108,3 @@ void mi::DefaultInputManager::stop()
 
     input_thread.reset();
 }
-
