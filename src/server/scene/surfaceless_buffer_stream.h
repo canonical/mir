@@ -50,7 +50,7 @@ private:
     std::shared_ptr<compositor::BufferStream> const buffer_stream;
 
     std::shared_ptr<scene::SurfaceObserver> observer;
-    
+
     std::shared_ptr<graphics::Buffer> comp_buffer;
 };
 }
