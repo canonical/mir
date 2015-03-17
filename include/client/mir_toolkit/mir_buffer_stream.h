@@ -63,7 +63,7 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     void* context);
 
 /**
- * Create a new buffer stream unattached to a surface and wair for the result. 
+ * Create a new buffer stream unattached to a surface and wait for the result. 
  * The resulting buffer stream may be used with 
  * mir_cursor_configuration_from_buffer_stream in order to post images 
  * to the system cursor.
