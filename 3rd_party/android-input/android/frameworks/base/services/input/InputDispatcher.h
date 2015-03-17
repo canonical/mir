@@ -419,9 +419,9 @@ public:
             const sp<InputWindowHandle>& inputWindowHandle, bool monitor);
     virtual status_t unregisterInputChannel(const sp<InputChannel>& inputChannel);
 
-    void send_failed(MirEvent const& event, mir::input::TransportSequenceID id, mir::input::Surface* surface, FailureReason reason) override;
-    void send_suceeded(MirEvent const& event, mir::input::TransportSequenceID id, mir::input::Surface* surface, InputResponse response) override;
-    void client_blocked(MirEvent const& event, mir::input::TransportSequenceID id, mir::input::Surface* client) override;
+    void send_failed(MirEvent const& event, mir::input::TransportSequenceID id, mir::input::Surface* surface, FailureReason reason);
+    void send_suceeded(MirEvent const& event, mir::input::TransportSequenceID id, mir::input::Surface* surface, InputResponse response);
+    void client_blocked(MirEvent const& event, mir::input::TransportSequenceID id, mir::input::Surface* client);
     
 private:
     std::shared_ptr<mir::input::InputReport> const input_report;
