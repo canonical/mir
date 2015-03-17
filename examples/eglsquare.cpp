@@ -246,17 +246,8 @@ private:
          1.0f, -1.0f, 0.0f, 1.0f,
          1.0f,  1.0f, 0.0f, 1.0f,
     };
-    GLfloat uv_data[16]
-    {
-        1.0f, 1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f
-
-    };
     GLuint vPositionAttr;
     GLuint posUniform; 
-    GLuint texture;
 };
 
 class Surface
