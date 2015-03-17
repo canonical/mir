@@ -20,6 +20,7 @@
 
 #include "android_input_receiver.h"
 
+#include "mir/log.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/input/xkb_mapper.h"
 #include "mir/input/input_receiver_report.h"
@@ -32,6 +33,8 @@
 #include <sys/epoll.h>
 #include <sys/timerfd.h>
 #include <system_error>
+#include <cstdlib>
+#include <mutex>
 
 namespace mircv = mir::input::receiver;
 namespace mircva = mircv::android;
@@ -164,10 +167,28 @@ void mircva::InputReceiver::process_and_maybe_send_event()
      * as the display refresh rate.
      */
 
-    std::chrono::nanoseconds const now = android_clock(SYSTEM_TIME_MONOTONIC);
-    int const event_rate_hz = 55;
-    std::chrono::nanoseconds const one_frame = std::chrono::nanoseconds(1000000000ULL / event_rate_hz);
-    std::chrono::nanoseconds frame_time = (now / one_frame) * one_frame;
+    static int event_rate_hz = 55;
+    static std::once_flag read_env;
+    std::call_once(read_env, []()
+    {
+        auto env = getenv("MIR_INPUT_RATE");
+        if (env != NULL)
+            event_rate_hz = atoi(env);
+
+        if (event_rate_hz)
+            mir::log_info("Input resampling rate set to %dHz.", event_rate_hz);
+        else
+            mir::log_info("Input resampling disabled.");
+    });
+
+    auto frame_time = std::chrono::nanoseconds(-1);
+    if (event_rate_hz > 0)
+    {
+        std::chrono::nanoseconds const
+            now = android_clock(SYSTEM_TIME_MONOTONIC),
+            one_frame = std::chrono::nanoseconds(1000000000ULL / event_rate_hz);
+        frame_time = (now / one_frame) * one_frame;
+    }
 
     auto result = input_consumer->consume(&event_factory,
                                           true,
