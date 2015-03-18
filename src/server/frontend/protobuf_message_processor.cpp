@@ -82,9 +82,15 @@ public:
   {
   }
 
-  void Run() {
-    callback();
-    delete this;
+  void Run()
+  {
+      struct Deleter
+      {
+          ~Deleter() { delete obj; }
+          SelfDeletingCallback* obj;
+      };
+      Deleter deleter{this};
+      callback();
   }
 
  private:
