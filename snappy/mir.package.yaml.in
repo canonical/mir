@@ -1,4 +1,4 @@
-name: mir-demos
+name: mir
 version: @MIR_VERSION@
 architecture: @MIR_PKG_ARCH@
 type: framework
