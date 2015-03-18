@@ -12,7 +12,6 @@ add_library(acceptance-test-throwback OBJECT
   test_client_input.cpp
   test_custom_input_dispatcher.cpp
   test_focus_selection.cpp
-  test_shell_control_of_surface_configuration.cpp
   test_touchspot_visualization.cpp
 )
 
