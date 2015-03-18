@@ -1,3 +1,8 @@
+set(MIR_PKG_ARCH ${CMAKE_SYSTEM_PROCESSOR})
+if (${MIR_PKG_ARCH} STREQUAL x86_64)
+  set(MIR_PKG_ARCH amd64)
+endif()
+
 configure_file(package.yaml.in package.yaml)
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/package.yaml
@@ -5,7 +10,7 @@ install(FILES
   DESTINATION meta/
 )
 
-set(ARCH_LIB_DIR /usr/lib/${CMAKE_SYSTEM_PROCESSOR}-linux-gnu)
+set(ARCH_LIB_DIR /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE})
 set(SNAPPY_IMAGE ${CMAKE_BINARY_DIR}/snappy-image)
 
 add_custom_target(snap
