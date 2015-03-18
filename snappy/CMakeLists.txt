@@ -14,7 +14,7 @@ set(ARCH_LIB_DIR /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE})
 set(SNAPPY_IMAGE ${CMAKE_BINARY_DIR}/snappy-image)
 
 add_custom_target(snap
-  # Create a clean stripping install tree
+  # Create a clean stripped install tree
   COMMAND rm -rf ${SNAPPY_IMAGE}
   COMMAND make -j8 -C ${CMAKE_BINARY_DIR} DESTDIR=${SNAPPY_IMAGE} install/strip
   COMMAND mv ${SNAPPY_IMAGE}/${CMAKE_INSTALL_PREFIX}/* ${SNAPPY_IMAGE}
