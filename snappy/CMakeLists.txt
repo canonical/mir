@@ -19,6 +19,8 @@ add_custom_target(snap
   COMMAND make -j8 -C ${CMAKE_BINARY_DIR} DESTDIR=${SNAPPY_IMAGE} install/strip
   COMMAND mv ${SNAPPY_IMAGE}/${CMAKE_INSTALL_PREFIX}/* ${SNAPPY_IMAGE}
 
+  COMMAND cp -p ${CMAKE_CURRENT_SOURCE_DIR}/run ${SNAPPY_IMAGE}/bin/
+
   # Remove bits of Mir we don't need
   COMMAND rm -rf ${SNAPPY_IMAGE}/usr
   COMMAND rm -rf ${SNAPPY_IMAGE}/include

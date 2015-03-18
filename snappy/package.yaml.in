@@ -1,6 +1,3 @@
 name: mir-demos
 version: @MIR_VERSION@
 architecture: @MIR_PKG_ARCH@
-binaries:
- - name: bin/provingserver
- - name: bin/egltriangle
