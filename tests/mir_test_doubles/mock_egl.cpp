@@ -116,7 +116,7 @@ mtd::MockEGL::MockEGL()
         [&] { return current_contexts[std::this_thread::get_id()]; }));
 
     ON_CALL(*this, eglSwapBuffers(_,_))
-        .WillByDefault(Return(true));                              
+        .WillByDefault(Return(EGL_TRUE));                              
 
     ON_CALL(*this, eglGetCurrentDisplay())
     .WillByDefault(Return(fake_egl_display));

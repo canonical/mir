@@ -62,7 +62,9 @@ struct StubClientPlatform : public mcl::ClientPlatform
 
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::EGLNativeSurface* surface)
     {
-        auto fake_window = reinterpret_cast<EGLNativeWindowType>(surface);
+        (void) surface;
+        auto fake_window = reinterpret_cast<EGLNativeWindowType>(0x12345678lu);
+        //        return std::make_shared<EGLNativeWindowType>(fake_window);
         return std::make_shared<EGLNativeWindowType>(fake_window);
     }
 
