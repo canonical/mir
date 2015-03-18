@@ -35,8 +35,8 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 {
     return shell([this]
         {
-            auto const builder = [&](msh::FocusController* focus_controller)
-                { return std::make_shared<msh::CanonicalWindowManager>(focus_controller); };
+            auto const builder = [this](msh::FocusController* focus_controller)
+                { return std::make_shared<msh::CanonicalWindowManager>(focus_controller, the_shell_display_layout()); };
 
             return wrap_shell(std::make_shared<msh::AbstractShell>(
                 the_input_targeter(),
