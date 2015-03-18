@@ -121,7 +121,7 @@ TEST_F(InputDeviceHubTest, input_device_hub_ignores_removal_of_unknown_devices)
     EXPECT_CALL(device,start(_)).Times(0);
     EXPECT_CALL(device,stop()).Times(0);
 
-    hub.remove_device(mt::fake_shared(device));
+    EXPECT_THROW(hub.remove_device(mt::fake_shared(device));, std::logic_error);
 }
 
 TEST_F(InputDeviceHubTest, input_device_hub_start_stop_happens_in_order)
