@@ -73,7 +73,7 @@ TRACEPOINT_EVENT(
 
 TRACEPOINT_EVENT(
     mir_server_input,
-    open_input_device,
+    opened_input_device,
     TP_ARGS(const char*, device, const char*, platform),
     TP_FIELDS(
         ctf_string(device, device)
@@ -83,7 +83,7 @@ TRACEPOINT_EVENT(
 
 TRACEPOINT_EVENT(
     mir_server_input,
-    failure_opening_input_device,
+    failed_to_open_input_device,
     TP_ARGS(const char*, device, const char*, platform),
     TP_FIELDS(
         ctf_string(device, device)

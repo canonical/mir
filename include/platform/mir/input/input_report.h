@@ -40,8 +40,8 @@ public:
 
     virtual void received_event_finished_signal(int src_fd, uint32_t seq_id) = 0;
 
-    virtual void open_input_device(char const* device_name, char const* input_platform) = 0;
-    virtual void failure_opening_input_device(char const* device_name, char const* input_platform) = 0;
+    virtual void opened_input_device(char const* device_name, char const* input_platform) = 0;
+    virtual void failed_to_open_input_device(char const* device_name, char const* input_platform) = 0;
 
 protected:
     InputReport() = default;
