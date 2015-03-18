@@ -107,17 +107,51 @@ MIR_CLIENT_8 {
  local: *;
 };
 MIR_CLIENT_8.1 {
+ global:
+    mir_connection_create_spec_for_normal_surface;
+    mir_surface_create;
+    mir_surface_create_sync;
+    mir_surface_spec_release;
+    mir_surface_spec_set_buffer_usage;
+    mir_surface_spec_set_fullscreen_on_output;
+    mir_surface_spec_set_height;
+    mir_surface_spec_set_name;
+    mir_surface_spec_set_pixel_format;
+    mir_surface_spec_set_width;
 } MIR_CLIENT_8;
 
 MIR_CLIENT_8.2 {
+ global:
+    mir_surface_get_preferred_orientation;
+    mir_surface_set_preferred_orientation;
+    mir_surface_spec_set_preferred_orientation;
 } MIR_CLIENT_8.1;
 
 MIR_CLIENT_8.3 {
  global:
+    mir_connection_create_spec_for_dialog;
+    mir_connection_create_spec_for_menu;
+    mir_connection_create_spec_for_tooltip;
     mir_connection_platform_operation;
 } MIR_CLIENT_8.2;
 
 MIR_CLIENT_8.4 {
+ global:
+    mir_default_cursor_name;
+    mir_disabled_cursor_name;
+    mir_arrow_cursor_name;
+    mir_busy_cursor_name;
+    mir_caret_cursor_name;
+    mir_pointing_hand_cursor_name;
+    mir_open_hand_cursor_name;
+    mir_closed_hand_cursor_name;
+    mir_horizontal_resize_cursor_name;
+    mir_vertical_resize_cursor_name;
+    mir_diagonal_resize_bottom_to_top_cursor_name;
+    mir_diagonal_resize_top_to_bottom_cursor_name;
+    mir_omnidirectional_resize_cursor_name;
+    mir_vsplit_resize_cursor_name;
+    mir_hsplit_resize_cursor_name;
 } MIR_CLIENT_8.3;
 
 MIR_CLIENT_8.5 {
