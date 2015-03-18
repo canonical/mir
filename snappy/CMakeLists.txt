@@ -22,6 +22,7 @@ add_custom_target(snap
   # Remove bits of Mir we don't need
   COMMAND rm -rf ${SNAPPY_IMAGE}/usr
   COMMAND rm -rf ${SNAPPY_IMAGE}/include
+  COMMAND rm -rf ${SNAPPY_IMAGE}/share
   COMMAND rm -rf ${SNAPPY_IMAGE}/lib/pkgconfig
 
   # Copy in the DRM libraries needed by Mesa
