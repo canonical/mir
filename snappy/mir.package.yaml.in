@@ -5,3 +5,5 @@ type: framework
 integration:
   framework:
     framework: meta/mir.framework
+  mir-run:
+    bin-path: bin/mir-run

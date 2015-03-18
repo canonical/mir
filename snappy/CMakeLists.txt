@@ -17,16 +17,18 @@ add_custom_target(snap
   COMMAND make -j8 -C ${CMAKE_BINARY_DIR} DESTDIR=${MIR_IMAGE} install/strip
 
   COMMAND mv -f ${MIR_IMAGE}/${CMAKE_INSTALL_PREFIX}/lib ${MIR_IMAGE}/
+  COMMAND mv -f ${MIR_IMAGE}/${CMAKE_INSTALL_PREFIX}/bin ${MIR_DEMOS_IMAGE}/
+
   COMMAND mkdir ${MIR_IMAGE}/meta
   COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/mir.package.yaml ${MIR_IMAGE}/meta/package.yaml
   COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/mir.framework ${MIR_IMAGE}/meta/
   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/readme.md ${MIR_IMAGE}/meta/
+  COMMAND mkdir ${MIR_IMAGE}/bin
+  COMMAND cp -p ${CMAKE_CURRENT_SOURCE_DIR}/mir-run ${MIR_IMAGE}/bin/
 
   COMMAND mkdir -p ${MIR_DEMOS_IMAGE}/meta
-  COMMAND mv -f ${MIR_IMAGE}/${CMAKE_INSTALL_PREFIX}/bin ${MIR_DEMOS_IMAGE}/
   COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/mir-demos.package.yaml ${MIR_DEMOS_IMAGE}/meta/package.yaml
   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/readme.md ${MIR_DEMOS_IMAGE}/meta/
-  COMMAND cp -p ${CMAKE_CURRENT_SOURCE_DIR}/run ${MIR_DEMOS_IMAGE}/bin/
 
   # Remove bits of Mir we don't need
   COMMAND rm -rf ${MIR_IMAGE}/${CMAKE_INSTALL_PREFIX}
