@@ -253,7 +253,7 @@ std::shared_ptr<mg::Buffer> ms::BasicSurface::snapshot_buffer() const
 
 bool ms::BasicSurface::supports_input() const
 {
-    if (server_input_channel)
+    if (server_input_channel  && server_input_channel->client_fd() != -1)
         return true;
     return false;
 }

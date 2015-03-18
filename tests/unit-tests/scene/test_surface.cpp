@@ -446,7 +446,7 @@ TEST_F(SurfaceCreation, input_fds)
 
     MockInputChannel channel;
     int const client_fd = 13;
-    EXPECT_CALL(channel, client_fd()).Times(1).WillOnce(Return(client_fd));
+    EXPECT_CALL(channel, client_fd()).Times(AnyNumber()).WillRepeatedly(Return(client_fd));
 
     ms::BasicSurface input_surf(
         surface_name,
