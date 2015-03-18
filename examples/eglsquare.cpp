@@ -19,7 +19,6 @@
 #include "mir_toolkit/mir_client_library.h"
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
-#include <atomic>
 #include <thread>
 #include <memory>
 #include <chrono>
@@ -128,7 +127,11 @@ private:
             if (surface == EGL_NO_SURFACE)
                 throw std::runtime_error("could not create egl surface");
         }
-        ~Surface() { eglDestroySurface(disp, surface); }
+        ~Surface() {
+            if (eglGetCurrentSurface(EGL_DRAW) == surface)
+                eglMakeCurrent(disp, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+            eglDestroySurface(disp, surface);
+         }
         EGLDisplay disp;
         EGLSurface surface;
     } surface;
@@ -255,8 +258,8 @@ class Surface
 public:
     Surface(Connection& connection) :
         dimensions(active_output_dimensions(connection)),
-        surface(create_surface(connection, dimensions)),
-        context{connection, surface},
+        surface{create_surface(connection, dimensions), surface_deleter},
+        context{connection, surface.get()},
         program{context, dimensions.width, dimensions.height}
     {
     }
@@ -291,10 +294,6 @@ public:
         context.swapbuffers();
     }
 
-    ~Surface()
-    {
-        mir_surface_release_sync(surface);
-    }
     Surface(Surface const&) = delete;
     Surface& operator=(Surface const&) = delete;
 private:
@@ -303,7 +302,15 @@ private:
         unsigned int const width;
         unsigned int const height;
     } const dimensions;
-    MirSurface* surface;
+
+
+    std::function<void(MirSurface*)> const surface_deleter{
+        [](MirSurface* surface)
+        {
+            mir_surface_release_sync(surface);
+        }
+    };
+    std::unique_ptr<MirSurface, decltype(surface_deleter)> surface;
     Context context;
     RenderProgram program;
 
@@ -371,21 +378,12 @@ private:
     }
 };
 
-std::atomic<bool> running{true};
-static void signal_handler(int)
-{
-    running = false;
-}
 }
 
 int main(int argc, char *argv[])
 try
 {
     using namespace std::literals::chrono_literals;
-    struct sigaction action;
-    std::memset(&action, 0, sizeof(action));
-    action.sa_handler = signal_handler;
-    sigaction(SIGTERM, &action, nullptr);
 
     auto arg = 0;
     char const* socket_file = nullptr;
@@ -403,7 +401,14 @@ try
 
     Connection connection(socket_file);
     Surface surface(connection);
-    while (running){ std::this_thread::sleep_for(400ms); }
+
+    sigset_t sigset;
+    siginfo_t siginfo;
+    sigemptyset(&sigset);
+    sigaddset(&sigset, SIGTERM);
+    sigaddset(&sigset, SIGINT);
+    sigprocmask(SIG_BLOCK, &sigset, nullptr);
+    sigwaitinfo(&sigset, &siginfo);
     return 0;
 }
 catch(std::exception& e)
