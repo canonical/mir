@@ -74,26 +74,27 @@ ParameterMessage parse_parameter(Invocation const& invocation)
     return request;
 }
 
-class SelfDeletingCallback : public google::protobuf::Closure {
+class SelfDeletingCallback : public google::protobuf::Closure
+{
 public:
-
-  SelfDeletingCallback(std::function<void()> const& callback)
+    SelfDeletingCallback(std::function<void()> const& callback)
     : callback(callback)
-  {
-  }
+    {
+    }
 
-  void Run()
-  {
-      struct Deleter
-      {
+    void Run() override
+    {
+        struct Deleter
+        {
           ~Deleter() { delete obj; }
           SelfDeletingCallback* obj;
-      };
-      Deleter deleter{this};
-      callback();
-  }
+        };
+        Deleter deleter{this};
+        callback();
+    }
 
  private:
+  ~SelfDeletingCallback() = default;
   SelfDeletingCallback(SelfDeletingCallback&) = delete;
   void operator=(const SelfDeletingCallback&) = delete;
   std::function<void()> callback;
@@ -135,9 +136,8 @@ void invoke(
     }
     catch (std::exception const& x)
     {
-        delete callback;
         result_message->set_error(boost::diagnostic_information(x));
-        mp->send_response(invocation_id, result_message);
+        callback->Run();
     }
 }
 
