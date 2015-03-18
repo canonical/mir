@@ -171,6 +171,25 @@ TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)
     EXPECT_THAT(info1.id,Ne(info2.id));
 }
 
+TEST_F(InputDeviceHubTest, throws_on_duplicate_add)
+{
+    hub.add_device(mt::fake_shared(device));
+    EXPECT_THROW(hub.add_device(mt::fake_shared(device)), std::logic_error);
+}
+
+TEST_F(InputDeviceHubTest, throws_on_spurious_remove)
+{
+    hub.add_device(mt::fake_shared(device));
+    hub.remove_device(mt::fake_shared(device));
+    EXPECT_THROW(hub.remove_device(mt::fake_shared(device)), std::logic_error);
+}
+
+TEST_F(InputDeviceHubTest, throws_on_invalid_handles)
+{
+    EXPECT_THROW(hub.add_device(std::shared_ptr<mi::InputDevice>()), std::logic_error);
+    EXPECT_THROW(hub.remove_device(std::shared_ptr<mi::InputDevice>()), std::logic_error);
+}
+
 TEST_F(InputDeviceHubTest, observers_receive_device_changes)
 {
     using namespace ::testing;
