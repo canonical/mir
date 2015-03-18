@@ -35,7 +35,6 @@ namespace doubles
 
 struct StubFramebufferBundle : public graphics::android::FramebufferBundle
 {
-    MirPixelFormat fb_format() override { return mir_pixel_format_abgr_8888; }
     geometry::Size fb_size() override { return {33, 34}; }
     std::shared_ptr<graphics::Buffer> buffer_for_render() { return nullptr; }
     std::shared_ptr<graphics::Buffer> last_rendered_buffer() { return nullptr; }
