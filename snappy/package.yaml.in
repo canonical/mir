@@ -1,3 +1,7 @@
 name: mir-demos
 version: @MIR_VERSION@
 architecture: @MIR_PKG_ARCH@
+type: framework
+integration:
+  framework:
+    framework: meta/mir.framework

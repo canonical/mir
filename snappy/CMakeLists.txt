@@ -4,9 +4,11 @@ if (${MIR_PKG_ARCH} STREQUAL x86_64)
 endif()
 
 configure_file(package.yaml.in package.yaml)
+configure_file(mir.framework.in mir.framework)
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/package.yaml
-  readme.md
+  ${CMAKE_CURRENT_BINARY_DIR}/mir.framework
+  ${CMAKE_CURRENT_SOURCE_DIR}/readme.md
   DESTINATION meta/
 )
 
