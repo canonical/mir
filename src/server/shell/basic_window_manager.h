@@ -113,7 +113,7 @@ public:
     {
     }
 
-private:
+protected:
     void add_session(std::shared_ptr<scene::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
