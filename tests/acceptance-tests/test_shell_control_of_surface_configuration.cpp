@@ -63,7 +63,9 @@ struct ShellSurfaceConfiguration : mtf::ConnectedClientWithASurface
                 auto const wm_builder = [this]
                     (msh::FocusController* focus_controller) -> std::shared_ptr<msh::WindowManager>
                     {
-                        mock_window_manager = std::make_shared<MockWindowManager>(focus_controller);
+                        mock_window_manager = std::make_shared<MockWindowManager>(
+                            focus_controller,
+                            server.the_shell_display_layout());
 
                         ON_CALL(*mock_window_manager, set_surface_attribute(_, _, _, _))
                             .WillByDefault(Invoke(
