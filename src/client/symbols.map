@@ -167,6 +167,13 @@ MIR_CLIENT_8.4 {
     mir_touch_input_event_get_touch_count;
     mir_touch_input_event_get_touch_id;
     mir_touch_input_event_get_touch_tooltype;
+    mir_surface_get_buffer_stream;
+    mir_buffer_stream_get_current_buffer;
+    mir_buffer_stream_get_platform_type;
+    mir_buffer_stream_swap_buffers_sync;
+    mir_screencast_get_buffer_stream;
+    mir_buffer_stream_get_egl_native_window;
+    mir_buffer_stream_get_graphics_region;
 } MIR_CLIENT_8.3;
 
 MIR_CLIENT_DETAIL_8 {
