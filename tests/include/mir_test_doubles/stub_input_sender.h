@@ -36,7 +36,6 @@ struct StubInputSender : mir::input::InputSender
     }
     void set_observer(std::shared_ptr<input::InputSendObserver> const& /* observer */) override
     {
-        
     }
 };
 

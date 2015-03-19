@@ -340,7 +340,7 @@ TEST_F(AndroidInputSender, observer_informed_on_response_timeout)
 TEST_F(AndroidInputSender, observer_informed_about_closed_socket_on_send_event)
 {
     using namespace ::testing;
-    
+
     register_surface();
 
     EXPECT_CALL(
