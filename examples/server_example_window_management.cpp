@@ -103,6 +103,12 @@ public:
 
     bool handle_pointer_event(MirPointerInputEvent const* /*event*/) { return false; }
 
+    std::vector<std::shared_ptr<ms::Surface>> generate_decorations_for(
+        std::shared_ptr<ms::Session> const&,
+        std::shared_ptr<ms::Surface> const&)
+    {
+        return {};
+    }
 private:
     std::shared_ptr<msh::DisplayLayout> const display_layout;
 };

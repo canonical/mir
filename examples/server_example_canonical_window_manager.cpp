@@ -21,8 +21,13 @@
 #include "mir/scene/surface.h"
 #include "mir/geometry/displacement.h"
 
+#include "mir/graphics/buffer.h"
+
 #include <linux/input.h>
 #include <csignal>
+#include <mutex>
+#include <condition_variable>
+#include <algorithm>
 
 namespace me = mir::examples;
 namespace ms = mir::scene;
@@ -160,6 +165,54 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
     }
 
     return parameters;
+}
+
+std::vector<std::shared_ptr<ms::Surface>> me::CanonicalWindowManagerPolicy::generate_decorations_for(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface)
+{
+    tools->info_for(session).surfaces++;
+    auto format = mir_pixel_format_xbgr_8888;
+    Height decoration_height_pixels{40};
+    ms::SurfaceCreationParameters params;
+    params.of_size(Size{surface->size().width, decoration_height_pixels})
+        .of_name("decoration")
+        .of_pixel_format(format)
+        .of_buffer_usage(mir::graphics::BufferUsage::software)
+        .of_position(Point{
+            surface->top_left().x,
+            surface->top_left().y - DeltaY(decoration_height_pixels.as_int())})
+        .of_type(mir_surface_type_gloss);
+    auto id = session->create_surface(params);
+    auto decoration_surface = session->surface(id);
+    decoration_surface->set_alpha(0.9);
+    tools->info_for(surface).decoration = decoration_surface;
+    tools->info_for(surface).children.push_back(decoration_surface);
+
+    //TODO: provide an easier way for the server to write to a surface!
+    std::mutex mut;
+    std::condition_variable cv;
+    mir::graphics::Buffer* written_buffer{nullptr};
+
+    decoration_surface->swap_buffers(
+        nullptr,
+        [&](mir::graphics::Buffer* buffer)
+        {
+            //TODO: this is painful to use mg::Buffer::write()
+            auto const sz = buffer->size().height.as_int() *
+                 buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
+            std::vector<unsigned char> pixels(sz, 0xFF);
+            buffer->write(pixels.data(), sz);
+            std::unique_lock<decltype(mut)> lk(mut);
+            written_buffer = buffer;
+            cv.notify_all();
+        });
+    {
+        std::unique_lock<decltype(mut)> lk(mut);
+        cv.wait(lk, [&]{return written_buffer;});
+    }
+    decoration_surface->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
+    return {decoration_surface};
 }
 
 void me::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
