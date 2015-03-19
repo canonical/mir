@@ -522,6 +522,7 @@ MIR_SERVER_31 {
     mir::shell::CanonicalWindowManagerPolicy::handle_key_event*;
     mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
     mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
+    mir::shell::DefaultWindowManager::DefaultWindowManager*;
 
     mir::DefaultServerConfiguration::clock*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
