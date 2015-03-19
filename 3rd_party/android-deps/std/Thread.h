@@ -57,8 +57,9 @@ public:
     {
         (void)priority; (void)stack;
 
-        // Workaround libstdc++ using copy on write implementation
-        // to avoid data races
+        // Avoid data races by working around libstdc++ using a
+        // copy-on-write implementation of std::string
+        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=21334#c45
         auto name_str = std::make_unique<std::string>(name);
 
         status.store(NO_ERROR);
