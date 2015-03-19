@@ -56,14 +56,17 @@ public:
         size_t stack = 0)
     {
         (void)priority; (void)stack;
-        std::string const name_str{name};
+
+        // Workaround libstdc++ using copy on write implementation
+        // to avoid data races
+        auto name_str = std::make_unique<std::string>(name);
 
         status.store(NO_ERROR);
         exit_pending.store(false);
 
-        thread = std::thread([name_str,this]() -> void
+        thread = std::thread([name_str = std::move(name_str),this]
             {
-                mir::set_thread_name(name_str);
+                mir::set_thread_name(*name_str);
                 try
                 {
                     if (auto result = readyToRun()) status.store(result);
