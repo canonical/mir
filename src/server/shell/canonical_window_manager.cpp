@@ -19,6 +19,7 @@
 #include "canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/shell/display_layout.h"
 #include "mir/geometry/displacement.h"
 
@@ -172,6 +173,38 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
     return parameters;
 }
 
+namespace
+{
+class SurfaceReadyObserver : public ms::NullSurfaceObserver,
+    public std::enable_shared_from_this<SurfaceReadyObserver>
+{
+public:
+    SurfaceReadyObserver(
+        msh::CanonicalWindowManagerPolicy::Tools* const focus_controller,
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& surface) :
+        focus_controller{focus_controller},
+        session{session},
+        surface{surface}
+    {
+    }
+
+private:
+    void frame_posted(int) override
+    {
+        if (auto const s = surface.lock())
+        {
+            focus_controller->set_focus_to(session.lock(), s);
+            s->remove_observer(shared_from_this());
+        }
+    }
+
+    msh::CanonicalWindowManagerPolicy::Tools* const focus_controller;
+    std::weak_ptr<ms::Session> const session;
+    std::weak_ptr<ms::Surface> const surface;
+};
+}
+
 void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = surface->parent())
@@ -193,7 +226,7 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
         // TODO There's currently no way to insert surfaces into an active (or inactive)
         // TODO window tree while keeping the order stable or consistent with spec.
         // TODO Nor is there a way to update the "default surface" when appropriate!!
-        tools->set_focus_to(session, surface);
+        surface->add_observer(std::make_shared<SurfaceReadyObserver>(tools, session, surface));
         active_surface_ = surface;
         break;
 
