@@ -23,6 +23,7 @@
 #include "mir_protobuf_wire.pb.h"
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -50,6 +51,7 @@ private:
     std::shared_ptr<MessageSender> const sender;
     std::shared_ptr<ResourceCache> const resource_cache;
 
+    std::mutex result_guard;
     mir::protobuf::wire::Result send_response_result;
 };
 }
