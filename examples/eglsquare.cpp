@@ -52,7 +52,7 @@ private:
 class Context
 {
 public:
-    Context(Connection& connection, MirSurface* surface) :
+    Context(Connection& connection, MirSurface* surface, int swap_interval) :
         native_display(reinterpret_cast<EGLNativeDisplayType>(
             mir_connection_get_egl_native_display(connection))),
         native_window(reinterpret_cast<EGLNativeWindowType>(
@@ -63,6 +63,7 @@ public:
         context(display.disp, config)
     {
         make_current();
+        eglSwapInterval(this->surface.surface, swap_interval);
     }
     void make_current()
     {
@@ -256,10 +257,10 @@ private:
 class Surface
 {
 public:
-    Surface(Connection& connection) :
+    Surface(Connection& connection, int swap_interval) :
         dimensions(active_output_dimensions(connection)),
         surface{create_surface(connection, dimensions), surface_deleter},
-        context{connection, surface.get()},
+        context{connection, surface.get(), swap_interval},
         program{context, dimensions.width, dimensions.height}
     {
     }
@@ -387,12 +388,16 @@ try
 
     auto arg = 0;
     char const* socket_file = nullptr;
-    while ((arg = getopt (argc, argv, "m:")) != -1)
+    int swap_interval = 1;
+    while ((arg = getopt (argc, argv, "nm:")) != -1)
     {
         switch (arg)
         {
         case 'm':
             socket_file = optarg;
+            break;
+        case 'n':
+            swap_interval = 0;
             break;
         default:
             throw std::invalid_argument("invalid command line argument");
@@ -400,7 +405,7 @@ try
     }
 
     Connection connection(socket_file);
-    Surface surface(connection);
+    Surface surface(connection, swap_interval);
 
     sigset_t sigset;
     siginfo_t siginfo;
