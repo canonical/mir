@@ -119,12 +119,25 @@ mir::DefaultServerConfiguration::the_input_registrar()
         });
 }
 
+namespace
+{
+class NullInputSender : public mi::InputSender
+{
+public:
+    virtual void send_event(MirEvent const&, std::shared_ptr<mi::InputChannel> const& ) {}
+};
+
+}
+
 std::shared_ptr<mi::InputSender>
 mir::DefaultServerConfiguration::the_input_sender()
 {
     return input_sender(
-        [this]()
+        [this]() -> std::shared_ptr<mi::InputSender>
         {
+        if (!the_options()->get<bool>(options::enable_input_opt))
+            return std::make_shared<NullInputSender>();
+        else
             return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), the_input_send_observer(), the_input_report());
         });
 }
