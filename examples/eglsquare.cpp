@@ -63,7 +63,7 @@ public:
         context(display.disp, config)
     {
         make_current();
-        eglSwapInterval(this->surface.surface, swap_interval);
+        eglSwapInterval(display.disp, swap_interval);
     }
     void make_current()
     {
