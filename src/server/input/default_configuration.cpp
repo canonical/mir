@@ -30,7 +30,6 @@
 #include "android/event_filter_dispatcher_policy.h"
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
-#include "android/android_input_manager.h"
 #include "android/input_translator.h"
 #include "display_input_region.h"
 #include "event_filter_chain.h"
