@@ -172,8 +172,8 @@ std::vector<std::shared_ptr<ms::Surface>> me::CanonicalWindowManagerPolicy::gene
     std::shared_ptr<ms::Surface> const& surface)
 {
     tools->info_for(session).surfaces++;
-    auto format = mir_pixel_format_xbgr_8888;
-    Height decoration_height_pixels{40};
+    auto format = mir_pixel_format_xrgb_8888;
+    Height decoration_height_pixels{title_bar_height};
     ms::SurfaceCreationParameters params;
     params.of_size(Size{surface->size().width, decoration_height_pixels})
         .of_name("decoration")
