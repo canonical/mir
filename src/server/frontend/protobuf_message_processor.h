@@ -37,7 +37,8 @@ namespace detail
 class DisplayServer;
 class ProtobufMessageSender;
 
-class ProtobufMessageProcessor : public MessageProcessor
+class ProtobufMessageProcessor : public MessageProcessor,
+                                 public std::enable_shared_from_this<ProtobufMessageProcessor>
 {
 public:
     ProtobufMessageProcessor(
