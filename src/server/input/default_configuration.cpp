@@ -126,7 +126,7 @@ namespace
 class NullInputSender : public mi::InputSender
 {
 public:
-    mi::TransportSequenceID send_event(MirEvent const&, std::shared_ptr<mi::InputChannel> const& ) override {}
+    mi::TransportSequenceID send_event(MirEvent const&, std::shared_ptr<mi::InputChannel> const& ) override { return mi::TransportSequenceID(); }
     void set_observer(std::shared_ptr<mi::InputSendObserver> const&) override {}
 };
 
