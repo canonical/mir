@@ -103,6 +103,9 @@ target_link_libraries(mir_demo_client_progressbar mirclient)
 mir_add_wrapped_executable(mir_demo_client_display_config demo_client_display_config.c)
 target_link_libraries(mir_demo_client_display_config eglapp)
 
+mir_add_wrapped_executable(mir_demo_client_eglsquare eglsquare.cpp)
+target_link_libraries(mir_demo_client_eglsquare eglapp)
+
 mir_add_wrapped_executable(mir_demo_client_flicker
   flicker.c
 )

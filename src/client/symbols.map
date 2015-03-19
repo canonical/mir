@@ -1,12 +1,6 @@
 MIR_CLIENT_8 {
  global:
     mir_arrow_cursor_name;
-    mir_buffer_stream_get_current_buffer;
-    mir_buffer_stream_get_egl_native_window;
-    mir_buffer_stream_get_graphics_region;
-    mir_buffer_stream_get_platform_type;
-    mir_buffer_stream_swap_buffers;
-    mir_buffer_stream_swap_buffers_sync;
     mir_busy_cursor_name;
     mir_caret_cursor_name;
     mir_closed_hand_cursor_name;
@@ -16,12 +10,8 @@ MIR_CLIENT_8 {
     mir_connection_create_display_config;
     mir_connection_create_prompt_session_sync;
     mir_connection_create_screencast_sync;
-    mir_connection_create_spec_for_dialog;
     mir_connection_create_spec_for_input_method;
-    mir_connection_create_spec_for_menu;
     mir_connection_create_spec_for_modal_dialog;
-    mir_connection_create_spec_for_normal_surface;
-    mir_connection_create_spec_for_tooltip;
     mir_connection_create_surface;
     mir_connection_create_surface_sync;
     mir_connection_drm_auth_magic;
@@ -32,7 +22,6 @@ MIR_CLIENT_8 {
     mir_connection_get_error_message;
     mir_connection_get_platform;
     mir_connection_is_valid;
-    mir_connection_platform_operation;
     mir_connection_release;
     mir_connection_set_display_config_change_callback;
     mir_connection_set_lifecycle_event_callback;
@@ -61,12 +50,8 @@ MIR_CLIENT_8 {
     mir_prompt_session_new_fds_for_prompt_providers;
     mir_prompt_session_release_sync;
     mir_screencast_egl_native_window;
-    mir_screencast_get_buffer_stream;
     mir_screencast_release_sync;
     mir_surface_configure_cursor;
-    mir_surface_create;
-    mir_surface_create_sync;
-    mir_surface_get_buffer_stream;
     mir_surface_get_current_buffer;
     mir_surface_get_dpi;
     mir_surface_get_egl_native_window;
@@ -77,7 +62,6 @@ MIR_CLIENT_8 {
     mir_surface_get_orientation;
     mir_surface_get_parameters;
     mir_surface_get_platform_type;
-    mir_surface_get_preferred_orientation;
     mir_surface_get_state;
     mir_surface_get_swapinterval;
     mir_surface_get_type;
@@ -86,18 +70,10 @@ MIR_CLIENT_8 {
     mir_surface_release;
     mir_surface_release_sync;
     mir_surface_set_event_handler;
-    mir_surface_set_preferred_orientation;
     mir_surface_set_state;
     mir_surface_set_swapinterval;
     mir_surface_set_type;
     mir_surface_spec_release;
-    mir_surface_spec_set_buffer_usage;
-    mir_surface_spec_set_fullscreen_on_output;
-    mir_surface_spec_set_height;
-    mir_surface_spec_set_name;
-    mir_surface_spec_set_pixel_format;
-    mir_surface_spec_set_preferred_orientation;
-    mir_surface_spec_set_width;
     mir_surface_swap_buffers;
     mir_surface_swap_buffers_sync;
     mir_vertical_resize_cursor_name;
@@ -107,21 +83,50 @@ MIR_CLIENT_8 {
  local: *;
 };
 MIR_CLIENT_8.1 {
+ global:
+    mir_connection_create_spec_for_normal_surface;
+    mir_surface_create;
+    mir_surface_create_sync;
+    mir_surface_spec_set_buffer_usage;
+    mir_surface_spec_set_fullscreen_on_output;
+    mir_surface_spec_set_height;
+    mir_surface_spec_set_name;
+    mir_surface_spec_set_pixel_format;
+    mir_surface_spec_set_width;
 } MIR_CLIENT_8;
 
 MIR_CLIENT_8.2 {
+ global:
+    mir_surface_get_preferred_orientation;
+    mir_surface_set_preferred_orientation;
+    mir_surface_spec_set_preferred_orientation;
 } MIR_CLIENT_8.1;
 
 MIR_CLIENT_8.3 {
  global:
+    mir_connection_create_spec_for_dialog;
+    mir_connection_create_spec_for_menu;
+    mir_connection_create_spec_for_tooltip;
     mir_connection_platform_operation;
 } MIR_CLIENT_8.2;
 
 MIR_CLIENT_8.4 {
-} MIR_CLIENT_8.3;
-
-MIR_CLIENT_8.5 {
-  global:
+ global:
+    mir_default_cursor_name;
+    mir_disabled_cursor_name;
+    mir_arrow_cursor_name;
+    mir_busy_cursor_name;
+    mir_caret_cursor_name;
+    mir_pointing_hand_cursor_name;
+    mir_open_hand_cursor_name;
+    mir_closed_hand_cursor_name;
+    mir_horizontal_resize_cursor_name;
+    mir_vertical_resize_cursor_name;
+    mir_diagonal_resize_bottom_to_top_cursor_name;
+    mir_diagonal_resize_top_to_bottom_cursor_name;
+    mir_omnidirectional_resize_cursor_name;
+    mir_vsplit_resize_cursor_name;
+    mir_hsplit_resize_cursor_name;
     mir_event_get_close_surface_event;
     mir_event_get_input_event;
     mir_event_get_keymap_event;
@@ -162,7 +167,14 @@ MIR_CLIENT_8.5 {
     mir_touch_input_event_get_touch_count;
     mir_touch_input_event_get_touch_id;
     mir_touch_input_event_get_touch_tooltype;
-} MIR_CLIENT_8.4;
+    mir_surface_get_buffer_stream;
+    mir_buffer_stream_get_current_buffer;
+    mir_buffer_stream_get_platform_type;
+    mir_buffer_stream_swap_buffers_sync;
+    mir_screencast_get_buffer_stream;
+    mir_buffer_stream_get_egl_native_window;
+    mir_buffer_stream_get_graphics_region;
+} MIR_CLIENT_8.3;
 
 MIR_CLIENT_DETAIL_8 {
   global:

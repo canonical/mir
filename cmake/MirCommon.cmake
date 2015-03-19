@@ -98,7 +98,6 @@ function (mir_discover_tests EXECUTABLE)
         set(EXCLUDED_TESTS "UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds:StreamTransportTest/0.SendsFullMessagesWhenInterrupted")
     endif()
 
-    message("What is this: " "${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests ${EXCLUDED_TESTS}")
     add_custom_target(
       ${TEST_DISCOVERY_TARGET_NAME} ALL
       ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --exclusions=${EXCLUDED_TESTS} ${DISCOVER_FLAGS}
