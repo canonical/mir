@@ -215,3 +215,33 @@ TEST_F(SimpleDispatchThreadTest, handles_destruction_from_dispatch_callback)
 
     EXPECT_TRUE(dispatched->wait_for(10s));
 }
+
+TEST_F(SimpleDispatchThreadTest, executes_around_code)
+{
+    using namespace std::chrono_literals;
+    auto before = false;
+    auto after = false;
+    auto dispatched = std::make_shared<mt::Signal>();
+
+    auto dispatchable = std::make_shared<mt::TestDispatchable>(
+        [&before,&after,&dispatched]()
+        {
+            EXPECT_TRUE(before);
+            EXPECT_FALSE(after);
+            dispatched->raise();
+        });
+    {
+        md::SimpleDispatchThread dispatcher{dispatchable,
+            [&before,&after](std::function<void()> const& thread_function)
+            {
+                before = true;
+                thread_function();
+                after = true;
+            }};
+        dispatchable->trigger();
+        EXPECT_TRUE(dispatched->wait_for(10s));
+    }
+
+    EXPECT_TRUE(before);
+    EXPECT_TRUE(after);
+}

@@ -34,6 +34,8 @@ class SimpleDispatchThread
 {
 public:
     SimpleDispatchThread(std::shared_ptr<Dispatchable> const& dispatchee);
+    SimpleDispatchThread(std::shared_ptr<Dispatchable> const& dispatchee,
+                         std::function<void(std::function<void()> const&)> const& execute_around);
     ~SimpleDispatchThread() noexcept;
 
 private:
