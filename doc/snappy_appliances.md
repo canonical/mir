@@ -60,3 +60,17 @@ Building snap packages of Mir
 
 3. Copy the .snap files from the location displayed at the end of step 2.
 
+Running the mir/mir-demos snap packages
+---------------------------------------
+
+Once installed you will have two new snappy `/apps`: mir and mir-demos
+
+Presently only server and standalone binaries work. To run them with the
+full environment, libraries and drivers they require, use:
+
+    sudo /apps/bin/mir-run /apps/mir-demos/current/mir_proving_server
+    sudo /apps/bin/mir-run /apps/mir-demos/current/mir_demo_standalone_render_surfaces
+    etc
+
+Automatic setting of privileges to avoid "sudo" is not yet implemented.
+
