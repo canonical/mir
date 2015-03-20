@@ -6,6 +6,7 @@ paths=$*
 externs=`ldd $paths |
     awk '/.* => \/usr\/lib\// {print $3;}' |
     sort |
+    grep -v libmir |
     uniq`
 
 echo "External libs:"
