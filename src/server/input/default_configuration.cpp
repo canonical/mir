@@ -51,6 +51,8 @@
 #include "mir/report/legacy_input_report.h"
 #include "mir/main_loop.h"
 
+#include "mir_toolkit/cursors.h"
+
 #include <InputDispatcher.h>
 #include <EventHub.h>
 #include <InputReader.h>
