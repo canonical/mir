@@ -61,7 +61,7 @@ public:
 
 private:
     void add_device_info(InputDeviceInfo const& info);
-    void remove_device_info(InputDeviceInfo const& info);
+    void remove_device_info(int32_t id);
     std::shared_ptr<InputDispatcher> const input_dispatcher;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
     std::shared_ptr<ServerActionQueue> const observer_queue;
@@ -74,6 +74,7 @@ private:
         bool device_matches(std::shared_ptr<InputDevice> const& dev) const;
         void start();
         void stop();
+        int32_t id();
         InputDeviceInfo get_device_info();
     private:
         static int32_t create_new_device_id();
