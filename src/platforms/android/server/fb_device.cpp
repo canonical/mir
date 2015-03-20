@@ -54,18 +54,36 @@ void mga::FbControl::power_mode(DisplayName display, MirPowerMode mode)
         fb_device->enableScreen(fb_device.get(), enable);
 }
 
-mga::DisplayAttribs mga::FbControl::active_attribs_for(DisplayName)
+mg::DisplayConfigurationOutput mga::FbControl::active_attribs_for(DisplayName)
 {
+    return {
+        mg::DisplayConfigurationOutputId{0},
+        mg::DisplayConfigurationCardId{0},
+        mg::DisplayConfigurationOutputType::lvds,
+        {mga::to_mir_format(fb_device->format)},
+        {mg::DisplayConfigurationMode{{fb_device->width, fb_device->height}, fb_device->fps}},
+        0,
+        {0,0},
+        true,
+        false,
+        {0,0},
+        0,
+        mir_pixel_format_abgr_8888,
+        mir_power_mode_on,
+        mir_orientation_normal
+    };
+#if 0
     //guarantee always 2 fb's allocated
     auto fb_num = static_cast<unsigned int>(fb_device->numFramebuffers);
     fb_num = std::max(2u, fb_num);
-    return mga::DisplayAttribs{
+    return mga::DisplayConfigurationOutput{
       {fb_device->width, fb_device->height},
       {0,0},
       fb_device->fps,
       true,
-      mga::to_mir_format(fb_device->format),
       fb_num};
+#endif
+    
 }
 
 mga::ConfigChangeSubscription mga::FbControl::subscribe_to_config_changes(

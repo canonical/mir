@@ -181,6 +181,7 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
     EXPECT_TRUE(attribs.connected);
 }
 
+#if 0
 //the primary display should not be disconnected, but this is how to tell if the external one is
 TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
 {
@@ -265,3 +266,4 @@ TEST_F(HwcConfiguration, subscribes_to_hotplug_and_vsync)
     EXPECT_THAT(hotplug_call_count, Eq(2));
     EXPECT_THAT(vsync_call_count, Eq(1));
 }
+#endif

@@ -390,6 +390,7 @@ TEST_F(Display, configures_power_modes)
     });
 }
 
+#if 0
 TEST_F(Display, returns_correct_config_with_one_connected_output_at_start)
 {
     using namespace testing;
@@ -801,3 +802,4 @@ TEST_F(Display, reports_vsync)
 
     vsync_fn(mga::DisplayName::primary);
 }
+#endif

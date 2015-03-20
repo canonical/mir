@@ -36,6 +36,7 @@ namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 
+#if 0
 //doesn't use the HW modules, rather tests mainloop integration
 struct DisplayHotplug : ::testing::Test
 {
@@ -139,3 +140,4 @@ TEST_F(DisplayHotplug, hotplug_generates_mainloop_event)
     EXPECT_TRUE(cv.wait_for(lk, std::chrono::seconds(2), [&]{ return call_count == 2; }));
     mainloop.unregister_fd_handler(&display);
 }
+#endif
