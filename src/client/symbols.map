@@ -1,46 +1,186 @@
 MIR_CLIENT_8 {
  global:
- mir_connection_platform_operation;
- mir_*;
-  extern "C++" { 
-   # used by PrivateProtobuf
-   mir::client::the_rpc_channel*;
-   
-   # used by test framework - see lp:1349788
-   MirConnection::MirConnection*;
-   MirConnection::connect*;
-   MirConnection::disconnect*;
-   mir::client::DefaultConnectionConfiguration::*;
-   vtable?for?mir::client::DefaultConnectionConfiguration;
-   typeinfo?for?mir::client::DefaultConnectionConfiguration;
-  }; 
+    mir_arrow_cursor_name;
+    mir_busy_cursor_name;
+    mir_caret_cursor_name;
+    mir_closed_hand_cursor_name;
+    mir_connect;
+    mir_connection_api_impl;
+    mir_connection_apply_display_config;
+    mir_connection_create_display_config;
+    mir_connection_create_prompt_session_sync;
+    mir_connection_create_screencast_sync;
+    mir_connection_create_spec_for_input_method;
+    mir_connection_create_spec_for_modal_dialog;
+    mir_connection_create_surface;
+    mir_connection_create_surface_sync;
+    mir_connection_drm_auth_magic;
+    mir_connection_drm_set_gbm_device;
+    mir_connection_get_available_surface_formats;
+    mir_connection_get_display_info;
+    mir_connection_get_egl_native_display;
+    mir_connection_get_error_message;
+    mir_connection_get_platform;
+    mir_connection_is_valid;
+    mir_connection_platform_operation;
+    mir_connection_release;
+    mir_connection_set_display_config_change_callback;
+    mir_connection_set_lifecycle_event_callback;
+    mir_connect_sync;
+    mir_cursor_configuration_destroy;
+    mir_cursor_configuration_from_name;
+    mir_default_cursor_name;
+    mir_diagonal_resize_bottom_to_top_cursor_name;
+    mir_diagonal_resize_top_to_bottom_cursor_name;
+    mir_disabled_cursor_name;
+    mir_display_config_destroy;
+    mir_horizontal_resize_cursor_name;
+    mir_hsplit_resize_cursor_name;
+    mir_omnidirectional_resize_cursor_name;
+    mir_open_hand_cursor_name;
+    mir_platform_message_create;
+    mir_platform_message_get_data;
+    mir_platform_message_get_fds;
+    mir_platform_message_get_opcode;
+    mir_platform_message_release;
+    mir_platform_message_set_data;
+    mir_platform_message_set_fds;
+    mir_pointing_hand_cursor_name;
+    mir_prompt_session_error_message;
+    mir_prompt_session_is_valid;
+    mir_prompt_session_new_fds_for_prompt_providers;
+    mir_prompt_session_release_sync;
+    mir_screencast_egl_native_window;
+    mir_screencast_release_sync;
+    mir_surface_configure_cursor;
+    mir_surface_get_current_buffer;
+    mir_surface_get_dpi;
+    mir_surface_get_egl_native_window;
+    mir_surface_get_error_message;
+    mir_surface_get_focus;
+    mir_surface_get_graphics_region;
+    mir_surface_get_id;
+    mir_surface_get_orientation;
+    mir_surface_get_parameters;
+    mir_surface_get_platform_type;
+    mir_surface_get_state;
+    mir_surface_get_swapinterval;
+    mir_surface_get_type;
+    mir_surface_get_visibility;
+    mir_surface_is_valid;
+    mir_surface_release;
+    mir_surface_release_sync;
+    mir_surface_set_event_handler;
+    mir_surface_set_state;
+    mir_surface_set_swapinterval;
+    mir_surface_set_type;
+    mir_surface_spec_release;
+    mir_surface_swap_buffers;
+    mir_surface_swap_buffers_sync;
+    mir_vertical_resize_cursor_name;
+    mir_vsplit_resize_cursor_name;
+    mir_wait_for;
+    mir_wait_for_one;
  local: *;
 };
-
 MIR_CLIENT_8.1 {
-  global:
+ global:
     mir_connection_create_spec_for_normal_surface;
     mir_surface_create;
     mir_surface_create_sync;
-    mir_surface_spec_set_name;
-    mir_surface_spec_set_width;
-    mir_surface_spec_set_height;
-    mir_surface_spec_set_pixel_format;
     mir_surface_spec_set_buffer_usage;
     mir_surface_spec_set_fullscreen_on_output;
+    mir_surface_spec_set_height;
+    mir_surface_spec_set_name;
+    mir_surface_spec_set_pixel_format;
+    mir_surface_spec_set_width;
 } MIR_CLIENT_8;
 
 MIR_CLIENT_8.2 {
-  global:
-    mir_surface_set_preferred_orientation;
+ global:
     mir_surface_get_preferred_orientation;
+    mir_surface_set_preferred_orientation;
     mir_surface_spec_set_preferred_orientation;
 } MIR_CLIENT_8.1;
 
 MIR_CLIENT_8.3 {
-  global:
+ global:
+    mir_connection_create_spec_for_dialog;
     mir_connection_create_spec_for_menu;
     mir_connection_create_spec_for_tooltip;
-    mir_connection_create_spec_for_dialog;
     mir_connection_platform_operation;
 } MIR_CLIENT_8.2;
+
+MIR_CLIENT_8.4 {
+ global:
+    mir_default_cursor_name;
+    mir_disabled_cursor_name;
+    mir_arrow_cursor_name;
+    mir_busy_cursor_name;
+    mir_caret_cursor_name;
+    mir_pointing_hand_cursor_name;
+    mir_open_hand_cursor_name;
+    mir_closed_hand_cursor_name;
+    mir_horizontal_resize_cursor_name;
+    mir_vertical_resize_cursor_name;
+    mir_diagonal_resize_bottom_to_top_cursor_name;
+    mir_diagonal_resize_top_to_bottom_cursor_name;
+    mir_omnidirectional_resize_cursor_name;
+    mir_vsplit_resize_cursor_name;
+    mir_hsplit_resize_cursor_name;
+    mir_event_get_close_surface_event;
+    mir_event_get_input_event;
+    mir_event_get_keymap_event;
+    mir_event_get_orientation_event;
+    mir_event_get_prompt_session_event;
+    mir_event_get_resize_event;
+    mir_event_get_surface_event;
+    mir_event_get_type;
+    mir_event_ref;
+    mir_event_unref;
+    mir_input_event_get_device_id;
+    mir_input_event_get_event_time;
+    mir_input_event_get_key_input_event;
+    mir_input_event_get_pointer_input_event;
+    mir_input_event_get_touch_input_event;
+    mir_input_event_get_type;
+    mir_key_input_event_get_action;
+    mir_key_input_event_get_key_code;
+    mir_key_input_event_get_modifiers;
+    mir_key_input_event_get_scan_code;
+    mir_keymap_event_get_rules;
+    mir_orientation_event_get_direction;
+    mir_pointer_input_event_get_action;
+    mir_pointer_input_event_get_axis_value;
+    mir_pointer_input_event_get_button_state;
+    mir_pointer_input_event_get_modifiers;
+    mir_prompt_session_event_get_state;
+    mir_resize_event_get_height;
+    mir_resize_event_get_width;
+    mir_surface_event_get_attribute;
+    mir_surface_event_get_attribute_value;
+    mir_surface_set_swapinterval;
+    mir_surface_swap_buffers;
+    mir_surface_swap_buffers_sync;
+    mir_touch_input_event_get_modifiers;
+    mir_touch_input_event_get_touch_action;
+    mir_touch_input_event_get_touch_axis_value;
+    mir_touch_input_event_get_touch_count;
+    mir_touch_input_event_get_touch_id;
+    mir_touch_input_event_get_touch_tooltype;
+    mir_surface_get_buffer_stream;
+    mir_buffer_stream_get_current_buffer;
+    mir_buffer_stream_get_platform_type;
+    mir_buffer_stream_swap_buffers_sync;
+    mir_screencast_get_buffer_stream;
+    mir_buffer_stream_get_egl_native_window;
+    mir_buffer_stream_get_graphics_region;
+} MIR_CLIENT_8.3;
+
+MIR_CLIENT_DETAIL_8 {
+  global:
+    extern "C++" { 
+      mir::events::make_event*;
+      mir::input::android::Lexicon::translate*;
+    }; 
+};

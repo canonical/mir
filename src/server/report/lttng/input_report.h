@@ -36,8 +36,6 @@ public:
     InputReport() = default;
     virtual ~InputReport() noexcept(true) = default;
 
-    void open_input_device(char const* device_name, char const* input_platform) override;
-    void failure_opening_input_device(char const* device_name, char const* input_platform) override;
     void received_event_from_kernel(int64_t when, int type, int code, int value) override;
 
     void published_key_event(int dest_fd, uint32_t seq_id, int64_t event_time) override;
@@ -45,6 +43,8 @@ public:
 
     void received_event_finished_signal(int src_fd, uint32_t seq_id) override;
 
+    void opened_input_device(char const* device_name, char const* input_platform) override;
+    void failed_to_open_input_device(char const* device_name, char const* input_platform) override;
 private:
     ServerTracepointProvider tp_provider;
 };

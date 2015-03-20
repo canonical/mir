@@ -26,6 +26,7 @@
 #include "mir/input/input_sink.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/server_action_queue.h"
+#include "mir/log.h"
 
 #include "boost/throw_exception.hpp"
 
@@ -44,6 +45,9 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
 
 void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& device)
 {
+    if (!device)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input device"));
+
     auto it = find_if(devices.cbegin(),
                       devices.cend(),
                       [&device](std::unique_ptr<RegisteredDevice> const& item)
@@ -67,33 +71,45 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
         // TODO let shell decide if device should be observed / exposed to clients.
         devices.back()->start();
     }
+    else
+    {
+        log(logging::Severity::error, "Input device %s added twice", device->get_device_info().name.c_str());
+        BOOST_THROW_EXCEPTION(std::logic_error("Input device already managed by server"));
+    }
 }
 
 void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const& device)
 {
-    devices.erase(
-        remove_if(
-            begin(devices),
-            end(devices),
-            [&device,this](std::unique_ptr<RegisteredDevice> const& item)
-            {
-                if (item->device_matches(device))
-                {
-                    item->stop();
+    if (!device)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input device"));
 
-                    // send input device info to observer queue..
-                    observer_queue->enqueue(
-                        this,
-                        [this,info = item->get_device_info()]()
-                        {
-                            remove_device_info(info);
-                        });
-                    return true;
-                }
-                return false;
-            }),
-        end(devices)
-        );
+    auto pos = remove_if(
+        begin(devices),
+        end(devices),
+        [&device,this](std::unique_ptr<RegisteredDevice> const& item)
+        {
+            if (item->device_matches(device))
+            {
+                item->stop();
+
+                // send input device info to observer queue..
+                observer_queue->enqueue(
+                    this,
+                    [this,info = item->get_device_info()]()
+                    {
+                        remove_device_info(info);
+                    });
+                return true;
+            }
+            return false;
+        });
+    if (pos == end(devices))
+    {
+        log(logging::Severity::error, "Input device %s not found", device->get_device_info().name.c_str());
+        BOOST_THROW_EXCEPTION(std::logic_error("Input device not managed by server"));
+    }
+
+    devices.erase(pos, end(devices));
 }
 
 mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
@@ -120,6 +136,8 @@ int32_t mi::DefaultInputDeviceHub::RegisteredDevice::create_new_device_id()
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
 {
+    // we attach the device id here, since this instance the first being able to maintains the uniqueness of the ids..
+    // TODO avoid the MIR_INCLUDE_DEPRECATED_EVENT_HEADER in some way
     if (event.type == mir_event_type_key)
     {
         event.key.device_id = device_id;
