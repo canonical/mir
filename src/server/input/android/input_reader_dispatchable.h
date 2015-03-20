@@ -39,12 +39,14 @@ struct InputReaderDispatchable : mir::dispatch::Dispatchable
 {
     InputReaderDispatchable(std::shared_ptr<droidinput::EventHubInterface> const& event_hub,
                             std::shared_ptr<droidinput::InputReaderInterface> const& reader);
-    std::shared_ptr<droidinput::EventHubInterface> const event_hub;
-    std::shared_ptr<droidinput::InputReaderInterface> const reader;
     Fd watch_fd() const override;
     bool dispatch(mir::dispatch::FdEvents events) override;
     mir::dispatch::FdEvents relevant_events() const override;
     void start();
+
+private:
+    std::shared_ptr<droidinput::EventHubInterface> const event_hub;
+    std::shared_ptr<droidinput::InputReaderInterface> const reader;
 };
 
 }

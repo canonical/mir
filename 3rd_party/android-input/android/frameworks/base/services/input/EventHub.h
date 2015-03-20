@@ -312,7 +312,7 @@ public:
     virtual void dump(String8& dump);
     virtual void monitor();
     virtual void flush();
-    virtual mir::Fd fd() override;
+    virtual mir::Fd fd();
 
     virtual ~EventHub();
 
