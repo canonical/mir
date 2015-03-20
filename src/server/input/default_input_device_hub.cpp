@@ -95,9 +95,9 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
                 // send input device info to observer queue..
                 observer_queue->enqueue(
                     this,
-                    [this,info = item->get_device_info()]()
+                    [this,id = item->id()]()
                     {
-                        remove_device_info(info);
+                        remove_device_info(id);
                     });
                 return true;
             }
@@ -132,6 +132,11 @@ int32_t mi::DefaultInputDeviceHub::RegisteredDevice::create_new_device_id()
 {
     static int32_t device_id{0};
     return ++device_id;
+}
+
+int32_t mi::DefaultInputDeviceHub::RegisteredDevice::id()
+{
+    return device_id;
 }
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
@@ -208,13 +213,17 @@ void mi::DefaultInputDeviceHub::add_device_info(InputDeviceInfo const& info)
     }
 }
 
-void mi::DefaultInputDeviceHub::remove_device_info(InputDeviceInfo const& info)
+void mi::DefaultInputDeviceHub::remove_device_info(int32_t id)
 {
+    auto info_it = remove_if(begin(infos), end(infos), [&id](auto const& info){return info.id == id;});
+
+    if (info_it == end(infos))
+        return;
     for (auto const& observer : observers)
     {
-        observer->device_removed(info);
+        observer->device_removed(*info_it);
         observer->changes_complete();
     }
 
-    infos.erase(remove(begin(infos), end(infos), info), end(infos));
+    infos.erase(info_it, end(infos));
 }
