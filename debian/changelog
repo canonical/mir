@@ -8,7 +8,7 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
       . TODO: mention more enhancements
     - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8
-      . Mircommon ABI unchanged at 3
+      . Mircommon ABI bumped to 4
       . Mirplatform ABI bumped to 7
       . Mirserver ABI bumped to 31  (TODO 30 is in series 0.12)
     - Bug fixes:

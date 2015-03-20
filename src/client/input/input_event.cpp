@@ -18,7 +18,7 @@
 
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
-#define MIR_LOGGING_COMPONENT "input-event-access"
+#define MIR_LOG_COMPONENT "input-event-access"
 
 #include "mir/event_type_to_string.h"
 #include "mir/log.h"
