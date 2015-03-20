@@ -69,6 +69,7 @@ mir_add_wrapped_executable(
   mir_integration_tests
   ${INTEGRATION_TESTS_SRCS}
   ${MIR_SERVER_OBJECTS}
+  $<TARGET_OBJECTS:mirclientobjects>
   ${MIR_PLATFORM_OBJECTS}
   ${MIR_COMMON_OBJECTS}
 )
@@ -86,7 +87,7 @@ target_link_libraries(
   mir-test-framework
   mir-test-doubles
   mirclient-debug-extension
-  mirclient-static
+
   mirdraw
   mirclientrpc
   mirclientlttngstatic

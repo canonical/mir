@@ -27,7 +27,6 @@
 #include "mir/graphics/cursor.h"
 
 #include "mir_toolkit/common.h"
-#include "mir_toolkit/cursors.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_scene_surface.h"

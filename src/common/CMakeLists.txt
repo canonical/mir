@@ -10,6 +10,7 @@ endif()
 
 add_subdirectory(fd)
 add_subdirectory(geometry)
+add_subdirectory(input)
 add_subdirectory(logging)
 add_subdirectory(report/lttng)
 add_subdirectory(env)
@@ -17,12 +18,12 @@ add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(time)
 add_subdirectory(dispatch)
-add_subdirectory(udev)
 
 list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirtime>
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
   )
+add_subdirectory(events)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -34,6 +35,10 @@ set(
   ${MIR_GENERATED_INCLUDE_DIRECTORIES}
   PARENT_SCOPE)
 
+list(APPEND MIR_COMMON_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/event.cpp
+)
+
 add_library(mircommon
   SHARED
   ${MIR_COMMON_SOURCES}
@@ -44,7 +49,7 @@ target_link_libraries(mircommon
 )
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 4)
+set(MIRCOMMON_ABI 3)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(mircommon
