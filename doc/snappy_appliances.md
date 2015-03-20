@@ -11,6 +11,11 @@ Mir as an appliance presently supports Mesa/DRM drivers. So almost any
 hardware that supports Mir on Ubuntu desktop will suffice. Virtual machines
 are generally NOT supported by Mir yet. So cannot be used here.
 
+Your chosen machine must be plugged into ethernet by cable (wifi not
+supported), and that cable must be able to reach a DHCP server
+(e.g. a typical home router). For more details see:
+<https://bugs.launchpad.net/snappy-ubuntu/+bugs?field.tag=wontboot>
+
 Getting the operating system
 ----------------------------
 
