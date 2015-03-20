@@ -19,6 +19,7 @@
 #include "server_example_canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
+#include "mir/shell/display_layout.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -46,8 +47,11 @@ me::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
 {
 }
 
-me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(Tools* const tools) :
-    tools{tools}
+me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(
+    Tools* const tools,
+    std::shared_ptr<shell::DisplayLayout> const& display_layout) :
+    tools{tools},
+    display_layout{display_layout}
 {
 }
 
@@ -90,7 +94,16 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
 
     auto const parent = parameters.parent.lock();
 
-    if (!parent) // No parent => client can't suggest positioning
+    if (parameters.output_id != mir::graphics::DisplayConfigurationOutputId{0})
+    {
+        Rectangle rect{parameters.top_left, parameters.size};
+        display_layout->place_in_output(parameters.output_id, rect);
+        parameters.top_left = rect.top_left;
+        parameters.size = rect.size;
+        parameters.state = mir_surface_state_fullscreen;
+        positioned = true;
+    }
+    else if (!parent) // No parent => client can't suggest positioning
     {
         if (auto const default_surface = session->default_surface())
         {
@@ -230,6 +243,7 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
     case mir_surface_state_maximized:
     case mir_surface_state_vertmaximized:
     case mir_surface_state_horizmaximized:
+    case mir_surface_state_fullscreen:
         break;
 
     default:
@@ -270,6 +284,14 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
         movement = Point{info.restore_rect.top_left.x, display_area.top_left.y} - old_pos;
         surface->resize({info.restore_rect.size.width, display_area.size.height});
         break;
+
+    case mir_surface_state_fullscreen:
+    {
+        Rectangle rect{old_pos, surface->size()};
+        display_layout->size_to_output(rect);
+        movement = rect.top_left - old_pos;
+        surface->resize(rect.size);
+    }
 
     default:
         break;
