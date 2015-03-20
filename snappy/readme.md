@@ -1,3 +1,3 @@
-Mir demos
+Mir
 
-This contains some Mir demos.
+This is an experimental Mir package.
