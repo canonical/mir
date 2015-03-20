@@ -37,12 +37,6 @@ struct InputDeviceInfo
     mir::input::DeviceCapabilities capabilities;
 };
 
-inline bool operator==(InputDeviceInfo const& lhs, InputDeviceInfo const& rhs)
-{
-    return lhs.id == rhs.id && lhs.name == rhs.name && lhs.unique_id == rhs.unique_id;
-}
-
 }
 }
-
 #endif
