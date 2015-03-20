@@ -56,18 +56,17 @@ public:
         size_t stack = 0)
     {
         (void)priority; (void)stack;
-
-        // Avoid data races by working around libstdc++ using a
-        // copy-on-write implementation of std::string
-        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=21334#c45
-        auto name_str = std::make_unique<std::string>(name);
+        std::string const name_str{name};
 
         status.store(NO_ERROR);
         exit_pending.store(false);
 
+        // Avoid data races by doing a move capture instead of copy capture,
+        // since libstdc++ is using a copy-on-write implementation of std::string
+        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=21334#c45
         thread = std::thread([name_str = std::move(name_str),this]
             {
-                mir::set_thread_name(*name_str);
+                mir::set_thread_name(name_str);
                 try
                 {
                     if (auto result = readyToRun()) status.store(result);
