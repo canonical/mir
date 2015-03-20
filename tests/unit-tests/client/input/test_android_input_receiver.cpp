@@ -18,7 +18,7 @@
 
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
-#include "src/common/input/android/android_input_receiver.h"
+#include "src/client/input/android/android_input_receiver.h"
 #include "mir/input/null_input_receiver_report.h"
 #include "mir/input/xkb_mapper.h"
 #include "mir_toolkit/event.h"

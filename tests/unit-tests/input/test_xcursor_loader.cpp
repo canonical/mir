@@ -22,6 +22,7 @@
 #include "mir_test_framework/executable_path.h"
 
 #include <mir_toolkit/common.h>
+#include <mir_toolkit/cursors.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
