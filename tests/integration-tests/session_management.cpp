@@ -22,7 +22,6 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/session.h"
 #include "mir/shell/focus_controller.h"
-#include "mir/shell/shell.h"
 
 #include "mir/scene/surface.h"
 #include "src/server/scene/surface_stack.h"
@@ -99,11 +98,9 @@ struct SessionManagement : Test
     std::shared_ptr<mf::Shell> const session_manager = builder.the_frontend_shell();
     std::shared_ptr<TestSurfaceStack> const& test_surface_stack = builder.test_surface_stack;
     ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters().of_size(100,100);
-    std::shared_ptr<msh::Shell>  const display_listener = builder.the_shell();
 
     void SetUp()
     {
-        display_listener->add_display({{0,0}, {1024, 768}});
         ASSERT_THAT(test_surface_stack, Ne(nullptr));
         ON_CALL(*test_surface_stack, add_surface(_,_,_))
             .WillByDefault(Invoke(test_surface_stack.get(), &TestSurfaceStack::default_add_surface));
