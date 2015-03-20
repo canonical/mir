@@ -597,6 +597,7 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_surface_factory*;
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
+    mir::DefaultServerConfiguration::the_window_manager_builder*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
     mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;

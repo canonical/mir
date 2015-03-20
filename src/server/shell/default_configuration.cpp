@@ -35,25 +35,23 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 {
     return shell([this]
         {
-            auto const input_targeter = the_input_targeter();
-            auto const surface_coordinator = the_surface_coordinator();
-            auto const session_coordinator = the_session_coordinator();
-            auto const prompt_session_manager = the_prompt_session_manager();
-
-            auto const builder = [&](msh::FocusController* focus_controller)
-                { return std::make_shared<msh::DefaultWindowManager>(
-                    focus_controller,
-                    the_placement_strategy(),
-                    session_coordinator,
-                    the_surface_configurator()); };
-
             return wrap_shell(std::make_shared<msh::AbstractShell>(
-                input_targeter,
-                surface_coordinator,
-                session_coordinator,
-                prompt_session_manager,
-                builder));
+                the_input_targeter(),
+                the_surface_coordinator(),
+                the_session_coordinator(),
+                the_prompt_session_manager(),
+                the_window_manager_builder()));
         });
+}
+
+auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
+{
+    return [this](msh::FocusController* focus_controller)
+        { return std::make_shared<msh::DefaultWindowManager>(
+            focus_controller,
+            the_placement_strategy(),
+            the_session_coordinator(),
+            the_surface_configurator()); };
 }
 
 auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) -> std::shared_ptr<msh::Shell>
