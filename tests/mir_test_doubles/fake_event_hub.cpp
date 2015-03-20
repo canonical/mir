@@ -229,7 +229,10 @@ size_t FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t buffe
     {
         std::lock_guard<std::mutex> lg(guard);
         uint64_t dummy;
-        read(trigger_fd, &dummy, sizeof dummy);
+        if (sizeof dummy != read(trigger_fd, &dummy, sizeof dummy))
+            BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                   std::system_category(),
+                                   "Failed to consume fake event hub trigger"}));
 
         if (throw_in_get_events)
             throw std::runtime_error("FakeEventHub::getEvents() exception");
@@ -412,7 +415,10 @@ void FakeEventHub::requestReopenDevices()
 void FakeEventHub::wake()
 {
     uint64_t one{1};
-    write(trigger_fd, &one, sizeof one);
+    if (sizeof one != write(trigger_fd, &one, sizeof one))
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                               std::system_category(),
+                               "Failed to wake fake event hub"}));
 }
 
 void FakeEventHub::dump(droidinput::String8& dump)
