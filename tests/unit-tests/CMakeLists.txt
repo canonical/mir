@@ -62,7 +62,20 @@ set(
   test_module_deleter.cpp
 )
 
+add_subdirectory(options/)
+add_subdirectory(client/)
+add_subdirectory(compositor/)
+add_subdirectory(frontend/)
+add_subdirectory(logging/)
+add_subdirectory(shell/)
+add_subdirectory(geometry/)
 add_subdirectory(graphics/)
+add_subdirectory(input/)
+add_subdirectory(android_input/)
+add_subdirectory(scene/)
+add_subdirectory(examples/)
+add_subdirectory(thread/)
+add_subdirectory(dispatch/)
 
 link_directories(${LIBRARY_OUTPUT_PATH})
 

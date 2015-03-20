@@ -54,11 +54,11 @@ option(MIR_BUILD_PERFORMANCE_TESTS "Build performance tests" ON)
 option(MIR_BUILD_UNIT_TESTS "Build unit tests" ON)
 
 if (MIR_BUILD_ACCEPTANCE_TESTS)
-#  add_subdirectory(acceptance-tests/)
+  add_subdirectory(acceptance-tests/)
 endif (MIR_BUILD_ACCEPTANCE_TESTS)
 
 if (MIR_BUILD_INTEGRATION_TESTS)
-#  add_subdirectory(integration-tests/)
+  add_subdirectory(integration-tests/)
 endif (MIR_BUILD_INTEGRATION_TESTS)
 
 if (MIR_BUILD_PERFORMANCE_TESTS)
