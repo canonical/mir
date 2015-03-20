@@ -27,9 +27,6 @@
  */
 
 /* This is C code. Not C++. */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * A special cursor name for use with mir_cursor_configuration_from_name
@@ -113,9 +110,6 @@ extern char const* const mir_vsplit_resize_cursor_name;
  */
 extern char const* const mir_hsplit_resize_cursor_name;
 
-#ifdef __cplusplus
-}
-#endif
 /**@}*/
 
 #endif
