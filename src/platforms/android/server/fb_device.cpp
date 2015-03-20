@@ -72,18 +72,6 @@ mg::DisplayConfigurationOutput mga::FbControl::active_attribs_for(DisplayName)
         mir_power_mode_on,
         mir_orientation_normal
     };
-#if 0
-    //guarantee always 2 fb's allocated
-    auto fb_num = static_cast<unsigned int>(fb_device->numFramebuffers);
-    fb_num = std::max(2u, fb_num);
-    return mga::DisplayConfigurationOutput{
-      {fb_device->width, fb_device->height},
-      {0,0},
-      fb_device->fps,
-      true,
-      fb_num};
-#endif
-    
 }
 
 mga::ConfigChangeSubscription mga::FbControl::subscribe_to_config_changes(

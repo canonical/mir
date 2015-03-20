@@ -181,7 +181,6 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
     EXPECT_TRUE(attribs.connected);
 }
 
-#if 0
 //the primary display should not be disconnected, but this is how to tell if the external one is
 TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
 {
@@ -193,8 +192,7 @@ TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
         config.active_attribs_for(mga::DisplayName::primary);
     }, std::runtime_error);
     auto external_attribs = config.active_attribs_for(mga::DisplayName::external);
-    EXPECT_THAT(external_attribs.pixel_size, Eq(geom::Size{0,0}));
-    EXPECT_THAT(external_attribs.vrefresh_hz, Eq(0.0));
+    EXPECT_THAT(external_attribs.modes.size(), Eq(0));
     EXPECT_FALSE(external_attribs.connected);
 }
 
@@ -209,8 +207,7 @@ TEST_F(HwcConfiguration, display_attributes_failure_indicates_problem_for_primar
         config.active_attribs_for(mga::DisplayName::primary);
     }, std::runtime_error);
     auto external_attribs = config.active_attribs_for(mga::DisplayName::external);
-    EXPECT_THAT(external_attribs.pixel_size, Eq(geom::Size{0,0}));
-    EXPECT_THAT(external_attribs.vrefresh_hz, Eq(0.0));
+    EXPECT_THAT(external_attribs.modes.size(), Eq(0));
     EXPECT_FALSE(external_attribs.connected);
 }
 
@@ -227,7 +224,7 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
                 return 0;
             }));
     auto attribs = config.active_attribs_for(mga::DisplayName::external);
-    EXPECT_THAT(attribs.vrefresh_hz, Eq(0.0f));
+    EXPECT_THAT(attribs.modes[attribs.current_mode_index].vrefresh_hz, Eq(0.0f));
 }
 
 TEST_F(HwcConfiguration, no_fpe_from_malformed_dpi)
@@ -243,7 +240,7 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_dpi)
                 return 0;
             }));
     auto attribs = config.active_attribs_for(mga::DisplayName::external);
-    EXPECT_THAT(attribs.mm_size, Eq(geom::Size{0,0}));
+    EXPECT_THAT(attribs.physical_size_mm, Eq(geom::Size{0,0}));
 }
 
 TEST_F(HwcConfiguration, subscribes_to_hotplug_and_vsync)
@@ -266,4 +263,3 @@ TEST_F(HwcConfiguration, subscribes_to_hotplug_and_vsync)
     EXPECT_THAT(hotplug_call_count, Eq(2));
     EXPECT_THAT(vsync_call_count, Eq(1));
 }
-#endif

@@ -193,7 +193,7 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_attribs_for(Displ
         {values[0], values[1]},
         period_to_hz(std::chrono::nanoseconds{values[2]}),
         {dpi_to_mm(values[3], values[0]), dpi_to_mm(values[4], values[1])},
-        mir_power_mode_on,
+        mir_power_mode_off,
         format,
         true);
 }

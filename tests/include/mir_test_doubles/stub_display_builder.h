@@ -71,7 +71,9 @@ struct StubHwcConfiguration : public graphics::android::HwcConfiguration
     graphics::DisplayConfigurationOutput active_attribs_for(graphics::android::DisplayName name) override
     {
         bool connected{name == graphics::android::DisplayName::primary};
-        return StubDisplayConfig({{connected, connected}}).outputs[0];
+        auto config = StubDisplayConfig({{connected, connected}}).outputs[0];
+        config.id = static_cast<graphics::DisplayConfigurationOutputId>(name);
+        return config;
     }
     
     graphics::android::ConfigChangeSubscription subscribe_to_config_changes(
