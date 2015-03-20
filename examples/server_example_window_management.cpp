@@ -115,16 +115,12 @@ using CanonicalWindowManager = me::BasicWindowManager<me::CanonicalWindowManager
 
 void me::add_window_manager_option_to(Server& server)
 {
-    server.add_configuration_option(wm_option, wm_description, mir::OptionType::string);
+    server.add_configuration_option(wm_option, wm_description, wm_canonical);
 
     server.override_the_window_manager_builder([&server](msh::FocusController* focus_controller)
         -> std::shared_ptr<msh::WindowManager>
         {
             auto const options = server.get_options();
-
-            if (!options->is_set(wm_option))
-                return std::make_shared<CanonicalWindowManager>(focus_controller);
-
             auto const selection = options->get<std::string>(wm_option);
 
             if (selection == wm_tiling)
