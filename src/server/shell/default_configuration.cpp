@@ -22,6 +22,7 @@
 
 #include "default_placement_strategy.h"
 #include "canonical_window_manager.h"
+#include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
 #include "frontend_shell.h"
 #include "graphics_display_layout.h"
@@ -38,12 +39,16 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
             auto const builder = [this](msh::FocusController* focus_controller)
                 { return std::make_shared<msh::CanonicalWindowManager>(focus_controller, the_shell_display_layout()); };
 
-            return wrap_shell(std::make_shared<msh::AbstractShell>(
+            auto const result = wrap_shell(std::make_shared<msh::AbstractShell>(
                 the_input_targeter(),
                 the_surface_coordinator(),
                 the_session_coordinator(),
                 the_prompt_session_manager(),
                 builder));
+
+            the_composite_event_filter()->prepend(result);
+
+            return result;
         });
 }
 
