@@ -30,14 +30,20 @@ add_definitions(-DMIR_CLIENT_PLATFORM_PATH="${MIR_CLIENT_PLATFORM_PATH}/")
 add_definitions(-DCLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}")
 add_definitions(-DMIR_LOGGING_COMPONENT_FALLBACK="mirclient")
 
+set(MIR_CLIENT_SOURCES)
+set(MIR_CLIENT_REFERENCES mircommon)
+
 add_subdirectory(rpc/)
 add_subdirectory(lttng/)
+add_subdirectory(events)
+add_subdirectory(input)
 
 add_library(mirclientobjects OBJECT
 
   client_buffer_depository.cpp
   display_configuration.cpp
   error_connections.cpp
+  event.cpp
   mir_connection.cpp
   mir_connection_api.cpp
   mir_wait_handle.cpp
@@ -63,14 +69,19 @@ add_library(mirclientobjects OBJECT
   buffer_stream.cpp
   mir_buffer_stream_api.cpp
   default_client_buffer_stream_factory.cpp
+  ${MIR_CLIENT_SOURCES}
 )
 
 # Ensure protobuf C++ headers have been produced before
 # trying to compile mirclientobjects
 add_dependencies(mirclientobjects mirprotobuf)
 
-add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects>)
-add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects>)
+add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
+add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
+
+target_link_libraries(mirclient
+  ${MIR_CLIENT_REFERENCES}
+)
 
 set_target_properties(mirclient
 
