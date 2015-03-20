@@ -121,7 +121,7 @@ TEST_F(InputDeviceHubTest, input_device_hub_ignores_removal_of_unknown_devices)
     EXPECT_CALL(device,start(_)).Times(0);
     EXPECT_CALL(device,stop()).Times(0);
 
-    hub.remove_device(mt::fake_shared(device));
+    EXPECT_THROW(hub.remove_device(mt::fake_shared(device));, std::logic_error);
 }
 
 TEST_F(InputDeviceHubTest, input_device_hub_start_stop_happens_in_order)
@@ -169,6 +169,25 @@ TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)
     observer_loop.trigger_server_actions();
 
     EXPECT_THAT(info1.id,Ne(info2.id));
+}
+
+TEST_F(InputDeviceHubTest, throws_on_duplicate_add)
+{
+    hub.add_device(mt::fake_shared(device));
+    EXPECT_THROW(hub.add_device(mt::fake_shared(device)), std::logic_error);
+}
+
+TEST_F(InputDeviceHubTest, throws_on_spurious_remove)
+{
+    hub.add_device(mt::fake_shared(device));
+    hub.remove_device(mt::fake_shared(device));
+    EXPECT_THROW(hub.remove_device(mt::fake_shared(device)), std::logic_error);
+}
+
+TEST_F(InputDeviceHubTest, throws_on_invalid_handles)
+{
+    EXPECT_THROW(hub.add_device(std::shared_ptr<mi::InputDevice>()), std::logic_error);
+    EXPECT_THROW(hub.remove_device(std::shared_ptr<mi::InputDevice>()), std::logic_error);
 }
 
 TEST_F(InputDeviceHubTest, observers_receive_device_changes)

@@ -79,23 +79,6 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     void session_error(const std::string&, const char*, const std::string&) override {};
 };
 
-struct FakeCommandLine
-{
-    static int const argc = 7;
-    char const* argv[argc];
-
-    FakeCommandLine(std::string const& host_socket)
-    {
-        char const** to = argv;
-        for(auto from : { "dummy-exe-name", "--file", "NestedServer", "--host-socket", host_socket.c_str(), "--enable-input", "off"})
-        {
-            *to++ = from;
-        }
-
-        EXPECT_THAT(to - argv, Eq(argc)); // Check the array size matches parameter list
-    }
-};
-
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
 {
     MOCK_METHOD1(lifecycle_event_occurred, void (MirLifecycleState));
@@ -160,6 +143,8 @@ public:
     NestedMirRunner(std::string const& connection_string)
         : mtf::HeadlessNestedServerRunner(connection_string)
     {
+        add_to_environment("MIR_SERVER_ENABLE_INPUT","off");
+
         server.override_the_host_lifecycle_event_listener([this]
            {
                return the_mock_host_lifecycle_event_listener();

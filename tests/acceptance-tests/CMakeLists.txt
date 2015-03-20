@@ -38,6 +38,7 @@ set(
   test_client_platform_operation.cpp
   test_input_device_hub.cpp
   test_latency.cpp
+  test_shell_control_of_surface_configuration.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")

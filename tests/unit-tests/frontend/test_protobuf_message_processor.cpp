@@ -87,6 +87,7 @@ TEST(ProtobufMessageProcessor, preserves_response_resource_for_exchange_buffer)
         mt::fake_shared(stub_msg_sender),
         mt::fake_shared(stub_display_server),
         mt::fake_shared(stub_report));
+    std::shared_ptr<mfd::MessageProcessor> mp = mt::fake_shared(pb_message_processor);
 
     mpw::Invocation raw_invocation;
     mp::BufferRequest buffer_request;
@@ -97,7 +98,6 @@ TEST(ProtobufMessageProcessor, preserves_response_resource_for_exchange_buffer)
     mfd::Invocation invocation(raw_invocation);
 
     std::vector<mir::Fd> fds;
-    mfd::MessageProcessor* mp = &pb_message_processor;
     mp->dispatch(invocation, fds);
 
     ASSERT_THAT(stub_display_server.exchange_buffer_response, testing::Ne(nullptr));
