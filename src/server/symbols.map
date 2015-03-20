@@ -152,6 +152,7 @@ MIR_SERVER_31 {
     mir::Server::override_the_session_mediator_report*;
     mir::Server::override_the_shell*;
     mir::Server::override_the_surface_configurator*;
+    mir::Server::override_the_window_manager_builder*;
     mir::Server::run*;
     mir::Server::Server*;
     mir::Server::set_command_line*;

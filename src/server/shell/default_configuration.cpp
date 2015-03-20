@@ -22,6 +22,7 @@
 
 #include "default_placement_strategy.h"
 #include "default_window_manager.h"
+#include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
 #include "frontend_shell.h"
 #include "graphics_display_layout.h"
@@ -35,12 +36,16 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 {
     return shell([this]
         {
-            return wrap_shell(std::make_shared<msh::AbstractShell>(
+            auto const result = wrap_shell(std::make_shared<msh::AbstractShell>(
                 the_input_targeter(),
                 the_surface_coordinator(),
                 the_session_coordinator(),
                 the_prompt_session_manager(),
                 the_window_manager_builder()));
+
+            the_composite_event_filter()->prepend(result);
+
+            return result;
         });
 }
 
