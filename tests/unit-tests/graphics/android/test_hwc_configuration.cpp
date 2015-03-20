@@ -68,7 +68,7 @@ TEST_F(HwcConfiguration, fb_format_selection)
         .InSequence(seq);
 
     mga::HwcBlankingControl hwc_config{mock_hwc_wrapper};
-    EXPECT_EQ(mir_pixel_format_argb_8888, hwc_config.active_attribs_for(mga::DisplayName::primary).display_format);
+    EXPECT_EQ(mir_pixel_format_argb_8888, hwc_config.active_attribs_for(mga::DisplayName::primary).current_format);
 }
 
 //not all hwc implementations give a hint about their framebuffer formats in their configuration.
@@ -92,7 +92,7 @@ TEST_F(HwcConfiguration, format_selection_failure_default)
         .InSequence(seq);
 
     mga::HwcBlankingControl hwc_config{mock_hwc_wrapper};
-    EXPECT_EQ(mir_pixel_format_abgr_8888, hwc_config.active_attribs_for(mga::DisplayName::primary).display_format);
+    EXPECT_EQ(mir_pixel_format_abgr_8888, hwc_config.active_attribs_for(mga::DisplayName::primary).current_format);
 }
 
 TEST_F(HwcConfiguration, turns_screen_on)
@@ -174,9 +174,10 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
 
     auto vrefresh_hz = 1000.0 / vrefresh_period.count();
     auto attribs = config.active_attribs_for(display);
-    EXPECT_THAT(attribs.pixel_size, Eq(px_size));
-    EXPECT_THAT(attribs.mm_size, Eq(mm_size));
-    EXPECT_THAT(attribs.vrefresh_hz, Eq(vrefresh_hz));
+    ASSERT_THAT(attribs.modes.size(), Eq(1));
+    EXPECT_THAT(attribs.modes[0].size, Eq(px_size));
+    EXPECT_THAT(attribs.modes[0].vrefresh_hz, Eq(vrefresh_hz));
+    EXPECT_THAT(attribs.physical_size_mm, Eq(mm_size));
     EXPECT_TRUE(attribs.connected);
 }
 
