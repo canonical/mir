@@ -25,21 +25,23 @@
 
 #include <memory>
 
-char const *const mir_default_cursor_name = "default";
-char const *const mir_disabled_cursor_name = "disabled";
-char const* const mir_arrow_cursor_name = "arrow";
-char const* const mir_busy_cursor_name = "busy";
-char const* const mir_caret_cursor_name = "caret";
-char const* const mir_pointing_hand_cursor_name = "pointing-hand";
-char const* const mir_open_hand_cursor_name = "open-hand";
-char const* const mir_closed_hand_cursor_name = "closed-hand";
-char const* const mir_horizontal_resize_cursor_name = "horizontal-resize";
-char const* const mir_vertical_resize_cursor_name = "vertical-resize";
-char const* const mir_diagonal_resize_bottom_to_top_cursor_name = "diagonal-resize-bottom-to-top";
-char const* const mir_diagonal_resize_top_to_bottom_cursor_name = "diagonal-resize-top_to_bottom";
-char const* const mir_omnidirectional_resize_cursor_name = "omnidirectional-resize";
-char const* const mir_vsplit_resize_cursor_name = "vsplit-resize";
-char const* const mir_hsplit_resize_cursor_name = "hsplit-resize";
+
+extern "C" char const *const mir_default_cursor_name = "default";
+extern "C" char const *const mir_disabled_cursor_name = "disabled";
+extern "C" char const* const mir_arrow_cursor_name = "arrow";
+extern "C" char const* const mir_busy_cursor_name = "busy";
+extern "C" char const* const mir_caret_cursor_name = "caret";
+extern "C" char const* const mir_pointing_hand_cursor_name = "pointing-hand";
+extern "C" char const* const mir_open_hand_cursor_name = "open-hand";
+extern "C" char const* const mir_closed_hand_cursor_name = "closed-hand";
+extern "C" char const* const mir_horizontal_resize_cursor_name = "horizontal-resize";
+extern "C" char const* const mir_vertical_resize_cursor_name = "vertical-resize";
+extern "C" char const* const mir_diagonal_resize_bottom_to_top_cursor_name = "diagonal-resize-bottom-to-top";
+extern "C" char const* const mir_diagonal_resize_top_to_bottom_cursor_name = "diagonal-resize-top_to_bottom";
+extern "C" char const* const mir_omnidirectional_resize_cursor_name = "omnidirectional-resize";
+extern "C" char const* const mir_vsplit_resize_cursor_name = "vsplit-resize";
+extern "C" char const* const mir_hsplit_resize_cursor_name = "hsplit-resize";
+
 
 MirCursorConfiguration::MirCursorConfiguration(char const* name) :
     name{name ? name : std::string()}
