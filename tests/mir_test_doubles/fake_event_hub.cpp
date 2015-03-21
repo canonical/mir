@@ -16,6 +16,9 @@
  */
 #include "mir_test/fake_event_hub.h"
 
+#include "mir/log.h"
+#include "mir/logging/logger.h"
+
 // from android-input
 #include <androidfw/Keyboard.h>
 #include <std/Errors.h>
@@ -230,9 +233,7 @@ size_t FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t buffe
         std::lock_guard<std::mutex> lg(guard);
         uint64_t dummy;
         if (sizeof dummy != read(trigger_fd, &dummy, sizeof dummy))
-            BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                   std::system_category(),
-                                   "Failed to consume fake event hub trigger"}));
+            mir::log(mir::logging::Severity::debug, "FakeEventHub", "No event trigger to consume");
 
         if (throw_in_get_events)
             throw std::runtime_error("FakeEventHub::getEvents() exception");
