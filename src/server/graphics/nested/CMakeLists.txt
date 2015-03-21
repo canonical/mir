@@ -1,4 +1,3 @@
-
 include_directories(
     ${PROJECT_SOURCE_DIR}/include/client
 )
@@ -12,4 +11,3 @@ add_library(
   mir_client_host_connection.cpp
   nested_cursor.cpp
 )
-
