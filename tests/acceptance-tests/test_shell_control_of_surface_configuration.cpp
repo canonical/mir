@@ -58,34 +58,23 @@ struct ShellSurfaceConfiguration : mtf::ConnectedClientWithASurface
 {
     void SetUp() override
     {
-        server.override_the_shell([this]
-           {
-                auto const wm_builder = [this]
-                    (msh::FocusController* focus_controller) -> std::shared_ptr<msh::WindowManager>
-                    {
-                        mock_window_manager = std::make_shared<MockWindowManager>(
-                            focus_controller,
-                            server.the_shell_display_layout());
+        server.override_the_window_manager_builder([this]
+            (msh::FocusController* focus_controller) -> std::shared_ptr<msh::WindowManager>
+            {
+                mock_window_manager = std::make_shared<MockWindowManager>(
+                    focus_controller,
+                    server.the_shell_display_layout());
 
-                        ON_CALL(*mock_window_manager, set_surface_attribute(_, _, _, _))
-                            .WillByDefault(Invoke(
-                                mock_window_manager.get(), &MockWindowManager::real_set_surface_attribute));
+                ON_CALL(*mock_window_manager, set_surface_attribute(_, _, _, _))
+                    .WillByDefault(Invoke(
+                        mock_window_manager.get(), &MockWindowManager::real_set_surface_attribute));
 
-                        EXPECT_CALL(*mock_window_manager,
-                            set_surface_attribute(_, _, Ne(mir_surface_attrib_state), _))
-                            .Times(AnyNumber());
+                EXPECT_CALL(*mock_window_manager,
+                    set_surface_attribute(_, _, Ne(mir_surface_attrib_state), _))
+                    .Times(AnyNumber());
 
-                        return mock_window_manager;
-                    };
-
-
-                return std::make_shared<msh::AbstractShell>(
-                    server.the_input_targeter(),
-                    server.the_surface_coordinator(),
-                    server.the_session_coordinator(),
-                    server.the_prompt_session_manager(),
-                    wm_builder);
-           });
+                return mock_window_manager;
+            });
 
         mtf::ConnectedClientWithASurface::SetUp();
     }
