@@ -173,7 +173,7 @@
 }
 
 {
-   libc_udivmoddi4_addr4
-   Memcheck:Addr4
+   libc_udivmoddi4_value4
+   Memcheck:Value4
    fun:__udivmoddi4
 }
