@@ -152,7 +152,7 @@ mg::DisplayConfigurationOutput fill_output(
 }
 }
 
-mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_attribs_for(DisplayName display_name)
+mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(DisplayName display_name)
 {
     auto configs = hwc_device->display_configs(display_name);
     if (configs.empty())

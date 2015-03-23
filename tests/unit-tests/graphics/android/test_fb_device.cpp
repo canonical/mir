@@ -139,7 +139,7 @@ TEST_F(FBDevice, bundle_from_fb)
 {
     using namespace testing;
     mga::FbControl fb_control(fb_hal_mock);
-    auto attribs = fb_control.active_attribs_for(mga::DisplayName::primary);
+    auto attribs = fb_control.active_config_for(mga::DisplayName::primary);
     EXPECT_EQ(display_size, attribs.modes[attribs.current_mode_index].size);
     EXPECT_EQ(mir_pixel_format_abgr_8888, attribs.current_format);
 }

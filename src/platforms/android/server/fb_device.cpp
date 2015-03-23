@@ -54,7 +54,7 @@ void mga::FbControl::power_mode(DisplayName display, MirPowerMode mode)
         fb_device->enableScreen(fb_device.get(), enable);
 }
 
-mg::DisplayConfigurationOutput mga::FbControl::active_attribs_for(DisplayName)
+mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName)
 {
     return {
         mg::DisplayConfigurationOutputId{0},

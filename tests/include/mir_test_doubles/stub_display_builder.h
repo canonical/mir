@@ -50,13 +50,13 @@ struct MockHwcConfiguration : public graphics::android::HwcConfiguration
         using namespace testing;
         StubDisplayConfig config({{true, true}, {false, false}});
         ON_CALL(*this, subscribe_to_config_changes(_,_)).WillByDefault(Return(nullptr));
-        ON_CALL(*this, active_attribs_for(graphics::android::DisplayName::primary))
+        ON_CALL(*this, active_config_for(graphics::android::DisplayName::primary))
             .WillByDefault(testing::Return(config.outputs[0]));
-        ON_CALL(*this, active_attribs_for(graphics::android::DisplayName::external))
+        ON_CALL(*this, active_config_for(graphics::android::DisplayName::external))
             .WillByDefault(testing::Return(config.outputs[1]));
     }
     MOCK_METHOD2(power_mode, void(graphics::android::DisplayName, MirPowerMode));
-    MOCK_METHOD1(active_attribs_for, graphics::DisplayConfigurationOutput(graphics::android::DisplayName));
+    MOCK_METHOD1(active_config_for, graphics::DisplayConfigurationOutput(graphics::android::DisplayName));
     MOCK_METHOD2(subscribe_to_config_changes,
         graphics::android::ConfigChangeSubscription(
             std::function<void()> const&, std::function<void(graphics::android::DisplayName)> const&));
@@ -68,7 +68,7 @@ struct StubHwcConfiguration : public graphics::android::HwcConfiguration
     {
     }
 
-    graphics::DisplayConfigurationOutput active_attribs_for(graphics::android::DisplayName name) override
+    graphics::DisplayConfigurationOutput active_config_for(graphics::android::DisplayName name) override
     {
         bool connected{name == graphics::android::DisplayName::primary};
         auto config = StubDisplayConfig({{connected, connected}}).outputs[0];

@@ -142,9 +142,9 @@ mga::Display::Display(
         std::bind(&mga::Display::on_hotplug, this),
         std::bind(&mga::Display::on_vsync, this, std::placeholders::_1))},
     config(
-        hwc_config->active_attribs_for(mga::DisplayName::primary),
+        hwc_config->active_config_for(mga::DisplayName::primary),
         mir_power_mode_off,
-        hwc_config->active_attribs_for(mga::DisplayName::external),
+        hwc_config->active_config_for(mga::DisplayName::external),
         mir_power_mode_off),
     gl_context{config.primary().current_format, *gl_config, *display_report},
     display_device(display_buffer_builder->create_display_device()),
@@ -194,14 +194,14 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
 {
     if (configuration_dirty)
     {
-        auto external_config = hwc_config->active_attribs_for(mga::DisplayName::external);
+        auto external_config = hwc_config->active_config_for(mga::DisplayName::external);
         if (external_config.connected)
             power_mode(mga::DisplayName::external, *hwc_config, config.external(), mir_power_mode_on);
         else
             config.external().power_mode = mir_power_mode_off;
 
         config = mga::DisplayConfiguration(
-            hwc_config->active_attribs_for(mga::DisplayName::primary),
+            hwc_config->active_config_for(mga::DisplayName::primary),
             config.primary().power_mode,
             std::move(external_config),
             config.external().power_mode);

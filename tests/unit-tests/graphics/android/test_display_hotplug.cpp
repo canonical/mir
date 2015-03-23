@@ -43,7 +43,7 @@ struct DisplayHotplug : ::testing::Test
     struct StubHwcConfig : public mga::HwcConfiguration
     {
         void power_mode(mga::DisplayName, MirPowerMode) override {}
-        mg::DisplayConfigurationOutput active_attribs_for(mga::DisplayName) override
+        mg::DisplayConfigurationOutput active_config_for(mga::DisplayName) override
         {
             return mtd::StubDisplayConfig({{true,true}}).outputs[0];
         } 
@@ -68,9 +68,9 @@ struct DisplayHotplug : ::testing::Test
         {
             wrapped.power_mode(d, m);
         }
-        mg::DisplayConfigurationOutput active_attribs_for(mga::DisplayName d) override
+        mg::DisplayConfigurationOutput active_config_for(mga::DisplayName d) override
         {
-            return wrapped.active_attribs_for(d);
+            return wrapped.active_config_for(d);
         } 
         mga::ConfigChangeSubscription subscribe_to_config_changes(
             std::function<void()> const& hotplug, std::function<void(mga::DisplayName)> const& vsync) override

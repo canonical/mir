@@ -39,7 +39,7 @@ class HwcConfiguration
 public:
     virtual ~HwcConfiguration() = default;
     virtual void power_mode(DisplayName, MirPowerMode) = 0;
-    virtual DisplayConfigurationOutput active_attribs_for(DisplayName) = 0; 
+    virtual DisplayConfigurationOutput active_config_for(DisplayName) = 0; 
     virtual ConfigChangeSubscription subscribe_to_config_changes(
         std::function<void()> const& hotplug_cb,
         std::function<void(DisplayName)> const& vsync_cb) = 0;
@@ -56,7 +56,7 @@ class HwcBlankingControl : public HwcConfiguration
 public:
     HwcBlankingControl(std::shared_ptr<HwcWrapper> const&);
     void power_mode(DisplayName, MirPowerMode) override;
-    DisplayConfigurationOutput active_attribs_for(DisplayName) override;
+    DisplayConfigurationOutput active_config_for(DisplayName) override;
     ConfigChangeSubscription subscribe_to_config_changes(
         std::function<void()> const& hotplug_cb,
         std::function<void(DisplayName)> const& vsync_cb) override;
