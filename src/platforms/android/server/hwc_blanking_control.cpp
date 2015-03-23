@@ -128,7 +128,6 @@ mg::DisplayConfigurationOutput fill_output(
     std::vector<mg::DisplayConfigurationMode> external_modes;
     if (connected)
         external_modes.emplace_back(mg::DisplayConfigurationMode{pixel_size, vrefresh_hz});
-    bool used{false};
 
     auto type = mg::DisplayConfigurationOutputType::lvds;
     if (name == mga::DisplayName::external)
@@ -143,7 +142,7 @@ mg::DisplayConfigurationOutput fill_output(
         preferred_mode_index,
         mm_size,
         connected,
-        used,
+        connected,
         origin,
         preferred_format_index,
         display_format,
