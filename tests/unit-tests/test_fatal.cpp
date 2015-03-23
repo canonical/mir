@@ -24,7 +24,7 @@
 
 using namespace testing;
 
-TEST(FatalTest, abort_formats_message_to_stderr)
+TEST(FatalErrorDeathTest, abort_formats_message_to_stderr)
 {
     mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
 
@@ -32,7 +32,7 @@ TEST(FatalTest, abort_formats_message_to_stderr)
                  "Mary had 1 little lamb");
 }
 
-TEST(FatalTest, abort_raises_sigabrt)
+TEST(FatalErrorDeathTest, abort_raises_sigabrt)
 {
     mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
 
@@ -41,7 +41,7 @@ TEST(FatalTest, abort_raises_sigabrt)
                 "Hello world");
 }
 
-TEST(FatalTest, throw_formats_message_to_what)
+TEST(FatalErrorTest, throw_formats_message_to_what)
 {
     EXPECT_THROW(
         mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb"),
