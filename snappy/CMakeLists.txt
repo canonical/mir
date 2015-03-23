@@ -1,5 +1,6 @@
 set(MIR_PKG_ARCH ${CMAKE_SYSTEM_PROCESSOR})
-if (${MIR_PKG_ARCH} STREQUAL x86_64)
+# FIXME: This is blank on armhf cross-compiles. But don't care right now.
+if ("${MIR_PKG_ARCH}" STREQUAL x86_64)
   set(MIR_PKG_ARCH amd64)
 endif()
 
