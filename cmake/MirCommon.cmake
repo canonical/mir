@@ -50,7 +50,7 @@ function (mir_discover_tests EXECUTABLE)
     # SharedLibraryProber.ReturnsNonEmptyListForPathContainingLibraries causes valgrind failures
     # because of false positives in libc-2.21 which we cannot suppress.
     if(VALGRIND_ARGS AND (TARGET_ARCH STREQUAL "arm-linux-gnueabihf"))
-        set(EXCLUDED_TESTS "SharedLibraryProber.ReturnsNonEmptyListForPathContainingLibraries")
+        set(EXCLUDED_TESTS "SharedLibraryProber.*")
     endif()
 
     execute_process(
