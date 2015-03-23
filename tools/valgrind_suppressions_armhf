@@ -163,3 +163,17 @@
    fun:memset
    fun:g_slice_alloc0
 }
+
+# __udivmoddi4
+
+{
+   libc_udivmoddi4_cond
+   Memcheck:Cond
+   fun:__udivmoddi4
+}
+
+{
+   libc_udivmoddi4_addr4
+   Memcheck:Addr4
+   fun:__udivmoddi4
+}
