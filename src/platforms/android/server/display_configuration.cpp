@@ -41,8 +41,8 @@ mga::DisplayConfiguration::DisplayConfiguration(
     },
     card{mg::DisplayConfigurationCardId{0}, 1}
 {
-    configurations[0].power_mode = primary_mode;
-    configurations[1].power_mode = external_mode;
+    primary().power_mode = primary_mode;
+    external().power_mode = external_mode;
 }
 
 mga::DisplayConfiguration::DisplayConfiguration(DisplayConfiguration const& other) :

@@ -113,7 +113,7 @@ int dpi_to_mm(uint32_t dpi, int pixel_num)
     return length.as(geom::Length::Units::millimetres);
 }
 
-mg::DisplayConfigurationOutput fill_output(
+mg::DisplayConfigurationOutput populate_config(
     mga::DisplayName name,
     geom::Size pixel_size,
     double vrefresh_hz,
@@ -160,7 +160,7 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(Displa
         if (display_name == mga::DisplayName::primary)
             BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
         else   
-            return fill_output(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
+            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
     }
 
     /* note: some drivers (qcom msm8960) choke if this is not the same size array
@@ -184,10 +184,10 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(Displa
         if (display_name == mga::DisplayName::primary)
             BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
         else   
-            return fill_output(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
+            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
     }
 
-    return fill_output(
+    return populate_config(
         display_name,
         {values[0], values[1]},
         period_to_hz(std::chrono::nanoseconds{values[2]}),
