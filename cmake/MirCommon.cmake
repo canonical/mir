@@ -45,6 +45,14 @@ endif(ENABLE_MEMCHECK_OPTION)
 
 function (mir_discover_tests EXECUTABLE)
   if(DISABLE_GTEST_TEST_DISCOVERY)
+
+    # TODO: This is an ugly hack. Replace with proper test configuration mechanism.
+    # SharedLibraryProber.ReturnsNonEmptyListForPathContainingLibraries causes valgrind failures
+    # because of false positives in libc-2.21 which we cannot suppress.
+    if(VALGRIND_ARGS AND (TARGET_ARCH STREQUAL "arm-linux-gnueabihf"))
+        set(EXCLUDED_TESTS "SharedLibraryProber.ReturnsNonEmptyListForPathContainingLibraries")
+    endif()
+
     execute_process(
       COMMAND uname -r
       OUTPUT_VARIABLE KERNEL_VERSION_FULL
@@ -55,10 +63,10 @@ function (mir_discover_tests EXECUTABLE)
     # Some tests expect kernel version 3.11 and up
     if (${KERNEL_VERSION} VERSION_LESS "3.11")
         add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
-            "--gtest_filter=-*DeathTest.*:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer")
+            "--gtest_filter=-*DeathTest.*:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer:${EXCLUDED_TESTS}")
     else()
         add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
-            "--gtest_filter=-*DeathTest.*")
+            "--gtest_filter=-*DeathTest.*:${EXCLUDED_TESTS}")
     endif()
 
     add_test(${EXECUTABLE}_death_tests ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} "--gtest_filter=*DeathTest.*")
