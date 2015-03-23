@@ -21,7 +21,6 @@
 
 #include "mir_test/fake_event_hub.h"
 
-#include "mir/shell/abstract_shell.h"
 #include "src/server/shell/default_window_manager.h"
 
 namespace mtf = mir_test_framework;
@@ -64,28 +63,13 @@ std::shared_ptr<droidinput::EventHubInterface> mtf::FakeEventHubServerConfigurat
     return fake_event_hub;
 }
 
-auto mtf::FakeEventHubServerConfiguration::the_shell() -> std::shared_ptr<shell::Shell>
+auto mtf::FakeEventHubServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
 {
-    return shell([this]
-        {
-            auto const input_targeter = the_input_targeter();
-            auto const surface_coordinator = the_surface_coordinator();
-            auto const session_coordinator = the_session_coordinator();
-            auto const prompt_session_manager = the_prompt_session_manager();
-
-            auto const builder = [&](ms::FocusController* focus_controller)
-                { return std::make_shared<ms::DefaultWindowManager>(
-                    focus_controller,
-                    the_placement_strategy(),
-                    session_coordinator,
-                    the_surface_configurator()); };
-
-            return wrap_shell(std::make_shared<ms::AbstractShell>(
-                input_targeter,
-                surface_coordinator,
-                session_coordinator,
-                prompt_session_manager,
-                builder));
-        });
+    return [&](ms::FocusController* focus_controller)
+        { return std::make_shared<ms::DefaultWindowManager>(
+            focus_controller,
+            the_placement_strategy(),
+            the_session_coordinator(),
+            the_surface_configurator()); };
 }
 
