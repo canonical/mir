@@ -179,6 +179,7 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
     EXPECT_THAT(attribs.modes[0].vrefresh_hz, Eq(vrefresh_hz));
     EXPECT_THAT(attribs.physical_size_mm, Eq(mm_size));
     EXPECT_TRUE(attribs.connected);
+    EXPECT_TRUE(attribs.used);
 }
 
 //the primary display should not be disconnected, but this is how to tell if the external one is
@@ -194,6 +195,7 @@ TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
     auto external_attribs = config.active_attribs_for(mga::DisplayName::external);
     EXPECT_THAT(external_attribs.modes.size(), Eq(0));
     EXPECT_FALSE(external_attribs.connected);
+    EXPECT_FALSE(external_attribs.used);
 }
 
 //some devices (bq) only report an error later in the display attributes call, make sure to report disconnected on error to this call. 
@@ -209,6 +211,7 @@ TEST_F(HwcConfiguration, display_attributes_failure_indicates_problem_for_primar
     auto external_attribs = config.active_attribs_for(mga::DisplayName::external);
     EXPECT_THAT(external_attribs.modes.size(), Eq(0));
     EXPECT_FALSE(external_attribs.connected);
+    EXPECT_FALSE(external_attribs.used);
 }
 
 TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
