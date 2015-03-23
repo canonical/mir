@@ -152,6 +152,7 @@ MIR_SERVER_31 {
     mir::Server::override_the_session_mediator_report*;
     mir::Server::override_the_shell*;
     mir::Server::override_the_surface_configurator*;
+    mir::Server::override_the_window_manager_builder*;
     mir::Server::run*;
     mir::Server::Server*;
     mir::Server::set_command_line*;
@@ -597,6 +598,7 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_surface_factory*;
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
+    mir::DefaultServerConfiguration::the_window_manager_builder*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
     mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
