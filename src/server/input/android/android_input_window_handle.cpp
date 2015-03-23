@@ -106,8 +106,6 @@ bool mia::InputWindowHandle::updateInfo()
     mInfo->ownerUid = 0;
     mInfo->inputFeatures = 0;
 
-    // TODO: Set touchableRegion and layer for touch events.
-
     return true;
 }
 

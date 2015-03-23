@@ -3046,7 +3046,7 @@ void InputDispatcher::dumpDispatchStateLocked(String8& dump) {
         const InputWindowInfo* windowInfo = windowHandle->getInfo();
 
         appendFormat(dump, INDENT2 "name='%s', paused=%s, hasFocus=%s, hasWallpaper=%s, "
-                "visible=%s, canReceiveKeys=%s, flags=0x%08x, type=0x%08x, layer=%d, "
+                "visible=%s, canReceiveKeys=%s, flags=0x%08x, type=0x%08x, "
                 "frame=[%d,%d][%d,%d], scale=%f, "
                 "touchableRegion=[%d,%d][%d,%d]",
                 c_str(windowInfo->name),
@@ -3056,7 +3056,6 @@ void InputDispatcher::dumpDispatchStateLocked(String8& dump) {
                 toString(windowInfo->visible),
                 toString(windowInfo->canReceiveKeys),
                 windowInfo->layoutParamsFlags, windowInfo->layoutParamsType,
-                windowInfo->layer,
                 windowInfo->frameLeft, windowInfo->frameTop,
                 windowInfo->frameRight, windowInfo->frameBottom,
                 windowInfo->scaleFactor,
