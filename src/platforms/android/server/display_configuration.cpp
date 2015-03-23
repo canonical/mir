@@ -25,9 +25,6 @@ namespace
 {
 int const primary_id{0};
 int const external_id{1};
-geom::Point const origin{0,0};
-size_t const preferred_format_index{0};
-size_t const preferred_mode_index{0};
 }
 
 mga::DisplayConfiguration::DisplayConfiguration(
@@ -36,8 +33,8 @@ mga::DisplayConfiguration::DisplayConfiguration(
     mg::DisplayConfigurationOutput external_config,
     MirPowerMode external_mode) :
     configurations{
-        std::move(primary_config),
-        std::move(external_config)
+        {std::move(primary_config),
+        std::move(external_config)}
     },
     card{mg::DisplayConfigurationCardId{0}, 1}
 {

@@ -62,7 +62,7 @@ mga::HalComponentFactory::HalComponentFactory(
     {
         fb_native = res_factory->create_fb_native_device();
         //guarantee always 2 fb's allocated
-        num_framebuffers = std::max(2u, static_cast<size_t>(fb_native->numFramebuffers));
+        num_framebuffers = std::max(2u, static_cast<unsigned int>(fb_native->numFramebuffers));
     }
 }
 

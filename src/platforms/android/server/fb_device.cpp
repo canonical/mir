@@ -60,8 +60,10 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName)
         mg::DisplayConfigurationOutputId{0},
         mg::DisplayConfigurationCardId{0},
         mg::DisplayConfigurationOutputType::lvds,
-        {mga::to_mir_format(fb_device->format)},
-        {mg::DisplayConfigurationMode{{fb_device->width, fb_device->height}, fb_device->fps}},
+        std::vector<MirPixelFormat>{mga::to_mir_format(fb_device->format)},
+        std::vector<mg::DisplayConfigurationMode>{
+            mg::DisplayConfigurationMode{{fb_device->width, fb_device->height}, fb_device->fps}
+        },
         0,
         {0,0},
         true,
