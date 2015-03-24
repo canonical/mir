@@ -41,6 +41,18 @@ using namespace mir::geometry;
 namespace
 {
 int const title_bar_height = 10;
+Size titlebar_size_for_window(Size window_size)
+{
+    return {window_size.width, Height{title_bar_height}};
+}
+
+Point titlebar_position_for_window(Point window_position)
+{
+    return {
+        window_position.x,
+        window_position.y - DeltaY(title_bar_height)
+    };
+}
 }
 
 me::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
@@ -181,19 +193,6 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
     }
 
     return parameters;
-}
-
-Size titlebar_size_for_window(Size window_size)
-{
-    return {window_size.width, Height{title_bar_height}};
-}
-
-Point titlebar_position_for_window(Point window_position)
-{
-    return {
-        window_position.x,
-        window_position.y - DeltaY(title_bar_height)
-    };
 }
 
 std::vector<std::shared_ptr<ms::Surface>> me::CanonicalWindowManagerPolicy::generate_decorations_for(
