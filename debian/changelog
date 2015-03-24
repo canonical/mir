@@ -1,3 +1,25 @@
+mir (0.12.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.12.1 (https://launchpad.net/mir/+milestone/0.12.1)
+    - Bug fixes:
+      . [regression] mali, powervr locks up with around the introduction or
+        removal of a third overlay (LP: #1413211)
+      . USC - mouse cursor on AMD graphics is drawing incorrectly
+        (LP: #1417581)
+      . mir_demo_server doesn't emit hover_exit events (LP: #1418569)
+      . SessionMediator locks mutexes in one thread and unlocks them in
+        another (LP: #1427976)
+      . ProtobufResponder::send_response_result race (LP: #1428402)
+      . Some protobuf Closure objects can access dead objects (LP: #1433330)
+      . DisplayConfigurationOutput.physical_size_mm is undefined/zero
+        (LP: #1430315)
+      . vivid fails to build Mir as of 2015-03-22: error: #warning
+        "_BSD_SOURCE and _SVID_SOURCE are deprecated, use _DEFAULT_SOURCE"
+        [-Werror=cpp] (LP: #1435127)
+      . valgrind on armhf fails with with many errors (LP: #1435186)
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 24 Mar 2015 11:07:41 +0200
+
 mir (0.12.0+15.04.20150228-0ubuntu1) vivid; urgency=medium
 
   [ Alberto Aguirre ]
