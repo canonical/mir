@@ -112,6 +112,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     using namespace ::testing;
 
     EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1);
+    EXPECT_CALL(surface_coordinator, remove_surface(_)).Times(1);
 
     ON_CALL(surface_coordinator, add_surface(_, _)).WillByDefault(
        Return(dummy_surface));
