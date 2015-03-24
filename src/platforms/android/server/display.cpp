@@ -114,7 +114,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
 {
     std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(attribs)};
     auto cache = std::make_shared<mga::InterpreterCache>();
-    auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, cache);
+    auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, attribs.display_format, cache);
     auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
     return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new mga::DisplayBuffer(
         name,
