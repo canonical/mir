@@ -39,11 +39,16 @@ typedef std::function<bool()> DisplayPauseHandler;
 typedef std::function<bool()> DisplayResumeHandler;
 typedef std::function<void()> DisplayConfigurationChangeHandler;
 
-/* DisplaySyncGroup allows for multiple displays to be posted together.
- * A DisplayGroup containing multiple DisplayBuffers should only be used
- * by platforms that have a nonblocking post implemenation. 
- * One DisplayBuffer per DisplaySyncGroup is preferable for platforms that
- * wait for the post to complete.
+/**
+ * DisplaySyncGroup represents a group of displays that need to be output
+ * in unison as a single post() call.
+ * This is only appropriate for platforms whose post() calls are non-blocking
+ * and not synchronous with the screen hardware (e.g. virtual machines or
+ * Android).
+ * Using a DisplaySyncGroup with multiple screens on a platform whose post()
+ * blocks for vsync often results in stuttering, and so should be avoided.
+ * Although using DisplaySyncGroup with a single DisplayBuffer remains safe
+ * for any platform.
  */
 class DisplaySyncGroup
 {

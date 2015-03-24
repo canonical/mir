@@ -1,20 +1,32 @@
 
-MIR_COMMON_3 {
+MIR_COMMON_4 {
  global: mir_*;
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mircommon public" | sed "s/mircommon public: /    /" | sort  
-    mir_arrow_cursor_name*;
-    mir_busy_cursor_name*;
-    mir_caret_cursor_name*;
-    mir_closed_hand_cursor_name*;
-    mir_default_cursor_name*;
-    mir_diagonal_resize_bottom_to_top_cursor_name*;
-    mir_diagonal_resize_top_to_bottom_cursor_name*;
-    mir_disabled_cursor_name*;
+    mir::detail::RefCountedLibrary::operator*;
+    mir::detail::RefCountedLibrary::?RefCountedLibrary*;
+    mir::detail::RefCountedLibrary::RefCountedLibrary*;
+    mir::dispatch::Dispatchable::?Dispatchable*;
+    mir::dispatch::Dispatchable::Dispatchable*;
+    mir::dispatch::Dispatchable::operator*;
+    mir::dispatch::MultiplexingDispatchable::add_watch*;
+    mir::dispatch::MultiplexingDispatchable::dispatch*;
+    mir::dispatch::MultiplexingDispatchable::?MultiplexingDispatchable*;
+    mir::dispatch::MultiplexingDispatchable::MultiplexingDispatchable*;
+    mir::dispatch::MultiplexingDispatchable::operator*;
+    mir::dispatch::MultiplexingDispatchable::relevant_events*;
+    mir::dispatch::MultiplexingDispatchable::remove_watch*;
+    mir::dispatch::MultiplexingDispatchable::watch_fd*;
+    mir::dispatch::SimpleDispatchThread::?SimpleDispatchThread*;
+    mir::dispatch::SimpleDispatchThread::SimpleDispatchThread*;
     mir::Fd::Fd*;
     mir::Fd::invalid*;
     mir::Fd::operator*;
+    mir::geometry::Displacement::Displacement*;
+    mir::geometry::Displacement::operator*;
+    mir::geometry::Length::Length*;
+    mir::geometry::Length::operator*;
     mir::geometry::operator*;
     mir::geometry::Point::operator*;
     mir::geometry::Point::Point*;
@@ -37,120 +49,53 @@ MIR_COMMON_3 {
     mir::geometry::Rectangle::top_right*;
     mir::geometry::Size::operator*;
     mir::geometry::Size::Size*;
-    mir_horizontal_resize_cursor_name*;
-    mir_hsplit_resize_cursor_name*;
-    mir::input::receiver::android::AndroidInputPlatform::?AndroidInputPlatform*;
-    mir::input::receiver::android::AndroidInputPlatform::AndroidInputPlatform*;
-    mir::input::receiver::android::AndroidInputPlatform::create_input_thread*;
-    mir::input::receiver::android::AndroidInputPlatform::operator*;
-    mir::input::receiver::android::InputReceiver::fd*;
-    mir::input::receiver::android::InputReceiver::?InputReceiver*;
-    mir::input::receiver::android::InputReceiver::InputReceiver*;
-    mir::input::receiver::android::InputReceiver::next_event*;
-    mir::input::receiver::android::InputReceiver::operator*;
-    mir::input::receiver::android::InputReceiverThread::?InputReceiverThread*;
-    mir::input::receiver::android::InputReceiverThread::InputReceiverThread*;
-    mir::input::receiver::android::InputReceiverThread::join*;
-    mir::input::receiver::android::InputReceiverThread::operator*;
-    mir::input::receiver::android::InputReceiverThread::start*;
-    mir::input::receiver::android::InputReceiverThread::stop*;
-    mir::input::receiver::android::InputReceiver::wake*;
-    mir::input::receiver::InputPlatform::create*;
-    mir::input::receiver::InputPlatform::create_input_thread*;
-    mir::input::receiver::InputPlatform::InputPlatform*;
-    mir::input::receiver::InputPlatform::operator*;
-    mir::input::receiver::InputReceiverThread::InputReceiverThread*;
-    mir::input::receiver::InputReceiverThread::join*;
-    mir::input::receiver::InputReceiverThread::operator*;
-    mir::input::receiver::InputReceiverThread::start*;
-    mir::input::receiver::InputReceiverThread::stop*;
-    mir_omnidirectional_resize_cursor_name*;
-    mir_open_hand_cursor_name*;
-    mir_pointing_hand_cursor_name*;
-    mir::time::Clock::?Clock*;
-    mir::time::Clock::Clock*;
-    mir::time::Clock::sample*;
-    mir_vertical_resize_cursor_name*;
-    mir_vsplit_resize_cursor_name*;
-    non-virtual?thunk?to?mir::input::receiver::android::AndroidInputPlatform::?AndroidInputPlatform*;
-    non-virtual?thunk?to?mir::input::receiver::android::AndroidInputPlatform::create_input_thread*;
-    non-virtual?thunk?to?mir::input::receiver::android::InputReceiver::?InputReceiver*;
-    non-virtual?thunk?to?mir::input::receiver::android::InputReceiver::next_event*;
-    non-virtual?thunk?to?mir::input::receiver::android::InputReceiverThread::?InputReceiverThread*;
-    non-virtual?thunk?to?mir::input::receiver::android::InputReceiverThread::join*;
-    non-virtual?thunk?to?mir::input::receiver::android::InputReceiverThread::start*;
-    non-virtual?thunk?to?mir::input::receiver::android::InputReceiverThread::stop*;
-    non-virtual?thunk?to?mir::input::receiver::android::InputReceiver::wake*;
-    non-virtual?thunk?to?mir::time::Clock::?Clock*;
+    mir::log*;
+    mir::logging::log*;
+    mir::logging::Logger::?Logger*;
+    mir::logging::Logger::Logger*;
+    mir::logging::Logger::operator*;
+    mir::logging::set_logger*;
+    non-virtual?thunk?to?mir::dispatch::Dispatchable::?Dispatchable*;
+    non-virtual?thunk?to?mir::dispatch::MultiplexingDispatchable::dispatch*;
+    non-virtual?thunk?to?mir::dispatch::MultiplexingDispatchable::?MultiplexingDispatchable*;
+    non-virtual?thunk?to?mir::dispatch::MultiplexingDispatchable::relevant_events*;
+    non-virtual?thunk?to?mir::dispatch::MultiplexingDispatchable::watch_fd*;
+    non-virtual?thunk?to?mir::logging::Logger::?Logger*;
     typeinfo?for?MirBufferPackage;
-    typeinfo?for?MirDisplayCard;
-    typeinfo?for?MirDisplayConfiguration;
-    typeinfo?for?MirDisplayInfo;
-    typeinfo?for?MirDisplayMode;
-    typeinfo?for?MirDisplayOutput;
-    typeinfo?for?MirEventDelegate;
+    typeinfo?for?mir::detail::RefCountedLibrary;
+    typeinfo?for?mir::dispatch::Dispatchable;
+    typeinfo?for?mir::dispatch::MultiplexingDispatchable;
+    typeinfo?for?mir::dispatch::SimpleDispatchThread;
     typeinfo?for?mir::Fd;
+    typeinfo?for?mir::geometry::Displacement;
+    typeinfo?for?mir::geometry::Length;
     typeinfo?for?mir::geometry::Point;
     typeinfo?for?mir::geometry::Rectangle;
     typeinfo?for?mir::geometry::Rectangles;
     typeinfo?for?mir::geometry::Size;
-    typeinfo?for?MirGraphicsRegion;
-    typeinfo?for?mir::input::receiver::android::AndroidInputPlatform;
-    typeinfo?for?mir::input::receiver::android::InputReceiver;
-    typeinfo?for?mir::input::receiver::android::InputReceiverThread;
-    typeinfo?for?mir::input::receiver::InputPlatform;
-    typeinfo?for?mir::input::receiver::InputReceiverThread;
     typeinfo?for?mir::IntOwnedFd;
-    typeinfo?for?MirKeyEvent;
-    typeinfo?for?MirMotionEvent;
-    typeinfo?for?MirMotionPointer;
-    typeinfo?for?MirOrientationEvent;
-    typeinfo?for?MirPlatformPackage;
-    typeinfo?for?MirPromptSessionEvent;
-    typeinfo?for?MirRectangle;
-    typeinfo?for?MirResizeEvent;
-    typeinfo?for?MirScreencastParameters;
-    typeinfo?for?MirSurfaceEvent;
-    typeinfo?for?MirSurfaceParameters;
-    typeinfo?for?mir::time::Clock;
+    typeinfo?for?mir::logging::Logger;
     vtable?for?MirBufferPackage;
-    vtable?for?MirDisplayCard;
-    vtable?for?MirDisplayConfiguration;
-    vtable?for?MirDisplayInfo;
-    vtable?for?MirDisplayMode;
-    vtable?for?MirDisplayOutput;
-    vtable?for?MirEventDelegate;
+    vtable?for?mir::detail::RefCountedLibrary;
+    vtable?for?mir::dispatch::Dispatchable;
+    vtable?for?mir::dispatch::MultiplexingDispatchable;
+    vtable?for?mir::dispatch::SimpleDispatchThread;
     vtable?for?mir::Fd;
+    vtable?for?mir::geometry::Displacement;
+    vtable?for?mir::geometry::Length;
     vtable?for?mir::geometry::Point;
     vtable?for?mir::geometry::Rectangle;
     vtable?for?mir::geometry::Rectangles;
     vtable?for?mir::geometry::Size;
-    vtable?for?MirGraphicsRegion;
-    vtable?for?mir::input::receiver::android::AndroidInputPlatform;
-    vtable?for?mir::input::receiver::android::InputReceiver;
-    vtable?for?mir::input::receiver::android::InputReceiverThread;
-    vtable?for?mir::input::receiver::InputPlatform;
-    vtable?for?mir::input::receiver::InputReceiverThread;
     vtable?for?mir::IntOwnedFd;
-    vtable?for?MirKeyEvent;
-    vtable?for?MirMotionEvent;
-    vtable?for?MirMotionPointer;
-    vtable?for?MirOrientationEvent;
-    vtable?for?MirPlatformPackage;
-    vtable?for?MirPromptSessionEvent;
-    vtable?for?MirRectangle;
-    vtable?for?MirResizeEvent;
-    vtable?for?MirScreencastParameters;
-    vtable?for?MirSurfaceEvent;
-    vtable?for?MirSurfaceParameters;
+    vtable?for?mir::logging::Logger;
     
     # These symbols are supposed to be "private" (they're under src/include)
     # but they are used by libmirplatform, libmirclient or libmirserver
     mir::default_server_socket;
-    mir::input::android::Lexicon::translate*;
+    mir::libraries_for_path*;
     mir::logging::input_timestamp*;
     mir::logging::log*;
-    mir::logging::set_logger*;
     mir::logging::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::RecursiveReadLock::?RecursiveReadLock*;
     mir::RecursiveReadLock::RecursiveReadLock*;
@@ -164,24 +109,6 @@ MIR_COMMON_3 {
     mir::SharedLibrary::load_symbol*;
     mir::SharedLibrary::?SharedLibrary*;
     mir::SharedLibrary::SharedLibrary*;
-    mir::udev::Context::?Context*;
-    mir::udev::Context::Context*;
-    mir::udev::Enumerator::begin*;
-    mir::udev::Enumerator::end*;
-    mir::udev::Enumerator::?Enumerator*;
-    mir::udev::Enumerator::Enumerator*;
-    mir::udev::Enumerator::iterator::operator*;
-    mir::udev::Enumerator::match_parent*;
-    mir::udev::Enumerator::match_subsystem*;
-    mir::udev::Enumerator::match_sysname*;
-    mir::udev::Enumerator::scan_devices*;
-    mir::udev::Monitor::enable*;
-    mir::udev::Monitor::fd*;
-    mir::udev::Monitor::filter_by_subsystem*;
-    mir::udev::Monitor::?Monitor*;
-    mir::udev::Monitor::Monitor*;
-    mir::udev::Monitor::process_events*;
-    mir::udev::operator*;
     vtable?for?mir::logging::DumbConsoleLogger;
     vtable?for?mir::time::SteadyClock;
     vtable?for?mir::time::Clock;
@@ -199,63 +126,3 @@ MIR_COMMON_3 {
   };
  local: *;
 };
-
-MIR_COMMON_3.1 {
-  global:
-    extern "C++" {
-      mir_event_get*;
-      mir_event_get*;
-      mir_input_event_get*;
-      mir_key_input_event_get*;
-      mir_touch_input_event_get*;
-      mir::log*char*;
-      mir::logv*;
-      mir::libraries_for_path*;
-    };
-} MIR_COMMON_3;
-
-MIR_COMMON_3.2 {
-  global:
-    extern "C++" {
-      mir::dispatch::SimpleDispatchThread::SimpleDispatchThread*;
-      mir::dispatch::SimpleDispatchThread::?SimpleDispatchThread*;
-      typeinfo?for?mir::dispatch::SimpleDispatchThread;
-      vtable?for?mir::dispatch::SimpleDispatchThread;
-
-      mir::events::*;
-      mir::input::receiver::XKBMapper::XKBMapper*;
-      mir::input::receiver::XKBMapper::XKBMapper*;        
-      mir::input::receiver::XKBMapper::set_rules*;
-      typeinfo?for?mir::input::receiver::XKBMapper;
-      vtable?for?mir::input::receiver::XKBMapper;
-
-      mir::dispatch::MultiplexingDispatchable::MultiplexingDispatchable*;
-      mir::dispatch::MultiplexingDispatchable::?MultiplexingDispatchable*;
-      mir::dispatch::MultiplexingDispatchable::watch_fd*;
-      mir::dispatch::MultiplexingDispatchable::dispatch*;
-      mir::dispatch::MultiplexingDispatchable::relevant_events*;
-      mir::dispatch::MultiplexingDispatchable::add_watch*;
-      mir::dispatch::MultiplexingDispatchable::remove_watch*;
-
-      typeinfo?for?mir::dispatch::MultiplexingDispatchable;
-      vtable?for?mir::dispatch::MultiplexingDispatchable;
-
-      mir::dispatch::ActionQueue::ActionQueue*;
-      mir::dispatch::ActionQueue::?ActionQueue*;
-      mir::dispatch::ActionQueue::watch_fd*;
-      mir::dispatch::ActionQueue::dispatch*;
-      mir::dispatch::ActionQueue::relevant_events*;
-      mir::dispatch::ActionQueue::enqueue*;
-
-      typeinfo?for?mir::dispatch::ActionQueue;
-      vtable?for?mir::dispatch::ActionQueue;
-
-      mir::detail::RefCountedLibrary::operator*;
-      mir::detail::RefCountedLibrary::?RefCountedLibrary*;
-      mir::detail::RefCountedLibrary::RefCountedLibrary*;
-      vtable?for?mir::detail::RefCountedLibrary;
-      typeinfo?for?mir::detail::RefCountedLibrary;
-
-      mir::events::*
-    };
-} MIR_COMMON_3.1;

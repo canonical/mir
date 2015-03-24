@@ -28,28 +28,16 @@ mga::Framebuffers::Framebuffers(
     mga::GraphicBufferAllocator& buffer_allocator,
     geom::Size size,
     MirPixelFormat format,
-    double vrefresh_hz,
     unsigned int num_framebuffers) :
-    format{format},
-    size{size},
-    refresh_rate_hz{vrefresh_hz}
+    size{size}
 {
     for(auto i = 0u; i < num_framebuffers; i++)
         queue.push(buffer_allocator.alloc_buffer_platform(size, format, mga::BufferUsage::use_framebuffer_gles));
 }
 
-MirPixelFormat mga::Framebuffers::fb_format()
-{
-    return format;
-}
 geom::Size mga::Framebuffers::fb_size()
 {
     return size;
-}
-
-double mga::Framebuffers::fb_refresh_rate()
-{
-    return refresh_rate_hz;
 }
 
 std::shared_ptr<mg::Buffer> mga::Framebuffers::buffer_for_render()

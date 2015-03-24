@@ -36,10 +36,11 @@ namespace geom=mir::geometry;
 
 mga::ServerRenderWindow::ServerRenderWindow(
     std::shared_ptr<mga::FramebufferBundle> const& fb_bundle,
+    MirPixelFormat format,
     std::shared_ptr<InterpreterResourceCache> const& cache)
     : fb_bundle(fb_bundle),
       resource_cache(cache),
-      format(mga::to_android_format(fb_bundle->fb_format()))
+      format(mga::to_android_format(format))
 {
 }
 

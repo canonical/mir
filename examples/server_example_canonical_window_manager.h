@@ -28,6 +28,7 @@
 
 namespace mir
 {
+namespace shell { class DisplayLayout; }
 namespace examples
 {
 struct CanonicalSessionInfo
@@ -63,7 +64,9 @@ public:
     using Tools = BasicWindowManagerTools<CanonicalSessionInfo, CanonicalSurfaceInfo>;
     using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfo>::type;
 
-    explicit CanonicalWindowManagerPolicy(Tools* const tools);
+    explicit CanonicalWindowManagerPolicy(
+        Tools* const tools,
+        std::shared_ptr<shell::DisplayLayout> const& display_layout);
 
     void click(geometry::Point cursor);
 
@@ -116,6 +119,7 @@ private:
     void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
 
     Tools* const tools;
+    std::shared_ptr<shell::DisplayLayout> const display_layout;
 
     geometry::Rectangle display_area;
     geometry::Point old_cursor{};

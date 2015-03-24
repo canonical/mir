@@ -2,4 +2,4 @@ race:libglib*
 race:libgio*
 race:testing::internal::FunctionMockerBase
 race:~posix_event
-
+race:boost::asio::detail::posix_event::signal_and_unlock
