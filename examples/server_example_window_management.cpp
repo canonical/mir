@@ -133,7 +133,7 @@ void me::add_window_manager_option_to(Server& server)
             }
             else if (selection == wm_canonical)
             {
-                return std::make_shared<CanonicalWindowManager>(focus_controller);
+                return std::make_shared<CanonicalWindowManager>(focus_controller, server.the_shell_display_layout());
             }
 
             throw mir::AbnormalExit("Unknown window manager: " + selection);
