@@ -27,9 +27,6 @@ namespace me = mir::examples;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-///\example server_example_fullscreen_placement_strategy.cpp
-/// Demonstrate a custom placement strategy (that fullscreens surfaces)
-
 me::FullscreenPlacementStrategy::FullscreenPlacementStrategy(
     std::shared_ptr<msh::DisplayLayout> const& display_layout)
   : display_layout(display_layout)
