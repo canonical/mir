@@ -1,5 +1,6 @@
-mir (0.12.1-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.12.1+15.04.20150324-0ubuntu1) vivid; urgency=medium
 
+  [ Alexandros Frantzis ]
   * New upstream release 0.12.1 (https://launchpad.net/mir/+milestone/0.12.1)
     - Bug fixes:
       . [regression] mali, powervr locks up with around the introduction or
@@ -18,7 +19,7 @@ mir (0.12.1-0ubuntu1) UNRELEASED; urgency=medium
         [-Werror=cpp] (LP: #1435127)
       . valgrind on armhf fails with with many errors (LP: #1435186)
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 24 Mar 2015 11:07:41 +0200
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 24 Mar 2015 16:09:54 +0000
 
 mir (0.12.0+15.04.20150228-0ubuntu1) vivid; urgency=medium
 
