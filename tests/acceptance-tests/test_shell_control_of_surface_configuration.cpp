@@ -16,12 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/scene/surface_configurator.h"
 #include "mir/scene/surface.h"
 
-#include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_surface_configurator.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
+
+#include "src/server/shell/canonical_window_manager.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -29,57 +28,88 @@
 #include <gmock/gmock.h>
 
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 
-namespace mt = mir::test;
-namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
 using namespace ::testing;
 
 namespace
 {
+struct MockWindowManager : msh::CanonicalWindowManager
+{
+    using msh::CanonicalWindowManager::CanonicalWindowManager;
+
+    MOCK_METHOD4(set_surface_attribute,
+        int(std::shared_ptr<ms::Session> const& session,
+            std::shared_ptr<ms::Surface> const& surface,
+            MirSurfaceAttrib attrib,
+            int value));
+
+    int real_set_surface_attribute(std::shared_ptr<ms::Session> const& session,
+                std::shared_ptr<ms::Surface> const& surface,
+                MirSurfaceAttrib attrib,
+                int value)
+    {
+        return msh::CanonicalWindowManager::set_surface_attribute(session, surface, attrib, value);
+    }
+};
+
 struct ShellSurfaceConfiguration : mtf::ConnectedClientWithASurface
 {
     void SetUp() override
     {
-        server.override_the_surface_configurator([this]
+        server.override_the_window_manager_builder([this]
+            (msh::FocusController* focus_controller) -> std::shared_ptr<msh::WindowManager>
             {
-                return mt::fake_shared(mock_configurator);
+                mock_window_manager = std::make_shared<MockWindowManager>(
+                    focus_controller,
+                    server.the_shell_display_layout());
+
+                ON_CALL(*mock_window_manager, set_surface_attribute(_, _, _, _))
+                    .WillByDefault(Invoke(
+                        mock_window_manager.get(), &MockWindowManager::real_set_surface_attribute));
+
+                EXPECT_CALL(*mock_window_manager,
+                    set_surface_attribute(_, _, Ne(mir_surface_attrib_state), _))
+                    .Times(AnyNumber());
+
+                return mock_window_manager;
             });
 
         mtf::ConnectedClientWithASurface::SetUp();
     }
 
-    mtd::MockSurfaceConfigurator mock_configurator;
+    std::shared_ptr<MockWindowManager> mock_window_manager;
 };
 }
 
-TEST_F(ShellSurfaceConfiguration, the_shell_surface_configurator_is_notified_of_attribute_changes)
+TEST_F(ShellSurfaceConfiguration, the_window_manager_is_notified_of_attribute_changes)
 {
-
-    EXPECT_CALL(mock_configurator, select_attribute_value(_, Ne(mir_surface_attrib_state), _))
-        .Times(AnyNumber())
-        .WillRepeatedly(ReturnArg<2>());
-    EXPECT_CALL(mock_configurator, attribute_set(_, Ne(mir_surface_attrib_state), _)).Times(AnyNumber());
-
-    ON_CALL(mock_configurator, select_attribute_value(_, _, _)).WillByDefault(Return(mir_surface_state_maximized));
-    EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_state, Eq(mir_surface_state_maximized))).Times(1);
-    EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_state, Eq(mir_surface_state_maximized))).Times(1);
+    EXPECT_CALL(*mock_window_manager,
+        set_surface_attribute(_, _, mir_surface_attrib_state, Eq(mir_surface_state_maximized)));
 
     mir_wait_for(mir_surface_set_state(surface, mir_surface_state_maximized));
-    EXPECT_EQ(mir_surface_state_maximized, mir_surface_get_state(surface));
+
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_maximized));
 }
 
-TEST_F(ShellSurfaceConfiguration, the_shell_surface_configurator_may_interfere_with_attribute_changes)
+TEST_F(ShellSurfaceConfiguration, the_window_manager_may_interfere_with_attribute_changes)
 {
-    EXPECT_CALL(mock_configurator, select_attribute_value(_, Ne(mir_surface_attrib_state), _))
-        .Times(AnyNumber())
-        .WillRepeatedly(ReturnArg<2>());
-    EXPECT_CALL(mock_configurator, attribute_set(_, Ne(mir_surface_attrib_state), _)).Times(AnyNumber());
+    auto const set_to_vertmax = [this](
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& surface,
+        MirSurfaceAttrib attrib,
+        int /*value*/)
+    {
+        return mock_window_manager->real_set_surface_attribute(
+            session, surface, attrib, mir_surface_state_vertmaximized);
+    };
 
-    EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_state, Eq(mir_surface_state_maximized))).Times(1)
-        .WillOnce(Return(mir_surface_state_maximized));
-    EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_state, Eq(mir_surface_state_maximized))).Times(1);
+    EXPECT_CALL(*mock_window_manager,
+        set_surface_attribute(_, _, mir_surface_attrib_state, Eq(mir_surface_state_maximized)))
+        .WillOnce(Invoke(set_to_vertmax));
 
     mir_wait_for(mir_surface_set_state(surface, mir_surface_state_maximized));
-    EXPECT_EQ(mir_surface_state_maximized, mir_surface_get_state(surface));
+
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_vertmaximized));
 }

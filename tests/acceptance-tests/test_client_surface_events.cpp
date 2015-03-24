@@ -156,7 +156,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
 
     {
         mir_wait_for(mir_surface_set_state(surface, mir_surface_state_fullscreen));
-        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_minimized));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_vertmaximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
@@ -182,7 +182,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     reset_last_event();
 
     {
-        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_minimized));
+        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_vertmaximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
@@ -190,7 +190,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
         EXPECT_THAT(last_event.type, Eq(mir_event_type_surface));
         EXPECT_THAT(last_event.surface.id, Eq(surface_id));
         EXPECT_THAT(last_event.surface.attrib, Eq(mir_surface_attrib_state));
-        EXPECT_THAT(last_event.surface.value, Eq(mir_surface_state_minimized));
+        EXPECT_THAT(last_event.surface.value, Eq(mir_surface_state_vertmaximized));
     }
 
     reset_last_event();

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,6 +20,8 @@
 #include "mir_test_framework/fake_event_hub_server_configuration.h"
 
 #include "mir_test/fake_event_hub.h"
+
+#include "src/server/shell/default_window_manager.h"
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;
@@ -60,3 +62,14 @@ std::shared_ptr<droidinput::EventHubInterface> mtf::FakeEventHubServerConfigurat
 
     return fake_event_hub;
 }
+
+auto mtf::FakeEventHubServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
+{
+    return [&](ms::FocusController* focus_controller)
+        { return std::make_shared<ms::DefaultWindowManager>(
+            focus_controller,
+            the_placement_strategy(),
+            the_session_coordinator(),
+            the_surface_configurator()); };
+}
+

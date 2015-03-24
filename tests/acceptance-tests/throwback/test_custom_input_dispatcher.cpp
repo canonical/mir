@@ -166,10 +166,7 @@ TEST_F(CustomInputDispatcher, receives_focus_changes)
             using namespace ::testing;
             auto const dispatcher = the_input_dispatcher_mock();
 
-            InSequence seq;
-            EXPECT_CALL(*dispatcher, focus_cleared()).Times(1);
-            EXPECT_CALL(*dispatcher, focus_changed(_)).Times(1);
-            EXPECT_CALL(*dispatcher, focus_cleared()).Times(1)
+            EXPECT_CALL(*dispatcher, focus_changed(_)).Times(1)
                 .WillOnce(InvokeWithoutArgs([this] { dispatching_done.signal_ready(); }));
         }
     } server_config;
