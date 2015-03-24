@@ -1,0 +1,9 @@
+name: mir
+version: @MIR_VERSION@
+architecture: @MIR_PKG_ARCH@
+type: framework
+integration:
+  framework:
+    framework: meta/mir.framework
+  mir-run:
+    bin-path: bin/mir-run

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+MIR_DIR=$SNAP_APP_PATH
+if [ -z "$MIR_DIR" ] ; then
+        MIR_DIR=/apps/mir/current
+fi
+export MIR_DIR
+
+export LIBGL_DRIVERS_PATH=$MIR_DIR/dri
+export MIR_SERVER_PLATFORM_PATH=$MIR_DIR/lib/mir/server-platform
+export MIR_CLIENT_PLATFORM_PATH=$MIR_DIR/lib/mir/client-platform
+export LD_LIBRARY_PATH=$MIR_DIR/lib
+
+exec $*

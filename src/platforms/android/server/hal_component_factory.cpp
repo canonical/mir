@@ -72,7 +72,6 @@ std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebu
         *buffer_allocator,
         config.modes[config.current_mode_index].size,
         config.current_format,
-        config.modes[config.current_mode_index].vrefresh_hz,
         num_framebuffers));
 }
 

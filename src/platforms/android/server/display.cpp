@@ -107,14 +107,14 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     std::shared_ptr<mga::DisplayDevice> const& display_device,
     mga::DisplayName name,
     mga::DisplayComponentFactory& display_buffer_builder,
-    mg::DisplayConfigurationOutput const& attribs,
+    mg::DisplayConfigurationOutput const& config,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
     mga::PbufferGLContext const& gl_context,
     mga::OverlayOptimization overlay_option)
 {
-    std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(attribs)};
+    std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(config)};
     auto cache = std::make_shared<mga::InterpreterCache>();
-    auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, cache);
+    auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, config.current_format, cache);
     auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
     return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new mga::DisplayBuffer(
         name,

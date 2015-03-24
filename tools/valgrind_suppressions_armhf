@@ -60,6 +60,33 @@
     ...
 }
 
+{
+   libc_udivmoddi4_cond
+   Memcheck:Cond
+   fun:__udivmoddi4
+}
+
+{
+   libc_udivmoddi4_value4
+   Memcheck:Value4
+   fun:__udivmoddi4
+}
+
+# It's unfortunate that we need these, since they will
+# suppress errors Addr4 and Value4 from libc regardless
+# of call depth
+{
+   libc_addr4
+   Memcheck:Addr4
+   obj:/lib/arm-linux-gnueabihf/libc-2.*.so
+}
+
+{
+   libc_value4
+   Memcheck:Value4
+   obj:/lib/arm-linux-gnueabihf/libc-2.*.so
+}
+
 # libgcc_s
 
 {
