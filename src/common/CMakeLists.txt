@@ -17,7 +17,6 @@ add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(time)
 add_subdirectory(dispatch)
-add_subdirectory(udev)
 
 list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirtime>
