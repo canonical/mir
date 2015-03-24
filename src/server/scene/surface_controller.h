@@ -26,7 +26,6 @@ namespace mir
 {
 namespace scene
 {
-class PlacementStrategy;
 class SurfaceStackModel;
 class SurfaceFactory;
 

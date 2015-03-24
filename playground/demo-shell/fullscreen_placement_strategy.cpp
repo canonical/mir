@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,9 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "server_example_fullscreen_placement_strategy.h"
+#include "fullscreen_placement_strategy.h"
 
-#include "mir/server.h"
 #include "mir/options/option.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/display_layout.h"
@@ -47,17 +46,4 @@ ms::SurfaceCreationParameters me::FullscreenPlacementStrategy::place(ms::Session
     placed_parameters.size = rect.size;
 
     return placed_parameters;
-}
-
-void me::add_fullscreen_option_to(Server& server)
-{
-    server.add_configuration_option("fullscreen-surfaces", "Make all surfaces fullscreen", mir::OptionType::null);
-    server.override_the_placement_strategy([&]()
-        -> std::shared_ptr<ms::PlacementStrategy>
-        {
-            if (server.get_options()->is_set("fullscreen-surfaces"))
-                return std::make_shared<me::FullscreenPlacementStrategy>(server.the_shell_display_layout());
-            else
-                return std::shared_ptr<ms::PlacementStrategy>{};
-        });
 }

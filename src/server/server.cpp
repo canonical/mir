@@ -53,7 +53,6 @@ namespace mo = mir::options;
     MACRO(host_lifecycle_event_listener)\
     MACRO(input_dispatcher)\
     MACRO(logger)\
-    MACRO(placement_strategy)\
     MACRO(prompt_session_listener)\
     MACRO(prompt_session_manager)\
     MACRO(server_status_listener)\

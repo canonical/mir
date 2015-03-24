@@ -44,7 +44,6 @@ class Shell;
 }
 namespace scene
 {
-class PlacementStrategy;
 class PromptSessionListener;
 class PromptSessionManager;
 class SessionListener;
@@ -227,9 +226,6 @@ public:
 
     /// Sets an override functor for creating the logger.
     void override_the_logger(Builder<logging::Logger> const& logger_builder);
-
-    /// Sets an override functor for creating the placement strategy.
-    void override_the_placement_strategy(Builder<scene::PlacementStrategy> const& placement_strategy_builder);
 
     /// Sets an override functor for creating the prompt session listener.
     void override_the_prompt_session_listener(Builder<scene::PromptSessionListener> const& prompt_session_listener_builder);
