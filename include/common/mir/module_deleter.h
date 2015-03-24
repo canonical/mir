@@ -92,25 +92,14 @@ template<typename Type, typename... Args>
 inline auto make_module_ptr(Args&&... args)
 -> UniqueModulePtr<Type>
 {
-    Type * ptr = new Type(std::forward<Args>(args)...);
-    try
+    struct Deleter : ModuleDeleter<Type>
     {
-        struct CompatibleDeleter : ModuleDeleter<Type>
-        {
-            CompatibleDeleter()
-                : ModuleDeleter<Type>(&make_module_ptr<Type, Args...>)
-            {}
-        };
-        return UniqueModulePtr<Type>(ptr, CompatibleDeleter());
-    }
-    catch (...)
-    {
-        delete ptr;
-        throw;
-    }
+        using ModuleDeleter<Type>::ModuleDeleter;
+    } deleter(&make_module_ptr<Type, Args...>);
+
+    return UniqueModulePtr<Type>(new Type(std::forward<Args>(args)...), std::move(deleter));
 }
 }
 
 }
-
 #endif
