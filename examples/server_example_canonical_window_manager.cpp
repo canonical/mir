@@ -183,21 +183,31 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
     return parameters;
 }
 
+Size titlebar_size_for_window(Size window_size)
+{
+    return {window_size.width, Height{title_bar_height}};
+}
+
+Point titlebar_position_for_window(Point window_position)
+{
+    return {
+        window_position.x,
+        window_position.y - DeltaY(title_bar_height)
+    };
+}
+
 std::vector<std::shared_ptr<ms::Surface>> me::CanonicalWindowManagerPolicy::generate_decorations_for(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface)
 {
     tools->info_for(session).surfaces++;
-    auto format = mir_pixel_format_xbgr_8888;
-    Height decoration_height_pixels{40};
+    auto format = mir_pixel_format_xrgb_8888;
     ms::SurfaceCreationParameters params;
-    params.of_size(Size{surface->size().width, decoration_height_pixels})
+    params.of_size(titlebar_size_for_window(surface->size()))
         .of_name("decoration")
         .of_pixel_format(format)
         .of_buffer_usage(mir::graphics::BufferUsage::software)
-        .of_position(Point{
-            surface->top_left().x,
-            surface->top_left().y - DeltaY(decoration_height_pixels.as_int())})
+        .of_position(titlebar_position_for_window(surface->top_left()))
         .of_type(mir_surface_type_gloss);
     auto id = session->create_surface(params);
     auto decoration_surface = session->surface(id);
@@ -357,21 +367,27 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
     case mir_surface_state_restored:
         movement = info.restore_rect.top_left - old_pos;
         surface->resize(info.restore_rect.size);
+        info.decoration->resize(titlebar_size_for_window(info.restore_rect.size));
+        info.decoration->show();
         break;
 
     case mir_surface_state_maximized:
         movement = display_area.top_left - old_pos;
         surface->resize(display_area.size);
+        info.decoration->hide();
         break;
 
     case mir_surface_state_horizmaximized:
         movement = Point{display_area.top_left.x, info.restore_rect.top_left.y} - old_pos;
         surface->resize({display_area.size.width, info.restore_rect.size.height});
+        info.decoration->resize(titlebar_size_for_window({display_area.size.width, info.restore_rect.size.height}));
+        info.decoration->show();
         break;
 
     case mir_surface_state_vertmaximized:
         movement = Point{info.restore_rect.top_left.x, display_area.top_left.y} - old_pos;
         surface->resize({info.restore_rect.size.width, display_area.size.height});
+        info.decoration->hide();
         break;
 
     case mir_surface_state_fullscreen:
@@ -654,7 +670,8 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
             new_size.height = new_size.height + to_bottom_right.dy;
     }
 
-    switch (tools->info_for(surface).state)
+    auto& info = tools->info_for(surface);
+    switch (info.state)
     {
     case mir_surface_state_restored:
         break;
@@ -681,6 +698,7 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
         return true;
     }
 
+    info.decoration->resize({new_size.width, Height{title_bar_height}});
     surface->resize(new_size);
 
     // TODO It is rather simplistic to move a tree WRT the top_left of the root
