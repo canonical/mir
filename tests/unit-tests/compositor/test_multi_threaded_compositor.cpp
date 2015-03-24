@@ -666,7 +666,7 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
 
     unsigned int const nbuffers{3};
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
-    auto mock_scene = std::make_shared<mtd::MockScene>();
+    auto mock_scene = std::make_shared<NiceMock<mtd::MockScene>>();
     auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
 
@@ -681,10 +681,6 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
     EXPECT_CALL(*mock_scene, scene_elements_for(_))
         .Times(AtLeast(0))
         .WillRepeatedly(Return(mc::SceneElementSequence{}));
-    EXPECT_CALL(*mock_scene, register_compositor(_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*mock_scene, unregister_compositor(_))
-        .Times(AtLeast(0));
 
     mc::MultiThreadedCompositor compositor{display, mock_scene, db_compositor_factory, null_display_listener, mock_report, true};
 
