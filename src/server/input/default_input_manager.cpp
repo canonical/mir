@@ -80,27 +80,20 @@ void mi::DefaultInputManager::start()
 
     queue->enqueue([this]()
                    {
-                       for (auto const& platform : platforms)
-                       {
-                           platform->start();
-                           multiplexer->add_watch(platform->dispatchable());
-                       }
+                        mir::set_thread_name("Mir/InputReader");
+                        for (auto const& platform : platforms)
+                        {
+                            platform->start();
+                            multiplexer->add_watch(platform->dispatchable());
+                        }
                    });
 
     input_thread = std::make_unique<dispatch::SimpleDispatchThread>(
         multiplexer,
-        [this](std::function<void()> const& thread_function)
+        [this]()
         {
-            mir::set_thread_name("Mir/InputReader");
-            try
-            {
-                thread_function();
-            }
-            catch (...)
-            {
-                state = State::stopped;
-                mir::terminate_with_current_exception();
-            }
+            state = State::stopped;
+            mir::terminate_with_current_exception();
         });
 }
 

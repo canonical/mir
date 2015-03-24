@@ -26,6 +26,7 @@
 #include <fcntl.h>
 
 #include <atomic>
+#include <exception>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -216,32 +217,26 @@ TEST_F(SimpleDispatchThreadTest, handles_destruction_from_dispatch_callback)
     EXPECT_TRUE(dispatched->wait_for(10s));
 }
 
-TEST_F(SimpleDispatchThreadTest, executes_around_code)
+TEST_F(SimpleDispatchThreadTest, executes_exception_handler_with_current_exception)
 {
     using namespace std::chrono_literals;
-    auto before = false;
-    auto after = false;
     auto dispatched = std::make_shared<mt::Signal>();
+    std::exception_ptr exception;
 
     auto dispatchable = std::make_shared<mt::TestDispatchable>(
-        [&before,&after,&dispatched]()
+        []()
         {
-            EXPECT_TRUE(before);
-            EXPECT_FALSE(after);
-            dispatched->raise();
+            throw std::runtime_error("thrown");
         });
-    {
-        md::SimpleDispatchThread dispatcher{dispatchable,
-            [&before,&after](std::function<void()> const& thread_function)
-            {
-                before = true;
-                thread_function();
-                after = true;
-            }};
-        dispatchable->trigger();
-        EXPECT_TRUE(dispatched->wait_for(10s));
-    }
 
-    EXPECT_TRUE(before);
-    EXPECT_TRUE(after);
+    md::SimpleDispatchThread dispatcher{dispatchable,
+        [&dispatched,&exception]()
+        {
+            exception = std::current_exception();
+            dispatched->raise();
+        }};
+    dispatchable->trigger();
+    EXPECT_TRUE(dispatched->wait_for(10s));
+
+    EXPECT_THROW({std::rethrow_exception(exception);}, std::runtime_error);
 }
