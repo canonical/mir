@@ -56,9 +56,8 @@ struct ModuleDeleter : std::default_delete<T>
     }
 
 protected:
-    template<typename R, typename... Rs>
-    ModuleDeleter(R (*module_address)(Rs...))
-        : library{reinterpret_cast<void*>(module_address)}
+    ModuleDeleter(void *address_in_module)
+        : library{address_in_module}
     {
     }
 private:
@@ -94,8 +93,9 @@ inline auto make_module_ptr(Args&&... args)
 {
     struct Deleter : ModuleDeleter<Type>
     {
-        using ModuleDeleter<Type>::ModuleDeleter;
-    } deleter(&make_module_ptr<Type, Args...>);
+        Deleter(void* address)
+            : ModuleDeleter<Type>(address) {}
+    } deleter(reinterpret_cast<void*>(&make_module_ptr<Type, Args...>));
 
     return UniqueModulePtr<Type>(new Type(std::forward<Args>(args)...), std::move(deleter));
 }
