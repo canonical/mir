@@ -60,7 +60,7 @@ function(make_lib_descriptor name)
 endfunction()
 
 #These headers are not part of the libmircommon interface
-set(android-platform-headers "${CMAKE_SOURCE_DIR}/src/include/common/mir/graphics/android")
+set(android-platform-headers "${CMAKE_SOURCE_DIR}/src/include/common/mir/graphics/android\n    ${CMAKE_SOURCE_DIR}/src/include/common/mir/input")
 
 make_lib_descriptor(client)
 make_lib_descriptor(server)
