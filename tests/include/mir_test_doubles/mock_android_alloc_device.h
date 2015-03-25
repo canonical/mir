@@ -72,7 +72,6 @@ public:
         alloc = hook_alloc;
         free = hook_free;
         dump = hook_dump;
-
         ON_CALL(*this, alloc_interface(_,_,_,_,_,_,_))
         .WillByDefault(DoAll(
                            SetArgPointee<5>(buffer_handle),
