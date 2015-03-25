@@ -38,7 +38,6 @@ namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
-namespace mo = mir::options;
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
 
