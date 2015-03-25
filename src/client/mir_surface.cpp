@@ -413,17 +413,18 @@ int MirSurface::attrib(MirSurfaceAttrib at) const
     return attrib_cache[at];
 }
 
-void MirSurface::set_event_handler(MirEventDelegate const* delegate)
+void MirSurface::set_event_handler(mir_surface_event_callback callback,
+                                   void* context)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     input_thread.reset();
 
-    if (delegate)
+    if (callback)
     {
-        handle_event_callback = std::bind(delegate->callback, this,
+        handle_event_callback = std::bind(callback, this,
                                           std::placeholders::_1,
-                                          delegate->context);
+                                          context);
 
         if (surface.fd_size() > 0 && handle_event_callback)
         {

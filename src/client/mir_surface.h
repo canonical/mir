@@ -130,7 +130,8 @@ public:
 
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
-    void set_event_handler(MirEventDelegate const* delegate);
+    void set_event_handler(mir_surface_event_callback callback,
+                           void* context);
     void handle_event(MirEvent const& e);
 
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
