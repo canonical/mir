@@ -22,7 +22,6 @@
 #include "window_manager.h"
 #include "../server_configuration.h"
 
-#include "mir/options/default_configuration.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
 #include "mir/graphics/display.h"
@@ -73,17 +72,7 @@ class DemoServerConfiguration : public mir::examples::ServerConfiguration
 public:
     DemoServerConfiguration(int argc, char const* argv[],
                             std::initializer_list<std::shared_ptr<mi::EventFilter>> const& filter_list)
-      : ServerConfiguration([argc, argv]
-        {
-            auto result = std::make_shared<mo::DefaultConfiguration>(argc, argv);
-
-            namespace po = boost::program_options;
-
-            result->add_options()
-                ("fullscreen-surfaces", "Make all surfaces fullscreen");
-
-            return result;
-        }()),
+      : ServerConfiguration(argc, argv),
         filter_list(filter_list)
     {
     }
