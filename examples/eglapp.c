@@ -16,10 +16,9 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "eglapp.h"
 #include "mir_toolkit/mir_client_library.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -135,16 +134,6 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
         break;
     case mir_event_type_surface:
         mir_eglapp_handle_surface_event(mir_event_get_surface_event(ev));
-        break;
-    case mir_event_type_resize:
-        /*
-         * FIXME: https://bugs.launchpad.net/mir/+bug/1194384
-         * It is unsafe to set the width and height here because we're in a
-         * different thread to that doing the rendering. So we either need
-         * support for event queuing (directing them to another thread) or
-         * full single-threaded callbacks. (LP: #1194384).
-         */
-        printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
         break;
     case mir_event_type_close_surface:
         printf("Received close event from server.\n");
