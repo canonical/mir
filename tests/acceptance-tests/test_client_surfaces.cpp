@@ -312,11 +312,9 @@ TEST_F(ClientSurfaces, can_be_renamed)
      * these, but really don't care -- such a function is not required
      * right now. Although might be in future to support some toolkits.
      *
-     * At least verify the rename completes without blocking and that
-     * NULL is supported...
+     * At least verify the rename completes without blocking...
      */
     mir_wait_for_one(mir_surface_set_title(surf, "New Name"));
-    mir_wait_for_one(mir_surface_set_title(surf, nullptr));  // alias for ""
     mir_wait_for_one(mir_surface_set_title(surf, ""));
     mir_wait_for_one(mir_surface_set_title(surf, "Alice"));
 

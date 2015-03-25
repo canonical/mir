@@ -156,7 +156,7 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
 
 bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
 {
-    spec->surface_name = name ? name : "";
+    spec->surface_name = name;
     return true;
 }
 
