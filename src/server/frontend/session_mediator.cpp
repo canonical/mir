@@ -410,8 +410,6 @@ void mf::SessionMediator::modify_surface(
     mir::protobuf::Void* response,
     google::protobuf::Closure* done)
 {
-    response->clear_error();
-
     {
         std::unique_lock<std::mutex> lock(session_mutex);
 
