@@ -37,9 +37,7 @@ class FramebufferBundle{
 public:
     virtual ~FramebufferBundle() = default;
 
-    virtual MirPixelFormat fb_format() = 0;
     virtual geometry::Size fb_size() = 0;
-    virtual double fb_refresh_rate() = 0;
     virtual std::shared_ptr<Buffer> buffer_for_render() = 0;
     virtual std::shared_ptr<Buffer> last_rendered_buffer() = 0;
 

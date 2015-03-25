@@ -147,7 +147,9 @@ void me::add_window_manager_option_to(Server& server)
             {
                 wm_builder = [&server](msh::FocusController* focus_controller) -> std::shared_ptr<msh::WindowManager>
                     {
-                        return std::make_shared<CanonicalWindowManager>(focus_controller);
+                        return std::make_shared<CanonicalWindowManager>(
+                            focus_controller,
+                            server.the_shell_display_layout());
                     };
             }
             else

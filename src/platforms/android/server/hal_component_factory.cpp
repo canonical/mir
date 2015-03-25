@@ -69,7 +69,7 @@ std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebu
         *buffer_allocator,
         attribs.pixel_size,
         attribs.display_format,
-        attribs.vrefresh_hz, attribs.num_framebuffers));
+        attribs.num_framebuffers));
 }
 
 std::unique_ptr<mga::LayerList> mga::HalComponentFactory::create_layer_list()
