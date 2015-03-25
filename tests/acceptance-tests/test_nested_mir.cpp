@@ -84,7 +84,7 @@ struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
     MOCK_METHOD1(lifecycle_event_occurred, void (MirLifecycleState));
 };
 
-struct NestedMockEGL : mir::test::doubles::MockEGL
+struct NestedMockEGL : NiceMock<mir::test::doubles::MockEGL>
 {
     NestedMockEGL()
     {
