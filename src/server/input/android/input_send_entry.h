@@ -35,10 +35,10 @@ namespace android
  */
 struct InputSendEntry
 {
-    uint32_t sequence_id;
+    TransportSequenceID sequence_id;
     MirEvent event;
     std::shared_ptr<InputChannel> channel;
-    InputSendEntry(uint32_t id, MirEvent ev, std::shared_ptr<InputChannel> const& channel)
+    InputSendEntry(TransportSequenceID id, MirEvent ev, std::shared_ptr<InputChannel> const& channel)
         : sequence_id(id), event(ev), channel(channel)
     {
     }

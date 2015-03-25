@@ -26,6 +26,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_input_surface.h"
+#include "mir_test_doubles/stub_input_sender.h"
 
 #include "mir/raii.h"
 
@@ -99,7 +100,8 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
         .Times(1)
         .WillOnce(Return(testing_surface_name));
 
-    mia::InputWindowHandle handle(new StubInputApplicationHandle(),
+    mia::InputWindowHandle handle(std::make_shared<mtd::StubInputSender>(),
+                                  new StubInputApplicationHandle(),
                                   mt::fake_shared(mock_channel), &mock_surface);
 
     auto info = handle.getInfo();
