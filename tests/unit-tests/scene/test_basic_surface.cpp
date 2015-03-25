@@ -600,7 +600,7 @@ TEST_P(BasicSurfaceAttributeTest, notifies_about_attrib_changes)
     auto const& value1 = params.a_valid_value;
     auto const& value2 = params.default_value;
 
-    MockSurfaceObserver mock_surface_observer;
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
 
     InSequence s;
     EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, value1))
@@ -623,7 +623,7 @@ TEST_P(BasicSurfaceAttributeTest, does_not_notify_if_attrib_is_unchanged)
     auto const& default_value = params.default_value;
     auto const& another_value = params.a_valid_value;
 
-    MockSurfaceObserver mock_surface_observer;
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
 
     EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, another_value))
         .Times(1);
