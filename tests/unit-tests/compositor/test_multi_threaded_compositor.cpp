@@ -666,7 +666,7 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
 
     unsigned int const nbuffers{3};
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
-    auto mock_scene = std::make_shared<mtd::MockScene>();
+    auto mock_scene = std::make_shared<NiceMock<mtd::MockScene>>();
     auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
 

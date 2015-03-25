@@ -83,7 +83,7 @@ struct SessionManagerSetup : public testing::Test
         std::shared_ptr<mi::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),
         mir::report::null_scene_report());
-    mtd::MockSurfaceCoordinator surface_coordinator;
+    testing::NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
     testing::NiceMock<MockSessionContainer> container;
     ms::NullSessionListener session_listener;
 
