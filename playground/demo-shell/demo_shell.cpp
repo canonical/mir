@@ -20,7 +20,6 @@
 
 #include "demo_compositor.h"
 #include "window_manager.h"
-#include "fullscreen_placement_strategy.h"
 #include "../server_configuration.h"
 
 #include "mir/options/default_configuration.h"
@@ -97,18 +96,6 @@ public:
             {
                 return std::make_shared<me::DisplayBufferCompositorFactory>(
                     the_compositor_report());
-            });
-    }
-
-    std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
-    {
-        return placement_strategy(
-            [this]() -> std::shared_ptr<ms::PlacementStrategy>
-            {
-                if (the_options()->is_set("fullscreen-surfaces"))
-                    return std::make_shared<me::FullscreenPlacementStrategy>(the_shell_display_layout());
-                else
-                    return DefaultServerConfiguration::the_placement_strategy();
             });
     }
 
