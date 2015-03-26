@@ -47,6 +47,7 @@ struct CanonicalSurfaceInfo
     std::weak_ptr<scene::Session> session;
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
+    std::shared_ptr<scene::Surface> decoration;
 };
 
 // standard window management algorithm:
@@ -93,6 +94,9 @@ public:
     bool handle_touch_event(MirTouchInputEvent const* event);
 
     bool handle_pointer_event(MirPointerInputEvent const* event);
+
+    std::vector<std::shared_ptr<scene::Surface>> generate_decorations_for(
+        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
 private:
     static const int modifier_mask =

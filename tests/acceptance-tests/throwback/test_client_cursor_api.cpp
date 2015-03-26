@@ -119,7 +119,7 @@ struct CursorClient
         client_thread = std::thread{
             [this,&setup_done]
             {
-                auto const connection =
+                connection =
                     mir_connect_sync(connect_string.c_str(), client_name.c_str());
 
                 auto spec = mir_connection_create_spec_for_normal_surface(connection,
@@ -165,6 +165,8 @@ struct CursorClient
 
     std::string const connect_string;
     std::string const client_name;
+
+    MirConnection* connection;
 
     std::thread client_thread;
     mir::test::WaitCondition teardown;
@@ -396,6 +398,54 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
     client.run();
 
     expectations_satisfied.wait_for_at_most_seconds(5);
+
+    client_shutdown_expectations();
+}
+
+TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
+{
+    using namespace ::testing;
+    
+    static int hotspot_x = 1, hotspot_y = 1;
+
+    struct BufferStreamClient : CursorClient
+    {
+        using CursorClient::CursorClient;
+
+        void setup_cursor(MirSurface* surface) override
+        {
+            auto stream = mir_connection_create_buffer_stream_sync(
+                connection, 24, 24, mir_pixel_format_argb_8888,
+                mir_buffer_usage_software);
+            auto conf = mir_cursor_configuration_from_buffer_stream(stream, hotspot_x, hotspot_y);
+
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            
+            mir_cursor_configuration_destroy(conf);            
+            
+            mir_buffer_stream_swap_buffers_sync(stream);
+            mir_buffer_stream_swap_buffers_sync(stream);
+            mir_buffer_stream_swap_buffers_sync(stream);
+
+            mir_buffer_stream_release_sync(stream);
+        }
+    };
+
+    test_server_config().client_geometries[client_name_1] =
+        geom::Rectangle{{0, 0}, {1, 1}};
+
+    BufferStreamClient client{new_connection(), client_name_1};
+
+    {
+        InSequence seq;
+        EXPECT_CALL(test_server_config().cursor, show(_)).Times(2);
+        EXPECT_CALL(test_server_config().cursor, show(_)).Times(1)
+            .WillOnce(mt::WakeUp(&expectations_satisfied));
+    }
+
+    client.run();
+
+    expectations_satisfied.wait_for_at_most_seconds(500);
 
     client_shutdown_expectations();
 }

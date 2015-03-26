@@ -25,6 +25,7 @@
 #include "mir_toolkit/common.h"
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -43,6 +44,7 @@ public:
     virtual MirPixelFormat pixel_format() const = 0;
     virtual void gl_bind_to_texture() = 0;
     virtual void write(unsigned char const* pixels, size_t size) = 0;
+    virtual void read(std::function<void(unsigned char const*)> const& do_with_pixels) = 0;
 
 protected:
     Buffer() = default;

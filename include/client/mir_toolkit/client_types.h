@@ -82,13 +82,12 @@ typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context);
 typedef void (*mir_buffer_stream_callback)(MirBufferStream *surface, void *client_context);
 
 /**
- * Callback member of MirEventDelegate for handling of events.
+ * Callback for handling of surface events.
  *   \param [in] surface     The surface on which an event has occurred
  *   \param [in] event       The event to be handled
- *   \param [in,out] context The context provided by client during delegate
- *                           registration.
+ *   \param [in,out] context The context provided by client
  */
-typedef void (*mir_event_delegate_callback)(
+typedef void (*mir_surface_event_callback)(
     MirSurface* surface, MirEvent const* event, void* context);
 
 /**
@@ -283,6 +282,7 @@ typedef struct MirDisplayConfiguration
  * MirEventDelegate may be used to specify (at surface creation time)
  * callbacks for handling of events.
  */
+typedef mir_surface_event_callback mir_event_delegate_callback;
 typedef struct MirEventDelegate
 {
     mir_event_delegate_callback callback;
