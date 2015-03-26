@@ -19,6 +19,7 @@
 #ifndef MIR_SERVER_H_
 #define MIR_SERVER_H_
 
+#include "mir/shell/window_manager_builder.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -253,6 +254,9 @@ public:
 
     /// Sets an override functor for creating the surface configurator.
     void override_the_surface_configurator(Builder<scene::SurfaceConfigurator> const& surface_configurator_builder);
+
+    /// Sets an override functor for creating the window manager.
+    void override_the_window_manager_builder(shell::WindowManagerBuilder const wmb);
 
     /// Each of the wrap functions takes a wrapper functor of the same form
     template<typename T> using Wrapper = std::function<std::shared_ptr<T>(std::shared_ptr<T> const&)>;
