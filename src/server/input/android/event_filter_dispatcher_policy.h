@@ -15,8 +15,9 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-#ifndef MIR_EVENT_FILTER_DISPATCHER_POLICY_H_
-#define MIR_EVENT_FILTER_DISPATCHER_POLICY_H_
+
+#ifndef MIR_INPUT_ANDROID_EVENT_FILTER_DISPATCHER_POLICY_H_
+#define MIR_INPUT_ANDROID_EVENT_FILTER_DISPATCHER_POLICY_H_
 
 #include "mir/input/event_filter.h"
 
@@ -78,4 +79,4 @@ private:
 }
 }
 
-#endif // MIR_DUMMY_INPUT_DISPATCHER_POLICY_H_
+#endif // MIR_INPUT_ANDROID_EVENT_FILTER_DISPATCHER_POLICY_H_

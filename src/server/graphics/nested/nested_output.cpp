@@ -16,12 +16,11 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "nested_output.h"
 #include "host_connection.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/graphics/pixel_format_utils.h"
+#include "mir/events/event_private.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

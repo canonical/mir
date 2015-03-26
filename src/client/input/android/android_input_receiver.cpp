@@ -16,14 +16,13 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "android_input_receiver.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/input/xkb_mapper.h"
 #include "mir/input/input_receiver_report.h"
 #include "mir/input/android/android_input_lexicon.h"
+#include "mir/events/event_private.h"
 
 #include <boost/throw_exception.hpp>
 

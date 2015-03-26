@@ -16,9 +16,10 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
 #include "src/server/input/android/input_translator.h"
+#include "mir/events/event_private.h"
+
 #include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_matchers.h"

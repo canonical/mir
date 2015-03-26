@@ -19,6 +19,7 @@
 #define MIR_TOOLKIT_MIR_CURSOR_H_
 
 #include <mir_toolkit/common.h>
+#include <mir_toolkit/client_types.h>
 
 /**
  * Opaque structure containing cursor parameterization. Create with mir_cursor* family.
@@ -51,6 +52,19 @@ void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters);
  *            to_mir_cursor_configuration_destroy
  */
 MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name);
+
+/**
+ * Returns a new cursor configuration tied to a given buffer stream.
+ * If the configuration is successfully applied buffers from the stream will be used 
+ * to fill the system cursor.
+ *    \param [in] name      The buffer stream
+ *    \param [in] hotspot_x The x-coordinate to use as the cursor's hotspot.
+ *    \param [in] hotspot_y The y-coordinate to use as the cursor's hotspot.
+ *    \return A cursor parameters object which must be passed
+ *            to_mir_cursor_configuration_destroy
+ */
+MirCursorConfiguration *mir_cursor_configuration_from_buffer_stream(MirBufferStream const* stream, int hotspot_x,
+    int hotspot_y);
 
 #ifdef __cplusplus
 }

@@ -16,8 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test_doubles/mock_rpc_report.h"
 #include "mir_test_doubles/null_client_event_sink.h"
@@ -29,6 +27,7 @@
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/events/event_private.h"
 
 #include <thread>
 

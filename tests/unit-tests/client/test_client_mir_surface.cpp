@@ -450,7 +450,6 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_dispatcher_when_del
 
     auto mock_input_dispatcher = std::make_shared<mt::TestDispatchable>([dispatched]() { dispatched->raise(); });
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
-    MirEventDelegate delegate = {null_event_callback, nullptr};
 
     EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _, _)).Times(1)
         .WillOnce(Return(mock_input_dispatcher));
@@ -459,7 +458,7 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_dispatcher_when_del
         stub_buffer_stream_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
     auto wait_handle = surface.get_create_wait_handle();
     wait_handle->wait_for_all();
-    surface.set_event_handler(&delegate);
+    surface.set_event_handler(null_event_callback, nullptr);
 
     mock_input_dispatcher->trigger();
 
@@ -474,7 +473,6 @@ TEST_F(MirClientSurfaceTest, replacing_delegate_with_nullptr_prevents_further_di
 
     auto mock_input_dispatcher = std::make_shared<mt::TestDispatchable>([dispatched]() { dispatched->raise(); });
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
-    MirEventDelegate delegate = {null_event_callback, nullptr};
 
     EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _, _)).Times(1)
         .WillOnce(Return(mock_input_dispatcher));
@@ -483,10 +481,10 @@ TEST_F(MirClientSurfaceTest, replacing_delegate_with_nullptr_prevents_further_di
         stub_buffer_stream_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
     auto wait_handle = surface.get_create_wait_handle();
     wait_handle->wait_for_all();
-    surface.set_event_handler(&delegate);
+    surface.set_event_handler(null_event_callback, nullptr);
 
     // Should now not get dispatched.
-    surface.set_event_handler(nullptr);
+    surface.set_event_handler(nullptr, nullptr);
 
     mock_input_dispatcher->trigger();
 

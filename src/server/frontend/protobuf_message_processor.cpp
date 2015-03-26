@@ -58,6 +58,7 @@ namespace frontend
 namespace detail
 {
 template<> struct result_ptr_t<::mir::protobuf::Buffer>     { typedef ::mir::protobuf::Buffer* type; };
+template<> struct result_ptr_t<::mir::protobuf::BufferStream>     { typedef ::mir::protobuf::BufferStream* type; };
 template<> struct result_ptr_t<::mir::protobuf::Connection> { typedef ::mir::protobuf::Connection* type; };
 template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::protobuf::Surface* type; };
 template<> struct result_ptr_t<::mir::protobuf::Screencast> { typedef ::mir::protobuf::Screencast* type; };
@@ -255,6 +256,14 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::release_screencast, invocation);
         }
+        else if ("create_buffer_stream" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::create_buffer_stream, invocation);
+        }
+        else if ("release_buffer_stream" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::release_buffer_stream, invocation);
+        }
         else if ("configure_cursor" == invocation.method_name())
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::configure_cursor, invocation);
@@ -341,6 +350,11 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
             {extract_fds_from(response), extract_fds_from(response->mutable_buffer_stream()->mutable_buffer())});
     else
         sender->send_response(id, response, {extract_fds_from(response)});
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::BufferStream* response)
+{
+    sender->send_response(id, response, {extract_fds_from(response->mutable_buffer())});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(

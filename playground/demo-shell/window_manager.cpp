@@ -17,8 +17,6 @@
  *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
 #include "window_manager.h"
 #include "demo_compositor.h"
 
@@ -28,6 +26,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/compositor/compositor.h"
+#include "mir/events/event_private.h"
 
 #include <linux/input.h>
 

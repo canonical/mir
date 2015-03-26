@@ -120,8 +120,6 @@ set(CMAKE_EXE_LINKER_FLAGS_THREADSANITIZER "-pie")
 # consume CPU time...
 add_definitions(-DLOG_NDEBUG=1)
 
-add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
-
 enable_testing()
 
 include_directories(include/common)

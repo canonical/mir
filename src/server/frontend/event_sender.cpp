@@ -16,12 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
 #include "mir/frontend/client_constants.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/variable_length_array.h"
 #include "event_sender.h"
+#include "mir/events/event_private.h"
 #include "message_sender.h"
 #include "protobuf_buffer_packer.h"
 

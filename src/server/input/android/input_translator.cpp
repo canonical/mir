@@ -16,9 +16,9 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
 #include "input_translator.h"
+
+#include "mir/events/event_private.h"
 
 #include "androidfw/Input.h"
 

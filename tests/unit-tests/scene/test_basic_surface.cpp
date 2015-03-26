@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/legacy_surface_change_notification.h"
 
+#include "mir/events/event_private.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/displacement.h"
@@ -604,7 +604,7 @@ TEST_P(BasicSurfaceAttributeTest, notifies_about_attrib_changes)
     auto const& value1 = params.a_valid_value;
     auto const& value2 = params.default_value;
 
-    MockSurfaceAttribObserver mock_surface_observer;
+    NiceMock<MockSurfaceAttribObserver> mock_surface_observer;
 
     InSequence s;
     EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, value1))
@@ -627,7 +627,7 @@ TEST_P(BasicSurfaceAttributeTest, does_not_notify_if_attrib_is_unchanged)
     auto const& default_value = params.default_value;
     auto const& another_value = params.a_valid_value;
 
-    MockSurfaceAttribObserver mock_surface_observer;
+    NiceMock<MockSurfaceAttribObserver> mock_surface_observer;
 
     EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, another_value))
         .Times(1);

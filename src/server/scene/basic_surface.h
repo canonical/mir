@@ -54,6 +54,7 @@ class Surface;
 namespace scene
 {
 class SceneReport;
+class CursorStreamImageAdapter;
 
 class SurfaceObservers : public SurfaceObserver, BasicObservers<SurfaceObserver>
 {
@@ -154,6 +155,11 @@ public:
     void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override;
     std::shared_ptr<graphics::CursorImage> cursor_image() const override;
 
+    void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const& stream,
+                           geometry::Displacement const& hotspot) override;
+    void set_cursor_from_buffer(graphics::Buffer& buffer,
+                                geometry::Displacement const& hotspot);
+
     void request_client_surface_close() override;
 
     std::shared_ptr<Surface> parent() const override;
@@ -201,6 +207,8 @@ private:
     int dpi_ = 0;
     MirSurfaceVisibility visibility_ = mir_surface_visibility_exposed;
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
+
+    std::unique_ptr<CursorStreamImageAdapter> cursor_stream_adapter;
 };
 
 }

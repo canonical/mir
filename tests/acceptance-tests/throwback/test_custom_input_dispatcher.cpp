@@ -16,8 +16,6 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
 #include "mir/input/input_dispatcher.h"
 
 #include "clients.h"
@@ -34,6 +32,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/scene/observer.h"
+#include "mir/events/event_private.h"
 
 #include "mir_toolkit/event.h"
 

@@ -16,8 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir/compositor/compositor.h"
 #include "mir/frontend/connector.h"
 #include "mir/graphics/display_configuration.h"
@@ -25,6 +23,7 @@
 #include "mir/server_action_queue.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/server_status_listener.h"
+#include "mir/events/event_private.h"
 
 #include "mir_test/pipe.h"
 #include "mir_test/wait_condition.h"
