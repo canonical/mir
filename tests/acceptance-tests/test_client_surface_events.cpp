@@ -110,6 +110,8 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
     void reset_last_event()
     {
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+        if (last_event != nullptr)
+            mir_event_unref(last_event);
         last_event = nullptr;
         last_event_surface = nullptr;
     }
