@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "surface_tracker.h"
+#include "buffer_stream_tracker.h"
 #include "client_buffer_tracker.h"
 
 #include "mir/graphics/buffer.h"
@@ -28,21 +28,22 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
-mf::SurfaceTracker::SurfaceTracker(size_t client_cache_size) :
+mf::BufferStreamTracker::BufferStreamTracker(size_t client_cache_size) :
     client_cache_size{client_cache_size}
 {
 }
 
-bool mf::SurfaceTracker::track_buffer(SurfaceId surface_id, mg::Buffer* buffer)
+bool mf::BufferStreamTracker::track_buffer(BufferStreamId buffer_stream_id, mg::Buffer* buffer)
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
-    auto& tracker = client_buffer_tracker[surface_id];
+    auto& tracker = client_buffer_tracker[buffer_stream_id];
+
     if (!tracker)
         tracker = std::make_shared<ClientBufferTracker>(client_cache_size);
 
     for (auto it = client_buffer_tracker.begin(); it != client_buffer_tracker.end(); it++)
     {
-        if (it->first == surface_id) continue;
+        if (it->first == buffer_stream_id) continue;
         if (it->second->client_has(buffer->id()))
             BOOST_THROW_EXCEPTION(std::logic_error("buffer already associated with another surface"));
     }
@@ -50,27 +51,30 @@ bool mf::SurfaceTracker::track_buffer(SurfaceId surface_id, mg::Buffer* buffer)
     auto already_tracked = tracker->client_has(buffer->id());
     tracker->add(buffer);
 
-    client_buffer_resource[surface_id] = buffer;
+    client_buffer_resource[buffer_stream_id] = buffer;
 
     return already_tracked;
 }
 
-void mf::SurfaceTracker::remove_surface(SurfaceId surface_id)
+void mf::BufferStreamTracker::remove_buffer_stream(BufferStreamId buffer_stream_id)
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
-    auto it = client_buffer_tracker.find(surface_id);
+    auto it = client_buffer_tracker.find(buffer_stream_id);
+
     if (it != client_buffer_tracker.end())
         client_buffer_tracker.erase(it);
 
-    auto last_buffer_it = client_buffer_resource.find(surface_id);
+    auto last_buffer_it = client_buffer_resource.find(buffer_stream_id);
     if (last_buffer_it != client_buffer_resource.end())
         client_buffer_resource.erase(last_buffer_it);
 }
 
-mg::Buffer* mf::SurfaceTracker::last_buffer(SurfaceId surface_id) const
+mg::Buffer* mf::BufferStreamTracker::last_buffer(BufferStreamId buffer_stream_id) const
 {
+
     std::lock_guard<decltype(mutex)> lock{mutex};
-    auto it = client_buffer_resource.find(surface_id);
+    auto it = client_buffer_resource.find(buffer_stream_id);
+
     if (it != client_buffer_resource.end())
         return it->second;
     else
@@ -78,7 +82,7 @@ mg::Buffer* mf::SurfaceTracker::last_buffer(SurfaceId surface_id) const
         return nullptr;
 }
 
-mg::Buffer* mf::SurfaceTracker::buffer_from(mg::BufferID buffer_id) const
+mg::Buffer* mf::BufferStreamTracker::buffer_from(mg::BufferID buffer_id) const
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
     for (auto const& tracker : client_buffer_tracker)

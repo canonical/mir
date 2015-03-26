@@ -121,6 +121,12 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
     {
         buffer = static_cast<mir::protobuf::Buffer*>(response);
     }
+    else if (message_type == "mir.protobuf.BufferStream")
+    {
+        auto buffer_stream = static_cast<mir::protobuf::BufferStream*>(response);
+        if (buffer_stream && buffer_stream->has_buffer())
+            buffer = buffer_stream->mutable_buffer();
+    }
     else if (message_type == "mir.protobuf.Surface")
     {
         surface = static_cast<mir::protobuf::Surface*>(response);

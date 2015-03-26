@@ -175,12 +175,18 @@ MIR_CLIENT_8.4 {
     mir_screencast_get_buffer_stream;
     mir_buffer_stream_get_egl_native_window;
     mir_buffer_stream_get_graphics_region;
+    mir_connection_create_buffer_stream_sync;
+    mir_cursor_configuration_from_buffer_stream;
+    mir_buffer_stream_release;
+    mir_buffer_stream_release_sync;
+    mir_buffer_stream_is_valid;
 } MIR_CLIENT_8.3;
 
 MIR_CLIENT_DETAIL_8 {
   global:
     extern "C++" { 
       mir::events::make_event*;
+      mir::events::add_touch*;
       mir::input::android::Lexicon::translate*;
     }; 
 };
