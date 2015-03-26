@@ -31,6 +31,7 @@
 #include "mir/frontend/connector.h"
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
+#include "mir_test_doubles/stub_buffer_stream_factory.h"
 #include "mir_test_doubles/stub_display.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_renderer.h"
@@ -93,6 +94,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
 
     ms::ApplicationSession session{
         conf.the_surface_coordinator(),
+        std::make_shared<mtd::StubBufferStreamFactory>(),
         __LINE__,
         "stress",
         conf.the_snapshot_strategy(),

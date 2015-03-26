@@ -20,6 +20,7 @@
 #define MIR_SHELL_ABSTRACT_SHELL_H_
 
 #include "mir/shell/shell.h"
+#include "mir/shell/window_manager_builder.h"
 
 #include <mutex>
 
@@ -38,7 +39,7 @@ public:
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
-        std::function<std::shared_ptr<WindowManager>(FocusController* focus_controller)> const& wm_builder);
+        WindowManagerBuilder const& wm_builder);
 
     ~AbstractShell() noexcept;
 
