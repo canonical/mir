@@ -404,7 +404,7 @@ TEST(ServerShutdownWithThreadException,
     auto fake_event_hub = server_config->the_fake_event_hub();
 
     std::thread server{
-        [&]
+        [&server_config]
         {
             EXPECT_THROW(
                 mir::run_mir(*server_config, [](mir::DisplayServer&){}),

@@ -61,7 +61,10 @@ public:
         status.store(NO_ERROR);
         exit_pending.store(false);
 
-        thread = std::thread([name_str,this]() -> void
+        // Avoid data races by doing a move capture instead of copy capture,
+        // since libstdc++ is using a copy-on-write implementation of std::string
+        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=21334#c45
+        thread = std::thread([name_str = std::move(name_str),this]
             {
                 mir::set_thread_name(name_str);
                 try

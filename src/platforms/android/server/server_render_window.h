@@ -38,6 +38,7 @@ class ServerRenderWindow : public AndroidDriverInterpreter
 {
 public:
     ServerRenderWindow(std::shared_ptr<FramebufferBundle> const& fb_bundle,
+                       MirPixelFormat format,
                        std::shared_ptr<InterpreterResourceCache> const&);
 
     graphics::NativeBuffer* driver_requests_buffer();
