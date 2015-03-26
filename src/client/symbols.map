@@ -186,6 +186,7 @@ MIR_CLIENT_DETAIL_8 {
   global:
     extern "C++" { 
       mir::events::make_event*;
+      mir::events::add_touch*;
       mir::input::android::Lexicon::translate*;
     }; 
 };

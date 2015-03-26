@@ -20,6 +20,7 @@
 
 #include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
+#include "mir/shell/window_manager_builder.h"
 
 #include <memory>
 #include <string>
@@ -251,6 +252,7 @@ public:
      * configurable interfaces for modifying shell
      *  @{ */
     virtual auto the_shell() -> std::shared_ptr<shell::Shell>;
+    virtual auto the_window_manager_builder() -> shell::WindowManagerBuilder;
     virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
