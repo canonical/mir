@@ -55,10 +55,6 @@ struct MockAndroidInputDispatcher : public droidinput::InputDispatcherInterface
     MOCK_METHOD1(notifyMotion, void(droidinput::NotifyMotionArgs const*));
     MOCK_METHOD1(notifySwitch, void(droidinput::NotifySwitchArgs const*));
     MOCK_METHOD1(notifyDeviceReset, void(droidinput::NotifyDeviceResetArgs const*));
-
-    MOCK_METHOD4(send_suceeded, void(MirEvent const&, input::TransportSequenceID, input::Surface*, InputResponse));
-    MOCK_METHOD4(send_failed, void(MirEvent const&, input::TransportSequenceID, input::Surface*, FailureReason));
-    MOCK_METHOD3(client_blocked, void(MirEvent const&, input::TransportSequenceID, input::Surface*));
 };
 
 }

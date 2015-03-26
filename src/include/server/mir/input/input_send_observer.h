@@ -19,8 +19,6 @@
 #ifndef MIR_INPUT_INPUT_SEND_OBSERVER_H_
 #define MIR_INPUT_INPUT_SEND_OBSERVER_H_
 
-#include "mir/input/input_sender.h"
-
 #include <mir_toolkit/event.h>
 
 #include <memory>
@@ -49,7 +47,7 @@ public:
      * Reasons for failure could be the surface disappearing from the scene, before the response
      * was received. Or the client not responding in time.
      */
-    virtual void send_failed(MirEvent const& event, TransportSequenceID id, input::Surface* surface, FailureReason reason) = 0;
+    virtual void send_failed(MirEvent const& event, input::Surface* surface, FailureReason reason) = 0;
 
     enum InputResponse
     {
@@ -59,13 +57,13 @@ public:
     /*!
      * \brief Client responded to an input event.
      */
-    virtual void send_suceeded(MirEvent const& event, TransportSequenceID id, input::Surface* surface, InputResponse response) = 0;
+    virtual void send_suceeded(MirEvent const& event, input::Surface* surface, InputResponse response) = 0;
 
     /*!
      * \brief Called when client is temporary blocked because input events are still in
      * the queue.
      */
-    virtual void client_blocked(MirEvent const& event, TransportSequenceID id, input::Surface* client) = 0;
+    virtual void client_blocked(MirEvent const& event, input::Surface* client) = 0;
 
 protected:
     InputSendObserver& operator=(InputSendObserver const&) = delete;

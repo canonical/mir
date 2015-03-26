@@ -16,8 +16,6 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER // For mocking funciton accepting MirEvent reference
-
 #include "src/server/input/android/android_input_targeter.h"
 #include "src/server/input/android/android_input_registrar.h"
 #include "src/server/input/android/android_window_handle_repository.h"
