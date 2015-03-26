@@ -63,7 +63,8 @@ public:
                 std::shared_ptr<InputSendObserver> const& observer,
                 std::shared_ptr<InputReport> const& report);
 
-    void send_event(MirEvent const& event, std::shared_ptr<InputChannel> const& channel) override;
+    TransportSequenceID send_event(MirEvent const& event, std::shared_ptr<InputChannel> const& channel) override;
+    void set_observer(std::shared_ptr<InputSendObserver> const& observer) override;
 
 private:
     struct InputSenderState;
@@ -121,18 +122,18 @@ private:
         InputSenderState(std::shared_ptr<MainLoop> const& main_loop,
                          std::shared_ptr<InputSendObserver> const& observer,
                          std::shared_ptr<InputReport> const& report);
-        void send_event(std::shared_ptr<InputChannel> const& channel, MirEvent const& event);
+        TransportSequenceID send_event(std::shared_ptr<InputChannel> const& channel, MirEvent const& event);
         void add_transfer(int fd, input::Surface* surface);
         void remove_transfer(int fd);
 
         std::shared_ptr<MainLoop> const main_loop;
         std::shared_ptr<InputReport> const report;
-        std::shared_ptr<InputSendObserver> const observer;
+        std::weak_ptr<InputSendObserver> observer;
 
     private:
         std::shared_ptr<ActiveTransfer> get_transfer(int fd);
-        uint32_t next_seq();
-        uint32_t seq;
+        TransportSequenceID next_seq();
+        TransportSequenceID seq;
 
         std::unordered_map<int,std::shared_ptr<ActiveTransfer>> transfers;
         std::mutex sender_mutex;
