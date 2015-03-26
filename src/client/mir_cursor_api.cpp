@@ -25,6 +25,7 @@
 
 #include <memory>
 
+namespace mcl = mir::client;
 
 extern "C" char const *const mir_default_cursor_name = "default";
 extern "C" char const *const mir_disabled_cursor_name = "disabled";
@@ -42,9 +43,16 @@ extern "C" char const* const mir_omnidirectional_resize_cursor_name = "omnidirec
 extern "C" char const* const mir_vsplit_resize_cursor_name = "vsplit-resize";
 extern "C" char const* const mir_hsplit_resize_cursor_name = "hsplit-resize";
 
-
 MirCursorConfiguration::MirCursorConfiguration(char const* name) :
-    name{name ? name : std::string()}
+    name{name ? name : std::string()},
+    stream(nullptr)   
+{
+}
+
+MirCursorConfiguration::MirCursorConfiguration(mcl::ClientBufferStream const* stream, int hotspot_x, int hotspot_y) :
+    stream(stream),
+    hotspot_x(hotspot_x),
+    hotspot_y(hotspot_y)
 {
 }
 
@@ -58,6 +66,20 @@ MirCursorConfiguration* mir_cursor_configuration_from_name(char const* name)
     try 
     {
         return new MirCursorConfiguration(name);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
+}
+
+MirCursorConfiguration* mir_cursor_configuration_from_buffer_stream(MirBufferStream const* stream, int hotspot_x,
+    int hotspot_y)
+{
+    try 
+    {
+        return new MirCursorConfiguration(reinterpret_cast<mcl::ClientBufferStream const*>(stream), hotspot_x, hotspot_y);
     }
     catch (std::exception const& ex)
     {
