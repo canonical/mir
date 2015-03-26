@@ -189,37 +189,6 @@ public:
      */
     virtual bool updateInfo() = 0;
 
-    // Returns seq_id or -1 in case of failure
-    virtual int64_t publishMotionEvent(int32_t deviceId,
-        int32_t source,
-        int32_t action,
-        int32_t flags,
-        int32_t edgeFlags,
-        int32_t metaState,
-        int32_t buttonState,
-        float xOffset,
-        float yOffset,
-        float xPrecision,
-        float yPrecision,
-        std::chrono::nanoseconds downTime,
-        std::chrono::nanoseconds eventTime,
-        size_t pointerCount,
-        const PointerProperties* pointerProperties,
-        const PointerCoords* pointerCoords) = 0;
-
-    // Returns seq_id or -1 in case of failure
-    virtual int64_t publishKeyEvent(
-        int32_t deviceId,
-        int32_t source,
-        int32_t action,
-        int32_t flags,
-        int32_t keyCode,
-        int32_t scanCode,
-        int32_t metaState,
-        int32_t repeatCount,
-        std::chrono::nanoseconds downTime,
-        std::chrono::nanoseconds eventTime) = 0;
-
     /**
      * Releases the storage used by the associated information when it is
      * no longer needed.

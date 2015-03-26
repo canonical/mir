@@ -319,7 +319,7 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     return std::make_shared<GuestPlatformAdapter>(context, graphics_platform);
 }
 
-extern "C" void add_graphics_platform_options(
+extern "C" void add_graphis_platform_options(
     boost::program_options::options_description& /*config*/)
 {
 }

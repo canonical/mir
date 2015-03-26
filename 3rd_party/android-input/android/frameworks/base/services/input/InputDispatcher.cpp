@@ -46,8 +46,6 @@
 #include "InputDispatcher.h"
 
 #include "mir/input/input_report.h"
-#include "mir/input/surface.h"
-#include "mir/input/input_channel.h"
 
 #include <cutils/log.h>
 #include <android/keycodes.h>
@@ -1861,20 +1859,21 @@ void InputDispatcher::startDispatchCycleLocked(std::chrono::nanoseconds currentT
     ALOGD("channel '%s' ~ startDispatchCycle",
             connection->getInputChannelName());
 #endif
-    mir::input::TransportSequenceID seq = -1;
+
     while (connection->status == Connection::STATUS_NORMAL
             && !connection->outboundQueue.isEmpty()) {
         DispatchEntry* dispatchEntry = connection->outboundQueue.head;
         dispatchEntry->deliveryTime = currentTime;
 
         // Publish the event.
+        status_t status;
         EventEntry* eventEntry = dispatchEntry->eventEntry;
         switch (eventEntry->type) {
         case EventEntry::TYPE_KEY: {
             KeyEntry* keyEntry = static_cast<KeyEntry*>(eventEntry);
 
             // Publish the key event.
-            seq = connection->inputWindowHandle->publishKeyEvent(
+            status = connection->inputPublisher.publishKeyEvent(dispatchEntry->seq,
                     keyEntry->deviceId, keyEntry->source,
                     dispatchEntry->resolvedAction, dispatchEntry->resolvedFlags,
                     keyEntry->keyCode, keyEntry->scanCode,
@@ -1921,7 +1920,7 @@ void InputDispatcher::startDispatchCycleLocked(std::chrono::nanoseconds currentT
             }
 
             // Publish the motion event.
-            seq = connection->inputWindowHandle->publishMotionEvent(
+            status = connection->inputPublisher.publishMotionEvent(dispatchEntry->seq,
                     motionEntry->deviceId, motionEntry->source,
                     dispatchEntry->resolvedAction, dispatchEntry->resolvedFlags,
                     motionEntry->edgeFlags, motionEntry->metaState, motionEntry->buttonState,
@@ -1942,13 +1941,31 @@ void InputDispatcher::startDispatchCycleLocked(std::chrono::nanoseconds currentT
         }
 
         // Check the result.
-        if (seq < 0) {
-            ALOGE("channel '%s' ~ Could not publish event due to an unexpected error, ",
-                  connection->getInputChannelName());
-            abortBrokenDispatchCycleLocked(currentTime, connection, true /*notify*/);
+        if (status) {
+            if (status == WOULD_BLOCK) {
+                if (connection->waitQueue.isEmpty()) {
+                    ALOGE("channel '%s' ~ Could not publish event because the pipe is full. "
+                            "This is unexpected because the wait queue is empty, so the pipe "
+                            "should be empty and we shouldn't have any problems writing an "
+                            "event to it, status=%d", connection->getInputChannelName(), status);
+                    abortBrokenDispatchCycleLocked(currentTime, connection, true /*notify*/);
+                } else {
+                    // Pipe is full and we are waiting for the app to finish process some events
+                    // before sending more events to it.
+#if DEBUG_DISPATCH_CYCLE
+                    ALOGD("channel '%s' ~ Could not publish event because the pipe is full, "
+                            "waiting for the application to catch up",
+                            connection->getInputChannelName());
+#endif
+                    connection->inputPublisherBlocked = true;
+                }
+            } else {
+                ALOGE("channel '%s' ~ Could not publish event due to an unexpected error, "
+                        "status=%d", connection->getInputChannelName(), status);
+                abortBrokenDispatchCycleLocked(currentTime, connection, true /*notify*/);
+            }
             return;
         }
-        dispatchEntry->seq = seq;
 
         // Re-enqueue the event on the wait queue.
         connection->outboundQueue.dequeue(dispatchEntry);
@@ -2011,101 +2028,69 @@ void InputDispatcher::releaseDispatchEntryLocked(DispatchEntry* dispatchEntry) {
     delete dispatchEntry;
 }
 
-void InputDispatcher::handleEventSendStatusLocked(uint32_t seq, sp<Connection> connection, bool success, bool handled, bool socket_dead)
-{
-    if (success)
-    {
-        finishDispatchCycleLocked(now(), connection, seq, handled);
-        input_report->received_event_finished_signal(connection->inputChannel->getFd(), seq);
-    }
-    else
-    {
-        ALOGW("channel '%s' ~ Consumer closed input channel or an error occurred.  ",
-              connection->getInputChannelName());
+int InputDispatcher::handleReceiveCallback(int fd, int events, void* data) {
+    InputDispatcher* d = static_cast<InputDispatcher*>(data);
+
+    { // acquire lock
+        AutoMutex _l(d->mLock);
+
+        ssize_t connectionIndex = d->mConnectionsByFd.indexOfKey(fd);
+        if (connectionIndex < 0) {
+            ALOGE("Received spurious receive callback for unknown input channel.  "
+                    "fd=%d, events=0x%x", fd, events);
+            return 0; // remove the callback
+        }
+
+        bool notify;
+        sp<Connection> connection = d->mConnectionsByFd.valueAt(connectionIndex);
+        if (!(events & (ALOOPER_EVENT_ERROR | ALOOPER_EVENT_HANGUP))) {
+            if (!(events & ALOOPER_EVENT_INPUT)) {
+                ALOGW("channel '%s' ~ Received spurious callback for unhandled poll event.  "
+                        "events=0x%x", connection->getInputChannelName(), events);
+                return 1;
+            }
+
+            std::chrono::nanoseconds currentTime = now();
+            bool gotOne = false;
+            status_t status;
+            for (;;) {
+                uint32_t seq;
+                bool handled;
+                status = connection->inputPublisher.receiveFinishedSignal(&seq, &handled);
+                if (status) {
+                    break;
+                }
+                d->input_report->received_event_finished_signal(connection->inputChannel->getFd(), seq);
+                d->finishDispatchCycleLocked(currentTime, connection, seq, handled);
+                gotOne = true;
+            }
+            if (gotOne) {
+                d->runCommandsLockedInterruptible();
+                if (status == WOULD_BLOCK) {
+                    return 1;
+                }
+            }
+
+            notify = status != DEAD_OBJECT || !connection->monitor;
+            if (notify) {
+                ALOGE("channel '%s' ~ Failed to receive finished signal.  status=%d",
+                        connection->getInputChannelName(), status);
+            }
+        } else {
+            // Monitor channels are never explicitly unregistered.
+            // We do it automatically when the remote endpoint is closed so don't warn
+            // about them.
+            notify = !connection->monitor;
+            if (notify) {
+                ALOGW("channel '%s' ~ Consumer closed input channel or an error occurred.  "
+                        "events=0x%x", connection->getInputChannelName(), events);
+            }
+        }
+
         // Unregister the channel.
-        bool notify = !socket_dead || !connection->monitor;
-        unregisterInputChannelLocked(connection->inputChannel, notify);
-    }
-}
-
-void InputDispatcher::send_failed(MirEvent const& event, mir::input::TransportSequenceID id,
-    mir::input::Surface* surface, FailureReason reason)
-{
-    { // acquire lock
-    AutoMutex _l(mLock);
-    auto fd = surface->input_channel()->server_fd();
-
-    ssize_t connectionIndex = mConnectionsByFd.indexOfKey(fd);
-    if (connectionIndex < 0)
-    {
-        ALOGE("Received spurious receive callback for unknown input channel.  "
-              "fd=%d", fd);
-        return;
-    }
-    
-    sp<Connection> connection = mConnectionsByFd.valueAt(connectionIndex);
-    handleEventSendStatusLocked(static_cast<uint32_t>(id), connection, false, false,
-                                reason == mir::input::InputSendObserver::FailureReason::socket_error);
+        d->unregisterInputChannelLocked(connection->inputChannel, notify);
+        return 0; // remove the callback
     } // release lock
-    
-    if (reason != mir::input::InputSendObserver::FailureReason::socket_error)
-        mLooper->wake();
-}
-    
-void InputDispatcher::send_suceeded(MirEvent const& event, mir::input::TransportSequenceID id,
-                                    mir::input::Surface* surface, InputResponse response)
-{
-    { // acquire lock
-    AutoMutex _l(mLock);
-    auto fd = surface->input_channel()->server_fd();
-
-    ssize_t connectionIndex = mConnectionsByFd.indexOfKey(fd);
-    if (connectionIndex < 0)
-    {
-        ALOGE("Received spurious receive callback for unknown input channel.  "
-              "fd=%d", fd);
-        return;
-    }
-    
-    bool handled = response == mir::input::InputSendObserver::InputResponse::consumed;
-    auto connection = mConnectionsByFd.valueAt(connectionIndex);
-    
-    handleEventSendStatusLocked(static_cast<uint32_t>(id), connection, true, handled,
-                                false);
-    } // release lock
-
-    mLooper->wake();
-}
-void InputDispatcher::client_blocked(MirEvent const& event, mir::input::TransportSequenceID id,
-                                     mir::input::Surface* surface)
-{
-    AutoMutex _l(mLock);
-    auto fd = surface->input_channel()->server_fd();
-
-    ssize_t connectionIndex = mConnectionsByFd.indexOfKey(fd);
-    if (connectionIndex < 0) {
-        ALOGE("Received spurious receive callback for unknown input channel.  "
-              "fd=%d", fd);
-        return;
-    }
-    auto connection = mConnectionsByFd.valueAt(connectionIndex);
-
-    if (connection->waitQueue.isEmpty()) {
-        ALOGE("channel '%s' ~ Could not publish event because the pipe is full. "
-              "This is unexpected because the wait queue is empty, so the pipe "
-              "should be empty and we shouldn't have any problems writing an "
-              "event to it", connection->getInputChannelName());
-        abortBrokenDispatchCycleLocked(now(), connection, true /*notify*/);
-    } else {
-        // Pipe is full and we are waiting for the app to finish process some events
-        // before sending more events to it.
-#if DEBUG_DISPATCH_CYCLE
-        ALOGD("channel '%s' ~ Could not publish event because the pipe is full, "
-              "waiting for the application to catch up",
-              connection->getInputChannelName());
-#endif
-        connection->inputPublisherBlocked = true;
-    }
 }
 
 void InputDispatcher::synthesizeCancelationEventsForAllConnectionsLocked(
@@ -3046,7 +3031,7 @@ void InputDispatcher::dumpDispatchStateLocked(String8& dump) {
         const InputWindowInfo* windowInfo = windowHandle->getInfo();
 
         appendFormat(dump, INDENT2 "name='%s', paused=%s, hasFocus=%s, hasWallpaper=%s, "
-                "visible=%s, canReceiveKeys=%s, flags=0x%08x, type=0x%08x, "
+                "visible=%s, canReceiveKeys=%s, flags=0x%08x, type=0x%08x, layer=%d, "
                 "frame=[%d,%d][%d,%d], scale=%f, "
                 "touchableRegion=[%d,%d][%d,%d]",
                 c_str(windowInfo->name),
@@ -3056,6 +3041,7 @@ void InputDispatcher::dumpDispatchStateLocked(String8& dump) {
                 toString(windowInfo->visible),
                 toString(windowInfo->canReceiveKeys),
                 windowInfo->layoutParamsFlags, windowInfo->layoutParamsType,
+                windowInfo->layer,
                 windowInfo->frameLeft, windowInfo->frameTop,
                 windowInfo->frameRight, windowInfo->frameBottom,
                 windowInfo->scaleFactor,
@@ -3176,6 +3162,8 @@ status_t InputDispatcher::registerInputChannel(const sp<InputChannel>& inputChan
             mMonitoringChannels.push(inputChannel);
         }
 
+        mLooper->addFd(fd, 0, ALOOPER_EVENT_INPUT, handleReceiveCallback, this);
+
         runCommandsLockedInterruptible();
     } // release lock
     return OK;
@@ -3216,6 +3204,8 @@ status_t InputDispatcher::unregisterInputChannelLocked(const sp<InputChannel>& i
     if (connection->monitor) {
         removeMonitorChannelLocked(inputChannel);
     }
+
+    mLooper->removeFd(inputChannel->getFd());
 
     std::chrono::nanoseconds currentTime = now();
     abortBrokenDispatchCycleLocked(currentTime, connection, notify);
