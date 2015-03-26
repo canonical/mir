@@ -226,7 +226,17 @@ MirSurface* mir_connection_create_surface_sync(
 }
 
 void mir_surface_set_event_handler(MirSurface* surface,
-                                   MirEventDelegate const* delegate)
+                                   mir_surface_event_callback callback,
+                                   void* context)
+{
+    surface->set_event_handler(callback, context);
+}
+
+__asm__(".symver old_mir_surface_set_event_handler,mir_surface_set_event_handler@MIR_CLIENT_8");
+
+extern "C"
+void old_mir_surface_set_event_handler(MirSurface* surface,
+                                       MirEventDelegate const* delegate)
 {
     if (delegate)
         surface->set_event_handler(delegate->callback, delegate->context);

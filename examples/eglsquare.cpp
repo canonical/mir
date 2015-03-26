@@ -362,8 +362,7 @@ private:
         mir_surface_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
         mir_surface_spec_set_buffer_usage(spec.get(), mir_buffer_usage_hardware);
         auto surface = mir_surface_create_sync(spec.get());
-        MirEventDelegate delegate = {&on_event, this};
-        mir_surface_set_event_handler(surface, &delegate);
+        mir_surface_set_event_handler(surface, &on_event, this);
         return surface;
     }
     static void on_event(MirSurface*, const MirEvent *event, void *context)

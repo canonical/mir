@@ -113,6 +113,7 @@ MIR_CLIENT_8.3 {
 
 MIR_CLIENT_8.4 {
  global:
+    mir_surface_set_event_handler;
     mir_default_cursor_name;
     mir_disabled_cursor_name;
     mir_arrow_cursor_name;

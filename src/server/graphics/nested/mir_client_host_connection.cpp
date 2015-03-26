@@ -78,7 +78,8 @@ public:
 
     void set_event_handler(MirEventDelegate const* handler) override
     {
-        mir_surface_set_event_handler(mir_surface, handler);
+        mir_surface_set_event_handler(mir_surface, handler->callback,
+                                                   handler->context);
     }
 
 private:
