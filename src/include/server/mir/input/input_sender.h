@@ -31,12 +31,17 @@ class InputSendObserver;
 class Surface;
 class InputChannel;
 
+typedef int64_t TransportSequenceID;
+
 class InputSender
 {
 public:
     InputSender() = default;
     virtual ~InputSender() = default;
-    virtual void send_event(MirEvent const& event, std::shared_ptr<InputChannel> const& channel) = 0;
+    virtual TransportSequenceID send_event(MirEvent const& event, std::shared_ptr<InputChannel> const& channel) = 0;
+
+    virtual void set_observer(std::shared_ptr<InputSendObserver> const& observer) = 0;
+
 protected:
     InputSender& operator=(InputSender const&) = delete;
     InputSender(InputSender const&) = delete;

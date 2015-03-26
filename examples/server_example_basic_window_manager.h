@@ -143,8 +143,10 @@ private:
         scene::SurfaceCreationParameters const placed_params = policy.handle_place_new_surface(session, params);
         auto const result = build(session, placed_params);
         auto const surface = session->surface(result);
-        policy.handle_new_surface(session, surface);
         surface_info.emplace(surface, SurfaceInfo{session, surface});
+        policy.handle_new_surface(session, surface);
+        for (auto& decoration : policy.generate_decorations_for(session, surface))
+            surface_info.emplace(decoration, SurfaceInfo{session, decoration});
         return result;
     }
 
