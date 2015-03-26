@@ -36,9 +36,8 @@ namespace ms = mir::scene;
 namespace mia = mi::android;
 namespace mc = mir::compositor;
 
-mia::InputRegistrar::InputRegistrar(std::shared_ptr<mc::Scene> const& scene, std::shared_ptr<InputSender> const& input_sender) :
+mia::InputRegistrar::InputRegistrar(std::shared_ptr<mc::Scene> const& scene) :
     scene(scene),
-    input_sender(input_sender),
     observer(std::make_shared<SceneObserver>(
             [this](ms::Surface *surface) { add_window_handle_for_surface(surface); },
             [this](ms::Surface *surface) { remove_window_handle_for_surface(surface); }
@@ -72,7 +71,7 @@ void mia::InputRegistrar::add_window_handle_for_surface(ms::Surface* surface)
             BOOST_THROW_EXCEPTION(std::logic_error("A channel was opened twice"));
 
         auto application_handle = new mia::InputApplicationHandle(surface);
-        window_handle = new mia::InputWindowHandle(input_sender, application_handle, channel, surface);
+        window_handle = new mia::InputWindowHandle(application_handle, channel, surface);
 
         window_handles[channel] = window_handle;
     }

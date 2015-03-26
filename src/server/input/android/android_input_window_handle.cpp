@@ -16,18 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "AndroidWindowHandle"
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "android_input_window_handle.h"
 #include "android_input_application_handle.h"
 
 #include "mir/input/input_channel.h"
-#include "mir/input/input_sender.h"
 #include "mir/input/surface.h"
-#include "mir/input/android/android_input_lexicon.h"
-
-#include "mir/log.h"
 
 #include <androidfw/InputTransport.h>
 
@@ -36,7 +29,6 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace geom = mir::geometry;
-namespace droidinput = android;
 
 namespace
 {
@@ -57,12 +49,10 @@ struct WindowInfo : public droidinput::InputWindowInfo
 };
 }
 
-mia::InputWindowHandle::InputWindowHandle(std::shared_ptr<mi::InputSender> const& input_sender,
-                                          droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
+mia::InputWindowHandle::InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
                                           std::shared_ptr<mi::InputChannel> const& channel,
                                           mi::Surface const* surface)
   : droidinput::InputWindowHandle(input_app_handle),
-    input_sender(input_sender),
     input_channel(channel),
     surface(surface)
 {
@@ -106,69 +96,7 @@ bool mia::InputWindowHandle::updateInfo()
     mInfo->ownerUid = 0;
     mInfo->inputFeatures = 0;
 
+    // TODO: Set touchableRegion and layer for touch events.
+
     return true;
-}
-
-int64_t mia::InputWindowHandle::publishMotionEvent(int32_t deviceId,
-    int32_t source,
-    int32_t action,
-    int32_t flags,
-    int32_t edgeFlags,
-    int32_t metaState,
-    int32_t buttonState,
-    float xOffset,
-    float yOffset,
-    float xPrecision,
-    float yPrecision,
-    std::chrono::nanoseconds downTime,
-    std::chrono::nanoseconds eventTime,
-    size_t pointerCount,
-    droidinput::PointerProperties const* pointerProperties,
-    droidinput::PointerCoords const* pointerCoords)
-{
-    droidinput::MotionEvent droid_event;
-    droid_event.initialize(deviceId, source, action,flags,
-                           edgeFlags, metaState, buttonState,
-                           xOffset, yOffset, xPrecision, yPrecision,
-                           downTime, eventTime,
-                           pointerCount, pointerProperties, pointerCoords);
-
-    MirEvent mir_event;
-    mia::Lexicon::translate(&droid_event, mir_event);
-    try {
-        return input_sender->send_event(mir_event, input_channel);
-    } catch (std::exception const& ex) {
-        mir::log_error("Exception sending event to surface (%s): %s", surface->name().c_str(),
-                 ex.what());
-        return -1;
-    }
-}
-
-int64_t mia::InputWindowHandle::publishKeyEvent(
-    int32_t deviceId,
-    int32_t source,
-    int32_t action,
-    int32_t flags,
-    int32_t keyCode,
-    int32_t scanCode,
-    int32_t metaState,
-    int32_t repeatCount,
-    std::chrono::nanoseconds downTime,
-    std::chrono::nanoseconds eventTime)
-{
-    droidinput::KeyEvent droid_event;
-    droid_event.initialize(deviceId, source, action,flags, keyCode, scanCode, metaState, repeatCount, downTime, eventTime);
-
-    MirEvent mir_event;
-    mia::Lexicon::translate(&droid_event, mir_event);
-    try
-    {
-        return input_sender->send_event(mir_event, input_channel);
-    }
-    catch (std::exception const& ex)
-    {
-        mir::log_error("Exception sending event to surface (%s): %s", surface->name().c_str(),
-                 ex.what());
-        return -1;
-    }
 }

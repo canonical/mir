@@ -16,15 +16,12 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER // For mocking funciton accepting MirEvent reference
-
 #include "mir/input/surface.h"
 
 #include "src/server/input/android/android_input_registrar.h"
 
 #include "mir_test_doubles/mock_android_input_dispatcher.h"
 #include "mir_test_doubles/stub_scene_surface.h"
-#include "mir_test_doubles/stub_input_sender.h"
 #include "mir_test_doubles/stub_scene.h"
 
 #include "mir_test/fake_shared.h"
@@ -62,7 +59,7 @@ struct AndroidInputRegistrarFdSetup : public testing::Test
     std::shared_ptr<mtd::MockAndroidInputDispatcher> dispatcher = std::make_shared<mtd::MockAndroidInputDispatcher>();
     std::shared_ptr<mtd::StubScene> scene = std::make_shared<mtd::StubScene>();
     mtd::StubSceneSurface surface;
-    mia::InputRegistrar registrar{scene, std::make_shared<mtd::StubInputSender>()};
+    mia::InputRegistrar registrar{scene};
 };
 
 MATCHER_P(WindowHandleFor, channel, "")

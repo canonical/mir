@@ -29,15 +29,15 @@ namespace input
 class NullInputSendObserver : public InputSendObserver
 {
 public:
-    void send_failed(MirEvent const& /*event*/, TransportSequenceID, input::Surface* /*surface*/, FailureReason /*reason*/) override
+    void send_failed(MirEvent const& /*event*/, input::Surface* /*surface*/, FailureReason /*reason*/) override
     {
     }
 
-    void send_suceeded(MirEvent const& /*event*/, TransportSequenceID, input::Surface* /*surface*/, InputResponse /*response*/) override
+    void send_suceeded(MirEvent const& /*event*/, input::Surface* /*surface*/, InputResponse /*response*/) override
     {
     }
 
-    void client_blocked(MirEvent const& /*event*/, TransportSequenceID, input::Surface* /*client*/) override
+    void client_blocked(MirEvent const& /*event*/, input::Surface* /*client*/) override
     {
     }
 };

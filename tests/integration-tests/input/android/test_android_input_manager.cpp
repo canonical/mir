@@ -31,7 +31,6 @@
 #include "mir_test_doubles/stub_scene_surface.h"
 #include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
-#include "mir_test_doubles/stub_input_sender.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/event_matchers.h"
@@ -243,7 +242,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : testing::Test, mtf::FakeEve
     mtd::MockEventFilter event_filter;
     MockDispatcherPolicy dispatcher_policy{mt::fake_shared(event_filter)};
     mtd::StubScene scene;
-    mia::InputRegistrar input_registrar{mt::fake_shared(scene), std::make_shared<mtd::StubInputSender>()};
+    mia::InputRegistrar input_registrar{mt::fake_shared(scene)};
 
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mi::InputDispatcher> input_dispatcher;

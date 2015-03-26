@@ -102,13 +102,11 @@ mir::DefaultServerConfiguration::the_android_input_dispatcher()
     return android_input_dispatcher(
         [this]()
         {
-            auto sender= the_input_sender();
             auto dispatcher = std::make_shared<droidinput::InputDispatcher>(
                 the_dispatcher_policy(),
                 the_input_report(),
                 the_input_target_enumerator());
             the_input_registrar()->set_dispatcher(dispatcher);
-            the_input_sender()->set_observer(dispatcher);
             return dispatcher;
         });
 }
@@ -119,7 +117,7 @@ mir::DefaultServerConfiguration::the_input_registrar()
     return input_registrar(
         [this]()
         {
-            return std::make_shared<mia::InputRegistrar>(the_scene(), the_input_sender());
+            return std::make_shared<mia::InputRegistrar>(the_scene());
         });
 }
 
@@ -128,8 +126,7 @@ namespace
 class NullInputSender : public mi::InputSender
 {
 public:
-    mi::TransportSequenceID send_event(MirEvent const&, std::shared_ptr<mi::InputChannel> const& ) override { return mi::TransportSequenceID(); }
-    void set_observer(std::shared_ptr<mi::InputSendObserver> const&) override {}
+    virtual void send_event(MirEvent const&, std::shared_ptr<mi::InputChannel> const& ) {}
 };
 
 }
@@ -140,10 +137,10 @@ mir::DefaultServerConfiguration::the_input_sender()
     return input_sender(
         [this]() -> std::shared_ptr<mi::InputSender>
         {
-            if (!the_options()->get<bool>(options::enable_input_opt))
-                return std::make_shared<NullInputSender>();
-            else
-                return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), nullptr, the_input_report());
+        if (!the_options()->get<bool>(options::enable_input_opt))
+            return std::make_shared<NullInputSender>();
+        else
+            return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), the_input_send_observer(), the_input_report());
         });
 }
 
@@ -153,7 +150,7 @@ mir::DefaultServerConfiguration::the_input_send_observer()
     return input_send_observer(
         [this]()
         {
-            return the_android_input_dispatcher();
+            return std::make_shared<mi::NullInputSendObserver>();
         });
 }
 

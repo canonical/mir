@@ -31,8 +31,8 @@ namespace doubles
 
 struct MockInputSender : mir::input::InputSender
 {
-    MOCK_METHOD2(send_event, input::TransportSequenceID(MirEvent const& ev, std::shared_ptr<mir::input::InputChannel> const& channel));
-    MOCK_METHOD1(set_observer, void(std::shared_ptr<input::InputSendObserver> const&));
+    MOCK_METHOD1(set_send_observer, void(mir::input::InputSendObserver *));
+    MOCK_METHOD2(send_event, void(MirEvent const& ev, std::shared_ptr<mir::input::InputChannel> const& channel));
 };
 
 }

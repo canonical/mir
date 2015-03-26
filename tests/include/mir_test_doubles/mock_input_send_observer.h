@@ -32,9 +32,9 @@ namespace doubles
 struct MockInputSendObserver : public mir::input::InputSendObserver
 {
     MockInputSendObserver() = default;
-    MOCK_METHOD4(send_failed, void(MirEvent const&, input::TransportSequenceID, mir::input::Surface*, FailureReason));
-    MOCK_METHOD4(send_suceeded, void(MirEvent const&, input::TransportSequenceID, mir::input::Surface*, InputResponse));
-    MOCK_METHOD3(client_blocked, void(MirEvent const&, input::TransportSequenceID, mir::input::Surface*));
+    MOCK_METHOD3(send_failed, void(MirEvent const&, mir::input::Surface*, FailureReason));
+    MOCK_METHOD3(send_suceeded, void(MirEvent const&, mir::input::Surface*, InputResponse));
+    MOCK_METHOD2(client_blocked, void(MirEvent const&, mir::input::Surface*));
 };
 
 }

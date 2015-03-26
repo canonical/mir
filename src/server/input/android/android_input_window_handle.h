@@ -19,7 +19,6 @@
 #ifndef MIR_INPUT_ANDROID_INPUT_WINDOW_HANDLE_H_
 #define MIR_INPUT_ANDROID_INPUT_WINDOW_HANDLE_H_
 
-#include <androidfw/Input.h>
 #include <InputWindow.h>
 
 #include <memory>
@@ -33,7 +32,6 @@ namespace input
 {
 class Surface;
 class InputChannel;
-class InputSender;
 
 namespace android
 {
@@ -41,50 +39,19 @@ namespace android
 class InputWindowHandle : public droidinput::InputWindowHandle
 {
 public:
-    InputWindowHandle(std::shared_ptr<input::InputSender> const& input_sender,
-                      droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
+    InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
                       std::shared_ptr<input::InputChannel> const& channel,
                       input::Surface const* surface);
     ~InputWindowHandle() {}
 
     bool updateInfo();
 
-    int64_t publishMotionEvent(int32_t deviceId,
-        int32_t source,
-        int32_t action,
-        int32_t flags,
-        int32_t edgeFlags,
-        int32_t metaState,
-        int32_t buttonState,
-        float xOffset,
-        float yOffset,
-        float xPrecision,
-        float yPrecision,
-        std::chrono::nanoseconds downTime,
-        std::chrono::nanoseconds eventTime,
-        size_t pointerCount,
-        droidinput::PointerProperties const* pointerProperties,
-        droidinput::PointerCoords const* pointerCoords);
-
-    int64_t publishKeyEvent(
-        int32_t deviceId,
-        int32_t source,
-        int32_t action,
-        int32_t flags,
-        int32_t keyCode,
-        int32_t scanCode,
-        int32_t metaState,
-        int32_t repeatCount,
-        std::chrono::nanoseconds downTime,
-        std::chrono::nanoseconds eventTime);
-
 protected:
     InputWindowHandle(InputWindowHandle const&) = delete;
     InputWindowHandle& operator=(InputWindowHandle const&) = delete;
 
 private:
-    std::shared_ptr<input::InputSender> const input_sender;
-    std::shared_ptr<input::InputChannel> const input_channel;
+    std::shared_ptr<input::InputChannel> input_channel;
     input::Surface const* surface;
 };
 
