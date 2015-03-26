@@ -32,6 +32,7 @@
 #include <sys/epoll.h>
 #include <sys/timerfd.h>
 #include <system_error>
+#include <cstdlib>
 
 namespace mircv = mir::input::receiver;
 namespace mircva = mircv::android;
@@ -51,6 +52,11 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     android_clock(clock)
 {
+    event_rate_hz = 55;
+    auto env = getenv("MIR_CLIENT_INPUT_RATE");
+    if (env != NULL)
+        event_rate_hz = atoi(env);
+
     timer_fd = mir::Fd{timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC)};
     if (timer_fd == mir::Fd::invalid)
     {
@@ -164,10 +170,14 @@ void mircva::InputReceiver::process_and_maybe_send_event()
      * as the display refresh rate.
      */
 
-    std::chrono::nanoseconds const now = android_clock(SYSTEM_TIME_MONOTONIC);
-    int const event_rate_hz = 55;
-    std::chrono::nanoseconds const one_frame = std::chrono::nanoseconds(1000000000ULL / event_rate_hz);
-    std::chrono::nanoseconds frame_time = (now / one_frame) * one_frame;
+    auto frame_time = std::chrono::nanoseconds(-1);
+    if (event_rate_hz > 0)
+    {
+        std::chrono::nanoseconds const
+            now = android_clock(SYSTEM_TIME_MONOTONIC),
+            one_frame = std::chrono::nanoseconds(1000000000ULL / event_rate_hz);
+        frame_time = (now / one_frame) * one_frame;
+    }
 
     auto result = input_consumer->consume(&event_factory,
                                           true,

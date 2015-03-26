@@ -67,8 +67,7 @@ struct DisplayBuffer : public ::testing::Test
     std::unique_ptr<mga::LayerList> list{
         new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})};
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle{
-        std::make_shared<testing::NiceMock<mtd::MockFBBundle>>(
-            display_size, refresh_rate, mir_pixel_format_abgr_8888)};
+        std::make_shared<testing::NiceMock<mtd::MockFBBundle>>(display_size)};
     MirOrientation orientation{mir_orientation_normal};
     mga::DisplayBuffer db{
         mga::DisplayName::primary,

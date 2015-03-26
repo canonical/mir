@@ -19,10 +19,17 @@
 #include "server_example_canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
+#include "mir/scene/null_surface_observer.h"
+#include "mir/shell/display_layout.h"
 #include "mir/geometry/displacement.h"
+
+#include "mir/graphics/buffer.h"
 
 #include <linux/input.h>
 #include <csignal>
+#include <mutex>
+#include <condition_variable>
+#include <algorithm>
 
 namespace me = mir::examples;
 namespace ms = mir::scene;
@@ -34,6 +41,18 @@ using namespace mir::geometry;
 namespace
 {
 int const title_bar_height = 10;
+Size titlebar_size_for_window(Size window_size)
+{
+    return {window_size.width, Height{title_bar_height}};
+}
+
+Point titlebar_position_for_window(Point window_position)
+{
+    return {
+        window_position.x,
+        window_position.y - DeltaY(title_bar_height)
+    };
+}
 }
 
 me::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
@@ -46,8 +65,11 @@ me::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
 {
 }
 
-me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(Tools* const tools) :
-    tools{tools}
+me::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(
+    Tools* const tools,
+    std::shared_ptr<shell::DisplayLayout> const& display_layout) :
+    tools{tools},
+    display_layout{display_layout}
 {
 }
 
@@ -84,13 +106,24 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
 
     auto width = std::min(display_area.size.width.as_int(), parameters.size.width.as_int());
     auto height = std::min(display_area.size.height.as_int(), parameters.size.height.as_int());
+    if (!width) width = 1;
+    if (!height) height = 1;
     parameters.size = Size{width, height};
 
     bool positioned = false;
 
     auto const parent = parameters.parent.lock();
 
-    if (!parent) // No parent => client can't suggest positioning
+    if (parameters.output_id != mir::graphics::DisplayConfigurationOutputId{0})
+    {
+        Rectangle rect{parameters.top_left, parameters.size};
+        display_layout->place_in_output(parameters.output_id, rect);
+        parameters.top_left = rect.top_left;
+        parameters.size = rect.size;
+        parameters.state = mir_surface_state_fullscreen;
+        positioned = true;
+    }
+    else if (!parent) // No parent => client can't suggest positioning
     {
         if (auto const default_surface = session->default_surface())
         {
@@ -162,6 +195,84 @@ auto me::CanonicalWindowManagerPolicy::handle_place_new_surface(
     return parameters;
 }
 
+std::vector<std::shared_ptr<ms::Surface>> me::CanonicalWindowManagerPolicy::generate_decorations_for(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface)
+{
+    tools->info_for(session).surfaces++;
+    auto format = mir_pixel_format_xrgb_8888;
+    ms::SurfaceCreationParameters params;
+    params.of_size(titlebar_size_for_window(surface->size()))
+        .of_name("decoration")
+        .of_pixel_format(format)
+        .of_buffer_usage(mir::graphics::BufferUsage::software)
+        .of_position(titlebar_position_for_window(surface->top_left()))
+        .of_type(mir_surface_type_gloss);
+    auto id = session->create_surface(params);
+    auto decoration_surface = session->surface(id);
+    decoration_surface->set_alpha(0.9);
+    tools->info_for(surface).decoration = decoration_surface;
+    tools->info_for(surface).children.push_back(decoration_surface);
+
+    //TODO: provide an easier way for the server to write to a surface!
+    std::mutex mut;
+    std::condition_variable cv;
+    mir::graphics::Buffer* written_buffer{nullptr};
+
+    decoration_surface->swap_buffers(
+        nullptr,
+        [&](mir::graphics::Buffer* buffer)
+        {
+            //TODO: this is painful to use mg::Buffer::write()
+            auto const sz = buffer->size().height.as_int() *
+                 buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
+            std::vector<unsigned char> pixels(sz, 0xFF);
+            buffer->write(pixels.data(), sz);
+            std::unique_lock<decltype(mut)> lk(mut);
+            written_buffer = buffer;
+            cv.notify_all();
+        });
+    {
+        std::unique_lock<decltype(mut)> lk(mut);
+        cv.wait(lk, [&]{return written_buffer;});
+    }
+
+    decoration_surface->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
+    return {decoration_surface};
+}
+
+namespace
+{
+class SurfaceReadyObserver : public ms::NullSurfaceObserver,
+    public std::enable_shared_from_this<SurfaceReadyObserver>
+{
+public:
+    SurfaceReadyObserver(
+        me::CanonicalWindowManagerPolicy::Tools* const focus_controller,
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& surface) :
+        focus_controller{focus_controller},
+        session{session},
+        surface{surface}
+    {
+    }
+
+private:
+    void frame_posted(int) override
+    {
+        if (auto const s = surface.lock())
+        {
+            focus_controller->set_focus_to(session.lock(), s);
+            s->remove_observer(shared_from_this());
+        }
+    }
+
+    me::CanonicalWindowManagerPolicy::Tools* const focus_controller;
+    std::weak_ptr<ms::Session> const session;
+    std::weak_ptr<ms::Surface> const surface;
+};
+}
+
 void me::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = surface->parent())
@@ -183,7 +294,7 @@ void me::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Se
         // TODO There's currently no way to insert surfaces into an active (or inactive)
         // TODO window tree while keeping the order stable or consistent with spec.
         // TODO Nor is there a way to update the "default surface" when appropriate!!
-        tools->set_focus_to(session, surface);
+        surface->add_observer(std::make_shared<SurfaceReadyObserver>(tools, session, surface));
         active_surface_ = surface;
         break;
 
@@ -230,6 +341,7 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
     case mir_surface_state_maximized:
     case mir_surface_state_vertmaximized:
     case mir_surface_state_horizmaximized:
+    case mir_surface_state_fullscreen:
         break;
 
     default:
@@ -254,22 +366,36 @@ int me::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surfa
     case mir_surface_state_restored:
         movement = info.restore_rect.top_left - old_pos;
         surface->resize(info.restore_rect.size);
+        info.decoration->resize(titlebar_size_for_window(info.restore_rect.size));
+        info.decoration->show();
         break;
 
     case mir_surface_state_maximized:
         movement = display_area.top_left - old_pos;
         surface->resize(display_area.size);
+        info.decoration->hide();
         break;
 
     case mir_surface_state_horizmaximized:
         movement = Point{display_area.top_left.x, info.restore_rect.top_left.y} - old_pos;
         surface->resize({display_area.size.width, info.restore_rect.size.height});
+        info.decoration->resize(titlebar_size_for_window({display_area.size.width, info.restore_rect.size.height}));
+        info.decoration->show();
         break;
 
     case mir_surface_state_vertmaximized:
         movement = Point{info.restore_rect.top_left.x, display_area.top_left.y} - old_pos;
         surface->resize({info.restore_rect.size.width, display_area.size.height});
+        info.decoration->hide();
         break;
+
+    case mir_surface_state_fullscreen:
+    {
+        Rectangle rect{old_pos, surface->size()};
+        display_layout->size_to_output(rect);
+        movement = rect.top_left - old_pos;
+        surface->resize(rect.size);
+    }
 
     default:
         break;
@@ -543,7 +669,8 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
             new_size.height = new_size.height + to_bottom_right.dy;
     }
 
-    switch (tools->info_for(surface).state)
+    auto& info = tools->info_for(surface);
+    switch (info.state)
     {
     case mir_surface_state_restored:
         break;
@@ -570,6 +697,7 @@ bool me::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const
         return true;
     }
 
+    info.decoration->resize({new_size.width, Height{title_bar_height}});
     surface->resize(new_size);
 
     // TODO It is rather simplistic to move a tree WRT the top_left of the root

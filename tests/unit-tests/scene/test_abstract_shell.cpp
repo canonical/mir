@@ -34,6 +34,7 @@
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_prompt_session_manager.h"
 #include "mir_test_doubles/stub_input_targeter.h"
+#include "mir_test_doubles/stub_buffer_stream_factory.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -97,6 +98,7 @@ struct AbstractShell : Test
 
     NiceMock<MockSessionManager> session_manager{
         mt::fake_shared(surface_coordinator),
+        std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(session_container),
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),

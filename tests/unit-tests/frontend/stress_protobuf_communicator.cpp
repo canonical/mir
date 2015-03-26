@@ -156,7 +156,7 @@ TEST_F(StressProtobufCommunicator, DISABLED_stress_exchange_buffer)
     for (int i = 0; i != 100000; ++i)
     {
         mir::protobuf::BufferRequest request;
-        *request.mutable_id() = client->surface.id();
+        request.mutable_id()->set_value(client->surface.id().value());
         *request.mutable_buffer() = client->surface.buffer();
         client->display_server.exchange_buffer(
             0,
