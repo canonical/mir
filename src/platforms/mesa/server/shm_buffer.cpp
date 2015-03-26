@@ -93,3 +93,8 @@ void mgm::ShmBuffer::write(unsigned char const* data, size_t data_size)
         BOOST_THROW_EXCEPTION(std::logic_error("Size is not equal to number of pixels in buffer"));
     memcpy(pixels, data, data_size);
 }
+
+void mgm::ShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
+{
+    do_with_pixels(static_cast<unsigned char const*>(pixels));
+}
