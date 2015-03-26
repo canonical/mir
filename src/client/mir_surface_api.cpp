@@ -226,9 +226,12 @@ MirSurface* mir_connection_create_surface_sync(
 }
 
 void mir_surface_set_event_handler(MirSurface* surface,
-                                   MirEventDelegate const* event_handler)
+                                   MirEventDelegate const* delegate)
 {
-    surface->set_event_handler(event_handler);
+    if (delegate)
+        surface->set_event_handler(delegate->callback, delegate->context);
+    else
+        surface->set_event_handler(nullptr, nullptr);
 }
 
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface* surface)
