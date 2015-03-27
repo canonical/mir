@@ -188,30 +188,10 @@ MirWaitHandle* mir_connection_platform_operation(
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context);
 
-/**
- * Request the arrangement of the surfaces associated with this connection.
- *
- * \param [in] connection  The connection
- * \param [in] arrangement The requested arrangement
- * \param [in] arrangement The number of arrangement requests
- */
-
-#if 0
-struct MirSurfaceArrangement
-{
-    MirSurface* surface;
-    /** The x,y position of the top left corner of the surface.
-     *  Surfaces in the same connection exist in the same x-y coordinate space.
-     *  Surfaces are placed at 0,0 by default. 
-     */
-    int x;
-    int y;
-};
-
 /** request an arrangement of surfaces belonging to this connection.
  *  The arrangement only exists within this connection, requests do not span to
  *  other connections. The request may be rejected, based on the server's window
- *  management rules, and the windowing types of the surfaces. Surface positions
+ *  management rules and the windowing types of the surfaces. Surface positions
  *  that are not present in the arrangement request remain unaffected.
  *
  *  The ordering of the array is indicative of the z order that the surfaces
@@ -226,10 +206,9 @@ struct MirSurfaceArrangement
  *                              and the arrangement was applied sucessfully
  *                              false, if the request was rejected 
  */
-
 bool mir_connection_request_surface_arrangement(
     MirConnection* connection, MirSurfaceArrangement* arrangement, int num_arrangements);
-#endif
+
 #ifdef __cplusplus
 }
 /**@}*/

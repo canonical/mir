@@ -321,6 +321,17 @@ typedef struct MirScreencastParameters
     MirPixelFormat pixel_format;
 } MirScreencastParameters;
 
+typedef struct MirSurfaceArrangement
+{
+    MirSurface* surface;
+    /** The x,y position of the top left corner of the surface.
+     *  Surfaces in the same connection exist in the same x-y coordinate space.
+     *  Surfaces are placed at 0,0 by default. 
+     */
+    int x;
+    int y;
+} MirSurfaceArrangement;
+
 /**
  * Callback to be passed when calling MirScreencast functions.
  *   \param [in] screencast          the screencast being updated
