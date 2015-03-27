@@ -277,7 +277,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     EXPECT_GT(duration, 1ms);
 
     // But later in a frame or so, the motion will be reported:
-    t += 2 * one_frame;  // Account for the new slower 55Hz event rate
+    t += 2 * one_frame;  // Account for the slower 59Hz event rate
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
 

@@ -18,7 +18,6 @@
 
 #include "eglapp.h"
 #include "mir_toolkit/mir_client_library.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -95,10 +94,10 @@ static void mir_eglapp_handle_input_event(MirInputEvent const* event)
 {
     if (mir_input_event_get_type(event) != mir_input_event_type_key)
         return;
-    MirKeyInputEvent const* kev = mir_input_event_get_key_input_event(event);
-    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_up)
+    MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(event);
+    if (mir_keyboard_event_action(kev) != mir_keyboard_action_up)
         return;
-    if (mir_key_input_event_get_key_code(kev) != XKB_KEY_q)
+    if (mir_keyboard_event_key_code(kev) != XKB_KEY_q)
         return;
     
     running = 0;
@@ -134,6 +133,21 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
         break;
     case mir_event_type_surface:
         mir_eglapp_handle_surface_event(mir_event_get_surface_event(ev));
+        break;
+    case mir_event_type_resize:
+        /*
+         * FIXME: https://bugs.launchpad.net/mir/+bug/1194384
+         * It is unsafe to set the width and height here because we're in a
+         * different thread to that doing the rendering. So we either need
+         * support for event queuing (directing them to another thread) or
+         * full single-threaded callbacks. (LP: #1194384).
+         */
+        {
+            MirResizeEvent const* resize = mir_event_get_resize_event(ev);
+            printf("Resized to %dx%d\n",
+                   mir_resize_event_get_width(resize),
+                   mir_resize_event_get_height(resize));
+        }
         break;
     case mir_event_type_close_surface:
         printf("Received close event from server.\n");

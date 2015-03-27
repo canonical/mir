@@ -97,11 +97,11 @@ public:
     int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value)
         { return value; }
 
-    bool handle_key_event(MirKeyInputEvent const* /*event*/) { return false; }
+    bool handle_key_event(MirKeyboardEvent const* /*event*/) { return false; }
 
-    bool handle_touch_event(MirTouchInputEvent const* /*event*/) { return false; }
+    bool handle_touch_event(MirTouchEvent const* /*event*/) { return false; }
 
-    bool handle_pointer_event(MirPointerInputEvent const* /*event*/) { return false; }
+    bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
 
     std::vector<std::shared_ptr<ms::Surface>> generate_decorations_for(
         std::shared_ptr<ms::Session> const&,
