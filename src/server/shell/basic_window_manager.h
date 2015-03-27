@@ -166,19 +166,19 @@ protected:
         policy.handle_displays_updated(session_info, displays);
     }
 
-    bool handle_key_event(MirKeyInputEvent const* event) override
+    bool handle_key_event(MirKeyboardEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         return policy.handle_key_event(event);
     }
 
-    bool handle_touch_event(MirTouchInputEvent const* event) override
+    bool handle_touch_event(MirTouchEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         return policy.handle_touch_event(event);
     }
 
-    bool handle_pointer_event(MirPointerInputEvent const* event) override
+    bool handle_pointer_event(MirPointerEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         return policy.handle_pointer_event(event);
