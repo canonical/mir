@@ -196,7 +196,8 @@ MirWaitHandle* mir_connection_platform_operation(
  *
  *  The ordering of the array is indicative of the z order that the surfaces
  *  of this connection should be arranged in. arrangement[0] is the bottom-most
- *  surface.
+ *  surface. Surfaces not listed may be placed at a z order of the server's
+ *  choosing.
  *
  * \param [in] connection       The connection
  * \param [in] arrangement      An array of MirSurfaceArrangements constituting
