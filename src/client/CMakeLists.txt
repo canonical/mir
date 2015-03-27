@@ -110,6 +110,7 @@ install(
 
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit
+            ${CMAKE_SOURCE_DIR}/include/client/mir
   DESTINATION "include/mirclient"
 )
 

@@ -45,6 +45,10 @@ public:
     std::shared_ptr<ClientBufferStream> make_producer_stream(protobuf::DisplayServer& server,
        protobuf::BufferStream const& protobuf_bs, std::string const& surface_name);
 
+    ClientBufferStream* make_producer_stream(protobuf::DisplayServer& server,
+       protobuf::BufferStreamParameters const& params,
+       mir_buffer_stream_callback callback, void* context);
+
 private:
     std::shared_ptr<ClientPlatform> const client_platform;
     std::shared_ptr<logging::Logger> const logger;

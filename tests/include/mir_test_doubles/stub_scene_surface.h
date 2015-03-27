@@ -107,6 +107,8 @@ public:
 
     void set_keymap(xkb_rule_names const&) {}
     bool modify(Modifications const&) override { return true; }
+
+    void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) {}
 };
 
 }

@@ -30,11 +30,90 @@ extern "C" {
 #endif
 
 /**
- * Get the underlying platform type so the buffer obtained in "raw" representation
- * in mir_buffer_stream_get_current_buffer() can be understood
+ * Test for a valid buffer stream
+ *
+ * \param [in] buffer_stream  The buffer stream
+ * \return                 True if the supplied buffer_stream is valid, or
+ *                         false otherwise.
+ */
+bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
+
+/**
+ * Create a new buffer stream. 
+ *
+ * For example, the resulting buffer stream may be used
+ * with mir_cursor_configuration_from_buffer_stream, 
+ * in order to post images to the system cursor.
+ *
+ * \param [in] connection     A valid connection
+ * \param [in] width          Requested buffer width
+ * \param [in] height         Requested buffer height
+ * \param [in] buffer_usage   Requested buffer usage, use 
+ *                            mir_buffer_usage_software for cursor image streams
+ * \param [in] callback       Callback to be invoked when the request completes
+ * \param [in] context        Userdata to pass to callback function
+ *
+ * \return                    A handle that can be supplied to mir_wait_for
+ */
+MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage,
+    mir_buffer_stream_callback callback,
+    void* context);
+
+/**
+ * Create a new buffer stream unattached to a surface and wait for the result. 
+ * The resulting buffer stream may be used with 
+ * mir_cursor_configuration_from_buffer_stream in order to post images 
+ * to the system cursor.
+ *
+ * \param [in] connection       A valid connection
+ * \param [in] width            Requested buffer width
+ * \param [in] height           Requested buffer height
+ * \param [in] buffer_usage     Requested buffer usage, use 
+ *                              mir_buffer_usage_software for cursor image streams
+ *
+ * \return                      The new buffer stream. This is guaranteed non-null, 
+ *                              but may be invalid in the case of error.
+ */
+MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connection,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage);
+
+/**
+ * Release the supplied stream and any associated buffer. The returned wait
+ * handle remains valid until the connection to the server is released.
+ *   \warning callback could be called from another thread. You must do any
+ *            locking appropriate to protect your data accessed in the
+ *            callback.
+ *   \param [in] stream      The stream
+ *   \param [in] callback     Callback function to be invoked when the request
+ *                            completes
+ *   \param [in,out] context  User data passed to the callback function
+ *   \return                  A handle that can be passed to mir_wait_for
+ */
+MirWaitHandle *mir_buffer_stream_release(
+    MirBufferStream * buffer_stream,
+    mir_buffer_stream_callback callback,
+    void *context);
+
+/**
+ * Release the specified buffer stream like in mir,_buffer_stream_release(), 
+ * but also wait for the operation to complete.
+ *   \param [in] buffer stream  The buffer stream to be released
+ */
+void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream);
+
+/**
+ * Get the underlying platform type so the buffer obtained in "raw"
+ * representation in mir_buffer_stream_get_current_buffer() 
+ * may be understood
  *   \pre                     The surface is valid
  *   \param [in] surface      The surface
- *   \return                  One of mir_platform_type_android or mir_platform_type_gbm
+ *   \return                  One of mir_platform_type_android or 
+ *                            mir_platform_type_gbm
  */
 MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream);
 
@@ -44,12 +123,13 @@ MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream);
  *   \param [in] surface          The buffer stream
  *   \param [out] buffer_package  Structure to be populated
  */
-void mir_buffer_stream_get_current_buffer(MirBufferStream *buffer_stream, MirNativeBuffer **buffer_package);
+void mir_buffer_stream_get_current_buffer(MirBufferStream *buffer_stream,
+    MirNativeBuffer **buffer_package);
 
 /**
- * Advance a buffer stream's buffer. The returned handle remains valid until the next
- * call to mir_buffer_stream_swap_buffers, until the buffer stream has been released or the
- * connection to the server has been released.
+ * Advance a buffer stream's buffer. The returned handle remains valid until the
+ * next call to mir_buffer_stream_swap_buffers, until the buffer stream has been 
+ * released or the connection to the server has been released.
  *   \warning callback could be called from another thread. You must do any
  *            locking appropriate to protect your data accessed in the
  *            callback.
@@ -65,8 +145,8 @@ MirWaitHandle *mir_buffer_stream_swap_buffers(
     void *context);
 
 /**
- * Advance a buffer stream's buffer as in mir_buffer stream_swap_buffers(), but also wait
- * for the operation to complete.
+ * Advance a buffer stream's buffer as in mir_buffer stream_swap_buffers(), 
+ * but also wait for the operation to complete.
  *   \param [in] buffer stream  The buffer stream whose buffer to advance
  */
 void mir_buffer_stream_swap_buffers_sync(MirBufferStream *buffer_stream);

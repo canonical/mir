@@ -144,3 +144,8 @@ void mgm::GBMBuffer::write(unsigned char const* /* pixels */, size_t /* size */)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Direct write to GBM hardware allocated buffer not supported"));
 }
+
+void mgm::GBMBuffer::read(std::function<void(unsigned char const*)> const& /* do_with_pixels */)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("Direct read from GBM hardware allocated buffer not supported"));
+}

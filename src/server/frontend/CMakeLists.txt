@@ -15,7 +15,7 @@ set(
   resource_cache.cpp
   socket_messenger.cpp
   event_sender.cpp
-  surface_tracker.cpp
+  buffer_stream_tracker.cpp
   unauthorized_display_changer.cpp
   unauthorized_screencast.cpp
   session_credentials.cpp
