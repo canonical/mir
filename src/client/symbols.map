@@ -70,7 +70,7 @@ MIR_CLIENT_8 {
     mir_surface_is_valid;
     mir_surface_release;
     mir_surface_release_sync;
-#    mir_surface_set_event_handler;
+    mir_surface_set_event_handler;
     mir_surface_set_state;
     mir_surface_set_swapinterval;
     mir_surface_set_type;

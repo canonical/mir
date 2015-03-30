@@ -225,22 +225,23 @@ MirSurface* mir_connection_create_surface_sync(
     return surface;
 }
 
-void mir_surface_set_event_handler(MirSurface* surface,
-                                   mir_surface_event_callback callback,
-                                   void* context)
+__asm__(".symver new_mir_surface_set_event_handler,mir_surface_set_event_handler@@MIR_CLIENT_8.4");
+extern "C"
+void new_mir_surface_set_event_handler(MirSurface* surface,
+                                       mir_surface_event_callback callback,
+                                       void* context)
 {
     surface->set_event_handler(callback, context);
 }
 
 // Deprecated but ABI backward compatible --->
-__asm__(".symver old_mir_surface_set_event_handler,mir_surface_set_event_handler@MIR_CLIENT_8");
-
 typedef struct MirEventDelegate
 {
     mir_surface_event_callback callback;
     void *context;
 } MirEventDelegate;
 
+__asm__(".symver old_mir_surface_set_event_handler,mir_surface_set_event_handler@MIR_CLIENT_8");
 extern "C"
 void old_mir_surface_set_event_handler(MirSurface* surface,
                                        MirEventDelegate const* delegate)
