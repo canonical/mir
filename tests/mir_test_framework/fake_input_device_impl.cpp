@@ -119,8 +119,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     xkb_keysym_t key_code = 0;
     int64_t event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
                              std::chrono::system_clock::now().time_since_epoch()).count();
-    auto input_action = (key_params.action == synthesis::EventAction::Down) ? mir_key_input_event_action_down :
-                                                                              mir_key_input_event_action_up;
+    auto input_action = (key_params.action == synthesis::EventAction::Down) ? mir_keyboard_action_down:
+                                                                              mir_keyboard_action_up;
 
     auto event_modifiers = expand_modifier(modifiers);
     auto key_event = mir::events::make_event(

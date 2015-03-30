@@ -25,23 +25,40 @@ namespace mir
 {
 namespace test
 {
-namespace android
-{
-class ICSAllocInterface
-{
-public:
-    virtual ~ICSAllocInterface() {/* TODO: make nothrow */}
-    virtual int alloc_interface(alloc_device_t* dev, int w, int h,
-                                int format, int usage, buffer_handle_t* handle, int* stride) = 0;
-    virtual int free_interface(alloc_device_t* dev, buffer_handle_t handle) = 0;
-    virtual int dump_interface(alloc_device_t* dev, char *buf, int len) = 0;
-
-};
-}
 namespace doubles
 {
-class MockAllocDevice : public android::ICSAllocInterface,
-    public alloc_device_t
+struct MockGrallocModule : gralloc_module_t
+{
+    MockGrallocModule()
+    {
+        lock = hook_lock;
+        unlock = hook_unlock;
+    }
+
+    static int hook_lock(
+        struct gralloc_module_t const* module,
+        buffer_handle_t handle, int usage,
+        int l, int t, int w, int h,
+        void** vaddr)
+    {
+        auto module_mock = static_cast<MockGrallocModule const*>(module);
+        return module_mock->lock_interface(module, handle, usage, l, t, w, h, vaddr);
+    }
+
+    static int hook_unlock(
+        struct gralloc_module_t const* module,
+        buffer_handle_t handle)
+    {
+        auto module_mock = static_cast<MockGrallocModule const*>(module);
+        return module_mock->unlock_interface(module, handle);
+    }
+
+    MOCK_CONST_METHOD8(lock_interface,
+        int(struct gralloc_module_t const*, buffer_handle_t, int, int, int, int, int, void**));
+    MOCK_CONST_METHOD2(unlock_interface, int(struct gralloc_module_t const*, buffer_handle_t));
+};
+
+class MockAllocDevice : public alloc_device_t
 {
 public:
 
