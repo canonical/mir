@@ -16,8 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir/scene/session.h"
@@ -73,6 +71,7 @@ public:
         surface_coordinator->raise(surface(index));
     }
 
+    using msh::ShellWrapper::raise;
 private:
     std::shared_ptr<ms::SurfaceCoordinator> const surface_coordinator;
     std::vector<std::weak_ptr<ms::Surface>> surfaces;
@@ -86,15 +85,17 @@ struct MockVisibilityCallback
 
 void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
 {
-    if (event->type == mir_event_type_surface &&
-        event->surface.attrib == mir_surface_attrib_visibility)
-    {
-        auto const mock_visibility_callback =
-            reinterpret_cast<testing::NiceMock<MockVisibilityCallback>*>(ctx);
-        mock_visibility_callback->handle(
-            surface,
-            static_cast<MirSurfaceVisibility>(event->surface.value));
-    }
+    if (mir_event_get_type(event) != mir_event_type_surface)
+        return;
+    auto sev = mir_event_get_surface_event(event);
+    if (mir_surface_event_get_attribute(sev) != mir_surface_attrib_visibility)
+        return;
+
+    auto const mock_visibility_callback =
+        reinterpret_cast<testing::NiceMock<MockVisibilityCallback>*>(ctx);
+    mock_visibility_callback->handle(
+        surface,
+        static_cast<MirSurfaceVisibility>(mir_surface_event_get_attribute_value(sev)));
 }
 
 struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface

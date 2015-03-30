@@ -16,8 +16,6 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "eglapp.h"
 #include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>
@@ -96,10 +94,10 @@ static void mir_eglapp_handle_input_event(MirInputEvent const* event)
 {
     if (mir_input_event_get_type(event) != mir_input_event_type_key)
         return;
-    MirKeyInputEvent const* kev = mir_input_event_get_key_input_event(event);
-    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_up)
+    MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(event);
+    if (mir_keyboard_event_action(kev) != mir_keyboard_action_up)
         return;
-    if (mir_key_input_event_get_key_code(kev) != XKB_KEY_q)
+    if (mir_keyboard_event_key_code(kev) != XKB_KEY_q)
         return;
     
     running = 0;
@@ -144,7 +142,12 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
          * support for event queuing (directing them to another thread) or
          * full single-threaded callbacks. (LP: #1194384).
          */
-        printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
+        {
+            MirResizeEvent const* resize = mir_event_get_resize_event(ev);
+            printf("Resized to %dx%d\n",
+                   mir_resize_event_get_width(resize),
+                   mir_resize_event_get_height(resize));
+        }
         break;
     case mir_event_type_close_surface:
         printf("Received close event from server.\n");

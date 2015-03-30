@@ -45,11 +45,11 @@ public:
 
     void remove_display(geometry::Rectangle const& area) override;
 
-    bool handle_key_event(MirKeyInputEvent const* event) override;
+    bool handle_key_event(MirKeyboardEvent const* event) override;
 
-    bool handle_touch_event(MirTouchInputEvent const* event) override;
+    bool handle_touch_event(MirTouchEvent const* event) override;
 
-    bool handle_pointer_event(MirPointerInputEvent const* event) override;
+    bool handle_pointer_event(MirPointerEvent const* event) override;
 
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,

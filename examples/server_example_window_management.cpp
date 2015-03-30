@@ -97,11 +97,11 @@ public:
     int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value)
         { return value; }
 
-    bool handle_key_event(MirKeyInputEvent const* /*event*/) { return false; }
+    bool handle_key_event(MirKeyboardEvent const* /*event*/) { return false; }
 
-    bool handle_touch_event(MirTouchInputEvent const* /*event*/) { return false; }
+    bool handle_touch_event(MirTouchEvent const* /*event*/) { return false; }
 
-    bool handle_pointer_event(MirPointerInputEvent const* /*event*/) { return false; }
+    bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
 
     std::vector<std::shared_ptr<ms::Surface>> generate_decorations_for(
         std::shared_ptr<ms::Session> const&,
@@ -121,56 +121,27 @@ using CanonicalWindowManager = me::BasicWindowManager<me::CanonicalWindowManager
 
 void me::add_window_manager_option_to(Server& server)
 {
-    server.add_configuration_option(wm_option, wm_description, mir::OptionType::string);
+    server.add_configuration_option(wm_option, wm_description, wm_canonical);
 
-    server.override_the_shell([&server]()
-        -> std::shared_ptr<msh::Shell>
+    server.override_the_window_manager_builder([&server](msh::FocusController* focus_controller)
+        -> std::shared_ptr<msh::WindowManager>
         {
             auto const options = server.get_options();
-
-            if (!options->is_set(wm_option))
-                return std::shared_ptr<msh::Shell>{};
-
             auto const selection = options->get<std::string>(wm_option);
-
-            std::function<std::shared_ptr<msh::WindowManager>(msh::FocusController* focus_controller)> wm_builder;
 
             if (selection == wm_tiling)
             {
-                wm_builder = [&server](msh::FocusController* focus_controller) -> std::shared_ptr<msh::WindowManager>
-                    {
-                        return std::make_shared<TilingWindowManager>(focus_controller);
-                    };
+                return std::make_shared<TilingWindowManager>(focus_controller);
             }
             else if (selection == wm_fullscreen)
             {
-                wm_builder = [&server](msh::FocusController* focus_controller) -> std::shared_ptr<msh::WindowManager>
-                    {
-                        return std::make_shared<FullscreenWindowManager>(focus_controller, server.the_shell_display_layout());
-                    };
+                return std::make_shared<FullscreenWindowManager>(focus_controller, server.the_shell_display_layout());
             }
             else if (selection == wm_canonical)
             {
-                wm_builder = [&server](msh::FocusController* focus_controller) -> std::shared_ptr<msh::WindowManager>
-                    {
-                        return std::make_shared<CanonicalWindowManager>(
-                            focus_controller,
-                            server.the_shell_display_layout());
-                    };
+                return std::make_shared<CanonicalWindowManager>(focus_controller, server.the_shell_display_layout());
             }
-            else
-                throw mir::AbnormalExit("Unknown window manager: " + selection);
 
-
-            auto tmp = std::make_shared<msh::AbstractShell>(
-                server.the_input_targeter(),
-                server.the_surface_coordinator(),
-                server.the_session_coordinator(),
-                server.the_prompt_session_manager(),
-                wm_builder);
-
-            server.the_composite_event_filter()->prepend(tmp);
-
-            return tmp;
+            throw mir::AbnormalExit("Unknown window manager: " + selection);
         });
 }
