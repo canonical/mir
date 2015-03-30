@@ -151,8 +151,9 @@ void mga::Buffer::write(unsigned char const* data, size_t data_size)
     int height = size().height.as_uint32_t();
     int top = 0;
     int left = 0;
-    if ( hw_module->lock(hw_module, handle->handle(),
-        usage, top, left, width, height, reinterpret_cast<void**>(&vaddr)) )
+    if (hw_module->lock(
+            hw_module, handle->handle(), usage, top, left, width, height, reinterpret_cast<void**>(&vaddr)) ||
+        !vaddr)
         BOOST_THROW_EXCEPTION(std::runtime_error("error securing buffer for client cpu use"));
 
     // Copy line by line in case of stride != width*bpp
