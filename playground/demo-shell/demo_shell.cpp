@@ -114,11 +114,15 @@ public:
 
     std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
     {
-        auto composite_filter = ServerConfiguration::the_composite_event_filter();
-        for (auto const& filter : filter_list)
-            composite_filter->append(filter);
+        return composite_event_filter(
+            [this]() -> std::shared_ptr<mi::CompositeEventFilter>
+            {
+                auto composite_filter = ServerConfiguration::the_composite_event_filter();
+                for (auto const& filter : filter_list)
+                    composite_filter->append(filter);
 
-        return composite_filter;
+                return composite_filter;
+            });
     }
 
     std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override

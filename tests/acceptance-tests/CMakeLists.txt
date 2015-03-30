@@ -11,6 +11,7 @@ set(
   server_configuration_options.cpp
   server_signal_handling.cpp
   test_client_header_version.cpp
+  test_client_input.cpp
   test_client_library.cpp
   test_client_library_errors.cpp
   test_client_library_old.cpp
@@ -35,8 +36,10 @@ set(
   test_debug_api.cpp
   test_unresponsive_client.cpp
   test_client_platform_operation.cpp
+  test_input_device_hub.cpp
   test_latency.cpp
   test_shell_control_of_surface_configuration.cpp
+  test_render_override.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")

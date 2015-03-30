@@ -60,16 +60,12 @@ public:
     MOCK_METHOD0(call, void());
 };
 
-class MockSurfaceAttribObserver : public ms::NullSurfaceObserver
+class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
     MOCK_METHOD2(attrib_changed, void(MirSurfaceAttrib, int));
     MOCK_METHOD1(hidden_set_to, void(bool));
-};
-
-class MockCloseObserver : public ms::NullSurfaceObserver
-{
-public:
+    MOCK_METHOD1(renamed, void(char const*));
     MOCK_METHOD0(client_surface_close_requested, void());
 };
 
@@ -604,7 +600,7 @@ TEST_P(BasicSurfaceAttributeTest, notifies_about_attrib_changes)
     auto const& value1 = params.a_valid_value;
     auto const& value2 = params.default_value;
 
-    NiceMock<MockSurfaceAttribObserver> mock_surface_observer;
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
 
     InSequence s;
     EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, value1))
@@ -627,7 +623,7 @@ TEST_P(BasicSurfaceAttributeTest, does_not_notify_if_attrib_is_unchanged)
     auto const& default_value = params.default_value;
     auto const& another_value = params.a_valid_value;
 
-    NiceMock<MockSurfaceAttribObserver> mock_surface_observer;
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
 
     EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, another_value))
         .Times(1);
@@ -715,9 +711,9 @@ TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)
 TEST_F(BasicSurfaceTest, observer_can_remove_itself_within_notification)
 {
     using namespace testing;
-    MockSurfaceAttribObserver observer1;
-    MockSurfaceAttribObserver observer2;
-    MockSurfaceAttribObserver observer3;
+    MockSurfaceObserver observer1;
+    MockSurfaceObserver observer2;
+    MockSurfaceObserver observer3;
 
     //Both of these observers should still get their notifications
     //regardless of the unregistration of observer2
@@ -743,11 +739,27 @@ TEST_F(BasicSurfaceTest, notifies_of_client_close_request)
 {
     using namespace testing;
 
-    MockCloseObserver mock_surface_observer;
+    MockSurfaceObserver mock_surface_observer;
 
     EXPECT_CALL(mock_surface_observer, client_surface_close_requested()).Times(1);
 
     surface.add_observer(mt::fake_shared(mock_surface_observer));
 
     surface.request_client_surface_close();
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_rename)
+{
+    using namespace testing;
+
+    MockSurfaceObserver mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, renamed(StrEq("Steve")))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+
+    mf::Surface::Modifications mods;
+    mods.name = "Steve";
+    surface.modify(mods);
 }
