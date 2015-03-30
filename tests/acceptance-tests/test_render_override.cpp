@@ -83,7 +83,6 @@ struct CustomDBC : mc::DisplayBufferCompositor
             tracker->surface_rendered_with_size(renderable->screen_position().size);
         }
     }
-
 private:
     std::shared_ptr<CompositionTracker> const tracker;
 };
@@ -119,7 +118,7 @@ struct DisplayBufferCompositorOverride : mtf::ConnectedClientWithASurface
     {
         mtf::ConnectedClientWithASurface::TearDown();
     }
-
+private:
     std::shared_ptr<CompositionTracker> const tracker{std::make_shared<CompositionTracker>()};
 };
 }
