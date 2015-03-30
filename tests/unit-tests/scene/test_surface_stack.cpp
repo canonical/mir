@@ -259,6 +259,7 @@ TEST_F(SurfaceStack, decor_name_is_surface_name)
     EXPECT_EQ("Mary had a little lamb", decor->name);
 }
 
+//This test only supports playground/
 TEST_F(SurfaceStack, gets_surface_renames)
 {
     using namespace testing;
@@ -288,10 +289,10 @@ TEST_F(SurfaceStack, gets_surface_renames)
 
     auto& element = elements.front();
 
-    auto const& decor = element->decoration();
-    EXPECT_TRUE(decor);
-    EXPECT_EQ(mc::Decoration::Type::surface, decor.type);
-    EXPECT_EQ("username@hostname: ~/Documents", decor.name);
+    auto decor = element->decoration();
+    EXPECT_THAT(decor, Ne(nullptr));
+    EXPECT_EQ(mc::Decoration::Type::surface, decor->type);
+    EXPECT_EQ("username@hostname: ~/Documents", decor->name);
 }
 
 TEST_F(SurfaceStack, scene_counts_pending_accurately)

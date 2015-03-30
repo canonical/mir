@@ -118,7 +118,7 @@ struct DisplayBufferCompositorOverride : mtf::ConnectedClientWithASurface
     {
         mtf::ConnectedClientWithASurface::TearDown();
     }
-private:
+protected:
     std::shared_ptr<CompositionTracker> const tracker{std::make_shared<CompositionTracker>()};
 };
 }
