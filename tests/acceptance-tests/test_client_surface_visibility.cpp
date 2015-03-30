@@ -73,6 +73,7 @@ public:
         surface_coordinator->raise(surface(index));
     }
 
+    using msh::ShellWrapper::raise;
 private:
     std::shared_ptr<ms::SurfaceCoordinator> const surface_coordinator;
     std::vector<std::weak_ptr<ms::Surface>> surfaces;

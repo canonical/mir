@@ -51,9 +51,9 @@ struct MockWindowManager : shell::WindowManager
     MOCK_METHOD1(add_display, void(geometry::Rectangle const&));
     MOCK_METHOD1(remove_display, void(geometry::Rectangle const&));
 
-    MOCK_METHOD1(handle_key_event, bool(MirKeyInputEvent const*));
-    MOCK_METHOD1(handle_touch_event, bool(MirTouchInputEvent const*));
-    MOCK_METHOD1(handle_pointer_event, bool(MirPointerInputEvent const*));
+    MOCK_METHOD1(handle_key_event, bool(MirKeyboardEvent const*));
+    MOCK_METHOD1(handle_touch_event, bool(MirTouchEvent const*));
+    MOCK_METHOD1(handle_pointer_event, bool(MirPointerEvent const*));
 
     MOCK_METHOD4(set_surface_attribute,
         int(std::shared_ptr<scene::Session> const& session,

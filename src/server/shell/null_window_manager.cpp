@@ -54,17 +54,17 @@ void msh::NullWindowManager::remove_display(geometry::Rectangle const& /*area*/)
 {
 }
 
-bool msh::NullWindowManager::handle_key_event(MirKeyInputEvent const* /*event*/)
+bool msh::NullWindowManager::handle_key_event(MirKeyboardEvent const* /*event*/)
 {
     return false;
 }
 
-bool msh::NullWindowManager::handle_touch_event(MirTouchInputEvent const* /*event*/)
+bool msh::NullWindowManager::handle_touch_event(MirTouchEvent const* /*event*/)
 {
     return false;
 }
 
-bool msh::NullWindowManager::handle_pointer_event(MirPointerInputEvent const* /*event*/)
+bool msh::NullWindowManager::handle_pointer_event(MirPointerEvent const* /*event*/)
 {
     return false;
 }

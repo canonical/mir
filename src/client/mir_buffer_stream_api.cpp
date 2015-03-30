@@ -21,7 +21,8 @@
 #include "mir_screencast.h"
 #include "mir_surface.h"
 #include "mir_connection.h"
-#include "client_buffer_stream.h"
+#include "buffer_stream.h"
+#include "client_buffer_stream_factory.h"
 
 #include "mir/client_buffer.h"
 
@@ -31,6 +32,90 @@
 #include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
+namespace mp = mir::protobuf;
+
+namespace
+{
+struct ReleaseData
+{
+    mir_buffer_stream_callback callback;
+    void *context;
+};
+void finish_release(MirBufferStream *stream, void *context)
+{
+    auto data = reinterpret_cast<ReleaseData*>(context);
+    data->callback(stream, data->context);
+    delete data;
+    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
+    delete bs;
+}
+// assign_result is compatible with all 2-parameter callbacks
+void assign_result(void* result, void** context)
+{
+    if (context)
+        *context = result;
+}
+
+}
+
+
+
+MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage,
+    mir_buffer_stream_callback callback,
+    void *context)
+try
+{
+    mp::BufferStreamParameters params;
+    params.set_width(width);
+    params.set_height(height);
+    params.set_pixel_format(format);
+    params.set_buffer_usage(buffer_usage);
+
+    return connection->get_client_buffer_stream_factory()->make_producer_stream(connection->display_server(), params, callback, context)
+        ->get_create_wait_handle();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connection,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage)
+try
+{
+    mcl::BufferStream *stream = nullptr;
+    mir_connection_create_buffer_stream(connection, width, height, format, buffer_usage,
+        reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
+    return reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+MirWaitHandle *mir_buffer_stream_release(
+    MirBufferStream * buffer_stream,
+    mir_buffer_stream_callback callback,
+    void *context)
+{
+    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    auto data = new ReleaseData{callback, context};
+    return bs->release(finish_release, data);
+}
+
+void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
+{
+    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    bs->release(nullptr, nullptr)->wait_for_all();
+    delete bs;
+}
 
 void mir_buffer_stream_get_current_buffer(MirBufferStream* buffer_stream, MirNativeBuffer** buffer_package_out)
 try
@@ -59,15 +144,6 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
-}
-
-namespace
-{
-void assign_result(void* result, void** context)
-{
-    if (context)
-        *context = result;
-}
 }
 
 void mir_buffer_stream_swap_buffers_sync(MirBufferStream* buffer_stream)
@@ -120,3 +196,8 @@ catch (std::exception const& ex)
     return MirPlatformType();
 }
 
+bool mir_buffer_stream_is_valid(MirBufferStream* opaque_stream)
+{
+    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
+    return buffer_stream->valid();
+}

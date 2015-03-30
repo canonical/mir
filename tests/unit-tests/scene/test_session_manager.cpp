@@ -30,6 +30,7 @@
 #include "mir_test_doubles/mock_surface_coordinator.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
+#include "mir_test_doubles/stub_buffer_stream_factory.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_session_event_sink.h"
 
@@ -86,8 +87,10 @@ struct SessionManagerSetup : public testing::Test
     testing::NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
     testing::NiceMock<MockSessionContainer> container;
     ms::NullSessionListener session_listener;
+    mtd::StubBufferStreamFactory buffer_stream_factory;
 
     ms::SessionManager session_manager{mt::fake_shared(surface_coordinator),
+        mt::fake_shared(buffer_stream_factory),
         mt::fake_shared(container),
         std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<mtd::NullSessionEventSink>(),
@@ -141,6 +144,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
 
     ms::SessionManager session_manager{
         mt::fake_shared(surface_coordinator),
+        std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(container),
         std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<mtd::NullSessionEventSink>(),
@@ -176,6 +180,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
 
     ms::SessionManager session_manager{
         mt::fake_shared(surface_coordinator),
+        std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(container),
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),

@@ -49,33 +49,33 @@ void mir::client::lttng::InputReceiverReport::received_event(MirEvent const& eve
 
 void mir::client::lttng::InputReceiverReport::report_key(MirInputEvent const* event) const
 {
-    auto kev = mir_input_event_get_key_input_event(event);
+    auto kev = mir_input_event_get_keyboard_event(event);
 
     mir_tracepoint(mir_client_input_receiver, key_event, mir_input_event_get_device_id(event),
-                   mir_key_input_event_get_action(kev),
-                   mir_key_input_event_get_modifiers(kev),
-                   mir_key_input_event_get_key_code(kev),
-                   mir_key_input_event_get_scan_code(kev),
+                   mir_keyboard_event_action(kev),
+                   mir_keyboard_event_modifiers(kev),
+                   mir_keyboard_event_key_code(kev),
+                   mir_keyboard_event_scan_code(kev),
                    mir_input_event_get_event_time(event));
 }
 
 void mir::client::lttng::InputReceiverReport::report_touch(MirInputEvent const* event) const
 {
-    auto tev = mir_input_event_get_touch_input_event(event);
+    auto tev = mir_input_event_get_touch_event(event);
     
     mir_tracepoint(mir_client_input_receiver, touch_event, mir_input_event_get_device_id(event),  
-                   mir_touch_input_event_get_modifiers(tev), mir_input_event_get_event_time(event));
+                   mir_touch_event_modifiers(tev), mir_input_event_get_event_time(event));
 
-    for (unsigned int i = 0; i < mir_touch_input_event_get_touch_count(tev); i++)
+    for (unsigned int i = 0; i < mir_touch_event_point_count(tev); i++)
     {
         mir_tracepoint(mir_client_input_receiver, touch_event_coordinate,
-                       mir_touch_input_event_get_touch_id(tev, i),
-                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_x),
-                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_y),
-                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_touch_major),
-                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_touch_minor),
-                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_size),
-                       mir_touch_input_event_get_touch_axis_value(tev, i, mir_touch_input_axis_pressure));
+                       mir_touch_event_id(tev, i),
+                       mir_touch_event_axis_value(tev, i, mir_touch_axis_x),
+                       mir_touch_event_axis_value(tev, i, mir_touch_axis_y),
+                       mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_major),
+                       mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_minor),
+                       mir_touch_event_axis_value(tev, i, mir_touch_axis_size),
+                       mir_touch_event_axis_value(tev, i, mir_touch_axis_pressure));
     }
 }
 

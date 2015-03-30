@@ -96,10 +96,10 @@ static void mir_eglapp_handle_input_event(MirInputEvent const* event)
 {
     if (mir_input_event_get_type(event) != mir_input_event_type_key)
         return;
-    MirKeyInputEvent const* kev = mir_input_event_get_key_input_event(event);
-    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_up)
+    MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(event);
+    if (mir_keyboard_event_action(kev) != mir_keyboard_action_up)
         return;
-    if (mir_key_input_event_get_key_code(kev) != XKB_KEY_q)
+    if (mir_keyboard_event_key_code(kev) != XKB_KEY_q)
         return;
     
     running = 0;
