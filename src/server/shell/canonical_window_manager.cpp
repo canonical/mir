@@ -16,46 +16,26 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "server_example_canonical_window_manager.h"
+#include "canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/shell/display_layout.h"
 #include "mir/geometry/displacement.h"
 
-#include "mir/graphics/buffer.h"
-
 #include <linux/input.h>
 #include <csignal>
-#include <mutex>
-#include <condition_variable>
-#include <algorithm>
 
-namespace me = mir::examples;
+namespace msh = mir::shell;
 namespace ms = mir::scene;
 using namespace mir::geometry;
-
-///\example server_example_canonical_window_manager.cpp
-// Based on "Mir and Unity: Surfaces, input, and displays (v0.3)"
 
 namespace
 {
 int const title_bar_height = 10;
-Size titlebar_size_for_window(Size window_size)
-{
-    return {window_size.width, Height{title_bar_height}};
 }
 
-Point titlebar_position_for_window(Point window_position)
-{
-    return {
-        window_position.x,
-        window_position.y - DeltaY(title_bar_height)
-    };
-}
-}
-
-me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
+msh::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface) :
     state{mir_surface_state_restored},
@@ -65,15 +45,15 @@ me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
 {
 }
 
-me::CanonicalWindowManagerPolicyCopy::CanonicalWindowManagerPolicyCopy(
+msh::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(
     Tools* const tools,
-    std::shared_ptr<shell::DisplayLayout> const& display_layout) :
+    std::shared_ptr<DisplayLayout> const& display_layout) :
     tools{tools},
     display_layout{display_layout}
 {
 }
 
-void me::CanonicalWindowManagerPolicyCopy::click(Point cursor)
+void msh::CanonicalWindowManagerPolicy::click(Point cursor)
 {
     if (auto const surface = tools->surface_at(cursor))
         select_active_surface(surface);
@@ -81,23 +61,23 @@ void me::CanonicalWindowManagerPolicyCopy::click(Point cursor)
     old_cursor = cursor;
 }
 
-void me::CanonicalWindowManagerPolicyCopy::handle_session_info_updated(CanonicalSessionInfoMap& /*session_info*/, Rectangles const& /*displays*/)
+void msh::CanonicalWindowManagerPolicy::handle_session_info_updated(CanonicalSessionInfoMap& /*session_info*/, Rectangles const& /*displays*/)
 {
 }
 
-void me::CanonicalWindowManagerPolicyCopy::handle_displays_updated(CanonicalSessionInfoMap& /*session_info*/, Rectangles const& displays)
+void msh::CanonicalWindowManagerPolicy::handle_displays_updated(CanonicalSessionInfoMap& /*session_info*/, Rectangles const& displays)
 {
     display_area = displays.bounding_rectangle();
 }
 
-void me::CanonicalWindowManagerPolicyCopy::resize(Point cursor)
+void msh::CanonicalWindowManagerPolicy::resize(Point cursor)
 {
     select_active_surface(tools->surface_at(old_cursor));
     resize(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
 
-auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
+auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
     std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& request_parameters)
 -> ms::SurfaceCreationParameters
@@ -195,52 +175,6 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
     return parameters;
 }
 
-std::vector<std::shared_ptr<ms::Surface>> me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
-    std::shared_ptr<ms::Session> const& session,
-    std::shared_ptr<ms::Surface> const& surface)
-{
-    tools->info_for(session).surfaces++;
-    auto format = mir_pixel_format_xrgb_8888;
-    ms::SurfaceCreationParameters params;
-    params.of_size(titlebar_size_for_window(surface->size()))
-        .of_name("decoration")
-        .of_pixel_format(format)
-        .of_buffer_usage(mir::graphics::BufferUsage::software)
-        .of_position(titlebar_position_for_window(surface->top_left()))
-        .of_type(mir_surface_type_gloss);
-    auto id = session->create_surface(params);
-    auto decoration_surface = session->surface(id);
-    decoration_surface->set_alpha(0.9);
-    tools->info_for(surface).decoration = decoration_surface;
-    tools->info_for(surface).children.push_back(decoration_surface);
-
-    //TODO: provide an easier way for the server to write to a surface!
-    std::mutex mut;
-    std::condition_variable cv;
-    mir::graphics::Buffer* written_buffer{nullptr};
-
-    decoration_surface->swap_buffers(
-        nullptr,
-        [&](mir::graphics::Buffer* buffer)
-        {
-            //TODO: this is painful to use mg::Buffer::write()
-            auto const sz = buffer->size().height.as_int() *
-                 buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
-            std::vector<unsigned char> pixels(sz, 0xFF);
-            buffer->write(pixels.data(), sz);
-            std::unique_lock<decltype(mut)> lk(mut);
-            written_buffer = buffer;
-            cv.notify_all();
-        });
-    {
-        std::unique_lock<decltype(mut)> lk(mut);
-        cv.wait(lk, [&]{return written_buffer;});
-    }
-
-    decoration_surface->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
-    return {decoration_surface};
-}
-
 namespace
 {
 class SurfaceReadyObserver : public ms::NullSurfaceObserver,
@@ -248,7 +182,7 @@ class SurfaceReadyObserver : public ms::NullSurfaceObserver,
 {
 public:
     SurfaceReadyObserver(
-        me::CanonicalWindowManagerPolicyCopy::Tools* const focus_controller,
+        msh::CanonicalWindowManagerPolicy::Tools* const focus_controller,
         std::shared_ptr<ms::Session> const& session,
         std::shared_ptr<ms::Surface> const& surface) :
         focus_controller{focus_controller},
@@ -267,13 +201,13 @@ private:
         }
     }
 
-    me::CanonicalWindowManagerPolicyCopy::Tools* const focus_controller;
+    msh::CanonicalWindowManagerPolicy::Tools* const focus_controller;
     std::weak_ptr<ms::Session> const session;
     std::weak_ptr<ms::Surface> const surface;
 };
 }
 
-void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
+void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = surface->parent())
     {
@@ -306,7 +240,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
     }
 }
 
-void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
+void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = tools->info_for(surface).parent.lock())
     {
@@ -331,7 +265,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
     }
 }
 
-int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
+int msh::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
 {
     auto& info = tools->info_for(surface);
 
@@ -366,27 +300,21 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
     case mir_surface_state_restored:
         movement = info.restore_rect.top_left - old_pos;
         surface->resize(info.restore_rect.size);
-        info.decoration->resize(titlebar_size_for_window(info.restore_rect.size));
-        info.decoration->show();
         break;
 
     case mir_surface_state_maximized:
         movement = display_area.top_left - old_pos;
         surface->resize(display_area.size);
-        info.decoration->hide();
         break;
 
     case mir_surface_state_horizmaximized:
         movement = Point{display_area.top_left.x, info.restore_rect.top_left.y} - old_pos;
         surface->resize({display_area.size.width, info.restore_rect.size.height});
-        info.decoration->resize(titlebar_size_for_window({display_area.size.width, info.restore_rect.size.height}));
-        info.decoration->show();
         break;
 
     case mir_surface_state_vertmaximized:
         movement = Point{info.restore_rect.top_left.x, display_area.top_left.y} - old_pos;
         surface->resize({info.restore_rect.size.width, display_area.size.height});
-        info.decoration->hide();
         break;
 
     case mir_surface_state_fullscreen:
@@ -409,14 +337,14 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
     return info.state = value;
 }
 
-void me::CanonicalWindowManagerPolicyCopy::drag(Point cursor)
+void msh::CanonicalWindowManagerPolicy::drag(Point cursor)
 {
     select_active_surface(tools->surface_at(old_cursor));
     drag(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
 
-bool me::CanonicalWindowManagerPolicyCopy::handle_key_event(MirKeyboardEvent const* event)
+bool msh::CanonicalWindowManagerPolicy::handle_key_event(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);
     auto const scan_code = mir_keyboard_event_scan_code(event);
@@ -468,7 +396,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_key_event(MirKeyboardEvent con
     return false;
 }
 
-bool me::CanonicalWindowManagerPolicyCopy::handle_touch_event(MirTouchEvent const* event)
+bool msh::CanonicalWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
 {
     auto const count = mir_touch_event_point_count(event);
 
@@ -511,7 +439,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_touch_event(MirTouchEvent cons
     }
 }
 
-bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent const* event)
+bool msh::CanonicalWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* event)
 {
     auto const action = mir_pointer_event_action(event);
     auto const modifiers = mir_pointer_event_modifiers(event) & modifier_mask;
@@ -543,7 +471,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
     return false;
 }
 
-void me::CanonicalWindowManagerPolicyCopy::toggle(MirSurfaceState state)
+void msh::CanonicalWindowManagerPolicy::toggle(MirSurfaceState state)
 {
     if (auto const surface = active_surface())
     {
@@ -557,7 +485,7 @@ void me::CanonicalWindowManagerPolicyCopy::toggle(MirSurfaceState state)
     }
 }
 
-void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr<ms::Surface> const& surface)
+void msh::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms::Surface> const& surface)
 {
     if (!surface)
     {
@@ -591,7 +519,7 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
     }
 }
 
-auto me::CanonicalWindowManagerPolicyCopy::active_surface() const
+auto msh::CanonicalWindowManagerPolicy::active_surface() const
 -> std::shared_ptr<ms::Surface>
 {
     if (auto const surface = active_surface_.lock())
@@ -606,7 +534,7 @@ auto me::CanonicalWindowManagerPolicyCopy::active_surface() const
     return std::shared_ptr<ms::Surface>{};
 }
 
-bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
+bool msh::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
     if (!surface || !surface->input_area_contains(cursor))
         return false;
@@ -669,8 +597,7 @@ bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> c
             new_size.height = new_size.height + to_bottom_right.dy;
     }
 
-    auto& info = tools->info_for(surface);
-    switch (info.state)
+    switch (tools->info_for(surface).state)
     {
     case mir_surface_state_restored:
         break;
@@ -697,7 +624,6 @@ bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> c
         return true;
     }
 
-    info.decoration->resize({new_size.width, Height{title_bar_height}});
     surface->resize(new_size);
 
     // TODO It is rather simplistic to move a tree WRT the top_left of the root
@@ -708,7 +634,7 @@ bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> c
     return true;
 }
 
-bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
+bool msh::CanonicalWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
 {
     if (surface && surface->input_area_contains(from))
     {
@@ -738,7 +664,7 @@ bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> sur
     return false;
 }
 
-void me::CanonicalWindowManagerPolicyCopy::move_tree(std::shared_ptr<ms::Surface> const& root, Displacement movement) const
+void msh::CanonicalWindowManagerPolicy::move_tree(std::shared_ptr<ms::Surface> const& root, Displacement movement) const
 {
     root->move_to(root->top_left() + movement);
 
@@ -748,7 +674,7 @@ void me::CanonicalWindowManagerPolicyCopy::move_tree(std::shared_ptr<ms::Surface
     }
 }
 
-void me::CanonicalWindowManagerPolicyCopy::raise_tree(std::shared_ptr<scene::Surface> const& root) const
+void msh::CanonicalWindowManagerPolicy::raise_tree(std::shared_ptr<scene::Surface> const& root) const
 {
     SurfaceSet surfaces;
     std::function<void(std::weak_ptr<scene::Surface> const& surface)> const add_children =
