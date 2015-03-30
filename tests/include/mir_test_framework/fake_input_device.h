@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,30 +16,29 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_NULL_INPUT_MANAGER_H_
-#define MIR_INPUT_NULL_INPUT_MANAGER_H_
+#ifndef MIR_TEST_FRAMEWORK_FAKE_INPUT_DEVICE_H_
+#define MIR_TEST_FRAMEWORK_FAKE_INPUT_DEVICE_H_
 
-#include "mir/input/input_manager.h"
+#include "mir_toolkit/events/event.h"
+#include "mir_test/event_factory.h"
 
-namespace mir
+namespace mir_test_framework
 {
-namespace input
+namespace synthesis = mir::input::synthesis;
+
+class FakeInputDevice
 {
-class NullInputManager : public input::InputManager
-{
-    void add_platform(std::shared_ptr<Platform> const&) override
-    {
-    }
-    void start() override
-    {
-    }
-    void stop() override
-    {
-    }
+public:
+    FakeInputDevice() = default;
+    virtual ~FakeInputDevice() = default;
+
+    // only key board events for now
+    virtual void emit_event(synthesis::KeyParameters const& key) = 0;
+
+    FakeInputDevice(FakeInputDevice const&) = delete;
+    FakeInputDevice& operator=(FakeInputDevice const&) = delete;
 };
 
 }
-}
 
 #endif
-

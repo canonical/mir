@@ -39,11 +39,30 @@ private:
 };
 }
 
-namespace
-{
 template<typename T>
-struct ModuleDeleter;
-}
+struct ModuleDeleter : std::default_delete<T>
+{
+    ModuleDeleter() : library(nullptr) {}
+    template<typename U>
+    ModuleDeleter(ModuleDeleter<U> const& other)
+        : std::default_delete<T>{other},
+        library{other.get_library()}
+    {
+    }
+
+    detail::RefCountedLibrary get_library() const
+    {
+        return library;
+    }
+
+protected:
+    ModuleDeleter(void *address_in_module)
+        : library{address_in_module}
+    {
+    }
+private:
+    detail::RefCountedLibrary library;
+};
 
 /*!
  * \brief Use UniqueModulePtr to ensure that your loadable libray outlives
@@ -72,38 +91,15 @@ template<typename Type, typename... Args>
 inline auto make_module_ptr(Args&&... args)
 -> UniqueModulePtr<Type>
 {
-    return UniqueModulePtr<Type>(new Type(std::forward<Args>(args)...), &make_module_ptr<Type, Args...>);
+    struct Deleter : ModuleDeleter<Type>
+    {
+        Deleter(void* address)
+            : ModuleDeleter<Type>(address) {}
+    } deleter(reinterpret_cast<void*>(&make_module_ptr<Type, Args...>));
+
+    return UniqueModulePtr<Type>(new Type(std::forward<Args>(args)...), std::move(deleter));
 }
-
-template<typename T>
-struct ModuleDeleter : std::default_delete<T>
-{
-    ModuleDeleter() : library(nullptr) {}
-    template<typename U>
-    ModuleDeleter(ModuleDeleter<U> const& other)
-        : std::default_delete<T>{other},
-        library{other.get_library()}
-    {
-    }
-
-    detail::RefCountedLibrary get_library() const
-    {
-        return library;
-    }
-private:
-    template<typename R, typename... Rs>
-    ModuleDeleter(R (*function)(Rs...))
-        : library{reinterpret_cast<void*>(function)}
-    {
-    }
-
-    detail::RefCountedLibrary library;
-    template<typename Type, typename... Args>
-    friend std::unique_ptr<Type, ModuleDeleter<Type>> make_module_ptr(Args&&... args);
-};
 }
 
 }
-
 #endif
-

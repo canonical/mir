@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,30 +16,34 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_NULL_INPUT_MANAGER_H_
-#define MIR_INPUT_NULL_INPUT_MANAGER_H_
-
-#include "mir/input/input_manager.h"
+#ifndef MIR_INPUT_INPUT_DEVICE_OBSERVER_H_
+#define MIR_INPUT_INPUT_DEVICE_OBSERVER_H_
 
 namespace mir
 {
 namespace input
 {
-class NullInputManager : public input::InputManager
+class InputDeviceInfo;
+
+class InputDeviceObserver
 {
-    void add_platform(std::shared_ptr<Platform> const&) override
-    {
-    }
-    void start() override
-    {
-    }
-    void stop() override
-    {
-    }
+public:
+    InputDeviceObserver() = default;
+    virtual ~InputDeviceObserver() = default;
+
+    virtual void device_added(InputDeviceInfo const& device) = 0;
+    virtual void device_changed(InputDeviceInfo const& device) = 0;
+    virtual void device_removed(InputDeviceInfo const& device) = 0;
+    /*!
+     * Called after every group of changes.
+     */
+    virtual void changes_complete() = 0;
+
+    InputDeviceObserver(InputDeviceObserver const&) = delete;
+    InputDeviceObserver& operator=(InputDeviceObserver const&) = delete;
 };
 
 }
 }
 
 #endif
-

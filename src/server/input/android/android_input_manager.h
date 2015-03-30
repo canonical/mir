@@ -51,6 +51,7 @@ public:
                           std::shared_ptr<InputThread> const& reader_thread);
     virtual ~InputManager();
 
+    void add_platform(std::shared_ptr<Platform> const&){};
     void start();
     void stop();
 

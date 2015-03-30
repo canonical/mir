@@ -22,7 +22,10 @@
 #include "mir/geometry/rectangle.h"
 
 #include "mir/graphics/platform.h"
+#include "mir/module_deleter.h"
 #include <vector>
+#include <memory>
+#include <string>
 
 namespace geom = mir::geometry;
 
@@ -32,18 +35,24 @@ namespace graphics
 {
 class Platform;
 }
+namespace input
+{
+class InputDeviceInfo;
+}
 }
 
 namespace mg = mir::graphics;
 
 namespace mir_test_framework
 {
+class FakeInputDevice;
 
 std::shared_ptr<mg::Platform> make_stubbed_server_graphics_platform(std::vector<geom::Rectangle> const& display_rects);
 
 void set_next_display_rects(std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects);
 
 void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display);
- 
+
+mir::UniqueModulePtr<FakeInputDevice> add_fake_input_device(mir::input::InputDeviceInfo const& info);
 }
 #endif /* MIR_TEST_FRAMEWORK_STUB_SERVER_PLATFORM_FACTORY_ */

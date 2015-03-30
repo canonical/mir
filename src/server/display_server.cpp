@@ -84,6 +84,7 @@ struct mir::DisplayServer::Private
           connector{config.the_connector()},
           prompt_connector{config.the_prompt_connector()},
           input_manager{config.the_input_manager()},
+          new_input_manager{config.the_new_input_manager()},
           main_loop{config.the_main_loop()},
           server_status_listener{config.the_server_status_listener()},
           display_changer{config.the_display_changer()}
@@ -109,6 +110,10 @@ struct mir::DisplayServer::Private
             TryButRevertIfUnwinding input{
                 [this] { input_manager->stop(); },
                 [this] { input_manager->start(); }};
+
+            TryButRevertIfUnwinding new_input{
+                [this] { new_input_manager->stop(); },
+                [this] { new_input_manager->start(); }};
 
             TryButRevertIfUnwinding display_config_processing{
                 [this] { display_changer->pause_display_config_processing(); },
@@ -158,6 +163,10 @@ struct mir::DisplayServer::Private
                 [this] { display_changer->resume_display_config_processing(); },
                 [this] { display_changer->pause_display_config_processing(); }};
 
+            TryButRevertIfUnwinding new_input{
+                [this] { new_input_manager->start(); },
+                [this] { new_input_manager->stop(); }};
+
             TryButRevertIfUnwinding input{
                 [this] { input_manager->start(); },
                 [this] { input_manager->stop(); }};
@@ -195,6 +204,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mf::Connector> const connector;
     std::shared_ptr<mf::Connector> const prompt_connector;
     std::shared_ptr<mi::InputManager> const input_manager;
+    std::shared_ptr<mi::InputManager> const new_input_manager;
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::ServerStatusListener> const server_status_listener;
     std::shared_ptr<mir::DisplayChanger> const display_changer;
@@ -219,6 +229,7 @@ void mir::DisplayServer::run()
     p->connector->start();
     p->prompt_connector->start();
     p->compositor->start();
+    p->new_input_manager->start();
     p->input_manager->start();
     p->input_dispatcher->start();
 
@@ -228,6 +239,7 @@ void mir::DisplayServer::run()
 
     p->input_dispatcher->stop();
     p->input_manager->stop();
+    p->new_input_manager->stop();
     p->compositor->stop();
     p->prompt_connector->stop();
     p->connector->stop();

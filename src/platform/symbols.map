@@ -135,6 +135,7 @@ MIRPLATFORM_7 {
     mir::options::msg_processor_report_opt*;
     mir::options::name_opt*;
     mir::options::no_server_socket_opt*;
+    mir::options::platform_input_lib*;
     mir::options::off_opt_value*;
     mir::options::offscreen_opt*;
     mir::options::Option::get*;
