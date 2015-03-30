@@ -560,3 +560,45 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
+
+namespace { // Private for now. TODO: Finalize and publish later (LP: #1422522)
+
+MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
+{
+    mir::require(mir_surface_is_valid(surf));
+
+    MirSurfaceSpec* spec = nullptr;
+    try
+    {
+        spec = new MirSurfaceSpec(surf);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return spec;
+}
+
+MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
+{
+    if (!spec->self.is_set())
+        return nullptr;
+
+    auto surface = spec->self.value();
+    return surface->modify(*spec);
+}
+
+} // Private namespace. TODO: finalize morphing API and publish.
+
+MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name)
+{
+    MirWaitHandle* result = nullptr;
+    if (auto spec = mir_surface_begin_changes(surf))
+    {
+        mir_surface_spec_set_name(spec, name);
+        result = mir_surface_spec_commit_changes(spec);
+        mir_surface_spec_release(spec);
+    }
+    return result;
+}
