@@ -399,9 +399,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");
 
-    MirEventDelegate foo;
-    (void)foo;
-
     mir_surface_set_event_handler(surface, mir_eglapp_handle_event, NULL);
     
     MirCursorConfiguration *conf = mir_cursor_configuration_from_name(cursor_name);

@@ -132,7 +132,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
         scene_surface = the_latest_surface();
 
         other_surface = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(other_surface, nullptr);
+        mir_surface_set_event_handler(other_surface, nullptr, nullptr);
 
         reset_last_event();
     }

@@ -55,7 +55,7 @@ public:
         {
         public:
             EGLNativeWindowType egl_native_window() override { return {}; }
-            void set_event_handler(MirEventDelegate const*) override {}
+            void set_event_handler(mir_surface_event_callback, void*) override {}
         };
 
         return std::make_shared<NullHostSurface>();
