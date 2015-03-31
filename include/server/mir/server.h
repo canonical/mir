@@ -44,12 +44,10 @@ class Shell;
 }
 namespace scene
 {
-class PlacementStrategy;
 class PromptSessionListener;
 class PromptSessionManager;
 class SessionListener;
 class SessionCoordinator;
-class SurfaceConfigurator;
 class SurfaceCoordinator;
 }
 
@@ -228,9 +226,6 @@ public:
     /// Sets an override functor for creating the logger.
     void override_the_logger(Builder<logging::Logger> const& logger_builder);
 
-    /// Sets an override functor for creating the placement strategy.
-    void override_the_placement_strategy(Builder<scene::PlacementStrategy> const& placement_strategy_builder);
-
     /// Sets an override functor for creating the prompt session listener.
     void override_the_prompt_session_listener(Builder<scene::PromptSessionListener> const& prompt_session_listener_builder);
 
@@ -251,9 +246,6 @@ public:
 
     /// Sets an override functor for creating the shell.
     void override_the_shell(Builder<shell::Shell> const& wrapper);
-
-    /// Sets an override functor for creating the surface configurator.
-    void override_the_surface_configurator(Builder<scene::SurfaceConfigurator> const& surface_configurator_builder);
 
     /// Sets an override functor for creating the window manager.
     void override_the_window_manager_builder(shell::WindowManagerBuilder const wmb);
@@ -334,9 +326,6 @@ public:
 
     /// \return the display layout.
     auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;
-
-    /// \return the surface configurator.
-    auto the_surface_configurator() const -> std::shared_ptr<scene::SurfaceConfigurator>;
 
     /// \return the surface coordinator.
     auto the_surface_coordinator() const -> std::shared_ptr<scene::SurfaceCoordinator>;
