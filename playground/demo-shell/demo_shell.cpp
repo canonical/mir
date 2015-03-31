@@ -20,10 +20,8 @@
 
 #include "demo_compositor.h"
 #include "window_manager.h"
-#include "server_example_fullscreen_placement_strategy.h"
 #include "../server_configuration.h"
 
-#include "mir/options/default_configuration.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
 #include "mir/graphics/display.h"
@@ -40,7 +38,6 @@ namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
-namespace mo = mir::options;
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
 
@@ -74,17 +71,7 @@ class DemoServerConfiguration : public mir::examples::ServerConfiguration
 public:
     DemoServerConfiguration(int argc, char const* argv[],
                             std::initializer_list<std::shared_ptr<mi::EventFilter>> const& filter_list)
-      : ServerConfiguration([argc, argv]
-        {
-            auto result = std::make_shared<mo::DefaultConfiguration>(argc, argv);
-
-            namespace po = boost::program_options;
-
-            result->add_options()
-                ("fullscreen-surfaces", "Make all surfaces fullscreen");
-
-            return result;
-        }()),
+      : ServerConfiguration(argc, argv),
         filter_list(filter_list)
     {
     }
@@ -97,18 +84,6 @@ public:
             {
                 return std::make_shared<me::DisplayBufferCompositorFactory>(
                     the_compositor_report());
-            });
-    }
-
-    std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
-    {
-        return placement_strategy(
-            [this]() -> std::shared_ptr<ms::PlacementStrategy>
-            {
-                if (the_options()->is_set("fullscreen-surfaces"))
-                    return std::make_shared<me::FullscreenPlacementStrategy>(the_shell_display_layout());
-                else
-                    return DefaultServerConfiguration::the_placement_strategy();
             });
     }
 
