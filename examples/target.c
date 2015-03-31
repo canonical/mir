@@ -27,8 +27,6 @@
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t change = PTHREAD_COND_INITIALIZER;
 
-static bool resized = false;
-
 typedef struct
 {
     float x, y;
@@ -41,9 +39,10 @@ enum
 
 typedef struct
 {
-    int count;
-    Vec2 pos[max_touches];
-} Touches;
+    int touches;
+    Vec2 touch[max_touches];
+    bool resized;
+} State;
 
 static GLuint load_shader(const char *src, GLenum type)
 {
@@ -121,7 +120,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     //        single-threaded apps like this won't need pthreads.
     pthread_mutex_lock(&mutex);
 
-    Touches *touches = (Touches*)context;
+    State *state = (State*)context;
 
     switch (mir_event_get_type(event))
     {
@@ -132,10 +131,10 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         {
             const MirPointerEvent *pointer =
                 mir_input_event_get_pointer_event(input);
-            touches->count = 1;
-            touches->pos[0].x = mir_pointer_event_axis_value(pointer,
+            state->touches = 1;
+            state->touch[0].x = mir_pointer_event_axis_value(pointer,
                                                          mir_pointer_axis_x);
-            touches->pos[0].y = mir_pointer_event_axis_value(pointer,
+            state->touch[0].y = mir_pointer_event_axis_value(pointer,
                                                          mir_pointer_axis_y);
         }
         else if (mir_input_event_get_type(input) == mir_input_event_type_touch)
@@ -144,12 +143,12 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             int n = mir_touch_event_point_count(touch);
             if (n > max_touches)
                 n = max_touches;
-            touches->count = n;
+            state->touches = n;
             for (int t = 0; t < n; ++t)
             {
-                touches->pos[t].x = mir_touch_event_axis_value(touch, t,
+                state->touch[t].x = mir_touch_event_axis_value(touch, t,
                                                         mir_touch_axis_x);
-                touches->pos[t].y = mir_touch_event_axis_value(touch, t,
+                state->touch[t].y = mir_touch_event_axis_value(touch, t,
                                                         mir_touch_axis_y);
             }
         }
@@ -157,7 +156,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         break;
     }
     case mir_event_type_resize:
-        resized = true;
+        state->resized = true;
         pthread_cond_signal(&change);
         break;
     default:
@@ -256,20 +255,20 @@ int main(int argc, char *argv[])
 
     MirSurface *surface = mir_eglapp_native_surface();
 
-    Touches touches;
-    touches.count = 0;
-    resized = true;
+    State state;
+    state.touches = 0;
+    state.resized = true;
 
-    mir_surface_set_event_handler(surface, on_event, &touches);
+    mir_surface_set_event_handler(surface, on_event, &state);
 
     do
     {
         pthread_mutex_lock(&mutex);
 
-        while (!resized && !touches.count)
+        while (!state.resized && !state.touches)
             pthread_cond_wait(&change, &mutex);
         
-        if (resized)
+        if (state.resized)
         {
             // mir_eglapp_swap_buffers updates the viewport for us...
             GLint viewport[4];
@@ -288,15 +287,15 @@ int main(int argc, char *argv[])
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        for (int t = 0; t < touches.count; ++t)
+        for (int t = 0; t < state.touches; ++t)
         {
-            glUniform2f(translate, touches.pos[t].x, touches.pos[t].y);
+            glUniform2f(translate, state.touch[t].x, state.touch[t].y);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         }
 
         // Put the event loop back to sleep:
-        resized = false;
-        touches.count = 0;
+        state.resized = false;
+        state.touches = 0;
         pthread_mutex_unlock(&mutex);
 
         mir_eglapp_swap_buffers();
