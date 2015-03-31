@@ -28,7 +28,7 @@ struct ConnectedClientWithASurface : ConnectedClientHeadlessServer
     MirSurface* surface{nullptr};
     MirSurfaceParameters const surface_params =
     {
-        __PRETTY_FUNCTION__,
+        "ConnectedClientWithASurfaceFixtureSurface",
         640, 480,
         mir_pixel_format_abgr_8888,
         mir_buffer_usage_hardware,
