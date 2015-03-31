@@ -116,6 +116,9 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 {
     (void)surface;
 
+    // FIXME: We presently need to know that events come in on a different
+    //        thread to main (LP: #1194384). When that's resolved, simple
+    //        single-threaded apps like this won't need pthreads.
     pthread_mutex_lock(&mutex);
 
     Touches *touches = (Touches*)context;
