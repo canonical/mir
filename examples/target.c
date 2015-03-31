@@ -115,6 +115,9 @@ GLuint generate_target_texture()
 static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 {
     (void)surface;
+
+    pthread_mutex_lock(&mutex);
+
     Touches *touches = (Touches*)context;
 
     switch (mir_event_get_type(event))
@@ -155,6 +158,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     default:
         break;
     }
+
+    pthread_mutex_unlock(&mutex);
 }
 
 int main(int argc, char *argv[])
