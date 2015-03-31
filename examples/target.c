@@ -44,9 +44,9 @@ static GLuint load_shader(const char *src, GLenum type)
     return shader;
 }
 
-GLuint generate_texture()
+GLuint generate_target_texture()
 {
-    const int width = 256, height = width;
+    const int width = 512, height = width;
     typedef struct { GLubyte r, b, g, a; } Texel;
     Texel image[height][width];
     const int centrex = width/2, centrey = height/2;
@@ -79,10 +79,12 @@ GLuint generate_texture()
     glBindTexture(GL_TEXTURE_2D, tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                   GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     return tex;
 }
@@ -135,9 +137,6 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
-    glViewport(0, 0, width, height);
-
     glUseProgram(prog);
 
     const GLfloat square[] =
@@ -157,8 +156,12 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(position);
     glEnableVertexAttribArray(texcoord);
 
-    GLuint tex = generate_texture();
+    GLuint tex = generate_target_texture();
     glBindTexture(GL_TEXTURE_2D, tex);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glViewport(0, 0, width, height);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
