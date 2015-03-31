@@ -19,6 +19,7 @@
 #include "eglapp.h"
 #include <assert.h>
 #include <stdio.h>
+#include <math.h>
 #include <GLES2/gl2.h>
 
 static GLuint load_shader(const char *src, GLenum type)
@@ -46,15 +47,30 @@ static GLuint load_shader(const char *src, GLenum type)
 GLuint generate_texture()
 {
     const int width = 256, height = width;
-    typedef struct { GLubyte r, b, g, a; }  Texel;
+    typedef struct { GLubyte r, b, g, a; } Texel;
     Texel image[height][width];
+    const int centrex = width/2, centrey = height/2;
+    const Texel blank = {0, 0, 0, 0};
+    const int radius = centrex - 1;
+    const int rings = 7;
+    const Texel ring[7] =
+    {
+        {  0,   0,   0, 255},
+        {  0,   0, 255, 255},
+        {  0, 255, 255, 255},
+        {  0, 255,   0, 255},
+        {255, 255,   0, 255},
+        {255, 128,   0, 255},
+        {255,   0,   0, 255},
+    };
 
     for (int y = 0; y < height; ++y)
     {
         for (int x = 0; x < width; ++x)
         {
-            const Texel flip[2] = {{0,255,0,255}, {255,0,255,255}};
-            image[y][x] = flip[(x ^ y) & 1];
+            int dx = x - centrex, dy = y - centrey;
+            int layer = rings * sqrtf(dx * dx + dy * dy) / radius;
+            image[y][x] = layer < rings ? ring[layer] : blank;
         }
     }
 
@@ -64,7 +80,7 @@ GLuint generate_texture()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, image);
 
@@ -143,6 +159,7 @@ int main(int argc, char *argv[])
 
     GLuint tex = generate_texture();
     glBindTexture(GL_TEXTURE_2D, tex);
+    glEnable(GL_BLEND);
 
     while (mir_eglapp_running())
     {
