@@ -273,8 +273,8 @@ int main(int argc, char *argv[])
             glGetIntegerv(GL_VIEWPORT, viewport);
             int w = viewport[2], h = viewport[3];
 
-            // TRANSPOSED projection matrix to covert from the input rectangle
-            // {{0,0},{w,h}} to the GL screen rectangle {{-1,1},{2,2}}.
+            // TRANSPOSED projection matrix to convert from the Mir input
+            // rectangle {{0,0},{w,h}} to GL screen rectangle {{-1,1},{2,2}}.
             GLfloat matrix[16] = {2.0f/w, 0.0f,   0.0f, 0.0f,
                                   0.0,   -2.0f/h, 0.0f, 0.0f,
                                   0.0f,   0.0f,   1.0f, 0.0f,
