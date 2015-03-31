@@ -64,8 +64,7 @@ void input_callback(MirSurface * /* surface */, MirEvent const* event, void* con
 
 void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier& client_ready, std::chrono::high_resolution_clock::duration duration, std::shared_ptr<TouchSamples> const& results)
 {
-    MirEventDelegate event_handler = { input_callback, results.get() };
-    mir_surface_set_event_handler(surface, &event_handler);
+    mir_surface_set_event_handler(surface, input_callback, results.get());
     
     client_ready.ready();
 

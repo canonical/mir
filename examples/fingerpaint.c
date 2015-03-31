@@ -348,7 +348,6 @@ int main(int argc, char *argv[])
     MirConnection *conn;
     MirSurface *surf;
     MirGraphicsRegion canvas;
-    MirEventDelegate delegate = {&on_event, &canvas};
     unsigned int f;
     int swap_interval = 0;
 
@@ -450,8 +449,9 @@ int main(int argc, char *argv[])
 
     if (surf != NULL)
     {
+        mir_surface_set_title(surf, "Mir Fingerpaint");
         mir_surface_set_swapinterval(surf, swap_interval);
-        mir_surface_set_event_handler(surf, &delegate);
+        mir_surface_set_event_handler(surf, &on_event, &canvas);
     
         canvas.width = width;
         canvas.height = height;
@@ -474,7 +474,7 @@ int main(int argc, char *argv[])
             }
 
             /* Ensure canvas won't be used after it's freed */
-            mir_surface_set_event_handler(surf, NULL);
+            mir_surface_set_event_handler(surf, NULL, NULL);
             free(canvas.vaddr);
         }
         else

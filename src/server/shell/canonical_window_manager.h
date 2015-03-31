@@ -16,29 +16,27 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_EXAMPLE_CANONICAL_WINDOW_MANAGER_H_
-#define MIR_EXAMPLE_CANONICAL_WINDOW_MANAGER_H_
+#ifndef MIR_SHELL_CANONICAL_WINDOW_MANAGER_H_
+#define MIR_SHELL_CANONICAL_WINDOW_MANAGER_H_
 
-#include "server_example_basic_window_manager.h"
+#include "basic_window_manager.h"
 
 #include "mir/geometry/displacement.h"
 
-///\example server_example_canonical_window_manager.h
-// Based on "Mir and Unity: Surfaces, input, and displays (v0.3)"
-
 namespace mir
 {
-namespace shell { class DisplayLayout; }
-namespace examples
+namespace shell
 {
-struct CanonicalSessionInfoCopy
+class DisplayLayout;
+
+struct CanonicalSessionInfo
 {
     int surfaces{0};
 };
 
-struct CanonicalSurfaceInfoCopy
+struct CanonicalSurfaceInfo
 {
-    CanonicalSurfaceInfoCopy(
+    CanonicalSurfaceInfo(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface);
 
@@ -47,7 +45,6 @@ struct CanonicalSurfaceInfoCopy
     std::weak_ptr<scene::Session> session;
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
-    std::shared_ptr<scene::Surface> decoration;
 };
 
 // standard window management algorithm:
@@ -58,13 +55,13 @@ struct CanonicalSurfaceInfoCopy
 //  o Maximize/restore current window (to display height): Shift-F11
 //  o Maximize/restore current window (to display width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class CanonicalWindowManagerPolicyCopy
+class CanonicalWindowManagerPolicy
 {
 public:
-    using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy, CanonicalSurfaceInfoCopy>;
-    using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfoCopy>::type;
+    using Tools = BasicWindowManagerTools<CanonicalSessionInfo, CanonicalSurfaceInfo>;
+    using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfo>::type;
 
-    explicit CanonicalWindowManagerPolicyCopy(
+    explicit CanonicalWindowManagerPolicy(
         Tools* const tools,
         std::shared_ptr<shell::DisplayLayout> const& display_layout);
 
@@ -119,13 +116,15 @@ private:
     void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
 
     Tools* const tools;
-    std::shared_ptr<shell::DisplayLayout> const display_layout;
+    std::shared_ptr<DisplayLayout> const display_layout;
 
     geometry::Rectangle display_area;
     geometry::Point old_cursor{};
     std::weak_ptr<scene::Surface> active_surface_;
 };
+
+using CanonicalWindowManager = BasicWindowManager<CanonicalWindowManagerPolicy, CanonicalSessionInfo, CanonicalSurfaceInfo>;
 }
 }
 
-#endif /* MIR_EXAMPLE_CANONICAL_WINDOW_MANAGER_H_ */
+#endif /* MIR_SHELL_CANONICAL_WINDOW_MANAGER_H_ */

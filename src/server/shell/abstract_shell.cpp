@@ -165,13 +165,18 @@ void msh::AbstractShell::set_focus_to_locked(
 {
     if (surface)
     {
-        // Ensure the surface has really taken the focus before notifying it that it is focused
-        surface->take_input_focus(input_targeter);
-        if (auto current_focus = focus_surface.lock())
-            current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+        auto current_focus = focus_surface.lock();
 
-        surface->configure(mir_surface_attrib_focus, mir_surface_focused);
-        focus_surface = surface;
+        if (surface != current_focus)
+        {
+            // Ensure the surface has really taken the focus before notifying it that it is focused
+            surface->take_input_focus(input_targeter);
+            if (current_focus)
+                current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+
+            surface->configure(mir_surface_attrib_focus, mir_surface_focused);
+            focus_surface = surface;
+        }
     }
     else
     {

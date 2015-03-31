@@ -55,6 +55,7 @@ public:
     virtual void cursor_image_set_to(graphics::CursorImage const& image) = 0;
     virtual void client_surface_close_requested() = 0;
     virtual void keymap_changed(xkb_rule_names const& names) = 0;
+    virtual void renamed(char const* name) = 0;
 
 protected:
     SurfaceObserver() = default;

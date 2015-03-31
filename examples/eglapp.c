@@ -189,11 +189,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
     };
-    MirEventDelegate delegate = 
-    {
-        mir_eglapp_handle_event,
-        NULL
-    };
     EGLConfig eglconfig;
     EGLint neglconfigs;
     EGLContext eglctx;
@@ -407,7 +402,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");
 
-    mir_surface_set_event_handler(surface, &delegate);
+    mir_surface_set_event_handler(surface, mir_eglapp_handle_event, NULL);
     
     MirCursorConfiguration *conf = mir_cursor_configuration_from_name(cursor_name);
     mir_surface_configure_cursor(surface, conf);

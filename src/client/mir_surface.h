@@ -64,6 +64,7 @@ struct MirSurfaceSpec
     MirSurfaceSpec() = default;
     MirSurfaceSpec(MirConnection* connection, int width, int height, MirPixelFormat format);
     MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params);
+    MirSurfaceSpec(MirSurface* preexisting);
 
     mir::protobuf::SurfaceParameters serialize() const;
 
@@ -82,6 +83,7 @@ struct MirSurfaceSpec
     mir::optional_value<MirSurfaceState> state;
     mir::optional_value<MirOrientationMode> pref_orientation;
 
+    mir::optional_value<MirSurface*> self;
     mir::optional_value<MirSurface*> parent;
     mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
@@ -138,6 +140,8 @@ public:
 
     mir::client::ClientBufferStream* get_buffer_stream();
 
+    MirWaitHandle* modify(MirSurfaceSpec const& changes);
+
     static bool is_valid(MirSurface* query);
 private:
     mutable std::mutex mutex; // Protects all members of *this
@@ -154,6 +158,10 @@ private:
     std::string error_message;
     std::string name;
     mir::protobuf::Void void_response;
+
+    void on_modified();
+    MirWaitHandle modify_wait_handle;
+    mir::protobuf::Void modify_result;
 
     MirConnection* const connection{nullptr};
 
