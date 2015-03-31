@@ -16,8 +16,6 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "touch_samples.h"
 
 void TouchSamples::record_frame_time(std::chrono::high_resolution_clock::time_point time)
@@ -36,21 +34,26 @@ void TouchSamples::record_pointer_coordinates(std::chrono::high_resolution_clock
 {
     std::unique_lock<std::mutex> lg(guard);
 
-    if (event.type != mir_event_type_motion)
+    if (mir_event_get_type(&event) != mir_event_type_input)
         return;
-    
-    auto const& mev = event.motion;
-    if (mev.action != mir_motion_action_down &&
-        mev.action != mir_motion_action_up &&
-        mev.action != mir_motion_action_move)
+    auto iev = mir_event_get_input_event(&event);
+    if (mir_input_event_get_type(iev) != mir_input_event_type_touch)
+        return;
+    auto tev = mir_input_event_get_touch_event(iev);
+
+    // We could support multitouch, etc...
+    size_t touch_index = 0;
+    auto action = mir_touch_event_action(tev, touch_index);
+    if (action != mir_touch_action_down &&
+        action != mir_touch_action_up &&
+        action != mir_touch_action_change)
     {
         return;
     }
-    // We could support multitouch, etc...
-    auto const& coordinates = mev.pointer_coordinates[0];
-
+    auto x = mir_touch_event_axis_value(tev, 0, mir_touch_axis_x);
+    auto y = mir_touch_event_axis_value(tev, 0, mir_touch_axis_y);
     // TODO: Record both event time and reception time
-    samples_being_prepared.push_back(Sample{coordinates.x, coordinates.y, reception_time, {}});
+    samples_being_prepared.push_back(Sample{x, y, reception_time, {}});
 }
 
 std::vector<TouchSamples::Sample> TouchSamples::get()

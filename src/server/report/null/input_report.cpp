@@ -36,4 +36,10 @@ void mrn::InputReport::received_event_finished_signal(int /* src_fd */, uint32_t
 {
 }
 
+void mrn::InputReport::opened_input_device(char const* /* name */, char const* /* platform */)
+{
+}
 
+void mrn::InputReport::failed_to_open_input_device(char const* /* name */, char const* /* platform */)
+{
+}

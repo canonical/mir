@@ -20,9 +20,6 @@
 #ifndef MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 #define MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
-
 #include "mir_toolkit/event.h"
 
 #include <xkbcommon/xkbcommon.h>
@@ -358,6 +355,17 @@ MATCHER_P(KeymapEventWithRules, expected_rules, "")
     if (strcmp(received_rules.variant, expected_rules.variant) != 0)
         return false;
     if (strcmp(received_rules.options, expected_rules.options) != 0)
+        return false;
+    return true;
+}
+
+MATCHER_P(OrientationEvent, direction, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_orientation)
+        return false;
+    auto oev = mir_event_get_orientation_event(as_address);
+    if (mir_orientation_event_get_direction(oev) != direction)
         return false;
     return true;
 }

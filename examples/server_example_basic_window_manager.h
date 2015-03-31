@@ -55,7 +55,7 @@ struct SessionTo
 /// I.e. should only be invoked by the policy handle_... methods (where any necessary locks are held).
 // TODO extract commonality with FocusController (once that's separated from shell::FocusController)
 template<typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManagerTools
+class BasicWindowManagerToolsCopy
 {
 public:
     virtual auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
@@ -79,10 +79,10 @@ public:
 
     virtual void raise(SurfaceSet const& surfaces) = 0;
 
-    virtual ~BasicWindowManagerTools() = default;
-    BasicWindowManagerTools() = default;
-    BasicWindowManagerTools(BasicWindowManagerTools const&) = delete;
-    BasicWindowManagerTools& operator=(BasicWindowManagerTools const&) = delete;
+    virtual ~BasicWindowManagerToolsCopy() = default;
+    BasicWindowManagerToolsCopy() = default;
+    BasicWindowManagerToolsCopy(BasicWindowManagerToolsCopy const&) = delete;
+    BasicWindowManagerToolsCopy& operator=(BasicWindowManagerToolsCopy const&) = delete;
 };
 
 /// A policy based window manager.
@@ -106,12 +106,12 @@ public:
 ///
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManager : public shell::WindowManager,
-    private BasicWindowManagerTools<SessionInfo, SurfaceInfo>
+class BasicWindowManagerCopy : public shell::WindowManager,
+    private BasicWindowManagerToolsCopy<SessionInfo, SurfaceInfo>
 {
 public:
     template <typename... PolicyArgs>
-    BasicWindowManager(
+    BasicWindowManagerCopy(
         shell::FocusController* focus_controller,
         PolicyArgs&&... policy_args) :
         focus_controller(focus_controller),

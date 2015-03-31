@@ -16,8 +16,6 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "eglapp.h"
 #include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>
@@ -144,7 +142,12 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
          * support for event queuing (directing them to another thread) or
          * full single-threaded callbacks. (LP: #1194384).
          */
-        printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
+        {
+            MirResizeEvent const* resize = mir_event_get_resize_event(ev);
+            printf("Resized to %dx%d\n",
+                   mir_resize_event_get_width(resize),
+                   mir_resize_event_get_height(resize));
+        }
         break;
     case mir_event_type_close_surface:
         printf("Received close event from server.\n");

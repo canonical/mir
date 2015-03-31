@@ -43,13 +43,20 @@
 #include "builtin_cursor_images.h"
 #include "null_input_send_observer.h"
 #include "null_input_channel_factory.h"
+#include "default_input_device_hub.h"
+#include "default_input_manager.h"
 
 #include "mir/input/touch_visualizer.h"
+#include "mir/input/platform.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/compositor/scene.h"
+#include "mir/emergency_cleanup.h"
 #include "mir/report/legacy_input_report.h"
 #include "mir/main_loop.h"
+#include "mir/shared_library.h"
+#include "mir/glib_main_loop.h"
 
 #include "mir_toolkit/cursors.h"
 
@@ -369,4 +376,82 @@ mir::DefaultServerConfiguration::the_cursor_images()
             else
                 return std::make_shared<mi::BuiltinCursorImages>();
         });
+}
+
+std::shared_ptr<mi::Platform>
+mir::DefaultServerConfiguration::the_input_platform()
+{
+    return input_platform(
+        [this]() -> std::shared_ptr<mi::Platform>
+        {
+            auto options = the_options();
+
+            if (!options->is_set(options::platform_input_lib))
+                return nullptr;
+
+            auto lib = std::make_shared<mir::SharedLibrary>(
+                options->get<std::string>(options::platform_input_lib));
+            auto create = lib->load_function<mi::CreatePlatform>(
+                "create_input_platform",
+                MIR_SERVER_INPUT_PLATFORM_VERSION);
+            return create(the_options(), the_emergency_cleanup(), the_input_device_registry(), the_input_report());
+        });
+}
+
+std::shared_ptr<mi::InputManager>
+mir::DefaultServerConfiguration::the_new_input_manager()
+{
+    return new_input_manager(
+        [this]() -> std::shared_ptr<mi::InputManager>
+        {
+            auto const options = the_options();
+            bool input_reading_required =
+                options->get<bool>(options::enable_input_opt) &&
+                !options->is_set(options::host_socket_opt);
+                // TODO nested input handling (== host_socket) should fold into a platform
+
+            if (input_reading_required)
+            {
+                auto ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
+
+                auto platform = the_input_platform();
+                if (platform)
+                    ret->add_platform(platform);
+                return ret;
+            }
+            else
+                return std::make_shared<mi::NullInputManager>();
+        }
+    );
+}
+
+std::shared_ptr<mir::dispatch::MultiplexingDispatchable>
+mir::DefaultServerConfiguration::the_input_reading_multiplexer()
+{
+    return input_reading_multiplexer(
+        [this]() -> std::shared_ptr<mir::dispatch::MultiplexingDispatchable>
+        {
+            return std::make_shared<mir::dispatch::MultiplexingDispatchable>();
+        }
+    );
+}
+
+std::shared_ptr<mi::InputDeviceRegistry>
+mir::DefaultServerConfiguration::the_input_device_registry()
+{
+    return default_input_device_hub([this]()
+                                    {
+                                        return std::make_shared<mi::DefaultInputDeviceHub>(
+                                            the_input_dispatcher(), the_input_reading_multiplexer(), the_main_loop());
+                                    });
+}
+
+std::shared_ptr<mi::InputDeviceHub>
+mir::DefaultServerConfiguration::the_input_device_hub()
+{
+    return default_input_device_hub([this]()
+                                    {
+                                        return std::make_shared<mi::DefaultInputDeviceHub>(
+                                            the_input_dispatcher(), the_input_reading_multiplexer(), the_main_loop());
+                                    });
 }

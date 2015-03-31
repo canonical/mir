@@ -97,6 +97,23 @@ TEST_F(LegacySceneChangeNotificationTest, observes_surface_changes)
     surface_observer->frame_posted(buffer_num);
 }
 
+TEST_F(LegacySceneChangeNotificationTest, redraws_on_rename)
+{
+    using namespace ::testing;
+
+    std::shared_ptr<ms::SurfaceObserver> surface_observer;
+
+    EXPECT_CALL(surface, add_observer(_)).Times(1)
+        .WillOnce(SaveArg<0>(&surface_observer));
+    EXPECT_CALL(scene_callback, invoke())
+        .Times(2);
+
+    ms::LegacySceneChangeNotification observer(scene_change_callback,
+                                               buffer_change_callback);
+    observer.surface_added(&surface);
+    surface_observer->renamed("Something New");
+}
+
 TEST_F(LegacySceneChangeNotificationTest, destroying_observer_unregisters_surface_observers)
 {
     using namespace ::testing;

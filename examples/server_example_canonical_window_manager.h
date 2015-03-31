@@ -31,14 +31,14 @@ namespace mir
 namespace shell { class DisplayLayout; }
 namespace examples
 {
-struct CanonicalSessionInfo
+struct CanonicalSessionInfoCopy
 {
     int surfaces{0};
 };
 
-struct CanonicalSurfaceInfo
+struct CanonicalSurfaceInfoCopy
 {
-    CanonicalSurfaceInfo(
+    CanonicalSurfaceInfoCopy(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface);
 
@@ -58,13 +58,13 @@ struct CanonicalSurfaceInfo
 //  o Maximize/restore current window (to display height): Shift-F11
 //  o Maximize/restore current window (to display width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class CanonicalWindowManagerPolicy
+class CanonicalWindowManagerPolicyCopy
 {
 public:
-    using Tools = BasicWindowManagerTools<CanonicalSessionInfo, CanonicalSurfaceInfo>;
-    using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfo>::type;
+    using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy, CanonicalSurfaceInfoCopy>;
+    using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfoCopy>::type;
 
-    explicit CanonicalWindowManagerPolicy(
+    explicit CanonicalWindowManagerPolicyCopy(
         Tools* const tools,
         std::shared_ptr<shell::DisplayLayout> const& display_layout);
 
