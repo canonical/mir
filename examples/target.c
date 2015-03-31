@@ -21,6 +21,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <GLES2/gl2.h>
+#include <mir_toolkit/mir_surface.h>
+
+bool resized = false;
 
 static GLuint load_shader(const char *src, GLenum type)
 {
@@ -89,15 +92,35 @@ GLuint generate_target_texture()
     return tex;
 }
 
+static void on_event(MirSurface *surface, const MirEvent *event, void *context)
+{
+    (void)surface;
+    (void)event;
+    (void)context;
+
+    switch (mir_event_get_type(event))
+    {
+    case mir_event_type_input:
+        break;
+    case mir_event_type_resize:
+        resized = true;
+        break;
+    default:
+        break;
+    }
+}
+
 int main(int argc, char *argv[])
 {
     const char vshadersrc[] =
         "attribute vec2 position;\n"
         "attribute vec2 texcoord;\n"
+        "uniform vec2 scale;\n"
+        "uniform vec2 translate;\n"
         "varying vec2 v_texcoord;\n"
         "void main()\n"
         "{\n"
-        "    gl_Position = vec4(position, 0.0, 1.0);\n"
+        "    gl_Position = vec4(position * scale + translate, 0.0, 1.0);\n"
         "    v_texcoord = texcoord;\n"
         "}\n";
 
@@ -112,8 +135,8 @@ int main(int argc, char *argv[])
 
     GLuint vshader, fshader, prog;
     GLint linked;
-    unsigned int width = 512, height = 512;
 
+    static unsigned int width = 0, height = 0;
     if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
 
@@ -152,9 +175,13 @@ int main(int argc, char *argv[])
                           square);
     glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat),
                           square+2);
-
     glEnableVertexAttribArray(position);
     glEnableVertexAttribArray(texcoord);
+
+    GLint scale = glGetUniformLocation(prog, "scale");
+
+    GLint translate = glGetUniformLocation(prog, "translate");
+    glUniform2f(translate, 0.0f, 0.0f);
 
     GLuint tex = generate_target_texture();
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -165,8 +192,22 @@ int main(int argc, char *argv[])
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    MirSurface *surface = mir_eglapp_native_surface();
+
+    mir_surface_set_event_handler(surface, on_event, NULL);
+
+    resized = true;
     while (mir_eglapp_running())
     {
+        if (resized)
+        {
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+            width = viewport[2];
+            height = viewport[3];
+            glUniform2f(scale, height / (float)width, 1.0f);
+        }
+
         glClear(GL_COLOR_BUFFER_BIT);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         mir_eglapp_swap_buffers();
