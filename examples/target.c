@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
     {
         pthread_mutex_lock(&mutex);
 
-        if (!resized)
+        while (!resized && !touches.count)
             pthread_cond_wait(&change, &mutex);
         
         if (resized)
