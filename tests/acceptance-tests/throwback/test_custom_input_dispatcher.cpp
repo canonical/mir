@@ -16,8 +16,7 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/input/input_dispatcher.h"
-
+#include "mir/shell/input_targeter.h"
 #include "clients.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -27,7 +26,6 @@
 #include "mir_test/event_matchers.h"
 
 #include "mir/compositor/scene.h"
-#include "mir/shell/input_targeter.h"
 #include "mir/scene/observer.h"
 
 #include "mir_toolkit/event.h"

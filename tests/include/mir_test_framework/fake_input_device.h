@@ -29,6 +29,15 @@ namespace synthesis = mir::input::synthesis;
 class FakeInputDevice
 {
 public:
+    /**
+     * Valid value range of simulated touch coordinates. The simulated coordinates will be remapped to the
+     * the coorindates of the given input sink.
+     * \{
+     */
+    static const int maximum_touch_axis_value = 0xFFFF;
+    static const int minimum_touch_axis_value = 0;
+    /// \}
+
     FakeInputDevice() = default;
     virtual ~FakeInputDevice() = default;
 

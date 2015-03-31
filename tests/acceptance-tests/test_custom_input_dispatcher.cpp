@@ -84,8 +84,8 @@ TEST_F(TestCustomInputDispatcher, receives_input)
     EXPECT_CALL(input_dispatcher, dispatch(mt::KeyDownEvent()))
         .WillOnce(mt::WakeUp(&all_events_received));
 
+    fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
-    fake_keyboard->emit_event(mis::a_pointer_event().with_movement(1, 1));
 
     all_events_received.wait_for_at_most_seconds(10);
 }

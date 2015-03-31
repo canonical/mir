@@ -16,18 +16,24 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
+// only needed for event matchers:
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
 #include "src/server/input/default_input_device_hub.h"
 
 #include "mir_test_doubles/triggered_main_loop.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
+#include "mir_test_doubles/mock_input_region.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test/event_matchers.h"
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
+#include "mir/input/touch_visualizer.h"
+#include "mir/input/input_device_observer.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
+#include "mir/events/event_builders.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -46,8 +52,20 @@ std::ostream& operator<<(std::ostream& out, InputDeviceInfo const& info)
 {
     return out << info.id << ' ' << info.name << ' ' << info.unique_id;
 }
+
+bool operator==(mir::input::TouchVisualizer::Spot const& lhs, mir::input::TouchVisualizer::Spot const& rhs)
+{
+    return lhs.touch_location == rhs.touch_location && lhs.pressure == rhs.pressure;
 }
 }
+}
+
+struct MockTouchVisualizer : public mi::TouchVisualizer
+{
+    MOCK_METHOD1(visualize_touches, void(std::vector<mi::TouchVisualizer::Spot> const&));
+    MOCK_METHOD0(enable, void());
+    MOCK_METHOD0(disable, void());
+};
 
 struct MockInputDeviceObserver : public mi::InputDeviceObserver
 {
@@ -73,9 +91,12 @@ struct InputDeviceHubTest : ::testing::Test
 {
     mtd::TriggeredMainLoop observer_loop;
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
+    Nice<mtd::MockInputRegion> mock_region;
+    Nice<MockTouchVisualizer> mock_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_dispatcher), mt::fake_shared(multiplexer),
-                                  mt::fake_shared(observer_loop)};
+                                  mt::fake_shared(observer_loop), mt::fake_shared(mock_visualizer),
+                                  mt::fake_shared(mock_region)};
     Nice<MockInputDeviceObserver> mock_observer;
     Nice<MockInputDevice> device;
     Nice<MockInputDevice> another_device;
@@ -211,12 +232,11 @@ TEST_F(InputDeviceHubTest, observers_receive_device_changes)
 TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 {
     using namespace ::testing;
-    MirEvent event;
-    std::memset(&event, 0, sizeof event);
-    event.type = mir_event_type_key;
+    int64_t arbitrary_timestamp = 0;
+    auto event = mir::events::make_event(0, arbitrary_timestamp, mir_key_input_event_action_down, 0, KEY_A, mir_input_event_modifier_none);
+
     mi::InputSink* sink;
     mi::InputDeviceInfo info;
-    MirEvent dispatched_event;
 
     EXPECT_CALL(device,start(_))
         .WillOnce(Invoke([&sink](mi::InputSink* input_sink)
@@ -227,15 +247,65 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 
     EXPECT_CALL(mock_observer,device_added(_))
         .WillOnce(SaveArg<0>(&info));
-    EXPECT_CALL(mock_dispatcher,dispatch(_))
-        .WillOnce(SaveArg<0>(&dispatched_event));
 
     hub.add_observer(mt::fake_shared(mock_observer));
     hub.add_device(mt::fake_shared(device));
 
     observer_loop.trigger_server_actions();
-    sink->handle_input(event);
 
-    EXPECT_THAT(dispatched_event.key.device_id, Eq(info.id));
-    EXPECT_THAT(dispatched_event.type, Eq(event.type));
+    EXPECT_CALL(mock_dispatcher, dispatch(AllOf(mt::InputDeviceIdMatches(info.id), mt::MirKeyEventMatches(*event))));
+
+    sink->handle_input(*event);
+}
+
+TEST_F(InputDeviceHubTest, forwards_touch_spots_to_visualizer)
+{
+    using namespace ::testing;
+    int64_t arbitrary_timestamp = 0;
+    auto touch_event_1 = mir::events::make_event(0, arbitrary_timestamp, mir_input_event_modifier_none);
+    mir::events::add_touch(*touch_event_1, 0, mir_touch_input_event_action_down, mir_touch_input_tool_type_finger,
+                           21.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
+
+    auto touch_event_2 = mir::events::make_event(0, arbitrary_timestamp, mir_input_event_modifier_none);
+    mir::events::add_touch(*touch_event_2, 0, mir_touch_input_event_action_change, mir_touch_input_tool_type_finger,
+                           24.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
+    mir::events::add_touch(*touch_event_2, 1, mir_touch_input_event_action_down, mir_touch_input_tool_type_finger,
+                           60.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
+
+    auto touch_event_3 = mir::events::make_event(0, arbitrary_timestamp, mir_input_event_modifier_none);
+    mir::events::add_touch(*touch_event_3, 0, mir_touch_input_event_action_up, mir_touch_input_tool_type_finger, 24.0f,
+                           34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
+    mir::events::add_touch(*touch_event_3, 1, mir_touch_input_event_action_change, mir_touch_input_tool_type_finger,
+                           70.0f, 30.0f, 50.0f, 15.0f, 5.0f, 4.0f);
+
+    auto touch_event_4 = mir::events::make_event(0, arbitrary_timestamp, mir_input_event_modifier_none);
+    mir::events::add_touch(*touch_event_4, 1, mir_touch_input_event_action_up, mir_touch_input_tool_type_finger, 70.0f,
+                           35.0f, 50.0f, 15.0f, 5.0f, 4.0f);
+
+    mi::InputSink* sink;
+    mi::InputDeviceInfo info;
+
+    ON_CALL(device,start(_))
+        .WillByDefault(Invoke([&sink](mi::InputSink* input_sink)
+                              {
+                                  sink = input_sink;
+                              }
+                             ));
+
+    hub.add_device(mt::fake_shared(device));
+
+    observer_loop.trigger_server_actions();
+
+    using Spot = mi::TouchVisualizer::Spot;
+
+    InSequence seq;
+    EXPECT_CALL(mock_visualizer, visualize_touches(ElementsAreArray({Spot{{21,34}, 50}})));
+    EXPECT_CALL(mock_visualizer, visualize_touches(ElementsAreArray({Spot{{24,34}, 50}, Spot{{60,34}, 50}})));
+    EXPECT_CALL(mock_visualizer, visualize_touches(ElementsAreArray({Spot{{70,30}, 50}})));
+    EXPECT_CALL(mock_visualizer, visualize_touches(ElementsAreArray(std::vector<Spot>())));
+
+    sink->handle_input(*touch_event_1);
+    sink->handle_input(*touch_event_2);
+    sink->handle_input(*touch_event_3);
+    sink->handle_input(*touch_event_4);
 }

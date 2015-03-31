@@ -67,7 +67,6 @@ public:
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<mir::input::InputSender> the_input_sender() override;
 
-    std::shared_ptr<mir::input::android::FakeEventHub> fake_event_hub;
 
 protected:
     virtual void inject_input() = 0;
@@ -75,6 +74,7 @@ protected:
     void wait_until_client_appears(std::string const& surface_name);
 
 private:
+    std::shared_ptr<mir::input::android::FakeEventHub> fake_event_hub;
     std::thread input_injection_thread;
 };
 

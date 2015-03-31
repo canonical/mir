@@ -53,6 +53,7 @@ private:
         InputDevice(mir::input::InputDeviceInfo const& info,
                     std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable);
         std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
+
         void start(mir::input::InputSink* destination) override;
         void stop() override;
 
@@ -68,6 +69,7 @@ private:
     private:
         MirPointerInputEventAction update_buttons(synthesis::EventAction action, int button);
         void update_position(int rel_x, int rel_y);
+        void map_touch_coordinates(int& x, int& y);
 
         mir::input::InputSink* sink{nullptr};
         mir::input::InputDeviceInfo info;

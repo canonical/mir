@@ -199,6 +199,9 @@ MirPointerInputEventAction mtf::FakeInputDeviceImpl::InputDevice::update_buttons
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionParameters const& pointer)
 {
+    if (!sink)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
+
     int64_t event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
                              std::chrono::system_clock::now().time_since_epoch()).count();
     auto event_modifiers = expand_modifier(modifiers);
@@ -213,19 +216,20 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
                                                 scroll.x.as_float(),
                                                 scroll.y.as_float());
 
-    if (!sink)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
     sink->handle_input(*pointer_event);
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::update_position(int rel_x, int rel_y)
 {
-    // confine to rectangle of screen
+    sink->confine_pointer_movement(rel_x, rel_y);
     pos = pos + mir::geometry::Displacement{rel_x, rel_y};
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchParameters const& touch)
 {
+    if (!sink)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
+
     int64_t event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
                              std::chrono::system_clock::now().time_since_epoch()).count();
     auto event_modifiers = expand_modifier(modifiers);
@@ -241,25 +245,40 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
         touch_action = mir_touch_input_event_action_change;
 
     MirTouchInputEventTouchId touch_id = 1;
-    float pressure = 100.0f;
+    float pressure = 1.0f;
+
+    int abs_x = touch.abs_x;
+    int abs_y = touch.abs_y;
+    map_touch_coordinates(abs_x, abs_y);
+    // those values would need scaling too as soon as they can be controlled by the caller
     float touch_major = 5.0f;
     float touch_minor = 8.0f;
     float size_value = 8.0f;
+
 
     mir::events::add_touch(*touch_event,
                            touch_id,
                            touch_action,
                            mir_touch_input_tool_type_finger,
-                           float(touch.abs_x),
-                           float(touch.abs_y),
+                           float(abs_x),
+                           float(abs_y),
                            pressure,
                            touch_major,
                            touch_minor,
                            size_value);
 
-    if (!sink)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
     sink->handle_input(*touch_event);
+}
+
+void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(int& x, int& y)
+{
+    // TODO take orientation of input sink into account?
+    auto area = sink->bounding_rectangle();
+    auto touch_range = FakeInputDevice::maximum_touch_axis_value - FakeInputDevice::minimum_touch_axis_value + 1;
+    auto x_scale = area.size.width.as_float() / float(touch_range);
+    auto y_scale = area.size.height.as_float() / float(touch_range);
+    x = (x - FakeInputDevice::minimum_touch_axis_value)*x_scale + area.top_left.x.as_int();
+    y = (y - FakeInputDevice::minimum_touch_axis_value)*y_scale + area.top_left.y.as_int();
 }
 
 std::shared_ptr<md::Dispatchable> mtf::FakeInputDeviceImpl::InputDevice::dispatchable()
