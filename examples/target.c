@@ -23,7 +23,23 @@
 #include <GLES2/gl2.h>
 #include <mir_toolkit/mir_surface.h>
 
-bool resized = false;
+static bool resized = false;
+
+typedef struct
+{
+    float x, y;
+} Vec2;
+
+enum
+{
+    max_touches = 10
+};
+
+typedef struct
+{
+    int count;
+    Vec2 pos[max_touches];
+} Touches;
 
 static GLuint load_shader(const char *src, GLenum type)
 {
@@ -95,13 +111,25 @@ GLuint generate_target_texture()
 static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 {
     (void)surface;
-    (void)event;
-    (void)context;
+    Touches *touches = (Touches*)context;
 
     switch (mir_event_get_type(event))
     {
     case mir_event_type_input:
+    {
+        const MirInputEvent *input = mir_event_get_input_event(event);
+        if (mir_input_event_get_type(input) == mir_input_event_type_pointer)
+        {
+            const MirPointerEvent *pointer =
+                mir_input_event_get_pointer_event(input);
+            touches->count = 1;
+            touches->pos[0].x = mir_pointer_event_axis_value(pointer,
+                mir_pointer_axis_x);
+            touches->pos[0].y = mir_pointer_event_axis_value(pointer,
+                mir_pointer_axis_y);
+        }
         break;
+    }
     case mir_event_type_resize:
         resized = true;
         break;
@@ -194,7 +222,9 @@ int main(int argc, char *argv[])
 
     MirSurface *surface = mir_eglapp_native_surface();
 
-    mir_surface_set_event_handler(surface, on_event, NULL);
+    Touches touches;
+    touches.count = 0;
+    mir_surface_set_event_handler(surface, on_event, &touches);
 
     resized = true;
     while (mir_eglapp_running())
@@ -206,10 +236,18 @@ int main(int argc, char *argv[])
             width = viewport[2];
             height = viewport[3];
             glUniform2f(scale, height / (float)width, 1.0f);
+            resized = false;
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+        for (int t = 0; t < touches.count; ++t)
+        {
+            GLfloat tx = 2 * (touches.pos[t].x / width) - 1;
+            GLfloat ty = 2 * (touches.pos[t].y / height) - 1;
+            glUniform2f(translate, tx, -ty);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        }
         mir_eglapp_swap_buffers();
     }
 
