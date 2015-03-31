@@ -146,7 +146,7 @@ add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 # Default to mesa backend, but build all of them
 set(
   MIR_PLATFORM
-  mesa;android
+  mesa;android;X
   CACHE
   STRING
   "a list of graphics backends to build (options are 'mesa' or 'android')"
@@ -160,6 +160,9 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
   if (platform STREQUAL "android")
      set(MIR_BUILD_PLATFORM_ANDROID TRUE)
+  endif()
+  if (platform STREQUAL "X")
+     set(MIR_BUILD_PLATFORM_X TRUE)
   endif()
 endforeach(platform)
 
@@ -187,6 +190,10 @@ if (MIR_BUILD_PLATFORM_MESA)
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
+endif()
+
+if (MIR_BUILD_PLATFORM_X)
+#TODO: Fill this in.
 endif()
 
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
