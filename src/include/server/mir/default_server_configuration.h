@@ -104,7 +104,6 @@ class SessionListener;
 class SessionCoordinator;
 class SnapshotStrategy;
 class SurfaceCoordinator;
-class SurfaceConfigurator;
 class SurfaceStackModel;
 class SurfaceStack;
 class SceneReport;
@@ -283,7 +282,6 @@ public:
     virtual std::shared_ptr<scene::SurfaceStackModel> the_surface_stack_model();
     virtual std::shared_ptr<scene::SurfaceFactory>    the_surface_factory();
     virtual std::shared_ptr<scene::SurfaceCoordinator>the_surface_coordinator();
-    virtual std::shared_ptr<scene::SurfaceConfigurator> the_surface_configurator();
     /** @} */
 
     /** @name scene configuration - dependencies
@@ -424,7 +422,6 @@ protected:
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
-    CachedPtr<scene::SurfaceConfigurator> surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<compositor::CompositorReport> compositor_report;

@@ -69,7 +69,6 @@ auto mtf::FakeEventHubServerConfiguration::the_window_manager_builder() -> shell
         { return std::make_shared<ms::DefaultWindowManager>(
             focus_controller,
             the_placement_strategy(),
-            the_session_coordinator(),
-            the_surface_configurator()); };
+            the_session_coordinator()); };
 }
 
