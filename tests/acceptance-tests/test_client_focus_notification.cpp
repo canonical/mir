@@ -84,12 +84,7 @@ private:
         // We need to set the event delegate from the surface_created
         // callback so we can block the reading of new events
         // until we are ready
-        MirEventDelegate const event_delegate =
-            {
-                handle_event,
-                self
-            };
-        mir_surface_set_event_handler(surface_, &event_delegate);
+        mir_surface_set_event_handler(surface_, handle_event, self);
     }
 };
 }

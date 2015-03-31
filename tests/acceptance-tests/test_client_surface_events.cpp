@@ -71,7 +71,6 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
     std::condition_variable last_event_cv;
     MirEvent last_event{};
     MirSurface* last_event_surface = nullptr;
-    MirEventDelegate delegate{&event_callback, this};
 
     std::shared_ptr<ms::Surface> scene_surface;
 
@@ -128,12 +127,12 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 
         mtf::ConnectedClientWithASurface::SetUp();
 
-        mir_surface_set_event_handler(surface, &delegate);
+        mir_surface_set_event_handler(surface, &event_callback, this);
 
         scene_surface = the_latest_surface();
 
         other_surface = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(other_surface, nullptr);
+        mir_surface_set_event_handler(other_surface, nullptr, nullptr);
 
         reset_last_event();
     }

@@ -368,8 +368,7 @@ int main(int argc, char *argv[])
     mir_connection_set_display_config_change_callback(
         connection, display_change_callback, &ctx);
 
-    struct MirEventDelegate ed = {event_callback, &ctx};
-    mir_surface_set_event_handler(surface, &ed);
+    mir_surface_set_event_handler(surface, event_callback, &ctx);
 
     time_t start = time(NULL);
 

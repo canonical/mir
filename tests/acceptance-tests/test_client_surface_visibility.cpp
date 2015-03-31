@@ -114,8 +114,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
         mtf::ConnectedClientWithASurface::SetUp();
 
-        MirEventDelegate delegate{&event_callback, &mock_visibility_callback};
-        mir_surface_set_event_handler(surface, &delegate);
+        mir_surface_set_event_handler(surface, &event_callback, &mock_visibility_callback);
 
         // Swap enough buffers to ensure compositor threads are into run loop
         for (auto i = 0; i != 11; ++i)

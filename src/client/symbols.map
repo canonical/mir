@@ -103,7 +103,7 @@ MIR_CLIENT_8.2 {
     mir_surface_spec_set_preferred_orientation;
 } MIR_CLIENT_8.1;
 
-MIR_CLIENT_8.3 {
+MIR_CLIENT_8.3 {   # New in Mir 0.11
  global:
     mir_connection_create_spec_for_dialog;
     mir_connection_create_spec_for_menu;
@@ -113,6 +113,7 @@ MIR_CLIENT_8.3 {
 
 MIR_CLIENT_8.4 {   # New in Mir 0.13
  global:
+    mir_surface_set_event_handler;
     mir_surface_set_title;
     mir_default_cursor_name;
     mir_disabled_cursor_name;
