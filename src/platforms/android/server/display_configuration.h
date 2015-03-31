@@ -31,9 +31,9 @@ namespace android
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    DisplayConfiguration(DisplayAttribs const& primary,
+    DisplayConfiguration(DisplayConfigurationOutput primary,
                          MirPowerMode primary_mode,
-                         DisplayAttribs const& external,
+                         DisplayConfigurationOutput external,
                          MirPowerMode external_mode);
 
     DisplayConfiguration(DisplayConfiguration const& other);

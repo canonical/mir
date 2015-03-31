@@ -26,6 +26,7 @@
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/stub_gl_config.h"
+#include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test/auto_unblock_thread.h"
@@ -42,9 +43,9 @@ struct DisplayHotplug : ::testing::Test
     struct StubHwcConfig : public mga::HwcConfiguration
     {
         void power_mode(mga::DisplayName, MirPowerMode) override {}
-        mga::DisplayAttribs active_attribs_for(mga::DisplayName) override
+        mg::DisplayConfigurationOutput active_config_for(mga::DisplayName) override
         {
-            return mga::DisplayAttribs{{0,0}, {0,0}, 0.0, true, mir_pixel_format_abgr_8888, 2};
+            return mtd::StubDisplayConfig({{true,true}}).outputs[0];
         } 
         mga::ConfigChangeSubscription subscribe_to_config_changes(
             std::function<void()> const& cb, std::function<void(mga::DisplayName)> const&) override
@@ -67,9 +68,9 @@ struct DisplayHotplug : ::testing::Test
         {
             wrapped.power_mode(d, m);
         }
-        mga::DisplayAttribs active_attribs_for(mga::DisplayName d) override
+        mg::DisplayConfigurationOutput active_config_for(mga::DisplayName d) override
         {
-            return wrapped.active_attribs_for(d);
+            return wrapped.active_config_for(d);
         } 
         mga::ConfigChangeSubscription subscribe_to_config_changes(
             std::function<void()> const& hotplug, std::function<void(mga::DisplayName)> const& vsync) override
@@ -81,7 +82,7 @@ struct DisplayHotplug : ::testing::Test
 
     struct StubOutputBuilder : public mga::DisplayComponentFactory
     {
-        std::unique_ptr<mga::FramebufferBundle> create_framebuffers(mga::DisplayAttribs const&) override
+        std::unique_ptr<mga::FramebufferBundle> create_framebuffers(mg::DisplayConfigurationOutput const&) override
         {
             return std::unique_ptr<mga::FramebufferBundle>(new testing::NiceMock<mtd::MockFBBundle>());
         }
