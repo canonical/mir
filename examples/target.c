@@ -22,6 +22,10 @@
 #include <math.h>
 #include <GLES2/gl2.h>
 #include <mir_toolkit/mir_surface.h>
+#include <pthread.h>
+
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t change = PTHREAD_COND_INITIALIZER;
 
 static bool resized = false;
 
@@ -141,10 +145,12 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                                                         mir_touch_axis_y);
             }
         }
+        pthread_cond_signal(&change);
         break;
     }
     case mir_event_type_resize:
         resized = true;
+        pthread_cond_signal(&change);
         break;
     default:
         break;
@@ -237,11 +243,17 @@ int main(int argc, char *argv[])
 
     Touches touches;
     touches.count = 0;
+    resized = true;
+
     mir_surface_set_event_handler(surface, on_event, &touches);
 
-    resized = true;
-    while (mir_eglapp_running())
+    do
     {
+        pthread_mutex_lock(&mutex);
+
+        if (!resized)
+            pthread_cond_wait(&change, &mutex);
+        
         if (resized)
         {
             GLint viewport[4];
@@ -261,8 +273,11 @@ int main(int argc, char *argv[])
             glUniform2f(translate, tx, -ty);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         }
+
+        pthread_mutex_unlock(&mutex);
+
         mir_eglapp_swap_buffers();
-    }
+    } while (mir_eglapp_running());
 
     mir_eglapp_shutdown();
 
