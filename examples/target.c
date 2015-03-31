@@ -139,6 +139,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         {
             const MirTouchEvent *touch = mir_input_event_get_touch_event(input);
             int n = mir_touch_event_point_count(touch);
+            if (n > max_touches)
+                n = max_touches;
             touches->count = n;
             for (int t = 0; t < n; ++t)
             {
