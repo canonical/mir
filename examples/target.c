@@ -124,9 +124,22 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                 mir_input_event_get_pointer_event(input);
             touches->count = 1;
             touches->pos[0].x = mir_pointer_event_axis_value(pointer,
-                mir_pointer_axis_x);
+                                                         mir_pointer_axis_x);
             touches->pos[0].y = mir_pointer_event_axis_value(pointer,
-                mir_pointer_axis_y);
+                                                         mir_pointer_axis_y);
+        }
+        else if (mir_input_event_get_type(input) == mir_input_event_type_touch)
+        {
+            const MirTouchEvent *touch = mir_input_event_get_touch_event(input);
+            int n = mir_touch_event_point_count(touch);
+            touches->count = n;
+            for (int t = 0; t < n; ++t)
+            {
+                touches->pos[t].x = mir_touch_event_axis_value(touch, t,
+                                                        mir_touch_axis_x);
+                touches->pos[t].y = mir_touch_event_axis_value(touch, t,
+                                                        mir_touch_axis_y);
+            }
         }
         break;
     }
