@@ -39,9 +39,10 @@ enum
 
 typedef struct
 {
+    bool running;
+    bool resized;
     int touches;
     Vec2 touch[max_touches];
-    bool resized;
 } State;
 
 static GLuint load_shader(const char *src, GLenum type)
@@ -152,17 +153,19 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                                                         mir_touch_axis_y);
             }
         }
-        pthread_cond_signal(&change);
         break;
     }
     case mir_event_type_resize:
         state->resized = true;
-        pthread_cond_signal(&change);
+        break;
+    case mir_event_type_close_surface:
+        state->running = false;
         break;
     default:
         break;
     }
 
+    pthread_cond_signal(&change);
     pthread_mutex_unlock(&mutex);
 }
 
@@ -256,8 +259,9 @@ int main(int argc, char *argv[])
     MirSurface *surface = mir_eglapp_native_surface();
 
     State state;
-    state.touches = 0;
+    state.running = true;
     state.resized = true;
+    state.touches = 0;
 
     mir_surface_set_event_handler(surface, on_event, &state);
 
@@ -265,9 +269,15 @@ int main(int argc, char *argv[])
     {
         pthread_mutex_lock(&mutex);
 
-        while (!state.resized && !state.touches)
+        while (state.running && !state.resized && !state.touches)
             pthread_cond_wait(&change, &mutex);
         
+        if (!state.running)
+        {
+            pthread_mutex_unlock(&mutex);
+            break;
+        }
+
         if (state.resized)
         {
             // mir_eglapp_swap_buffers updates the viewport for us...
