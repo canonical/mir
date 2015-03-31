@@ -169,12 +169,14 @@ int main(int argc, char *argv[])
     const char vshadersrc[] =
         "attribute vec2 position;\n"
         "attribute vec2 texcoord;\n"
-        "uniform vec2 scale;\n"
+        "uniform float scale;\n"
         "uniform vec2 translate;\n"
+        "uniform mat4 projection;\n"
         "varying vec2 v_texcoord;\n"
         "void main()\n"
         "{\n"
-        "    gl_Position = vec4(position * scale + translate, 0.0, 1.0);\n"
+        "    gl_Position = projection *\n"
+        "                  vec4(position * scale + translate, 0.0, 1.0);\n"
         "    v_texcoord = texcoord;\n"
         "}\n";
 
@@ -233,9 +235,12 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(texcoord);
 
     GLint scale = glGetUniformLocation(prog, "scale");
+    glUniform1f(scale, 256.0f);
 
     GLint translate = glGetUniformLocation(prog, "translate");
     glUniform2f(translate, 0.0f, 0.0f);
+
+    GLint projection = glGetUniformLocation(prog, "projection");
 
     GLuint tex = generate_target_texture();
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -263,24 +268,32 @@ int main(int argc, char *argv[])
         
         if (resized)
         {
+            // mir_eglapp_swap_buffers updates the viewport for us...
             GLint viewport[4];
             glGetIntegerv(GL_VIEWPORT, viewport);
-            width = viewport[2];
-            height = viewport[3];
-            glUniform2f(scale, height / (float)width, 1.0f);
-            resized = false;
+            int w = viewport[2], h = viewport[3];
+
+            // TRANSPOSED projection matrix to covert from the input rectangle
+            // {{0,0},{w,h}} to the GL screen rectangle {{-1,1},{2,2}}.
+            GLfloat matrix[16] = {2.0f/w, 0.0f,   0.0f, 0.0f,
+                                  0.0,   -2.0f/h, 0.0f, 0.0f,
+                                  0.0f,   0.0f,   1.0f, 0.0f,
+                                 -1.0f,   1.0f,   0.0f, 1.0f};
+            // Note GL_FALSE: GLES does not support the transpose option
+            glUniformMatrix4fv(projection, 1, GL_FALSE, matrix);
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
 
         for (int t = 0; t < touches.count; ++t)
         {
-            GLfloat tx = 2 * (touches.pos[t].x / width) - 1;
-            GLfloat ty = 2 * (touches.pos[t].y / height) - 1;
-            glUniform2f(translate, tx, -ty);
+            glUniform2f(translate, touches.pos[t].x, touches.pos[t].y);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         }
 
+        // Put the event loop back to sleep:
+        resized = false;
+        touches.count = 0;
         pthread_mutex_unlock(&mutex);
 
         mir_eglapp_swap_buffers();
