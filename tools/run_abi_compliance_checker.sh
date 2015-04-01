@@ -72,10 +72,16 @@ NEXT_RELEASE_DIR=${3}
 OLD_ABI_DUMP=${4}
 NEW_ABI_DUMP=${5}
 
+SKIP_SYMBOLS_FILE=${NEXT_RELEASE_DIR}/tools/abi-check-${LIB_NAME}-skip-symbols
+if [ -f ${SKIP_SYMBOLS_FILE} ];
+then
+SKIP_SYMBOLS_OPT="-skip-symbols ${SKIP_SYMBOLS_FILE}"
+fi
+
 if need_abi_check ${LIB_NAME} ${OLD_RELEASE_DIR} ${NEXT_RELEASE_DIR};
 then
     echo "Running abi-compliance-checker for ${LIB_NAME}"
-    abi-compliance-checker -l ${LIB_NAME} -old "${OLD_ABI_DUMP}" -new "${NEW_ABI_DUMP}" -check-implementation
+    abi-compliance-checker -l ${LIB_NAME} -old "${OLD_ABI_DUMP}" -new "${NEW_ABI_DUMP}" -check-implementation ${SKIP_SYMBOLS_OPT}
 else
     echo "No need for abi-compliance-checker, ABI has already been bumped for ${LIB_NAME}"
 fi
