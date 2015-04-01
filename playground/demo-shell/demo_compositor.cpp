@@ -188,6 +188,9 @@ void me::DemoCompositor::update_viewport()
         float zoom_width = db_width / zoom_mag;
         float zoom_height = db_height / zoom_mag;
     
+        // Note the 0.5f. This is because cursors (and all input in general)
+        // measures coordinates at the centre of a pixel. But GL measures to
+        // the top-left corner of a pixel.
         float screen_x = cursor_pos.x.as_float() + 0.5f - db_x;
         float screen_y = cursor_pos.y.as_float() + 0.5f - db_y;
 

@@ -80,7 +80,7 @@ GLuint generate_target_texture()
     const int width = 512, height = width;
     typedef struct { GLubyte r, b, g, a; } Texel;
     Texel image[height][width];
-    // Note the 0.5f to convert from pixel boundaries (GL) to middles (image)
+    // Note the 0.5f to convert from pixel corner (GL) to middle (image)
     const float centrex = width/2 - 0.5f, centrey = height/2 - 0.5f;
     const Texel blank = {0, 0, 0, 0};
     const int radius = centrex - 1;
@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
 
         for (int p = 0; p < state.touch.points; ++p)
         {
-            // Note the 0.5f to convert from pixel middles to boundaries (GL)
+            // Note the 0.5f to convert from pixel middle to corner (GL)
             glUniform2f(translate, state.touch.point[p].x + 0.5f,
                                    state.touch.point[p].y + 0.5f);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
