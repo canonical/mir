@@ -44,6 +44,8 @@ public:
     std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
 
     EGLNativeDisplayType egl_native_display() const override;
+private:
+    Display *display;
 };
 
 }

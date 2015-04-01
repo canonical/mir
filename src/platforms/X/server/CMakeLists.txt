@@ -19,6 +19,8 @@ add_library(
   mirplatformgraphicsXobjects OBJECT
 
   platform.cpp
+  display.cpp
+  display_configuration.cpp
 )
 
 add_library(

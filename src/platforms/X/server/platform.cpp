@@ -17,6 +17,7 @@
  */
 
 #include "platform.h"
+#include "display.h"
 
 namespace mg = mir::graphics;
 namespace mgx = mg::X;
@@ -37,15 +38,7 @@ std::shared_ptr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<GLProgramFactory> const&,
     std::shared_ptr<GLConfig> const& /*gl_config*/)
 {
-#if 0
-    return std::make_shared<mgm::Display>(
-        this->shared_from_this(),
-        initial_conf_policy,
-        gl_config,
-        listener);
-#else
-    return nullptr;
-#endif
+    return std::make_shared<mgx::Display>();
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
@@ -77,15 +70,6 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
 
 extern "C" void add_graphics_platform_options(boost::program_options::options_description& /*config*/)
 {
-#if 0
-    config.add_options()
-        (vt_option_name,
-         boost::program_options::value<int>()->default_value(0),
-         "[platform-specific] VT to run on or 0 to use current.")
-        (bypass_option_name,
-         boost::program_options::value<bool>()->default_value(true),
-         "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
-#endif
 }
 
 extern "C" mg::PlatformPriority probe_graphics_platform()
