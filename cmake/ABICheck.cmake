@@ -4,6 +4,7 @@ execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine OUTPUT_VARIABLE ABI_CHE
 
 set(ABI_CHECK_BASE_DIR $ENV{MIR_ABI_CHECK_BASE_DIR})
 set(ABI_DUMP_PREBUILT_LIBDIR $ENV{MIR_ABI_DUMP_PREBUILT_LIBDIR})
+set(RUN_ABI_CHECK_DURING_BUILD $ENV{MIR_RUN_ABI_CHECK_DURING_BUILD})
 
 if ("${ABI_CHECK_BASE_DIR}" STREQUAL "")
   set(ABI_CHECK_BASE_DIR ${CMAKE_BINARY_DIR}/mir-prev-release/obj-${ABI_CHECK_TARGET_MACH}/abi_dumps)
@@ -117,4 +118,8 @@ endforeach(libname)
 
 add_custom_target(abi-dump DEPENDS ${abi-dump-list})
 add_custom_target(abi-dump-base DEPENDS ${abi-dump-base-list})
-add_custom_target(abi-check DEPENDS ${abi-check-list})
+if (RUN_ABI_CHECK_DURING_BUILD)
+  add_custom_target(abi-check ALL DEPENDS ${abi-check-list})
+else()
+  add_custom_target(abi-check DEPENDS ${abi-check-list})
+endif()
