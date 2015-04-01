@@ -80,8 +80,19 @@ fi
 
 if need_abi_check ${LIB_NAME} ${OLD_RELEASE_DIR} ${NEXT_RELEASE_DIR};
 then
-    echo "Running abi-compliance-checker for ${LIB_NAME}"
-    abi-compliance-checker -l ${LIB_NAME} -old "${OLD_ABI_DUMP}" -new "${NEW_ABI_DUMP}" -check-implementation ${SKIP_SYMBOLS_OPT}
+    if [ ! -f "${OLD_ABI_DUMP}" ];
+    then
+        # This does not return an error code on purpose
+        # The previous release source may not have the required changes
+        # to generate an ABI dump of the requested library
+        # TODO: Exit with error code once the archive mir release
+        # can dump ABI for all libraries of interest
+        echo "Warning: No base abi dump exists for ${LIB_NAME}"
+        echo "skipping abi-compliance-checker for ${LIB_NAME}"
+    else
+        echo "Running abi-compliance-checker for ${LIB_NAME}"
+        abi-compliance-checker -l ${LIB_NAME} -old "${OLD_ABI_DUMP}" -new "${NEW_ABI_DUMP}" -check-implementation ${SKIP_SYMBOLS_OPT}
+    fi
 else
     echo "No need for abi-compliance-checker, ABI has already been bumped for ${LIB_NAME}"
 fi
