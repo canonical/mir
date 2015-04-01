@@ -6,7 +6,7 @@ set(ABI_CHECK_BASE_DIR $ENV{MIR_ABI_CHECK_BASE_DIR})
 set(ABI_DUMP_PREBUILT_LIBDIR $ENV{MIR_ABI_DUMP_PREBUILT_LIBDIR})
 
 if ("${ABI_CHECK_BASE_DIR}" STREQUAL "")
-  set(ABI_CHECK_BASE_DIR ${CMAKE_BINARY_DIR}/abi_dumps)
+  set(ABI_CHECK_BASE_DIR ${CMAKE_BINARY_DIR}/mir-prev-release/obj-${ABI_CHECK_TARGET_MACH}/abi_dumps)
 endif()
 
 set(ABI_DUMPS_DIR_PREFIX "abi_dumps/${ABI_CHECK_TARGET_MACH}")
@@ -67,6 +67,10 @@ make_lib_descriptor(server)
 make_lib_descriptor(common INCLUDE_PRIVATE EXCLUDE_HEADERS ${android-platform-headers})
 make_lib_descriptor(platform INCLUDE_PRIVATE)
 
+add_custom_target(abi-release-dump
+  COMMAND /bin/sh -c ${CMAKE_SOURCE_DIR}/tools/generate-abi-base-dump.sh
+)
+
 macro(_add_custom_abi_dump_command libname version)
   set(ABI_DUMP_NAME ${ABI_DUMPS_DIR_PREFIX}/${libname}_${version}.abi.tar.gz)
 
@@ -93,8 +97,8 @@ macro(_define_abi_check_for libname)
   set(OLD_ABI_DUMP "${ABI_CHECK_BASE_DIR}/${ABI_CHECK_TARGET_MACH}/${libname}_base.abi.tar.gz")
   set(NEW_ABI_DUMP ${ABI_DUMPS_DIR_PREFIX}/${libname}_next.abi.tar.gz)
   add_custom_target(abi-check-${libname} 
-    COMMAND abi-compliance-checker -l ${libname} -old "${OLD_ABI_DUMP}" -new "${NEW_ABI_DUMP}" -check-implementation
-    DEPENDS abi-dump-${libname}
+    COMMAND /bin/bash -c '${CMAKE_SOURCE_DIR}/tools/run_abi_compliance_checker.sh ${libname} "${CMAKE_BINARY_DIR}/mir-prev-release" "${CMAKE_SOURCE_DIR}" "${OLD_ABI_DUMP}" "${NEW_ABI_DUMP}"'
+    DEPENDS abi-dump-${libname} abi-release-dump
   )
 endmacro(_define_abi_check_for)
 
