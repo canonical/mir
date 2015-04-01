@@ -136,11 +136,14 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         {
             const MirPointerEvent *pointer =
                 mir_input_event_get_pointer_event(input);
-            state->touches = 1;
-            state->touch[0].x = mir_pointer_event_axis_value(pointer,
+            if (mir_pointer_event_action(pointer) != mir_pointer_action_leave)
+            {
+                state->touches = 1;
+                state->touch[0].x = mir_pointer_event_axis_value(pointer,
                                                          mir_pointer_axis_x);
-            state->touch[0].y = mir_pointer_event_axis_value(pointer,
+                state->touch[0].y = mir_pointer_event_axis_value(pointer,
                                                          mir_pointer_axis_y);
+            }
         }
         else if (mir_input_event_get_type(input) == mir_input_event_type_touch)
         {
