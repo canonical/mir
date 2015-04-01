@@ -444,12 +444,3 @@ int mir_connection_drm_set_gbm_device(MirConnection* connection,
 
     return status == success;
 }
-
-bool mir_connection_request_surface_arrangement(
-    MirConnection* connection, MirSurfaceArrangement* arrangement, int num_arrangements)
-{
-    (void) connection;
-    (void) arrangement;
-    (void) num_arrangements;
-    return false;
-}
