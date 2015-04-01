@@ -278,17 +278,6 @@ typedef struct MirDisplayConfiguration
     MirDisplayCard *cards;
 } MirDisplayConfiguration;
 
-/**
- * MirEventDelegate may be used to specify (at surface creation time)
- * callbacks for handling of events.
- */
-typedef mir_surface_event_callback mir_event_delegate_callback;
-typedef struct MirEventDelegate
-{
-    mir_event_delegate_callback callback;
-    void *context;
-} MirEventDelegate;
-
 typedef struct MirRectangle
 {
     int left;

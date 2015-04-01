@@ -16,14 +16,13 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "default_window_manager.h"
+#include "mir/shell/default_window_manager.h"
 
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/placement_strategy.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_configurator.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/focus_controller.h"
 
@@ -34,12 +33,10 @@ namespace msh = mir::shell;
 msh::DefaultWindowManager::DefaultWindowManager(
     FocusController* focus_controller,
     std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
-    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-    std::shared_ptr<scene::SurfaceConfigurator> const& surface_configurator) :
+    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator) :
     focus_controller{focus_controller},
     placement_strategy{placement_strategy},
-    session_coordinator{session_coordinator},
-    surface_configurator{surface_configurator}
+    session_coordinator{session_coordinator}
 {
 }
 
@@ -117,17 +114,17 @@ void msh::DefaultWindowManager::remove_display(geometry::Rectangle const& /*area
 {
 }
 
-bool msh::DefaultWindowManager::handle_key_event(MirKeyInputEvent const* /*event*/)
+bool msh::DefaultWindowManager::handle_key_event(MirKeyboardEvent const* /*event*/)
 {
     return false;
 }
 
-bool msh::DefaultWindowManager::handle_touch_event(MirTouchInputEvent const* /*event*/)
+bool msh::DefaultWindowManager::handle_touch_event(MirTouchEvent const* /*event*/)
 {
     return false;
 }
 
-bool msh::DefaultWindowManager::handle_pointer_event(MirPointerInputEvent const* /*event*/)
+bool msh::DefaultWindowManager::handle_pointer_event(MirPointerEvent const* /*event*/)
 {
     return false;
 }
@@ -138,11 +135,5 @@ int msh::DefaultWindowManager::set_surface_attribute(
     MirSurfaceAttrib attrib,
     int value)
 {
-    auto const configured_value = surface_configurator->select_attribute_value(*surface, attrib, value);
-
-    auto const result = surface->configure(attrib, configured_value);
-
-    surface_configurator->attribute_set(*surface, attrib, result);
-
-    return result;
+    return surface->configure(attrib, value);
 }

@@ -52,11 +52,11 @@ public:
 
     virtual void remove_display(geometry::Rectangle const& area) = 0;
 
-    virtual bool handle_key_event(MirKeyInputEvent const* event) = 0;
+    virtual bool handle_key_event(MirKeyboardEvent const* event) = 0;
 
-    virtual bool handle_touch_event(MirTouchInputEvent const* event) = 0;
+    virtual bool handle_touch_event(MirTouchEvent const* event) = 0;
 
-    virtual bool handle_pointer_event(MirPointerInputEvent const* event) = 0;
+    virtual bool handle_pointer_event(MirPointerEvent const* event) = 0;
 
     virtual int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,

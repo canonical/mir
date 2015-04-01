@@ -31,7 +31,6 @@
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_input_sender.h"
-#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_display_sync_group.h"
 
 #include <condition_variable>

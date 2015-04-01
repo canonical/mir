@@ -64,7 +64,7 @@ struct NullSurfaceInfo
 class FullscreenWindowManagerPolicy
 {
 public:
-    using Tools = me::BasicWindowManagerTools<NullSessionInfo, NullSurfaceInfo>;
+    using Tools = me::BasicWindowManagerToolsCopy<NullSessionInfo, NullSurfaceInfo>;
     using SessionInfoMap = typename me::SessionTo<NullSessionInfo>::type;
 
     FullscreenWindowManagerPolicy(Tools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
@@ -97,11 +97,11 @@ public:
     int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value)
         { return value; }
 
-    bool handle_key_event(MirKeyInputEvent const* /*event*/) { return false; }
+    bool handle_key_event(MirKeyboardEvent const* /*event*/) { return false; }
 
-    bool handle_touch_event(MirTouchInputEvent const* /*event*/) { return false; }
+    bool handle_touch_event(MirTouchEvent const* /*event*/) { return false; }
 
-    bool handle_pointer_event(MirPointerInputEvent const* /*event*/) { return false; }
+    bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
 
     std::vector<std::shared_ptr<ms::Surface>> generate_decorations_for(
         std::shared_ptr<ms::Session> const&,
@@ -115,9 +115,9 @@ private:
 
 }
 
-using TilingWindowManager = me::BasicWindowManager<me::TilingWindowManagerPolicy, me::TilingSessionInfo, me::TilingSurfaceInfo>;
-using FullscreenWindowManager = me::BasicWindowManager<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
-using CanonicalWindowManager = me::BasicWindowManager<me::CanonicalWindowManagerPolicy, me::CanonicalSessionInfo, me::CanonicalSurfaceInfo>;
+using TilingWindowManager = me::BasicWindowManagerCopy<me::TilingWindowManagerPolicy, me::TilingSessionInfo, me::TilingSurfaceInfo>;
+using FullscreenWindowManager = me::BasicWindowManagerCopy<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
+using CanonicalWindowManager = me::BasicWindowManagerCopy<me::CanonicalWindowManagerPolicyCopy, me::CanonicalSessionInfoCopy, me::CanonicalSurfaceInfoCopy>;
 
 void me::add_window_manager_option_to(Server& server)
 {

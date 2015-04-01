@@ -366,11 +366,13 @@ bool me::WindowManager::handle(MirEvent const& event)
                  event.key.scan_code == KEY_N)
         {
             toggle(inverse);
+            return true;
         }
         else if (event.key.modifiers & mir_key_modifier_meta &&
                  event.key.scan_code == KEY_C)
         {
             toggle(contrast);
+            return true;
         }
     }
     else if (event.type == mir_event_type_motion &&

@@ -268,15 +268,15 @@ public:
         auto ievent = mir_event_get_input_event(ev);
         if (mir_input_event_get_type(ievent) == mir_input_event_type_touch)
         {
-            auto tev = mir_input_event_get_touch_input_event(ievent);
-            x = mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_x);
-            y = mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_y);
+            auto tev = mir_input_event_get_touch_event(ievent);
+            x = mir_touch_event_axis_value(tev, 0, mir_touch_axis_x);
+            y = mir_touch_event_axis_value(tev, 0, mir_touch_axis_y);
         }
         else if (mir_input_event_get_type(ievent) == mir_input_event_type_pointer)
         {
-            auto pev = mir_input_event_get_pointer_input_event(ievent);
-            x = mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x);
-            y = mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_y);
+            auto pev = mir_input_event_get_pointer_event(ievent);
+            x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x);
+            y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y);
         }
         else
         {
@@ -362,8 +362,7 @@ private:
         mir_surface_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
         mir_surface_spec_set_buffer_usage(spec.get(), mir_buffer_usage_hardware);
         auto surface = mir_surface_create_sync(spec.get());
-        MirEventDelegate delegate = {&on_event, this};
-        mir_surface_set_event_handler(surface, &delegate);
+        mir_surface_set_event_handler(surface, &on_event, this);
         return surface;
     }
     static void on_event(MirSurface*, const MirEvent *event, void *context)

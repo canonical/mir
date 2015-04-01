@@ -36,7 +36,6 @@ namespace scene
 {
 class BufferStreamFactory;
 class SceneReport;
-class SurfaceConfigurator;
 
 class SurfaceAllocator : public SurfaceFactory
 {
