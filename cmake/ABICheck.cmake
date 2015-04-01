@@ -75,7 +75,8 @@ make_lib_descriptor(common INCLUDE_PRIVATE EXCLUDE_HEADERS ${mircommon-exclude-h
 make_lib_descriptor(platform INCLUDE_PRIVATE EXCLUDE_HEADERS ${mirplatform-exclude-headers})
 make_lib_descriptor(clientplatformmesa LIBRARY_HEADER ${CMAKE_SOURCE_DIR}/src/include/client/mir/client_platform_factory.h)
 make_lib_descriptor(clientplatformandroid LIBRARY_HEADER ${CMAKE_SOURCE_DIR}/src/include/client/mir/client_platform_factory.h)
-
+make_lib_descriptor(platformgraphicsmesa LIBRARY_HEADER ${CMAKE_SOURCE_DIR}/include/platform/mir/graphics/platform.h)
+make_lib_descriptor(platformgraphicsandroid LIBRARY_HEADER ${CMAKE_SOURCE_DIR}/include/platform/mir/graphics/platform.h)
 
 add_custom_target(abi-release-dump
   COMMAND /bin/sh -c '${CMAKE_SOURCE_DIR}/tools/generate-abi-base-dump.sh ${CMAKE_SOURCE_DIR}'
@@ -112,7 +113,7 @@ macro(_define_abi_check_for libname)
   )
 endmacro(_define_abi_check_for)
 
-set(the_libs mirserver mirclient mircommon mirplatform mirclientplatformmesa mirclientplatformandroid)
+set(the_libs mirserver mirclient mircommon mirplatform mirclientplatformmesa mirclientplatformandroid mirplatformgraphicsmesa mirplatformgraphicsandroid)
 
 foreach(libname ${the_libs})
   _define_abi_dump_for(${libname})
