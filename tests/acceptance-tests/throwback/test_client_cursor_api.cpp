@@ -479,6 +479,9 @@ TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
     DisabledCursorClient client{nested_mir.new_connection(), client_name_1};
     client.run();
 
+    // Roar
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(799, 533));
+
     expectations_satisfied.wait_for_at_most_seconds(60);
     expect_client_shutdown();
     }

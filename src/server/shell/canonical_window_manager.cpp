@@ -102,6 +102,7 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
         parameters.size = rect.size;
         parameters.state = mir_surface_state_fullscreen;
         positioned = true;
+        printf("Placed in output: top_left.x %d \n", parameters.top_left.x.as_int());
     }
     else if (!parent) // No parent => client can't suggest positioning
     {

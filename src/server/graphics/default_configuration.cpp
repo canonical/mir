@@ -152,7 +152,8 @@ mir::DefaultServerConfiguration::the_display()
                     the_input_dispatcher(),
                     the_display_report(),
                     the_display_configuration_policy(),
-                    the_gl_config());
+                    the_gl_config(),
+                    the_cursor_listener());
             }
             {
                 return the_graphics_platform()->create_display(
