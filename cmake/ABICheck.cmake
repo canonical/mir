@@ -1,5 +1,12 @@
 cmake_minimum_required (VERSION 2.6)
 
+find_program(ABI_COMPLIANCE_CHECKER abi-compliance-checker)
+
+if (NOT ABI_COMPLIANCE_CHECKER)
+  message(WARNING "no ABI checks possible: abi-compliance-checker was not found")
+  return()
+endif()
+
 execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine OUTPUT_VARIABLE ABI_CHECK_TARGET_MACH OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 set(ABI_CHECK_BASE_DIR $ENV{MIR_ABI_CHECK_BASE_DIR})
