@@ -16,6 +16,7 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#define _POSIX_C_SOURCE 200112L  // for setenv() from stdlib.h
 #include "eglapp.h"
 #include <assert.h>
 #include <stdio.h>
@@ -23,6 +24,7 @@
 #include <GLES2/gl2.h>
 #include <mir_toolkit/mir_surface.h>
 #include <pthread.h>
+#include <stdlib.h>
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t change = PTHREAD_COND_INITIALIZER;
@@ -196,6 +198,11 @@ int main(int argc, char *argv[])
 
     GLuint vshader, fshader, prog;
     GLint linked;
+
+    // Disable Mir's input resampling. We do our own here, in a way that
+    // has even lower latency than Mir's default algorithm.
+    // TODO: Make a proper client APU function for this:
+    setenv("MIR_CLIENT_INPUT_RATE", "0", 1);
 
     static unsigned int width = 0, height = 0;
     if (!mir_eglapp_init(argc, argv, &width, &height))
