@@ -36,9 +36,12 @@ function(make_lib_descriptor name)
     set(private_headers "${CMAKE_SOURCE_DIR}/src/include/${name}")
   endif()
   
-  set(LIB_DESC_HEADERS "${CMAKE_SOURCE_DIR}/include/${name}
-    ${private_headers}"
-  )
+  get_value_for_arg("${ARGN}" "LIBRARY_HEADER" library_header)
+  if ("${library_header}" STREQUAL "")
+    set(LIB_DESC_HEADERS "${CMAKE_SOURCE_DIR}/include/${name}\n    ${private_headers}")
+  else()
+    set(LIB_DESC_HEADERS ${library_header})
+  endif()
 
   if (NOT ${CMAKE_MAJOR_VERSION} LESS 3)
     cmake_policy(SET CMP0026 OLD)
@@ -70,9 +73,12 @@ make_lib_descriptor(client)
 make_lib_descriptor(server)
 make_lib_descriptor(common INCLUDE_PRIVATE EXCLUDE_HEADERS ${mircommon-exclude-headers})
 make_lib_descriptor(platform INCLUDE_PRIVATE EXCLUDE_HEADERS ${mirplatform-exclude-headers})
+make_lib_descriptor(clientplatformmesa LIBRARY_HEADER ${CMAKE_SOURCE_DIR}/src/include/client/mir/client_platform_factory.h)
+make_lib_descriptor(clientplatformandroid LIBRARY_HEADER ${CMAKE_SOURCE_DIR}/src/include/client/mir/client_platform_factory.h)
+
 
 add_custom_target(abi-release-dump
-  COMMAND /bin/sh -c ${CMAKE_SOURCE_DIR}/tools/generate-abi-base-dump.sh
+  COMMAND /bin/sh -c '${CMAKE_SOURCE_DIR}/tools/generate-abi-base-dump.sh ${CMAKE_SOURCE_DIR}'
 )
 
 macro(_add_custom_abi_dump_command libname version)
@@ -106,7 +112,7 @@ macro(_define_abi_check_for libname)
   )
 endmacro(_define_abi_check_for)
 
-set(the_libs mirserver mirclient mircommon mirplatform)
+set(the_libs mirserver mirclient mircommon mirplatform mirclientplatformmesa mirclientplatformandroid)
 
 foreach(libname ${the_libs})
   _define_abi_dump_for(${libname})
