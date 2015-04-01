@@ -103,7 +103,7 @@ MIR_CLIENT_8.2 {
     mir_surface_spec_set_preferred_orientation;
 } MIR_CLIENT_8.1;
 
-MIR_CLIENT_8.3 {
+MIR_CLIENT_8.3 {   # New in Mir 0.11
  global:
     mir_connection_create_spec_for_dialog;
     mir_connection_create_spec_for_menu;
@@ -111,8 +111,10 @@ MIR_CLIENT_8.3 {
     mir_connection_platform_operation;
 } MIR_CLIENT_8.2;
 
-MIR_CLIENT_8.4 {
+MIR_CLIENT_8.4 {   # New in Mir 0.13
  global:
+    mir_surface_set_event_handler;
+    mir_surface_set_title;
     mir_default_cursor_name;
     mir_disabled_cursor_name;
     mir_arrow_cursor_name;
@@ -140,20 +142,20 @@ MIR_CLIENT_8.4 {
     mir_event_unref;
     mir_input_event_get_device_id;
     mir_input_event_get_event_time;
-    mir_input_event_get_key_input_event;
-    mir_input_event_get_pointer_input_event;
-    mir_input_event_get_touch_input_event;
+    mir_input_event_get_keyboard_event;
+    mir_input_event_get_pointer_event;
+    mir_input_event_get_touch_event;
     mir_input_event_get_type;
-    mir_key_input_event_get_action;
-    mir_key_input_event_get_key_code;
-    mir_key_input_event_get_modifiers;
-    mir_key_input_event_get_scan_code;
+    mir_keyboard_event_action;
+    mir_keyboard_event_key_code;
+    mir_keyboard_event_modifiers;
+    mir_keyboard_event_scan_code;
     mir_keymap_event_get_rules;
     mir_orientation_event_get_direction;
-    mir_pointer_input_event_get_action;
-    mir_pointer_input_event_get_axis_value;
-    mir_pointer_input_event_get_button_state;
-    mir_pointer_input_event_get_modifiers;
+    mir_pointer_event_action;
+    mir_pointer_event_axis_value;
+    mir_pointer_event_button_state;
+    mir_pointer_event_modifiers;
     mir_prompt_session_event_get_state;
     mir_resize_event_get_height;
     mir_resize_event_get_width;
@@ -162,12 +164,12 @@ MIR_CLIENT_8.4 {
     mir_surface_set_swapinterval;
     mir_surface_swap_buffers;
     mir_surface_swap_buffers_sync;
-    mir_touch_input_event_get_modifiers;
-    mir_touch_input_event_get_touch_action;
-    mir_touch_input_event_get_touch_axis_value;
-    mir_touch_input_event_get_touch_count;
-    mir_touch_input_event_get_touch_id;
-    mir_touch_input_event_get_touch_tooltype;
+    mir_touch_event_modifiers;
+    mir_touch_event_action;
+    mir_touch_event_axis_value;
+    mir_touch_event_point_count;
+    mir_touch_event_id;
+    mir_touch_event_tooltype;
     mir_surface_get_buffer_stream;
     mir_buffer_stream_get_current_buffer;
     mir_buffer_stream_get_platform_type;
@@ -175,12 +177,18 @@ MIR_CLIENT_8.4 {
     mir_screencast_get_buffer_stream;
     mir_buffer_stream_get_egl_native_window;
     mir_buffer_stream_get_graphics_region;
+    mir_connection_create_buffer_stream_sync;
+    mir_cursor_configuration_from_buffer_stream;
+    mir_buffer_stream_release;
+    mir_buffer_stream_release_sync;
+    mir_buffer_stream_is_valid;
 } MIR_CLIENT_8.3;
 
 MIR_CLIENT_DETAIL_8 {
   global:
     extern "C++" { 
       mir::events::make_event*;
+      mir::events::add_touch*;
       mir::input::android::Lexicon::translate*;
     }; 
 };

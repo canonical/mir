@@ -90,3 +90,8 @@ void ms::LegacySurfaceChangeNotification::client_surface_close_requested()
 void ms::LegacySurfaceChangeNotification::keymap_changed(xkb_rule_names const&)
 {
 }
+
+void ms::LegacySurfaceChangeNotification::renamed(char const*)
+{
+    notify_scene_change();
+}

@@ -16,8 +16,6 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
@@ -116,17 +114,6 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     size_t current_surface_count()
     {
         return surfaces.size();
-    }
-
-    MirEvent last_event{};
-    MirSurface* last_event_surface = nullptr;
-
-    static void event_callback(MirSurface* surface, MirEvent const* event,
-                               void* ctx)
-    {
-        ClientLibrary* self = static_cast<ClientLibrary*>(ctx);
-        self->last_event = *event;
-        self->last_event_surface = surface;
     }
 
     static void nosey_thread(MirSurface *surf)
@@ -273,11 +260,11 @@ TEST_F(ClientLibrary, can_set_surface_state)
     mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(999)));
     EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_fullscreen));
 
-    mir_wait_for(mir_surface_set_state(surface, mir_surface_state_minimized));
-    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_minimized));
+    mir_wait_for(mir_surface_set_state(surface, mir_surface_state_horizmaximized));
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_horizmaximized));
 
     mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(888)));
-    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_minimized));
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_horizmaximized));
 
     // Stress-test synchronization logic with some flooding
     for (int i = 0; i < 100; i++)
@@ -540,7 +527,7 @@ TEST_F(ClientLibrary, highly_threaded_client)
     b.join();
     c.join();
 
-    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_minimized));
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_fullscreen));
 
     mir_surface_release_sync(surface);
 

@@ -28,6 +28,23 @@ message SurfaceParameters {
   optional int32 edge_attachment = 12;
 }
 
+// If and when we break our protocol backward-compatibility, this could be
+// merged with SurfaceParameters...
+message SurfaceModifications {
+  required SurfaceId surface_id = 1;
+
+  optional string name = 2;
+
+  // TODO: Client API for resizing (LP: #1420573)
+  // optional int32 width = 3;
+  // optional int32 height = 4;
+
+  // TODO: We could use these to replace SurfaceSetting
+  // optional int32 type = 5;
+  // optional int32 state = 6;
+  // ...
+}
+
 message SurfaceId {
   required int32 value = 1;
 };
@@ -36,8 +53,15 @@ message BufferStreamId {
   required int32 value = 1;
 };
 
+message BufferStreamParameters {
+    required int32 width = 1;
+    required int32 height = 2;
+    required int32 pixel_format = 3;
+    required int32 buffer_usage = 4;
+};
+
 message BufferRequest {
-  optional SurfaceId id = 1;
+  optional BufferStreamId id = 1;
   optional Buffer buffer = 2;
 };
 
@@ -209,6 +233,10 @@ message CursorSetting {
   required SurfaceId surfaceid = 1;
   // No name is interpreted as disabled cursor.
   optional string name = 2;
+  // If we supply a buffer stream we must supply hotspot x and y
+  optional BufferStreamId buffer_stream = 3;
+  optional int32 hotspot_x = 4;
+  optional int32 hotspot_y = 5;
 }
 
 message SocketFDRequest {
@@ -240,6 +268,7 @@ service DisplayServer {
   rpc connect(ConnectParameters) returns (Connection);
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
+  rpc modify_surface(SurfaceModifications) returns (Void);
   rpc next_buffer(SurfaceId) returns (Buffer);
   rpc release_surface(SurfaceId) returns (Void);
 
@@ -253,6 +282,9 @@ service DisplayServer {
   rpc create_screencast(ScreencastParameters) returns (Screencast);
   rpc screencast_buffer(ScreencastId) returns (Buffer);
   rpc release_screencast(ScreencastId) returns (Void);
+
+  rpc create_buffer_stream(BufferStreamParameters) returns (BufferStream);
+  rpc release_buffer_stream(BufferStreamId) returns (Void);
 
   rpc configure_cursor(CursorSetting) returns (Void);
   rpc new_fds_for_prompt_providers(SocketFDRequest) returns (SocketFD);

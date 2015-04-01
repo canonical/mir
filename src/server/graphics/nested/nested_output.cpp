@@ -45,8 +45,7 @@ mgn::detail::NestedOutput::NestedOutput(
     dispatcher{dispatcher},
     egl_surface{egl_display, host_surface->egl_native_window(), egl_config}
 {
-    MirEventDelegate ed = {event_thunk, this};
-    host_surface->set_event_handler(&ed);
+    host_surface->set_event_handler(event_thunk, this);
 }
 
 geom::Rectangle mgn::detail::NestedOutput::view_area() const

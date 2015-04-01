@@ -43,6 +43,7 @@ public:
     void reception_mode_set_to(input::InputReceptionMode mode) override;
     void client_surface_close_requested() override;
     void keymap_changed(xkb_rule_names const& names) override;
+    void renamed(char const* name) override;
 
 protected:
     NullSurfaceObserver(NullSurfaceObserver const&) = delete;

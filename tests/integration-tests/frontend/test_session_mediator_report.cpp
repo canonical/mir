@@ -256,7 +256,7 @@ TEST_F(SessionMediatorReport, session_exchange_buffer_called)
             client.wait_for_create_surface();
 
             mir::protobuf::BufferRequest request;
-            *request.mutable_id() =  client.surface.id();
+            request.mutable_id()->set_value(client.surface.id().value());
             *request.mutable_buffer() =  client.surface.buffer();
 
             client.display_server.exchange_buffer(

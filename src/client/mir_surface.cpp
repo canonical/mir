@@ -72,6 +72,11 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
     }
 }
 
+MirSurfaceSpec::MirSurfaceSpec(MirSurface* preexisting)
+{
+    self = preexisting;
+}
+
 mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
 {
     mir::protobuf::SurfaceParameters message;
@@ -280,8 +285,20 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
     {
         std::unique_lock<decltype(mutex)> lock(mutex);
         setting.mutable_surfaceid()->CopyFrom(surface.id());
-        if (cursor && cursor->name != mir_disabled_cursor_name)
-            setting.set_name(cursor->name.c_str());
+        if (cursor)
+        {
+            if (cursor->stream != nullptr)
+            {
+                setting.mutable_buffer_stream()->set_value(cursor->stream->rpc_id().as_value());
+                setting.set_hotspot_x(cursor->hotspot_x);
+                setting.set_hotspot_y(cursor->hotspot_y);
+            }
+            else if (cursor->name != mir_disabled_cursor_name)
+            {
+                setting.set_name(cursor->name.c_str());
+            }
+
+        }
     }
     
     configure_cursor_wait_handle.expect_result();
@@ -413,17 +430,18 @@ int MirSurface::attrib(MirSurfaceAttrib at) const
     return attrib_cache[at];
 }
 
-void MirSurface::set_event_handler(MirEventDelegate const* delegate)
+void MirSurface::set_event_handler(mir_surface_event_callback callback,
+                                   void* context)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     input_thread.reset();
 
-    if (delegate)
+    if (callback)
     {
-        handle_event_callback = std::bind(delegate->callback, this,
+        handle_event_callback = std::bind(callback, this,
                                           std::placeholders::_1,
-                                          delegate->context);
+                                          context);
 
         if (surface.fd_size() > 0 && handle_event_callback)
         {
@@ -493,4 +511,35 @@ mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
     std::lock_guard<decltype(mutex)> lock(mutex);
     
     return buffer_stream.get();
+}
+
+void MirSurface::on_modified()
+{
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (modify_result.has_error())
+        {
+            // TODO return errors like lp:~vanvugt/mir/wait-result
+        }
+    }
+    modify_wait_handle.result_received();
+}
+
+MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
+{
+    mp::SurfaceModifications mods;
+
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        mods.mutable_surface_id()->set_value(surface.id().value());
+    }
+
+    if (spec.surface_name.is_set())
+        mods.set_name(spec.surface_name.value());
+
+    modify_wait_handle.expect_result();
+    server->modify_surface(0, &mods, &modify_result,
+              google::protobuf::NewCallback(this, &MirSurface::on_modified));
+
+    return &modify_wait_handle;
 }

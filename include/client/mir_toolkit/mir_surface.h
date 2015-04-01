@@ -319,10 +319,12 @@ MirSurface *mir_connection_create_surface_sync(
  *            called back in different threads, for the same surface,
  *            simultaneously.
  *   \param [in] surface        The surface
- *   \param [in] event_handler  The event handler to call
+ *   \param [in] callback       The callback function
+ *   \param [in] context        Additional argument to be passed to callback
  */
 void mir_surface_set_event_handler(MirSurface *surface,
-                                   MirEventDelegate const *event_handler);
+                                   mir_surface_event_callback callback,
+                                   void* context);
 
 /**
  * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,
@@ -570,6 +572,14 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
                                                             int width,
                                                             int height,
                                                             MirPixelFormat format);
+
+/**
+ * Change the title (name) of a surface.
+ *   \param [in] surface  The surface to rename
+ *   \param [in] name     The new name
+ *   \returns             When the change has completed
+ */
+MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name);
 
 #ifdef __cplusplus
 }

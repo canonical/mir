@@ -55,7 +55,7 @@ struct SessionTo
 /// I.e. should only be invoked by the policy handle_... methods (where any necessary locks are held).
 // TODO extract commonality with FocusController (once that's separated from shell::FocusController)
 template<typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManagerTools
+class BasicWindowManagerToolsCopy
 {
 public:
     virtual auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
@@ -79,10 +79,10 @@ public:
 
     virtual void raise(SurfaceSet const& surfaces) = 0;
 
-    virtual ~BasicWindowManagerTools() = default;
-    BasicWindowManagerTools() = default;
-    BasicWindowManagerTools(BasicWindowManagerTools const&) = delete;
-    BasicWindowManagerTools& operator=(BasicWindowManagerTools const&) = delete;
+    virtual ~BasicWindowManagerToolsCopy() = default;
+    BasicWindowManagerToolsCopy() = default;
+    BasicWindowManagerToolsCopy(BasicWindowManagerToolsCopy const&) = delete;
+    BasicWindowManagerToolsCopy& operator=(BasicWindowManagerToolsCopy const&) = delete;
 };
 
 /// A policy based window manager.
@@ -98,20 +98,20 @@ public:
 /// - void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface);
 /// - void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/);
 /// - int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value);
-/// - bool handle_key_event(MirKeyInputEvent const* event);
-/// - bool handle_touch_event(MirTouchInputEvent const* event);
-/// - bool handle_pointer_event(MirPointerInputEvent const* event);
+/// - bool handle_key_event(MirKeyboardEvent const* event);
+/// - bool handle_touch_event(MirTouchEvent const* event);
+/// - bool handle_pointer_event(MirPointerEvent const* event);
 ///
 /// \tparam SessionInfo must be default constructable.
 ///
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManager : public shell::WindowManager,
-    private BasicWindowManagerTools<SessionInfo, SurfaceInfo>
+class BasicWindowManagerCopy : public shell::WindowManager,
+    private BasicWindowManagerToolsCopy<SessionInfo, SurfaceInfo>
 {
 public:
     template <typename... PolicyArgs>
-    BasicWindowManager(
+    BasicWindowManagerCopy(
         shell::FocusController* focus_controller,
         PolicyArgs&&... policy_args) :
         focus_controller(focus_controller),
@@ -143,8 +143,10 @@ private:
         scene::SurfaceCreationParameters const placed_params = policy.handle_place_new_surface(session, params);
         auto const result = build(session, placed_params);
         auto const surface = session->surface(result);
-        policy.handle_new_surface(session, surface);
         surface_info.emplace(surface, SurfaceInfo{session, surface});
+        policy.handle_new_surface(session, surface);
+        for (auto& decoration : policy.generate_decorations_for(session, surface))
+            surface_info.emplace(decoration, SurfaceInfo{session, decoration});
         return result;
     }
 
@@ -172,19 +174,19 @@ private:
         policy.handle_displays_updated(session_info, displays);
     }
 
-    bool handle_key_event(MirKeyInputEvent const* event) override
+    bool handle_key_event(MirKeyboardEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         return policy.handle_key_event(event);
     }
 
-    bool handle_touch_event(MirTouchInputEvent const* event) override
+    bool handle_touch_event(MirTouchEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         return policy.handle_touch_event(event);
     }
 
-    bool handle_pointer_event(MirPointerInputEvent const* event) override
+    bool handle_pointer_event(MirPointerEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         return policy.handle_pointer_event(event);

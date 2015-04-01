@@ -56,7 +56,7 @@ struct TilingSurfaceInfo
 class TilingWindowManagerPolicy
 {
 public:
-    using Tools = BasicWindowManagerTools<TilingSessionInfo, TilingSurfaceInfo>;
+    using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo, TilingSurfaceInfo>;
     using TilingSessionInfoMap = typename SessionTo<TilingSessionInfo>::type;
 
     explicit TilingWindowManagerPolicy(Tools* const tools);
@@ -82,11 +82,14 @@ public:
 
     void drag(geometry::Point cursor);
 
-    bool handle_key_event(MirKeyInputEvent const* event);
+    bool handle_key_event(MirKeyboardEvent const* event);
 
-    bool handle_touch_event(MirTouchInputEvent const* event);
+    bool handle_touch_event(MirTouchEvent const* event);
 
-    bool handle_pointer_event(MirPointerInputEvent const* event);
+    bool handle_pointer_event(MirPointerEvent const* event);
+
+    std::vector<std::shared_ptr<scene::Surface>> generate_decorations_for(
+        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
 private:
     static const int modifier_mask =

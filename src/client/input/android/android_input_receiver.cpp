@@ -52,7 +52,11 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     android_clock(clock)
 {
-    event_rate_hz = 55;
+    /*
+     * 59Hz by default. This ensures the input rate never gets ahead of the
+     * typical display rate, which would be seen as visible lag.
+     */
+    event_rate_hz = 59;
     auto env = getenv("MIR_CLIENT_INPUT_RATE");
     if (env != NULL)
         event_rate_hz = atoi(env);
@@ -160,14 +164,6 @@ void mircva::InputReceiver::process_and_maybe_send_event()
      *      appearance of lower latency. Getting a real frame time from the
      *      graphics logic (which is messy) does not appear to be necessary to
      *      gain significant benefit.
-     *
-     * Note event_rate_hz is only 55Hz. This allows rendering to catch up and
-     * overtake the event rate every ~12th frame (200ms) on a 60Hz display.
-     * Thus on every 12th+1 frame, there will be zero buffer lag in responding
-     * to the cooked input event we have given the client.
-     * This phase control is useful as it eliminates the one frame of lag you
-     * would otherwise never catch up to if the event rate was exactly the same
-     * as the display refresh rate.
      */
 
     auto frame_time = std::chrono::nanoseconds(-1);

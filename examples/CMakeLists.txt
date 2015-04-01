@@ -21,7 +21,6 @@ add_library(exampleserverconfig STATIC
   server_example_input_event_filter.cpp
   server_example_log_options.cpp
   server_example_input_filter.cpp
-  server_example_fullscreen_placement_strategy.cpp
   server_example_host_lifecycle_event.cpp
   server_example_tiling_window_manager.cpp
   server_example_window_management.cpp
@@ -31,6 +30,13 @@ target_link_libraries(eglapp
   mirclient
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
+  )
+
+mir_add_wrapped_executable(mir_demo_client_animated_cursor
+  animated_cursor_demo_client.c
+)
+target_link_libraries(mir_demo_client_animated_cursor
+  eglapp
 )
 mir_add_wrapped_executable(mir_demo_client_eglflash
   eglflash.c

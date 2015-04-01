@@ -33,3 +33,4 @@ void ms::NullSurfaceObserver::reception_mode_set_to(input::InputReceptionMode /*
 void ms::NullSurfaceObserver::cursor_image_set_to(mg::CursorImage const& /*image*/) {}
 void ms::NullSurfaceObserver::client_surface_close_requested() {}
 void ms::NullSurfaceObserver::keymap_changed(xkb_rule_names const& /* names */) {}
+void ms::NullSurfaceObserver::renamed(char const*) {}

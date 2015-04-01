@@ -6,4 +6,5 @@ usr/bin/mir_performance_tests
 usr/lib/*/mir/tools/libmirclientlttng.so
 usr/lib/*/mir/tools/libmirserverlttng.so
 usr/lib/*/mir/server-platform/graphics-dummy.so
+usr/lib/*/mir/server-platform/input-stub.so
 usr/lib/*/mir/client-platform/dummy.so

@@ -43,3 +43,13 @@ void mir::report::lttng::InputReport::received_event_finished_signal(int src_fd,
 {
     mir_tracepoint(mir_server_input, received_event_finished_signal, src_fd, seq_id);
 }
+
+void mir::report::lttng::InputReport::opened_input_device(char const* name, char const* platform)
+{
+    mir_tracepoint(mir_server_input, opened_input_device, name, platform);
+}
+
+void mir::report::lttng::InputReport::failed_to_open_input_device(char const* name, char const* platform)
+{
+    mir_tracepoint(mir_server_input, failed_to_open_input_device, name, platform);
+}

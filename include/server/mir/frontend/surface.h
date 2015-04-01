@@ -20,9 +20,14 @@
 #ifndef MIR_FRONTEND_SURFACE_H_
 #define MIR_FRONTEND_SURFACE_H_
 
+#include "mir/frontend/buffer_stream.h"
 #include "mir/geometry/size.h"
-#include "mir_toolkit/common.h"
+#include "mir/geometry/displacement.h"
 
+#include "mir_toolkit/common.h"
+#include "mir/optional_value.h"
+
+#include <string>
 #include <memory>
 
 namespace mir
@@ -37,9 +42,15 @@ namespace frontend
 {
 class ClientBufferTracker;
 
-class Surface
+class Surface : public BufferStream
 {
 public:
+    struct Modifications
+    {
+        optional_value<std::string> name;
+        // TODO: type/state/size etc (LP: #1422522) (LP: #1420573)
+    };
+
     virtual ~Surface() = default;
 
     /// Size of the client area of the surface (excluding any decorations)
@@ -52,6 +63,14 @@ public:
     virtual int client_input_fd() const = 0;
 
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
+    virtual void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const& image,
+        geometry::Displacement const& hotspot) = 0;
+
+    /**
+     * Applies a bunch of modifications to the surface, all at once or
+     * not at all.
+     */
+    virtual bool modify(Modifications const&) = 0;
 
 protected:
     Surface() = default;

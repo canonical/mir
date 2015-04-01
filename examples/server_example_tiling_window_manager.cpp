@@ -112,6 +112,13 @@ auto me::TilingWindowManagerPolicy::handle_place_new_surface(
     return parameters;
 }
 
+std::vector<std::shared_ptr<ms::Surface>> me::TilingWindowManagerPolicy::generate_decorations_for(
+    std::shared_ptr<ms::Session> const&,
+    std::shared_ptr<ms::Surface> const&)
+{
+    return {};
+}
+
 void me::TilingWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
     tools->info_for(session).surfaces.push_back(surface);
@@ -226,13 +233,13 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
     old_cursor = cursor;
 }
 
-bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* event)
+bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyboardEvent const* event)
 {
-    auto const action = mir_key_input_event_get_action(event);
-    auto const scan_code = mir_key_input_event_get_scan_code(event);
-    auto const modifiers = mir_key_input_event_get_modifiers(event) & modifier_mask;
+    auto const action = mir_keyboard_event_action(event);
+    auto const scan_code = mir_keyboard_event_scan_code(event);
+    auto const modifiers = mir_keyboard_event_modifiers(event) & modifier_mask;
 
-    if (action == mir_key_input_event_action_down && scan_code == KEY_F11)
+    if (action == mir_keyboard_action_down && scan_code == KEY_F11)
     {
         switch (modifiers & modifier_mask)
         {
@@ -252,7 +259,7 @@ bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* eve
             break;
         }
     }
-    else if (action == mir_key_input_event_action_down && scan_code == KEY_F4)
+    else if (action == mir_keyboard_action_down && scan_code == KEY_F4)
     {
         if (auto const session = tools->focused_session())
         {
@@ -278,17 +285,17 @@ bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* eve
     return false;
 }
 
-bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchInputEvent const* event)
+bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
 {
-    auto const count = mir_touch_input_event_get_touch_count(event);
+    auto const count = mir_touch_event_point_count(event);
 
     long total_x = 0;
     long total_y = 0;
 
     for (auto i = 0U; i != count; ++i)
     {
-        total_x += mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_x);
-        total_y += mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_y);
+        total_x += mir_touch_event_axis_value(event, i, mir_touch_axis_x);
+        total_y += mir_touch_event_axis_value(event, i, mir_touch_axis_y);
     }
 
     Point const cursor{total_x/count, total_y/count};
@@ -296,15 +303,15 @@ bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchInputEvent const*
     bool is_drag = true;
     for (auto i = 0U; i != count; ++i)
     {
-        switch (mir_touch_input_event_get_touch_action(event, i))
+        switch (mir_touch_event_action(event, i))
         {
-        case mir_touch_input_event_action_up:
+        case mir_touch_action_up:
             return false;
 
-        case mir_touch_input_event_action_down:
+        case mir_touch_action_down:
             is_drag = false;
 
-        case mir_touch_input_event_action_change:
+        case mir_touch_action_change:
             continue;
         }
     }
@@ -321,29 +328,29 @@ bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchInputEvent const*
     }
 }
 
-bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerInputEvent const* event)
+bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* event)
 {
-    auto const action = mir_pointer_input_event_get_action(event);
-    auto const modifiers = mir_pointer_input_event_get_modifiers(event) & modifier_mask;
+    auto const action = mir_pointer_event_action(event);
+    auto const modifiers = mir_pointer_event_modifiers(event) & modifier_mask;
     Point const cursor{
-        mir_pointer_input_event_get_axis_value(event, mir_pointer_input_axis_x),
-        mir_pointer_input_event_get_axis_value(event, mir_pointer_input_axis_y)};
+        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
-    if (action == mir_pointer_input_event_action_button_down)
+    if (action == mir_pointer_action_button_down)
     {
         click(cursor);
         return false;
     }
-    else if (action == mir_pointer_input_event_action_motion &&
+    else if (action == mir_pointer_action_motion &&
              modifiers == mir_input_event_modifier_alt)
     {
-        if (mir_pointer_input_event_get_button_state(event, mir_pointer_input_button_primary))
+        if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
         {
             drag(cursor);
             return true;
         }
 
-        if (mir_pointer_input_event_get_button_state(event, mir_pointer_input_button_tertiary))
+        if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
         {
             resize(cursor);
             return true;

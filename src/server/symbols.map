@@ -47,6 +47,12 @@ MIR_SERVER_31 {
     mir::input::EventFilter::operator*;
     mir::input::InputChannel::InputChannel*;
     mir::input::InputChannel::operator*;
+    mir::input::InputDeviceHub::?InputDeviceHub*;
+    mir::input::InputDeviceHub::InputDeviceHub*;
+    mir::input::InputDeviceHub::operator*;
+    mir::input::InputDeviceObserver::?InputDeviceObserver*;
+    mir::input::InputDeviceObserver::InputDeviceObserver*;
+    mir::input::InputDeviceObserver::operator*;
     mir::input::InputDispatcher::?InputDispatcher*;
     mir::input::InputManager::InputManager*;
     mir::input::InputManager::operator*;
@@ -80,6 +86,7 @@ MIR_SERVER_31 {
     mir::scene::NullSurfaceObserver::reception_mode_set_to*;
     mir::scene::NullSurfaceObserver::resized_to*;
     mir::scene::NullSurfaceObserver::transformation_set_to*;
+    mir::scene::NullSurfaceObserver::renamed*;
     mir::scene::Observer::?Observer*;
     mir::scene::Observer::Observer*;
     mir::scene::Observer::operator*;
@@ -152,6 +159,7 @@ MIR_SERVER_31 {
     mir::Server::override_the_session_mediator_report*;
     mir::Server::override_the_shell*;
     mir::Server::override_the_surface_configurator*;
+    mir::Server::override_the_window_manager_builder*;
     mir::Server::run*;
     mir::Server::Server*;
     mir::Server::set_command_line*;
@@ -172,6 +180,7 @@ MIR_SERVER_31 {
     mir::Server::the_focus_controller*;
     mir::Server::the_gl_config*;
     mir::Server::the_graphics_platform*;
+    mir::Server::the_input_device_hub*;
     mir::Server::the_input_targeter*;
     mir::Server::the_logger*;
     mir::Server::the_main_loop*;
@@ -221,16 +230,6 @@ MIR_SERVER_31 {
     mir::shell::InputTargeter::?InputTargeter*;
     mir::shell::InputTargeter::InputTargeter*;
     mir::shell::InputTargeter::operator*;
-    mir::shell::NullWindowManager::add_display*;
-    mir::shell::NullWindowManager::add_session*;
-    mir::shell::NullWindowManager::add_surface*;
-    mir::shell::NullWindowManager::handle_key_event*;
-    mir::shell::NullWindowManager::handle_pointer_event*;
-    mir::shell::NullWindowManager::handle_touch_event*;
-    mir::shell::NullWindowManager::remove_display*;
-    mir::shell::NullWindowManager::remove_session*;
-    mir::shell::NullWindowManager::remove_surface*;
-    mir::shell::NullWindowManager::set_surface_attribute*;
     mir::shell::ShellWrapper::add_display*;
     mir::shell::ShellWrapper::add_prompt_provider_for*;
     mir::shell::ShellWrapper::close_session*;
@@ -270,6 +269,8 @@ MIR_SERVER_31 {
     non-virtual?thunk?to?mir::input::CursorImages::?CursorImages*;
     non-virtual?thunk?to?mir::input::CursorListener::?CursorListener*;
     non-virtual?thunk?to?mir::input::EventFilter::?EventFilter*;
+    non-virtual?thunk?to?mir::input::InputDeviceHub::?InputDeviceHub*;
+    non-virtual?thunk?to?mir::input::InputDeviceObserver::?InputDeviceObserver*;
     non-virtual?thunk?to?mir::input::InputDispatcher::?InputDispatcher*;
     non-virtual?thunk?to?mir::input::Surface::?Surface*;
     non-virtual?thunk?to?mir::input::TouchVisualizer::?TouchVisualizer*;
@@ -323,16 +324,6 @@ MIR_SERVER_31 {
     non-virtual?thunk?to?mir::shell::FocusController::?FocusController*;
     non-virtual?thunk?to?mir::shell::HostLifecycleEventListener::?HostLifecycleEventListener*;
     non-virtual?thunk?to?mir::shell::InputTargeter::?InputTargeter*;
-    non-virtual?thunk?to?mir::shell::NullWindowManager::add_display*;
-    non-virtual?thunk?to?mir::shell::NullWindowManager::add_session*;
-    non-virtual?thunk?to?mir::shell::NullWindowManager::add_surface*;
-    non-virtual?thunk?to?mir::shell::NullWindowManager::handle_key_event*;
-    non-virtual?thunk?to?mir::shell::NullWindowManager::handle_pointer_event*;
-    non-virtual?thunk?to?mir::shell::NullWindowManager::handle_touch_event*;
-    non-virtual?thunk?to?mir::shell::NullWindowManager::remove_display*;
-    non-virtual?thunk?to?mir::shell::NullWindowManager::remove_session*;
-    non-virtual?thunk?to?mir::shell::NullWindowManager::remove_surface*;
-    non-virtual?thunk?to?mir::shell::NullWindowManager::set_surface_attribute*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::add_display*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::add_prompt_provider_for*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::close_session*;
@@ -370,6 +361,8 @@ MIR_SERVER_31 {
     typeinfo?for?mir::input::CursorListener;
     typeinfo?for?mir::input::EventFilter;
     typeinfo?for?mir::input::InputChannel;
+    typeinfo?for?mir::input::InputDeviceHub;
+    typeinfo?for?mir::input::InputDeviceObserver;
     typeinfo?for?mir::input::InputDispatcher;
     typeinfo?for?mir::input::InputManager;
     typeinfo?for?mir::input::Surface;
@@ -404,7 +397,6 @@ MIR_SERVER_31 {
     typeinfo?for?mir::shell::FocusController;
     typeinfo?for?mir::shell::HostLifecycleEventListener;
     typeinfo?for?mir::shell::InputTargeter;
-    typeinfo?for?mir::shell::NullWindowManager;
     typeinfo?for?mir::shell::Shell;
     typeinfo?for?mir::shell::ShellWrapper;
     typeinfo?for?mir::shell::WindowManager;
@@ -426,6 +418,8 @@ MIR_SERVER_31 {
     vtable?for?mir::input::CursorListener;
     vtable?for?mir::input::EventFilter;
     vtable?for?mir::input::InputChannel;
+    vtable?for?mir::input::InputDeviceHub;
+    vtable?for?mir::input::InputDeviceObserver;
     vtable?for?mir::input::InputDispatcher;
     vtable?for?mir::input::InputManager;
     vtable?for?mir::input::Surface;
@@ -460,7 +454,6 @@ MIR_SERVER_31 {
     vtable?for?mir::shell::FocusController;
     vtable?for?mir::shell::HostLifecycleEventListener;
     vtable?for?mir::shell::InputTargeter;
-    vtable?for?mir::shell::NullWindowManager;
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellWrapper;
     vtable?for?mir::shell::WindowManager;
@@ -509,6 +502,21 @@ MIR_SERVER_31 {
     vtable?for?mir::compositor::RecentlyUsedCache;
 
 # these symbols are needed by the test framework but are not intended to be public
+    mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
+    mir::shell::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_place_new_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_new_surface*;
+    mir::shell::CanonicalSurfaceInfo::CanonicalSurfaceInfo*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_delete_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_key_event*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
+    mir::shell::DefaultWindowManager::DefaultWindowManager*;
+
     mir::DefaultServerConfiguration::clock*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
     mir::DefaultServerConfiguration::is_key_repeat_enabled*;
@@ -549,11 +557,15 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
     mir::DefaultServerConfiguration::the_input_channel_factory*;
+    mir::DefaultServerConfiguration::the_input_device_hub*;
+    mir::DefaultServerConfiguration::the_input_device_registry*;
     mir::DefaultServerConfiguration::the_input_dispatcher*;
     mir::DefaultServerConfiguration::the_input_manager*;
+    mir::DefaultServerConfiguration::the_input_platform*;
     mir::DefaultServerConfiguration::the_input_reader*;
     mir::DefaultServerConfiguration::the_input_reader_policy*;
     mir::DefaultServerConfiguration::the_input_reader_thread*;
+    mir::DefaultServerConfiguration::the_input_reading_multiplexer*;
     mir::DefaultServerConfiguration::the_input_region*;
     mir::DefaultServerConfiguration::the_input_registrar*;
     mir::DefaultServerConfiguration::the_input_report*;
@@ -567,6 +579,7 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;
     mir::DefaultServerConfiguration::the_message_processor_report*;
+    mir::DefaultServerConfiguration::the_new_input_manager*;
     mir::DefaultServerConfiguration::the_options*;
     mir::DefaultServerConfiguration::the_pixel_buffer*;
     mir::DefaultServerConfiguration::the_placement_strategy*;
@@ -597,6 +610,7 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_surface_factory*;
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
+    mir::DefaultServerConfiguration::the_window_manager_builder*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
     mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;

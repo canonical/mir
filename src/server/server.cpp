@@ -53,15 +53,13 @@ namespace mo = mir::options;
     MACRO(host_lifecycle_event_listener)\
     MACRO(input_dispatcher)\
     MACRO(logger)\
-    MACRO(placement_strategy)\
     MACRO(prompt_session_listener)\
     MACRO(prompt_session_manager)\
     MACRO(server_status_listener)\
     MACRO(session_authorizer)\
     MACRO(session_listener)\
     MACRO(session_mediator_report)\
-    MACRO(shell)\
-    MACRO(surface_configurator)
+    MACRO(shell)
 
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_compositor)\
@@ -82,9 +80,9 @@ namespace mo = mir::options;
     MACRO(the_prompt_session_manager)\
     MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
-    MACRO(the_surface_configurator)\
     MACRO(the_surface_coordinator)\
-    MACRO(the_touch_visualizer)
+    MACRO(the_touch_visualizer)\
+    MACRO(the_input_device_hub)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
@@ -118,6 +116,8 @@ struct mir::Server::Self
         [](options::DefaultConfiguration&){}};
 
     FOREACH_OVERRIDE(MIR_SERVER_BUILDER)
+
+    shell::WindowManagerBuilder wmb;
 
     FOREACH_WRAPPER(MIR_SERVER_WRAPPER)
 };
@@ -208,6 +208,12 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     FOREACH_OVERRIDE(MIR_SERVER_CONFIG_OVERRIDE)
 
     FOREACH_WRAPPER(MIR_SERVER_CONFIG_WRAP)
+
+    auto the_window_manager_builder() -> shell::WindowManagerBuilder override
+    {
+        if (self->wmb) return self->wmb;
+        return mir::DefaultServerConfiguration::the_window_manager_builder();
+    }
 
     Self* const self;
 };
@@ -449,6 +455,12 @@ void mir::Server::override_the_##name(decltype(Self::name##_builder) const& valu
 FOREACH_OVERRIDE(MIR_SERVER_OVERRIDE)
 
 #undef MIR_SERVER_OVERRIDE
+
+void mir::Server::override_the_window_manager_builder(shell::WindowManagerBuilder const wmb)
+{
+    verify_setting_allowed(self->server_config);
+    self->wmb = wmb;
+}
 
 #define MIR_SERVER_WRAP(name)\
 void mir::Server::wrap_##name(decltype(Self::name##_wrapper) const& value)\

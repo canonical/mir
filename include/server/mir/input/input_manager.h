@@ -21,14 +21,18 @@
 #ifndef MIR_INPUT_INPUT_MANAGER_H_
 #define MIR_INPUT_INPUT_MANAGER_H_
 
+#include <memory>
+
 namespace mir
 {
 namespace input
 {
+class Platform;
 
 class InputManager
 {
 public:
+    virtual void add_platform(std::shared_ptr<Platform> const& platform) = 0;
     virtual void start() = 0;
     virtual void stop() = 0;
 

@@ -21,7 +21,8 @@
 
 
 #include "default_placement_strategy.h"
-#include "default_window_manager.h"
+#include "canonical_window_manager.h"
+#include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
 #include "frontend_shell.h"
 #include "graphics_display_layout.h"
@@ -35,25 +36,25 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 {
     return shell([this]
         {
-            auto const input_targeter = the_input_targeter();
-            auto const surface_coordinator = the_surface_coordinator();
-            auto const session_coordinator = the_session_coordinator();
-            auto const prompt_session_manager = the_prompt_session_manager();
+            auto const result = wrap_shell(std::make_shared<msh::AbstractShell>(
+                the_input_targeter(),
+                the_surface_coordinator(),
+                the_session_coordinator(),
+                the_prompt_session_manager(),
+                the_window_manager_builder()));
 
-            auto const builder = [&](msh::FocusController* focus_controller)
-                { return std::make_shared<msh::DefaultWindowManager>(
-                    focus_controller,
-                    the_placement_strategy(),
-                    session_coordinator,
-                    the_surface_configurator()); };
+            the_composite_event_filter()->prepend(result);
 
-            return wrap_shell(std::make_shared<msh::AbstractShell>(
-                input_targeter,
-                surface_coordinator,
-                session_coordinator,
-                prompt_session_manager,
-                builder));
+            return result;
         });
+}
+
+auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
+{
+    return [this](msh::FocusController* focus_controller)
+        { return std::make_shared<msh::CanonicalWindowManager>(
+            focus_controller,
+            the_shell_display_layout()); };
 }
 
 auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) -> std::shared_ptr<msh::Shell>

@@ -57,6 +57,7 @@ char const* const mo::log_opt_value = "log";
 char const* const mo::lttng_opt_value = "lttng";
 
 char const* const mo::platform_graphics_lib = "platform-graphics-lib";
+char const* const mo::platform_input_lib = "platform-input-lib";
 char const* const mo::platform_path = "platform-path";
 
 namespace
@@ -123,6 +124,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (prompt_socket_opt, "Provide a \"..._trusted\" filename for prompt helper connections")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support (default: autodetect)")
+        (platform_input_lib, po::value<std::string>(),
+            "Library to use for platform input support (default: input-stub.so)")
         (platform_path, po::value<std::string>()->default_value(MIR_SERVER_PLATFORM_PATH),
             "Directory to look for platform libraries (default: " MIR_SERVER_PLATFORM_PATH ")")
         (enable_input_opt, po::value<bool>()->default_value(enable_input_default),

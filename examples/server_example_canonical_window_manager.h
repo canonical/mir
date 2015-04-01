@@ -31,14 +31,14 @@ namespace mir
 namespace shell { class DisplayLayout; }
 namespace examples
 {
-struct CanonicalSessionInfo
+struct CanonicalSessionInfoCopy
 {
     int surfaces{0};
 };
 
-struct CanonicalSurfaceInfo
+struct CanonicalSurfaceInfoCopy
 {
-    CanonicalSurfaceInfo(
+    CanonicalSurfaceInfoCopy(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface);
 
@@ -47,6 +47,7 @@ struct CanonicalSurfaceInfo
     std::weak_ptr<scene::Session> session;
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
+    std::shared_ptr<scene::Surface> decoration;
 };
 
 // standard window management algorithm:
@@ -57,13 +58,13 @@ struct CanonicalSurfaceInfo
 //  o Maximize/restore current window (to display height): Shift-F11
 //  o Maximize/restore current window (to display width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class CanonicalWindowManagerPolicy
+class CanonicalWindowManagerPolicyCopy
 {
 public:
-    using Tools = BasicWindowManagerTools<CanonicalSessionInfo, CanonicalSurfaceInfo>;
-    using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfo>::type;
+    using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy, CanonicalSurfaceInfoCopy>;
+    using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfoCopy>::type;
 
-    explicit CanonicalWindowManagerPolicy(
+    explicit CanonicalWindowManagerPolicyCopy(
         Tools* const tools,
         std::shared_ptr<shell::DisplayLayout> const& display_layout);
 
@@ -88,11 +89,14 @@ public:
 
     void drag(geometry::Point cursor);
 
-    bool handle_key_event(MirKeyInputEvent const* event);
+    bool handle_key_event(MirKeyboardEvent const* event);
 
-    bool handle_touch_event(MirTouchInputEvent const* event);
+    bool handle_touch_event(MirTouchEvent const* event);
 
-    bool handle_pointer_event(MirPointerInputEvent const* event);
+    bool handle_pointer_event(MirPointerEvent const* event);
+
+    std::vector<std::shared_ptr<scene::Surface>> generate_decorations_for(
+        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
 private:
     static const int modifier_mask =

@@ -90,3 +90,8 @@ void mc::TemporaryBuffer::write(unsigned char const*, size_t)
     BOOST_THROW_EXCEPTION(
         std::runtime_error("Write to temporary buffer snapshot is ill advised and indicates programmer error"));
 }
+
+void mc::TemporaryBuffer::read(std::function<void(unsigned char const*)> const& exec)
+{
+    buffer->read(exec);
+}

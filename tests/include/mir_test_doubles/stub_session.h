@@ -38,6 +38,18 @@ struct StubSession : public frontend::Session
     {
         return std::string();
     }
+
+    std::shared_ptr<frontend::BufferStream> get_buffer_stream(frontend::BufferStreamId) const override
+    {
+        return nullptr;
+    }
+    void destroy_buffer_stream(frontend::BufferStreamId) override
+    {
+    }
+    frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const&) override
+    {
+        return frontend::BufferStreamId();
+    }
 };
 
 }

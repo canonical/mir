@@ -54,6 +54,7 @@ class Surface;
 namespace scene
 {
 class SceneReport;
+class CursorStreamImageAdapter;
 
 class SurfaceObservers : public SurfaceObserver, BasicObservers<SurfaceObserver>
 {
@@ -73,6 +74,7 @@ public:
     void cursor_image_set_to(graphics::CursorImage const& image) override;
     void client_surface_close_requested() override;
     void keymap_changed(xkb_rule_names const& names) override;
+    void renamed(char const*) override;
 };
 
 class BasicSurface : public Surface
@@ -154,6 +156,11 @@ public:
     void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override;
     std::shared_ptr<graphics::CursorImage> cursor_image() const override;
 
+    void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const& stream,
+                           geometry::Displacement const& hotspot) override;
+    void set_cursor_from_buffer(graphics::Buffer& buffer,
+                                geometry::Displacement const& hotspot);
+
     void request_client_surface_close() override;
 
     std::shared_ptr<Surface> parent() const override;
@@ -164,6 +171,8 @@ public:
     int dpi() const;
 
     void set_keymap(xkb_rule_names const& rules) override;
+
+    bool modify(Modifications const&) override;
 
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
@@ -177,7 +186,7 @@ private:
 
     SurfaceObservers observers;
     std::mutex mutable guard;
-    std::string const surface_name;
+    std::string surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;
     float surface_alpha;
@@ -201,6 +210,8 @@ private:
     int dpi_ = 0;
     MirSurfaceVisibility visibility_ = mir_surface_visibility_exposed;
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
+
+    std::unique_ptr<CursorStreamImageAdapter> cursor_stream_adapter;
 };
 
 }
