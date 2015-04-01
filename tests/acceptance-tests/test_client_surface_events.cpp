@@ -69,7 +69,6 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
     std::condition_variable last_event_cv;
     MirEvent const* last_event = nullptr;
     MirSurface* last_event_surface = nullptr;
-    MirEventDelegate delegate{&event_callback, this};
 
     std::shared_ptr<ms::Surface> scene_surface;
 
@@ -138,12 +137,12 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 
         mtf::ConnectedClientWithASurface::SetUp();
 
-        mir_surface_set_event_handler(surface, &delegate);
+        mir_surface_set_event_handler(surface, &event_callback, this);
 
         scene_surface = the_latest_surface();
 
         other_surface = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(other_surface, nullptr);
+        mir_surface_set_event_handler(other_surface, nullptr, nullptr);
 
         reset_last_event();
     }
@@ -164,7 +163,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
 {
     {
         mir_wait_for(mir_surface_set_state(surface, mir_surface_state_fullscreen));
-        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_minimized));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_vertmaximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
@@ -181,11 +180,22 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     reset_last_event();
 
     {
-        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_minimized));
+        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_vertmaximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-        EXPECT_THAT(last_event, mt::SurfaceEvent(mir_surface_attrib_state, mir_surface_state_minimized));
+        EXPECT_THAT(last_event, mt::SurfaceEvent(mir_surface_attrib_state, mir_surface_state_vertmaximized));
+    }
+
+    reset_last_event();
+
+    {
+        mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(777)));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_maximized));
+
+        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+
+        EXPECT_EQ(nullptr, last_event);
     }
 }
 

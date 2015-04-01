@@ -23,7 +23,7 @@
 
 namespace mir
 {
-namespace scene { class PlacementStrategy; class SurfaceConfigurator; class SessionCoordinator; }
+namespace scene { class PlacementStrategy; class SessionCoordinator; }
 
 namespace shell
 {
@@ -34,8 +34,7 @@ class DefaultWindowManager : public WindowManager
 public:
     explicit DefaultWindowManager(FocusController* focus_controller,
         std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
-        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<scene::SurfaceConfigurator> const& surface_configurator);
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
 
     void add_session(std::shared_ptr<scene::Session> const& session) override;
 
@@ -54,11 +53,11 @@ public:
 
     void remove_display(geometry::Rectangle const& area) override;
 
-    bool handle_key_event(MirKeyInputEvent const* event) override;
+    bool handle_key_event(MirKeyboardEvent const* event) override;
 
-    bool handle_touch_event(MirTouchInputEvent const* event) override;
+    bool handle_touch_event(MirTouchEvent const* event) override;
 
-    bool handle_pointer_event(MirPointerInputEvent const* event) override;
+    bool handle_pointer_event(MirPointerEvent const* event) override;
 
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
@@ -70,7 +69,6 @@ private:
     FocusController* const focus_controller;
     std::shared_ptr<scene::PlacementStrategy> const placement_strategy;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
-    std::shared_ptr<scene::SurfaceConfigurator> const surface_configurator;
 };
 }
 }

@@ -88,8 +88,6 @@ private:
     bool mutable configuration_dirty{false};
     std::unique_ptr<HwcConfiguration> const hwc_config;
     ConfigChangeSubscription const hotplug_subscription;
-    DisplayAttribs const primary_attribs; //TODO: could be removed, really only useful in construction
-    DisplayAttribs mutable external_attribs; //TODO: could be removed, really only useful in construction
     DisplayConfiguration mutable config;
     PbufferGLContext gl_context;
     std::shared_ptr<DisplayDevice> display_device;

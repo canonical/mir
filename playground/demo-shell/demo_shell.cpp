@@ -20,10 +20,8 @@
 
 #include "demo_compositor.h"
 #include "window_manager.h"
-#include "server_example_fullscreen_placement_strategy.h"
 #include "../server_configuration.h"
 
-#include "mir/options/default_configuration.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
 #include "mir/graphics/display.h"
@@ -31,6 +29,7 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/destination_alpha.h"
 #include "mir/compositor/renderer_factory.h"
+#include "mir/shell/default_window_manager.h"
 #include "server_example_host_lifecycle_event_listener.h"
 
 #include <iostream>
@@ -40,7 +39,6 @@ namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
-namespace mo = mir::options;
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
 
@@ -74,17 +72,7 @@ class DemoServerConfiguration : public mir::examples::ServerConfiguration
 public:
     DemoServerConfiguration(int argc, char const* argv[],
                             std::initializer_list<std::shared_ptr<mi::EventFilter>> const& filter_list)
-      : ServerConfiguration([argc, argv]
-        {
-            auto result = std::make_shared<mo::DefaultConfiguration>(argc, argv);
-
-            namespace po = boost::program_options;
-
-            result->add_options()
-                ("fullscreen-surfaces", "Make all surfaces fullscreen");
-
-            return result;
-        }()),
+      : ServerConfiguration(argc, argv),
         filter_list(filter_list)
     {
     }
@@ -100,25 +88,26 @@ public:
             });
     }
 
-    std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
+    std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
     {
-        return placement_strategy(
-            [this]() -> std::shared_ptr<ms::PlacementStrategy>
+        return composite_event_filter(
+            [this]() -> std::shared_ptr<mi::CompositeEventFilter>
             {
-                if (the_options()->is_set("fullscreen-surfaces"))
-                    return std::make_shared<me::FullscreenPlacementStrategy>(the_shell_display_layout());
-                else
-                    return DefaultServerConfiguration::the_placement_strategy();
+                auto composite_filter = ServerConfiguration::the_composite_event_filter();
+                for (auto const& filter : filter_list)
+                    composite_filter->append(filter);
+
+                return composite_filter;
             });
     }
 
-    std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
+    auto the_window_manager_builder() -> shell::WindowManagerBuilder override
     {
-        auto composite_filter = ServerConfiguration::the_composite_event_filter();
-        for (auto const& filter : filter_list)
-            composite_filter->append(filter);
-
-        return composite_filter;
+        return [&](shell::FocusController* focus_controller)
+            { return std::make_shared<shell::DefaultWindowManager>(
+                focus_controller,
+                the_placement_strategy(),
+                the_session_coordinator()); };
     }
 
     std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override

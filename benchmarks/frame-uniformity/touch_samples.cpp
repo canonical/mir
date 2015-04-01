@@ -39,19 +39,19 @@ void TouchSamples::record_pointer_coordinates(std::chrono::high_resolution_clock
     auto iev = mir_event_get_input_event(&event);
     if (mir_input_event_get_type(iev) != mir_input_event_type_touch)
         return;
-    auto tev = mir_input_event_get_touch_input_event(iev);
+    auto tev = mir_input_event_get_touch_event(iev);
 
     // We could support multitouch, etc...
     size_t touch_index = 0;
-    auto action = mir_touch_input_event_get_touch_action(tev, touch_index);
-    if (action != mir_touch_input_event_action_down &&
-        action != mir_touch_input_event_action_up &&
-        action != mir_touch_input_event_action_change)
+    auto action = mir_touch_event_action(tev, touch_index);
+    if (action != mir_touch_action_down &&
+        action != mir_touch_action_up &&
+        action != mir_touch_action_change)
     {
         return;
     }
-    auto x = mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_x);
-    auto y = mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_y);
+    auto x = mir_touch_event_axis_value(tev, 0, mir_touch_axis_x);
+    auto y = mir_touch_event_axis_value(tev, 0, mir_touch_axis_y);
     // TODO: Record both event time and reception time
     samples_being_prepared.push_back(Sample{x, y, reception_time, {}});
 }

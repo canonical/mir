@@ -103,6 +103,24 @@ set_target_properties(
   LINK_FLAGS "-Wl,--version-script,${symbol_map}"
 )
 
+add_library(
+  mirplatforminputstub MODULE
+  
+  stub_input.cpp
+  fake_input_device_impl.cpp
+  stub_input_platform.cpp
+  )
+
+set_target_properties(
+  mirplatforminputstub PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/server-modules
+  OUTPUT_NAME input-stub
+  PREFIX ""
+  LINK_FLAGS "-Wl,--version-script,${CMAKE_CURRENT_SOURCE_DIR}/symbols-stub-input.map"
+)
+
+install(TARGETS mirplatforminputstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
+
 set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map)
 add_library(
   mirplatformgraphicsstub MODULE

@@ -232,15 +232,22 @@ struct SimpleClient
     void connect()
     {
         connection = mir_connect_sync(mir_test_socket.c_str(), __PRETTY_FUNCTION__);
+
+        auto const spec = mir_connection_create_spec_for_normal_surface(connection, 100, 100, mir_pixel_format_abgr_8888);
+        surface = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     }
 
     void disconnect()
     {
+        mir_surface_release_sync(surface);
         mir_connection_release(connection);
     }
 
     std::string mir_test_socket;
     MirConnection* connection{nullptr};
+    MirSurface* surface{nullptr};
 };
 
 struct DisplayClient : SimpleClient
@@ -282,16 +289,15 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
 {
     EXPECT_CALL(mock_display, configure(_)).Times(0);
 
-    DisplayClient display_client{new_connection()};
     SimpleClient simple_client{new_connection()};
-
-    display_client.connect();
 
     /* Connect the simple client. After this the simple client should have the focus. */
     simple_client.connect();
 
     /* Apply the display config while not focused */
-    display_client.apply_config();
+    auto const configuration = mir_connection_create_display_config(connection);
+    mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+    mir_display_config_destroy(configuration);
 
     wait_for_server_actions_to_finish(*server.the_main_loop());
     testing::Mock::VerifyAndClearExpectations(&mock_display);
@@ -306,8 +312,6 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
 
     wait_for_server_actions_to_finish(*server.the_main_loop());
     testing::Mock::VerifyAndClearExpectations(&mock_display);
-
-    display_client.disconnect();
 }
 
 TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_client_without_config_configures_display)

@@ -27,10 +27,10 @@ namespace mir
 {
 namespace graphics
 {
+class DisplayConfigurationOutput;
 namespace android
 {
 class HwcConfiguration;
-class DisplayAttribs;
 
 //TODO: this name needs improvement.
 class DisplayComponentFactory
@@ -38,7 +38,7 @@ class DisplayComponentFactory
 public:
     virtual ~DisplayComponentFactory() = default;
 
-    virtual std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayAttribs const&) = 0;
+    virtual std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayConfigurationOutput const&) = 0;
     virtual std::unique_ptr<DisplayDevice> create_display_device() = 0;
     virtual std::unique_ptr<HwcConfiguration> create_hwc_configuration() = 0;
     virtual std::unique_ptr<LayerList> create_layer_list() = 0;

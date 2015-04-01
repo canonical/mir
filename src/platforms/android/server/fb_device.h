@@ -36,7 +36,7 @@ class FbControl : public HwcConfiguration
 public:
     FbControl(std::shared_ptr<framebuffer_device_t> const& fbdev);
     void power_mode(DisplayName, MirPowerMode) override;
-    DisplayAttribs active_attribs_for(DisplayName) override;
+    DisplayConfigurationOutput active_config_for(DisplayName) override;
     ConfigChangeSubscription subscribe_to_config_changes(
         std::function<void()> const& hotplug_cb,
         std::function<void(DisplayName)> const& vsync_cb) override;

@@ -68,7 +68,7 @@ TEST_F(HwcConfiguration, fb_format_selection)
         .InSequence(seq);
 
     mga::HwcBlankingControl hwc_config{mock_hwc_wrapper};
-    EXPECT_EQ(mir_pixel_format_argb_8888, hwc_config.active_attribs_for(mga::DisplayName::primary).display_format);
+    EXPECT_EQ(mir_pixel_format_argb_8888, hwc_config.active_config_for(mga::DisplayName::primary).current_format);
 }
 
 //not all hwc implementations give a hint about their framebuffer formats in their configuration.
@@ -92,7 +92,7 @@ TEST_F(HwcConfiguration, format_selection_failure_default)
         .InSequence(seq);
 
     mga::HwcBlankingControl hwc_config{mock_hwc_wrapper};
-    EXPECT_EQ(mir_pixel_format_abgr_8888, hwc_config.active_attribs_for(mga::DisplayName::primary).display_format);
+    EXPECT_EQ(mir_pixel_format_abgr_8888, hwc_config.active_config_for(mga::DisplayName::primary).current_format);
 }
 
 TEST_F(HwcConfiguration, turns_screen_on)
@@ -173,11 +173,13 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
             }));
 
     auto vrefresh_hz = 1000.0 / vrefresh_period.count();
-    auto attribs = config.active_attribs_for(display);
-    EXPECT_THAT(attribs.pixel_size, Eq(px_size));
-    EXPECT_THAT(attribs.mm_size, Eq(mm_size));
-    EXPECT_THAT(attribs.vrefresh_hz, Eq(vrefresh_hz));
+    auto attribs = config.active_config_for(display);
+    ASSERT_THAT(attribs.modes.size(), Eq(1));
+    EXPECT_THAT(attribs.modes[0].size, Eq(px_size));
+    EXPECT_THAT(attribs.modes[0].vrefresh_hz, Eq(vrefresh_hz));
+    EXPECT_THAT(attribs.physical_size_mm, Eq(mm_size));
     EXPECT_TRUE(attribs.connected);
+    EXPECT_TRUE(attribs.used);
 }
 
 //the primary display should not be disconnected, but this is how to tell if the external one is
@@ -188,12 +190,12 @@ TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
         .WillByDefault(Return(std::vector<mga::ConfigId>{}));
 
     EXPECT_THROW({
-        config.active_attribs_for(mga::DisplayName::primary);
+        config.active_config_for(mga::DisplayName::primary);
     }, std::runtime_error);
-    auto external_attribs = config.active_attribs_for(mga::DisplayName::external);
-    EXPECT_THAT(external_attribs.pixel_size, Eq(geom::Size{0,0}));
-    EXPECT_THAT(external_attribs.vrefresh_hz, Eq(0.0));
+    auto external_attribs = config.active_config_for(mga::DisplayName::external);
+    EXPECT_THAT(external_attribs.modes.size(), Eq(0));
     EXPECT_FALSE(external_attribs.connected);
+    EXPECT_FALSE(external_attribs.used);
 }
 
 //some devices (bq) only report an error later in the display attributes call, make sure to report disconnected on error to this call. 
@@ -204,12 +206,12 @@ TEST_F(HwcConfiguration, display_attributes_failure_indicates_problem_for_primar
         .WillByDefault(Return(-22));
 
     EXPECT_THROW({
-        config.active_attribs_for(mga::DisplayName::primary);
+        config.active_config_for(mga::DisplayName::primary);
     }, std::runtime_error);
-    auto external_attribs = config.active_attribs_for(mga::DisplayName::external);
-    EXPECT_THAT(external_attribs.pixel_size, Eq(geom::Size{0,0}));
-    EXPECT_THAT(external_attribs.vrefresh_hz, Eq(0.0));
+    auto external_attribs = config.active_config_for(mga::DisplayName::external);
+    EXPECT_THAT(external_attribs.modes.size(), Eq(0));
     EXPECT_FALSE(external_attribs.connected);
+    EXPECT_FALSE(external_attribs.used);
 }
 
 TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
@@ -224,8 +226,8 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
                     values[i++] = 0;
                 return 0;
             }));
-    auto attribs = config.active_attribs_for(mga::DisplayName::external);
-    EXPECT_THAT(attribs.vrefresh_hz, Eq(0.0f));
+    auto attribs = config.active_config_for(mga::DisplayName::external);
+    EXPECT_THAT(attribs.modes[attribs.current_mode_index].vrefresh_hz, Eq(0.0f));
 }
 
 TEST_F(HwcConfiguration, no_fpe_from_malformed_dpi)
@@ -240,8 +242,8 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_dpi)
                     values[i++] = 0;
                 return 0;
             }));
-    auto attribs = config.active_attribs_for(mga::DisplayName::external);
-    EXPECT_THAT(attribs.mm_size, Eq(geom::Size{0,0}));
+    auto attribs = config.active_config_for(mga::DisplayName::external);
+    EXPECT_THAT(attribs.physical_size_mm, Eq(geom::Size{0,0}));
 }
 
 TEST_F(HwcConfiguration, subscribes_to_hotplug_and_vsync)

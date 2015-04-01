@@ -118,6 +118,12 @@ void ms::SurfaceObservers::keymap_changed(xkb_rule_names const& rules)
         { observer->keymap_changed(rules); });
 }
 
+void ms::SurfaceObservers::renamed(char const* name)
+{
+    for_each([name](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->renamed(name); });
+}
+
 
 ms::BasicSurface::BasicSurface(
     std::string const& name,
@@ -878,4 +884,18 @@ void ms::BasicSurface::consume(MirEvent const& event)
 void ms::BasicSurface::set_keymap(xkb_rule_names const& rules)
 {
     observers.keymap_changed(rules);
+}
+
+bool ms::BasicSurface::modify(frontend::Surface::Modifications const& mods)
+{
+    bool valid = true;
+
+    if (mods.name.is_set())
+    {
+        surface_name = mods.name.value();
+        observers.renamed(surface_name.c_str());
+    }
+
+    // TODO: In future some specs might not be valid (LP: #1422522)
+    return valid;
 }
