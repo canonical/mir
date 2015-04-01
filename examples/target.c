@@ -25,6 +25,7 @@
 #include <mir_toolkit/mir_surface.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <signal.h>
 
 typedef struct
 {
@@ -41,7 +42,6 @@ typedef struct
     pthread_mutex_t mutex;
     pthread_cond_t change;
 
-    bool running;
     bool resized;
     int touches;
     Vec2 touch[max_touches];
@@ -160,7 +160,9 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         state->resized = true;
         break;
     case mir_event_type_close_surface:
-        state->running = false;
+        // TODO: eglapp.h needs a quit() function or different behaviour of
+        //       mir_eglapp_shutdown().
+        raise(SIGTERM);  // handled by eglapp
         break;
     default:
         break;
@@ -269,26 +271,19 @@ int main(int argc, char *argv[])
         PTHREAD_MUTEX_INITIALIZER,
         PTHREAD_COND_INITIALIZER,
         true,
-        true,
         0,
         {{0,0}}
     };
 
     mir_surface_set_event_handler(surface, on_event, &state);
 
-    do
+    while (mir_eglapp_running())
     {
         pthread_mutex_lock(&state.mutex);
 
-        while (state.running && !state.resized && !state.touches)
+        while (mir_eglapp_running() && !state.resized && !state.touches)
             pthread_cond_wait(&state.change, &state.mutex);
         
-        if (!state.running)
-        {
-            pthread_mutex_unlock(&state.mutex);
-            break;
-        }
-
         if (state.resized)
         {
             // mir_eglapp_swap_buffers updates the viewport for us...
@@ -320,7 +315,7 @@ int main(int argc, char *argv[])
         pthread_mutex_unlock(&state.mutex);
 
         mir_eglapp_swap_buffers();
-    } while (mir_eglapp_running());
+    }
 
     mir_surface_set_event_handler(surface, NULL, NULL);
     mir_eglapp_shutdown();
