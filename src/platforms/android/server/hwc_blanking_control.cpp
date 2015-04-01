@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <chrono>
 
+namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
@@ -111,9 +112,47 @@ int dpi_to_mm(uint32_t dpi, int pixel_num)
     geom::Length length(pixel_num / dpi_inches, geom::Length::Units::inches);
     return length.as(geom::Length::Units::millimetres);
 }
+
+mg::DisplayConfigurationOutput populate_config(
+    mga::DisplayName name,
+    geom::Size pixel_size,
+    double vrefresh_hz,
+    geom::Size mm_size,
+    MirPowerMode external_mode,
+    MirPixelFormat display_format,
+    bool connected)
+{
+    geom::Point const origin{0,0};
+    size_t const preferred_format_index{0};
+    size_t const preferred_mode_index{0};
+    std::vector<mg::DisplayConfigurationMode> external_modes;
+    if (connected)
+        external_modes.emplace_back(mg::DisplayConfigurationMode{pixel_size, vrefresh_hz});
+
+    auto type = mg::DisplayConfigurationOutputType::lvds;
+    if (name == mga::DisplayName::external)
+        type = mg::DisplayConfigurationOutputType::displayport;
+    
+    return {
+        static_cast<mg::DisplayConfigurationOutputId>(name),
+        mg::DisplayConfigurationCardId{0},
+        type,
+        {display_format},
+        external_modes,
+        preferred_mode_index,
+        mm_size,
+        connected,
+        connected,
+        origin,
+        preferred_format_index,
+        display_format,
+        external_mode,
+        mir_orientation_normal
+    };
+}
 }
 
-mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName display_name)
+mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(DisplayName display_name)
 {
     auto configs = hwc_device->display_configs(display_name);
     if (configs.empty())
@@ -121,7 +160,7 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
         if (display_name == mga::DisplayName::primary)
             BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
         else   
-            return {{}, {}, 0.0, false, format, quirks.num_framebuffers()};
+            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
     }
 
     /* note: some drivers (qcom msm8960) choke if this is not the same size array
@@ -145,17 +184,17 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
         if (display_name == mga::DisplayName::primary)
             BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
         else   
-            return {{}, {}, 0.0, false, format, quirks.num_framebuffers()};
+            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
     }
 
-    return {
+    return populate_config(
+        display_name,
         {values[0], values[1]},
-        {dpi_to_mm(values[3], values[0]), dpi_to_mm(values[4], values[1])},
         period_to_hz(std::chrono::nanoseconds{values[2]}),
-        true,
+        {dpi_to_mm(values[3], values[0]), dpi_to_mm(values[4], values[1])},
+        mir_power_mode_off,
         format,
-        quirks.num_framebuffers()
-    };
+        true);
 }
 
 mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_changes(

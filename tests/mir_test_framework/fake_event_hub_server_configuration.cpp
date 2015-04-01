@@ -21,7 +21,7 @@
 
 #include "mir_test/fake_event_hub.h"
 
-#include "src/server/shell/default_window_manager.h"
+#include "mir/shell/default_window_manager.h"
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;

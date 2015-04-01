@@ -21,6 +21,7 @@
 
 #include "display_component_factory.h"
 #include "display_resource_factory.h"
+#include "device_quirks.h"
 
 namespace mir
 {
@@ -46,18 +47,20 @@ public:
         std::shared_ptr<DisplayResourceFactory> const& res_factory,
         std::shared_ptr<HwcReport> const& hwc_report);
 
-    std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayAttribs const&) override;
+    std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayConfigurationOutput const&) override;
     std::unique_ptr<DisplayDevice> create_display_device() override;
     std::unique_ptr<HwcConfiguration> create_hwc_configuration() override;
     std::unique_ptr<LayerList> create_layer_list() override;
 
 private:
+    DeviceQuirks quirks{PropertiesOps{}};
     std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<DisplayResourceFactory> const res_factory;
     std::shared_ptr<HwcReport> const hwc_report;
 
     std::shared_ptr<FramebufferBundle> framebuffers;
     bool force_backup_display;
+    size_t num_framebuffers;
 
     std::shared_ptr<HwcWrapper> hwc_wrapper;
     std::shared_ptr<framebuffer_device_t> fb_native;

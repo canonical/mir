@@ -8,7 +8,6 @@ set(
   graphics_display_layout.cpp
   default_configuration.cpp
   default_window_manager.cpp
-  null_window_manager.cpp
   shell_wrapper.cpp
 )
 
