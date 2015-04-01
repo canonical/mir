@@ -123,10 +123,9 @@ GLuint generate_target_texture()
 
 static void get_all_touch_points(const MirInputEvent *ievent, TouchState *touch)
 {
-    touch->points = 0;
-
     if (mir_input_event_get_type(ievent) == mir_input_event_type_pointer)
     {
+        touch->points = 0;
         const MirPointerEvent *pevent =
             mir_input_event_get_pointer_event(ievent);
         if (mir_pointer_event_action(pevent) != mir_pointer_action_leave)
@@ -169,8 +168,6 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     //        thread to main (LP: #1194384). When that's resolved, simple
     //        single-threaded apps like this won't need pthread.
     pthread_mutex_lock(&state->mutex);
-
-    state->touch.points = 0;
 
     switch (mir_event_get_type(event))
     {
