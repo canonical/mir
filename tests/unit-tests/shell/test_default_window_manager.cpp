@@ -34,7 +34,6 @@
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
-#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_prompt_session_manager.h"
 #include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test_doubles/stub_buffer_stream_factory.h"
@@ -127,8 +126,7 @@ struct DefaultWindowManager : Test
             { return std::make_shared<msh::DefaultWindowManager>(
                 focus_controller,
                 mt::fake_shared(placement_strategy),
-                mt::fake_shared(session_manager),
-                std::make_shared<mtd::NullSurfaceConfigurator>());
+                mt::fake_shared(session_manager));
             }};
 
     void SetUp() override

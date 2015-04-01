@@ -107,8 +107,7 @@ public:
             { return std::make_shared<shell::DefaultWindowManager>(
                 focus_controller,
                 the_placement_strategy(),
-                the_session_coordinator(),
-                the_surface_configurator()); };
+                the_session_coordinator()); };
     }
 
     std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override
