@@ -36,6 +36,13 @@ typedef struct
 {
     float x, y;
 } Vec2;
+
+typedef struct
+{
+    int points;
+    Vec2 point[max_touches];
+} TouchState;
+
 typedef struct
 {
     pthread_mutex_t mutex;
@@ -43,8 +50,7 @@ typedef struct
     bool changed;
 
     bool resized;
-    int touches;
-    Vec2 touch[max_touches];
+    TouchState touch;
 } State;
 
 static GLuint load_shader(const char *src, GLenum type)
@@ -114,6 +120,45 @@ GLuint generate_target_texture()
     return tex;
 }
 
+static void get_all_touch_points(const MirInputEvent *ievent, TouchState *touch)
+{
+    touch->points = 0;
+
+    if (mir_input_event_get_type(ievent) == mir_input_event_type_pointer)
+    {
+        const MirPointerEvent *pevent =
+            mir_input_event_get_pointer_event(ievent);
+        if (mir_pointer_event_action(pevent) != mir_pointer_action_leave)
+        {
+            touch->points = 1;
+            touch->point[0] = (Vec2)
+            {
+                mir_pointer_event_axis_value(pevent, mir_pointer_axis_x),
+                mir_pointer_event_axis_value(pevent, mir_pointer_axis_y)
+            };
+        }
+    }
+    else if (mir_input_event_get_type(ievent) == mir_input_event_type_touch)
+    {
+        const MirTouchEvent *tevent = mir_input_event_get_touch_event(ievent);
+        int n = mir_touch_event_point_count(tevent);
+        if (n > max_touches)
+            n = max_touches;
+        bool all_up = true;
+        for (int p = 0; p < n; ++p)
+        {
+            if (mir_touch_event_action(tevent, p) != mir_touch_action_up)
+                all_up = false;
+            touch->point[p] = (Vec2)
+            {
+                mir_touch_event_axis_value(tevent, p, mir_touch_axis_x),
+                mir_touch_event_axis_value(tevent, p, mir_touch_axis_y)
+            };
+        }
+        touch->points = all_up ? 0 : n;
+    }
+}
+
 static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 {
     (void)surface;
@@ -124,48 +169,13 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     //        single-threaded apps like this won't need pthread.
     pthread_mutex_lock(&state->mutex);
 
-    state->touches = 0;
+    state->touch.points = 0;
 
     switch (mir_event_get_type(event))
     {
     case mir_event_type_input:
-    {
-        const MirInputEvent *input = mir_event_get_input_event(event);
-        if (mir_input_event_get_type(input) == mir_input_event_type_pointer)
-        {
-            const MirPointerEvent *pointer =
-                mir_input_event_get_pointer_event(input);
-            if (mir_pointer_event_action(pointer) != mir_pointer_action_leave)
-            {
-                state->touches = 1;
-                state->touch[0] = (Vec2)
-                {
-                    mir_pointer_event_axis_value(pointer, mir_pointer_axis_x),
-                    mir_pointer_event_axis_value(pointer, mir_pointer_axis_y)
-                };
-            }
-        }
-        else if (mir_input_event_get_type(input) == mir_input_event_type_touch)
-        {
-            const MirTouchEvent *touch = mir_input_event_get_touch_event(input);
-            int n = mir_touch_event_point_count(touch);
-            if (n > max_touches)
-                n = max_touches;
-            bool all_up = true;
-            for (int p = 0; p < n; ++p)
-            {
-                if (mir_touch_event_action(touch, p) != mir_touch_action_up)
-                    all_up = false;
-                state->touch[p] = (Vec2)
-                {
-                    mir_touch_event_axis_value(touch, p, mir_touch_axis_x),
-                    mir_touch_event_axis_value(touch, p, mir_touch_axis_y)
-                };
-            }
-            state->touches = all_up ? 0 : n;
-        }
+        get_all_touch_points(mir_event_get_input_event(event), &state->touch);
         break;
-    }
     case mir_event_type_resize:
         state->resized = true;
         break;
@@ -281,8 +291,7 @@ int main(int argc, char *argv[])
         PTHREAD_COND_INITIALIZER,
         true,
         true,
-        0,
-        {{0,0}}
+        {0, {{0,0}}}
     };
     MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
@@ -314,10 +323,10 @@ int main(int argc, char *argv[])
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Note: state.touches==0 is a valid event we need to redraw on.
-        for (int t = 0; t < state.touches; ++t)
+        for (int p = 0; p < state.touch.points; ++p)
         {
-            glUniform2f(translate, state.touch[t].x, state.touch[t].y);
+            glUniform2f(translate, state.touch.point[p].x,
+                                   state.touch.point[p].y);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         }
 
