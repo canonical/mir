@@ -575,9 +575,87 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
  * Change the title (name) of a surface.
  *   \param [in] surface  The surface to rename
  *   \param [in] name     The new name
- *   \returns             When the change has completed
+ *   \return              When the change has completed
  */
 MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name);
+
+
+/** generate a batch of changes to apply to the surface via
+ *  mir_surface_spec_commit_changes. The returned spec must be released with
+ *  mir_surface_spec_release;
+ *  \param [in] surface  The surface the changes will take effect on
+ *  \return              A wait handle that can be passed to mir_wait_for
+ */
+MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surface);
+
+/** Commit the changes accummulated in the MirSurfaceSpect to the surface
+ * \param [in] spec  The spec to apply
+ * \return           A wait handle that is
+ */
+MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec);
+
+/** rearrange the ordering of the buffer streams in the connection, placing
+ *  stream_to_place above stream_below. If stream_to_place is not associated
+ *  the surface, it will become associated with the surface. If it is already
+ *  in the ordering of the surface, it will be removed from its current position
+ *  and placed in the requested position.
+ *
+ *  Associated buffer streams are not owned by the surface and still must be
+ *  released.
+ *
+ *  \param [in] spec  The spec to accumulate the request in
+ *  \param [in] stream_to_place The stream to place
+ *  \param [in] reference_stream The stream which will be above stream_to_place
+ */
+void mir_surface_spec_place_buffer_stream_below(
+    MirSurfaceSpec* spec, MirBufferStream* stream_to_place, MirBufferStream* reference_stream);
+
+/** Same as mir_surface_spec_place_buffer_stream_below, except placing stream_to_place
+ *  below reference_stream.
+ *
+ *  \param [in] spec  The spec to accumulate the request in
+ *  \param [in] stream_to_place The stream to place
+ *  \param [in] reference_stream The stream which will be below stream_to_place
+ */
+void mir_surface_spec_place_buffer_stream_above(
+    MirSurfaceSpec* spec, MirBufferStream* stream_to_place, MirBufferStream* reference_stream);
+
+/** Specify the position of the stream within the surface. This establishes
+ *  positions relative to the other streams in the surface, and is not a
+ *  guarantee of the final composited ons
+ *
+ *  If stream_to_place is not associated the surface yet, it will become
+ *  associated with the surface at the given position.
+ *
+ *  Associated buffer streams are not owned by the surface and still must be
+ *  released.
+ *
+ *  \param [in] spec  The spec to accumulate the request in
+ *  \param [in] stream_to_move  The stream to movee
+ *  \param [in] x  The x coordinate of the stream
+ *  \param [in] y  The x coordinate of the stream
+ */
+void mir_surface_spec_place_buffer_stream_position(
+    MirSurfaceSpec* spec, MirBufferStream* stream_to_move, int x, int y);
+
+/* Returns the number of streams currently associated with surface
+ *  \param [in] surface  A surface
+ *  \return              The number of streams associated with surface
+ */
+unsigned int mir_surface_get_number_of_streams(MirSurface* surface);
+
+/* Query the streams associated with this surface and their positions.
+ * streams and positions must have the size of num_streams.
+ * streams and positions are filled in their z-order. (with is streams[0]
+ * being the bottom-most surface)
+ *
+ *  \param [in] surface  The surface to query
+ *  \param [out] streams An array of MirBufferStream* that is of size num_streams
+ *  \param [out] positions An array of MirRectangles that is of size num_streams
+ *  \param [in] num_streams The size of both positions and streams array
+ */
+void mir_surface_get_streams(
+    MirSurface* surface, MirBufferStream** streams, MirRectangle* positions, unsigned int num_streams);
 
 #ifdef __cplusplus
 }

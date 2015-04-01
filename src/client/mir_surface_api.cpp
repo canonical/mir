@@ -561,8 +561,6 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-namespace { // Private for now. TODO: Finalize and publish later (LP: #1422522)
-
 MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
 {
     mir::require(mir_surface_is_valid(surf));
@@ -589,8 +587,6 @@ MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
     return surface->modify(*spec);
 }
 
-} // Private namespace. TODO: finalize morphing API and publish.
-
 MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name)
 {
     MirWaitHandle* result = nullptr;
@@ -601,4 +597,35 @@ MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name)
         mir_surface_spec_release(spec);
     }
     return result;
+}
+
+void mir_surface_spec_place_buffer_stream_below(
+    MirSurfaceSpec* spec, MirBufferStream* stream_to_place, MirBufferStream* reference_stream)
+{
+    (void) spec;
+    (void) stream_to_place;
+    (void) reference_stream;
+}
+
+void mir_surface_spec_place_buffer_stream_position(
+    MirSurfaceSpec* spec, MirBufferStream* stream_to_move, int x, int y)
+{
+    (void) spec;
+    (void) stream_to_move;
+    (void) x;
+    (void) y;
+}
+
+unsigned int mir_surface_get_number_of_streams(MirSurface*)
+{
+    return 1;
+}
+
+void mir_surface_get_streams(
+    MirSurface* surface, MirBufferStream** streams, MirRectangle* positions, unsigned int num_streams)
+{
+    (void) surface;
+    (void) streams;
+    (void) positions;
+    (void) num_streams;
 }

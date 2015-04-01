@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_test_framework/connected_client_headless_server.h"
+#include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/scene_element.h"
@@ -35,6 +35,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace
 {
+
 MirPixelFormat an_available_format(MirConnection* connection)
 {
     using namespace testing;
@@ -44,26 +45,50 @@ MirPixelFormat an_available_format(MirConnection* connection)
     return format;
 }
 
-struct MirClient
+struct Stream
 {
-    MirClient(MirConnection* connection, geom::Rectangle rect) :
-        rect(rect),
-        surface(mir_surface_create_sync(mir_connection_create_spec_for_normal_surface(
+    Stream(MirBufferStream* stream, geom::Point pt) :
+        stream(stream),
+        pos{pt},
+        needs_release{false}
+    {
+    }
+
+    Stream(MirConnection* connection, geom::Rectangle rect) :
+        stream(mir_connection_create_buffer_stream_sync(
             connection,
             rect.size.width.as_int(),
             rect.size.height.as_int(),
-            an_available_format(connection))))
+            an_available_format(connection),
+            mir_buffer_usage_hardware)),
+        pos{rect.top_left},
+        needs_release{true}
     {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        mir_buffer_stream_swap_buffers_sync(stream);
     }
-    ~MirClient()
+
+    ~Stream()
     {
-        mir_surface_release_sync(surface);
+        if (needs_release)
+            mir_buffer_stream_release_sync(stream);
     }
-    MirClient(MirClient const&) = delete;
-    MirClient& operator=(MirClient const&) = delete;
-    geom::Rectangle const rect;
-    MirSurface* surface;
+
+    operator MirBufferStream*() const
+    {
+        return stream;
+    }
+
+    geom::Point position()
+    {
+        return pos;
+    }
+
+    Stream(Stream const&) = delete;
+    Stream& operator=(Stream const&) = delete;
+private:
+    MirBufferStream* stream;
+    geom::Point const pos;
+    bool const needs_release;
 };
 
 struct Ordering
@@ -87,14 +112,14 @@ struct Ordering
     }
 
     bool ensure_last_ordering_is_consistent_with(
-        std::vector<MirSurfaceArrangement> const& arrangement)
+        std::vector<MirRectangle> const& arrangement)
     {
         if (rectangles.size() != arrangement.size())
             return false;
         for(auto i = 0u; i < rectangles.size(); i++)
         {
-            if ((rectangles[i].top_left.x.as_int() != arrangement[i].x) ||
-                (rectangles[i].top_left.y.as_int() != arrangement[i].y))
+            if ((rectangles[i].top_left.x.as_int() != arrangement[i].left) ||
+                (rectangles[i].top_left.y.as_int() != arrangement[i].top))
                 return false;
         }
         return true;
@@ -146,7 +171,7 @@ struct OrderTrackingDBCFactory : mc::DisplayBufferCompositorFactory
     std::shared_ptr<Ordering> const ordering;
 };
 
-struct MirSurfaceArrangements : mtf::ConnectedClientHeadlessServer
+struct MirSurfaceArrangements : mtf::ConnectedClientWithASurface
 {
     void SetUp() override
     {
@@ -158,41 +183,73 @@ struct MirSurfaceArrangements : mtf::ConnectedClientHeadlessServer
                 return order_tracker;
             });
 
-        ConnectedClientHeadlessServer::SetUp();
-        for(auto i = 0; i < num_clients; i++)
+        ConnectedClientWithASurface::SetUp();
+
+        primary_stream = std::unique_ptr<Stream>(
+            new Stream(mir_surface_get_buffer_stream(surface), geom::Point{0,0}));
+
+        int const additional_streams{3};
+        for(auto i = 0; i < additional_streams; i++)
         {
             geom::Size size{30 * i + 1, 40* i + 1};
             geom::Point position{i * 2, i * 3};
-            clients.emplace_back(std::unique_ptr<MirClient>(new MirClient(connection, geom::Rectangle{position, size})));
+            streams.emplace_back(std::unique_ptr<Stream>(
+                new Stream(connection, geom::Rectangle{position, size})));
         }
     }
 
     void TearDown() override
     {
-        clients.clear();
-        ConnectedClientHeadlessServer::TearDown();
+        streams.clear();
+        ConnectedClientWithASurface::TearDown();
     }
 
     std::shared_ptr<Ordering> ordering;
     std::shared_ptr<OrderTrackingDBCFactory> order_tracker{nullptr};
-    int const num_clients{3};
-    std::vector<std::unique_ptr<MirClient>> clients;
+    std::unique_ptr<Stream> primary_stream;
+    std::vector<std::unique_ptr<Stream>> streams;
 };
 }
 
-TEST_F(MirSurfaceArrangements, occluded_received_when_surface_goes_off_screen)
+TEST_F(MirSurfaceArrangements, arrangements_are_applied)
 {
-    using namespace std::literals::chrono_literals;
-    std::vector<MirSurfaceArrangement> arrangement{clients.size()};
-    for(auto i : {1, 0, 2})
-        arrangement.emplace_back(MirSurfaceArrangement{
-            clients[i]->surface,
-            clients[i]->rect.top_left.x.as_int(),
-            clients[i]->rect.top_left.y.as_int()});
+    using namespace testing;
+    MirBufferStream* above_stream = *primary_stream;
+    auto change_spec = mir_surface_begin_changes(surface);
+    for(auto& stream : streams)
+    {
+        mir_surface_spec_place_buffer_stream_below(change_spec, *stream, above_stream);
+        mir_surface_spec_place_buffer_stream_position(
+            change_spec, *stream, stream->position().x.as_int(), stream->position().y.as_int());
+        above_stream = *stream;
+    }
+    mir_wait_for(mir_surface_spec_commit_changes(change_spec));
+    mir_surface_spec_release(change_spec);
 
-    EXPECT_TRUE(mir_connection_request_surface_arrangement(connection, arrangement.data(), arrangement.size()));
+    unsigned int num_streams = mir_surface_get_number_of_streams(surface);
+    ASSERT_THAT(num_streams, Eq(streams.size() + 1));
+    std::vector<MirBufferStream*> buffer_streams{num_streams};
+    std::vector<MirRectangle> positions{num_streams};
+    mir_surface_get_streams(surface, buffer_streams.data(), positions.data(), num_streams);
+    for(auto i = 0u; i < num_streams; ++i)
+    {
+        geom::Point pt{positions[i].top, positions[i].left};
+        if (i == 0u)
+        {
+            EXPECT_THAT(buffer_streams[i], Eq(static_cast<MirBufferStream*>(*primary_stream)));
+            EXPECT_THAT(pt, Eq(primary_stream->position()));
+        }
+        else
+        {
+            EXPECT_THAT(buffer_streams[i], Eq(static_cast<MirBufferStream*>(*streams[i-1])));
+            EXPECT_THAT(pt, Eq(streams[i-1]->position()));
+        }
+    }
+
+    //check that the compositor rendered correctly
+    using namespace std::literals::chrono_literals;
     EXPECT_TRUE(ordering->wait_for_another_post_within(1s))
          << "timed out waiting for another post";
-    EXPECT_TRUE(ordering->ensure_last_ordering_is_consistent_with(arrangement))
+    EXPECT_TRUE(ordering->ensure_last_ordering_is_consistent_with(positions))
          << "surface ordering was not consistent with the client request";
 }
