@@ -75,8 +75,7 @@ GLuint generate_target_texture()
     const int centrex = width/2, centrey = height/2;
     const Texel blank = {0, 0, 0, 0};
     const int radius = centrex - 1;
-    const int rings = 7;
-    const Texel ring[7] =
+    const Texel ring[] =
     {
         {  0,   0,   0, 255},
         {  0,   0, 255, 255},
@@ -86,6 +85,7 @@ GLuint generate_target_texture()
         {255, 128,   0, 255},
         {255,   0,   0, 255},
     };
+    const int rings = sizeof(ring) / sizeof(ring[0]);
 
     for (int y = 0; y < height; ++y)
     {
@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(texcoord);
 
     GLint scale = glGetUniformLocation(prog, "scale");
-    glUniform1f(scale, 256.0f);
+    glUniform1f(scale, 128.0f);
 
     GLint translate = glGetUniformLocation(prog, "translate");
     glUniform2f(translate, 0.0f, 0.0f);
