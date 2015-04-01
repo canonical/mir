@@ -6,10 +6,10 @@ abi_var_for=( ["mirclient"]="MIRCLIENT_ABI" \
     ["mirplatform"]="MIRPLATFORM_ABI" \
     ["mirprotobuf"]="MIRPROTOBUF_ABI" \
     ["mirserver"]="MIRSERVER_ABI" \
-    ["mir-client-platform-android"]="MIR_CLIENT_PLATFORM_ABI" \
-    ["mir-client-platform-mesa"]="MIR_CLIENT_PLATFORM_ABI" \
-    ["mir-platform-graphics-android"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" \
-    ["mir-platform-graphics-mesa"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" )
+    ["mirclientplatformandroid"]="MIR_CLIENT_PLATFORM_ABI" \
+    ["mirclientplatformmesa"]="MIR_CLIENT_PLATFORM_ABI" \
+    ["mirplatformgraphicsandroid"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" \
+    ["mirplatformgraphicsmesa"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" )
 
 print_help_and_exit()
 {
