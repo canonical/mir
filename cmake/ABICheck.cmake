@@ -59,13 +59,16 @@ function(make_lib_descriptor name)
   configure_file(${CMAKE_SOURCE_DIR}/tools/lib_descriptor.xml.skel ${libname}_desc.xml)
 endfunction()
 
-#These headers are not part of the libmircommon interface
-set(android-platform-headers "${CMAKE_SOURCE_DIR}/src/include/common/mir/graphics/android\n    ${CMAKE_SOURCE_DIR}/src/include/common/mir/input")
+#These headers are not part of the libmircommon ABI
+set(mircommon-exclude-headers "${CMAKE_SOURCE_DIR}/src/include/common/mir/graphics/android\n    ${CMAKE_SOURCE_DIR}/src/include/common/mir/input")
+
+#These headers are not part of the libmirplatform ABI
+set(mirplatform-exclude-headers "${CMAKE_SOURCE_DIR}/include/platform/mir/input")
 
 make_lib_descriptor(client)
 make_lib_descriptor(server)
-make_lib_descriptor(common INCLUDE_PRIVATE EXCLUDE_HEADERS ${android-platform-headers})
-make_lib_descriptor(platform INCLUDE_PRIVATE)
+make_lib_descriptor(common INCLUDE_PRIVATE EXCLUDE_HEADERS ${mircommon-exclude-headers})
+make_lib_descriptor(platform INCLUDE_PRIVATE EXCLUDE_HEADERS ${mirplatform-exclude-headers})
 
 add_custom_target(abi-release-dump
   COMMAND /bin/sh -c ${CMAKE_SOURCE_DIR}/tools/generate-abi-base-dump.sh
