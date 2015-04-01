@@ -228,7 +228,6 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
             SceneElementFor(stub_surface2)));
 }
 
-//This test only supports playground/
 TEST_F(SurfaceStack, decor_name_is_surface_name)
 {
     using namespace testing;
@@ -259,7 +258,6 @@ TEST_F(SurfaceStack, decor_name_is_surface_name)
     EXPECT_EQ("Mary had a little lamb", decor->name);
 }
 
-//This test only supports playground/
 TEST_F(SurfaceStack, gets_surface_renames)
 {
     using namespace testing;
