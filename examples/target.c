@@ -121,7 +121,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 
     // FIXME: We presently need to know that events come in on a different
     //        thread to main (LP: #1194384). When that's resolved, simple
-    //        single-threaded apps like this won't need pthreads.
+    //        single-threaded apps like this won't need pthread.
     pthread_mutex_lock(&state->mutex);
 
     switch (mir_event_get_type(event))
@@ -181,6 +181,7 @@ int main(int argc, char *argv[])
         "uniform vec2 translate;\n"
         "uniform mat4 projection;\n"
         "varying vec2 v_texcoord;\n"
+        "\n"
         "void main()\n"
         "{\n"
         "    gl_Position = projection *\n"
@@ -192,13 +193,11 @@ int main(int argc, char *argv[])
         "precision mediump float;\n"
         "varying vec2 v_texcoord;\n"
         "uniform sampler2D texture;\n"
+        "\n"
         "void main()\n"
         "{\n"
         "    gl_FragColor = texture2D(texture, v_texcoord);\n"
         "}\n";
-
-    GLuint vshader, fshader, prog;
-    GLint linked;
 
     // Disable Mir's input resampling. We do our own here, in a way that
     // has even lower latency than Mir's default algorithm.
@@ -209,16 +208,17 @@ int main(int argc, char *argv[])
     if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
 
-    vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
+    GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
     assert(vshader);
-    fshader = load_shader(fshadersrc, GL_FRAGMENT_SHADER);
+    GLuint fshader = load_shader(fshadersrc, GL_FRAGMENT_SHADER);
     assert(fshader);
-    prog = glCreateProgram();
+    GLuint prog = glCreateProgram();
     assert(prog);
     glAttachShader(prog, vshader);
     glAttachShader(prog, fshader);
     glLinkProgram(prog);
 
+    GLint linked;
     glGetProgramiv(prog, GL_LINK_STATUS, &linked);
     if (!linked)
     {
@@ -264,8 +264,6 @@ int main(int argc, char *argv[])
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    MirSurface *surface = mir_eglapp_native_surface();
-
     State state =
     {
         PTHREAD_MUTEX_INITIALIZER,
@@ -274,7 +272,7 @@ int main(int argc, char *argv[])
         0,
         {{0,0}}
     };
-
+    MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
 
     while (mir_eglapp_running())
