@@ -26,9 +26,6 @@
 #include <pthread.h>
 #include <stdlib.h>
 
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t change = PTHREAD_COND_INITIALIZER;
-
 typedef struct
 {
     float x, y;
@@ -41,6 +38,9 @@ enum
 
 typedef struct
 {
+    pthread_mutex_t mutex;
+    pthread_cond_t change;
+
     bool running;
     bool resized;
     int touches;
@@ -117,13 +117,12 @@ GLuint generate_target_texture()
 static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 {
     (void)surface;
+    State *state = (State*)context;
 
     // FIXME: We presently need to know that events come in on a different
     //        thread to main (LP: #1194384). When that's resolved, simple
     //        single-threaded apps like this won't need pthreads.
-    pthread_mutex_lock(&mutex);
-
-    State *state = (State*)context;
+    pthread_mutex_lock(&state->mutex);
 
     switch (mir_event_get_type(event))
     {
@@ -167,8 +166,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         break;
     }
 
-    pthread_cond_signal(&change);
-    pthread_mutex_unlock(&mutex);
+    pthread_cond_signal(&state->change);
+    pthread_mutex_unlock(&state->mutex);
 }
 
 int main(int argc, char *argv[])
@@ -265,23 +264,28 @@ int main(int argc, char *argv[])
 
     MirSurface *surface = mir_eglapp_native_surface();
 
-    State state;
-    state.running = true;
-    state.resized = true;
-    state.touches = 0;
+    State state =
+    {
+        PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_COND_INITIALIZER,
+        true,
+        true,
+        0,
+        {{0,0}}
+    };
 
     mir_surface_set_event_handler(surface, on_event, &state);
 
     do
     {
-        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&state.mutex);
 
         while (state.running && !state.resized && !state.touches)
-            pthread_cond_wait(&change, &mutex);
+            pthread_cond_wait(&state.change, &state.mutex);
         
         if (!state.running)
         {
-            pthread_mutex_unlock(&mutex);
+            pthread_mutex_unlock(&state.mutex);
             break;
         }
 
@@ -313,11 +317,12 @@ int main(int argc, char *argv[])
         // Put the event loop back to sleep:
         state.resized = false;
         state.touches = 0;
-        pthread_mutex_unlock(&mutex);
+        pthread_mutex_unlock(&state.mutex);
 
         mir_eglapp_swap_buffers();
     } while (mir_eglapp_running());
 
+    mir_surface_set_event_handler(surface, NULL, NULL);
     mir_eglapp_shutdown();
 
     return 0;
