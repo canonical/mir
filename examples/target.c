@@ -151,7 +151,6 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             int n = mir_touch_event_point_count(touch);
             if (n > max_touches)
                 n = max_touches;
-            state->touches = n;
             bool all_up = true;
             for (int p = 0; p < n; ++p)
             {
@@ -163,8 +162,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                     mir_touch_event_axis_value(touch, p, mir_touch_axis_y)
                 };
             }
-            if (all_up)
-                state->touches = 0;
+            state->touches = all_up ? 0 : n;
         }
         break;
     }
