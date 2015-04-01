@@ -107,14 +107,14 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     std::shared_ptr<mga::DisplayDevice> const& display_device,
     mga::DisplayName name,
     mga::DisplayComponentFactory& display_buffer_builder,
-    mga::DisplayAttribs const& attribs,
+    mg::DisplayConfigurationOutput const& config,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
     mga::PbufferGLContext const& gl_context,
     mga::OverlayOptimization overlay_option)
 {
-    std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(attribs)};
+    std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(config)};
     auto cache = std::make_shared<mga::InterpreterCache>();
-    auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, attribs.display_format, cache);
+    auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, config.current_format, cache);
     auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
     return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new mga::DisplayBuffer(
         name,
@@ -141,12 +141,10 @@ mga::Display::Display(
     hotplug_subscription{hwc_config->subscribe_to_config_changes(
         std::bind(&mga::Display::on_hotplug, this),
         std::bind(&mga::Display::on_vsync, this, std::placeholders::_1))},
-    primary_attribs(hwc_config->active_attribs_for(mga::DisplayName::primary)),
-    external_attribs(hwc_config->active_attribs_for(mga::DisplayName::external)),
     config(
-        primary_attribs,
+        hwc_config->active_config_for(mga::DisplayName::primary),
         mir_power_mode_off,
-        external_attribs,
+        hwc_config->active_config_for(mga::DisplayName::external),
         mir_power_mode_off),
     gl_context{config.primary().current_format, *gl_config, *display_report},
     display_device(display_buffer_builder->create_display_device()),
@@ -158,7 +156,7 @@ mga::Display::Display(
             display_device,
             mga::DisplayName::primary,
             *display_buffer_builder,
-            primary_attribs,
+            config.primary(),
             gl_program_factory,
             gl_context,
             overlay_option))
@@ -173,7 +171,7 @@ mga::Display::Display(
                 display_device,
                 mga::DisplayName::external,
                 *display_buffer_builder,
-                external_attribs,
+                config.external(),
                 gl_program_factory,
                 gl_context,
                 mga::OverlayOptimization::disabled));
@@ -196,16 +194,16 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
 {
     if (configuration_dirty)
     {
-        external_attribs = hwc_config->active_attribs_for(mga::DisplayName::external);
-        if (external_attribs.connected)
+        auto external_config = hwc_config->active_config_for(mga::DisplayName::external);
+        if (external_config.connected)
             power_mode(mga::DisplayName::external, *hwc_config, config.external(), mir_power_mode_on);
         else
             config.external().power_mode = mir_power_mode_off;
 
         config = mga::DisplayConfiguration(
-            hwc_config->active_attribs_for(mga::DisplayName::primary),
+            hwc_config->active_config_for(mga::DisplayName::primary),
             config.primary().power_mode,
-            external_attribs,
+            std::move(external_config),
             config.external().power_mode);
         configuration_dirty = false;
     }
@@ -221,7 +219,7 @@ void mga::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
                 display_device,
                 mga::DisplayName::external,
                 *display_buffer_builder,
-                external_attribs,
+                config.external(),
                 gl_program_factory,
                 gl_context,
                 mga::OverlayOptimization::disabled));
