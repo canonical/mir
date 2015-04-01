@@ -97,7 +97,7 @@ macro(_define_abi_check_for libname)
   set(OLD_ABI_DUMP "${ABI_CHECK_BASE_DIR}/${ABI_CHECK_TARGET_MACH}/${libname}_base.abi.tar.gz")
   set(NEW_ABI_DUMP ${ABI_DUMPS_DIR_PREFIX}/${libname}_next.abi.tar.gz)
   add_custom_target(abi-check-${libname} 
-    COMMAND /bin/bash -c '${CMAKE_SOURCE_DIR}/tools/run_abi_compliance_checker.sh ${libname} "${CMAKE_BINARY_DIR}/mir-prev-release" "${CMAKE_SOURCE_DIR}" "${OLD_ABI_DUMP}" "${NEW_ABI_DUMP}"'
+    COMMAND /bin/bash -c '${CMAKE_SOURCE_DIR}/tools/run_abi_compliance_checker.sh ${libname} ${CMAKE_BINARY_DIR}/mir-prev-release ${CMAKE_SOURCE_DIR} ${OLD_ABI_DUMP} ${NEW_ABI_DUMP}'
     DEPENDS abi-dump-${libname} abi-release-dump
   )
 endmacro(_define_abi_check_for)
