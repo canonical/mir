@@ -41,6 +41,7 @@ typedef struct
 {
     pthread_mutex_t mutex;
     pthread_cond_t change;
+    bool changed;
 
     bool resized;
     int touches;
@@ -124,6 +125,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     //        single-threaded apps like this won't need pthread.
     pthread_mutex_lock(&state->mutex);
 
+    state->touches = 0;
+
     switch (mir_event_get_type(event))
     {
     case mir_event_type_input:
@@ -168,6 +171,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         break;
     }
 
+    state->changed = true;
     pthread_cond_signal(&state->change);
     pthread_mutex_unlock(&state->mutex);
 }
@@ -269,6 +273,7 @@ int main(int argc, char *argv[])
         PTHREAD_MUTEX_INITIALIZER,
         PTHREAD_COND_INITIALIZER,
         true,
+        true,
         0,
         {{0,0}}
     };
@@ -279,7 +284,7 @@ int main(int argc, char *argv[])
     {
         pthread_mutex_lock(&state.mutex);
 
-        while (mir_eglapp_running() && !state.resized && !state.touches)
+        while (mir_eglapp_running() && !state.changed)
             pthread_cond_wait(&state.change, &state.mutex);
         
         if (state.resized)
@@ -297,10 +302,12 @@ int main(int argc, char *argv[])
                                  -1.0f,   1.0f,   0.0f, 1.0f};
             // Note GL_FALSE: GLES does not support the transpose option
             glUniformMatrix4fv(projection, 1, GL_FALSE, matrix);
+            state.resized = false;
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // Note: state.touches==0 is a valid event we need to redraw on.
         for (int t = 0; t < state.touches; ++t)
         {
             glUniform2f(translate, state.touch[t].x, state.touch[t].y);
@@ -308,8 +315,7 @@ int main(int argc, char *argv[])
         }
 
         // Put the event loop back to sleep:
-        state.resized = false;
-        state.touches = 0;
+        state.changed = false;
         pthread_mutex_unlock(&state.mutex);
 
         mir_eglapp_swap_buffers();
