@@ -18,7 +18,7 @@
 
 #include "mir/shell/abstract_shell.h"
 #include "mir/shell/input_targeter.h"
-#include "mir/shell/null_window_manager.h"
+#include "mir/shell/window_manager.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session_coordinator.h"

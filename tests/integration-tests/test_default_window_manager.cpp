@@ -20,8 +20,8 @@
 #include "mir/scene/session.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/scene/placement_strategy.h"
+#include "mir/shell/default_window_manager.h"
 
-#include "src/server/shell/default_window_manager.h"
 #include "src/server/scene/session_manager.h"
 #include "src/server/scene/default_session_container.h"
 

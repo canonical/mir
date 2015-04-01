@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "default_window_manager.h"
+#include "mir/shell/default_window_manager.h"
 
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/placement_strategy.h"

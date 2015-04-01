@@ -16,7 +16,7 @@
  * Authored by: ALan Griffiths <alan.griffiths@canonical.com>
  */
 
-#include "src/server/shell/default_window_manager.h"
+#include "mir/shell/default_window_manager.h"
 
 #include "mir/shell/abstract_shell.h"
 #include "mir/scene/session.h"
