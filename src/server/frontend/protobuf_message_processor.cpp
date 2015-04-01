@@ -244,6 +244,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::configure_surface, invocation);
         }
+        else if ("modify_surface" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::modify_surface, invocation);
+        }
         else if ("create_screencast" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::create_screencast, invocation);

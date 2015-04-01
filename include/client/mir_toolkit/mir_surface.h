@@ -571,6 +571,14 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
                                                             int height,
                                                             MirPixelFormat format);
 
+/**
+ * Change the title (name) of a surface.
+ *   \param [in] surface  The surface to rename
+ *   \param [in] name     The new name
+ *   \returns             When the change has completed
+ */
+MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name);
+
 #ifdef __cplusplus
 }
 /**@}*/

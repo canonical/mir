@@ -84,7 +84,8 @@ namespace mo = mir::options;
     MACRO(the_shell_display_layout)\
     MACRO(the_surface_configurator)\
     MACRO(the_surface_coordinator)\
-    MACRO(the_touch_visualizer)
+    MACRO(the_touch_visualizer)\
+    MACRO(the_input_device_hub)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;

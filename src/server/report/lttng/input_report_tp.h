@@ -71,6 +71,26 @@ TRACEPOINT_EVENT(
     )
 )
 
+TRACEPOINT_EVENT(
+    mir_server_input,
+    opened_input_device,
+    TP_ARGS(const char*, device, const char*, platform),
+    TP_FIELDS(
+        ctf_string(device, device)
+        ctf_string(platform, platform)
+    )
+)
+
+TRACEPOINT_EVENT(
+    mir_server_input,
+    failed_to_open_input_device,
+    TP_ARGS(const char*, device, const char*, platform),
+    TP_FIELDS(
+        ctf_string(device, device)
+        ctf_string(platform, platform)
+    )
+)
+
 #endif /* MIR_LTTNG_DISPLAY_REPORT_TP_H_ */
 
 #include <lttng/tracepoint-event.h>

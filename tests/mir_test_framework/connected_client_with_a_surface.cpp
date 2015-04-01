@@ -24,16 +24,7 @@ void mtf::ConnectedClientWithASurface::SetUp()
 {
     ConnectedClientHeadlessServer::SetUp();
 
-    MirSurfaceParameters request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
-    surface = mir_connection_create_surface_sync(connection, &request_params);
+    surface = mir_connection_create_surface_sync(connection, &surface_params);
     ASSERT_TRUE(mir_surface_is_valid(surface));
 }
 

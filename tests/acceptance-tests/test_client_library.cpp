@@ -16,8 +16,6 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
@@ -116,17 +114,6 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     size_t current_surface_count()
     {
         return surfaces.size();
-    }
-
-    MirEvent last_event{};
-    MirSurface* last_event_surface = nullptr;
-
-    static void event_callback(MirSurface* surface, MirEvent const* event,
-                               void* ctx)
-    {
-        ClientLibrary* self = static_cast<ClientLibrary*>(ctx);
-        self->last_event = *event;
-        self->last_event_surface = surface;
     }
 
     static void nosey_thread(MirSurface *surf)
