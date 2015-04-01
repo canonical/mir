@@ -80,7 +80,7 @@ GLuint generate_target_texture()
     const int width = 512, height = width;
     typedef struct { GLubyte r, b, g, a; } Texel;
     Texel image[height][width];
-    const int centrex = width/2, centrey = height/2;
+    const float centrex = width/2 - 0.5f, centrey = height/2 - 0.5f;
     const Texel blank = {0, 0, 0, 0};
     const int radius = centrex - 1;
     const Texel ring[] =
@@ -99,7 +99,7 @@ GLuint generate_target_texture()
     {
         for (int x = 0; x < width; ++x)
         {
-            int dx = x - centrex, dy = y - centrey;
+            float dx = x - centrex, dy = y - centrey;
             int layer = rings * sqrtf(dx * dx + dy * dy) / radius;
             image[y][x] = layer < rings ? ring[layer] : blank;
         }
@@ -325,8 +325,8 @@ int main(int argc, char *argv[])
 
         for (int p = 0; p < state.touch.points; ++p)
         {
-            glUniform2f(translate, state.touch.point[p].x,
-                                   state.touch.point[p].y);
+            glUniform2f(translate, state.touch.point[p].x + 0.5f,
+                                   state.touch.point[p].y + 0.5f);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         }
 

@@ -188,8 +188,8 @@ void me::DemoCompositor::update_viewport()
         float zoom_width = db_width / zoom_mag;
         float zoom_height = db_height / zoom_mag;
     
-        float screen_x = cursor_pos.x.as_int() - db_x;
-        float screen_y = cursor_pos.y.as_int() - db_y;
+        float screen_x = cursor_pos.x.as_float() + 0.5f - db_x;
+        float screen_y = cursor_pos.y.as_float() + 0.5f - db_y;
 
         float normal_x = screen_x / db_width;
         float normal_y = screen_y / db_height;
