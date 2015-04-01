@@ -27,16 +27,15 @@
 #include <stdlib.h>
 #include <signal.h>
 
-typedef struct
-{
-    float x, y;
-} Vec2;
-
 enum
 {
     max_touches = 10
 };
 
+typedef struct
+{
+    float x, y;
+} Vec2;
 typedef struct
 {
     pthread_mutex_t mutex;
@@ -139,10 +138,11 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             if (mir_pointer_event_action(pointer) != mir_pointer_action_leave)
             {
                 state->touches = 1;
-                state->touch[0].x = mir_pointer_event_axis_value(pointer,
-                                                         mir_pointer_axis_x);
-                state->touch[0].y = mir_pointer_event_axis_value(pointer,
-                                                         mir_pointer_axis_y);
+                state->touch[0] = (Vec2)
+                {
+                    mir_pointer_event_axis_value(pointer, mir_pointer_axis_x),
+                    mir_pointer_event_axis_value(pointer, mir_pointer_axis_y)
+                };
             }
         }
         else if (mir_input_event_get_type(input) == mir_input_event_type_touch)
@@ -154,10 +154,11 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             state->touches = n;
             for (int t = 0; t < n; ++t)
             {
-                state->touch[t].x = mir_touch_event_axis_value(touch, t,
-                                                        mir_touch_axis_x);
-                state->touch[t].y = mir_touch_event_axis_value(touch, t,
-                                                        mir_touch_axis_y);
+                state->touch[t] = (Vec2)
+                {
+                    mir_touch_event_axis_value(touch, t, mir_touch_axis_x),
+                    mir_touch_event_axis_value(touch, t, mir_touch_axis_y)
+                };
             }
         }
         break;
