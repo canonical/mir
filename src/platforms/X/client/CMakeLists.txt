@@ -4,6 +4,7 @@ set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mirclientplatformXobjects OBJECT
   client_platform_factory.cpp
+  client_platform.cpp
 )
 
 add_library(

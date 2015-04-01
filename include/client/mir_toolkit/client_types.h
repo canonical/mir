@@ -164,7 +164,8 @@ enum { mir_platform_package_max = 32 };
 typedef enum MirPlatformType
 {
     mir_platform_type_gbm,
-    mir_platform_type_android
+    mir_platform_type_android,
+    mir_platform_type_X,
 } MirPlatformType;
 
 typedef struct MirPlatformPackage
