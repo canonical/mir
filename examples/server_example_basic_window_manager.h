@@ -152,13 +152,12 @@ private:
     }
 
     void modify_surface(
-        std::shared_ptr<scene::Session> const& /*session*/,
+        std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
         shell::SurfaceSpecification const& modifications) override
     {
-        // TODO use the policy
-        if (modifications.name.is_set())
-            surface->rename(modifications.name.value());
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        policy.handle_modify_surface(session, surface, modifications);
     }
 
     void remove_surface(

@@ -508,6 +508,7 @@ MIR_SERVER_31 {
     mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
     mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
     mir::shell::CanonicalWindowManagerPolicy::handle_place_new_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_modify_surface*;
     mir::shell::CanonicalWindowManagerPolicy::handle_new_surface*;
     mir::shell::CanonicalSurfaceInfo::CanonicalSurfaceInfo*;
     mir::shell::CanonicalWindowManagerPolicy::handle_delete_surface*;

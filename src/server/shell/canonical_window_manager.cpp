@@ -240,6 +240,15 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
     }
 }
 
+void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& surface,
+    SurfaceSpecification const& modifications)
+{
+    if (modifications.name.is_set())
+        surface->rename(modifications.name.value());
+}
+
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = tools->info_for(surface).parent.lock())

@@ -124,6 +124,15 @@ void me::TilingWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Sessi
     tools->info_for(session).surfaces.push_back(surface);
 }
 
+void me::TilingWindowManagerPolicy::handle_modify_surface(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& surface,
+    shell::SurfaceSpecification const& modifications)
+{
+    if (modifications.name.is_set())
+        surface->rename(modifications.name.value());
+}
+
 void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     auto& surfaces = tools->info_for(session).surfaces;

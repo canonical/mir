@@ -306,6 +306,15 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
     }
 }
 
+void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& surface,
+    shell::SurfaceSpecification const& modifications)
+{
+    if (modifications.name.is_set())
+        surface->rename(modifications.name.value());
+}
+
 void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = tools->info_for(surface).parent.lock())
