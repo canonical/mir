@@ -16,6 +16,8 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#define _POSIX_C_SOURCE 200112L  // for setenv() from stdlib.h
+
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/events/input/input_event.h"
 
@@ -393,6 +395,10 @@ int main(int argc, char *argv[])
             }
         }
     }
+
+    // TODO: Replace setenv with a proper Mir function (LP: #1439590)
+    if (swap_interval == 0)
+        setenv("MIR_CLIENT_INPUT_RATE", "0", 0);
 
     conn = mir_connect_sync(mir_socket, argv[0]);
     if (!mir_connection_is_valid(conn))
