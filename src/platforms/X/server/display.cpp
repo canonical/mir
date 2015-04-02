@@ -23,6 +23,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
+#include "../debug.h"
 
 #include <boost/throw_exception.hpp>
 #include <fcntl.h>
@@ -34,46 +35,66 @@ namespace geom=mir::geometry;
 
 mgx::Display::Display()
 {
-#if 0
-    display = XOpenDisplay(0);
-    // TODO: check for error
-    int blackColor = BlackPixel(dpy, DefaultScreen(dpy));
-    int whiteColor = WhitePixel(dpy, DefaultScreen(dpy));
+    CALLED
 
-    Window mir_display = XCreateSimpleWindow(display, DefaultRootWindow(display), 0, 0,
-				     200, 100, 0, blackColor, blackColor);
+    dpy = XOpenDisplay(NULL);
 
-    XSelectInput(dpy, w, StructureNotifyMask);
+    if (!dpy)
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get a display"));
 
-    // "Map" the window (that is, make it appear on the screen)
+    GLint att[] = { GLX_RGBA, GLX_DOUBLEBUFFER, None };
+    vi = glXChooseVisual(dpy, 0, att);
 
-    XMapWindow(dpy, w);
+    auto root = DefaultRootWindow(dpy);
 
-    // Create a "Graphics Context"
+    if (!vi)
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get a display"));
 
-    GC gc = XCreateGC(dpy, w, 0, NIL);
+    cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
 
-    // Tell the GC we draw using the white color
+    XSetWindowAttributes swa;
+    swa.colormap = cmap;
+    swa.event_mask = ExposureMask | KeyPressMask;
 
-    XSetForeground(dpy, gc, whiteColor);
+    win = XCreateWindow(dpy, root, 0, 0, 600, 600, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
 
-    // Wait for the MapNotify event
+    XMapWindow(dpy, win);
+    XStoreName(dpy, win, "Mir on X");
 
-    for(;;) {
-	    XEvent e;
-	    XNextEvent(dpy, &e);
-	    if (e.type == MapNotify)
-		  break;
+    glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
+
+    glXMakeCurrent(dpy, win, glc);
+
+    XEvent xev;
+    while(1)
+    {
+       XNextEvent(dpy, &xev);
+
+       if(xev.type == Expose)
+       {
+           XGetWindowAttributes(dpy, win, &gwa);
+           glViewport(0, 0, gwa.width, gwa.height);
+
+           glClearColor(1.0, 1.0, 1.0, 1.0);
+           glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+           glXSwapBuffers(dpy, win);
+           sleep(1);
+           return;
+       }
     }
-#endif
 }
 
 mgx::Display::~Display() noexcept
 {
+    glXMakeCurrent(dpy, None, NULL);
+    glXDestroyContext(dpy, glc);
+    XDestroyWindow(dpy, win);
+    XCloseDisplay(dpy);
 }
 
 void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& /*f*/)
 {
+	CALLED
 #if 0
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
@@ -83,6 +104,7 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
+	CALLED
 #if 0
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     return std::unique_ptr<mg::DisplayConfiguration>(new mgx::DisplayConfiguration(config));
@@ -93,6 +115,7 @@ std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 
 void mgx::Display::configure(mg::DisplayConfiguration const& /*new_configuration*/)
 {
+	CALLED
 #if 0
     if (!new_configuration.valid())
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
@@ -123,6 +146,7 @@ void mgx::Display::register_configuration_change_handler(
     EventHandlerRegister& /* event_handler */,
     DisplayConfigurationChangeHandler const& /* change_handler */)
 {
+	CALLED
 #if 0
     event_handler.register_fd_handler({display_change_pipe->read_pipe}, this, [change_handler, this](int){
         change_handler();
@@ -136,23 +160,28 @@ void mgx::Display::register_pause_resume_handlers(
     DisplayPauseHandler const& /*pause_handler*/,
     DisplayResumeHandler const& /*resume_handler*/)
 {
+	CALLED
 }
 
 void mgx::Display::pause()
 {
+	CALLED
 }
 
 void mgx::Display::resume()
 {
+	CALLED
 }
 
 auto mgx::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial_image */) -> std::shared_ptr<Cursor>
 {
+	CALLED
     return nullptr;
 }
 
 std::unique_ptr<mg::GLContext> mgx::Display::create_gl_context()
 {
+	CALLED
 #if 0
     return std::unique_ptr<mg::GLContext>{new mga::PbufferGLContext(gl_context)};
 #else

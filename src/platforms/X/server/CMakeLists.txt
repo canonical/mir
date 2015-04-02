@@ -21,6 +21,7 @@ add_library(
   platform.cpp
   display.cpp
   display_configuration.cpp
+  gl_context.cpp
 )
 
 add_library(
@@ -33,6 +34,7 @@ target_link_libraries(
   mirplatformgraphicsX
 
   mirplatform
+  GL
 #  ${Boost_PROGRAM_OPTIONS_LIBRARY}
 #  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 #  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
