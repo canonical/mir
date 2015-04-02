@@ -22,6 +22,7 @@
 #include "mir/scene/observer.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/compositor/decoration.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
@@ -251,10 +252,10 @@ TEST_F(SurfaceStack, decor_name_is_surface_name)
 
     auto& element = elements.front();
 
-    auto const& decor = element->decoration();
-    EXPECT_TRUE(decor);
-    EXPECT_EQ(mc::Decoration::Type::surface, decor.type);
-    EXPECT_EQ("Mary had a little lamb", decor.name);
+    auto decor = element->decoration();
+    ASSERT_THAT(decor, Ne(nullptr));
+    EXPECT_EQ(mc::Decoration::Type::surface, decor->type);
+    EXPECT_EQ("Mary had a little lamb", decor->name);
 }
 
 TEST_F(SurfaceStack, gets_surface_renames)
@@ -284,10 +285,10 @@ TEST_F(SurfaceStack, gets_surface_renames)
 
     auto& element = elements.front();
 
-    auto const& decor = element->decoration();
-    EXPECT_TRUE(decor);
-    EXPECT_EQ(mc::Decoration::Type::surface, decor.type);
-    EXPECT_EQ("username@hostname: ~/Documents", decor.name);
+    auto decor = element->decoration();
+    ASSERT_THAT(decor, Ne(nullptr));
+    EXPECT_EQ(mc::Decoration::Type::surface, decor->type);
+    EXPECT_EQ("username@hostname: ~/Documents", decor->name);
 }
 
 TEST_F(SurfaceStack, scene_counts_pending_accurately)

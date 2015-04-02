@@ -83,8 +83,8 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         auto embellished = renderer.would_embellish(*renderable, viewport);
         auto any_part_drawn = (viewport.overlaps(renderable->screen_position()) || embellished);
         
-        if (auto const& decor = it->decoration())
-            decorated[renderable->id()] = decor;
+        if (auto decor = it->decoration())
+            decorated[renderable->id()] = std::move(decor);
         if (any_part_drawn)
         {
             renderable_list.push_back(renderable);
