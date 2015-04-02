@@ -310,7 +310,7 @@ int main(int argc, char *argv[])
             // TRANSPOSED projection matrix to convert from the Mir input
             // rectangle {{0,0},{w,h}} to GL screen rectangle {{-1,1},{2,2}}.
             GLfloat matrix[16] = {2.0f/w, 0.0f,   0.0f, 0.0f,
-                                  0.0,   -2.0f/h, 0.0f, 0.0f,
+                                  0.0f,  -2.0f/h, 0.0f, 0.0f,
                                   0.0f,   0.0f,   1.0f, 0.0f,
                                  -1.0f,   1.0f,   0.0f, 1.0f};
             // Note GL_FALSE: GLES does not support the transpose option
