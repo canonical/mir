@@ -48,6 +48,7 @@ struct CanonicalSurfaceInfoCopy
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
     std::shared_ptr<scene::Surface> decoration;
+    bool is_decoration = false;
 };
 
 // standard window management algorithm:
@@ -63,6 +64,7 @@ class CanonicalWindowManagerPolicyCopy
 public:
     using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy, CanonicalSurfaceInfoCopy>;
     using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfoCopy>::type;
+    using CanonicalSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfoCopy>::type;
 
     explicit CanonicalWindowManagerPolicyCopy(
         Tools* const tools,
@@ -95,8 +97,9 @@ public:
 
     bool handle_pointer_event(MirPointerEvent const* event);
 
-    std::vector<std::shared_ptr<scene::Surface>> generate_decorations_for(
-        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
+    void generate_decorations_for(
+        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface,
+        CanonicalSurfaceInfoMap& surface_info);
 
 private:
     static const int modifier_mask =
