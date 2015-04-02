@@ -22,6 +22,7 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/frontend/surface_modifications.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 
 #include <gmock/gmock.h>
@@ -51,6 +52,7 @@ struct MockShell : public frontend::Shell
     MOCK_METHOD1(stop_prompt_session, void(std::shared_ptr<frontend::PromptSession> const&));
 
     MOCK_METHOD2(create_surface, frontend::SurfaceId(std::shared_ptr<frontend::Session> const&, scene::SurfaceCreationParameters const& params));
+    MOCK_METHOD3(modify_surface, void(std::shared_ptr<frontend::Session> const&, frontend::SurfaceId, frontend::SurfaceModifications const&));
     MOCK_METHOD2(destroy_surface, void(std::shared_ptr<frontend::Session> const&, frontend::SurfaceId));
 
     MOCK_METHOD4(set_surface_attribute, int(
