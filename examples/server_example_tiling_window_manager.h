@@ -82,7 +82,7 @@ public:
 
     void drag(geometry::Point cursor);
 
-    bool handle_key_event(MirKeyboardEvent const* event);
+    bool handle_keyboard_event(MirKeyboardEvent const* event);
 
     bool handle_touch_event(MirTouchEvent const* event);
 

@@ -53,7 +53,7 @@ public:
 
     void remove_display(geometry::Rectangle const& area) override;
 
-    bool handle_key_event(MirKeyboardEvent const* event) override;
+    bool handle_keyboard_event(MirKeyboardEvent const* event) override;
 
     bool handle_touch_event(MirTouchEvent const* event) override;
 

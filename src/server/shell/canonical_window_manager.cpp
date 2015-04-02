@@ -344,7 +344,7 @@ void msh::CanonicalWindowManagerPolicy::drag(Point cursor)
     old_cursor = cursor;
 }
 
-bool msh::CanonicalWindowManagerPolicy::handle_key_event(MirKeyboardEvent const* event)
+bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);
     auto const scan_code = mir_keyboard_event_scan_code(event);
