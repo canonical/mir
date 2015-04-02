@@ -59,6 +59,7 @@ struct StubShell : msh::ShellWrapper
 
 struct SurfaceModifications : mtf::ConnectedClientWithASurface
 {
+    SurfaceModifications() { add_to_environment("MIR_SERVER_ENABLE_INPUT", "OFF"); }
 
     void SetUp() override
     {
@@ -88,5 +89,5 @@ TEST_F(SurfaceModifications, rename_is_notified)
 
     EXPECT_CALL(surface_observer, renamed(StrEq(new_title)));
 
-    mir_wait_for(mir_surface_set_title(surface, new_title));
+    mir_surface_set_title(surface, new_title);
 }
