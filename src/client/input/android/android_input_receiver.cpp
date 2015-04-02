@@ -91,7 +91,7 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
         process_and_maybe_send_event();
     });
 
-    dispatcher.add_watch(mir::Fd{input_channel->getFd()},
+    dispatcher.add_watch(mir::Fd{mir::IntOwnedFd{input_channel->getFd()}},
                          [this]() { process_and_maybe_send_event(); });
 }
 
