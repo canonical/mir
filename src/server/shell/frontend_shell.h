@@ -59,7 +59,7 @@ struct FrontendShell : mf::Shell
 
     mf::SurfaceId create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params) override;
 
-    void modify_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface, mf::SurfaceModifications const& modifications) override;
+    void modify_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface, SurfaceSpecification const& modifications) override;
 
     void destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface) override;
 

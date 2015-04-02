@@ -30,7 +30,7 @@
 
 namespace mir
 {
-namespace frontend { class EventSink; class SurfaceModifications; }
+namespace frontend { class EventSink; }
 namespace geometry { class Rectangle; }
 namespace scene
 {
@@ -46,6 +46,7 @@ class SurfaceCreationParameters;
 namespace shell
 {
 class InputTargeter;
+class SurfaceSpecification;
 
 class Shell :
     public virtual FocusController,
@@ -77,7 +78,7 @@ public:
     virtual void modify_surface(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        frontend::SurfaceModifications  const& modifications) = 0;
+        shell::SurfaceSpecification  const& modifications) = 0;
 
     virtual void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) = 0;
 

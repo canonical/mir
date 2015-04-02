@@ -16,8 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_FRONTEND_SURFACE_MODIFICATIONS_H_
-#define MIR_FRONTEND_SURFACE_MODIFICATIONS_H_
+#ifndef MIR_SHELL_SURFACE_SPECIFICATION_H_
+#define MIR_SHELL_SURFACE_SPECIFICATION_H_
 
 #include "mir/optional_value.h"
 
@@ -25,9 +25,10 @@
 
 namespace mir
 {
-namespace frontend
+namespace shell
 {
-struct SurfaceModifications
+/// Specification of surface properties requested by client
+struct SurfaceSpecification
 {
     optional_value<std::string> name;
     // TODO: type/state/size etc (LP: #1422522) (LP: #1420573)
@@ -35,4 +36,4 @@ struct SurfaceModifications
 }
 }
 
-#endif /* MIR_FRONTEND_SURFACE_MODIFICATIONS_H_ */
+#endif /* MIR_SHELL_SURFACE_SPECIFICATION_H_ */

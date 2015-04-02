@@ -58,7 +58,7 @@ mf::SurfaceId mf::ShellWrapper::create_surface(std::shared_ptr<Session> const& s
     return wrapped->create_surface(session, params);
 }
 
-void mf::ShellWrapper::modify_surface(std::shared_ptr<Session> const& session, SurfaceId surface, SurfaceModifications const& modifications)
+void mf::ShellWrapper::modify_surface(std::shared_ptr<Session> const& session, SurfaceId surface, shell::SurfaceSpecification const& modifications)
 {
     wrapped->modify_surface(session, surface, modifications);
 }

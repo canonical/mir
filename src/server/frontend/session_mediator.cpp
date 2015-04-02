@@ -22,7 +22,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
-#include "mir/frontend/surface_modifications.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/coordinate_translator.h"
 #include "mir/frontend/display_changer.h"
@@ -69,6 +69,7 @@
 #include <cstring>
 
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mf = mir::frontend;
 namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
@@ -426,7 +427,7 @@ void mf::SessionMediator::modify_surface(
         if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        mf::SurfaceModifications mods;
+        msh::SurfaceSpecification mods;
         if (request->has_name())
             mods.name = request->name();
         // TODO: More fields soon (LP: #1422522) (LP: #1420573)

@@ -19,12 +19,12 @@
 #ifndef MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 #define MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 
-#include "mir/frontend/surface_modifications.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/abstract_shell.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/shell/window_manager.h"
 
 #include <map>
@@ -154,7 +154,7 @@ private:
     void modify_surface(
         std::shared_ptr<scene::Session> const& /*session*/,
         std::shared_ptr<scene::Surface> const& surface,
-        frontend::SurfaceModifications  const& modifications) override
+        shell::SurfaceSpecification const& modifications) override
     {
         // TODO use the policy
         if (modifications.name.is_set())

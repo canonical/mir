@@ -27,11 +27,12 @@
 
 namespace mir
 {
-namespace frontend { class SurfaceModifications; }
 namespace geometry { class Rectangle; }
 namespace scene { class Session; class Surface; class SurfaceCreationParameters; }
 namespace shell
 {
+class SurfaceSpecification;
+
 /// interface to provide window management logic
 class WindowManager
 {
@@ -48,7 +49,7 @@ public:
     virtual void modify_surface(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        frontend::SurfaceModifications  const& modifications) = 0;
+        SurfaceSpecification  const& modifications) = 0;
 
     virtual void remove_surface(
         std::shared_ptr<scene::Session> const& session,
