@@ -874,4 +874,6 @@ TEST_F(ClientLibrary, can_change_event_delegate)
     mir_surface_set_event_handler(surface, &dummy_event_handler_one, nullptr);
     mir_surface_set_event_handler(surface, &dummy_event_handler_two, nullptr);
 
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
 }
