@@ -19,6 +19,7 @@
 #ifndef MIR_SHELL_BASIC_WINDOW_MANAGER_H_
 #define MIR_SHELL_BASIC_WINDOW_MANAGER_H_
 
+#include "mir/frontend/surface_modifications.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -140,6 +141,16 @@ protected:
         policy.handle_new_surface(session, surface);
         surface_info.emplace(surface, SurfaceInfo{session, surface});
         return result;
+    }
+
+    void modify_surface(
+        std::shared_ptr<scene::Session> const& /*session*/,
+        std::shared_ptr<scene::Surface> const& surface,
+        frontend::SurfaceModifications  const& modifications) override
+    {
+        // TODO use the policy
+        if (modifications.name.is_set())
+            surface->rename(modifications.name.value());
     }
 
     void remove_surface(

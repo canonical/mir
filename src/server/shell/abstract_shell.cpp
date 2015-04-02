@@ -78,6 +78,11 @@ mf::SurfaceId msh::AbstractShell::create_surface(
     return window_manager->add_surface(session, params, build);
 }
 
+void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, frontend::SurfaceModifications const& modifications)
+{
+    window_manager->modify_surface(session, surface, modifications);
+}
+
 void msh::AbstractShell::destroy_surface(
     std::shared_ptr<ms::Session> const& session,
     mf::SurfaceId surface)

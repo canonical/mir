@@ -240,6 +240,7 @@ MIR_SERVER_31 {
     mir::shell::ShellWrapper::focus_next*;
     mir::shell::ShellWrapper::get_surface_attribute*;
     mir::shell::ShellWrapper::handle*;
+    mir::shell::ShellWrapper::modify_surface*;
     mir::shell::ShellWrapper::open_session*;
     mir::shell::ShellWrapper::raise*;
     mir::shell::ShellWrapper::remove_display*;

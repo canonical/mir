@@ -27,6 +27,7 @@
 
 namespace mir
 {
+namespace frontend { class SurfaceModifications; }
 namespace geometry { class Rectangle; }
 namespace scene { class Session; class Surface; class SurfaceCreationParameters; }
 namespace shell
@@ -43,6 +44,11 @@ public:
         std::shared_ptr<scene::Session> const& session,
         scene::SurfaceCreationParameters const& params,
         std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) = 0;
+
+    virtual void modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        frontend::SurfaceModifications  const& modifications) = 0;
 
     virtual void remove_surface(
         std::shared_ptr<scene::Session> const& session,

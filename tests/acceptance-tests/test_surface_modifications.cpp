@@ -66,7 +66,6 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         std::shared_ptr<StubShell> shell;
 
         server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
-            -> std::shared_ptr<msh::Shell>
         {
             auto const msc = std::make_shared<StubShell>(wrapped);
             shell = msc;
