@@ -32,6 +32,8 @@ struct SurfaceSpecification
 {
     optional_value<std::string> name;
     // TODO: type/state/size etc (LP: #1422522) (LP: #1420573)
+    // Once fully populated for surface modification this can probably
+    // also replace scene::SurfaceCreationParameters in create_surface()
 };
 }
 }
