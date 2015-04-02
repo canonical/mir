@@ -606,8 +606,9 @@ MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec);
  *  \param [in] spec  The spec to accumulate the request in
  *  \param [in] stream_to_place The stream to place
  *  \param [in] reference_stream The stream which will be above stream_to_place
+ *  \return     whether the change was applied to spec
  */
-void mir_surface_spec_place_buffer_stream_below(
+bool mir_surface_spec_place_buffer_stream_below(
     MirSurfaceSpec* spec, MirBufferStream* stream_to_place, MirBufferStream* reference_stream);
 
 /** Same as mir_surface_spec_place_buffer_stream_below, except placing stream_to_place
@@ -616,8 +617,9 @@ void mir_surface_spec_place_buffer_stream_below(
  *  \param [in] spec  The spec to accumulate the request in
  *  \param [in] stream_to_place The stream to place
  *  \param [in] reference_stream The stream which will be below stream_to_place
+ *  \return     whether the change was applied to spec
  */
-void mir_surface_spec_place_buffer_stream_above(
+bool mir_surface_spec_place_buffer_stream_above(
     MirSurfaceSpec* spec, MirBufferStream* stream_to_place, MirBufferStream* reference_stream);
 
 /** Specify the position of the stream within the surface. This establishes
@@ -634,15 +636,16 @@ void mir_surface_spec_place_buffer_stream_above(
  *  \param [in] stream_to_move  The stream to move
  *  \param [in] x  The x coordinate of the stream
  *  \param [in] y  The x coordinate of the stream
+ *  \return     whether the change was applied to spec
  */
-void mir_surface_spec_place_buffer_stream_position(
+bool mir_surface_spec_place_buffer_stream_position(
     MirSurfaceSpec* spec, MirBufferStream* stream_to_move, int x, int y);
 
-/* Returns the number of streams currently associated with surface
+/* Returns the maximum of streams the surface supports
  *  \param [in] surface  A surface
  *  \return              The number of streams associated with surface
  */
-unsigned int mir_surface_get_number_of_streams(MirSurface* surface);
+unsigned int mir_surface_get_maximum_number_of_streams(MirSurface* surface);
 
 /* Query the streams associated with this surface and their positions.
  * streams and positions must have the size of num_streams.
@@ -653,8 +656,9 @@ unsigned int mir_surface_get_number_of_streams(MirSurface* surface);
  *  \param [out] streams An array of MirBufferStream* that is of size num_streams
  *  \param [out] positions An array of MirRectangles that is of size num_streams
  *  \param [in] num_streams The size of both positions and streams array
+ *  \return     the number of streams and positions that were filled with valid data
  */
-void mir_surface_get_streams(
+unsigned int mir_surface_get_streams(
     MirSurface* surface, MirBufferStream** streams, MirRectangle* positions, unsigned int num_streams);
 
 #ifdef __cplusplus

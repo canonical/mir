@@ -599,33 +599,36 @@ MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name)
     return result;
 }
 
-void mir_surface_spec_place_buffer_stream_below(
+bool mir_surface_spec_place_buffer_stream_below(
     MirSurfaceSpec* spec, MirBufferStream* stream_to_place, MirBufferStream* reference_stream)
 {
     (void) spec;
     (void) stream_to_place;
     (void) reference_stream;
+    return false;
 }
 
-void mir_surface_spec_place_buffer_stream_position(
+bool mir_surface_spec_place_buffer_stream_position(
     MirSurfaceSpec* spec, MirBufferStream* stream_to_move, int x, int y)
 {
     (void) spec;
     (void) stream_to_move;
     (void) x;
     (void) y;
+    return false;
 }
 
-unsigned int mir_surface_get_number_of_streams(MirSurface*)
+unsigned int mir_surface_get_maximum_number_of_streams(MirSurface*)
 {
     return 1;
 }
 
-void mir_surface_get_streams(
+unsigned int mir_surface_get_streams(
     MirSurface* surface, MirBufferStream** streams, MirRectangle* positions, unsigned int num_streams)
 {
     (void) surface;
     (void) streams;
     (void) positions;
     (void) num_streams;
+    return 0;
 }

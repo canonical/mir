@@ -218,15 +218,15 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     auto change_spec = mir_surface_begin_changes(surface);
     for(auto& stream : streams)
     {
-        mir_surface_spec_place_buffer_stream_below(change_spec, *stream, above_stream);
-        mir_surface_spec_place_buffer_stream_position(
-            change_spec, *stream, stream->position().x.as_int(), stream->position().y.as_int());
+        EXPECT_TRUE(mir_surface_spec_place_buffer_stream_below(change_spec, *stream, above_stream));
+        EXPECT_TRUE(mir_surface_spec_place_buffer_stream_position(
+            change_spec, *stream, stream->position().x.as_int(), stream->position().y.as_int()));
         above_stream = *stream;
     }
     mir_wait_for(mir_surface_spec_commit_changes(change_spec));
     mir_surface_spec_release(change_spec);
 
-    unsigned int num_streams = mir_surface_get_number_of_streams(surface);
+    unsigned int num_streams = mir_surface_get_maximum_number_of_streams(surface);
     ASSERT_THAT(num_streams, Eq(streams.size() + 1));
     std::vector<MirBufferStream*> buffer_streams{num_streams};
     std::vector<MirRectangle> positions{num_streams};
