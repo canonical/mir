@@ -21,7 +21,7 @@
 
 #include "mir_test/fake_event_hub.h"
 
-#include "src/server/shell/default_window_manager.h"
+#include "mir/shell/default_window_manager.h"
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;
@@ -69,7 +69,6 @@ auto mtf::FakeEventHubServerConfiguration::the_window_manager_builder() -> shell
         { return std::make_shared<ms::DefaultWindowManager>(
             focus_controller,
             the_placement_strategy(),
-            the_session_coordinator(),
-            the_surface_configurator()); };
+            the_session_coordinator()); };
 }
 
