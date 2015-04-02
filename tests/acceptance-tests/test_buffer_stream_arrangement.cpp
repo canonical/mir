@@ -171,7 +171,7 @@ struct OrderTrackingDBCFactory : mc::DisplayBufferCompositorFactory
     std::shared_ptr<Ordering> const ordering;
 };
 
-struct MirSurfaceArrangements : mtf::ConnectedClientWithASurface
+struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
 {
     void SetUp() override
     {
@@ -211,7 +211,7 @@ struct MirSurfaceArrangements : mtf::ConnectedClientWithASurface
 };
 }
 
-TEST_F(MirSurfaceArrangements, arrangements_are_applied)
+TEST_F(BufferStreamArrangement, arrangements_are_applied)
 {
     using namespace testing;
     MirBufferStream* above_stream = *primary_stream;

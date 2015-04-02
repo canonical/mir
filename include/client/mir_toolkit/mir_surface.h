@@ -631,7 +631,7 @@ void mir_surface_spec_place_buffer_stream_above(
  *  released.
  *
  *  \param [in] spec  The spec to accumulate the request in
- *  \param [in] stream_to_move  The stream to movee
+ *  \param [in] stream_to_move  The stream to move
  *  \param [in] x  The x coordinate of the stream
  *  \param [in] y  The x coordinate of the stream
  */
