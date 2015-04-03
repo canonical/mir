@@ -18,6 +18,7 @@
 
 #include "platform.h"
 #include "display.h"
+#include "buffer_allocator.h"
 #include "../debug.h"
 
 namespace mg = mir::graphics;
@@ -31,9 +32,8 @@ mgx::Platform::Platform(std::shared_ptr<DisplayReport> const& /*listener*/)
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator()
 {
-//    return std::make_shared<mgm::BufferAllocator>(gbm.device, bypass_option_);
     CALLED
-    return nullptr;
+    return std::make_shared<mgx::BufferAllocator>();
 }
 
 std::shared_ptr<mg::Display> mgx::Platform::create_display(
