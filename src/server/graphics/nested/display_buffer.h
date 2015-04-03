@@ -19,7 +19,20 @@
 #ifndef MIR_GRAPHICS_NESTED_DETAIL_NESTED_OUTPUT_H_
 #define MIR_GRAPHICS_NESTED_DETAIL_NESTED_OUTPUT_H_
 
-#include "nested_display.h"
+#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_configuration.h"
+#include "mir/graphics/egl_resources.h"
+#include "display.h"
+#include "host_surface.h"
+#include "mir_toolkit/client_types.h"
+
+#include <EGL/egl.h>
+
+#include <mutex>
+#include <unordered_map>
+#include <EGL/egl.h>
 
 namespace mir
 {
@@ -32,17 +45,17 @@ class HostSurface;
 namespace detail
 {
 
-class NestedOutput : public DisplayBuffer
+class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    NestedOutput(
+    DisplayBuffer(
         EGLDisplayHandle const& egl_display,
         std::shared_ptr<HostSurface> const& host_surface,
         geometry::Rectangle const& area,
         std::shared_ptr<input::InputDispatcher> const& input_dispatcher,
         MirPixelFormat preferred_format);
 
-    ~NestedOutput() noexcept;
+    ~DisplayBuffer() noexcept;
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
@@ -53,8 +66,8 @@ public:
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
-    NestedOutput(NestedOutput const&) = delete;
-    NestedOutput operator=(NestedOutput const&) = delete;
+    DisplayBuffer(DisplayBuffer const&) = delete;
+    DisplayBuffer operator=(DisplayBuffer const&) = delete;
 private:
     bool const uses_alpha_;
     EGLDisplayHandle const& egl_display;
