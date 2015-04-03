@@ -23,6 +23,8 @@ add_library(
   display_configuration.cpp
   gl_context.cpp
   buffer_allocator.cpp
+  anonymous_shm_file.cpp
+  shm_buffer.cpp
 )
 
 add_library(

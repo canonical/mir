@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_X_BUFFER_ALLOCATOR_H_
 
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/buffer_id.h"
 
 namespace mir
 {
@@ -39,6 +40,11 @@ public:
         graphics::BufferProperties const& buffer_properties) override;
 
     std::vector<MirPixelFormat> supported_pixel_formats() override;
+
+private:
+    bool is_pixel_format_supported(MirPixelFormat format);
+    std::shared_ptr<Buffer> alloc_software_buffer(
+        graphics::BufferProperties const& buffer_properties);
 };
 
 }

@@ -18,6 +18,12 @@
  */
 
 #include "buffer_allocator.h"
+#include "anonymous_shm_file.h"
+#include "shm_buffer.h"
+#include "mir/graphics/buffer_properties.h"
+#include <boost/throw_exception.hpp>
+#include <algorithm>
+
 #include "../debug.h"
 
 namespace mg  = mir::graphics;
@@ -25,20 +31,43 @@ namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
 std::shared_ptr<mg::Buffer> mgx::BufferAllocator::alloc_buffer(
-    BufferProperties const& /*buffer_properties*/)
+    BufferProperties const& buffer_properties)
 {
-#if 0
 	std::shared_ptr<mg::Buffer> buffer;
 
+    CALLED
     if (buffer_properties.usage == BufferUsage::software)
         buffer = alloc_software_buffer(buffer_properties);
     else
-        buffer = alloc_hardware_buffer(buffer_properties);
+        return nullptr;
+//        buffer = alloc_hardware_buffer(buffer_properties);
 
     return buffer;
-#endif
-    CALLED
-    return nullptr;
+}
+
+std::shared_ptr<mg::Buffer> mgx::BufferAllocator::alloc_software_buffer(
+    BufferProperties const& buffer_properties)
+{
+    if (!is_pixel_format_supported(buffer_properties.format))
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error(
+                "Trying to create SHM buffer with unsupported pixel format"));
+    }
+
+    auto const stride = geom::Stride{
+        MIR_BYTES_PER_PIXEL(buffer_properties.format) *
+        buffer_properties.size.width.as_uint32_t()};
+    size_t const size_in_bytes =
+        stride.as_int() * buffer_properties.size.height.as_int();
+    auto const shm_file =
+        std::make_shared<mgx::AnonymousShmFile>(size_in_bytes);
+
+    auto const buffer =
+        std::make_shared<ShmBuffer>(shm_file, buffer_properties.size,
+                                    buffer_properties.format);
+
+    return buffer;
 }
 
 std::vector<MirPixelFormat> mgx::BufferAllocator::supported_pixel_formats()
@@ -50,4 +79,13 @@ std::vector<MirPixelFormat> mgx::BufferAllocator::supported_pixel_formats()
     };
 
     return pixel_formats;
+}
+
+bool mgx::BufferAllocator::is_pixel_format_supported(MirPixelFormat format)
+{
+    auto formats = supported_pixel_formats();
+
+    auto iter = std::find(formats.begin(), formats.end(), format);
+
+    return iter != formats.end();
 }
