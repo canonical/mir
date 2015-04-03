@@ -57,7 +57,9 @@ me::AdorningRenderer::Program::~Program()
     glDeleteProgram(program);
 }
 
-me::AdorningRenderer::AdorningRenderer(mg::DisplayBuffer& display_buffer) :
+me::AdorningRenderer::AdorningRenderer(
+    mg::DisplayBuffer& display_buffer,
+    std::tuple<float, float, float> const& background_rgb) :
     db{display_buffer},
     vert_shader_src{
         "attribute vec4 vPosition;"
@@ -95,7 +97,7 @@ me::AdorningRenderer::AdorningRenderer(mg::DisplayBuffer& display_buffer) :
     uvCoord = glGetAttribLocation(program.program, "uvCoord");
     glVertexAttribPointer(uvCoord, 2, GL_FLOAT, GL_FALSE, 0, uv_data);
     posUniform = glGetUniformLocation(program.program, "pos");
-    glClearColor(0.8, 0.5, 0.8, 1.0); //light purple
+    glClearColor(std::get<0>(background_rgb), std::get<1>(background_rgb), std::get<2>(background_rgb), 1.0);
     scaleUniform = glGetUniformLocation(program.program, "scale");
     alphaUniform = glGetUniformLocation(program.program, "alpha");
 

@@ -38,35 +38,66 @@ char const* const renderer_description = "Select an alterative renderer [{adorni
 char const* const renderer_adorning = "adorning";
 char const* const renderer_default = "default";
 
+char const* const background_option = "background-color";
+char const* const background_description =
+    "fill the background of the adorning renderer with a color [{purple|blue|grey|black}]";
+char const* const background_purple = "purple";
+char const* const background_blue = "blue";
+char const* const background_grey = "grey";
+char const* const background_black = "black";
+
 class AdorningRendererFactory : public mc::DisplayBufferCompositorFactory
 {
+public:
+    AdorningRendererFactory(std::tuple<float, float, float> const& rgb_color) :
+        color(rgb_color)
+    {
+    }
+
     std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(
         mg::DisplayBuffer& display_buffer) override
     {
-        return std::make_unique<me::AdorningRenderer>(display_buffer);
+        return std::make_unique<me::AdorningRenderer>(display_buffer, color);
     }
+private:
+    std::tuple<float, float, float> const color;
 };
 }
 
 void me::add_custom_renderer_option_to(Server& server)
 {
     server.add_configuration_option(renderer_option, renderer_description, renderer_default);
+    server.add_configuration_option(background_option, background_description, background_black);
 
     server.wrap_display_buffer_compositor_factory(
         [server](std::shared_ptr<mc::DisplayBufferCompositorFactory> const& factory)
         -> std::shared_ptr<mc::DisplayBufferCompositorFactory>
     {
         auto const selection = server.get_options()->get<std::string>(renderer_option);
+
+        auto const color_name = server.get_options()->get<std::string>(background_option);
         if (selection == renderer_adorning)
         {
-            return std::make_shared<AdorningRendererFactory>(); 
+            std::tuple<float, float, float> color;
+            if (color_name == background_blue)
+                color = std::make_tuple(0.4, 0.5, 1.0);
+            else if (color_name == background_grey)
+                color = std::make_tuple(0.3, 0.3, 0.3);
+            else if (color_name == background_purple)
+                color = std::make_tuple(0.8, 0.5, 0.8);
+            else if (color_name == background_black)
+                color = std::make_tuple(0.0, 0.0, 0.0);
+            else
+                throw mir::AbnormalExit("Unknown color selection: " + color_name);
+            return std::make_shared<AdorningRendererFactory>(color); 
         }
         else if (selection == renderer_default)
         {
+            if (color_name != background_black)
+                throw mir::AbnormalExit("default renderer can only set background color to black");
             return factory;
         }
 
         throw mir::AbnormalExit("Unknown renderer selection: " + selection);
     });
-
 }

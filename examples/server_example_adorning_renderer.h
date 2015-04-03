@@ -20,6 +20,7 @@
 #define MIR_EXAMPLES_ADORNING_RENDERER_H_
 #include "mir/compositor/display_buffer_compositor.h"
 #include <GLES2/gl2.h>
+#include <tuple>
 
 namespace mir
 {
@@ -32,7 +33,7 @@ namespace examples
 class AdorningRenderer : public compositor::DisplayBufferCompositor
 {
 public:
-    AdorningRenderer(graphics::DisplayBuffer&);
+    AdorningRenderer(graphics::DisplayBuffer&, std::tuple<float, float, float> const& background_rgb);
     void composite(compositor::SceneElementSequence&& scene_sequence) override;
 private:
     graphics::DisplayBuffer& db;
@@ -51,12 +52,10 @@ private:
         ~Program();
         GLuint program;
     } program;
-    GLuint vPositionAttr;
-    GLuint uvCoord;
-    GLuint scaleUniform;
+
     GLfloat vertex_data[16]
     {
-        0.0, 0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
         0.0f, 1.0f, 0.0f, 1.0f,
         1.0f, 0.0f, 0.0f, 1.0f,
         1.0f, 1.0f, 0.0f, 1.0f,
@@ -69,6 +68,10 @@ private:
         1.0f, 1.0f,
 
     };
+
+    GLuint vPositionAttr;
+    GLuint uvCoord;
+    GLuint scaleUniform;
     GLuint posUniform;
     GLuint alphaUniform; 
     GLuint texture;
