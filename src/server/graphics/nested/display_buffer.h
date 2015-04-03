@@ -20,18 +20,9 @@
 #define MIR_GRAPHICS_NESTED_DETAIL_NESTED_OUTPUT_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_buffer.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/graphics/egl_resources.h"
 #include "display.h"
 #include "host_surface.h"
-#include "mir_toolkit/client_types.h"
 
-#include <EGL/egl.h>
-
-#include <mutex>
-#include <unordered_map>
 #include <EGL/egl.h>
 
 namespace mir
