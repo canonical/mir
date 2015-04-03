@@ -22,6 +22,7 @@ add_library(
   display.cpp
   display_configuration.cpp
   gl_context.cpp
+  buffer_allocator.cpp
 )
 
 add_library(
