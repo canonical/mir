@@ -243,7 +243,7 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
         scan_code,
         modifiers);
 
-    EXPECT_CALL(*wm, handle_key_event(_))
+    EXPECT_CALL(*wm, handle_keyboard_event(_))
         .WillOnce(Return(false))
         .WillOnce(Return(true));
 
