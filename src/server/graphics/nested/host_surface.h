@@ -24,8 +24,6 @@
 
 #include <EGL/egl.h>
 
-struct gbm_device;
-
 namespace mir
 {
 namespace graphics
