@@ -26,6 +26,8 @@ add_library(
   anonymous_shm_file.cpp
   shm_buffer.cpp
   ipc_operations.cpp
+  display_group.cpp
+  display_buffer.cpp
 )
 
 add_library(

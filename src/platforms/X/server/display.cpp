@@ -19,9 +19,9 @@
 #include "mir/graphics/platform.h"
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
-#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
+#include "display_buffer.h"
 #include "gl_context.h"
 #include "../debug.h"
 
@@ -100,6 +100,7 @@ mgx::Display::Display()
            glClearColor(1.0, 1.0, 1.0, 1.0);
            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
            glXSwapBuffers(dpy, win);
+           display_group = std::make_unique<mgx::DisplayGroup>(std::make_unique<mgx::DisplayBuffer>(geom::Size{gwa.width, gwa.height}));
            return;
        }
     }
@@ -113,9 +114,10 @@ mgx::Display::~Display() noexcept
     XCloseDisplay(dpy);
 }
 
-void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& /*f*/)
+void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
 {
 	CALLED
+    f(*display_group);
 #if 0
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 

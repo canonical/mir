@@ -21,6 +21,8 @@
 
 #include "mir/graphics/display.h"
 #include "mir_toolkit/common.h"
+#include "display_group.h"
+
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 
@@ -66,6 +68,7 @@ private:
     GLXContext        glc;
     XWindowAttributes gwa;
     MirPixelFormat    pf;
+    std::unique_ptr<DisplayGroup> display_group;
 //    std::mutex mutable configuration_mutex;
 //    bool mutable configuration_dirty{false};
 //    DisplayConfiguration mutable config;

@@ -17,16 +17,13 @@
  *
  */
 
-#ifndef MIR_GRAPHICS_X_GL_CONTEXT_H_
-#define MIR_GRAPHICS_X_GL_CONTEXT_H_
+#ifndef MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
+#define MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
 
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
-#include <GL/glu.h>
-
-#include "mir/graphics/gl_context.h"
+#include "mir/graphics/display_buffer.h"
+#include "gl_context.h"
+//#include "mir/graphics/gl_program_factory.h"
+//#include "display_configuration.h"
 
 namespace mir
 {
@@ -35,22 +32,26 @@ namespace graphics
 namespace X
 {
 
-class XGLContext : public graphics::GLContext
+class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-	XGLContext(::Display* const display, Window const win, GLXContext const glc);
-	~XGLContext();
-    void make_current() const override;
-    void release_current() const override;
+    DisplayBuffer(geometry::Size size);
+
+    geometry::Rectangle view_area() const override;
+    void make_current() override;
+    void release_current() override;
+    void gl_swap_buffers() override;
+    bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
+
+    MirOrientation orientation() const override;
+    bool uses_alpha() const override;
 
 private:
-    ::Display *dpy;
-    Window     win;
-    GLXContext glc;
+    geometry::Size size;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_X_GL_CONTEXT_H_ */
+#endif /* MIR_GRAPHICS_X_DISPLAY_BUFFER_H_ */

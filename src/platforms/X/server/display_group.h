@@ -17,16 +17,13 @@
  *
  */
 
-#ifndef MIR_GRAPHICS_X_GL_CONTEXT_H_
-#define MIR_GRAPHICS_X_GL_CONTEXT_H_
+#ifndef MIR_GRAPHICS_X_DISPLAY_GROUP_H_
+#define MIR_GRAPHICS_X_DISPLAY_GROUP_H_
 
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
-#include <GL/glu.h>
-
-#include "mir/graphics/gl_context.h"
+#include "mir_toolkit/common.h"
+#include "mir/graphics/display.h"
+#include "display_buffer.h"
+//#include <mutex>
 
 namespace mir
 {
@@ -35,22 +32,20 @@ namespace graphics
 namespace X
 {
 
-class XGLContext : public graphics::GLContext
+class DisplayGroup : public graphics::DisplaySyncGroup
 {
 public:
-	XGLContext(::Display* const display, Window const win, GLXContext const glc);
-	~XGLContext();
-    void make_current() const override;
-    void release_current() const override;
+    DisplayGroup(std::unique_ptr<DisplayBuffer> primary_buffer);
+
+    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override;
+    void post() override;
 
 private:
-    ::Display *dpy;
-    Window     win;
-    GLXContext glc;
+    std::unique_ptr<DisplayBuffer> display_buffer;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_X_GL_CONTEXT_H_ */
+#endif /* MIR_GRAPHICS_X_DISPLAY_GROUP_H_ */

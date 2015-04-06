@@ -17,40 +17,35 @@
  *
  */
 
-#ifndef MIR_GRAPHICS_X_GL_CONTEXT_H_
-#define MIR_GRAPHICS_X_GL_CONTEXT_H_
+#include "display_group.h"
+#include "../debug.h"
 
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
-#include <GL/glu.h>
+namespace mg = mir::graphics;
+namespace mgx = mg::X;
 
-#include "mir/graphics/gl_context.h"
-
-namespace mir
+mgx::DisplayGroup::DisplayGroup(std::unique_ptr<mgx::DisplayBuffer> primary_buffer)
 {
-namespace graphics
-{
-namespace X
-{
-
-class XGLContext : public graphics::GLContext
-{
-public:
-	XGLContext(::Display* const display, Window const win, GLXContext const glc);
-	~XGLContext();
-    void make_current() const override;
-    void release_current() const override;
-
-private:
-    ::Display *dpy;
-    Window     win;
-    GLXContext glc;
-};
-
-}
-}
+	CALLED
+    display_buffer = std::move(primary_buffer);
 }
 
-#endif /* MIR_GRAPHICS_X_GL_CONTEXT_H_ */
+void mgx::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+{
+	CALLED
+//    std::unique_lock<decltype(guard)> lk(guard);
+    f(*display_buffer);
+}
+
+void mgx::DisplayGroup::post()
+{
+    /*
+    std::list<DisplayContents> contents;
+    std::unique_lock<decltype(guard)> lk(guard);
+    for(auto const& db : dbs)
+        contents.emplace_back(db.second->contents());
+    device->commit(contents);
+    */
+
+	//TODO:: post here
+	CALLED
+}
