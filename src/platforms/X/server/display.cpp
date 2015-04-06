@@ -166,16 +166,10 @@ void mgx::Display::configure(mg::DisplayConfiguration const& /*new_configuration
 }
 
 void mgx::Display::register_configuration_change_handler(
-    EventHandlerRegister& /* event_handler */,
-    DisplayConfigurationChangeHandler const& /* change_handler */)
+    EventHandlerRegister& /* event_handler*/,
+    DisplayConfigurationChangeHandler const& /*change_handler*/)
 {
 	CALLED
-#if 0
-    event_handler.register_fd_handler({display_change_pipe->read_pipe}, this, [change_handler, this](int){
-        change_handler();
-        display_change_pipe->ack_change();
-    });
-#endif
 }
 
 void mgx::Display::register_pause_resume_handlers(

@@ -20,12 +20,6 @@
 #include "display_buffer.h"
 #include "../debug.h"
 
-#include <functional>
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
-#include <algorithm>
-#include <sstream>
-
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
