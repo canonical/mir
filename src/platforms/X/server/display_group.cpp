@@ -25,13 +25,13 @@ namespace mgx = mg::X;
 
 mgx::DisplayGroup::DisplayGroup(std::unique_ptr<mgx::DisplayBuffer> primary_buffer)
 {
-	CALLED
+    CALLED
     display_buffer = std::move(primary_buffer);
 }
 
 void mgx::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
-	CALLED
+    CALLED
 //    std::unique_lock<decltype(guard)> lk(guard);
     f(*display_buffer);
 }
@@ -46,6 +46,6 @@ void mgx::DisplayGroup::post()
     device->commit(contents);
     */
 
-	//TODO:: post here
-	CALLED
+    //TODO:: post here
+    CALLED
 }

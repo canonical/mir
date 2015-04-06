@@ -118,22 +118,13 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 {
 	CALLED
     f(*display_group);
-#if 0
-    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
-
-    f(displays);
-#endif
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
 	CALLED
-#if 0
-    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
-    return std::unique_ptr<mg::DisplayConfiguration>(new mgx::DisplayConfiguration(config));
-#else
+//    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     return std::make_unique<mgx::DisplayConfiguration>(pf, gwa.width, gwa.height);
-#endif
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& /*new_configuration*/)
