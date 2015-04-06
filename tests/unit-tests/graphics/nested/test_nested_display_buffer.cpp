@@ -54,7 +54,8 @@ struct NestedDisplayBufferTest : testing::Test
     mtd::StubGLConfig stub_gl_config;
     NullHostSurface null_host_surface;
     mi::NullInputDispatcher null_input_dispatcher;
-    std::shared_ptr<mi::CursorListener> cursor = std::make_shared<mtd::StubCursorListener>();
+    std::shared_ptr<mi::CursorListener> cursor =
+        std::make_shared<mtd::StubCursorListener>();
     mgnd::EGLDisplayHandle egl_disp_handle;
     geom::Rectangle const default_rect;
 };

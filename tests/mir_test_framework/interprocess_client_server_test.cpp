@@ -68,10 +68,6 @@ void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> cons
         server_process_id = getpid();
         process_tag = "server";
         add_to_environment("MIR_SERVER_FILE", mir_test_socket);
-        // TODO: Remove
-        add_to_environment("MIR_SERVER_LOGGING", "on");
-        add_to_environment("MIR_CLIENT_RPC_REPORT", "log");
-        add_to_environment("MIR_SERVER_MSG_PROCESSOR_REPORT", "log");
                 
         server_setup();
         start_server();

@@ -122,7 +122,6 @@ void mgn::detail::NestedOutput::mir_event(MirEvent const& event)
         auto y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y) + area.top_left.y.as_float();
         cursor_listener->cursor_moved_to(x, y);
     }
-    
     if (event.type == mir_event_type_motion)
     {
         auto my_event = event;

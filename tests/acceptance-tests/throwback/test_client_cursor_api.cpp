@@ -465,6 +465,9 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
 
 namespace
 {
+// The nested server fixture we use is using the 'CanonicalWindowManager' which will place
+// surfaces in the center...in order to ensure the surface appears under the cursor we use
+// the fullscreen state.
 struct FullscreenDisabledCursorClient : CursorClient
 {
     using CursorClient::CursorClient;
