@@ -100,7 +100,11 @@ mgx::Display::Display()
            glClearColor(1.0, 1.0, 1.0, 1.0);
            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
            glXSwapBuffers(dpy, win);
-           display_group = std::make_unique<mgx::DisplayGroup>(std::make_unique<mgx::DisplayBuffer>(geom::Size{gwa.width, gwa.height}));
+           display_group = std::make_unique<mgx::DisplayGroup>(
+        		   std::make_unique<mgx::DisplayBuffer>(geom::Size{gwa.width, gwa.height},
+                                                        dpy,
+                                                        win,
+                                                        glc));
            return;
        }
     }

@@ -24,7 +24,8 @@ namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-mgx::DisplayBuffer::DisplayBuffer(geometry::Size s) : size{s}
+mgx::DisplayBuffer::DisplayBuffer(geometry::Size s, ::Display *d, Window w, GLXContext g)
+    : size{s}, dpy{d}, win{w}, glc{g}
 {
 	CALLED
 }
@@ -41,13 +42,13 @@ geom::Rectangle mgx::DisplayBuffer::view_area() const
 void mgx::DisplayBuffer::make_current()
 {
 	CALLED
-//    gl_context.make_current();
+    glXMakeCurrent(dpy, win, glc);
 }
 
 void mgx::DisplayBuffer::release_current()
 {
 	CALLED
-//    gl_context.release_current();
+    glXMakeCurrent(dpy, None, NULL);
 }
 
 bool mgx::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& /*renderlist*/)

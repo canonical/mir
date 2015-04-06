@@ -25,6 +25,9 @@
 //#include "mir/graphics/gl_program_factory.h"
 //#include "display_configuration.h"
 
+#include <X11/Xlib.h>
+#include <GL/glx.h>
+
 namespace mir
 {
 namespace graphics
@@ -35,7 +38,7 @@ namespace X
 class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    DisplayBuffer(geometry::Size size);
+    DisplayBuffer(geometry::Size size, ::Display *d, Window w, GLXContext g);
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
@@ -48,6 +51,9 @@ public:
 
 private:
     geometry::Size size;
+    ::Display     *dpy;
+    Window         win;
+    GLXContext     glc;
 };
 
 }
