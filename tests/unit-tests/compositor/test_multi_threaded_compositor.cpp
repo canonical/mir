@@ -24,8 +24,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/scene/observer.h"
-#include "mir/glib_main_loop.h"
-#include "mir/time/steady_clock.h"
+#include "mir/raii.h"
 
 #include "mir_test/current_thread_name.h"
 #include "mir_test_doubles/null_display.h"
@@ -47,6 +46,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <csignal>
 
 using namespace std::literals::chrono_literals;
 
@@ -834,10 +834,11 @@ TEST(MultiThreadedCompositor, does_not_block_in_start_when_compositor_thread_fai
         display, stub_scene, db_compositor_factory, mock_display_listener, mock_report, true};
 
     // Ignore SIGTERM
-    auto clock = std::make_shared<mir::time::SteadyClock>();
-    mir::GLibMainLoop main_loop{clock};
-    main_loop.register_signal_handler({SIGTERM}, [&compositor](int){});
-
+    sighandler_t old_sigterm_handler = nullptr;
+    auto const sigterm_raii = mir::raii::paired_calls(
+        [&] { old_sigterm_handler = signal(SIGTERM, SIG_IGN); },
+        [&] { signal(SIGTERM, old_sigterm_handler); });
+ 
     EXPECT_CALL(*mock_display_listener, add_display(_))
         .WillRepeatedly(Throw(std::runtime_error("Failed to add display")));
 
