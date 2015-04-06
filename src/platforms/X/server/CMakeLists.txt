@@ -25,6 +25,7 @@ add_library(
   buffer_allocator.cpp
   anonymous_shm_file.cpp
   shm_buffer.cpp
+  ipc_operations.cpp
 )
 
 add_library(

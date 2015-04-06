@@ -17,10 +17,10 @@
  *
  */
 
-#ifndef MIR_GRAPHICS_X_DISPLAY_CONFIGURATION_H_
-#define MIR_GRAPHICS_X_DISPLAY_CONFIGURATION_H_
+#ifndef MIR_GRAPHICS_X_IPC_OPERATIONS_H_
+#define MIR_GRAPHICS_X_IPC_OPERATIONS_H_
 
-#include "mir/graphics/display_configuration.h"
+#include "mir/graphics/platform_ipc_operations.h"
 
 namespace mir
 {
@@ -29,23 +29,20 @@ namespace graphics
 namespace X
 {
 
-class DisplayConfiguration : public graphics::DisplayConfiguration
+class IpcOperations : public PlatformIpcOperations
 {
 public:
-	DisplayConfiguration(MirPixelFormat pf, int width, int height);
+    IpcOperations();
 
-    virtual ~DisplayConfiguration() = default;
-
-    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
-    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
-    void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
-private:
-    DisplayConfigurationOutput configuration;
-    DisplayConfigurationCard card;
+    void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const override;
+    void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const override;
+    std::shared_ptr<PlatformIPCPackage> connection_ipc_package() override;
+    PlatformOperationMessage platform_operation(
+        unsigned int const opcode,
+        PlatformOperationMessage const& message) override;
 };
 
-
 }
 }
 }
-#endif /* MIR_GRAPHICS_X_DISPLAY_CONFIGURATION_H_ */
+#endif /* MIR_GRAPHICS_X_IPC_OPERATIONS_H_ */

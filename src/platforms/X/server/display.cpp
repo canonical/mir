@@ -20,9 +20,9 @@
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
+#include "gl_context.h"
 #include "../debug.h"
 
 #include <boost/throw_exception.hpp>
@@ -44,6 +44,28 @@ mgx::Display::Display()
 
     GLint att[] = { GLX_RGBA, GLX_DOUBLEBUFFER, None };
     vi = glXChooseVisual(dpy, 0, att);
+
+    int bits;
+    glXGetConfig(dpy, vi, GLX_BUFFER_SIZE, &bits);
+    std::cout<< "\tNumber of bits selected : " << bits << std::endl;
+
+    int rgba;
+    glXGetConfig(dpy, vi, GLX_RGBA, &rgba);
+    std::cout<< "\tRGBA selected : " << (rgba ? "Yes" : "No") << std::endl;
+
+    int alpha;
+    glXGetConfig(dpy, vi, GLX_ALPHA_SIZE, &alpha);
+    std::cout<< "\tALPHA exists: " << (alpha ? "Yes" : "No") << std::endl;
+
+    if (bits == 32)
+    {
+        if (alpha)
+            pf = mir_pixel_format_argb_8888;
+        else
+            pf = mir_pixel_format_xrgb_8888;
+    }
+    else if (bits == 24)
+        pf = mir_pixel_format_bgr_888;
 
     auto root = DefaultRootWindow(dpy);
 
@@ -78,7 +100,6 @@ mgx::Display::Display()
            glClearColor(1.0, 1.0, 1.0, 1.0);
            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
            glXSwapBuffers(dpy, win);
-           sleep(1);
            return;
        }
     }
@@ -109,7 +130,7 @@ std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     return std::unique_ptr<mg::DisplayConfiguration>(new mgx::DisplayConfiguration(config));
 #else
-    return std::make_unique<mgx::DisplayConfiguration>();
+    return std::make_unique<mgx::DisplayConfiguration>(pf, gwa.width, gwa.height);
 #endif
 }
 
@@ -182,9 +203,5 @@ auto mgx::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
 std::unique_ptr<mg::GLContext> mgx::Display::create_gl_context()
 {
 	CALLED
-#if 0
-    return std::unique_ptr<mg::GLContext>{new mga::PbufferGLContext(gl_context)};
-#else
-    return nullptr;
-#endif
+    return std::make_unique<mgx::XGLContext>(dpy, win, glc);
 }

@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_X_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir_toolkit/common.h"
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 
@@ -57,13 +58,14 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
-    ::Display               *dpy;
-    XVisualInfo             *vi;
-    Colormap                cmap;
-    Window                  win;
-    Window                  root;
-    GLXContext              glc;
-    XWindowAttributes       gwa;
+    ::Display         *dpy;
+    XVisualInfo       *vi;
+    Colormap          cmap;
+    Window            win;
+    Window            root;
+    GLXContext        glc;
+    XWindowAttributes gwa;
+    MirPixelFormat    pf;
 //    std::mutex mutable configuration_mutex;
 //    bool mutable configuration_dirty{false};
 //    DisplayConfiguration mutable config;

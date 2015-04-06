@@ -24,21 +24,23 @@ namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
-mgx::DisplayConfiguration::DisplayConfiguration() :
+mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, int width, int height) :
     configuration{
             mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::unknown,
-            {mir_pixel_format_invalid},
-            {mg::DisplayConfigurationMode{geom::Size{0, 0}, 0.0}},
+            {pf},
+            //TODO: query fps
+            {mg::DisplayConfigurationMode{geom::Size{width, height}, 60.0}},
             0,
-            geom::Size{0, 0},
+            //TODO: query mm-size
+            geom::Size{width, height},
             true,
             true,
             geom::Point{0, 0},
             0,
-            mir_pixel_format_invalid,
-            mir_power_mode_off,
+            pf,
+            mir_power_mode_on,
             mir_orientation_normal},
     card{mg::DisplayConfigurationCardId{0}, 1}
 {

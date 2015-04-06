@@ -75,7 +75,8 @@ std::vector<MirPixelFormat> mgx::BufferAllocator::supported_pixel_formats()
     CALLED
     static std::vector<MirPixelFormat> const pixel_formats{
         mir_pixel_format_argb_8888,
-        mir_pixel_format_xrgb_8888
+        mir_pixel_format_xrgb_8888,
+        mir_pixel_format_bgr_888
     };
 
     return pixel_formats;
