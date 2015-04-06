@@ -114,7 +114,7 @@ void msh::DefaultWindowManager::remove_display(geometry::Rectangle const& /*area
 {
 }
 
-bool msh::DefaultWindowManager::handle_key_event(MirKeyboardEvent const* /*event*/)
+bool msh::DefaultWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
 {
     return false;
 }

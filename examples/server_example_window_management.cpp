@@ -97,7 +97,7 @@ public:
     int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value)
         { return value; }
 
-    bool handle_key_event(MirKeyboardEvent const* /*event*/) { return false; }
+    bool handle_keyboard_event(MirKeyboardEvent const* /*event*/) { return false; }
 
     bool handle_touch_event(MirTouchEvent const* /*event*/) { return false; }
 

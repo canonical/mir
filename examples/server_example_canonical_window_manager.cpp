@@ -416,7 +416,7 @@ void me::CanonicalWindowManagerPolicyCopy::drag(Point cursor)
     old_cursor = cursor;
 }
 
-bool me::CanonicalWindowManagerPolicyCopy::handle_key_event(MirKeyboardEvent const* event)
+bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);
     auto const scan_code = mir_keyboard_event_scan_code(event);

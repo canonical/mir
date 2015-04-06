@@ -23,6 +23,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/scene_report.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/compositor/decoration.h"
 #include "mir/graphics/renderable.h"
 
 #include <boost/throw_exception.hpp>
@@ -52,7 +53,7 @@ public:
         : renderable_{surface->compositor_snapshot(id)},
           tracker{tracker},
           cid{id},
-          decor(mc::Decoration::Type::surface, surface->name())
+          surface_name(surface->name())
     {
     }
 
@@ -71,16 +72,16 @@ public:
         tracker->occluded_in(cid);
     }
 
-    mc::Decoration const& decoration() const override
+    std::unique_ptr<mc::Decoration> decoration() const override
     {
-        return decor;
+        return std::make_unique<mc::Decoration>(mc::Decoration::Type::surface, surface_name);
     }
 
 private:
     std::shared_ptr<mg::Renderable> const renderable_;
     std::shared_ptr<ms::RenderingTracker> const tracker;
     mc::CompositorID cid;
-    mc::Decoration const decor;
+    std::string const surface_name;
 };
 
 //note: something different than a 2D/HWC overlay
@@ -104,6 +105,11 @@ public:
 
     void occluded() override
     {
+    }
+
+    std::unique_ptr<mc::Decoration> decoration() const override
+    {
+        return std::make_unique<mc::Decoration>();
     }
 
 private:
