@@ -1,7 +1,3 @@
-include_directories(
-    ${PROJECT_SOURCE_DIR}/include/client
-)
-
 add_library(
   mirnestedgraphics OBJECT
 

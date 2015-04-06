@@ -213,8 +213,6 @@ void mgn::NestedDisplay::create_surfaces(mg::DisplayConfiguration const& configu
 
                         complete_display_initialization(egl_config_format);
 
-                        printf("Placing nested in output %d \n",output.id.as_value());
-
                         MirSurfaceParameters const request_params = {
                             "Mir nested display",
                             area.size.width.as_int(),

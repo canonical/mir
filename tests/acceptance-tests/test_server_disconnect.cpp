@@ -42,6 +42,7 @@ struct ServerDisconnect : mtf::InterprocessClientServerTest
         mtf::InterprocessClientServerTest::SetUp();
         run_in_server([]{});
     }
+
     mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 
@@ -81,7 +82,7 @@ TEST_F(ServerDisconnect, is_detected_by_client)
 
             using clock = std::chrono::high_resolution_clock;
 
-            auto time_limit = clock::now() + std::chrono::seconds(1);
+            auto time_limit = clock::now() + std::chrono::seconds(2);
 
             while (!signalled.load() && clock::now() < time_limit)
             {

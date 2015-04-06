@@ -94,7 +94,7 @@ public:
         auto pixels_size = image_width * image_height
             * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888);
 
-        // TODO: preserve stream
+        // TODO: Maybe the stream should be preserved.
         auto bs = mir_connection_create_buffer_stream_sync(mir_connection,
                                                            image_width,
                                                            image_height,
@@ -109,8 +109,9 @@ public:
         memcpy(g.vaddr, image.as_argb_8888(), pixels_size);
         mir_buffer_stream_swap_buffers_sync(bs);
 
-        auto conf = mir_cursor_configuration_from_buffer_stream(bs, image.hotspot().dx.as_int(),
-                                                                image.hotspot().dy.as_int());
+        auto conf = mir_cursor_configuration_from_buffer_stream(bs,
+            image.hotspot().dx.as_int(), image.hotspot().dy.as_int());
+        
         mir_surface_configure_cursor(mir_surface, conf);
         mir_cursor_configuration_destroy(conf);
         mir_buffer_stream_release_sync(bs);

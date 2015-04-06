@@ -135,8 +135,6 @@ struct CursorClient
 
                 mir_buffer_stream_swap_buffers_sync(
                     mir_surface_get_buffer_stream(surface));
-                mir_buffer_stream_swap_buffers_sync(
-                    mir_surface_get_buffer_stream(surface));
 
                 wait_for_surface_to_become_focused_and_exposed(surface);
 
@@ -465,6 +463,23 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
     expect_client_shutdown();
 }
 
+namespace
+{
+struct FullscreenDisabledCursorClient : CursorClient
+{
+    using CursorClient::CursorClient;
+
+    void setup_cursor(MirSurface* surface) override
+    {
+        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_fullscreen));
+        auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+        mir_wait_for(mir_surface_configure_cursor(surface, conf));
+        mir_cursor_configuration_destroy(conf);
+    }
+};
+
+}
+
 TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
 {
     using namespace ::testing;
@@ -476,11 +491,8 @@ TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
     { // Ensure we finalize the client prior stopping the nested server
-    DisabledCursorClient client{nested_mir.new_connection(), client_name_1};
+    FullscreenDisabledCursorClient client{nested_mir.new_connection(), client_name_1};
     client.run();
-
-    // Roar
-    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(799, 533));
 
     expectations_satisfied.wait_for_at_most_seconds(60);
     expect_client_shutdown();

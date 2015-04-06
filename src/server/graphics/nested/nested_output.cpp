@@ -111,7 +111,6 @@ catch (std::exception const&)
 
 void mgn::detail::NestedOutput::mir_event(MirEvent const& event)
 {
-    // TODO: Cleanup
     if (mir_event_get_type(&event) != mir_event_type_input)
         return;
     auto iev = mir_event_get_input_event(&event);

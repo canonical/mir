@@ -334,9 +334,7 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 
     // Restrict to bounding rectangle
     if (!surface_rect.contains(point))
-    {
         return false;
-    }
 
     // No custom input region means effective input region is whole surface
     if (custom_input_rectangles.empty())
