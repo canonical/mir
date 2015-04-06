@@ -39,7 +39,7 @@ enum ColourEffect
 };
 
 typedef std::unordered_map<graphics::Renderable::ID,
-                           compositor::Decoration> DecorMap;
+                           std::unique_ptr<compositor::Decoration>> DecorMap;
 
 class DemoRenderer : public compositor::GLRenderer
 {

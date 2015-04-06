@@ -52,7 +52,7 @@ public:
 
     virtual void remove_display(geometry::Rectangle const& area) = 0;
 
-    virtual bool handle_key_event(MirKeyboardEvent const* event) = 0;
+    virtual bool handle_keyboard_event(MirKeyboardEvent const* event) = 0;
 
     virtual bool handle_touch_event(MirTouchEvent const* event) = 0;
 

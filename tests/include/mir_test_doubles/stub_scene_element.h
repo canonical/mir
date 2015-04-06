@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_SCENE_ELEMENT_H_
 
 #include "mir/compositor/scene_element.h"
+#include "mir/compositor/decoration.h"
 #include "stub_renderable.h"
 
 namespace mir
@@ -53,6 +54,11 @@ public:
 
     void occluded() override
     {
+    }
+
+    std::unique_ptr<compositor::Decoration> decoration() const override
+    {
+        return nullptr;
     }
 
 private:
