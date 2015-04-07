@@ -22,6 +22,8 @@
 #include "mir_test/pipe.h"
 #include "mir_test/signal.h"
 #include "mir_test/test_dispatchable.h"
+#include "mir_test_framework/process.h"
+#include "mir_test/cross_process_action.h"
 
 #include <fcntl.h>
 
@@ -214,4 +216,50 @@ TEST_F(SimpleDispatchThreadTest, handles_destruction_from_dispatch_callback)
     assignment_made->raise();
 
     EXPECT_TRUE(dispatched->wait_for(10s));
+}
+
+// Regression test for: lp #1439719
+// The bug involves uninitialized memory and is also sensitive to signal
+// timings, so this test does not always catch the problem. However, repeated
+// runs (~300, YMMV) consistently fail when run against the problematic code.
+TEST_F(SimpleDispatchThreadTest, keeps_dispatching_after_signal_interruption)
+{
+    using namespace std::chrono_literals;
+    mt::CrossProcessAction stop_and_restart_process;
+
+    auto child = mir_test_framework::fork_and_run_in_a_different_process(
+        [&]
+        {
+            auto dispatched = std::make_shared<mt::Signal>();
+            auto dispatchable = std::make_shared<mt::TestDispatchable>(
+                [dispatched]() { dispatched->raise(); });
+
+            md::SimpleDispatchThread dispatcher{dispatchable};
+            // Ensure the dispatcher has started
+            dispatchable->trigger();
+            EXPECT_TRUE(dispatched->wait_for(1s));
+
+            stop_and_restart_process();
+
+            dispatched->reset();
+            // The dispatcher shouldn't have been affected by the signal
+            dispatchable->trigger();
+            EXPECT_TRUE(dispatched->wait_for(1s));
+            exit(HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+        },
+        []{ return 1; });
+
+    stop_and_restart_process.exec(
+        [child]
+        {
+            // Increase chances of interrupting the dispatch mechanism
+            for (int i = 0; i < 100; ++i)
+            {
+                child->stop();
+                child->cont();
+            }
+        });
+
+    auto const result = child->wait_for_termination(10s);
+    EXPECT_TRUE(result.succeeded());
 }
