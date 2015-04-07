@@ -303,6 +303,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         {
             printf("Oh I forgot you can't save your work. Quitting now...\n");
             running = false;
+            changed = true;
         }
     }
     else if (event_type == mir_event_type_resize)
