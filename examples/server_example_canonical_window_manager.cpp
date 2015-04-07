@@ -195,9 +195,10 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
     return parameters;
 }
 
-std::vector<std::shared_ptr<ms::Surface>> me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
-    std::shared_ptr<ms::Session> const& session,
-    std::shared_ptr<ms::Surface> const& surface)
+void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    CanonicalSurfaceInfoMap& surface_info)
 {
     tools->info_for(session).surfaces++;
     auto format = mir_pixel_format_xrgb_8888;
@@ -238,7 +239,12 @@ std::vector<std::shared_ptr<ms::Surface>> me::CanonicalWindowManagerPolicyCopy::
     }
 
     decoration_surface->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
-    return {decoration_surface};
+
+    CanonicalSurfaceInfoCopy info{session, decoration_surface};
+    info.is_decoration = true;
+    info.parent = surface;
+
+    surface_info.emplace(decoration_surface, std::move(info));
 }
 
 namespace
