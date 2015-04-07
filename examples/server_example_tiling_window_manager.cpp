@@ -20,6 +20,7 @@
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_coordinator.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>

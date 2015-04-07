@@ -21,6 +21,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/shell/display_layout.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>

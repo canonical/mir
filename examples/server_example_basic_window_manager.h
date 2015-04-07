@@ -24,7 +24,6 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/abstract_shell.h"
-#include "mir/shell/surface_specification.h"
 #include "mir/shell/window_manager.h"
 
 #include <map>
