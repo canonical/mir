@@ -145,8 +145,7 @@ private:
         auto const surface = session->surface(result);
         surface_info.emplace(surface, SurfaceInfo{session, surface});
         policy.handle_new_surface(session, surface);
-        for (auto& decoration : policy.generate_decorations_for(session, surface))
-            surface_info.emplace(decoration, SurfaceInfo{session, decoration});
+        policy.generate_decorations_for(session, surface, surface_info);
         return result;
     }
 
