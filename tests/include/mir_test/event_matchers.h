@@ -261,6 +261,22 @@ MATCHER_P2(TouchEvent, x, y, "")
     return true;
 }
 
+MATCHER_P2(TouchUpEvent, x, y, "")
+{
+    auto tev = maybe_touch_event(to_address(arg));
+    if (tev == nullptr)
+        return false;
+
+    if (mir_touch_event_action(tev, 0) != mir_touch_action_up)
+        return false;
+    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) != x)
+        return false;
+    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) != y)
+        return false;
+
+    return true;
+}
+
 MATCHER_P2(PointerEventWithPosition, x, y, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));

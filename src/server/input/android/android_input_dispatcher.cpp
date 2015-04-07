@@ -58,7 +58,7 @@ void mia::AndroidInputDispatcher::device_reset(int32_t device_id, std::chrono::n
     dispatcher->notifyDeviceReset(&args);
 }
 
-void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
+bool mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
 {
     static auto const policy_flags = 0;
 
@@ -133,6 +133,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Unhandled event type"));
     }
+    return true;
 }
 
 void mia::AndroidInputDispatcher::stop()

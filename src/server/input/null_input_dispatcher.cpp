@@ -30,8 +30,9 @@ void mi::NullInputDispatcher::device_reset(int32_t /*device_id*/, std::chrono::n
 {
 }
 
-void mi::NullInputDispatcher::dispatch(MirEvent const& /*event*/)
+bool mi::NullInputDispatcher::dispatch(MirEvent const& /*event*/)
 {
+    return true;
 }
 
 void mi::NullInputDispatcher::start()
@@ -41,4 +42,3 @@ void mi::NullInputDispatcher::start()
 void mi::NullInputDispatcher::stop()
 {
 }
-

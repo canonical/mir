@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,52 +13,44 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_ANDROID_INPUT_DISPATCHER_H_
-#define MIR_INPUT_ANDROID_INPUT_DISPATCHER_H_
+#ifndef MIR_INPUT_DEFAULT_INPUT_DISPATCHER_H_
+#define MIR_INPUT_DEFAULT_INPUT_DISPATCHER_H_
 
 #include "mir/input/input_dispatcher.h"
 
 #include <memory>
 
-namespace android
-{
-class InputDispatcherInterface;
-}
-namespace droidinput = android;
-
 namespace mir
 {
 namespace input
 {
-namespace android
-{
-class InputThread;
+class Surface;
+class Scene;
 
-/*!
- * \brief Android based input dispatcher
- */
-class AndroidInputDispatcher : public mir::input::InputDispatcher
+// TODO: Add shell dispatcher interface for focus...or this is the focus targeter or something
+class DefaultInputDispatcher : public mir::input::InputDispatcher
 {
 public:
-    AndroidInputDispatcher(std::shared_ptr<droidinput::InputDispatcherInterface> const& dispatcher,
-                           std::shared_ptr<InputThread> const& thread);
-    ~AndroidInputDispatcher();
+    DefaultInputDispatcher(std::shared_ptr<input::Scene> const& scene);
+
+// mir::input::InputDispatcher
     void configuration_changed(std::chrono::nanoseconds when) override;
     void device_reset(int32_t device_id, std::chrono::nanoseconds when) override;
     bool dispatch(MirEvent const& event) override;
     void start() override;
     void stop() override;
-private:
-    std::shared_ptr<droidinput::InputDispatcherInterface> const dispatcher;
-    std::shared_ptr<InputThread> const dispatcher_thread;
 
+// FocusTargeter
+    void set_focus(std::shared_ptr<input::Surface> const& target);
+    
+private:
+    std::shared_ptr<input::Scene> const scene;
 };
 
 }
 }
-}
 
-#endif
+#endif // MIR_INPUT_DEFAULT_INPUT_DISPATCHER_H_

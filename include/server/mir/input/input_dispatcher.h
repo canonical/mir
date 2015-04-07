@@ -46,7 +46,7 @@ public:
      * \brief Called when the device \a device_id was added removed or was reset
      */
     virtual void device_reset(int32_t device_id, std::chrono::nanoseconds when) = 0;
-    virtual void dispatch(MirEvent const& event) = 0;
+    virtual bool dispatch(MirEvent const& event) = 0;
     virtual void start() = 0;
     virtual void stop() = 0;
 
