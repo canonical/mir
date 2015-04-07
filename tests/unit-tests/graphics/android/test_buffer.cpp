@@ -218,6 +218,9 @@ TEST_F(AndroidBuffer, reads_pixels)
     EXPECT_CALL(gralloc, unlock_interface(_,_));
 
     mga::Buffer buffer(&gralloc, mock_native_buffer, extensions);
-    buffer.read([](unsigned char const*){});
+    buffer.read([](unsigned char const* pixels)
+    {
+        EXPECT_THAT(pixels, Ne(nullptr));
+    });
     Mock::VerifyAndClearExpectations(&gralloc);
 }
