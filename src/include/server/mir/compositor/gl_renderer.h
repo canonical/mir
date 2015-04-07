@@ -25,14 +25,16 @@
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/gl_primitive.h>
-#include <mir/graphics/gl_texture_cache.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <memory>
 
 namespace mir
 {
+namespace graphics { class GLTextureCache; }
+
 namespace compositor
 {
 
@@ -41,6 +43,9 @@ enum class DestinationAlpha;
 class GLRenderer : public Renderer
 {
 public:
+    GLRenderer(
+        geometry::Rectangle const& display_area,
+        DestinationAlpha dest_alpha);
     GLRenderer(
         std::unique_ptr<graphics::GLTextureCache> && texture_cache, 
         geometry::Rectangle const& display_area,
@@ -106,7 +111,9 @@ protected:
                       GLRenderer::Program const& prog) const;
 
 private:
-    std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
+    // texture_cache is actually unique, but shared_ptr is required to allow
+    // this to compile while GLTextureCache is an incomplete type...
+    std::shared_ptr<graphics::GLTextureCache> mutable texture_cache;
     float rotation;
     DestinationAlpha const dest_alpha;
     geometry::Rectangle viewport;

@@ -19,6 +19,7 @@
 #include "mir/compositor/gl_renderer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/destination_alpha.h"
+#include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/gl_texture_cache.h"
@@ -88,6 +89,14 @@ mc::GLRenderer::Program::Program(GLuint program_id)
     transform_uniform = glGetUniformLocation(id, "transform");
     screen_to_gl_coords_uniform = glGetUniformLocation(id, "screen_to_gl_coords");
     alpha_uniform = glGetUniformLocation(id, "alpha");
+}
+
+mc::GLRenderer::GLRenderer(
+    geom::Rectangle const& display_area,
+    DestinationAlpha dest_alpha)
+    : GLRenderer(std::make_unique<RecentlyUsedCache>(),
+                 display_area, dest_alpha)
+{
 }
 
 mc::GLRenderer::GLRenderer(
