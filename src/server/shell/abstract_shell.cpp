@@ -220,7 +220,7 @@ bool msh::AbstractShell::handle(MirEvent const& event)
     switch (mir_input_event_get_type(input_event))
     {
     case mir_input_event_type_key:
-        return window_manager->handle_key_event(mir_input_event_get_keyboard_event(input_event));
+        return window_manager->handle_keyboard_event(mir_input_event_get_keyboard_event(input_event));
 
     case mir_input_event_type_touch:
         return window_manager->handle_touch_event(mir_input_event_get_touch_event(input_event));

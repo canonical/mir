@@ -514,7 +514,7 @@ MIR_SERVER_31 {
     mir::shell::CanonicalWindowManagerPolicy::handle_delete_surface*;
     mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
     mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_key_event*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_keyboard_event*;
     mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
     mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
     mir::shell::DefaultWindowManager::DefaultWindowManager*;

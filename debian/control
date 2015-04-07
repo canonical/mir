@@ -41,6 +41,7 @@ Build-Depends: cmake,
                valgrind [!arm64],
                libglib2.0-dev,
                libfreetype6-dev,
+               abi-compliance-checker,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
