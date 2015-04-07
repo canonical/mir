@@ -104,8 +104,10 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 {
     auto parameters = request_parameters;
 
-    auto width = std::min(display_area.size.width.as_int(), parameters.size.width.as_int());
-    auto height = std::min(display_area.size.height.as_int(), parameters.size.height.as_int());
+    auto const active_display = tools->active_display();
+
+    auto width = std::min(active_display.size.width.as_int(), parameters.size.width.as_int());
+    auto height = std::min(active_display.size.height.as_int(), parameters.size.height.as_int());
     if (!width) width = 1;
     if (!height) height = 1;
     parameters.size = Size{width, height};
@@ -138,7 +140,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
             // "If there is not room to do that, Mir should place it as if it was the app’s
             // only regular surface."
-            positioned = display_area.contains(parameters.top_left + as_displacement(parameters.size));
+            positioned = active_display.contains(parameters.top_left + as_displacement(parameters.size));
         }
     }
 
@@ -153,12 +155,12 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
         if (edge_attachment && mir_edge_attachment_vertical)
         {
-            if (display_area.contains(top_right + Displacement{width, height}))
+            if (active_display.contains(top_right + Displacement{width, height}))
             {
                 parameters.top_left = top_right;
                 positioned = true;
             }
-            else if (display_area.contains(top_left + Displacement{-width, height}))
+            else if (active_display.contains(top_left + Displacement{-width, height}))
             {
                 parameters.top_left = top_left + Displacement{-width, 0};
                 positioned = true;
@@ -167,12 +169,12 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
         if (edge_attachment && mir_edge_attachment_horizontal)
         {
-            if (display_area.contains(bot_left + Displacement{width, height}))
+            if (active_display.contains(bot_left + Displacement{width, height}))
             {
                 parameters.top_left = bot_left;
                 positioned = true;
             }
-            else if (display_area.contains(top_left + Displacement{width, -height}))
+            else if (active_display.contains(top_left + Displacement{width, -height}))
             {
                 parameters.top_left = top_left + Displacement{0, -height};
                 positioned = true;
@@ -186,10 +188,10 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
         // opening it, Mir should position it horizontally centered, and vertically
         // such that the top margin is half the bottom margin. (Vertical centering
         // would look too low, and would allow little room for cascading.)"
-        auto centred = display_area.top_left + 0.5*(
-            as_displacement(display_area.size) - as_displacement(parameters.size));
+        auto centred = active_display.top_left + 0.5*(
+            as_displacement(active_display.size) - as_displacement(parameters.size));
 
-        parameters.top_left = centred - DeltaY{(display_area.size.height.as_int()-height)/6};
+        parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
     }
 
     return parameters;
