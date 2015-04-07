@@ -19,6 +19,7 @@
 #include "mir/client_platform_factory.h"
 #include "mir_toolkit/client_types.h"
 #include "mir/client_context.h"
+#include "../debug.h"
 
 //#include <boost/throw_exception.hpp>
 //#include <stdexcept>
@@ -29,6 +30,8 @@ namespace mcl = mir::client;
 extern "C" std::shared_ptr<mcl::ClientPlatform>
 mcl::create_client_platform(mcl::ClientContext* context)
 {
+    CALLED
+
     MirPlatformPackage platform;
     context->populate_server_package(platform);
 #if 0
@@ -45,6 +48,8 @@ mcl::create_client_platform(mcl::ClientContext* context)
 extern "C" bool
 mcl::is_appropriate_module(mcl::ClientContext* context)
 {
+    CALLED
+
     MirPlatformPackage platform;
     context->populate_server_package(platform);
 #if 0

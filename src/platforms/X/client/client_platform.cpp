@@ -21,6 +21,7 @@
 #include "client_platform.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/client_context.h"
+#include "../debug.h"
 
 //#include <cstring>
 
@@ -30,16 +31,21 @@ namespace geom=mir::geometry;
 
 mclx::ClientPlatform::ClientPlatform()
 {
+    CALLED
 }
 
 std::shared_ptr<mcl::ClientBufferFactory> mclx::ClientPlatform::create_buffer_factory()
 {
+    CALLED
+
 //    return std::make_shared<mclm::ClientBufferFactory>(buffer_file_ops);
     return nullptr;
 }
 
 std::shared_ptr<EGLNativeWindowType> mclx::ClientPlatform::create_egl_native_window(EGLNativeSurface* /* client_surface */)
 {
+    CALLED
+
 #if 0
     //TODO: this is awkward on both android and gbm...
     auto native_window = new NativeSurface(*client_surface);
@@ -54,6 +60,8 @@ std::shared_ptr<EGLNativeWindowType> mclx::ClientPlatform::create_egl_native_win
 
 std::shared_ptr<EGLNativeDisplayType> mclx::ClientPlatform::create_egl_native_display()
 {
+    CALLED
+
 #if 0
     MirEGLNativeDisplayType *mir_native_display = new MirEGLNativeDisplayType;
     *mir_native_display = display_container.create(this);
@@ -67,11 +75,15 @@ std::shared_ptr<EGLNativeDisplayType> mclx::ClientPlatform::create_egl_native_di
 
 MirPlatformType mclx::ClientPlatform::platform_type() const
 {
+    CALLED
+
     return mir_platform_type_X;
 }
 
 void mclx::ClientPlatform::populate(MirPlatformPackage& /* package*/) const
 {
+    CALLED
+
 #if 0
     size_t constexpr pointer_size_in_ints = division_ceiling(sizeof(gbm_dev), sizeof(int));
 
@@ -92,6 +104,8 @@ void mclx::ClientPlatform::populate(MirPlatformPackage& /* package*/) const
 MirPlatformMessage* mclx::ClientPlatform::platform_operation(
     MirPlatformMessage const* /*msg*/)
 {
+    CALLED
+
 #if 0
     auto const op = mir_platform_message_get_opcode(msg);
     auto const msg_data = mir_platform_message_get_data(msg);
@@ -117,6 +131,8 @@ MirPlatformMessage* mclx::ClientPlatform::platform_operation(
 
 MirNativeBuffer* mclx::ClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
 {
+    CALLED
+
     //MirNativeBuffer is type-compatible with the MirNativeBuffer
     return buf;
 }
