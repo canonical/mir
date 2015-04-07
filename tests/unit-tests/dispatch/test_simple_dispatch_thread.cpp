@@ -128,25 +128,25 @@ TEST_F(SimpleDispatchThreadTest, passes_dispatch_events_through)
 TEST_F(SimpleDispatchThreadTest, doesnt_call_dispatch_after_first_false_return)
 {
     using namespace testing;
+    using namespace std::chrono_literals;
 
     int constexpr expected_count{10};
-    auto dispatched_more_than_enough = std::make_shared<mt::Signal>();
+    auto const dispatched_more_than_enough = std::make_shared<mt::Signal>();
 
-    auto delegate = [dispatched_more_than_enough](md::FdEvents)
-    {
-        static std::atomic<int> dispatch_count{0};
-
-        if (++dispatch_count == expected_count)
+    auto delegate =
+        [dispatched_more_than_enough, dispatch_count = 0](md::FdEvents) mutable
         {
-            return false;
-        }
-        if (dispatch_count > expected_count)
-        {
-            dispatched_more_than_enough->raise();
-        }
-        return true;
-    };
-    auto dispatchable = std::make_shared<mt::TestDispatchable>(delegate);
+            if (++dispatch_count == expected_count)
+            {
+                return false;
+            }
+            if (dispatch_count > expected_count)
+            {
+                dispatched_more_than_enough->raise();
+            }
+            return true;
+        };
+    auto const dispatchable = std::make_shared<mt::TestDispatchable>(delegate);
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -155,7 +155,7 @@ TEST_F(SimpleDispatchThreadTest, doesnt_call_dispatch_after_first_false_return)
         dispatchable->trigger();
     }
 
-    EXPECT_FALSE(dispatched_more_than_enough->wait_for(std::chrono::seconds{1}));
+    EXPECT_FALSE(dispatched_more_than_enough->wait_for(1s));
 }
 
 TEST_F(SimpleDispatchThreadTest, only_calls_dispatch_with_remote_closed_when_relevant)
