@@ -18,7 +18,7 @@
 
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
-#include "nested_output.h"
+#include "display_buffer.h"
 #include "host_connection.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/graphics/pixel_format_utils.h"
@@ -30,7 +30,7 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
-mgn::detail::NestedOutput::NestedOutput(
+mgn::detail::DisplayBuffer::DisplayBuffer(
     EGLDisplayHandle const& egl_display,
     std::shared_ptr<HostSurface> const& host_surface,
     geometry::Rectangle const& area,
@@ -48,33 +48,33 @@ mgn::detail::NestedOutput::NestedOutput(
     host_surface->set_event_handler(event_thunk, this);
 }
 
-geom::Rectangle mgn::detail::NestedOutput::view_area() const
+geom::Rectangle mgn::detail::DisplayBuffer::view_area() const
 {
     return area;
 }
 
-void mgn::detail::NestedOutput::make_current()
+void mgn::detail::DisplayBuffer::make_current()
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to update EGL surface.\n"));
 }
 
-void mgn::detail::NestedOutput::release_current()
+void mgn::detail::DisplayBuffer::release_current()
 {
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
-void mgn::detail::NestedOutput::gl_swap_buffers()
+void mgn::detail::DisplayBuffer::gl_swap_buffers()
 {
     eglSwapBuffers(egl_display, egl_surface);
 }
 
-bool mgn::detail::NestedOutput::post_renderables_if_optimizable(RenderableList const&)
+bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
 {
     return false;
 }
 
-MirOrientation mgn::detail::NestedOutput::orientation() const
+MirOrientation mgn::detail::DisplayBuffer::orientation() const
 {
     /*
      * Always normal orientation. The real rotation is handled by the
@@ -83,29 +83,29 @@ MirOrientation mgn::detail::NestedOutput::orientation() const
     return mir_orientation_normal;
 }
 
-bool mgn::detail::NestedOutput::uses_alpha() const
+bool mgn::detail::DisplayBuffer::uses_alpha() const
 {
     return uses_alpha_;
 }
 
-mgn::detail::NestedOutput::~NestedOutput() noexcept
+mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept
 {
 }
 
-void mgn::detail::NestedOutput::event_thunk(
+void mgn::detail::DisplayBuffer::event_thunk(
     MirSurface* /*surface*/,
     MirEvent const* event,
     void* context)
 try
 {
-    static_cast<mgn::detail::NestedOutput*>(context)->mir_event(*event);
+    static_cast<mgn::detail::DisplayBuffer*>(context)->mir_event(*event);
 }
 catch (std::exception const&)
 {
     // Just in case: do not allow exceptions to propagate.
 }
 
-void mgn::detail::NestedOutput::mir_event(MirEvent const& event)
+void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
 {
     if (event.type == mir_event_type_motion)
     {
