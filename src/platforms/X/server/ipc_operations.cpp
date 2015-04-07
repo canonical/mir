@@ -126,6 +126,5 @@ mg::PlatformOperationMessage mgx::IpcOperations::platform_operation(
 std::shared_ptr<mg::PlatformIPCPackage> mgx::IpcOperations::connection_ipc_package()
 {
     CALLED
-//    return std::make_shared<MesaPlatformIPCPackage>(drm_auth->authenticated_fd());
-    return nullptr;
+    return std::make_shared<mg::PlatformIPCPackage>();
 }

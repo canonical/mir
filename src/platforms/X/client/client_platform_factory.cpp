@@ -19,13 +19,14 @@
 #include "mir/client_platform_factory.h"
 #include "mir_toolkit/client_types.h"
 #include "mir/client_context.h"
+#include "client_platform.h"
 #include "../debug.h"
 
-//#include <boost/throw_exception.hpp>
+#include <boost/throw_exception.hpp>
 //#include <stdexcept>
 
 namespace mcl = mir::client;
-//namespace mclx = mcl::X;
+namespace mclx = mcl::X;
 
 extern "C" std::shared_ptr<mcl::ClientPlatform>
 mcl::create_client_platform(mcl::ClientContext* context)
@@ -34,15 +35,13 @@ mcl::create_client_platform(mcl::ClientContext* context)
 
     MirPlatformPackage platform;
     context->populate_server_package(platform);
-#if 0
+
     if (platform.data_items != 0 || platform.fd_items != 0)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create X client platform on non-X server"}));
     }
-    return std::make_shared<mcla::AndroidClientPlatform>(context);
-#else
-    return nullptr;
-#endif
+
+    return std::make_shared<mclx::ClientPlatform>(context);
 }
 
 extern "C" bool

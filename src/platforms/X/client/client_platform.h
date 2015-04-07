@@ -32,7 +32,7 @@ namespace X
 class ClientPlatform : public client::ClientPlatform
 {
 public:
-    ClientPlatform();
+    ClientPlatform(ClientContext* const context);
 
     MirPlatformType platform_type() const override;
     void populate(MirPlatformPackage& package) const override;
@@ -41,6 +41,8 @@ public:
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(EGLNativeSurface *surface) override;
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override;
     MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
+private:
+    ClientContext* const context;
 };
 
 }

@@ -29,7 +29,8 @@ namespace mcl=mir::client;
 namespace mclx=mcl::X;
 namespace geom=mir::geometry;
 
-mclx::ClientPlatform::ClientPlatform()
+mclx::ClientPlatform::ClientPlatform(ClientContext* const context)
+                                     : context{context}
 {
     CALLED
 }
@@ -80,25 +81,11 @@ MirPlatformType mclx::ClientPlatform::platform_type() const
     return mir_platform_type_X;
 }
 
-void mclx::ClientPlatform::populate(MirPlatformPackage& /* package*/) const
+void mclx::ClientPlatform::populate(MirPlatformPackage& package) const
 {
     CALLED
 
-#if 0
-    size_t constexpr pointer_size_in_ints = division_ceiling(sizeof(gbm_dev), sizeof(int));
-
     context->populate_server_package(package);
-
-    auto const total_data_size = package.data_items + pointer_size_in_ints;
-    if (gbm_dev && total_data_size <= mir_platform_package_max)
-    {
-        int gbm_ptr[pointer_size_in_ints]{};
-        std::memcpy(&gbm_ptr, &gbm_dev, sizeof(gbm_dev));
-
-        for (auto i : gbm_ptr)
-            package.data[package.data_items++] = i;
-    }
-#endif
 }
 
 MirPlatformMessage* mclx::ClientPlatform::platform_operation(
