@@ -60,7 +60,7 @@ bool mgx::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& /
 void mgx::DisplayBuffer::gl_swap_buffers()
 {
 	CALLED
-//    layer_list->update_list({});
+    glXSwapBuffers(dpy, win);
 }
 
 MirOrientation mgx::DisplayBuffer::orientation() const

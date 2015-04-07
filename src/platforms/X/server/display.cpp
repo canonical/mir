@@ -80,9 +80,9 @@ mgx::Display::Display()
 
     XSetWindowAttributes swa;
     swa.colormap = cmap;
-    swa.event_mask = ExposureMask | KeyPressMask;
+    swa.event_mask = ExposureMask;
 
-    win = XCreateWindow(dpy, root, 0, 0, 600, 600, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
+    win = XCreateWindow(dpy, root, 0, 0, 1280, 1024, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
 
     XMapWindow(dpy, win);
     XStoreName(dpy, win, "Mir on X");
@@ -97,21 +97,19 @@ mgx::Display::Display()
        XNextEvent(dpy, &xev);
 
        if(xev.type == Expose)
-       {
-           XGetWindowAttributes(dpy, win, &gwa);
-           glViewport(0, 0, gwa.width, gwa.height);
-
-           glClearColor(1.0, 1.0, 1.0, 1.0);
-           glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-           glXSwapBuffers(dpy, win);
-           display_group = std::make_unique<mgx::DisplayGroup>(
-        		   std::make_unique<mgx::DisplayBuffer>(geom::Size{gwa.width, gwa.height},
-                                                        dpy,
-                                                        win,
-                                                        glc));
-           return;
-       }
+           break;
     }
+    XGetWindowAttributes(dpy, win, &gwa);
+    glViewport(0, 0, gwa.width, gwa.height);
+
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glXSwapBuffers(dpy, win);
+    display_group = std::make_unique<mgx::DisplayGroup>(
+        std::make_unique<mgx::DisplayBuffer>(geom::Size{gwa.width, gwa.height},
+                                             dpy,
+                                             win,
+                                             glc));
 }
 
 mgx::Display::~Display() noexcept

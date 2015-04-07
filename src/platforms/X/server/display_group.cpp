@@ -38,14 +38,5 @@ void mgx::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBu
 
 void mgx::DisplayGroup::post()
 {
-    /*
-    std::list<DisplayContents> contents;
-    std::unique_lock<decltype(guard)> lk(guard);
-    for(auto const& db : dbs)
-        contents.emplace_back(db.second->contents());
-    device->commit(contents);
-    */
-
-    //TODO:: post here
     CALLED
 }
