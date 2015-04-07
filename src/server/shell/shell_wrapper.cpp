@@ -83,6 +83,11 @@ mf::SurfaceId msh::ShellWrapper::create_surface(std::shared_ptr<ms::Session> con
     return wrapped->create_surface(session, params);
 }
 
+void msh::ShellWrapper::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
+{
+    wrapped->modify_surface(session, surface, modifications);
+}
+
 void msh::ShellWrapper::destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface)
 {
     wrapped->destroy_surface(session, surface);

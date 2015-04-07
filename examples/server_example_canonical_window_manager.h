@@ -85,6 +85,11 @@ public:
 
     void handle_new_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
+    void handle_modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        shell::SurfaceSpecification const& modifications);
+
     void handle_delete_surface(std::shared_ptr<scene::Session> const& session, std::weak_ptr<scene::Surface> const& surface);
 
     int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value);
