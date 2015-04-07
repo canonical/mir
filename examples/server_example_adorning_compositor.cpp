@@ -68,12 +68,7 @@ me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
         "attribute vec2 uvCoord;"
         "varying vec2 texcoord;"
         "void main() {"
-        "   mat4 m;"
-        "    m[0] = vec4(scale.x,     0.0, 0.0, pos.x);"
-        "    m[1] = vec4(    0.0, scale.y, 0.0, pos.y);"
-        "    m[2] = vec4(    0.0,     0.0, 1.0, 0.0);"
-        "    m[3] = vec4(    0.0,     0.0, 0.0, 1.0);"
-        "   gl_Position = vPosition * m;"
+        "   gl_Position = vec4(vPosition.xy * scale + pos, 0.0, 1.0);"
         "   texcoord = uvCoord.xy;"
         "}"
     },
