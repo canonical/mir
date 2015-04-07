@@ -278,9 +278,7 @@ TEST_F(SurfaceStack, gets_surface_renames)
     post_a_frame(*surface);
 
     // (change directory in shell app)
-    mir::frontend::Surface::Modifications mods;
-    mods.name = "username@hostname: ~/Documents";
-    surface->modify(mods);
+    surface->rename("username@hostname: ~/Documents");
 
     auto elements = stack.scene_elements_for(compositor_id);
     ASSERT_EQ(1, elements.size());

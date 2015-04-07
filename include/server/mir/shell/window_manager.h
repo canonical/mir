@@ -31,6 +31,8 @@ namespace geometry { class Rectangle; }
 namespace scene { class Session; class Surface; class SurfaceCreationParameters; }
 namespace shell
 {
+class SurfaceSpecification;
+
 /// interface to provide window management logic
 class WindowManager
 {
@@ -43,6 +45,11 @@ public:
         std::shared_ptr<scene::Session> const& session,
         scene::SurfaceCreationParameters const& params,
         std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) = 0;
+
+    virtual void modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        SurfaceSpecification  const& modifications) = 0;
 
     virtual void remove_surface(
         std::shared_ptr<scene::Session> const& session,
