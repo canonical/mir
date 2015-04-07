@@ -466,10 +466,11 @@ int main(int argc, char *argv[])
         
             clear_region(&canvas, &background);
         
+            MirBufferStream *bs = mir_surface_get_buffer_stream(surf);
+
             while (running)
             {
                 MirGraphicsRegion backbuffer;
-                MirBufferStream *bs = mir_surface_get_buffer_stream(surf);
                 mir_buffer_stream_get_graphics_region(bs, &backbuffer);
 
                 pthread_mutex_lock(&mutex);
