@@ -145,7 +145,7 @@ void mga::Buffer::write(unsigned char const* data, size_t data_size)
     if (buffer_size_bytes != data_size)
         BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
-    char* vaddr;
+    char* vaddr{nullptr};
     int usage = GRALLOC_USAGE_SW_WRITE_OFTEN;
     int width = size().width.as_uint32_t();
     int height = size().height.as_uint32_t();
@@ -169,20 +169,21 @@ void mga::Buffer::write(unsigned char const* data, size_t data_size)
 
 void mga::Buffer::read(std::function<void(unsigned char const*)> const& do_with_data)
 {
-    auto const& handle = native_buffer_handle();
+    auto handle = native_buffer_handle();
 
-    std::unique_lock<std::mutex> lk(content_lock);
+    native_buffer->ensure_available_for(mga::BufferAccess::read);
     auto buffer_size = size();
 
-    unsigned char* vaddr;
+    unsigned char* vaddr{nullptr};
     int usage = GRALLOC_USAGE_SW_READ_OFTEN;
     int width = buffer_size.width.as_uint32_t();
     int height = buffer_size.height.as_uint32_t();
 
     int top = 0;
     int left = 0;
-    if ( hw_module->lock(hw_module, handle->handle(),
-        usage, top, left, width, height, reinterpret_cast<void**>(&vaddr)) )
+    if ((hw_module->lock(
+        hw_module, handle->handle(), usage, top, left, width, height, reinterpret_cast<void**>(&vaddr)) ) ||
+        !vaddr)
         BOOST_THROW_EXCEPTION(std::runtime_error("error securing buffer for client cpu use"));
 
     do_with_data(vaddr);
