@@ -221,7 +221,7 @@ DemoRenderer::~DemoRenderer()
 
 void DemoRenderer::begin(DecorMap&& d) const
 {
-    decor_map = d;
+    decor_map = std::move(d);
     title_cache.drop_unused();
     title_cache.mark_all_unused();
 }
@@ -236,7 +236,7 @@ void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
         auto& decor = d->second;
         tessellate_shadow(primitives, renderable, shadow_radius);
         tessellate_frame(primitives, renderable, titlebar_height,
-                         decor.name.c_str());
+                         decor->name.c_str());
     }
 }
 

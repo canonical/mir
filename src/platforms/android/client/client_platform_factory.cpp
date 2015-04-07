@@ -28,7 +28,7 @@ namespace mcl = mir::client;
 namespace mcla = mcl::android;
 
 extern "C" std::shared_ptr<mcl::ClientPlatform>
-mcl::create_client_platform(mcl::ClientContext* context)
+create_client_platform(mcl::ClientContext* context)
 {
     MirPlatformPackage platform;
     context->populate_server_package(platform);
@@ -40,7 +40,7 @@ mcl::create_client_platform(mcl::ClientContext* context)
 }
 
 extern "C" bool
-mcl::is_appropriate_module(mcl::ClientContext* context)
+is_appropriate_module(mcl::ClientContext* context)
 {
     MirPlatformPackage platform;
     context->populate_server_package(platform);
