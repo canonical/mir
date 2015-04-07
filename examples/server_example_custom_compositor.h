@@ -16,8 +16,8 @@
  * Authored By: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_CUSTOM_RENDERER_H_
-#define MIR_EXAMPLES_CUSTOM_RENDERER_H_
+#ifndef MIR_EXAMPLES_CUSTOM_COMPOSITOR_H_
+#define MIR_EXAMPLES_CUSTOM_COMPOSITOR_H_
 
 namespace mir
 {
@@ -25,9 +25,9 @@ class Server;
 
 namespace examples
 {
-void add_custom_renderer_option_to(Server& server);
+void add_custom_compositor_option_to(Server& server);
 }
 } // namespace mir
 
 
-#endif /* MIR_EXAMPLES_CUSTOM_RENDERER_H_ */
+#endif /* MIR_EXAMPLES_CUSTOM_COMPOSITOR_H_ */

@@ -16,8 +16,8 @@
  * Authored By: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_ADORNING_RENDERER_H_
-#define MIR_EXAMPLES_ADORNING_RENDERER_H_
+#ifndef MIR_EXAMPLES_ADORNING_COMPOSITOR_H_
+#define MIR_EXAMPLES_ADORNING_COMPOSITOR_H_
 #include "mir/compositor/display_buffer_compositor.h"
 #include <GLES2/gl2.h>
 #include <tuple>
@@ -30,10 +30,10 @@ class DisplayBuffer;
 }
 namespace examples
 {
-class AdorningRenderer : public compositor::DisplayBufferCompositor
+class AdorningDisplayBufferCompositor : public compositor::DisplayBufferCompositor
 {
 public:
-    AdorningRenderer(graphics::DisplayBuffer&, std::tuple<float, float, float> const& background_rgb);
+    AdorningDisplayBufferCompositor(graphics::DisplayBuffer&, std::tuple<float, float, float> const& background_rgb);
     void composite(compositor::SceneElementSequence&& scene_sequence) override;
 private:
     graphics::DisplayBuffer& db;
@@ -79,4 +79,4 @@ private:
 }
 }
 
-#endif /* MIR_EXAMPLES_ADORNING_RENDERER_H_ */
+#endif /* MIR_EXAMPLES_ADORNING_COMPOSITOR_H_ */

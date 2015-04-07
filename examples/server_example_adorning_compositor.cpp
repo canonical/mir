@@ -16,7 +16,7 @@
  * Authored By: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "server_example_adorning_renderer.h"
+#include "server_example_adorning_compositor.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/scene_element.h"
@@ -32,19 +32,19 @@ bool make_current(mg::DisplayBuffer& db)
     return true;
 }
 
-me::AdorningRenderer::Shader::Shader(GLchar const* const* src, GLuint type) :
+me::AdorningDisplayBufferCompositor::Shader::Shader(GLchar const* const* src, GLuint type) :
     shader(glCreateShader(type))
 {
     glShaderSource(shader, 1, src, 0);
     glCompileShader(shader);
 }
 
-me::AdorningRenderer::Shader::~Shader()
+me::AdorningDisplayBufferCompositor::Shader::~Shader()
 {
     glDeleteShader(shader);
 }
 
-me::AdorningRenderer::Program::Program(Shader& vertex, Shader& fragment) :
+me::AdorningDisplayBufferCompositor::Program::Program(Shader& vertex, Shader& fragment) :
     program(glCreateProgram())
 {
     glAttachShader(program, vertex.shader);
@@ -52,12 +52,12 @@ me::AdorningRenderer::Program::Program(Shader& vertex, Shader& fragment) :
     glLinkProgram(program);
 }
 
-me::AdorningRenderer::Program::~Program()
+me::AdorningDisplayBufferCompositor::Program::~Program()
 {
     glDeleteProgram(program);
 }
 
-me::AdorningRenderer::AdorningRenderer(
+me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
     std::tuple<float, float, float> const& background_rgb) :
     db{display_buffer},
@@ -110,7 +110,7 @@ me::AdorningRenderer::AdorningRenderer(
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void me::AdorningRenderer::composite(compositor::SceneElementSequence&& scene_sequence)
+void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequence&& scene_sequence)
 {
     //note: If what should be drawn is expressible as a SceneElementSequence,
     //      mg::DisplayBuffer::post_renderables_if_optimizable() should be used,

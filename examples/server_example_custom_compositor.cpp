@@ -16,8 +16,8 @@
  * Authored By: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "server_example_custom_renderer.h"
-#include "server_example_adorning_renderer.h"
+#include "server_example_custom_compositor.h"
+#include "server_example_adorning_compositor.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
@@ -28,28 +28,28 @@ namespace me = mir::examples;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 
-///\example server_example_custom_renderer.cpp
+///\example server_example_custom_display_buffer_compositor.cpp
 /// Demonstrate writing an alternative GL rendering code
 
 namespace
 {
-char const* const renderer_option = "custom-renderer";
-char const* const renderer_description = "Select an alterative renderer [{adorning|default}]";
-char const* const renderer_adorning = "adorning";
-char const* const renderer_default = "default";
+char const* const compositor_option = "custom-compositor";
+char const* const compositor_description = "Select an alterative compositor [{adorning|default}]";
+char const* const compositor_adorning = "adorning";
+char const* const compositor_default = "default";
 
 char const* const background_option = "background-color";
 char const* const background_description =
-    "fill the background of the adorning renderer with a color [{purple|blue|grey|black}]";
+    "fill the background of the adorning compositor with a color [{purple|blue|grey|black}]";
 char const* const background_purple = "purple";
 char const* const background_blue = "blue";
 char const* const background_grey = "grey";
 char const* const background_black = "black";
 
-class AdorningRendererFactory : public mc::DisplayBufferCompositorFactory
+class AdorningDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
-    AdorningRendererFactory(std::tuple<float, float, float> const& rgb_color) :
+    AdorningDisplayBufferCompositorFactory(std::tuple<float, float, float> const& rgb_color) :
         color(rgb_color)
     {
     }
@@ -57,26 +57,26 @@ public:
     std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(
         mg::DisplayBuffer& display_buffer) override
     {
-        return std::make_unique<me::AdorningRenderer>(display_buffer, color);
+        return std::make_unique<me::AdorningDisplayBufferCompositor>(display_buffer, color);
     }
 private:
     std::tuple<float, float, float> const color;
 };
 }
 
-void me::add_custom_renderer_option_to(Server& server)
+void me::add_custom_compositor_option_to(Server& server)
 {
-    server.add_configuration_option(renderer_option, renderer_description, renderer_default);
+    server.add_configuration_option(compositor_option, compositor_description, compositor_default);
     server.add_configuration_option(background_option, background_description, background_black);
 
     server.wrap_display_buffer_compositor_factory(
         [server](std::shared_ptr<mc::DisplayBufferCompositorFactory> const& factory)
         -> std::shared_ptr<mc::DisplayBufferCompositorFactory>
     {
-        auto const selection = server.get_options()->get<std::string>(renderer_option);
+        auto const selection = server.get_options()->get<std::string>(compositor_option);
 
         auto const color_name = server.get_options()->get<std::string>(background_option);
-        if (selection == renderer_adorning)
+        if (selection == compositor_adorning)
         {
             std::tuple<float, float, float> color;
             if (color_name == background_blue)
@@ -89,15 +89,15 @@ void me::add_custom_renderer_option_to(Server& server)
                 color = std::make_tuple(0.0, 0.0, 0.0);
             else
                 throw mir::AbnormalExit("Unknown color selection: " + color_name);
-            return std::make_shared<AdorningRendererFactory>(color); 
+            return std::make_shared<AdorningDisplayBufferCompositorFactory>(color); 
         }
-        else if (selection == renderer_default)
+        else if (selection == compositor_default)
         {
             if (color_name != background_black)
-                throw mir::AbnormalExit("default renderer can only set background color to black");
+                throw mir::AbnormalExit("default compositor can only set background color to black");
             return factory;
         }
 
-        throw mir::AbnormalExit("Unknown renderer selection: " + selection);
+        throw mir::AbnormalExit("Unknown compositor selection: " + selection);
     });
 }
