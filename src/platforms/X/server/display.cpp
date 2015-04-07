@@ -45,6 +45,10 @@ mgx::Display::Display()
     GLint att[] = { GLX_RGBA, GLX_DOUBLEBUFFER, None };
     vi = glXChooseVisual(dpy, 0, att);
 
+    int maj, min;
+    glXQueryVersion(dpy, &maj, &min);
+    std::cout<< "\tglX version : (" << maj << ',' << min << ')' << std::endl;
+
     int bits;
     glXGetConfig(dpy, vi, GLX_BUFFER_SIZE, &bits);
     std::cout<< "\tNumber of bits selected : " << bits << std::endl;
