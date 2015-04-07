@@ -18,7 +18,6 @@
 #define MIR_LOG_COMPONENT "GL"
 #include "mir/compositor/gl_renderer.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/compositor/destination_alpha.h"
 #include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
@@ -91,24 +90,20 @@ mc::GLRenderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-mc::GLRenderer::GLRenderer(
-    geom::Rectangle const& display_area,
-    DestinationAlpha dest_alpha)
-    : GLRenderer(std::make_unique<RecentlyUsedCache>(),
-                 display_area, dest_alpha)
+mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
+    : GLRenderer(std::make_unique<RecentlyUsedCache>(), display_area)
 {
 }
 
 mc::GLRenderer::GLRenderer(
     std::unique_ptr<mg::GLTextureCache> && texture_cache, 
-    geom::Rectangle const& display_area,
-    DestinationAlpha dest_alpha)
+    geom::Rectangle const& display_area)
     : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
       texture_cache(std::move(texture_cache)),
       rotation(NAN), // ensure the first set_rotation succeeds
-      dest_alpha(dest_alpha)
+      dest_alpha_bits(0)
 {
     struct {GLenum id; char const* label;} const glstrings[] =
     {
@@ -144,7 +139,8 @@ mc::GLRenderer::GLRenderer(
     set_viewport(display_area);
     set_rotation(0.0f);
 
-    if (dest_alpha != DestinationAlpha::opaque)
+    glGetIntegerv(GL_ALPHA_BITS, &dest_alpha_bits);
+    if (dest_alpha_bits)
         clear_color[3] = 0.0f;
 }
 
@@ -161,7 +157,7 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (dest_alpha == DestinationAlpha::opaque)
+    if (dest_alpha_bits == 0)
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 
     ++frameno;
@@ -303,7 +299,3 @@ void mc::GLRenderer::suspend()
     texture_cache->invalidate();
 }
 
-mc::DestinationAlpha mc::GLRenderer::destination_alpha() const
-{
-    return dest_alpha;
-}

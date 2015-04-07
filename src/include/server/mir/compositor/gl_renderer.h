@@ -38,18 +38,13 @@ namespace graphics { class GLTextureCache; }
 namespace compositor
 {
 
-enum class DestinationAlpha;
-
 class GLRenderer : public Renderer
 {
 public:
-    GLRenderer(
-        geometry::Rectangle const& display_area,
-        DestinationAlpha dest_alpha);
+    GLRenderer(geometry::Rectangle const& display_area);
     GLRenderer(
         std::unique_ptr<graphics::GLTextureCache> && texture_cache, 
-        geometry::Rectangle const& display_area,
-        DestinationAlpha dest_alpha);
+        geometry::Rectangle const& display_area);
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
@@ -78,8 +73,6 @@ protected:
      */
     virtual void tessellate(std::vector<graphics::GLPrimitive>& primitives,
                             graphics::Renderable const& renderable) const;
-
-    DestinationAlpha destination_alpha() const;
 
     GLfloat clear_color[4];
 
@@ -114,9 +107,9 @@ private:
     // GLTextureCache is an incomplete type so shared_ptr is required...
     std::shared_ptr<graphics::GLTextureCache> mutable texture_cache;
     float rotation;
-    DestinationAlpha const dest_alpha;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords, screen_rotation;
+    GLint dest_alpha_bits;
 
     std::vector<graphics::GLPrimitive> mutable primitives;
 };
