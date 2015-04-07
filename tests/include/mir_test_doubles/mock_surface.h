@@ -66,6 +66,8 @@ struct MockSurface : public scene::BasicSurface
     MOCK_METHOD1(take_input_focus, void(std::shared_ptr<shell::InputTargeter> const&));
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));
+
+    MOCK_METHOD1(consume, void(MirEvent const&));
 };
 
 }
