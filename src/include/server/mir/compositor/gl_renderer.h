@@ -111,8 +111,7 @@ protected:
                       GLRenderer::Program const& prog) const;
 
 private:
-    // texture_cache is actually unique, but shared_ptr is required to allow
-    // this to compile while GLTextureCache is an incomplete type...
+    // GLTextureCache is an incompleted type, so shared_ptr is required...
     std::shared_ptr<graphics::GLTextureCache> mutable texture_cache;
     float rotation;
     DestinationAlpha const dest_alpha;
