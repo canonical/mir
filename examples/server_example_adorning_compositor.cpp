@@ -129,8 +129,8 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
         auto const renderable = element->renderable();
         float width  = renderable->screen_position().size.width.as_float();
         float height = renderable->screen_position().size.height.as_float();
-        float x = renderable->screen_position().top_left.x.as_float();
-        float y = renderable->screen_position().top_left.y.as_float();
+        float x = renderable->screen_position().top_left.x.as_float() - db.view_area().top_left.x.as_float();
+        float y = renderable->screen_position().top_left.y.as_float() - db.view_area().top_left.y.as_float();
         float scale[2] {
             width/display_width * 2,
             height/display_height * -2};
