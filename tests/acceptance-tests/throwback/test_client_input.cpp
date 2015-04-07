@@ -18,8 +18,7 @@
  *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
+#include "mir/events/event_private.h"
 #include "mir/shell/shell_wrapper.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface.h"
@@ -108,7 +107,7 @@ struct InputClient
     {
         auto const client = static_cast<InputClient*>(context);
 
-        if (ev->type == mir_event_type_surface)
+        if (mir_event_get_type(ev) == mir_event_type_surface)
             return;
 
         client->handler.handle_input(ev);

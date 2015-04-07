@@ -61,7 +61,7 @@ struct RealBufferFileOps : public mclm::BufferFileOps
 
 }
 
-extern "C" std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(mcl::ClientContext* context)
+extern "C" std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
 {
     MirPlatformPackage package;
     context->populate_server_package(package);
@@ -75,7 +75,7 @@ extern "C" std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(mcl:
 }
 
 extern "C" bool
-mcl::is_appropriate_module(mcl::ClientContext* context)
+is_appropriate_module(mcl::ClientContext* context)
 {
     MirPlatformPackage platform;
     context->populate_server_package(platform);

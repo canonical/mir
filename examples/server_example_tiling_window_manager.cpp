@@ -112,11 +112,11 @@ auto me::TilingWindowManagerPolicy::handle_place_new_surface(
     return parameters;
 }
 
-std::vector<std::shared_ptr<ms::Surface>> me::TilingWindowManagerPolicy::generate_decorations_for(
+void me::TilingWindowManagerPolicy::generate_decorations_for(
     std::shared_ptr<ms::Session> const&,
-    std::shared_ptr<ms::Surface> const&)
+    std::shared_ptr<ms::Surface> const&,
+    TilingSurfaceInfoMap&)
 {
-    return {};
 }
 
 void me::TilingWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)

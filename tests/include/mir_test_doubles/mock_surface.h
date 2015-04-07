@@ -23,6 +23,9 @@
 #include "src/server/report/null_report_factory.h"
 #include "mock_buffer_stream.h"
 
+// GMock wants to be able to construct MirEvent as its passed by reference to consume
+#include "mir/events/event_private.h"
+
 #include <gmock/gmock.h>
 
 namespace mir

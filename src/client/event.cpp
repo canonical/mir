@@ -22,7 +22,7 @@
 #include "mir/log.h"
 
 #include "mir_toolkit/events/event.h"
-#include "mir_toolkit/events/event_deprecated.h"
+#include "mir/events/event_private.h"
 
 #include "mir_toolkit/events/surface_event.h"
 #include "mir_toolkit/events/resize_event.h"

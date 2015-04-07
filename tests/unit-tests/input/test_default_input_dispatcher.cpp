@@ -16,11 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "src/server/input/default_input_dispatcher.h"
 
 #include "mir/events/event_builders.h"
+#include "mir/events/event_private.h"
 #include "mir/scene/observer.h"
 
 #include "mir_test/event_matchers.h"
@@ -40,6 +39,8 @@ namespace mev = mir::events;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
+namespace geom = mir::geometry;
+
 // TODO: Could eliminate many local event variables by passingdirectly to ::dispatch
 
 namespace
@@ -52,9 +53,9 @@ struct MockSurfaceWithGeometry : public mtd::MockSurface
     {
     }
 
-    bool input_area_contains(geometry::Point const& p) const override
+    bool input_area_contains(geom::Point const& p) const override
     {
-        return goem.contains(p);n
+        return geom.contains(p);
     }
 
     geom::Rectangle input_bounds() const override
@@ -71,7 +72,7 @@ struct StubInputScene : public mtd::StubInputScene
     {
         std::lock_guard<std::mutex> lg(surface_guard);
         
-        auto surface = std::make_shared<mtd::MockSurface>(geometry);
+        auto surface = std::make_shared<MockSurfaceWithGeometry>(geometry);
         surfaces.push_back(surface);
 
         observer->surface_added(surface.get());
@@ -84,9 +85,9 @@ struct StubInputScene : public mtd::StubInputScene
         std::lock_guard<std::mutex> lg(surface_guard);
         auto it = std::find(surfaces.begin(), surfaces.end(), surface);
         assert(it != surfaces.end());
-        auto surface = *it;
+        auto surf = *it;
         surfaces.erase(it);
-        observer->surface_removed(surface.get());
+        observer->surface_removed(surf.get());
     }
 
     std::shared_ptr<mtd::MockSurface> add_surface()
@@ -113,7 +114,7 @@ struct StubInputScene : public mtd::StubInputScene
         }
     }
     
-    void remove_observer(std::weak_ptr<ms::Observer> const& observer) override
+    void remove_observer(std::weak_ptr<ms::Observer> const& /* remove_observer */) override
     {
         assert(observer != nullptr);
         observer->end_observation();
@@ -121,7 +122,7 @@ struct StubInputScene : public mtd::StubInputScene
     }
     
     std::mutex surface_guard;
-    std::vector<std::shared_ptr<mi::Surface>> surfaces;
+    std::vector<std::shared_ptr<ms::Surface>> surfaces;
 
     std::shared_ptr<ms::Observer> observer;
 };
@@ -145,28 +146,53 @@ mir::EventUPtr a_key_event(MirKeyboardAction action = mir_keyboard_action_down)
     return mev::make_event(0, 0, action, 0, 0, mir_input_event_modifier_alt);
 }
 
-// TODO: Deal with pointer button pressed tracking. Need a synthetic pointer thingy...
-// in order to handle the multi button test
-mir::EventUPtr a_pointer_event(geom::Point const& pointer_location)
+// TODO: Impl fake device ID
+struct FakePointer
 {
-    return mev::make_event(0, 0, 0, mir_pointer_action_motion, {},
-                           pointer_location.x.as_int(), pointer_location.y.as_int(),
-                           0, 0);
-}
-    
-mir::EventUPtr a_pointer_up_event(geom::Point const& pointer_location, MirPointerButton button)
+    mir::EventUPtr move_to(geom::Point const& location)
+    {
+        return mev::make_event(0, 0, 0, mir_pointer_action_motion, buttons_pressed,
+                               location.x.as_int(), location.y.as_int(),
+                               0, 0);
+    }
+    mir::EventUPtr release_button(geom::Point const& location, MirPointerButton button = mir_pointer_button_primary)
+    {
+        std::remove_if(buttons_pressed.begin(), buttons_pressed.end(), [&button](MirPointerButton b){
+            return b == button;
+        });
+
+        return mev::make_event(0, 0, 0, mir_pointer_action_button_up, buttons_pressed,
+                               location.x.as_int(), location.y.as_int(),
+                               0, 0);
+    }
+    mir::EventUPtr press_button(geom::Point const& location, MirPointerButton button = mir_pointer_button_primary)
+    {
+        buttons_pressed.push_back(button);
+        return mev::make_event(0, 0, 0, mir_pointer_action_button_down, buttons_pressed,
+                               location.x.as_int(), location.y.as_int(),
+                               0, 0);
+    }
+
+    std::vector<MirPointerButton> buttons_pressed;
+};
+
+// TODO: Impl touch synth
+mir::EventUPtr a_touch_movement_event(geom::Point const& point)
 {
-    (void) button;
-    return mev::make_event(0, 0, 0, mir_pointer_action_button_up, {},
-                           pointer_location.x.as_int(), pointer_location.y.as_int(),
-                           0, 0);
+    (void) point;
+    return mev::make_event(0, 0, 0);
 }
 
-mir::EventUPtr a_pointer_down_event(geom::Point const& pointer_location, MirPointerButton button)
+mir::EventUPtr a_touch_down_event(geom::Point const& point)
 {
-    return mev::make_event(0, 0, 0, mir_pointer_action_button_down, {button},
-                           pointer_location.x.as_int(), pointer_location.y.as_int(),
-                           0, 0);
+    (void) point;
+    return mev::make_event(0, 0, 0);
+}
+
+mir::EventUPtr a_touch_up_event(geom::Point const& point)
+{
+    (void) point;
+    return mev::make_event(0, 0, 0);
 }
    
 }
@@ -245,8 +271,9 @@ TEST_F(DefaultInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
 
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
 
-    auto ev_1 = a_pointer_event({1, 0});
-    auto ev_2 = a_pointer_event({5, 0});
+    FakePointer pointer;
+    auto ev_1 = pointer.move_to({1, 0});
+    auto ev_2 = pointer.move_to({5, 0});
 
     InSequence seq;
     // The cursor begins at 0, 0
@@ -257,18 +284,18 @@ TEST_F(DefaultInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
 
     dispatcher.start();
 
-    EXPECT_TRUE(dispatcher.dispatch(*ev_1));
-    EXPECT_TRUE(dispatcher.dispatch(*ev_2));
+    EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({1, 0})));
+    EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({5, 0})));
 }
 
-TEST_F(DefaultInputDispatcher, pointer_delivered_only_to_top_surface);
+TEST_F(DefaultInputDispatcher, pointer_delivered_only_to_top_surface)
 {
     using namespace ::testing;
 
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
     auto top_surface = scene.add_surface({{0, 0}, {5, 5}});
 
-    auto ev_1 = a_pointer_event({1, 0});
+    FakePointer pointer;
 
     InSequence seq;
     // The cursor begins at 0, 0
@@ -279,9 +306,9 @@ TEST_F(DefaultInputDispatcher, pointer_delivered_only_to_top_surface);
     
     dispatcher.start();
 
-    EXPECT_TRUE(dispatcher.dispatch(*ev_1));
+    EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({1, 0})));
     scene.remove_surface(top_surface);
-    EXPECT_TRUE(dispatcher.dispatch(*ev_1));
+    EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({1, 0})));
 }
 
 TEST_F(DefaultInputDispatcher, pointer_may_move_between_adjacent_surfaces)
@@ -291,8 +318,9 @@ TEST_F(DefaultInputDispatcher, pointer_may_move_between_adjacent_surfaces)
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
     auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
 
-    auto ev_1 = a_pointer_event({6, 6});
-    auto ev_2 = a_pointer_event({1, 1});
+    FakePointer pointer;
+    auto ev_1 = pointer.move_to({6, 6});
+    auto ev_2 = pointer.move_to({7, 7});
 
     InSequence seq;
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
@@ -300,6 +328,7 @@ TEST_F(DefaultInputDispatcher, pointer_may_move_between_adjacent_surfaces)
     EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
     EXPECT_CALL(*another_surface, consume(mt::PointerEnterEvent())).Times(1);
     EXPECT_CALL(*another_surface, consume(mt::PointerEventWithPosition(1, 0))).Times(1);
+    EXPECT_CALL(*another_surface, consume(mt::PointerLeaveEvent())).Times(1);
     
     dispatcher.start();
 
@@ -317,9 +346,10 @@ TEST_F(DefaultInputDispatcher, gestures_persist_over_button_down)
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
     auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
 
-    auto ev_1 = a_pointer_down_event({0, 0});
-    auto ev_2 = a_pointer_event({6, 6});
-    auto ev_3 = a_pointer_up_event({6, 6});
+    FakePointer pointer;
+    auto ev_1 = pointer.press_button({0, 0});
+    auto ev_2 = pointer.move_to({6, 6});
+    auto ev_3 = pointer.release_button({6, 6});
 
     InSequence seq;
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
@@ -344,11 +374,12 @@ TEST_F(DefaultInputDispatcher, pointer_gestures_may_transfer_over_buttons)
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
     auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
 
-    auto ev_1 = a_pointer_down_event({0, 0}, mir_pointer_button_primary);
-    auto ev_2 = a_pointer_down_event({0, 0}, mir_pointer_button_secondary);
-    auto ev_3 = a_pointer_up_event({0, 0}, mir_pointer_button_primary);
-    auto ev_4 = a_pointer_event({6, 6});
-    auto ev_5 = a_pointer_up_event({6, 6}, mir_pointer_button_secondary);
+    FakePointer pointer;
+    auto ev_1 = pointer.press_button({0, 0}, mir_pointer_button_primary);
+    auto ev_2 = pointer.press_button({0, 0}, mir_pointer_button_secondary);
+    auto ev_3 = pointer.release_button({0, 0}, mir_pointer_button_primary);
+    auto ev_4 = pointer.move_to({6, 6});
+    auto ev_5 = pointer.release_button({6, 6}, mir_pointer_button_secondary);
 
     InSequence seq;
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
@@ -359,7 +390,7 @@ TEST_F(DefaultInputDispatcher, pointer_gestures_may_transfer_over_buttons)
     EXPECT_CALL(*surface, consume(mt::PointerEventWithPosition(6, 6))).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
     EXPECT_CALL(*another_surface, consume(mt::PointerEnterEvent())).Times(1);
-    
+
     dispatcher.start();
 
     EXPECT_TRUE(dispatcher.dispatch(*ev_1));
@@ -377,6 +408,7 @@ TEST_F(DefaultInputDispatcher, touch_delivered_to_surface)
     
     auto surface = scene.add_surface({{1, 1}, {1, 1}});
 
+    InSequence seq;
     EXPECT_CALL(*surface, consume(mt::TouchEvent(0,0))).Times(1);
     EXPECT_CALL(*surface, consume(mt::TouchUpEvent(0,0))).Times(1);
 
@@ -393,6 +425,7 @@ TEST_F(DefaultInputDispatcher, touch_delivered_only_to_top_surface)
     auto bottom_surface = scene.add_surface({{1, 1}, {3, 3}});
     auto surface = scene.add_surface({{1, 1}, {3, 3}});
 
+    InSequence seq;
     EXPECT_CALL(*surface, consume(mt::TouchEvent(0,0))).Times(1);
     EXPECT_CALL(*surface, consume(mt::TouchUpEvent(0,0))).Times(1);
     EXPECT_CALL(*bottom_surface, consume(mt::TouchEvent(0,0))).Times(0);
@@ -413,9 +446,11 @@ TEST_F(DefaultInputDispatcher, gestures_persist_over_touch_down)
     auto left_surface = scene.add_surface({{0, 0}, {1, 1}});
     auto right_surface = scene.add_surface({{1, 1}, {1, 1}});
 
-    EXPECT_CALL(*left_surface, consume(mt::TouchEvent(0, 0)));
-    EXPECT_CALL(*left_surface, consume(mt::TouchMovementEvent(2, 2)));
-    EXPECT_CALL(*left_surface, consume(mt::TouchUpEvent(2, 2)));
+    InSequence seq;
+    EXPECT_CALL(*left_surface, consume(mt::TouchEvent(0, 0))).Times(1);
+    // Mathc movement pos?
+    EXPECT_CALL(*left_surface, consume(mt::TouchMovementEvent())).Times(1);
+    EXPECT_CALL(*left_surface, consume(mt::TouchUpEvent(2, 2))).Times(1);
     EXPECT_CALL(*right_surface, consume(_)).Times(0);
 
     dispatcher.start();

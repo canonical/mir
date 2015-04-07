@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/legacy_surface_change_notification.h"
 
+#include "mir/events/event_private.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/displacement.h"
