@@ -208,4 +208,3 @@ TEST_F(GLRenderer, clears_all_channels_zero)
 
     renderer.render(renderable_list);
 }
-
