@@ -21,6 +21,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/shell/display_layout.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/geometry/displacement.h"
 
 #include "mir/graphics/buffer.h"
@@ -195,9 +196,10 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
     return parameters;
 }
 
-std::vector<std::shared_ptr<ms::Surface>> me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
-    std::shared_ptr<ms::Session> const& session,
-    std::shared_ptr<ms::Surface> const& surface)
+void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    CanonicalSurfaceInfoMap& surface_info)
 {
     tools->info_for(session).surfaces++;
     auto format = mir_pixel_format_xrgb_8888;
@@ -238,7 +240,12 @@ std::vector<std::shared_ptr<ms::Surface>> me::CanonicalWindowManagerPolicyCopy::
     }
 
     decoration_surface->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
-    return {decoration_surface};
+
+    CanonicalSurfaceInfoCopy info{session, decoration_surface};
+    info.is_decoration = true;
+    info.parent = surface;
+
+    surface_info.emplace(decoration_surface, std::move(info));
 }
 
 namespace
@@ -304,6 +311,15 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
         // Cannot have input focus
         break;
     }
+}
+
+void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& surface,
+    shell::SurfaceSpecification const& modifications)
+{
+    if (modifications.name.is_set())
+        surface->rename(modifications.name.value());
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)

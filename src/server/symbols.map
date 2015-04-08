@@ -240,6 +240,7 @@ MIR_SERVER_31 {
     mir::shell::ShellWrapper::focus_next*;
     mir::shell::ShellWrapper::get_surface_attribute*;
     mir::shell::ShellWrapper::handle*;
+    mir::shell::ShellWrapper::modify_surface*;
     mir::shell::ShellWrapper::open_session*;
     mir::shell::ShellWrapper::raise*;
     mir::shell::ShellWrapper::remove_display*;
@@ -506,6 +507,7 @@ MIR_SERVER_31 {
     mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
     mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
     mir::shell::CanonicalWindowManagerPolicy::handle_place_new_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_modify_surface*;
     mir::shell::CanonicalWindowManagerPolicy::handle_new_surface*;
     mir::shell::CanonicalSurfaceInfo::CanonicalSurfaceInfo*;
     mir::shell::CanonicalWindowManagerPolicy::handle_delete_surface*;

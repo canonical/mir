@@ -13,6 +13,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #define MIR_LOG_COMPONENT "GL"
@@ -91,17 +92,11 @@ mc::GLRenderer::Program::Program(GLuint program_id)
 }
 
 mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
-    : GLRenderer(std::make_unique<RecentlyUsedCache>(), display_area)
-{
-}
-
-mc::GLRenderer::GLRenderer(
-    std::unique_ptr<mg::GLTextureCache> && texture_cache, 
-    geom::Rectangle const& display_area)
     : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
-      texture_cache(std::move(texture_cache)),
+      texture_cache(new RecentlyUsedCache,
+                    [](graphics::GLTextureCache *p){delete p;}),
       rotation(NAN), // ensure the first set_rotation succeeds
       dest_alpha_bits(0)
 {

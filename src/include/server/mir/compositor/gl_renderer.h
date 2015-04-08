@@ -29,7 +29,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <memory>
 
 namespace mir
 {
@@ -42,9 +41,6 @@ class GLRenderer : public Renderer
 {
 public:
     GLRenderer(geometry::Rectangle const& display_area);
-    GLRenderer(
-        std::unique_ptr<graphics::GLTextureCache> && texture_cache, 
-        geometry::Rectangle const& display_area);
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
@@ -104,8 +100,8 @@ protected:
                       GLRenderer::Program const& prog) const;
 
 private:
-    // GLTextureCache is an incomplete type so shared_ptr is required...
-    std::shared_ptr<graphics::GLTextureCache> mutable texture_cache;
+    std::unique_ptr<graphics::GLTextureCache,
+                    void(*)(graphics::GLTextureCache*)> const texture_cache;
     float rotation;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords, screen_rotation;

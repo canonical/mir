@@ -145,9 +145,17 @@ private:
         auto const surface = session->surface(result);
         surface_info.emplace(surface, SurfaceInfo{session, surface});
         policy.handle_new_surface(session, surface);
-        for (auto& decoration : policy.generate_decorations_for(session, surface))
-            surface_info.emplace(decoration, SurfaceInfo{session, decoration});
+        policy.generate_decorations_for(session, surface, surface_info);
         return result;
+    }
+
+    void modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        shell::SurfaceSpecification const& modifications) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        policy.handle_modify_surface(session, surface, modifications);
     }
 
     void remove_surface(
