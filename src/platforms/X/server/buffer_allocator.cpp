@@ -37,12 +37,24 @@ std::shared_ptr<mg::Buffer> mgx::BufferAllocator::alloc_buffer(
 
     CALLED
     if (buffer_properties.usage == BufferUsage::software)
+    {
+        std::cout<< "\t\t software buffer" << std::endl;
         buffer = alloc_software_buffer(buffer_properties);
+    }
     else
-        return nullptr;
-//        buffer = alloc_hardware_buffer(buffer_properties);
+    {
+        std::cout<< "\t\t hardware buffer" << std::endl;
+        buffer = alloc_hardware_buffer(buffer_properties);
+//        return nullptr;
+    }
 
     return buffer;
+}
+
+std::shared_ptr<mg::Buffer> mgx::BufferAllocator::alloc_hardware_buffer(
+    BufferProperties const& buffer_properties)
+{
+    return alloc_software_buffer(buffer_properties);
 }
 
 std::shared_ptr<mg::Buffer> mgx::BufferAllocator::alloc_software_buffer(
