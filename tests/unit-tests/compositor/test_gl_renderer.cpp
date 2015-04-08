@@ -100,8 +100,6 @@ public:
             .WillByDefault(SetArgPointee<2>(GL_TRUE));
 
         //A mix of defaults and silencing from here on out
-        EXPECT_CALL(mock_gl, glGetIntegerv(_, _))
-            .WillRepeatedly(SetArgPointee<1>(0));
         EXPECT_CALL(mock_gl, glUseProgram(_)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glActiveTexture(_)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, GL_FALSE, _))
@@ -155,8 +153,7 @@ public:
 
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 {
-    EXPECT_CALL(mock_gl, glGetIntegerv(GL_ALPHA_BITS, _))
-        .WillOnce(SetArgPointee<1>(0));
+    InSequence seq;
     EXPECT_CALL(*renderable, shaped())
         .WillOnce(Return(false));
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
@@ -202,6 +199,7 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
 
 TEST_F(GLRenderer, clears_all_channels_zero)
 {
+    InSequence seq;
     EXPECT_CALL(mock_gl, glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
     EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     EXPECT_CALL(mock_gl, glClear(_));
