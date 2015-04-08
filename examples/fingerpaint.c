@@ -303,6 +303,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         {
             printf("Oh I forgot you can't save your work. Quitting now...\n");
             running = false;
+            changed = true;
         }
     }
     else if (event_type == mir_event_type_resize)
@@ -466,10 +467,11 @@ int main(int argc, char *argv[])
         
             clear_region(&canvas, &background);
         
+            MirBufferStream *bs = mir_surface_get_buffer_stream(surf);
+
             while (running)
             {
                 MirGraphicsRegion backbuffer;
-                MirBufferStream *bs = mir_surface_get_buffer_stream(surf);
                 mir_buffer_stream_get_graphics_region(bs, &backbuffer);
 
                 pthread_mutex_lock(&mutex);
