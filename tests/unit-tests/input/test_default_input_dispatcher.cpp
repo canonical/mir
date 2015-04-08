@@ -41,8 +41,6 @@ namespace mtd = mt::doubles;
 
 namespace geom = mir::geometry;
 
-// TODO: Could eliminate many local event variables by passingdirectly to ::dispatch
-
 namespace
 {
 
@@ -176,25 +174,44 @@ struct FakePointer
     std::vector<MirPointerButton> buttons_pressed;
 };
 
-// TODO: Impl touch synth
-mir::EventUPtr a_touch_movement_event(geom::Point const& point)
+// TODO: Multi-touch
+// TODO: Device IDs
+struct FakeToucher
 {
-    (void) point;
-    return mev::make_event(0, 0, 0);
-}
+    mir::EventUPtr move_to(geom::Point const& point)
+    {
+        auto ev = mev::make_event(0, 0, 0);
+        mev::add_touch(*ev, 0, mir_touch_action_change,
+                       mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
+                       touched ? 1.0 : 0.0,
+                       touched ? 1.0 : 0.0,
+                       touched ? 1.0 : 0.0,
+                       touched ? 1.0 : 0.0);
+        return ev;
+    }
+    mir::EventUPtr touch_at(geom::Point const& point)
+    {
+        touched = true;
+        
+        auto ev = mev::make_event(0, 0, 0);
+        mev::add_touch(*ev, 0, mir_touch_action_down,
+                       mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
+                       1.0, 1.0, 1.0, 1.0);
+        return ev;
+    }
+    mir::EventUPtr release_at(geom::Point const& point)
+    {
+        touched = false;
+        
+        auto ev = mev::make_event(0, 0, 0);
+        mev::add_touch(*ev, 0, mir_touch_action_up,
+                       mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
+                       0.0, 0.0, 0.0, 0.0);
+        return ev;
+    }
+    bool touched = false;
+};
 
-mir::EventUPtr a_touch_down_event(geom::Point const& point)
-{
-    (void) point;
-    return mev::make_event(0, 0, 0);
-}
-
-mir::EventUPtr a_touch_up_event(geom::Point const& point)
-{
-    (void) point;
-    return mev::make_event(0, 0, 0);
-}
-   
 }
 
 TEST_F(DefaultInputDispatcher, key_event_delivered_to_focused_surface)
@@ -414,8 +431,9 @@ TEST_F(DefaultInputDispatcher, touch_delivered_to_surface)
 
     dispatcher.start();
 
-    EXPECT_TRUE(dispatcher.dispatch(*a_touch_down_event({1,1})));
-    EXPECT_TRUE(dispatcher.dispatch(*a_touch_up_event({1,1})));
+    FakeToucher toucher;
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({1,1})));
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.release_at({1,1})));
 }
 
 TEST_F(DefaultInputDispatcher, touch_delivered_only_to_top_surface)
@@ -433,8 +451,9 @@ TEST_F(DefaultInputDispatcher, touch_delivered_only_to_top_surface)
 
     dispatcher.start();
 
-    EXPECT_TRUE(dispatcher.dispatch(*a_touch_movement_event({1,1})));
-    EXPECT_TRUE(dispatcher.dispatch(*a_touch_movement_event({2,2})));
+    FakeToucher toucher;
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.move_to({1,1})));
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.move_to({2,2})));
 }
 
 // TODO: Test that touch can move between surfaces beside eachother
@@ -454,10 +473,11 @@ TEST_F(DefaultInputDispatcher, gestures_persist_over_touch_down)
     EXPECT_CALL(*right_surface, consume(_)).Times(0);
 
     dispatcher.start();
-
-    EXPECT_TRUE(dispatcher.dispatch(*a_touch_down_event({0, 0})));
-    EXPECT_TRUE(dispatcher.dispatch(*a_touch_movement_event({2, 2})));
-    EXPECT_TRUE(dispatcher.dispatch(*a_touch_up_event({2, 2})));
+    
+    FakeToucher toucher;
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({0, 0})));
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.move_to({2, 2})));
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.release_at({2, 2})));
 }
 
 // TODO: Test multiple touch gesture
