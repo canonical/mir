@@ -79,6 +79,14 @@ mf::SurfaceId msh::FrontendShell::create_surface(std::shared_ptr<mf::Session> co
     return wrapped->create_surface(scene_session, populated_params);
 }
 
+void msh::FrontendShell::modify_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface_id, SurfaceSpecification const& modifications)
+{
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    auto const surface = scene_session->surface(surface_id);
+
+    wrapped->modify_surface(scene_session, surface, modifications);
+}
+
 void msh::FrontendShell::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);

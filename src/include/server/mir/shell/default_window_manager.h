@@ -45,6 +45,11 @@ public:
         scene::SurfaceCreationParameters const& params,
         std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) override;
 
+    void modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        SurfaceSpecification const& modifications) override;
+
     void remove_surface(
         std::shared_ptr<scene::Session> const& session,
         std::weak_ptr<scene::Surface> const& surface) override;

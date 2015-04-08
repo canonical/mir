@@ -16,9 +16,9 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#include "nested_display.h"
+#include "display.h"
 #include "nested_display_configuration.h"
-#include "nested_output.h"
+#include "display_buffer.h"
 #include "host_connection.h"
 
 #include "mir/geometry/rectangle.h"
@@ -120,13 +120,13 @@ mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
 }
 
 mgn::detail::DisplaySyncGroup::DisplaySyncGroup(
-    std::shared_ptr<mgn::detail::NestedOutput> const& output) :
+    std::shared_ptr<mgn::detail::DisplayBuffer> const& output) :
     output(output)
 {
 }
 
 void mgn::detail::DisplaySyncGroup::for_each_display_buffer(
-    std::function<void(DisplayBuffer&)> const& f)
+    std::function<void(graphics::DisplayBuffer&)> const& f)
 {
     f(*output);
 }
@@ -135,7 +135,7 @@ void mgn::detail::DisplaySyncGroup::post()
 {
 }
 
-mgn::NestedDisplay::NestedDisplay(
+mgn::Display::Display(
     std::shared_ptr<mg::Platform> const& platform,
     std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<input::InputDispatcher> const& dispatcher,
@@ -154,26 +154,26 @@ mgn::NestedDisplay::NestedDisplay(
     create_surfaces(*conf);
 }
 
-mgn::NestedDisplay::~NestedDisplay() noexcept
+mgn::Display::~Display() noexcept
 {
     if (eglGetCurrentContext() == egl_display.egl_context())
         eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
-void mgn::NestedDisplay::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
+void mgn::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
 {
     std::unique_lock<std::mutex> lock(outputs_mutex);
     for (auto& i : outputs)
         f(*i.second);
 }
 
-std::unique_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration() const
+std::unique_ptr<mg::DisplayConfiguration> mgn::Display::configuration() const
 {
     return std::make_unique<NestedDisplayConfiguration>(
         connection->create_display_config());
 }
 
-void mgn::NestedDisplay::complete_display_initialization(MirPixelFormat format)
+void mgn::Display::complete_display_initialization(MirPixelFormat format)
 {
     if (egl_display.egl_context() != EGL_NO_CONTEXT)  return;
 
@@ -181,13 +181,13 @@ void mgn::NestedDisplay::complete_display_initialization(MirPixelFormat format)
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_display.egl_context());
 }
 
-void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration)
+void mgn::Display::configure(mg::DisplayConfiguration const& configuration)
 {
     create_surfaces(configuration);
     apply_to_connection(configuration);
 }
 
-void mgn::NestedDisplay::create_surfaces(mg::DisplayConfiguration const& configuration)
+void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration)
 {
     if (!configuration.valid())
     {
@@ -222,7 +222,7 @@ void mgn::NestedDisplay::create_surfaces(mg::DisplayConfiguration const& configu
                         auto const host_surface = connection->create_surface(request_params);
 
                         result[output.id] = std::make_shared<mgn::detail::DisplaySyncGroup>( 
-                            std::make_shared<mgn::detail::NestedOutput>(
+                            std::make_shared<mgn::detail::DisplayBuffer>(
                                 egl_display,
                                 host_surface,
                                 area,
@@ -239,21 +239,21 @@ void mgn::NestedDisplay::create_surfaces(mg::DisplayConfiguration const& configu
     }
 }
 
-void mgn::NestedDisplay::apply_to_connection(mg::DisplayConfiguration const& configuration)
+void mgn::Display::apply_to_connection(mg::DisplayConfiguration const& configuration)
 {
     auto const& conf = dynamic_cast<NestedDisplayConfiguration const&>(configuration);
 
     connection->apply_display_config(*conf);
 }
 
-void mgn::NestedDisplay::register_configuration_change_handler(
+void mgn::Display::register_configuration_change_handler(
         EventHandlerRegister& /*handlers*/,
         DisplayConfigurationChangeHandler const& conf_change_handler)
 {
     connection->set_display_config_change_callback(conf_change_handler);
 }
 
-void mgn::NestedDisplay::register_pause_resume_handlers(
+void mgn::Display::register_pause_resume_handlers(
         EventHandlerRegister& /*handlers*/,
         DisplayPauseHandler const& /*pause_handler*/,
         DisplayResumeHandler const& /*resume_handler*/)
@@ -261,25 +261,25 @@ void mgn::NestedDisplay::register_pause_resume_handlers(
     // No need to do anything
 }
 
-void mgn::NestedDisplay::pause()
+void mgn::Display::pause()
 {
     // TODO Do we "own" the cursor or does the host mir?
     // If we "own" the cursor then we need to hide it
 }
 
-void mgn::NestedDisplay::resume()
+void mgn::Display::resume()
 {
     // TODO Do we "own" the cursor or does the host mir?
     // TODO If we "own" the cursor then we need to restore it
 }
 
-auto mgn::NestedDisplay::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial image */)->std::shared_ptr<Cursor>
+auto mgn::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial image */)->std::shared_ptr<Cursor>
 {
     // TODO Do we "own" the cursor or does the host mir?
     return std::shared_ptr<Cursor>();
 }
 
-std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
+std::unique_ptr<mg::GLContext> mgn::Display::create_gl_context()
 {
     return std::make_unique<SurfacelessEGLContext>(egl_display, EGL_NO_CONTEXT);
 }

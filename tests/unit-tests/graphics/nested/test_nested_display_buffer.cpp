@@ -16,7 +16,7 @@
  * Authored by: Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
-#include "src/server/graphics/nested/nested_output.h"
+#include "src/server/graphics/nested/display_buffer.h"
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/input/null_input_dispatcher.h"
 
@@ -58,7 +58,7 @@ struct NestedDisplayBufferTest : testing::Test
 
 TEST_F(NestedDisplayBufferTest, alpha_enabled_pixel_format_enables_destination_alpha)
 {
-    mgnd::NestedOutput db{
+    mgnd::DisplayBuffer db{
         egl_disp_handle,
         mt::fake_shared(null_host_surface),
         default_rect,
@@ -70,7 +70,7 @@ TEST_F(NestedDisplayBufferTest, alpha_enabled_pixel_format_enables_destination_a
 
 TEST_F(NestedDisplayBufferTest, non_alpha_pixel_format_disables_destination_alpha)
 {
-    mgnd::NestedOutput db{
+    mgnd::DisplayBuffer db{
         egl_disp_handle,
         mt::fake_shared(null_host_surface),
         default_rect,

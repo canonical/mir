@@ -53,6 +53,8 @@ public:
 
     SurfaceId create_surface(std::shared_ptr<Session> const& session, scene::SurfaceCreationParameters const& params) override;
 
+    void modify_surface(std::shared_ptr<Session> const& session, SurfaceId surface, shell::SurfaceSpecification const& modifications) override;
+
     void destroy_surface(std::shared_ptr<Session> const& session, SurfaceId surface) override;
 
     int set_surface_attribute(

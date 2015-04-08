@@ -58,6 +58,7 @@ class TilingWindowManagerPolicy
 public:
     using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo, TilingSurfaceInfo>;
     using TilingSessionInfoMap = typename SessionTo<TilingSessionInfo>::type;
+    using TilingSurfaceInfoMap = typename SurfaceTo<TilingSurfaceInfo>::type;
 
     explicit TilingWindowManagerPolicy(Tools* const tools);
 
@@ -76,6 +77,11 @@ public:
 
     void handle_new_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
+    void handle_modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        shell::SurfaceSpecification const& modifications);
+
     void handle_delete_surface(std::shared_ptr<scene::Session> const& session, std::weak_ptr<scene::Surface> const& surface);
 
     int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value);
@@ -88,8 +94,9 @@ public:
 
     bool handle_pointer_event(MirPointerEvent const* event);
 
-    std::vector<std::shared_ptr<scene::Surface>> generate_decorations_for(
-        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
+    void generate_decorations_for(
+        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface,
+        TilingSurfaceInfoMap& surface_info);
 
 private:
     static const int modifier_mask =
