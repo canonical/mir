@@ -23,7 +23,6 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/gl_texture.h>
 #include <mir/compositor/gl_renderer.h>
-#include <mir/compositor/destination_alpha.h>
 #include <mir_test/fake_shared.h>
 #include <mir_test_doubles/mock_buffer.h>
 #include <mir_test_doubles/mock_renderable.h>
@@ -101,6 +100,8 @@ public:
             .WillByDefault(SetArgPointee<2>(GL_TRUE));
 
         //A mix of defaults and silencing from here on out
+        EXPECT_CALL(mock_gl, glGetIntegerv(_, _))
+            .WillRepeatedly(SetArgPointee<1>(0));
         EXPECT_CALL(mock_gl, glUseProgram(_)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glActiveTexture(_)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, GL_FALSE, _))
@@ -154,12 +155,13 @@ public:
 
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 {
-    InSequence seq;
+    EXPECT_CALL(mock_gl, glGetIntegerv(GL_ALPHA_BITS, _))
+        .WillOnce(SetArgPointee<1>(0));
     EXPECT_CALL(*renderable, shaped())
         .WillOnce(Return(false));
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
 
-    mc::GLRenderer renderer(display_area, mc::DestinationAlpha::opaque);
+    mc::GLRenderer renderer(display_area);
     renderer.render(renderable_list);
 }
 
@@ -170,7 +172,7 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
     {
         OverriddenTessellateRenderer(
             mir::geometry::Rectangle const& display_area, unsigned int num_primitives) :
-            GLRenderer(display_area, mc::DestinationAlpha::opaque),
+            GLRenderer(display_area),
             num_primitives(num_primitives)
         {
         }
@@ -201,22 +203,25 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
 TEST_F(GLRenderer, opaque_alpha_channel)
 {
     InSequence seq;
+    EXPECT_CALL(mock_gl, glGetIntegerv(GL_ALPHA_BITS, _))
+        .WillOnce(SetArgPointee<1>(0));
     EXPECT_CALL(mock_gl, glClearColor(_, _, _, 1.0f));
     EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE));
 
-    mc::GLRenderer renderer(display_area, mc::DestinationAlpha::opaque);
+    mc::GLRenderer renderer(display_area);
 
     renderer.render(renderable_list);
 }
 
 TEST_F(GLRenderer, generates_alpha_channel_content)
 {
+    EXPECT_CALL(mock_gl, glGetIntegerv(GL_ALPHA_BITS, _))
+        .WillOnce(SetArgPointee<1>(8));
     EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
 
-    mc::GLRenderer renderer(display_area,
-        mc::DestinationAlpha::generate_from_source);
+    mc::GLRenderer renderer(display_area);
 
     renderer.render(renderable_list);
 }

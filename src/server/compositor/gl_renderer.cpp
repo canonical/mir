@@ -134,7 +134,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
     set_viewport(display_area);
     set_rotation(0.0f);
 
-    glGetIntegerv(GL_ALPHA_BITS, &dest_alpha_bits);
+    dest_alpha_bits = abits;
     if (dest_alpha_bits)
         clear_color[3] = 0.0f;
 }
