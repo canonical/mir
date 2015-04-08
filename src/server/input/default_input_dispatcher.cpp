@@ -18,6 +18,9 @@
 
 #include "default_input_dispatcher.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept.h>
+
 namespace mi = mir::input;
 
 mi::DefaultInputDispatcher::DefaultInputDispatcher(std::shared_ptr<mi::Scene> const& scene)
@@ -37,14 +40,53 @@ void mi::DefaultInputDispatcher::device_reset(int32_t device_id, std::chrono::na
     (void) when;
 }
 
+bool mi::DefaultInputDispatcher::dispatch_key(MirKeyEvent *kev)
+{
+    std::lock_guard<std::mutex> lg(focus_guard);
+    auto strong_focus = focus_surface.lock();
+    if (!strong_focus)
+        return false;
+
+    // TODO: Impl state tracking
+
+    strong_focus->consume(*(reinterpret_cast<MirEvent*>(kev)));
+}
+
+bool mi::DefaultInputDispatcher::dispatch_pointer(MirPointerEvent *pev)
+{
+    (void) pev;
+    return false;
+}
+
+bool mi::DefaultInputDispatcher::dispatch_touch(MirTouchEvent *tev)
+{
+    (void) tev;
+    return false;
+}
+
 bool mi::DefaultInputDispatcher::dispatch(MirEvent const& event)
 {
-    (void) event;
+    if (mir_event_get_type(&event) != mir_event_type_input)
+        BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got a non-input event"));
+    auto iev = mir_input_event_get_type(&event);
+    switch (mir_input_event_get_type(iev))
+    {
+    case mir_input_event_type_key:
+        return dispatch_key(mir_input_event_get_keyboard_event(iev));
+    case mir_input_event_type_touch:
+        return dispatch_touch(mir_input_event_get_touch_event(iev));
+    case mir_input_event_type_pointer:
+        return dispatch_pointer(mir_input_event_get_pointer_event(iev));
+    default:
+        BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got an input event of unknown type"));
+    }
+    
     return true;
 }
 
 void mi::DefaultInputDispatcher::start()
 {
+    // TODO: Trigger hover here?
 }
 
 void mi::DefaultInputDispatcher::stop()
@@ -53,6 +95,8 @@ void mi::DefaultInputDispatcher::stop()
 
 void mi::DefaultInputDispatcher::set_focus(std::shared_ptr<input::Surface> const& target)
 {
-    (void) target;
+    std::lock_guard<std::mutex> lg(focus_mutex);
+
+    focus_surface = target;
 }
 

@@ -22,6 +22,7 @@
 #include "mir/input/input_dispatcher.h"
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -47,7 +48,14 @@ public:
     void set_focus(std::shared_ptr<input::Surface> const& target);
     
 private:
+    bool dispatch_key(MirKeyEvent *kev);
+    bool dispatch_pointer(MirPointerEvent *pev);
+    bool dispatch_touch(MirTouchEvent *tev);
+    
     std::shared_ptr<input::Scene> const scene;
+
+    std::mutex focus_mutex;
+    std::weak_ptr<input::Surface> focus_surface;
 };
 
 }
