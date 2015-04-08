@@ -48,16 +48,3 @@ TEST_F(IpcOperations, test_ipc_data_packed_correctly_for_full_ipc)
     for (auto fd : message.fds)
         close(fd); 
 }
-
-TEST_F(IpcOperations, test_buffer_reconstruction_from_MirNativeBuffer)
-{
-    ANativeWindowBuffer anwb;
-    anwb->width = 4;
-    anwb->height = 5;
-    anwb->stride = 16;
-    auto buffer = ipc_operations.reconstruct_buffer(anwb);
-    EXPECT_THAT(buffer, Ne(nullptr));
-    EXPECT_THAT(buffer->size(), Eq(geom::Width{anwb->width, anwb->height}));
-
-    EXPECT_THAT(buffer->native_buffer_handle()->anwb(), Eq(&anwb));
-}

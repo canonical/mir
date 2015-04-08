@@ -89,3 +89,15 @@ TEST_F(AndroidGraphicBufferAllocatorTest, buffer_usage_converter)
     EXPECT_EQ(mga::BufferUsage::use_software,
         mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mg::BufferUsage::software));
 }
+
+TEST_F(AndroidGraphicBufferAllocatorTest, test_buffer_reconstruction_from_MirNativeBuffer)
+{
+    ANativeWindowBuffer anwb;
+    anwb->width = 4;
+    anwb->height = 5;
+    anwb->stride = 16;
+    auto buffer = ipc_operations.reconstruct_buffer(anwb);
+    EXPECT_THAT(buffer, Ne(nullptr));
+    EXPECT_THAT(buffer->size(), Eq(geom::Width{anwb->width, anwb->height}));
+    EXPECT_THAT(buffer->native_buffer_handle()->anwb(), Eq(&anwb));
+}
