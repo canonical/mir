@@ -98,7 +98,8 @@ mc::GLRenderer::GLRenderer(
     : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
-      texture_cache(std::make_unique<RecentlyUsedCache>()),
+      texture_cache(new RecentlyUsedCache,
+                    [](graphics::GLTextureCache *p){delete p;}),
       rotation(NAN), // ensure the first set_rotation succeeds
       dest_alpha(dest_alpha)
 {
