@@ -420,16 +420,18 @@ void mf::SessionMediator::modify_surface(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
+    auto const& surface_specification = request->surface_specification();
+
     {
         std::unique_lock<std::mutex> lock(session_mutex);
 
-        auto session = weak_session.lock();
+        auto const session = weak_session.lock();
         if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         msh::SurfaceSpecification mods;
-        if (request->has_name())
-            mods.name = request->name();
+        if (surface_specification.has_surface_name())
+            mods.name = surface_specification.surface_name();
         // TODO: More fields soon (LP: #1422522) (LP: #1420573)
 
         auto const id = mf::SurfaceId(request->surface_id().value());

@@ -528,14 +528,13 @@ void MirSurface::on_modified()
 MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 {
     mp::SurfaceModifications mods;
-
     {
         std::unique_lock<decltype(mutex)> lock(mutex);
         mods.mutable_surface_id()->set_value(surface.id().value());
     }
 
     if (spec.surface_name.is_set())
-        mods.set_name(spec.surface_name.value());
+        mods.mutable_surface_specification()->set_surface_name(spec.surface_name.value());
 
     modify_wait_handle.expect_result();
     server->modify_surface(0, &mods, &modify_result,
