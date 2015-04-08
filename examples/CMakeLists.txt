@@ -50,6 +50,12 @@ mir_add_wrapped_executable(mir_demo_client_egltriangle
 target_link_libraries(mir_demo_client_egltriangle
   eglapp
 )
+mir_add_wrapped_executable(mir_demo_client_target
+  target.c
+)
+target_link_libraries(mir_demo_client_target
+  eglapp
+)
 mir_add_wrapped_executable(mir_demo_client_eglcounter
   eglcounter.cpp
 )
