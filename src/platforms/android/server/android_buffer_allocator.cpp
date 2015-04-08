@@ -21,6 +21,7 @@
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/android/android_native_buffer.h"
 #include "android_graphic_buffer_allocator.h"
 #include "android_alloc_adaptor.h"
 #include "buffer.h"
@@ -77,8 +78,9 @@ std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
 std::unique_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::reconstruct_from(
     ANativeWindowBuffer* anwb)
 {
-    (void) anwb;
-    return nullptr;
+    std::shared_ptr<ANativeWindowBuffer> fake(anwb, [](ANativeWindowBuffer*){});
+    auto native_handle = std::make_shared<mga::AndroidNativeBuffer>(fake, nullptr, mga::BufferAccess::read);
+    return std::make_unique<Buffer>(reinterpret_cast<gralloc_module_t const*>(hw_module), native_handle, egl_extensions);
 }
 
 std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
