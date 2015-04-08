@@ -19,7 +19,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "client_platform.h"
-#include "mir/client_buffer_factory.h"
+#include "client_buffer_factory.h"
 #include "mir/client_context.h"
 #include "../debug.h"
 
@@ -29,8 +29,10 @@ namespace mcl=mir::client;
 namespace mclx=mcl::X;
 namespace geom=mir::geometry;
 
-mclx::ClientPlatform::ClientPlatform(ClientContext* const context)
-                                     : context{context}
+mclx::ClientPlatform::ClientPlatform(ClientContext* const context,
+                                     std::shared_ptr<BufferFileOps> const& buffer_file_ops)
+                                     : context{context},
+                                       buffer_file_ops{buffer_file_ops}
 {
     CALLED
 }
@@ -39,8 +41,7 @@ std::shared_ptr<mcl::ClientBufferFactory> mclx::ClientPlatform::create_buffer_fa
 {
     CALLED
 
-//    return std::make_shared<mclm::ClientBufferFactory>(buffer_file_ops);
-    return nullptr;
+    return std::make_shared<mclx::ClientBufferFactory>(buffer_file_ops);
 }
 
 std::shared_ptr<EGLNativeWindowType> mclx::ClientPlatform::create_egl_native_window(EGLNativeSurface* /* client_surface */)

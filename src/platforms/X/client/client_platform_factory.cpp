@@ -22,11 +22,41 @@
 #include "client_platform.h"
 #include "../debug.h"
 
+#include <sys/mman.h>
 #include <boost/throw_exception.hpp>
-//#include <stdexcept>
 
 namespace mcl = mir::client;
 namespace mclx = mcl::X;
+
+namespace
+{
+
+struct RealBufferFileOps : public mclx::BufferFileOps
+{
+    int close(int fd) const
+    {
+        while (::close(fd) == -1)
+        {
+            // Retry on EINTR, return error on anything else
+            if (errno != EINTR)
+                return errno;
+        }
+        return 0;
+    }
+
+    void* map(int fd, off_t offset, size_t size) const
+    {
+        return mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED,
+                    fd, offset);
+    }
+
+    void unmap(void* addr, size_t size) const
+    {
+        munmap(addr, size);
+    }
+};
+
+}
 
 extern "C" std::shared_ptr<mcl::ClientPlatform>
 mcl::create_client_platform(mcl::ClientContext* context)
@@ -41,7 +71,8 @@ mcl::create_client_platform(mcl::ClientContext* context)
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create X client platform on non-X server"}));
     }
 
-    return std::make_shared<mclx::ClientPlatform>(context);
+    auto buffer_file_ops = std::make_shared<RealBufferFileOps>();
+    return std::make_shared<mclx::ClientPlatform>(context, buffer_file_ops);
 }
 
 extern "C" bool

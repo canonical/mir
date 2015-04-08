@@ -21,6 +21,7 @@
 #define MIR_CLIENT_X_CLIENT_PLATFORM_H_
 
 #include "mir/client_platform.h"
+#include "buffer_file_ops.h"
 
 namespace mir
 {
@@ -32,7 +33,8 @@ namespace X
 class ClientPlatform : public client::ClientPlatform
 {
 public:
-    ClientPlatform(ClientContext* const context);
+    ClientPlatform(ClientContext* const context,
+                   std::shared_ptr<BufferFileOps> const& buffer_file_ops);
 
     MirPlatformType platform_type() const override;
     void populate(MirPlatformPackage& package) const override;
@@ -43,6 +45,7 @@ public:
     MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
 private:
     ClientContext* const context;
+    std::shared_ptr<BufferFileOps> const buffer_file_ops;
 };
 
 }
