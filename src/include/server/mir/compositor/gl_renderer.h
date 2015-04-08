@@ -46,10 +46,6 @@ public:
     GLRenderer(
         geometry::Rectangle const& display_area,
         DestinationAlpha dest_alpha);
-    GLRenderer(
-        std::unique_ptr<graphics::GLTextureCache> && texture_cache, 
-        geometry::Rectangle const& display_area,
-        DestinationAlpha dest_alpha);
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
