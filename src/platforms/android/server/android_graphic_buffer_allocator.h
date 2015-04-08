@@ -21,6 +21,7 @@
 #define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
 
 #include <hardware/hardware.h>
+#include "mir_toolkit/mir_native_buffer.h" 
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -44,10 +45,12 @@ public:
     AndroidGraphicBufferAllocator();
 
     std::shared_ptr<graphics::Buffer> alloc_buffer(
-        graphics::BufferProperties const& buffer_properties);
+        graphics::BufferProperties const& buffer_properties) override;
+
+    std::unique_ptr<graphics::Buffer> reconstruct_from(ANativeWindowBuffer* anwb);
 
     std::shared_ptr<graphics::Buffer> alloc_buffer_platform(
-        geometry::Size sz, MirPixelFormat pf, BufferUsage use);
+        geometry::Size sz, MirPixelFormat pf, BufferUsage use) override;
 
     std::vector<MirPixelFormat> supported_pixel_formats();
 

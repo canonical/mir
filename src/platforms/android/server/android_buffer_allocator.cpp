@@ -74,6 +74,13 @@ std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
     return alloc_buffer_platform(buffer_properties.size, buffer_properties.format, usage);
 }
 
+std::unique_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::reconstruct_from(
+    ANativeWindowBuffer* anwb)
+{
+    (void) anwb;
+    return nullptr;
+}
+
 std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
     geom::Size sz, MirPixelFormat pf, mga::BufferUsage use)
 {
