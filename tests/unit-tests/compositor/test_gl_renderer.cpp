@@ -200,28 +200,14 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
     renderer.render(renderable_list);
 }
 
-TEST_F(GLRenderer, opaque_alpha_channel)
+TEST_F(GLRenderer, clears_all_channels_zero)
 {
-    InSequence seq;
-    EXPECT_CALL(mock_gl, glGetIntegerv(GL_ALPHA_BITS, _))
-        .WillOnce(SetArgPointee<1>(0));
-    EXPECT_CALL(mock_gl, glClearColor(_, _, _, 1.0f));
+    EXPECT_CALL(mock_gl, glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
     EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     EXPECT_CALL(mock_gl, glClear(_));
-    EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE));
 
     mc::GLRenderer renderer(display_area);
 
     renderer.render(renderable_list);
 }
 
-TEST_F(GLRenderer, generates_alpha_channel_content)
-{
-    EXPECT_CALL(mock_gl, glGetIntegerv(GL_ALPHA_BITS, _))
-        .WillOnce(SetArgPointee<1>(8));
-    EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
-
-    mc::GLRenderer renderer(display_area);
-
-    renderer.render(renderable_list);
-}

@@ -92,13 +92,12 @@ mc::GLRenderer::Program::Program(GLuint program_id)
 }
 
 mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
-    : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
+    : clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
       texture_cache(new RecentlyUsedCache,
                     [](graphics::GLTextureCache *p){delete p;}),
-      rotation(NAN), // ensure the first set_rotation succeeds
-      dest_alpha_bits(0)
+      rotation(NAN) // ensure the first set_rotation succeeds
 {
     struct {GLenum id; char const* label;} const glstrings[] =
     {
@@ -133,10 +132,6 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
 
     set_viewport(display_area);
     set_rotation(0.0f);
-
-    dest_alpha_bits = abits;
-    if (dest_alpha_bits)
-        clear_color[3] = 0.0f;
 }
 
 void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
@@ -151,9 +146,6 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
-
-    if (dest_alpha_bits == 0)
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 
     ++frameno;
     for (auto const& r : renderables)

@@ -105,7 +105,6 @@ private:
     float rotation;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords, screen_rotation;
-    GLint dest_alpha_bits;
 
     std::vector<graphics::GLPrimitive> mutable primitives;
 };
