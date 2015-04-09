@@ -248,6 +248,19 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 {
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
+
+    if (modifications.width.is_set() || modifications.height.is_set())
+    {
+        auto new_size = surface->size();
+
+        if (modifications.width.is_set())
+            new_size.width = modifications.width.value();
+
+        if (modifications.height.is_set())
+            new_size.height = modifications.height.value();
+
+        surface->resize(new_size);
+    }
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)

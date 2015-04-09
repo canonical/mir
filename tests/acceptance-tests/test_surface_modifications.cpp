@@ -31,6 +31,7 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mt = mir::test;
 
+using namespace mir::geometry;
 using namespace testing;
 
 namespace
@@ -39,6 +40,7 @@ class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
     MOCK_METHOD1(renamed, void(char const*));
+    MOCK_METHOD1(resized_to, void(Size const& size));
 };
 
 struct StubShell : msh::ShellWrapper
@@ -100,6 +102,22 @@ TEST_F(SurfaceModifications, surface_spec_name_is_notified)
     auto const spec = mir_connection_create_spec_for_changes(connection);
 
     mir_surface_spec_set_name(spec, new_title);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
+}
+
+TEST_F(SurfaceModifications, surface_spec_resize_is_notified)
+{
+    auto const new_width = 5;
+    auto const new_height = 7;
+
+    EXPECT_CALL(surface_observer, resized_to(Eq(Size{new_width, new_height})));
+
+    auto const spec = mir_connection_create_spec_for_changes(connection);
+
+    mir_surface_spec_set_width(spec, new_width);
+    mir_surface_spec_set_height(spec, new_height);
+
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
 }
