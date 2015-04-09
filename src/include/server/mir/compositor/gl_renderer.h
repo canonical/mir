@@ -42,9 +42,9 @@ enum class DestinationAlpha;
 class GLRenderer : public Renderer
 {
 public:
-    GLRenderer(
-        geometry::Rectangle const& display_area,
-        DestinationAlpha dest_alpha);
+    GLRenderer(geometry::Rectangle const& display_area,
+               DestinationAlpha dest_alpha);
+    virtual ~GLRenderer();
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
@@ -106,8 +106,7 @@ protected:
                       GLRenderer::Program const& prog) const;
 
 private:
-    std::unique_ptr<graphics::GLTextureCache,
-                    void(*)(graphics::GLTextureCache*)> const texture_cache;
+    std::unique_ptr<graphics::GLTextureCache> const texture_cache;
     float rotation;
     DestinationAlpha const dest_alpha;
     geometry::Rectangle viewport;
