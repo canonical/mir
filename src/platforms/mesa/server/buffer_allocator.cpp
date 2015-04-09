@@ -51,6 +51,7 @@ public:
                                 std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
         : bo{gbm_bo}, egl_extensions{egl_extensions}, egl_image{EGL_NO_IMAGE_KHR}
     {
+    printf("OK.\n");
     }
 
     ~EGLImageBufferTextureBinder()
@@ -231,11 +232,24 @@ bool mgm::BufferAllocator::is_pixel_format_supported(MirPixelFormat format)
 
 
 std::unique_ptr<mg::Buffer> mgm::BufferAllocator::reconstruct_from(
-    MirBufferPackage * package,
+    MirBufferPackage* package,
     MirPixelFormat format)
 {
-    (void) package;
-    (void) format;
+    if (package->fd_items != 1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create mgm::Buffer from MirBufferPackage"));
 
-    return nullptr;
+    gbm_import_fd_data data;
+    data.fd = package->fd[0];
+    data.width  = package->width;
+    data.height = package->height; 
+    data.stride = package->stride;
+    data.format = format;
+    auto bo_raw = gbm_bo_import(device, GBM_BO_IMPORT_FD, &data, package->flags);
+    if (!bo_raw)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to import MirBufferPackage"));
+    std::shared_ptr<gbm_bo> bo(bo_raw, [](gbm_bo* bo){ gbm_bo_destroy(bo); });
+    return std::make_unique<mgm::GBMBuffer>(
+        bo,
+        package->flags,
+        std::make_unique<EGLImageBufferTextureBinder>(bo, egl_extensions));
 }
