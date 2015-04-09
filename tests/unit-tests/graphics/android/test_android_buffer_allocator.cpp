@@ -118,7 +118,7 @@ TEST_F(AndroidGraphicBufferAllocatorTest, test_buffer_reconstruction_from_MirNat
     anwb->width = width;
     anwb->height = height;
     anwb->stride = stride;
-    auto buffer = allocator.reconstruct_from(anwb.get());
+    auto buffer = allocator.reconstruct_from(anwb.get(), mir_pixel_format_abgr_8888);
     ASSERT_THAT(buffer, Ne(nullptr));
     EXPECT_THAT(buffer->size(), Eq(geom::Size{width, height}));
     EXPECT_THAT(buffer->native_buffer_handle()->anwb(), Eq(anwb.get()));
@@ -135,12 +135,12 @@ TEST_F(AndroidGraphicBufferAllocatorTest, throws_if_cannot_share_anwb_ownership)
     anwb->common.incRef = nullptr;
     anwb->common.decRef = dec_ref;
     EXPECT_THROW({
-        auto buffer = allocator.reconstruct_from(anwb.get());
+        auto buffer = allocator.reconstruct_from(anwb.get(), mir_pixel_format_abgr_8888);
     }, std::runtime_error);
 
     anwb->common.incRef = inc_ref;
     anwb->common.decRef = nullptr;
     EXPECT_THROW({
-        auto buffer = allocator.reconstruct_from(anwb.get());
+        auto buffer = allocator.reconstruct_from(anwb.get(), mir_pixel_format_abgr_8888);
     }, std::runtime_error);
 }

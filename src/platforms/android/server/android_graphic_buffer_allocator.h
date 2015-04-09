@@ -47,7 +47,7 @@ public:
     std::shared_ptr<graphics::Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties) override;
 
-    std::unique_ptr<graphics::Buffer> reconstruct_from(MirNativeBuffer* anwb);
+    std::unique_ptr<graphics::Buffer> reconstruct_from(MirNativeBuffer* anwb, MirPixelFormat);
 
     std::shared_ptr<graphics::Buffer> alloc_buffer_platform(
         geometry::Size sz, MirPixelFormat pf, BufferUsage use) override;
