@@ -93,15 +93,55 @@ TEST_F(AndroidGraphicBufferAllocatorTest, buffer_usage_converter)
         mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mg::BufferUsage::software));
 }
 
+static unsigned int inc_count{0};
+static unsigned int dec_count{0};
+void inc_ref(struct android_native_base_t*)
+{
+    inc_count++;
+}
+void dec_ref(struct android_native_base_t*)
+{
+    dec_count++;
+}
+
 TEST_F(AndroidGraphicBufferAllocatorTest, test_buffer_reconstruction_from_MirNativeBuffer)
 {
+    inc_count = 0;
+    dec_count = 0;
+    unsigned int width {4};
+    unsigned int height {5};
+    unsigned int stride {16};
     mga::AndroidGraphicBufferAllocator allocator;
-    ANativeWindowBuffer anwb;
-    anwb.width = 4;
-    anwb.height = 5;
-    anwb.stride = 16;
-    auto buffer = allocator.reconstruct_from(&anwb);
+    auto anwb = std::make_unique<ANativeWindowBuffer>();
+    anwb->common.incRef = inc_ref;
+    anwb->common.decRef = dec_ref;
+    anwb->width = width;
+    anwb->height = height;
+    anwb->stride = stride;
+    auto buffer = allocator.reconstruct_from(anwb.get());
     ASSERT_THAT(buffer, Ne(nullptr));
-//    EXPECT_THAT(buffer->size(), Eq(geom::Width{anwb.width, anwb.height}));
-    EXPECT_THAT(buffer->native_buffer_handle()->anwb(), Eq(&anwb));
+    EXPECT_THAT(buffer->size(), Eq(geom::Size{width, height}));
+    EXPECT_THAT(buffer->native_buffer_handle()->anwb(), Eq(anwb.get()));
+    EXPECT_THAT(inc_count, Eq(1));
+    EXPECT_THAT(dec_count, Eq(0));
+
+    buffer.reset();
+    EXPECT_THAT(dec_count, Eq(1));
+}
+
+TEST_F(AndroidGraphicBufferAllocatorTest, throws_if_cannot_share_anwb_ownership)
+{
+    mga::AndroidGraphicBufferAllocator allocator;
+    auto anwb = std::make_unique<ANativeWindowBuffer>();
+    anwb->common.incRef = nullptr;
+    anwb->common.decRef = dec_ref;
+    EXPECT_THROW({
+        auto buffer = allocator.reconstruct_from(anwb.get());
+    }, std::runtime_error);
+
+    anwb->common.incRef = inc_ref;
+    anwb->common.decRef = nullptr;
+    EXPECT_THROW({
+        auto buffer = allocator.reconstruct_from(anwb.get());
+    }, std::runtime_error);
 }

@@ -78,9 +78,17 @@ std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
 std::unique_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::reconstruct_from(
     ANativeWindowBuffer* anwb)
 {
-    std::shared_ptr<ANativeWindowBuffer> fake(anwb, [](ANativeWindowBuffer*){});
-    auto native_handle = std::make_shared<mga::AndroidNativeBuffer>(fake, nullptr, mga::BufferAccess::read);
-    return std::make_unique<Buffer>(reinterpret_cast<gralloc_module_t const*>(hw_module), native_handle, egl_extensions);
+    std::shared_ptr<ANativeWindowBuffer> native_window_buffer(anwb,
+        [](ANativeWindowBuffer* buffer){ buffer->common.decRef(&buffer->common); });
+//    anwb->common.incRef(&anwb->common);
+
+    auto native_handle = std::make_shared<mga::AndroidNativeBuffer>(
+        native_window_buffer,
+        //TODO: we should have an android platform function for accessing the fence.
+        std::make_shared<mga::SyncFence>(std::make_shared<mga::RealSyncFileOps>(), mir::Fd()),
+        mga::BufferAccess::read);
+    return std::make_unique<Buffer>(
+        reinterpret_cast<gralloc_module_t const*>(hw_module), native_handle, egl_extensions);
 }
 
 std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
