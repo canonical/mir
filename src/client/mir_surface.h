@@ -70,10 +70,10 @@ struct MirSurfaceSpec
 
     // Required parameters
     MirConnection* connection{nullptr};
-    int width{-1};
-    int height{-1};
-    MirPixelFormat pixel_format{mir_pixel_format_invalid};
-    MirBufferUsage buffer_usage{mir_buffer_usage_hardware};
+    mir::optional_value<int> width;
+    mir::optional_value<int> height;
+    mir::optional_value<MirPixelFormat> pixel_format;
+    mir::optional_value<MirBufferUsage> buffer_usage;
 
     // Optional parameters
     mir::optional_value<std::string> surface_name;

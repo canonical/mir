@@ -54,7 +54,8 @@ MirSurfaceSpec::MirSurfaceSpec(
     : connection{connection},
       width{width},
       height{height},
-      pixel_format{format}
+      pixel_format{format},
+      buffer_usage{mir_buffer_usage_hardware}
 {
 }
 
@@ -81,18 +82,20 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
 {
     mir::protobuf::SurfaceParameters message;
 
-    message.set_width(width);
-    message.set_height(height);
-    message.set_pixel_format(pixel_format);
-    message.set_buffer_usage(buffer_usage);
-
+    SERIALIZE_OPTION_IF_SET(width, message);
+    SERIALIZE_OPTION_IF_SET(height, message);
+    SERIALIZE_OPTION_IF_SET(pixel_format, message);
+    SERIALIZE_OPTION_IF_SET(buffer_usage, message);
     SERIALIZE_OPTION_IF_SET(surface_name, message);
     SERIALIZE_OPTION_IF_SET(output_id, message);
     SERIALIZE_OPTION_IF_SET(type, message);
     SERIALIZE_OPTION_IF_SET(state, message);
     SERIALIZE_OPTION_IF_SET(pref_orientation, message);
+    SERIALIZE_OPTION_IF_SET(edge_attachment, message);
+
     if (parent.is_set() && parent.value() != nullptr)
         message.set_parent_id(parent.value()->id());
+
     if (aux_rect.is_set())
     {
         message.mutable_aux_rect()->set_left(aux_rect.value().left);
@@ -100,7 +103,7 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
         message.mutable_aux_rect()->set_width(aux_rect.value().width);
         message.mutable_aux_rect()->set_height(aux_rect.value().height);
     }
-    SERIALIZE_OPTION_IF_SET(edge_attachment, message);
+
     return message;
 }
 
