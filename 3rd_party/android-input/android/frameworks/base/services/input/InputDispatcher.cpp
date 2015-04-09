@@ -43,6 +43,8 @@
 // Log debug messages about hover events.
 #define DEBUG_HOVER 0
 
+#define ENABLE_APP_SWITCH_OPTIMIZATION 0
+
 #include "InputDispatcher.h"
 
 #include "mir/input/input_report.h"
@@ -373,6 +375,7 @@ bool InputDispatcher::enqueueInboundEventLocked(EventEntry* entry) {
 
     switch (entry->type) {
     case EventEntry::TYPE_KEY: {
+#if ENABLE_APP_SWITCH_OPTIMIZATION == 1
         // Optimize app switch latency.
         // If the application takes too long to catch up then we drop all events preceding
         // the app switch key.
@@ -391,6 +394,7 @@ bool InputDispatcher::enqueueInboundEventLocked(EventEntry* entry) {
                 }
             }
         }
+#endif
         break;
     }
 
