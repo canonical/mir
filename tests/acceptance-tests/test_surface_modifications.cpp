@@ -90,3 +90,16 @@ TEST_F(SurfaceModifications, rename_is_notified)
 
     mir_surface_set_title(surface, new_title);
 }
+
+TEST_F(SurfaceModifications, surface_spec_name_is_notified)
+{
+    auto const new_title = __PRETTY_FUNCTION__;
+
+    EXPECT_CALL(surface_observer, renamed(StrEq(new_title)));
+
+    auto const spec = mir_connection_create_spec_for_changes(connection);
+
+    mir_surface_spec_set_name(spec, new_title);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
+}
