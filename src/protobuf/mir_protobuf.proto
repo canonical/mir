@@ -116,16 +116,9 @@ message DisplayOutput {
   optional sint32 orientation = 16;
 }
 
-// DEPRECATED
-message DisplayInfo {
-  required uint32 width = 1;
-  required uint32 height = 2;
-  repeated uint32 supported_pixel_format = 3;
-}
-
 message Connection {
   optional Platform platform = 1;
-  optional DisplayInfo display_info = 2;
+//  optional DisplayInfo display_info = 2;
   repeated DisplayOutput display_output = 3;
   optional DisplayConfiguration display_configuration = 4;
   repeated uint32 surface_pixel_format = 5;
