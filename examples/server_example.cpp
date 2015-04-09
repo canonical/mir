@@ -22,6 +22,7 @@
 #include "server_example_display_configuration_policy.h"
 #include "server_example_host_lifecycle_event_listener.h"
 #include "server_example_window_management.h"
+#include "server_example_custom_compositor.h"
 #include "server_example_test_client.h"
 
 #include "mir/server.h"
@@ -86,6 +87,7 @@ try
     me::add_log_host_lifecycle_option_to(server);
     me::add_glog_options_to(server);
     me::add_window_manager_option_to(server);
+    me::add_custom_compositor_option_to(server);
     add_launcher_option_to(server);
     add_timeout_option_to(server);
 
