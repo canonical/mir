@@ -582,41 +582,41 @@ catch (std::exception const& ex)
 
 namespace { // Private for now. TODO: Finalize and publish later (LP: #1422522)
 
-MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
+MirSurfaceSpec* create_spec_for_changes()
 {
-    mir::require(mir_surface_is_valid(surf));
+    return new MirSurfaceSpec{};
+}
+} // Private namespace.
 
-    MirSurfaceSpec* spec = nullptr;
-    try
-    {
-        spec = new MirSurfaceSpec(surf);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
+MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
+try
+{
+    mir::require(mir_connection_is_valid(connection));
 
-    return spec;
+    return create_spec_for_changes();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
-MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
+MirWaitHandle* mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
 {
-    if (!spec->self.is_set())
-        return nullptr;
+    mir::require(mir_surface_is_valid(surface));
 
-    auto surface = spec->self.value();
     return surface->modify(*spec);
 }
 
-} // Private namespace. TODO: finalize morphing API and publish.
-
-MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name)
+MirWaitHandle* mir_surface_set_title(MirSurface* surface, char const* name)
 {
+    mir::require(mir_surface_is_valid(surface));
+
     MirWaitHandle* result = nullptr;
-    if (auto spec = mir_surface_begin_changes(surf))
+    if (auto const spec = create_spec_for_changes())
     {
         mir_surface_spec_set_name(spec, name);
-        result = mir_surface_spec_commit_changes(spec);
+        result = mir_surface_apply_spec(surface, spec);
         mir_surface_spec_release(spec);
     }
     return result;
