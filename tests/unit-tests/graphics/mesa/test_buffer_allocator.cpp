@@ -281,3 +281,36 @@ TEST_F(MesaBufferAllocatorTest, alloc_with_unsupported_pixel_format_throws)
         allocator->alloc_buffer(mg::BufferProperties{size, mir_pixel_format_abgr_8888, usage});
     }, std::runtime_error);
 }
+
+MATCHER_P(GbmImportMatch, value, "import data matches")
+{
+    (void) arg;
+    return true;
+}
+
+TEST_F(MesaBufferAllocatorTest, reconstructs_from_native_type)
+{
+    using namespace testing;
+    geom::Size size;
+    MirNativeBuffer native_buffer;
+    uint32_t stride {22};
+    int fake_fd {34};
+    struct gbm_import_fd_data expected_data {
+        fake_fd,
+        size.width.as_uint32_t(),
+        size.height.as_uint32_t(),
+        stride,
+        pf 
+    };
+
+    int a_number{89};
+    gbm_bo* fake_bo = reinterpret_cast<gbm_bo*>(&a_number);
+
+    EXPECT_CALL(mock_gbm, gbm_bo_import(_, GBM_BO_IMPORT_FD, GbmImportMatch(expected_data), native_buffer.flags ))
+        .WillOnce(Return(fake_bo));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(fake_bo));
+
+    auto buffer = allocator->reconstruct_from(&native_buffer, pf);
+    ASSERT_THAT(buffer, Ne(nullptr));
+    EXPECT_THAT(buffer->size(), Eq(size));
+}

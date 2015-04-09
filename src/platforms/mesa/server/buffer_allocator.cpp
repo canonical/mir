@@ -228,3 +228,14 @@ bool mgm::BufferAllocator::is_pixel_format_supported(MirPixelFormat format)
 
     return iter != formats.end();
 }
+
+
+std::unique_ptr<mg::Buffer> mgm::BufferAllocator::reconstruct_from(
+    MirBufferPackage * package,
+    MirPixelFormat format)
+{
+    (void) package;
+    (void) format;
+
+    return nullptr;
+}
