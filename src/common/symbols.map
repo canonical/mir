@@ -135,3 +135,11 @@ MIR_COMMON_4 {
   };
  local: *;
 };
+
+MIR_COMMON_4.1 {
+  global:
+    extern "C++" {
+      mir::SignalBlocker::SignalBlocker*;
+      mir::SignalBlocker::?SignalBlocker*;
+    };
+} MIR_COMMON_4;
