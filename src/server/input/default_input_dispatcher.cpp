@@ -123,6 +123,21 @@ std::shared_ptr<mi::Surface> mi::DefaultInputDispatcher::find_target_surface(geo
     return top_target;
 }
 
+namespace
+{
+// TODO: TIMESTAMP
+// TODO: MODIFIERS
+// TODO: BUTTONS
+// TODO: HSCROLL
+// TODO: VSCROLL
+// (Obviously copy event)    
+void send_enter_exit_event(std::shared_ptr<mi::Surface> const& surface, MirInputDeviceId id, MirPointerAction action,
+                           geom::Point const& point)
+{
+    surface->consume(*mev::make_event(id, 0, 0, action, point.x.as_int(), point.y.as_int(), 0, 0));
+}
+}
+
 // TODO: TRANSLATE TO RELATIVE
 bool mi::DefaultInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointerEvent const* pev)
 {
@@ -134,6 +149,8 @@ bool mi::DefaultInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointe
     }
     auto action = mir_pointer_event_action(pev);
     auto &pointer_state = pointer_state_by_id[id];
+    geom::Point event_x_y = { mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
+                              mir_pointer_event_axis_value(pev,mir_pointer_axis_y) };
     if (action == mir_pointer_action_button_up && !any_buttons_pressed(pev))
     {
         if (pointer_state.gesture_owner)
@@ -141,6 +158,16 @@ bool mi::DefaultInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointe
             // TOOD: TRANSLATE TO RELATIVE
             pointer_state.gesture_owner->consume(*(reinterpret_cast<MirEvent const*>(pev)));
             pointer_state.gesture_owner.reset();
+            return true;
+        }
+        return false;
+    }
+    else if (action == mir_pointer_action_button_up)
+    {
+        if (pointer_state.gesture_owner)
+        {
+            // TOOD: TRANSLATE TO RELATIVE
+            pointer_state.gesture_owner->consume(*(reinterpret_cast<MirEvent const*>(pev)));
             return true;
         }
         return false;
@@ -153,10 +180,7 @@ bool mi::DefaultInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointe
             pointer_state.gesture_owner->consume(*(reinterpret_cast<MirEvent const*>(pev)));
             return true;
         }
-        //TODO: Implement find_target_surface (FIRST!!!!)
-        auto target = find_target_surface({
-            mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
-            mir_pointer_event_axis_value(pev,mir_pointer_axis_y)
+        auto target = find_target_surface(event_x_y);
         });
         if (target)
         {
@@ -173,26 +197,36 @@ bool mi::DefaultInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointe
             pointer_state.gesture_owner->consume(*(reinterpret_cast<MirEvent const*>(pev)));
             return true;
         }
-        //TODO: Implement find_target_surface (FIRST!!!!)
-        // TODO: Impl enter exit
-        auto target = find_target_surface({
-            mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
-            mir_pointer_event_axis_value(pev,mir_pointer_axis_y)
+
+        auto target = find_target_surface(event_x_y);
         });
+
+        bool sent_ev = false;
         if (target)
         {
             target->consume(*(reinterpret_cast<MirEvent const*>(pev)));
-            return true;
+            sent_ev = true;
         }
+
+        if (pointer_state.current_target != target)
+        {
+            sent_ev = true;
+            if (pointer_state.current_target)
+                send_enter_exit_event(pointer_state.current_target, id, mir_pointer_action_exit, event_x_y)
+
+            pointer_state.current_target = target;
+            if (target)
+                send_enter_exit_event(target, id, mir_pointer_action_enter, event_x_y);
+        }
+        return sent_ev;
     }
     return false;
 }
 
 bool mi::DefaultInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEvent const* tev)
 {
-    (void) tev;
     (void) id;
-    return false;
+    (void) tev;
 }
 
 bool mi::DefaultInputDispatcher::dispatch(MirEvent const& event)

@@ -79,9 +79,17 @@ private:
     // TODO: Ensure pointer up/down consistency
     struct PointerInputState
     {
+        // TODO: Weak? Raw?
+        std::shared_ptr<input::Surface> current_target;
         std::shared_ptr<input::Surface> gesture_owner;
     };
     std::map<MirInputDeviceId, PointerInputState> pointer_state_by_id;
+
+    struct TouchInputState
+    {
+        std::shared_ptr<input::Surface> gesture_owner;
+    };
+    std::map<MirInputDeviceId, TouchInputState> touch_state_by_id;
     
     std::shared_ptr<input::Scene> const scene;
 
