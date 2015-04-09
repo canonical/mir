@@ -13,12 +13,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #define MIR_LOG_COMPONENT "GL"
 #include "mir/compositor/gl_renderer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/destination_alpha.h"
+#include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/gl_texture_cache.h"
@@ -91,13 +93,12 @@ mc::GLRenderer::Program::Program(GLuint program_id)
 }
 
 mc::GLRenderer::GLRenderer(
-    std::unique_ptr<mg::GLTextureCache> && texture_cache, 
     geom::Rectangle const& display_area,
     DestinationAlpha dest_alpha)
     : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
-      texture_cache(std::move(texture_cache)),
+      texture_cache(std::make_unique<RecentlyUsedCache>()),
       rotation(NAN), // ensure the first set_rotation succeeds
       dest_alpha(dest_alpha)
 {
@@ -138,6 +139,8 @@ mc::GLRenderer::GLRenderer(
     if (dest_alpha != DestinationAlpha::opaque)
         clear_color[3] = 0.0f;
 }
+
+mc::GLRenderer::~GLRenderer() = default;
 
 void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
                                 mg::Renderable const& renderable) const
