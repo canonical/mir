@@ -138,11 +138,22 @@ struct DefaultInputDispatcher : public testing::Test
     StubInputScene scene;
 };
 
-mir::EventUPtr a_key_event(MirKeyboardAction action = mir_keyboard_action_down)
+struct FakeKeyboard
 {
-    // TODO: More
-    return mev::make_event(0, 0, action, 0, 0, mir_input_event_modifier_alt);
-}
+    FakeKeyboard(MirInputDeviceId id = 0)
+        : id(id)
+    {
+    }
+    mir::EventUPtr press(int scan_code = 7)
+    {
+        return mev::make_event(id, 0, mir_keyboard_action_down, 0, scan_code, mir_input_event_modifier_alt);
+    }
+    mir::EventUPtr release(int scan_code = 7)
+    {
+        return mev::make_event(id, 0, mir_keyboard_action_up, 0, scan_code, mir_input_event_modifier_alt);
+    }
+    MirInputDeviceId const id;
+};
 
 // TODO: Impl fake device ID
 struct FakePointer
@@ -220,7 +231,8 @@ TEST_F(DefaultInputDispatcher, key_event_delivered_to_focused_surface)
     
     auto surface = scene.add_surface();
 
-    auto event = a_key_event();
+    FakeKeyboard keyboard;
+    auto event = keyboard.press();
 
     EXPECT_CALL(*surface, consume(mt::MirKeyEventMatches(*event))).Times(1);
 
@@ -235,12 +247,13 @@ TEST_F(DefaultInputDispatcher, key_event_dropped_if_no_surface_focused)
     using namespace ::testing;
     
     auto surface = scene.add_surface();
-    auto event = a_key_event();
     
     EXPECT_CALL(*surface, consume(_)).Times(0);
 
     dispatcher.start();
-    EXPECT_FALSE(dispatcher.dispatch(*event));
+
+    FakeKeyboard keyboard;
+    EXPECT_FALSE(dispatcher.dispatch(*keyboard.press()));
 }
 
 TEST_F(DefaultInputDispatcher, inconsistent_key_events_dropped)
@@ -248,15 +261,15 @@ TEST_F(DefaultInputDispatcher, inconsistent_key_events_dropped)
     using namespace ::testing;
 
     auto surface = scene.add_surface();
-    auto event = a_key_event(mir_keyboard_action_up);
 
-    EXPECT_CALL(*surface, consume(mt::MirKeyEventMatches(*event))).Times(0);
+    EXPECT_CALL(*surface, consume(_)).Times(0);
 
     dispatcher.start();
 
     dispatcher.set_focus(surface);
-    
-    EXPECT_FALSE(dispatcher.dispatch(*event));
+
+    FakeKeyboard keyboard;
+    EXPECT_FALSE(dispatcher.dispatch(*keyboard.release()));
 }
 
 TEST_F(DefaultInputDispatcher, key_state_is_consistent_per_client)
@@ -266,8 +279,9 @@ TEST_F(DefaultInputDispatcher, key_state_is_consistent_per_client)
     auto surface_1 = scene.add_surface();
     auto surface_2 = scene.add_surface();
 
-    auto down_event = a_key_event();
-    auto up_event= a_key_event(mir_keyboard_action_up);
+    FakeKeyboard keyboard;
+    auto down_event = keyboard.press();
+    auto up_event = keyboard.release();
 
     EXPECT_CALL(*surface_1, consume(mt::MirKeyEventMatches(*down_event))).Times(1);
     EXPECT_CALL(*surface_2, consume(_)).Times(0);
@@ -277,9 +291,37 @@ TEST_F(DefaultInputDispatcher, key_state_is_consistent_per_client)
     dispatcher.set_focus(surface_1);
     EXPECT_TRUE(dispatcher.dispatch(*down_event));
     dispatcher.set_focus(surface_2);
-    EXPECT_TRUE(dispatcher.dispatch(*up_event));
+    EXPECT_FALSE(dispatcher.dispatch(*up_event));
+}
+
+TEST_F(DefaultInputDispatcher, key_state_consistency_is_per_device)
+{
+    using namespace ::testing;
+
+    auto surface = scene.add_surface();
+
+    FakeKeyboard keyboard_1(MirInputDeviceId{1});
+    FakeKeyboard keyboard_2(MirInputDeviceId{2});
+
+    int scan_code = 11;
+    auto down_event_1 = keyboard_1.press(scan_code);
+    auto down_event_2 = keyboard_2.press(scan_code);
+
+    InSequence seq;
+    EXPECT_CALL(*surface, consume(mt::MirKeyEventMatches(*down_event_1))).Times(1);
+    EXPECT_CALL(*surface, consume(mt::MirKeyEventMatches(*down_event_2))).Times(1);
+
+    dispatcher.start();
+
+    dispatcher.set_focus(surface);
+    EXPECT_TRUE(dispatcher.dispatch(*down_event_1));
+    // We can't press the same key again on the same device.
+    EXPECT_FALSE(dispatcher.dispatch(*down_event_1));
+    // But we can on another device.
+    EXPECT_TRUE(dispatcher.dispatch(*down_event_2));
 }
 // TODO: Audit key state tests but this seems like a good start...
+// TODO: Test for key repeat
 
 // TODO: Test that pointer motion is relative
 TEST_F(DefaultInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
@@ -416,7 +458,7 @@ TEST_F(DefaultInputDispatcher, pointer_gestures_may_transfer_over_buttons)
     EXPECT_TRUE(dispatcher.dispatch(*ev_4));
     EXPECT_TRUE(dispatcher.dispatch(*ev_5));
 }
-// TODO: Test for what happens to gesture when client dissapears
+// TODO: Test for what happens to gesture when client dissapears in middle of gesture
 
 // TODO: Add touch event builders
 TEST_F(DefaultInputDispatcher, touch_delivered_to_surface)

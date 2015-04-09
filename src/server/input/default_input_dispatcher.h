@@ -20,12 +20,19 @@
 #define MIR_INPUT_DEFAULT_INPUT_DISPATCHER_H_
 
 #include "mir/input/input_dispatcher.h"
+#include "mir/geometry/point.h"
 
 #include <memory>
 #include <mutex>
+#include <map>
+#include <unordered_set>
 
 namespace mir
 {
+namespace scene
+{
+class Observer;
+}
 namespace input
 {
 class Surface;
@@ -36,6 +43,7 @@ class DefaultInputDispatcher : public mir::input::InputDispatcher
 {
 public:
     DefaultInputDispatcher(std::shared_ptr<input::Scene> const& scene);
+    ~DefaultInputDispatcher();
 
 // mir::input::InputDispatcher
     void configuration_changed(std::chrono::nanoseconds when) override;
@@ -48,13 +56,38 @@ public:
     void set_focus(std::shared_ptr<input::Surface> const& target);
     
 private:
-    bool dispatch_key(MirKeyEvent *kev);
-    bool dispatch_pointer(MirPointerEvent *pev);
-    bool dispatch_touch(MirTouchEvent *tev);
+    bool dispatch_key(MirInputDeviceId id, MirKeyboardEvent const* kev);
+    bool dispatch_pointer(MirInputDeviceId id, MirPointerEvent const* pev);
+    bool dispatch_touch(MirInputDeviceId id, MirTouchEvent const* tev);
+
+    std::shared_ptr<input::Surface> find_target_surface(geometry::Point const& target);
+
+    struct KeyInputState
+    {
+        bool handle_event(MirInputDeviceId id, MirKeyboardEvent const* kev);
+        
+        bool press_key(MirInputDeviceId id, int scan_code);
+        bool release_key(MirInputDeviceId id, int scan_code);
+
+        void clear();
+
+        // TODO: How do we handle device reconfiguration here?
+        std::map<MirInputDeviceId, std::unordered_set<int>> depressed_scancodes;
+    } focus_surface_key_input_state;
+
+    // Look in to homognizing index on KeyInputState and PointerInputState (wrt to device id)
+    // TODO: Ensure pointer up/down consistency
+    struct PointerInputState
+    {
+        std::shared_ptr<input::Surface> gesture_owner;
+    };
+    std::map<MirInputDeviceId, PointerInputState> pointer_state_by_id;
     
     std::shared_ptr<input::Scene> const scene;
 
-    std::mutex focus_mutex;
+    std::shared_ptr<scene::Observer> scene_observer;
+
+    std::mutex dispatcher_mutex;
     std::weak_ptr<input::Surface> focus_surface;
 };
 
