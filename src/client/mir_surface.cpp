@@ -535,7 +535,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     }
 
     if (spec.surface_name.is_set())
-        mods.set_name(spec.surface_name.value());
+        mods.mutable_surface_specification()->set_name(spec.surface_name.value());
 
     modify_wait_handle.expect_result();
     server->modify_surface(0, &mods, &modify_result,
