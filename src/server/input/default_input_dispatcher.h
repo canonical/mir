@@ -60,6 +60,14 @@ private:
     bool dispatch_pointer(MirInputDeviceId id, MirPointerEvent const* pev);
     bool dispatch_touch(MirInputDeviceId id, MirTouchEvent const* tev);
 
+    void deliver(std::shared_ptr<input::Surface> const& surface, MirTouchEvent const* tev);
+    void deliver(std::shared_ptr<input::Surface> const& surface, MirPointerEvent const* pev);
+    void deliver(std::shared_ptr<input::Surface> const& surface, MirKeyboardEvent const* kev);
+    void deliver(std::shared_ptr<input::Surface> const& surface, MirEvent const* ev);
+
+    void send_enter_exit_event(std::shared_ptr<input::Surface> const& surface,
+        MirInputDeviceId id, MirPointerAction action, geometry::Point const& point);
+
     std::shared_ptr<input::Surface> find_target_surface(geometry::Point const& target);
 
     struct KeyInputState
@@ -84,12 +92,14 @@ private:
         std::shared_ptr<input::Surface> gesture_owner;
     };
     std::map<MirInputDeviceId, PointerInputState> pointer_state_by_id;
+    PointerInputState& ensure_pointer_state(MirInputDeviceId id);
 
     struct TouchInputState
     {
         std::shared_ptr<input::Surface> gesture_owner;
     };
     std::map<MirInputDeviceId, TouchInputState> touch_state_by_id;
+    TouchInputState& ensure_touch_state(MirInputDeviceId id);
     
     std::shared_ptr<input::Scene> const scene;
 

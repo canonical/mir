@@ -105,7 +105,6 @@ struct StubInputScene : public mtd::StubInputScene
         std::lock_guard<std::mutex> lg(surface_guard);
         assert(observer == nullptr);
         observer = new_observer;
-        
         for (auto const& surface : surfaces)
         {
             observer->surface_exists(surface.get());
@@ -134,8 +133,8 @@ struct DefaultInputDispatcher : public testing::Test
 
     void TearDown() override { dispatcher.stop(); }
 
-    mi::DefaultInputDispatcher dispatcher;
     StubInputScene scene;
+    mi::DefaultInputDispatcher dispatcher;
 };
 
 struct FakeKeyboard
@@ -155,7 +154,6 @@ struct FakeKeyboard
     MirInputDeviceId const id;
 };
 
-// TODO: Impl fake device ID
 struct FakePointer
 {
     mir::EventUPtr move_to(geom::Point const& location)
@@ -186,7 +184,6 @@ struct FakePointer
 };
 
 // TODO: Multi-touch
-// TODO: Device IDs
 struct FakeToucher
 {
     mir::EventUPtr move_to(geom::Point const& point)
@@ -360,6 +357,8 @@ TEST_F(DefaultInputDispatcher, pointer_delivered_only_to_top_surface)
     // The cursor begins at 0, 0
     EXPECT_CALL(*top_surface, consume(mt::PointerEnterEvent())).Times(1);
     EXPECT_CALL(*top_surface, consume(mt::PointerEventWithPosition(1, 0))).Times(1);
+    // Hard to say if we really want this...
+    EXPECT_CALL(*top_surface, consume(mt::PointerLeaveEvent())).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerEventWithPosition(1, 0))).Times(1);
     
@@ -383,16 +382,17 @@ TEST_F(DefaultInputDispatcher, pointer_may_move_between_adjacent_surfaces)
 
     InSequence seq;
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
-    // TODO: Position on leave event
+    EXPECT_CALL(*surface, consume(mt::PointerEventWithPosition(1, 1))).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
     EXPECT_CALL(*another_surface, consume(mt::PointerEnterEvent())).Times(1);
-    EXPECT_CALL(*another_surface, consume(mt::PointerEventWithPosition(1, 0))).Times(1);
+    EXPECT_CALL(*another_surface, consume(mt::PointerEventWithPosition(1, 1))).Times(1);
     EXPECT_CALL(*another_surface, consume(mt::PointerLeaveEvent())).Times(1);
     
     dispatcher.start();
 
-    EXPECT_TRUE(dispatcher.dispatch(*ev_1));
-    EXPECT_TRUE(dispatcher.dispatch(*ev_2));
+    EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({1, 1})));
+    EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({6, 6})));
+    EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({7, 7})));
 }
 
 // We test that a client will receive pointer events following a button down
@@ -487,15 +487,15 @@ TEST_F(DefaultInputDispatcher, touch_delivered_only_to_top_surface)
 
     InSequence seq;
     EXPECT_CALL(*surface, consume(mt::TouchEvent(0,0))).Times(1);
-    EXPECT_CALL(*surface, consume(mt::TouchUpEvent(0,0))).Times(1);
+    EXPECT_CALL(*surface, consume(mt::TouchUpEvent(1,1))).Times(1);
     EXPECT_CALL(*bottom_surface, consume(mt::TouchEvent(0,0))).Times(0);
     EXPECT_CALL(*bottom_surface, consume(mt::TouchUpEvent(0,0))).Times(0);
 
     dispatcher.start();
 
     FakeToucher toucher;
-    EXPECT_TRUE(dispatcher.dispatch(*toucher.move_to({1,1})));
-    EXPECT_TRUE(dispatcher.dispatch(*toucher.move_to({2,2})));
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({1,1})));
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.release_at({2,2})));
 }
 
 // TODO: Test that touch can move between surfaces beside eachother
