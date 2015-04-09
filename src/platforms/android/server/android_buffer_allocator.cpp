@@ -78,9 +78,11 @@ std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
 std::unique_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::reconstruct_from(
     ANativeWindowBuffer* anwb)
 {
+    if (!anwb->common.incRef || !anwb->common.decRef)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Could not claim a reference (incRef or decRef was null)"));
     std::shared_ptr<ANativeWindowBuffer> native_window_buffer(anwb,
         [](ANativeWindowBuffer* buffer){ buffer->common.decRef(&buffer->common); });
-//    anwb->common.incRef(&anwb->common);
+    anwb->common.incRef(&anwb->common);
 
     auto native_handle = std::make_shared<mga::AndroidNativeBuffer>(
         native_window_buffer,

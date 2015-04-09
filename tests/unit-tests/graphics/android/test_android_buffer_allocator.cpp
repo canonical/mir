@@ -124,7 +124,6 @@ TEST_F(AndroidGraphicBufferAllocatorTest, test_buffer_reconstruction_from_MirNat
     EXPECT_THAT(buffer->native_buffer_handle()->anwb(), Eq(anwb.get()));
     EXPECT_THAT(inc_count, Eq(1));
     EXPECT_THAT(dec_count, Eq(0));
-
     buffer.reset();
     EXPECT_THAT(dec_count, Eq(1));
 }
