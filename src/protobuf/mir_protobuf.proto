@@ -35,11 +35,11 @@ message SurfaceSpecification {
   optional int32 height = 2;
   optional int32 pixel_format = 3;
   optional int32 buffer_usage = 4;
-  optional string surface_name = 5;
+  optional string name = 5;
   optional uint32 output_id = 6;
   optional int32 type = 7;
   optional int32 state = 8;
-  optional int32 pref_orientation = 9;
+  optional int32 preferred_orientation = 9;
   optional int32 parent_id = 10;
   optional Rectangle aux_rect = 11;
   optional int32 edge_attachment = 12;

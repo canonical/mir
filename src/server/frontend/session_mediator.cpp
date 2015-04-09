@@ -430,9 +430,35 @@ void mf::SessionMediator::modify_surface(
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         msh::SurfaceSpecification mods;
-        if (surface_specification.has_surface_name())
-            mods.name = surface_specification.surface_name();
-        // TODO: More fields soon (LP: #1422522) (LP: #1420573)
+
+        #define COPY_IF_SET(name)\
+            if (surface_specification.has_##name())\
+                mods.name = decltype(mods.name.value())(surface_specification.name())
+
+        COPY_IF_SET(width);
+        COPY_IF_SET(height);
+        COPY_IF_SET(pixel_format);
+        COPY_IF_SET(buffer_usage);
+        COPY_IF_SET(name);
+        COPY_IF_SET(output_id);
+        COPY_IF_SET(type);
+        COPY_IF_SET(state);
+        COPY_IF_SET(preferred_orientation);
+        COPY_IF_SET(parent_id);
+        // aux_rect is a special case (below)
+        COPY_IF_SET(edge_attachment);
+        COPY_IF_SET(min_width);
+        COPY_IF_SET(min_height);
+        COPY_IF_SET(max_width);
+        COPY_IF_SET(max_height);
+
+        #undef COPY_IF_SET
+
+        if (surface_specification.has_aux_rect())
+        {
+            auto const& rect = surface_specification.aux_rect();
+            mods.aux_rect = {{rect.left(), rect.top()}, {rect.width(), rect.height()}};
+        }
 
         auto const id = mf::SurfaceId(request->surface_id().value());
 
