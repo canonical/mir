@@ -528,6 +528,7 @@ void MirSurface::on_modified()
 MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 {
     mp::SurfaceModifications mods;
+
     {
         std::unique_lock<decltype(mutex)> lock(mutex);
         mods.mutable_surface_id()->set_value(surface.id().value());
