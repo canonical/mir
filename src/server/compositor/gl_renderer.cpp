@@ -95,8 +95,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
     : clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
-      texture_cache(new RecentlyUsedCache,
-                    [](graphics::GLTextureCache *p){delete p;}),
+      texture_cache(std::make_unique<RecentlyUsedCache>()),
       rotation(NAN) // ensure the first set_rotation succeeds
 {
     struct {GLenum id; char const* label;} const glstrings[] =
@@ -133,6 +132,8 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
     set_viewport(display_area);
     set_rotation(0.0f);
 }
+
+mc::GLRenderer::~GLRenderer() = default;
 
 void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
                                 mg::Renderable const& renderable) const

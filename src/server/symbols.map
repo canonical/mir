@@ -487,10 +487,9 @@ MIR_SERVER_31 {
 # these symbols are needed by mir_proving_server but are not intended to be public
     mir::compositor::GLProgramFamily::*;
     mir::compositor::GLRenderer::GLRenderer*;
+    mir::compositor::GLRenderer::?GLRenderer*;
     mir::compositor::GLRenderer::Program::Program*;
-    mir::compositor::GLRenderer::begin*;
     mir::compositor::GLRenderer::draw*;
-    mir::compositor::GLRenderer::end*;
     mir::compositor::GLRenderer::render*;
     mir::compositor::GLRenderer::set_rotation*;
     mir::compositor::GLRenderer::set_viewport*;
@@ -499,7 +498,6 @@ MIR_SERVER_31 {
     mir::compositor::GLRenderer::vshader;
     typeinfo?for?mir::compositor::GLRenderer;
     vtable?for?mir::compositor::GLRenderer;
-    vtable?for?mir::compositor::RecentlyUsedCache;
 
 # these symbols are needed by the test framework but are not intended to be public
     mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;

@@ -41,6 +41,7 @@ class GLRenderer : public Renderer
 {
 public:
     GLRenderer(geometry::Rectangle const& display_area);
+    virtual ~GLRenderer();
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
@@ -100,8 +101,7 @@ protected:
                       GLRenderer::Program const& prog) const;
 
 private:
-    std::unique_ptr<graphics::GLTextureCache,
-                    void(*)(graphics::GLTextureCache*)> const texture_cache;
+    std::unique_ptr<graphics::GLTextureCache> const texture_cache;
     float rotation;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords, screen_rotation;
