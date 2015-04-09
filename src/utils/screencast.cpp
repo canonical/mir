@@ -204,6 +204,17 @@ std::string to_file_extension(std::string format)
     return ext;
 }
 
+MirGraphicsRegion graphics_region_for(MirBufferStream* buffer_stream)
+{
+    MirGraphicsRegion region{0, 0, 0, mir_pixel_format_invalid, nullptr};
+    mir_buffer_stream_get_graphics_region(buffer_stream, &region);
+
+    if (region.vaddr == nullptr)
+        throw std::runtime_error("Failed to obtain screencast buffer");
+
+    return region;
+}
+
 class Screencast
 {
 public:
@@ -248,10 +259,11 @@ public:
                            MirScreencastParameters* params,
                            MirBufferStream* buffer_stream)
         : Screencast(num_captures, capture_fps),
+          region(graphics_region_for(buffer_stream)),
+          line_size{region.width * MIR_BYTES_PER_PIXEL(region.pixel_format)},
           buffer_stream{buffer_stream},
           pixel_format_{mir_pixel_format_to_string(params->pixel_format)}
     {
-        init_region();
     }
 
     std::string pixel_format() override
@@ -273,17 +285,7 @@ public:
     }
 
 private:
-    void init_region()
-    {
-        mir_buffer_stream_get_graphics_region(buffer_stream, &region);
-
-        if (region.vaddr == nullptr)
-            throw std::runtime_error("Failed to obtain screencast buffer");
-
-        line_size = region.width * MIR_BYTES_PER_PIXEL(region.pixel_format);
-    }
-
-    MirGraphicsRegion region{0, 0, 0, mir_pixel_format_invalid, nullptr};
+    MirGraphicsRegion const region;
     int const line_size;
     MirBufferStream* buffer_stream;
     std::string pixel_format_;
