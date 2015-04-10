@@ -19,8 +19,6 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_EVENT_FILTER_H_
 #define MIR_TEST_DOUBLES_MOCK_EVENT_FILTER_H_
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir/input/event_filter.h"
 
 #include <gmock/gmock.h>
