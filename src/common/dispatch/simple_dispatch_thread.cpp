@@ -133,13 +133,7 @@ md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable>
 md::SimpleDispatchThread::~SimpleDispatchThread() noexcept
 {
     shutdown_fd = mir::Fd{};
-    if (eventloop.get_id() == std::this_thread::get_id())
-    {
-        // We're being destroyed from within the dispatch callback
-        // That's OK; we'll exit once we return back to wait_for_events_forever
-        eventloop.detach();
-    }
-    else if (eventloop.joinable())
+    if (eventloop.joinable())
     {
         eventloop.join();
     }
