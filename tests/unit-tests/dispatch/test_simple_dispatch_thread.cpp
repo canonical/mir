@@ -28,6 +28,7 @@
 #include <fcntl.h>
 
 #include <atomic>
+#include <thread>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -230,4 +231,23 @@ TEST_F(SimpleDispatchThreadTest, keeps_dispatching_after_signal_interruption)
 
     auto const result = child->wait_for_termination(10s);
     EXPECT_TRUE(result.succeeded());
+}
+
+using SimpleDispatchThreadDeathTest = SimpleDispatchThreadTest;
+
+TEST_F(SimpleDispatchThreadDeathTest, destroying_dispatcher_from_a_callback_is_an_error)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    EXPECT_EXIT(
+    {
+        md::SimpleDispatchThread* dispatcher;
+    
+        auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatcher]() { delete dispatcher; });
+        
+        dispatchable->trigger();
+        dispatcher = new md::SimpleDispatchThread{dispatchable};
+        std::this_thread::sleep_for(10s);
+    }, KilledBySignal(SIGABRT), ".*Destroying SimpleDispatchThread.*");
 }
