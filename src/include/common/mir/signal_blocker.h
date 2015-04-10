@@ -28,6 +28,9 @@ class SignalBlocker
 public:
     SignalBlocker();
     ~SignalBlocker();
+
+    SignalBlocker(SignalBlocker const&) = delete;
+    SignalBlocker& operator=(SignalBlocker const&) = delete;
 private:
     sigset_t previous_set;
 };
