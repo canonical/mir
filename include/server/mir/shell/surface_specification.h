@@ -36,22 +36,22 @@ namespace shell
 /// Specification of surface properties requested by client
 struct SurfaceSpecification
 {
-    mir::optional_value<geometry::Width> width;
-    mir::optional_value<geometry::Height> height;
+    optional_value<geometry::Width> width;
+    optional_value<geometry::Height> height;
     optional_value<MirPixelFormat> pixel_format;
     optional_value<graphics::BufferUsage> buffer_usage;
     optional_value<std::string> name;
     optional_value<graphics::DisplayConfigurationOutputId> output_id;
-    mir::optional_value<MirSurfaceType> type;
-    mir::optional_value<MirSurfaceState> state;
-    mir::optional_value<MirOrientationMode> preferred_orientation;
-    mir::optional_value<frontend::SurfaceId> parent_id;
-    mir::optional_value<geometry::Rectangle> aux_rect;
-    mir::optional_value<MirEdgeAttachment> edge_attachment;
-    mir::optional_value<geometry::Width> min_width;
-    mir::optional_value<geometry::Height> min_height;
-    mir::optional_value<geometry::Width> max_width;
-    mir::optional_value<geometry::Height> max_height;
+    optional_value<MirSurfaceType> type;
+    optional_value<MirSurfaceState> state;
+    optional_value<MirOrientationMode> preferred_orientation;
+    optional_value<frontend::SurfaceId> parent_id;
+    optional_value<geometry::Rectangle> aux_rect;
+    optional_value<MirEdgeAttachment> edge_attachment;
+    optional_value<geometry::Width> min_width;
+    optional_value<geometry::Height> min_height;
+    optional_value<geometry::Width> max_width;
+    optional_value<geometry::Height> max_height;
 
     // TODO scene::SurfaceCreationParameters overlaps this content but has additional fields:
     //    geometry::Point top_left;
