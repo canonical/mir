@@ -609,5 +609,3 @@ MirWaitHandle* mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
 #endif
 
 #endif /* MIR_TOOLKIT_MIR_SURFACE_H_ */
-
-

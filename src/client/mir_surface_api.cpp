@@ -580,13 +580,13 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-namespace { // Private for now. TODO: Finalize and publish later (LP: #1422522)
-
+namespace
+{
 MirSurfaceSpec* create_spec_for_changes()
 {
     return new MirSurfaceSpec{};
 }
-} // Private namespace.
+}
 
 MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
 try
