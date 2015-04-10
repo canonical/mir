@@ -213,17 +213,17 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
         .of_position(titlebar_position_for_window(surface->top_left()))
         .of_type(mir_surface_type_gloss);
     auto id = session->create_surface(params);
-    auto decoration_surface = session->surface(id);
-    decoration_surface->set_alpha(0.9);
-    tools->info_for(surface).decoration = decoration_surface;
-    tools->info_for(surface).children.push_back(decoration_surface);
+    auto titlebar = session->surface(id);
+    titlebar->set_alpha(0.9);
+    tools->info_for(surface).titlebar = titlebar;
+    tools->info_for(surface).children.push_back(titlebar);
 
     //TODO: provide an easier way for the server to write to a surface!
     std::mutex mut;
     std::condition_variable cv;
     mir::graphics::Buffer* written_buffer{nullptr};
 
-    decoration_surface->swap_buffers(
+    titlebar->swap_buffers(
         nullptr,
         [&](mir::graphics::Buffer* buffer)
         {
@@ -241,13 +241,13 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
         cv.wait(lk, [&]{return written_buffer;});
     }
 
-    decoration_surface->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
+    titlebar->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
 
-    CanonicalSurfaceInfoCopy info{session, decoration_surface};
-    info.is_decoration = true;
+    CanonicalSurfaceInfoCopy info{session, titlebar};
+    info.is_titlebar = true;
     info.parent = surface;
 
-    surface_info.emplace(decoration_surface, std::move(info));
+    surface_info.emplace(titlebar, std::move(info));
 }
 
 namespace
@@ -384,27 +384,27 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
     case mir_surface_state_restored:
         movement = info.restore_rect.top_left - old_pos;
         surface->resize(info.restore_rect.size);
-        info.decoration->resize(titlebar_size_for_window(info.restore_rect.size));
-        info.decoration->show();
+        info.titlebar->resize(titlebar_size_for_window(info.restore_rect.size));
+        info.titlebar->show();
         break;
 
     case mir_surface_state_maximized:
         movement = display_area.top_left - old_pos;
         surface->resize(display_area.size);
-        info.decoration->hide();
+        info.titlebar->hide();
         break;
 
     case mir_surface_state_horizmaximized:
         movement = Point{display_area.top_left.x, info.restore_rect.top_left.y} - old_pos;
         surface->resize({display_area.size.width, info.restore_rect.size.height});
-        info.decoration->resize(titlebar_size_for_window({display_area.size.width, info.restore_rect.size.height}));
-        info.decoration->show();
+        info.titlebar->resize(titlebar_size_for_window({display_area.size.width, info.restore_rect.size.height}));
+        info.titlebar->show();
         break;
 
     case mir_surface_state_vertmaximized:
         movement = Point{info.restore_rect.top_left.x, display_area.top_left.y} - old_pos;
         surface->resize({info.restore_rect.size.width, display_area.size.height});
-        info.decoration->hide();
+        info.titlebar->hide();
         break;
 
     case mir_surface_state_fullscreen:
@@ -555,6 +555,20 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
         {
             resize(cursor);
             return true;
+        }
+    }
+    else if (action == mir_pointer_action_motion && !modifiers)
+    {
+        if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
+        {
+            if (auto const possible_titlebar = tools->surface_at(old_cursor))
+            {
+                if (tools->info_for(possible_titlebar).is_titlebar)
+                {
+                    drag(cursor);
+                    return true;
+                }
+            }
         }
     }
 
@@ -715,7 +729,7 @@ bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> c
         return true;
     }
 
-    info.decoration->resize({new_size.width, Height{title_bar_height}});
+    info.titlebar->resize({new_size.width, Height{title_bar_height}});
     surface->resize(new_size);
 
     // TODO It is rather simplistic to move a tree WRT the top_left of the root
@@ -728,32 +742,33 @@ bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> c
 
 bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
 {
-    if (surface && surface->input_area_contains(from))
-    {
-        auto const top_left = surface->top_left();
-        auto const surface_size = surface->size();
-        auto const bottom_right = top_left + as_displacement(surface_size);
+    if (!surface)
+        return false;
 
-        auto movement = to - from;
+    if (!surface->input_area_contains(from) && !tools->info_for(surface).titlebar)
+        return false;
 
-        if (movement.dx < DeltaX{0})
-            movement.dx = std::max(movement.dx, (bounds.top_left - top_left).dx);
+    auto const top_left = surface->top_left();
+    auto const surface_size = surface->size();
+    auto const bottom_right = top_left + as_displacement(surface_size);
 
-        if (movement.dy < DeltaY{0})
-            movement.dy = std::max(movement.dy, (bounds.top_left - top_left).dy);
+    auto movement = to - from;
 
-        if (movement.dx > DeltaX{0})
-            movement.dx = std::min(movement.dx, (bounds.bottom_right() - bottom_right).dx);
+    if (movement.dx < DeltaX{0})
+        movement.dx = std::max(movement.dx, (bounds.top_left - top_left).dx);
 
-        if (movement.dy > DeltaY{0})
-            movement.dy = std::min(movement.dy, (bounds.bottom_right() - bottom_right).dy);
+    if (movement.dy < DeltaY{0})
+        movement.dy = std::max(movement.dy, (bounds.top_left - top_left).dy);
 
-        move_tree(surface, movement);
+    if (movement.dx > DeltaX{0})
+        movement.dx = std::min(movement.dx, (bounds.bottom_right() - bottom_right).dx);
 
-        return true;
-    }
+    if (movement.dy > DeltaY{0})
+        movement.dy = std::min(movement.dy, (bounds.bottom_right() - bottom_right).dy);
 
-    return false;
+    move_tree(surface, movement);
+
+    return true;
 }
 
 void me::CanonicalWindowManagerPolicyCopy::move_tree(std::shared_ptr<ms::Surface> const& root, Displacement movement) const

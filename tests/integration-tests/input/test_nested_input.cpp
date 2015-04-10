@@ -16,11 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "src/server/report/null/input_report.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/input_dispatcher.h"
+#include "mir/events/event_private.h"
 #include "src/server/input/android/android_input_dispatcher.h"
 #include "src/server/input/android/event_filter_dispatcher_policy.h"
 #include "src/server/input/android/common_input_thread.h"

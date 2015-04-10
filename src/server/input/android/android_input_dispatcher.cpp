@@ -17,11 +17,11 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
 #include "android_input_dispatcher.h"
 #include "android_input_constants.h"
 #include "android_input_thread.h"
+
+#include "mir/events/event_private.h"
 
 #include <InputListener.h> // NotifyArgs
 #include <InputDispatcher.h>

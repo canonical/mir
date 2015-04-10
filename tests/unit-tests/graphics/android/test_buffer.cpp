@@ -179,3 +179,48 @@ TEST_F(AndroidBuffer, writes_pixels)
     buffer.write(pixels.get(), sz);
     Mock::VerifyAndClearExpectations(&gralloc);
 }
+
+TEST_F(AndroidBuffer, read_throws_on_failed_mapping_indicated_by_rc_code)
+{
+    using namespace testing;
+    EXPECT_CALL(gralloc, lock_interface(_, _, _, _, _, _, _, _))
+        .WillOnce(Return(-1));
+
+    mga::Buffer buffer(&gralloc, mock_native_buffer, extensions);
+    EXPECT_THROW({
+        buffer.read([](unsigned char const*){});
+    }, std::runtime_error);
+}
+
+TEST_F(AndroidBuffer, read_throws_on_failed_mapping_indicated_by_nullptr_return)
+{
+    using namespace testing;
+    EXPECT_CALL(gralloc, lock_interface(_, _, _, _, _, _, _, _))
+        .WillOnce(DoAll(SetArgPointee<7>(nullptr), Return(0)));
+
+    mga::Buffer buffer(&gralloc, mock_native_buffer, extensions);
+    EXPECT_THROW({
+        buffer.read([](unsigned char const*){});
+    }, std::runtime_error);
+}
+
+TEST_F(AndroidBuffer, reads_pixels)
+{
+    using namespace testing;
+    size_t strided_sz = anwb->height * anwb->stride * MIR_BYTES_PER_PIXEL(pf);
+    auto const mapped_pixels = std::shared_ptr<unsigned char>(
+        static_cast<unsigned char*>(::operator new(sizeof(unsigned char) * strided_sz)));
+
+    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::read));
+    EXPECT_CALL(gralloc, lock_interface(
+        &gralloc,_, GRALLOC_USAGE_SW_READ_OFTEN, 0, 0, size.width.as_int(), size.height.as_int(), _))
+        .WillOnce(DoAll(SetArgPointee<7>(mapped_pixels.get()), Return(0)));
+    EXPECT_CALL(gralloc, unlock_interface(_,_));
+
+    mga::Buffer buffer(&gralloc, mock_native_buffer, extensions);
+    buffer.read([](unsigned char const* pixels)
+    {
+        EXPECT_THAT(pixels, Ne(nullptr));
+    });
+    Mock::VerifyAndClearExpectations(&gralloc);
+}
