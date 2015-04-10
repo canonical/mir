@@ -65,6 +65,7 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
       pixel_format{params.pixel_format},
       buffer_usage{params.buffer_usage}
 {
+    type = mir_surface_type_normal;
     if (params.output_id != mir_display_output_id_invalid)
     {
         output_id = params.output_id;
