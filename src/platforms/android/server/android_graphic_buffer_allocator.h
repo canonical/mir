@@ -52,7 +52,7 @@ public:
     std::shared_ptr<graphics::Buffer> alloc_buffer_platform(
         geometry::Size sz, MirPixelFormat pf, BufferUsage use) override;
 
-    std::vector<MirPixelFormat> supported_pixel_formats();
+    std::vector<MirPixelFormat> supported_pixel_formats() override;
 
     static BufferUsage convert_from_compositor_usage(graphics::BufferUsage usage);
 
