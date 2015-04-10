@@ -59,7 +59,6 @@ public:
     MOCK_METHOD1(dispatch, bool(md::FdEvents));
     MOCK_CONST_METHOD0(relevant_events, md::FdEvents());
 };
-
 }
 
 TEST_F(SimpleDispatchThreadTest, calls_dispatch_when_fd_is_readable)
@@ -67,7 +66,10 @@ TEST_F(SimpleDispatchThreadTest, calls_dispatch_when_fd_is_readable)
     using namespace testing;
 
     auto dispatched = std::make_shared<mt::Signal>();
-    auto dispatchable = std::make_shared<mt::TestDispatchable>([dispatched]() { dispatched->raise(); });
+    auto dispatchable = std::make_shared<mt::TestDispatchable>([dispatched]()
+                                                               {
+                                                                   dispatched->raise();
+                                                               });
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -81,7 +83,10 @@ TEST_F(SimpleDispatchThreadTest, stops_calling_dispatch_once_fd_is_not_readable)
     using namespace testing;
 
     std::atomic<int> dispatch_count{0};
-    auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatch_count]() { ++dispatch_count; });
+    auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatch_count]()
+                                                               {
+                                                                   ++dispatch_count;
+                                                               });
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -111,7 +116,8 @@ TEST_F(SimpleDispatchThreadTest, passes_dispatch_events_through)
         }
         return true;
     };
-    auto dispatchable = std::make_shared<mt::TestDispatchable>(delegate, md::FdEvent::readable | md::FdEvent::remote_closed);
+    auto dispatchable =
+        std::make_shared<mt::TestDispatchable>(delegate, md::FdEvent::readable | md::FdEvent::remote_closed);
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -166,17 +172,17 @@ TEST_F(SimpleDispatchThreadTest, only_calls_dispatch_with_remote_closed_when_rel
     auto dispatched_closed = std::make_shared<mt::Signal>();
 
     ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([=](md::FdEvents events)
-    {
-        if (events & md::FdEvent::writable)
-        {
-            dispatched_writable->raise();
-        }
-        if (events & md::FdEvent::remote_closed)
-        {
-            dispatched_closed->raise();
-        }
-        return true;
-    }));
+                                                             {
+                                                                 if (events & md::FdEvent::writable)
+                                                                 {
+                                                                     dispatched_writable->raise();
+                                                                 }
+                                                                 if (events & md::FdEvent::remote_closed)
+                                                                 {
+                                                                     dispatched_closed->raise();
+                                                                 }
+                                                                 return true;
+                                                             }));
 
     md::SimpleDispatchThread dispatcher{dispatchable};
 
@@ -251,3 +257,4 @@ TEST_F(SimpleDispatchThreadDeathTest, destroying_dispatcher_from_a_callback_is_a
         std::this_thread::sleep_for(10s);
     }, KilledBySignal(SIGABRT), ".*Destroying SimpleDispatchThread.*");
 }
+
