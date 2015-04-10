@@ -18,6 +18,7 @@
 
 #include "mir/dispatch/simple_dispatch_thread.h"
 #include "mir/dispatch/dispatchable.h"
+#include "mir/logging/logger.h"
 #include "utils.h"
 
 #include <sys/epoll.h>
@@ -136,8 +137,13 @@ md::SimpleDispatchThread::~SimpleDispatchThread() noexcept
     if (eventloop.get_id() == std::this_thread::get_id())
     {
         // We're being destroyed from within the dispatch callback
-        // That's OK; we'll exit once we return back to wait_for_events_forever
-        eventloop.detach();
+        // Attempting to join the eventloop will result in a trivial deadlock.
+        // 
+        // The std::thread destructor will call std::terminate() for us, let's
+        // leave a useful message.
+        mir::logging::log(mir::logging::Severity::critical,
+                          "Destroying SimpleDispatchThread from within a dispatch callback. This is a programming error.",
+                          "Dispatch");
     }
     else if (eventloop.joinable())
     {
