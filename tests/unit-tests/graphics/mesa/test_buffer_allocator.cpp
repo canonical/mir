@@ -31,6 +31,7 @@
 #include <cstdlib>
 #include <memory>
 #include <stdexcept>
+#include <system_error>
 #include <algorithm>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
