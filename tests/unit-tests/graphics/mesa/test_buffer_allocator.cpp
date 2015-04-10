@@ -343,5 +343,5 @@ TEST_F(MesaBufferAllocatorTest, reconstruct_throws_if_gbm_cannot_import)
     native_buffer.fd_items = 1;
     EXPECT_THROW({
         auto buffer = allocator->reconstruct_from(&native_buffer, pf);
-    }, std::runtime_error);
+    }, std::system_error);
 } 
