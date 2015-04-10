@@ -34,7 +34,7 @@ mir::SignalBlocker::SignalBlocker()
                                       "Failed to block signals"}));
 }
 
-mir::SignalBlocker::~SignalBlocker()
+mir::SignalBlocker::~SignalBlocker() noexcept(false)
 {
     if (auto error = pthread_sigmask(SIG_SETMASK, &previous_set, nullptr))
     {

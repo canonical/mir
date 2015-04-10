@@ -27,7 +27,7 @@ class SignalBlocker
 {
 public:
     SignalBlocker();
-    ~SignalBlocker();
+    ~SignalBlocker() noexcept(false);
 
     SignalBlocker(SignalBlocker const&) = delete;
     SignalBlocker& operator=(SignalBlocker const&) = delete;
