@@ -608,17 +608,16 @@ bool mir_surface_spec_place_buffer_stream_below(
     return false;
 }
 
-bool mir_surface_spec_place_buffer_stream_position(
-    MirSurfaceSpec* spec, MirBufferStream* stream_to_move, int x, int y)
+void mir_surface_spec_set_buffer_stream_position(
+    MirSurfaceSpec* spec, unsigned int index, int x, int y)
 {
     (void) spec;
-    (void) stream_to_move;
+    (void) index;
     (void) x;
     (void) y;
-    return false;
 }
 
-unsigned int mir_surface_get_maximum_number_of_streams(MirSurface*)
+unsigned int mir_surface_spec_num_streams(MirSurfaceSpec*)
 {
     return 1;
 }
@@ -631,4 +630,25 @@ unsigned int mir_surface_get_streams(
     (void) positions;
     (void) num_streams;
     return 0;
+}
+
+MirBufferStream* mir_surface_spec_buffer_stream_at(MirSurfaceSpec* spec, unsigned int index)
+{
+    (void) spec;
+    (void) index;
+    return nullptr;
+}
+
+void mir_surface_spec_insert_stream_at(MirSurfaceSpec* spec, MirBufferStream* stream, unsigned int index)
+{
+    (void) spec;
+    (void) stream;
+    (void) index;
+}
+
+MirBufferStream* mir_surface_spec_remove_stream_at(MirSurfaceSpec* spec, unsigned int index)
+{
+    (void) spec;
+    (void) index;
+    return nullptr;
 }

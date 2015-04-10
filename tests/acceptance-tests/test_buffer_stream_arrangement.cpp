@@ -73,7 +73,7 @@ struct Stream
             mir_buffer_stream_release_sync(stream);
     }
 
-    operator MirBufferStream*() const
+    MirBufferStream* handle() const
     {
         return stream;
     }
@@ -112,14 +112,13 @@ struct Ordering
     }
 
     bool ensure_last_ordering_is_consistent_with(
-        std::vector<MirRectangle> const& arrangement)
+        std::vector<geom::Point> const& arrangement)
     {
         if (rectangles.size() != arrangement.size())
             return false;
         for(auto i = 0u; i < rectangles.size(); i++)
         {
-            if ((rectangles[i].top_left.x.as_int() != arrangement[i].left) ||
-                (rectangles[i].top_left.y.as_int() != arrangement[i].top))
+            if (rectangles[i].top_left != arrangement[i])
                 return false;
         }
         return true;
@@ -214,42 +213,48 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
 TEST_F(BufferStreamArrangement, arrangements_are_applied)
 {
     using namespace testing;
-    MirBufferStream* above_stream = *primary_stream;
     auto change_spec = mir_surface_begin_changes(surface);
+
     for(auto& stream : streams)
-    {
-        EXPECT_TRUE(mir_surface_spec_place_buffer_stream_below(change_spec, *stream, above_stream));
-        EXPECT_TRUE(mir_surface_spec_place_buffer_stream_position(
-            change_spec, *stream, stream->position().x.as_int(), stream->position().y.as_int()));
-        above_stream = *stream;
-    }
+        mir_surface_spec_insert_stream_at(
+            change_spec, stream->handle(), mir_surface_spec_num_streams(change_spec));
+
+    auto num_streams = mir_surface_spec_num_streams(change_spec);
+    EXPECT_THAT(mir_surface_spec_num_streams(change_spec), Eq(streams.size() + 1));
+    for(auto i = 0u; i < num_streams; ++i)
+        mir_surface_spec_set_buffer_stream_position(change_spec, i, i*10, i*10);
+
     mir_wait_for(mir_surface_spec_commit_changes(change_spec));
     mir_surface_spec_release(change_spec);
 
-    unsigned int num_streams = mir_surface_get_maximum_number_of_streams(surface);
-    ASSERT_THAT(num_streams, Eq(streams.size() + 1));
-    std::vector<MirBufferStream*> buffer_streams{num_streams};
-    std::vector<MirRectangle> positions{num_streams};
-    mir_surface_get_streams(surface, buffer_streams.data(), positions.data(), num_streams);
-    for(auto i = 0u; i < num_streams; ++i)
+    //* check last spec is still same
+    change_spec = mir_surface_begin_changes(surface);
+    EXPECT_THAT(mir_surface_spec_num_streams(change_spec), Eq(num_streams));
+
+    std::vector<geom::Point> points;
+    for(auto i = 0u; i < num_streams; i++)
     {
-        geom::Point pt{positions[i].top, positions[i].left};
-        if (i == 0u)
+        int x = 0;
+        int y = 0;
+        auto stream = mir_surface_spec_buffer_stream_at(change_spec, i);
+        mir_buffer_stream_get_position(stream, &x, &y);
+        points.emplace_back(geom::Point{x, y});
+        if (i == 0)
         {
-            EXPECT_THAT(buffer_streams[i], Eq(static_cast<MirBufferStream*>(*primary_stream)));
-            EXPECT_THAT(pt, Eq(primary_stream->position()));
+            EXPECT_THAT(stream, Eq(primary_stream->handle()));
+            EXPECT_THAT(points.back(), Eq(primary_stream->position()));
         }
         else
         {
-            EXPECT_THAT(buffer_streams[i], Eq(static_cast<MirBufferStream*>(*streams[i-1])));
-            EXPECT_THAT(pt, Eq(streams[i-1]->position()));
+            EXPECT_THAT(stream, Eq(streams[i-1]->handle()));
+            EXPECT_THAT(points.back(), Eq(streams[i-1]->position()));
         }
-    }
+    } 
 
     //check that the compositor rendered correctly
     using namespace std::literals::chrono_literals;
     EXPECT_TRUE(ordering->wait_for_another_post_within(1s))
          << "timed out waiting for another post";
-    EXPECT_TRUE(ordering->ensure_last_ordering_is_consistent_with(positions))
+    EXPECT_TRUE(ordering->ensure_last_ordering_is_consistent_with(points))
          << "surface ordering was not consistent with the client request";
 }

@@ -169,6 +169,15 @@ void mir_buffer_stream_get_graphics_region(
  */
 MirEGLNativeWindowType mir_buffer_stream_get_egl_native_window(MirBufferStream *buffer_stream);
 
+/**
+ * Retrieve the coordinates of the bufferstream within its surface's
+ * coordinate space.
+ *   \param [in]  buffer_stream  The buffer stream
+ *   \param [out] x              The x coordinate of the top-left corner
+ *   \param [out] y              The y coordinate of the top-left corner
+ */
+void mir_buffer_stream_get_position(MirBufferStream* stream, int* x, int* y);
+
 #ifdef __cplusplus
 }
 /**@}*/
