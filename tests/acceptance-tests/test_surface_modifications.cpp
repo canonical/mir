@@ -111,7 +111,7 @@ TEST_F(SurfaceModifications, surface_spec_resize_is_notified)
     auto const new_width = 5;
     auto const new_height = 7;
 
-    EXPECT_CALL(surface_observer, resized_to(Eq(Size{new_width, new_height})));
+    EXPECT_CALL(surface_observer, resized_to(Size{new_width, new_height}));
 
     auto const spec = mir_connection_create_spec_for_changes(connection);
 
