@@ -7,8 +7,8 @@ least:
 Modules: i915, radeon and nouveau, to support the broadest range of common
 desktop/laptop hardware.
 
-Version: Kernel version 3.11.0 or later at least for radeon and nouveu to
+Version: Kernel version 3.11.0 or later, at least for radeon and nouveau to
 support fullscreen bypass correctly. Intel (i915) is known to work properly
 with even older kernels.
 
-Additional Patches: None at this time.
+Additional patches: None at this time.
