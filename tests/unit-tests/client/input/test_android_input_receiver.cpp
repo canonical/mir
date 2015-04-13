@@ -16,11 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "src/client/input/android/android_input_receiver.h"
 #include "mir/input/null_input_receiver_report.h"
 #include "mir/input/xkb_mapper.h"
+#include "mir/events/event_private.h"
+
 #include "mir_toolkit/event.h"
 
 #include "mir_test/fd_utils.h"

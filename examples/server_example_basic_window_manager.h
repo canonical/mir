@@ -79,6 +79,8 @@ public:
 
     virtual void raise(SurfaceSet const& surfaces) = 0;
 
+    virtual auto active_display() -> geometry::Rectangle const = 0;
+
     virtual ~BasicWindowManagerToolsCopy() = default;
     BasicWindowManagerToolsCopy() = default;
     BasicWindowManagerToolsCopy(BasicWindowManagerToolsCopy const&) = delete;
@@ -98,7 +100,7 @@ public:
 /// - void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface);
 /// - void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/);
 /// - int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value);
-/// - bool handle_key_event(MirKeyboardEvent const* event);
+/// - bool handle_keyboard_event(MirKeyboardEvent const* event);
 /// - bool handle_touch_event(MirTouchEvent const* event);
 /// - bool handle_pointer_event(MirPointerEvent const* event);
 ///
@@ -145,9 +147,17 @@ private:
         auto const surface = session->surface(result);
         surface_info.emplace(surface, SurfaceInfo{session, surface});
         policy.handle_new_surface(session, surface);
-        for (auto& decoration : policy.generate_decorations_for(session, surface))
-            surface_info.emplace(decoration, SurfaceInfo{session, decoration});
+        policy.generate_decorations_for(session, surface, surface_info);
         return result;
+    }
+
+    void modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        shell::SurfaceSpecification const& modifications) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        policy.handle_modify_surface(session, surface, modifications);
     }
 
     void remove_surface(
@@ -174,10 +184,10 @@ private:
         policy.handle_displays_updated(session_info, displays);
     }
 
-    bool handle_key_event(MirKeyboardEvent const* event) override
+    bool handle_keyboard_event(MirKeyboardEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        return policy.handle_key_event(event);
+        return policy.handle_keyboard_event(event);
     }
 
     bool handle_touch_event(MirTouchEvent const* event) override
@@ -189,6 +199,11 @@ private:
     bool handle_pointer_event(MirPointerEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
+
+        cursor = {
+            mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+            mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+
         return policy.handle_pointer_event(event);
     }
 
@@ -267,6 +282,53 @@ private:
         focus_controller->raise(surfaces);
     }
 
+    auto active_display() -> geometry::Rectangle const override
+    {
+        geometry::Rectangle result;
+
+        // 1. If a window has input focus, whichever display contains the largest
+        //    proportion of the area of that window.
+        if (auto const surface = focused_surface())
+        {
+            auto const surface_rect = surface->input_bounds();
+            int max_overlap_area = -1;
+
+            for (auto const& display : displays)
+            {
+                auto const intersection = surface_rect.intersection_with(display).size;
+                if (intersection.width.as_int()*intersection.height.as_int() > max_overlap_area)
+                {
+                    max_overlap_area = intersection.width.as_int()*intersection.height.as_int();
+                    result = display;
+                }
+            }
+            return result;
+        }
+
+        // 2. Otherwise, if any window previously had input focus, for the window that had
+        //    it most recently, the display that contained the largest proportion of the
+        //    area of that window at the moment it closed, as long as that display is still
+        //    available.
+
+        // 3. Otherwise, the display that contains the pointer, if there is one.
+        for (auto const& display : displays)
+        {
+            if (display.contains(cursor))
+            {
+                // Ignore the (unspecified) possiblity of overlapping displays
+                return display;
+            }
+        }
+
+        // 4. Otherwise, the primary display, if there is one (for example, the laptop display).
+
+        // 5. Otherwise, the first display.
+        if (displays.size())
+            result = *displays.begin();
+
+        return result;
+    }
+
     shell::FocusController* const focus_controller;
     WindowManagementPolicy policy;
 
@@ -274,6 +336,7 @@ private:
     typename SessionTo<SessionInfo>::type session_info;
     typename SurfaceTo<SurfaceInfo>::type surface_info;
     geometry::Rectangles displays;
+    geometry::Point cursor{-1, -1};
 };
 }
 }

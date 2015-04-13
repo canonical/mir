@@ -169,6 +169,21 @@ TEST_F(CustomWindowManagement, surface_create_adds_surface)
     mir_surface_release_sync(surface);
 }
 
+TEST_F(CustomWindowManagement, surface_rename_modifies_surface)
+{
+    auto const new_title = __PRETTY_FUNCTION__;
+
+    start_server();
+    auto const client = connect_client();
+    auto const surface = client.surface_create();
+
+    EXPECT_CALL(window_manager, modify_surface(_,_,_));
+
+    mir_surface_set_title(surface, new_title);
+
+    mir_surface_release_sync(surface);
+}
+
 TEST_F(CustomWindowManagement, surface_release_removes_surface)
 {
     start_server();

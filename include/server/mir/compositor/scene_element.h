@@ -19,7 +19,6 @@
 #ifndef MIR_COMPOSITOR_SCENE_ELEMENT_H_
 #define MIR_COMPOSITOR_SCENE_ELEMENT_H_
 
-#include "mir/compositor/decoration.h"
 #include <memory>
 
 namespace mir
@@ -30,7 +29,7 @@ class Renderable;
 }
 namespace compositor
 {
-
+class Decoration;
 class SceneElement
 {
 public:
@@ -40,11 +39,9 @@ public:
     virtual void rendered() = 0;
     virtual void occluded() = 0;
 
-    virtual Decoration const& decoration() const
-    {
-        static const Decoration none;
-        return none;
-    }
+    //TODO: Decoration is opaque on purpose. It is only used by an internal example,
+    //      and this function should be removed from the public API.
+    virtual std::unique_ptr<Decoration> decoration() const = 0; 
 
 protected:
     SceneElement() = default;

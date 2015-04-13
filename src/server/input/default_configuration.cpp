@@ -16,10 +16,9 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir/default_server_configuration.h"
 
+#include "mir/events/event_private.h"
 #include "android/android_input_dispatcher.h"
 #include "android/android_input_targeter.h"
 #include "android/android_input_reader_policy.h"

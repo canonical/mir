@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/legacy_surface_change_notification.h"
 
+#include "mir/events/event_private.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/displacement.h"
@@ -753,13 +753,9 @@ TEST_F(BasicSurfaceTest, notifies_of_rename)
     using namespace testing;
 
     MockSurfaceObserver mock_surface_observer;
-
-    EXPECT_CALL(mock_surface_observer, renamed(StrEq("Steve")))
-        .Times(1);
-
     surface.add_observer(mt::fake_shared(mock_surface_observer));
 
-    mf::Surface::Modifications mods;
-    mods.name = "Steve";
-    surface.modify(mods);
+    EXPECT_CALL(mock_surface_observer, renamed(StrEq("Steve")));
+
+    surface.rename("Steve");
 }

@@ -18,10 +18,6 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-// TODO: Eliminate usage of std::chrono::nanoseconds in input_dispatcher.h
-// to remove this.
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
 #define MIR_LOG_COMPONENT "DisplayServer"
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
@@ -114,10 +110,6 @@ struct mir::DisplayServer::Private
                 [this] { display_changer->pause_display_config_processing(); },
                 [this] { display_changer->resume_display_config_processing(); }};
 
-            TryButRevertIfUnwinding comp{
-                [this] { compositor->stop(); },
-                [this] { compositor->start(); }};
-
             TryButRevertIfUnwinding prompt{
                 [this] { prompt_connector->stop(); },
                 [this] { prompt_connector->start(); }};
@@ -125,6 +117,10 @@ struct mir::DisplayServer::Private
             TryButRevertIfUnwinding comm{
                 [this] { connector->stop(); },
                 [this] { connector->start(); }};
+
+            TryButRevertIfUnwinding comp{
+                [this] { compositor->stop(); },
+                [this] { compositor->start(); }};
 
             display->pause();
         }
@@ -146,6 +142,10 @@ struct mir::DisplayServer::Private
                 [this] { display->resume(); },
                 [this] { display->pause(); }};
 
+            TryButRevertIfUnwinding comp{
+                [this] { compositor->start(); },
+                [this] { compositor->stop(); }};
+
             TryButRevertIfUnwinding comm{
                 [this] { connector->start(); },
                 [this] { connector->stop(); }};
@@ -162,11 +162,7 @@ struct mir::DisplayServer::Private
                 [this] { input_manager->start(); },
                 [this] { input_manager->stop(); }};
 
-            TryButRevertIfUnwinding dispatcher{
-                [this] { input_dispatcher->start(); },
-                [this] { input_dispatcher->stop(); }};
-
-            compositor->start();
+            input_dispatcher->start();
         }
         catch(std::runtime_error const&)
         {
@@ -216,9 +212,9 @@ void mir::DisplayServer::run()
 {
     mir::log_info("Mir version " MIR_VERSION);
 
+    p->compositor->start();
     p->connector->start();
     p->prompt_connector->start();
-    p->compositor->start();
     p->input_manager->start();
     p->input_dispatcher->start();
 
@@ -228,9 +224,9 @@ void mir::DisplayServer::run()
 
     p->input_dispatcher->stop();
     p->input_manager->stop();
-    p->compositor->stop();
     p->prompt_connector->stop();
     p->connector->stop();
+    p->compositor->stop();
 }
 
 void mir::DisplayServer::stop()

@@ -22,11 +22,12 @@
 //
 // ==================================
 
-#ifndef MIR_TOOLKIT_EVENT_DEPRECATED_H_
-#define MIR_TOOLKIT_EVENT_DEPRECATED_H_
+#ifndef MIR_COMMON_EVENT_PRIVATE_H_
+#define MIR_COMMON_EVENT_PRIVATE_H_
 
 #include <stddef.h>
 #include <stdint.h>
+#include "mir_toolkit/event.h"
 #include "mir_toolkit/common.h"
 
 #include <xkbcommon/xkbcommon.h>
@@ -118,7 +119,7 @@ typedef enum {
    mir_motion_tool_type_eraser  = 4
 } MirMotionToolType;
 
-// DEPRECATED
+// PRIVATE
 // Direct access to MirKeyEvent is deprecated. Please use mir_event_get_input_event
 // and the mir_input_event* family of functions.
 typedef struct
@@ -158,7 +159,7 @@ typedef struct
     int unused3;
 } MirMotionPointer;
 
-// DEPRECATED
+// PRIVATE
 // Direct access to MirMotionEvent is deprecated. Please use mir_event_get_input_event
 // and the mir_input_event* family of functions.
 typedef struct
@@ -263,4 +264,4 @@ union MirEvent
 /**@}*/
 #endif
 
-#endif /* MIR_TOOLKIT_EVENT_DEPRECATED_H_ */
+#endif /* MIR_COMMON_EVENT_PRIVATE_H_ */

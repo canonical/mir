@@ -66,6 +66,7 @@ class FullscreenWindowManagerPolicy
 public:
     using Tools = me::BasicWindowManagerToolsCopy<NullSessionInfo, NullSurfaceInfo>;
     using SessionInfoMap = typename me::SessionTo<NullSessionInfo>::type;
+    using SurfaceInfoMap = typename me::SurfaceTo<NullSurfaceInfo>::type;
 
     FullscreenWindowManagerPolicy(Tools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
         display_layout{display_layout} {}
@@ -87,6 +88,12 @@ public:
 
         return placed_parameters;
     }
+    void handle_modify_surface(
+        std::shared_ptr<ms::Session> const& /*session*/,
+        std::shared_ptr<ms::Surface> const& /*surface*/,
+        msh::SurfaceSpecification const& /*modifications*/)
+    {
+    }
 
     void handle_new_surface(std::shared_ptr<ms::Session> const& /*session*/, std::shared_ptr<ms::Surface> const& /*surface*/)
     {
@@ -97,17 +104,17 @@ public:
     int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value)
         { return value; }
 
-    bool handle_key_event(MirKeyboardEvent const* /*event*/) { return false; }
+    bool handle_keyboard_event(MirKeyboardEvent const* /*event*/) { return false; }
 
     bool handle_touch_event(MirTouchEvent const* /*event*/) { return false; }
 
     bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
 
-    std::vector<std::shared_ptr<ms::Surface>> generate_decorations_for(
+    void generate_decorations_for(
         std::shared_ptr<ms::Session> const&,
-        std::shared_ptr<ms::Surface> const&)
+        std::shared_ptr<ms::Surface> const&,
+        SurfaceInfoMap&)
     {
-        return {};
     }
 private:
     std::shared_ptr<msh::DisplayLayout> const display_layout;

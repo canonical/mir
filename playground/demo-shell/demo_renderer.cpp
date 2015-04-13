@@ -25,7 +25,6 @@
 #include "demo_renderer.h"
 #include <mir/graphics/renderable.h>
 #include <mir/compositor/destination_alpha.h>
-#include <mir/compositor/recently_used_cache.h>
 #include <mir/log.h>
 #include <cmath>
 
@@ -183,10 +182,7 @@ DemoRenderer::DemoRenderer(
     compositor::DestinationAlpha dest_alpha,
     float const titlebar_height,
     float const shadow_radius) :
-    GLRenderer(
-        std::unique_ptr<graphics::GLTextureCache>(new compositor::RecentlyUsedCache()),
-        display_area,
-        dest_alpha),
+    GLRenderer(display_area, dest_alpha),
     titlebar_height{titlebar_height},
     shadow_radius{shadow_radius},
     corner_radius{0.5f},
@@ -221,7 +217,7 @@ DemoRenderer::~DemoRenderer()
 
 void DemoRenderer::begin(DecorMap&& d) const
 {
-    decor_map = d;
+    decor_map = std::move(d);
     title_cache.drop_unused();
     title_cache.mark_all_unused();
 }
@@ -236,7 +232,7 @@ void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
         auto& decor = d->second;
         tessellate_shadow(primitives, renderable, shadow_radius);
         tessellate_frame(primitives, renderable, titlebar_height,
-                         decor.name.c_str());
+                         decor->name.c_str());
     }
 }
 

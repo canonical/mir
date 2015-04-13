@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_WINDOW_MANAGER_H_
 
 #include "mir/shell/window_manager.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/scene/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
@@ -46,12 +47,13 @@ struct MockWindowManager : shell::WindowManager
         scene::SurfaceCreationParameters const& params,
         std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build));
 
+    MOCK_METHOD3(modify_surface, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, shell::SurfaceSpecification const&));
     MOCK_METHOD2(remove_surface, void(std::shared_ptr<scene::Session> const&, std::weak_ptr<scene::Surface> const&));
 
     MOCK_METHOD1(add_display, void(geometry::Rectangle const&));
     MOCK_METHOD1(remove_display, void(geometry::Rectangle const&));
 
-    MOCK_METHOD1(handle_key_event, bool(MirKeyboardEvent const*));
+    MOCK_METHOD1(handle_keyboard_event, bool(MirKeyboardEvent const*));
     MOCK_METHOD1(handle_touch_event, bool(MirTouchEvent const*));
     MOCK_METHOD1(handle_pointer_event, bool(MirPointerEvent const*));
 

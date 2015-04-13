@@ -42,12 +42,11 @@ protected:
 };
 
 extern "C" typedef std::shared_ptr<ClientPlatform>(*CreateClientPlatform)(ClientContext* context);
-extern "C" std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context);
-
 extern "C" typedef bool (*ClientPlatformProbe)(ClientContext* context);
-extern "C" bool is_appropriate_module(ClientContext* context);
+}
+}
 
-}
-}
+extern "C" std::shared_ptr<mir::client::ClientPlatform> create_client_platform(mir::client::ClientContext* context);
+extern "C" bool is_appropriate_module(mir::client::ClientContext* context);
 
 #endif /* MIR_CLIENT_CLIENT_PLATFORM_FACTORY_H_ */

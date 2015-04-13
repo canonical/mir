@@ -18,7 +18,7 @@
 
 #include "mir/shell/abstract_shell.h"
 #include "mir/shell/input_targeter.h"
-#include "mir/shell/null_window_manager.h"
+#include "mir/shell/window_manager.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session_coordinator.h"
@@ -76,6 +76,11 @@ mf::SurfaceId msh::AbstractShell::create_surface(
         };
 
     return window_manager->add_surface(session, params, build);
+}
+
+void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
+{
+    window_manager->modify_surface(session, surface, modifications);
 }
 
 void msh::AbstractShell::destroy_surface(
@@ -215,7 +220,7 @@ bool msh::AbstractShell::handle(MirEvent const& event)
     switch (mir_input_event_get_type(input_event))
     {
     case mir_input_event_type_key:
-        return window_manager->handle_key_event(mir_input_event_get_keyboard_event(input_event));
+        return window_manager->handle_keyboard_event(mir_input_event_get_keyboard_event(input_event));
 
     case mir_input_event_type_touch:
         return window_manager->handle_touch_event(mir_input_event_get_touch_event(input_event));

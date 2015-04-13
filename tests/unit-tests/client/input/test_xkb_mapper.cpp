@@ -17,6 +17,7 @@
  */
 
 #include "mir/input/xkb_mapper.h"
+#include "mir/events/event_private.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 #include <xkbcommon/xkbcommon.h>

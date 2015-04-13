@@ -16,14 +16,12 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
+#include "mir/events/event_private.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/legacy_surface_change_notification.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/scene/surface_creation_parameters.h"
-#include "mir/scene/surface_configurator.h"
 #include "mir/scene/surface_event_source.h"
 #include "mir/input/input_channel.h"
 

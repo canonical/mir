@@ -39,6 +39,8 @@ set(
   test_input_device_hub.cpp
   test_latency.cpp
   test_shell_control_of_surface_configuration.cpp
+  test_render_override.cpp
+  test_surface_modifications.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")

@@ -16,6 +16,8 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#define _POSIX_C_SOURCE 200112L  // for setenv() from stdlib.h
+
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/events/input/input_event.h"
 
@@ -25,6 +27,7 @@
 #include <stdlib.h>
 #include <unistd.h>  /* sleep() */
 #include <string.h>
+#include <pthread.h>
 
 #define BYTES_PER_PIXEL(f) ((f) == mir_pixel_format_bgr_888 ? 3 : 4)
 #define MIN(a, b) ((a) <= (b) ? (a) : (b))
@@ -34,13 +37,19 @@ typedef struct
     uint8_t r, g, b, a;
 } Color;
 
-static volatile sig_atomic_t running = 1;
+static volatile bool running = true;
+
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t change = PTHREAD_COND_INITIALIZER;
+static bool changed = true;
 
 static void shutdown(int signum)
 {
     if (running)
     {
-        running = 0;
+        running = false;
+        changed = true;
+        pthread_cond_signal(&change);
         printf("Signal %d received. Good night.\n", signum);
     }
 }
@@ -174,20 +183,9 @@ static void copy_region(const MirGraphicsRegion *dest,
     }
 }
 
-static void redraw(MirSurface *surface, const MirGraphicsRegion *canvas)
-{
-    MirGraphicsRegion backbuffer;
-    MirBufferStream *bs = mir_surface_get_buffer_stream(surface);
-
-    mir_buffer_stream_get_graphics_region(
-        bs, &backbuffer);
-    copy_region(&backbuffer, canvas);
-    mir_buffer_stream_swap_buffers_sync(
-        bs);
-}
-
 static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 {
+    (void)surface;
     MirGraphicsRegion *canvas = (MirGraphicsRegion*)context;
 
     static const Color color[] =
@@ -207,6 +205,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     };
     
     MirEventType event_type = mir_event_get_type(event);
+
+    pthread_mutex_lock(&mutex);
 
     if (event_type == mir_event_type_input)
     {
@@ -289,7 +289,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                 draw_box(canvas, x - radius, y - radius, 2*radius, &tone);
             }
     
-            redraw(surface, canvas);
+            changed = true;
         }
     }
     else if (event_type == mir_event_type_close_surface)
@@ -302,21 +302,17 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         else if (closing > 1)
         {
             printf("Oh I forgot you can't save your work. Quitting now...\n");
-            running = 0;
+            running = false;
+            changed = true;
         }
     }
     else if (event_type == mir_event_type_resize)
     {
-        /* FIXME: https://bugs.launchpad.net/mir/+bug/1194384
-         * mir_event_type_resize will arrive in a different thread to that of
-         * mir_event_type_motion, so we cannot safely redraw from this thread.
-         * Either the callbacks will need to become thread-safe, or we'd have
-         * to employ some non-trivial event queuing and inter-thread signals,
-         * which I think is beyond the scope of this example code.
-         *
-         *    redraw(surface, canvas);
-         */
+        changed = true;
     }
+
+    pthread_cond_signal(&change);
+    pthread_mutex_unlock(&mutex);
 }
 
 static const MirDisplayOutput *find_active_output(
@@ -394,6 +390,10 @@ int main(int argc, char *argv[])
         }
     }
 
+    // We do our own resampling now. We can keep up with raw input...
+    // TODO: Replace setenv with a proper Mir function (LP: #1439590)
+    setenv("MIR_CLIENT_INPUT_RATE", "0", 0);
+
     conn = mir_connect_sync(mir_socket, argv[0]);
     if (!mir_connection_is_valid(conn))
     {
@@ -466,11 +466,22 @@ int main(int argc, char *argv[])
             signal(SIGHUP, shutdown);
         
             clear_region(&canvas, &background);
-            redraw(surf, &canvas);
         
+            MirBufferStream *bs = mir_surface_get_buffer_stream(surf);
+
             while (running)
             {
-                sleep(1);  /* Is there a better way yet? */
+                MirGraphicsRegion backbuffer;
+                mir_buffer_stream_get_graphics_region(bs, &backbuffer);
+
+                pthread_mutex_lock(&mutex);
+                while (!changed)
+                    pthread_cond_wait(&change, &mutex);
+                changed = false;
+                copy_region(&backbuffer, &canvas);
+                pthread_mutex_unlock(&mutex);
+
+                mir_buffer_stream_swap_buffers_sync(bs);
             }
 
             /* Ensure canvas won't be used after it's freed */

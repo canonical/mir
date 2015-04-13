@@ -16,18 +16,26 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SHELL_NULL_WINDOW_MANAGER_H_
-#define MIR_SHELL_NULL_WINDOW_MANAGER_H_
+#ifndef MIR_SHELL_DEFAULT_WINDOW_MANAGER_H_
+#define MIR_SHELL_DEFAULT_WINDOW_MANAGER_H_
 
 #include "mir/shell/window_manager.h"
 
 namespace mir
 {
+namespace scene { class PlacementStrategy; class SessionCoordinator; }
+
 namespace shell
 {
-class NullWindowManager : public WindowManager
+class FocusController;
+
+class DefaultWindowManager : public WindowManager
 {
 public:
+    explicit DefaultWindowManager(FocusController* focus_controller,
+        std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
+
     void add_session(std::shared_ptr<scene::Session> const& session) override;
 
     void remove_session(std::shared_ptr<scene::Session> const& session) override;
@@ -37,6 +45,11 @@ public:
         scene::SurfaceCreationParameters const& params,
         std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) override;
 
+    void modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        SurfaceSpecification const& modifications) override;
+
     void remove_surface(
         std::shared_ptr<scene::Session> const& session,
         std::weak_ptr<scene::Surface> const& surface) override;
@@ -45,7 +58,7 @@ public:
 
     void remove_display(geometry::Rectangle const& area) override;
 
-    bool handle_key_event(MirKeyboardEvent const* event) override;
+    bool handle_keyboard_event(MirKeyboardEvent const* event) override;
 
     bool handle_touch_event(MirTouchEvent const* event) override;
 
@@ -56,8 +69,13 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib,
         int value) override;
+
+private:
+    FocusController* const focus_controller;
+    std::shared_ptr<scene::PlacementStrategy> const placement_strategy;
+    std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
 };
 }
 }
 
-#endif /* MIR_SHELL_NULL_WINDOW_MANAGER_H_ */
+#endif /* MIR_SHELL_DEFAULT_WINDOW_MANAGER_H_ */

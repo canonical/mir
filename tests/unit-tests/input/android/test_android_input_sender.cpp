@@ -16,7 +16,7 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+#include "mir/events/event_private.h"
 
 #include "src/server/input/android/android_input_channel.h"
 #include "src/server/input/android/input_sender.h"
