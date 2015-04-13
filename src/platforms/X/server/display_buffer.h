@@ -25,8 +25,7 @@
 //#include "mir/graphics/gl_program_factory.h"
 //#include "display_configuration.h"
 
-#include <X11/Xlib.h>
-#include <GL/glx.h>
+#include <EGL/egl.h>
 
 namespace mir
 {
@@ -38,7 +37,7 @@ namespace X
 class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    DisplayBuffer(geometry::Size size, ::Display *d, Window w, GLXContext g);
+	DisplayBuffer(geometry::Size const sz, EGLDisplay const d, EGLSurface const s, EGLContext const c);
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
@@ -50,10 +49,10 @@ public:
     bool uses_alpha() const override;
 
 private:
-    geometry::Size size;
-    ::Display     *dpy;
-    Window         win;
-    GLXContext     glc;
+    geometry::Size const size;
+    EGLDisplay const egl_dpy;
+    EGLSurface const egl_surf;
+    EGLContext const egl_ctx;
 };
 
 }

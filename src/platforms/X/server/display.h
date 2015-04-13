@@ -24,7 +24,8 @@
 #include "display_group.h"
 
 #include <X11/Xlib.h>
-#include <GL/glx.h>
+#include <X11/Xutil.h>
+#include <EGL/egl.h>
 
 namespace mir
 {
@@ -60,14 +61,21 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
-    ::Display         *dpy;
+    ::Display     *x_dpy;
+    EGLDisplay     egl_dpy;
+    EGLContext     egl_ctx;
+    EGLSurface     egl_surf;
+    Window         win;
+    MirPixelFormat pf;
+    int const      display_width;
+    int const      display_height;
+#if 0
     XVisualInfo       *vi;
     Colormap          cmap;
-    Window            win;
     Window            root;
     GLXContext        glc;
     XWindowAttributes gwa;
-    MirPixelFormat    pf;
+#endif
     std::unique_ptr<DisplayGroup> display_group;
 //    std::mutex mutable configuration_mutex;
 //    bool mutable configuration_dirty{false};

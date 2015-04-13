@@ -59,9 +59,7 @@ const GLchar* const mc::GLRenderer::vshader =
 
 const GLchar* const mc::GLRenderer::alpha_fshader =
 {
-#ifdef GL_ES
     "precision mediump float;\n"
-#endif
     "uniform sampler2D tex;\n"
     "uniform float alpha;\n"
     "varying vec2 v_texcoord;\n"
@@ -73,9 +71,7 @@ const GLchar* const mc::GLRenderer::alpha_fshader =
 
 const GLchar* const mc::GLRenderer::default_fshader =
 {   // This is the fastest fragment shader. Use it when you can.
-#ifdef GL_ES
     "precision mediump float;\n"
-#endif
     "uniform sampler2D tex;\n"
     "varying vec2 v_texcoord;\n"
     "void main() {\n"

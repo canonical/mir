@@ -19,13 +19,17 @@
 
 #include "display_buffer.h"
 #include "../debug.h"
+#include <boost/throw_exception.hpp>
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-mgx::DisplayBuffer::DisplayBuffer(geometry::Size s, ::Display *d, Window w, GLXContext g)
-    : size{s}, dpy{d}, win{w}, glc{g}
+mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
+		                          EGLDisplay const d,
+                                  EGLSurface const s,
+                                  EGLContext const c)
+                                  : size{sz}, egl_dpy{d}, egl_surf{s}, egl_ctx{c}
 {
 	CALLED
 }
@@ -42,13 +46,15 @@ geom::Rectangle mgx::DisplayBuffer::view_area() const
 void mgx::DisplayBuffer::make_current()
 {
 	CALLED
-    glXMakeCurrent(dpy, win, glc);
+    if (!eglMakeCurrent(egl_dpy, egl_surf, egl_surf, egl_ctx))
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot make current"));
 }
 
 void mgx::DisplayBuffer::release_current()
 {
 	CALLED
-    glXMakeCurrent(dpy, None, NULL);
+    if (!eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot make uncurrent"));
 }
 
 bool mgx::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& /*renderlist*/)
@@ -60,7 +66,8 @@ bool mgx::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& /
 void mgx::DisplayBuffer::gl_swap_buffers()
 {
 	CALLED
-    glXSwapBuffers(dpy, win);
+	if (!eglSwapBuffers(egl_dpy, egl_surf))
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot swap"));
 }
 
 MirOrientation mgx::DisplayBuffer::orientation() const

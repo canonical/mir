@@ -40,7 +40,9 @@ target_link_libraries(
   mirplatformgraphicsX
 
   mirplatform
-  GL
+  EGL
+  GLESv2
+  X11
 #  ${Boost_PROGRAM_OPTIONS_LIBRARY}
 #  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 #  ${GBM_LDFLAGS} ${GBM_LIBRARIES}

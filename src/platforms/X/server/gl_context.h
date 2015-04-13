@@ -20,13 +20,9 @@
 #ifndef MIR_GRAPHICS_X_GL_CONTEXT_H_
 #define MIR_GRAPHICS_X_GL_CONTEXT_H_
 
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
-#include <GL/glu.h>
-
 #include "mir/graphics/gl_context.h"
+
+#include <EGL/egl.h>
 
 namespace mir
 {
@@ -38,15 +34,15 @@ namespace X
 class XGLContext : public graphics::GLContext
 {
 public:
-	XGLContext(::Display* const display, Window const win, GLXContext const glc);
+	XGLContext(EGLDisplay const d, EGLSurface const s, EGLContext const c);
 	~XGLContext();
     void make_current() const override;
     void release_current() const override;
 
 private:
-    ::Display *dpy;
-    Window     win;
-    GLXContext glc;
+    EGLDisplay const egl_dpy;
+    EGLSurface const egl_surf;
+    EGLContext const egl_ctx;
 };
 
 }

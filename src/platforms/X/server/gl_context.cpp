@@ -19,14 +19,16 @@
 
 #include "gl_context.h"
 #include "../debug.h"
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
 
-mgx::XGLContext::XGLContext(::Display* const dpy, Window const win, GLXContext const glc) :
-    dpy{dpy},
-    win{win},
-    glc{glc}
+mgx::XGLContext::XGLContext(EGLDisplay const d, EGLSurface const s, EGLContext const c)
+    : egl_dpy{d},
+      egl_surf{s},
+      egl_ctx{c}
 {
     CALLED
 }
@@ -34,17 +36,18 @@ mgx::XGLContext::XGLContext(::Display* const dpy, Window const win, GLXContext c
 mgx::XGLContext::~XGLContext()
 {
     CALLED
-    dpy = NULL;
 }
 
 void mgx::XGLContext::make_current() const
 {
     CALLED
-    glXMakeCurrent(dpy, win, glc);
+    if (!eglMakeCurrent(egl_dpy, egl_surf, egl_surf, egl_ctx))
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot make current"));
 }
 
 void mgx::XGLContext::release_current() const
 {
     CALLED
-    glXMakeCurrent(dpy, None, NULL);
+    if (!eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot make uncurrent"));
 }
