@@ -247,9 +247,12 @@ std::unique_ptr<mg::Buffer> mgm::BufferAllocator::reconstruct_from(
     std::shared_ptr<gbm_bo> bo(
         gbm_bo_import(device, GBM_BO_IMPORT_FD, &data, package->flags),
         [](gbm_bo* bo){ gbm_bo_destroy(bo); });
+
     if (!bo)
+    {
         BOOST_THROW_EXCEPTION(
             std::system_error(errno, std::system_category(), "Failed to import MirBufferPackage"));
+    }
 
     return std::make_unique<mgm::GBMBuffer>(
         bo,
