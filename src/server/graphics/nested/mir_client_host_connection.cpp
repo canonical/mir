@@ -76,9 +76,9 @@ public:
             mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(mir_surface)));
     }
 
-    void set_event_handler(MirEventDelegate const* handler) override
+    void set_event_handler(mir_surface_event_callback cb, void* context) override
     {
-        mir_surface_set_event_handler(mir_surface, handler);
+        mir_surface_set_event_handler(mir_surface, cb, context);
     }
 
 private:

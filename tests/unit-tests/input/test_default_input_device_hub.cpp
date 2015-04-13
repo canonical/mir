@@ -233,7 +233,8 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 {
     using namespace ::testing;
     int64_t arbitrary_timestamp = 0;
-    auto event = mir::events::make_event(0, arbitrary_timestamp, mir_key_input_event_action_down, 0, KEY_A, mir_input_event_modifier_none);
+    int64_t unset_input_device_id = 0;
+    auto event = mir::events::make_event(unset_input_device_id, arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_A, mir_input_event_modifier_none);
 
     mi::InputSink* sink;
     mi::InputDeviceInfo info;
@@ -263,23 +264,23 @@ TEST_F(InputDeviceHubTest, forwards_touch_spots_to_visualizer)
     using namespace ::testing;
     int64_t arbitrary_timestamp = 0;
     auto touch_event_1 = mir::events::make_event(0, arbitrary_timestamp, mir_input_event_modifier_none);
-    mir::events::add_touch(*touch_event_1, 0, mir_touch_input_event_action_down, mir_touch_input_tool_type_finger,
+    mir::events::add_touch(*touch_event_1, 0, mir_touch_action_down, mir_touch_tooltype_finger,
                            21.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
 
     auto touch_event_2 = mir::events::make_event(0, arbitrary_timestamp, mir_input_event_modifier_none);
-    mir::events::add_touch(*touch_event_2, 0, mir_touch_input_event_action_change, mir_touch_input_tool_type_finger,
+    mir::events::add_touch(*touch_event_2, 0, mir_touch_action_change, mir_touch_tooltype_finger,
                            24.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
-    mir::events::add_touch(*touch_event_2, 1, mir_touch_input_event_action_down, mir_touch_input_tool_type_finger,
+    mir::events::add_touch(*touch_event_2, 1, mir_touch_action_down, mir_touch_tooltype_finger,
                            60.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
 
     auto touch_event_3 = mir::events::make_event(0, arbitrary_timestamp, mir_input_event_modifier_none);
-    mir::events::add_touch(*touch_event_3, 0, mir_touch_input_event_action_up, mir_touch_input_tool_type_finger, 24.0f,
+    mir::events::add_touch(*touch_event_3, 0, mir_touch_action_up, mir_touch_tooltype_finger, 24.0f,
                            34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
-    mir::events::add_touch(*touch_event_3, 1, mir_touch_input_event_action_change, mir_touch_input_tool_type_finger,
+    mir::events::add_touch(*touch_event_3, 1, mir_touch_action_change, mir_touch_tooltype_finger,
                            70.0f, 30.0f, 50.0f, 15.0f, 5.0f, 4.0f);
 
     auto touch_event_4 = mir::events::make_event(0, arbitrary_timestamp, mir_input_event_modifier_none);
-    mir::events::add_touch(*touch_event_4, 1, mir_touch_input_event_action_up, mir_touch_input_tool_type_finger, 70.0f,
+    mir::events::add_touch(*touch_event_4, 1, mir_touch_action_up, mir_touch_tooltype_finger, 70.0f,
                            35.0f, 50.0f, 15.0f, 5.0f, 4.0f);
 
     mi::InputSink* sink;

@@ -215,8 +215,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         static float max_pressure = 1.0f;
 
         MirInputEvent const* input_event = mir_event_get_input_event(event);
-        MirTouchInputEvent const* tev = NULL;
-        MirPointerInputEvent const* pev = NULL;
+        MirTouchEvent const* tev = NULL;
+        MirPointerEvent const* pev = NULL;
         unsigned touch_count = 0;
         bool ended = false;
         MirInputEventType type = mir_input_event_get_type(input_event);
@@ -224,18 +224,17 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         switch (type)
         {
         case mir_input_event_type_touch:
-            tev = mir_input_event_get_touch_input_event(input_event);
-            touch_count = mir_touch_input_event_get_touch_count(tev);
+            tev = mir_input_event_get_touch_event(input_event);
+            touch_count = mir_touch_event_point_count(tev);
             ended = touch_count == 1 &&
-                    (mir_touch_input_event_get_touch_action(tev, 0) ==
-                     mir_touch_input_event_action_up);
+                    (mir_touch_event_action(tev, 0) == mir_touch_action_up);
             break;
         case mir_input_event_type_pointer:
-            pev = mir_input_event_get_pointer_input_event(input_event);
-            ended = mir_pointer_input_event_get_action(pev) ==
-                mir_pointer_input_event_action_button_up;
-            touch_count = mir_pointer_input_event_get_button_state(pev,
-                               mir_pointer_input_button_primary) ? 1 : 0;
+            pev = mir_input_event_get_pointer_event(input_event);
+            ended = mir_pointer_event_action(pev) ==
+                    mir_pointer_action_button_up;
+            touch_count = mir_pointer_event_button_state(pev,
+                               mir_pointer_button_primary) ? 1 : 0;
         default:
             break;
         }
@@ -262,22 +261,18 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 
                 if (tev != NULL)
                 {
-                    x = mir_touch_input_event_get_touch_axis_value(tev, p,
-                        mir_touch_input_axis_x);
-                    y = mir_touch_input_event_get_touch_axis_value(tev, p,
-                        mir_touch_input_axis_y);
-                    float size = mir_touch_input_event_get_touch_axis_value(
-                        tev, p, mir_touch_input_axis_size);
-                    pressure = mir_touch_input_event_get_touch_axis_value(tev,
-                        p, mir_touch_input_axis_pressure);
+                    x = mir_touch_event_axis_value(tev, p, mir_touch_axis_x);
+                    y = mir_touch_event_axis_value(tev, p, mir_touch_axis_y);
+                    float size = mir_touch_event_axis_value(tev, p,
+                                                          mir_touch_axis_size);
+                    pressure = mir_touch_event_axis_value(tev, p,
+                                                      mir_touch_axis_pressure);
                     radius = size * 50.0f + 1.0f;
                 }
                 else if (pev != NULL)
                 {
-                    x = mir_pointer_input_event_get_axis_value(pev,
-                        mir_pointer_input_axis_x);
-                    y = mir_pointer_input_event_get_axis_value(pev,
-                        mir_pointer_input_axis_y);
+                    x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x);
+                    y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y);
                     pressure = 0.5f;
                     radius = 5;
                 }
@@ -353,7 +348,6 @@ int main(int argc, char *argv[])
     MirConnection *conn;
     MirSurface *surf;
     MirGraphicsRegion canvas;
-    MirEventDelegate delegate = {&on_event, &canvas};
     unsigned int f;
     int swap_interval = 0;
 
@@ -455,8 +449,9 @@ int main(int argc, char *argv[])
 
     if (surf != NULL)
     {
+        mir_surface_set_title(surf, "Mir Fingerpaint");
         mir_surface_set_swapinterval(surf, swap_interval);
-        mir_surface_set_event_handler(surf, &delegate);
+        mir_surface_set_event_handler(surf, &on_event, &canvas);
     
         canvas.width = width;
         canvas.height = height;
@@ -479,7 +474,7 @@ int main(int argc, char *argv[])
             }
 
             /* Ensure canvas won't be used after it's freed */
-            mir_surface_set_event_handler(surf, NULL);
+            mir_surface_set_event_handler(surf, NULL, NULL);
             free(canvas.vaddr);
         }
         else

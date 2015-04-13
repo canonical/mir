@@ -171,18 +171,18 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::update_spots(MirInputEvent con
     if (mir_input_event_get_type(event) != mir_input_event_type_touch)
         return;
 
-    auto const* touch_event = mir_input_event_get_touch_input_event(event);
-    auto count = mir_touch_input_event_get_touch_count(touch_event);
+    auto const* touch_event = mir_input_event_get_touch_event(event);
+    auto count = mir_touch_event_point_count(touch_event);
     touch_spots.reserve(count);
     touch_spots.clear();
     for (decltype(count) i = 0; i != count; ++i)
     {
-        if (mir_touch_input_event_get_touch_action(touch_event, i) == mir_touch_input_event_action_up)
+        if (mir_touch_event_action(touch_event, i) == mir_touch_action_up)
             continue;
         touch_spots.push_back(mi::TouchVisualizer::Spot{
-            {mir_touch_input_event_get_touch_axis_value(touch_event, i, mir_touch_input_axis_x),
-             mir_touch_input_event_get_touch_axis_value(touch_event, i, mir_touch_input_axis_y)},
-            mir_touch_input_event_get_touch_axis_value(touch_event, i, mir_touch_input_axis_pressure)});
+            {mir_touch_event_axis_value(touch_event, i, mir_touch_axis_x),
+             mir_touch_event_axis_value(touch_event, i, mir_touch_axis_y)},
+            mir_touch_event_axis_value(touch_event, i, mir_touch_axis_pressure)});
     }
 
     hub->update_spots();

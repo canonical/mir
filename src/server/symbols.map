@@ -86,6 +86,7 @@ MIR_SERVER_31 {
     mir::scene::NullSurfaceObserver::reception_mode_set_to*;
     mir::scene::NullSurfaceObserver::resized_to*;
     mir::scene::NullSurfaceObserver::transformation_set_to*;
+    mir::scene::NullSurfaceObserver::renamed*;
     mir::scene::Observer::?Observer*;
     mir::scene::Observer::Observer*;
     mir::scene::Observer::operator*;
@@ -158,6 +159,7 @@ MIR_SERVER_31 {
     mir::Server::override_the_session_mediator_report*;
     mir::Server::override_the_shell*;
     mir::Server::override_the_surface_configurator*;
+    mir::Server::override_the_window_manager_builder*;
     mir::Server::run*;
     mir::Server::Server*;
     mir::Server::set_command_line*;
@@ -522,6 +524,21 @@ MIR_SERVER_31 {
     vtable?for?mir::compositor::RecentlyUsedCache;
 
 # these symbols are needed by the test framework but are not intended to be public
+    mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
+    mir::shell::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_place_new_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_new_surface*;
+    mir::shell::CanonicalSurfaceInfo::CanonicalSurfaceInfo*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_delete_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_key_event*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
+    mir::shell::DefaultWindowManager::DefaultWindowManager*;
+
     mir::DefaultServerConfiguration::clock*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
     mir::DefaultServerConfiguration::is_key_repeat_enabled*;
@@ -613,6 +630,7 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_surface_factory*;
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
+    mir::DefaultServerConfiguration::the_window_manager_builder*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
     mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;

@@ -117,17 +117,17 @@ void msh::DefaultWindowManager::remove_display(geometry::Rectangle const& /*area
 {
 }
 
-bool msh::DefaultWindowManager::handle_key_event(MirKeyInputEvent const* /*event*/)
+bool msh::DefaultWindowManager::handle_key_event(MirKeyboardEvent const* /*event*/)
 {
     return false;
 }
 
-bool msh::DefaultWindowManager::handle_touch_event(MirTouchInputEvent const* /*event*/)
+bool msh::DefaultWindowManager::handle_touch_event(MirTouchEvent const* /*event*/)
 {
     return false;
 }
 
-bool msh::DefaultWindowManager::handle_pointer_event(MirPointerInputEvent const* /*event*/)
+bool msh::DefaultWindowManager::handle_pointer_event(MirPointerEvent const* /*event*/)
 {
     return false;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,8 +16,10 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
-#include "mir/scene/placement_strategy.h"
+#include "mir/shell/shell_wrapper.h"
 
 #include "mir_test_framework/headless_test.h"
 #include "mir_test_framework/any_surface.h"
@@ -29,20 +31,26 @@
 #include <gmock/gmock.h>
 
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 
 namespace mtf = mir_test_framework;
 
 namespace
 {
-class SimpleConfigurablePlacementStrategy : public ms::PlacementStrategy
+class SimpleConfigurablePlacementShell : public msh::ShellWrapper
 {
 public:
-    ms::SurfaceCreationParameters place(ms::Session const& /*session*/,
-                                        ms::SurfaceCreationParameters const& request_parameters) override
+    using msh::ShellWrapper::ShellWrapper;
+
+    mir::frontend::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
     {
-        return ms::SurfaceCreationParameters(request_parameters)
-            .of_position(placement.top_left)
-            .of_size(placement.size);
+        auto const result = msh::ShellWrapper::create_surface(session, params);
+        auto const surface = session->surface(result);
+
+        surface->move_to(placement.top_left);
+        surface->resize(placement.size);
+
+        return result;
     }
 
     mir::geometry::Rectangle placement{{0, 0}, {100, 100}};
@@ -62,7 +70,12 @@ public:
     {
         add_to_environment("MIR_SERVER_NO_FILE", "");
 
-        server.override_the_placement_strategy([&]{ return placement_strategy; });
+        server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
+        {
+            return placement_strategy =
+                std::make_shared<SimpleConfigurablePlacementShell>(wrapped);
+        });
+
         mtf::HeadlessTest::SetUp();
     }
 
@@ -107,8 +120,7 @@ public:
     MirConnection* connection{nullptr};
 
 private:
-    std::shared_ptr<SimpleConfigurablePlacementStrategy> const placement_strategy
-        {std::make_shared<SimpleConfigurablePlacementStrategy>()};
+    std::shared_ptr<SimpleConfigurablePlacementShell> placement_strategy;
 };
 }
 

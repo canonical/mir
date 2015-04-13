@@ -100,10 +100,7 @@ TEST_F(CustomInputTargeter, receives_focus_changes)
             using namespace ::testing;
             auto const targeter = the_input_targeter_mock();
 
-            InSequence seq;
-            EXPECT_CALL(*targeter, focus_cleared()).Times(1);
-            EXPECT_CALL(*targeter, focus_changed(_)).Times(1);
-            EXPECT_CALL(*targeter, focus_cleared()).Times(1)
+            EXPECT_CALL(*targeter, focus_changed(_)).Times(1)
                 .WillOnce(InvokeWithoutArgs([this] { dispatching_done.signal_ready(); }));
         }
     } server_config;

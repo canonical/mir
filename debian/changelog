@@ -1,19 +1,37 @@
 mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release 0.13.0 (https://launchpad.net/mir/+milestone/0.13.0)
+    - Very large release as the previous 0.12 series contained only minimal
+      bug fixes...
     - Enhancements:
-      . Switched from always triple buffers to always double buffers. This
-        visibly reduces latency and resource usage. It only just became
-        possible to make this switch recently after bug fixes that landed.
+      . New demo client for input testing: mir_demo_client_eglsquare
+      . Large window management redesign in libmirserver.
+      . Introduce "buffer streams" properly. This is a generalization of the
+        most basic functionality of a surface.
+      . Log useful OpenGL information on server start-up.
+      . Added client API support for constructing input method surfaces.
+      . Switched default behaviour from triple to double buffering to reduce
+        latency. This is also configurable by --nbuffers=N for demo servers or
+        environment MIR_SERVER_NBUFFERS=N for any server.
+      . Added experimental environment variable MIR_CLIENT_INPUT_RATE=Hz for
+        tweaking the input resampling rate a client experiences (0 = off).
+      . Added keymap setting support for surfaces.
+      . Improved automated testing of latency.
+      . Removed automated ABI-checking tests that used SHA1. More reliable
+        ABI checking is coming but not yet automated.
+      . Added support and example code for rendering window title strings.
+      . Added proof-of-concept support for Snappy packaging for Ubuntu Core.
+      . Drop support for C++11. Now C++14 is required to build Mir.
+      . Deprecated MirEventDelegate. Now you just pass the two fields as
+        parameters directly to mir_surface_set_event_handler().
       . TODO: mention more enhancements
     - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8
       . Mircommon ABI bumped to 4
       . Mirplatform ABI bumped to 7
-      . Mirserver ABI bumped to 31  (TODO 30 is in series 0.12)
+      . Mirserver ABI bumped to 31
     - Bug fixes:
       . TODO: insert bug fix info at time of release.
-    - TODO: Merge final 0.12.0 changelog entry below this one when ready.
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 12 Feb 2015 10:12:11 +0800
 

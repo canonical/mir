@@ -67,7 +67,7 @@ private:
         }
 
     private:
-        MirPointerInputEventAction update_buttons(synthesis::EventAction action, int button);
+        MirPointerAction update_buttons(synthesis::EventAction action, int button);
         void update_position(int rel_x, int rel_y);
         void map_touch_coordinates(int& x, int& y);
 
@@ -76,7 +76,7 @@ private:
         std::shared_ptr<mir::dispatch::Dispatchable> const queue;
         uint32_t modifiers{0};
         mir::geometry::Point pos, scroll;
-        std::vector<MirPointerInputEventButton> buttons;
+        std::vector<MirPointerButton> buttons;
     };
     std::shared_ptr<mir::dispatch::ActionQueue> queue;
     std::shared_ptr<InputDevice> device;

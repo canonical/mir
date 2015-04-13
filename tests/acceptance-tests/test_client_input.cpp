@@ -56,8 +56,7 @@ struct TestClientInputNew : mtf::ConnectedClientWithASurface
     {
         ConnectedClientWithASurface::SetUp();
 
-        MirEventDelegate const event_delegate { handle_input, this };
-        mir_surface_set_event_handler(surface, &event_delegate);
+        mir_surface_set_event_handler(surface, handle_input, this);
         mir_buffer_stream_swap_buffers_sync(
             mir_surface_get_buffer_stream(surface));
 

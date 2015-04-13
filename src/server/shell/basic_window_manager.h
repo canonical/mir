@@ -16,8 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
-#define MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
+#ifndef MIR_SHELL_BASIC_WINDOW_MANAGER_H_
+#define MIR_SHELL_BASIC_WINDOW_MANAGER_H_
 
 #include "mir/geometry/rectangles.h"
 #include "mir/scene/session.h"
@@ -29,15 +29,10 @@
 #include <map>
 #include <mutex>
 
-///\example server_example_basic_window_manager.h
-/// A generic policy-based window manager implementation
-
 namespace mir
 {
-namespace examples
+namespace shell
 {
-using shell::SurfaceSet;
-
 template<typename Info>
 struct SurfaceTo
 {
@@ -53,9 +48,8 @@ struct SessionTo
 /// The interface through which the policy instructs the controller.
 /// These functions assume that the BasicWindowManager data structures can be accessed freely.
 /// I.e. should only be invoked by the policy handle_... methods (where any necessary locks are held).
-// TODO extract commonality with FocusController (once that's separated from shell::FocusController)
 template<typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManagerToolsCopy
+class BasicWindowManagerTools
 {
 public:
     virtual auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
@@ -65,9 +59,9 @@ public:
 
     virtual auto info_for(std::weak_ptr<scene::Surface> const& surface) const -> SurfaceInfo& = 0;
 
-    virtual std::shared_ptr<scene::Session> focused_session() const = 0;
+    virtual auto focused_session() const -> std::shared_ptr<scene::Session> = 0;
 
-    virtual std::shared_ptr<scene::Surface> focused_surface() const = 0;
+    virtual auto focused_surface() const -> std::shared_ptr<scene::Surface> = 0;
 
     virtual void focus_next() = 0;
 
@@ -79,10 +73,10 @@ public:
 
     virtual void raise(SurfaceSet const& surfaces) = 0;
 
-    virtual ~BasicWindowManagerToolsCopy() = default;
-    BasicWindowManagerToolsCopy() = default;
-    BasicWindowManagerToolsCopy(BasicWindowManagerToolsCopy const&) = delete;
-    BasicWindowManagerToolsCopy& operator=(BasicWindowManagerToolsCopy const&) = delete;
+    virtual ~BasicWindowManagerTools() = default;
+    BasicWindowManagerTools() = default;
+    BasicWindowManagerTools(BasicWindowManagerTools const&) = delete;
+    BasicWindowManagerTools& operator=(BasicWindowManagerTools const&) = delete;
 };
 
 /// A policy based window manager.
@@ -98,28 +92,28 @@ public:
 /// - void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface);
 /// - void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/);
 /// - int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value);
-/// - bool handle_key_event(MirKeyboardEvent const* event);
-/// - bool handle_touch_event(MirTouchEvent const* event);
-/// - bool handle_pointer_event(MirPointerEvent const* event);
+/// - bool handle_key_event(MirKeyInputEvent const* event);
+/// - bool handle_touch_event(MirTouchInputEvent const* event);
+/// - bool handle_pointer_event(MirPointerInputEvent const* event);
 ///
 /// \tparam SessionInfo must be default constructable.
 ///
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
-class BasicWindowManagerCopy : public shell::WindowManager,
-    private BasicWindowManagerToolsCopy<SessionInfo, SurfaceInfo>
+class BasicWindowManager : public WindowManager,
+    private BasicWindowManagerTools<SessionInfo, SurfaceInfo>
 {
 public:
     template <typename... PolicyArgs>
-    BasicWindowManagerCopy(
-        shell::FocusController* focus_controller,
+    BasicWindowManager(
+        FocusController* focus_controller,
         PolicyArgs&&... policy_args) :
         focus_controller(focus_controller),
         policy(this, std::forward<PolicyArgs>(policy_args)...)
     {
     }
 
-private:
+protected:
     void add_session(std::shared_ptr<scene::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -143,10 +137,8 @@ private:
         scene::SurfaceCreationParameters const placed_params = policy.handle_place_new_surface(session, params);
         auto const result = build(session, placed_params);
         auto const surface = session->surface(result);
-        surface_info.emplace(surface, SurfaceInfo{session, surface});
         policy.handle_new_surface(session, surface);
-        for (auto& decoration : policy.generate_decorations_for(session, surface))
-            surface_info.emplace(decoration, SurfaceInfo{session, decoration});
+        surface_info.emplace(surface, SurfaceInfo{session, surface});
         return result;
     }
 
@@ -235,12 +227,12 @@ private:
         return const_cast<SurfaceInfo&>(surface_info.at(surface));
     }
 
-    std::shared_ptr<scene::Session> focused_session() const override
+    auto focused_session() const -> std::shared_ptr<scene::Session> override
     {
         return focus_controller->focused_session();
     }
 
-    std::shared_ptr<scene::Surface> focused_surface() const override
+    auto focused_surface() const -> std::shared_ptr<scene::Surface> override
     {
         return focus_controller->focused_surface();
     }
@@ -267,7 +259,7 @@ private:
         focus_controller->raise(surfaces);
     }
 
-    shell::FocusController* const focus_controller;
+    FocusController* const focus_controller;
     WindowManagementPolicy policy;
 
     std::mutex mutex;
@@ -278,4 +270,4 @@ private:
 }
 }
 
-#endif /* MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_ */
+#endif /* MIR_SHELL_BASIC_WINDOW_MANAGER_H_ */

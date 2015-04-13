@@ -21,7 +21,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/main_loop.h"
-#include "mir/shell/focus_controller.h"
+#include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/shell/host_lifecycle_event_listener.h"
 
@@ -190,7 +190,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
     void trigger_lifecycle_event(MirLifecycleState const lifecycle_state)
     {
-        auto const app = server.the_focus_controller()->focused_session();
+        auto const app = server.the_session_coordinator()->successor_of({});
 
         EXPECT_TRUE(app != nullptr) << "Nested server not connected";
 
