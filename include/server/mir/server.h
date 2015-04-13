@@ -295,8 +295,6 @@ public:
     auto the_gl_config() const -> std::shared_ptr<graphics::GLConfig>;
 
     /// \return the graphics platform.
-    //server.override_the_input_dispatcher(
-    //);
     auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
 
     /// \return the input targeter.

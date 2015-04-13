@@ -16,9 +16,6 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-// only needed for event matchers:
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "src/server/input/default_input_device_hub.h"
 
 #include "mir_test_doubles/triggered_main_loop.h"
@@ -31,7 +28,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/events/event_private.h"
+//#include "mir/events/event_private.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
@@ -255,7 +252,7 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 
     observer_loop.trigger_server_actions();
 
-    EXPECT_CALL(mock_dispatcher, dispatch(AllOf(mt::InputDeviceIdMatches(info.id), mt::MirKeyEventMatches(*event))));
+    EXPECT_CALL(mock_dispatcher, dispatch(AllOf(mt::InputDeviceIdMatches(info.id), mt::MirKeyEventMatches(event.get()))));
 
     sink->handle_input(*event);
 }
