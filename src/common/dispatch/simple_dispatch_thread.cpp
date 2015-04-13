@@ -103,6 +103,7 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
 }
 
 }
+
 md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable> const& dispatchee)
     : SimpleDispatchThread(dispatchee, []{})
 {}
