@@ -16,8 +16,6 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir/input/input_device_info.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
@@ -45,18 +43,10 @@ namespace
 {
 struct TestCustomInputDispatcher : mtf::HeadlessInProcessServer
 {
-    mtd::MockInputDispatcher input_dispatcher;
-    void SetUp() override
+    testing::NiceMock<mtd::MockInputDispatcher> input_dispatcher;
+
+    void SetUp()
     {
-        server.override_the_input_dispatcher(
-            [this]()
-            {
-                testing::InSequence seq;
-                EXPECT_CALL(input_dispatcher, start());
-                EXPECT_CALL(input_dispatcher, stop());
-                return mt::fake_shared(input_dispatcher);
-            });
-        HeadlessInProcessServer::SetUp();
     }
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
@@ -67,16 +57,25 @@ struct TestCustomInputDispatcher : mtf::HeadlessInProcessServer
         };
     mir::test::WaitCondition all_events_received;
 };
-
 }
 
 TEST_F(TestCustomInputDispatcher, gets_started_and_stopped)
 {
-    // expectations are configured in input dispatcher override
+    server.override_the_input_dispatcher(
+            [this]()
+            {
+                testing::InSequence seq;
+                EXPECT_CALL(input_dispatcher, start());
+                EXPECT_CALL(input_dispatcher, stop());
+                return mt::fake_shared(input_dispatcher);
+            });
+    start_server();
 }
 
 TEST_F(TestCustomInputDispatcher, receives_input)
 {
+    server.override_the_input_dispatcher([this](){return mt::fake_shared(input_dispatcher);});
+    start_server();
     using namespace testing;
 
     InSequence seq;
