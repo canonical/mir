@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/server/graphics/nested/nested_cursor.h"
+#include "src/server/graphics/nested/cursor.h"
 #include "mir/graphics/cursor_image.h"
 
 #include "mir_test/fake_shared.h"

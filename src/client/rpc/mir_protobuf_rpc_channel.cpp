@@ -16,8 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER // Required until wire format changes
-
 #include "mir_protobuf_rpc_channel.h"
 #include "rpc_report.h"
 
@@ -28,6 +26,7 @@
 #include "../lifecycle_control.h"
 #include "../event_sink.h"
 #include "mir/variable_length_array.h"
+#include "mir/events/event_private.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"

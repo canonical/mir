@@ -32,7 +32,11 @@
 #include "mir/thread_name.h"
 
 #include <thread>
+#include <chrono>
 #include <condition_variable>
+#include <boost/throw_exception.hpp>
+
+using namespace std::literals::chrono_literals;
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -104,13 +108,21 @@ public:
         running{true},
         frames_scheduled{0},
         display_listener{display_listener},
-        report{report}
+        report{report},
+        started_future{started.get_future()}
     {
     }
 
     void operator()() noexcept  // noexcept is important! (LP: #1237332)
     try
     {
+        ApplyIfUnwinding on_startup_failure{
+            [this]
+            {
+                if (started_future.wait_for(0s) != std::future_status::ready)
+                    started.set_exception(std::current_exception());
+            }};
+
         mir::set_thread_name("Mir/Comp");
 
         CurrentRenderingTarget target;
@@ -138,6 +150,8 @@ public:
         auto compositor_registration = mir::raii::paired_calls(
             [this,&comp_id]{scene->register_compositor(comp_id);},
             [this,&comp_id]{scene->unregister_compositor(comp_id);});
+
+        started.set_value();
 
         std::unique_lock<std::mutex> lock{run_mutex};
         while (running)
@@ -205,6 +219,12 @@ public:
         run_cv.notify_one();
     }
 
+    void wait_until_started()
+    {
+        if (started_future.wait_for(10s) != std::future_status::ready)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Compositor thread failed to start"));
+    }
+
 private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const compositor_factory;
     mg::DisplaySyncGroup& group;
@@ -215,6 +235,8 @@ private:
     std::condition_variable run_cv;
     std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
+    std::promise<void> started;
+    std::future<void> started_future;
 };
 
 }
@@ -333,6 +355,9 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     });
 
     thread_pool.shrink();
+
+    for (auto& functor : thread_functors)
+        functor->wait_until_started();
 
     state = CompositorState::started;
 }

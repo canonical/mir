@@ -16,8 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir/compositor/compositor.h"
 #include "mir/frontend/connector.h"
 #include "mir/graphics/display_configuration.h"
@@ -25,6 +23,7 @@
 #include "mir/server_action_queue.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/server_status_listener.h"
+#include "mir/events/event_private.h"
 
 #include "mir_test/pipe.h"
 #include "mir_test/wait_condition.h"
@@ -390,30 +389,30 @@ TEST(DisplayServerMainLoopEvents, display_server_components_pause_and_resume)
         InSequence s;
 
         /* Start */
-        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
         /* Pause */
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()).Times(1);
 
         /* Resume */
         EXPECT_CALL(*mock_display, resume()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
-        EXPECT_CALL(*mock_compositor, start()).Times(1);
 
         /* Stop */
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
     }
 
     mt::AutoJoinThread t;
@@ -447,23 +446,23 @@ TEST(DisplayServerMainLoopEvents, display_server_quits_when_paused)
         InSequence s;
 
         /* Start */
-        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
         /* Pause */
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()).Times(1);
 
         /* Stop */
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
     }
 
     mt::AutoJoinThread t;
@@ -496,30 +495,30 @@ TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_f
         InSequence s;
 
         /* Start */
-        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
         /* Pause failure */
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause())
             .WillOnce(Throw(std::runtime_error("")));
 
         /* Attempt to continue */
-        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
         /* Stop */
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
     }
 
     mt::AutoJoinThread t;
@@ -552,8 +551,8 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
         InSequence s;
 
         /* Start */
-        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
@@ -565,8 +564,8 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
         /* Stop */
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
     }
 
     mt::AutoJoinThread t;
@@ -600,24 +599,24 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
         InSequence s;
 
         /* Start */
-        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
         /* Pause event */
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()) .Times(1);
 
         /* Resume event */
         EXPECT_CALL(*mock_display, resume()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
-        EXPECT_CALL(*mock_compositor, start()).Times(1);
 
         /* Change configuration (after resuming) */
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
@@ -627,8 +626,8 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
         /* Stop */
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
     }
 
     mt::AutoJoinThread t;
@@ -666,8 +665,8 @@ TEST(DisplayServerMainLoopEvents, server_status_listener)
         InSequence s;
 
         /* "started" is emitted after all components have been started */
-        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
         EXPECT_CALL(*mock_server_status_listener, started()).Times(1);
@@ -675,24 +674,24 @@ TEST(DisplayServerMainLoopEvents, server_status_listener)
         /* "paused" is emitted after all components have been paused/stopped */
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()).Times(1);
         EXPECT_CALL(*mock_server_status_listener, paused()).Times(1);
 
         /* "resumed" is emitted after all components have been resumed/started */
         EXPECT_CALL(*mock_display, resume()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
-        EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_server_status_listener, resumed()).Times(1);
 
         /* Stop */
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
     }
 
     mt::AutoJoinThread t;

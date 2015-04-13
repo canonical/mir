@@ -24,6 +24,8 @@ add_library(exampleserverconfig STATIC
   server_example_host_lifecycle_event.cpp
   server_example_tiling_window_manager.cpp
   server_example_window_management.cpp
+  server_example_custom_compositor.cpp
+  server_example_adorning_compositor.cpp
 )
 
 target_link_libraries(eglapp
@@ -48,6 +50,12 @@ mir_add_wrapped_executable(mir_demo_client_egltriangle
   egltriangle.c
 )
 target_link_libraries(mir_demo_client_egltriangle
+  eglapp
+)
+mir_add_wrapped_executable(mir_demo_client_target
+  target.c
+)
+target_link_libraries(mir_demo_client_target
   eglapp
 )
 mir_add_wrapped_executable(mir_demo_client_eglcounter

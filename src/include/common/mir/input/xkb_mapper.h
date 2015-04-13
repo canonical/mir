@@ -19,8 +19,6 @@
 #ifndef MIR_INPUT_RECEIVER_XKB_MAPPER_H_
 #define MIR_INPUT_RECEIVER_XKB_MAPPER_H_
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_toolkit/event.h"
 
 #include <xkbcommon/xkbcommon.h>

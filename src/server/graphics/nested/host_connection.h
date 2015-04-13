@@ -28,8 +28,6 @@
 
 #include <EGL/egl.h>
 
-struct gbm_device;
-
 namespace mir
 {
 namespace graphics
@@ -38,22 +36,7 @@ class CursorImage;
  
 namespace nested
 {
-
-class HostSurface
-{
-public:
-    virtual ~HostSurface() = default;
-
-    virtual EGLNativeWindowType egl_native_window() = 0;
-    virtual void set_event_handler(mir_surface_event_callback cb,
-                                   void* context) = 0;
-
-protected:
-    HostSurface() = default;
-    HostSurface(HostSurface const&) = delete;
-    HostSurface& operator=(HostSurface const&) = delete;
-};
-
+class HostSurface;
 class HostConnection : public NestedContext
 {
 public:

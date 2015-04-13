@@ -16,9 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir/input/xkb_mapper.h"
+#include "mir/events/event_private.h"
 
 #include <string.h>
 

@@ -25,6 +25,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/focus_controller.h"
+#include "mir/shell/surface_specification.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -99,6 +100,16 @@ auto msh::DefaultWindowManager::add_surface(
 
     return result;
 }
+
+void msh::DefaultWindowManager::modify_surface(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& surface,
+    SurfaceSpecification const& modifications)
+{
+    if (modifications.name.is_set())
+        surface->rename(modifications.name.value());
+}
+
 
 void msh::DefaultWindowManager::remove_surface(
     std::shared_ptr<scene::Session> const& /*session*/,
