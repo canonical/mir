@@ -88,7 +88,7 @@ TYPED_TEST(StreamTransportTest, ReturnsValidWatchFd)
     EXPECT_GE(this->transport->watch_fd(), 3);
 }
 
-TYPED_TEST(StreamTransportTest, WatchFdIsPollable)
+TYPED_TEST(StreamTransportTest, watch_fd_is_pollable)
 {
     pollfd socket_readable;
     socket_readable.events = POLLIN;
@@ -100,7 +100,7 @@ TYPED_TEST(StreamTransportTest, WatchFdIsPollable)
     EXPECT_FALSE(socket_readable.revents & POLLNVAL);
 }
 
-TYPED_TEST(StreamTransportTest, WatchFdNotifiesReadableWhenDataPending)
+TYPED_TEST(StreamTransportTest, watch_fd_notifies_readable_when_data_pending)
 {
     uint64_t dummy{0xdeadbeef};
     EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
@@ -108,7 +108,7 @@ TYPED_TEST(StreamTransportTest, WatchFdNotifiesReadableWhenDataPending)
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 }
 
-TYPED_TEST(StreamTransportTest, WatchFdRemainsUnreadableUntilEventPending)
+TYPED_TEST(StreamTransportTest, watch_fd_remains_unreadable_until_event_pending)
 {
     EXPECT_FALSE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
@@ -118,7 +118,7 @@ TYPED_TEST(StreamTransportTest, WatchFdRemainsUnreadableUntilEventPending)
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 }
 
-TYPED_TEST(StreamTransportTest, WatchFdIsNoLongerReadableAfterEventProcessing)
+TYPED_TEST(StreamTransportTest, watch_fd_is_no_longer_readable_after_event_processing)
 {
     using namespace testing;
 
@@ -144,7 +144,7 @@ TYPED_TEST(StreamTransportTest, WatchFdIsNoLongerReadableAfterEventProcessing)
     EXPECT_FALSE(mt::fd_is_readable(this->test_fd));
 }
 
-TYPED_TEST(StreamTransportTest, NoEventsDispatchedUntilDispatchCalled)
+TYPED_TEST(StreamTransportTest, no_events_dispatched_until_dispatch_called)
 {
     using namespace testing;
 
@@ -180,7 +180,7 @@ TYPED_TEST(StreamTransportTest, NoEventsDispatchedUntilDispatchCalled)
     EXPECT_TRUE(disconnected);
 }
 
-TYPED_TEST(StreamTransportTest, DispatchesSingleEventAtATime)
+TYPED_TEST(StreamTransportTest, dispatches_single_event_at_a_time)
 {
     using namespace testing;
 
@@ -220,7 +220,7 @@ TYPED_TEST(StreamTransportTest, DispatchesSingleEventAtATime)
     EXPECT_TRUE(disconnected);
 }
 
-TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnect)
+TYPED_TEST(StreamTransportTest, notices_remote_disconnect)
 {
     using namespace testing;
     auto observer = std::make_shared<NiceMock<MockObserver>>();
@@ -241,7 +241,7 @@ TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnect)
     EXPECT_TRUE(disconnected);
 }
 
-TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnectWhileReading)
+TYPED_TEST(StreamTransportTest, notices_remote_disconnect_while_reading)
 {
     using namespace testing;
     auto observer = std::make_shared<NiceMock<MockObserver>>();
@@ -277,7 +277,7 @@ TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnectWhileReading)
     EXPECT_TRUE(receive_error_detected);
 }
 
-TYPED_TEST(StreamTransportTest, NotifiesOnDataAvailable)
+TYPED_TEST(StreamTransportTest, notifies_on_data_available)
 {
     using namespace testing;
 
@@ -299,7 +299,7 @@ TYPED_TEST(StreamTransportTest, NotifiesOnDataAvailable)
     EXPECT_TRUE(notified_data_available);
 }
 
-TYPED_TEST(StreamTransportTest, KeepsNotifyingOfAvailableDataUntilAllIsRead)
+TYPED_TEST(StreamTransportTest, keeps_notifying_of_available_data_until_all_data_is_read)
 {
     using namespace testing;
 
@@ -329,7 +329,7 @@ TYPED_TEST(StreamTransportTest, KeepsNotifyingOfAvailableDataUntilAllIsRead)
     EXPECT_EQ(0, bytes_left);
 }
 
-TYPED_TEST(StreamTransportTest, StopsNotifyingOnceAllDataIsRead)
+TYPED_TEST(StreamTransportTest, stops_notifying_once_all_data_is_read)
 {
     using namespace testing;
 
@@ -360,7 +360,7 @@ TYPED_TEST(StreamTransportTest, StopsNotifyingOnceAllDataIsRead)
     EXPECT_FALSE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 }
 
-TYPED_TEST(StreamTransportTest, DoesntSendDataAvailableNotificationOnDisconnect)
+TYPED_TEST(StreamTransportTest, doesnt_send_data_available_notification_on_disconnect)
 {
     using namespace testing;
 
@@ -401,7 +401,7 @@ TYPED_TEST(StreamTransportTest, DoesntSendDataAvailableNotificationOnDisconnect)
     EXPECT_TRUE(disconnected);
 }
 
-TYPED_TEST(StreamTransportTest, ReadsCorrectData)
+TYPED_TEST(StreamTransportTest, reads_correct_data)
 {
     using namespace testing;
 
@@ -428,7 +428,7 @@ TYPED_TEST(StreamTransportTest, ReadsCorrectData)
     EXPECT_EQ(0, memcmp(expected.data(), received.data(), expected.size()));
 }
 
-TYPED_TEST(StreamTransportTest, WritesCorrectData)
+TYPED_TEST(StreamTransportTest, writes_correct_data)
 {
     using namespace testing;
 
@@ -527,7 +527,7 @@ private:
 };
 }
 
-TYPED_TEST(StreamTransportTest, ReadsFullDataFromMultipleChunks)
+TYPED_TEST(StreamTransportTest, reads_full_data_from_multiple_chunks)
 {
     size_t const chunk_size{8};
     std::vector<uint8_t> expected(chunk_size * 4);
@@ -559,7 +559,7 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataFromMultipleChunks)
     EXPECT_EQ(expected, received);
 }
 
-TYPED_TEST(StreamTransportTest, ReadsFullDataWhenInterruptedWithSignals)
+TYPED_TEST(StreamTransportTest, reads_full_data_when_interrupted_with_signals)
 {
     SocketBlockThreshold sockopt{this->test_fd, this->transport_fd};
 
@@ -717,7 +717,7 @@ public:
 };
 }
 
-TYPED_TEST(StreamTransportTest, ReadsDataWithFds)
+TYPED_TEST(StreamTransportTest, reads_data_with_fds)
 {
     size_t const chunk_size{8};
     int const num_chunks{4};
@@ -768,7 +768,7 @@ TYPED_TEST(StreamTransportTest, ReadsDataWithFds)
     }
 }
 
-TYPED_TEST(StreamTransportTest, ReadsFdsFromMultipleChunks)
+TYPED_TEST(StreamTransportTest, reads_fds_from_multiple_chunks)
 {
     size_t const chunk_size{8};
     int const num_chunks{4};
@@ -826,7 +826,7 @@ TYPED_TEST(StreamTransportTest, ReadsFdsFromMultipleChunks)
     }
 }
 
-TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
+TYPED_TEST(StreamTransportTest, reads_full_data_and_fds_when_interrupted_with_signals)
 {
     SocketBlockThreshold sockopt{this->test_fd, this->transport_fd};
 
@@ -948,7 +948,7 @@ constexpr int cmsg_space_alias(int starting_fd_count, int max_count)
 }
 }
 
-TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanExpectedOnCmsgBoundaryIsAnError)
+TYPED_TEST(StreamTransportTest, receiving_more_fds_than_expected_on_cmsg_boundary_is_an_error)
 {
     constexpr int num_fds{cmsg_space_boundary(1)};
 
@@ -977,7 +977,7 @@ TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanExpectedOnCmsgBoundaryIsAnEr
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 }
 
-TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanRequestedWithSameCmsgSpaceIsAnError)
+TYPED_TEST(StreamTransportTest, receiving_more_fds_than_requested_with_same_cmsg_space_is_an_error)
 {
     constexpr int num_fds{cmsg_space_alias(1, 20)};
 
@@ -1017,7 +1017,7 @@ TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanRequestedWithSameCmsgSpaceIs
  *
  * Rad.
  */
-TYPED_TEST(StreamTransportTest, DISABLED_ReceivingMoreFdsThanExpectedInMultipleChunksRaisesException)
+TYPED_TEST(StreamTransportTest, DISABLED_receiving_more_fds_than_expected_in_multiple_chunks_raises_exception)
 {
     size_t const chunk_size{8};
     int const num_chunks{4};
@@ -1066,7 +1066,7 @@ TYPED_TEST(StreamTransportTest, DISABLED_ReceivingMoreFdsThanExpectedInMultipleC
     }
 }
 
-TYPED_TEST(StreamTransportTest, MismatchedFdExpectationsHaveAppropriateErrorMessages)
+TYPED_TEST(StreamTransportTest, mismatched_fd_expectations_have_appropriate_error_messages)
 {
     constexpr int num_fds{5};
 
@@ -1105,7 +1105,7 @@ TYPED_TEST(StreamTransportTest, MismatchedFdExpectationsHaveAppropriateErrorMess
     }
 }
 
-TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
+TYPED_TEST(StreamTransportTest, sends_full_messages_when_interrupted)
 {
     SocketBlockThreshold socketopt(this->transport_fd, this->test_fd);
 
@@ -1156,7 +1156,7 @@ TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
     EXPECT_EQ(expected, received);
 }
 
-TYPED_TEST(StreamTransportTest, ReadingZeroBytesIsAnError)
+TYPED_TEST(StreamTransportTest, reading_zero_bytes_is_an_error)
 {
     EXPECT_THROW(this->transport->receive_data(nullptr, 0),
                  std::logic_error);
@@ -1166,7 +1166,7 @@ TYPED_TEST(StreamTransportTest, ReadingZeroBytesIsAnError)
                  std::logic_error);
 }
 
-TYPED_TEST(StreamTransportTest, ReceivingDataWithoutAskingForFdsIsAnErrorWhenThereAreFds)
+TYPED_TEST(StreamTransportTest, receiving_data_without_asking_for_fds_is_an_error_when_there_are_fds)
 {
     constexpr int num_fds{1};
 
