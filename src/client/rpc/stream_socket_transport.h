@@ -39,6 +39,7 @@ class TransportObservers : public BasicObservers<StreamTransport::Observer>,
 {
 public:
     using BasicObservers<StreamTransport::Observer>::add;
+    using BasicObservers<StreamTransport::Observer>::remove;
 
     void on_data_available() override;
     void on_disconnected() override;
@@ -51,6 +52,8 @@ public:
     StreamSocketTransport(std::string const& socket_path);
 
     void register_observer(std::shared_ptr<Observer> const& observer) override;
+    void unregister_observer(std::shared_ptr<Observer> const& observer) override;
+
     void receive_data(void* buffer, size_t bytes_requested) override;
     void receive_data(void* buffer, size_t bytes_requested, std::vector<Fd>& fds) override;
     void send_message(std::vector<uint8_t> const& buffer, std::vector<mir::Fd> const& fds) override;

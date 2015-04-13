@@ -60,6 +60,11 @@ void mclr::StreamSocketTransport::register_observer(std::shared_ptr<Observer> co
     observers.add(observer);
 }
 
+void mclr::StreamSocketTransport::unregister_observer(std::shared_ptr<Observer> const& observer)
+{
+    observers.remove(observer);
+}
+
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested)
 {
     /*

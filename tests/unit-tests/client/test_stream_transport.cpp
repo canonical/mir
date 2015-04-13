@@ -439,6 +439,83 @@ TYPED_TEST(StreamTransportTest, notifies_all_observers)
     }
 }
 
+/*
+ * ThreadSafeList doesn't report any error when trying to remove a non-existent element.
+ *
+ * It probably should, but let's not do that now.
+ */
+TYPED_TEST(StreamTransportTest, DISABLED_unregistering_a_not_registered_observer_is_an_error)
+{
+    using namespace testing;
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    EXPECT_THROW(this->transport->unregister_observer(observer), std::logic_error);
+}
+
+TYPED_TEST(StreamTransportTest, unregistering_an_observer_prevents_further_observation)
+{
+    using namespace testing;
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    int notification_count{0};
+
+    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([&notification_count]()
+                                                                 { ++notification_count; }));
+    ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([&notification_count]()
+                                                               { ++notification_count; }));
+
+    this->transport->register_observer(observer);
+
+    this->transport->dispatch(md::FdEvent::readable);
+
+    EXPECT_THAT(notification_count, Eq(1));
+
+    this->transport->unregister_observer(observer);
+
+    this->transport->dispatch(md::FdEvent::readable);
+
+    // No new notification of readability...
+    EXPECT_THAT(notification_count, Eq(1));
+
+    // Likewise, no notification of disconnection.
+    this->transport->dispatch(md::FdEvent::remote_closed);
+    EXPECT_THAT(notification_count, Eq(1));
+}
+
+TYPED_TEST(StreamTransportTest, unregistering_in_a_callback_succeeds)
+{
+    using namespace testing;
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    int notification_count{0};
+
+    // Pass the observer shared_ptr by reference here to avoid a trivial reference cycle.
+    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([&notification_count, this, &observer]()
+    {
+        ++notification_count;
+        this->transport->unregister_observer(observer);
+    }));
+    ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([&notification_count]()
+    {
+        ++notification_count;
+    }));
+
+    this->transport->register_observer(observer);
+
+    this->transport->dispatch(md::FdEvent::readable);
+
+    EXPECT_THAT(notification_count, Eq(1));
+
+    this->transport->dispatch(md::FdEvent::readable);
+
+    // No new notification of readability...
+    EXPECT_THAT(notification_count, Eq(1));
+
+    // Likewise, no notification of disconnection.
+    this->transport->dispatch(md::FdEvent::remote_closed);
+    EXPECT_THAT(notification_count, Eq(1));
+}
+
 TYPED_TEST(StreamTransportTest, reads_correct_data)
 {
     using namespace testing;
