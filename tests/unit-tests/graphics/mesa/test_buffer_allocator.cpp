@@ -328,11 +328,11 @@ TEST_F(MesaBufferAllocatorTest, reconstruct_throws_with_invalid_native_type)
     native_buffer.fd_items = 0;
     EXPECT_THROW({
         auto buffer = allocator->reconstruct_from(&native_buffer, pf);
-    }, std::runtime_error);
+    }, std::logic_error);
     native_buffer.fd_items = 2;
     EXPECT_THROW({
         auto buffer = allocator->reconstruct_from(&native_buffer, pf);
-    }, std::runtime_error);
+    }, std::logic_error);
 } 
 
 TEST_F(MesaBufferAllocatorTest, reconstruct_throws_if_gbm_cannot_import)

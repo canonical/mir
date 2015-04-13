@@ -235,7 +235,7 @@ std::unique_ptr<mg::Buffer> mgm::BufferAllocator::reconstruct_from(
     MirPixelFormat format)
 {
     if (package->fd_items != 1)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create mgm::Buffer from MirBufferPackage"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Failed to create mgm::Buffer from invalid MirBufferPackage"));
 
     gbm_import_fd_data data;
     data.fd = package->fd[0];
