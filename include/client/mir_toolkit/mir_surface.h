@@ -589,9 +589,8 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
  * Change the title (name) of a surface.
  *   \param [in] surface  The surface to rename
  *   \param [in] name     The new name
- *   \returns             When the change has completed
  */
-MirWaitHandle* mir_surface_set_title(MirSurface* surface, char const* name);
+void mir_surface_set_title(MirSurface* surface, char const* name);
 
 /**
  * Request changes to the specification of a surface. The server will decide
@@ -599,9 +598,8 @@ MirWaitHandle* mir_surface_set_title(MirSurface* surface, char const* name);
  *
  *   \param [in] surface  The surface to rename
  *   \param [in] spec     Spec with the requested changes applied
- *   \returns             When the change has completed
  */
-MirWaitHandle* mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
 #ifdef __cplusplus
 }

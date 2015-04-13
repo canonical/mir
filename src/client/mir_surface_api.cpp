@@ -601,23 +601,21 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-MirWaitHandle* mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
 {
     mir::require(mir_surface_is_valid(surface));
 
-    return surface->modify(*spec);
+    surface->modify(*spec);
 }
 
-MirWaitHandle* mir_surface_set_title(MirSurface* surface, char const* name)
+void mir_surface_set_title(MirSurface* surface, char const* name)
 {
     mir::require(mir_surface_is_valid(surface));
 
-    MirWaitHandle* result = nullptr;
     if (auto const spec = create_spec_for_changes())
     {
         mir_surface_spec_set_name(spec, name);
-        result = mir_surface_apply_spec(surface, spec);
+        mir_surface_apply_spec(surface, spec);
         mir_surface_spec_release(spec);
     }
-    return result;
 }
