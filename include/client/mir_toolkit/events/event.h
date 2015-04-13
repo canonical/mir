@@ -61,15 +61,6 @@ typedef union MirEvent MirEvent;
 /**@}*/
 #endif
 
-#ifdef MIR_REQUIRE_DEPRECATED_EVENT_OPT_IN
-    #ifdef MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-        #include "mir_toolkit/events/event_deprecated.h"
-    #endif // MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-#else 
-    #include "mir_toolkit/events/event_deprecated.h"
-#endif // MIR_REQUIRE_DEPRECATED_EVENT_OPT_IN
-
-
 #include "mir_toolkit/events/input/input_event.h"
 #include "mir_toolkit/events/resize_event.h"
 #include "mir_toolkit/events/surface_event.h"

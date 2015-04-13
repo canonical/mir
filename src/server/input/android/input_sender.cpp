@@ -16,7 +16,7 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
+#include "mir/events/event_private.h"
 
 #include "input_sender.h"
 #include "input_send_entry.h"

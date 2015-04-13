@@ -16,8 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/command_line_server_configuration.h"
 

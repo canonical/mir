@@ -17,7 +17,7 @@
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+#include "mir/events/event_private.h"
 
 #include "src/server/input/android/android_input_targeter.h"
 #include "src/server/input/android/android_input_registrar.h"

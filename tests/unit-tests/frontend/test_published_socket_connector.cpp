@@ -17,9 +17,8 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir/frontend/connector.h"
+#include "mir/events/event_private.h"
 
 #include "src/server/report/null_report_factory.h"
 #include "src/server/frontend/resource_cache.h"
