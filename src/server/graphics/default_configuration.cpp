@@ -22,7 +22,7 @@
 
 #include "default_display_configuration_policy.h"
 #include "nested/mir_client_host_connection.h"
-#include "nested/nested_display.h"
+#include "nested/display.h"
 #include "offscreen/display.h"
 #include "software_cursor.h"
 
@@ -145,7 +145,7 @@ mir::DefaultServerConfiguration::the_display()
             }
             else if (the_options()->is_set(options::host_socket_opt))
             {
-                return std::make_shared<mgn::NestedDisplay>(
+                return std::make_shared<mgn::Display>(
                     the_graphics_platform(),
                     the_host_connection(),
                     the_input_dispatcher(),

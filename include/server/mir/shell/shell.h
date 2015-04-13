@@ -46,6 +46,7 @@ class SurfaceCreationParameters;
 namespace shell
 {
 class InputTargeter;
+class SurfaceSpecification;
 
 class Shell :
     public virtual FocusController,
@@ -73,6 +74,11 @@ public:
     virtual void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) = 0;
 
     virtual frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) = 0;
+
+    virtual void modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        shell::SurfaceSpecification  const& modifications) = 0;
 
     virtual void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) = 0;
 

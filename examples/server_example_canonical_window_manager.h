@@ -47,8 +47,8 @@ struct CanonicalSurfaceInfoCopy
     std::weak_ptr<scene::Session> session;
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
-    std::shared_ptr<scene::Surface> decoration;
-    bool is_decoration = false;
+    std::shared_ptr<scene::Surface> titlebar;
+    bool is_titlebar = false;
 };
 
 // standard window management algorithm:
@@ -84,6 +84,11 @@ public:
     -> scene::SurfaceCreationParameters;
 
     void handle_new_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
+
+    void handle_modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        shell::SurfaceSpecification const& modifications);
 
     void handle_delete_surface(std::shared_ptr<scene::Session> const& session, std::weak_ptr<scene::Surface> const& surface);
 
