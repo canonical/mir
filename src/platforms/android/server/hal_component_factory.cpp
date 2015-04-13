@@ -27,12 +27,9 @@
 #include "hwc_report.h"
 #include "hwc_configuration.h"
 #include "hwc_layers.h"
-#include "hwc_configuration.h"
 #include "hwc_device.h"
 #include "hwc_fb_device.h"
 
-#include "mir/graphics/display_buffer.h"
-#include "mir/graphics/egl_resources.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
