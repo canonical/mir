@@ -101,7 +101,7 @@ bool mi::DefaultInputDispatcher::dispatch_key(MirInputDeviceId id, MirKeyboardEv
 
 namespace
 {
-bool any_buttons_pressed(MirPointerEvent const* pev)
+bool is_gesture_terminator(MirPointerEvent const* pev)
 {
     auto const buttons = {
         mir_pointer_button_primary,
@@ -111,8 +111,8 @@ bool any_buttons_pressed(MirPointerEvent const* pev)
         mir_pointer_button_forward
     };
     for (auto button : buttons)
-        if (mir_pointer_event_button_state(pev, button)) return true;
-    return false;
+        if (mir_pointer_event_button_state(pev, button)) return false;
+    return mir_pointer_event_action(pev) == mir_pointer_action_button_up;
 }
 }
 
@@ -198,70 +198,63 @@ bool mi::DefaultInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointe
     auto& pointer_state = ensure_pointer_state(id);
     geom::Point event_x_y = { mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
                               mir_pointer_event_axis_value(pev,mir_pointer_axis_y) };
-    if (action == mir_pointer_action_button_up && !any_buttons_pressed(pev))
+
+    if (pointer_state.gesture_owner)
     {
-        if (pointer_state.gesture_owner)
+        deliver(pointer_state.gesture_owner, pev);
+
+        if (is_gesture_terminator(pev))
         {
-            deliver(pointer_state.gesture_owner, pev);
             pointer_state.gesture_owner.reset();
-            return true;
+
+            // TODO: Deduplicate a little
+            auto target = find_target_surface(event_x_y);
+            printf("No buttons pressed %p %p\n", (void*)pointer_state.current_target.get(), (void*)target.get());
+
+            if (pointer_state.current_target != target)
+            {
+                if (pointer_state.current_target)
+                    send_enter_exit_event(pointer_state.current_target, id, mir_pointer_action_leave, event_x_y);
+
+                pointer_state.current_target = target;
+                if (target)
+                    send_enter_exit_event(target, id, mir_pointer_action_enter, event_x_y);
+            }
         }
-        return false;
+
+        return true;
     }
     else if (action == mir_pointer_action_button_up)
     {
-        if (pointer_state.gesture_owner)
-        {
-            deliver(pointer_state.gesture_owner, pev);
-            return true;
-        }
+        // If we have an up but no gesture owner
+        // then we never delivered the corresponding
+        // down to anyone so we drop this event.
         return false;
     }
-    else if (action == mir_pointer_action_button_down)
+    else
     {
-        if (pointer_state.gesture_owner)
-        {
-            deliver(pointer_state.gesture_owner, pev);
-            return true;
-        }
         auto target = find_target_surface(event_x_y);
-
-        if (target)
-        {
-            pointer_state.gesture_owner = target;
-            deliver(target, pev);
-            return true;
-        }
-    }
-    else if (action == mir_pointer_action_motion)
-    {
-        if (pointer_state.gesture_owner)
-        {
-            deliver(pointer_state.gesture_owner, pev);
-            return true;
-        }
-
-        auto target = find_target_surface(event_x_y);
-
         bool sent_ev = false;
         if (pointer_state.current_target != target)
         {
-            sent_ev = true;
             if (pointer_state.current_target)
                 send_enter_exit_event(pointer_state.current_target, id, mir_pointer_action_leave, event_x_y);
 
             pointer_state.current_target = target;
             if (target)
                 send_enter_exit_event(target, id, mir_pointer_action_enter, event_x_y);
-        }
 
-        if (target)
-        {
-            target->consume(*(reinterpret_cast<MirEvent const*>(pev)));
             sent_ev = true;
         }
+        if (!target)
+            return sent_ev;
+        if (action == mir_pointer_action_button_down)
+        {
+            pointer_state.gesture_owner = target;
+        }
 
-        return sent_ev;
+        deliver(target, pev);
+        return true;
     }
     return false;
 }

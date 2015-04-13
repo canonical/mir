@@ -164,9 +164,9 @@ struct FakePointer
     }
     mir::EventUPtr release_button(geom::Point const& location, MirPointerButton button = mir_pointer_button_primary)
     {
-        std::remove_if(buttons_pressed.begin(), buttons_pressed.end(), [&button](MirPointerButton b){
+        buttons_pressed.erase(std::remove_if(buttons_pressed.begin(), buttons_pressed.end(), [&button](MirPointerButton b){
             return b == button;
-        });
+        }));
 
         return mev::make_event(0, 0, 0, mir_pointer_action_button_up, buttons_pressed,
                                location.x.as_int(), location.y.as_int(),
@@ -392,7 +392,7 @@ TEST_F(DefaultInputDispatcher, pointer_may_move_between_adjacent_surfaces)
 
     EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({1, 1})));
     EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({6, 6})));
-    EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({7, 7})));
+    EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({11, 11})));
 }
 
 // We test that a client will receive pointer events following a button down
@@ -447,6 +447,7 @@ TEST_F(DefaultInputDispatcher, pointer_gestures_may_transfer_over_buttons)
     EXPECT_CALL(*surface, consume(mt::ButtonUpEvent(0,0))).Times(1);
     // TODO: Position on leave event
     EXPECT_CALL(*surface, consume(mt::PointerEventWithPosition(6, 6))).Times(1);
+    EXPECT_CALL(*surface, consume(mt::ButtonUpEvent(6,6))).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
     EXPECT_CALL(*another_surface, consume(mt::PointerEnterEvent())).Times(1);
 
