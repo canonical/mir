@@ -16,8 +16,8 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NESTED_NESTED_DISPLAY_H_
-#define MIR_GRAPHICS_NESTED_NESTED_DISPLAY_H_
+#ifndef MIR_GRAPHICS_NESTED_DISPLAY_H_
+#define MIR_GRAPHICS_NESTED_DISPLAY_H_
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
@@ -85,16 +85,16 @@ private:
     EGLDisplayHandle operator=(EGLDisplayHandle const&) = delete;
 };
 
-class NestedOutput;
+class DisplayBuffer;
 
 class DisplaySyncGroup : public graphics::DisplaySyncGroup
 {
 public:
-    DisplaySyncGroup(std::shared_ptr<detail::NestedOutput> const& output);
-    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const&) override;
+    DisplaySyncGroup(std::shared_ptr<detail::DisplayBuffer> const& output);
+    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const&) override;
     void post() override;
 private:
-    std::shared_ptr<detail::NestedOutput> const output;
+    std::shared_ptr<detail::DisplayBuffer> const output;
 };
 
 extern EGLint const nested_egl_context_attribs[];
@@ -102,10 +102,10 @@ extern EGLint const nested_egl_context_attribs[];
 
 class HostConnection;
 
-class NestedDisplay : public Display
+class Display : public graphics::Display
 {
 public:
-    NestedDisplay(
+    Display(
         std::shared_ptr<Platform> const& platform,
         std::shared_ptr<HostConnection> const& connection,
         std::shared_ptr<input::InputDispatcher> const& dispatcher,
@@ -113,7 +113,7 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy,
         std::shared_ptr<GLConfig> const& gl_config);
 
-    ~NestedDisplay() noexcept;
+    ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(DisplaySyncGroup&)>const& f) override;
 
@@ -154,4 +154,4 @@ private:
 }
 }
 
-#endif // MIR_GRAPHICS_NESTED_NESTED_DISPLAY_H_
+#endif // MIR_GRAPHICS_NESTED_DISPLAY_H_

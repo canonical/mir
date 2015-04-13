@@ -20,6 +20,7 @@
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_coordinator.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -112,16 +113,25 @@ auto me::TilingWindowManagerPolicy::handle_place_new_surface(
     return parameters;
 }
 
-std::vector<std::shared_ptr<ms::Surface>> me::TilingWindowManagerPolicy::generate_decorations_for(
+void me::TilingWindowManagerPolicy::generate_decorations_for(
     std::shared_ptr<ms::Session> const&,
-    std::shared_ptr<ms::Surface> const&)
+    std::shared_ptr<ms::Surface> const&,
+    TilingSurfaceInfoMap&)
 {
-    return {};
 }
 
 void me::TilingWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
     tools->info_for(session).surfaces.push_back(surface);
+}
+
+void me::TilingWindowManagerPolicy::handle_modify_surface(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& surface,
+    shell::SurfaceSpecification const& modifications)
+{
+    if (modifications.name.is_set())
+        surface->rename(modifications.name.value());
 }
 
 void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
@@ -233,7 +243,7 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
     old_cursor = cursor;
 }
 
-bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyboardEvent const* event)
+bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);
     auto const scan_code = mir_keyboard_event_scan_code(event);

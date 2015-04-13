@@ -17,6 +17,7 @@
  */
 
 #include "mir/shell/input_targeter.h"
+
 #include "clients.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -27,6 +28,7 @@
 
 #include "mir/compositor/scene.h"
 #include "mir/scene/observer.h"
+#include "mir/events/event_private.h"
 
 #include "mir_toolkit/event.h"
 

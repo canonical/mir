@@ -31,6 +31,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_observer.h"
+#include "mir/events/event_private.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"

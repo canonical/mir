@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,31 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_CONFIGURATOR_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_CONFIGURATOR_H_
+#ifndef MIR_SHELL_SURFACE_SPECIFICATION_H_
+#define MIR_SHELL_SURFACE_SPECIFICATION_H_
 
-#include "mir/scene/surface_configurator.h"
+#include "mir/optional_value.h"
 
-#include <gmock/gmock.h>
+#include <string>
 
 namespace mir
 {
-namespace test
+namespace shell
 {
-namespace doubles
+/// Specification of surface properties requested by client
+struct SurfaceSpecification
 {
-
-struct MockSurfaceConfigurator : public scene::SurfaceConfigurator
-{
-    MOCK_METHOD3(select_attribute_value, int(scene::Surface const&, MirSurfaceAttrib, int));
-    MOCK_METHOD3(attribute_set, void(scene::Surface const&, MirSurfaceAttrib, int));
+    optional_value<std::string> name;
+    // TODO: type/state/size etc (LP: #1422522) (LP: #1420573)
+    // Once fully populated for surface modification this can probably
+    // also replace scene::SurfaceCreationParameters in create_surface()
 };
-
-}
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_CONFIGURATOR_H_ */
+#endif /* MIR_SHELL_SURFACE_SPECIFICATION_H_ */

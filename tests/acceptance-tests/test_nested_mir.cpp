@@ -143,8 +143,6 @@ public:
     NestedMirRunner(std::string const& connection_string)
         : mtf::HeadlessNestedServerRunner(connection_string)
     {
-        add_to_environment("MIR_SERVER_ENABLE_INPUT","off");
-
         server.override_the_host_lifecycle_event_listener([this]
            {
                return the_mock_host_lifecycle_event_listener();
@@ -171,6 +169,8 @@ private:
 
 struct NestedServer : mtf::HeadlessInProcessServer
 {
+    NestedServer() { add_to_environment("MIR_SERVER_ENABLE_INPUT","off"); }
+
     NestedMockEGL mock_egl;
     mtf::UsingStubClientPlatform using_stub_client_platform;
 

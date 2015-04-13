@@ -172,7 +172,7 @@ public:
 
     void set_keymap(xkb_rule_names const& rules) override;
 
-    bool modify(Modifications const&) override;
+    void rename(std::string const& title) override;
 
 private:
     bool visible(std::unique_lock<std::mutex>&) const;

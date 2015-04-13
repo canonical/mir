@@ -30,6 +30,7 @@
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test/gmock_fixes.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -47,7 +48,7 @@ namespace
 struct MockSceneElement : mc::SceneElement
 {
     MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
-    MOCK_CONST_METHOD0(decoration, mc::Decoration const&());
+    MOCK_CONST_METHOD0(decoration, std::unique_ptr<mc::Decoration>());
     MOCK_METHOD0(rendered, void());
     MOCK_METHOD0(occluded, void());
 };

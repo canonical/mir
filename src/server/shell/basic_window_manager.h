@@ -92,9 +92,9 @@ public:
 /// - void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface);
 /// - void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/);
 /// - int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value);
-/// - bool handle_key_event(MirKeyInputEvent const* event);
-/// - bool handle_touch_event(MirTouchInputEvent const* event);
-/// - bool handle_pointer_event(MirPointerInputEvent const* event);
+/// - bool handle_keyboard_event(MirKeyboardEvent const* event);
+/// - bool handle_touch_event(MirTouchEvent const* event);
+/// - bool handle_pointer_event(MirPointerEvent const* event);
 ///
 /// \tparam SessionInfo must be default constructable.
 ///
@@ -142,6 +142,15 @@ protected:
         return result;
     }
 
+    void modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        shell::SurfaceSpecification const& modifications) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        policy.handle_modify_surface(session, surface, modifications);
+    }
+
     void remove_surface(
         std::shared_ptr<scene::Session> const& session,
         std::weak_ptr<scene::Surface> const& surface) override
@@ -166,10 +175,10 @@ protected:
         policy.handle_displays_updated(session_info, displays);
     }
 
-    bool handle_key_event(MirKeyboardEvent const* event) override
+    bool handle_keyboard_event(MirKeyboardEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        return policy.handle_key_event(event);
+        return policy.handle_keyboard_event(event);
     }
 
     bool handle_touch_event(MirTouchEvent const* event) override

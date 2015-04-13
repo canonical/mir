@@ -139,17 +139,7 @@ TEST_F(FBDevice, bundle_from_fb)
 {
     using namespace testing;
     mga::FbControl fb_control(fb_hal_mock);
-    auto attribs = fb_control.active_attribs_for(mga::DisplayName::primary);
-    EXPECT_EQ(display_size, attribs.pixel_size);
-    EXPECT_EQ(mir_pixel_format_abgr_8888, attribs.display_format);
-    EXPECT_EQ(fbnum, attribs.num_framebuffers);
-}
-
-//some drivers incorrectly report 0 buffers available. request 2 fbs in this case.
-TEST_F(FBDevice, determine_fbnum_always_reports_2_minimum)
-{
-    auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(
-        display_size.width.as_int(), display_size.height.as_int(), format, 0);
-    mga::FbControl fb_control(slightly_malformed_fb_hal_mock);
-    EXPECT_EQ(2u, fb_control.active_attribs_for(mga::DisplayName::primary).num_framebuffers);
+    auto attribs = fb_control.active_config_for(mga::DisplayName::primary);
+    EXPECT_EQ(display_size, attribs.modes[attribs.current_mode_index].size);
+    EXPECT_EQ(mir_pixel_format_abgr_8888, attribs.current_format);
 }

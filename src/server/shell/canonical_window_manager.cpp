@@ -21,6 +21,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/shell/display_layout.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -240,6 +241,15 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
     }
 }
 
+void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& surface,
+    SurfaceSpecification const& modifications)
+{
+    if (modifications.name.is_set())
+        surface->rename(modifications.name.value());
+}
+
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = tools->info_for(surface).parent.lock())
@@ -344,7 +354,7 @@ void msh::CanonicalWindowManagerPolicy::drag(Point cursor)
     old_cursor = cursor;
 }
 
-bool msh::CanonicalWindowManagerPolicy::handle_key_event(MirKeyboardEvent const* event)
+bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);
     auto const scan_code = mir_keyboard_event_scan_code(event);

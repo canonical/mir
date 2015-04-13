@@ -29,7 +29,6 @@
 #include "mir/options/program_option.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/scene/surface_configurator.h"
 #include "mir/graphics/cursor.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/graphics/display.h"
@@ -98,25 +97,6 @@ mir::DefaultServerConfiguration::the_prompt_session_listener()
         [this]
         {
             return std::make_shared<ms::NullPromptSessionListener>();
-        });
-}
-
-std::shared_ptr<ms::SurfaceConfigurator> mir::DefaultServerConfiguration::the_surface_configurator()
-{
-    struct DefaultSurfaceConfigurator : public ms::SurfaceConfigurator
-    {
-        int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value)
-        {
-            return requested_value;
-        }
-        void attribute_set(ms::Surface const&, MirSurfaceAttrib, int)
-        {
-        }
-    };
-    return surface_configurator(
-        [this]()
-        {
-            return std::make_shared<DefaultSurfaceConfigurator>();
         });
 }
 

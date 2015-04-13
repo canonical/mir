@@ -33,6 +33,7 @@
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_gl_program_factory.h"
+#include "mir_test_doubles/stub_display_configuration.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
@@ -158,4 +159,23 @@ TEST_F(HalComponentFactory, hwc_and_fb_failure_fatal)
             mock_resource_factory,
             mock_hwc_report);
     }, std::runtime_error);
+}
+
+//some drivers incorrectly report 0 buffers available. request 2 fbs in this case.
+TEST_F(HalComponentFactory, determine_fbnum_always_reports_2_minimum)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
+        .WillOnce(Throw(std::runtime_error("")));
+    EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
+        .WillOnce(Return(std::make_shared<mtd::MockFBHalDevice>(
+            0, 0, mir_pixel_format_abgr_8888, 0)));
+    EXPECT_CALL(mock_buffer_allocator, alloc_buffer_platform(_,_,_))
+        .Times(2);
+
+    mga::HalComponentFactory factory(
+        mt::fake_shared(mock_buffer_allocator),
+        mock_resource_factory,
+        mock_hwc_report);
+    factory.create_framebuffers(mtd::StubDisplayConfig(1).outputs[0]);
 }

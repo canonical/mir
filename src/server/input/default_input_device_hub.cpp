@@ -24,6 +24,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/input/input_region.h"
+#include "mir/events/event_private.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/server_action_queue.h"
 #define MIR_LOG_COMPONENT "Input"

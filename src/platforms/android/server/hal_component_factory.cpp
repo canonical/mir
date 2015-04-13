@@ -47,7 +47,8 @@ mga::HalComponentFactory::HalComponentFactory(
     : buffer_allocator(buffer_allocator),
       res_factory(res_factory),
       hwc_report(hwc_report),
-      force_backup_display(false)
+      force_backup_display(false),
+      num_framebuffers{quirks.num_framebuffers()}
 {
     try
     {
@@ -60,16 +61,18 @@ mga::HalComponentFactory::HalComponentFactory(
     if (force_backup_display || hwc_version == mga::HwcVersion::hwc10)
     {
         fb_native = res_factory->create_fb_native_device();
+        //guarantee always 2 fb's allocated
+        num_framebuffers = std::max(2u, static_cast<unsigned int>(fb_native->numFramebuffers));
     }
 }
 
-std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebuffers(mga::DisplayAttribs const& attribs)
+std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebuffers(mg::DisplayConfigurationOutput const& config)
 {
     return std::unique_ptr<mga::FramebufferBundle>(new mga::Framebuffers(
         *buffer_allocator,
-        attribs.pixel_size,
-        attribs.display_format,
-        attribs.num_framebuffers));
+        config.modes[config.current_mode_index].size,
+        config.current_format,
+        num_framebuffers));
 }
 
 std::unique_ptr<mga::LayerList> mga::HalComponentFactory::create_layer_list()
