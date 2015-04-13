@@ -26,6 +26,7 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
+#include "mir/events/event_private.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 
