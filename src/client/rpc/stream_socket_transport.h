@@ -22,6 +22,7 @@
 
 #include "stream_transport.h"
 #include "mir/fd.h"
+#include "mir/basic_observers.h"
 
 #include <thread>
 #include <mutex>
@@ -32,6 +33,16 @@ namespace client
 {
 namespace rpc
 {
+
+class TransportObservers : public BasicObservers<StreamTransport::Observer>,
+                           public StreamTransport::Observer
+{
+public:
+    using BasicObservers<StreamTransport::Observer>::add;
+
+    void on_data_available() override;
+    void on_disconnected() override;
+};
 
 class StreamSocketTransport : public StreamTransport
 {
@@ -49,13 +60,10 @@ public:
     mir::dispatch::FdEvents relevant_events() const override;
 private:
     Fd open_socket(std::string const& path);
-    void notify_data_available();
-    void notify_disconnected();
 
     Fd const socket_fd;
 
-    std::mutex observer_mutex;
-    std::vector<std::shared_ptr<Observer>> observers;
+    TransportObservers observers;
 };
 
 }
