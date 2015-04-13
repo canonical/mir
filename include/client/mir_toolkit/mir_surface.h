@@ -227,6 +227,48 @@ bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
 bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
 
 /**
+ * Set the minimum width, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    Minimum width.
+ * \return              False if width is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width);
+
+/**
+ * Set the minimum height, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] height   Minimum height.
+ * \return              False if height is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height);
+/**
+ * Set the maximum width, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    Maximum width.
+ * \return              False if width is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width);
+
+/**
+ * Set the maximum height, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] height   Requested height.
+ * \return              False if height is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
+/**
  * Set the requested pixel format.
  * \param [in] spec     Specification to mutate
  * \param [in] format   Requested pixel format
