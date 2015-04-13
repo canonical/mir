@@ -401,6 +401,44 @@ TYPED_TEST(StreamTransportTest, doesnt_send_data_available_notification_on_disco
     EXPECT_TRUE(disconnected);
 }
 
+
+TYPED_TEST(StreamTransportTest, notifies_all_observers)
+{
+    using namespace testing;
+
+    constexpr int const observer_count{10};
+
+    std::array<bool, observer_count> read_notified;
+    std::array<bool, observer_count> disconnect_notified;
+
+    read_notified.fill(false);
+    disconnect_notified.fill(false);
+
+    for (int i = 0; i < observer_count; ++i)
+    {
+        auto observer = std::make_shared<NiceMock<MockObserver>>();
+
+        ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([&disconnected = disconnect_notified[i]]() mutable
+                                                                   { disconnected = true; }));
+        ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([&read = read_notified[i]]() mutable
+                                                                     { read = true; }));
+
+        this->transport->register_observer(observer);
+    }
+
+    this->transport->dispatch(md::FdEvent::readable);
+    this->transport->dispatch(md::FdEvent::remote_closed);
+
+    for (auto const& read_flag : read_notified)
+    {
+        EXPECT_TRUE(read_flag);
+    }
+    for (auto const& disconnected_flag : disconnect_notified)
+    {
+        EXPECT_TRUE(disconnected_flag);
+    }
+}
+
 TYPED_TEST(StreamTransportTest, reads_correct_data)
 {
     using namespace testing;
