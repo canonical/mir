@@ -5,5 +5,5 @@ add_library(
   nested_display_configuration.cpp
   display_buffer.cpp
   mir_client_host_connection.cpp
-  nested_cursor.cpp
+  cursor.cpp
 )

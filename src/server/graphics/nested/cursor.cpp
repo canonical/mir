@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "nested_cursor.h"
+#include "cursor.h"
 
 #include "host_connection.h"
 
