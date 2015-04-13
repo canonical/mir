@@ -48,7 +48,9 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
                                                               int width, int height,
                                                               MirPixelFormat format)
 {
-    return new MirSurfaceSpec{connection, width, height, format};
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_normal;
+    return spec;
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_menu(MirConnection* connection,
@@ -137,6 +139,7 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
                                   mir_surface_callback callback, void* context)
 {
     mir::require(requested_specification != nullptr);
+    mir::require(requested_specification->type.is_set());
 
     auto conn = requested_specification->connection;
     mir::require(mir_connection_is_valid(conn));
