@@ -112,6 +112,7 @@ public:
     void cancelVibrate(int32_t deviceId) override;
     void requestReopenDevices() override;
     void wake() override;
+    void wake(droidinput::RawEvent const&);
     void dump(droidinput::String8& dump) override;
     void monitor() override;
     void flush() override;
