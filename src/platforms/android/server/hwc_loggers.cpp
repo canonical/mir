@@ -140,6 +140,23 @@ std::ostream& operator<<(std::ostream& str, HwcRect r)
                << HwcRectMember{r.rect.bottom} << "}";
 }
 
+struct HwcFloatRectMember { float member; };
+std::ostream& operator<<(std::ostream& str, HwcFloatRectMember rect)
+{
+    StreamFormatter stream_format(str, rect_entry_column_size, std::ios_base::right);
+    return str << rect.member;
+}
+
+struct HwcFloatRect { hwc_frect_t const& rect; };
+std::ostream& operator<<(std::ostream& str, HwcFloatRect r)
+{
+    return str << "{"
+               << HwcFloatRectMember{r.rect.left} << ","
+               << HwcFloatRectMember{r.rect.top} << ","
+               << HwcFloatRectMember{r.rect.right} << ","
+               << HwcFloatRectMember{r.rect.bottom} << "}";
+}
+
 std::ostream& operator<<(std::ostream& str, mga::OverlayOptimization opt)
 {
     if (opt == mga::OverlayOptimization::enabled)
@@ -167,25 +184,34 @@ void mga::HwcFormattedLogger::report_list_submitted_to_prepare(
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
     std::cout << "before prepare():" << std::endl
-              << " # | display  | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | "
+              << " # | display  | Type      | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | "
               << std::endl;
     for(auto i = 0u; i < displays.size(); i++)
     {
         if (!displays[i]) continue;
         for(auto j = 0u; j < displays[i]->numHwLayers; j++)
+        {
             std::cout << LayerNumber{j}
                       << separator
                       << DisplayName{i}
                       << separator
+                      << HwcType{displays[i]->hwLayers[j].compositionType, displays[i]->hwLayers[j].flags}
+                      << separator
                       << HwcRect{displays[i]->hwLayers[j].displayFrame}
-                      << separator
-                      << HwcRect{displays[i]->hwLayers[j].sourceCrop}
-                      << separator
+                      << separator;
+
+            if (hwc_version < HwcVersion::hwc13)
+                std::cout << HwcRect{displays[i]->hwLayers[j].sourceCrop};
+            else
+                std::cout << HwcFloatRect{displays[i]->hwLayers[j].sourceCropf};
+
+            std::cout << separator
                       << HwcRotation{displays[i]->hwLayers[j].transform}
                       << separator
                       << HwcBlending{displays[i]->hwLayers[j].blending}
                       << separator
                       << std::endl;
+        }
     }
 }
 
@@ -212,7 +238,7 @@ void mga::HwcFormattedLogger::report_set_list(
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
     std::cout << "set list():" << std::endl
-              << " # | display  | handle | acquireFenceFd" << std::endl;
+              << " # | display  | Type      | handle | acquireFenceFd" << std::endl;
 
     for(auto i = 0u; i < displays.size(); i++)
     {
@@ -221,6 +247,8 @@ void mga::HwcFormattedLogger::report_set_list(
             std::cout << LayerNumber{j}
                       << separator
                       << DisplayName{i}
+                      << separator
+                      << HwcType{displays[i]->hwLayers[j].compositionType, displays[i]->hwLayers[j].flags}
                       << separator
                       << displays[i]->hwLayers[j].handle
                       << separator

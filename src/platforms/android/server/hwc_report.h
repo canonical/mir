@@ -50,10 +50,13 @@ public:
     virtual void report_hwc_version(HwcVersion) const = 0;
     virtual void report_legacy_fb_module() const = 0;
 
+    void set_version(HwcVersion version) { hwc_version = version; }
+
 protected:
     HwcReport() = default;
     HwcReport& operator=(HwcReport const&) = delete;
     HwcReport(HwcReport const&) = delete;
+    HwcVersion hwc_version{unknown};
 };
 }
 }

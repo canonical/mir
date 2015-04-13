@@ -364,3 +364,40 @@ TEST_F(HwcWrapper, callback_calls_hwcvsync_and_can_continue_calling_after_destru
 
     EXPECT_THAT(call_count, Eq(1));
 }
+
+TEST_F(HwcWrapper, hwc14_uses_setPowerMode)
+{
+    using namespace testing;
+
+    auto mock_dev = std::make_shared<testing::NiceMock<mtd::MockHWC14ComposerDevice1>>();
+    EXPECT_CALL(*mock_dev, setPowerMode_interface(mock_dev.get(), HWC_DISPLAY_PRIMARY, HWC_POWER_MODE_OFF))
+        .WillOnce(Return(0));
+    EXPECT_CALL(*mock_dev, setPowerMode_interface(mock_dev.get(), HWC_DISPLAY_PRIMARY, HWC_POWER_MODE_NORMAL))
+        .WillOnce(Return(0));
+
+    mga::RealHwc14Wrapper wrapper(mock_dev, mock_report);
+    wrapper.display_off(mga::DisplayName::primary);
+    wrapper.display_on(mga::DisplayName::primary);
+}
+
+TEST_F(HwcWrapper, hwc14_uses_active_config_apis)
+{
+    using namespace testing;
+
+    std::array<uint32_t, 1> id_array{1u};
+    auto mock_dev = std::make_shared<testing::NiceMock<mtd::MockHWC14ComposerDevice1>>();
+
+    EXPECT_CALL(*mock_dev, getDisplayConfigs_interface(
+        mock_dev.get(), HWC_DISPLAY_PRIMARY, _, Pointee(Gt(0))))
+            .WillOnce(DoAll(
+                SetArrayArgument<2>(id_array.begin(), id_array.end()),
+                SetArgPointee<3>(id_array.size()),
+                Return(0)));
+    EXPECT_CALL(*mock_dev, getActiveConfig_interface(mock_dev.get(), HWC_DISPLAY_PRIMARY))
+        .WillOnce(Return(-1));
+    EXPECT_CALL(*mock_dev, setActiveConfig_interface(mock_dev.get(), HWC_DISPLAY_PRIMARY, id_array[0]))
+        .WillOnce(Return(0));
+
+    mga::RealHwc14Wrapper wrapper(mock_dev, mock_report);
+    wrapper.display_configs(mga::DisplayName::primary);
+}

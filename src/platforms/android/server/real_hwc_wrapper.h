@@ -69,7 +69,8 @@ public:
     void vsync(DisplayName, std::chrono::nanoseconds) noexcept;
     void hotplug(DisplayName, bool) noexcept;
     void invalidate() noexcept;
-private:
+
+protected:
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
     std::shared_ptr<HwcReport> const report;
     std::mutex callback_map_lock;
@@ -80,6 +81,19 @@ private:
         std::function<void()> invalidate;
     };
     std::unordered_map<void const*, Callbacks> callback_map;
+};
+
+class RealHwc14Wrapper : public RealHwcWrapper
+{
+public:
+    RealHwc14Wrapper(
+        //should probably be unique_ptr
+        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+        std::shared_ptr<HwcReport> const& report);
+
+    void display_on(DisplayName) const override;
+    void display_off(DisplayName) const override;
+    std::vector<ConfigId> display_configs(DisplayName) const override;
 };
 
 }

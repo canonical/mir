@@ -254,3 +254,48 @@ int mga::RealHwcWrapper::display_attributes(
     return hwc_device->getDisplayAttributes(
         hwc_device.get(), display_name, config.as_value(), attributes, values);
 }
+
+mga::RealHwc14Wrapper::RealHwc14Wrapper(
+    std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    std::shared_ptr<mga::HwcReport> const& report) :
+    RealHwcWrapper(hwc_device, report)
+{
+}
+
+void mga::RealHwc14Wrapper::display_on(DisplayName display_name) const
+{
+    if (auto rc = hwc_device->setPowerMode(hwc_device.get(), display_name, HWC_POWER_MODE_NORMAL))
+    {
+        std::stringstream ss;
+        ss << "error turning display on. rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+    }
+    report->report_display_on();
+}
+
+void mga::RealHwc14Wrapper::display_off(DisplayName display_name) const
+{
+    if (auto rc = hwc_device->setPowerMode(hwc_device.get(), display_name, HWC_POWER_MODE_OFF))
+    {
+        std::stringstream ss;
+        ss << "error turning display off. rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+    }
+    report->report_display_off();
+}
+
+std::vector<mga::ConfigId> mga::RealHwc14Wrapper::display_configs(DisplayName display_name) const
+{
+    auto configs = RealHwcWrapper::display_configs(display_name);
+    if (!configs.empty())
+    {
+        int active_config = hwc_device->getActiveConfig(hwc_device.get(), display_name);
+        if (active_config == -1)
+        {
+            int rc = hwc_device->setActiveConfig(hwc_device.get(), display_name, configs[0].as_value());
+            if (rc < 0)
+                BOOST_THROW_EXCEPTION(std::system_error(rc, std::system_category(), "unable to set active display config"));
+        }
+    }
+    return configs;
+}

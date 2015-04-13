@@ -25,6 +25,7 @@
 #include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <system_error>
 #include <chrono>
 
 namespace mg = mir::graphics;
@@ -182,7 +183,7 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(Displa
     if (rc < 0)
     {
         if (display_name == mga::DisplayName::primary)
-            BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
+            BOOST_THROW_EXCEPTION(std::system_error(rc, std::system_category(), "primary display disconnected"));
         else   
             return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
     }

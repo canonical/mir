@@ -58,6 +58,7 @@ class HardwareAccessMock
 {
 public:
     HardwareAccessMock();
+    HardwareAccessMock(std::shared_ptr<hwc_composer_device_1> const& mock_device);
     ~HardwareAccessMock();
 
     MOCK_METHOD2(hw_get_module, int(const char *id, const struct hw_module_t**));
