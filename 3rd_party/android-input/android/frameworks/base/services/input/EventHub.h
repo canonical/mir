@@ -32,8 +32,6 @@
 #include <std/Vector.h>
 #include <std/KeyedVector.h>
 
-#include "mir/fd.h"
-
 #include <linux/input.h>
 #include <sys/epoll.h>
 
@@ -252,8 +250,6 @@ public:
 
     /* Flush all pending events not yet read from the input devices */
     virtual void flush() = 0;
-
-    virtual mir::Fd fd() = 0;
 };
 
 class EventHub : public EventHubInterface
@@ -312,7 +308,6 @@ public:
     virtual void dump(String8& dump);
     virtual void monitor();
     virtual void flush();
-    virtual mir::Fd fd();
 
     virtual ~EventHub();
 
@@ -410,7 +405,7 @@ private:
     bool mNeedToScanDevices;
     Vector<String8> mExcludedDevices;
 
-    mir::Fd mEpollFd;
+    int mEpollFd;
     std::unique_ptr<mir::udev::Monitor> const device_listener;
     int mWakeReadPipeFd;
     int mWakeWritePipeFd;

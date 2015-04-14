@@ -32,8 +32,6 @@
 #include <csignal>
 #include <cstdlib>
 #include <cassert>
-#include <sys/types.h>
-#include <unistd.h>
 
 namespace
 {
@@ -125,6 +123,6 @@ void mir::terminate_with_current_exception()
     if (!termination_exception)
     {
         termination_exception = std::current_exception();
-        kill(getpid(), SIGTERM);
+        raise(SIGTERM);
     }
 }
