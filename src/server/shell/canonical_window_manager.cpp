@@ -87,8 +87,16 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
 
     auto width = std::min(display_area.size.width.as_int(), parameters.size.width.as_int());
     auto height = std::min(display_area.size.height.as_int(), parameters.size.height.as_int());
-    if (!width) width = 1;
-    if (!height) height = 1;
+
+    auto const min_width  = parameters.min_width.is_set() ?
+        parameters.min_width.value().as_int() : 1;
+
+    auto const min_height = parameters.min_height.is_set() ?
+        parameters.min_height.value().as_int() : 1;
+
+    width = std::max(width, min_width);
+    height = std::max(height, min_height);
+
     parameters.size = Size{width, height};
 
     bool positioned = false;
