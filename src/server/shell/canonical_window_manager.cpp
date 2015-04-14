@@ -264,10 +264,17 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
 
-    if (modifications.min_width.is_set()) surface_info.min_width = modifications.min_width;
-    if (modifications.min_height.is_set()) surface_info.min_height = modifications.min_height;
-    if (modifications.max_width.is_set()) surface_info.max_width = modifications.max_width;
-    if (modifications.max_height.is_set()) surface_info.max_height = modifications.max_height;
+    if (modifications.min_width.is_set())
+        surface_info.min_width = modifications.min_width;
+
+    if (modifications.min_height.is_set())
+        surface_info.min_height = modifications.min_height;
+
+    if (modifications.max_width.is_set())
+        surface_info.max_width = modifications.max_width;
+
+    if (modifications.max_height.is_set())
+        surface_info.max_height = modifications.max_height;
 
     if (modifications.width.is_set() || modifications.height.is_set())
     {

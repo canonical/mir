@@ -206,9 +206,28 @@ TEST_F(SurfaceModifications, surface_spec_change_height_is_notified)
     mir_surface_spec_release(spec);
 }
 
+TEST_F(SurfaceModifications, surface_spec_min_width_is_respected)
+{
+    auto const min_width = 19;
+
+    {
+        auto const spec = mir_connection_create_spec_for_changes(connection);
+        mir_surface_spec_set_min_width(spec, min_width);
+        mir_surface_apply_spec(surface, spec);
+        mir_surface_spec_release(spec);
+    }
+
+    auto const shell_surface = this->shell_surface.lock();
+
+    EXPECT_CALL(surface_observer, resized_to(WidthEq(min_width)));
+
+    generate_alt_click_at(shell_surface->input_bounds().bottom_right());
+    generate_alt_move_to(shell_surface->top_left());
+}
+
 TEST_F(SurfaceModifications, surface_spec_min_height_is_respected)
 {
-    auto const min_height = 13;
+    auto const min_height = 17;
 
     {
         auto const spec = mir_connection_create_spec_for_changes(connection);
