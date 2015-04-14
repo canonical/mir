@@ -221,8 +221,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
 
 void mtf::FakeInputDeviceImpl::InputDevice::update_position(int rel_x, int rel_y)
 {
-    sink->confine_pointer_movement(rel_x, rel_y);
-    pos = pos + mir::geometry::Displacement{rel_x, rel_y};
+    mir::geometry::Displacement movement{rel_x, rel_y};
+    sink->confine_pointer_movement(movement);
+    pos = pos + movement;
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchParameters const& touch)

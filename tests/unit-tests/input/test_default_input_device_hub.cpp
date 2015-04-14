@@ -28,7 +28,6 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_observer.h"
-//#include "mir/events/event_private.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
@@ -41,6 +40,7 @@
 namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
+namespace geom = mir::geometry;
 
 namespace mir
 {
@@ -111,6 +111,17 @@ struct InputDeviceHubTest : ::testing::Test
 
         ON_CALL(third_device,get_device_info())
             .WillByDefault(Return(mi::InputDeviceInfo{0,"third_device","dev-3", mi::DeviceCapability::keyboard}));
+    }
+
+    void capture_input_sink(Nice<MockInputDevice>& dev, mi::InputSink*& sink)
+    {
+        using namespace ::testing;
+        ON_CALL(dev,start(_))
+            .WillByDefault(Invoke([&sink](mi::InputSink* input_sink)
+                                  {
+                                      sink = input_sink;
+                                  }
+                                 ));
     }
 };
 
@@ -237,12 +248,7 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
     mi::InputSink* sink;
     mi::InputDeviceInfo info;
 
-    EXPECT_CALL(device,start(_))
-        .WillOnce(Invoke([&sink](mi::InputSink* input_sink)
-                         {
-                             sink = input_sink;
-                         }
-                        ));
+    capture_input_sink(device, sink);
 
     EXPECT_CALL(mock_observer,device_added(_))
         .WillOnce(SaveArg<0>(&info));
@@ -284,12 +290,7 @@ TEST_F(InputDeviceHubTest, forwards_touch_spots_to_visualizer)
     mi::InputSink* sink;
     mi::InputDeviceInfo info;
 
-    ON_CALL(device,start(_))
-        .WillByDefault(Invoke([&sink](mi::InputSink* input_sink)
-                              {
-                                  sink = input_sink;
-                              }
-                             ));
+    capture_input_sink(device, sink);
 
     hub.add_device(mt::fake_shared(device));
 
@@ -307,4 +308,43 @@ TEST_F(InputDeviceHubTest, forwards_touch_spots_to_visualizer)
     sink->handle_input(*touch_event_2);
     sink->handle_input(*touch_event_3);
     sink->handle_input(*touch_event_4);
+}
+
+
+TEST_F(InputDeviceHubTest, tracks_pointer_position)
+{
+    geom::Point first{10,10}, second{20,20}, third{10,30};
+    EXPECT_CALL(mock_region,confine(first));
+    EXPECT_CALL(mock_region,confine(second));
+    EXPECT_CALL(mock_region,confine(third));
+
+    mi::InputSink* sink;
+    capture_input_sink(device, sink);
+
+    hub.add_device(mt::fake_shared(device));
+
+    geom::Displacement movement{10,10};
+    sink->confine_pointer_movement(movement);
+    sink->confine_pointer_movement(movement);
+    movement = geom::Displacement{-10,10};
+    sink->confine_pointer_movement(movement);
+}
+
+TEST_F(InputDeviceHubTest, confines_pointer_movement)
+{
+    using namespace ::testing;
+    ON_CALL(mock_region,confine(_))
+        .WillByDefault(SetArgReferee<0>(geom::Point{10,18}));
+    mi::InputSink* sink;
+    capture_input_sink(device, sink);
+    hub.add_device(mt::fake_shared(device));
+
+    geom::Displacement movement1{10,20};
+    sink->confine_pointer_movement(movement1);
+
+    geom::Displacement movement2{5,10};
+    sink->confine_pointer_movement(movement2);
+
+    EXPECT_THAT(movement1, Eq(geom::Displacement{10,18}));
+    EXPECT_THAT(movement2, Eq(geom::Displacement{0,0}));
 }

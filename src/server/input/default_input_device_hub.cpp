@@ -211,15 +211,17 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
     device->stop();
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::confine_pointer_movement(int& , int& )
+void mi::DefaultInputDeviceHub::RegisteredDevice::confine_pointer_movement(mir::geometry::Displacement& movement)
 {
-    // do nothing
+    auto new_position = pos + movement;
+    hub->input_region->confine(new_position);
+    movement = new_position - pos;
+    pos = new_position;
 }
 
 mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_rectangle() const
 {
-    // TODO fix graphics paltform dependent complexityh of this..
-    // TODO external touchscreens only need the bounding rectangle of one output
+    // TODO touchscreens only need the bounding rectangle of one output
     return hub->input_region->bounding_rectangle();
 }
 

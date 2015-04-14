@@ -22,6 +22,7 @@
 
 #include "mir_toolkit/event.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
 
 namespace mir
 {
@@ -36,7 +37,7 @@ public:
     /**
      * Confine relative movement of pointer
      */
-    virtual void confine_pointer_movement(int& x, int& y) = 0;
+    virtual void confine_pointer_movement(mir::geometry::Displacement& movement) = 0;
 
     /**!
      * Obtain the bounding rectangle of the destination area for this input sink
