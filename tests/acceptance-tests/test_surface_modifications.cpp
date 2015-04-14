@@ -81,6 +81,9 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         shell_surface = shell->latest_surface;
         auto const scene_surface = shell_surface.lock();
         scene_surface->add_observer(mt::fake_shared(surface_observer));
+
+        // Swap buffers to ensure surface is visible for event based tests
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     }
 
     void generate_alt_click_at(Point const& click_position)
@@ -216,9 +219,9 @@ TEST_F(SurfaceModifications, surface_spec_min_height_is_respected)
 
     auto const shell_surface = this->shell_surface.lock();
 
-    generate_alt_click_at(shell_surface->input_bounds().bottom_right() - Displacement{1,1});
+    generate_alt_click_at(shell_surface->input_bounds().bottom_right());
 
     EXPECT_CALL(surface_observer, resized_to(HeightEq(min_height)));
 
-    generate_alt_move_to(shell_surface->top_left() + Displacement{1,1});
+    generate_alt_move_to(shell_surface->top_left());
 }
