@@ -68,7 +68,7 @@ mgx::Display::Display()
         EGL_RED_SIZE, 5,
         EGL_GREEN_SIZE, 5,
         EGL_BLUE_SIZE, 5,
-        EGL_ALPHA_SIZE, 1,
+        EGL_ALPHA_SIZE, 0,
         EGL_DEPTH_SIZE, 0,
         EGL_STENCIL_SIZE, 0,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
