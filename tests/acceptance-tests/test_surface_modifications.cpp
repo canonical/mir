@@ -219,9 +219,8 @@ TEST_F(SurfaceModifications, surface_spec_min_height_is_respected)
 
     auto const shell_surface = this->shell_surface.lock();
 
-    generate_alt_click_at(shell_surface->input_bounds().bottom_right());
-
     EXPECT_CALL(surface_observer, resized_to(HeightEq(min_height)));
 
+    generate_alt_click_at(shell_surface->input_bounds().bottom_right());
     generate_alt_move_to(shell_surface->top_left());
 }

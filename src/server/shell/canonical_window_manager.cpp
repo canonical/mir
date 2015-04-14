@@ -259,8 +259,15 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     std::shared_ptr<scene::Surface> const& surface,
     SurfaceSpecification const& modifications)
 {
+    auto& surface_info = tools->info_for(surface);
+
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
+
+    if (modifications.min_width.is_set()) surface_info.min_width = modifications.min_width;
+    if (modifications.min_height.is_set()) surface_info.min_height = modifications.min_height;
+    if (modifications.max_width.is_set()) surface_info.max_width = modifications.max_width;
+    if (modifications.max_height.is_set()) surface_info.max_height = modifications.max_height;
 
     if (modifications.width.is_set() || modifications.height.is_set())
     {
@@ -621,6 +628,28 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     bool const top_resize,
     Rectangle const& bounds)
 {
+    auto const& surface_info = tools->info_for(surface);
+
+    if (surface_info.min_width.is_set() && surface_info.min_width.value() > new_size.width)
+    {
+        if (left_resize)
+        {
+            new_pos.x += surface_info.min_width.value() - new_size.width;
+        }
+
+        new_size.width = surface_info.min_width.value();
+    }
+
+    if (surface_info.min_height.is_set() && surface_info.min_height.value() > new_size.height)
+    {
+        if (top_resize)
+        {
+            new_pos.y += surface_info.min_height.value() - new_size.height;
+        }
+
+        new_size.height = surface_info.min_height.value();
+    }
+
     if (left_resize)
     {
         if (new_pos.x < bounds.top_left.x)
@@ -651,7 +680,7 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
             new_size.height = new_size.height + to_bottom_right.dy;
     }
 
-    switch (tools->info_for(surface).state)
+    switch (surface_info.state)
     {
     case mir_surface_state_restored:
         break;
