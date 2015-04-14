@@ -218,10 +218,10 @@ EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
         mOpeningDevices(0), mClosingDevices(0),
         mNeedToSendFinishedDeviceScan(false),
         mNeedToReopenDevices(false), mNeedToScanDevices(true),
+        mEpollFd{epoll_create(EPOLL_SIZE_HINT)},
         mPendingEventCount(0), mPendingEventIndex(0), mPendingUdevEvent(false) {
     acquire_wake_lock(PARTIAL_WAKE_LOCK, WAKE_LOCK_ID);
 
-    mEpollFd = epoll_create(EPOLL_SIZE_HINT);
     LOG_ALWAYS_FATAL_IF(mEpollFd < 0, "Could not create epoll instance.  errno=%d", errno);
 
     device_listener->filter_by_subsystem("input");
@@ -265,7 +265,6 @@ EventHub::~EventHub(void) {
         delete device;
     }
 
-    ::close(mEpollFd);
     ::close(mWakeReadPipeFd);
     ::close(mWakeWritePipeFd);
 
@@ -1498,6 +1497,11 @@ bool EventHub::hasDeviceByPathLocked(String8 const& path)
         if (device->path == path) return true;
     }
     return false;
+}
+
+mir::Fd EventHub::fd()
+{
+    return mEpollFd;
 }
 
 }; // namespace android

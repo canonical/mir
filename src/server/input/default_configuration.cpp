@@ -29,7 +29,6 @@
 #include "android/event_filter_dispatcher_policy.h"
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
-#include "android/android_input_manager.h"
 #include "android/input_translator.h"
 #include "display_input_region.h"
 #include "event_filter_chain.h"
@@ -217,31 +216,6 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
         });
 }
 
-std::shared_ptr<mi::InputManager>
-mir::DefaultServerConfiguration::the_input_manager()
-{
-    return input_manager(
-        [&, this]() -> std::shared_ptr<mi::InputManager>
-        {
-            auto const options = the_options();
-            bool input_reading_required =
-                options->get<bool>(options::enable_input_opt) &&
-                !options->is_set(options::host_socket_opt);
-
-            if (input_reading_required)
-            {
-                if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
-                        mr::legacy_input::initialize(the_logger());
-
-                return std::make_shared<mia::InputManager>(
-                    the_event_hub(),
-                    the_input_reader_thread());
-            }
-            else
-                return std::make_shared<mi::NullInputManager>();
-        });
-}
-
 std::shared_ptr<droidinput::EventHubInterface>
 mir::DefaultServerConfiguration::the_event_hub()
 {
@@ -269,16 +243,6 @@ mir::DefaultServerConfiguration::the_input_reader()
         [this]()
         {
             return std::make_shared<droidinput::InputReader>(the_event_hub(), the_input_reader_policy(), the_input_translator());
-        });
-}
-
-std::shared_ptr<mia::InputThread>
-mir::DefaultServerConfiguration::the_input_reader_thread()
-{
-    return input_reader_thread(
-        [this]()
-        {
-            return std::make_shared<mia::CommonInputThread>("Mir/InputReader", new droidinput::InputReaderThread(the_input_reader()));
         });
 }
 
@@ -398,9 +362,9 @@ mir::DefaultServerConfiguration::the_input_platform()
 }
 
 std::shared_ptr<mi::InputManager>
-mir::DefaultServerConfiguration::the_new_input_manager()
+mir::DefaultServerConfiguration::the_input_manager()
 {
-    return new_input_manager(
+    return input_manager(
         [this]() -> std::shared_ptr<mi::InputManager>
         {
             auto const options = the_options();
@@ -411,7 +375,11 @@ mir::DefaultServerConfiguration::the_new_input_manager()
 
             if (input_reading_required)
             {
-                auto ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
+                if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
+                        mr::legacy_input::initialize(the_logger());
+
+                auto ret = std::make_shared<mi::DefaultInputManager>(
+                    the_input_reading_multiplexer(), the_input_reader(), the_event_hub());
 
                 auto platform = the_input_platform();
                 if (platform)

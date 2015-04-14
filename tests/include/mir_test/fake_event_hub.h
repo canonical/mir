@@ -112,9 +112,11 @@ public:
     void cancelVibrate(int32_t deviceId) override;
     void requestReopenDevices() override;
     void wake() override;
+    void wake(droidinput::RawEvent const&);
     void dump(droidinput::String8& dump) override;
     void monitor() override;
     void flush() override;
+    mir::Fd fd() override;
 
     void synthesize_builtin_keyboard_added();
     void synthesize_builtin_cursor_added();
@@ -164,6 +166,7 @@ public:
 private:
     const KeyInfo* getKey(const FakeDevice* device, int32_t scanCode, int32_t usageCode) const;
     bool throw_in_get_events = false;
+    mir::Fd trigger_fd; // not really used
 
 };
 }

@@ -22,10 +22,14 @@
 #include "mir_test/signal.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_input_platform.h"
+#include "mir_test_doubles/mock_event_hub.h"
+#include "mir_test_doubles/mock_input_reader.h"
 
 #include "mir/input/platform.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
+
+#include <sys/eventfd.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -43,10 +47,17 @@ struct DefaultInputManagerTest : ::testing::Test
     md::MultiplexingDispatchable multiplexer;
     md::ActionQueue platform_dispatchable;
     NiceMock<mtd::MockInputPlatform> platform;
-    mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer)};
+    mir::Fd event_hub_fd{eventfd(0, EFD_CLOEXEC|EFD_NONBLOCK)};
+    NiceMock<mtd::MockEventHub> event_hub;
+    NiceMock<mtd::MockInputReader> reader;
+    mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer), mt::fake_shared(reader), mt::fake_shared(event_hub)};
 
     DefaultInputManagerTest()
     {
+        ON_CALL(event_hub, fd())
+            .WillByDefault(Return(event_hub_fd));
+        ON_CALL(platform, dispatchable())
+            .WillByDefault(Return(mt::fake_shared(platform_dispatchable)));
         ON_CALL(platform, dispatchable())
             .WillByDefault(Return(mt::fake_shared(platform_dispatchable)));
     }
@@ -66,6 +77,21 @@ struct DefaultInputManagerTest : ::testing::Test
     }
 };
 
+}
+
+TEST_F(DefaultInputManagerTest, flushes_event_hub_before_anything_to_fulfill_legacy_tests)
+{
+    testing::InSequence seq;
+    EXPECT_CALL(event_hub, flush()).Times(1);
+    EXPECT_CALL(platform, start()).Times(1);
+    EXPECT_CALL(platform, dispatchable()).Times(2);
+    EXPECT_CALL(platform, stop()).Times(1);
+
+    input_manager.add_platform(mt::fake_shared(platform));
+    input_manager.start();
+    Mock::VerifyAndClearExpectations(&event_hub);
+
+    EXPECT_TRUE(wait_for_multiplexer_dispatch());
 }
 
 TEST_F(DefaultInputManagerTest, starts_platforms_on_start)
