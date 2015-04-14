@@ -38,11 +38,16 @@ int const title_bar_height = 10;
 
 msh::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
     std::shared_ptr<scene::Session> const& session,
-    std::shared_ptr<scene::Surface> const& surface) :
+    std::shared_ptr<scene::Surface> const& surface,
+    scene::SurfaceCreationParameters const& params) :
     state{mir_surface_state_restored},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
-    parent{surface->parent()}
+    parent{surface->parent()},
+    min_width{params.min_width},
+    min_height{params.min_height},
+    max_width{params.max_width},
+    max_height{params.max_height}
 {
 }
 
