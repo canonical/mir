@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 
+#include "mir/events/event_builders.h"
 #include "mir/shell/shell_wrapper.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -25,6 +26,7 @@
 
 #include "mir_test/fake_shared.h"
 
+namespace mev = mir::events;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
@@ -76,11 +78,13 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
 
         mtf::ConnectedClientWithASurface::SetUp();
 
-        auto const scene_surface = shell->latest_surface.lock();
+        shell_surface = shell->latest_surface;
+        auto const scene_surface = shell_surface.lock();
         scene_surface->add_observer(mt::fake_shared(surface_observer));
     }
 
     MockSurfaceObserver surface_observer;
+    std::weak_ptr<ms::Surface> shell_surface;
 };
 
 MATCHER_P(WidthEq, value, "")
@@ -159,4 +163,61 @@ TEST_F(SurfaceModifications, surface_spec_change_height_is_notified)
 
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
+}
+
+TEST_F(SurfaceModifications, surface_spec_min_height_is_respected)
+{
+    auto const min_height = 13;
+
+    auto const shell = server.the_shell();
+    auto const shell_surface = this->shell_surface.lock();
+
+    {
+        auto const spec = mir_connection_create_spec_for_changes(connection);
+        mir_surface_spec_set_height(spec, min_height);
+        mir_surface_apply_spec(surface, spec);
+        mir_surface_spec_release(spec);
+    }
+
+    {
+        auto click_position = shell_surface->input_bounds().bottom_right();
+
+        MirInputDeviceId const device_id{7};
+        int64_t const timestamp{39};
+        auto const modifiers = mir_input_event_modifier_alt;
+        std::vector<MirPointerButton> depressed_buttons{mir_pointer_button_tertiary};
+
+        auto const x_axis_value = click_position.x.as_float();
+        auto const y_axis_value = click_position.y.as_float();
+        auto const hscroll_value = 0.0;
+        auto const vscroll_value = 0.0;
+        auto const action = mir_pointer_action_button_down;
+
+        auto const click_event = mev::make_event(device_id, timestamp, modifiers,
+            action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+
+        shell->handle(*click_event);
+    }
+
+    EXPECT_CALL(surface_observer, resized_to(HeightEq(min_height)));
+
+    {
+        auto drag_position  = shell_surface->top_left();
+
+        MirInputDeviceId const device_id{7};
+        int64_t const timestamp{39};
+        auto const modifiers = mir_input_event_modifier_alt;
+        std::vector<MirPointerButton> depressed_buttons{mir_pointer_button_tertiary};
+
+        auto const x_axis_value = drag_position.x.as_float();
+        auto const y_axis_value = drag_position.y.as_float();
+        auto const hscroll_value = 0.0;
+        auto const vscroll_value = 0.0;
+        auto const action = mir_pointer_action_motion;
+
+        auto const drag_event = mev::make_event(device_id, timestamp, modifiers,
+            action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+
+        shell->handle(*drag_event);
+    }
 }
