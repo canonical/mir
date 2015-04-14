@@ -18,8 +18,7 @@
  *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
+#include "mir/events/event_private.h"
 #include "mir/shell/shell_wrapper.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface.h"
@@ -91,8 +90,7 @@ struct InputClient
         surface = mir_surface_create_sync(spec);
         mir_surface_spec_release(spec);
 
-        MirEventDelegate const event_delegate { handle_input, this };
-        mir_surface_set_event_handler(surface, &event_delegate);
+        mir_surface_set_event_handler(surface, handle_input, this);
         mir_buffer_stream_swap_buffers_sync(
             mir_surface_get_buffer_stream(surface));
 
@@ -109,7 +107,7 @@ struct InputClient
     {
         auto const client = static_cast<InputClient*>(context);
 
-        if (ev->type == mir_event_type_surface)
+        if (mir_event_get_type(ev) == mir_event_type_surface)
             return;
 
         client->handler.handle_input(ev);

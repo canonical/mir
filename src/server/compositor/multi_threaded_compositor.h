@@ -26,6 +26,7 @@
 #include <memory>
 #include <vector>
 #include <future>
+#include <chrono>
 
 namespace mir
 {

@@ -22,6 +22,8 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
       . Added support and example code for rendering window title strings.
       . Added proof-of-concept support for Snappy packaging for Ubuntu Core.
       . Drop support for C++11. Now C++14 is required to build Mir.
+      . Deprecated MirEventDelegate. Now you just pass the two fields as
+        parameters directly to mir_surface_set_event_handler().
       . TODO: mention more enhancements
     - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8

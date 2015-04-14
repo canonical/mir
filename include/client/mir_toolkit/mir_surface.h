@@ -168,6 +168,18 @@ mir_connection_create_spec_for_dialog(MirConnection* connection,
                                       MirPixelFormat format);
 
 /**
+ * Create a surface specification for updating a surface.
+ *
+ * This can be applied to one or more target surfaces using
+ * mir_surface_apply_spec(...).
+ *
+ * \param [in] connection   a valid mir connection
+ *
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_changes(MirConnection* connection);
+
+/**
  * Create a surface from a given specification
  *
  *
@@ -319,10 +331,12 @@ MirSurface *mir_connection_create_surface_sync(
  *            called back in different threads, for the same surface,
  *            simultaneously.
  *   \param [in] surface        The surface
- *   \param [in] event_handler  The event handler to call
+ *   \param [in] callback       The callback function
+ *   \param [in] context        Additional argument to be passed to callback
  */
 void mir_surface_set_event_handler(MirSurface *surface,
-                                   MirEventDelegate const *event_handler);
+                                   mir_surface_event_callback callback,
+                                   void* context);
 
 /**
  * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,
@@ -575,40 +589,33 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
  * Change the title (name) of a surface.
  *   \param [in] surface  The surface to rename
  *   \param [in] name     The new name
- *   \return              When the change has completed
  */
-MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name);
+void mir_surface_set_title(MirSurface* surface, char const* name);
 
-
-/** generate a batch of changes to apply to the surface via
- *  mir_surface_spec_commit_changes. The returned spec must be released with
- *  mir_surface_spec_release;
- *  \param [in] surface  The surface the changes will take effect on
- *  \return              A wait handle that can be passed to mir_wait_for
+/**
+ * Request changes to the specification of a surface. The server will decide
+ * whether and how the request can be honoured.
+ *
+ *   \param [in] surface  The surface to rename
+ *   \param [in] spec     Spec with the requested changes applied
  */
-MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surface);
-
-/** Commit the changes accummulated in the MirSurfaceSpect to the surface
- * \param [in] spec  The spec to apply
- * \return           A wait handle that is
- */
-MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec);
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
 /**
  * Retreive the buffer stream at the index specified
- *  \param spec  The spec of interest
- *  \param index The index of the buffer stream within the spec. An index of 0
- *               is the bottom-most surface; and index of
- *               mir_surface_spec_num_streams() - 1 is the top-most surface.
- *  \returns     The buffer stream at the index, or nullptr if the index
- *               is greater than or equal to mir_surface_spec_num_streams()
+ *  \param surface  The surface of interest
+ *  \param index    The index of the buffer stream within the spec. An index of 0
+ *                  is the bottom-most surface; and index of
+ *                  mir_surface_num_streams() - 1 is the top-most surface.
+ *  \returns        The buffer stream at the index, or nullptr if the index
+ *                  is greater than or equal to mir_surface_num_streams()
  */ 
-MirBufferStream* mir_surface_spec_buffer_stream_at(MirSurfaceSpec* spec, unsigned int index);
+MirBufferStream* mir_surface_buffer_stream_at(MirSurface* surface, unsigned int index);
 
 /** Insert a buffer stream into the surface. index indicates at which point in
  *  the z-order of the existing surfaces the stream will be placed below.
  *  An index of 0 will place the surface at the bottom-most position.
- *  An index >= mir_surface_spec_num_streams() will place the surface at the
+ *  An index >= mir_surface_num_streams() will place the surface at the
  *  topmost position.
  *
  *  \param [in] spec    The spec to accumulate the request in
@@ -618,20 +625,6 @@ MirBufferStream* mir_surface_spec_buffer_stream_at(MirSurfaceSpec* spec, unsigne
  *  
  */
 void mir_surface_spec_insert_stream_at(MirSurfaceSpec* spec, MirBufferStream* stream, unsigned int index);
-
-
-/** Remove a buffer stream from the surface.
- *  \warning removing a buffer stream from the surface does NOT release the
- *           buffer stream. The returned buffer stream can be re-inserted, or
- *           released via mir_buffer_stream_release.
- *  \param [in] spec    The spec to accumulate the request in
- *  \param [in] index   The index of the streams to be removed.
- *  \return             The removed stream, or nullptr if (index >= 
- *                      mir_surface_spec_num_streams() or if spec was invalid).
- *  
- */
-MirBufferStream* mir_surface_spec_remove_stream_at(MirSurfaceSpec* spec, unsigned int index);
-
 
 /** Specify the position of the stream within the surface. This establishes
  *  positions relative to the other streams in the surface, and is not a
@@ -651,12 +644,12 @@ MirBufferStream* mir_surface_spec_remove_stream_at(MirSurfaceSpec* spec, unsigne
 void mir_surface_spec_set_buffer_stream_position(
     MirSurfaceSpec* spec, unsigned int index, int x, int y);
 
-/** The number of streams currently associated with the specification.
+/** The number of streams currently associated with the surface.
  *
- *  \param [in] spec  The spec of interest
- *  \return           The number of streams associated with spec
+ *  \param [in] surface  The surface of interest
+ *  \return              The number of streams associated with spec
  */
-unsigned int mir_surface_spec_num_streams(MirSurfaceSpec* spec);
+unsigned int mir_surface_num_streams(MirSurface* surface);
 
 #ifdef __cplusplus
 }

@@ -213,30 +213,27 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
 TEST_F(BufferStreamArrangement, arrangements_are_applied)
 {
     using namespace testing;
-    auto change_spec = mir_surface_begin_changes(surface);
+    auto change_spec = mir_connection_create_spec_for_changes(connection);
 
+    auto z_index = 0u;
     for(auto& stream : streams)
-        mir_surface_spec_insert_stream_at(
-            change_spec, stream->handle(), mir_surface_spec_num_streams(change_spec));
+        mir_surface_spec_insert_stream_at(change_spec, stream->handle(), z_index++);
+    mir_surface_spec_insert_stream_at(change_spec, primary_stream->handle(), z_index++);
 
-    auto num_streams = mir_surface_spec_num_streams(change_spec);
-    EXPECT_THAT(mir_surface_spec_num_streams(change_spec), Eq(streams.size() + 1));
-    for(auto i = 0u; i < num_streams; ++i)
+    for(auto i = 0u; i < streams.size() + 1; ++i)
         mir_surface_spec_set_buffer_stream_position(change_spec, i, i*10, i*10);
 
-    mir_wait_for(mir_surface_spec_commit_changes(change_spec));
-    mir_surface_spec_release(change_spec);
+    mir_surface_apply_spec(surface, change_spec);
 
-    //* check last spec is still same
-    change_spec = mir_surface_begin_changes(surface);
-    EXPECT_THAT(mir_surface_spec_num_streams(change_spec), Eq(num_streams));
+    auto num_streams = mir_surface_num_streams(surface);
+    EXPECT_THAT(num_streams, Eq(streams.size() + 1));
 
     std::vector<geom::Point> points;
     for(auto i = 0u; i < num_streams; i++)
     {
         int x = 0;
         int y = 0;
-        auto stream = mir_surface_spec_buffer_stream_at(change_spec, i);
+        auto stream = mir_surface_buffer_stream_at(surface, i);
         mir_buffer_stream_get_position(stream, &x, &y);
         points.emplace_back(geom::Point{x, y});
         if (i == 0)

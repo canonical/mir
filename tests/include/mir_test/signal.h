@@ -50,6 +50,8 @@ public:
         return cv.wait_until(lock, time, [this]() { return signalled; });
     }
 
+    void reset();
+
 private:
     std::mutex mutex;
     std::condition_variable cv;

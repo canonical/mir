@@ -31,14 +31,14 @@ namespace mir
 namespace shell { class DisplayLayout; }
 namespace examples
 {
-struct CanonicalSessionInfo
+struct CanonicalSessionInfoCopy
 {
     int surfaces{0};
 };
 
-struct CanonicalSurfaceInfo
+struct CanonicalSurfaceInfoCopy
 {
-    CanonicalSurfaceInfo(
+    CanonicalSurfaceInfoCopy(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface);
 
@@ -47,7 +47,8 @@ struct CanonicalSurfaceInfo
     std::weak_ptr<scene::Session> session;
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
-    std::shared_ptr<scene::Surface> decoration;
+    std::shared_ptr<scene::Surface> titlebar;
+    bool is_titlebar = false;
 };
 
 // standard window management algorithm:
@@ -58,13 +59,14 @@ struct CanonicalSurfaceInfo
 //  o Maximize/restore current window (to display height): Shift-F11
 //  o Maximize/restore current window (to display width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class CanonicalWindowManagerPolicy
+class CanonicalWindowManagerPolicyCopy
 {
 public:
-    using Tools = BasicWindowManagerTools<CanonicalSessionInfo, CanonicalSurfaceInfo>;
-    using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfo>::type;
+    using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy, CanonicalSurfaceInfoCopy>;
+    using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfoCopy>::type;
+    using CanonicalSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfoCopy>::type;
 
-    explicit CanonicalWindowManagerPolicy(
+    explicit CanonicalWindowManagerPolicyCopy(
         Tools* const tools,
         std::shared_ptr<shell::DisplayLayout> const& display_layout);
 
@@ -83,20 +85,26 @@ public:
 
     void handle_new_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
+    void handle_modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        shell::SurfaceSpecification const& modifications);
+
     void handle_delete_surface(std::shared_ptr<scene::Session> const& session, std::weak_ptr<scene::Surface> const& surface);
 
     int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value);
 
     void drag(geometry::Point cursor);
 
-    bool handle_key_event(MirKeyboardEvent const* event);
+    bool handle_keyboard_event(MirKeyboardEvent const* event);
 
     bool handle_touch_event(MirTouchEvent const* event);
 
     bool handle_pointer_event(MirPointerEvent const* event);
 
-    std::vector<std::shared_ptr<scene::Surface>> generate_decorations_for(
-        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
+    void generate_decorations_for(
+        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface,
+        CanonicalSurfaceInfoMap& surface_info);
 
 private:
     static const int modifier_mask =

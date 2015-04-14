@@ -48,7 +48,9 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
                                                               int width, int height,
                                                               MirPixelFormat format)
 {
-    return new MirSurfaceSpec{connection, width, height, format};
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_normal;
+    return spec;
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_menu(MirConnection* connection,
@@ -137,6 +139,7 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
                                   mir_surface_callback callback, void* context)
 {
     mir::require(requested_specification != nullptr);
+    mir::require(requested_specification->type.is_set());
 
     auto conn = requested_specification->connection;
     mir::require(mir_connection_is_valid(conn));
@@ -225,14 +228,33 @@ MirSurface* mir_connection_create_surface_sync(
     return surface;
 }
 
-void mir_surface_set_event_handler(MirSurface* surface,
-                                   MirEventDelegate const* delegate)
+__asm__(".symver new_mir_surface_set_event_handler,mir_surface_set_event_handler@@MIR_CLIENT_8.4");
+extern "C"
+void new_mir_surface_set_event_handler(MirSurface* surface,
+                                       mir_surface_event_callback callback,
+                                       void* context)
+{
+    surface->set_event_handler(callback, context);
+}
+
+// Deprecated but ABI backward compatible --->
+typedef struct MirEventDelegate
+{
+    mir_surface_event_callback callback;
+    void *context;
+} MirEventDelegate;
+
+__asm__(".symver old_mir_surface_set_event_handler,mir_surface_set_event_handler@MIR_CLIENT_8");
+extern "C"
+void old_mir_surface_set_event_handler(MirSurface* surface,
+                                       MirEventDelegate const* delegate)
 {
     if (delegate)
         surface->set_event_handler(delegate->callback, delegate->context);
     else
         surface->set_event_handler(nullptr, nullptr);
 }
+// <--- Deprecated
 
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface* surface)
 {
@@ -561,51 +583,47 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-MirSurfaceSpec* mir_surface_begin_changes(MirSurface* surf)
+namespace
 {
-    mir::require(mir_surface_is_valid(surf));
-
-    MirSurfaceSpec* spec = nullptr;
-    try
-    {
-        spec = new MirSurfaceSpec(surf);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return spec;
+MirSurfaceSpec* create_spec_for_changes()
+try
+{
+    return new MirSurfaceSpec{};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
+}
 }
 
-MirWaitHandle* mir_surface_spec_commit_changes(MirSurfaceSpec* spec)
+MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
 {
-    if (!spec->self.is_set())
-        return nullptr;
+    mir::require(mir_connection_is_valid(connection));
 
-    auto surface = spec->self.value();
-    return surface->modify(*spec);
+    return create_spec_for_changes();
 }
 
-MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name)
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
+try
 {
-    MirWaitHandle* result = nullptr;
-    if (auto spec = mir_surface_begin_changes(surf))
-    {
-        mir_surface_spec_set_name(spec, name);
-        result = mir_surface_spec_commit_changes(spec);
-        mir_surface_spec_release(spec);
-    }
-    return result;
+    mir::require(mir_surface_is_valid(surface));
+    mir::require(spec);
+
+    surface->modify(*spec);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    // Keep calm and carry on
 }
 
-bool mir_surface_spec_place_buffer_stream_below(
-    MirSurfaceSpec* spec, MirBufferStream* stream_to_place, MirBufferStream* reference_stream)
+void mir_surface_set_title(MirSurface* surface, char const* name)
 {
-    (void) spec;
-    (void) stream_to_place;
-    (void) reference_stream;
-    return false;
+    auto const spec = create_spec_for_changes();
+    mir_surface_spec_set_name(spec, name);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
 }
 
 void mir_surface_spec_set_buffer_stream_position(
@@ -617,24 +635,15 @@ void mir_surface_spec_set_buffer_stream_position(
     (void) y;
 }
 
-unsigned int mir_surface_spec_num_streams(MirSurfaceSpec*)
+unsigned int mir_surface_num_streams(MirSurface* surface)
 {
+    (void) surface;
     return 1;
 }
 
-unsigned int mir_surface_get_streams(
-    MirSurface* surface, MirBufferStream** streams, MirRectangle* positions, unsigned int num_streams)
+MirBufferStream* mir_surface_buffer_stream_at(MirSurface* surface, unsigned int index)
 {
     (void) surface;
-    (void) streams;
-    (void) positions;
-    (void) num_streams;
-    return 0;
-}
-
-MirBufferStream* mir_surface_spec_buffer_stream_at(MirSurfaceSpec* spec, unsigned int index)
-{
-    (void) spec;
     (void) index;
     return nullptr;
 }
@@ -644,11 +653,4 @@ void mir_surface_spec_insert_stream_at(MirSurfaceSpec* spec, MirBufferStream* st
     (void) spec;
     (void) stream;
     (void) index;
-}
-
-MirBufferStream* mir_surface_spec_remove_stream_at(MirSurfaceSpec* spec, unsigned int index)
-{
-    (void) spec;
-    (void) index;
-    return nullptr;
 }

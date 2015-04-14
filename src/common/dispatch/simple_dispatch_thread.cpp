@@ -18,11 +18,13 @@
 
 #include "mir/dispatch/simple_dispatch_thread.h"
 #include "mir/dispatch/dispatchable.h"
+#include "mir/logging/logger.h"
 #include "utils.h"
 
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <system_error>
+#include <array>
 #include <signal.h>
 #include <boost/exception/all.hpp>
 
@@ -60,27 +62,42 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
 
     for (;;)
     {
-        epoll_event events[2];
-        if (epoll_wait(epoll_fd, events, sizeof(events), -1) > 1)
+        std::array<epoll_event,2> events;
+        auto const num_available_events =
+            epoll_wait(epoll_fd, events.data(), events.size(), -1);
+
+        if (num_available_events == 1)
+        {
+            if (events[0].data.u32 == fd_names::dispatchee_fd)
+            {
+                if (!dispatchee->dispatch(md::epoll_to_fd_event(events[0])))
+                {
+                    // No need to keep looping, the Dispatchable's not going to produce any more events.
+                    return;
+                }
+            }
+            else if (events[0].data.u32 == fd_names::shutdown)
+            {
+                // The only thing we do with the shutdown fd is to close it.
+                return;
+            }
+        }
+        else if (num_available_events > 1)
         {
             // Because we only have two fds in the epoll, if there is more than one
             // event pending then one of them must be a shutdown event.
             // So, shutdown.
             return;
         }
-
-        if (events[0].data.u32 == fd_names::dispatchee_fd)
+        else if (num_available_events < 0)
         {
-            if (!dispatchee->dispatch(md::epoll_to_fd_event(events[0])))
+            // Although we have blocked signals in this thread, we can still
+            // get interrupted by SIGSTOP (which is unblockable and non-fatal).
+            if (errno != EINTR)
             {
-                // No need to keep looping, the Dispatchable's not going to produce any more events.
-                return;
+                BOOST_THROW_EXCEPTION((std::system_error{
+                    errno, std::system_category(), "Failed to wait for epoll events"}));
             }
-        }
-        else if (events[0].data.u32 == fd_names::shutdown)
-        {
-            // The only thing we do with the shutdown fd is to close it.
-            return;
         }
     }
 }
@@ -120,8 +137,13 @@ md::SimpleDispatchThread::~SimpleDispatchThread() noexcept
     if (eventloop.get_id() == std::this_thread::get_id())
     {
         // We're being destroyed from within the dispatch callback
-        // That's OK; we'll exit once we return back to wait_for_events_forever
-        eventloop.detach();
+        // Attempting to join the eventloop will result in a trivial deadlock.
+        // 
+        // The std::thread destructor will call std::terminate() for us, let's
+        // leave a useful message.
+        mir::logging::log(mir::logging::Severity::critical,
+                          "Destroying SimpleDispatchThread from within a dispatch callback. This is a programming error.",
+                          "Dispatch");
     }
     else if (eventloop.joinable())
     {

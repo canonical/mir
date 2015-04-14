@@ -165,10 +165,10 @@ mgm::BypassOption mgm::Platform::bypass_option() const
     return bypass_option_;
 }
 
-extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
+extern "C" std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<DisplayReport> const& report)
+    std::shared_ptr<mir::graphics::DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});

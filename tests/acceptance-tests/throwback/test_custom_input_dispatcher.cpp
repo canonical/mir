@@ -16,8 +16,6 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
 #include "mir/input/input_dispatcher.h"
 
 #include "clients.h"
@@ -34,6 +32,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/scene/observer.h"
+#include "mir/events/event_private.h"
 
 #include "mir_toolkit/event.h"
 
@@ -166,10 +165,7 @@ TEST_F(CustomInputDispatcher, receives_focus_changes)
             using namespace ::testing;
             auto const dispatcher = the_input_dispatcher_mock();
 
-            InSequence seq;
-            EXPECT_CALL(*dispatcher, focus_cleared()).Times(1);
-            EXPECT_CALL(*dispatcher, focus_changed(_)).Times(1);
-            EXPECT_CALL(*dispatcher, focus_cleared()).Times(1)
+            EXPECT_CALL(*dispatcher, focus_changed(_)).Times(1)
                 .WillOnce(InvokeWithoutArgs([this] { dispatching_done.signal_ready(); }));
         }
     } server_config;

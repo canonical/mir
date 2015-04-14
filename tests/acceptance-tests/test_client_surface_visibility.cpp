@@ -56,9 +56,11 @@ public:
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& params) override
     {
-        auto const surface = msh::ShellWrapper::create_surface(session, params);
-        surfaces.push_back(session->surface(surface));
-        return surface;
+        auto const result = msh::ShellWrapper::create_surface(session, params);
+        auto const surface = session->surface(result);
+        surface->move_to({0, 0});
+        surfaces.push_back(surface);
+        return result;
     }
 
     std::shared_ptr<ms::Surface> surface(int index)
@@ -112,8 +114,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
         mtf::ConnectedClientWithASurface::SetUp();
 
-        MirEventDelegate delegate{&event_callback, &mock_visibility_callback};
-        mir_surface_set_event_handler(surface, &delegate);
+        mir_surface_set_event_handler(surface, &event_callback, &mock_visibility_callback);
 
         // Swap enough buffers to ensure compositor threads are into run loop
         for (auto i = 0; i != 11; ++i)

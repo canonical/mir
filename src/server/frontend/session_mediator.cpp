@@ -22,6 +22,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/coordinate_translator.h"
 #include "mir/frontend/display_changer.h"
@@ -68,6 +69,7 @@
 #include <cstring>
 
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mf = mir::frontend;
 namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
@@ -415,26 +417,52 @@ void mf::SessionMediator::configure_surface(
 void mf::SessionMediator::modify_surface(
     google::protobuf::RpcController*, // controller,
     const mir::protobuf::SurfaceModifications* request,
-    mir::protobuf::Void* response,
+    mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
+    auto const& surface_specification = request->surface_specification();
+
     {
         std::unique_lock<std::mutex> lock(session_mutex);
 
-        auto session = weak_session.lock();
+        auto const session = weak_session.lock();
         if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        mf::Surface::Modifications mods;
-        if (request->has_name())
-            mods.name = request->name();
-        // TODO: More fields soon (LP: #1422522) (LP: #1420573)
+        msh::SurfaceSpecification mods;
+
+        #define COPY_IF_SET(name)\
+            if (surface_specification.has_##name())\
+                mods.name = decltype(mods.name.value())(surface_specification.name())
+
+        COPY_IF_SET(width);
+        COPY_IF_SET(height);
+        COPY_IF_SET(pixel_format);
+        COPY_IF_SET(buffer_usage);
+        COPY_IF_SET(name);
+        COPY_IF_SET(output_id);
+        COPY_IF_SET(type);
+        COPY_IF_SET(state);
+        COPY_IF_SET(preferred_orientation);
+        COPY_IF_SET(parent_id);
+        // aux_rect is a special case (below)
+        COPY_IF_SET(edge_attachment);
+        COPY_IF_SET(min_width);
+        COPY_IF_SET(min_height);
+        COPY_IF_SET(max_width);
+        COPY_IF_SET(max_height);
+
+        #undef COPY_IF_SET
+
+        if (surface_specification.has_aux_rect())
+        {
+            auto const& rect = surface_specification.aux_rect();
+            mods.aux_rect = {{rect.left(), rect.top()}, {rect.width(), rect.height()}};
+        }
 
         auto const id = mf::SurfaceId(request->surface_id().value());
-        auto const surface = session->get_surface(id);
-        // TODO: Route this through shell after the dust settles (alan_g):
-        if (!surface->modify(mods))
-            response->set_error("Unsupported surface modifications");
+
+        shell->modify_surface(session, id, mods);
     }
 
     done->Run();
