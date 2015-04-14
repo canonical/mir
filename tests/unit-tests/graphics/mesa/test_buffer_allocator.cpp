@@ -305,6 +305,7 @@ TEST_F(MesaBufferAllocatorTest, reconstructs_from_native_type)
     native_buffer.width = size.width.as_uint32_t(); 
     native_buffer.height = size.height.as_uint32_t(); 
     native_buffer.stride = stride;
+    native_buffer.flags = GBM_BO_USE_RENDERING;
 
     struct gbm_import_fd_data expected_data {
         native_buffer.fd[0],
