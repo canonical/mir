@@ -122,7 +122,7 @@ std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
 
     if (gralloc_module->registerBuffer(gralloc_module.get(), handle))
     {
-        ::operator delete(const_cast<native_handle_t*>(handle));
+        ::operator delete(handle);
         BOOST_THROW_EXCEPTION(std::runtime_error("error registering graphics buffer for client use\n"));
     }
 
