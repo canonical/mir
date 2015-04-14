@@ -323,28 +323,32 @@ TEST_F(InputDeviceHubTest, tracks_pointer_position)
 
     hub.add_device(mt::fake_shared(device));
 
-    geom::Displacement movement{10,10};
-    sink->confine_pointer_movement(movement);
-    sink->confine_pointer_movement(movement);
-    movement = geom::Displacement{-10,10};
-    sink->confine_pointer_movement(movement);
+    geom::Point pos = first;
+    sink->confine_pointer(pos);
+    pos = second;
+    sink->confine_pointer(pos);
+    pos = third;
+    sink->confine_pointer(pos);
 }
 
 TEST_F(InputDeviceHubTest, confines_pointer_movement)
 {
     using namespace ::testing;
+    geom::Point confined_pos{10, 18};
+
     ON_CALL(mock_region,confine(_))
-        .WillByDefault(SetArgReferee<0>(geom::Point{10,18}));
+        .WillByDefault(SetArgReferee<0>(confined_pos));
+
     mi::InputSink* sink;
     capture_input_sink(device, sink);
     hub.add_device(mt::fake_shared(device));
 
-    geom::Displacement movement1{10,20};
-    sink->confine_pointer_movement(movement1);
+    geom::Point pos1{10,20};
+    sink->confine_pointer(pos1);
 
-    geom::Displacement movement2{5,10};
-    sink->confine_pointer_movement(movement2);
+    geom::Point pos2{20,30};
+    sink->confine_pointer(pos2);
 
-    EXPECT_THAT(movement1, Eq(geom::Displacement{10,18}));
-    EXPECT_THAT(movement2, Eq(geom::Displacement{0,0}));
+    EXPECT_THAT(pos1, Eq(confined_pos));
+    EXPECT_THAT(pos2, Eq(confined_pos));
 }

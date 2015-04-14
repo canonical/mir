@@ -79,7 +79,7 @@ private:
     public:
         RegisteredDevice(std::shared_ptr<InputDevice> const& dev, std::shared_ptr<InputDispatcher> const& dispatcher, std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer, DefaultInputDeviceHub * hub);
         void handle_input(MirEvent& event) override;
-        void confine_pointer_movement(mir::geometry::Displacement& movement) override;
+        void confine_pointer(mir::geometry::Point& position) override;
         mir::geometry::Rectangle bounding_rectangle() const override;
         bool device_matches(std::shared_ptr<InputDevice> const& dev) const;
         void start();
@@ -95,7 +95,6 @@ private:
         std::shared_ptr<InputDispatcher> const dispatcher;
         std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
         DefaultInputDeviceHub * hub;
-        geometry::Point pos;
         std::vector<TouchVisualizer::Spot> touch_spots;
         friend class DefaultInputDeviceHub;
     };

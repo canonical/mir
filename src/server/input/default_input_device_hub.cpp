@@ -35,7 +35,6 @@
 #include <algorithm>
 #include <atomic>
 
-
 namespace mi = mir::input;
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
@@ -211,12 +210,9 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
     device->stop();
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::confine_pointer_movement(mir::geometry::Displacement& movement)
+void mi::DefaultInputDeviceHub::RegisteredDevice::confine_pointer(mir::geometry::Point& position)
 {
-    auto new_position = pos + movement;
-    hub->input_region->confine(new_position);
-    movement = new_position - pos;
-    pos = new_position;
+    hub->input_region->confine(position);
 }
 
 mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_rectangle() const

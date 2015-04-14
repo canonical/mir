@@ -35,9 +35,9 @@ public:
     virtual ~InputSink() = default;
     virtual void handle_input(MirEvent& event) = 0;
     /**
-     * Confine relative movement of pointer
+     * Confine position of a pointer
      */
-    virtual void confine_pointer_movement(mir::geometry::Displacement& movement) = 0;
+    virtual void confine_pointer(mir::geometry::Point& position) = 0;
 
     /**!
      * Obtain the bounding rectangle of the destination area for this input sink
