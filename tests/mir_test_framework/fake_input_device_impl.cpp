@@ -74,20 +74,16 @@ uint32_t to_modifier(int32_t scan_code)
 
 uint32_t expand_modifier(uint32_t modifiers)
 {
-    if ((modifiers&mir_input_event_modifier_alt_left) ||
-        (modifiers&mir_input_event_modifier_alt_right))
+    if ((modifiers & mir_input_event_modifier_alt_left) || (modifiers & mir_input_event_modifier_alt_right))
         modifiers |= mir_input_event_modifier_alt;
 
-    if ((modifiers&mir_input_event_modifier_ctrl_left) ||
-        (modifiers&mir_input_event_modifier_ctrl_right))
+    if ((modifiers & mir_input_event_modifier_ctrl_left) || (modifiers & mir_input_event_modifier_ctrl_right))
         modifiers |= mir_input_event_modifier_ctrl;
 
-    if ((modifiers&mir_input_event_modifier_shift_left) ||
-        (modifiers&mir_input_event_modifier_shift_right))
+    if ((modifiers & mir_input_event_modifier_shift_left) || (modifiers & mir_input_event_modifier_shift_right))
         modifiers |= mir_input_event_modifier_shift;
 
-    if ((modifiers&mir_input_event_modifier_meta_left) ||
-        (modifiers&mir_input_event_modifier_meta_right))
+    if ((modifiers & mir_input_event_modifier_meta_left) || (modifiers & mir_input_event_modifier_meta_right))
         modifiers |= mir_input_event_modifier_meta;
 
     return modifiers;
@@ -96,8 +92,7 @@ uint32_t expand_modifier(uint32_t modifiers)
 }
 
 mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
-    : queue{mir::make_module_ptr<md::ActionQueue>()},
-    device{mir::make_module_ptr<InputDevice>(info, queue)}
+    : queue{mir::make_module_ptr<md::ActionQueue>()}, device{mir::make_module_ptr<InputDevice>(info, queue)}
 {
     mtf::StubInputPlatform::add(device);
 }
@@ -145,8 +140,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     xkb_keysym_t key_code = 0;
     int64_t event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
                              std::chrono::system_clock::now().time_since_epoch()).count();
-    auto input_action = (key_params.action == synthesis::EventAction::Down) ? mir_keyboard_action_down:
-                                                                              mir_keyboard_action_up;
+
+    auto input_action =
+        (key_params.action == synthesis::EventAction::Down) ? mir_keyboard_action_down : mir_keyboard_action_up;
 
     auto event_modifiers = expand_modifier(modifiers);
     auto key_event = mir::events::make_event(
@@ -207,14 +203,14 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     auto event_modifiers = expand_modifier(modifiers);
     update_position(pointer.rel_x, pointer.rel_y);
     auto pointer_event = mir::events::make_event(device_id_unknown,
-                                                event_time,
-                                                event_modifiers,
-                                                mir_pointer_action_motion,
-                                                buttons,
-                                                pos.x.as_float(),
-                                                pos.y.as_float(),
-                                                scroll.x.as_float(),
-                                                scroll.y.as_float());
+                                                 event_time,
+                                                 event_modifiers,
+                                                 mir_pointer_action_motion,
+                                                 buttons,
+                                                 pos.x.as_float(),
+                                                 pos.y.as_float(),
+                                                 scroll.x.as_float(),
+                                                 scroll.y.as_float());
 
     sink->handle_input(*pointer_event);
 }
@@ -234,14 +230,12 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
                              std::chrono::system_clock::now().time_since_epoch()).count();
     auto event_modifiers = expand_modifier(modifiers);
 
-    auto touch_event = mir::events::make_event(device_id_unknown,
-                                               event_time,
-                                               event_modifiers);
+    auto touch_event = mir::events::make_event(device_id_unknown, event_time, event_modifiers);
 
     auto touch_action = mir_touch_action_up;
     if (touch.action == synthesis::TouchParameters::Action::Tap)
         touch_action = mir_touch_action_down;
-    else if(touch.action == synthesis::TouchParameters::Action::Move)
+    else if (touch.action == synthesis::TouchParameters::Action::Move)
         touch_action = mir_touch_action_change;
 
     MirTouchId touch_id = 1;
@@ -254,7 +248,6 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
     float touch_major = 5.0f;
     float touch_minor = 8.0f;
     float size_value = 8.0f;
-
 
     mir::events::add_touch(*touch_event,
                            touch_id,
