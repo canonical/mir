@@ -32,7 +32,7 @@ void PrintTo(MirInputEvent const& event, std::ostream *os)
         *os << "key_event(when=" << event_time << ", from=" << device_id
             << ", " << key_event_actions[mir_keyboard_event_action(key_event)] << ", code=" << mir_keyboard_event_key_code(key_event)
             << ", scan=" << mir_keyboard_event_scan_code(key_event)
-            << ", modifiers=" << std::hex << mir_keyboard_event_modifiers(key_event)
+            << ", modifiers=0x" << std::hex << mir_keyboard_event_modifiers(key_event) << std::dec
             << ')';
         break;
     }
@@ -54,7 +54,7 @@ void PrintTo(MirInputEvent const& event, std::ostream *os)
                 << ", minor=" << mir_touch_event_axis_value(touch_event, index, mir_touch_axis_touch_minor)
                 << ", size=" << mir_touch_event_axis_value(touch_event, index, mir_touch_axis_size)
                 << '}';
-        *os << ", modifiers=" << std::hex << mir_touch_event_modifiers(touch_event) << ')';
+        *os << ", modifiers=0x" << std::hex << mir_touch_event_modifiers(touch_event) << std::dec << ')';
         break;
     }
     case mir_input_event_type_pointer:
@@ -75,7 +75,7 @@ void PrintTo(MirInputEvent const& event, std::ostream *os)
             << ", y=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)
             << ", vscroll=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_vscroll)
             << ", hscroll=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_hscroll)
-            << ", modifiers=" << std::hex << mir_pointer_event_modifiers(pointer_event)
+            << ", modifiers=" << std::hex << mir_pointer_event_modifiers(pointer_event) << std::dec
             << ')';
         break;
     }
