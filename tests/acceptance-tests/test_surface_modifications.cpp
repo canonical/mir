@@ -25,6 +25,7 @@
 #include "mir/scene/null_surface_observer.h"
 
 #include "mir_test/fake_shared.h"
+#include "mir_test/signal.h"
 
 namespace mev = mir::events;
 namespace mf = mir::frontend;
@@ -124,6 +125,24 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         server.the_shell()->handle(*drag_event);
     }
 
+    void ensure_server_has_processed_setup()
+    {
+        mt::Signal server_ready;
+
+        auto const new_title = __PRETTY_FUNCTION__;
+
+        EXPECT_CALL(surface_observer, renamed(StrEq(new_title))).
+            WillOnce(InvokeWithoutArgs([&]{ server_ready.raise(); }));
+
+        auto const spec = mir_connection_create_spec_for_changes(connection);
+
+        mir_surface_spec_set_name(spec, new_title);
+        mir_surface_apply_spec(surface, spec);
+        mir_surface_spec_release(spec);
+
+        server_ready.wait();
+    }
+
     MockSurfaceObserver surface_observer;
     std::weak_ptr<ms::Surface> shell_surface;
 };
@@ -208,7 +227,7 @@ TEST_F(SurfaceModifications, surface_spec_change_height_is_notified)
 
 TEST_F(SurfaceModifications, surface_spec_min_width_is_respected)
 {
-    auto const min_width = 19;
+    auto const min_width = 17;
 
     {
         auto const spec = mir_connection_create_spec_for_changes(connection);
@@ -216,6 +235,8 @@ TEST_F(SurfaceModifications, surface_spec_min_width_is_respected)
         mir_surface_apply_spec(surface, spec);
         mir_surface_spec_release(spec);
     }
+
+    ensure_server_has_processed_setup();
 
     auto const shell_surface = this->shell_surface.lock();
 
@@ -227,7 +248,7 @@ TEST_F(SurfaceModifications, surface_spec_min_width_is_respected)
 
 TEST_F(SurfaceModifications, surface_spec_min_height_is_respected)
 {
-    auto const min_height = 17;
+    auto const min_height = 19;
 
     {
         auto const spec = mir_connection_create_spec_for_changes(connection);
@@ -235,6 +256,8 @@ TEST_F(SurfaceModifications, surface_spec_min_height_is_respected)
         mir_surface_apply_spec(surface, spec);
         mir_surface_spec_release(spec);
     }
+
+    ensure_server_has_processed_setup();
 
     auto const shell_surface = this->shell_surface.lock();
 
