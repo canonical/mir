@@ -586,39 +586,42 @@ catch (std::exception const& ex)
 namespace
 {
 MirSurfaceSpec* create_spec_for_changes()
+try
 {
     return new MirSurfaceSpec{};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
 }
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
-try
 {
     mir::require(mir_connection_is_valid(connection));
 
     return create_spec_for_changes();
 }
+
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
+try
+{
+    mir::require(mir_surface_is_valid(surface));
+    mir::require(spec);
+
+    surface->modify(*spec);
+}
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
-void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
-{
-    mir::require(mir_surface_is_valid(surface));
-
-    surface->modify(*spec);
+    // Keep calm and carry on
 }
 
 void mir_surface_set_title(MirSurface* surface, char const* name)
 {
-    mir::require(mir_surface_is_valid(surface));
-
-    if (auto const spec = create_spec_for_changes())
-    {
-        mir_surface_spec_set_name(spec, name);
-        mir_surface_apply_spec(surface, spec);
-        mir_surface_spec_release(spec);
-    }
+    auto const spec = create_spec_for_changes();
+    mir_surface_spec_set_name(spec, name);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
 }
