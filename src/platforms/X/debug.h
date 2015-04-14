@@ -19,11 +19,19 @@
 #ifndef MIR_GRAPHICS_X_DEBUG_H_
 #define MIR_GRAPHICS_X_DEBUG_H_
 
-#include <iostream>
+#define MIR_LOG_COMPONENT "X11-platform"
+#include "mir/log.h"
 
+// Set DEBUG=1 for debug info, 0 for silent operation
+#define DEBUG 1
+
+#if DEBUG
 #define CALLED \
 { \
-   std::cout<< "\t" << __PRETTY_FUNCTION__ << std::endl; \
+    mir::log_info("%s", __PRETTY_FUNCTION__); \
 }
+#else
+#define CALLED
+#endif
 
 #endif /* MIR_GRAPHICS_X_DEBUG_H_ */
