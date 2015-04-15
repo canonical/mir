@@ -103,12 +103,10 @@ static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* c
     int const width = 50;
     int const height = 20;
     MirSurfaceSpec* const spec = mir_connection_create_spec_for_tooltip(
-        connection, width, height, format, parent,
-        &zone);
+        connection, width, height, format, parent, &zone);
 
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     mir_surface_spec_set_name(spec, "tooltip");
-
     mir_surface_spec_set_min_width(spec, width);
     mir_surface_spec_set_max_width(spec, width);
     mir_surface_spec_set_min_height(spec, height);
