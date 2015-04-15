@@ -47,11 +47,6 @@ void mcl::lttng::RpcReport::invocation_failed(
 {
 }
 
-void mcl::lttng::RpcReport::header_receipt_failed(
-    std::exception const& /*ex*/)
-{
-}
-
 void mcl::lttng::RpcReport::result_receipt_succeeded(
     mir::protobuf::wire::Result const& result)
 {

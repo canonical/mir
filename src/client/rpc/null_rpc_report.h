@@ -36,7 +36,6 @@ public:
     void invocation_failed(mir::protobuf::wire::Invocation const& invocation,
                            std::exception const& ex) override;
 
-    void header_receipt_failed(std::exception const& ex) override;
     void result_receipt_succeeded(mir::protobuf::wire::Result const& result) override;
     void result_receipt_failed(std::exception const& ex) override;
 

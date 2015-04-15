@@ -45,8 +45,6 @@ public:
                  void(mir::protobuf::wire::Invocation const&,
                       std::exception const&));
 
-    MOCK_METHOD1(header_receipt_failed,
-                 void(std::exception const&));
     MOCK_METHOD1(result_receipt_succeeded,
                  void(mir::protobuf::wire::Result const&));
     MOCK_METHOD1(result_receipt_failed,

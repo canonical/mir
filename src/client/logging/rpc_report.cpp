@@ -70,15 +70,6 @@ void mcll::RpcReport::invocation_failed(
     logger->log(ml::Severity::error, ss.str(), component);
 }
 
-void mcll::RpcReport::header_receipt_failed(
-    std::exception const& ex)
-{
-    std::stringstream ss;
-    ss << "Header receipt failed: " << " error: " << ex.what();
-
-    logger->log(ml::Severity::error, ss.str(), component);
-}
-
 void mcll::RpcReport::result_receipt_succeeded(
     mir::protobuf::wire::Result const& result)
 {
