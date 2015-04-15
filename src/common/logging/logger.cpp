@@ -19,7 +19,6 @@
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/logger.h"
 
-#include <memory>
 #include <mutex>
 
 namespace ml = mir::logging;

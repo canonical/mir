@@ -552,9 +552,7 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
         result = set_preferred_orientation(static_cast<MirOrientationMode>(result));
         break;
     default:
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
-                                               "attribute."));
-        break;
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface attribute."));
     }
 
     return result;

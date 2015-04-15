@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -70,12 +70,13 @@ struct MirSurfaceSpec
 
     // Required parameters
     MirConnection* connection{nullptr};
-    int width{-1};
-    int height{-1};
-    MirPixelFormat pixel_format{mir_pixel_format_invalid};
-    MirBufferUsage buffer_usage{mir_buffer_usage_hardware};
 
     // Optional parameters
+    mir::optional_value<int> width;
+    mir::optional_value<int> height;
+    mir::optional_value<MirPixelFormat> pixel_format;
+    mir::optional_value<MirBufferUsage> buffer_usage;
+
     mir::optional_value<std::string> surface_name;
     mir::optional_value<uint32_t> output_id;
 
@@ -87,6 +88,11 @@ struct MirSurfaceSpec
     mir::optional_value<MirSurface*> parent;
     mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
+
+    mir::optional_value<int> min_width;
+    mir::optional_value<int> min_height;
+    mir::optional_value<int> max_width;
+    mir::optional_value<int> max_height;
 };
 
 struct MirSurface
