@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyrightg © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -156,9 +156,14 @@ struct FakeKeyboard
 
 struct FakePointer
 {
+    FakePointer(MirInputDeviceId id = 0)
+        : id(id)
+    {
+    }
+
     mir::EventUPtr move_to(geom::Point const& location)
     {
-        return mev::make_event(0, 0, 0, mir_pointer_action_motion, buttons_pressed,
+        return mev::make_event(id, 0, 0, mir_pointer_action_motion, buttons_pressed,
                                location.x.as_int(), location.y.as_int(),
                                0, 0);
     }
@@ -168,27 +173,32 @@ struct FakePointer
             return b == button;
         }));
 
-        return mev::make_event(0, 0, 0, mir_pointer_action_button_up, buttons_pressed,
+        return mev::make_event(id, 0, 0, mir_pointer_action_button_up, buttons_pressed,
                                location.x.as_int(), location.y.as_int(),
                                0, 0);
     }
     mir::EventUPtr press_button(geom::Point const& location, MirPointerButton button = mir_pointer_button_primary)
     {
         buttons_pressed.push_back(button);
-        return mev::make_event(0, 0, 0, mir_pointer_action_button_down, buttons_pressed,
+        return mev::make_event(id, 0, 0, mir_pointer_action_button_down, buttons_pressed,
                                location.x.as_int(), location.y.as_int(),
                                0, 0);
     }
 
     std::vector<MirPointerButton> buttons_pressed;
+    MirInputDeviceId const id;
 };
 
-// TODO: Multi-touch
 struct FakeToucher
 {
+    FakeToucher(MirInputDeviceId id = 0)
+        : id(id)
+    {
+    }
+    
     mir::EventUPtr move_to(geom::Point const& point)
     {
-        auto ev = mev::make_event(0, 0, 0);
+        auto ev = mev::make_event(id, 0, 0);
         mev::add_touch(*ev, 0, mir_touch_action_change,
                        mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
                        touched ? 1.0 : 0.0,
@@ -201,7 +211,7 @@ struct FakeToucher
     {
         touched = true;
         
-        auto ev = mev::make_event(0, 0, 0);
+        auto ev = mev::make_event(id, 0, 0);
         mev::add_touch(*ev, 0, mir_touch_action_down,
                        mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
                        1.0, 1.0, 1.0, 1.0);
@@ -211,13 +221,14 @@ struct FakeToucher
     {
         touched = false;
         
-        auto ev = mev::make_event(0, 0, 0);
+        auto ev = mev::make_event(id, 0, 0);
         mev::add_touch(*ev, 0, mir_touch_action_up,
                        mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
                        0.0, 0.0, 0.0, 0.0);
         return ev;
     }
     bool touched = false;
+    MirInputDeviceId const id;
 };
 
 }
@@ -291,36 +302,69 @@ TEST_F(DefaultInputDispatcher, key_state_is_consistent_per_client)
     EXPECT_FALSE(dispatcher.dispatch(*up_event));
 }
 
-TEST_F(DefaultInputDispatcher, key_state_consistency_is_per_device)
+TEST_F(DefaultInputDispatcher, inconsistent_key_down_translated_to_repeat)
+{
+    using namespace ::testing;
+    
+    auto surface = scene.add_surface();
+
+    FakeKeyboard keyboard;
+    auto event = keyboard.press();
+
+    InSequence seq;
+    EXPECT_CALL(*surface, consume(mt::MirKeyEventMatches(*event))).Times(1);
+    EXPECT_CALL(*surface, consume(mt::KeyRepeatEvent())).Times(2);
+
+    dispatcher.start();
+
+    dispatcher.set_focus(surface);
+    EXPECT_TRUE(dispatcher.dispatch(*event));
+    EXPECT_TRUE(dispatcher.dispatch(*event));
+    EXPECT_TRUE(dispatcher.dispatch(*event));
+}
+
+TEST_F(DefaultInputDispatcher, device_reset_resets_key_state_consistency)
 {
     using namespace ::testing;
 
     auto surface = scene.add_surface();
 
-    FakeKeyboard keyboard_1(MirInputDeviceId{1});
-    FakeKeyboard keyboard_2(MirInputDeviceId{2});
-
-    int scan_code = 11;
-    auto down_event_1 = keyboard_1.press(scan_code);
-    auto down_event_2 = keyboard_2.press(scan_code);
-
-    InSequence seq;
-    EXPECT_CALL(*surface, consume(mt::MirKeyEventMatches(*down_event_1))).Times(1);
-    EXPECT_CALL(*surface, consume(mt::MirKeyEventMatches(*down_event_2))).Times(1);
-
-    dispatcher.start();
+    auto device_id = MirInputDeviceId{1};
+    FakeKeyboard keyboard(device_id);
+    auto down_event = keyboard.press(11);
+    auto release_event = keyboard.release(11);
 
     dispatcher.set_focus(surface);
-    EXPECT_TRUE(dispatcher.dispatch(*down_event_1));
-    // We can't press the same key again on the same device.
-    EXPECT_FALSE(dispatcher.dispatch(*down_event_1));
-    // But we can on another device.
-    EXPECT_TRUE(dispatcher.dispatch(*down_event_2));
+    EXPECT_TRUE(dispatcher.dispatch(*down_event));
+    dispatcher.device_reset(device_id, std::chrono::nanoseconds{1});
+    EXPECT_FALSE(dispatcher.dispatch(*release_event));
 }
-// TODO: Audit key state tests but this seems like a good start...
-// TODO: Test for key repeat
 
-// TODO: Test that pointer motion is relative
+TEST_F(DefaultInputDispatcher, key_input_target_may_dissapear_and_things_remain_quote_a_unquote_ok)
+{
+    using namespace ::testing;
+    
+    auto surface_2 = scene.add_surface();
+    auto surface_1 = scene.add_surface();
+
+    EXPECT_CALL(*surface_1, consume(_)).Times(AnyNumber());
+    EXPECT_CALL(*surface_2, consume(_)).Times(AnyNumber());
+
+    FakeKeyboard k;
+    auto an_ev = k.press(11);
+    auto another_ev = k.press(12);
+
+    dispatcher.start();
+    dispatcher.set_focus(surface_1);
+    EXPECT_TRUE(dispatcher.dispatch(*an_ev));
+    scene.remove_surface(surface_1);
+    EXPECT_FALSE(dispatcher.dispatch(*another_ev));
+    dispatcher.set_focus(surface_2);
+    EXPECT_TRUE(dispatcher.dispatch(*another_ev));
+}
+
+// TODO: Test stopping and starting
+
 TEST_F(DefaultInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
 {
     using namespace ::testing;
@@ -332,10 +376,8 @@ TEST_F(DefaultInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
     auto ev_2 = pointer.move_to({5, 0});
 
     InSequence seq;
-    // The cursor begins at 0, 0
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerEventWithPosition(1, 0))).Times(1);
-    // TODO: Test coordinate on PointerExit and PointerEnter event
     EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
 
     dispatcher.start();
@@ -354,11 +396,8 @@ TEST_F(DefaultInputDispatcher, pointer_delivered_only_to_top_surface)
     FakePointer pointer;
 
     InSequence seq;
-    // The cursor begins at 0, 0
     EXPECT_CALL(*top_surface, consume(mt::PointerEnterEvent())).Times(1);
     EXPECT_CALL(*top_surface, consume(mt::PointerEventWithPosition(1, 0))).Times(1);
-    // Hard to say if we really want this...
-    EXPECT_CALL(*top_surface, consume(mt::PointerLeaveEvent())).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerEventWithPosition(1, 0))).Times(1);
     
@@ -397,7 +436,6 @@ TEST_F(DefaultInputDispatcher, pointer_may_move_between_adjacent_surfaces)
 
 // We test that a client will receive pointer events following a button down
 // until the pointer comes up.
-// TODO: What happens when a client dissapears during a gesture?
 TEST_F(DefaultInputDispatcher, gestures_persist_over_button_down)
 {
     using namespace ::testing;
@@ -413,7 +451,6 @@ TEST_F(DefaultInputDispatcher, gestures_persist_over_button_down)
     InSequence seq;
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
     EXPECT_CALL(*surface, consume(mt::ButtonDownEvent(0,0))).Times(1);
-    // TODO: Position on leave event
     EXPECT_CALL(*surface, consume(mt::PointerEventWithPosition(6, 6))).Times(1);
     EXPECT_CALL(*surface, consume(mt::ButtonUpEvent(6,6))).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
@@ -424,6 +461,31 @@ TEST_F(DefaultInputDispatcher, gestures_persist_over_button_down)
     EXPECT_TRUE(dispatcher.dispatch(*ev_1));
     EXPECT_TRUE(dispatcher.dispatch(*ev_2));
     EXPECT_TRUE(dispatcher.dispatch(*ev_3));
+}
+
+TEST_F(DefaultInputDispatcher, gestures_terminated_by_device_reset)
+{
+    using namespace ::testing;
+    
+    auto surface = scene.add_surface({{0, 0}, {5, 5}});
+    auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
+
+    MirInputDeviceId device_id{1};
+    FakePointer pointer(device_id);
+    auto ev_1 = pointer.press_button({0, 0});
+    auto ev_2 = pointer.move_to({6, 6});
+
+    InSequence seq;
+    EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+    EXPECT_CALL(*surface, consume(mt::ButtonDownEvent(0,0))).Times(1);
+    EXPECT_CALL(*another_surface, consume(mt::PointerEnterEvent())).Times(1);
+    EXPECT_CALL(*another_surface, consume(mt::PointerEventWithPosition(1, 1))).Times(1);
+    
+    dispatcher.start();
+
+    EXPECT_TRUE(dispatcher.dispatch(*ev_1));
+    dispatcher.device_reset(device_id, std::chrono::nanoseconds{1});    
+    EXPECT_TRUE(dispatcher.dispatch(*ev_2));
 }
 
 TEST_F(DefaultInputDispatcher, pointer_gestures_may_transfer_over_buttons)
@@ -445,7 +507,6 @@ TEST_F(DefaultInputDispatcher, pointer_gestures_may_transfer_over_buttons)
     EXPECT_CALL(*surface, consume(mt::ButtonDownEvent(0,0))).Times(1);
     EXPECT_CALL(*surface, consume(mt::ButtonDownEvent(0,0))).Times(1);
     EXPECT_CALL(*surface, consume(mt::ButtonUpEvent(0,0))).Times(1);
-    // TODO: Position on leave event
     EXPECT_CALL(*surface, consume(mt::PointerEventWithPosition(6, 6))).Times(1);
     EXPECT_CALL(*surface, consume(mt::ButtonUpEvent(6,6))).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
@@ -459,9 +520,33 @@ TEST_F(DefaultInputDispatcher, pointer_gestures_may_transfer_over_buttons)
     EXPECT_TRUE(dispatcher.dispatch(*ev_4));
     EXPECT_TRUE(dispatcher.dispatch(*ev_5));
 }
-// TODO: Test for what happens to gesture when client dissapears in middle of gesture
 
-// TODO: Add touch event builders
+TEST_F(DefaultInputDispatcher, pointer_gesture_target_may_vanish_and_the_situation_remains_hunky_dorey)
+{
+    using namespace ::testing;
+    
+    auto surface = scene.add_surface({{0, 0}, {5, 5}});
+    auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
+
+    FakePointer pointer;
+    auto ev_1 = pointer.press_button({0, 0});
+    auto ev_2 = pointer.release_button({0, 0});
+    auto ev_3 = pointer.move_to({6, 6});
+
+    InSequence seq;
+    EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+    EXPECT_CALL(*surface, consume(mt::ButtonDownEvent(0,0))).Times(1);
+    EXPECT_CALL(*another_surface, consume(mt::PointerEnterEvent())).Times(1);
+    EXPECT_CALL(*another_surface, consume(mt::PointerEventWithPosition(1,1))).Times(1);
+    
+    dispatcher.start();
+
+    EXPECT_TRUE(dispatcher.dispatch(*ev_1));
+    scene.remove_surface(surface);
+    EXPECT_FALSE(dispatcher.dispatch(*ev_2));
+    EXPECT_TRUE(dispatcher.dispatch(*ev_3));
+}
+
 TEST_F(DefaultInputDispatcher, touch_delivered_to_surface)
 {
     using namespace ::testing;
@@ -499,8 +584,6 @@ TEST_F(DefaultInputDispatcher, touch_delivered_only_to_top_surface)
     EXPECT_TRUE(dispatcher.dispatch(*toucher.release_at({2,2})));
 }
 
-// TODO: Test that touch can move between surfaces beside eachother
-
 TEST_F(DefaultInputDispatcher, gestures_persist_over_touch_down)
 {
     using namespace ::testing;
@@ -510,7 +593,6 @@ TEST_F(DefaultInputDispatcher, gestures_persist_over_touch_down)
 
     InSequence seq;
     EXPECT_CALL(*left_surface, consume(mt::TouchEvent(0, 0))).Times(1);
-    // Mathc movement pos?
     EXPECT_CALL(*left_surface, consume(mt::TouchMovementEvent())).Times(1);
     EXPECT_CALL(*left_surface, consume(mt::TouchUpEvent(2, 2))).Times(1);
     EXPECT_CALL(*right_surface, consume(_)).Times(0);
@@ -523,6 +605,43 @@ TEST_F(DefaultInputDispatcher, gestures_persist_over_touch_down)
     EXPECT_TRUE(dispatcher.dispatch(*toucher.release_at({2, 2})));
 }
 
-// TODO: Test multiple touch gesture
+TEST_F(DefaultInputDispatcher, touch_gestures_terminated_by_device_reset)
+{
+    using namespace ::testing;
+    
+    auto left_surface = scene.add_surface({{0, 0}, {1, 1}});
+    auto right_surface = scene.add_surface({{1, 1}, {1, 1}});
 
-// TODO: Test that gesture tracking is per device
+    MirInputDeviceId device_id{1};
+    FakeToucher toucher(device_id);
+
+    InSequence seq;
+    EXPECT_CALL(*left_surface, consume(mt::TouchEvent(0, 0))).Times(1);
+    EXPECT_CALL(*right_surface, consume(mt::TouchEvent(0, 0))).Times(1);
+
+    dispatcher.start();
+    
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({0, 0})));
+    dispatcher.device_reset(device_id, std::chrono::nanoseconds{1});
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({1, 1})));
+}
+
+TEST_F(DefaultInputDispatcher, touch_gesture_target_may_vanish_but_things_continue_to_function_as_intended)
+{
+    using namespace ::testing;
+    
+    auto surface_1 = scene.add_surface({{0, 0}, {1, 1}});
+    auto surface_2 = scene.add_surface({{0, 0}, {1, 1}});
+
+    InSequence seq;
+    EXPECT_CALL(*surface_2, consume(mt::TouchEvent(0, 0))).Times(1);
+    EXPECT_CALL(*surface_1, consume(mt::TouchEvent(0, 0))).Times(1);
+
+    dispatcher.start();
+    
+    FakeToucher toucher;
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({0, 0})));
+    scene.remove_surface(surface_2);
+    EXPECT_FALSE(dispatcher.dispatch(*toucher.release_at({0, 0})));
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({0, 0})));
+}

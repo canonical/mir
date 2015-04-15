@@ -17,6 +17,7 @@
  */
 
 #include "src/server/input/event_filter_chain.h"
+#include "src/server/input/null_input_dispatcher.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
@@ -48,7 +49,7 @@ struct EventFilterChain : public ::testing::Test
 TEST_F(EventFilterChain, offers_events_to_filters)
 {
     auto filter = mock_filter();
-    mi::EventFilterChain filter_chain{filter, filter};
+    mi::EventFilterChain filter_chain({filter, filter}, std::make_shared<mi::NullInputDispatcher>());
     
     // Filter will pass the event on twice
     EXPECT_CALL(*filter, handle(_)).Times(2).WillRepeatedly(Return(false));
@@ -62,7 +63,7 @@ TEST_F(EventFilterChain, prepends_appends_filters)
     auto filter2 = mock_filter();
     auto filter3 = mock_filter();
 
-    mi::EventFilterChain filter_chain{filter2};
+    mi::EventFilterChain filter_chain({filter2}, std::make_shared<mi::NullInputDispatcher>());
     filter_chain.append(filter3);
     filter_chain.prepend(filter1);
 
@@ -81,7 +82,7 @@ TEST_F(EventFilterChain, accepting_event_halts_emission)
 {
     auto filter = mock_filter();
 
-    mi::EventFilterChain filter_chain{filter, filter, filter};
+    mi::EventFilterChain filter_chain({filter, filter, filter}, std::make_shared<mi::NullInputDispatcher>());
 
     // First filter will reject, second will accept, third one should not be asked.
     {
@@ -97,7 +98,7 @@ TEST_F(EventFilterChain, does_not_own_event_filters)
 {
     auto filter = mock_filter();
 
-    mi::EventFilterChain filter_chain{filter};
+    mi::EventFilterChain filter_chain({filter}, std::make_shared<mi::NullInputDispatcher>());
     EXPECT_CALL(*filter, handle(_)).Times(1).WillOnce(Return(true));
     EXPECT_TRUE(filter_chain.handle(*event));
     filter.reset();

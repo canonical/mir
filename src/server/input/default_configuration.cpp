@@ -32,7 +32,7 @@
 #include "android/android_input_manager.h"
 #include "android/input_translator.h"
 #include "display_input_region.h"
-#include "event_filter_chain.h"
+#include "event_filter_chain_dispatcher.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
@@ -44,6 +44,7 @@
 #include "null_input_channel_factory.h"
 #include "default_input_device_hub.h"
 #include "default_input_manager.h"
+#include "default_input_dispatcher.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/platform.h"
@@ -80,14 +81,25 @@ std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_regi
         });
 }
 
+// TODO: Remove default server conf variable?
 std::shared_ptr<mi::CompositeEventFilter>
 mir::DefaultServerConfiguration::the_composite_event_filter()
 {
     return composite_event_filter(
-        [this]() -> std::shared_ptr<mi::CompositeEventFilter>
+        [this]()
+        {
+            return the_event_filter_chain_dispatcher();
+        });
+}
+
+std::shared_ptr<mi::EventFilterChainDispatcher>
+mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
+{
+    return event_filter_chain_dispatcher(
+        [this]() -> std::shared_ptr<mi::EventFilterChainDispatcher>
         {
             std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
-            return std::make_shared<mi::EventFilterChain>(filter_list);
+            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_new_input_dispatcher());
         });
 }
 
@@ -171,7 +183,17 @@ mir::DefaultServerConfiguration::the_input_targeter()
             if (!options->get<bool>(options::enable_input_opt))
                 return std::make_shared<mi::NullInputTargeter>();
             else
-                return std::make_shared<mia::InputTargeter>(the_android_input_dispatcher(), the_input_registrar());
+                return the_new_input_dispatcher();
+        });
+}
+
+std::shared_ptr<mi::DefaultInputDispatcher>
+mir::DefaultServerConfiguration::the_new_input_dispatcher()
+{
+    return new_input_dispatcher(
+        [this]()
+        {
+            return std::make_shared<mi::DefaultInputDispatcher>(the_input_scene());
         });
 }
 
@@ -212,7 +234,7 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
                 return std::make_shared<mi::NullInputDispatcher>();
             else
             {
-                return std::make_shared<mia::AndroidInputDispatcher>(the_android_input_dispatcher(), the_dispatcher_thread());
+                return the_event_filter_chain_dispatcher();
             }
         });
 }

@@ -21,11 +21,15 @@
 #include "mir/input/scene.h"
 #include "mir/input/surface.h"
 #include "mir/scene/observer.h"
+#include "mir/scene/surface.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
 
+#include <string.h>
+
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <algorithm>
 
 namespace mi = mir::input;
 namespace ms = mir::scene;
@@ -34,15 +38,19 @@ namespace geom = mir::geometry;
 
 namespace
 {
-class InputDispatcherSceneObserver : public ms::Observer
+struct InputDispatcherSceneObserver : public ms::Observer
 {
+    InputDispatcherSceneObserver(std::function<void(ms::Surface*)> const& on_removed)
+        : on_removed(on_removed)
+    {
+    }
     void surface_added(ms::Surface* surface)
     {
         (void) surface;
     }
     void surface_removed(ms::Surface* surface)
     {
-        (void) surface;
+        on_removed(surface);
     }
     void surfaces_reordered()
     {
@@ -58,13 +66,15 @@ class InputDispatcherSceneObserver : public ms::Observer
     void end_observation()
     {
     }
+
+    std::function<void(ms::Surface*)> const on_removed;
 };
 }
 
 mi::DefaultInputDispatcher::DefaultInputDispatcher(std::shared_ptr<mi::Scene> const& scene)
     : scene(scene)
 {
-    scene_observer = std::make_shared<InputDispatcherSceneObserver>();
+    scene_observer = std::make_shared<InputDispatcherSceneObserver>([this](ms::Surface* s){surface_removed(s);});
     scene->add_observer(scene_observer);
 }
 
@@ -78,10 +88,68 @@ void mi::DefaultInputDispatcher::configuration_changed(std::chrono::nanoseconds 
     (void) when;
 }
 
-void mi::DefaultInputDispatcher::device_reset(int32_t device_id, std::chrono::nanoseconds when)
+namespace
 {
-    (void) device_id;
-    (void) when;
+bool compare_surfaces(std::shared_ptr<mi::Surface> const& input_surface, ms::Surface *surface)
+{
+    return input_surface.get() == static_cast<mi::Surface*>(surface);
+}
+}
+
+void mi::DefaultInputDispatcher::surface_removed(ms::Surface *surface)
+{
+    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+
+    auto strong_focus = focus_surface.lock();
+    if (strong_focus && compare_surfaces(strong_focus, surface))
+    {
+        set_focus_locked(lg, nullptr);
+    }
+
+    for (auto &kv : pointer_state_by_id)
+    {
+        auto &state = kv.second;
+        if (compare_surfaces(state.current_target, surface))
+            state.current_target.reset();
+        if (compare_surfaces(state.gesture_owner, surface))
+            state.gesture_owner.reset();
+    }
+
+    for (auto &kv : touch_state_by_id)
+    {
+        auto &state = kv.second;
+        if (compare_surfaces(state.gesture_owner, surface))
+            state.gesture_owner.reset();
+    }
+}
+
+void mi::DefaultInputDispatcher::device_reset(int32_t reset_device_id, std::chrono::nanoseconds /* when */)
+{
+    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+
+    auto key_it = focus_surface_key_state.depressed_scancodes.find(reset_device_id);
+    if (key_it != focus_surface_key_state.depressed_scancodes.end())
+        focus_surface_key_state.depressed_scancodes.erase(key_it);
+
+    auto pointer_it = pointer_state_by_id.find(reset_device_id);
+    if (pointer_it != pointer_state_by_id.end())
+        pointer_state_by_id.erase(pointer_it);
+    
+    auto touch_it = touch_state_by_id.find(reset_device_id);
+    if (touch_it != touch_state_by_id.end())
+        touch_state_by_id.erase(touch_it);
+}
+
+namespace
+{
+inline MirEvent copy_to_repeat_ev(MirKeyboardEvent const* kev)
+{
+    MirEvent repeat_ev;
+    memcpy(&repeat_ev, kev, sizeof(MirEvent));
+
+    repeat_ev.key.repeat_count = 1;
+    return repeat_ev;
+}
 }
 
 bool mi::DefaultInputDispatcher::dispatch_key(MirInputDeviceId id, MirKeyboardEvent const* kev)
@@ -91,17 +159,25 @@ bool mi::DefaultInputDispatcher::dispatch_key(MirInputDeviceId id, MirKeyboardEv
     if (!strong_focus)
         return false;
 
-    if (!focus_surface_key_input_state.handle_event(id, kev))
-        return false;
-
-    deliver(strong_focus, kev);
+    // Translate repeated downs to repeat
+    MirKeyboardEvent const* to_deliver = kev;
+    if (!focus_surface_key_state.handle_event(id, kev))
+    {
+        // TODO: Clean up casts
+        auto rep_ev = copy_to_repeat_ev(kev);
+        if (focus_surface_key_state.handle_event(id, (MirKeyboardEvent const*)&rep_ev))
+            to_deliver = reinterpret_cast<MirKeyboardEvent const*>(&rep_ev);
+        else
+            return false;
+    }
+    deliver(strong_focus, to_deliver);
 
     return true;
 }
 
 namespace
 {
-bool is_gesture_terminator(MirPointerEvent const* pev)
+void for_pressed_buttons(MirPointerEvent const* pev, std::function<void(MirPointerButton)> const& exec)
 {
     auto const buttons = {
         mir_pointer_button_primary,
@@ -111,9 +187,26 @@ bool is_gesture_terminator(MirPointerEvent const* pev)
         mir_pointer_button_forward
     };
     for (auto button : buttons)
-        if (mir_pointer_event_button_state(pev, button)) return false;
-    return mir_pointer_event_action(pev) == mir_pointer_action_button_up;
+        if (mir_pointer_event_button_state(pev, button)) exec(button);
 }
+    
+bool is_gesture_terminator(MirPointerEvent const* pev)
+{
+    bool any_pressed;
+    for_pressed_buttons(pev, [&any_pressed](MirPointerButton){ any_pressed = true; });
+    return !any_pressed && mir_pointer_event_action(pev) == mir_pointer_action_button_up;
+}
+
+std::vector<MirPointerButton> buttons_in_vector(MirPointerEvent const* pev)
+{
+    std::vector<MirPointerButton> buttons;
+    for_pressed_buttons(pev, [&buttons](MirPointerButton button)
+    {
+        buttons.push_back(button);
+    });
+    return buttons;
+}
+       
 }
 
 void mi::DefaultInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirTouchEvent const* tev)
@@ -133,21 +226,22 @@ void mi::DefaultInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& sur
 
 void mi::DefaultInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirEvent const* ev)
 {
+    MirEvent to_deliver;
+    memcpy(&to_deliver, ev, sizeof(MirEvent));
+    
     // TODO: A little weird to use deprecated API
     if (ev->type == mir_event_type_motion)
     {
         auto sx = surface->input_bounds().top_left.x.as_int();
         auto sy = surface->input_bounds().top_left.y.as_int();
 
-        // TODO: I guess mir_event_copy is the answer
-        auto not_const_ev = const_cast<MirEvent*>(ev);
         for (unsigned i = 0; i < ev->motion.pointer_count; i++)
         {
-            not_const_ev->motion.pointer_coordinates[i].x -= sx;
-            not_const_ev->motion.pointer_coordinates[i].y -= sy;
+            to_deliver.motion.pointer_coordinates[i].x -= sx;
+            to_deliver.motion.pointer_coordinates[i].y -= sy;
         }
     }
-    surface->consume(*ev);
+    surface->consume(to_deliver);
 }
 
 std::shared_ptr<mi::Surface> mi::DefaultInputDispatcher::find_target_surface(geom::Point const& point)
@@ -160,16 +254,20 @@ std::shared_ptr<mi::Surface> mi::DefaultInputDispatcher::find_target_surface(geo
     return top_target;
 }
 
-// TODO: TIMESTAMP
-// TODO: MODIFIERS
-// TODO: BUTTONS
-// TODO: HSCROLL
-// TODO: VSCROLL
-// (Obviously copy event)    
 void mi::DefaultInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surface> const& surface,
-    MirInputDeviceId id, MirPointerAction action, geom::Point const& point)
+                                                       MirPointerEvent const* pev,
+                                                       MirPointerAction action)
 {
-    deliver(surface, &*mev::make_event(id, 0, 0, action, {}, point.x.as_int(), point.y.as_int(), 0, 0));
+    auto iev = (MirInputEvent const*)pev;
+    
+    deliver(surface, &*mev::make_event(mir_input_event_get_device_id(iev),
+                                       mir_input_event_get_event_time(iev),
+                                       mir_pointer_event_modifiers(pev),
+                                       action, buttons_in_vector(pev),
+                                       mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
+                                       mir_pointer_event_axis_value(pev,mir_pointer_axis_y),
+                                       mir_pointer_event_axis_value(pev,mir_pointer_axis_hscroll),
+                                       mir_pointer_event_axis_value(pev,mir_pointer_axis_vscroll)));
 }
 
 mi::DefaultInputDispatcher::PointerInputState& mi::DefaultInputDispatcher::ensure_pointer_state(MirInputDeviceId id)
@@ -190,7 +288,6 @@ mi::DefaultInputDispatcher::TouchInputState& mi::DefaultInputDispatcher::ensure_
     return touch_state_by_id[id];
 }
 
-// TODO: Handle device reset
 bool mi::DefaultInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointerEvent const* pev)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
@@ -207,18 +304,16 @@ bool mi::DefaultInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointe
         {
             pointer_state.gesture_owner.reset();
 
-            // TODO: Deduplicate a little
             auto target = find_target_surface(event_x_y);
-            printf("No buttons pressed %p %p\n", (void*)pointer_state.current_target.get(), (void*)target.get());
 
             if (pointer_state.current_target != target)
             {
                 if (pointer_state.current_target)
-                    send_enter_exit_event(pointer_state.current_target, id, mir_pointer_action_leave, event_x_y);
+                    send_enter_exit_event(pointer_state.current_target, pev, mir_pointer_action_leave);
 
                 pointer_state.current_target = target;
                 if (target)
-                    send_enter_exit_event(target, id, mir_pointer_action_enter, event_x_y);
+                    send_enter_exit_event(target, pev, mir_pointer_action_enter);
             }
         }
 
@@ -238,11 +333,11 @@ bool mi::DefaultInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointe
         if (pointer_state.current_target != target)
         {
             if (pointer_state.current_target)
-                send_enter_exit_event(pointer_state.current_target, id, mir_pointer_action_leave, event_x_y);
+                send_enter_exit_event(pointer_state.current_target, pev, mir_pointer_action_leave);
 
             pointer_state.current_target = target;
             if (target)
-                send_enter_exit_event(target, id, mir_pointer_action_enter, event_x_y);
+                send_enter_exit_event(target, pev, mir_pointer_action_enter);
 
             sent_ev = true;
         }
@@ -318,37 +413,45 @@ bool mi::DefaultInputDispatcher::dispatch(MirEvent const& event)
 
 void mi::DefaultInputDispatcher::start()
 {
-    // TODO: Trigger hover here?
 }
 
 void mi::DefaultInputDispatcher::stop()
 {
 }
 
-void mi::DefaultInputDispatcher::set_focus(std::shared_ptr<input::Surface> const& target)
+void mi::DefaultInputDispatcher::set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<mi::Surface> const& target)
+{
+    focus_surface_key_state.clear();
+    focus_surface = target;
+}
+
+void mi::DefaultInputDispatcher::set_focus(std::shared_ptr<mi::Surface> const& target)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    set_focus_locked(lg, target);
+}
 
-    // TODO: Clear from observer too
-    focus_surface_key_input_state.clear();
-    focus_surface = target;
+void mi::DefaultInputDispatcher::clear_focus()
+{
+    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    set_focus_locked(lg, nullptr);
 }
 
 bool mi::DefaultInputDispatcher::KeyInputState::handle_event(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
     auto action = mir_keyboard_event_action(kev);
+    auto scan_code = mir_keyboard_event_scan_code(kev);
     if (action == mir_keyboard_action_up)
     {
-        return release_key(id, mir_keyboard_event_scan_code(kev));
+        return release_key(id, scan_code);
     }
     else if (action == mir_keyboard_action_down)
     {
-        return press_key(id, mir_keyboard_event_scan_code(kev));
+        return press_key(id, scan_code);
     }
     else if (action == mir_keyboard_action_repeat)
     {
-        // TODO: Handle repeat case
-        return false;
+        return repeat_key(id, scan_code);
     }
     return false;
 }
@@ -356,8 +459,7 @@ bool mi::DefaultInputDispatcher::KeyInputState::handle_event(MirInputDeviceId id
 bool mi::DefaultInputDispatcher::KeyInputState::press_key(MirInputDeviceId id, int scan_code)
 {
     // TODO: How do we handle the device dissapearing?
-
-    // First key press for a device
+   // First key press for a device
     if (depressed_scancodes.find(id) == depressed_scancodes.end())
     {
         depressed_scancodes[id] = {};
@@ -381,6 +483,17 @@ bool mi::DefaultInputDispatcher::KeyInputState::release_key(MirInputDeviceId id,
     if (device_key_state.find(scan_code) == device_key_state.end())
         return false;
     device_key_state.erase(scan_code);
+    return true;
+}
+
+bool mi::DefaultInputDispatcher::KeyInputState::repeat_key(MirInputDeviceId id, int scan_code)
+{
+    if (depressed_scancodes.find(id) == depressed_scancodes.end())
+        return false;
+    auto& device_key_state = depressed_scancodes[id];
+    if (device_key_state.find(scan_code) == device_key_state.end())
+        return false;
+
     return true;
 }
 

@@ -156,11 +156,11 @@ TEST_F(TestDefaultWindowManager, sets_input_focus)
 
     {
         InSequence seq;
-        EXPECT_CALL(mock_surface, take_input_focus(_)).Times(1);
+        EXPECT_CALL(input_targeter, set_focus(_)).Times(1);
         // When we have no default surface.
-        EXPECT_CALL(input_targeter, focus_cleared()).Times(1);
+        EXPECT_CALL(input_targeter, clear_focus()).Times(1);
         // When we have no session.
-        EXPECT_CALL(input_targeter, focus_cleared()).Times(1);
+        EXPECT_CALL(input_targeter, clear_focus()).Times(1);
     }
 
     shell.set_focus_to(mt::fake_shared(app1), mt::fake_shared(mock_surface));

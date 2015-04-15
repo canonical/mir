@@ -520,11 +520,6 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
     return new_orientation_mode;
 }
 
-void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
-{
-    targeter->focus_changed(input_channel());
-}
-
 int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = value;

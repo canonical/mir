@@ -16,10 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_FILTER_CHAIN_H_
-#define MIR_INPUT_EVENT_FILTER_CHAIN_H_
+#ifndef MIR_INPUT_EVENT_FILTER_CHAIN_DISPATCHER_H_
+#define MIR_INPUT_EVENT_FILTER_CHAIN_DISPATCHER_H_
 
 #include "mir/input/composite_event_filter.h"
+#include "mir/input/input_dispatcher.h"
 
 #include <vector>
 
@@ -28,20 +29,30 @@ namespace mir
 namespace input
 {
 
-class EventFilterChain : public CompositeEventFilter
+class EventFilterChainDispatcher : public CompositeEventFilter, public mir::input::InputDispatcher
 {
 public:
-    explicit EventFilterChain(std::initializer_list<std::shared_ptr<EventFilter> const> const& values);
+    EventFilterChainDispatcher(std::initializer_list<std::shared_ptr<EventFilter> const> const& values,
+                               std::shared_ptr<InputDispatcher> const& next_dispatcher);
 
+    // CompositeEventFilter
     bool handle(MirEvent const& event);
     void append(std::shared_ptr<EventFilter> const& filter);
     void prepend(std::shared_ptr<EventFilter> const& filter);
 
+    // InputDispatcher
+    void configuration_changed(std::chrono::nanoseconds when) override;
+    void device_reset(int32_t device_id, std::chrono::nanoseconds when) override;
+    bool dispatch(MirEvent const& event) override;
+    void start() override;
+    void stop() override;
+    
 private:
     std::vector<std::weak_ptr<EventFilter>> filters;
+    std::shared_ptr<InputDispatcher> const next_dispatcher;
 };
 
 }
 }
 
-#endif // MIR_INPUT_EVENT_FILTER_CHAIN_H_
+#endif // MIR_INPUT_EVENT_FILTER_CHAIN_DISPATCHER_H_

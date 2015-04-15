@@ -20,6 +20,7 @@
 #define MIR_INPUT_DEFAULT_INPUT_DISPATCHER_H_
 
 #include "mir/input/input_dispatcher.h"
+#include "mir/shell/input_targeter.h"
 #include "mir/geometry/point.h"
 
 #include <memory>
@@ -32,14 +33,14 @@ namespace mir
 namespace scene
 {
 class Observer;
+class Surface;
 }
 namespace input
 {
 class Surface;
 class Scene;
 
-// TODO: Add shell dispatcher interface for focus...or this is the focus targeter or something
-class DefaultInputDispatcher : public mir::input::InputDispatcher
+class DefaultInputDispatcher : public mir::input::InputDispatcher, public shell::InputTargeter
 {
 public:
     DefaultInputDispatcher(std::shared_ptr<input::Scene> const& scene);
@@ -52,8 +53,9 @@ public:
     void start() override;
     void stop() override;
 
-// FocusTargeter
-    void set_focus(std::shared_ptr<input::Surface> const& target);
+    // InputTargeter
+    void set_focus(std::shared_ptr<input::Surface> const& target) override;
+    void clear_focus() override;
     
 private:
     bool dispatch_key(MirInputDeviceId id, MirKeyboardEvent const* kev);
@@ -66,25 +68,28 @@ private:
     void deliver(std::shared_ptr<input::Surface> const& surface, MirEvent const* ev);
 
     void send_enter_exit_event(std::shared_ptr<input::Surface> const& surface,
-        MirInputDeviceId id, MirPointerAction action, geometry::Point const& point);
+                               MirPointerEvent const* triggering_ev, MirPointerAction action);
 
     std::shared_ptr<input::Surface> find_target_surface(geometry::Point const& target);
+
+    void set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<input::Surface> const&);
+
+    void surface_removed(scene::Surface* surface);
 
     struct KeyInputState
     {
         bool handle_event(MirInputDeviceId id, MirKeyboardEvent const* kev);
         
         bool press_key(MirInputDeviceId id, int scan_code);
+        bool repeat_key(MirInputDeviceId id, int scan_code);
         bool release_key(MirInputDeviceId id, int scan_code);
 
         void clear();
 
-        // TODO: How do we handle device reconfiguration here?
         std::map<MirInputDeviceId, std::unordered_set<int>> depressed_scancodes;
-    } focus_surface_key_input_state;
+    } focus_surface_key_state;
 
     // Look in to homognizing index on KeyInputState and PointerInputState (wrt to device id)
-    // TODO: Ensure pointer up/down consistency
     struct PointerInputState
     {
         // TODO: Weak? Raw?
