@@ -18,7 +18,6 @@
 
 #include "gl_renderer_factory.h"
 #include "mir/compositor/gl_renderer.h"
-#include "mir/geometry/rectangle.h"
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;

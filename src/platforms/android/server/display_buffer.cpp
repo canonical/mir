@@ -21,7 +21,6 @@
 #include "display_device.h"
 #include "hwc_layerlist.h"
 
-#include <functional>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <algorithm>
@@ -86,10 +85,8 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     bool needs_commit{false};
     for (auto& layer : *layer_list)
         needs_commit |= layer.needs_commit;
-    if (!needs_commit)
-        return false;
 
-    return true;
+    return needs_commit;
 }
 
 void mga::DisplayBuffer::gl_swap_buffers()

@@ -32,8 +32,7 @@ class EGLExtensions : public mg::GLExtensionsBase
 {
 public:
     EGLExtensions(EGLDisplay egl_display) :
-        mg::GLExtensionsBase{
-            reinterpret_cast<char const*>(eglQueryString(egl_display, EGL_EXTENSIONS))}
+        mg::GLExtensionsBase{eglQueryString(egl_display, EGL_EXTENSIONS)}
     {
     }
 };

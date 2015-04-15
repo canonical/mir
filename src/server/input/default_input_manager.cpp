@@ -86,6 +86,9 @@ void mi::DefaultInputManager::start()
                             platform->start();
                             multiplexer->add_watch(platform->dispatchable());
                         }
+                        // TODO: Udev monitoring is still not separated yet - an initial scan is necessary to open
+                        // devices, this will be triggered through the first call to dispatch->InputReader->loopOnce.
+                        legacy_dispatchable->dispatch(dispatch::FdEvent::readable);
                    });
 
     input_thread = std::make_unique<dispatch::SimpleDispatchThread>(

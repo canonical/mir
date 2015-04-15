@@ -20,6 +20,7 @@
 #include "mir/dispatch/dispatchable.h"
 #include "mir/logging/logger.h"
 #include "utils.h"
+#include "mir/signal_blocker.h"
 
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -103,6 +104,7 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
 }
 
 }
+
 md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable> const& dispatchee)
     : SimpleDispatchThread(dispatchee, []{})
 {}
@@ -120,28 +122,34 @@ md::SimpleDispatchThread::SimpleDispatchThread(
     }
     shutdown_fd = mir::Fd{pipefds[1]};
     mir::Fd const terminate_fd = mir::Fd{pipefds[0]};
-    eventloop = std::thread{
-        [exception_handler, dispatchee, terminate_fd]()
-        {
-            // Our IO threads must not receive any signals
-            sigset_t all_signals;
-            sigfillset(&all_signals);
-
-            if (auto error = pthread_sigmask(SIG_BLOCK, &all_signals, NULL))
-                BOOST_THROW_EXCEPTION((
-                    std::system_error{error,
-                        std::system_category(),
-                        "Failed to block signals on IO thread"}));
-
-            try
+    {
+        // The newly spawned thread inherits the current signal mask; block everything
+        // before creating the new thread so that there's no race between thread start
+        // and signal blocking.
+        mir::SignalBlocker block_signals;
+        eventloop = std::thread{
+            [exception_handler, dispatchee, terminate_fd]()
             {
-                wait_for_events_forever(dispatchee, terminate_fd);
-            }
-            catch(...)
-            {
-                exception_handler();
-            }
-        }};
+                // Our IO threads must not receive any signals
+                sigset_t all_signals;
+                sigfillset(&all_signals);
+
+                if (auto error = pthread_sigmask(SIG_BLOCK, &all_signals, NULL))
+                    BOOST_THROW_EXCEPTION((
+                        std::system_error{error,
+                            std::system_category(),
+                            "Failed to block signals on IO thread"}));
+
+                try
+                {
+                    wait_for_events_forever(dispatchee, terminate_fd);
+                }
+                catch(...)
+                {
+                    exception_handler();
+                }
+            }};
+    }
 }
 
 md::SimpleDispatchThread::~SimpleDispatchThread() noexcept

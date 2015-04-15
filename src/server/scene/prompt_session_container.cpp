@@ -71,10 +71,7 @@ bool ms::PromptSessionContainer::insert_participant(PromptSession* prompt_sessio
         Participant participant{prompt_session, locked_session, participant_type, insertion_order++};
         boost::tie(it,valid) = participant_map.insert(participant);
 
-        if (!valid)
-            return false;
-
-        return true;
+        return valid;
     }
     return false;
 }

@@ -225,10 +225,9 @@ void FakeEventHub::setExcludedDevices(const Vector<String8>& devices)
     excluded_devices = devices;
 }
 
-size_t FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSize)
+size_t FakeEventHub::getEvents(RawEvent* buffer, size_t bufferSize)
 {
     size_t num_events_obtained = 0;
-    (void) timeoutMillis;
     {
         std::lock_guard<std::mutex> lg(guard);
         uint64_t dummy;
@@ -413,6 +412,10 @@ void FakeEventHub::requestReopenDevices()
 {
 }
 
+void FakeEventHub::wakeIn(int32_t)
+{
+}
+
 void FakeEventHub::wake()
 {
     uint64_t one{1};
@@ -420,6 +423,13 @@ void FakeEventHub::wake()
         BOOST_THROW_EXCEPTION((std::system_error{errno,
                                std::system_category(),
                                "Failed to wake fake event hub"}));
+}
+
+void FakeEventHub::wake(droidinput::RawEvent const& event)
+{
+    std::lock_guard<std::mutex> lg(guard);
+    events_available.push_back(event);
+    wake();
 }
 
 void FakeEventHub::dump(droidinput::String8& dump)
@@ -447,9 +457,7 @@ void FakeEventHub::synthesize_builtin_keyboard_added()
     event.deviceId = BuiltInKeyboardID;
     event.type = EventHubInterface::DEVICE_ADDED;
 
-    std::lock_guard<std::mutex> lg(guard);
-    events_available.push_back(event);
-    wake();
+    wake(event);
 }
 
 void FakeEventHub::synthesize_builtin_cursor_added()
@@ -459,9 +467,7 @@ void FakeEventHub::synthesize_builtin_cursor_added()
     event.deviceId = BuiltInCursorID;
     event.type = EventHubInterface::DEVICE_ADDED;
 
-    std::lock_guard<std::mutex> lg(guard);
-    events_available.push_back(event);
-    wake();
+    wake(event);
 }
 
 void FakeEventHub::synthesize_usb_touchscreen_added()
@@ -499,9 +505,7 @@ void FakeEventHub::synthesize_device_scan_complete()
     event.when = std::chrono::nanoseconds(0);
     event.type = EventHubInterface::FINISHED_DEVICE_SCAN;
 
-    std::lock_guard<std::mutex> lg(guard);
-    events_available.push_back(event);
-    wake();
+    wake(event);
 }
 
 void FakeEventHub::synthesize_event(const mis::KeyParameters &parameters)
@@ -521,9 +525,7 @@ void FakeEventHub::synthesize_event(const mis::KeyParameters &parameters)
     else
         event.value = 0;
 
-    std::lock_guard<std::mutex> lg(guard);
-    events_available.push_back(event);
-    wake();
+    wake(event);
 }
 
 void FakeEventHub::synthesize_event(const mis::ButtonParameters &parameters)
@@ -622,11 +624,7 @@ void FakeEventHub::synthesize_event(std::chrono::nanoseconds when, int32_t devic
     event.code = code;
     event.value = value;
 
-    {
-        std::lock_guard<std::mutex> lg(guard);
-        events_available.push_back(event);
-        wake();
-    }
+    wake(event);
 
     if (type == EV_ABS)
     {

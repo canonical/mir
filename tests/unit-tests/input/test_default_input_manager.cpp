@@ -94,6 +94,18 @@ TEST_F(DefaultInputManagerTest, flushes_event_hub_before_anything_to_fulfill_leg
     EXPECT_TRUE(wait_for_multiplexer_dispatch());
 }
 
+TEST_F(DefaultInputManagerTest, flushes_then_loops_once_to_initiate_device_scan_after_start)
+{
+    testing::InSequence seq;
+    EXPECT_CALL(event_hub, flush()).Times(1);
+    EXPECT_CALL(reader, loopOnce()).Times(1);
+
+    input_manager.start();
+    Mock::VerifyAndClearExpectations(&event_hub);
+
+    EXPECT_TRUE(wait_for_multiplexer_dispatch());
+}
+
 TEST_F(DefaultInputManagerTest, starts_platforms_on_start)
 {
     EXPECT_CALL(platform, start()).Times(1);
