@@ -104,13 +104,14 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 -> ms::SurfaceCreationParameters
 {
     auto parameters = request_parameters;
+    parameters.size.height = parameters.size.height + DeltaY{title_bar_height};
 
     auto const active_display = tools->active_display();
 
     auto width = std::min(active_display.size.width.as_int(), parameters.size.width.as_int());
     auto height = std::min(active_display.size.height.as_int(), parameters.size.height.as_int());
     if (!width) width = 1;
-    if (!height) height = 1;
+    if (height <= title_bar_height) height = title_bar_height+1;
     parameters.size = Size{width, height};
 
     bool positioned = false;
@@ -195,6 +196,8 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
         parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
     }
 
+    parameters.top_left.y = parameters.top_left.y + DeltaY{title_bar_height};
+    parameters.size.height = parameters.size.height - DeltaY{title_bar_height};
     return parameters;
 }
 
