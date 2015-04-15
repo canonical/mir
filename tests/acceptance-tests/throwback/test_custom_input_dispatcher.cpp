@@ -121,9 +121,9 @@ TEST_F(CustomInputDispatcher, receives_input)
             auto const dispatcher = the_input_dispatcher_mock();
 
             InSequence seq;
-            EXPECT_CALL(*dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1);
+            EXPECT_CALL(*dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1).WillOnce(Return(true));
             EXPECT_CALL(*dispatcher, dispatch(mt::KeyDownEvent()))
-                .WillOnce(InvokeWithoutArgs([this]{ dispatching_done.signal_ready(); }));
+                .WillOnce(InvokeWithoutArgs([this] -> bool { dispatching_done.signal_ready(); return true; }));
         }
     } server_config;
 
@@ -158,11 +158,12 @@ TEST_F(CustomInputDispatcher, gets_started_and_stopped)
 
 TEST_F(CustomInputDispatcher, receives_focus_changes)
 {
+    using namespace ::testing;
+
     struct ServerConfig : CustomDispatcherServerConfig
     {
         void input_dispatcher_expectations() override
         {
-            using namespace ::testing;
             auto const dispatcher = the_input_dispatcher_mock();
 
             EXPECT_CALL(*dispatcher, set_focus(_)).Times(1)
