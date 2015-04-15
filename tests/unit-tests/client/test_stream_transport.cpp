@@ -437,7 +437,7 @@ TYPED_TEST(StreamTransportTest, notifies_all_observers)
 }
 
 /*
- * ThreadSafeList doesn't report any error when trying to remove a non-existent element.
+ * TODO: ThreadSafeList doesn't report any error when trying to remove a non-existent element.
  *
  * It probably should, but let's not do that now.
  */
