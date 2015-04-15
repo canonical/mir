@@ -26,7 +26,7 @@
 #include "android/android_input_reader_policy.h"
 #include "android/android_input_registrar.h"
 #include "android/android_input_target_enumerator.h"
-#include "android/event_filter_dispatcher_policy.h"
+#include "android/default_dispatcher_policy.h"
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
 #include "android/android_input_manager.h"
@@ -213,7 +213,7 @@ mir::DefaultServerConfiguration::the_dispatcher_policy()
     return android_dispatcher_policy(
         [this]()
         {
-            return std::make_shared<mia::EventFilterDispatcherPolicy>(the_composite_event_filter(), is_key_repeat_enabled());
+            return std::make_shared<mia::DefaultDispatcherPolicy>(is_key_repeat_enabled());
         });
 }
 

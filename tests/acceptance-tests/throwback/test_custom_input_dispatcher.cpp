@@ -123,7 +123,7 @@ TEST_F(CustomInputDispatcher, receives_input)
             InSequence seq;
             EXPECT_CALL(*dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1).WillOnce(Return(true));
             EXPECT_CALL(*dispatcher, dispatch(mt::KeyDownEvent()))
-                .WillOnce(InvokeWithoutArgs([this] -> bool { dispatching_done.signal_ready(); return true; }));
+                .WillOnce(InvokeWithoutArgs([this]() -> bool { dispatching_done.signal_ready(); return true; }));
         }
     } server_config;
 
