@@ -106,6 +106,12 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
 }
 
 md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable> const& dispatchee)
+    : SimpleDispatchThread(dispatchee, []{})
+{}
+
+md::SimpleDispatchThread::SimpleDispatchThread(
+    std::shared_ptr<md::Dispatchable> const& dispatchee,
+    std::function<void()> const& exception_handler)
 {
     int pipefds[2];
     if (pipe(pipefds) < 0)
@@ -121,7 +127,28 @@ md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable>
         // before creating the new thread so that there's no race between thread start
         // and signal blocking.
         mir::SignalBlocker block_signals;
-        eventloop = std::thread{&wait_for_events_forever, dispatchee, terminate_fd};
+        eventloop = std::thread{
+            [exception_handler, dispatchee, terminate_fd]()
+            {
+                // Our IO threads must not receive any signals
+                sigset_t all_signals;
+                sigfillset(&all_signals);
+
+                if (auto error = pthread_sigmask(SIG_BLOCK, &all_signals, NULL))
+                    BOOST_THROW_EXCEPTION((
+                        std::system_error{error,
+                            std::system_category(),
+                            "Failed to block signals on IO thread"}));
+
+                try
+                {
+                    wait_for_events_forever(dispatchee, terminate_fd);
+                }
+                catch(...)
+                {
+                    exception_handler();
+                }
+            }};
     }
 }
 

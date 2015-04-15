@@ -28,6 +28,7 @@
 #include <fcntl.h>
 
 #include <atomic>
+#include <exception>
 #include <thread>
 
 #include <gtest/gtest.h>
@@ -258,3 +259,26 @@ TEST_F(SimpleDispatchThreadDeathTest, destroying_dispatcher_from_a_callback_is_a
     }, KilledBySignal(SIGABRT), ".*Destroying SimpleDispatchThread.*");
 }
 
+TEST_F(SimpleDispatchThreadTest, executes_exception_handler_with_current_exception)
+{
+    using namespace std::chrono_literals;
+    auto dispatched = std::make_shared<mt::Signal>();
+    std::exception_ptr exception;
+
+    auto dispatchable = std::make_shared<mt::TestDispatchable>(
+        []()
+        {
+            throw std::runtime_error("thrown");
+        });
+
+    md::SimpleDispatchThread dispatcher{dispatchable,
+        [&dispatched,&exception]()
+        {
+            exception = std::current_exception();
+            dispatched->raise();
+        }};
+    dispatchable->trigger();
+    EXPECT_TRUE(dispatched->wait_for(10s));
+
+    EXPECT_THROW({std::rethrow_exception(exception);}, std::runtime_error);
+}
