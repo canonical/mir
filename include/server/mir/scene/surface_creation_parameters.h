@@ -89,6 +89,11 @@ struct SurfaceCreationParameters
     mir::optional_value<MirEdgeAttachment> edge_attachment;
 
     std::weak_ptr<Surface> parent;
+
+    optional_value<geometry::Width> min_width;
+    optional_value<geometry::Height> min_height;
+    optional_value<geometry::Width> max_width;
+    optional_value<geometry::Height> max_height;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
