@@ -95,15 +95,6 @@ MATCHER_P(HeightEq, value, "")
 
 }
 
-TEST_F(SurfaceModifications, rename_is_notified)
-{
-    auto const new_title = __PRETTY_FUNCTION__;
-
-    EXPECT_CALL(surface_observer, renamed(StrEq(new_title)));
-
-    mir_surface_set_title(surface, new_title);
-}
-
 TEST_F(SurfaceModifications, surface_spec_name_is_notified)
 {
     auto const new_title = __PRETTY_FUNCTION__;
