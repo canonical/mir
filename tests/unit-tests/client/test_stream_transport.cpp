@@ -47,15 +47,12 @@ namespace mclr = mir::client::rpc;
 namespace mt = mir::test;
 namespace md = mir::dispatch;
 
-namespace
-{
 class MockObserver : public mclr::StreamTransport::Observer
 {
 public:
     MOCK_METHOD0(on_data_available, void());
     MOCK_METHOD0(on_disconnected, void());
 };
-}
 
 template <typename TransportMechanism>
 class StreamTransportTest : public ::testing::Test
