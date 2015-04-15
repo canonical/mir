@@ -314,9 +314,11 @@ public:
     virtual std::shared_ptr<droidinput::InputReaderInterface> the_input_reader();
     virtual std::shared_ptr<droidinput::InputReaderPolicyInterface> the_input_reader_policy();
     virtual std::shared_ptr<droidinput::InputListenerInterface> the_input_translator();
+    virtual std::shared_ptr<input::android::InputThread> the_input_reader_thread();
 
     // new input reading related parts:
     virtual std::shared_ptr<input::Platform> the_input_platform();
+    virtual std::shared_ptr<input::InputManager> the_new_input_manager() override;
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
     virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
     virtual std::shared_ptr<input::InputDeviceHub> the_input_device_hub();
@@ -365,6 +367,7 @@ protected:
 
     CachedPtr<input::android::InputRegistrar> input_registrar;
     CachedPtr<input::android::InputThread> dispatcher_thread;
+    CachedPtr<input::android::InputThread> input_reader_thread;
     CachedPtr<droidinput::InputDispatcherInterface> android_input_dispatcher;
     CachedPtr<droidinput::InputEnumerator> input_target_enumerator;
     CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
@@ -379,9 +382,10 @@ protected:
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<input::InputManager>    new_input_manager; // currently not used by default
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
     CachedPtr<input::Platform>    input_platform; // currently not used by default
-    CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
+    CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer; // currently not used by default
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
     CachedPtr<input::InputSendObserver> input_send_observer;
