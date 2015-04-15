@@ -63,7 +63,7 @@ public:
 
     virtual auto focused_surface() const -> std::shared_ptr<scene::Surface> = 0;
 
-    virtual void focus_next() = 0;
+    virtual void focus_next_session() = 0;
 
     virtual void set_focus_to(
         std::shared_ptr<scene::Session> const& focus,
@@ -246,9 +246,9 @@ protected:
         return focus_controller->focused_surface();
     }
 
-    void focus_next() override
+    void focus_next_session() override
     {
-        focus_controller->focus_next();
+        focus_controller->focus_next_session();
     }
 
     void set_focus_to(
