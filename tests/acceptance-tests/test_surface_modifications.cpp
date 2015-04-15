@@ -268,3 +268,47 @@ TEST_F(SurfaceModifications, surface_spec_min_height_is_respected)
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(shell_surface->top_left());
 }
+
+TEST_F(SurfaceModifications, surface_spec_max_width_is_respected)
+{
+    auto const max_width = 23;
+
+    {
+        auto const spec = mir_connection_create_spec_for_changes(connection);
+        mir_surface_spec_set_max_width(spec, max_width);
+        mir_surface_apply_spec(surface, spec);
+        mir_surface_spec_release(spec);
+    }
+
+    ensure_server_has_processed_setup();
+
+    auto const shell_surface = this->shell_surface.lock();
+    auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
+
+    EXPECT_CALL(surface_observer, resized_to(WidthEq(max_width)));
+
+    generate_alt_click_at(bottom_right);
+    generate_alt_move_to(bottom_right + DeltaX(max_width));
+}
+
+TEST_F(SurfaceModifications, surface_spec_max_height_is_respected)
+{
+    auto const max_height = 29;
+
+    {
+        auto const spec = mir_connection_create_spec_for_changes(connection);
+        mir_surface_spec_set_max_height(spec, max_height);
+        mir_surface_apply_spec(surface, spec);
+        mir_surface_spec_release(spec);
+    }
+
+    ensure_server_has_processed_setup();
+
+    auto const shell_surface = this->shell_surface.lock();
+    auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
+
+    EXPECT_CALL(surface_observer, resized_to(HeightEq(max_height)));
+
+    generate_alt_click_at(bottom_right);
+    generate_alt_move_to(bottom_right + DeltaY(max_height));
+}

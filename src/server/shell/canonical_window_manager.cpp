@@ -657,6 +657,26 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
         new_size.height = surface_info.min_height.value();
     }
 
+    if (surface_info.max_width.is_set() && surface_info.max_width.value() < new_size.width)
+    {
+        if (left_resize)
+        {
+            new_pos.x += surface_info.max_width.value() - new_size.width;
+        }
+
+        new_size.width = surface_info.max_width.value();
+    }
+
+    if (surface_info.max_height.is_set() && surface_info.max_height.value() < new_size.height)
+    {
+        if (top_resize)
+        {
+            new_pos.y += surface_info.max_height.value() - new_size.height;
+        }
+
+        new_size.height = surface_info.max_height.value();
+    }
+
     if (left_resize)
     {
         if (new_pos.x < bounds.top_left.x)
