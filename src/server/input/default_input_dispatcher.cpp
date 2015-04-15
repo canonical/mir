@@ -458,8 +458,7 @@ bool mi::DefaultInputDispatcher::KeyInputState::handle_event(MirInputDeviceId id
 
 bool mi::DefaultInputDispatcher::KeyInputState::press_key(MirInputDeviceId id, int scan_code)
 {
-    // TODO: How do we handle the device dissapearing?
-   // First key press for a device
+    // First key press for a device
     if (depressed_scancodes.find(id) == depressed_scancodes.end())
     {
         depressed_scancodes[id] = {};

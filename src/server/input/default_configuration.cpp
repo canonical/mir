@@ -81,7 +81,6 @@ std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_regi
         });
 }
 
-// TODO: Remove default server conf variable?
 std::shared_ptr<mi::CompositeEventFilter>
 mir::DefaultServerConfiguration::the_composite_event_filter()
 {
