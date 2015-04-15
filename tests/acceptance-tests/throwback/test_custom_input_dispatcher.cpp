@@ -60,7 +60,7 @@ class CustomMockInputDispatcher :
 public:
     CustomMockInputDispatcher() = default;
     // mocks for InputTargeter
-    MOCK_METHOD1(set_focus, void(std::shared_ptr<mi::Surface> const& /*focus_channel*/));
+    MOCK_METHOD1(set_focus, void(std::shared_ptr<mi::Surface> const& /*focus_surface*/));
     MOCK_METHOD0(clear_focus, void());
 };
 
@@ -121,9 +121,9 @@ TEST_F(CustomInputDispatcher, receives_input)
             auto const dispatcher = the_input_dispatcher_mock();
 
             InSequence seq;
-            EXPECT_CALL(*dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1).WillOnce(Return(true));
+            EXPECT_CALL(*dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1);
             EXPECT_CALL(*dispatcher, dispatch(mt::KeyDownEvent()))
-                .WillOnce(InvokeWithoutArgs([this]() -> bool { dispatching_done.signal_ready(); return true; }));
+                .WillOnce(InvokeWithoutArgs([this]{ dispatching_done.signal_ready(); }));
         }
     } server_config;
 

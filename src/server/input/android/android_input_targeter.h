@@ -47,7 +47,7 @@ public:
                            std::shared_ptr<WindowHandleRepository> const& repository);
     virtual ~InputTargeter() noexcept(true);
 
-    void set_focus(std::shared_ptr<input::Surface> const& focus_channel);
+    void set_focus(std::shared_ptr<input::Surface> const& focus_surface);
     void clear_focus();
 
 protected:

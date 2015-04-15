@@ -18,6 +18,7 @@
 
 #include "android_input_targeter.h"
 #include "android_input_registrar.h"
+
 #include "android_input_window_handle.h"
 #include "android_input_application_handle.h"
 
@@ -51,9 +52,9 @@ void mia::InputTargeter::clear_focus()
     input_dispatcher->setKeyboardFocus(null_window);
 }
 
-void mia::InputTargeter::set_focus(std::shared_ptr<mi::Surface> const& surface)
+void mia::InputTargeter::set_focus(std::shared_ptr<mi::Surface> const& focus_surface)
 {
-    auto window_handle = repository->handle_for_channel(surface->input_channel());
+    auto window_handle = repository->handle_for_channel(focus_surface->input_channel());
 
     if (window_handle == NULL)
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set keyboard focus to an unregistered input channel"));

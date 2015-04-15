@@ -24,6 +24,7 @@
 
 #include "mir_test_doubles/mock_android_input_dispatcher.h"
 #include "mir_test_doubles/stub_input_channel.h"
+#include "mir_test_doubles/stub_input_surface.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_input_channel.h"
@@ -65,7 +66,7 @@ TEST_F(AndroidInputTargeterSetup, on_clear_focus)
     targeter.clear_focus();
 }
 
-TEST_F(AndroidInputTargeterSetup, on_focus_changed)
+TEST_F(AndroidInputTargeterSetup, on_set_focus)
 {
     using namespace ::testing;
 

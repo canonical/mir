@@ -25,13 +25,14 @@ namespace mir
 {
 namespace input
 {
+class InputChannel;
 
 struct NullInputTargeter : public shell::InputTargeter
 {
     NullInputTargeter() = default;
     virtual ~NullInputTargeter() noexcept(true) = default;
 
-    void set_focus(std::shared_ptr<input::Surface> const&) override
+    void set_focus(std::shared_ptr<Surface> const&) override
     {
     }
 
