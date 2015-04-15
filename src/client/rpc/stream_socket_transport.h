@@ -34,8 +34,8 @@ namespace client
 namespace rpc
 {
 
-class TransportObservers : public BasicObservers<StreamTransport::Observer>,
-                           public StreamTransport::Observer
+class TransportObservers : public StreamTransport::Observer,
+                           private BasicObservers<StreamTransport::Observer>
 {
 public:
     using BasicObservers<StreamTransport::Observer>::add;
