@@ -248,6 +248,26 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 {
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
+
+    if (modifications.width.is_set() || modifications.height.is_set())
+    {
+        // TODO similar logic is needed in example window management policies
+        auto new_size = surface->size();
+
+        if (modifications.width.is_set())
+            new_size.width = modifications.width.value();
+
+        if (modifications.height.is_set())
+            new_size.height = modifications.height.value();
+
+        constrained_resize(
+            surface,
+            surface->top_left(),
+            new_size,
+            false,
+            false,
+            display_area);
+    }
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
@@ -577,6 +597,17 @@ bool msh::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> cons
 
     Point new_pos = top_left + left_resize*delta.dx + top_resize*delta.dy;
 
+    return constrained_resize(surface, new_pos, new_size, left_resize, top_resize, bounds);
+}
+
+bool msh::CanonicalWindowManagerPolicy::constrained_resize(
+    std::shared_ptr<ms::Surface> const& surface,
+    Point new_pos,
+    Size new_size,
+    bool const left_resize,
+    bool const top_resize,
+    Rectangle const& bounds)
+{
     if (left_resize)
     {
         if (new_pos.x < bounds.top_left.x)
@@ -615,15 +646,15 @@ bool msh::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> cons
     // "A vertically maximised surface is anchored to the top and bottom of
     // the available workspace and can have any width."
     case mir_surface_state_vertmaximized:
-        new_pos.y = old_pos.top_left.y;
-        new_size.height = old_pos.size.height;
+        new_pos.y = surface->top_left().y;
+        new_size.height = surface->size().height;
         break;
 
     // "A horizontally maximised surface is anchored to the left and right of
     // the available workspace and can have any height"
     case mir_surface_state_horizmaximized:
-        new_pos.x = old_pos.top_left.x;
-        new_size.width = old_pos.size.width;
+        new_pos.x = surface->top_left().x;
+        new_size.width = surface->size().width;
         break;
 
     // "A maximised surface is anchored to the top, bottom, left and right of the
@@ -639,7 +670,7 @@ bool msh::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> cons
     // TODO It is rather simplistic to move a tree WRT the top_left of the root
     // TODO when resizing. But for more sophistication we would need to encode
     // TODO some sensible layout rules.
-    move_tree(surface, new_pos-top_left);
+    move_tree(surface, new_pos-surface->top_left());
 
     return true;
 }

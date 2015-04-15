@@ -119,6 +119,13 @@ private:
     bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
     void move_tree(std::shared_ptr<scene::Surface> const& root, geometry::Displacement movement) const;
     void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
+    bool constrained_resize(
+        std::shared_ptr<scene::Surface> const& surface,
+        geometry::Point new_pos,
+        geometry::Size new_size,
+        const bool left_resize,
+        const bool top_resize,
+        geometry::Rectangle const& bounds);
 
     Tools* const tools;
     std::shared_ptr<DisplayLayout> const display_layout;
