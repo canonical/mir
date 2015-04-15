@@ -218,6 +218,18 @@ bool me::WindowManager::handle(MirEvent const& event)
             return true;
         }
         else if (event.key.modifiers & mir_key_modifier_alt &&
+                 event.key.scan_code == KEY_GRAVE)
+        {
+            if (auto const prev = focus_controller->focused_surface())
+            {
+                auto const app = focus_controller->focused_session();
+                auto const next = app->surface_after(prev);
+                focus_controller->set_focus_to(app, next);
+                focus_controller->raise({next});
+            }
+            return true;
+        }
+        else if (event.key.modifiers & mir_key_modifier_alt &&
                  event.key.scan_code == KEY_F4)
         {
             auto const app = focus_controller->focused_session();
