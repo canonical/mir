@@ -131,6 +131,16 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface(mf::SurfaceId id) c
     return checked_find(id)->second;
 }
 
+mf::SurfaceId ms::ApplicationSession::surface_after(mf::SurfaceId i) const
+{
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    auto j = checked_find(i);
+    ++j;
+    if (j == surfaces.end())
+        j = surfaces.begin();
+    return j->first;
+}
+
 void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
 {
     if (auto surface = default_surface())

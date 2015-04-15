@@ -47,6 +47,10 @@ struct StubSceneSession : public scene::Session
     {
         return std::shared_ptr<scene::Surface>();
     }
+    frontend::SurfaceId surface_after(frontend::SurfaceId id) const override
+    {
+        return id;
+    }
     std::string name() const override
     {
         return std::string();
