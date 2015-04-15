@@ -593,7 +593,7 @@ auto msh::CanonicalWindowManagerPolicy::active_surface() const
 
 bool msh::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
-    if (!surface || !surface->input_area_contains(cursor))
+    if (!surface || !surface->input_area_contains(old_cursor))
         return false;
 
     auto const top_left = surface->top_left();

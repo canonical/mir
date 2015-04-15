@@ -239,10 +239,11 @@ TEST_F(SurfaceModifications, surface_spec_min_width_is_respected)
     ensure_server_has_processed_setup();
 
     auto const shell_surface = this->shell_surface.lock();
+    auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
 
     EXPECT_CALL(surface_observer, resized_to(WidthEq(min_width)));
 
-    generate_alt_click_at(shell_surface->input_bounds().bottom_right());
+    generate_alt_click_at(bottom_right);
     generate_alt_move_to(shell_surface->top_left());
 }
 
@@ -260,9 +261,10 @@ TEST_F(SurfaceModifications, surface_spec_min_height_is_respected)
     ensure_server_has_processed_setup();
 
     auto const shell_surface = this->shell_surface.lock();
+    auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
 
     EXPECT_CALL(surface_observer, resized_to(HeightEq(min_height)));
 
-    generate_alt_click_at(shell_surface->input_bounds().bottom_right());
+    generate_alt_click_at(bottom_right);
     generate_alt_move_to(shell_surface->top_left());
 }
