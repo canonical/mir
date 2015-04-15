@@ -147,11 +147,3 @@ void mcll::RpcReport::file_descriptors_received(
 
     logger->log(ml::Severity::debug, ss.str(), component);
 }
-
-void mcll::RpcReport::connection_failure(std::exception const& x)
-{
-    std::stringstream ss;
-    ss << "Connection failure: " << boost::diagnostic_information(x) << std::endl;
-
-    logger->log(ml::Severity::warning, ss.str(), component);
-}

@@ -66,8 +66,6 @@ public:
     virtual void file_descriptors_received(google::protobuf::Message const& response,
                                            std::vector<mir::Fd> const& fds) = 0;
 
-    virtual void connection_failure(std::exception const& ex) = 0;
-
 protected:
     RpcReport() = default;
     RpcReport(RpcReport const&) = delete;

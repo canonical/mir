@@ -79,7 +79,3 @@ void mclr::NullRpcReport::file_descriptors_received(
     std::vector<mir::Fd> const& /*fds*/)
 {
 }
-
-void mclr::NullRpcReport::connection_failure(std::exception const& /*ex*/)
-{
-}

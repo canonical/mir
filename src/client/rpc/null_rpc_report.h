@@ -50,8 +50,6 @@ public:
 
     void file_descriptors_received(google::protobuf::Message const& response,
                                    std::vector<Fd> const& fds) override;
-
-    void connection_failure(std::exception const& ex) override;
 };
 
 }
