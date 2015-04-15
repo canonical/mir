@@ -168,6 +168,18 @@ mir_connection_create_spec_for_dialog(MirConnection* connection,
                                       MirPixelFormat format);
 
 /**
+ * Create a surface specification for updating a surface.
+ *
+ * This can be applied to one or more target surfaces using
+ * mir_surface_apply_spec(...).
+ *
+ * \param [in] connection   a valid mir connection
+ *
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_changes(MirConnection* connection);
+
+/**
  * Create a surface from a given specification
  *
  *
@@ -577,9 +589,17 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
  * Change the title (name) of a surface.
  *   \param [in] surface  The surface to rename
  *   \param [in] name     The new name
- *   \returns             When the change has completed
  */
-MirWaitHandle* mir_surface_set_title(MirSurface* surf, char const* name);
+void mir_surface_set_title(MirSurface* surface, char const* name);
+
+/**
+ * Request changes to the specification of a surface. The server will decide
+ * whether and how the request can be honoured.
+ *
+ *   \param [in] surface  The surface to rename
+ *   \param [in] spec     Spec with the requested changes applied
+ */
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
 #ifdef __cplusplus
 }

@@ -74,9 +74,8 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
     }
 }
 
-MirSurfaceSpec::MirSurfaceSpec(MirSurface* preexisting)
+MirSurfaceSpec::MirSurfaceSpec()
 {
-    self = preexisting;
 }
 
 mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
