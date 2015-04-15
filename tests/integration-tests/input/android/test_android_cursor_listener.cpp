@@ -18,7 +18,8 @@
  */
 
 #include "mir/events/event_private.h"
-#include "src/server/input/event_filter_chain.h"
+#include "src/server/input/event_filter_chain_dispatcher.h"
+#include "src/server/input/null_input_dispatcher.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
@@ -66,7 +67,7 @@ struct AndroidCursorListenerIntegrationTest : testing::Test, mtf::FakeEventHubSe
     std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
     {
         std::initializer_list<std::shared_ptr<mi::EventFilter>const> const& chain{std::static_pointer_cast<mi::EventFilter>(event_filter)};
-        return std::make_shared<mi::EventFilterChain>(chain);
+        return std::make_shared<mi::EventFilterChainDispatcher>(chain, std::make_shared<mi::NullInputDispatcher>());
     }
 
     std::shared_ptr<mi::CursorListener> the_cursor_listener() override

@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/server/input/event_filter_chain.h"
+#include "src/server/input/event_filter_chain_dispatcher.h"
 #include "src/server/input/null_input_dispatcher.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir/events/event_builders.h"
@@ -39,17 +39,17 @@ std::shared_ptr<mtd::MockEventFilter> mock_filter()
     return std::make_shared<mtd::MockEventFilter>();
 }
 
-struct EventFilterChain : public ::testing::Test
+struct EventFilterChainDispatcher : public ::testing::Test
 {
     mir::EventUPtr const event = mir::events::make_event(MirInputDeviceId(), 0,
         MirKeyboardAction(), xkb_keysym_t(), 0, MirInputEventModifiers());
 };
 }
 
-TEST_F(EventFilterChain, offers_events_to_filters)
+TEST_F(EventFilterChainDispatcher, offers_events_to_filters)
 {
     auto filter = mock_filter();
-    mi::EventFilterChain filter_chain({filter, filter}, std::make_shared<mi::NullInputDispatcher>());
+    mi::EventFilterChainDispatcher filter_chain({filter, filter}, std::make_shared<mi::NullInputDispatcher>());
     
     // Filter will pass the event on twice
     EXPECT_CALL(*filter, handle(_)).Times(2).WillRepeatedly(Return(false));
@@ -57,13 +57,13 @@ TEST_F(EventFilterChain, offers_events_to_filters)
     EXPECT_FALSE(filter_chain.handle(*event));
 }
 
-TEST_F(EventFilterChain, prepends_appends_filters)
+TEST_F(EventFilterChainDispatcher, prepends_appends_filters)
 {
     auto filter1 = mock_filter();
     auto filter2 = mock_filter();
     auto filter3 = mock_filter();
 
-    mi::EventFilterChain filter_chain({filter2}, std::make_shared<mi::NullInputDispatcher>());
+    mi::EventFilterChainDispatcher filter_chain({filter2}, std::make_shared<mi::NullInputDispatcher>());
     filter_chain.append(filter3);
     filter_chain.prepend(filter1);
 
@@ -78,11 +78,11 @@ TEST_F(EventFilterChain, prepends_appends_filters)
     EXPECT_FALSE(filter_chain.handle(*event));
 }
 
-TEST_F(EventFilterChain, accepting_event_halts_emission)
+TEST_F(EventFilterChainDispatcher, accepting_event_halts_emission)
 {
     auto filter = mock_filter();
 
-    mi::EventFilterChain filter_chain({filter, filter, filter}, std::make_shared<mi::NullInputDispatcher>());
+    mi::EventFilterChainDispatcher filter_chain({filter, filter, filter}, std::make_shared<mi::NullInputDispatcher>());
 
     // First filter will reject, second will accept, third one should not be asked.
     {
@@ -94,11 +94,11 @@ TEST_F(EventFilterChain, accepting_event_halts_emission)
     EXPECT_TRUE(filter_chain.handle(*event));
 }
 
-TEST_F(EventFilterChain, does_not_own_event_filters)
+TEST_F(EventFilterChainDispatcher, does_not_own_event_filters)
 {
     auto filter = mock_filter();
 
-    mi::EventFilterChain filter_chain({filter}, std::make_shared<mi::NullInputDispatcher>());
+    mi::EventFilterChainDispatcher filter_chain({filter}, std::make_shared<mi::NullInputDispatcher>());
     EXPECT_CALL(*filter, handle(_)).Times(1).WillOnce(Return(true));
     EXPECT_TRUE(filter_chain.handle(*event));
     filter.reset();

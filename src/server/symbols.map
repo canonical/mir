@@ -526,6 +526,7 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
+    mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
     mir::DefaultServerConfiguration::the_compositor*;
     mir::DefaultServerConfiguration::the_compositor_report*;
     mir::DefaultServerConfiguration::the_connection_creator*;

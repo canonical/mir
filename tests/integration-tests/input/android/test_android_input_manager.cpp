@@ -19,9 +19,10 @@
 
 #include "mir/events/event_private.h"
 
+#include "src/server/input/null_input_dispatcher.h"
 #include "src/server/input/android/android_input_targeter.h"
 #include "src/server/input/android/android_input_registrar.h"
-#include "src/server/input/event_filter_chain.h"
+#include "src/server/input/event_filter_chain_dispatcher.h"
 #include "src/server/input/android/event_filter_dispatcher_policy.h"
 
 #include "mir_test/fake_shared.h"
@@ -69,7 +70,7 @@ public:
     std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
     {
         std::initializer_list<std::shared_ptr<mi::EventFilter>const> const& chain{std::static_pointer_cast<mi::EventFilter>(event_filter)};
-        return std::make_shared<mi::EventFilterChain>(chain);
+        return std::make_shared<mi::EventFilterChainDispatcher>(chain, std::make_shared<mi::NullInputDispatcher>());
     }
     void SetUp() override
     {
