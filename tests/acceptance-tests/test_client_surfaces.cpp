@@ -298,11 +298,11 @@ TEST_F(ClientSurfaces, can_be_input_methods)
 
 TEST_F(ClientSurfaces, can_be_renamed)
 {
-    auto spec = mir_connection_create_spec_for_normal_surface(
+    auto create_spec = mir_connection_create_spec_for_normal_surface(
                    connection, 123, 456, mir_pixel_format_abgr_8888);
-    ASSERT_THAT(spec, NotNull());
-    auto surf = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    ASSERT_THAT(create_spec, NotNull());
+    auto surf = mir_surface_create_sync(create_spec);
+    mir_surface_spec_release(create_spec);
 
     /*
      * Generally no windowing system ever censors window names. They are
@@ -315,15 +315,16 @@ TEST_F(ClientSurfaces, can_be_renamed)
      * At least verify the rename completes without blocking...
      */
     auto const rename_spec = mir_connection_create_spec_for_changes(connection);
+    ASSERT_THAT(rename_spec, NotNull());
     mir_surface_spec_set_name(rename_spec, "New Name");
     mir_surface_apply_spec(surf, rename_spec);
 
-    mir_surface_spec_set_name(spec, "");
+    mir_surface_spec_set_name(rename_spec, "");
     mir_surface_apply_spec(surf, rename_spec);
 
-    mir_surface_spec_set_name(spec, "Alice");
+    mir_surface_spec_set_name(rename_spec, "Alice");
     mir_surface_apply_spec(surf, rename_spec);
-    mir_surface_spec_release(spec);
+    mir_surface_spec_release(rename_spec);
 
     mir_surface_release_sync(surf);
 }
