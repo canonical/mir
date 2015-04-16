@@ -24,6 +24,7 @@
 #include <tuple>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace msh = mir::shell;
 namespace mg = mir::graphics;

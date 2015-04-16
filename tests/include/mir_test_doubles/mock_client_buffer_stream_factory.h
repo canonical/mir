@@ -22,6 +22,9 @@
 #include "src/client/client_buffer_stream_factory.h"
 #include "src/client/buffer_stream.h"
 
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 namespace mir
 {
 namespace test
