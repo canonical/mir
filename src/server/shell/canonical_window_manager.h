@@ -38,13 +38,18 @@ struct CanonicalSurfaceInfo
 {
     CanonicalSurfaceInfo(
         std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface);
+        std::shared_ptr<scene::Surface> const& surface,
+        scene::SurfaceCreationParameters const& params);
 
     MirSurfaceState state;
     geometry::Rectangle restore_rect;
     std::weak_ptr<scene::Session> session;
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
+    optional_value<geometry::Width> min_width;
+    optional_value<geometry::Height> min_height;
+    optional_value<geometry::Width> max_width;
+    optional_value<geometry::Height> max_height;
 };
 
 // standard window management algorithm:
@@ -119,6 +124,13 @@ private:
     bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
     void move_tree(std::shared_ptr<scene::Surface> const& root, geometry::Displacement movement) const;
     void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
+    bool constrained_resize(
+        std::shared_ptr<scene::Surface> const& surface,
+        geometry::Point new_pos,
+        geometry::Size new_size,
+        const bool left_resize,
+        const bool top_resize,
+        geometry::Rectangle const& bounds);
 
     Tools* const tools;
     std::shared_ptr<DisplayLayout> const display_layout;

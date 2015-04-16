@@ -13,38 +13,27 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ * Authored By: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_DISPATCH_SIMPLE_DISPATCH_THREAD_H_
-#define MIR_DISPATCH_SIMPLE_DISPATCH_THREAD_H_
+#ifndef MIR_SIGNAL_BLOCKER_H_
+#define MIR_SIGNAL_BLOCKER_H_
 
-#include <memory>
-#include <thread>
-#include "mir/fd.h"
+#include <signal.h>
 
 namespace mir
 {
-namespace dispatch
-{
-class Dispatchable;
-
-
-class SimpleDispatchThread
+class SignalBlocker
 {
 public:
-    SimpleDispatchThread(std::shared_ptr<Dispatchable> const& dispatchee);
-    SimpleDispatchThread(std::shared_ptr<Dispatchable> const& dispatchee,
-                         std::function<void()> const& exception_handler);
-    ~SimpleDispatchThread() noexcept;
+    SignalBlocker();
+    ~SignalBlocker() noexcept(false);
 
+    SignalBlocker(SignalBlocker const&) = delete;
+    SignalBlocker& operator=(SignalBlocker const&) = delete;
 private:
-    Fd shutdown_fd;
-    std::thread eventloop;
+    sigset_t previous_set;
 };
-
-}
 }
 
-
-#endif // MIR_DISPATCH_SIMPLE_DISPATCH_THREAD_H_
+#endif /* MIR_SIGNAL_BLOCKER_H_ */

@@ -113,6 +113,8 @@ MIR_CLIENT_8.3 {   # New in Mir 0.11
 
 MIR_CLIENT_8.4 {   # New in Mir 0.13
  global:
+    mir_connection_create_spec_for_changes;
+    mir_surface_apply_spec;
     mir_surface_set_event_handler;
     mir_surface_set_title;
     mir_default_cursor_name;
@@ -162,6 +164,10 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_surface_event_get_attribute;
     mir_surface_event_get_attribute_value;
     mir_surface_set_swapinterval;
+    mir_surface_spec_set_min_width;
+    mir_surface_spec_set_min_height;
+    mir_surface_spec_set_max_width;
+    mir_surface_spec_set_max_height;
     mir_surface_swap_buffers;
     mir_surface_swap_buffers_sync;
     mir_touch_event_modifiers;

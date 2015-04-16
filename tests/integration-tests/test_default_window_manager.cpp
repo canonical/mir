@@ -112,9 +112,9 @@ TEST_F(TestDefaultWindowManager, cycle_focus)
       EXPECT_CALL(session_manager, set_focus_to(Eq(session3))).Times(1);
     }
 
-    shell.focus_next();
-    shell.focus_next();
-    shell.focus_next();
+    shell.focus_next_session();
+    shell.focus_next_session();
+    shell.focus_next_session();
 
     Mock::VerifyAndClearExpectations(&session_manager);
 
