@@ -24,6 +24,7 @@ set(
   test_client_focus_notification.cpp
   test_client_authorization.cpp
   test_nested_mir.cpp
+  test_nested_input.cpp
   test_display_configuration.cpp
   test_surfaces_with_output_id.cpp
   test_server_disconnect.cpp
