@@ -44,7 +44,7 @@
 #include "null_input_channel_factory.h"
 #include "default_input_device_hub.h"
 #include "default_input_manager.h"
-#include "default_input_dispatcher.h"
+#include "surface_input_dispatcher.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/platform.h"
@@ -186,13 +186,13 @@ mir::DefaultServerConfiguration::the_input_targeter()
         });
 }
 
-std::shared_ptr<mi::DefaultInputDispatcher>
+std::shared_ptr<mi::SurfaceInputDispatcher>
 mir::DefaultServerConfiguration::the_new_input_dispatcher()
 {
     return new_input_dispatcher(
         [this]()
         {
-            return std::make_shared<mi::DefaultInputDispatcher>(the_input_scene());
+            return std::make_shared<mi::SurfaceInputDispatcher>(the_input_scene());
         });
 }
 

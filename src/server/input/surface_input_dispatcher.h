@@ -40,11 +40,11 @@ namespace input
 class Surface;
 class Scene;
 
-class DefaultInputDispatcher : public mir::input::InputDispatcher, public shell::InputTargeter
+class SurfaceInputDispatcher : public mir::input::InputDispatcher, public shell::InputTargeter
 {
 public:
-    DefaultInputDispatcher(std::shared_ptr<input::Scene> const& scene);
-    ~DefaultInputDispatcher();
+    SurfaceInputDispatcher(std::shared_ptr<input::Scene> const& scene);
+    ~SurfaceInputDispatcher();
 
 // mir::input::InputDispatcher
     void configuration_changed(std::chrono::nanoseconds when) override;

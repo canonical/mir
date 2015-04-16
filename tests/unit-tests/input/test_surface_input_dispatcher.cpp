@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/server/input/default_input_dispatcher.h"
+#include "src/server/input/surface_input_dispatcher.h"
 
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
@@ -124,9 +124,9 @@ struct StubInputScene : public mtd::StubInputScene
     std::shared_ptr<ms::Observer> observer;
 };
 
-struct DefaultInputDispatcher : public testing::Test
+struct SurfaceInputDispatcher : public testing::Test
 {
-    DefaultInputDispatcher()
+    SurfaceInputDispatcher()
         : dispatcher(mt::fake_shared(scene))
     {
     }
@@ -134,7 +134,7 @@ struct DefaultInputDispatcher : public testing::Test
     void TearDown() override { dispatcher.stop(); }
 
     StubInputScene scene;
-    mi::DefaultInputDispatcher dispatcher;
+    mi::SurfaceInputDispatcher dispatcher;
 };
 
 struct FakeKeyboard
@@ -233,7 +233,7 @@ struct FakeToucher
 
 }
 
-TEST_F(DefaultInputDispatcher, key_event_delivered_to_focused_surface)
+TEST_F(SurfaceInputDispatcher, key_event_delivered_to_focused_surface)
 {
     using namespace ::testing;
     
@@ -250,7 +250,7 @@ TEST_F(DefaultInputDispatcher, key_event_delivered_to_focused_surface)
     EXPECT_TRUE(dispatcher.dispatch(*event));
 }
 
-TEST_F(DefaultInputDispatcher, key_event_dropped_if_no_surface_focused)
+TEST_F(SurfaceInputDispatcher, key_event_dropped_if_no_surface_focused)
 {
     using namespace ::testing;
     
@@ -264,7 +264,7 @@ TEST_F(DefaultInputDispatcher, key_event_dropped_if_no_surface_focused)
     EXPECT_FALSE(dispatcher.dispatch(*keyboard.press()));
 }
 
-TEST_F(DefaultInputDispatcher, inconsistent_key_events_dropped)
+TEST_F(SurfaceInputDispatcher, inconsistent_key_events_dropped)
 {
     using namespace ::testing;
 
@@ -280,7 +280,7 @@ TEST_F(DefaultInputDispatcher, inconsistent_key_events_dropped)
     EXPECT_FALSE(dispatcher.dispatch(*keyboard.release()));
 }
 
-TEST_F(DefaultInputDispatcher, key_state_is_consistent_per_client)
+TEST_F(SurfaceInputDispatcher, key_state_is_consistent_per_client)
 {
     using namespace ::testing;
 
@@ -302,7 +302,7 @@ TEST_F(DefaultInputDispatcher, key_state_is_consistent_per_client)
     EXPECT_FALSE(dispatcher.dispatch(*up_event));
 }
 
-TEST_F(DefaultInputDispatcher, inconsistent_key_down_translated_to_repeat)
+TEST_F(SurfaceInputDispatcher, inconsistent_key_down_translated_to_repeat)
 {
     using namespace ::testing;
     
@@ -323,7 +323,7 @@ TEST_F(DefaultInputDispatcher, inconsistent_key_down_translated_to_repeat)
     EXPECT_TRUE(dispatcher.dispatch(*event));
 }
 
-TEST_F(DefaultInputDispatcher, device_reset_resets_key_state_consistency)
+TEST_F(SurfaceInputDispatcher, device_reset_resets_key_state_consistency)
 {
     using namespace ::testing;
 
@@ -340,7 +340,7 @@ TEST_F(DefaultInputDispatcher, device_reset_resets_key_state_consistency)
     EXPECT_FALSE(dispatcher.dispatch(*release_event));
 }
 
-TEST_F(DefaultInputDispatcher, key_input_target_may_dissapear_and_things_remain_quote_a_unquote_ok)
+TEST_F(SurfaceInputDispatcher, key_input_target_may_dissapear_and_things_remain_quote_a_unquote_ok)
 {
     using namespace ::testing;
     
@@ -365,7 +365,7 @@ TEST_F(DefaultInputDispatcher, key_input_target_may_dissapear_and_things_remain_
 
 // TODO: Test stopping and starting
 
-TEST_F(DefaultInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
+TEST_F(SurfaceInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
 {
     using namespace ::testing;
 
@@ -386,7 +386,7 @@ TEST_F(DefaultInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
     EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({5, 0})));
 }
 
-TEST_F(DefaultInputDispatcher, pointer_delivered_only_to_top_surface)
+TEST_F(SurfaceInputDispatcher, pointer_delivered_only_to_top_surface)
 {
     using namespace ::testing;
 
@@ -408,7 +408,7 @@ TEST_F(DefaultInputDispatcher, pointer_delivered_only_to_top_surface)
     EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({1, 0})));
 }
 
-TEST_F(DefaultInputDispatcher, pointer_may_move_between_adjacent_surfaces)
+TEST_F(SurfaceInputDispatcher, pointer_may_move_between_adjacent_surfaces)
 {
     using namespace ::testing;
     
@@ -436,7 +436,7 @@ TEST_F(DefaultInputDispatcher, pointer_may_move_between_adjacent_surfaces)
 
 // We test that a client will receive pointer events following a button down
 // until the pointer comes up.
-TEST_F(DefaultInputDispatcher, gestures_persist_over_button_down)
+TEST_F(SurfaceInputDispatcher, gestures_persist_over_button_down)
 {
     using namespace ::testing;
     
@@ -463,7 +463,7 @@ TEST_F(DefaultInputDispatcher, gestures_persist_over_button_down)
     EXPECT_TRUE(dispatcher.dispatch(*ev_3));
 }
 
-TEST_F(DefaultInputDispatcher, gestures_terminated_by_device_reset)
+TEST_F(SurfaceInputDispatcher, gestures_terminated_by_device_reset)
 {
     using namespace ::testing;
     
@@ -488,7 +488,7 @@ TEST_F(DefaultInputDispatcher, gestures_terminated_by_device_reset)
     EXPECT_TRUE(dispatcher.dispatch(*ev_2));
 }
 
-TEST_F(DefaultInputDispatcher, pointer_gestures_may_transfer_over_buttons)
+TEST_F(SurfaceInputDispatcher, pointer_gestures_may_transfer_over_buttons)
 {
     using namespace ::testing;
     
@@ -521,7 +521,7 @@ TEST_F(DefaultInputDispatcher, pointer_gestures_may_transfer_over_buttons)
     EXPECT_TRUE(dispatcher.dispatch(*ev_5));
 }
 
-TEST_F(DefaultInputDispatcher, pointer_gesture_target_may_vanish_and_the_situation_remains_hunky_dorey)
+TEST_F(SurfaceInputDispatcher, pointer_gesture_target_may_vanish_and_the_situation_remains_hunky_dorey)
 {
     using namespace ::testing;
     
@@ -547,7 +547,7 @@ TEST_F(DefaultInputDispatcher, pointer_gesture_target_may_vanish_and_the_situati
     EXPECT_TRUE(dispatcher.dispatch(*ev_3));
 }
 
-TEST_F(DefaultInputDispatcher, touch_delivered_to_surface)
+TEST_F(SurfaceInputDispatcher, touch_delivered_to_surface)
 {
     using namespace ::testing;
     
@@ -564,7 +564,7 @@ TEST_F(DefaultInputDispatcher, touch_delivered_to_surface)
     EXPECT_TRUE(dispatcher.dispatch(*toucher.release_at({1,1})));
 }
 
-TEST_F(DefaultInputDispatcher, touch_delivered_only_to_top_surface)
+TEST_F(SurfaceInputDispatcher, touch_delivered_only_to_top_surface)
 {
     using namespace ::testing;
     
@@ -584,7 +584,7 @@ TEST_F(DefaultInputDispatcher, touch_delivered_only_to_top_surface)
     EXPECT_TRUE(dispatcher.dispatch(*toucher.release_at({2,2})));
 }
 
-TEST_F(DefaultInputDispatcher, gestures_persist_over_touch_down)
+TEST_F(SurfaceInputDispatcher, gestures_persist_over_touch_down)
 {
     using namespace ::testing;
     
@@ -605,7 +605,7 @@ TEST_F(DefaultInputDispatcher, gestures_persist_over_touch_down)
     EXPECT_TRUE(dispatcher.dispatch(*toucher.release_at({2, 2})));
 }
 
-TEST_F(DefaultInputDispatcher, touch_gestures_terminated_by_device_reset)
+TEST_F(SurfaceInputDispatcher, touch_gestures_terminated_by_device_reset)
 {
     using namespace ::testing;
     
@@ -626,7 +626,7 @@ TEST_F(DefaultInputDispatcher, touch_gestures_terminated_by_device_reset)
     EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({1, 1})));
 }
 
-TEST_F(DefaultInputDispatcher, touch_gesture_target_may_vanish_but_things_continue_to_function_as_intended)
+TEST_F(SurfaceInputDispatcher, touch_gesture_target_may_vanish_but_things_continue_to_function_as_intended)
 {
     using namespace ::testing;
     

@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "default_input_dispatcher.h"
+#include "surface_input_dispatcher.h"
 
 #include "mir/input/scene.h"
 #include "mir/input/surface.h"
@@ -71,19 +71,19 @@ struct InputDispatcherSceneObserver : public ms::Observer
 };
 }
 
-mi::DefaultInputDispatcher::DefaultInputDispatcher(std::shared_ptr<mi::Scene> const& scene)
+mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> const& scene)
     : scene(scene)
 {
     scene_observer = std::make_shared<InputDispatcherSceneObserver>([this](ms::Surface* s){surface_removed(s);});
     scene->add_observer(scene_observer);
 }
 
-mi::DefaultInputDispatcher::~DefaultInputDispatcher()
+mi::SurfaceInputDispatcher::~SurfaceInputDispatcher()
 {
     scene->remove_observer(scene_observer);
 }
 
-void mi::DefaultInputDispatcher::configuration_changed(std::chrono::nanoseconds when)
+void mi::SurfaceInputDispatcher::configuration_changed(std::chrono::nanoseconds when)
 {
     (void) when;
 }
@@ -96,7 +96,7 @@ bool compare_surfaces(std::shared_ptr<mi::Surface> const& input_surface, ms::Sur
 }
 }
 
-void mi::DefaultInputDispatcher::surface_removed(ms::Surface *surface)
+void mi::SurfaceInputDispatcher::surface_removed(ms::Surface *surface)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
 
@@ -123,7 +123,7 @@ void mi::DefaultInputDispatcher::surface_removed(ms::Surface *surface)
     }
 }
 
-void mi::DefaultInputDispatcher::device_reset(int32_t reset_device_id, std::chrono::nanoseconds /* when */)
+void mi::SurfaceInputDispatcher::device_reset(int32_t reset_device_id, std::chrono::nanoseconds /* when */)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
 
@@ -152,7 +152,7 @@ inline MirEvent copy_to_repeat_ev(MirKeyboardEvent const* kev)
 }
 }
 
-bool mi::DefaultInputDispatcher::dispatch_key(MirInputDeviceId id, MirKeyboardEvent const* kev)
+bool mi::SurfaceInputDispatcher::dispatch_key(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
     auto strong_focus = focus_surface.lock();
@@ -209,22 +209,22 @@ std::vector<MirPointerButton> buttons_in_vector(MirPointerEvent const* pev)
        
 }
 
-void mi::DefaultInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirTouchEvent const* tev)
+void mi::SurfaceInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirTouchEvent const* tev)
 {
     deliver(surface, reinterpret_cast<MirEvent const*>(tev));
 }
 
-void mi::DefaultInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirPointerEvent const* pev)
+void mi::SurfaceInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirPointerEvent const* pev)
 {
     deliver(surface, reinterpret_cast<MirEvent const*>(pev));
 }
 
-void mi::DefaultInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirKeyboardEvent const* kev)
+void mi::SurfaceInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirKeyboardEvent const* kev)
 {
     deliver(surface, reinterpret_cast<MirEvent const*>(kev));
 }
 
-void mi::DefaultInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirEvent const* ev)
+void mi::SurfaceInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirEvent const* ev)
 {
     MirEvent to_deliver;
     memcpy(&to_deliver, ev, sizeof(MirEvent));
@@ -244,7 +244,7 @@ void mi::DefaultInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& sur
     surface->consume(to_deliver);
 }
 
-std::shared_ptr<mi::Surface> mi::DefaultInputDispatcher::find_target_surface(geom::Point const& point)
+std::shared_ptr<mi::Surface> mi::SurfaceInputDispatcher::find_target_surface(geom::Point const& point)
 {
     std::shared_ptr<mi::Surface> top_target = nullptr;
     scene->for_each([&top_target, &point](std::shared_ptr<mi::Surface> const& target) {
@@ -254,7 +254,7 @@ std::shared_ptr<mi::Surface> mi::DefaultInputDispatcher::find_target_surface(geo
     return top_target;
 }
 
-void mi::DefaultInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surface> const& surface,
+void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surface> const& surface,
                                                        MirPointerEvent const* pev,
                                                        MirPointerAction action)
 {
@@ -270,7 +270,7 @@ void mi::DefaultInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
                                        mir_pointer_event_axis_value(pev,mir_pointer_axis_vscroll)));
 }
 
-mi::DefaultInputDispatcher::PointerInputState& mi::DefaultInputDispatcher::ensure_pointer_state(MirInputDeviceId id)
+mi::SurfaceInputDispatcher::PointerInputState& mi::SurfaceInputDispatcher::ensure_pointer_state(MirInputDeviceId id)
 {
     if (pointer_state_by_id.find(id) == pointer_state_by_id.end())
     {
@@ -279,7 +279,7 @@ mi::DefaultInputDispatcher::PointerInputState& mi::DefaultInputDispatcher::ensur
     return pointer_state_by_id[id];
 }
 
-mi::DefaultInputDispatcher::TouchInputState& mi::DefaultInputDispatcher::ensure_touch_state(MirInputDeviceId id)
+mi::SurfaceInputDispatcher::TouchInputState& mi::SurfaceInputDispatcher::ensure_touch_state(MirInputDeviceId id)
 {
     if (touch_state_by_id.find(id) == touch_state_by_id.end())
     {
@@ -288,7 +288,7 @@ mi::DefaultInputDispatcher::TouchInputState& mi::DefaultInputDispatcher::ensure_
     return touch_state_by_id[id];
 }
 
-bool mi::DefaultInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointerEvent const* pev)
+bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointerEvent const* pev)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
     auto action = mir_pointer_event_action(pev);
@@ -354,7 +354,7 @@ bool mi::DefaultInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointe
     return false;
 }
 
-bool mi::DefaultInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEvent const* tev)
+bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEvent const* tev)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
     // Either we have a gesture owner or a gesture is just beginning
@@ -390,7 +390,7 @@ bool mi::DefaultInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEve
     return false;
 }
 
-bool mi::DefaultInputDispatcher::dispatch(MirEvent const& event)
+bool mi::SurfaceInputDispatcher::dispatch(MirEvent const& event)
 {
     if (mir_event_get_type(&event) != mir_event_type_input)
         BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got a non-input event"));
@@ -411,33 +411,33 @@ bool mi::DefaultInputDispatcher::dispatch(MirEvent const& event)
     return true;
 }
 
-void mi::DefaultInputDispatcher::start()
+void mi::SurfaceInputDispatcher::start()
 {
 }
 
-void mi::DefaultInputDispatcher::stop()
+void mi::SurfaceInputDispatcher::stop()
 {
 }
 
-void mi::DefaultInputDispatcher::set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<mi::Surface> const& target)
+void mi::SurfaceInputDispatcher::set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<mi::Surface> const& target)
 {
     focus_surface_key_state.clear();
     focus_surface = target;
 }
 
-void mi::DefaultInputDispatcher::set_focus(std::shared_ptr<mi::Surface> const& target)
+void mi::SurfaceInputDispatcher::set_focus(std::shared_ptr<mi::Surface> const& target)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
     set_focus_locked(lg, target);
 }
 
-void mi::DefaultInputDispatcher::clear_focus()
+void mi::SurfaceInputDispatcher::clear_focus()
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
     set_focus_locked(lg, nullptr);
 }
 
-bool mi::DefaultInputDispatcher::KeyInputState::handle_event(MirInputDeviceId id, MirKeyboardEvent const* kev)
+bool mi::SurfaceInputDispatcher::KeyInputState::handle_event(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
     auto action = mir_keyboard_event_action(kev);
     auto scan_code = mir_keyboard_event_scan_code(kev);
@@ -456,7 +456,7 @@ bool mi::DefaultInputDispatcher::KeyInputState::handle_event(MirInputDeviceId id
     return false;
 }
 
-bool mi::DefaultInputDispatcher::KeyInputState::press_key(MirInputDeviceId id, int scan_code)
+bool mi::SurfaceInputDispatcher::KeyInputState::press_key(MirInputDeviceId id, int scan_code)
 {
     // First key press for a device
     if (depressed_scancodes.find(id) == depressed_scancodes.end())
@@ -471,7 +471,7 @@ bool mi::DefaultInputDispatcher::KeyInputState::press_key(MirInputDeviceId id, i
     return true;
 }
 
-bool mi::DefaultInputDispatcher::KeyInputState::release_key(MirInputDeviceId id, int scan_code)
+bool mi::SurfaceInputDispatcher::KeyInputState::release_key(MirInputDeviceId id, int scan_code)
 {
     if (depressed_scancodes.find(id) == depressed_scancodes.end())
     {
@@ -485,7 +485,7 @@ bool mi::DefaultInputDispatcher::KeyInputState::release_key(MirInputDeviceId id,
     return true;
 }
 
-bool mi::DefaultInputDispatcher::KeyInputState::repeat_key(MirInputDeviceId id, int scan_code)
+bool mi::SurfaceInputDispatcher::KeyInputState::repeat_key(MirInputDeviceId id, int scan_code)
 {
     if (depressed_scancodes.find(id) == depressed_scancodes.end())
         return false;
@@ -496,7 +496,7 @@ bool mi::DefaultInputDispatcher::KeyInputState::repeat_key(MirInputDeviceId id, 
     return true;
 }
 
-void mi::DefaultInputDispatcher::KeyInputState::clear()
+void mi::SurfaceInputDispatcher::KeyInputState::clear()
 {
     depressed_scancodes.clear();
 }
