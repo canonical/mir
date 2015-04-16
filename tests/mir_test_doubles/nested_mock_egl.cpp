@@ -36,6 +36,7 @@ mtd::NestedMockEGL::NestedMockEGL()
     EXPECT_CALL(*this, eglQueryString(_, _)).Times(AnyNumber());
 
     provide_egl_extensions();
+    provide_stub_platform_buffer_swapping();
 
     EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(AnyNumber()).WillRepeatedly(
         DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));
