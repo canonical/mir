@@ -73,15 +73,15 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
         : mtf::HeadlessNestedServerRunner(connection_string)
     {
         start_server();
-        server.the_composite_event_filter()->append(mt::fake_shared(mock_event_filter));
+        server.the_composite_event_filter()->append(mock_event_filter);
         
     }
     ~NestedServerWithMockEventFilter()
     {
         stop_server();
     }
-    
-    MockEventFilter mock_event_filter;
+
+    std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
 };
 
 struct NestedInput : public mtf::HeadlessInProcessServer
@@ -99,17 +99,15 @@ struct NestedInput : public mtf::HeadlessInProcessServer
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
     };
+
+    mir::test::WaitCondition all_events_received;
 };
-}
 
-TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
+void make_and_wait_for_surface(std::string const& connect_string)
 {
-    NestedServerWithMockEventFilter nested_mir{new_connection()};
-
-    // Trigger the nested mir to swap a frame
-    auto c = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    // Ensure the nested server posts a frame
+    auto c = mir_connect_sync(connect_string.c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(c);
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
 
     bool became_exposed_and_focused = mir::test::spin_wait_for_condition_or_timeout(
@@ -119,14 +117,24 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
                 && mir_surface_get_focus(surface) == mir_surface_focused;
         },
         std::chrono::seconds{10});
+    EXPECT_TRUE(became_exposed_and_focused);      
+}
+    
+}
 
-    EXPECT_TRUE(became_exposed_and_focused);  
+TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
+{
+    NestedServerWithMockEventFilter nested_mir{new_connection()};
+    make_and_wait_for_surface(nested_mir.new_connection());
 
-    // TODO: Better (aka more)
-    EXPECT_CALL(nested_mir.mock_event_filter, handle(_)).Times(1).WillOnce(Return(true));
+    InSequence seq;
+    EXPECT_CALL(*nested_mir.mock_event_filter, handle(_)).Times(AtLeast(1)).WillOnce(Return(true));
+    EXPECT_CALL(*nested_mir.mock_event_filter, handle(_)).Times(AtLeast(1)).WillOnce(
+            DoAll(mt::WakeUp(&all_events_received), Return(true)));
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    printf("Injecting input\n");    
+
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+    fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_RIGHTSHIFT));
+
+    all_events_received.wait_for_at_most_seconds(10);
 }
