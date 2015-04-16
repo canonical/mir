@@ -47,12 +47,15 @@ namespace mclr = mir::client::rpc;
 namespace mt = mir::test;
 namespace md = mir::dispatch;
 
+namespace
+{
 class MockObserver : public mclr::StreamTransport::Observer
 {
 public:
     MOCK_METHOD0(on_data_available, void());
     MOCK_METHOD0(on_disconnected, void());
 };
+}
 
 template <typename TransportMechanism>
 class StreamTransportTest : public ::testing::Test
@@ -486,11 +489,14 @@ TYPED_TEST(StreamTransportTest, unregistering_in_a_callback_succeeds)
     auto observer = std::make_shared<NiceMock<MockObserver>>();
     int notification_count{0};
 
+    // g++ has trouble lambda-capturing observer (whose type involves anonymous namespace)
+    std::shared_ptr<mclr::StreamTransport::Observer> frig{observer};
+
     // Pass the observer shared_ptr by reference here to avoid a trivial reference cycle.
-    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([&notification_count, this, &observer]()
+    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([&notification_count, this, &frig]()
     {
         ++notification_count;
-        this->transport->unregister_observer(observer);
+        this->transport->unregister_observer(frig);
     }));
     ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([&notification_count]()
     {
