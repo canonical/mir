@@ -55,7 +55,8 @@ struct TestCustomInputDispatcher : mtf::HeadlessInProcessServer
     std::unique_ptr<mtf::FakeInputDevice> fake_pointer{
         mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "mouse", "mouse-uid" , mi::DeviceCapability::pointer})
         };
-    mir::test::WaitCondition all_events_received;
+    mir::test::WaitCondition all_keys_received;
+    mir::test::WaitCondition all_pointer_events_received;
 };
 }
 
@@ -78,13 +79,17 @@ TEST_F(TestCustomInputDispatcher, receives_input)
     start_server();
     using namespace testing;
 
-    InSequence seq;
-    EXPECT_CALL(input_dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1);
-    EXPECT_CALL(input_dispatcher, dispatch(mt::KeyDownEvent()))
-        .WillOnce(mt::WakeUp(&all_events_received));
+    // the order of those two occuring is not guranteed since, the input is simulated from
+    // separate devices - if the sequence of events is required in a test, better use
+    // just one device with the superset of the capabilities instead.
+    EXPECT_CALL(input_dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1)
+        .WillOnce(mt::WakeUp(&all_pointer_events_received));
+    EXPECT_CALL(input_dispatcher, dispatch(mt::KeyDownEvent())).Times(1)
+        .WillOnce(mt::WakeUp(&all_keys_received));
 
     fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
 
-    all_events_received.wait_for_at_most_seconds(10);
+    all_keys_received.wait_for_at_most_seconds(10);
+    all_pointer_events_received.wait_for_at_most_seconds(10);
 }
