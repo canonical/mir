@@ -221,7 +221,7 @@ EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
         mNeedToSendFinishedDeviceScan(false),
         mNeedToReopenDevices(false), mNeedToScanDevices(true),
         mEpollFd{epoll_create(EPOLL_SIZE_HINT)},
-        mTimerFd{timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK|TFD_CLOEXEC)},
+        mTimerFd{timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK|TFD_CLOEXEC)},
         mPendingEventCount(0), mPendingEventIndex(0), mPendingUdevEvent(false) {
     acquire_wake_lock(PARTIAL_WAKE_LOCK, WAKE_LOCK_ID);
 
@@ -230,6 +230,7 @@ EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
 
     device_listener->filter_by_subsystem("input");
     device_listener->enable();
+
 
     struct epoll_event eventItem;
     memset(&eventItem, 0, sizeof(eventItem));
