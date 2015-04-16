@@ -38,7 +38,7 @@ namespace
 struct MyShell : msh::ShellWrapper
 {
     using msh::ShellWrapper::ShellWrapper;
-    MOCK_METHOD0(focus_next, void());
+    MOCK_METHOD0(focus_next_session, void());
 };
 
 struct MyCursorListener : mi::CursorListener
@@ -89,8 +89,8 @@ TEST_F(ServerConfigurationWrapping, can_override_shell_methods)
 {
     auto const my_shell = std::dynamic_pointer_cast<MyShell>(shell);
 
-    EXPECT_CALL(*my_shell, focus_next()).Times(1);
-    shell->focus_next();
+    EXPECT_CALL(*my_shell, focus_next_session()).Times(1);
+    shell->focus_next_session();
 }
 
 TEST_F(ServerConfigurationWrapping, returns_same_shell_from_cache)
