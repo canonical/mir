@@ -30,7 +30,7 @@ class ShellWrapper : public Shell
 public:
     explicit ShellWrapper(std::shared_ptr<Shell> const& wrapped);
 
-    void focus_next() override;
+    void focus_next_session() override;
 
     std::shared_ptr<scene::Session> focused_session() const override;
 
