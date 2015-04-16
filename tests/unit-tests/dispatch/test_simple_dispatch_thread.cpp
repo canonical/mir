@@ -275,10 +275,10 @@ TEST_F(SimpleDispatchThreadTest, executes_exception_handler_with_current_excepti
         [&dispatched,&exception]()
         {
             exception = std::current_exception();
-            dispatched->raise();
+            if (exception)
+                dispatched->raise();
         }};
     dispatchable->trigger();
     EXPECT_TRUE(dispatched->wait_for(10s));
-
-    EXPECT_THROW({std::rethrow_exception(exception);}, std::runtime_error);
+    EXPECT_TRUE(exception!=nullptr);
 }
