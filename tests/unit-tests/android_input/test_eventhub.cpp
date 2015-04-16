@@ -72,7 +72,7 @@ TEST(EventHub, wakes_on_delay)
             epoll_wait(hub->fd(), &pending_event, 1, -1);
 
             if (pending_event.data.u32 == android::EventHub::EPOLL_ID_TIMER)
-                event_hub_fd_triggered->wake_up_everyone();
+                event_hub_triggered->wake_up_everyone();
         }};
 
     reader.detach();

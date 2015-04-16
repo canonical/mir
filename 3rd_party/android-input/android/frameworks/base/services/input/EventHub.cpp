@@ -219,8 +219,6 @@ EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
         mBuiltInKeyboardId(NO_BUILT_IN_KEYBOARD), mNextDeviceId(1),
         mOpeningDevices(0), mClosingDevices(0),
         mNeedToSendFinishedDeviceScan(false),
-        mEpollFd{epoll_create(EPOLL_SIZE_HINT)},
-        mTimerFd{timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK|TFD_CLOEXEC)},
         mNeedToReopenDevices(false), mNeedToScanDevices(true),
         mEpollFd{epoll_create(EPOLL_SIZE_HINT)},
         mTimerFd{timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK|TFD_CLOEXEC)},
