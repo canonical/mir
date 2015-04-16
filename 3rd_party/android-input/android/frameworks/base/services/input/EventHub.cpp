@@ -53,7 +53,6 @@
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include <sys/timerfd.h>
-
 // <mir changes>
 // Needed to build on android platform (PATH_MAX)
 #ifdef HAVE_ANDROID_OS
@@ -220,6 +219,8 @@ EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
         mBuiltInKeyboardId(NO_BUILT_IN_KEYBOARD), mNextDeviceId(1),
         mOpeningDevices(0), mClosingDevices(0),
         mNeedToSendFinishedDeviceScan(false),
+        mEpollFd{epoll_create(EPOLL_SIZE_HINT)},
+        mTimerFd{timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK|TFD_CLOEXEC)},
         mNeedToReopenDevices(false), mNeedToScanDevices(true),
         mEpollFd{epoll_create(EPOLL_SIZE_HINT)},
         mTimerFd{timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK|TFD_CLOEXEC)},
@@ -262,7 +263,7 @@ EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
     eventItem.data.u32 = EPOLL_ID_TIMER;
     result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mTimerFd, &eventItem);
     LOG_ALWAYS_FATAL_IF(result != 0, "Could not add timer fd to epoll instance.  errno=%d",
-            errno);
+                        errno);
 }
 
 EventHub::~EventHub(void) {
@@ -771,7 +772,7 @@ size_t EventHub::getEvents(RawEvent* buffer, size_t bufferSize) {
                     read(mTimerFd, &timeout_count, sizeof timeout_count);
                 } else {
                     ALOGW("Received unexpected epoll event 0x%08x for wake read pipe.",
-                            eventItem.events);
+                          eventItem.events);
                 }
                 continue;
             }
@@ -889,6 +890,7 @@ size_t EventHub::getEvents(RawEvent* buffer, size_t bufferSize) {
         mLock.unlock(); // release lock before poll, must be before release_wake_lock
         release_wake_lock(WAKE_LOCK_ID);
 
+        // non blocking call to epoll_wait - blocking happens in dispatch threads
         int pollResult = epoll_wait(mEpollFd, mPendingEventItems, EPOLL_MAX_EVENTS, 0);
 
         acquire_wake_lock(PARTIAL_WAKE_LOCK, WAKE_LOCK_ID);

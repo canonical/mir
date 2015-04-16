@@ -202,8 +202,7 @@ public:
      * If the device needs to remain awake longer than that, then the caller is responsible
      * for taking care of it (say, by poking the power manager user activity timer).
      *
-     *
-     * Returns the number of events obtained
+     * Returns the number of events obtained.
      */
     virtual size_t getEvents(RawEvent* buffer, size_t bufferSize) = 0;
 
@@ -242,7 +241,7 @@ public:
     /* Wakes up getEvents() if it is blocked on a read. */
     virtual void wake() = 0;
 
-    /* Makes fd() readable after given timeout */
+    /* Ensures that fd() readable after given timeout */
     virtual void wakeIn(int32_t timeout) = 0;
 
     /* Dump EventHub state to a string. */
@@ -254,6 +253,7 @@ public:
     /* Flush all pending events not yet read from the input devices */
     virtual void flush() = 0;
 
+    /* Epoll fd used by EventHub */
     virtual mir::Fd fd() = 0;
 };
 
