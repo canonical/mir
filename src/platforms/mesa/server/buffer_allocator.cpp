@@ -19,7 +19,6 @@
 
 #include "buffer_allocator.h"
 #include "gbm_buffer.h"
-#include "platform.h"
 #include "buffer_texture_binder.h"
 #include "anonymous_shm_file.h"
 #include "shm_buffer.h"
@@ -34,6 +33,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <system_error>
 #include <gbm.h>
 #include <cassert>
 
@@ -227,4 +227,34 @@ bool mgm::BufferAllocator::is_pixel_format_supported(MirPixelFormat format)
     auto iter = std::find(formats.begin(), formats.end(), format);
 
     return iter != formats.end();
+}
+
+std::unique_ptr<mg::Buffer> mgm::BufferAllocator::reconstruct_from(
+    MirBufferPackage* package,
+    MirPixelFormat format)
+{
+    if (package->fd_items != 1)
+        BOOST_THROW_EXCEPTION(std::logic_error("Failed to create mgm::Buffer from invalid MirBufferPackage"));
+
+    gbm_import_fd_data data;
+    data.fd = package->fd[0];
+    data.width  = package->width;
+    data.height = package->height; 
+    data.stride = package->stride;
+    data.format = format;
+
+    std::shared_ptr<gbm_bo> bo(
+        gbm_bo_import(device, GBM_BO_IMPORT_FD, &data, package->flags),
+        [](gbm_bo* bo){ gbm_bo_destroy(bo); });
+
+    if (!bo)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to import MirBufferPackage"));
+    }
+
+    return std::make_unique<mgm::GBMBuffer>(
+        bo,
+        package->flags,
+        std::make_unique<EGLImageBufferTextureBinder>(bo, egl_extensions));
 }

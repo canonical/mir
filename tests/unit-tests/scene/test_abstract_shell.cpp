@@ -334,7 +334,7 @@ TEST_F(AbstractShell, as_focus_controller_set_focus_to_notifies_session_event_si
     focus_controller.set_focus_to({}, {});
 }
 
-TEST_F(AbstractShell, as_focus_controller_focus_next_notifies_session_event_sink)
+TEST_F(AbstractShell, as_focus_controller_focus_next_session_notifies_session_event_sink)
 {
     msh::FocusController& focus_controller = shell;
     auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
@@ -346,7 +346,7 @@ TEST_F(AbstractShell, as_focus_controller_focus_next_notifies_session_event_sink
 
     EXPECT_CALL(session_event_sink, handle_focus_change(session1));
 
-    focus_controller.focus_next();
+    focus_controller.focus_next_session();
 }
 
 TEST_F(AbstractShell, as_focus_controller_focused_session_follows_focus)
@@ -362,7 +362,7 @@ TEST_F(AbstractShell, as_focus_controller_focused_session_follows_focus)
     EXPECT_THAT(focus_controller.focused_session(), Eq(session));
     focus_controller.set_focus_to(session1, {});
     EXPECT_THAT(focus_controller.focused_session(), Eq(session1));
-    focus_controller.focus_next();
+    focus_controller.focus_next_session();
     EXPECT_THAT(focus_controller.focused_session(), Eq(session));
 }
 
@@ -390,7 +390,7 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
     EXPECT_THAT(focus_controller.focused_surface(), Eq(surface0));
     focus_controller.set_focus_to(session1, surface1);
     EXPECT_THAT(focus_controller.focused_surface(), Eq(surface1));
-    focus_controller.focus_next();
+    focus_controller.focus_next_session();
     EXPECT_THAT(focus_controller.focused_surface(), Eq(surface0));
 
     shell.destroy_surface(session0, surface0_id);

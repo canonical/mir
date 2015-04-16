@@ -26,6 +26,11 @@ message SurfaceParameters {
   
   optional Rectangle aux_rect = 11;
   optional int32 edge_attachment = 12;
+
+  optional int32 min_width = 13;
+  optional int32 min_height = 14;
+  optional int32 max_width = 15;
+  optional int32 max_height = 16;
 }
 
 // If and when we break our protocol backward-compatibility, this could be
