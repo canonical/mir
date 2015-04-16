@@ -231,6 +231,17 @@ void mf::SessionMediator::create_surface(
     if (request->has_edge_attachment())
         params.with_edge_attachment(static_cast<MirEdgeAttachment>(request->edge_attachment()));
 
+    #define COPY_IF_SET(field)\
+        if (request->has_##field())\
+            params.field = decltype(params.field.value())(request->field())
+
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+
+    #undef COPY_IF_SET
+
     auto const surf_id = shell->create_surface(session, params);
 
     auto surface = session->get_surface(surf_id);
