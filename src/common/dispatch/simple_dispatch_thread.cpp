@@ -130,16 +130,6 @@ md::SimpleDispatchThread::SimpleDispatchThread(
         eventloop = std::thread{
             [exception_handler, dispatchee, terminate_fd]()
             {
-                // Our IO threads must not receive any signals
-                sigset_t all_signals;
-                sigfillset(&all_signals);
-
-                if (auto error = pthread_sigmask(SIG_BLOCK, &all_signals, NULL))
-                    BOOST_THROW_EXCEPTION((
-                        std::system_error{error,
-                            std::system_category(),
-                            "Failed to block signals on IO thread"}));
-
                 try
                 {
                     wait_for_events_forever(dispatchee, terminate_fd);

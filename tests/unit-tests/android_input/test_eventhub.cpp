@@ -62,22 +62,22 @@ TEST(EventHub, wakes_on_delay)
     mir_test_framework::UdevEnvironment empty_env;
     auto hub = android::sp<android::EventHub>{new android::EventHub{mir::report::null_input_report()}};
     hub->wakeIn(1);
-    auto event_hub_fd_triggered = std::make_shared<mir::test::WaitCondition>();
+    auto event_hub_triggered = std::make_shared<mir::test::WaitCondition>();
 
     std::thread reader{
-        [hub,event_hub_fd_triggered]
+        [hub,event_hub_triggered]
         {
             struct epoll_event pending_event;
             std::memset(&pending_event, 0, sizeof pending_event);
             epoll_wait(hub->fd(), &pending_event, 1, -1);
 
             if (pending_event.data.u32 == android::EventHub::EPOLL_ID_TIMER)
-                event_hub_fd_triggered->wake_up_everyone();
+                event_hub_triggered->wake_up_everyone();
         }};
 
     reader.detach();
-    event_hub_fd_triggered->wait_for_at_most_seconds(4);
-    EXPECT_TRUE(event_hub_fd_triggered->woken());
+    event_hub_triggered->wait_for_at_most_seconds(4);
+    EXPECT_TRUE(event_hub_triggered->woken());
 }
 
 class EventHubDeviceEnumerationTest : public ::testing::TestWithParam<std::string>
