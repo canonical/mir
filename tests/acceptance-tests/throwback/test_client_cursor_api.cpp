@@ -25,6 +25,8 @@
 #include "mir_test_framework/fake_event_hub_server_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/headless_nested_server_runner.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/spin_wait.h"
@@ -36,12 +38,15 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mt = mir::test;
-namespace mtf = mir_test_framework;
-namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mis = mir::input::synthesis;
+namespace geom = mir::geometry;
+
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
+namespace mtf = mir_test_framework;
+
 
 namespace
 {
@@ -155,7 +160,7 @@ struct CursorClient
             [surface]
             {
                 return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed &&
-                       mir_surface_get_focus(surface) == mir_surface_focused;
+                    mir_surface_get_focus(surface) == mir_surface_focused;
             },
             std::chrono::seconds{5});
 
@@ -231,6 +236,11 @@ struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
 
 struct TestClientCursorAPI : mtf::InProcessServer
 {
+    TestClientCursorAPI()
+    {
+        mock_egl.provide_egl_extensions();
+        mock_egl.provide_stub_platform_buffer_swapping();
+    }
     mir::DefaultServerConfiguration& server_config() override
     {
         return server_configuration_;
@@ -246,7 +256,7 @@ struct TestClientCursorAPI : mtf::InProcessServer
         return server_configuration_.fake_event_hub;
     }
 
-    void client_shutdown_expectations()
+    void expect_client_shutdown()
     {
         using namespace testing;
         Mock::VerifyAndClearExpectations(&test_server_config().cursor);
@@ -260,9 +270,12 @@ struct TestClientCursorAPI : mtf::InProcessServer
     std::string const client_name_2{"client-2"};
     std::string const client_cursor_1{"cursor-1"};
     std::string const client_cursor_2{"cursor-2"};
+
     TestServerConfiguration server_configuration_;
     mir::test::WaitCondition expectations_satisfied;
     mtf::UsingStubClientPlatform using_stub_client_platform;
+
+    ::testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
 }
@@ -287,7 +300,7 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
 }
 
 TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
@@ -310,7 +323,7 @@ TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
 }
 
 TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
@@ -337,7 +350,7 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
 }
 
 TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
@@ -361,7 +374,7 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
 }
 
 TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
@@ -399,7 +412,7 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
 }
 
 TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
@@ -447,5 +460,46 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
 
     expectations_satisfied.wait_for_at_most_seconds(500);
 
-    client_shutdown_expectations();
+    expect_client_shutdown();
+}
+
+namespace
+{
+// The nested server fixture we use is using the 'CanonicalWindowManager' which will place
+// surfaces in the center...in order to ensure the surface appears under the cursor we use
+// the fullscreen state.
+struct FullscreenDisabledCursorClient : CursorClient
+{
+    using CursorClient::CursorClient;
+
+    void setup_cursor(MirSurface* surface) override
+    {
+        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_fullscreen));
+        auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+        mir_wait_for(mir_surface_configure_cursor(surface, conf));
+        mir_cursor_configuration_destroy(conf);
+    }
+};
+
+}
+
+TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
+{
+    using namespace ::testing;
+
+    mtf::HeadlessNestedServerRunner nested_mir(new_connection());
+    nested_mir.start_server();
+
+    EXPECT_CALL(test_server_config().cursor, hide())
+        .WillOnce(mt::WakeUp(&expectations_satisfied));
+
+    { // Ensure we finalize the client prior stopping the nested server
+    FullscreenDisabledCursorClient client{nested_mir.new_connection(), client_name_1};
+    client.run();
+
+    expectations_satisfied.wait_for_at_most_seconds(60);
+    expect_client_shutdown();
+    }
+    
+    nested_mir.stop_server();
 }

@@ -23,6 +23,7 @@
 #include "mir/shell/host_lifecycle_event_listener.h"
 
 #include <string>
+#include <mutex>
 
 struct MirConnection;
 
@@ -48,13 +49,20 @@ public:
     void set_display_config_change_callback(std::function<void()> const& cb) override;
     void apply_display_config(MirDisplayConfiguration&) override;
 
+    void set_cursor_image(CursorImage const& image) override;
+    void hide_cursor() override;
+
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) override;
 
 private:
+    std::mutex surfaces_mutex;
+    
     MirConnection* const mir_connection;
     std::function<void()> conf_change_callback;
     std::shared_ptr<msh::HostLifecycleEventListener> const host_lifecycle_event_listener;
+
+    std::vector<HostSurface*> surfaces;
 };
 
 }
