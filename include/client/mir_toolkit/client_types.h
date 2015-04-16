@@ -43,6 +43,7 @@ typedef struct MirSurfaceSpec MirSurfaceSpec;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirPromptSession MirPromptSession;
 typedef struct MirBufferStream MirBufferStream;
+typedef struct MirSurfaceId MirSurfaceId;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by

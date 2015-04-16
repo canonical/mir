@@ -322,6 +322,8 @@ bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t ou
  */
 bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode);
 
+bool mir_surface_spec_set_id(MirSurfaceSpec* spec, MirSurfaceId* id);
+
 /**
  * Release the resources held by a MirSurfaceSpec.
  *
@@ -642,6 +644,18 @@ void mir_surface_set_title(MirSurface* surface, char const* name);
  *   \param [in] spec     Spec with the requested changes applied
  */
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
+
+MirSurfaceId* mir_surface_get_persistent_id(MirSurface* surface);
+
+MirSurfaceId* mir_surface_id_from_string(char const* id_string);
+
+bool mir_surface_id_is_valid(MirSurfaceId* id);
+
+bool mir_surface_ids_equal(MirSurfaceId* first, MirSurfaceId* second);
+
+char const* mir_surface_id_as_string(MirSurfaceId* id);
+
+void mir_surface_id_release(MirSurfaceId* id);
 
 #ifdef __cplusplus
 }

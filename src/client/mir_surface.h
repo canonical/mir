@@ -93,6 +93,11 @@ struct MirSurfaceSpec
     mir::optional_value<int> max_height;
 };
 
+struct MirSurfaceId
+{
+
+};
+
 struct MirSurface
 {
 public:

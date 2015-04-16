@@ -44,6 +44,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <uuid/uuid.h>
 
 #include <errno.h>
 
@@ -980,5 +981,96 @@ TEST_F(ClientLibrary, can_change_event_delegate)
     mir_surface_set_event_handler(surface, &dummy_event_handler_two, nullptr);
 
     mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, can_set_previous_surface_unique_id)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection,
+                                                                      800, 600,
+                                                                      mir_pixel_format_argb_8888);
+    auto surface = mir_surface_create_sync(surface_spec);
+
+    ASSERT_THAT(surface, IsValid());
+
+    auto surface_id = mir_surface_get_persistent_id(surface);
+    EXPECT_TRUE(mir_surface_id_is_valid(surface_id));
+
+    mir_surface_release_sync(surface);
+
+    mir_surface_spec_set_id(surface_spec, surface_id);
+
+    surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    auto reincarnated_surface_id = mir_surface_get_persistent_id(surface);
+
+    EXPECT_TRUE(mir_surface_ids_equal(surface_id, reincarnated_surface_id));
+
+    mir_surface_id_release(surface_id);
+    mir_surface_id_release(reincarnated_surface_id);
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, previous_surface_id_is_ignored_if_surface_still_exists)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection,
+                                                                      800, 600,
+                                                                      mir_pixel_format_argb_8888);
+    auto surface = mir_surface_create_sync(surface_spec);
+
+    ASSERT_THAT(surface, IsValid());
+
+    auto surface_id = mir_surface_get_persistent_id(surface);
+    EXPECT_TRUE(mir_surface_id_is_valid(surface_id));
+
+    mir_surface_spec_set_id(surface_spec, surface_id);
+
+    auto surface_two = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    auto surface_id_two = mir_surface_get_persistent_id(surface_two);
+
+    EXPECT_FALSE(mir_surface_ids_equal(surface_id, surface_id_two));
+
+    mir_surface_id_release(surface_id);
+    mir_surface_id_release(surface_id_two);
+
+    mir_surface_release_sync(surface);
+    mir_surface_release_sync(surface_two);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, can_roundtrip_surface_id_to_string)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection,
+                                                                      800, 600,
+                                                                      mir_pixel_format_argb_8888);
+    auto surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    ASSERT_THAT(surface, IsValid());
+
+    auto surface_id = mir_surface_get_persistent_id(surface);
+    EXPECT_TRUE(mir_surface_id_is_valid(surface_id));
+
+    mir_surface_release_sync(surface);
+
+    auto surface_id_str = mir_surface_id_as_string(surface_id);
+    auto roundtrip_id = mir_surface_id_from_string(surface_id_str);
+
+    EXPECT_TRUE(mir_surface_ids_equal(surface_id, roundtrip_id));
+
+    mir_surface_id_release(surface_id);
+    mir_surface_id_release(roundtrip_id);
+
     mir_connection_release(connection);
 }
