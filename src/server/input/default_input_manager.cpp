@@ -71,6 +71,7 @@ void mi::DefaultInputManager::start()
 {
     if (state == State::running)
         return;
+
     state = State::running;
 
     multiplexer->add_watch(queue);
