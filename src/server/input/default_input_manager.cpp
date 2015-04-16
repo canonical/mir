@@ -34,7 +34,6 @@ namespace mi = mir::input;
 mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer)
     : multiplexer{multiplexer}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
 {
-    multiplexer->add_watch(queue);
 }
 
 mi::DefaultInputManager::~DefaultInputManager()
@@ -68,6 +67,8 @@ void mi::DefaultInputManager::start()
     if (state == State::running)
         return;
 
+    multiplexer->add_watch(queue);
+
     state = State::running;
     queue->enqueue([this]()
                    {
@@ -79,7 +80,13 @@ void mi::DefaultInputManager::start()
                        }
                    });
 
-    input_thread = std::make_unique<dispatch::SimpleDispatchThread>(multiplexer);
+    input_thread = std::make_unique<dispatch::SimpleDispatchThread>(
+        multiplexer,
+        [this]()
+        {
+            state = State::stopped;
+            mir::terminate_with_current_exception();
+        });
 }
 
 void mi::DefaultInputManager::stop()
@@ -107,4 +114,6 @@ void mi::DefaultInputManager::stop()
     state = State::stopped;
 
     input_thread.reset();
+
+    multiplexer->remove_watch(queue);
 }
