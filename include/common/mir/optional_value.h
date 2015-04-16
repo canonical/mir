@@ -48,7 +48,7 @@ template<typename T>
 inline bool operator == (optional_value<T> const& lhs, optional_value<T> const& rhs)
 {
     return lhs.is_set() == rhs.is_set() &&
-           (lhs.is_set() ? lhs.value() == rhs.value() : true);
+           (!lhs.is_set() || lhs.value() == rhs.value());
 }
 
 template<typename T>

@@ -27,12 +27,9 @@
 #include "hwc_report.h"
 #include "hwc_configuration.h"
 #include "hwc_layers.h"
-#include "hwc_configuration.h"
 #include "hwc_device.h"
 #include "hwc_fb_device.h"
 
-#include "mir/graphics/display_buffer.h"
-#include "mir/graphics/egl_resources.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -110,14 +107,13 @@ std::unique_ptr<mga::DisplayDevice> mga::HalComponentFactory::create_display_dev
             case mga::HwcVersion::hwc10:
                 return std::unique_ptr<mga::DisplayDevice>{
                     new mga::HwcFbDevice(hwc_wrapper, fb_native)};
-            break;
 
             case mga::HwcVersion::hwc11:
             case mga::HwcVersion::hwc12:
             case mga::HwcVersion::hwc13:
                return std::unique_ptr<mga::DisplayDevice>(
                     new mga::HwcDevice(hwc_wrapper));
-            break;
+
             case mga::HwcVersion::hwc14:
             case mga::HwcVersion::unknown:
             default:
