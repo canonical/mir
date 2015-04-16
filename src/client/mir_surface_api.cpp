@@ -626,13 +626,11 @@ void mir_surface_set_title(MirSurface* surface, char const* name)
     mir_surface_spec_release(spec);
 }
 
-void mir_surface_spec_set_buffer_stream_position(
-    MirSurfaceSpec* spec, unsigned int index, int x, int y)
+void mir_surface_spec_reorder_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size)
 {
     (void) spec;
-    (void) index;
-    (void) x;
-    (void) y;
+    (void) streams;
+    (void) size;
 }
 
 unsigned int mir_surface_num_streams(MirSurface* surface)
@@ -641,16 +639,9 @@ unsigned int mir_surface_num_streams(MirSurface* surface)
     return 1;
 }
 
-MirBufferStream* mir_surface_buffer_stream_at(MirSurface* surface, unsigned int index)
+void mir_surface_buffer_stream_info_at(MirSurface* surface, unsigned int index, MirBufferStreamInfo* info)
 {
     (void) surface;
     (void) index;
-    return nullptr;
-}
-
-void mir_surface_spec_insert_stream_at(MirSurfaceSpec* spec, MirBufferStream* stream, unsigned int index)
-{
-    (void) spec;
-    (void) stream;
-    (void) index;
+    (void) info;
 }

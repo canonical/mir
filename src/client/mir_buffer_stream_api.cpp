@@ -201,10 +201,3 @@ bool mir_buffer_stream_is_valid(MirBufferStream* opaque_stream)
     auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
     return buffer_stream->valid();
 }
-
-void mir_buffer_stream_get_position(MirBufferStream* stream, int* x, int* y)
-{
-    (void) stream;
-    (void) x;
-    (void) y;
-}

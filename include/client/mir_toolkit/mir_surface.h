@@ -601,55 +601,38 @@ void mir_surface_set_title(MirSurface* surface, char const* name);
  */
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
-/**
- * Retreive the buffer stream at the index specified
- *  \param surface  The surface of interest
- *  \param index    The index of the buffer stream within the spec. An index of 0
- *                  is the bottom-most surface; and index of
- *                  mir_surface_num_streams() - 1 is the top-most surface.
- *  \returns        The buffer stream at the index, or nullptr if the index
- *                  is greater than or equal to mir_surface_num_streams()
- */ 
-MirBufferStream* mir_surface_buffer_stream_at(MirSurface* surface, unsigned int index);
-
-/** Insert a buffer stream into the surface. index indicates at which point in
- *  the z-order of the existing surfaces the stream will be placed below.
- *  An index of 0 will place the surface at the bottom-most position.
- *  An index >= mir_surface_num_streams() will place the surface at the
- *  topmost position.
- *
- *  \param [in] spec    The spec to accumulate the request in
- *  \param [in] stream  The stream to move
- *  \param [in] index   The index of the existing streams that will be
- *                      immediately above the inserted stream 
- *  
- */
-void mir_surface_spec_insert_stream_at(MirSurfaceSpec* spec, MirBufferStream* stream, unsigned int index);
-
-/** Specify the position of the stream within the surface. This establishes
- *  positions relative to the other streams in the surface, and is not a
- *  guarantee of the final composited ons
- *
- *  If stream_to_place is not associated the surface yet, it will become
- *  associated with the surface at the given position.
- *
- *  Associated buffer streams are not owned by the surface and still must be
- *  released.
- *
- *  \param [in] spec  The spec to accumulate the request in
- *  \param [in] index The index of stream to move
- *  \param [in] x     The x coordinate of the stream
- *  \param [in] y     The y coordinate of the stream
- */
-void mir_surface_spec_set_buffer_stream_position(
-    MirSurfaceSpec* spec, unsigned int index, int x, int y);
-
 /** The number of streams currently associated with the surface.
  *
  *  \param [in] surface  The surface of interest
  *  \return              The number of streams associated with spec
  */
 unsigned int mir_surface_num_streams(MirSurface* surface);
+
+/**
+ * Retreive the buffer stream at the index specified
+ *  \param [in]  surface  The surface of interest
+ *  \param [in]  index    The index of the buffer stream within the spec. An index of 0
+ *                       is the bottom-most surface; and index of
+ *                       (mir_surface_num_streams() - 1) is the top-most surface.
+ *  \param [out] info    The info for buffer stream at the index.
+ */ 
+void mir_surface_buffer_stream_info_at(MirSurface* surface, unsigned int index, MirBufferStreamInfo*);
+
+/** Reorder the streams associated with the spec.
+ *  streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
+ *  On application of the spec, A stream that is present in the surface,
+ *  but is not in the list will be disassociated from the surface.
+ *  On application of the spec, A stream that is not present in the surface,
+ *  but is in the list will be associated with the surface.
+ *
+ *  \warning no entry of streams may be null
+ *  \warning disassociating streams from the surface will not release() them.
+ *
+ *  \param [in] spec      The spec to accumulate the request in.
+ *  \param [in] streams   The an array of streams info.
+ *  \param [in] size      The size of streams.
+ */
+void mir_surface_spec_reorder_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size);
 
 #ifdef __cplusplus
 }

@@ -213,37 +213,43 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
 TEST_F(BufferStreamArrangement, arrangements_are_applied)
 {
     using namespace testing;
+    auto num_streams = streams.size() + 1;
+    std::vector<MirBufferStreamInfo> info(num_streams);
+    auto i = 0u;
+    info[i++] = MirBufferStreamInfo{
+        primary_stream->handle(),
+        primary_stream->position().x.as_int(),
+        primary_stream->position().y.as_int()};
+    for(auto &stream : streams)
+    {
+        info[i++] = MirBufferStreamInfo{
+            stream->handle(),
+            stream->position().x.as_int(),
+            stream->position().y.as_int()};
+    }
+
     auto change_spec = mir_connection_create_spec_for_changes(connection);
-
-    auto z_index = 0u;
-    for(auto& stream : streams)
-        mir_surface_spec_insert_stream_at(change_spec, stream->handle(), z_index++);
-    mir_surface_spec_insert_stream_at(change_spec, primary_stream->handle(), z_index++);
-
-    for(auto i = 0u; i < streams.size() + 1; ++i)
-        mir_surface_spec_set_buffer_stream_position(change_spec, i, i*10, i*10);
-
+    mir_surface_spec_reorder_streams(change_spec, info.data(), info.size());
     mir_surface_apply_spec(surface, change_spec);
+    mir_surface_spec_release(change_spec);
 
-    auto num_streams = mir_surface_num_streams(surface);
+    num_streams = mir_surface_num_streams(surface);
     EXPECT_THAT(num_streams, Eq(streams.size() + 1));
 
     std::vector<geom::Point> points;
     for(auto i = 0u; i < num_streams; i++)
     {
-        int x = 0;
-        int y = 0;
-        auto stream = mir_surface_buffer_stream_at(surface, i);
-        mir_buffer_stream_get_position(stream, &x, &y);
-        points.emplace_back(geom::Point{x, y});
+        MirBufferStreamInfo info{nullptr, 0, 0};
+        mir_surface_buffer_stream_info_at(surface, i, &info);
+        points.emplace_back(geom::Point{info.x, info.y});
         if (i == 0)
         {
-            EXPECT_THAT(stream, Eq(primary_stream->handle()));
+            EXPECT_THAT(info.stream, Eq(primary_stream->handle()));
             EXPECT_THAT(points.back(), Eq(primary_stream->position()));
         }
         else
         {
-            EXPECT_THAT(stream, Eq(streams[i-1]->handle()));
+            EXPECT_THAT(info.stream, Eq(streams[i-1]->handle()));
             EXPECT_THAT(points.back(), Eq(streams[i-1]->position()));
         }
     } 

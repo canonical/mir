@@ -278,6 +278,13 @@ typedef struct MirDisplayConfiguration
     MirDisplayCard *cards;
 } MirDisplayConfiguration;
 
+typedef struct MirBufferStreamInfo
+{
+    MirBufferStream * stream;
+    int x;
+    int y;
+} MirBufferStreamInfo;
+
 typedef struct MirRectangle
 {
     int left;
