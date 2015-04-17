@@ -81,16 +81,16 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         mtf::ConnectedClientHeadlessServer::TearDown();
     }
 
-    std::shared_ptr<ms::Surface> latest_shell_surface()
+    std::shared_ptr<ms::Surface> latest_shell_surface() const
     {
-        auto const surface = shell->latest_surface.lock();
-//        ASSERT_THAT(surface.get(), NotNull());
-        EXPECT_THAT(surface.get(), NotNull());
-        return surface;
+        auto const result = shell->latest_surface.lock();
+//      ASSERT_THAT(result, NotNull()); //<= doesn't compile!?
+        EXPECT_THAT(result, NotNull());
+        return result;
     }
 
     template<typename Specifier>
-    MirSurface* create_normal_surface(int width, int height, Specifier const& specifier)
+    MirSurface* create_normal_surface(int width, int height, Specifier const& specifier) const
     {
         auto const spec = mir_connection_create_spec_for_normal_surface(
             connection, width, height, pixel_format);
@@ -101,6 +101,11 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         mir_surface_spec_release(spec);
 
         return surface;
+    }
+
+    MirSurface* create_normal_surface(int width, int height) const
+    {
+        return create_normal_surface(width, height, [](MirSurfaceSpec*){});
     }
 
 private:
@@ -124,33 +129,69 @@ private:
         }
     }
 };
-
-//MATCHER_P(WidthEq, value, "")
-//{
-//    return Width(value) == arg.width;
-//}
-//
-//MATCHER_P(HeightEq, value, "")
-//{
-//    return Height(value) == arg.height;
-//}
-
 }
 
-TEST_F(SurfacePlacement, small_window_not_resized)
+// Optically centered in a space means:
+//
+//  o horizontally centered, and positioned vertically such that the top margin
+//    is half the bottom margin (vertical centering would look too low, and
+//    would allow little room for cascading), unless this would leave any
+//    part of the window off-screen or in shell space;
+//
+//  o otherwise, as close as possible to that position without any part of the
+//    window being off-screen or in shell space, if possible;
+//
+//  o otherwise, as close as possible to that position while keeping all of its
+//    title bar thickness in non-shell space. (For example, a dialog that is
+//    taller than the screen should be positioned immediately below any menu
+//    bar or shell panel at the top of the screen.)
+
+TEST_F(SurfacePlacement, small_window_is_optically_centered_on_first_display)
 {
     auto const width = 59;
     auto const height= 61;
 
-    auto const surface = create_normal_surface(width, height, [](MirSurfaceSpec*){});
+    auto const geometric_centre = first_display.top_left +
+        0.5*(as_displacement(first_display.size) - Displacement{width, height});
 
+    auto const optically_centred = geometric_centre -
+        DeltaY{(first_display.size.height.as_int()-height)/6};
+
+    auto const surface = create_normal_surface(width, height);
+    auto const shell_surface = latest_shell_surface();
+    ASSERT_THAT(shell_surface, NotNull());  // Compiles here
+
+    EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
+    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
+
+    mir_surface_release_sync(surface);
+}
+
+TEST_F(SurfacePlacement, medium_window_fitted_onto_first_display)
+{
+    auto const width = first_display.size.width.as_int();
+    auto const height= first_display.size.height.as_int();
+
+    auto const surface = create_normal_surface(width, height);
     auto const shell_surface = latest_shell_surface();
 
-    auto const top_left = shell_surface->top_left();
-    auto const size     = shell_surface->size();
+    EXPECT_THAT(shell_surface->top_left(), Eq(first_display.top_left));
+    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
+    EXPECT_THAT(shell_surface->size(),     Eq(first_display.size));
 
-    EXPECT_THAT(top_left, Ne(Point{0,0}));
-    EXPECT_THAT(size,     Eq(Size{59,61}));
+    mir_surface_release_sync(surface);
+}
+
+TEST_F(SurfacePlacement, big_window_keeps_top_on_first_display)
+{
+    auto const width = 2*first_display.size.width.as_int();
+    auto const height= 2*first_display.size.height.as_int();
+
+    auto const surface = create_normal_surface(width, height);
+    auto const shell_surface = latest_shell_surface();
+
+    EXPECT_THAT(shell_surface->top_left(), Eq(Point{-width/4, 0}));
+    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
 
     mir_surface_release_sync(surface);
 }
