@@ -47,8 +47,8 @@ public:
                            std::shared_ptr<WindowHandleRepository> const& repository);
     virtual ~InputTargeter() noexcept(true);
 
-    void focus_changed(std::shared_ptr<input::InputChannel const> const& focus_channel);
-    void focus_cleared();
+    void set_focus(std::shared_ptr<input::Surface> const& focus_surface);
+    void clear_focus();
 
 protected:
     InputTargeter(const InputTargeter&) = delete;

@@ -36,11 +36,6 @@ void mclr::NullRpcReport::invocation_failed(
 {
 }
 
-void mclr::NullRpcReport::header_receipt_failed(
-    std::exception const& /*error*/)
-{
-}
-
 void mclr::NullRpcReport::result_receipt_succeeded(
     mir::protobuf::wire::Result const& /*result*/)
 {
@@ -82,9 +77,5 @@ void mclr::NullRpcReport::result_processing_failed(
 void mclr::NullRpcReport::file_descriptors_received(
     google::protobuf::Message const& /*response*/,
     std::vector<mir::Fd> const& /*fds*/)
-{
-}
-
-void mclr::NullRpcReport::connection_failure(std::exception const& /*ex*/)
 {
 }
