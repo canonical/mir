@@ -116,7 +116,6 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_connection_create_spec_for_changes;
     mir_surface_apply_spec;
     mir_surface_set_event_handler;
-    mir_surface_set_title;
     mir_default_cursor_name;
     mir_disabled_cursor_name;
     mir_arrow_cursor_name;
