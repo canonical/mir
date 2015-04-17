@@ -56,8 +56,8 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
 {
     SurfacePlacement() { add_to_environment("MIR_SERVER_ENABLE_INPUT", "OFF"); }
 
-    Rectangle const first_display {{0, 0}, {640,  480}};
-    Rectangle const second_display{{0, 0}, {640,  480}};
+    Rectangle const first_display {{  0, 0}, {640,  480}};
+    Rectangle const second_display{{640, 0}, {640,  480}};
 
     // limit to cascade step (don't hard code title bar height)
     Displacement const max_cascade{20, 20};

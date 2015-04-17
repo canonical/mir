@@ -137,7 +137,11 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
             parameters.top_left = default_surface->top_left() + offset;
 
-            positioned = active_display.overlaps(Rectangle{parameters.top_left, parameters.size});
+            geometry::Rectangle display_for_app{default_surface->top_left(), default_surface->size()};
+
+            display_layout->size_to_output(display_for_app);
+
+            positioned = display_for_app.overlaps(Rectangle{parameters.top_left, parameters.size});
         }
     }
 

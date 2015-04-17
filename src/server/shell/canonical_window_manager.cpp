@@ -116,15 +116,19 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
 
             parameters.top_left = default_surface->top_left() + offset;
 
+            geometry::Rectangle display_for_app{default_surface->top_left(), default_surface->size()};
+            display_layout->size_to_output(display_for_app);
+
 //            // TODO This is what is currently in the spec, but I think it's wrong
-//            if (!active_display.contains(parameters.top_left + as_displacement(parameters.size)))
+//            if (!display_for_app.contains(parameters.top_left + as_displacement(parameters.size)))
 //            {
-//                parameters.size = as_size(active_display.bottom_right() - parameters.top_left);
+//                parameters.size = as_size(display_for_app.bottom_right() - parameters.top_left);
 //            }
 //
-//            positioned = active_display.contains(Rectangle{parameters.top_left, parameters.size});
+//            positioned = display_for_app.contains(Rectangle{parameters.top_left, parameters.size});
 
-            positioned = active_display.overlaps(Rectangle{parameters.top_left, parameters.size});
+
+            positioned = display_for_app.overlaps(Rectangle{parameters.top_left, parameters.size});
         }
     }
 
