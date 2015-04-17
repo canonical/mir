@@ -72,7 +72,6 @@ target_link_libraries(
   mir-test-framework-static
   mir-test-doubles-static
   mir-test-doubles-platform-static
-  3rd_party
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}

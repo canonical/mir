@@ -91,7 +91,8 @@ target_link_libraries(
   mirclientrpc-static
   mirclientlttngstatic
 
-  3rd_party
+  android-input-static
+  xcursorloader-static
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}

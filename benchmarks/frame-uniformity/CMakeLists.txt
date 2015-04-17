@@ -23,17 +23,13 @@ mir_add_wrapped_executable(frame_uniformity_test_client NOINSTALL
 target_link_libraries(frame_uniformity_test_client
   mirserver
   mirclient
+  mirplatform
   
   mir-test-static
   mir-test-framework-static
   mir-test-doubles-static
   mir-test-doubles-platform-static
 
-  # Why does this have to come after mir-test-framework-static here but not in tests/acceptance-tests/
-  # /CMakeLists.txt? ~racarr
-  mirplatform
-
-  3rd_party
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}

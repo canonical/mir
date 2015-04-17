@@ -107,7 +107,8 @@ target_link_libraries(
   mir-test-doubles-static
   mir-test-doubles-platform-static
 
-  3rd_party
+  android-input-static
+  xcursorloader-static
 
   ${PROTOBUF_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
