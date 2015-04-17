@@ -69,6 +69,7 @@ struct DisplayBuffer : public ::testing::Test
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle{
         std::make_shared<testing::NiceMock<mtd::MockFBBundle>>(display_size)};
     MirOrientation orientation{mir_orientation_normal};
+    geom::Point top_left{0,0};
     mga::DisplayBuffer db{
         mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
@@ -79,6 +80,7 @@ struct DisplayBuffer : public ::testing::Test
         *gl_context,
         stub_program_factory,
         orientation,
+        top_left,
         mga::OverlayOptimization::enabled};
 
 };
@@ -162,6 +164,7 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
         *gl_context,
         stub_program_factory,
         orientation,
+        top_left,
         mga::OverlayOptimization::enabled};
     testing::Mock::VerifyAndClearExpectations(&mock_egl);
 }
@@ -188,6 +191,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
             *gl_context,
             stub_program_factory,
             orientation,
+            top_left,
             mga::OverlayOptimization::enabled);
     }, std::runtime_error);
 
@@ -202,6 +206,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
             *gl_context,
             stub_program_factory,
             orientation,
+            top_left,
             mga::OverlayOptimization::enabled);
     }, std::runtime_error);
 }
@@ -259,6 +264,7 @@ TEST_F(DisplayBuffer, reject_list_if_option_disabled)
         *gl_context,
         stub_program_factory,
         orientation,
+        top_left,
         mga::OverlayOptimization::disabled);
 
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
@@ -297,4 +303,13 @@ TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
     EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
     set_to_overlays(db.contents().list);
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
+}
+
+TEST_F(DisplayBuffer, reports_position_correctly)
+{
+    geom::Point moved_point{100, 100};
+
+    EXPECT_THAT(db.view_area().top_left, Eq(top_left));
+    db.move_to(moved_point);
+    EXPECT_THAT(db.view_area().top_left, Eq(moved_point));
 }
