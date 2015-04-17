@@ -59,6 +59,9 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
     Rectangle const first_display {{0, 0}, {640,  480}};
     Rectangle const second_display{{0, 0}, {640,  480}};
 
+    // limit to cascade step (don't hard code title bar height)
+    Displacement const max_cascade{20, 20};
+
     void SetUp() override
     {
         initial_display_layout({first_display, second_display});
@@ -194,4 +197,82 @@ TEST_F(SurfacePlacement, big_window_keeps_top_on_first_display)
     EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
 
     mir_surface_release_sync(surface);
+}
+
+TEST_F(SurfacePlacement, second_window_is_on_same_display_as_first)
+{
+    auto const width = 67;
+    auto const height= 71;
+
+    auto const surface1 = create_normal_surface(width, height);
+    auto const shell_surface1 = latest_shell_surface();
+    shell_surface1->move_to(second_display.top_left);
+
+    auto const surface2 = create_normal_surface(width, height);
+    auto const shell_surface2 = latest_shell_surface();
+
+    EXPECT_TRUE(second_display.contains({shell_surface2->input_bounds()}));
+
+    mir_surface_release_sync(surface1);
+    mir_surface_release_sync(surface2);
+}
+
+// Cascaded, horizontally and/or vertically, relative to another window means:
+//
+//  o if vertically, positioned one standard title-bar height lower than the
+//    other window, and if horizontally, positioned one standard title-bar
+//    height to the right if in an LTR language, or one standard title-bar
+//    height to the left in an RTL language — unless the resulting position
+//    would leave any part of the window off-screen or in shell space;
+//
+//  o otherwise, positioned the same way, and shrunk the minimum amount
+//    required to avoid extending off-screen or into shell space — unless this
+//    would require making it smaller than its minimum width/height (for
+//    example, if the window is not resizable at all);
+//
+//  o otherwise, placed at the top left (LTR) or top right (RTL) of the
+//    display’s biggest non-shell space.
+TEST_F(SurfacePlacement, second_window_is_cascaded_wrt_first)
+{
+    auto const width = 73;
+    auto const height= 79;
+
+    auto const surface1 = create_normal_surface(width, height);
+    auto const shell_surface1 = latest_shell_surface();
+    auto const surface2 = create_normal_surface(width, height);
+    auto const shell_surface2 = latest_shell_surface();
+
+    EXPECT_THAT(shell_surface2->top_left().x, Gt(shell_surface1->top_left().x));
+    EXPECT_THAT(shell_surface2->top_left().y, Gt(shell_surface1->top_left().y));
+
+    EXPECT_THAT(shell_surface2->top_left().x, Lt((shell_surface1->top_left()+max_cascade).x));
+    EXPECT_THAT(shell_surface2->top_left().y, Lt((shell_surface1->top_left()+max_cascade).y));
+
+    EXPECT_THAT(shell_surface2->size(), Eq(Size{width, height}));
+
+    mir_surface_release_sync(surface1);
+    mir_surface_release_sync(surface2);
+}
+
+TEST_F(SurfacePlacement, medium_second_window_is_sized_when_cascaded_wrt_first)
+{
+    auto const width = first_display.size.width.as_int();
+    auto const height= first_display.size.height.as_int();
+
+    auto const surface1 = create_normal_surface(width, height);
+    auto const shell_surface1 = latest_shell_surface();
+    auto const surface2 = create_normal_surface(width, height);
+    auto const shell_surface2 = latest_shell_surface();
+
+    EXPECT_THAT(shell_surface2->top_left().x, Gt(shell_surface1->top_left().x));
+    EXPECT_THAT(shell_surface2->top_left().y, Gt(shell_surface1->top_left().y));
+
+    EXPECT_THAT(shell_surface2->top_left().x, Lt((shell_surface1->top_left()+max_cascade).x));
+    EXPECT_THAT(shell_surface2->top_left().y, Lt((shell_surface1->top_left()+max_cascade).y));
+
+    EXPECT_TRUE(first_display.contains({shell_surface2->input_bounds()}));
+    EXPECT_THAT(shell_surface2->size(), Ne(Size{width, height}));
+
+    mir_surface_release_sync(surface1);
+    mir_surface_release_sync(surface2);
 }
