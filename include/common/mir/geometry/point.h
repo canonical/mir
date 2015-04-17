@@ -63,6 +63,16 @@ inline bool operator != (Point const& lhs, Point const& rhs)
     return lhs.x != rhs.x || lhs.y != rhs.y;
 }
 
+inline bool operator == (PointOffset const& lhs, PointOffset const& rhs)
+{
+    return lhs.dx == rhs.dx && lhs.dy == rhs.dy;
+}
+
+inline bool operator != (PointOffset const& lhs, PointOffset const& rhs)
+{
+    return lhs.dx != rhs.dx || lhs.dy != rhs.dy;
+}
+
 inline Point operator+(Point lhs, PointOffset rhs) { return {lhs.x - rhs.dx, lhs.y - rhs.dy}; }
 inline Point operator+(Point lhs, DeltaX rhs) { return{lhs.x + rhs, lhs.y}; }
 inline Point operator+(Point lhs, DeltaY rhs) { return{lhs.x, lhs.y + rhs}; }

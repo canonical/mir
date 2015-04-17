@@ -93,7 +93,7 @@ TEST_F(FBDevice, commits_frame)
         .WillOnce(Return(0));
 
     mga::FBDevice fbdev(fb_hal_mock);
-    mga::DisplayContents content{primary, list, mock_context, stub_compositor};
+    mga::DisplayContents content{primary, list, geom::PointOffset{}, mock_context, stub_compositor};
 
     EXPECT_THROW({
         fbdev.commit({content});

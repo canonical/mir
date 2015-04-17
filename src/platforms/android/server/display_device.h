@@ -42,6 +42,7 @@ struct DisplayContents
 {
     DisplayName name;
     LayerList& list;
+    geometry::PointOffset list_offset;
     SwappingGLContext& context;
     RenderableListCompositor& compositor; 
 };

@@ -43,12 +43,13 @@ struct StubConfigurableDB : mga::ConfigurableDisplayBuffer
     void configure(MirPowerMode, MirOrientation, mir::geometry::PointOffset) override {}
     mga::DisplayContents contents() override
     {
-        return mga::DisplayContents{mga::DisplayName::primary, list, context, compositor};
+        return mga::DisplayContents{mga::DisplayName::primary, list, offset, context, compositor};
     }
     MirPowerMode power_mode() const override { return mir_power_mode_on; }
-    mga::LayerList mutable list{std::make_shared<mga::IntegerSourceCrop>(), {}, mir::geometry::PointOffset{0,0}};
+    mga::LayerList mutable list{std::make_shared<mga::IntegerSourceCrop>(), {}, offset};
     mtd::StubRenderableListCompositor mutable compositor;
     mtd::StubSwappingGLContext mutable context;
+    mir::geometry::PointOffset offset;
 };
 }
 

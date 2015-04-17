@@ -99,8 +99,9 @@ mga::HWCFallbackGLRenderer::HWCFallbackGLRenderer(
 }
 
 void mga::HWCFallbackGLRenderer::render(
-    RenderableList const& renderlist, SwappingGLContext const& context) const
+    RenderableList const& renderlist, geom::PointOffset offset, SwappingGLContext const& context) const
 {
+    (void) offset;
     glUseProgram(*program);
 
     /* NOTE: some HWC implementations rely on the framebuffer target layer

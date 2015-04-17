@@ -124,7 +124,7 @@ void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orien
 
 mga::DisplayContents mga::DisplayBuffer::contents()
 {
-    return mga::DisplayContents{display_name, *layer_list, gl_context, overlay_program};
+    return mga::DisplayContents{display_name, *layer_list, offset_from_origin, gl_context, overlay_program};
 }
 
 MirPowerMode mga::DisplayBuffer::power_mode() const
