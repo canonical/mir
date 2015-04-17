@@ -73,7 +73,6 @@ public:
     void show() override {}
     bool visible() const override { return true; }
     void move_to(geometry::Point const&) override {}
-    void take_input_focus(std::shared_ptr<shell::InputTargeter> const&) override {}
     void set_input_region(std::vector<geometry::Rectangle> const&) override {}
     void allow_framedropping(bool) override {}
     void resize(geometry::Size const&) override {}

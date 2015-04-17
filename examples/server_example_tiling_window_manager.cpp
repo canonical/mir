@@ -35,7 +35,8 @@ using namespace mir::geometry;
 
 me::TilingSurfaceInfo::TilingSurfaceInfo(
     std::shared_ptr<scene::Session> const& session,
-    std::shared_ptr<scene::Surface> const& surface) :
+    std::shared_ptr<scene::Surface> const& surface,
+    scene::SurfaceCreationParameters const& /*params*/) :
     session{session},
     state{mir_surface_state_restored},
     restore_rect{surface->top_left(), surface->size()}
