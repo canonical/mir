@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/connected_client_headless_server.h"
 
+#include "mir/events/event_builders.h"
 #include "mir/shell/shell_wrapper.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -25,6 +26,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/signal.h"
 
+namespace mev = mir::events;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
@@ -76,6 +78,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         mtf::ConnectedClientHeadlessServer::SetUp();
 
         init_pixel_format();
+        make_active(first_display);
     }
 
     void TearDown() override
@@ -109,6 +112,27 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
     MirSurface* create_normal_surface(int width, int height) const
     {
         return create_normal_surface(width, height, [](MirSurfaceSpec*){});
+    }
+
+    void make_active(Rectangle const& display)
+    {
+        auto const click_position = display.top_left + 0.5*as_displacement(display.size);
+
+        MirInputDeviceId const device_id{7};
+        int64_t const timestamp{39};
+        auto const modifiers = mir_input_event_modifier_none;
+        std::vector<MirPointerButton> depressed_buttons{mir_pointer_button_primary};
+
+        auto const x_axis_value = click_position.x.as_float();
+        auto const y_axis_value = click_position.y.as_float();
+        auto const hscroll_value = 0.0;
+        auto const vscroll_value = 0.0;
+        auto const action = mir_pointer_action_button_down;
+
+        auto const click_event = mev::make_event(device_id, timestamp, modifiers,
+            action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+
+        server.the_shell()->handle(*click_event);
     }
 
 private:
@@ -159,6 +183,29 @@ TEST_F(SurfacePlacement, small_window_is_optically_centered_on_first_display)
 
     auto const optically_centred = geometric_centre -
         DeltaY{(first_display.size.height.as_int()-height)/6};
+
+    auto const surface = create_normal_surface(width, height);
+    auto const shell_surface = latest_shell_surface();
+    ASSERT_THAT(shell_surface, NotNull());  // Compiles here
+
+    EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
+    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
+
+    mir_surface_release_sync(surface);
+}
+
+TEST_F(SurfacePlacement, which_second_display_acive_small_window_is_optically_centered_on_it)
+{
+    auto const width = 59;
+    auto const height= 61;
+
+    make_active(second_display);
+
+    auto const geometric_centre = second_display.top_left +
+        0.5*(as_displacement(second_display.size) - Displacement{width, height});
+
+    auto const optically_centred = geometric_centre -
+        DeltaY{(second_display.size.height.as_int()-height)/6};
 
     auto const surface = create_normal_surface(width, height);
     auto const shell_surface = latest_shell_surface();
