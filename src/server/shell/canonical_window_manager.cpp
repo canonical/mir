@@ -150,7 +150,7 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
 
         if (edge_attachment && mir_edge_attachment_horizontal)
         {
-            if (display_area.contains(bot_left + Displacement{width, height}))
+            if (active_display.contains(bot_left + Displacement{width, height}))
             {
                 parameters.top_left = bot_left;
                 positioned = true;
@@ -168,7 +168,7 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
         auto centred = active_display.top_left + 0.5*(
             as_displacement(active_display.size) - as_displacement(parameters.size));
 
-        parameters.top_left = centred - DeltaY{(display_area.size.height.as_int()-height)/6};
+        parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
 
         if (parameters.top_left.y < display_area.top_left.y)
             parameters.top_left.y = display_area.top_left.y;
