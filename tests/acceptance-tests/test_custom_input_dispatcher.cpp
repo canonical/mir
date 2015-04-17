@@ -79,7 +79,7 @@ TEST_F(TestCustomInputDispatcher, receives_input)
     start_server();
     using namespace testing;
 
-    // the order of those two occuring is not guranteed since, the input is simulated from
+    // the order of those two occuring is not guranteed, since the input is simulated from
     // separate devices - if the sequence of events is required in a test, better use
     // just one device with the superset of the capabilities instead.
     EXPECT_CALL(input_dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1)
