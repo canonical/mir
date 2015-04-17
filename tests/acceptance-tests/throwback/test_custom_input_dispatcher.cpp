@@ -60,8 +60,8 @@ class CustomMockInputDispatcher :
 public:
     CustomMockInputDispatcher() = default;
     // mocks for InputTargeter
-    MOCK_METHOD1(focus_changed, void(std::shared_ptr<mi::InputChannel const> const& /*focus_channel*/));
-    MOCK_METHOD0(focus_cleared, void());
+    MOCK_METHOD1(set_focus, void(std::shared_ptr<mi::Surface> const& /*focus_surface*/));
+    MOCK_METHOD0(clear_focus, void());
 };
 
 struct CustomDispatcherServerConfig : mtf::InputTestingServerConfiguration
@@ -165,7 +165,7 @@ TEST_F(CustomInputDispatcher, receives_focus_changes)
             using namespace ::testing;
             auto const dispatcher = the_input_dispatcher_mock();
 
-            EXPECT_CALL(*dispatcher, focus_changed(_)).Times(1)
+            EXPECT_CALL(*dispatcher, set_focus(_)).Times(1)
                 .WillOnce(InvokeWithoutArgs([this] { dispatching_done.signal_ready(); }));
         }
     } server_config;

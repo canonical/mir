@@ -32,11 +32,11 @@ struct NullInputTargeter : public shell::InputTargeter
     NullInputTargeter() = default;
     virtual ~NullInputTargeter() noexcept(true) = default;
 
-    void focus_changed(std::shared_ptr<InputChannel const> const&) override
+    void set_focus(std::shared_ptr<Surface> const&) override
     {
     }
 
-    void focus_cleared() override
+    void clear_focus() override
     {
     }
 };

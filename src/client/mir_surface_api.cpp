@@ -607,25 +607,16 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-namespace
-{
-MirSurfaceSpec* create_spec_for_changes()
+MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
 try
 {
+    mir::require(mir_connection_is_valid(connection));
     return new MirSurfaceSpec{};
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
-}
-}
-
-MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
-{
-    mir::require(mir_connection_is_valid(connection));
-
-    return create_spec_for_changes();
 }
 
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
@@ -642,15 +633,7 @@ catch (std::exception const& ex)
     // Keep calm and carry on
 }
 
-void mir_surface_set_title(MirSurface* surface, char const* name)
-{
-    auto const spec = create_spec_for_changes();
-    mir_surface_spec_set_name(spec, name);
-    mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
-}
-
-void mir_surface_spec_reorder_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size)
+void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size)
 {
     (void) spec;
     (void) streams;

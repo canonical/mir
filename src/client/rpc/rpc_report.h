@@ -51,7 +51,6 @@ public:
     virtual void invocation_failed(mir::protobuf::wire::Invocation const& invocation,
                                    std::exception const& ex) = 0;
 
-    virtual void header_receipt_failed(std::exception const& ex) = 0;
     virtual void result_receipt_succeeded(mir::protobuf::wire::Result const& result) = 0;
     virtual void result_receipt_failed(std::exception const& ex) = 0;
 
@@ -66,8 +65,6 @@ public:
 
     virtual void file_descriptors_received(google::protobuf::Message const& response,
                                            std::vector<mir::Fd> const& fds) = 0;
-
-    virtual void connection_failure(std::exception const& ex) = 0;
 
 protected:
     RpcReport() = default;

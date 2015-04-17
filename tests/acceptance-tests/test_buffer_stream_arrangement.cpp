@@ -229,7 +229,7 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     }
 
     auto change_spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_reorder_streams(change_spec, info.data(), info.size());
+    mir_surface_spec_set_streams(change_spec, info.data(), info.size());
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
 
