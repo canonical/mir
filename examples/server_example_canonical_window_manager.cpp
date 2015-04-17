@@ -133,18 +133,16 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
     {
         if (auto const default_surface = session->default_surface())
         {
-            // "If an app does not suggest a position for a regular surface when opening
-            // it, and the app has at least one regular surface already open, and there
-            // is room to do so, Mir should place it one title bar’s height below and to
-            // the right (in LTR languages) or to the left (in RTL languages) of the app’s
-            // most recently active window, so that you can see the title bars of both."
             static Displacement const offset{title_bar_height, title_bar_height};
 
             parameters.top_left = default_surface->top_left() + offset;
 
-            // "If there is not room to do that, Mir should place it as if it was the app’s
-            // only regular surface."
-            positioned = active_display.contains(parameters.top_left + as_displacement(parameters.size));
+            if (!active_display.contains(parameters.top_left + as_displacement(parameters.size)))
+            {
+                parameters.size = as_size(active_display.bottom_right() - parameters.top_left);
+            }
+
+            positioned = active_display.contains(Rectangle{parameters.top_left, parameters.size});
         }
     }
 
