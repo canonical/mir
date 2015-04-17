@@ -167,8 +167,8 @@ public:
 private:
     const KeyInfo* getKey(const FakeDevice* device, int32_t scanCode, int32_t usageCode) const;
     bool throw_in_get_events = false;
-    mir::Fd trigger_fd; // not really used
-
+    mir::Fd trigger_fd;  // event fd used internally when events are added to the list, with that fd() could be used to
+                         // wake an epoll_wait
 };
 }
 }

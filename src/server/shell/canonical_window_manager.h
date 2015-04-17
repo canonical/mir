@@ -38,13 +38,18 @@ struct CanonicalSurfaceInfo
 {
     CanonicalSurfaceInfo(
         std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface);
+        std::shared_ptr<scene::Surface> const& surface,
+        scene::SurfaceCreationParameters const& params);
 
     MirSurfaceState state;
     geometry::Rectangle restore_rect;
     std::weak_ptr<scene::Session> session;
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
+    optional_value<geometry::Width> min_width;
+    optional_value<geometry::Height> min_height;
+    optional_value<geometry::Width> max_width;
+    optional_value<geometry::Height> max_height;
 };
 
 // standard window management algorithm:

@@ -112,9 +112,9 @@ TEST_F(TestDefaultWindowManager, cycle_focus)
       EXPECT_CALL(session_manager, set_focus_to(Eq(session3))).Times(1);
     }
 
-    shell.focus_next();
-    shell.focus_next();
-    shell.focus_next();
+    shell.focus_next_session();
+    shell.focus_next_session();
+    shell.focus_next_session();
 
     Mock::VerifyAndClearExpectations(&session_manager);
 
@@ -156,11 +156,11 @@ TEST_F(TestDefaultWindowManager, sets_input_focus)
 
     {
         InSequence seq;
-        EXPECT_CALL(mock_surface, take_input_focus(_)).Times(1);
+        EXPECT_CALL(input_targeter, set_focus(Eq(mt::fake_shared(mock_surface)))).Times(1);
         // When we have no default surface.
-        EXPECT_CALL(input_targeter, focus_cleared()).Times(1);
+        EXPECT_CALL(input_targeter, clear_focus()).Times(1);
         // When we have no session.
-        EXPECT_CALL(input_targeter, focus_cleared()).Times(1);
+        EXPECT_CALL(input_targeter, clear_focus()).Times(1);
     }
 
     shell.set_focus_to(mt::fake_shared(app1), mt::fake_shared(mock_surface));
@@ -171,10 +171,10 @@ TEST_F(TestDefaultWindowManager, sets_input_focus)
 TEST_F(TestDefaultWindowManager, notifies_surface_of_focus_change_after_it_has_taken_the_focus)
 {
     mtd::StubSceneSession app;
-    auto const mock_surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+    auto mock_surface = std::make_shared<NiceMock<mtd::MockSurface>>();
 
     InSequence seq;
-    EXPECT_CALL(*mock_surface, take_input_focus(_));
+    EXPECT_CALL(input_targeter, set_focus(_));
     EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
 
     shell.set_focus_to(mt::fake_shared(app), mock_surface);

@@ -53,8 +53,8 @@ class CustomMockInputTargeter :
 {
 public:
     // mocks for InputTargeter
-    MOCK_METHOD1(focus_changed, void(std::shared_ptr<mi::InputChannel const> const& /*focus_channel*/));
-    MOCK_METHOD0(focus_cleared, void());
+    MOCK_METHOD1(set_focus, void(std::shared_ptr<mi::Surface> const& /*focus_surface*/));
+    MOCK_METHOD0(clear_focus, void());
 };
 
 struct CustomInputTargeterServerConfig : mtf::InputTestingServerConfiguration
@@ -102,7 +102,7 @@ TEST_F(CustomInputTargeter, receives_focus_changes)
             using namespace ::testing;
             auto const targeter = the_input_targeter_mock();
 
-            EXPECT_CALL(*targeter, focus_changed(_)).Times(1)
+            EXPECT_CALL(*targeter, set_focus(_)).Times(1)
                 .WillOnce(InvokeWithoutArgs([this] { dispatching_done.signal_ready(); }));
         }
     } server_config;

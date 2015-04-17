@@ -212,7 +212,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         if (event.key.modifiers & mir_key_modifier_alt &&
             event.key.scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
         {
-            focus_controller->focus_next();
+            focus_controller->focus_next_session();
             if (auto const surface = focus_controller->focused_surface())
                 focus_controller->raise({surface});
             return true;
@@ -505,7 +505,7 @@ bool me::WindowManager::handle(MirEvent const& event)
             geometry::Displacement dir = cursor - click;
             if (abs(dir.dx.as_int()) >= min_swipe_distance)
             {
-                focus_controller->focus_next();
+                focus_controller->focus_next_session();
                 if (auto const surface = focus_controller->focused_surface())
                     focus_controller->raise({surface});
                 handled = true;

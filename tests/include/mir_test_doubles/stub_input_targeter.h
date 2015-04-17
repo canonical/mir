@@ -30,10 +30,10 @@ namespace doubles
 
 struct StubInputTargeter : public shell::InputTargeter
 {
-    void focus_changed(std::shared_ptr<input::InputChannel const> const&)
+    void set_focus(std::shared_ptr<input::Surface> const&)
     {
     }
-    void focus_cleared()
+    void clear_focus()
     {
     }
 };
