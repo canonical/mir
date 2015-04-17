@@ -97,7 +97,7 @@ target_link_libraries(
 
   mirdraw
   mirclientrpc-static
-  mirclientlttngstatic
+  mirclientlttng-static
   demo-shell
   mirclient-static
   mircommon

@@ -89,7 +89,7 @@ target_link_libraries(
   mirclient-static
   mirdraw
   mirclientrpc-static
-  mirclientlttngstatic
+  mirclientlttng-static
 
   android-input-static
   xcursorloader-static
