@@ -227,7 +227,7 @@ TEST_F(LayerListTest, list_is_offset_for_nonorigin_displays)
 {
     using namespace testing;
     geom::PointOffset offset{199, 299};
-    geom::Rectangle not_offset_rect{geom::Point{250, 200}, disp_frame.size};
+    geom::Rectangle not_offset_rect{geom::Point{250, 200}, buffer1->size()};
     mg::RenderableList renderable_list {std::make_shared<mtd::StubRenderable>(buffer1, not_offset_rect)};
 
     mga::LayerList list(layer_adapter, renderable_list, offset);
@@ -236,7 +236,7 @@ TEST_F(LayerListTest, list_is_offset_for_nonorigin_displays)
     hwc_layer_1 expected_layer;
     hwc_rect_t visible_rect;
     geom::Point expected_point{not_offset_rect.top_left - offset};
-    geom::Rectangle expected_rectangle{expected_point, disp_frame.size};
+    geom::Rectangle expected_rectangle{expected_point, buffer1->size()};
     mt::fill_hwc_layer(expected_layer, &visible_rect, expected_rectangle, *buffer1, HWC_FRAMEBUFFER, 0);
 
     auto l = list.native_list();

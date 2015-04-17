@@ -84,7 +84,7 @@ void mga::LayerList::update_list_mode(mg::RenderableList const& renderlist)
         mode = Mode::no_extra_layers;
 }
 
-void mga::LayerList::update_list(RenderableList const& renderlist, geometry::PointOffset)
+void mga::LayerList::update_list(RenderableList const& renderlist, geometry::PointOffset offset)
 {
     renderable_list = renderlist;
     update_list_mode(renderlist);
@@ -101,9 +101,11 @@ void mga::LayerList::update_list(RenderableList const& renderlist, geometry::Poi
         auto it = layers.begin();
         for(auto renderable : renderlist)
         {
+            auto position = renderable->screen_position();
+            position.top_left = position.top_left - offset;
             it->needs_commit = it->layer.setup_layer(
                 mga::LayerType::gl_rendered,
-                renderable->screen_position(),
+                position,
                 renderable->shaped(), // TODO: support alpha() in future too
                 renderable->buffer());
             it++;
@@ -115,11 +117,13 @@ void mga::LayerList::update_list(RenderableList const& renderlist, geometry::Poi
         auto i = 0u;
         for(auto const& renderable : renderlist)
         {
+            auto position = renderable->screen_position();
+            position.top_left = position.top_left - offset;
             new_layers.emplace_back(
                 mga::HWCLayer(
                     layer_adapter, hwc_representation, i++,
                     mga::LayerType::gl_rendered,
-                    renderable->screen_position(),
+                    position,
                     renderable->shaped(), // TODO: support alpha() in future
                     renderable->buffer()), true);
         }
