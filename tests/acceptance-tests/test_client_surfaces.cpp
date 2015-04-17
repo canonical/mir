@@ -314,9 +314,17 @@ TEST_F(ClientSurfaces, can_be_renamed)
      *
      * At least verify the rename completes without blocking...
      */
-    mir_surface_set_title(surf, "New Name");
-    mir_surface_set_title(surf, "");
-    mir_surface_set_title(surf, "Alice");
+    spec = mir_connection_create_spec_for_changes(connection);
+    ASSERT_THAT(spec, NotNull());
+    mir_surface_spec_set_name(spec, "New Name");
+    mir_surface_apply_spec(surf, spec);
+
+    mir_surface_spec_set_name(spec, "");
+    mir_surface_apply_spec(surf, spec);
+
+    mir_surface_spec_set_name(spec, "Alice");
+    mir_surface_apply_spec(surf, spec);
+    mir_surface_spec_release(spec);
 
     mir_surface_release_sync(surf);
 }
