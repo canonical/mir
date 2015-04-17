@@ -267,5 +267,6 @@ TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct
         mir_surface_set_state(client_surface[i], mir_surface_state_maximized);
 
         received.wait_for(400ms);
+        mir_surface_release_sync(client_surface[i]);
     }
 }
