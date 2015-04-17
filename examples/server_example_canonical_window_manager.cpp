@@ -113,19 +113,8 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
     auto const active_display = tools->active_display();
 
-    auto width = std::min(display_area.size.width.as_int(), parameters.size.width.as_int());
-    auto height = std::min(display_area.size.height.as_int(), parameters.size.height.as_int());
-
-    auto const min_width  = parameters.min_width.is_set() ?
-        parameters.min_width.value().as_int() : 1;
-
-    auto const min_height = title_bar_height + (parameters.min_height.is_set() ?
-        parameters.min_height.value().as_int() : 1);
-
-    width = std::max(width, min_width);
-    height = std::max(height, min_height);
-
-    parameters.size = Size{width, height};
+    auto const width = parameters.size.width.as_int();
+    auto const height = parameters.size.height.as_int();
 
     bool positioned = false;
 
@@ -199,14 +188,13 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
     if (!positioned)
     {
-        // "If an app does not suggest a position for its only regular surface when
-        // opening it, Mir should position it horizontally centered, and vertically
-        // such that the top margin is half the bottom margin. (Vertical centering
-        // would look too low, and would allow little room for cascading.)"
         auto centred = active_display.top_left + 0.5*(
             as_displacement(active_display.size) - as_displacement(parameters.size));
 
         parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
+
+        if (parameters.top_left.y < display_area.top_left.y)
+            parameters.top_left.y = display_area.top_left.y;
     }
 
     parameters.top_left.y = parameters.top_left.y + DeltaY{title_bar_height};
