@@ -53,13 +53,13 @@ static EGLDisplay create_and_initialize_display()
 
     auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (egl_display == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION(mg::egl_error("eglGetDisplay failed\n"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("eglGetDisplay failed"));
 
     if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
-        BOOST_THROW_EXCEPTION(mg::egl_error("eglInitialize failure\n"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("eglInitialize failure"));
 
     if ((major != 1) || (minor != 4))
-        BOOST_THROW_EXCEPTION(std::runtime_error("must have EGL 1.4\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("must have EGL 1.4"));
     return egl_display;
 }
 
@@ -109,7 +109,7 @@ void mga::GLContext::make_current(EGLSurface egl_surface) const
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(
-            mg::egl_error("could not activate surface with eglMakeCurrent\n"));
+            mg::egl_error("could not activate surface with eglMakeCurrent"));
     }
 }
 
