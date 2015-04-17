@@ -39,6 +39,7 @@ mga::DisplayBuffer::DisplayBuffer(
     mga::GLContext const& shared_gl_context,
     mg::GLProgramFactory const& program_factory,
     MirOrientation orientation,
+    geom::Point position,
     mga::OverlayOptimization overlay_option)
     : display_name(display_name),
       layer_list(std::move(layer_list)),
@@ -49,6 +50,7 @@ mga::DisplayBuffer::DisplayBuffer(
       overlay_program{program_factory, gl_context, geom::Rectangle{{0,0},fb_bundle->fb_size()}},
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
       orientation_{orientation},
+      position{position},
       power_mode_{mir_power_mode_on}
 {
 }
@@ -110,7 +112,7 @@ bool mga::DisplayBuffer::uses_alpha() const
     return false;
 }
 
-void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation)
+void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::Point)
 {
     power_mode_ = power_mode;
     if (power_mode_ != mir_power_mode_on)

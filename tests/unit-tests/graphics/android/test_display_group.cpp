@@ -40,7 +40,7 @@ struct StubConfigurableDB : mga::ConfigurableDisplayBuffer
     bool post_renderables_if_optimizable(mg::RenderableList const&) override { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
     bool uses_alpha() const override { return false; }
-    void configure(MirPowerMode, MirOrientation) override {}
+    void configure(MirPowerMode, MirOrientation, mir::geometry::Point) override {}
     mga::DisplayContents contents() override
     {
         return mga::DisplayContents{mga::DisplayName::primary, list, context, compositor};

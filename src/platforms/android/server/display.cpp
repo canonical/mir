@@ -125,6 +125,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
         gl_context,
         *gl_program_factory,
         mir_orientation_normal,
+        geom::Point{0,0},
         overlay_option));
 }
 }
@@ -248,16 +249,17 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
         if (output.current_format != config[output.id].current_format)
             BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
 
+        geom::Point origin;
         config[output.id].orientation = output.orientation;
         if (config.primary().id == output.id)
         {
             power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
-            displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation);
+            displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation, origin);
         }
         else if (config.external().connected)
         {
             power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
-            displays.configure(mga::DisplayName::external, output.power_mode, output.orientation);
+            displays.configure(mga::DisplayName::external, output.power_mode, output.orientation, origin);
         }
     });
 }

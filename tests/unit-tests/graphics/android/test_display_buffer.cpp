@@ -112,15 +112,15 @@ TEST_F(DisplayBuffer, rotation_transposes_dimensions_and_reports_correctly)
     geom::Size const transposed{display_size.height.as_int(), display_size.width.as_int()};
     EXPECT_EQ(display_size, db.view_area().size);
     EXPECT_EQ(db.orientation(), mir_orientation_normal);
-    db.configure(mir_power_mode_on, mir_orientation_inverted);
+    db.configure(mir_power_mode_on, mir_orientation_inverted, top_left);
 
     EXPECT_EQ(display_size, db.view_area().size);
     EXPECT_EQ(db.orientation(), mir_orientation_inverted);
-    db.configure(mir_power_mode_on, mir_orientation_left);
+    db.configure(mir_power_mode_on, mir_orientation_left, top_left);
 
     EXPECT_EQ(transposed, db.view_area().size);
     EXPECT_EQ(db.orientation(), mir_orientation_left);
-    db.configure(mir_power_mode_on, mir_orientation_right);
+    db.configure(mir_power_mode_on, mir_orientation_right, top_left);
 
     EXPECT_EQ(transposed, db.view_area().size);
     EXPECT_EQ(db.orientation(), mir_orientation_right);
@@ -236,10 +236,10 @@ TEST_F(DisplayBuffer, notifies_list_that_content_is_cleared)
 {
     EXPECT_CALL(*mock_display_device, content_cleared())
         .Times(3);
-    db.configure(mir_power_mode_off, mir_orientation_normal);
-    db.configure(mir_power_mode_suspend, mir_orientation_normal);
-    db.configure(mir_power_mode_standby, mir_orientation_normal);
-    db.configure(mir_power_mode_on, mir_orientation_normal);
+    db.configure(mir_power_mode_off, mir_orientation_normal, top_left);
+    db.configure(mir_power_mode_suspend, mir_orientation_normal, top_left);
+    db.configure(mir_power_mode_standby, mir_orientation_normal, top_left);
+    db.configure(mir_power_mode_on, mir_orientation_normal, top_left);
 }
 
 TEST_F(DisplayBuffer, does_not_use_alpha)
@@ -307,9 +307,10 @@ TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
 
 TEST_F(DisplayBuffer, reports_position_correctly)
 {
+    using namespace testing;
     geom::Point moved_point{100, 100};
 
     EXPECT_THAT(db.view_area().top_left, Eq(top_left));
-    db.move_to(moved_point);
+    db.configure(mir_power_mode_on, orientation, moved_point);
     EXPECT_THAT(db.view_area().top_left, Eq(moved_point));
 }
