@@ -301,3 +301,23 @@ TEST_F(SurfacePlacement, medium_second_window_is_cascaded_wrt_first)
     mir_surface_release_sync(surface1);
     mir_surface_release_sync(surface2);
 }
+
+// Parented dialog or parented freestyle window
+//
+// For convenience, these types are referred to here as “parented dialogs”.
+//
+//  o If a newly-opened parented dialog is the same as a previous dialog with
+//    the same parent window, and it has user-customized position, then:
+//      o …
+//
+//  o Otherwise, if the dialog is not the same as any previous dialog for the
+//    same parent window, and/or it does not have user-customized position:
+//      o It should be optically centered relative to its parent, unless this
+//        would overlap or cover the title bar of the parent.
+//      o Otherwise, it should be cascaded vertically (but not horizontally)
+//        relative to its parent, unless, this would cause at least part of
+//        it to extend into shell space.
+//
+// o Otherwise (resorting to the original plan) it should be optically centered
+//    relative to its parent
+// TODO tests for this
