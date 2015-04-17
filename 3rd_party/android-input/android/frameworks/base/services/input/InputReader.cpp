@@ -278,6 +278,8 @@ void InputReader::loopOnce() {
 
         uint32_t changes = mConfigurationChangesToRefresh;
         if (changes) {
+            if (0 == (changes & InputReaderConfiguration::CHANGE_MUST_REOPEN))
+                mEventHub->wake();
             mConfigurationChangesToRefresh = 0;
             refreshConfigurationLocked(changes);
         }

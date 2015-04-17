@@ -175,6 +175,30 @@ bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height)
     return true;
 }
 
+bool mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width)
+{
+    spec->min_width = min_width;
+    return true;
+}
+
+bool mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height)
+{
+    spec->min_height = min_height;
+    return true;
+}
+
+bool mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width)
+{
+    spec->max_width = max_width;
+    return true;
+}
+
+bool mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height)
+{
+    spec->max_height = max_height;
+    return true;
+}
+
 bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format)
 {
     spec->pixel_format = format;
