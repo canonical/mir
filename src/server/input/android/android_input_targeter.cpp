@@ -22,6 +22,8 @@
 #include "android_input_window_handle.h"
 #include "android_input_application_handle.h"
 
+#include "mir/input/surface.h"
+
 #include <InputDispatcher.h>
 
 #include <boost/throw_exception.hpp>
@@ -43,16 +45,16 @@ mia::InputTargeter::InputTargeter(std::shared_ptr<droidinput::InputDispatcherInt
 mia::InputTargeter::~InputTargeter() noexcept(true) {}
 
 
-void mia::InputTargeter::focus_cleared()
+void mia::InputTargeter::clear_focus()
 {
     droidinput::sp<droidinput::InputWindowHandle> null_window = nullptr;
 
     input_dispatcher->setKeyboardFocus(null_window);
 }
 
-void mia::InputTargeter::focus_changed(std::shared_ptr<mi::InputChannel const> const& focus_channel)
+void mia::InputTargeter::set_focus(std::shared_ptr<mi::Surface> const& focus_surface)
 {
-    auto window_handle = repository->handle_for_channel(focus_channel);
+    auto window_handle = repository->handle_for_channel(focus_surface->input_channel());
 
     if (window_handle == NULL)
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set keyboard focus to an unregistered input channel"));
