@@ -101,7 +101,6 @@ mga::HWCFallbackGLRenderer::HWCFallbackGLRenderer(
 void mga::HWCFallbackGLRenderer::render(
     RenderableList const& renderlist, geom::PointOffset offset, SwappingGLContext const& context) const
 {
-    (void) offset;
     glUseProgram(*program);
 
     /* NOTE: some HWC implementations rely on the framebuffer target layer
@@ -124,7 +123,7 @@ void mga::HWCFallbackGLRenderer::render(
         else
             glDisable(GL_BLEND);
 
-        auto const primitive = mg::tessellate_renderable_into_rectangle(*renderable);
+        auto const primitive = mg::tessellate_renderable_into_rectangle(*renderable, offset);
         glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE, sizeof(mg::GLVertex),
                               &primitive.vertices[0].position);
         //TODO: (kdub) scaling or pi/2 rotation eventually. for now, all quads get same texcoords
