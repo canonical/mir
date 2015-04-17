@@ -268,4 +268,7 @@ TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct
 
         received.wait_for(400ms);
     }
+
+    for (auto const surface : client_surface)
+        mir_surface_release_sync(surface);
 }
