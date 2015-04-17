@@ -67,7 +67,7 @@ struct FBDevice : public ::testing::Test
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer;
     mtd::HardwareAccessMock hw_access_mock;
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
-    mga::LayerList list{std::make_shared<mga::IntegerSourceCrop>(), {}};
+    mga::LayerList list{std::make_shared<mga::IntegerSourceCrop>(), {}, geom::PointOffset{}};
     mtd::StubRenderableListCompositor stub_compositor;
     mga::DisplayName primary{mga::DisplayName::primary};
 };

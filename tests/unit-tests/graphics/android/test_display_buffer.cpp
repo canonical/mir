@@ -64,16 +64,16 @@ struct DisplayBuffer : public ::testing::Test
         std::make_shared<testing::NiceMock<mtd::MockDisplayDevice>>()};
     geom::Size const display_size{433,232};
     double const refresh_rate{60.0};
+    geom::PointOffset top_left{0,0};
     std::unique_ptr<mga::LayerList> list{
-        new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})};
+        new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, top_left)};
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle{
         std::make_shared<testing::NiceMock<mtd::MockFBBundle>>(display_size)};
     MirOrientation orientation{mir_orientation_normal};
-    geom::Point top_left{0,0};
     mga::DisplayBuffer db{
         mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
-            new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
+            new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, top_left)),
         mock_fb_bundle,
         mock_display_device,
         native_window,
@@ -126,14 +126,6 @@ TEST_F(DisplayBuffer, rotation_transposes_dimensions_and_reports_correctly)
     EXPECT_EQ(db.orientation(), mir_orientation_right);
 }
 
-TEST_F(DisplayBuffer, reports_correct_size)
-{
-    auto view_area = db.view_area();
-    geom::Point origin_pt{geom::X{0}, geom::Y{0}};
-    EXPECT_EQ(display_size, view_area.size);
-    EXPECT_EQ(origin_pt, view_area.top_left);
-}
-
 TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
 {
     testing::Mock::VerifyAndClearExpectations(&mock_egl);
@@ -157,7 +149,7 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
     mga::DisplayBuffer db{
         mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
-            new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
+            new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, top_left)),
         mock_fb_bundle,
         mock_display_device,
         native_window,
@@ -184,7 +176,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
         mga::DisplayBuffer db(
             mga::DisplayName::primary,
             std::unique_ptr<mga::LayerList>(
-                new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
+                new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, top_left)),
             mock_fb_bundle,
             mock_display_device,
             native_window,
@@ -199,7 +191,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
         mga::DisplayBuffer db(
             mga::DisplayName::primary,
             std::unique_ptr<mga::LayerList>(
-                new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
+                new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, top_left)),
             mock_fb_bundle,
             mock_display_device,
             native_window,
@@ -257,7 +249,7 @@ TEST_F(DisplayBuffer, reject_list_if_option_disabled)
     mga::DisplayBuffer db(
         mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
-            new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})),
+            new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, top_left)),
         mock_fb_bundle,
         mock_display_device,
         native_window,
@@ -308,9 +300,10 @@ TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
 TEST_F(DisplayBuffer, reports_position_correctly)
 {
     using namespace testing;
-    geom::Point moved_point{100, 100};
+    geom::Point origin;
+    geom::PointOffset offset{100, 100};
 
-    EXPECT_THAT(db.view_area().top_left, Eq(top_left));
-    db.configure(mir_power_mode_on, orientation, moved_point);
-    EXPECT_THAT(db.view_area().top_left, Eq(moved_point));
+    EXPECT_THAT(db.view_area().top_left, Eq(origin));
+    db.configure(mir_power_mode_on, orientation, offset);
+    EXPECT_THAT(db.view_area().top_left, Eq(geom::Point{origin - offset}));
 }

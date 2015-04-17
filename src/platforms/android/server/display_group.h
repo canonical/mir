@@ -47,7 +47,7 @@ public:
 
     void add(DisplayName name, std::unique_ptr<ConfigurableDisplayBuffer> buffer);
     void remove(DisplayName name);
-    void configure(DisplayName name, MirPowerMode, MirOrientation, geometry::Point);
+    void configure(DisplayName name, MirPowerMode, MirOrientation, geometry::PointOffset);
     bool display_present(DisplayName name) const;
 
 private:

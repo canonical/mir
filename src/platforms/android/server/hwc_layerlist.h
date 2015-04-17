@@ -51,8 +51,9 @@ class LayerList
 public:
     LayerList(
         std::shared_ptr<LayerAdapter> const& layer_adapter,
-        RenderableList const& renderlist);
-    void update_list(RenderableList const& renderlist);
+        RenderableList const& renderlist,
+        geometry::PointOffset list_offset);
+    void update_list(RenderableList const& renderlist, geometry::PointOffset list_offset);
 
     std::list<HwcLayerEntry>::iterator begin();
     std::list<HwcLayerEntry>::iterator end();

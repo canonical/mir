@@ -40,6 +40,19 @@ struct Point
     Y y;
 };
 
+struct PointOffset
+{
+    PointOffset() = default;
+    PointOffset(PointOffset const&) = default;
+    PointOffset& operator=(PointOffset const&) = default;
+
+    template<typename DeltaXType, typename DeltaYType>
+    PointOffset(DeltaXType&& dx, DeltaYType&& dy) : dx{dx}, dy{dy} {}
+
+    DeltaX dx;
+    DeltaY dy;
+};
+
 inline bool operator == (Point const& lhs, Point const& rhs)
 {
     return lhs.x == rhs.x && lhs.y == rhs.y;
@@ -50,9 +63,11 @@ inline bool operator != (Point const& lhs, Point const& rhs)
     return lhs.x != rhs.x || lhs.y != rhs.y;
 }
 
+inline Point operator+(Point lhs, PointOffset rhs) { return {lhs.x - rhs.dx, lhs.y - rhs.dy}; }
 inline Point operator+(Point lhs, DeltaX rhs) { return{lhs.x + rhs, lhs.y}; }
 inline Point operator+(Point lhs, DeltaY rhs) { return{lhs.x, lhs.y + rhs}; }
 
+inline Point operator-(Point lhs, PointOffset rhs) { return {lhs.x - rhs.dx, lhs.y - rhs.dy}; }
 inline Point operator-(Point lhs, DeltaX rhs) { return{lhs.x - rhs, lhs.y}; }
 inline Point operator-(Point lhs, DeltaY rhs) { return{lhs.x, lhs.y - rhs}; }
 

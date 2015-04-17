@@ -99,7 +99,7 @@ protected:
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
     mtd::StubRenderableListCompositor stub_compositor;
     mga::DisplayName primary{mga::DisplayName::primary};
-    mga::LayerList list{std::make_shared<mga::Hwc10Adapter>(), {}};
+    mga::LayerList list{std::make_shared<mga::Hwc10Adapter>(), {}, geom::PointOffset{}};
     hwc_layer_1_t skip_layer;
 };
 }

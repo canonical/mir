@@ -39,7 +39,7 @@ mga::DisplayBuffer::DisplayBuffer(
     mga::GLContext const& shared_gl_context,
     mg::GLProgramFactory const& program_factory,
     MirOrientation orientation,
-    geom::Point position,
+    geom::PointOffset offset,
     mga::OverlayOptimization overlay_option)
     : display_name(display_name),
       layer_list(std::move(layer_list)),
@@ -50,7 +50,7 @@ mga::DisplayBuffer::DisplayBuffer(
       overlay_program{program_factory, gl_context, geom::Rectangle{{0,0},fb_bundle->fb_size()}},
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
       orientation_{orientation},
-      position{position},
+      offset_from_origin{offset},
       power_mode_{mir_power_mode_on}
 {
 }
@@ -64,7 +64,8 @@ geom::Rectangle mga::DisplayBuffer::view_area() const
     if (orientation_ == mir_orientation_left || orientation_ == mir_orientation_right)
         std::swap(width, height);
 
-    return {position, {width,height}};
+    geom::Point origin;
+    return {origin - offset_from_origin, {width,height}};
 }
 
 void mga::DisplayBuffer::make_current()
@@ -82,7 +83,7 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     if (!overlay_enabled || !display_device->compatible_renderlist(renderlist))
         return false;
 
-    layer_list->update_list(renderlist);
+    layer_list->update_list(renderlist, offset_from_origin);
 
     bool needs_commit{false};
     for (auto& layer : *layer_list)
@@ -93,7 +94,7 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
 
 void mga::DisplayBuffer::gl_swap_buffers()
 {
-    layer_list->update_list({});
+    layer_list->update_list({}, offset_from_origin);
 }
 
 MirOrientation mga::DisplayBuffer::orientation() const
@@ -112,10 +113,10 @@ bool mga::DisplayBuffer::uses_alpha() const
     return false;
 }
 
-void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::Point pos)
+void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::PointOffset offset)
 {
     power_mode_ = power_mode;
-    position = pos;
+    offset_from_origin = offset;
     if (power_mode_ != mir_power_mode_on)
         display_device->content_cleared();
     orientation_ = orientation;
