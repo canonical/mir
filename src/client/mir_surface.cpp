@@ -29,6 +29,7 @@
 
 #include <cassert>
 #include <unistd.h>
+#include <uuid/uuid.h>
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -109,6 +110,22 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
     }
 
     return message;
+}
+
+MirSurfaceId::MirSurfaceId(std::string const& string_id)
+    : string_id{string_id}
+{
+    uuid_parse(string_id.c_str(), id);
+}
+
+std::string const& MirSurfaceId::as_string()
+{
+    return string_id;
+}
+
+bool MirSurfaceId::operator==(MirSurfaceId const& rhs) const
+{
+    return !uuid_compare(id, rhs.id);
 }
 
 MirSurface::MirSurface(std::string const& error)

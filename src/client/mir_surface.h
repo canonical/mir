@@ -34,6 +34,7 @@
 #include <functional>
 #include <mutex>
 #include <unordered_set>
+#include <uuid/uuid.h>
 
 namespace mir
 {
@@ -95,7 +96,16 @@ struct MirSurfaceSpec
 
 struct MirSurfaceId
 {
+public:
+    MirSurfaceId(std::string const& string_id);
 
+    std::string const& as_string();
+
+    bool operator==(MirSurfaceId const& rhs) const;
+
+private:
+    std::string const string_id;
+    uuid_t id;
 };
 
 struct MirSurface
