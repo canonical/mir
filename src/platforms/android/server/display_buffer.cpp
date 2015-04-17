@@ -64,7 +64,7 @@ geom::Rectangle mga::DisplayBuffer::view_area() const
     if (orientation_ == mir_orientation_left || orientation_ == mir_orientation_right)
         std::swap(width, height);
 
-    return {{0,0}, {width,height}};
+    return {position, {width,height}};
 }
 
 void mga::DisplayBuffer::make_current()
@@ -112,9 +112,10 @@ bool mga::DisplayBuffer::uses_alpha() const
     return false;
 }
 
-void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::Point)
+void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::Point pos)
 {
     power_mode_ = power_mode;
+    position = pos;
     if (power_mode_ != mir_power_mode_on)
         display_device->content_cleared();
     orientation_ = orientation;
