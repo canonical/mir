@@ -47,15 +47,15 @@ if (MIR_BUILD_PLATFORM_ANDROID)
 endif()
 
 add_library(
-  mir-test-doubles STATIC
+  mir-test-doubles-static STATIC
   ${TEST_UTILS_SRCS})
 
-add_dependencies(mir-test-doubles GMock)
+add_dependencies(mir-test-doubles-static GMock)
 
-uses_android_input(mir-test-doubles)
+uses_android_input(mir-test-doubles-static)
 
 target_link_libraries(
-  mir-test-doubles
+  mir-test-doubles-static
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -65,11 +65,11 @@ target_link_libraries(
 )
 
 add_library(
-  mir-test-doubles-platform STATIC
+  mir-test-doubles-platform-static STATIC
   ${MIR_TEST_DOUBLES_PLATFORM_SRCS})
 
 target_link_libraries(
-  mir-test-doubles-platform
+  mir-test-doubles-platform-static
 
   -ldl
   ${GMOCK_LIBRARY}

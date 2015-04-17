@@ -57,16 +57,16 @@ list(APPEND TEST_FRAMEWORK_SRCS
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
 add_library(
-  mir-test-framework STATIC
+  mir-test-framework-static STATIC
   ${TEST_FRAMEWORK_SRCS}
 )
 
-add_dependencies(mir-test-framework GMock)
+add_dependencies(mir-test-framework-static GMock)
 
-uses_android_input(mir-test-framework)
+uses_android_input(mir-test-framework-static)
 
 target_link_libraries(
-  mir-test-framework
+  mir-test-framework-static
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -88,7 +88,7 @@ add_library(
 target_link_libraries(
   mirclientplatformstub
 
-  mir-test-framework
+  mir-test-framework-static
   ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
 )
 
@@ -129,9 +129,9 @@ add_library(
 target_link_libraries(
   mirplatformgraphicsstub
 
-  mir-test
-  mir-test-framework
-  mir-test-doubles
+  mir-test-static
+  mir-test-framework-static
+  mir-test-doubles-static
   ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
 )
 
@@ -143,12 +143,12 @@ set_target_properties(
   LINK_FLAGS "-Wl,--version-script,${server_symbol_map}"
 )
 
-add_custom_command(TARGET mir-test-framework POST_BUILD
+add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
   ${CMAKE_CURRENT_SOURCE_DIR}/udev_recordings ${CMAKE_BINARY_DIR}/bin/udev_recordings
   COMMENT "Copying umockdev recordings to build dir..."
 )
-add_custom_command(TARGET mir-test-framework POST_BUILD
+add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
   ${CMAKE_CURRENT_SOURCE_DIR}/testing-cursor-theme ${CMAKE_BINARY_DIR}/bin/testing-cursor-theme
   COMMENT "Copying testing cursor themes to build dir..."

@@ -39,6 +39,6 @@ set(MIR_XCURSOR_INCLUDE_DIRECTORIES ${MIR_XCURSOR_INCLUDE_DIRECTORIES} PARENT_SC
 target_link_libraries(
   3rd_party
 
-  android-input
-  xcursorloader
+  android-input-static
+  xcursorloader-static
 )

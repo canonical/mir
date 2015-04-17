@@ -92,7 +92,6 @@ target_link_libraries(mirserver LINK_PUBLIC
   mircommon
   mirprotobuf
   3rd_party
-  xcursorloader
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

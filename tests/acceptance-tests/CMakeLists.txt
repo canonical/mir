@@ -68,10 +68,10 @@ target_link_libraries(
   mirclient-debug-extension
   mirserver
 
-  mir-test
-  mir-test-framework
-  mir-test-doubles
-  mir-test-doubles-platform
+  mir-test-static
+  mir-test-framework-static
+  mir-test-doubles-static
+  mir-test-doubles-platform-static
   3rd_party
 
   ${PROTOBUF_LIBRARIES}

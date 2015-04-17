@@ -91,7 +91,7 @@ set_target_properties(mirclient
 )
 
 set(LINKS
-  mirclientrpc
+  mirclientrpc-static
   mirclientlttngstatic
   mircommon
   mirprotobuf

@@ -96,16 +96,16 @@ target_link_libraries(
   mir_unit_tests
 
   mirdraw
-  mirclientrpc
+  mirclientrpc-static
   mirclientlttngstatic
   demo-shell
   mirclient-static
   mircommon
 
-  mir-test
-  mir-test-framework
-  mir-test-doubles
-  mir-test-doubles-platform
+  mir-test-static
+  mir-test-framework-static
+  mir-test-doubles-static
+  mir-test-doubles-platform-static
 
   3rd_party
 
@@ -135,7 +135,7 @@ target_link_libraries(
 
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_unit_tests 
-  mirsharedandroid
+  mirsharedandroid-static
   ${ANDROID_PROPERTIES_LDFLAGS}
 )
 endif()
