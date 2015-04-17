@@ -68,9 +68,6 @@ uses_android_input(mir-test-framework)
 target_link_libraries(
   mir-test-framework
 
-  3rd_party
-  mir-test-doubles
-
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}

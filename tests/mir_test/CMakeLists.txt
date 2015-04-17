@@ -14,5 +14,3 @@ add_library(
   fd_utils.cpp
   test_dispatchable.cpp
 )
-
-target_link_libraries(mir-test mirprotobuf)

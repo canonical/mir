@@ -63,10 +63,10 @@ add_dependencies(mir_acceptance_tests GMock)
 target_link_libraries(
   mir_acceptance_tests
 
-  mirserver
   mirclient
-  mirclient-debug-extension
   mirplatform
+  mirclient-debug-extension
+  mirserver
 
   mir-test
   mir-test-framework
