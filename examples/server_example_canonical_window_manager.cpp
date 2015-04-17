@@ -137,12 +137,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
             parameters.top_left = default_surface->top_left() + offset;
 
-            if (!active_display.contains(parameters.top_left + as_displacement(parameters.size)))
-            {
-                parameters.size = as_size(active_display.bottom_right() - parameters.top_left);
-            }
-
-            positioned = active_display.contains(Rectangle{parameters.top_left, parameters.size});
+            positioned = active_display.overlaps(Rectangle{parameters.top_left, parameters.size});
         }
     }
 
