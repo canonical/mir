@@ -96,11 +96,12 @@ target_link_libraries(
   mir_unit_tests
 
   mirdraw
+  demo-shell
+  mircommon
+
+  mirclient-static
   mirclientrpc-static
   mirclientlttng-static
-  demo-shell
-  mirclient-static
-  mircommon
 
   mir-test-static
   mir-test-framework-static

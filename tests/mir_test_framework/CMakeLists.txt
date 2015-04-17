@@ -56,8 +56,7 @@ list(APPEND TEST_FRAMEWORK_SRCS
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
-add_library(
-  mir-test-framework-static STATIC
+add_library(mir-test-framework-static STATIC
   ${TEST_FRAMEWORK_SRCS}
 )
 
@@ -65,8 +64,7 @@ add_dependencies(mir-test-framework-static GMock)
 
 uses_android_input(mir-test-framework-static)
 
-target_link_libraries(
-  mir-test-framework-static
+target_link_libraries(mir-test-framework-static
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}

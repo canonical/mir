@@ -60,24 +60,16 @@ mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompi
 
 add_dependencies(mir_acceptance_tests GMock)
 
-target_link_libraries(
-  mir_acceptance_tests
-
-  mirclient
-  mirplatform
-  mirclient-debug-extension
-  mirserver
-
+target_link_libraries(mir_acceptance_tests
   mir-test-static
   mir-test-framework-static
   mir-test-doubles-static
   mir-test-doubles-platform-static
 
-  ${PROTOBUF_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
+  mirclient
+  mirclient-debug-extension
+  mirserver
+
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
