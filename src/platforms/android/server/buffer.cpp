@@ -84,7 +84,7 @@ void mga::Buffer::gl_bind_to_texture()
 
     if (current.first == EGL_NO_DISPLAY)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("cannot bind buffer to texture without EGL context\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("cannot bind buffer to texture without EGL context"));
     }
 
     static const EGLint image_attrs[] =
@@ -103,7 +103,7 @@ void mga::Buffer::gl_bind_to_texture()
 
         if (image == EGL_NO_IMAGE_KHR)
         {
-            BOOST_THROW_EXCEPTION(mg::egl_error("error binding buffer to texture\n"));
+            BOOST_THROW_EXCEPTION(mg::egl_error("error binding buffer to texture"));
         }
         egl_image_map[current] = image;
     }

@@ -187,7 +187,7 @@ void mg::SurfacelessEGLContext::make_current() const
                        egl_context) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(
-            mg::egl_error("could not make context current\n"));
+            mg::egl_error("could not make context current"));
     }
 }
 
