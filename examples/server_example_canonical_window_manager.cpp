@@ -113,19 +113,8 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
     auto const active_display = tools->active_display();
 
-    auto width = std::min(display_area.size.width.as_int(), parameters.size.width.as_int());
-    auto height = std::min(display_area.size.height.as_int(), parameters.size.height.as_int());
-
-    auto const min_width  = parameters.min_width.is_set() ?
-        parameters.min_width.value().as_int() : 1;
-
-    auto const min_height = title_bar_height + (parameters.min_height.is_set() ?
-        parameters.min_height.value().as_int() : 1);
-
-    width = std::max(width, min_width);
-    height = std::max(height, min_height);
-
-    parameters.size = Size{width, height};
+    auto const width = parameters.size.width.as_int();
+    auto const height = parameters.size.height.as_int();
 
     bool positioned = false;
 
@@ -144,18 +133,15 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
     {
         if (auto const default_surface = session->default_surface())
         {
-            // "If an app does not suggest a position for a regular surface when opening
-            // it, and the app has at least one regular surface already open, and there
-            // is room to do so, Mir should place it one title bar’s height below and to
-            // the right (in LTR languages) or to the left (in RTL languages) of the app’s
-            // most recently active window, so that you can see the title bars of both."
             static Displacement const offset{title_bar_height, title_bar_height};
 
             parameters.top_left = default_surface->top_left() + offset;
 
-            // "If there is not room to do that, Mir should place it as if it was the app’s
-            // only regular surface."
-            positioned = active_display.contains(parameters.top_left + as_displacement(parameters.size));
+            geometry::Rectangle display_for_app{default_surface->top_left(), default_surface->size()};
+
+            display_layout->size_to_output(display_for_app);
+
+            positioned = display_for_app.overlaps(Rectangle{parameters.top_left, parameters.size});
         }
     }
 
@@ -199,14 +185,13 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
     if (!positioned)
     {
-        // "If an app does not suggest a position for its only regular surface when
-        // opening it, Mir should position it horizontally centered, and vertically
-        // such that the top margin is half the bottom margin. (Vertical centering
-        // would look too low, and would allow little room for cascading.)"
         auto centred = active_display.top_left + 0.5*(
             as_displacement(active_display.size) - as_displacement(parameters.size));
 
         parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
+
+        if (parameters.top_left.y < display_area.top_left.y)
+            parameters.top_left.y = display_area.top_left.y;
     }
 
     parameters.top_left.y = parameters.top_left.y + DeltaY{title_bar_height};
