@@ -19,7 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/interprocess_client_server_test.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/cross_process_sync.h"
 #include "mir_test_framework/process.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir_test/cross_process_action.h"
@@ -60,7 +60,7 @@ void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
 
 TEST_F(ServerDisconnect, is_detected_by_client)
 {
-    mtf::CrossProcessSync sync;
+    mt::CrossProcessSync sync;
 
     auto const client = new_client_process([&]
         {
@@ -155,7 +155,7 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
 TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
 {
     mt::CrossProcessAction connect;
-    mtf::CrossProcessSync create_surface_sync;
+    mt::CrossProcessSync create_surface_sync;
 
     auto const client = new_client_process([&]
         {

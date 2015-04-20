@@ -1,9 +1,9 @@
-add_library(
-  mir-test STATIC
+add_library(mir-test STATIC
 
   pipe.cpp
   display_config_matchers.cpp
   cross_process_action.cpp
+  cross_process_sync.cpp
   spin_wait.cpp
   signal.cpp
   fake_clock.cpp
@@ -14,5 +14,3 @@ add_library(
   fd_utils.cpp
   test_dispatchable.cpp
 )
-
-target_link_libraries(mir-test mirprotobuf)
