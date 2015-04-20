@@ -634,11 +634,11 @@ catch (std::exception const& ex)
 }
 
 
-bool mir_surface_spec_set_width_inc(MirSurfaceSpec* /*spec*/, unsigned /*width_inc*/)
+bool mir_surface_spec_set_width_inc(MirSurfaceSpec* spec, unsigned width_inc)
 try
 {
-    // TODO implement
-    return false;
+    spec->width_inc = width_inc;
+    return true;
 }
 catch (std::exception const& ex)
 {
@@ -646,11 +646,11 @@ catch (std::exception const& ex)
     return false;
 }
 
-bool mir_surface_spec_set_height_inc(MirSurfaceSpec* /*spec*/, unsigned /*width_inc*/)
+bool mir_surface_spec_set_height_inc(MirSurfaceSpec* spec, unsigned height_inc)
 try
 {
-    // TODO implement
-    return false;
+    spec->height_inc = height_inc;
+    return true;
 }
 catch (std::exception const& ex)
 {
@@ -658,11 +658,11 @@ catch (std::exception const& ex)
     return false;
 }
 
-bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* /*spec*/, unsigned /*x*/, unsigned /*y*/)
+bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned x, unsigned y)
 try
 {
-    // TODO implement
-    return false;
+    spec->min_aspect = {x, y};
+    return true;
 }
 catch (std::exception const& ex)
 {
@@ -670,11 +670,11 @@ catch (std::exception const& ex)
     return false;
 }
 
-bool mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* /*spec*/, unsigned /*x*/, unsigned /*y*/)
+bool mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned x, unsigned y)
 try
 {
-    // TODO implement
-    return false;
+    spec->max_aspect = {x, y};
+    return true;
 }
 catch (std::exception const& ex)
 {
