@@ -45,8 +45,6 @@ public:
                  void(mir::protobuf::wire::Invocation const&,
                       std::exception const&));
 
-    MOCK_METHOD1(header_receipt_failed,
-                 void(std::exception const&));
     MOCK_METHOD1(result_receipt_succeeded,
                  void(mir::protobuf::wire::Result const&));
     MOCK_METHOD1(result_receipt_failed,
@@ -69,8 +67,6 @@ public:
     MOCK_METHOD2(file_descriptors_received,
                  void(google::protobuf::Message const&,
                       std::vector<Fd> const&));
-
-    MOCK_METHOD1(connection_failure, void (std::exception const&));
 };
 
 
