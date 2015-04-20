@@ -246,6 +246,7 @@ MIRPLATFORM_7 {
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::operator*;
+    mir::graphics::egl_category*;
     mir::graphics::GLTexture::bind*;
     mir::graphics::GLTexture::?GLTexture*;
     mir::graphics::GLTexture::GLTexture*;
