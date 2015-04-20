@@ -19,6 +19,7 @@
 #include "display.h"
 #include "display_buffer.h"
 #include "mir/graphics/display_configuration_policy.h"
+#include "mir/graphics/egl_error.h"
 #include "mir/geometry/size.h"
 
 #include <boost/throw_exception.hpp>
@@ -45,7 +46,7 @@ mgo::detail::EGLDisplayHandle::EGLDisplayHandle(EGLNativeDisplayType native_disp
     : egl_display{eglGetDisplay(native_display)}
 {
     if (egl_display == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get EGL display"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get EGL display"));
 }
 
 mgo::detail::EGLDisplayHandle::EGLDisplayHandle(EGLDisplayHandle&& other)
@@ -59,7 +60,7 @@ void mgo::detail::EGLDisplayHandle::initialize()
     int major, minor;
 
     if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to initialize EGL"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialize EGL"));
 
     if ((major != 1) || (minor != 4))
         BOOST_THROW_EXCEPTION(std::runtime_error("EGL version 1.4 needed"));

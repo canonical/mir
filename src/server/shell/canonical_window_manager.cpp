@@ -278,7 +278,6 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
     if (modifications.width.is_set() || modifications.height.is_set())
     {
-        // TODO similar logic is needed in example window management policies
         auto new_size = surface->size();
 
         if (modifications.width.is_set())

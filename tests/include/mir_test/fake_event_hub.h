@@ -93,7 +93,7 @@ public:
     droidinput::status_t mapAxis(int32_t deviceId, int32_t scanCode,
             droidinput::AxisInfo* outAxisInfo) const override;
     void setExcludedDevices(const droidinput::Vector<droidinput::String8>& devices) override;
-    size_t getEvents(int timeoutMillis, droidinput::RawEvent* buffer, size_t bufferSize) override;
+    size_t getEvents(droidinput::RawEvent* buffer, size_t bufferSize) override;
     int32_t getScanCodeState(int32_t deviceId, int32_t scanCode) const override;
     int32_t getKeyCodeState(int32_t deviceId, int32_t keyCode) const override;
     int32_t getSwitchState(int32_t deviceId, int32_t sw) const override;
@@ -111,10 +111,13 @@ public:
     void vibrate(int32_t deviceId, std::chrono::nanoseconds duration) override;
     void cancelVibrate(int32_t deviceId) override;
     void requestReopenDevices() override;
+    void wakeIn(int32_t) override;
     void wake() override;
+    void wake(droidinput::RawEvent const&);
     void dump(droidinput::String8& dump) override;
     void monitor() override;
     void flush() override;
+    mir::Fd fd() override;
 
     void synthesize_builtin_keyboard_added();
     void synthesize_builtin_cursor_added();
@@ -164,7 +167,8 @@ public:
 private:
     const KeyInfo* getKey(const FakeDevice* device, int32_t scanCode, int32_t usageCode) const;
     bool throw_in_get_events = false;
-
+    mir::Fd trigger_fd;  // event fd used internally when events are added to the list, with that fd() could be used to
+                         // wake an epoll_wait
 };
 }
 }
