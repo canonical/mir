@@ -103,7 +103,24 @@ struct NestedInput : public mtf::HeadlessInProcessServer
     mir::test::WaitCondition all_events_received;
 };
 
-void make_and_wait_for_surface(std::string const& connect_string)
+struct ConnectionAndSurfaceDeleter
+{
+    ConnectionAndSurfaceDeleter(MirConnection* connection, MirSurface* surface)
+        : c(connection),
+          s(surface)
+    {
+    }
+
+    ~ConnectionAndSurfaceDeleter()
+    {
+        mir_surface_release_sync(s);
+        mir_connection_release(c);
+    }
+    MirConnection *c;
+    MirSurface *s;
+};
+
+std::shared_ptr<ConnectionAndSurfaceDeleter> make_and_wait_for_surface(std::string const& connect_string)
 {
     // Ensure the nested server posts a frame
     auto c = mir_connect_sync(connect_string.c_str(), __PRETTY_FUNCTION__);
@@ -117,7 +134,9 @@ void make_and_wait_for_surface(std::string const& connect_string)
                 && mir_surface_get_focus(surface) == mir_surface_focused;
         },
         std::chrono::seconds{10});
-    EXPECT_TRUE(became_exposed_and_focused);      
+    EXPECT_TRUE(became_exposed_and_focused);
+
+    return std::make_shared<ConnectionAndSurfaceDeleter>(c, surface);
 }
     
 }
@@ -125,7 +144,7 @@ void make_and_wait_for_surface(std::string const& connect_string)
 TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
 {
     NestedServerWithMockEventFilter nested_mir{new_connection()};
-    make_and_wait_for_surface(nested_mir.new_connection());
+    auto connection_deleter = make_and_wait_for_surface(nested_mir.new_connection());
 
     InSequence seq;
     EXPECT_CALL(*nested_mir.mock_event_filter, handle(_)).Times(AtLeast(1)).WillOnce(Return(true));
