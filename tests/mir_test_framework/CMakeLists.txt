@@ -26,7 +26,6 @@ set(
   command_line_server_configuration.cpp
   connected_client_headless_server.cpp
   connected_client_with_a_surface.cpp
-  cross_process_sync.cpp
   headless_in_process_server.cpp
   headless_test.cpp
   interprocess_client_server_test.cpp

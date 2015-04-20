@@ -16,14 +16,14 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/cross_process_sync.h"
 
 #include <boost/exception/info.hpp>
 #include <system_error>
 #include <poll.h>
 #include <unistd.h>
 
-namespace mtf = mir_test_framework;
+namespace mt = mir::test;
 
 namespace
 {
@@ -34,7 +34,7 @@ struct UnexpectedValueErrorInfoTag {};
 typedef boost::error_info<UnexpectedValueErrorInfoTag, unsigned int> errinfo_unexpected_value;
 }
 
-mtf::CrossProcessSync::CrossProcessSync() : counter(0)
+mt::CrossProcessSync::CrossProcessSync() : counter(0)
 {
     if (::pipe(fds) < 0)
     {
@@ -44,19 +44,19 @@ mtf::CrossProcessSync::CrossProcessSync() : counter(0)
     }
 }
 
-mtf::CrossProcessSync::CrossProcessSync(const CrossProcessSync& rhs) : counter(rhs.counter)
+mt::CrossProcessSync::CrossProcessSync(const CrossProcessSync& rhs) : counter(rhs.counter)
 {
     fds[0] = ::dup(rhs.fds[0]);
     fds[1] = ::dup(rhs.fds[1]);
 }
 
-mtf::CrossProcessSync::~CrossProcessSync() noexcept
+mt::CrossProcessSync::~CrossProcessSync() noexcept
 {
     ::close(fds[0]);
     ::close(fds[1]);
 }
 
-mtf::CrossProcessSync& mtf::CrossProcessSync::operator=(const mtf::CrossProcessSync& rhs)
+mt::CrossProcessSync& mt::CrossProcessSync::operator=(const mt::CrossProcessSync& rhs)
 {
     ::close(fds[0]);
     ::close(fds[1]);
@@ -68,12 +68,12 @@ mtf::CrossProcessSync& mtf::CrossProcessSync::operator=(const mtf::CrossProcessS
     return *this;
 }
 
-void mtf::CrossProcessSync::try_signal_ready_for()
+void mt::CrossProcessSync::try_signal_ready_for()
 {
     try_signal_ready_for(std::chrono::minutes(2));
 }
 
-void mtf::CrossProcessSync::try_signal_ready_for(const std::chrono::milliseconds& duration)
+void mt::CrossProcessSync::try_signal_ready_for(const std::chrono::milliseconds& duration)
 {
     static const short empty_revents = 0;
     pollfd poll_fd[1] = { { fds[write_fd], POLLOUT, empty_revents } };
@@ -99,12 +99,12 @@ void mtf::CrossProcessSync::try_signal_ready_for(const std::chrono::milliseconds
     }
 }
 
-unsigned int mtf::CrossProcessSync::wait_for_signal_ready_for()
+unsigned int mt::CrossProcessSync::wait_for_signal_ready_for()
 {
     return wait_for_signal_ready_for(std::chrono::minutes(2));
 }
 
-unsigned int mtf::CrossProcessSync::wait_for_signal_ready_for(const std::chrono::milliseconds& duration)
+unsigned int mt::CrossProcessSync::wait_for_signal_ready_for(const std::chrono::milliseconds& duration)
 {
     static const short empty_revents = 0;
     pollfd poll_fd[1] = { { fds[read_fd], POLLIN, empty_revents } };
@@ -141,12 +141,12 @@ unsigned int mtf::CrossProcessSync::wait_for_signal_ready_for(const std::chrono:
     return counter;
 }
 
-void mtf::CrossProcessSync::signal_ready()
+void mt::CrossProcessSync::signal_ready()
 {
     try_signal_ready_for(std::chrono::milliseconds{-1});
 }
 
-unsigned int mtf::CrossProcessSync::wait_for_signal_ready()
+unsigned int mt::CrossProcessSync::wait_for_signal_ready()
 {
     return wait_for_signal_ready_for(std::chrono::milliseconds{-1});
 }

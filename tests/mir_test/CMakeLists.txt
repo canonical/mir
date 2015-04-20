@@ -1,9 +1,8 @@
-add_library(
-  mir-test-static STATIC
-
+add_library(mir-test-static STATIC
   pipe.cpp
   display_config_matchers.cpp
   cross_process_action.cpp
+  cross_process_sync.cpp
   spin_wait.cpp
   signal.cpp
   fake_clock.cpp
