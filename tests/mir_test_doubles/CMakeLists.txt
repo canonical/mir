@@ -57,6 +57,8 @@ uses_android_input(mir-test-doubles-static)
 target_link_libraries(
   mir-test-doubles-static
 
+  mirserver
+
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GMOCK_LIBRARY}

@@ -126,9 +126,11 @@ add_library(
 target_link_libraries(
   mirplatformgraphicsstub
 
+  PRIVATE
   mir-test-static
   mir-test-framework-static
   mir-test-doubles-static
+  PUBLIC
   ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
 )
 

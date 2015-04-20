@@ -94,17 +94,15 @@ set(LINKS
   mircommon
   mirprotobuf
 
-  ${Boost_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
+  m
   ${XKBCOMMON_LIBRARIES}
 )
+
 target_link_libraries(mirclient
+  PRIVATE
   mirclientrpc-static
   mirclientlttng-static
-  ${LINKS}
-)
-
-target_link_libraries(mirclient-static
+  PUBLIC
   ${LINKS}
 )
 
@@ -131,11 +129,14 @@ add_library(mirclient-debug-extension SHARED
 )
 
 target_link_libraries(mirclient-debug-extension
+  PRIVATE
   mirclient-static  # Link statically; only copy what you need.
                     # This allows access to private symbols normally hidden
                     # in the shared version of libmirclient.
   mirclientrpc-static
   mirclientlttng-static
+  PUBLIC
+  ${LINKS}
 )
 
 set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
@@ -145,7 +146,7 @@ set_target_properties(
 
   PROPERTIES
   SOVERSION ${MIRCLIENT_DEBUG_EXTENSION_ABI}
-  LINK_FLAGS "-Wl,--version-script,${debug_symbol_map}"
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${debug_symbol_map}"
 )
 
 install(
