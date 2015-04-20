@@ -36,6 +36,7 @@
 #include <boost/throw_exception.hpp>
 #include <fcntl.h>
 
+#include "mir/geometry/dimensions.h"
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
@@ -239,6 +240,7 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
 
 void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
+    using namespace geometry;
     if (!new_configuration.valid())
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
 
@@ -249,17 +251,21 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
         if (output.current_format != config[output.id].current_format)
             BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
 
-        geom::PointOffset no_offset;
+        geom::PointOffset offset(
+            config[output.id].top_left.x - output.top_left.x,
+            config[output.id].top_left.y - output.top_left.y);
+
         config[output.id].orientation = output.orientation;
+        config[output.id].top_left = config[output.id].top_left + offset;
         if (config.primary().id == output.id)
         {
             power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
-            displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation, no_offset);
+            displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation, offset);
         }
         else if (config.external().connected)
         {
             power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
-            displays.configure(mga::DisplayName::external, output.power_mode, output.orientation, no_offset);
+            displays.configure(mga::DisplayName::external, output.power_mode, output.orientation, offset);
         }
     });
 }

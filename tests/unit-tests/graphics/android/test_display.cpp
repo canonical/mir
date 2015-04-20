@@ -809,7 +809,7 @@ TEST_F(Display, can_configure_positioning_of_dbs)
     using namespace testing;
     auto origin = geom::Point{0,0};
     geom::PointOffset offset{493,999};
-    auto new_location = origin + offset;
+    auto new_location = origin - offset;
 
     mga::Display display(
         stub_db_factory,
@@ -825,6 +825,6 @@ TEST_F(Display, can_configure_positioning_of_dbs)
 
     config = display.configuration();
     config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf) {
-        EXPECT_THAT(new_location, Eq(disp_conf.top_left));
+        EXPECT_THAT(disp_conf.top_left, Eq(new_location));
     });
 }
