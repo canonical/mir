@@ -79,10 +79,6 @@ add_dependencies(mirclientobjects mirprotobuf)
 add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
 add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
 
-target_link_libraries(mirclient
-  ${MIR_CLIENT_REFERENCES}
-)
-
 set_target_properties(mirclient
 
   PROPERTIES
@@ -94,7 +90,6 @@ set(LINKS
   mircommon
   mirprotobuf
 
-  m
   ${XKBCOMMON_LIBRARIES}
 )
 
@@ -103,6 +98,7 @@ target_link_libraries(mirclient
   mirclientrpc-static
   mirclientlttng-static
   PUBLIC
+  ${MIR_CLIENT_REFERENCES}
   ${LINKS}
 )
 
