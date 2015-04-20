@@ -256,9 +256,9 @@ TEST_F(Surface, take_input_focus)
     using namespace ::testing;
 
     mtd::MockInputTargeter targeter;
-    EXPECT_CALL(targeter, focus_changed(_)).Times(1);
+    EXPECT_CALL(targeter, set_focus(_)).Times(1);
 
-    surface->take_input_focus(mt::fake_shared(targeter));
+    targeter.set_focus(surface);
 }
 
 TEST_F(Surface, with_most_recent_buffer_do_uses_compositor_buffer)

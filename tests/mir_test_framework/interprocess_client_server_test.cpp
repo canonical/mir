@@ -22,6 +22,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 using namespace ::testing;
 
@@ -54,7 +55,7 @@ void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> cons
 {
     if (test_process_id != getpid()) return;
 
-    CrossProcessSync started_sync;
+    mt::CrossProcessSync started_sync;
 
     pid_t pid = fork();
 

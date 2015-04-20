@@ -20,6 +20,7 @@
 #include "drm_close_threadsafe.h"
 
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/egl_error.h"
 #include "mir/udev/wrapper.h"
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -31,6 +32,7 @@
 #include <xf86drm.h>
 #include <fcntl.h>
 
+namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace mgmh = mir::graphics::mesa::helpers;
 
@@ -317,7 +319,7 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr);
     if (egl_context == EGL_NO_CONTEXT)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL context"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 }
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
@@ -331,7 +333,7 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 
     egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr);
     if (egl_context == EGL_NO_CONTEXT)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL context"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 }
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
@@ -346,11 +348,11 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
 
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, surface_gbm, nullptr);
     if(egl_surface == EGL_NO_SURFACE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL window surface"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL window surface"));
 
     egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr);
     if (egl_context == EGL_NO_CONTEXT)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL context"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 }
 
 mgmh::EGLHelper::~EGLHelper() noexcept
@@ -408,14 +410,14 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
 
     egl_display = eglGetDisplay(static_cast<EGLNativeDisplayType>(gbm.device));
     if (egl_display == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get EGL display"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get EGL display"));
 
     if (initialize)
     {
         EGLint major, minor;
 
         if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to initialize EGL display"));
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialize EGL display"));
 
         if ((major != required_egl_version_major) || (minor != required_egl_version_minor))
         {
@@ -432,7 +434,7 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
     if (eglChooseConfig(egl_display, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
         num_egl_configs != 1)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to choose ARGB EGL config"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to choose ARGB EGL config"));
     }
 }
 
