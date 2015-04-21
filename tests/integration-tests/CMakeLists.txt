@@ -82,16 +82,17 @@ uses_android_input(mir_integration_tests)
 target_link_libraries(
   mir_integration_tests
 
-  mir-test
-  mir-test-framework
-  mir-test-doubles
+  mir-test-static
+  mir-test-framework-static
+  mir-test-doubles-static
   mirclient-debug-extension
   mirclient-static
   mirdraw
-  mirclientrpc
-  mirclientlttngstatic
+  mirclientrpc-static
+  mirclientlttng-static
 
-  3rd_party
+  android-input-static
+  xcursorloader-static
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -118,7 +119,7 @@ target_link_libraries(
 
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_integration_tests
-  mirsharedandroid
+  mirsharedandroid-static
   ${ANDROID_PROPERTIES_LDFLAGS}
 )
 endif()

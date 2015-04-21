@@ -23,8 +23,12 @@ namespace geom = mir::geometry;
 
 namespace
 {
-int const primary_id{0};
-int const external_id{1};
+enum DisplayIds
+{
+    primary_id,
+    external_id,
+    max_displays
+};
 }
 
 mga::DisplayConfiguration::DisplayConfiguration(
@@ -36,7 +40,7 @@ mga::DisplayConfiguration::DisplayConfiguration(
         {std::move(primary_config),
         std::move(external_config)}
     },
-    card{mg::DisplayConfigurationCardId{0}, 1}
+    card{mg::DisplayConfigurationCardId{0}, max_displays}
 {
     primary().power_mode = primary_mode;
     external().power_mode = external_mode;

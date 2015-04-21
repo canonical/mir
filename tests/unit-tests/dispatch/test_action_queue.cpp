@@ -21,6 +21,7 @@
 #include "mir_test/fd_utils.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mt = mir::test;
 namespace md = mir::dispatch;
