@@ -394,3 +394,53 @@ TEST_F(SurfaceModifications, surface_spec_with_min_height_and_height_inc_is_resp
 
     EXPECT_TRUE((actual.height.as_int() - min_height) % height_inc == 0);
 }
+
+TEST_F(SurfaceModifications, surface_spec_with_min_aspect_ratio_is_respected)
+{
+    auto const aspect_x = 11;
+    auto const aspect_y = 5;
+
+    apply_changes([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_min_aspect_ratio(spec, aspect_x, aspect_y);
+        });
+
+    ensure_server_has_processed_setup();
+
+    auto const shell_surface = this->shell_surface.lock();
+    auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
+    auto const top_right = shell_surface->input_bounds().top_right() - Displacement{1,-1};
+
+    Size actual;
+    EXPECT_CALL(surface_observer, resized_to(_)).WillOnce(SaveArg<0>(&actual));
+
+    generate_alt_click_at(bottom_right);
+    generate_alt_move_to(top_right);
+
+    EXPECT_THAT(actual.width.as_int()*aspect_y, Le(actual.height.as_int()*aspect_x));
+}
+
+TEST_F(SurfaceModifications, surface_spec_with_max_aspect_ratio_is_respected)
+{
+    auto const aspect_x = 5;
+    auto const aspect_y = 11;
+
+    apply_changes([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_max_aspect_ratio(spec, aspect_x, aspect_y);
+        });
+
+    ensure_server_has_processed_setup();
+
+    auto const shell_surface = this->shell_surface.lock();
+    auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
+    auto const bottom_left = shell_surface->input_bounds().bottom_left() + Displacement{1,-1};
+
+    Size actual;
+    EXPECT_CALL(surface_observer, resized_to(_)).WillOnce(SaveArg<0>(&actual));
+
+    generate_alt_click_at(bottom_right);
+    generate_alt_move_to(bottom_left);
+
+    EXPECT_THAT(actual.width.as_int()*aspect_y, Ge(actual.height.as_int()*aspect_x));
+}

@@ -651,6 +651,44 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     Point new_pos = requested_pos;
     Size new_size = requested_size;
 
+    if (surface_info.min_aspect.is_set())
+    {
+        auto const ar = surface_info.min_aspect.value();
+
+        auto const error = new_size.width.as_int()*(long)ar.y - new_size.height.as_int()*(long)ar.x;
+
+        if (error > 0)
+        {
+            if (new_size.height.as_int() > new_size.width.as_int())
+            {
+                new_size.width = new_size.width - DeltaX((error+(ar.y-1))/ar.y);
+            }
+            else
+            {
+                new_size.height = new_size.height + DeltaY((error+(ar.x-1))/ar.x);
+            }
+        }
+    }
+
+    if (surface_info.max_aspect.is_set())
+    {
+        auto const ar = surface_info.max_aspect.value();
+
+        auto const error = new_size.height.as_int()*(long)ar.x - new_size.width.as_int()*(long)ar.y;
+
+        if (error > 0)
+        {
+            if (new_size.height.as_int() > new_size.width.as_int())
+            {
+                new_size.width = new_size.width + DeltaX((error+(ar.y-1))/ar.y);
+            }
+            else
+            {
+                new_size.height = new_size.height - DeltaY((error+(ar.x-1))/ar.x);
+            }
+        }
+    }
+
     if (min_width > new_size.width)
         new_size.width = min_width;
 
