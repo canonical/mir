@@ -336,7 +336,7 @@ private:
     typename SessionTo<SessionInfo>::type session_info;
     typename SurfaceTo<SurfaceInfo>::type surface_info;
     geometry::Rectangles displays;
-    geometry::Point cursor{-1, -1};
+    geometry::Point cursor;
 };
 }
 }
