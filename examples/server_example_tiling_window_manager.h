@@ -38,7 +38,8 @@ struct TilingSurfaceInfo
 {
     TilingSurfaceInfo(
         std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface);
+        std::shared_ptr<scene::Surface> const& surface,
+        scene::SurfaceCreationParameters const& params);
 
     std::weak_ptr<scene::Session> session;
     MirSurfaceState state;

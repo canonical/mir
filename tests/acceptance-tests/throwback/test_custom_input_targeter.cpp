@@ -22,7 +22,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/cross_process_sync.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_matchers.h"
 
@@ -85,7 +85,7 @@ struct CustomInputTargeterServerConfig : mtf::InputTestingServerConfiguration
     virtual void input_targeter_expectations() {}
 
     mir::CachedPtr<::testing::NiceMock<CustomMockInputTargeter>> targeter;
-    mtf::CrossProcessSync dispatching_done;
+    mt::CrossProcessSync dispatching_done;
     bool expectations_set{false};
 };
 
