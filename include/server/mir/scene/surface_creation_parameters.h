@@ -28,6 +28,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/input/input_reception_mode.h"
 #include "mir/optional_value.h"
+#include "mir/shell/surface_specification.h"
 
 #include <memory>
 #include <string>
@@ -90,16 +91,14 @@ struct SurfaceCreationParameters
 
     std::weak_ptr<Surface> parent;
 
-    struct AspectRation { unsigned x; unsigned y; };
-
     optional_value<geometry::Width> min_width;
     optional_value<geometry::Height> min_height;
     optional_value<geometry::Width> max_width;
     optional_value<geometry::Height> max_height;
     mir::optional_value<geometry::DeltaX> width_inc;
     mir::optional_value<geometry::DeltaY> height_inc;
-    mir::optional_value<AspectRation> min_aspect;
-    mir::optional_value<AspectRation> max_aspect;
+    mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
+    mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
