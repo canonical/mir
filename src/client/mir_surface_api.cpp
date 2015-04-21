@@ -224,11 +224,6 @@ bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrienta
     return true;
 }
 
-bool mir_surface_spec_set_id(MirSurfaceSpec* /*spec*/, MirSurfaceId* /*id*/)
-{
-    return false;
-}
-
 void mir_surface_spec_release(MirSurfaceSpec* spec)
 {
     delete spec;
@@ -673,24 +668,9 @@ MirSurfaceId* mir_surface_request_persistent_id_sync(MirSurface* surface)
     return result;
 }
 
-MirSurfaceId* mir_surface_id_from_string(char const* /*id_string*/)
-{
-    return nullptr;
-}
-
 bool mir_surface_id_is_valid(MirSurfaceId* /*id*/)
 {
     return false;
-}
-
-bool mir_surface_ids_equal(MirSurfaceId* /*first*/, MirSurfaceId* /*second*/)
-{
-    return false;
-}
-
-char const* mir_surface_id_as_string(MirSurfaceId* /*id*/)
-{
-    return nullptr;
 }
 
 void mir_surface_id_release(MirSurfaceId* /*id*/)
