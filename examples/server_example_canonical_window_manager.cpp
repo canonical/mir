@@ -67,7 +67,11 @@ me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
     min_width{params.min_width},
     min_height{params.min_height},
     max_width{params.max_width},
-    max_height{params.max_height}
+    max_height{params.max_height},
+    width_inc{params.width_inc},
+    height_inc{params.height_inc},
+    min_aspect{params.min_aspect},
+    max_aspect{params.max_aspect}
 {
 }
 
@@ -323,20 +327,24 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 {
     auto& surface_info = tools->info_for(surface);
 
+    #define COPY_IF_SET(field)\
+        if (modifications.field.is_set())\
+        surface_info.field = modifications.field
+
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(width_inc);
+    COPY_IF_SET(height_inc);
+    COPY_IF_SET(min_aspect);
+    COPY_IF_SET(max_aspect);
+
+    #undef COPY_IF_SET
+
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
-
-    if (modifications.min_width.is_set())
-        surface_info.min_width = modifications.min_width;
-
-    if (modifications.min_height.is_set())
-        surface_info.min_height = modifications.min_height;
-
-    if (modifications.max_width.is_set())
-        surface_info.max_width = modifications.max_width;
-
-    if (modifications.max_height.is_set())
-        surface_info.max_height = modifications.max_height;
 
     if (modifications.width.is_set() || modifications.height.is_set())
     {

@@ -54,6 +54,10 @@ struct CanonicalSurfaceInfoCopy
     optional_value<geometry::Height> min_height;
     optional_value<geometry::Width> max_width;
     optional_value<geometry::Height> max_height;
+    mir::optional_value<geometry::DeltaX> width_inc;
+    mir::optional_value<geometry::DeltaY> height_inc;
+    mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
+    mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
 };
 
 // standard window management algorithm:
