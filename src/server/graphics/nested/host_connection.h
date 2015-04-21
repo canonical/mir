@@ -32,6 +32,8 @@ namespace mir
 {
 namespace graphics
 {
+class CursorImage;
+ 
 namespace nested
 {
 class HostSurface;
@@ -45,6 +47,9 @@ public:
     virtual void set_display_config_change_callback(std::function<void()> const& cb) = 0;
     virtual void apply_display_config(MirDisplayConfiguration&) = 0;
     virtual std::shared_ptr<HostSurface> create_surface(MirSurfaceParameters const&) = 0;
+
+    virtual void set_cursor_image(CursorImage const& image) = 0;
+    virtual void hide_cursor() = 0;
 
 protected:
     HostConnection() = default;

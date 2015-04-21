@@ -55,7 +55,7 @@ public:
                   size,
                   mir_pixel_format_abgr_8888,
                   graphics::BufferUsage::hardware},
-             geometry::Stride{}}
+                  geometry::Stride{}}
 
     {
     }
@@ -66,7 +66,7 @@ public:
     }
 
     StubBuffer(graphics::BufferProperties const& properties)
-        : StubBuffer{create_native_buffer(), properties, geometry::Stride{}}
+        : StubBuffer{create_native_buffer(), properties, geometry::Stride{properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)}}
     {
     }
 
