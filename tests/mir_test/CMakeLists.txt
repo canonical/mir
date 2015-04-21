@@ -13,6 +13,7 @@ add_library(
   validity_matchers.cpp
   fd_utils.cpp
   test_dispatchable.cpp
+  event_matchers.cpp
 )
 
 target_link_libraries(mir-test mirprotobuf)
