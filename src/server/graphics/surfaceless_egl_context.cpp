@@ -18,6 +18,7 @@
 
 #include "mir/graphics/surfaceless_egl_context.h"
 #include "mir/graphics/gl_extensions_base.h"
+#include "mir/graphics/egl_error.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -99,7 +100,7 @@ EGLConfig choose_config(EGLDisplay egl_display, EGLint const* attribs, bool surf
     if (eglChooseConfig(egl_display, attribs, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
         num_egl_configs != 1)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to choose EGL config"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to choose EGL config"));
     }
 
     return egl_config;
@@ -186,7 +187,7 @@ void mg::SurfacelessEGLContext::make_current() const
                        egl_context) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(
-            std::runtime_error("could not make context current\n"));
+            mg::egl_error("could not make context current"));
     }
 }
 
