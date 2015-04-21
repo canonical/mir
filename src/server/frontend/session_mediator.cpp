@@ -161,23 +161,26 @@ void mf::SessionMediator::advance_buffer(
     std::unique_lock<std::mutex>& lock,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto const tid = std::this_thread::get_id();
+    auto const tid = std::make_shared<std::thread::id>(std::this_thread::get_id());
+    auto const weak_tid = std::weak_ptr<std::thread::id>{tid};
 
     stream.swap_buffers(
         old_buffer,
         // Note: We assume that the lambda will be executed within swap_buffers
         // (in which case the lock reference is valid) or in a different thread
         // altogether (in which case the dangling reference is not accessed)
-        [this, tid, &lock, stream_id, complete](mg::Buffer* new_buffer)
+        [this, weak_tid, &lock, stream_id, complete](mg::Buffer* new_buffer)
         {
-            if (tid == std::this_thread::get_id())
-                lock.unlock();
+            if (auto const tid = weak_tid.lock())
+            {
+                if (*tid == std::this_thread::get_id())
+                    lock.unlock();
+            }
 
             if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
                 complete(new_buffer, mg::BufferIpcMsgType::full_msg);
-
         });
 }
 
