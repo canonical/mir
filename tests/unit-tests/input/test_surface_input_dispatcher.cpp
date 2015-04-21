@@ -363,8 +363,6 @@ TEST_F(SurfaceInputDispatcher, key_input_target_may_dissapear_and_things_remain_
     EXPECT_TRUE(dispatcher.dispatch(*another_ev));
 }
 
-// TODO: Test stopping and starting
-
 TEST_F(SurfaceInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
 {
     using namespace ::testing;

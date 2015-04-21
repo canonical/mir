@@ -28,6 +28,7 @@ mi::EventFilterChainDispatcher::EventFilterChainDispatcher(
 {
 }
 
+// TODO: It probably makes sense to provide keymapped events.
 bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
 {
     auto it = filters.begin();

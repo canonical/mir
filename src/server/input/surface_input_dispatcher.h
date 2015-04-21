@@ -92,7 +92,6 @@ private:
     // Look in to homognizing index on KeyInputState and PointerInputState (wrt to device id)
     struct PointerInputState
     {
-        // TODO: Weak? Raw?
         std::shared_ptr<input::Surface> current_target;
         std::shared_ptr<input::Surface> gesture_owner;
     };
@@ -112,6 +111,7 @@ private:
 
     std::mutex dispatcher_mutex;
     std::weak_ptr<input::Surface> focus_surface;
+    bool started;
 };
 
 }

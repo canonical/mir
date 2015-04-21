@@ -127,6 +127,9 @@ void mi::SurfaceInputDispatcher::device_reset(int32_t reset_device_id, std::chro
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
 
+    if (!started)
+        return false;
+
     auto key_it = focus_surface_key_state.depressed_scancodes.find(reset_device_id);
     if (key_it != focus_surface_key_state.depressed_scancodes.end())
         focus_surface_key_state.depressed_scancodes.erase(key_it);
@@ -155,6 +158,10 @@ inline MirEvent copy_to_repeat_ev(MirKeyboardEvent const* kev)
 bool mi::SurfaceInputDispatcher::dispatch_key(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
+
+    if (!started)
+        return false;
+    
     auto strong_focus = focus_surface.lock();
     if (!strong_focus)
         return false;
@@ -163,7 +170,6 @@ bool mi::SurfaceInputDispatcher::dispatch_key(MirInputDeviceId id, MirKeyboardEv
     MirKeyboardEvent const* to_deliver = kev;
     if (!focus_surface_key_state.handle_event(id, kev))
     {
-        // TODO: Clean up casts
         auto rep_ev = copy_to_repeat_ev(kev);
         if (focus_surface_key_state.handle_event(id, (MirKeyboardEvent const*)&rep_ev))
             to_deliver = reinterpret_cast<MirKeyboardEvent const*>(&rep_ev);
@@ -229,7 +235,6 @@ void mi::SurfaceInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& sur
     MirEvent to_deliver;
     memcpy(&to_deliver, ev, sizeof(MirEvent));
     
-    // TODO: A little weird to use deprecated API
     if (ev->type == mir_event_type_motion)
     {
         auto sx = surface->input_bounds().top_left.x.as_int();
@@ -413,10 +418,18 @@ bool mi::SurfaceInputDispatcher::dispatch(MirEvent const& event)
 
 void mi::SurfaceInputDispatcher::start()
 {
+    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    if (started)
+        BOOST_THROW_EXCEPTION(std::logic_error("Starting but already started"));
+    started = true;
 }
 
 void mi::SurfaceInputDispatcher::stop()
 {
+    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    if (!started)
+        BOOST_THROW_EXCEPTION(std::logic_error("Stopping but already stopped"));
+    started = false;
 }
 
 void mi::SurfaceInputDispatcher::set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<mi::Surface> const& target)
