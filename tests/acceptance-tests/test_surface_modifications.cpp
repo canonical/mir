@@ -299,7 +299,7 @@ TEST_F(SurfaceModifications, surface_spec_max_height_is_respected)
     generate_alt_move_to(bottom_right + DeltaY(max_height));
 }
 
-TEST_F(SurfaceModifications, DISABLED_surface_spec_width_inc_is_respected)
+TEST_F(SurfaceModifications, surface_spec_width_inc_is_respected)
 {
     auto const width_inc = 3;
 
@@ -322,7 +322,7 @@ TEST_F(SurfaceModifications, DISABLED_surface_spec_width_inc_is_respected)
     EXPECT_TRUE(actual.width.as_int() % width_inc == 0);
 }
 
-TEST_F(SurfaceModifications, DISABLED_surface_spec_with_min_width_and_width_inc_is_respected)
+TEST_F(SurfaceModifications, surface_spec_with_min_width_and_width_inc_is_respected)
 {
     auto const width_inc = 3;
     auto const min_width = 1;
