@@ -136,8 +136,8 @@ private:
     void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
     bool constrained_resize(
         std::shared_ptr<scene::Surface> const& surface,
-        geometry::Point new_pos,
-        geometry::Size new_size,
+        geometry::Point const& requested_pos,
+        geometry::Size const& requested_size,
         const bool left_resize,
         const bool top_resize,
         geometry::Rectangle const& bounds);
