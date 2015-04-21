@@ -138,3 +138,11 @@ void PrintTo(MirEvent const& event, std::ostream *os)
     }
 }
 
+void PrintTo(MirEvent const* event, std::ostream *os)
+{
+    if (event)
+        PrintTo(*event, os);
+    else
+        *os << "nullptr";
+}
+
