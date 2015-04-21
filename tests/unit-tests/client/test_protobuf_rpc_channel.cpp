@@ -106,6 +106,7 @@ public:
     }
 
     MOCK_METHOD1(register_observer, void(std::shared_ptr<Observer> const&));
+    MOCK_METHOD1(unregister_observer, void(std::shared_ptr<Observer> const&));
     MOCK_METHOD2(receive_data, void(void*, size_t));
     MOCK_METHOD3(receive_data, void(void*, size_t, std::vector<mir::Fd>&));
     MOCK_METHOD2(send_message, void(std::vector<uint8_t> const&, std::vector<mir::Fd> const&));

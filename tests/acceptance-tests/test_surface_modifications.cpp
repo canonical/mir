@@ -27,6 +27,9 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/signal.h"
 
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 namespace mev = mir::events;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
@@ -157,15 +160,6 @@ MATCHER_P(HeightEq, value, "")
     return Height(value) == arg.height;
 }
 
-}
-
-TEST_F(SurfaceModifications, rename_is_notified)
-{
-    auto const new_title = __PRETTY_FUNCTION__;
-
-    EXPECT_CALL(surface_observer, renamed(StrEq(new_title)));
-
-    mir_surface_set_title(surface, new_title);
 }
 
 TEST_F(SurfaceModifications, surface_spec_name_is_notified)
