@@ -671,6 +671,14 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
             new_size.width = min_width + DeltaX{inc*(((2L*width + inc)/2)/inc)};
     }
 
+    if (surface_info.height_inc.is_set())
+    {
+        auto const height = new_size.height.as_int() - min_height.as_int();
+        auto inc = surface_info.height_inc.value().as_int();
+        if (height % inc)
+            new_size.height = min_height + DeltaY{inc*(((2L*height + inc)/2)/inc)};
+    }
+
     if (left_resize)
         new_pos.x += new_size.width - requested_size.width;
 
