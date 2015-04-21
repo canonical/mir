@@ -124,6 +124,10 @@ typedef void (*mir_display_config_callback)(
 typedef void (*mir_client_fd_callback)(
     MirPromptSession *prompt_session, size_t count, int const* fds, void* context);
 
+
+typedef void (*mir_surface_id_callback)(
+    MirSurface* surface, MirSurfaceId* id, void* context);
+
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
  * surface can be used for OpenGL accelerated rendering. A "software" surface

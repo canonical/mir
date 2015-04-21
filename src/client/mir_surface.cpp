@@ -221,6 +221,41 @@ bool MirSurface::is_valid(MirSurface* query)
     return false;
 }
 
+void MirSurface::acquired_persistent_id(mir_surface_id_callback callback, void* context)
+{
+    if (!persistent_id.has_error())
+    {
+        callback(this, new MirSurfaceId{persistent_id.value()}, context);
+    }
+    else
+    {
+        callback(this, nullptr, context);
+    }
+}
+
+MirWaitHandle* MirSurface::request_persistent_id(mir_surface_id_callback callback, void* context)
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+
+    if (persistent_id.has_value())
+    {
+        callback(this, new MirSurfaceId{persistent_id.value()}, context);
+        return nullptr;
+    }
+
+    persistent_id_wait_handle.expect_result();
+    try
+    {
+        server->request_persistent_surface_id(0, &surface.id(), &persistent_id, gp::NewCallback(this, &MirSurface::acquired_persistent_id, callback, context));
+    }
+    catch (std::exception const& ex)
+    {
+        surface.set_error(std::string{"Error invoking create surface: "} +
+                          boost::diagnostic_information(ex));
+    }
+    return &persistent_id_wait_handle;
+}
+
 MirWaitHandle* MirSurface::get_create_wait_handle()
 {
     return &create_wait_handle;

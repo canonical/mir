@@ -655,9 +655,22 @@ void mir_surface_set_title(MirSurface* surface, char const* name)
     mir_surface_spec_release(spec);
 }
 
-MirSurfaceId* mir_surface_get_persistent_id(MirSurface* /*surface*/)
+MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
 {
-    return nullptr;
+    mir::require(mir_surface_is_valid(surface));
+
+    return surface->request_persistent_id(callback, context);
+}
+
+MirSurfaceId* mir_surface_request_persistent_id_sync(MirSurface* surface)
+{
+    mir::require(mir_surface_is_valid(surface));
+
+    MirSurfaceId* result = nullptr;
+    mir_wait_for(mir_surface_request_persistent_id(surface,
+                                                   reinterpret_cast<mir_surface_id_callback>(assign_result),
+                                                   &result));
+    return result;
 }
 
 MirSurfaceId* mir_surface_id_from_string(char const* /*id_string*/)

@@ -995,7 +995,7 @@ TEST_F(ClientLibrary, can_set_previous_surface_unique_id)
 
     ASSERT_THAT(surface, IsValid());
 
-    auto surface_id = mir_surface_get_persistent_id(surface);
+    auto surface_id = mir_surface_request_persistent_id_sync(surface);
     EXPECT_TRUE(mir_surface_id_is_valid(surface_id));
 
     mir_surface_release_sync(surface);
@@ -1005,7 +1005,7 @@ TEST_F(ClientLibrary, can_set_previous_surface_unique_id)
     surface = mir_surface_create_sync(surface_spec);
     mir_surface_spec_release(surface_spec);
 
-    auto reincarnated_surface_id = mir_surface_get_persistent_id(surface);
+    auto reincarnated_surface_id = mir_surface_request_persistent_id_sync(surface);
 
     EXPECT_TRUE(mir_surface_ids_equal(surface_id, reincarnated_surface_id));
 
@@ -1027,7 +1027,7 @@ TEST_F(ClientLibrary, previous_surface_id_is_ignored_if_surface_still_exists)
 
     ASSERT_THAT(surface, IsValid());
 
-    auto surface_id = mir_surface_get_persistent_id(surface);
+    auto surface_id = mir_surface_request_persistent_id_sync(surface);
     EXPECT_TRUE(mir_surface_id_is_valid(surface_id));
 
     mir_surface_spec_set_id(surface_spec, surface_id);
@@ -1035,7 +1035,7 @@ TEST_F(ClientLibrary, previous_surface_id_is_ignored_if_surface_still_exists)
     auto surface_two = mir_surface_create_sync(surface_spec);
     mir_surface_spec_release(surface_spec);
 
-    auto surface_id_two = mir_surface_get_persistent_id(surface_two);
+    auto surface_id_two = mir_surface_request_persistent_id_sync(surface_two);
 
     EXPECT_FALSE(mir_surface_ids_equal(surface_id, surface_id_two));
 
@@ -1059,7 +1059,7 @@ TEST_F(ClientLibrary, can_roundtrip_surface_id_to_string)
 
     ASSERT_THAT(surface, IsValid());
 
-    auto surface_id = mir_surface_get_persistent_id(surface);
+    auto surface_id = mir_surface_request_persistent_id_sync(surface);
     EXPECT_TRUE(mir_surface_id_is_valid(surface_id));
 
     mir_surface_release_sync(surface);
