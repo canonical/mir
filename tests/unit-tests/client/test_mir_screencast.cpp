@@ -27,9 +27,6 @@
 #include "mir_test_doubles/null_client_buffer.h"
 #include "mir_test/fake_shared.h"
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
 #include <thread>
 
 namespace mcl = mir::client;

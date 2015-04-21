@@ -111,6 +111,13 @@ public:
     virtual void register_observer(std::shared_ptr<Observer> const& observer) = 0;
 
     /**
+     * \brief Unregister a previously-registered observer.
+     * \param [in] observer. This object must be managed by one of the shared_ptrs previously
+     *             registered via register_observer().
+     */
+    virtual void unregister_observer(std::shared_ptr<Observer> const& observer) = 0;
+
+    /**
      * \brief Read data from the server
      * \param [out] buffer          Buffer to read into
      * \param [in]  bytes_requested Number of bytes to read

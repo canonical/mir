@@ -51,9 +51,6 @@
 #include "mir_test_doubles/mock_client_buffer_stream_factory.h"
 #include "mir_test_doubles/mock_client_buffer_stream.h"
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
 #include <cstring>
 #include <map>
 #include <atomic>
