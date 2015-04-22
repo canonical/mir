@@ -128,7 +128,7 @@ void mi::SurfaceInputDispatcher::device_reset(int32_t reset_device_id, std::chro
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
 
     if (!started)
-        return false;
+        return;
 
     auto key_it = focus_surface_key_state.depressed_scancodes.find(reset_device_id);
     if (key_it != focus_surface_key_state.depressed_scancodes.end())
@@ -419,16 +419,16 @@ bool mi::SurfaceInputDispatcher::dispatch(MirEvent const& event)
 void mi::SurfaceInputDispatcher::start()
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
-    if (started)
-        BOOST_THROW_EXCEPTION(std::logic_error("Starting but already started"));
+    //    if (started)
+    //        BOOST_THROW_EXCEPTION(std::logic_error("Starting but already started"));
     started = true;
 }
 
 void mi::SurfaceInputDispatcher::stop()
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
-    if (!started)
-        BOOST_THROW_EXCEPTION(std::logic_error("Stopping but already stopped"));
+    //    if (!started)
+    //        BOOST_THROW_EXCEPTION(std::logic_error("Stopping but already stopped"));
     started = false;
 }
 

@@ -7,8 +7,10 @@ set(
 
   default_input_manager.cpp
   default_input_device_hub.cpp
+
   surface_input_dispatcher.cpp
   event_filter_chain_dispatcher.cpp
+  key_repeat_dispatcher.cpp
 
   null_input_channel_factory.cpp
   null_input_dispatcher.cpp

@@ -33,6 +33,7 @@
 #include "android/input_translator.h"
 #include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
+#include "key_repeat_dispatcher.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
@@ -233,7 +234,7 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
                 return std::make_shared<mi::NullInputDispatcher>();
             else
             {
-                return the_event_filter_chain_dispatcher();
+                return std::make_shared<mi::KeyRepeatDispatcher>(the_event_filter_chain_dispatcher(), the_main_loop(), std::chrono::milliseconds(5));
             }
         });
 }
