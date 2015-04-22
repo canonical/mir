@@ -51,7 +51,7 @@ struct StubClientBuffer : client::ClientBuffer
             size().height,
             stride(),
             pixel_format(),
-            nullptr};
+            std::shared_ptr<char>(new char[stride().as_int()*size().height.as_int()], [](char arr[]) {delete[] arr;})};
 
         return std::shared_ptr<client::MemoryRegion>(raw);
     }

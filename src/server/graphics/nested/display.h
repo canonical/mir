@@ -33,7 +33,11 @@
 
 namespace mir
 {
-namespace input { class InputDispatcher; }
+namespace input
+{
+class InputDispatcher;
+class CursorListener;
+}
 namespace geometry
 {
 struct Rectangle;
@@ -111,7 +115,8 @@ public:
         std::shared_ptr<input::InputDispatcher> const& dispatcher,
         std::shared_ptr<DisplayReport> const& display_report,
         std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy,
-        std::shared_ptr<GLConfig> const& gl_config);
+        std::shared_ptr<GLConfig> const& gl_config,
+        std::shared_ptr<input::CursorListener> const& cursor_listener);
 
     ~Display() noexcept;
 
@@ -132,7 +137,7 @@ public:
     void pause() override;
     void resume() override;
 
-    std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
+    std::shared_ptr<graphics::Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
@@ -141,6 +146,7 @@ private:
     std::shared_ptr<input::InputDispatcher> const dispatcher;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;
+    std::shared_ptr<input::CursorListener> const cursor_listener;
 
     std::mutex outputs_mutex;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::DisplaySyncGroup>> outputs;

@@ -27,6 +27,10 @@
 
 namespace mir
 {
+namespace input
+{
+class CursorListener;
+}
 namespace graphics
 {
 namespace nested
@@ -44,6 +48,7 @@ public:
         std::shared_ptr<HostSurface> const& host_surface,
         geometry::Rectangle const& area,
         std::shared_ptr<input::InputDispatcher> const& input_dispatcher,
+        std::shared_ptr<input::CursorListener> const& cursor,
         MirPixelFormat preferred_format);
 
     ~DisplayBuffer() noexcept;
@@ -67,6 +72,7 @@ private:
     EGLContextStore const egl_context;
     geometry::Rectangle const area;
     std::shared_ptr<input::InputDispatcher> const dispatcher;
+    std::shared_ptr<input::CursorListener> const cursor_listener;
     EGLSurfaceHandle const egl_surface;
 
     static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
