@@ -144,12 +144,12 @@ set_target_properties(
 
 add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/udev_recordings ${CMAKE_BINARY_DIR}/bin/udev_recordings
+  ${CMAKE_CURRENT_SOURCE_DIR}/udev_recordings ${RUNTIME_OUTPUT_DIRECTORY}/udev_recordings
   COMMENT "Copying umockdev recordings to build dir..."
 )
 add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/testing-cursor-theme ${CMAKE_BINARY_DIR}/bin/testing-cursor-theme
+  ${CMAKE_CURRENT_SOURCE_DIR}/testing-cursor-theme ${RUNTIME_OUTPUT_DIRECTORY}/testing-cursor-theme
   COMMENT "Copying testing cursor themes to build dir..."
 )
 

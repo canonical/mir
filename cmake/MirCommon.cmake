@@ -190,7 +190,7 @@ function (mir_add_wrapped_executable TARGET)
   if ("${modifier}" STREQUAL "NOINSTALL")
     list(REMOVE_AT ARGN 0)
   else()
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/${REAL_EXECUTABLE}
+    install(PROGRAMS ${RUNTIME_OUTPUT_DIRECTORY}/${REAL_EXECUTABLE}
       DESTINATION ${CMAKE_INSTALL_BINDIR}
       RENAME ${TARGET}
     )
@@ -203,7 +203,7 @@ function (mir_add_wrapped_executable TARGET)
   )
 
   add_custom_target(${TARGET}-wrapped
-    ln -fs wrapper ${CMAKE_BINARY_DIR}/bin/${TARGET}
+    ln -fs wrapper ${RUNTIME_OUTPUT_DIRECTORY}/${TARGET}
   )
   add_dependencies(${TARGET} ${TARGET}-wrapped)
 endfunction()
