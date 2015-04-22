@@ -419,7 +419,7 @@ bool mi::SurfaceInputDispatcher::dispatch(MirEvent const& event)
 void mi::SurfaceInputDispatcher::start()
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
-k
+
     started = true;
 }
 
