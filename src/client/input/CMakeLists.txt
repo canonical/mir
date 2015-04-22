@@ -29,10 +29,10 @@ add_library(mirsharedinput OBJECT
   ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
 )
 
-# As we put android-input in MIR_CLIENT_REFERENCES it ends up linked into
+# As we put android-input-static in MIR_CLIENT_REFERENCES it ends up linked into
 # libmirserver. But linking into libmircommon fails as it in turn needs
 # mir::mir::terminate_with_current_exception() from mirserver
-list(APPEND MIR_CLIENT_REFERENCES android-input)
+list(APPEND MIR_CLIENT_REFERENCES android-input-static)
 
 list(APPEND MIR_CLIENT_REFERENCES ${XKBCOMMON_LIBRARIES})
 

@@ -364,13 +364,25 @@ mir::DefaultServerConfiguration::the_input_platform()
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
+    // As the input configuration is structured now, if there is no
+    // InputReader (as in the nested case) there will be nothing to instate
+    // and keep alive the cursor and its controller.
+    // We use the CursorControllingInputManager for this purpose.
+    struct CursorControllingInputManager : public mi::NullInputManager
+    {
+        CursorControllingInputManager(
+            std::shared_ptr<mi::CursorListener> const& cursor_listener)
+            : cursor_listener(cursor_listener)
+        {
+        }
+        std::shared_ptr<mi::CursorListener> const cursor_listener;
+    };
     return input_manager(
         [this]() -> std::shared_ptr<mi::InputManager>
         {
             auto const options = the_options();
-            bool input_reading_required =
-                options->get<bool>(options::enable_input_opt) &&
-                !options->is_set(options::host_socket_opt);
+            bool input_opt = options->get<bool>(options::enable_input_opt);
+            bool input_reading_required = input_opt && !options->is_set(options::host_socket_opt);
                 // TODO nested input handling (== host_socket) should fold into a platform
 
             if (input_reading_required)
@@ -386,6 +398,8 @@ mir::DefaultServerConfiguration::the_input_manager()
                     ret->add_platform(platform);
                 return ret;
             }
+            else if (input_opt)
+                return std::make_shared<CursorControllingInputManager>(the_cursor_listener());
             else
                 return std::make_shared<mi::NullInputManager>();
         }
