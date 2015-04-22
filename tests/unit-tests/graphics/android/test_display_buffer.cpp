@@ -147,9 +147,9 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
         dummy_display, _, native_window.get(), NULL))
         .Times(1)
         .WillOnce(Return(mock_egl.fake_egl_surface));
-    EXPECT_CALL(mock_egl, eglDestroySurface(dummy_display, mock_egl.fake_egl_surface))
+    EXPECT_CALL(mock_egl, eglDestroySurface(_, _))
         .Times(AtLeast(1));
-    EXPECT_CALL(mock_egl, eglDestroyContext(dummy_display, mock_egl.fake_egl_context))
+    EXPECT_CALL(mock_egl, eglDestroyContext(_, _))
         .Times(AtLeast(1));
 
     mga::DisplayBuffer db{
