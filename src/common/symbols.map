@@ -132,6 +132,9 @@ MIR_COMMON_4 {
     typeinfo?for?mir::fd_reception_error;
     typeinfo?for?mir::socket_error;
     typeinfo?for?mir::socket_disconnected_error;
+
+    mir::SignalBlocker::SignalBlocker*;
+    mir::SignalBlocker::?SignalBlocker*;
   };
  local: *;
 };

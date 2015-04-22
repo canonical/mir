@@ -61,10 +61,9 @@ struct MemoryRegion;
 
 struct MirSurfaceSpec
 {
-    MirSurfaceSpec() = default;
+    MirSurfaceSpec();
     MirSurfaceSpec(MirConnection* connection, int width, int height, MirPixelFormat format);
     MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params);
-    MirSurfaceSpec(MirSurface* preexisting);
 
     mir::protobuf::SurfaceParameters serialize() const;
 
@@ -84,7 +83,6 @@ struct MirSurfaceSpec
     mir::optional_value<MirSurfaceState> state;
     mir::optional_value<MirOrientationMode> pref_orientation;
 
-    mir::optional_value<MirSurface*> self;
     mir::optional_value<MirSurface*> parent;
     mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;

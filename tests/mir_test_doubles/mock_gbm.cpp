@@ -168,3 +168,8 @@ void gbm_bo_destroy(struct gbm_bo *bo)
 {
     return global_mock->gbm_bo_destroy(bo);
 }
+
+struct gbm_bo* gbm_bo_import(struct gbm_device* device, uint32_t type, void* data, uint32_t flags)
+{
+    return global_mock->gbm_bo_import(device, type, data, flags);
+}

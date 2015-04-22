@@ -113,8 +113,9 @@ MIR_CLIENT_8.3 {   # New in Mir 0.11
 
 MIR_CLIENT_8.4 {   # New in Mir 0.13
  global:
+    mir_connection_create_spec_for_changes;
+    mir_surface_apply_spec;
     mir_surface_set_event_handler;
-    mir_surface_set_title;
     mir_default_cursor_name;
     mir_disabled_cursor_name;
     mir_arrow_cursor_name;
@@ -162,6 +163,10 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_surface_event_get_attribute;
     mir_surface_event_get_attribute_value;
     mir_surface_set_swapinterval;
+    mir_surface_spec_set_min_width;
+    mir_surface_spec_set_min_height;
+    mir_surface_spec_set_max_width;
+    mir_surface_spec_set_max_height;
     mir_surface_swap_buffers;
     mir_surface_swap_buffers_sync;
     mir_touch_event_modifiers;
@@ -173,6 +178,7 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_surface_get_buffer_stream;
     mir_buffer_stream_get_current_buffer;
     mir_buffer_stream_get_platform_type;
+    mir_buffer_stream_swap_buffers;
     mir_buffer_stream_swap_buffers_sync;
     mir_screencast_get_buffer_stream;
     mir_buffer_stream_get_egl_native_window;
@@ -190,5 +196,19 @@ MIR_CLIENT_DETAIL_8 {
       mir::events::make_event*;
       mir::events::add_touch*;
       mir::input::android::Lexicon::translate*;
+      mir::client::DefaultConnectionConfiguration::DefaultConnectionConfiguration*;
+      mir::client::DefaultConnectionConfiguration::the_surface_map*;
+      mir::client::DefaultConnectionConfiguration::the_rpc_channel*;
+      mir::client::DefaultConnectionConfiguration::the_logger*;
+      mir::client::DefaultConnectionConfiguration::the_input_platform*;
+      mir::client::DefaultConnectionConfiguration::the_display_configuration*;
+      mir::client::DefaultConnectionConfiguration::the_lifecycle_control*;
+      mir::client::DefaultConnectionConfiguration::the_event_sink*;
+      mir::client::DefaultConnectionConfiguration::the_event_handler_register*;
+      mir::client::DefaultConnectionConfiguration::the_socket_file*;
+      mir::client::DefaultConnectionConfiguration::the_rpc_report*;
+      mir::client::DefaultConnectionConfiguration::the_input_receiver_report*;
+      typeinfo?for?mir::client::DefaultConnectionConfiguration;
+      vtable?for?mir::client::DefaultConnectionConfiguration;
     }; 
 };

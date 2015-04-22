@@ -56,7 +56,8 @@ struct NullSurfaceInfo
 {
     NullSurfaceInfo(
         std::shared_ptr<ms::Session> const& /*session*/,
-        std::shared_ptr<ms::Surface> const& /*surface*/) {}
+        std::shared_ptr<ms::Surface> const& /*surface*/,
+        ms::SurfaceCreationParameters const& /*params*/) {}
 };
 
 

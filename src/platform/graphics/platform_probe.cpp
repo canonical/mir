@@ -20,7 +20,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_probe.h"
 
-#include <string>
 #include <boost/throw_exception.hpp>
 
 namespace ml = mir::logging;

@@ -231,6 +231,17 @@ void mf::SessionMediator::create_surface(
     if (request->has_edge_attachment())
         params.with_edge_attachment(static_cast<MirEdgeAttachment>(request->edge_attachment()));
 
+    #define COPY_IF_SET(field)\
+        if (request->has_##field())\
+            params.field = decltype(params.field.value())(request->field())
+
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+
+    #undef COPY_IF_SET
+
     auto const surf_id = shell->create_surface(session, params);
 
     auto surface = session->get_surface(surf_id);
@@ -589,16 +600,8 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
 
     report->session_create_surface_called(session->name());
     
-    mg::BufferUsage usage = mg::BufferUsage::undefined;
-    auto client_usage = request->buffer_usage();
-    if (client_usage == mir_buffer_usage_hardware)
-    {
-        usage = mg::BufferUsage::hardware;
-    }
-    else
-    {
-        usage = mg::BufferUsage::software;
-    }
+    auto const usage = (request->buffer_usage() == mir_buffer_usage_hardware) ?
+        mg::BufferUsage::hardware : mg::BufferUsage::software;
 
     auto stream_size = geom::Size{geom::Width{request->width()}, geom::Height{request->height()}};
     mg::BufferProperties props(stream_size,

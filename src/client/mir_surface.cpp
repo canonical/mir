@@ -74,9 +74,8 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
     }
 }
 
-MirSurfaceSpec::MirSurfaceSpec(MirSurface* preexisting)
+MirSurfaceSpec::MirSurfaceSpec()
 {
-    self = preexisting;
 }
 
 mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
@@ -93,6 +92,10 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
     SERIALIZE_OPTION_IF_SET(state, message);
     SERIALIZE_OPTION_IF_SET(pref_orientation, message);
     SERIALIZE_OPTION_IF_SET(edge_attachment, message);
+    SERIALIZE_OPTION_IF_SET(min_width, message);
+    SERIALIZE_OPTION_IF_SET(min_height, message);
+    SERIALIZE_OPTION_IF_SET(max_width, message);
+    SERIALIZE_OPTION_IF_SET(max_height, message);
 
     if (parent.is_set() && parent.value() != nullptr)
         message.set_parent_id(parent.value()->id());

@@ -69,7 +69,7 @@ public:
 
     virtual std::shared_ptr<scene::Surface> focused_surface() const = 0;
 
-    virtual void focus_next() = 0;
+    virtual void focus_next_session() = 0;
 
     virtual void set_focus_to(
         std::shared_ptr<scene::Session> const& focus,
@@ -106,7 +106,7 @@ public:
 ///
 /// \tparam SessionInfo must be default constructable.
 ///
-/// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>)
+/// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>, ms::SurfaceCreationParameters const& params)
 template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
 class BasicWindowManagerCopy : public shell::WindowManager,
     private BasicWindowManagerToolsCopy<SessionInfo, SurfaceInfo>
@@ -145,7 +145,7 @@ private:
         scene::SurfaceCreationParameters const placed_params = policy.handle_place_new_surface(session, params);
         auto const result = build(session, placed_params);
         auto const surface = session->surface(result);
-        surface_info.emplace(surface, SurfaceInfo{session, surface});
+        surface_info.emplace(surface, SurfaceInfo{session, surface, placed_params});
         policy.handle_new_surface(session, surface);
         policy.generate_decorations_for(session, surface, surface_info);
         return result;
@@ -260,9 +260,9 @@ private:
         return focus_controller->focused_surface();
     }
 
-    void focus_next() override
+    void focus_next_session() override
     {
-        focus_controller->focus_next();
+        focus_controller->focus_next_session();
     }
 
     void set_focus_to(
@@ -336,7 +336,7 @@ private:
     typename SessionTo<SessionInfo>::type session_info;
     typename SurfaceTo<SurfaceInfo>::type surface_info;
     geometry::Rectangles displays;
-    geometry::Point cursor{-1, -1};
+    geometry::Point cursor;
 };
 }
 }
