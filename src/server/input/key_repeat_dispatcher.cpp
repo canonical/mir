@@ -129,6 +129,24 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
     }
 }
 
+void mi::KeyRepeatDispatcher::cancel_repeats_for_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id)
+{
+    std::lock_guard<std::mutex> lg(repeat_state_mutex);
+
+    auto it = repeat_state_by_device.find(id);
+    if (it == repeat_state_by_device.end())
+    {
+        // TODO: Logging?
+        return;
+    }
+    for (auto& kv : it->second.repeat_alarms_by_scancode)
+    {
+        auto& alarm = kv.second;
+        alarm->cancel();
+    }
+    repeat_state_by_device.erase(it);
+}
+
 // Should we start/stop key repeats here?
 // Why would we want to?
 void mi::KeyRepeatDispatcher::start()
@@ -138,5 +156,12 @@ void mi::KeyRepeatDispatcher::start()
 
 void mi::KeyRepeatDispatcher::stop()
 {
-     next_dispatcher->start();   
+    std::lock_guard<std::mutex> lg(repeat_state_mutex);
+    
+    for (auto kv : repeat_state_by_device)
+    {
+        cancel_repeats_for_locked(lg, kv.first);
+    }
+        
+    next_dispatcher->start();   
 }

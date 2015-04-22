@@ -419,16 +419,18 @@ bool mi::SurfaceInputDispatcher::dispatch(MirEvent const& event)
 void mi::SurfaceInputDispatcher::start()
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
-    //    if (started)
-    //        BOOST_THROW_EXCEPTION(std::logic_error("Starting but already started"));
+k
     started = true;
 }
 
 void mi::SurfaceInputDispatcher::stop()
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
-    //    if (!started)
-    //        BOOST_THROW_EXCEPTION(std::logic_error("Stopping but already stopped"));
+
+    focus_surface_key_state.clear();
+    pointer_state_by_id.clear();
+    touch_state_by_id.clear();
+    
     started = false;
 }
 
