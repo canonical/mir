@@ -91,7 +91,7 @@ target_link_libraries(
 
 set_target_properties(
   mirclientplatformstub PROPERTIES;
-  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/client-modules
+  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_DIRECTORY}/client-modules
   OUTPUT_NAME dummy
   PREFIX ""
   LINK_FLAGS "-Wl,--version-script,${symbol_map}"
@@ -107,7 +107,7 @@ add_library(
 
 set_target_properties(
   mirplatforminputstub PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/server-modules
+  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_DIRECTORY}/server-modules
   OUTPUT_NAME input-stub
   PREFIX ""
   LINK_FLAGS "-Wl,--version-script,${CMAKE_CURRENT_SOURCE_DIR}/symbols-stub-input.map"
@@ -136,7 +136,7 @@ target_link_libraries(
 
 set_target_properties(
   mirplatformgraphicsstub PROPERTIES;
-  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/server-modules
+  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_DIRECTORY}/server-modules
   OUTPUT_NAME graphics-dummy
   PREFIX ""
   LINK_FLAGS "-Wl,--version-script,${server_symbol_map}"

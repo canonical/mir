@@ -33,7 +33,6 @@ add_library(example SHARED library_example.cpp)
 target_link_libraries(example mircommon)
 set_target_properties(
   example PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
   OUTPUT_NAME example
   PREFIX ""
 )
@@ -77,7 +76,7 @@ add_subdirectory(examples/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
 
-link_directories(${LIBRARY_OUTPUT_PATH})
+link_directories(${LIBRARY_OUTPUT_DIRECTORY})
 
 mir_add_wrapped_executable(mir_unit_tests
   ${UNIT_TEST_SOURCES}
