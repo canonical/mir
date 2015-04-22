@@ -27,6 +27,8 @@
 #include <linux/input.h>
 #include <csignal>
 
+#include <climits>
+
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 using namespace mir::geometry;
@@ -43,11 +45,15 @@ msh::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
     state{mir_surface_state_restored},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
-    parent{surface->parent()},
+    parent{params.parent},
     min_width{params.min_width},
     min_height{params.min_height},
     max_width{params.max_width},
-    max_height{params.max_height}
+    max_height{params.max_height},
+    width_inc{params.width_inc},
+    height_inc{params.height_inc},
+    min_aspect{params.min_aspect},
+    max_aspect{params.max_aspect}
 {
 }
 
@@ -256,20 +262,24 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 {
     auto& surface_info = tools->info_for(surface);
 
+    #define COPY_IF_SET(field)\
+        if (modifications.field.is_set())\
+        surface_info.field = modifications.field
+
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(width_inc);
+    COPY_IF_SET(height_inc);
+    COPY_IF_SET(min_aspect);
+    COPY_IF_SET(max_aspect);
+
+    #undef COPY_IF_SET
+
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
-
-    if (modifications.min_width.is_set())
-        surface_info.min_width = modifications.min_width;
-
-    if (modifications.min_height.is_set())
-        surface_info.min_height = modifications.min_height;
-
-    if (modifications.max_width.is_set())
-        surface_info.max_width = modifications.max_width;
-
-    if (modifications.max_height.is_set())
-        surface_info.max_height = modifications.max_height;
 
     if (modifications.width.is_set() || modifications.height.is_set())
     {
@@ -623,53 +633,95 @@ bool msh::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> cons
 
 bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     std::shared_ptr<ms::Surface> const& surface,
-    Point new_pos,
-    Size new_size,
+    Point const& requested_pos,
+    Size const& requested_size,
     bool const left_resize,
     bool const top_resize,
     Rectangle const& bounds)
 {
     auto const& surface_info = tools->info_for(surface);
 
-    if (surface_info.min_width.is_set() && surface_info.min_width.value() > new_size.width)
-    {
-        if (left_resize)
-        {
-            new_pos.x += surface_info.min_width.value() - new_size.width;
-        }
+    auto const min_width  = surface_info.min_width.is_set()  ? surface_info.min_width.value()  : Width{};
+    auto const min_height = surface_info.min_height.is_set() ? surface_info.min_height.value() : Height{};
+    auto const max_width  = surface_info.max_width.is_set()  ?
+        surface_info.max_width.value()  : Width{std::numeric_limits<int>::max()};
+    auto const max_height = surface_info.max_height.is_set() ?
+        surface_info.max_height.value() : Height{std::numeric_limits<int>::max()};
 
-        new_size.width = surface_info.min_width.value();
+    Point new_pos = requested_pos;
+    Size new_size = requested_size;
+
+    if (surface_info.min_aspect.is_set())
+    {
+        auto const ar = surface_info.min_aspect.value();
+
+        auto const error = new_size.width.as_int()*(long)ar.y - new_size.height.as_int()*(long)ar.x;
+
+        if (error > 0)
+        {
+            if (new_size.height.as_int() > new_size.width.as_int())
+            {
+                new_size.width = new_size.width - DeltaX((error+(ar.y-1))/ar.y);
+            }
+            else
+            {
+                new_size.height = new_size.height + DeltaY((error+(ar.x-1))/ar.x);
+            }
+        }
     }
 
-    if (surface_info.min_height.is_set() && surface_info.min_height.value() > new_size.height)
+    if (surface_info.max_aspect.is_set())
     {
-        if (top_resize)
-        {
-            new_pos.y += surface_info.min_height.value() - new_size.height;
-        }
+        auto const ar = surface_info.max_aspect.value();
 
-        new_size.height = surface_info.min_height.value();
+        auto const error = new_size.height.as_int()*(long)ar.x - new_size.width.as_int()*(long)ar.y;
+
+        if (error > 0)
+        {
+            if (new_size.height.as_int() > new_size.width.as_int())
+            {
+                new_size.width = new_size.width + DeltaX((error+(ar.y-1))/ar.y);
+            }
+            else
+            {
+                new_size.height = new_size.height - DeltaY((error+(ar.x-1))/ar.x);
+            }
+        }
     }
 
-    if (surface_info.max_width.is_set() && surface_info.max_width.value() < new_size.width)
-    {
-        if (left_resize)
-        {
-            new_pos.x += surface_info.max_width.value() - new_size.width;
-        }
+    if (min_width > new_size.width)
+        new_size.width = min_width;
 
-        new_size.width = surface_info.max_width.value();
+    if (min_height > new_size.height)
+        new_size.height = min_height;
+
+    if (max_width < new_size.width)
+        new_size.width = max_width;
+
+    if (max_height < new_size.height)
+        new_size.height = max_height;
+
+    if (surface_info.width_inc.is_set())
+    {
+        auto const width = new_size.width.as_int() - min_width.as_int();
+        auto inc = surface_info.width_inc.value().as_int();
+        if (width % inc)
+            new_size.width = min_width + DeltaX{inc*(((2L*width + inc)/2)/inc)};
     }
 
-    if (surface_info.max_height.is_set() && surface_info.max_height.value() < new_size.height)
+    if (surface_info.height_inc.is_set())
     {
-        if (top_resize)
-        {
-            new_pos.y += surface_info.max_height.value() - new_size.height;
-        }
-
-        new_size.height = surface_info.max_height.value();
+        auto const height = new_size.height.as_int() - min_height.as_int();
+        auto inc = surface_info.height_inc.value().as_int();
+        if (height % inc)
+            new_size.height = min_height + DeltaY{inc*(((2L*height + inc)/2)/inc)};
     }
+
+    if (left_resize)
+        new_pos.x += new_size.width - requested_size.width;
+
+    if (top_resize)
+        new_pos.y += new_size.height - requested_size.height;
 
     if (left_resize)
     {

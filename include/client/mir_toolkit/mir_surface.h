@@ -239,6 +239,32 @@ bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
 bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
 
 /**
+ * Set the requested width increment, in pixels.
+ * Defines an arithmetic progression of sizes starting with min_width (if set, otherwise 0)
+ * into which the surface prefers to be resized.
+ *
+ * \param [in] spec       Specification to mutate
+ * \param [in] width_inc  Requested width increment.
+ * \return                False if width increment is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to
+ *          create a surface of any specific width or height.
+ */
+bool mir_surface_spec_set_width_inc(MirSurfaceSpec* spec, unsigned width_inc);
+
+/**
+ * Set the requested height increment, in pixels
+ * Defines an arithmetic progression of sizes starting with min_hight (if set, otherwise 0)
+ * into which the surface prefers to be resized.
+ *
+ * \param [in] spec       Specification to mutate
+ * \param [in] height_inc Requested height increment.
+ * \return                False if height increment is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to
+ *          create a surface of any specific width or height.
+ */
+bool mir_surface_spec_set_height_inc(MirSurfaceSpec* spec, unsigned height_inc);
+
+/**
  * Set the minimum width, in pixels
  *
  * \param [in] spec     Specification to mutate
@@ -280,6 +306,31 @@ bool mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width);
  *          surface of any specific width or height.
  */
 bool mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height);
+
+/**
+ * Set the minimum aspect ratio
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] x        numerator
+ * \param [in] y        denominator
+ * \return              False if minimum aspect is invalid for a surface of this type
+ * \note    The requested aspect ration is a hint only. The server is not guaranteed
+ *          to create a surface of any specific aspect.
+ */
+bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned x, unsigned y);
+
+/**
+ * Set the maximum aspect ratio
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] x        numerator
+ * \param [in] y        denominator
+ * \return              False if maximum aspect is invalid for a surface of this type
+ * \note    The requested aspect ration is a hint only. The server is not guaranteed
+ *          to create a surface of any specific aspect.
+ */
+bool mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned x, unsigned y);
+
 /**
  * Set the requested pixel format.
  * \param [in] spec     Specification to mutate
