@@ -23,11 +23,13 @@
 
 #include "mir/input/android/android_input_lexicon.h"
 #include "mir/events/event_private.h"
+#include "mir/report/legacy_input_report.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/input/android/event_filter_dispatcher_policy.h"
 
 #include "mir_test_doubles/stub_input_enumerator.h"
 #include "mir_test_doubles/mock_event_filter.h"
+#include "mir_test_doubles/null_logger.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_matchers.h"
 
@@ -65,6 +67,11 @@ struct InputDispatcher : testing::Test
     testing::NiceMock<mtd::MockEventFilter> filter;
     testing::NiceMock<MockInputDispatcherPolicy> filter_policy{mt::fake_shared(filter), true};
     android::InputDispatcher dispatcher{mt::fake_shared(filter_policy), mir::report::null_input_report(), mt::fake_shared(enumerator)};
+    mtd::NullLogger logger;
+    InputDispatcher()
+    {
+        mir::report::legacy_input::initialize(mt::fake_shared(logger));
+    }
 
     android::NotifyKeyArgs create_key_event(int32_t key_code, int32_t scan_code, int32_t action = AKEY_EVENT_ACTION_DOWN)
     {
