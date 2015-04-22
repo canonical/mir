@@ -131,8 +131,6 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
 
 void mi::KeyRepeatDispatcher::cancel_repeats_for_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id)
 {
-    std::lock_guard<std::mutex> lg(repeat_state_mutex);
-
     auto it = repeat_state_by_device.find(id);
     if (it == repeat_state_by_device.end())
     {
