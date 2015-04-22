@@ -334,6 +334,8 @@ TEST_F(SurfaceInputDispatcher, device_reset_resets_key_state_consistency)
     auto down_event = keyboard.press(11);
     auto release_event = keyboard.release(11);
 
+    dispatcher.start();
+
     dispatcher.set_focus(surface);
     EXPECT_TRUE(dispatcher.dispatch(*down_event));
     dispatcher.device_reset(device_id, std::chrono::nanoseconds{1});

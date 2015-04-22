@@ -72,7 +72,8 @@ struct InputDispatcherSceneObserver : public ms::Observer
 }
 
 mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> const& scene)
-    : scene(scene)
+    : scene(scene),
+      started(false)
 {
     scene_observer = std::make_shared<InputDispatcherSceneObserver>([this](ms::Surface* s){surface_removed(s);});
     scene->add_observer(scene_observer);

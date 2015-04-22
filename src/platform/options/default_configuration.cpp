@@ -51,6 +51,7 @@ char const* const mo::touchspots_opt               = "enable-touchspots";
 char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::nbuffers_opt                = "nbuffers";
+char const* const mo::enable_key_repeat_opt        = "enable-key-repeat";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
@@ -158,6 +159,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Render to offscreen buffers instead of the real outputs.")
         (touchspots_opt,
             "Display visualization of touchspots (e.g. for screencasting).")
+        (enable_key_repeat_opt, po::value<bool>()->default_value(true),
+             "Enable server generated key repeat")
         (fatal_abort_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
             "in unexpected ways] abort (to get a core dump)")
         (debug_opt, "Enable extra development debugging. "

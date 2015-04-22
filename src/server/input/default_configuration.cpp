@@ -234,7 +234,10 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
                 return std::make_shared<mi::NullInputDispatcher>();
             else
             {
-                return std::make_shared<mi::KeyRepeatDispatcher>(the_event_filter_chain_dispatcher(), the_main_loop(), std::chrono::milliseconds(5));
+                if (the_options()->get<bool>(options::enable_key_repeat_opt))
+                    return std::make_shared<mi::KeyRepeatDispatcher>(the_event_filter_chain_dispatcher(), the_main_loop(), std::chrono::milliseconds(5));
+                else
+                    return the_event_filter_chain_dispatcher();
             }
         });
 }
