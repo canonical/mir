@@ -9,6 +9,7 @@ set(
   default_configuration.cpp
   default_window_manager.cpp
   shell_wrapper.cpp
+  default_persistent_surface_store.cpp
 )
 
 add_library(
