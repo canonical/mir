@@ -24,35 +24,17 @@
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 
-class UUID : public msh::PersistentSurfaceStore::Id
-{
-public:
-    friend class msh::PersistentSurfaceStore;
-
-    UUID();
-    UUID(std::string const& id);
-
-    bool operator==(Id const& rhs) const override;
-
-    operator std::string() const;
-private:
-    uuid_t value;
-};
-
-UUID::UUID()
+msh::detail::UUID::UUID()
 {
     uuid_generate(value);
 }
 
-UUID::UUID(std::string const& string_repr)
+msh::detail::UUID::UUID(UUID const& copy_from)
 {
-    if (uuid_parse(string_repr.c_str(), value) != 0)
-    {
-        throw std::runtime_error{string_repr.data()};
-    }
+    std::copy(copy_from.value, copy_from.value + sizeof(copy_from.value), value);
 }
 
-bool UUID::operator==(msh::PersistentSurfaceStore::Id const& rhs) const
+bool msh::detail::UUID::operator==(msh::PersistentSurfaceStore::Id const& rhs) const
 {
     auto rhs_resolved = dynamic_cast<UUID const*>(&rhs);
     if (rhs_resolved)
@@ -62,11 +44,11 @@ bool UUID::operator==(msh::PersistentSurfaceStore::Id const& rhs) const
     return false;
 }
 
-UUID::operator std::string() const
+auto std::hash<msh::detail::UUID>::operator()(argument_type const& arg) const
+    -> result_type
 {
-    char buffer[37];
-    uuid_unparse_upper(value, buffer);
-    return buffer;
+    return std::hash<uint64_t>()(*reinterpret_cast<uint64_t const*>(arg.value)) ^
+           std::hash<uint64_t>()(*reinterpret_cast<uint64_t const*>(arg.value + 8));
 }
 
 msh::DefaultPersistentSurfaceStore::DefaultPersistentSurfaceStore()
@@ -83,11 +65,11 @@ auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::S
     });
     if (prexistent != store.cend())
     {
-        return std::make_unique<UUID>(prexistent->first);
+        return std::make_unique<detail::UUID>(prexistent->first);
     }
     else
     {
-        auto new_id = std::make_unique<UUID>();
+        auto new_id = std::make_unique<detail::UUID>();
         store[*new_id] = surface;
         return std::move(new_id);
     }
@@ -95,7 +77,7 @@ auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::S
 
 std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(Id const& id)
 {
-    auto uuid = dynamic_cast<UUID const*>(&id);
+    auto uuid = dynamic_cast<detail::UUID const*>(&id);
     if (uuid != nullptr)
     {
         return store.at(*uuid);

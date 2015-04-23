@@ -22,6 +22,59 @@
 #include "mir/shell/persistent_surface_store.h"
 
 #include <unordered_map>
+#include <uuid/uuid.h>
+
+namespace mir
+{
+namespace shell
+{
+namespace detail
+{
+class UUID;
+}
+}
+}
+
+namespace std
+{
+template<>
+struct hash<mir::shell::detail::UUID>;
+}
+
+namespace mir
+{
+namespace shell
+{
+namespace detail
+{
+class UUID : public PersistentSurfaceStore::Id
+{
+public:
+    UUID();
+    UUID(UUID const& copy_from);
+
+    bool operator==(Id const& rhs) const override;
+private:
+    uuid_t value;
+
+    friend struct std::hash<UUID>;
+};
+}
+}
+}
+
+namespace std
+{
+template<>
+struct hash<mir::shell::detail::UUID>
+{
+    typedef mir::shell::detail::UUID argument_type;
+    typedef std::size_t result_type;
+
+    result_type operator()(argument_type const& uuid) const;
+};
+}
+
 
 namespace mir
 {
@@ -36,7 +89,7 @@ public:
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) override;
 
 private:
-    std::unordered_map<std::string, std::shared_ptr<scene::Surface>> store;
+    std::unordered_map<detail::UUID, std::shared_ptr<scene::Surface>> store;
 };
 }
 }
