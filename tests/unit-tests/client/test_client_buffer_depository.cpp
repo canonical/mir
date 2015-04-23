@@ -406,3 +406,41 @@ TEST_F(MirBufferDepositoryTest, depository_keeps_last_3_buffers_regardless_of_ag
     depository.deposit_package(package, 10, size, pf);
     depository.deposit_package(package, 8, size, pf);
 }
+
+TEST_F(MirBufferDepositoryTest, can_decrease_cache_size)
+{
+    using namespace testing;
+    int initial_size{3};
+    int changed_size{2};
+    mcl::ClientBufferDepository depository{mock_factory, initial_size};
+    EXPECT_CALL(*mock_factory, create_buffer(_,_,_))
+        .Times(5);
+
+    depository.deposit_package(package, 8, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 10, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 10, size, pf);
+
+    depository.set_max_buffers(changed_size); //8 should be kicked out
+    depository.deposit_package(package, 8, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+}
+
+TEST_F(MirBufferDepositoryTest, can_increase_cache_size)
+{
+    using namespace testing;
+    int initial_size{3};
+    int changed_size{4};
+    mcl::ClientBufferDepository depository{mock_factory, initial_size};
+    EXPECT_CALL(*mock_factory, create_buffer(_,_,_))
+        .Times(4);
+
+    depository.deposit_package(package, 8, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 10, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 10, size, pf);
+    depository.set_max_buffers(changed_size);
+    depository.deposit_package(package, 7, size, pf);
+}
