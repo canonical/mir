@@ -21,6 +21,8 @@
 
 #include "mir/shell/persistent_surface_store.h"
 
+#include <unordered_map>
+
 namespace mir
 {
 namespace shell
@@ -34,7 +36,7 @@ public:
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) override;
 
 private:
-    std::shared_ptr<scene::Surface> surface;
+    std::unordered_map<std::string, std::shared_ptr<scene::Surface>> store;
 };
 }
 }

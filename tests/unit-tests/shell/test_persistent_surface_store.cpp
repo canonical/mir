@@ -75,3 +75,22 @@ TEST(PersistentSurfaceStore, can_lookup_surface_by_id)
 
     EXPECT_THAT(looked_up_surface, Eq(surface));
 }
+
+TEST(PersistentSurfaceStore, retrieves_correct_surface)
+{
+    using namespace testing;
+
+    msh::DefaultPersistentSurfaceStore map;
+
+    auto surface_one = std::make_shared<NiceMock<mtd::MockSurface>>();
+    auto surface_two = std::make_shared<NiceMock<mtd::MockSurface>>();
+
+    auto id_one = map.id_for_surface(surface_one);
+    auto id_two = map.id_for_surface(surface_two);
+
+    auto looked_up_surface_one = map.surface_for_id(*id_one);
+    auto looked_up_surface_two = map.surface_for_id(*id_two);
+
+    EXPECT_THAT(looked_up_surface_one, Eq(surface_one));
+    EXPECT_THAT(looked_up_surface_two, Eq(surface_two));
+}
