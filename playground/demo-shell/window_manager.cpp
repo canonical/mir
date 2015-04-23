@@ -218,19 +218,24 @@ bool me::WindowManager::handle(MirEvent const& event)
             return true;
         }
         else if (event.key.modifiers & mir_key_modifier_alt &&
+                 event.key.scan_code == KEY_GRAVE)
+        {
+            if (auto const prev = focus_controller->focused_surface())
+            {
+                auto const app = focus_controller->focused_session();
+                auto const next = app->surface_after(prev);
+                focus_controller->set_focus_to(app, next);
+                focus_controller->raise({next});
+            }
+            return true;
+        }
+        else if (event.key.modifiers & mir_key_modifier_alt &&
                  event.key.scan_code == KEY_F4)
         {
-            auto const app = focus_controller->focused_session();
-            if (app)
-            {
-                // Ask the app to close politely. It has the right to refuse.
-                auto const surf = app->default_surface();
-                if (surf)
-                {
-                    surf->request_client_surface_close();
-                    return true;
-                }
-            }
+            auto const surf = focus_controller->focused_surface();
+            if (surf)
+                surf->request_client_surface_close();
+            return true;
         }
         else if ((event.key.modifiers & mir_key_modifier_alt &&
                   event.key.scan_code == KEY_P) ||
@@ -409,95 +414,87 @@ bool me::WindowManager::handle(MirEvent const& event)
         if (zoom_exponent || new_zoom_mag)
             force_redraw();
 
-        auto const app = focus_controller->focused_session();
-
         int fingers = static_cast<int>(event.motion.pointer_count);
 
         if (action == mir_motion_action_down || fingers > max_fingers)
             max_fingers = fingers;
 
-        if (app)
+        auto const surf = focus_controller->focused_surface();
+        if (surf &&
+            (event.motion.modifiers & mir_key_modifier_alt ||
+             fingers >= 3))
         {
-            // FIXME: We need to be able to select individual surfaces in
-            //        future and not just the "default" one.
-            auto const surf = app->default_surface();
+            geometry::Displacement pinch_dir;
+            auto pinch_diam =
+                measure_pinch(event.motion, pinch_dir);
 
-            if (surf &&
-                (event.motion.modifiers & mir_key_modifier_alt ||
-                 fingers >= 3))
+            // Start of a gesture: When the latest finger/button goes down
+            if (action == mir_motion_action_down ||
+                action == mir_motion_action_pointer_down)
             {
-                geometry::Displacement pinch_dir;
-                auto pinch_diam =
-                    measure_pinch(event.motion, pinch_dir);
-
-                // Start of a gesture: When the latest finger/button goes down
-                if (action == mir_motion_action_down ||
-                    action == mir_motion_action_pointer_down)
-                {
-                    click = cursor;
-                    save_edges(*surf, click);
-                    handled = true;
-                }
-                else if (event.motion.action == mir_motion_action_move &&
-                         max_fingers <= 3)  // Avoid accidental movement
-                {
-                    geometry::Displacement drag = cursor - old_cursor;
-
-                    if (event.motion.button_state ==
-                        mir_motion_button_tertiary)
-                    {  // Resize by mouse middle button
-                        resize(*surf, cursor);
-                    }
-                    else
-                    { // Move surface (by mouse or 3 fingers)
-                        surf->move_to(old_pos + drag);
-                    }
-
-                    if (fingers == 3)
-                    {  // Resize by pinch/zoom
-                        float diam_delta = pinch_diam - old_pinch_diam;
-                        /*
-                         * Resize vector (dx,dy) has length=diam_delta and
-                         * direction=pinch_dir, so solve for (dx,dy)...
-                         */
-                        float lenlen = diam_delta * diam_delta;
-                        int x = pinch_dir.dx.as_int();
-                        int y = pinch_dir.dy.as_int();
-                        int xx = x * x;
-                        int yy = y * y;
-                        int xxyy = xx + yy;
-                        int dx = sqrtf(lenlen * xx / xxyy);
-                        int dy = sqrtf(lenlen * yy / xxyy);
-                        if (diam_delta < 0.0f)
-                        {
-                            dx = -dx;
-                            dy = -dy;
-                        }
-
-                        int width = old_size.width.as_int() + dx;
-                        int height = old_size.height.as_int() + dy;
-                        surf->resize({width, height});
-                    }
-
-                    handled = true;
-                }
-                else if (action == mir_motion_action_scroll)
-                {
-                    float alpha = surf->alpha();
-                    alpha += 0.1f *
-                             event.motion.pointer_coordinates[0].vscroll;
-                    if (alpha < 0.0f)
-                        alpha = 0.0f;
-                    else if (alpha > 1.0f)
-                        alpha = 1.0f;
-                    surf->set_alpha(alpha);
-                    handled = true;
-                }
-
-                old_pos = surf->top_left();
-                old_size = surf->size();
-                old_pinch_diam = pinch_diam;
+                click = cursor;
+                save_edges(*surf, click);
+                handled = true;
             }
+            else if (event.motion.action == mir_motion_action_move &&
+                     max_fingers <= 3)  // Avoid accidental movement
+            {
+                geometry::Displacement drag = cursor - old_cursor;
+
+                if (event.motion.button_state ==
+                    mir_motion_button_tertiary)
+                {  // Resize by mouse middle button
+                    resize(*surf, cursor);
+                }
+                else
+                { // Move surface (by mouse or 3 fingers)
+                    surf->move_to(old_pos + drag);
+                }
+
+                if (fingers == 3)
+                {  // Resize by pinch/zoom
+                    float diam_delta = pinch_diam - old_pinch_diam;
+                    /*
+                     * Resize vector (dx,dy) has length=diam_delta and
+                     * direction=pinch_dir, so solve for (dx,dy)...
+                     */
+                    float lenlen = diam_delta * diam_delta;
+                    int x = pinch_dir.dx.as_int();
+                    int y = pinch_dir.dy.as_int();
+                    int xx = x * x;
+                    int yy = y * y;
+                    int xxyy = xx + yy;
+                    int dx = sqrtf(lenlen * xx / xxyy);
+                    int dy = sqrtf(lenlen * yy / xxyy);
+                    if (diam_delta < 0.0f)
+                    {
+                        dx = -dx;
+                        dy = -dy;
+                    }
+
+                    int width = old_size.width.as_int() + dx;
+                    int height = old_size.height.as_int() + dy;
+                    surf->resize({width, height});
+                }
+
+                handled = true;
+            }
+            else if (action == mir_motion_action_scroll)
+            {
+                float alpha = surf->alpha();
+                alpha += 0.1f *
+                         event.motion.pointer_coordinates[0].vscroll;
+                if (alpha < 0.0f)
+                    alpha = 0.0f;
+                else if (alpha > 1.0f)
+                    alpha = 1.0f;
+                surf->set_alpha(alpha);
+                handled = true;
+            }
+
+            old_pos = surf->top_left();
+            old_size = surf->size();
+            old_pinch_diam = pinch_diam;
         }
 
         if (max_fingers == 4 && action == mir_motion_action_up)
