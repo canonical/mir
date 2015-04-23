@@ -91,8 +91,10 @@ target_link_libraries(mirserver LINK_PUBLIC
   mirplatform
   mircommon
   mirprotobuf
-  3rd_party
-  xcursorloader
+
+  android-input-static
+  xcursorloader-static
+
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

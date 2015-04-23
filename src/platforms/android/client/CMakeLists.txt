@@ -32,7 +32,7 @@ set_target_properties(
 
 target_link_libraries(mirclientplatformandroid
   mirclient
-  mirsharedandroid
+  mirsharedandroid-static
   ${LIBHARDWARE_LIBRARIES}
 )
 
