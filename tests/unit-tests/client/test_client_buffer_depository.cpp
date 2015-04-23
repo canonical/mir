@@ -121,7 +121,7 @@ MATCHER_P(SizeMatches, value, "")
     return value == arg;
 }
 
-TEST_F(ClientBufferDepository, depository_sets_width_and_height)
+TEST_F(ClientBufferDepository, sets_width_and_height)
 {
     using namespace testing;
 
@@ -132,7 +132,7 @@ TEST_F(ClientBufferDepository, depository_sets_width_and_height)
     depository.deposit_package(package, 8, size, pf);
 }
 
-TEST_F(ClientBufferDepository, depository_new_deposit_changes_current_buffer)
+TEST_F(ClientBufferDepository, changes_current_buffer_on_new_deposit)
 {
     using namespace testing;
 
@@ -148,7 +148,7 @@ TEST_F(ClientBufferDepository, depository_new_deposit_changes_current_buffer)
     EXPECT_NE(buffer1, buffer2);
 }
 
-TEST_F(ClientBufferDepository, depository_sets_buffer_age_to_zero_for_new_buffer)
+TEST_F(ClientBufferDepository, sets_buffer_age_to_zero_for_new_buffer)
 {
     using namespace testing;
 
@@ -160,7 +160,7 @@ TEST_F(ClientBufferDepository, depository_sets_buffer_age_to_zero_for_new_buffer
     EXPECT_EQ(0u, buffer1->age());
 }
 
-TEST_F(ClientBufferDepository, just_sumbitted_buffer_has_age_1)
+TEST_F(ClientBufferDepository, has_age_1_for_just_sumbitted_buffer)
 {
     using namespace testing;
 
@@ -178,7 +178,7 @@ TEST_F(ClientBufferDepository, just_sumbitted_buffer_has_age_1)
     EXPECT_EQ(1u, buffer1->age());
 }
 
-TEST_F(ClientBufferDepository, submitting_buffer_ages_other_buffers)
+TEST_F(ClientBufferDepository, ages_other_buffers_on_new_submission)
 {
     using namespace testing;
 
@@ -205,7 +205,7 @@ TEST_F(ClientBufferDepository, submitting_buffer_ages_other_buffers)
     EXPECT_EQ(0u, buffer3->age());
 }
 
-TEST_F(ClientBufferDepository, double_buffering_reaches_steady_state_age)
+TEST_F(ClientBufferDepository, reaches_steady_state_age_for_double_buffering)
 {
     using namespace testing;
 
@@ -234,7 +234,7 @@ TEST_F(ClientBufferDepository, double_buffering_reaches_steady_state_age)
     EXPECT_EQ(2u, buffer2->age());
 }
 
-TEST_F(ClientBufferDepository, triple_buffering_reaches_steady_state_age)
+TEST_F(ClientBufferDepository, reaches_steady_state_age_when_triple_buffering)
 {
     using namespace testing;
 
@@ -274,7 +274,7 @@ TEST_F(ClientBufferDepository, triple_buffering_reaches_steady_state_age)
     EXPECT_EQ(3u, buffer3->age());
 }
 
-TEST_F(ClientBufferDepository, depository_destroys_old_buffers)
+TEST_F(ClientBufferDepository, destroys_old_buffers)
 {
     using namespace testing;
     const int num_buffers = 3;
@@ -296,7 +296,7 @@ TEST_F(ClientBufferDepository, depository_destroys_old_buffers)
     EXPECT_TRUE(mock_factory->first_buffer_allocated_and_then_freed());
 }
 
-TEST_F(ClientBufferDepository, depositing_packages_implicitly_submits_current_buffer)
+TEST_F(ClientBufferDepository, implicitly_submits_current_buffer_on_deposit)
 {
     using namespace testing;
     const int num_buffers = 3;
@@ -311,7 +311,7 @@ TEST_F(ClientBufferDepository, depositing_packages_implicitly_submits_current_bu
     depository.deposit_package(package2, 2, size, pf);
 }
 
-TEST_F(ClientBufferDepository, depository_frees_buffers_after_reaching_capacity)
+TEST_F(ClientBufferDepository, frees_buffers_after_reaching_capacity)
 {
     using namespace testing;
     std::shared_ptr<mcl::ClientBufferDepository> depository;
@@ -335,7 +335,7 @@ TEST_F(ClientBufferDepository, depository_frees_buffers_after_reaching_capacity)
     }
 }
 
-TEST_F(ClientBufferDepository, depository_caches_recently_seen_buffer)
+TEST_F(ClientBufferDepository, caches_recently_seen_buffer)
 {
     using namespace testing;
 
@@ -359,7 +359,7 @@ TEST_F(ClientBufferDepository, depository_caches_recently_seen_buffer)
     depository.deposit_package(package3, 8, size, pf);
 }
 
-TEST_F(ClientBufferDepository, depository_creates_new_buffer_for_different_id)
+TEST_F(ClientBufferDepository, creates_new_buffer_for_different_id)
 {
     using namespace testing;
 
@@ -375,7 +375,7 @@ TEST_F(ClientBufferDepository, depository_creates_new_buffer_for_different_id)
     depository.deposit_package(package2, 9, size, pf);
 }
 
-TEST_F(ClientBufferDepository, depository_keeps_last_2_buffers_regardless_of_age)
+TEST_F(ClientBufferDepository, keeps_last_2_buffers_regardless_of_age)
 {
     using namespace testing;
 
@@ -390,7 +390,7 @@ TEST_F(ClientBufferDepository, depository_keeps_last_2_buffers_regardless_of_age
     depository.deposit_package(package, 8, size, pf);
 }
 
-TEST_F(ClientBufferDepository, depository_keeps_last_3_buffers_regardless_of_age)
+TEST_F(ClientBufferDepository, keeps_last_3_buffers_regardless_of_age)
 {
     using namespace testing;
 
