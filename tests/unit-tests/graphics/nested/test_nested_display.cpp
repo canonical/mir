@@ -28,6 +28,7 @@
 #include "mir_test_doubles/mock_gl_config.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_host_connection.h"
+#include "mir_test_doubles/stub_cursor_listener.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test/fake_shared.h"
 
@@ -70,7 +71,7 @@ struct NestedDisplay : testing::Test
             mt::fake_shared(null_input_dispatcher),
             mt::fake_shared(null_display_report),
             mt::fake_shared(default_conf_policy),
-            gl_config};
+            gl_config, std::make_shared<mtd::StubCursorListener>()};
 
         return std::unique_ptr<mgn::Display>{nested_display_raw};
     }
