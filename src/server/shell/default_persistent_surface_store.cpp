@@ -58,19 +58,16 @@ msh::DefaultPersistentSurfaceStore::DefaultPersistentSurfaceStore()
 auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::Surface> const& surface)
     -> Id const&
 {
-    auto prexistent = std::find_if(store.cbegin(), store.cend(),
-                                   [&surface](auto candidate)
+    auto& surface_id = surface_to_id[surface.get()];
+    if (surface_id)
     {
-        return candidate.second == surface;
-    });
-    if (prexistent != store.cend())
-    {
-        return prexistent->first;
+        return *surface_id;
     }
     else
     {
-        auto new_element = store.emplace(std::make_pair(detail::UUID{}, surface));
-        return new_element.first->first;
+        auto new_element = id_to_surface.emplace(std::make_pair(detail::UUID{}, surface));
+        surface_id = &new_element.first->first;
+        return *surface_id;
     }
 }
 
@@ -79,7 +76,7 @@ std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(
     auto uuid = dynamic_cast<detail::UUID const*>(&id);
     if (uuid != nullptr)
     {
-        return store.at(*uuid);
+        return id_to_surface.at(*uuid);
     }
     return {};
 }

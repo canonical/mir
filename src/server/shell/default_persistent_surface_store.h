@@ -89,7 +89,8 @@ public:
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) override;
 
 private:
-    std::unordered_map<detail::UUID, std::shared_ptr<scene::Surface>> store;
+    std::unordered_map<detail::UUID, std::shared_ptr<scene::Surface>> id_to_surface;
+    std::unordered_map<scene::Surface const*, detail::UUID const*> surface_to_id;
 };
 }
 }
