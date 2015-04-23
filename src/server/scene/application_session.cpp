@@ -131,6 +131,24 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface(mf::SurfaceId id) c
     return checked_find(id)->second;
 }
 
+std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_ptr<ms::Surface> const& before) const
+{
+    std::lock_guard<std::mutex> lock(surfaces_and_streams_mutex);
+    auto i = surfaces.begin();
+    for (; i != surfaces.end(); ++i)
+    {
+        if (i->second == before)
+            break;
+    }
+    if (i == surfaces.end())
+        BOOST_THROW_EXCEPTION(std::runtime_error("surface_after: surface is not a member of this session"));
+
+    ++i;
+    if (i == surfaces.end())
+        i = surfaces.begin();
+    return i->second;
+}
+
 void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
 {
     if (auto surface = default_surface())

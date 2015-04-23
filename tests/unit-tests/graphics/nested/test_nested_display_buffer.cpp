@@ -22,16 +22,14 @@
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/stub_cursor_listener.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace geom = mir::geometry;
-namespace mg = mir::graphics;
-namespace mgn = mg::nested;
-namespace mgnd = mg::nested::detail;
+namespace mgn = mir::graphics::nested;
+namespace mgnd = mir::graphics::nested::detail;
 namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -54,8 +52,6 @@ struct NestedDisplayBufferTest : testing::Test
     mtd::StubGLConfig stub_gl_config;
     NullHostSurface null_host_surface;
     mi::NullInputDispatcher null_input_dispatcher;
-    std::shared_ptr<mi::CursorListener> cursor =
-        std::make_shared<mtd::StubCursorListener>();
     mgnd::EGLDisplayHandle egl_disp_handle;
     geom::Rectangle const default_rect;
 };
@@ -67,7 +63,6 @@ TEST_F(NestedDisplayBufferTest, alpha_enabled_pixel_format_enables_destination_a
         mt::fake_shared(null_host_surface),
         default_rect,
         mt::fake_shared(null_input_dispatcher),
-        cursor,
         mir_pixel_format_abgr_8888};
 
     EXPECT_TRUE(db.uses_alpha());
@@ -80,7 +75,6 @@ TEST_F(NestedDisplayBufferTest, non_alpha_pixel_format_disables_destination_alph
         mt::fake_shared(null_host_surface),
         default_rect,
         mt::fake_shared(null_input_dispatcher),
-        cursor,
         mir_pixel_format_xbgr_8888};
 
     EXPECT_FALSE(db.uses_alpha());
