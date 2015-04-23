@@ -1,7 +1,9 @@
 cmake_minimum_required (VERSION 2.6)
 # Create target to discover tests
+include (CMakeParseArguments)
 
 include(CMakeDependentOption)
+file(REMOVE ${CMAKE_BINARY_DIR}/discover_all_tests.sh)
 
 CMAKE_DEPENDENT_OPTION(
   DISABLE_GTEST_TEST_DISCOVERY
@@ -123,6 +125,20 @@ function (mir_discover_tests EXECUTABLE)
       mir_discover_gtest_tests)
 
   endif()
+
+  foreach (env ${ARGN})
+    set(discover_envs "${discover_envs} --env ${env}")
+  endforeach()
+
+  if(ENABLE_MEMCHECK_OPTION)
+    set(discover_cmd_memcheck "${VALGRIND_EXECUTABLE}")
+    foreach (arg ${VALGRIND_ARGS})
+      set(discover_cmd_memcheck "${discover_cmd_memcheck} ${arg}")
+    endforeach()
+  endif()
+
+  file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_envs} -- ${discover_cmd_memcheck} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}\n")
 endfunction ()
 
 function (mir_add_memcheck_test)
@@ -131,7 +147,8 @@ function (mir_add_memcheck_test)
 	add_custom_target(
 	  memcheck_test ALL
 	)
-	ADD_TEST("memcheck-test" ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error)
+    mir_add_test(NAME "memcheck-test"
+      COMMAND ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error)
 	add_dependencies(
 	  memcheck_test
 
@@ -206,4 +223,26 @@ function (mir_add_wrapped_executable TARGET)
     ln -fs wrapper ${CMAKE_BINARY_DIR}/bin/${TARGET}
   )
   add_dependencies(${TARGET} ${TARGET}-wrapped)
+endfunction()
+
+function (mir_add_test)
+  # Add test normally
+  add_test(${ARGN})
+
+  # Add to to discovery for parallel test running
+  set(one_value_args "NAME" WORKING_DIRECTORY)
+  set(multi_value_args "COMMAND")
+  cmake_parse_arguments(MAT "" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+  foreach (cmd ${MAT_COMMAND})
+    set(cmdstr "${cmdstr} \\\"${cmd}\\\"")
+  endforeach()
+
+  file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+    "echo \"add_test(${MAT_NAME} ${cmdstr})\"\n")
+
+  if (MAT_WORKING_DIRECTORY)
+    file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+      "echo \"set_tests_properties(${MAT_NAME} PROPERTIES WORKING_DIRECTORY \\\"${MAT_WORKING_DIRECTORY}\\\")\"\n")
+  endif()
 endfunction()
