@@ -23,6 +23,8 @@
 #include "mir/client_context.h"
 #include "../debug.h"
 
+#include <EGL/egl.h>
+
 //#include <cstring>
 
 namespace mcl=mir::client;
@@ -64,15 +66,9 @@ std::shared_ptr<EGLNativeDisplayType> mclx::ClientPlatform::create_egl_native_di
 {
     CALLED
 
-#if 0
-    MirEGLNativeDisplayType *mir_native_display = new MirEGLNativeDisplayType;
-    *mir_native_display = display_container.create(this);
-    auto egl_native_display = reinterpret_cast<EGLNativeDisplayType*>(mir_native_display);
-
-    return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter(display_container));
-#else
-    return 0;
-#endif
+    auto native_display = std::make_shared<EGLNativeDisplayType>();
+    *native_display = EGL_DEFAULT_DISPLAY;
+    return native_display;
 }
 
 MirPlatformType mclx::ClientPlatform::platform_type() const
