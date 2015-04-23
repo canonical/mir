@@ -18,6 +18,7 @@
 
 #include "egl_native_surface_interpreter.h"
 #include "mir/graphics/android/sync_fence.h"
+#include "mir/frontend/client_constants.h"
 #include "mir/client_buffer.h"
 #include <system/window.h>
 #include <stdexcept>
@@ -87,5 +88,6 @@ void mcla::EGLNativeSurfaceInterpreter::sync_to_display(bool should_sync)
 
 void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_buffer_count(unsigned int count)
 {
-    surface.set_buffer_cache_size(count);
+    if (count > mir::frontend::client_buffer_cache_size)
+        surface.set_buffer_cache_size(count);
 }
