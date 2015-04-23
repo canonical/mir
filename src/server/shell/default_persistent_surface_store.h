@@ -32,6 +32,9 @@ public:
 
     virtual std::unique_ptr<Id> id_for_surface(std::shared_ptr<scene::Surface> const& surface) override;
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) override;
+
+private:
+    std::shared_ptr<scene::Surface> surface;
 };
 }
 }

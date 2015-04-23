@@ -57,13 +57,14 @@ msh::DefaultPersistentSurfaceStore::DefaultPersistentSurfaceStore()
 {
 }
 
-auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::Surface> const& /*surface*/)
+auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::Surface> const& surface)
     -> std::unique_ptr<Id>
 {
+    this->surface = surface;
     return std::make_unique<UUID>("499847d1-f351-46fc-9439-0918253a642c");
 }
 
 std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(Id const& /*id*/)
 {
-    return {};
+    return surface;
 }

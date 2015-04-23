@@ -45,3 +45,33 @@ TEST(PersistentSurfaceStore, id_for_surface_is_idempotent)
 
     EXPECT_TRUE(*id_one == *id_two);
 }
+
+TEST(PersistentSurfaceStore, id_is_stable_under_aliasing)
+{
+    using namespace testing;
+
+    msh::DefaultPersistentSurfaceStore map;
+
+    auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+    auto surface_alias = surface;
+
+    auto id_one = map.id_for_surface(surface);
+    auto id_two = map.id_for_surface(surface_alias);
+
+    EXPECT_TRUE(*id_one == *id_two);
+}
+
+TEST(PersistentSurfaceStore, can_lookup_surface_by_id)
+{
+    using namespace testing;
+
+    msh::DefaultPersistentSurfaceStore map;
+
+    auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+
+    auto id = map.id_for_surface(surface);
+
+    auto looked_up_surface = map.surface_for_id(*id);
+
+    EXPECT_THAT(looked_up_surface, Eq(surface));
+}
