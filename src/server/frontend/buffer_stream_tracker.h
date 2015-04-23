@@ -20,7 +20,6 @@
 #define MIR_FRONTEND_BUFFER_STREAM_TRACKER_H_
 
 #include "mir/frontend/buffer_stream_id.h"
-#include "client_buffer_tracker.h"
 #include "mir/graphics/buffer_id.h"
 
 #include <unordered_map>
