@@ -22,16 +22,18 @@
 #include "mir/client_buffer.h"
 #include "mir/client_buffer_factory.h"
 
+#include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <memory>
 #include <map>
 
 namespace mcl=mir::client;
 
-mcl::ClientBufferDepository::ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const& factory, int max_buffers)
-    : factory(factory),
-      max_buffers(max_buffers)
+mcl::ClientBufferDepository::ClientBufferDepository(
+    std::shared_ptr<ClientBufferFactory> const& factory, int max_buffers) :
+    factory(factory)
 {
+    set_max_buffers(max_buffers);
 }
 
 void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPackage> const& package, int id, geometry::Size size, MirPixelFormat pf)
@@ -49,7 +51,6 @@ void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPacka
 
     if (existing_buffer_id_pair == buffers.end())
     {
-        printf("GENERATE\n");
         auto new_buffer = factory->create_buffer(package, size, pf);
         buffers.push_front(std::make_pair(id, new_buffer));
     }
@@ -61,10 +62,7 @@ void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPacka
     }
 
     if (buffers.size() > max_buffers)
-    {
-        printf("KICK.\n");
         buffers.pop_back();
-    }
 }
 
 std::shared_ptr<mcl::ClientBuffer> mcl::ClientBufferDepository::current_buffer()
@@ -77,7 +75,11 @@ uint32_t mcl::ClientBufferDepository::current_buffer_id() const
     return buffers.front().first;
 }
 
-void mcl::ClientBufferDepository::set_max_buffers(unsigned int max_buffers)
+void mcl::ClientBufferDepository::set_max_buffers(unsigned int new_max_buffers)
 {
-    (void) max_buffers;
+    if (!new_max_buffers)
+        BOOST_THROW_EXCEPTION(std::logic_error("ClientBufferDepository cache size cannot be 0"));
+    max_buffers = new_max_buffers;
+    while (buffers.size() > max_buffers)
+        buffers.pop_back();
 }
