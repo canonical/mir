@@ -20,6 +20,7 @@
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
+#include "mir/frontend/client_constants.h"
 #include "src/platforms/android/client/egl_native_surface_interpreter.h"
 #include "mir_test_doubles/stub_android_native_buffer.h"
 #include "mir_test/fake_shared.h"
@@ -253,6 +254,17 @@ TEST_F(AndroidInterpreter, request_to_set_buffer_count_sets_cache_size)
     int new_size = 5;
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     EXPECT_CALL(mock_surface, set_buffer_cache_size(new_size));
+    mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);
+    interpreter.dispatch_driver_request_buffer_count(new_size); 
+}
+
+TEST_F(AndroidInterpreter, does_not_set_lower_than_mir_frontend_cache_size)
+{
+    int new_size = mir::frontend::client_buffer_cache_size - 1;
+;
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
+    EXPECT_CALL(mock_surface, set_buffer_cache_size(new_size))
+        .Times(0);
     mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);
     interpreter.dispatch_driver_request_buffer_count(new_size); 
 }
