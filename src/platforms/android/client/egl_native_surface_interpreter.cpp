@@ -87,5 +87,5 @@ void mcla::EGLNativeSurfaceInterpreter::sync_to_display(bool should_sync)
 
 void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_buffer_count(unsigned int count)
 {
-    (void) count;
+    surface.set_buffer_cache_size(count);
 }

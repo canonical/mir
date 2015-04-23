@@ -258,12 +258,13 @@ try
     va_list args;
     va_copy(args, arg_list);
 
-    int driver_format;
     switch(key)
     {
         case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
-            driver_format = va_arg(args, int);
-            driver_interpreter->dispatch_driver_request_format(driver_format);
+            driver_interpreter->dispatch_driver_request_format(va_arg(args, int));
+            break;
+        case NATIVE_WINDOW_SET_BUFFER_COUNT:
+            driver_interpreter->dispatch_driver_request_buffer_count(va_arg(args, int));
             break;
         default:
             break;
