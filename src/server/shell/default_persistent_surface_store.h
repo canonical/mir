@@ -85,7 +85,7 @@ class DefaultPersistentSurfaceStore : public PersistentSurfaceStore
 public:
     DefaultPersistentSurfaceStore();
 
-    virtual std::unique_ptr<Id> id_for_surface(std::shared_ptr<scene::Surface> const& surface) override;
+    virtual Id const& id_for_surface(std::shared_ptr<scene::Surface> const& surface) override;
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) override;
 
 private:

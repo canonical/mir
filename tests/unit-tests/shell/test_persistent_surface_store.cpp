@@ -40,10 +40,10 @@ TEST(PersistentSurfaceStore, id_for_surface_is_idempotent)
 
     auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
 
-    auto id_one = map.id_for_surface(surface);
-    auto id_two = map.id_for_surface(surface);
+    auto& id_one = map.id_for_surface(surface);
+    auto& id_two = map.id_for_surface(surface);
 
-    EXPECT_TRUE(*id_one == *id_two);
+    EXPECT_TRUE(id_one == id_two);
 }
 
 TEST(PersistentSurfaceStore, id_is_stable_under_aliasing)
@@ -55,10 +55,10 @@ TEST(PersistentSurfaceStore, id_is_stable_under_aliasing)
     auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
     auto surface_alias = surface;
 
-    auto id_one = map.id_for_surface(surface);
-    auto id_two = map.id_for_surface(surface_alias);
+    auto& id_one = map.id_for_surface(surface);
+    auto& id_two = map.id_for_surface(surface_alias);
 
-    EXPECT_TRUE(*id_one == *id_two);
+    EXPECT_TRUE(id_one == id_two);
 }
 
 TEST(PersistentSurfaceStore, can_lookup_surface_by_id)
@@ -69,9 +69,9 @@ TEST(PersistentSurfaceStore, can_lookup_surface_by_id)
 
     auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
 
-    auto id = map.id_for_surface(surface);
+    auto& id = map.id_for_surface(surface);
 
-    auto looked_up_surface = map.surface_for_id(*id);
+    auto looked_up_surface = map.surface_for_id(id);
 
     EXPECT_THAT(looked_up_surface, Eq(surface));
 }
@@ -85,11 +85,11 @@ TEST(PersistentSurfaceStore, retrieves_correct_surface)
     auto surface_one = std::make_shared<NiceMock<mtd::MockSurface>>();
     auto surface_two = std::make_shared<NiceMock<mtd::MockSurface>>();
 
-    auto id_one = map.id_for_surface(surface_one);
-    auto id_two = map.id_for_surface(surface_two);
+    auto& id_one = map.id_for_surface(surface_one);
+    auto& id_two = map.id_for_surface(surface_two);
 
-    auto looked_up_surface_one = map.surface_for_id(*id_one);
-    auto looked_up_surface_two = map.surface_for_id(*id_two);
+    auto looked_up_surface_one = map.surface_for_id(id_one);
+    auto looked_up_surface_two = map.surface_for_id(id_two);
 
     EXPECT_THAT(looked_up_surface_one, Eq(surface_one));
     EXPECT_THAT(looked_up_surface_two, Eq(surface_two));

@@ -42,9 +42,8 @@ public:
 
     virtual ~PersistentSurfaceStore() = default;
 
-    virtual std::unique_ptr<Id> id_for_surface(std::shared_ptr<scene::Surface> const& surface) = 0;
+    virtual Id const& id_for_surface(std::shared_ptr<scene::Surface> const& surface) = 0;
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) = 0;
-
 };
 }
 }

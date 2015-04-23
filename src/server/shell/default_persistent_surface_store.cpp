@@ -56,7 +56,7 @@ msh::DefaultPersistentSurfaceStore::DefaultPersistentSurfaceStore()
 }
 
 auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::Surface> const& surface)
-    -> std::unique_ptr<Id>
+    -> Id const&
 {
     auto prexistent = std::find_if(store.cbegin(), store.cend(),
                                    [&surface](auto candidate)
@@ -65,13 +65,12 @@ auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::S
     });
     if (prexistent != store.cend())
     {
-        return std::make_unique<detail::UUID>(prexistent->first);
+        return prexistent->first;
     }
     else
     {
-        auto new_id = std::make_unique<detail::UUID>();
-        store[*new_id] = surface;
-        return std::move(new_id);
+        auto new_element = store.emplace(std::make_pair(detail::UUID{}, surface));
+        return new_element.first->first;
     }
 }
 
