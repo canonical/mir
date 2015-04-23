@@ -29,6 +29,7 @@ target_link_libraries(
   mirclientplatformX
 
   mirclient
+  EGL
   X11
 )
 

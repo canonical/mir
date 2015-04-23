@@ -80,8 +80,6 @@ mgx::Display::Display()
        EGL_NONE
     };
 
-    eglBindAPI(EGL_OPENGL_ES_API);
-
     scrno = DefaultScreen(x_dpy);
     root = RootWindow(x_dpy, scrno);
 
@@ -107,7 +105,7 @@ mgx::Display::Display()
 
     win = XCreateWindow(x_dpy, root, 0, 0, 1280, 1024,
                         0, visInfo->depth, InputOutput,
-                        visInfo->visual, mask, &attr );
+                        visInfo->visual, mask, &attr);
 
     std::cout<<"depth="<<visInfo->depth<<std::endl;
 
