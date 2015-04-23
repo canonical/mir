@@ -84,3 +84,8 @@ void mcla::EGLNativeSurfaceInterpreter::sync_to_display(bool should_sync)
 { 
     surface.request_and_wait_for_configure(mir_surface_attrib_swapinterval, should_sync);
 }
+
+void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_buffer_count(unsigned int count)
+{
+    (void) count;
+}

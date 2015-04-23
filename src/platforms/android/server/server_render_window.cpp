@@ -96,3 +96,7 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
 void mga::ServerRenderWindow::sync_to_display(bool)
 {
 }
+
+void mga::ServerRenderWindow::dispatch_driver_request_buffer_count(unsigned int)
+{
+}

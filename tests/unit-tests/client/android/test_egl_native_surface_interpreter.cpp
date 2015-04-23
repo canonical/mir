@@ -79,7 +79,7 @@ struct MockMirSurface : public mcl::EGLNativeSurface
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
     MOCK_METHOD0(request_and_wait_for_next_buffer, void());
     MOCK_METHOD2(request_and_wait_for_configure, void(MirSurfaceAttrib, int));
-    MOCK_METHOD1(set_buffer_cache_size(unsigned int));
+    MOCK_METHOD1(set_buffer_cache_size, void(unsigned int));
     MirSurfaceParameters params;
 };
 
@@ -254,5 +254,5 @@ TEST_F(AndroidInterpreter, request_to_set_buffer_count_sets_cache_size)
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     EXPECT_CALL(mock_surface, set_buffer_cache_size(new_size));
     mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);
-    interpreter.set_cache_size(new_size); 
+    interpreter.dispatch_driver_request_buffer_count(new_size); 
 }
