@@ -23,6 +23,9 @@
 #include "mir/client_context.h"
 #include "../debug.h"
 
+#include <boost/throw_exception.hpp>
+
+#include <X11/Xlib.h>
 #include <EGL/egl.h>
 
 //#include <cstring>
@@ -67,7 +70,10 @@ std::shared_ptr<EGLNativeDisplayType> mclx::ClientPlatform::create_egl_native_di
     CALLED
 
     auto native_display = std::make_shared<EGLNativeDisplayType>();
-    *native_display = EGL_DEFAULT_DISPLAY;
+//    *native_display = EGL_DEFAULT_DISPLAY;
+    *native_display = XOpenDisplay(NULL);
+    if (!(*native_display))
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get a display for client"));
     return native_display;
 }
 

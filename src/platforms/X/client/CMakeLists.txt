@@ -25,8 +25,11 @@ set_target_properties(
   LINK_FLAGS "-Wl,--version-script,${symbol_map}"
 )
 
-target_link_libraries(mirclientplatformX
+target_link_libraries(
+  mirclientplatformX
+
   mirclient
+  X11
 )
 
 install(TARGETS mirclientplatformX LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})
