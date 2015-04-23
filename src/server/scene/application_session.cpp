@@ -133,7 +133,7 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface(mf::SurfaceId id) c
 
 std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_ptr<ms::Surface> const& before) const
 {
-    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    std::lock_guard<std::mutex> lock(surfaces_and_streams_mutex);
     auto i = surfaces.begin();
     for (; i != surfaces.end(); ++i)
     {
