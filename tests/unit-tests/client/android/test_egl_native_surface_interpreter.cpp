@@ -261,7 +261,6 @@ TEST_F(AndroidInterpreter, request_to_set_buffer_count_sets_cache_size)
 TEST_F(AndroidInterpreter, does_not_set_lower_than_mir_frontend_cache_size)
 {
     int new_size = mir::frontend::client_buffer_cache_size - 1;
-;
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     EXPECT_CALL(mock_surface, set_buffer_cache_size(new_size))
         .Times(0);
