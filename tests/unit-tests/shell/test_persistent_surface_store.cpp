@@ -43,7 +43,7 @@ TEST(PersistentSurfaceStore, id_for_surface_is_idempotent)
     auto& id_one = map.id_for_surface(surface);
     auto& id_two = map.id_for_surface(surface);
 
-    EXPECT_TRUE(id_one == id_two);
+    EXPECT_THAT(id_one, Eq(std::ref(id_two)));
 }
 
 TEST(PersistentSurfaceStore, id_is_stable_under_aliasing)
@@ -58,7 +58,7 @@ TEST(PersistentSurfaceStore, id_is_stable_under_aliasing)
     auto& id_one = map.id_for_surface(surface);
     auto& id_two = map.id_for_surface(surface_alias);
 
-    EXPECT_TRUE(id_one == id_two);
+    EXPECT_THAT(id_one, Eq(std::ref(id_two)));
 }
 
 TEST(PersistentSurfaceStore, can_lookup_surface_by_id)
