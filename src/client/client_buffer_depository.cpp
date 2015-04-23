@@ -49,6 +49,7 @@ void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPacka
 
     if (existing_buffer_id_pair == buffers.end())
     {
+        printf("GENERATE\n");
         auto new_buffer = factory->create_buffer(package, size, pf);
         buffers.push_front(std::make_pair(id, new_buffer));
     }
@@ -60,7 +61,10 @@ void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPacka
     }
 
     if (buffers.size() > max_buffers)
+    {
+        printf("KICK.\n");
         buffers.pop_back();
+    }
 }
 
 std::shared_ptr<mcl::ClientBuffer> mcl::ClientBufferDepository::current_buffer()
@@ -71,4 +75,9 @@ std::shared_ptr<mcl::ClientBuffer> mcl::ClientBufferDepository::current_buffer()
 uint32_t mcl::ClientBufferDepository::current_buffer_id() const
 {
     return buffers.front().first;
+}
+
+void mcl::ClientBufferDepository::set_max_buffers(unsigned int max_buffers)
+{
+    (void) max_buffers;
 }
