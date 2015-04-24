@@ -194,9 +194,9 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
     float const error_margin = 0.1f;
     auto observed_latency = display.group.average_latency();
 
-    // FIXME: LP: #1447947: We broke this test around r2387. Now the production
-    //        rate is seemingly throttled to the consumption rate you will only
-    //        ever measure latency around 1.0, regardless of nbuffers.
+    // FIXME: LP: #1447947: This actually doesn't work as intended. Raising
+    //        the queue length isn't affecting the measured latency for some
+    //        reason. But latency too low is better than too high.
     //EXPECT_THAT(observed_latency, AllOf(Gt(expected_latency-error_margin),
     //                                    Lt(expected_latency+error_margin)));
 
