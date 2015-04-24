@@ -59,6 +59,10 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
     MOCK_METHOD0(drop_old_buffers, void());
     MOCK_METHOD0(drop_client_requests, void());
+
+    MOCK_METHOD2(swap_buffers, void(graphics::Buffer*, std::function<void(graphics::Buffer*)>));
+    MOCK_METHOD1(with_most_recent_buffer_do, void(std::function<void(graphics::Buffer&)> const&));
+    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 };
 }
 }

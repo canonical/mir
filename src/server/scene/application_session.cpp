@@ -251,6 +251,9 @@ void ms::ApplicationSession::resume_prompt_session()
 
 std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::BufferStreamId id) const
 {
+    (void) id;
+    return nullptr;
+#if 0
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
 
     auto p = streams.find(id);
@@ -258,6 +261,7 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
         return checked_find(mf::SurfaceId(id.as_value()))->second;
     else 
         return p->second;
+#endif
 }
 
 mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)

@@ -220,6 +220,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     tools->info_for(surface).children.push_back(titlebar);
 
     //TODO: provide an easier way for the server to write to a surface!
+#if 0
     std::mutex mut;
     std::condition_variable cv;
     mir::graphics::Buffer* written_buffer{nullptr};
@@ -243,7 +244,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     }
 
     titlebar->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
-
+#endif
     CanonicalSurfaceInfoCopy info{session, titlebar, ms::SurfaceCreationParameters{}};
     info.is_titlebar = true;
     info.parent = surface;

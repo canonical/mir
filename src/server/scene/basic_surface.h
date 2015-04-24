@@ -114,7 +114,8 @@ public:
     MirPixelFormat pixel_format() const override;
 
     std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
-    void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
+    void with_primary_buffer_stream(std::function<void(frontend::BufferStream& stream)> const& fn) override;
+//    void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
     void force_requests_to_complete() override;
 
     bool supports_input() const override;

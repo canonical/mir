@@ -86,6 +86,9 @@ struct StubStream : public mc::BufferStream
     int buffers_ready_for_compositor(void const*) const override { return -5; }
     void drop_old_buffers() {}
     void drop_client_requests() override {}
+    void swap_buffers(mg::Buffer*, std::function<void(mg::Buffer*)>) override {}
+    void with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const&) {}
+    MirPixelFormat pixel_format() const { return mir_pixel_format_abgr_8888; }
 
     std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
     std::vector<mg::BufferID> const buffer_id_seq;

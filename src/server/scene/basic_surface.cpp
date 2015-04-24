@@ -231,26 +231,14 @@ MirPixelFormat ms::BasicSurface::pixel_format() const
     return surface_buffer_stream->get_stream_pixel_format();
 }
 
-void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(mg::Buffer* new_buffer)> complete)
+void ms::BasicSurface::with_primary_buffer_stream(
+    std::function<void(frontend::BufferStream& stream)> const& fn)
 {
-    if (old_buffer)
-    {
-        surface_buffer_stream->release_client_buffer(old_buffer);
-        {
-            std::unique_lock<std::mutex> lk(guard);
-            first_frame_posted = true;
-        }
-
-        /*
-         * TODO: In future frame_posted() could be made parameterless.
-         *       The new method of catching up on buffer backlogs is to
-         *       query buffers_ready_for_compositor() or Scene::frames_pending
-         */
-        observers.frame_posted(1);
-    }
-
-    surface_buffer_stream->acquire_client_buffer(complete);
+    fn(*surface_buffer_stream);
 }
+
+#if 0
+#endif
 
 void ms::BasicSurface::allow_framedropping(bool allow)
 {
@@ -668,12 +656,12 @@ struct CursorStreamImageAdapter
         observer = std::make_shared<FramePostObserver>([&](){
                 post_cursor_image_from_current_buffer();
             });
-        stream->add_observer(observer);
+        //stream->add_observer(observer);
     }
 
     ~CursorStreamImageAdapter()
     {
-        stream->remove_observer(observer);
+        //stream->remove_observer(observer);
     }
 
     void post_cursor_image_from_current_buffer()

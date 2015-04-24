@@ -72,6 +72,8 @@ void swap_buffers_blocking(mf::Surface& surf, mg::Buffer*& buffer)
     std::condition_variable cv;
     bool done = false;
 
+    (void) surf; (void) buffer;
+#if 0
     surf.swap_buffers(buffer,
         [&](mg::Buffer* new_buffer)
         {
@@ -80,7 +82,7 @@ void swap_buffers_blocking(mf::Surface& surf, mg::Buffer*& buffer)
             done = true;
             cv.notify_one();
         });
-
+#endif
     std::unique_lock<decltype(mutex)> lock(mutex);
 
     cv.wait(lock, [&]{ return done; });

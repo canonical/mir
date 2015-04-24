@@ -71,6 +71,9 @@ public:
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
 
+    void swap_buffers(mg::Buffer*, std::function<void(mg::Buffer*)>) override {}
+    void with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const&) {}
+    MirPixelFormat pixel_format() const { return mir_pixel_format_abgr_8888; }
 private:
     int render_operations_fd;
 };

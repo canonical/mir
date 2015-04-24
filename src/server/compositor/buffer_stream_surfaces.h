@@ -39,6 +39,11 @@ public:
     BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& swapper);
     ~BufferStreamSurfaces();
 
+    void swap_buffers(
+        graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
+    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec) override;
+    MirPixelFormat pixel_format() const override;
+
     void acquire_client_buffer(std::function<void(graphics::Buffer* buffer)> complete) override;
     void release_client_buffer(graphics::Buffer* buf) override;
 

@@ -100,9 +100,10 @@ TEST_F(SurfaceComposition, does_not_send_client_buffers_to_dead_surfaces)
 {
     auto surface = create_surface();
 
-    mg::Buffer* old_buffer{nullptr};
+//    mg::Buffer* old_buffer{nullptr};
 
     bool called_back = true;
+#if 0
     auto const callback = [&] (mg::Buffer* new_buffer)
         {
             // If surface is dead then callback is not expected
@@ -110,14 +111,14 @@ TEST_F(SurfaceComposition, does_not_send_client_buffers_to_dead_surfaces)
             old_buffer = new_buffer;
             called_back = true;
         };
-
+#endif
     // Exhaust the buffers to ensure we have a pending swap to complete
     // But also be careful to not pass a formerly released non-null old_buffer
     // in to swap_buffers...
     while (called_back)
     {
         called_back = false;
-        surface->swap_buffers(old_buffer, callback);
+//        surface->swap_buffers(old_buffer, callback);
     }
 
     auto const renderable = surface->compositor_snapshot(this);
