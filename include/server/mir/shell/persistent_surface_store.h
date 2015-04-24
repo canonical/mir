@@ -20,7 +20,7 @@
 #define MIR_SHELL_PERSISTENT_SURFACE_STORE_H_
 
 #include <memory>
-#include <string>
+#include <vector>
 
 namespace mir
 {
@@ -39,8 +39,6 @@ public:
     public:
         virtual ~Id() = default;
         virtual bool operator==(Id const& rhs) const = 0;
-
-        virtual std::string serialise_to_string() const = 0;
     };
 
     virtual ~PersistentSurfaceStore() = default;
@@ -48,7 +46,8 @@ public:
     virtual Id const& id_for_surface(std::shared_ptr<scene::Surface> const& surface) = 0;
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) = 0;
 
-    virtual Id const& deserialise(std::string const& string_repr) const = 0;
+    virtual Id const& deserialise_id(std::vector<uint8_t> const& buffer) const = 0;
+    virtual std::vector<uint8_t> serialise_id(Id const& id) const = 0;
 };
 }
 }

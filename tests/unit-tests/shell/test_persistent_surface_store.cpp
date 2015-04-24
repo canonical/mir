@@ -105,8 +105,8 @@ TEST(PersistentSurfaceStore, can_roundtrip_ids_to_strings)
 
     auto& id_one = map.id_for_surface(surface);
 
-    auto string_repr = id_one.serialise_to_string();
-    auto& id_two = map.deserialise(string_repr);
+    auto buf = map.serialise_id(id_one);
+    auto& id_two = map.deserialise_id(buf);
 
     EXPECT_THAT(id_one, Eq(std::ref(id_two)));
 }

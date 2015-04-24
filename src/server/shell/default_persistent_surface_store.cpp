@@ -35,9 +35,8 @@ public:
 
     bool operator==(Id const& rhs) const override;
 
-    std::string serialise_to_string() const override;
-
     std::size_t hash() const;
+    std::vector<uint8_t> serialise() const;
 private:
     uuid_t value;
 };
@@ -67,17 +66,17 @@ bool UUID::operator==(msh::PersistentSurfaceStore::Id const& rhs) const
     return false;
 }
 
-std::string UUID::serialise_to_string() const
-{
-    char buf[37];
-    uuid_unparse(value, buf);
-    return buf;
-}
-
 std::size_t UUID::hash() const
 {
     return std::hash<uint64_t>()(*reinterpret_cast<uint64_t const*>(value)) ^
            std::hash<uint64_t>()(*reinterpret_cast<uint64_t const*>(value + 8));
+}
+
+std::vector<uint8_t> UUID::serialise() const
+{
+    std::vector<uint8_t> buf(37);
+    uuid_unparse(value, reinterpret_cast<char*>(buf.data()));
+    return buf;
 }
 }
 
@@ -162,10 +161,15 @@ std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(
     return {};
 }
 
-auto msh::DefaultPersistentSurfaceStore::deserialise(std::string const& string_repr) const
+std::vector<uint8_t> msh::DefaultPersistentSurfaceStore::serialise_id(Id const& id) const
+{
+    return reinterpret_cast<UUID const&>(id).serialise();
+}
+
+auto msh::DefaultPersistentSurfaceStore::deserialise_id(std::vector<uint8_t> const& buf) const
     -> Id const&
 {
-    UUID uuid{string_repr};
+    UUID uuid{reinterpret_cast<char const*>(buf.data())};
 
     auto surface = (*store)[uuid];
     return (*store)[surface];
