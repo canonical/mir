@@ -18,28 +18,46 @@
 
 #include "default_persistent_surface_store.h"
 #include <uuid/uuid.h>
-#include <array>
 #include <algorithm>
+#include <unordered_map>
 
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 
-msh::detail::UUID::UUID()
+namespace
+{
+class UUID : public msh::PersistentSurfaceStore::Id
+{
+public:
+    UUID();
+    UUID(std::string const& string_repr);
+    UUID(UUID const& copy_from);
+
+    bool operator==(Id const& rhs) const override;
+
+    std::string serialise_to_string() const override;
+
+    std::size_t hash() const;
+private:
+    uuid_t value;
+};
+
+UUID::UUID()
 {
     uuid_generate(value);
 }
 
-msh::detail::UUID::UUID(std::string const& string_repr)
+UUID::UUID(std::string const& string_repr)
 {
     uuid_parse(string_repr.c_str(), value);
 }
 
-msh::detail::UUID::UUID(UUID const& copy_from)
+UUID::UUID(UUID const& copy_from)
 {
     std::copy(copy_from.value, copy_from.value + sizeof(copy_from.value), value);
 }
 
-bool msh::detail::UUID::operator==(msh::PersistentSurfaceStore::Id const& rhs) const
+bool UUID::operator==(msh::PersistentSurfaceStore::Id const& rhs) const
 {
     auto rhs_resolved = dynamic_cast<UUID const*>(&rhs);
     if (rhs_resolved)
@@ -49,46 +67,97 @@ bool msh::detail::UUID::operator==(msh::PersistentSurfaceStore::Id const& rhs) c
     return false;
 }
 
-std::string msh::detail::UUID::serialise_to_string() const
+std::string UUID::serialise_to_string() const
 {
     char buf[37];
     uuid_unparse(value, buf);
     return buf;
 }
 
-auto std::hash<msh::detail::UUID>::operator()(argument_type const& arg) const
-    -> result_type
+std::size_t UUID::hash() const
 {
-    return std::hash<uint64_t>()(*reinterpret_cast<uint64_t const*>(arg.value)) ^
-           std::hash<uint64_t>()(*reinterpret_cast<uint64_t const*>(arg.value + 8));
+    return std::hash<uint64_t>()(*reinterpret_cast<uint64_t const*>(value)) ^
+           std::hash<uint64_t>()(*reinterpret_cast<uint64_t const*>(value + 8));
+}
+}
+
+namespace std
+{
+template<>
+struct hash<UUID>
+{
+    typedef UUID argument_type;
+    typedef std::size_t result_type;
+
+    result_type operator()(argument_type const& uuid) const
+    {
+        return uuid.hash();
+    }
+};
+}
+
+class msh::DefaultPersistentSurfaceStore::SurfaceIdBimap
+{
+public:
+    UUID const& insert_or_retrieve(std::shared_ptr<scene::Surface> const& surface);
+
+    std::shared_ptr<scene::Surface> operator[](UUID const& id) const;
+    UUID const& operator[](std::shared_ptr<scene::Surface> const& surface) const;
+
+private:
+    std::unordered_map<UUID, std::shared_ptr<scene::Surface>> id_to_surface;
+    std::unordered_map<scene::Surface const*, UUID const*> surface_to_id;
+};
+
+UUID const& msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::insert_or_retrieve(std::shared_ptr<scene::Surface> const& surface)
+{
+    auto element = surface_to_id.insert(std::make_pair(surface.get(), nullptr));
+    if (!element.second)
+    {
+        // Surface already exists in our map, return it.
+        return *element.first->second;
+    }
+    else
+    {
+        auto new_element = id_to_surface.insert(std::make_pair(UUID{}, surface));
+        // Update the surface_to_id map element from nullptr to our new UUID
+        element.first->second = &new_element.first->first;
+        return *element.first->second;
+    }
+}
+
+UUID const& msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::operator[](std::shared_ptr<scene::Surface> const& surface) const
+{
+    return *surface_to_id.at(surface.get());
+}
+
+auto msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::operator[](UUID const& id) const
+    -> std::shared_ptr<scene::Surface>
+{
+    return id_to_surface.at(id);
 }
 
 msh::DefaultPersistentSurfaceStore::DefaultPersistentSurfaceStore()
+    : store{std::make_unique<SurfaceIdBimap>()}
+{
+}
+
+msh::DefaultPersistentSurfaceStore::~DefaultPersistentSurfaceStore()
 {
 }
 
 auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::Surface> const& surface)
     -> Id const&
 {
-    auto& surface_id = surface_to_id[surface.get()];
-    if (surface_id)
-    {
-        return *surface_id;
-    }
-    else
-    {
-        auto new_element = id_to_surface.emplace(std::make_pair(detail::UUID{}, surface));
-        surface_id = &new_element.first->first;
-        return *surface_id;
-    }
+    return store->insert_or_retrieve(surface);
 }
 
 std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(Id const& id)
 {
-    auto uuid = dynamic_cast<detail::UUID const*>(&id);
+    auto uuid = dynamic_cast<UUID const*>(&id);
     if (uuid != nullptr)
     {
-        return id_to_surface.at(*uuid);
+        return (*store)[*uuid];
     }
     return {};
 }
@@ -96,8 +165,8 @@ std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(
 auto msh::DefaultPersistentSurfaceStore::deserialise(std::string const& string_repr) const
     -> Id const&
 {
-    detail::UUID uuid{string_repr};
+    UUID uuid{string_repr};
 
-    auto tmp = id_to_surface.at(uuid);
-    return *surface_to_id.at(tmp.get());
+    auto surface = (*store)[uuid];
+    return (*store)[surface];
 }
