@@ -54,14 +54,14 @@ function (mir_discover_tests EXECUTABLE)
     message(STATUS "Kernel version detected: " ${KERNEL_VERSION})
     # Some tests expect kernel version 3.11 and up
     if (${KERNEL_VERSION} VERSION_LESS "3.11")
-        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
+        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}
             "--gtest_filter=-*DeathTest.*:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer")
     else()
-        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
+        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}
             "--gtest_filter=-*DeathTest.*")
     endif()
 
-    add_test(${EXECUTABLE}_death_tests ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} "--gtest_filter=*DeathTest.*")
+    add_test(${EXECUTABLE}_death_tests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE} "--gtest_filter=*DeathTest.*")
     if (${ARGC} GREATER 1)
       set_property(TEST ${EXECUTABLE} PROPERTY ENVIRONMENT ${ARGN})
       set_property(TEST ${EXECUTABLE}_death_tests PROPERTY ENVIRONMENT ${ARGN})
@@ -74,7 +74,7 @@ function (mir_discover_tests EXECUTABLE)
     # These targets are always considered out-of-date, and are always run (at least for normal builds, except for make test/install).
     add_custom_target(
       ${CHECK_TEST_DISCOVERY_TARGET_NAME} ALL
-      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests > /dev/null
+      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE} --gtest_list_tests > /dev/null
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       COMMENT "Check that discovering Tests in ${EXECUTABLE} works")
       
@@ -106,7 +106,7 @@ function (mir_discover_tests EXECUTABLE)
 
     add_custom_target(
       ${TEST_DISCOVERY_TARGET_NAME} ALL
-      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --exclusions=${EXCLUDED_TESTS} ${DISCOVER_FLAGS}
+      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE} --exclusions=${EXCLUDED_TESTS} ${DISCOVER_FLAGS}
       ${EXTRA_ENV_FLAGS}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       COMMENT "Discovering Tests in ${EXECUTABLE}" VERBATIM)
@@ -190,7 +190,7 @@ function (mir_add_wrapped_executable TARGET)
   if ("${modifier}" STREQUAL "NOINSTALL")
     list(REMOVE_AT ARGN 0)
   else()
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/${REAL_EXECUTABLE}
+    install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${REAL_EXECUTABLE}
       DESTINATION ${CMAKE_INSTALL_BINDIR}
       RENAME ${TARGET}
     )
@@ -203,7 +203,7 @@ function (mir_add_wrapped_executable TARGET)
   )
 
   add_custom_target(${TARGET}-wrapped
-    ln -fs wrapper ${CMAKE_BINARY_DIR}/bin/${TARGET}
+    ln -fs wrapper ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET}
   )
   add_dependencies(${TARGET} ${TARGET}-wrapped)
 endfunction()
