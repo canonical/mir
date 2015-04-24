@@ -138,7 +138,7 @@ function (mir_discover_tests EXECUTABLE)
   endif()
 
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_envs} -- ${discover_cmd_memcheck} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}\n")
+      "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_envs} -- ${discover_cmd_memcheck} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}\n")
 endfunction ()
 
 function (mir_add_memcheck_test)
