@@ -196,7 +196,7 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
 
     // FIXME: LP: #1447947: We broke this test around r2387. Now the production
     //        rate is seemingly throttled to the consumption rate you will only
-    //        ever measure a latency about 1, regardless of nbuffers.
+    //        ever measure latency around 1.0, regardless of nbuffers.
     //EXPECT_THAT(observed_latency, AllOf(Gt(expected_latency-error_margin),
     //                                    Lt(expected_latency+error_margin)));
 
