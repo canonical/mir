@@ -41,7 +41,7 @@ namespace frontend
 {
 class ClientBufferTracker;
 
-class Surface : public BufferStream
+class Surface // : public BufferStream
 {
 public:
     virtual ~Surface() = default;

@@ -123,6 +123,13 @@ TEST_F(BasicSurfaceTest, basics)
     EXPECT_FALSE(surface.compositor_snapshot(compositor_id)->shaped());
 }
 
+TEST_F(BasicSurfaceTest, with_primary_buffer_stream)
+{
+    surface.with_primary_buffer_stream([](mf::BufferStream& stream) {
+        EXPECT_THAT(&stream, Eq(mock_buffer_stream.get()));
+    });
+}
+
 TEST_F(BasicSurfaceTest, id_always_unique)
 {
     int const N = 10;
