@@ -51,9 +51,12 @@ class UUID : public PersistentSurfaceStore::Id
 {
 public:
     UUID();
+    UUID(std::string const& string_repr);
     UUID(UUID const& copy_from);
 
     bool operator==(Id const& rhs) const override;
+
+    std::string serialise_to_string() const override;
 private:
     uuid_t value;
 
@@ -88,6 +91,7 @@ public:
     virtual Id const& id_for_surface(std::shared_ptr<scene::Surface> const& surface) override;
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) override;
 
+    virtual Id const& deserialise(std::string const& string_repr) const override;
 private:
     std::unordered_map<detail::UUID, std::shared_ptr<scene::Surface>> id_to_surface;
     std::unordered_map<scene::Surface const*, detail::UUID const*> surface_to_id;

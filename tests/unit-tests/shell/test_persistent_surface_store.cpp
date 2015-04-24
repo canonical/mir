@@ -94,3 +94,19 @@ TEST(PersistentSurfaceStore, retrieves_correct_surface)
     EXPECT_THAT(looked_up_surface_one, Eq(surface_one));
     EXPECT_THAT(looked_up_surface_two, Eq(surface_two));
 }
+
+TEST(PersistentSurfaceStore, can_roundtrip_ids_to_strings)
+{
+    using namespace testing;
+
+    msh::DefaultPersistentSurfaceStore map;
+
+    auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+
+    auto& id_one = map.id_for_surface(surface);
+
+    auto string_repr = id_one.serialise_to_string();
+    auto& id_two = map.deserialise(string_repr);
+
+    EXPECT_THAT(id_one, Eq(std::ref(id_two)));
+}

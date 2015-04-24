@@ -29,6 +29,11 @@ msh::detail::UUID::UUID()
     uuid_generate(value);
 }
 
+msh::detail::UUID::UUID(std::string const& string_repr)
+{
+    uuid_parse(string_repr.c_str(), value);
+}
+
 msh::detail::UUID::UUID(UUID const& copy_from)
 {
     std::copy(copy_from.value, copy_from.value + sizeof(copy_from.value), value);
@@ -42,6 +47,13 @@ bool msh::detail::UUID::operator==(msh::PersistentSurfaceStore::Id const& rhs) c
         return !uuid_compare(value, rhs_resolved->value);
     }
     return false;
+}
+
+std::string msh::detail::UUID::serialise_to_string() const
+{
+    char buf[37];
+    uuid_unparse(value, buf);
+    return buf;
 }
 
 auto std::hash<msh::detail::UUID>::operator()(argument_type const& arg) const
@@ -79,4 +91,13 @@ std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(
         return id_to_surface.at(*uuid);
     }
     return {};
+}
+
+auto msh::DefaultPersistentSurfaceStore::deserialise(std::string const& string_repr) const
+    -> Id const&
+{
+    detail::UUID uuid{string_repr};
+
+    auto tmp = id_to_surface.at(uuid);
+    return *surface_to_id.at(tmp.get());
 }
