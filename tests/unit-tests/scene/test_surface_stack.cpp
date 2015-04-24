@@ -56,8 +56,9 @@ namespace
 
 void post_a_frame(ms::Surface& s)
 {
-    mtd::StubBuffer old_buffer;
-    s.swap_buffers(&old_buffer, [](mg::Buffer*){});
+    (void)s;
+ //   mtd::StubBuffer old_buffer;
+//    s.swap_buffers(&old_buffer, [](mg::Buffer*){});
 }
 
 MATCHER_P(SurfaceWithInputReceptionMode, mode, "")
