@@ -54,6 +54,9 @@ int get_output_width()
             width = w.ws_col;
     }
 
+    // If width is zero we likely don't have a terminal
+    if (width == 0) width = 80;
+
     return width;
 }
 
