@@ -77,7 +77,7 @@ private:
         if (auto const s = surface.lock())
         {
             focus_controller->set_focus_to(session.lock(), s);
-            //s->remove_observer(shared_from_this());
+            s->remove_observer(shared_from_this());
         }
     }
 
@@ -96,7 +96,7 @@ auto msh::DefaultWindowManager::add_surface(
     auto const result = build(session, placement_strategy->place(*session, params));
     auto const surface = session->surface(result);
 
-//    surface->add_observer(std::make_shared<SurfaceReadyObserver>(focus_controller, session, surface));
+    surface->add_observer(std::make_shared<SurfaceReadyObserver>(focus_controller, session, surface));
 
     return result;
 }

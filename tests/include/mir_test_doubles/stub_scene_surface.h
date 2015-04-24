@@ -106,7 +106,7 @@ public:
 
 
     MirPixelFormat pixel_format() const { return mir_pixel_format_abgr_8888; }
-    void with_primary_buffer_stream(std::function<void(frontend::BufferStream& stream)> const&) {}
+    std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const { return nullptr; }
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const&) {}
 };
 

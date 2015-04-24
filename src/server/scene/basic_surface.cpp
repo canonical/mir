@@ -231,14 +231,10 @@ MirPixelFormat ms::BasicSurface::pixel_format() const
     return surface_buffer_stream->get_stream_pixel_format();
 }
 
-void ms::BasicSurface::with_primary_buffer_stream(
-    std::function<void(frontend::BufferStream& stream)> const& fn)
+std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
 {
-    fn(*surface_buffer_stream);
+    return surface_buffer_stream;
 }
-
-#if 0
-#endif
 
 void ms::BasicSurface::allow_framedropping(bool allow)
 {

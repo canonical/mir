@@ -43,7 +43,7 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
 {
     auto observer = std::make_shared<ms::LegacySurfaceChangeNotification>(
         scene_notify_change, buffer_notify_change);
-    //surface->add_observer(observer);
+    surface->add_observer(observer);
     
     {
         std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
@@ -69,7 +69,7 @@ void ms::LegacySceneChangeNotification::surface_removed(ms::Surface* surface)
         auto it = surface_observers.find(surface);
         if (it != surface_observers.end())
         {
-//            surface->remove_observer(it->second);
+            surface->remove_observer(it->second);
             surface_observers.erase(it);
         }
     }
@@ -89,11 +89,11 @@ void ms::LegacySceneChangeNotification::scene_changed()
 void ms::LegacySceneChangeNotification::end_observation()
 {
     std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
-//    for (auto &kv : surface_observers)
-//    {
-//        auto surface = kv.first;
-//        if (surface)
-//            surface->remove_observer(kv.second);
-//    }
+    for (auto &kv : surface_observers)
+    {
+        auto surface = kv.first;
+        if (surface)
+            surface->remove_observer(kv.second);
+    }
     surface_observers.clear();
 }

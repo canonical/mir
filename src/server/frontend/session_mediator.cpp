@@ -269,22 +269,20 @@ void mf::SessionMediator::create_surface(
         setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
-    surface->with_primary_buffer_stream(
-        [this, &lock, response, done, session, surf_id](mf::BufferStream& stream) {
-        auto stream_id = mf::BufferStreamId(surf_id.as_value());
-        advance_buffer(stream_id, stream, buffer_stream_tracker.last_buffer(stream_id), lock,
-            [this, surf_id, response, done, session]
-            (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
-            {
-                response->mutable_buffer_stream()->mutable_id()->set_value(
-                   surf_id.as_value());
-                pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(),
-                             client_buffer,
-                             msg_type);
+    auto stream = surface->primary_buffer_stream();
+    auto stream_id = mf::BufferStreamId(surf_id.as_value());
+    advance_buffer(stream_id, *stream, buffer_stream_tracker.last_buffer(stream_id), lock,
+        [this, surf_id, response, done, session]
+        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
+        {
+            response->mutable_buffer_stream()->mutable_id()->set_value(
+               surf_id.as_value());
+            pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(),
+                         client_buffer,
+                         msg_type);
 
-                done->Run();
-            });
-    });
+            done->Run();
+        });
 
 }
 
@@ -306,18 +304,16 @@ void mf::SessionMediator::next_buffer(
     report->session_next_buffer_called(session->name());
 
     auto surface = session->get_surface(surf_id);
+    auto stream = surface->primary_buffer_stream();
     auto stream_id = mf::BufferStreamId{surf_id.as_value()};
 
-    surface->with_primary_buffer_stream(
-        [this, &lock, response, done, session, stream_id](mf::BufferStream& stream) {
-        advance_buffer(stream_id, stream, buffer_stream_tracker.last_buffer(stream_id), lock,
-            [this, response, done]
-            (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
-            {
-                pack_protobuf_buffer(*response, client_buffer, msg_type);
-                done->Run();
-            });
-    });
+    advance_buffer(stream_id, *stream, buffer_stream_tracker.last_buffer(stream_id), lock,
+        [this, response, done]
+        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
+        {
+            pack_protobuf_buffer(*response, client_buffer, msg_type);
+            done->Run();
+        });
 }
 
 void mf::SessionMediator::exchange_buffer(

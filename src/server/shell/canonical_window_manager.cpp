@@ -206,7 +206,7 @@ private:
         if (auto const s = surface.lock())
         {
             focus_controller->set_focus_to(session.lock(), s);
-//            s->remove_observer(shared_from_this());
+            s->remove_observer(shared_from_this());
         }
     }
 
@@ -237,7 +237,7 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
         // TODO There's currently no way to insert surfaces into an active (or inactive)
         // TODO window tree while keeping the order stable or consistent with spec.
         // TODO Nor is there a way to update the "default surface" when appropriate!!
-        //surface->add_observer(std::make_shared<SurfaceReadyObserver>(tools, session, surface));
+        surface->add_observer(std::make_shared<SurfaceReadyObserver>(tools, session, surface));
         active_surface_ = surface;
         break;
 
