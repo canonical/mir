@@ -1,7 +1,9 @@
 cmake_minimum_required (VERSION 2.6)
 # Create target to discover tests
+include (CMakeParseArguments)
 
 include(CMakeDependentOption)
+file(REMOVE ${CMAKE_BINARY_DIR}/discover_all_tests.sh)
 
 CMAKE_DEPENDENT_OPTION(
   DISABLE_GTEST_TEST_DISCOVERY
@@ -54,14 +56,14 @@ function (mir_discover_tests EXECUTABLE)
     message(STATUS "Kernel version detected: " ${KERNEL_VERSION})
     # Some tests expect kernel version 3.11 and up
     if (${KERNEL_VERSION} VERSION_LESS "3.11")
-        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
+        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}
             "--gtest_filter=-*DeathTest.*:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer")
     else()
-        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
+        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}
             "--gtest_filter=-*DeathTest.*")
     endif()
 
-    add_test(${EXECUTABLE}_death_tests ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} "--gtest_filter=*DeathTest.*")
+    add_test(${EXECUTABLE}_death_tests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE} "--gtest_filter=*DeathTest.*")
     if (${ARGC} GREATER 1)
       set_property(TEST ${EXECUTABLE} PROPERTY ENVIRONMENT ${ARGN})
       set_property(TEST ${EXECUTABLE}_death_tests PROPERTY ENVIRONMENT ${ARGN})
@@ -74,7 +76,7 @@ function (mir_discover_tests EXECUTABLE)
     # These targets are always considered out-of-date, and are always run (at least for normal builds, except for make test/install).
     add_custom_target(
       ${CHECK_TEST_DISCOVERY_TARGET_NAME} ALL
-      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests > /dev/null
+      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE} --gtest_list_tests > /dev/null
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       COMMENT "Check that discovering Tests in ${EXECUTABLE} works")
       
@@ -106,7 +108,7 @@ function (mir_discover_tests EXECUTABLE)
 
     add_custom_target(
       ${TEST_DISCOVERY_TARGET_NAME} ALL
-      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --exclusions=${EXCLUDED_TESTS} ${DISCOVER_FLAGS}
+      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE} --exclusions=${EXCLUDED_TESTS} ${DISCOVER_FLAGS}
       ${EXTRA_ENV_FLAGS}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       COMMENT "Discovering Tests in ${EXECUTABLE}" VERBATIM)
@@ -123,6 +125,20 @@ function (mir_discover_tests EXECUTABLE)
       mir_discover_gtest_tests)
 
   endif()
+
+  foreach (env ${ARGN})
+    set(discover_envs "${discover_envs} --env ${env}")
+  endforeach()
+
+  if(ENABLE_MEMCHECK_OPTION)
+    set(discover_cmd_memcheck "${VALGRIND_EXECUTABLE}")
+    foreach (arg ${VALGRIND_ARGS})
+      set(discover_cmd_memcheck "${discover_cmd_memcheck} ${arg}")
+    endforeach()
+  endif()
+
+  file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+      "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_envs} -- ${discover_cmd_memcheck} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}\n")
 endfunction ()
 
 function (mir_add_memcheck_test)
@@ -131,7 +147,8 @@ function (mir_add_memcheck_test)
 	add_custom_target(
 	  memcheck_test ALL
 	)
-	ADD_TEST("memcheck-test" ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error)
+    mir_add_test(NAME "memcheck-test"
+      COMMAND ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error)
 	add_dependencies(
 	  memcheck_test
 
@@ -190,7 +207,7 @@ function (mir_add_wrapped_executable TARGET)
   if ("${modifier}" STREQUAL "NOINSTALL")
     list(REMOVE_AT ARGN 0)
   else()
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/${REAL_EXECUTABLE}
+    install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${REAL_EXECUTABLE}
       DESTINATION ${CMAKE_INSTALL_BINDIR}
       RENAME ${TARGET}
     )
@@ -203,7 +220,29 @@ function (mir_add_wrapped_executable TARGET)
   )
 
   add_custom_target(${TARGET}-wrapped
-    ln -fs wrapper ${CMAKE_BINARY_DIR}/bin/${TARGET}
+    ln -fs wrapper ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET}
   )
   add_dependencies(${TARGET} ${TARGET}-wrapped)
+endfunction()
+
+function (mir_add_test)
+  # Add test normally
+  add_test(${ARGN})
+
+  # Add to to discovery for parallel test running
+  set(one_value_args "NAME" WORKING_DIRECTORY)
+  set(multi_value_args "COMMAND")
+  cmake_parse_arguments(MAT "" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+  foreach (cmd ${MAT_COMMAND})
+    set(cmdstr "${cmdstr} \\\"${cmd}\\\"")
+  endforeach()
+
+  file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+    "echo \"add_test(${MAT_NAME} ${cmdstr})\"\n")
+
+  if (MAT_WORKING_DIRECTORY)
+    file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+      "echo \"set_tests_properties(${MAT_NAME} PROPERTIES WORKING_DIRECTORY \\\"${MAT_WORKING_DIRECTORY}\\\")\"\n")
+  endif()
 endfunction()
