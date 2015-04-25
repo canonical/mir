@@ -35,7 +35,7 @@ namespace graphics
 class DisplayConfiguration;
 }
 
-    namespace frontend
+namespace frontend
 {
 namespace detail
 {
