@@ -35,7 +35,8 @@ using namespace mir::geometry;
 
 me::TilingSurfaceInfo::TilingSurfaceInfo(
     std::shared_ptr<scene::Session> const& session,
-    std::shared_ptr<scene::Surface> const& surface) :
+    std::shared_ptr<scene::Surface> const& surface,
+    scene::SurfaceCreationParameters const& /*params*/) :
     session{session},
     state{mir_surface_state_restored},
     restore_rect{surface->top_left(), surface->size()}
@@ -149,7 +150,7 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
 
     if (surfaces.empty() && session == tools->focused_session())
     {
-        tools->focus_next();
+        tools->focus_next_session();
         if (auto const surface = tools->focused_surface())
             tools->raise({surface});
     }

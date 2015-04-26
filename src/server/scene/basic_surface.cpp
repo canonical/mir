@@ -520,11 +520,6 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
     return new_orientation_mode;
 }
 
-void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
-{
-    targeter->focus_changed(input_channel());
-}
-
 int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = value;
@@ -552,9 +547,7 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
         result = set_preferred_orientation(static_cast<MirOrientationMode>(result));
         break;
     default:
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
-                                               "attribute."));
-        break;
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface attribute."));
     }
 
     return result;

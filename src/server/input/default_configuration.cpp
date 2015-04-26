@@ -368,9 +368,8 @@ mir::DefaultServerConfiguration::the_input_manager()
         [this]() -> std::shared_ptr<mi::InputManager>
         {
             auto const options = the_options();
-            bool input_reading_required =
-                options->get<bool>(options::enable_input_opt) &&
-                !options->is_set(options::host_socket_opt);
+            bool input_opt = options->get<bool>(options::enable_input_opt);
+            bool input_reading_required = input_opt && !options->is_set(options::host_socket_opt);
                 // TODO nested input handling (== host_socket) should fold into a platform
 
             if (input_reading_required)

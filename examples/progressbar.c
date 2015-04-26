@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
     conn = mir_connect_sync(NULL, argv[0]);
     if (!mir_connection_is_valid(conn))
     {
-        fprintf(stderr, "Could not connect to a display server.\n");
+        fprintf(stderr, "Could not connect to a display server: %s\n", mir_connection_get_error_message(conn));
         return 1;
     }
 
@@ -259,7 +259,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    mir_surface_spec_set_name(spec, "Progress Bars");
+    {
+        char name[128];
+        snprintf(name, sizeof(name)-1, "Progress Bars (%dHz)", hz);
+        name[sizeof(name)-1] = '\0';
+        mir_surface_spec_set_name(spec, name);
+    }
+
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
     surf = mir_surface_create_sync(spec);
@@ -267,11 +273,6 @@ int main(int argc, char *argv[])
 
     if (surf != NULL)
     {
-        char name[128];
-        snprintf(name, sizeof(name)-1, "Progress Bars (%dHz)", hz);
-        name[sizeof(name)-1] = '\0';
-        mir_surface_set_title(surf, name);
-
         canvas.width = width;
         canvas.height = height;
         canvas.stride = canvas.width * BYTES_PER_PIXEL(pixel_format);

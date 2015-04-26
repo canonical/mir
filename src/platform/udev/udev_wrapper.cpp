@@ -279,7 +279,7 @@ void mu::Monitor::process_events(std::function<void(mu::Monitor::EventType,
     udev_device *dev;
     do
     {
-        dev = udev_monitor_receive_device(const_cast<udev_monitor*>(monitor));
+        dev = udev_monitor_receive_device(monitor);
         if (dev != nullptr)
             handler(action_to_event_type(udev_device_get_action(dev)), DeviceImpl(dev));
     } while (dev != nullptr);
@@ -287,7 +287,7 @@ void mu::Monitor::process_events(std::function<void(mu::Monitor::EventType,
 
 int mu::Monitor::fd(void) const
 {
-    return udev_monitor_get_fd(const_cast<udev_monitor*>(monitor));
+    return udev_monitor_get_fd(monitor);
 }
 
 void mu::Monitor::filter_by_subsystem(std::string const& subsystem)

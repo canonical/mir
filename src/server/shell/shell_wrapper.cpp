@@ -41,9 +41,9 @@ void msh::ShellWrapper::close_session(std::shared_ptr<ms::Session> const& sessio
     wrapped->close_session(session);
 }
 
-void msh::ShellWrapper::focus_next()
+void msh::ShellWrapper::focus_next_session()
 {
-    wrapped->focus_next();
+    wrapped->focus_next_session();
 }
 
 std::shared_ptr<ms::Session> msh::ShellWrapper::focused_session() const

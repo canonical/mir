@@ -231,6 +231,17 @@ void mf::SessionMediator::create_surface(
     if (request->has_edge_attachment())
         params.with_edge_attachment(static_cast<MirEdgeAttachment>(request->edge_attachment()));
 
+    #define COPY_IF_SET(field)\
+        if (request->has_##field())\
+            params.field = decltype(params.field.value())(request->field())
+
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+
+    #undef COPY_IF_SET
+
     auto const surf_id = shell->create_surface(session, params);
 
     auto surface = session->get_surface(surf_id);
@@ -420,17 +431,45 @@ void mf::SessionMediator::modify_surface(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
+    auto const& surface_specification = request->surface_specification();
+
     {
         std::unique_lock<std::mutex> lock(session_mutex);
 
-        auto session = weak_session.lock();
+        auto const session = weak_session.lock();
         if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         msh::SurfaceSpecification mods;
-        if (request->has_name())
-            mods.name = request->name();
-        // TODO: More fields soon (LP: #1422522) (LP: #1420573)
+
+        #define COPY_IF_SET(name)\
+            if (surface_specification.has_##name())\
+                mods.name = decltype(mods.name.value())(surface_specification.name())
+
+        COPY_IF_SET(width);
+        COPY_IF_SET(height);
+        COPY_IF_SET(pixel_format);
+        COPY_IF_SET(buffer_usage);
+        COPY_IF_SET(name);
+        COPY_IF_SET(output_id);
+        COPY_IF_SET(type);
+        COPY_IF_SET(state);
+        COPY_IF_SET(preferred_orientation);
+        COPY_IF_SET(parent_id);
+        // aux_rect is a special case (below)
+        COPY_IF_SET(edge_attachment);
+        COPY_IF_SET(min_width);
+        COPY_IF_SET(min_height);
+        COPY_IF_SET(max_width);
+        COPY_IF_SET(max_height);
+
+        #undef COPY_IF_SET
+
+        if (surface_specification.has_aux_rect())
+        {
+            auto const& rect = surface_specification.aux_rect();
+            mods.aux_rect = {{rect.left(), rect.top()}, {rect.width(), rect.height()}};
+        }
 
         auto const id = mf::SurfaceId(request->surface_id().value());
 
@@ -561,16 +600,8 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
 
     report->session_create_surface_called(session->name());
     
-    mg::BufferUsage usage = mg::BufferUsage::undefined;
-    auto client_usage = request->buffer_usage();
-    if (client_usage == mir_buffer_usage_hardware)
-    {
-        usage = mg::BufferUsage::hardware;
-    }
-    else
-    {
-        usage = mg::BufferUsage::software;
-    }
+    auto const usage = (request->buffer_usage() == mir_buffer_usage_hardware) ?
+        mg::BufferUsage::hardware : mg::BufferUsage::software;
 
     auto stream_size = geom::Size{geom::Width{request->width()}, geom::Height{request->height()}};
     mg::BufferProperties props(stream_size,

@@ -18,9 +18,7 @@
  */
 
 #include "mir/glib_main_loop_sources.h"
-#include "mir/recursive_read_write_mutex.h"
 #include "mir/lockable_callback.h"
-#include "mir/thread_safe_list.h"
 #include "mir/raii.h"
 
 #include <algorithm>

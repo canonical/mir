@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -54,7 +54,8 @@ MirSurfaceSpec::MirSurfaceSpec(
     : connection{connection},
       width{width},
       height{height},
-      pixel_format{format}
+      pixel_format{format},
+      buffer_usage{mir_buffer_usage_hardware}
 {
 }
 
@@ -65,6 +66,7 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
       pixel_format{params.pixel_format},
       buffer_usage{params.buffer_usage}
 {
+    type = mir_surface_type_normal;
     if (params.output_id != mir_display_output_id_invalid)
     {
         output_id = params.output_id;
@@ -72,27 +74,32 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
     }
 }
 
-MirSurfaceSpec::MirSurfaceSpec(MirSurface* preexisting)
+MirSurfaceSpec::MirSurfaceSpec()
 {
-    self = preexisting;
 }
 
 mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
 {
     mir::protobuf::SurfaceParameters message;
 
-    message.set_width(width);
-    message.set_height(height);
-    message.set_pixel_format(pixel_format);
-    message.set_buffer_usage(buffer_usage);
-
+    SERIALIZE_OPTION_IF_SET(width, message);
+    SERIALIZE_OPTION_IF_SET(height, message);
+    SERIALIZE_OPTION_IF_SET(pixel_format, message);
+    SERIALIZE_OPTION_IF_SET(buffer_usage, message);
     SERIALIZE_OPTION_IF_SET(surface_name, message);
     SERIALIZE_OPTION_IF_SET(output_id, message);
     SERIALIZE_OPTION_IF_SET(type, message);
     SERIALIZE_OPTION_IF_SET(state, message);
     SERIALIZE_OPTION_IF_SET(pref_orientation, message);
+    SERIALIZE_OPTION_IF_SET(edge_attachment, message);
+    SERIALIZE_OPTION_IF_SET(min_width, message);
+    SERIALIZE_OPTION_IF_SET(min_height, message);
+    SERIALIZE_OPTION_IF_SET(max_width, message);
+    SERIALIZE_OPTION_IF_SET(max_height, message);
+
     if (parent.is_set() && parent.value() != nullptr)
         message.set_parent_id(parent.value()->id());
+
     if (aux_rect.is_set())
     {
         message.mutable_aux_rect()->set_left(aux_rect.value().left);
@@ -100,7 +107,7 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
         message.mutable_aux_rect()->set_width(aux_rect.value().width);
         message.mutable_aux_rect()->set_height(aux_rect.value().height);
     }
-    SERIALIZE_OPTION_IF_SET(edge_attachment, message);
+
     return message;
 }
 
@@ -534,8 +541,48 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
         mods.mutable_surface_id()->set_value(surface.id().value());
     }
 
+    auto const surface_specification = mods.mutable_surface_specification();
+
+    #define COPY_IF_SET(field)\
+        if (spec.field.is_set())\
+        surface_specification->set_##field(spec.field.value())
+
+    COPY_IF_SET(width);
+    COPY_IF_SET(height);
+    COPY_IF_SET(pixel_format);
+    COPY_IF_SET(buffer_usage);
+    // name is a special case (below)
+    COPY_IF_SET(output_id);
+    COPY_IF_SET(type);
+    COPY_IF_SET(state);
+    // preferred_orientation is a special case (below)
+    // parent_id is a special case (below)
+    // aux_rect is a special case (below)
+    COPY_IF_SET(edge_attachment);
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+    #undef COPY_IF_SET
+
     if (spec.surface_name.is_set())
-        mods.set_name(spec.surface_name.value());
+        surface_specification->set_name(spec.surface_name.value());
+
+    if (spec.pref_orientation.is_set())
+        surface_specification->set_preferred_orientation(spec.pref_orientation.value());
+
+    if (spec.parent.is_set() && spec.parent.value())
+        surface_specification->set_parent_id(spec.parent.value()->id());
+
+    if (spec.aux_rect.is_set())
+    {
+        auto const rect = surface_specification->mutable_aux_rect();
+        auto const& value = spec.aux_rect.value();
+        rect->set_left(value.left);
+        rect->set_top(value.top);
+        rect->set_width(value.width);
+        rect->set_height(value.height);
+    }
 
     modify_wait_handle.expect_result();
     server->modify_surface(0, &mods, &modify_result,

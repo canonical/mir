@@ -26,23 +26,39 @@ message SurfaceParameters {
   
   optional Rectangle aux_rect = 11;
   optional int32 edge_attachment = 12;
+
+  optional int32 min_width = 13;
+  optional int32 min_height = 14;
+  optional int32 max_width = 15;
+  optional int32 max_height = 16;
 }
 
 // If and when we break our protocol backward-compatibility, this could be
 // merged with SurfaceParameters...
+message SurfaceSpecification {
+  optional int32 width = 1;
+  optional int32 height = 2;
+  optional int32 pixel_format = 3;
+  optional int32 buffer_usage = 4;
+  optional string name = 5;
+  optional uint32 output_id = 6;
+  optional int32 type = 7;
+  optional int32 state = 8;
+  optional int32 preferred_orientation = 9;
+  optional int32 parent_id = 10;
+  optional Rectangle aux_rect = 11;
+  optional int32 edge_attachment = 12;
+
+  optional int32 min_width = 13;
+  optional int32 min_height = 14;
+  optional int32 max_width = 15;
+  optional int32 max_height = 16;
+}
+
+
 message SurfaceModifications {
   required SurfaceId surface_id = 1;
-
-  optional string name = 2;
-
-  // TODO: Client API for resizing (LP: #1420573)
-  // optional int32 width = 3;
-  // optional int32 height = 4;
-
-  // TODO: We could use these to replace SurfaceSetting
-  // optional int32 type = 5;
-  // optional int32 state = 6;
-  // ...
+  required SurfaceSpecification surface_specification = 2;
 }
 
 message SurfaceId {

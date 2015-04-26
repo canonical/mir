@@ -279,6 +279,111 @@ TEST_F(ClientLibrary, can_set_surface_state)
     mir_connection_release(connection);
 }
 
+TEST_F(ClientLibrary, can_set_surface_min_width)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width = 640;
+    int const height = 480;
+    auto const format = mir_pixel_format_abgr_8888;
+    auto const spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+
+    int const min_width = 480;
+    EXPECT_TRUE(mir_surface_spec_set_min_width(spec, min_width));
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, can_set_surface_min_height)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width = 640;
+    int const height = 480;
+    auto const format = mir_pixel_format_abgr_8888;
+    auto const spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+
+    int const min_height = 480;
+    EXPECT_TRUE(mir_surface_spec_set_min_height(spec, min_height));
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, can_set_surface_max_width)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width = 640;
+    int const height = 480;
+    auto const format = mir_pixel_format_abgr_8888;
+    auto const spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+
+    int const max_width = 1024;
+    EXPECT_TRUE(mir_surface_spec_set_max_width(spec, max_width));
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, can_set_surface_max_height)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width = 640;
+    int const height = 480;
+    auto const format = mir_pixel_format_abgr_8888;
+    auto const spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+
+    int const max_height = 1024;
+    EXPECT_TRUE(mir_surface_spec_set_max_height(spec, max_height));
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, min_size_respected_when_placing_surface)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width = 6400;
+    int const height = 4800;
+    auto const format = mir_pixel_format_abgr_8888;
+    auto const spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+
+    int const min_width = 4800;
+    int const min_height = 3200;
+
+    mir_surface_spec_set_min_width(spec, min_width);
+    mir_surface_spec_set_min_height(spec, min_height);
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    auto const buffer_stream = mir_surface_get_buffer_stream(surface);
+
+    MirGraphicsRegion graphics_region;
+    mir_buffer_stream_get_graphics_region(buffer_stream, &graphics_region);
+    EXPECT_THAT(graphics_region.width, Ge(min_width));
+    EXPECT_THAT(graphics_region.height, Ge(min_height));
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
 TEST_F(ClientLibrary, receives_surface_dpi_value)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);

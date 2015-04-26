@@ -34,29 +34,15 @@ configuration entries: Video and Display.
 Now boot the machine and build a new kernel and verify that you have the right
 Mesa package.
 
-Build the right kernel
-----------------------
 
-Until Linux 3.18 is released either build 
-[drm-next](http://cgit.freedesktop.org/~airlied/linux/log/?h=drm-next) for your
-KVM architecture or pull the sources of the current Ubuntu kernel image and
-apply the following two patches before you build:
-
-* [drm/qxl: simple crtc page flipping emulated using buffer copy]
-(http://cgit.freedesktop.org/~airlied/linux/patch/?id=058e9f5c8236ad740ab984588b507758e5feee6d)
-* [drm/qxl: enables gem prime helpers for qxl using dummy driver callbacks]
-(http://cgit.freedesktop.org/~airlied/linux/patch/?id=47c1296829505d119d7d58dd23d39cc5db344f12)
-
-More detais on building a Kernel within and for Ubuntu is described [here]
-(https://help.ubuntu.com/community/Kernel/Compile) in full detail.
-
-
-Verify Mesa installation
-------------------------
+Verify Mesa and used Kernel
+---------------------------
 
 Since the DRM QXL driver only provides KMS, GEM and dma-buf support, and no 3D
 GPU emulation or forwarding, Mesa will load the kms-swrast driver. This driver
-is available since Mesa 10.3.0
+is available since Mesa 10.3.0. The necessary support for dmabuf fds and crtc
+handling in QXL is available since Linux 3.18. 
+
 With that we have enough support for EGL and GLESv2 to run Mir.
 
 Additional steps
