@@ -36,7 +36,8 @@ public:
         connection(mir_connect_sync(socket_file, __PRETTY_FUNCTION__))
     {
         if (!mir_connection_is_valid(connection))
-            throw std::runtime_error("could not connect to server");
+            throw std::runtime_error(std::string("could not connect to server: ") +
+                                     mir_connection_get_error_message(connection));
     }
     ~Connection()
     {
