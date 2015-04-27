@@ -20,7 +20,6 @@
 #include "mir/dispatch/simple_dispatch_thread.h"
 
 #include <iostream>
-#include <atomic>
 #include <vector>
 #include <memory>
 #include <chrono>

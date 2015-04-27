@@ -26,7 +26,6 @@
 #include <unistd.h>
 #include <system_error>
 #include <array>
-#include <signal.h>
 #include <boost/exception/all.hpp>
 
 namespace md = mir::dispatch;

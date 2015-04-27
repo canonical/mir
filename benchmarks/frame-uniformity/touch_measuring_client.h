@@ -23,13 +23,8 @@
 
 #include "mir_test/barrier.h"
 
-#include "mir_toolkit/mir_client_library.h"
-
 #include <chrono>
 #include <memory>
-#include <vector>
-#include <string>
-#include <mutex>
 
 class TouchMeasuringClient
 {
