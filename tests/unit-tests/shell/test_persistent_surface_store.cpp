@@ -110,3 +110,26 @@ TEST(PersistentSurfaceStore, can_roundtrip_ids_to_strings)
 
     EXPECT_THAT(id_one, Eq(std::ref(id_two)));
 }
+
+TEST(PersistentSurfaceStore, deserialising_wildly_incorrect_buffer_raises_exception)
+{
+    using namespace testing;
+
+    msh::DefaultPersistentSurfaceStore map;
+
+    std::vector<uint8_t> buf(5, 'a');
+
+    EXPECT_THROW(map.deserialise_id(buf), std::invalid_argument);
+}
+
+TEST(PersistentSurfaceStore, deserialising_invalid_buffer_raises_exception)
+{
+    using namespace testing;
+
+    msh::DefaultPersistentSurfaceStore map;
+
+    // This is the right size, but isn't a UUID because it lacks the XX-XX-XX structure
+    std::vector<uint8_t> buf(36, 'a');
+
+    EXPECT_THROW(map.deserialise_id(buf), std::invalid_argument);
+}

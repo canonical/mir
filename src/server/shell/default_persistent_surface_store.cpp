@@ -20,6 +20,7 @@
 #include <uuid/uuid.h>
 #include <algorithm>
 #include <unordered_map>
+#include <boost/throw_exception.hpp>
 
 namespace msh = mir::shell;
 namespace ms = mir::scene;
@@ -30,7 +31,7 @@ class UUID : public msh::PersistentSurfaceStore::Id
 {
 public:
     UUID();
-    UUID(std::string const& string_repr);
+    UUID(std::vector<uint8_t> const& buf);
     UUID(UUID const& copy_from);
 
     bool operator==(Id const& rhs) const override;
@@ -46,9 +47,17 @@ UUID::UUID()
     uuid_generate(value);
 }
 
-UUID::UUID(std::string const& string_repr)
+UUID::UUID(std::vector<uint8_t> const& buf)
 {
-    uuid_parse(string_repr.c_str(), value);
+    char buffer[37];
+    std::copy(buf.cbegin(), buf.cend(), buffer);
+    buffer[36] = '\0';
+    if (uuid_parse(buffer, value) != 0)
+    {
+        using namespace std::literals::string_literals;
+        BOOST_THROW_EXCEPTION((std::invalid_argument{"Failed to parse "s +
+                               buffer + " as UUID"s}));
+    }
 }
 
 UUID::UUID(UUID const& copy_from)
@@ -76,6 +85,7 @@ std::vector<uint8_t> UUID::serialise() const
 {
     std::vector<uint8_t> buf(37);
     uuid_unparse(value, reinterpret_cast<char*>(buf.data()));
+    buf.resize(36);
     return buf;
 }
 }
@@ -169,7 +179,11 @@ std::vector<uint8_t> msh::DefaultPersistentSurfaceStore::serialise_id(Id const& 
 auto msh::DefaultPersistentSurfaceStore::deserialise_id(std::vector<uint8_t> const& buf) const
     -> Id const&
 {
-    UUID uuid{reinterpret_cast<char const*>(buf.data())};
+    if (buf.size() != 36)
+    {
+        BOOST_THROW_EXCEPTION((std::invalid_argument{"Failed to deserialise: data has invalid length"}));
+    }
+    UUID uuid{buf};
 
     auto surface = (*store)[uuid];
     return (*store)[surface];
