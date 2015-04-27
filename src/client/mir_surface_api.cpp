@@ -633,8 +633,7 @@ catch (std::exception const& ex)
     // Keep calm and carry on
 }
 
-
-bool mir_surface_spec_set_width_inc(MirSurfaceSpec* spec, unsigned width_inc)
+bool mir_surface_spec_set_width_increment(MirSurfaceSpec *spec, unsigned width_inc)
 try
 {
     spec->width_inc = width_inc;
@@ -646,7 +645,7 @@ catch (std::exception const& ex)
     return false;
 }
 
-bool mir_surface_spec_set_height_inc(MirSurfaceSpec* spec, unsigned height_inc)
+bool mir_surface_spec_set_height_increment(MirSurfaceSpec *spec, unsigned height_inc)
 try
 {
     spec->height_inc = height_inc;

@@ -249,7 +249,7 @@ bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
  * \note    The requested dimensions are a hint only. The server is not guaranteed to
  *          create a surface of any specific width or height.
  */
-bool mir_surface_spec_set_width_inc(MirSurfaceSpec* spec, unsigned width_inc);
+bool mir_surface_spec_set_width_increment(MirSurfaceSpec *spec, unsigned width_inc);
 
 /**
  * Set the requested height increment, in pixels
@@ -262,7 +262,7 @@ bool mir_surface_spec_set_width_inc(MirSurfaceSpec* spec, unsigned width_inc);
  * \note    The requested dimensions are a hint only. The server is not guaranteed to
  *          create a surface of any specific width or height.
  */
-bool mir_surface_spec_set_height_inc(MirSurfaceSpec* spec, unsigned height_inc);
+bool mir_surface_spec_set_height_increment(MirSurfaceSpec *spec, unsigned height_inc);
 
 /**
  * Set the minimum width, in pixels
