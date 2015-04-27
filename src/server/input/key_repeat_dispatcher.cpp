@@ -51,9 +51,7 @@ void mi::KeyRepeatDispatcher::device_reset(int32_t device_id, std::chrono::nanos
 
 mi::KeyRepeatDispatcher::KeyboardState& mi::KeyRepeatDispatcher::ensure_state_for_device_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id)
 {
-    auto it = repeat_state_by_device.find(id);
-    if (it == repeat_state_by_device.end())
-        repeat_state_by_device[id] = KeyboardState();
+    repeat_state_by_device.insert(std::make_pair(id, KeyboardState()));
     return repeat_state_by_device[id];
 }
 

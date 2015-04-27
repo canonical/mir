@@ -278,19 +278,13 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
 
 mi::SurfaceInputDispatcher::PointerInputState& mi::SurfaceInputDispatcher::ensure_pointer_state(MirInputDeviceId id)
 {
-    if (pointer_state_by_id.find(id) == pointer_state_by_id.end())
-    {
-        pointer_state_by_id[id] = { nullptr, nullptr };
-    }
+    pointer_state_by_id.insert(std::make_pair(id, PointerInputState()));
     return pointer_state_by_id[id];
 }
 
 mi::SurfaceInputDispatcher::TouchInputState& mi::SurfaceInputDispatcher::ensure_touch_state(MirInputDeviceId id)
 {
-    if (touch_state_by_id.find(id) == touch_state_by_id.end())
-    {
-        touch_state_by_id[id] = { nullptr };
-    }
+    touch_state_by_id.insert(std::make_pair(id, TouchInputState()));
     return touch_state_by_id[id];
 }
 
