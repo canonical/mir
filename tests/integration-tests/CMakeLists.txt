@@ -64,7 +64,7 @@ if(MIR_TEST_PLATFORM STREQUAL "mesa")
   list(APPEND INTEGRATION_TESTS_SRCS test_drm_auth_magic.cpp)
 endif()
 
-link_directories(${LIBRARY_OUTPUT_PATH})
+link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 mir_add_wrapped_executable(
   mir_integration_tests
   ${INTEGRATION_TESTS_SRCS}
