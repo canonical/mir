@@ -107,24 +107,3 @@ TEST_F(ResourceFactoryTest, hwc_allocation_failures)
 
     EXPECT_TRUE(hw_access_mock->open_count_matches_close());
 }
-
-TEST_F(ResourceFactoryTest, allocates_hwc14_wrapper)
-{
-    using namespace testing;
-
-    hw_access_mock.reset();
-    auto mock_device = std::make_shared<NiceMock<mtd::MockHWC14ComposerDevice1>>();
-    hw_access_mock = std::make_unique<mtd::HardwareAccessMock>(mock_device);
-
-    EXPECT_CALL(*hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
-        .Times(1);
-
-    mga::ResourceFactory factory;
-    auto wrapper_tuple = factory.create_hwc_wrapper(null_report);
-    auto version = std::get<1>(wrapper_tuple);
-    auto hwc_wrapper = std::get<0>(wrapper_tuple);
-
-    EXPECT_THAT(version, Eq(mga::HwcVersion::hwc14));
-    EXPECT_THAT(dynamic_cast<mga::RealHwc14Wrapper*>(hwc_wrapper.get()), Ne(nullptr));
-
-}

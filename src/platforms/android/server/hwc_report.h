@@ -21,6 +21,7 @@
 
 #include "overlay_optimization.h"
 #include "display_resource_factory.h"
+#include "power_mode.h"
 #include <hardware/hwcomposer.h>
 
 namespace mir
@@ -49,6 +50,7 @@ public:
     virtual void report_vsync_off() const = 0;
     virtual void report_hwc_version(HwcVersion) const = 0;
     virtual void report_legacy_fb_module() const = 0;
+    virtual void report_power_mode(PowerMode mode) const = 0;
 
     void set_version(HwcVersion version) { hwc_version = version; }
 

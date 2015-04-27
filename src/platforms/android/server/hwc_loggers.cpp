@@ -178,6 +178,19 @@ std::ostream& operator<<(std::ostream& str, mga::HwcVersion version)
     }
     return str;
 }
+
+std::ostream& operator<<(std::ostream& str, mga::PowerMode power_mode)
+{
+    switch (power_mode)
+    {
+        case mga::PowerMode::off: str << "off"; break;
+        case mga::PowerMode::doze: str << "doze"; break;
+        case mga::PowerMode::normal: str << "on(normal)"; break;
+        case mga::PowerMode::doze_suspend: str << "doze(suspend)"; break;
+        default: break;
+    }
+    return str;
+}
 }
 
 void mga::HwcFormattedLogger::report_list_submitted_to_prepare(
@@ -310,6 +323,11 @@ void mga::HwcFormattedLogger::report_legacy_fb_module() const
     std::cout << "Legacy FB module" << std::endl;
 }
 
+void mga::HwcFormattedLogger::report_power_mode(PowerMode mode) const
+{
+    std::cout << "HWC: power mode: " << mode << std::endl;
+}
+
 void mga::NullHwcReport::report_list_submitted_to_prepare(
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const {}
 void mga::NullHwcReport::report_prepare_done(
@@ -325,3 +343,4 @@ void mga::NullHwcReport::report_vsync_on() const {}
 void mga::NullHwcReport::report_vsync_off() const {}
 void mga::NullHwcReport::report_hwc_version(mga::HwcVersion) const {}
 void mga::NullHwcReport::report_legacy_fb_module() const {}
+void mga::NullHwcReport::report_power_mode(PowerMode) const {}

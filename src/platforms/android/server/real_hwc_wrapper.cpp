@@ -255,47 +255,38 @@ int mga::RealHwcWrapper::display_attributes(
         hwc_device.get(), display_name, config.as_value(), attributes, values);
 }
 
-mga::RealHwc14Wrapper::RealHwc14Wrapper(
-    std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-    std::shared_ptr<mga::HwcReport> const& report) :
-    RealHwcWrapper(hwc_device, report)
+void mga::RealHwcWrapper::power_mode(DisplayName display_name, PowerMode mode) const
 {
-}
-
-void mga::RealHwc14Wrapper::display_on(DisplayName display_name) const
-{
-    if (auto rc = hwc_device->setPowerMode(hwc_device.get(), display_name, HWC_POWER_MODE_NORMAL))
+    if (auto rc = hwc_device->setPowerMode(hwc_device.get(), display_name, mode))
     {
         std::stringstream ss;
-        ss << "error turning display on. rc = " << std::hex << rc;
+        ss << "error setting power mode. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-    report->report_display_on();
+    report->report_power_mode(mode);
 }
 
-void mga::RealHwc14Wrapper::display_off(DisplayName display_name) const
+bool mga::RealHwcWrapper::has_active_config(DisplayName display_name) const
 {
-    if (auto rc = hwc_device->setPowerMode(hwc_device.get(), display_name, HWC_POWER_MODE_OFF))
+    int const no_active_config = -1;
+    return hwc_device->getActiveConfig(hwc_device.get(), display_name) != no_active_config;
+}
+
+mga::ConfigId mga::RealHwcWrapper::active_config_for(DisplayName display_name) const
+{
+    int id = hwc_device->getActiveConfig(hwc_device.get(), display_name);
+    if (id == -1)
     {
         std::stringstream ss;
-        ss << "error turning display off. rc = " << std::hex << rc;
+        ss << "No active configuration for display: " << display_name;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-    report->report_display_off();
+    return mga::ConfigId{static_cast<uint32_t>(id)};
 }
 
-std::vector<mga::ConfigId> mga::RealHwc14Wrapper::display_configs(DisplayName display_name) const
+void mga::RealHwcWrapper::set_active_config(DisplayName display_name, ConfigId id) const
 {
-    auto configs = RealHwcWrapper::display_configs(display_name);
-    if (!configs.empty())
-    {
-        int active_config = hwc_device->getActiveConfig(hwc_device.get(), display_name);
-        if (active_config == -1)
-        {
-            int rc = hwc_device->setActiveConfig(hwc_device.get(), display_name, configs[0].as_value());
-            if (rc < 0)
-                BOOST_THROW_EXCEPTION(std::system_error(rc, std::system_category(), "unable to set active display config"));
-        }
-    }
-    return configs;
+    int rc = hwc_device->setActiveConfig(hwc_device.get(), display_name, id.as_value());
+    if (rc < 0)
+        BOOST_THROW_EXCEPTION(std::system_error(rc, std::system_category(), "unable to set active display config"));
 }

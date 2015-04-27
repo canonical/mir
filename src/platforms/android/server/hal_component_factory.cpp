@@ -127,6 +127,8 @@ std::unique_ptr<mga::HwcConfiguration> mga::HalComponentFactory::create_hwc_conf
 {
     if (force_backup_display || hwc_version == mga::HwcVersion::hwc10)
         return std::unique_ptr<mga::HwcConfiguration>(new mga::FbControl(fb_native));
-    else
+    else if (hwc_version < mga::HwcVersion::hwc14)
         return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcBlankingControl(hwc_wrapper));
+    else
+        return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcPowerModeControl(hwc_wrapper));
 }
