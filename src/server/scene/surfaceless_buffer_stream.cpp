@@ -63,7 +63,6 @@ void ms::SurfacelessBufferStream::with_most_recent_buffer_do(std::function<void(
         exec(*comp_buffer);
 }
 
-#if 0
 void ms::SurfacelessBufferStream::add_observer(std::shared_ptr<ms::SurfaceObserver> const& new_observer)
 {
     // TODO: Could utilize ms::SurfaceObservers to enable situations like setting multiple surfaces
@@ -77,7 +76,7 @@ void ms::SurfacelessBufferStream::remove_observer(std::weak_ptr<ms::SurfaceObser
 {
     observer.reset();
 }
-#endif
+
 MirPixelFormat ms::SurfacelessBufferStream::pixel_format() const
 {
     return buffer_stream->get_stream_pixel_format();

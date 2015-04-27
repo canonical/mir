@@ -89,6 +89,9 @@ struct StubStream : public mc::BufferStream
     void swap_buffers(mg::Buffer*, std::function<void(mg::Buffer*)>) override {}
     void with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const&) {}
     MirPixelFormat pixel_format() const { return mir_pixel_format_abgr_8888; }
+    void add_observer(std::shared_ptr<msc::SurfaceObserver> const&) {}
+    void remove_observer(std::weak_ptr<msc::SurfaceObserver> const&) {}
+    bool has_submitted_buffer() const { return true; }
 
     std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
     std::vector<mg::BufferID> const buffer_id_seq;

@@ -138,7 +138,6 @@ ms::BasicSurface::BasicSurface(
     surface_name(name),
     surface_rect(rect),
     surface_alpha(1.0f),
-    first_frame_posted(false),
     hidden(false),
     input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
@@ -368,7 +367,7 @@ bool ms::BasicSurface::visible() const
 
 bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
 {
-    return !hidden && first_frame_posted;
+    return !hidden && surface_buffer_stream->has_submitted_buffer();
 }
 
 mi::InputReceptionMode ms::BasicSurface::reception_mode() const
@@ -388,8 +387,7 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
 void ms::BasicSurface::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
 {
-    auto buf = snapshot_buffer();
-    exec(*buf);
+    surface_buffer_stream->with_most_recent_buffer_do(exec);
 }
 
 
@@ -652,12 +650,12 @@ struct CursorStreamImageAdapter
         observer = std::make_shared<FramePostObserver>([&](){
                 post_cursor_image_from_current_buffer();
             });
-        //stream->add_observer(observer);
+        stream->add_observer(observer);
     }
 
     ~CursorStreamImageAdapter()
     {
-        //stream->remove_observer(observer);
+        stream->remove_observer(observer);
     }
 
     void post_cursor_image_from_current_buffer()

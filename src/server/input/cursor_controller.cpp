@@ -125,7 +125,6 @@ struct UpdateCursorOnSceneChanges : ms::Observer
             if (it != surface_observers.end())
             {
                 surface->remove_observer(it->second);
-
                 surface_observers.erase(it);
             }
         }

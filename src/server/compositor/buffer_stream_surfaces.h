@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_stream.h"
 
 #include <mutex>
+#include <set>
 
 namespace mir
 {
@@ -39,11 +40,15 @@ public:
     BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& swapper);
     ~BufferStreamSurfaces();
 
+    //from mf::BufferStream
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec) override;
     MirPixelFormat pixel_format() const override;
+    void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) override;
+    void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
 
+    //from mc::BufferStream
     void acquire_client_buffer(std::function<void(graphics::Buffer* buffer)> complete) override;
     void release_client_buffer(graphics::Buffer* buf) override;
 
@@ -59,13 +64,17 @@ public:
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     void drop_client_requests() override;
+    bool has_submitted_buffer() const override;
 
 protected:
     BufferStreamSurfaces(const BufferStreamSurfaces&) = delete;
     BufferStreamSurfaces& operator=(const BufferStreamSurfaces&) = delete;
 
 private:
+    std::mutex mutable mutex;
     std::shared_ptr<BufferBundle> const buffer_bundle;
+    std::set<std::shared_ptr<scene::SurfaceObserver>> observers;
+    bool first_frame_posted;
 };
 
 }

@@ -20,6 +20,7 @@
 #include "buffer_stream_surfaces.h"
 #include "buffer_bundle.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/scene/surface_observer.h"
 
 #include "temporary_buffers.h"
 
@@ -27,8 +28,9 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle)
-    : buffer_bundle(buffer_bundle)
+mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle) :
+    buffer_bundle(buffer_bundle),
+    first_frame_posted{false}
 {
 }
 
@@ -107,9 +109,8 @@ void mc::BufferStreamSurfaces::swap_buffers(
     if (old_buffer)
     {
         release_client_buffer(old_buffer);
-#if 0
         {
-            std::unique_lock<std::mutex> lk(guard);
+            std::unique_lock<std::mutex> lk(mutex);
             first_frame_posted = true;
         }
 
@@ -118,19 +119,37 @@ void mc::BufferStreamSurfaces::swap_buffers(
          *       The new method of catching up on buffer backlogs is to
          *       query buffers_ready_for_compositor() or Scene::frames_pending
          */
-        observers.frame_posted(1);
-#endif
+        for(auto& observer : observers)
+            observer->frame_posted(1);
     }
 
     acquire_client_buffer(complete);
 }
 
+bool mc::BufferStreamSurfaces::has_submitted_buffer() const
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    return first_frame_posted;
+}
+
 void mc::BufferStreamSurfaces::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
 {
-    (void) exec;
+    exec(*lock_snapshot_buffer());
 }
 
 MirPixelFormat mc::BufferStreamSurfaces::pixel_format() const
 {
     return buffer_bundle->properties().format;
+}
+
+void mc::BufferStreamSurfaces::add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer)
+{
+    observers.insert(observer);
+}
+
+void mc::BufferStreamSurfaces::remove_observer(std::weak_ptr<scene::SurfaceObserver> const& weak_observer)
+{
+    auto it = observers.find(weak_observer.lock());
+    if (it != observers.end())
+        observers.erase(it);
 }

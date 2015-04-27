@@ -74,6 +74,9 @@ public:
     void swap_buffers(mg::Buffer*, std::function<void(mg::Buffer*)>) override {}
     void with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const&) {}
     MirPixelFormat pixel_format() const { return mir_pixel_format_abgr_8888; }
+    void add_observer(std::shared_ptr<ms::SurfaceObserver> const&) {}
+    void remove_observer(std::weak_ptr<ms::SurfaceObserver> const&) {}
+    bool has_submitted_buffer() const { return true; }
 private:
     int render_operations_fd;
 };

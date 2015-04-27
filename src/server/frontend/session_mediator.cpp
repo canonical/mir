@@ -283,7 +283,6 @@ void mf::SessionMediator::create_surface(
 
             done->Run();
         });
-
 }
 
 void mf::SessionMediator::next_buffer(

@@ -56,6 +56,7 @@ public:
     virtual int buffers_ready_for_compositor(void const* user_id) const = 0;
     virtual void drop_old_buffers() = 0;
     virtual void drop_client_requests() = 0;
+    virtual bool has_submitted_buffer() const = 0;
 };
 
 }

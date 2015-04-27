@@ -189,7 +189,6 @@ private:
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;
     float surface_alpha;
-    bool first_frame_posted;
     bool hidden;
     input::InputReceptionMode input_mode;
     const bool nonrectangular;
