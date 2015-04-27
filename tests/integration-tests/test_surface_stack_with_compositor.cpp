@@ -181,7 +181,6 @@ TEST_F(SurfaceStackCompositor, does_not_composes_on_start_if_told_not_to_in_cons
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(0, timeout));
 }
 
-#if 0
 TEST_F(SurfaceStackCompositor, adding_a_surface_that_has_been_swapped_triggers_a_composition)
 {
     mc::MultiThreadedCompositor mt_compositor(
@@ -192,7 +191,7 @@ TEST_F(SurfaceStackCompositor, adding_a_surface_that_has_been_swapped_triggers_a
         null_comp_report, false);
     mt_compositor.start();
 
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
@@ -215,7 +214,7 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(5, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(5, timeout));
@@ -238,7 +237,7 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(5, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(5, timeout));
@@ -259,7 +258,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
@@ -272,7 +271,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
 
 TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 {
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
 
     mc::MultiThreadedCompositor mt_compositor(
@@ -291,7 +290,7 @@ TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 
 TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
 {
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
 
     mc::MultiThreadedCompositor mt_compositor(
@@ -314,7 +313,7 @@ TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor(_))
         .WillByDefault(testing::Return(1));
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
@@ -324,9 +323,8 @@ TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
         null_comp_report, false);
 
     mt_compositor.start();
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
 }
-#endif

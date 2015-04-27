@@ -257,7 +257,6 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
     EXPECT_FALSE(surface.compositor_snapshot(compositor_id)->shaped());
 }
 
-#if 0
 TEST_F(BasicSurfaceTest, test_surface_visibility)
 {
     using namespace testing;
@@ -289,8 +288,8 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
     EXPECT_FALSE(surface.visible());
 
     // The second call posts the buffer returned by first
-    surface.swap_buffers(buffer, callback);
-    surface.swap_buffers(buffer, callback);
+    surface.primary_buffer_stream()->swap_buffers(buffer, callback);
+    surface.primary_buffer_stream()->swap_buffers(buffer, callback);
 
     EXPECT_FALSE(surface.visible());
 
@@ -300,7 +299,6 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
     surface.configure(mir_surface_attrib_state, mir_surface_state_hidden);
     EXPECT_FALSE(surface.visible());
 }
-#endif
 
 TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
 {
@@ -313,7 +311,6 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
     surface.set_hidden(true);
 }
 
-#if 0
 TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
 {
     using namespace testing;
@@ -329,10 +326,9 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
     EXPECT_CALL(mock_callback, call()).Times(1);
 
     // The second call posts the buffer returned by first
-    surface.swap_buffers(buffer, callback);
-    surface.swap_buffers(buffer, callback);
+    surface.primary_buffer_stream()->swap_buffers(buffer, callback);
+    surface.primary_buffer_stream()->swap_buffers(buffer, callback);
 }
-#endif
 
 // a 1x1 window at (1,1) will get events at (1,1)
 TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
