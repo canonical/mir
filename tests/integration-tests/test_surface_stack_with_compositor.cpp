@@ -21,11 +21,13 @@
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
 #include "src/server/compositor/gl_renderer_factory.h"
+#include "src/server/compositor/buffer_stream_surfaces.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "src/server/compositor/multi_threaded_compositor.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_renderer.h"
 #include "mir_test_doubles/stub_display_buffer.h"
@@ -119,19 +121,19 @@ struct SurfaceStackCompositor : public testing::Test
 {
     SurfaceStackCompositor() :
         timeout{std::chrono::system_clock::now() + std::chrono::seconds(5)},
-        mock_buffer_stream(std::make_shared<testing::NiceMock<mtd::MockBufferStream>>()),
+        mock_buffer_stream(std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>()),
         stub_surface{std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{{0,0},{1,1}},
             false,
-            mock_buffer_stream,
+            std::make_shared<mc::BufferStreamSurfaces>(mock_buffer_stream),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mtd::StubInputSender>(),
             std::shared_ptr<mg::CursorImage>(),
             null_scene_report)}
     {
         using namespace testing;
-        ON_CALL(*mock_buffer_stream, lock_compositor_buffer(_))
+        ON_CALL(*mock_buffer_stream, compositor_acquire(_))
             .WillByDefault(Return(mt::fake_shared(stubbuf)));
     }
     std::shared_ptr<ms::SceneReport> null_scene_report{mr::null_scene_report()};
@@ -139,7 +141,7 @@ struct SurfaceStackCompositor : public testing::Test
     std::shared_ptr<mc::CompositorReport> null_comp_report{mr::null_compositor_report()};
     StubRendererFactory renderer_factory;
     std::chrono::system_clock::time_point timeout;
-    std::shared_ptr<mtd::MockBufferStream> mock_buffer_stream;
+    std::shared_ptr<mtd::MockBufferBundle> mock_buffer_stream;
     std::shared_ptr<ms::BasicSurface> stub_surface;
     ms::SurfaceCreationParameters default_params;
     mtd::StubBuffer stubbuf;
