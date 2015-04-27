@@ -396,24 +396,6 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
     surface.allow_framedropping(true);
 }
 
-TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
-{
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(
-        change_notification,
-        [this](int){change_notification();});
-    surface.add_observer(observer);
-
-    mg::Buffer* buffer{nullptr};
-
-    auto const complete = [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; };
-    surface.primary_buffer_stream()->swap_buffers(buffer, complete);
-    surface.primary_buffer_stream()->swap_buffers(buffer, complete);
-    surface.primary_buffer_stream()->swap_buffers(buffer, complete);
-    surface.primary_buffer_stream()->swap_buffers(buffer, complete);
-
-    EXPECT_EQ(3, notification_count);
-}
-
 TEST_F(SurfaceCreation, input_fds)
 {
     using namespace testing;
