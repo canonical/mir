@@ -253,7 +253,7 @@ bool mir_surface_spec_set_width_inc(MirSurfaceSpec* spec, unsigned width_inc);
 
 /**
  * Set the requested height increment, in pixels
- * Defines an arithmetic progression of sizes starting with min_hight (if set, otherwise 0)
+ * Defines an arithmetic progression of sizes starting with min_height (if set, otherwise 0)
  * into which the surface prefers to be resized.
  *
  * \param [in] spec       Specification to mutate
