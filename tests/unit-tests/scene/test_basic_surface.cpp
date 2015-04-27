@@ -348,6 +348,10 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
 
 TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
 {
+    EXPECT_CALL(*mock_buffer_stream, has_submitted_buffer())
+        .WillOnce(testing::Return(false))
+        .WillOnce(testing::Return(true));
+
     ms::BasicSurface surface{
         name,
         geom::Rectangle{{0,0}, {100,100}},
@@ -359,7 +363,6 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
         report};
 
     EXPECT_FALSE(surface.input_area_contains({50,50}));
-    post_a_frame(surface);
     EXPECT_TRUE(surface.input_area_contains({50,50}));
 }
 

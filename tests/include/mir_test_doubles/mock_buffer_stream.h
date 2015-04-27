@@ -43,6 +43,8 @@ struct MockBufferStream : public compositor::BufferStream
     {
         ON_CALL(*this, buffers_ready_for_compositor(::testing::_))
             .WillByDefault(testing::Invoke(this, &MockBufferStream::buffers_ready));
+        ON_CALL(*this, has_submitted_buffer())
+            .WillByDefault(testing::Return(true));
     }
     MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));
     MOCK_METHOD1(release_client_buffer, void(graphics::Buffer*));
