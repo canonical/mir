@@ -261,11 +261,11 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
 {
     using namespace testing;
     mtd::StubBuffer mock_buffer;
-    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_)).Times(2)
-        .WillRepeatedly(InvokeArgument<0>(&mock_buffer));
-
-    mir::graphics::Buffer* buffer = nullptr;
-    auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
+    EXPECT_CALL(*mock_buffer_stream, has_submitted_buffer())
+        .Times(3)
+        .WillOnce(Return(false))
+        .WillOnce(Return(false))
+        .WillOnce(Return(true));
 
     // Must be a fresh surface to guarantee no frames posted yet...
     ms::BasicSurface surface{
@@ -287,12 +287,6 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
     surface.set_hidden(true);
     EXPECT_FALSE(surface.visible());
 
-    // The second call posts the buffer returned by first
-    surface.primary_buffer_stream()->swap_buffers(buffer, callback);
-    surface.primary_buffer_stream()->swap_buffers(buffer, callback);
-
-    EXPECT_FALSE(surface.visible());
-
     surface.set_hidden(false);
     EXPECT_TRUE(surface.visible());
 
@@ -309,25 +303,6 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
     surface.add_observer(observer);
 
     surface.set_hidden(true);
-}
-
-TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
-{
-    using namespace testing;
-    mtd::StubBuffer mock_buffer;
-    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_)).Times(2)
-        .WillRepeatedly(InvokeArgument<0>(&mock_buffer));
-
-    surface.add_observer(observer);
-
-    mir::graphics::Buffer* buffer = nullptr;
-    auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
-
-    EXPECT_CALL(mock_callback, call()).Times(1);
-
-    // The second call posts the buffer returned by first
-    surface.primary_buffer_stream()->swap_buffers(buffer, callback);
-    surface.primary_buffer_stream()->swap_buffers(buffer, callback);
 }
 
 // a 1x1 window at (1,1) will get events at (1,1)

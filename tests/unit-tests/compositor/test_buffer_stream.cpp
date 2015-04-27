@@ -17,6 +17,7 @@
  */
 
 #include "src/server/compositor/buffer_stream_surfaces.h"
+#include "src/server/scene/legacy_surface_change_notification.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
@@ -192,3 +193,32 @@ TEST_F(BufferStreamTest, resizes_bundle)
     buffer_stream.resize(new_size);
 }
 
+TEST_F(BufferStreamTest, swap_buffer_swaps_and_notifies)
+{
+    using namespace testing;
+    struct MockCallback
+    {
+        MOCK_METHOD0(call, void());
+    } mock_cb;
+
+    EXPECT_CALL(*mock_bundle, client_acquire(_))
+        .Times(2)
+        .WillRepeatedly(InvokeArgument<0>(mock_buffer.get()));
+    EXPECT_CALL(*mock_bundle, client_release(_))
+        .Times(1);
+    EXPECT_CALL(mock_cb, call()).Times(1);
+    auto observer = std::make_shared<mir::scene::LegacySurfaceChangeNotification>(
+        []{ FAIL() << "buffer stream shouldnt notify of scene changes.";},
+        std::bind(&MockCallback::call, &mock_cb));
+
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    buffer_stream.add_observer(observer);
+
+    mir::graphics::Buffer* buffer = nullptr;
+    auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer;};
+
+    // The first call is with a nullptr buffer, so no frame posted.
+    buffer_stream.swap_buffers(buffer, callback);
+    // The second call posts the buffer returned by first, and should notify
+    buffer_stream.swap_buffers(buffer, callback);
+}
