@@ -269,3 +269,20 @@ TEST_F(HwcLogger, report_hwc_version)
     logger.report_hwc_version(mga::HwcVersion::hwc14);
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
+
+TEST_F(HwcLogger, report_power_mode)
+{
+    std::stringstream str;
+    str << "HWC: power mode: off" << std::endl
+        << "HWC: power mode: doze" << std::endl
+        << "HWC: power mode: doze(suspend)" << std::endl
+        << "HWC: power mode: on(normal)" << std::endl;
+
+    mga::HwcFormattedLogger logger;
+    logger.report_power_mode(mga::PowerMode::off);
+    logger.report_power_mode(mga::PowerMode::doze);
+    logger.report_power_mode(mga::PowerMode::doze_suspend);
+    logger.report_power_mode(mga::PowerMode::normal);
+
+    EXPECT_EQ(str.str(), test_stream.str());
+}

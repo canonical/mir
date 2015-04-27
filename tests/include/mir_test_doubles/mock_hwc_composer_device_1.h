@@ -96,40 +96,8 @@ public:
     MOCK_METHOD5(getDisplayAttributes_interface, int(struct hwc_composer_device_1*, int, uint32_t, const uint32_t*, int32_t*));
 };
 
-class MockHWC14ComposerDevice1 : public MockHWCComposerDevice1
-{
-public:
-    MockHWC14ComposerDevice1() : MockHWCComposerDevice1()
-    {
-        common.version = HWC_DEVICE_API_VERSION_1_4;
-        setPowerMode = hook_setPowerMode;
-        getActiveConfig = hook_getActiveConfig;
-        setActiveConfig = hook_setActiveConfig;
-    }
-
-    static int hook_getActiveConfig(struct hwc_composer_device_1* mock_hwc, int disp)
-    {
-        auto mocker = static_cast<MockHWC14ComposerDevice1*>(mock_hwc);
-        return mocker->getActiveConfig_interface(mock_hwc, disp);
-    }
-
-    static int hook_setActiveConfig(struct hwc_composer_device_1* mock_hwc, int disp, int index)
-    {
-        auto mocker = static_cast<MockHWC14ComposerDevice1*>(mock_hwc);
-        return mocker->setActiveConfig_interface(mock_hwc, disp, index);
-    }
-
-    static int hook_setPowerMode(struct hwc_composer_device_1 *mock_hwc, int disp, int power_mode)
-    {
-        auto mocker = static_cast<MockHWC14ComposerDevice1*>(mock_hwc);
-        return mocker->setPowerMode_interface(mock_hwc, disp, power_mode);
-    }
-
-    MOCK_METHOD2(getActiveConfig_interface, int(struct hwc_composer_device_1*, int));
-    MOCK_METHOD3(setActiveConfig_interface, int(struct hwc_composer_device_1*, int, int));
-    MOCK_METHOD3(setPowerMode_interface, int(struct hwc_composer_device_1*, int, int));
-};
 }
 }
 }
+
 #endif /* MIR_TEST_DOUBLES_MOCK_HWC_COMPOSER_DEVICE_1_H_ */

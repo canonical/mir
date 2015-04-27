@@ -84,19 +84,7 @@ mga::ResourceFactory::create_hwc_wrapper(std::shared_ptr<mga::HwcReport> const& 
         default: version = mga::HwcVersion::unknown; break;
     }
     
-    std::shared_ptr<mga::HwcWrapper> wrapper;
-    switch(version)
-    {
-        case mga::HwcVersion::hwc10:
-        case mga::HwcVersion::hwc11:
-        case mga::HwcVersion::hwc12:
-        case mga::HwcVersion::hwc13:
-        case mga::HwcVersion::hwc14:
-            wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native, hwc_report);
-            break;
-        default:
-            BOOST_THROW_EXCEPTION(std::runtime_error("invalid hwc version"));
-    }
-
-    return std::make_tuple(wrapper, version);
+    return std::make_tuple(
+        std::make_shared<mga::RealHwcWrapper>(hwc_native, hwc_report),
+        version);
 }

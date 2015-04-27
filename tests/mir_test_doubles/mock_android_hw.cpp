@@ -71,8 +71,7 @@ int mtd::FailingHardwareModuleStub::hw_close(struct hw_device_t*)
     return 0;
 }
 
-mtd::HardwareAccessMock::HardwareAccessMock(std::shared_ptr<hwc_composer_device_1> const& mock_device)
-    : mock_hwc_device{mock_device}
+mtd::HardwareAccessMock::HardwareAccessMock()
 {
     using namespace testing;
     assert(global_mock_android_hw == NULL && "Only one mock object per process is allowed");
@@ -81,9 +80,7 @@ mtd::HardwareAccessMock::HardwareAccessMock(std::shared_ptr<hwc_composer_device_
     mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocDevice>>();
     mock_gralloc_module = std::make_shared<mtd::HardwareModuleStub>(mock_alloc_device->common);
 
-    if (mock_hwc_device == nullptr)
-        mock_hwc_device = std::make_shared<NiceMock<mtd::MockHWCComposerDevice1>>();
-
+    mock_hwc_device = std::make_shared<NiceMock<mtd::MockHWCComposerDevice1>>();
     mock_hwc_module = std::make_shared<mtd::HardwareModuleStub>(mock_hwc_device->common);
 
     ON_CALL(*this, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID),_))
@@ -92,11 +89,6 @@ mtd::HardwareAccessMock::HardwareAccessMock(std::shared_ptr<hwc_composer_device_
         .WillByDefault(DoAll(SetArgPointee<1>(mock_hwc_module.get()), Return(0)));
 
     open_count.store(0);
-}
-
-mtd::HardwareAccessMock::HardwareAccessMock()
-   : HardwareAccessMock(std::make_shared<::testing::NiceMock<mtd::MockHWCComposerDevice1>>())
-{
 }
 
 bool mtd::HardwareAccessMock::open_count_matches_close()
