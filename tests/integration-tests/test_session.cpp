@@ -80,6 +80,7 @@ void swap_buffers_blocking(mf::Surface& surf, mg::Buffer*& buffer)
             done = true;
             cv.notify_one();
         });
+
     std::unique_lock<decltype(mutex)> lock(mutex);
 
     cv.wait(lock, [&]{ return done; });

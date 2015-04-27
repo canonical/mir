@@ -80,6 +80,7 @@ public:
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
+
 private:
     std::shared_ptr<mg::Buffer> client_buffer{std::make_shared<mtd::StubBuffer>()};
     int render_operations_fd;

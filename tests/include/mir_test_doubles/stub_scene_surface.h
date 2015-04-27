@@ -92,10 +92,13 @@ public:
 
     void request_client_surface_close() override {}
 
+    MirPixelFormat pixel_format() const override { return mir_pixel_format_abgr_8888; }
+
     bool supports_input() const override { return true;}
     int client_input_fd() const override { return fd;}
     int configure(MirSurfaceAttrib, int) override { return 0; }
     int query(MirSurfaceAttrib) const override { return 0; }
+    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const&) {}
 
     std::shared_ptr<mir::scene::Surface> parent() const override { return nullptr; }
 
@@ -103,11 +106,7 @@ public:
 
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) {}
     void rename(std::string const&) {}
-
-
-    MirPixelFormat pixel_format() const { return mir_pixel_format_abgr_8888; }
-    std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const { return nullptr; }
-    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const&) {}
+    std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
 };
 
 }

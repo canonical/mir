@@ -102,7 +102,6 @@ void mc::BufferStreamSurfaces::drop_client_requests()
     buffer_bundle->drop_client_requests();
 }
 
-//helper
 void mc::BufferStreamSurfaces::swap_buffers(
     mg::Buffer* old_buffer, std::function<void(mg::Buffer* new_buffer)> complete)
 {

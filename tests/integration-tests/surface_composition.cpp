@@ -110,6 +110,7 @@ TEST_F(SurfaceComposition, does_not_send_client_buffers_to_dead_surfaces)
             old_buffer = new_buffer;
             called_back = true;
         };
+
     // Exhaust the buffers to ensure we have a pending swap to complete
     // But also be careful to not pass a formerly released non-null old_buffer
     // in to swap_buffers...
