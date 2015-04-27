@@ -99,4 +99,5 @@ void mga::ServerRenderWindow::sync_to_display(bool)
 
 void mga::ServerRenderWindow::dispatch_driver_request_buffer_count(unsigned int)
 {
+    //note: Haven't seen a good reason to honor this request for a fb context
 }
