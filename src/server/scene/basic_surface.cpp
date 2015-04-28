@@ -235,6 +235,11 @@ std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() cons
     return surface_buffer_stream;
 }
 
+void set_additional_streams(std::list<mc::BufferStream> const& streams)
+{
+    (void) streams;
+}
+
 void ms::BasicSurface::allow_framedropping(bool allow)
 {
     surface_buffer_stream->allow_framedropping(allow);

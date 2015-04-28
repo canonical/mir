@@ -26,6 +26,7 @@
 
 #include "mir_toolkit/common.h"
 
+#include <list>
 #include <string>
 #include <memory>
 
@@ -36,7 +37,10 @@ namespace graphics
 class Buffer;
 class CursorImage;
 }
-
+namespace compositor
+{
+class BufferStream;
+}
 namespace frontend
 {
 class ClientBufferTracker;
@@ -55,6 +59,7 @@ public:
     virtual void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) = 0;
     
     virtual std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const = 0;
+    virtual void set_additional_streams(std::list<compositor::BufferStream> const& streams) = 0;
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;

@@ -227,9 +227,9 @@ TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
     auto stub_stream1 = std::make_shared<mtd::StubBufferStream>();
     auto stub_stream2 = std::make_shared<mtd::StubBufferStream>();
     auto stub_stream3 = std::make_shared<mtd::StubBufferStream>();
-    stub_surface1->add_stream(stub_stream1);
-    stub_surface1->add_stream(stub_stream2);
-    stub_surface3->add_stream(stub_stream3);
+    stub_surface1->set_additional_streams({stub_stream1, stub_stream2});
+    stub_surface2->set_additional_streams({});
+    stub_surface3->set_additional_streams({stub_stream3});
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),

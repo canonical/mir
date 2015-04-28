@@ -742,3 +742,16 @@ TEST_F(BasicSurfaceTest, notifies_of_rename)
 
     surface.rename("Steve");
 }
+
+TEST_F(BasicSurfaceTest, adds_buffer_streams)
+{
+    using namespace testing;
+    auto additional_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto additional_buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto primary_stream = surface->primary_buffer_stream();
+
+    surface.set_additional_streams({additional_buffer_stream1, additional_buffer_stream2});
+
+    EXPECT_THAT(surface.streams(),
+        ElementsAre(additional_buffer_stream1, additional_buffer_stream2, primary_stream));
+}
