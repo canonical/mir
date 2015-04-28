@@ -201,6 +201,7 @@ private:
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
+    compositor::BufferStreamList additional_streams;
 
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;

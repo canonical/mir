@@ -237,12 +237,13 @@ std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() cons
 
 void ms::BasicSurface::set_additional_streams(mc::BufferStreamList const& streams)
 {
-    (void) streams;
+    std::unique_lock<std::mutex> lk(guard);
+    additional_streams = streams;
 }
 
 mc::BufferStreamList ms::BasicSurface::streams() const
 {
-    return {};
+    return additional_streams;
 }
 
 void ms::BasicSurface::allow_framedropping(bool allow)
