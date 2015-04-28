@@ -257,7 +257,7 @@ int mga::RealHwcWrapper::display_attributes(
 
 void mga::RealHwcWrapper::power_mode(DisplayName display_name, PowerMode mode) const
 {
-    if (auto rc = hwc_device->setPowerMode(hwc_device.get(), display_name, mode))
+    if (auto rc = hwc_device->setPowerMode(hwc_device.get(), display_name, static_cast<int>(mode)))
     {
         std::stringstream ss;
         ss << "error setting power mode. rc = " << std::hex << rc;

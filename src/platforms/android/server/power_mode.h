@@ -28,7 +28,7 @@ namespace graphics
 namespace android
 {
 
-enum PowerMode
+enum class PowerMode
 {
     off = HWC_POWER_MODE_OFF,
     doze = HWC_POWER_MODE_DOZE,
