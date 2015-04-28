@@ -245,10 +245,10 @@ void mf::SessionMediator::create_surface(
     #undef COPY_IF_SET
 
     if (request->has_min_aspect())
-        params.min_aspect = { request->min_aspect().x(), request->min_aspect().y()};
+        params.min_aspect = { request->min_aspect().width(), request->min_aspect().height()};
 
     if (request->has_max_aspect())
-        params.max_aspect = { request->max_aspect().x(), request->max_aspect().y()};
+        params.max_aspect = { request->max_aspect().width(), request->max_aspect().height()};
 
     auto const surf_id = shell->create_surface(session, params);
 
@@ -484,10 +484,18 @@ void mf::SessionMediator::modify_surface(
         }
 
         if (surface_specification.has_min_aspect())
-            mods.min_aspect = { surface_specification.min_aspect().x(), surface_specification.min_aspect().y()};
+            mods.min_aspect =
+                {
+                    surface_specification.min_aspect().width(),
+                    surface_specification.min_aspect().height()
+                };
 
         if (surface_specification.has_max_aspect())
-            mods.max_aspect = { surface_specification.max_aspect().x(), surface_specification.max_aspect().y()};
+            mods.max_aspect =
+                {
+                    surface_specification.max_aspect().width(),
+                    surface_specification.max_aspect().height()
+                };
 
         auto const id = mf::SurfaceId(request->surface_id().value());
 
