@@ -23,18 +23,26 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wall"
+#include <gbm.h>
+#pragma GCC diagnostic pop
+
+#include <memory>
+
 namespace mir
 {
 namespace graphics
 {
+struct EGLExtensions;
+
 namespace X
 {
 
 class BufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator() = default;
-    virtual ~BufferAllocator() = default;
+    BufferAllocator(gbm_device* device);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties) override;
@@ -47,6 +55,9 @@ private:
         graphics::BufferProperties const& buffer_properties);
     std::shared_ptr<Buffer> alloc_hardware_buffer(
         graphics::BufferProperties const& buffer_properties);
+
+    gbm_device* const device;
+    std::shared_ptr<EGLExtensions> const egl_extensions;
 };
 
 }

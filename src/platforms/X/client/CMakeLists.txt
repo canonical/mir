@@ -1,12 +1,21 @@
 include_directories(${client_common_include_dirs})
 
+include_directories(
+    ${DRM_INCLUDE_DIRS}
+    ${EGL_INCLUDE_DIRS}
+)
+
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
+
+#add_definitions(-D__GBM__)
 
 add_library(mirclientplatformXobjects OBJECT
   client_platform_factory.cpp
   client_platform.cpp
   client_buffer_factory.cpp
   client_buffer.cpp
+  native_surface.cpp
+  mesa_native_display_container.cpp
 )
 
 add_library(

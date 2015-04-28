@@ -2,13 +2,13 @@ include_directories(
     ${server_common_include_dirs}
 )
 
-#include_directories(
-#    ${DRM_INCLUDE_DIRS}
-#    ${GBM_INCLUDE_DIRS}
-#    ${EGL_INCLUDE_DIRS}
-#    ${GLESv2_INCLUDE_DIRS}
-#    ${UDEV_INCLUDE_DIRS}
-#)
+include_directories(
+    ${DRM_INCLUDE_DIRS}
+    ${GBM_INCLUDE_DIRS}
+    ${EGL_INCLUDE_DIRS}
+    ${GLESv2_INCLUDE_DIRS}
+    ${UDEV_INCLUDE_DIRS}
+)
 
 # gbm.h and drm.h have trailing commas at the end of enum definitions
 # This is valid C99, but g++ 4.4 flags it as an error with -pedantic
@@ -28,6 +28,10 @@ add_library(
   ipc_operations.cpp
   display_group.cpp
   display_buffer.cpp
+  gbm_buffer.cpp
+  display_helpers.cpp
+  drm_mode_resources.cpp
+  drm_close_threadsafe.cpp
 )
 
 add_library(
@@ -43,9 +47,9 @@ target_link_libraries(
   EGL
   GLESv2
   X11
-#  ${Boost_PROGRAM_OPTIONS_LIBRARY}
-#  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
-#  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
 #  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
 #  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )

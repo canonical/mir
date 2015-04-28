@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_X_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "display_helpers.h"
 
 namespace mir
 {
@@ -46,6 +47,9 @@ public:
     EGLNativeDisplayType egl_native_display() const override;
 private:
     Display *display;
+    std::shared_ptr<mir::udev::Context> udev;
+    std::shared_ptr<helpers::DRMHelper> const drm;
+    helpers::GBMHelper gbm;
 };
 
 }

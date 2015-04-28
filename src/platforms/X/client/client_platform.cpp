@@ -20,24 +20,63 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "client_platform.h"
 #include "client_buffer_factory.h"
+#include "mesa_native_display_container.h"
+#include "native_surface.h"
 #include "mir/client_context.h"
 #include "../debug.h"
 
 #include <boost/throw_exception.hpp>
 
-#include <X11/Xlib.h>
 #include <EGL/egl.h>
-
-//#include <cstring>
 
 namespace mcl=mir::client;
 namespace mclx=mcl::X;
 namespace geom=mir::geometry;
 
-mclx::ClientPlatform::ClientPlatform(ClientContext* const context,
-                                     std::shared_ptr<BufferFileOps> const& buffer_file_ops)
-                                     : context{context},
-                                       buffer_file_ops{buffer_file_ops}
+namespace
+{
+struct NativeDisplayDeleter
+{
+    NativeDisplayDeleter(mcl::EGLNativeDisplayContainer& container)
+    : container(container)
+    {
+    }
+    void operator() (EGLNativeDisplayType* p)
+    {
+        auto display = *(reinterpret_cast<MirEGLNativeDisplayType*>(p));
+        container.release(display);
+        delete p;
+    }
+
+    mcl::EGLNativeDisplayContainer& container;
+};
+}
+
+namespace
+{
+struct NativeWindowDeleter
+{
+    NativeWindowDeleter(mclx::NativeSurface* window)
+     : window(window) {}
+
+    void operator()(EGLNativeWindowType* type)
+    {
+        delete type;
+        delete window;
+    }
+
+private:
+    mclx::NativeSurface* window;
+};
+}
+
+mclx::ClientPlatform::ClientPlatform(
+        ClientContext* const context,
+        std::shared_ptr<BufferFileOps> const& buffer_file_ops,
+        mcl::EGLNativeDisplayContainer& display_container)
+    : context{context},
+      buffer_file_ops{buffer_file_ops},
+      display_container(display_container)
 {
     CALLED
 }
@@ -49,32 +88,26 @@ std::shared_ptr<mcl::ClientBufferFactory> mclx::ClientPlatform::create_buffer_fa
     return std::make_shared<mclx::ClientBufferFactory>(buffer_file_ops);
 }
 
-std::shared_ptr<EGLNativeWindowType> mclx::ClientPlatform::create_egl_native_window(EGLNativeSurface* /* client_surface */)
+std::shared_ptr<EGLNativeWindowType> mclx::ClientPlatform::create_egl_native_window(EGLNativeSurface* client_surface)
 {
     CALLED
 
-#if 0
-    //TODO: this is awkward on both android and gbm...
     auto native_window = new NativeSurface(*client_surface);
     auto egl_native_window = new EGLNativeWindowType;
     *egl_native_window = reinterpret_cast<EGLNativeWindowType>(native_window);
     NativeWindowDeleter deleter(native_window);
     return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
-#else
-    return 0;
-#endif
 }
 
 std::shared_ptr<EGLNativeDisplayType> mclx::ClientPlatform::create_egl_native_display()
 {
     CALLED
 
-    auto native_display = std::make_shared<EGLNativeDisplayType>();
-//    *native_display = EGL_DEFAULT_DISPLAY;
-    *native_display = XOpenDisplay(NULL);
-    if (!(*native_display))
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get a display for client"));
-    return native_display;
+    MirEGLNativeDisplayType *mir_native_display = new MirEGLNativeDisplayType;
+    *mir_native_display = display_container.create(this);
+    auto egl_native_display = reinterpret_cast<EGLNativeDisplayType*>(mir_native_display);
+
+    return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter(display_container));
 }
 
 MirPlatformType mclx::ClientPlatform::platform_type() const

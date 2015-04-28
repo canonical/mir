@@ -17,9 +17,12 @@
  */
 
 #include "mir/client_platform_factory.h"
+#include "client_platform.h"
 #include "mir_toolkit/client_types.h"
 #include "mir/client_context.h"
-#include "client_platform.h"
+#include "buffer_file_ops.h"
+#include "mir/egl_native_display_container.h"
+
 #include "../debug.h"
 
 #include <sys/mman.h>
@@ -58,8 +61,7 @@ struct RealBufferFileOps : public mclx::BufferFileOps
 
 }
 
-extern "C" std::shared_ptr<mcl::ClientPlatform>
-create_client_platform(mcl::ClientContext* context)
+extern "C" std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
 {
     CALLED
 
@@ -72,7 +74,8 @@ create_client_platform(mcl::ClientContext* context)
     }
 
     auto buffer_file_ops = std::make_shared<RealBufferFileOps>();
-    return std::make_shared<mclx::ClientPlatform>(context, buffer_file_ops);
+    return std::make_shared<mclx::ClientPlatform>(
+               context, buffer_file_ops, mcl::EGLNativeDisplayContainer::instance());
 }
 
 extern "C" bool

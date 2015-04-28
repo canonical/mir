@@ -20,6 +20,7 @@
 #include "display.h"
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
+#include "mir/udev/wrapper.h"
 #include "../debug.h"
 
 namespace mg = mir::graphics;
@@ -27,14 +28,19 @@ namespace mgx = mg::X;
 namespace mo = mir::options;
 
 mgx::Platform::Platform(std::shared_ptr<DisplayReport> const& /*listener*/)
+    : udev{std::make_shared<mir::udev::Context>()},
+       drm{std::make_shared<helpers::DRMHelper>()}
 {
-    CALLED
+   CALLED
+
+   drm->setup(udev);
+   gbm.setup(*drm);
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator()
 {
     CALLED
-    return std::make_shared<mgx::BufferAllocator>();
+    return std::make_shared<mgx::BufferAllocator>(gbm.device);
 }
 
 std::shared_ptr<mg::Display> mgx::Platform::create_display(
