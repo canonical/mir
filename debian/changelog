@@ -10,8 +10,7 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
         most basic functionality of a surface.
       . Log useful OpenGL information on server start-up.
       . Added client API support for constructing input method surfaces.
-      . Switched default behaviour from triple to double buffering to reduce
-        latency. This is also configurable by --nbuffers=N for demo servers or
+      . Buffer queue size is configurable by --nbuffers=N for demo servers or
         environment MIR_SERVER_NBUFFERS=N for any server.
       . Added experimental environment variable MIR_CLIENT_INPUT_RATE=Hz for
         tweaking the input resampling rate a client experiences (0 = off).

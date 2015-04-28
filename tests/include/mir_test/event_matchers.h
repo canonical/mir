@@ -27,10 +27,9 @@
 
 #include <gmock/gmock.h>
 
-// MirEvent is in global namespace
+
 void PrintTo(MirEvent const& event, std::ostream *os);
 void PrintTo(MirEvent const* event, std::ostream *os);
-void PrintTo(MirInputEvent const& event, std::ostream *os);
 
 namespace mir
 {

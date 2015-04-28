@@ -21,6 +21,7 @@
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_platform_helpers.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test/validity_matchers.h"
 
 #include "src/include/client/mir/client_buffer.h"
@@ -130,6 +131,8 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
                                             mir_surface_state_minimized));
         }
     }
+    
+    mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 }
 
