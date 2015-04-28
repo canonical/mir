@@ -655,17 +655,17 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     {
         auto const ar = surface_info.min_aspect.value();
 
-        auto const error = new_size.width.as_int()*(long)ar.y - new_size.height.as_int()*(long)ar.x;
+        auto const error = new_size.width.as_int()*(long)ar.height - new_size.height.as_int()*(long)ar.width;
 
         if (error > 0)
         {
             if (new_size.height.as_int() > new_size.width.as_int())
             {
-                new_size.width = new_size.width - DeltaX((error+(ar.y-1))/ar.y);
+                new_size.width = new_size.width - DeltaX((error+(ar.height-1))/ar.height);
             }
             else
             {
-                new_size.height = new_size.height + DeltaY((error+(ar.x-1))/ar.x);
+                new_size.height = new_size.height + DeltaY((error+(ar.width-1))/ar.width);
             }
         }
     }
@@ -674,17 +674,17 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     {
         auto const ar = surface_info.max_aspect.value();
 
-        auto const error = new_size.height.as_int()*(long)ar.x - new_size.width.as_int()*(long)ar.y;
+        auto const error = new_size.height.as_int()*(long)ar.width - new_size.width.as_int()*(long)ar.height;
 
         if (error > 0)
         {
             if (new_size.height.as_int() > new_size.width.as_int())
             {
-                new_size.width = new_size.width + DeltaX((error+(ar.y-1))/ar.y);
+                new_size.width = new_size.width + DeltaX((error+(ar.height-1))/ar.height);
             }
             else
             {
-                new_size.height = new_size.height - DeltaY((error+(ar.x-1))/ar.x);
+                new_size.height = new_size.height - DeltaY((error+(ar.width-1))/ar.width);
             }
         }
     }
