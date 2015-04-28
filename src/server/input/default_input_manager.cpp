@@ -17,6 +17,8 @@
  */
 
 #include "default_input_manager.h"
+#include "android/input_reader_dispatchable.h"
+
 #include "mir/input/platform.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -30,9 +32,12 @@
 #include <mutex>
 
 namespace mi = mir::input;
+namespace mia = mi::android;
 
-mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer)
-    : multiplexer{multiplexer}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
+mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+                                             std::shared_ptr<droidinput::InputReaderInterface> const& reader,
+                                             std::shared_ptr<droidinput::EventHubInterface> const& event_hub)
+    : multiplexer{multiplexer}, legacy_dispatchable{std::make_shared<mia::InputReaderDispatchable>(event_hub, reader)}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
 {
 }
 
@@ -67,17 +72,24 @@ void mi::DefaultInputManager::start()
     if (state == State::running)
         return;
 
-    multiplexer->add_watch(queue);
-
     state = State::running;
+
+    multiplexer->add_watch(queue);
+    multiplexer->add_watch(legacy_dispatchable);
+
+    legacy_dispatchable->start();
+
     queue->enqueue([this]()
                    {
-                       mir::set_thread_name("Mir/Input");
-                       for (auto const& platform : platforms)
-                       {
-                           platform->start();
-                           multiplexer->add_watch(platform->dispatchable());
-                       }
+                        mir::set_thread_name("Mir/InputReader");
+                        for (auto const& platform : platforms)
+                        {
+                            platform->start();
+                            multiplexer->add_watch(platform->dispatchable());
+                        }
+                        // TODO: Udev monitoring is still not separated yet - an initial scan is necessary to open
+                        // devices, this will be triggered through the first call to dispatch->InputReader->loopOnce.
+                        legacy_dispatchable->dispatch(dispatch::FdEvent::readable);
                    });
 
     input_thread = std::make_unique<dispatch::SimpleDispatchThread>(
@@ -115,5 +127,6 @@ void mi::DefaultInputManager::stop()
 
     input_thread.reset();
 
+    multiplexer->remove_watch(legacy_dispatchable);
     multiplexer->remove_watch(queue);
 }
