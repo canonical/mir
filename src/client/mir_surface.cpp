@@ -114,14 +114,14 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
 
     if (min_aspect.is_set())
     {
-        message.mutable_min_aspect()->set_x(min_aspect.value().x);
-        message.mutable_min_aspect()->set_y(min_aspect.value().y);
+        message.mutable_min_aspect()->set_x(min_aspect.value().width);
+        message.mutable_min_aspect()->set_y(min_aspect.value().height);
     }
 
     if (max_aspect.is_set())
     {
-        message.mutable_max_aspect()->set_x(max_aspect.value().x);
-        message.mutable_max_aspect()->set_y(max_aspect.value().y);
+        message.mutable_max_aspect()->set_x(max_aspect.value().width);
+        message.mutable_max_aspect()->set_y(max_aspect.value().height);
     }
 
     return message;
@@ -607,15 +607,15 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     if (spec.min_aspect.is_set())
     {
         auto const aspect = surface_specification->mutable_min_aspect();
-        aspect->set_x(spec.min_aspect.value().x);
-        aspect->set_y(spec.min_aspect.value().y);
+        aspect->set_x(spec.min_aspect.value().width);
+        aspect->set_y(spec.min_aspect.value().height);
     }
 
     if (spec.max_aspect.is_set())
     {
         auto const aspect = surface_specification->mutable_max_aspect();
-        aspect->set_x(spec.max_aspect.value().x);
-        aspect->set_y(spec.max_aspect.value().y);
+        aspect->set_x(spec.max_aspect.value().width);
+        aspect->set_y(spec.max_aspect.value().height);
     }
 
     modify_wait_handle.expect_result();
