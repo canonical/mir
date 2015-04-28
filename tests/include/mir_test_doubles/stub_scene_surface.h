@@ -107,6 +107,8 @@ public:
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) {}
     void rename(std::string const&) {}
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
+    void set_additional_streams(compositor::BufferStreamList const&) override {};
+    compositor::BufferStreamList streams() const override { return {}; }
 };
 
 }

@@ -71,6 +71,8 @@ struct MockFrontendSurface : public frontend::Surface
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));
 
     MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());    
+    MOCK_CONST_METHOD0(streams, compositor::BufferStreamList());
+    MOCK_METHOD1(set_additional_streams, void(compositor::BufferStreamList const&));
 };
 }
 }
