@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_HOST_CONNECTION_H_
 
 #include "src/server/graphics/nested/host_connection.h"
+#include "src/server/graphics/nested/host_surface.h"
 #include "mir/graphics/platform_operation_message.h"
 
 namespace mir
@@ -65,6 +66,13 @@ public:
         unsigned int, graphics::PlatformOperationMessage const&) override
     {
         return {{},{}};
+    }
+
+    void set_cursor_image(graphics::CursorImage const&)
+    {
+    }
+    void hide_cursor()
+    {
     }
 };
 
