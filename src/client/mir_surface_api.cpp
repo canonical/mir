@@ -657,10 +657,10 @@ catch (std::exception const& ex)
     return false;
 }
 
-bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned x, unsigned y)
+bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
 try
 {
-    spec->min_aspect = {x, y};
+    spec->min_aspect = {width, height};
     return true;
 }
 catch (std::exception const& ex)
@@ -669,10 +669,10 @@ catch (std::exception const& ex)
     return false;
 }
 
-bool mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned x, unsigned y)
+bool mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
 try
 {
-    spec->max_aspect = {x, y};
+    spec->max_aspect = {width, height};
     return true;
 }
 catch (std::exception const& ex)

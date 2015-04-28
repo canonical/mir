@@ -33,6 +33,7 @@
 #include "src/server/input/null_input_dispatcher.h"
 #include "src/server/input/null_input_targeter.h"
 #include "mir_test_doubles/null_logger.h"
+#include "mir_test_doubles/stub_cursor.h"
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
@@ -46,14 +47,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-class StubCursor : public mg::Cursor
-{
-    void show() override {}
-    void show(mg::CursorImage const&) override {}
-    void hide() override {}
-    void move_to(geom::Point) override {}
-};
-
 class StubRendererFactory : public mc::RendererFactory
 {
 public:
@@ -155,7 +148,7 @@ std::shared_ptr<mi::InputSender> mtf::StubbedServerConfiguration::the_input_send
 
 std::shared_ptr<mg::Cursor> mtf::StubbedServerConfiguration::the_cursor()
 {
-    return std::make_shared<StubCursor>();
+    return std::make_shared<mtd::StubCursor>();
 }
 
 std::shared_ptr<ml::Logger> mtf::StubbedServerConfiguration::the_logger()

@@ -33,7 +33,7 @@ namespace mir
 {
 namespace shell
 {
-struct SurfaceAspectRatio { unsigned x; unsigned y; };
+struct SurfaceAspectRatio { unsigned width; unsigned height; };
 
 /// Specification of surface properties requested by client
 struct SurfaceSpecification

@@ -311,25 +311,25 @@ bool mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height);
  * Set the minimum aspect ratio
  *
  * \param [in] spec     Specification to mutate
- * \param [in] x        numerator
- * \param [in] y        denominator
+ * \param [in] width    numerator
+ * \param [in] height   denominator
  * \return              False if minimum aspect is invalid for a surface of this type
- * \note    The requested aspect ration is a hint only. The server is not guaranteed
+ * \note    The requested aspect ratio is a hint only. The server is not guaranteed
  *          to create a surface of any specific aspect.
  */
-bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned x, unsigned y);
+bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
 
 /**
  * Set the maximum aspect ratio
  *
  * \param [in] spec     Specification to mutate
- * \param [in] x        numerator
- * \param [in] y        denominator
+ * \param [in] width    numerator
+ * \param [in] height   denominator
  * \return              False if maximum aspect is invalid for a surface of this type
- * \note    The requested aspect ration is a hint only. The server is not guaranteed
+ * \note    The requested aspect ratio is a hint only. The server is not guaranteed
  *          to create a surface of any specific aspect.
  */
-bool mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned x, unsigned y);
+bool mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
 
 /**
  * Set the requested pixel format.
@@ -677,13 +677,6 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
                                                             int width,
                                                             int height,
                                                             MirPixelFormat format);
-
-/**
- * Change the title (name) of a surface.
- *   \param [in] surface  The surface to rename
- *   \param [in] name     The new name
- */
-void mir_surface_set_title(MirSurface* surface, char const* name);
 
 /**
  * Request changes to the specification of a surface. The server will decide

@@ -67,7 +67,7 @@ struct MirSurfaceSpec
 
     mir::protobuf::SurfaceParameters serialize() const;
 
-    struct AspectRation { unsigned x; unsigned y; };
+    struct AspectRatio { unsigned width; unsigned height; };
 
     // Required parameters
     MirConnection* connection{nullptr};
@@ -95,8 +95,8 @@ struct MirSurfaceSpec
     mir::optional_value<int> max_height;
     mir::optional_value<int> width_inc;
     mir::optional_value<int> height_inc;
-    mir::optional_value<AspectRation> min_aspect;
-    mir::optional_value<AspectRation> max_aspect;
+    mir::optional_value<AspectRatio> min_aspect;
+    mir::optional_value<AspectRatio> max_aspect;
 };
 
 struct MirSurface
