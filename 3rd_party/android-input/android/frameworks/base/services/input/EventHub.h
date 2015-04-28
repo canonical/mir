@@ -196,13 +196,13 @@ public:
     virtual void setExcludedDevices(const Vector<String8>& devices) = 0;
 
     /*
-     * Wait for events to become available and returns them.
+     * Tests for available events and returns them.
      * After returning, the EventHub holds onto a wake lock until the next call to getEvent.
      * This ensures that the device will not go to sleep while the event is being processed.
      * If the device needs to remain awake longer than that, then the caller is responsible
      * for taking care of it (say, by poking the power manager user activity timer).
      *
-     * Returns the number of events obtained, or 0 if the timeout expired.
+     * Returns the number of events obtained.
      */
     virtual size_t getEvents(RawEvent* buffer, size_t bufferSize) = 0;
 
