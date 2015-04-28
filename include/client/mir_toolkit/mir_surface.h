@@ -308,7 +308,8 @@ bool mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width);
 bool mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height);
 
 /**
- * Set the minimum aspect ratio
+ * Set the minimum aspect ratio. This is the minimum ratio of surface width to height.
+ * It is independent of orientation changes and/or preferences.
  *
  * \param [in] spec     Specification to mutate
  * \param [in] width    numerator
@@ -320,7 +321,8 @@ bool mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height);
 bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
 
 /**
- * Set the maximum aspect ratio
+ * Set the maximum aspect ratio. This is the maximum ratio of surface width to height.
+ * It is independent of orientation changes and/or preferences.
  *
  * \param [in] spec     Specification to mutate
  * \param [in] width    numerator
