@@ -655,17 +655,21 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     {
         auto const ar = surface_info.min_aspect.value();
 
-        auto const error = new_size.height.as_int()*(long)ar.width - new_size.width.as_int()*(long)ar.height;
+        auto const error = new_size.height.as_int()*long(ar.width) - new_size.width.as_int()*long(ar.height);
 
         if (error > 0)
         {
-            if (new_size.height.as_int() > new_size.width.as_int())
+            // Add (denominator-1) to numerator to ensure rounding up
+            auto const width_correction  = (error+(ar.height-1))/ar.height;
+            auto const height_correction = (error+(ar.width-1))/ar.width;
+
+            if (width_correction < height_correction)
             {
-                new_size.width = new_size.width + DeltaX((error+(ar.height-1))/ar.height);
+                new_size.width = new_size.width + DeltaX(width_correction);
             }
             else
             {
-                new_size.height = new_size.height - DeltaY((error+(ar.width-1))/ar.width);
+                new_size.height = new_size.height - DeltaY(height_correction);
             }
         }
     }
@@ -674,17 +678,21 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     {
         auto const ar = surface_info.max_aspect.value();
 
-        auto const error = new_size.width.as_int()*(long)ar.height - new_size.height.as_int()*(long)ar.width;
+        auto const error = new_size.width.as_int()*long(ar.height) - new_size.height.as_int()*long(ar.width);
 
         if (error > 0)
         {
-            if (new_size.height.as_int() > new_size.width.as_int())
+            // Add (denominator-1) to numerator to ensure rounding up
+            auto const height_correction = (error+(ar.width-1))/ar.width;
+            auto const width_correction  = (error+(ar.height-1))/ar.height;
+
+            if (width_correction < height_correction)
             {
-                new_size.width = new_size.width - DeltaX((error+(ar.height-1))/ar.height);
+                new_size.width = new_size.width - DeltaX(width_correction);
             }
             else
             {
-                new_size.height = new_size.height + DeltaY((error+(ar.width-1))/ar.width);
+                new_size.height = new_size.height + DeltaY(height_correction);
             }
         }
     }

@@ -63,7 +63,7 @@ me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
     state{mir_surface_state_restored},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
-    parent{surface->parent()},
+    parent{params.parent},
     min_width{params.min_width},
     min_height{params.min_height},
     max_width{params.max_width},
@@ -740,17 +740,21 @@ bool me::CanonicalWindowManagerPolicyCopy::constrained_resize(
     {
         auto const ar = surface_info.min_aspect.value();
 
-        auto const error = new_size.height.as_int()*(long)ar.width - new_size.width.as_int()*(long)ar.height;
+        auto const error = new_size.height.as_int()*long(ar.width) - new_size.width.as_int()*long(ar.height);
 
         if (error > 0)
         {
-            if (new_size.height.as_int() > new_size.width.as_int())
+            // Add (denominator-1) to numerator to ensure rounding up
+            auto const width_correction  = (error+(ar.height-1))/ar.height;
+            auto const height_correction = (error+(ar.width-1))/ar.width;
+
+            if (width_correction < height_correction)
             {
-                new_size.width = new_size.width + DeltaX((error+(ar.height-1))/ar.height);
+                new_size.width = new_size.width + DeltaX(width_correction);
             }
             else
             {
-                new_size.height = new_size.height - DeltaY((error+(ar.width-1))/ar.width);
+                new_size.height = new_size.height - DeltaY(height_correction);
             }
         }
     }
@@ -759,17 +763,21 @@ bool me::CanonicalWindowManagerPolicyCopy::constrained_resize(
     {
         auto const ar = surface_info.max_aspect.value();
 
-        auto const error = new_size.width.as_int()*(long)ar.height - new_size.height.as_int()*(long)ar.width;
+        auto const error = new_size.width.as_int()*long(ar.height) - new_size.height.as_int()*long(ar.width);
 
         if (error > 0)
         {
-            if (new_size.height.as_int() > new_size.width.as_int())
+            // Add (denominator-1) to numerator to ensure rounding up
+            auto const height_correction = (error+(ar.width-1))/ar.width;
+            auto const width_correction  = (error+(ar.height-1))/ar.height;
+
+            if (width_correction < height_correction)
             {
-                new_size.width = new_size.width - DeltaX((error+(ar.height-1))/ar.height);
+                new_size.width = new_size.width - DeltaX(width_correction);
             }
             else
             {
-                new_size.height = new_size.height + DeltaY((error+(ar.width-1))/ar.width);
+                new_size.height = new_size.height + DeltaY(height_correction);
             }
         }
     }
@@ -838,8 +846,7 @@ bool me::CanonicalWindowManagerPolicyCopy::constrained_resize(
             new_size.height = new_size.height + to_bottom_right.dy;
     }
 
-    auto& info = tools->info_for(surface);
-    switch (info.state)
+    switch (surface_info.state)
     {
     case mir_surface_state_restored:
         break;
@@ -866,7 +873,7 @@ bool me::CanonicalWindowManagerPolicyCopy::constrained_resize(
         return true;
     }
 
-    info.titlebar->resize({new_size.width, Height{title_bar_height}});
+    surface_info.titlebar->resize({new_size.width, Height{title_bar_height}});
     surface->resize(new_size);
 
     // TODO It is rather simplistic to move a tree WRT the top_left of the root
