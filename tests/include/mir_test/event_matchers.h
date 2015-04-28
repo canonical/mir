@@ -27,6 +27,9 @@
 
 #include <gmock/gmock.h>
 
+void PrintTo(MirEvent const& event, std::ostream *os);
+void PrintTo(MirEvent const* event, std::ostream *os);
+
 namespace mir
 {
 namespace test

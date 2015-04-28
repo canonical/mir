@@ -1,4 +1,5 @@
 add_library(mir-test-static STATIC
+  event_matchers.cpp
   pipe.cpp
   display_config_matchers.cpp
   cross_process_action.cpp
