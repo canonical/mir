@@ -740,7 +740,7 @@ bool me::CanonicalWindowManagerPolicyCopy::constrained_resize(
     {
         auto const ar = surface_info.min_aspect.value();
 
-        auto const error = new_size.width.as_int()*(long)ar.height - new_size.height.as_int()*(long)ar.width;
+        auto const error = new_size.width.as_int()*long(ar.height) - new_size.height.as_int()*long(ar.width);
 
         if (error > 0)
         {
@@ -759,7 +759,7 @@ bool me::CanonicalWindowManagerPolicyCopy::constrained_resize(
     {
         auto const ar = surface_info.max_aspect.value();
 
-        auto const error = new_size.height.as_int()*(long)ar.width - new_size.width.as_int()*(long)ar.height;
+        auto const error = new_size.height.as_int()*long(ar.width) - new_size.width.as_int()*long(ar.height);
 
         if (error > 0)
         {
