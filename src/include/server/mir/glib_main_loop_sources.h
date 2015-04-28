@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -42,6 +42,7 @@
 
 namespace mir
 {
+class LockableCallback;
 namespace detail
 {
 
@@ -73,7 +74,8 @@ void add_server_action_gsource(
 GSourceHandle add_timer_gsource(
     GMainContext* main_context,
     std::shared_ptr<time::Clock> const& clock,
-    std::function<void()> const& handler,
+    std::shared_ptr<LockableCallback> const& handler,
+    std::function<void()> const& exception_handler,
     time::Timestamp target_time);
 
 class FdSources

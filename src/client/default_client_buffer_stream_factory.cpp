@@ -19,6 +19,7 @@
 #include "buffer_stream.h"
 #include "perf_report.h"
 #include "logging/perf_report.h"
+#include "lttng/perf_report.h"
 
 namespace mcl = mir::client;
 namespace ml = mir::logging;
@@ -35,6 +36,10 @@ make_perf_report(std::shared_ptr<ml::Logger> const& logger)
     if (report_target && !strncmp(report_target, "log", strlen(report_target)))
     {
         return std::make_shared<mcl::logging::PerfReport>(logger);
+    }
+    else if (report_target && !strncmp(report_target, "lttng", strlen(report_target)))
+    {
+        return std::make_shared<mcl::lttng::PerfReport>();
     }
     else
     {
@@ -62,4 +67,11 @@ std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::
     mp::BufferStream const& protobuf_bs, std::string const& surface_name)
 {
     return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Producer, client_platform, protobuf_bs, make_perf_report(logger), surface_name);
+}
+
+
+mcl::ClientBufferStream* mcl::DefaultClientBufferStreamFactory::make_producer_stream(mp::DisplayServer& server,
+    mp::BufferStreamParameters const& params, mir_buffer_stream_callback callback, void* context)
+{
+    return new mcl::BufferStream(server, client_platform, params, make_perf_report(logger), callback, context);
 }

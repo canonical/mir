@@ -59,12 +59,13 @@ public:
     void make_current() override;
     void release_current() override;
     void gl_swap_buffers() override;
-    void flip() override;
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     MirOrientation orientation() const override;
     bool uses_alpha() const override;
     void configure(MirPowerMode power_mode, MirOrientation orientation) override;
+    DisplayContents contents() override;
+    MirPowerMode power_mode() const override;
 private:
     DisplayName display_name;
     std::unique_ptr<LayerList> layer_list;
@@ -75,6 +76,7 @@ private:
     HWCFallbackGLRenderer overlay_program;
     bool overlay_enabled;
     MirOrientation orientation_;
+    MirPowerMode power_mode_;
 };
 
 }

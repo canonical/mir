@@ -46,6 +46,7 @@ extern char const* const frontend_threads_opt;
 extern char const* const touchspots_opt;
 extern char const* const fatal_abort_opt;
 extern char const* const debug_opt;
+extern char const* const nbuffers_opt;
 
 extern char const* const name_opt;
 extern char const* const offscreen_opt;
@@ -55,6 +56,7 @@ extern char const* const log_opt_value;
 extern char const* const lttng_opt_value;
 
 extern char const* const platform_graphics_lib;
+extern char const* const platform_input_lib;
 extern char const* const platform_path;
 
 class Configuration

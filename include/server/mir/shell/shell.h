@@ -20,7 +20,9 @@
 #define MIR_SHELL_SHELL_H_
 
 #include "mir/shell/focus_controller.h"
+#include "mir/input/event_filter.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/compositor/display_listener.h"
 
 #include "mir_toolkit/common.h"
 
@@ -29,6 +31,7 @@
 namespace mir
 {
 namespace frontend { class EventSink; }
+namespace geometry { class Rectangle; }
 namespace scene
 {
 class PromptSession;
@@ -43,10 +46,12 @@ class SurfaceCreationParameters;
 namespace shell
 {
 class InputTargeter;
+class SurfaceSpecification;
 
 class Shell :
-// TODO public virtual graphics::DisplayConfigurationPolicy,
-    public virtual FocusController
+    public virtual FocusController,
+    public virtual input::EventFilter,
+    public virtual compositor::DisplayListener
 {
 public:
 /** @name these functions support frontend requests
@@ -57,8 +62,6 @@ public:
         std::shared_ptr<frontend::EventSink> const& sink) = 0;
 
     virtual void close_session(std::shared_ptr<scene::Session> const& session) = 0;
-
-    virtual void handle_surface_created(std::shared_ptr<scene::Session> const& session) = 0;
 
     virtual std::shared_ptr<scene::PromptSession> start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,
@@ -71,6 +74,11 @@ public:
     virtual void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) = 0;
 
     virtual frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) = 0;
+
+    virtual void modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        shell::SurfaceSpecification  const& modifications) = 0;
 
     virtual void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) = 0;
 

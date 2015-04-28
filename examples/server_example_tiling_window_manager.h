@@ -38,7 +38,8 @@ struct TilingSurfaceInfo
 {
     TilingSurfaceInfo(
         std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface);
+        std::shared_ptr<scene::Surface> const& surface,
+        scene::SurfaceCreationParameters const& params);
 
     std::weak_ptr<scene::Session> session;
     MirSurfaceState state;
@@ -56,10 +57,11 @@ struct TilingSurfaceInfo
 class TilingWindowManagerPolicy
 {
 public:
-    using Tools = BasicWindowManagerTools<TilingSessionInfo, TilingSurfaceInfo>;
+    using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo, TilingSurfaceInfo>;
     using TilingSessionInfoMap = typename SessionTo<TilingSessionInfo>::type;
+    using TilingSurfaceInfoMap = typename SurfaceTo<TilingSurfaceInfo>::type;
 
-    TilingWindowManagerPolicy(Tools* const tools);
+    explicit TilingWindowManagerPolicy(Tools* const tools);
 
     void click(geometry::Point cursor);
 
@@ -76,17 +78,26 @@ public:
 
     void handle_new_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
+    void handle_modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        shell::SurfaceSpecification const& modifications);
+
     void handle_delete_surface(std::shared_ptr<scene::Session> const& session, std::weak_ptr<scene::Surface> const& surface);
 
     int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value);
 
     void drag(geometry::Point cursor);
 
-    bool handle_key_event(MirKeyInputEvent const* event);
+    bool handle_keyboard_event(MirKeyboardEvent const* event);
 
-    bool handle_touch_event(MirTouchInputEvent const* event);
+    bool handle_touch_event(MirTouchEvent const* event);
 
-    bool handle_pointer_event(MirPointerInputEvent const* event);
+    bool handle_pointer_event(MirPointerEvent const* event);
+
+    void generate_decorations_for(
+        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface,
+        TilingSurfaceInfoMap& surface_info);
 
 private:
     static const int modifier_mask =
@@ -115,8 +126,8 @@ private:
     static bool resize(std::shared_ptr<scene::Surface> surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
 
     Tools* const tools;
+
     geometry::Point old_cursor{};
-    std::weak_ptr<scene::Surface> old_surface;
 };
 }
 }

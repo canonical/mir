@@ -47,6 +47,10 @@ struct StubSceneSession : public scene::Session
     {
         return std::shared_ptr<scene::Surface>();
     }
+    std::shared_ptr<scene::Surface> surface_after(std::shared_ptr<scene::Surface> const& s) const override
+    {
+        return s;
+    }
     std::string name() const override
     {
         return std::string();
@@ -98,6 +102,19 @@ struct StubSceneSession : public scene::Session
 
     void resume_prompt_session() override
     {
+    }
+
+    std::shared_ptr<frontend::BufferStream> get_buffer_stream(frontend::BufferStreamId) const override
+    {
+        return nullptr;
+    }
+    void destroy_buffer_stream(frontend::BufferStreamId) override
+    {
+    }
+    
+    frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const&) override
+    {
+        return frontend::BufferStreamId();
     }
 
     pid_t const pid;

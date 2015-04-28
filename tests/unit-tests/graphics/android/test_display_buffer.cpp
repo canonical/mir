@@ -67,8 +67,7 @@ struct DisplayBuffer : public ::testing::Test
     std::unique_ptr<mga::LayerList> list{
         new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {})};
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle{
-        std::make_shared<testing::NiceMock<mtd::MockFBBundle>>(
-            display_size, refresh_rate, mir_pixel_format_abgr_8888)};
+        std::make_shared<testing::NiceMock<mtd::MockFBBundle>>(display_size)};
     MirOrientation orientation{mir_orientation_normal};
     mga::DisplayBuffer db{
         mga::DisplayName::primary,
@@ -83,28 +82,6 @@ struct DisplayBuffer : public ::testing::Test
         mga::OverlayOptimization::enabled};
 
 };
-}
-
-TEST_F(DisplayBuffer, can_post_update_with_gl_only)
-{
-    using namespace testing;
-    mga::DisplayName external{mga::DisplayName::external};
-    std::unique_ptr<mga::LayerList> list(new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
-    EXPECT_CALL(*mock_display_device, commit(external, Ref(*list), _, _));
-
-    mga::DisplayBuffer db{
-        external,
-        std::move(list),
-        mock_fb_bundle,
-        mock_display_device,
-        native_window,
-        *gl_context,
-        stub_program_factory,
-        orientation,
-        mga::OverlayOptimization::enabled};
-
-    db.gl_swap_buffers();
-    db.flip();
 }
 
 TEST_F(DisplayBuffer, posts_overlay_list_returns_display_device_decision)
@@ -296,30 +273,28 @@ TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
 
     ON_CALL(*mock_display_device, compatible_renderlist(_))
         .WillByDefault(Return(true));
-    ON_CALL(*mock_display_device, commit(_,_,_,_))
-        .WillByDefault(Invoke([](
-            mga::DisplayName,
-            mga::LayerList& list,
-            mga::SwappingGLContext const&,
-            mga::RenderableListCompositor const&)
+    auto set_to_overlays = [](mga::LayerList& list)
+    {
+        auto native_list = list.native_list();
+        for (auto i = 0u; i < native_list->numHwLayers; i++)
         {
-            auto native_list = list.native_list();
-            for (auto i = 0u; i < native_list->numHwLayers; i++)
-            {
-                if (native_list->hwLayers[i].compositionType == HWC_FRAMEBUFFER)
-                    native_list->hwLayers[i].compositionType = HWC_OVERLAY;
-            }
-        }));
+            if (native_list->hwLayers[i].compositionType == HWC_FRAMEBUFFER)
+                native_list->hwLayers[i].compositionType = HWC_OVERLAY;
+        }
+    };
 
     mg::RenderableList renderlist{buffer1, buffer2};
-    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist));
+    set_to_overlays(db.contents().list);
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
 
     renderlist = mg::RenderableList{buffer2, buffer1}; //ordering changed
     EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
+    set_to_overlays(db.contents().list);
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
 
     renderlist = mg::RenderableList{buffer3, buffer1}; //buffer changed
     EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
+    set_to_overlays(db.contents().list);
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
 }

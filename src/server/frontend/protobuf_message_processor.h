@@ -37,7 +37,8 @@ namespace detail
 class DisplayServer;
 class ProtobufMessageSender;
 
-class ProtobufMessageProcessor : public MessageProcessor
+class ProtobufMessageProcessor : public MessageProcessor,
+                                 public std::enable_shared_from_this<ProtobufMessageProcessor>
 {
 public:
     ProtobufMessageProcessor(
@@ -55,6 +56,7 @@ public:
     void send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
     void send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response);
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Screencast* response);
+    void send_response(::google::protobuf::uint32 id, mir::protobuf::BufferStream* response);
     void send_response(::google::protobuf::uint32 id, mir::protobuf::SocketFD* response);
     void send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::PlatformOperationMessage> response);
 

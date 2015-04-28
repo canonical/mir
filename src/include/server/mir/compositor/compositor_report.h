@@ -19,6 +19,8 @@
 #ifndef MIR_COMPOSITOR_COMPOSITOR_REPORT_H_
 #define MIR_COMPOSITOR_COMPOSITOR_REPORT_H_
 
+#include "mir/graphics/renderable.h"
+
 namespace mir
 {
 namespace compositor
@@ -28,10 +30,11 @@ class CompositorReport
 {
 public:
     typedef const void* SubCompositorId;  // e.g. thread/display buffer ID
-    virtual void added_display(int width, int height, int x, int y, SubCompositorId id = 0) = 0;
-    virtual void began_frame(SubCompositorId id = 0) = 0;
-    virtual void rendered_frame(SubCompositorId id = 0) = 0;
-    virtual void finished_frame(SubCompositorId id = 0) = 0;
+    virtual void added_display(int width, int height, int x, int y, SubCompositorId id) = 0;
+    virtual void began_frame(SubCompositorId id) = 0;
+    virtual void renderables_in_frame(SubCompositorId id, graphics::RenderableList const& renderables) = 0;
+    virtual void rendered_frame(SubCompositorId id) = 0;
+    virtual void finished_frame(SubCompositorId id) = 0;
     virtual void started() = 0;
     virtual void stopped() = 0;
     virtual void scheduled() = 0;

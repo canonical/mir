@@ -312,7 +312,7 @@ TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
         mock_egl.fake_egl_context);
 
     db.gl_swap_buffers();
-    db.flip();
+    db.post();
 }
 
 TEST_F(MesaDisplayBufferTest, single_mode_first_post_flips_with_wait)
@@ -333,7 +333,7 @@ TEST_F(MesaDisplayBufferTest, single_mode_first_post_flips_with_wait)
         mock_egl.fake_egl_context);
 
     db.gl_swap_buffers();
-    db.flip();
+    db.post();
 }
 
 TEST_F(MesaDisplayBufferTest, clone_mode_waits_for_page_flip_on_second_flip)
@@ -362,10 +362,10 @@ TEST_F(MesaDisplayBufferTest, clone_mode_waits_for_page_flip_on_second_flip)
         mock_egl.fake_egl_context);
 
     db.gl_swap_buffers();
-    db.flip();
+    db.post();
 
     db.gl_swap_buffers();
-    db.flip();
+    db.post();
 }
 
 TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)

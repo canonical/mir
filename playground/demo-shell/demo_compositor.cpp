@@ -75,7 +75,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
     //the elements should be notified if they are rendered or not
     bool nonrenderlist_elements{false};
     mg::RenderableList renderable_list;
-    std::unordered_set<mg::Renderable::ID> decoration_skip_list;
+    DecorMap decorated;
 
     for(auto const& it : elements)
     {
@@ -83,8 +83,8 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         auto embellished = renderer.would_embellish(*renderable, viewport);
         auto any_part_drawn = (viewport.overlaps(renderable->screen_position()) || embellished);
         
-        if (!it->is_a_surface())
-            decoration_skip_list.insert(renderable->id());
+        if (auto decor = it->decoration())
+            decorated[renderable->id()] = std::move(decor);
         if (any_part_drawn)
         {
             renderable_list.push_back(renderable);
@@ -122,6 +122,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         viewport == display_buffer.view_area() &&  // no bypass while zoomed
         display_buffer.post_renderables_if_optimizable(renderable_list))
     {
+        report->renderables_in_frame(this, renderable_list);
         renderer.suspend();
     }
     else
@@ -130,10 +131,11 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
 
         renderer.set_rotation(display_buffer.orientation());
         renderer.set_viewport(viewport);
-        renderer.begin(std::move(decoration_skip_list));
+        renderer.begin(std::move(decorated));
         renderer.render(renderable_list);
 
         display_buffer.gl_swap_buffers();
+        report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);
 
         // Release buffers back to the clients now that the swap has returned.
@@ -141,8 +143,6 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         // flip() ...
         // FIXME: This clear() call is blocking a little (LP: #1395421)
         renderable_list.clear();
-
-        display_buffer.flip();
     }
 
     report->finished_frame(this);
@@ -188,8 +188,11 @@ void me::DemoCompositor::update_viewport()
         float zoom_width = db_width / zoom_mag;
         float zoom_height = db_height / zoom_mag;
     
-        float screen_x = cursor_pos.x.as_int() - db_x;
-        float screen_y = cursor_pos.y.as_int() - db_y;
+        // Note the 0.5f. This is because cursors (and all input in general)
+        // measures coordinates at the centre of a pixel. But GL measures to
+        // the top-left corner of a pixel.
+        float screen_x = cursor_pos.x.as_float() + 0.5f - db_x;
+        float screen_y = cursor_pos.y.as_float() + 0.5f - db_y;
 
         float normal_x = screen_x / db_width;
         float normal_y = screen_y / db_height;

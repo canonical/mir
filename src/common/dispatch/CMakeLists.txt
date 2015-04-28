@@ -16,9 +16,11 @@
 
 list(
   APPEND MIR_COMMON_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/action_queue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/simple_dispatch_thread.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/multiplexing_dispatchable.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/action_queue.cpp
 )
 
 set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)

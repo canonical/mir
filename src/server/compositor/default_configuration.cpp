@@ -18,6 +18,7 @@
 
 #include "mir/default_server_configuration.h"
 
+#include "mir/shell/shell.h"
 #include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"
 #include "multi_threaded_compositor.h"
@@ -85,6 +86,7 @@ mir::DefaultServerConfiguration::the_compositor()
                 the_display(),
                 the_scene(),
                 the_display_buffer_compositor_factory(),
+                the_shell(),
                 the_compositor_report(),
                 !the_options()->is_set(options::host_socket_opt));
         });

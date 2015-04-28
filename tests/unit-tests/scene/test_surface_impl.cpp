@@ -16,8 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
+#include "mir/events/event_private.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/scene/surface_event_source.h"
@@ -257,9 +256,9 @@ TEST_F(Surface, take_input_focus)
     using namespace ::testing;
 
     mtd::MockInputTargeter targeter;
-    EXPECT_CALL(targeter, focus_changed(_)).Times(1);
+    EXPECT_CALL(targeter, set_focus(_)).Times(1);
 
-    surface->take_input_focus(mt::fake_shared(targeter));
+    targeter.set_focus(surface);
 }
 
 TEST_F(Surface, with_most_recent_buffer_do_uses_compositor_buffer)

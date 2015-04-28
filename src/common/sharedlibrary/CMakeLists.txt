@@ -15,6 +15,7 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 add_library(mirsharedsharedlibrary OBJECT
+  module_deleter.cpp
   shared_library.cpp
   shared_library_prober.cpp
 )
@@ -23,7 +24,10 @@ list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirsharedsharedlibrary>
 )
 
-list(APPEND MIR_COMMON_REFERENCES dl)
+list(APPEND MIR_COMMON_REFERENCES 
+  ${Boost_LIBRARIES}
+  dl
+)
 
 set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
 set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)

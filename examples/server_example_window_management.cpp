@@ -17,17 +17,21 @@
  */
 
 #include "server_example_window_management.h"
-#include "server_example_shell.h"
 
+#include "server_example_tiling_window_manager.h"
+#include "server_example_canonical_window_manager.h"
+#include "server_example_basic_window_manager.h"
+
+#include "mir/abnormal_exit.h"
 #include "mir/server.h"
-#include "mir/compositor/display_buffer_compositor_factory.h"
-#include "mir/compositor/display_buffer_compositor.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
+#include "mir/shell/display_layout.h"
 
-namespace mc = mir::compositor;
 namespace me = mir::examples;
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 using namespace mir::geometry;
@@ -37,87 +41,115 @@ using namespace mir::geometry;
 
 namespace
 {
-class DisplayTracker : public mc::DisplayBufferCompositor
+char const* const wm_option = "window-manager";
+char const* const wm_description = "window management strategy [{tiling|fullscreen|canonical}]";
+
+char const* const wm_tiling = "tiling";
+char const* const wm_fullscreen = "fullscreen";
+char const* const wm_canonical = "canonical";
+
+struct NullSessionInfo
 {
-public:
-    DisplayTracker(
-        std::unique_ptr<mc::DisplayBufferCompositor>&& wrapped,
-        Rectangle const& area,
-        std::shared_ptr<me::Shell> const& window_manager) :
-        wrapped{std::move(wrapped)},
-        area{area},
-        window_manager(window_manager)
-    {
-        window_manager->add_display(area);
-    }
-
-    ~DisplayTracker() noexcept
-    {
-        window_manager->remove_display(area);
-    }
-
-private:
-
-    void composite(mc::SceneElementSequence&& scene_sequence) override
-    {
-        wrapped->composite(std::move(scene_sequence));
-    }
-
-    std::unique_ptr<mc::DisplayBufferCompositor> const wrapped;
-    Rectangle const area;
-    std::shared_ptr<me::Shell> const window_manager;
 };
 
-class DisplayTrackerFactory : public mc::DisplayBufferCompositorFactory
+struct NullSurfaceInfo
+{
+    NullSurfaceInfo(
+        std::shared_ptr<ms::Session> const& /*session*/,
+        std::shared_ptr<ms::Surface> const& /*surface*/,
+        ms::SurfaceCreationParameters const& /*params*/) {}
+};
+
+
+// Very simple - make every surface fullscreen
+class FullscreenWindowManagerPolicy
 {
 public:
-    DisplayTrackerFactory(
-        std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped,
-        std::shared_ptr<me::Shell> const& window_manager) :
-        wrapped{wrapped},
-        window_manager(window_manager)
+    using Tools = me::BasicWindowManagerToolsCopy<NullSessionInfo, NullSurfaceInfo>;
+    using SessionInfoMap = typename me::SessionTo<NullSessionInfo>::type;
+    using SurfaceInfoMap = typename me::SurfaceTo<NullSurfaceInfo>::type;
+
+    FullscreenWindowManagerPolicy(Tools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
+        display_layout{display_layout} {}
+
+    void handle_session_info_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/) {}
+
+    void handle_displays_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/) {}
+
+    auto handle_place_new_surface(
+        std::shared_ptr<ms::Session> const& /*session*/,
+        ms::SurfaceCreationParameters const& request_parameters)
+    -> ms::SurfaceCreationParameters
+    {
+        auto placed_parameters = request_parameters;
+
+        Rectangle rect{request_parameters.top_left, request_parameters.size};
+        display_layout->size_to_output(rect);
+        placed_parameters.size = rect.size;
+
+        return placed_parameters;
+    }
+    void handle_modify_surface(
+        std::shared_ptr<ms::Session> const& /*session*/,
+        std::shared_ptr<ms::Surface> const& /*surface*/,
+        msh::SurfaceSpecification const& /*modifications*/)
     {
     }
 
+    void handle_new_surface(std::shared_ptr<ms::Session> const& /*session*/, std::shared_ptr<ms::Surface> const& /*surface*/)
+    {
+    }
+
+    void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/) {}
+
+    int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value)
+        { return value; }
+
+    bool handle_keyboard_event(MirKeyboardEvent const* /*event*/) { return false; }
+
+    bool handle_touch_event(MirTouchEvent const* /*event*/) { return false; }
+
+    bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
+
+    void generate_decorations_for(
+        std::shared_ptr<ms::Session> const&,
+        std::shared_ptr<ms::Surface> const&,
+        SurfaceInfoMap&)
+    {
+    }
 private:
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& display_buffer)
-    {
-        auto compositor = wrapped->create_compositor_for(display_buffer);
-        return std::unique_ptr<mc::DisplayBufferCompositor>{
-            new DisplayTracker{std::move(compositor), display_buffer.view_area(), window_manager}};
-    }
-
-    std::shared_ptr<mc::DisplayBufferCompositorFactory> const wrapped;
-    std::shared_ptr<me::Shell> const window_manager;
+    std::shared_ptr<msh::DisplayLayout> const display_layout;
 };
+
 }
+
+using TilingWindowManager = me::BasicWindowManagerCopy<me::TilingWindowManagerPolicy, me::TilingSessionInfo, me::TilingSurfaceInfo>;
+using FullscreenWindowManager = me::BasicWindowManagerCopy<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
+using CanonicalWindowManager = me::BasicWindowManagerCopy<me::CanonicalWindowManagerPolicyCopy, me::CanonicalSessionInfoCopy, me::CanonicalSurfaceInfoCopy>;
 
 void me::add_window_manager_option_to(Server& server)
 {
-    server.add_configuration_option(me::wm_option, me::wm_description, mir::OptionType::string);
+    server.add_configuration_option(wm_option, wm_description, wm_canonical);
 
-    auto const factory = std::make_shared<me::ShellFactory>(server);
-
-    server.override_the_shell([factory, &server]()
-        -> std::shared_ptr<msh::Shell>
+    server.override_the_window_manager_builder([&server](msh::FocusController* focus_controller)
+        -> std::shared_ptr<msh::WindowManager>
         {
             auto const options = server.get_options();
+            auto const selection = options->get<std::string>(wm_option);
 
-            if (!options->is_set(me::wm_option))
-                return std::shared_ptr<msh::Shell>{};
+            if (selection == wm_tiling)
+            {
+                return std::make_shared<TilingWindowManager>(focus_controller);
+            }
+            else if (selection == wm_fullscreen)
+            {
+                return std::make_shared<FullscreenWindowManager>(focus_controller, server.the_shell_display_layout());
+            }
+            else if (selection == wm_canonical)
+            {
+                return std::make_shared<CanonicalWindowManager>(focus_controller, server.the_shell_display_layout());
+            }
 
-            return factory->shell();
+            throw mir::AbnormalExit("Unknown window manager: " + selection);
         });
-
-    server.wrap_display_buffer_compositor_factory([factory, &server]
-       (std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped)
-       -> std::shared_ptr<mc::DisplayBufferCompositorFactory>
-       {
-           auto const options = server.get_options();
-
-           if (!options->is_set(me::wm_option))
-               return wrapped;
-
-           return std::make_shared<DisplayTrackerFactory>(wrapped, factory->shell());
-       });
 }

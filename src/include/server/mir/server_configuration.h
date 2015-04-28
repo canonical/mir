@@ -64,6 +64,7 @@ public:
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
+    virtual std::shared_ptr<input::InputManager> the_new_input_manager() = 0;
     virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher() = 0;
     virtual std::shared_ptr<MainLoop> the_main_loop() = 0;
     virtual std::shared_ptr<ServerStatusListener> the_server_status_listener() = 0;

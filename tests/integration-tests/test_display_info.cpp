@@ -24,11 +24,12 @@
 #include "src/server/frontend/session_mediator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/cross_process_sync.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_display_changer.h"
+#include "mir_test_doubles/null_display_sync_group.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test/display_config_matchers.h"
@@ -61,13 +62,13 @@ public:
     {
     }
 
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
-        f(display_buffer);
+        f(display_sync_group);
     }
 
 private:
-    mtd::NullDisplayBuffer display_buffer;
+    mtd::NullDisplaySyncGroup display_sync_group;
 };
 
 class StubChanger : public mtd::NullDisplayChanger

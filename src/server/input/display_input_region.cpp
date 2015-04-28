@@ -37,11 +37,14 @@ geom::Rectangle mi::DisplayInputRegion::bounding_rectangle()
 {
     geom::Rectangles rectangles;
 
-    display->for_each_display_buffer(
-        [&rectangles](mg::DisplayBuffer const& buffer)
-        {
-            rectangles.add(buffer.view_area());
-        });
+    display->for_each_display_sync_group([&rectangles](mg::DisplaySyncGroup& group)
+    {
+        group.for_each_display_buffer(
+            [&rectangles](mg::DisplayBuffer const& buffer)
+            {
+                rectangles.add(buffer.view_area());
+            });
+    });
 
     return rectangles.bounding_rectangle();
 }
@@ -50,11 +53,14 @@ void mi::DisplayInputRegion::confine(geom::Point& point)
 {
     geom::Rectangles rectangles;
 
-    display->for_each_display_buffer(
-        [&rectangles](mg::DisplayBuffer const& buffer)
-        {
-            rectangles.add(buffer.view_area());
-        });
+    display->for_each_display_sync_group([&rectangles](mg::DisplaySyncGroup& group)
+    {
+        group.for_each_display_buffer(
+            [&rectangles](mg::DisplayBuffer const& buffer)
+            {
+                rectangles.add(buffer.view_area());
+            });
+    });
 
     rectangles.confine(point);
 }

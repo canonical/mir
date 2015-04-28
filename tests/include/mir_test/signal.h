@@ -33,8 +33,6 @@ namespace test
 class Signal
 {
 public:
-    Signal();
-
     void raise();
     bool raised();
 
@@ -52,10 +50,12 @@ public:
         return cv.wait_until(lock, time, [this]() { return signalled; });
     }
 
+    void reset();
+
 private:
     std::mutex mutex;
     std::condition_variable cv;
-    bool signalled;
+    bool signalled{false};
 };
 }
 }

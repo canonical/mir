@@ -118,6 +118,7 @@ MIRPLATFORM_7 {
     mir::options::DefaultConfiguration::the_options*;
     mir::options::display_report_opt*;
     mir::options::debug_opt*;
+    mir::options::nbuffers_opt*;
     mir::options::enable_input_opt*;
     mir::options::fatal_abort_opt*;
     mir::options::frontend_threads_opt*;
@@ -134,6 +135,7 @@ MIRPLATFORM_7 {
     mir::options::msg_processor_report_opt*;
     mir::options::name_opt*;
     mir::options::no_server_socket_opt*;
+    mir::options::platform_input_lib*;
     mir::options::off_opt_value*;
     mir::options::offscreen_opt*;
     mir::options::Option::get*;
@@ -244,6 +246,7 @@ MIRPLATFORM_7 {
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::operator*;
+    mir::graphics::egl_category*;
     mir::graphics::GLTexture::bind*;
     mir::graphics::GLTexture::?GLTexture*;
     mir::graphics::GLTexture::GLTexture*;
@@ -255,6 +258,24 @@ MIRPLATFORM_7 {
     mir::graphics::red_channel_depth*;
     mir::graphics::SimpleGLProgram::SimpleGLProgram*;
     mir::graphics::tessellate_renderable_into_rectangle*;
+    mir::udev::Context::?Context*;
+    mir::udev::Context::Context*;
+    mir::udev::Enumerator::begin*;
+    mir::udev::Enumerator::end*;
+    mir::udev::Enumerator::?Enumerator*;
+    mir::udev::Enumerator::Enumerator*;
+    mir::udev::Enumerator::iterator::operator*;
+    mir::udev::Enumerator::match_parent*;
+    mir::udev::Enumerator::match_subsystem*;
+    mir::udev::Enumerator::match_sysname*;
+    mir::udev::Enumerator::scan_devices*;
+    mir::udev::Monitor::enable*;
+    mir::udev::Monitor::fd*;
+    mir::udev::Monitor::filter_by_subsystem*;
+    mir::udev::Monitor::?Monitor*;
+    mir::udev::Monitor::Monitor*;
+    mir::udev::Monitor::process_events*;
+    mir::udev::operator*;
   };
  local: *;
 };

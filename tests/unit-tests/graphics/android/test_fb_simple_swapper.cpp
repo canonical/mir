@@ -57,7 +57,6 @@ public:
     }
 
     MirPixelFormat format{mir_pixel_format_abgr_8888};
-    double vrefresh_hz{55.330};
     MockGraphicBufferAllocator mock_allocator;
     std::shared_ptr<mg::Buffer> buffer1;
     std::shared_ptr<mg::Buffer> buffer2;
@@ -74,14 +73,13 @@ TEST_F(PostingFBBundleTest, hwc_fb_size_allocation)
         .Times(2)
         .WillRepeatedly(Return(nullptr));
 
-    mga::Framebuffers framebuffers(mock_allocator, display_size, format, vrefresh_hz, 2u);
+    mga::Framebuffers framebuffers(mock_allocator, display_size, format, 2u);
     EXPECT_EQ(display_size, framebuffers.fb_size());
-    EXPECT_EQ(vrefresh_hz, framebuffers.fb_refresh_rate());
 }
 
 TEST_F(PostingFBBundleTest, last_rendered_returns_valid)
 {
-    mga::Framebuffers framebuffers(mock_allocator, display_size, format, vrefresh_hz, 2u);
+    mga::Framebuffers framebuffers(mock_allocator, display_size, format, 2u);
 
     auto test_buffer = framebuffers.last_rendered_buffer();
     EXPECT_TRUE((test_buffer == buffer1) || (test_buffer == buffer2));
@@ -95,7 +93,7 @@ TEST_F(PostingFBBundleTest, last_rendered_returns_valid)
 
 TEST_F(PostingFBBundleTest, last_rendered_is_first_returned_from_driver)
 {
-    mga::Framebuffers framebuffers(mock_allocator, display_size, format, vrefresh_hz, 2u);
+    mga::Framebuffers framebuffers(mock_allocator, display_size, format, 2u);
     auto buffer1 = framebuffers.buffer_for_render().get();
     EXPECT_EQ(buffer1, framebuffers.last_rendered_buffer().get());
     auto buffer2 = framebuffers.buffer_for_render().get();
@@ -104,7 +102,7 @@ TEST_F(PostingFBBundleTest, last_rendered_is_first_returned_from_driver)
 
 TEST_F(PostingFBBundleTest, no_rendering_returns_same_buffer)
 {
-    mga::Framebuffers framebuffers(mock_allocator, display_size, format, vrefresh_hz, 2u);
+    mga::Framebuffers framebuffers(mock_allocator, display_size, format, 2u);
     framebuffers.buffer_for_render().get();
     auto buffer = framebuffers.last_rendered_buffer();
     EXPECT_EQ(buffer, framebuffers.last_rendered_buffer());
@@ -112,7 +110,7 @@ TEST_F(PostingFBBundleTest, no_rendering_returns_same_buffer)
 
 TEST_F(PostingFBBundleTest, three_buffers_for_hwc)
 {
-    mga::Framebuffers framebuffers(mock_allocator, display_size, format, vrefresh_hz, 3u);
+    mga::Framebuffers framebuffers(mock_allocator, display_size, format, 3u);
 
     auto buffer1 = framebuffers.buffer_for_render().get();
     framebuffers.buffer_for_render();

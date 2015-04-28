@@ -16,11 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "src/server/input/event_filter_chain.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir/events/event_builders.h"
+#include "mir/events/event_private.h"
 
 #include <androidfw/Input.h>
 
@@ -42,7 +41,7 @@ std::shared_ptr<mtd::MockEventFilter> mock_filter()
 struct EventFilterChain : public ::testing::Test
 {
     mir::EventUPtr const event = mir::events::make_event(MirInputDeviceId(), 0,
-        MirKeyInputEventAction(), xkb_keysym_t(), 0, MirInputEventModifiers());
+        MirKeyboardAction(), xkb_keysym_t(), 0, MirInputEventModifiers());
 };
 }
 

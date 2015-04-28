@@ -21,6 +21,9 @@
 
 #include "mir/client_buffer_factory.h"
 
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 namespace mir
 {
 namespace test

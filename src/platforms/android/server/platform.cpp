@@ -131,10 +131,10 @@ EGLNativeDisplayType mga::Platform::egl_native_display() const
     return EGL_DEFAULT_DISPLAY;
 }
 
-extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
+extern "C" std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-    std::shared_ptr<DisplayReport> const& display_report)
+    std::shared_ptr<mir::graphics::DisplayReport> const& display_report)
 {
     auto hwc_report = make_hwc_report(*options);
     auto overlay_option = should_use_overlay_optimization(*options);

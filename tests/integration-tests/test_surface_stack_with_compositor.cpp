@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/compositor/display_listener.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
@@ -30,6 +31,7 @@
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_input_sender.h"
+#include "mir_test_doubles/null_display_sync_group.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -56,23 +58,14 @@ public:
     }
 };
 
-struct CountingDisplayBuffer : public mtd::StubDisplayBuffer
+struct CountingDisplaySyncGroup : public mtd::StubDisplaySyncGroup
 {
-    CountingDisplayBuffer() :
-        StubDisplayBuffer({{0,0}, {10, 10}})
+    CountingDisplaySyncGroup() :
+    mtd::StubDisplaySyncGroup({100,100})
     {
     }
 
-    bool post_renderables_if_optimizable(mg::RenderableList const&) override
-    {
-        return false;
-    }
-
-    void gl_swap_buffers() override
-    {
-    }
-
-    void flip() override
+    void post() override
     {
         increment_post_count();
     }
@@ -101,19 +94,25 @@ private:
 
 struct StubDisplay : public mtd::NullDisplay
 {
-    StubDisplay(mg::DisplayBuffer& primary, mg::DisplayBuffer& secondary)
+    StubDisplay(mg::DisplaySyncGroup& primary, mg::DisplaySyncGroup& secondary)
       : primary(primary),
         secondary(secondary)
     {
     } 
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& fn) override
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& fn) override
     {
         fn(primary);
         fn(secondary);
     }
 private:
-    mg::DisplayBuffer& primary;
-    mg::DisplayBuffer& secondary;
+    mg::DisplaySyncGroup& primary;
+    mg::DisplaySyncGroup& secondary;
+};
+
+struct StubDisplayListener : mc::DisplayListener
+{
+    virtual void add_display(geom::Rectangle const& /*area*/) override {}
+    virtual void remove_display(geom::Rectangle const& /*area*/) override {}
 };
 
 struct SurfaceStackCompositor : public testing::Test
@@ -144,9 +143,10 @@ struct SurfaceStackCompositor : public testing::Test
     std::shared_ptr<ms::BasicSurface> stub_surface;
     ms::SurfaceCreationParameters default_params;
     mtd::StubBuffer stubbuf;
-    CountingDisplayBuffer stub_primary_db;
-    CountingDisplayBuffer stub_secondary_db;
+    CountingDisplaySyncGroup stub_primary_db;
+    CountingDisplaySyncGroup stub_secondary_db;
     StubDisplay stub_display{stub_primary_db, stub_secondary_db};
+    StubDisplayListener stub_display_listener;
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
         mt::fake_shared(renderer_factory),
         null_comp_report};
@@ -159,6 +159,7 @@ TEST_F(SurfaceStackCompositor, composes_on_start_if_told_to_in_constructor)
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, true);
     mt_compositor.start();
 
@@ -172,6 +173,7 @@ TEST_F(SurfaceStackCompositor, does_not_composes_on_start_if_told_not_to_in_cons
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
     mt_compositor.start();
 
@@ -185,6 +187,7 @@ TEST_F(SurfaceStackCompositor, adding_a_surface_that_has_been_swapped_triggers_a
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
     mt_compositor.start();
 
@@ -206,6 +209,7 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
     mt_compositor.start();
 
@@ -228,6 +232,7 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
     mt_compositor.start();
 
@@ -248,6 +253,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
     mt_compositor.start();
 
@@ -272,6 +278,7 @@ TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
 
     mt_compositor.start();
@@ -290,6 +297,7 @@ TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
 
     mt_compositor.start();
@@ -311,6 +319,7 @@ TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
         null_comp_report, false);
 
     mt_compositor.start();

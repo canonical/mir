@@ -49,7 +49,7 @@ struct LayerListTest : public testing::Test
     std::shared_ptr<mga::LayerAdapter> layer_adapter;
     std::shared_ptr<mtd::StubBuffer> buffer1;
     std::shared_ptr<mtd::StubBuffer> buffer2;
-    std::list<std::shared_ptr<mg::Renderable>> renderables;
+    mg::RenderableList renderables;
 
     geom::Rectangle const disp_frame{{0,0}, {44,22}};
     std::shared_ptr<mtd::StubBuffer> stub_fb{

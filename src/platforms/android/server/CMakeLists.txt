@@ -17,6 +17,7 @@ add_library(mirplatformgraphicsandroidobjects OBJECT
   android_buffer_allocator.cpp
   buffer.cpp
   display.cpp
+  display_group.cpp
   display_configuration.cpp
   display_buffer.cpp
   hal_component_factory.cpp
@@ -47,7 +48,7 @@ add_library(mirplatformgraphicsandroid SHARED
 target_link_libraries(
   mirplatformgraphicsandroid
 
-  mirsharedandroid
+  mirsharedandroid-static
   mirplatform
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${LIBHARDWARE_LIBRARIES}
@@ -61,8 +62,9 @@ set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set_target_properties(
   mirplatformgraphicsandroid PROPERTIES
   OUTPUT_NAME graphics-android
-  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/server-modules
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   PREFIX ""
+  SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 

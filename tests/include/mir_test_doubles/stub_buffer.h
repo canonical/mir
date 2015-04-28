@@ -24,6 +24,7 @@
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_id.h"
 #include <vector>
+#include <string.h>
 
 namespace mir
 {
@@ -54,7 +55,7 @@ public:
                   size,
                   mir_pixel_format_abgr_8888,
                   graphics::BufferUsage::hardware},
-             geometry::Stride{}}
+                  geometry::Stride{}}
 
     {
     }
@@ -65,7 +66,7 @@ public:
     }
 
     StubBuffer(graphics::BufferProperties const& properties)
-        : StubBuffer{create_native_buffer(), properties, geometry::Stride{}}
+        : StubBuffer{create_native_buffer(), properties, geometry::Stride{properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)}}
     {
     }
 
@@ -103,6 +104,16 @@ public:
     void write(unsigned char const* pixels, size_t len) override
     {
         if (pixels) written_pixels.assign(pixels, pixels + len);
+    }
+    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override
+    {
+        if (written_pixels.size() == 0)
+        {
+            auto length = buf_size.width.as_int()*buf_size.height.as_int()*MIR_BYTES_PER_PIXEL(buf_pixel_format);
+            written_pixels.resize(length);
+            memset(written_pixels.data(), 0, length);
+        }
+        do_with_pixels(written_pixels.data());
     }
 
     std::shared_ptr<graphics::NativeBuffer> const native_buffer;

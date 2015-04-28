@@ -168,6 +168,18 @@ mir_connection_create_spec_for_dialog(MirConnection* connection,
                                       MirPixelFormat format);
 
 /**
+ * Create a surface specification for updating a surface.
+ *
+ * This can be applied to one or more target surfaces using
+ * mir_surface_apply_spec(...).
+ *
+ * \param [in] connection   a valid mir connection
+ *
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_changes(MirConnection* connection);
+
+/**
  * Create a surface from a given specification
  *
  *
@@ -226,6 +238,48 @@ bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
  */
 bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
 
+/**
+ * Set the minimum width, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    Minimum width.
+ * \return              False if minimum width is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width);
+
+/**
+ * Set the minimum height, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] height   Minimum height.
+ * \return              False if minimum height is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height);
+/**
+ * Set the maximum width, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    Maximum width.
+ * \return              False if maximum width is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width);
+
+/**
+ * Set the maximum height, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] height   Maximum height.
+ * \return              False if maximum height is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height);
 /**
  * Set the requested pixel format.
  * \param [in] spec     Specification to mutate
@@ -319,10 +373,12 @@ MirSurface *mir_connection_create_surface_sync(
  *            called back in different threads, for the same surface,
  *            simultaneously.
  *   \param [in] surface        The surface
- *   \param [in] event_handler  The event handler to call
+ *   \param [in] callback       The callback function
+ *   \param [in] context        Additional argument to be passed to callback
  */
 void mir_surface_set_event_handler(MirSurface *surface,
-                                   MirEventDelegate const *event_handler);
+                                   mir_surface_event_callback callback,
+                                   void* context);
 
 /**
  * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,
@@ -570,6 +626,15 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
                                                             int width,
                                                             int height,
                                                             MirPixelFormat format);
+
+/**
+ * Request changes to the specification of a surface. The server will decide
+ * whether and how the request can be honoured.
+ *
+ *   \param [in] surface  The surface to rename
+ *   \param [in] spec     Spec with the requested changes applied
+ */
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
 #ifdef __cplusplus
 }

@@ -16,8 +16,6 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "eglapp.h"
 #include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>
@@ -96,10 +94,10 @@ static void mir_eglapp_handle_input_event(MirInputEvent const* event)
 {
     if (mir_input_event_get_type(event) != mir_input_event_type_key)
         return;
-    MirKeyInputEvent const* kev = mir_input_event_get_key_input_event(event);
-    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_up)
+    MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(event);
+    if (mir_keyboard_event_action(kev) != mir_keyboard_action_up)
         return;
-    if (mir_key_input_event_get_key_code(kev) != XKB_KEY_q)
+    if (mir_keyboard_event_key_code(kev) != XKB_KEY_q)
         return;
     
     running = 0;
@@ -144,7 +142,12 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
          * support for event queuing (directing them to another thread) or
          * full single-threaded callbacks. (LP: #1194384).
          */
-        printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
+        {
+            MirResizeEvent const* resize = mir_event_get_resize_event(ev);
+            printf("Resized to %dx%d\n",
+                   mir_resize_event_get_width(resize),
+                   mir_resize_event_get_height(resize));
+        }
         break;
     case mir_event_type_close_surface:
         printf("Received close event from server.\n");
@@ -185,11 +188,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     {
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
-    };
-    MirEventDelegate delegate = 
-    {
-        mir_eglapp_handle_event,
-        NULL
     };
     EGLConfig eglconfig;
     EGLint neglconfigs;
@@ -388,7 +386,14 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     CHECK(spec != NULL, "Can't create a surface spec");
 
-    mir_surface_spec_set_name(spec, "eglappsurface");
+    char const* name = argv[0];
+    for (char const* p = name; *p; p++)
+    {
+        if (*p == '/')
+            name = p + 1;
+    }
+    mir_surface_spec_set_name(spec, name);
+
     if (output_id != mir_display_output_id_invalid)
         mir_surface_spec_set_fullscreen_on_output(spec, output_id);
 
@@ -397,7 +402,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");
 
-    mir_surface_set_event_handler(surface, &delegate);
+    mir_surface_set_event_handler(surface, mir_eglapp_handle_event, NULL);
     
     MirCursorConfiguration *conf = mir_cursor_configuration_from_name(cursor_name);
     mir_surface_configure_cursor(surface, conf);

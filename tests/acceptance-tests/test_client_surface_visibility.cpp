@@ -16,8 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir/scene/session.h"
@@ -58,9 +56,11 @@ public:
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& params) override
     {
-        auto const surface = msh::ShellWrapper::create_surface(session, params);
-        surfaces.push_back(session->surface(surface));
-        return surface;
+        auto const result = msh::ShellWrapper::create_surface(session, params);
+        auto const surface = session->surface(result);
+        surface->move_to({0, 0});
+        surfaces.push_back(surface);
+        return result;
     }
 
     std::shared_ptr<ms::Surface> surface(int index)
@@ -68,17 +68,12 @@ public:
         return surfaces[index].lock();
     }
 
-    void handle_surface_created(std::shared_ptr<ms::Session> const& /*session*/) override
-    {
-         // We get some racy "raise" requests from the DefaultShell
-         // so we ignore any raise requests that we don't issue ourselves
-    }
-
     void raise(int index)
     {
         surface_coordinator->raise(surface(index));
     }
 
+    using msh::ShellWrapper::raise;
 private:
     std::shared_ptr<ms::SurfaceCoordinator> const surface_coordinator;
     std::vector<std::weak_ptr<ms::Surface>> surfaces;
@@ -92,15 +87,17 @@ struct MockVisibilityCallback
 
 void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
 {
-    if (event->type == mir_event_type_surface &&
-        event->surface.attrib == mir_surface_attrib_visibility)
-    {
-        auto const mock_visibility_callback =
-            reinterpret_cast<testing::NiceMock<MockVisibilityCallback>*>(ctx);
-        mock_visibility_callback->handle(
-            surface,
-            static_cast<MirSurfaceVisibility>(event->surface.value));
-    }
+    if (mir_event_get_type(event) != mir_event_type_surface)
+        return;
+    auto sev = mir_event_get_surface_event(event);
+    if (mir_surface_event_get_attribute(sev) != mir_surface_attrib_visibility)
+        return;
+
+    auto const mock_visibility_callback =
+        reinterpret_cast<testing::NiceMock<MockVisibilityCallback>*>(ctx);
+    mock_visibility_callback->handle(
+        surface,
+        static_cast<MirSurfaceVisibility>(mir_surface_event_get_attribute_value(sev)));
 }
 
 struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
@@ -117,8 +114,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
         mtf::ConnectedClientWithASurface::SetUp();
 
-        MirEventDelegate delegate{&event_callback, &mock_visibility_callback};
-        mir_surface_set_event_handler(surface, &delegate);
+        mir_surface_set_event_handler(surface, &event_callback, &mock_visibility_callback);
 
         // Swap enough buffers to ensure compositor threads are into run loop
         for (auto i = 0; i != 11; ++i)

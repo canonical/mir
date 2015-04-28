@@ -40,15 +40,46 @@ typedef std::function<bool()> DisplayResumeHandler;
 typedef std::function<void()> DisplayConfigurationChangeHandler;
 
 /**
+ * DisplaySyncGroup represents a group of displays that need to be output
+ * in unison as a single post() call.
+ * This is only appropriate for platforms whose post() calls are non-blocking
+ * and not synchronous with the screen hardware (e.g. virtual machines or
+ * Android).
+ * Using a DisplaySyncGroup with multiple screens on a platform whose post()
+ * blocks for vsync often results in stuttering, and so should be avoided.
+ * Although using DisplaySyncGroup with a single DisplayBuffer remains safe
+ * for any platform.
+ */
+class DisplaySyncGroup
+{
+public:
+    /**
+     *  Executes a functor that allows the DisplayBuffer contents to be updated
+    **/
+    virtual void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) = 0;
+
+    /** Post the content of the DisplayBuffers associated with this DisplaySyncGroup.
+     *  The content of all the DisplayBuffers in this DisplaySyncGroup are guaranteed to be onscreen
+     *  in the near future. On some platforms, this may wait a potentially long time for vsync. 
+    **/
+    virtual void post() = 0;
+    virtual ~DisplaySyncGroup() = default;
+protected:
+    DisplaySyncGroup() = default;
+    DisplaySyncGroup(DisplaySyncGroup const&) = delete;
+    DisplaySyncGroup& operator=(DisplaySyncGroup const&) = delete;
+};
+
+/**
  * Interface to the display subsystem.
  */
 class Display
 {
 public:
     /**
-     * Executes a functor for each output framebuffer.
+     * Executes a functor for each output group.
      */
-    virtual void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) = 0;
+    virtual void for_each_display_sync_group(std::function<void(DisplaySyncGroup&)> const& f) = 0;
 
     /**
      * Gets a copy of the current output configuration.

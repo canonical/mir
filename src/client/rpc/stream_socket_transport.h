@@ -22,6 +22,7 @@
 
 #include "stream_transport.h"
 #include "mir/fd.h"
+#include "mir/basic_observers.h"
 
 #include <thread>
 #include <mutex>
@@ -33,6 +34,17 @@ namespace client
 namespace rpc
 {
 
+class TransportObservers : public StreamTransport::Observer,
+                           private BasicObservers<StreamTransport::Observer>
+{
+public:
+    using BasicObservers<StreamTransport::Observer>::add;
+    using BasicObservers<StreamTransport::Observer>::remove;
+
+    void on_data_available() override;
+    void on_disconnected() override;
+};
+
 class StreamSocketTransport : public StreamTransport
 {
 public:
@@ -40,6 +52,8 @@ public:
     StreamSocketTransport(std::string const& socket_path);
 
     void register_observer(std::shared_ptr<Observer> const& observer) override;
+    void unregister_observer(std::shared_ptr<Observer> const& observer) override;
+
     void receive_data(void* buffer, size_t bytes_requested) override;
     void receive_data(void* buffer, size_t bytes_requested, std::vector<Fd>& fds) override;
     void send_message(std::vector<uint8_t> const& buffer, std::vector<mir::Fd> const& fds) override;
@@ -49,13 +63,10 @@ public:
     mir::dispatch::FdEvents relevant_events() const override;
 private:
     Fd open_socket(std::string const& path);
-    void notify_data_available();
-    void notify_disconnected();
 
     Fd const socket_fd;
 
-    std::mutex observer_mutex;
-    std::vector<std::shared_ptr<Observer>> observers;
+    TransportObservers observers;
 };
 
 }

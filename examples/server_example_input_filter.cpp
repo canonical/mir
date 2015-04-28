@@ -42,9 +42,9 @@ namespace
 void print_key_event(MirInputEvent const* ev)
 {
     auto event_time = mir_input_event_get_event_time(ev);
-    auto kev = mir_input_event_get_key_input_event(ev);
-    auto scan_code = mir_key_input_event_get_scan_code(kev);
-    auto key_code = mir_key_input_event_get_key_code(kev);
+    auto kev = mir_input_event_get_keyboard_event(ev);
+    auto scan_code = mir_keyboard_event_scan_code(kev);
+    auto key_code = mir_keyboard_event_key_code(kev);
 
     std::cout << "Handling key event (time, scancode, keycode): " << event_time << " " <<
               scan_code << " " << key_code << std::endl;
@@ -53,18 +53,16 @@ void print_key_event(MirInputEvent const* ev)
 void print_touch_event(MirInputEvent const* ev)
 {
     auto event_time = mir_input_event_get_event_time(ev);
-    auto tev = mir_input_event_get_touch_input_event(ev);
-    auto tc = mir_touch_input_event_get_touch_count(tev);
+    auto tev = mir_input_event_get_touch_event(ev);
+    auto tc = mir_touch_event_point_count(tev);
 
     std::cout << "Handline touch event time=" << event_time
               << " touch_count=" << tc << std::endl;
     for (unsigned i = 0; i < tc; i++)
     {
-        auto id = mir_touch_input_event_get_touch_id(tev, i);
-        auto px = mir_touch_input_event_get_touch_axis_value(tev, i, 
-            mir_touch_input_axis_x);
-        auto py = mir_touch_input_event_get_touch_axis_value(tev, i, 
-            mir_touch_input_axis_y);
+        auto id = mir_touch_event_id(tev, i);
+        auto px = mir_touch_event_axis_value(tev, i, mir_touch_axis_x);
+        auto py = mir_touch_event_axis_value(tev, i, mir_touch_axis_y);
 
         std::cout << "  "
             << " id=" << id
@@ -110,10 +108,10 @@ struct ScreenRotationFilter : public mi::EventFilter
         if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
             return false;
 
-        return handle_key_event(mir_input_event_get_key_input_event(input_event));
+        return handle_keyboard_event(mir_input_event_get_keyboard_event(input_event));
     }
 
-    bool handle_key_event(MirKeyInputEvent const* event)
+    bool handle_keyboard_event(MirKeyboardEvent const* event)
     {
         static const int modifier_mask =
             mir_input_event_modifier_alt |
@@ -122,11 +120,11 @@ struct ScreenRotationFilter : public mi::EventFilter
             mir_input_event_modifier_ctrl |
             mir_input_event_modifier_meta;
 
-        auto const action = mir_key_input_event_get_action(event);
-        auto const scan_code = mir_key_input_event_get_scan_code(event);
-        auto const modifiers = mir_key_input_event_get_modifiers(event) & modifier_mask;
+        auto const action = mir_keyboard_event_action(event);
+        auto const scan_code = mir_keyboard_event_scan_code(event);
+        auto const modifiers = mir_keyboard_event_modifiers(event) & modifier_mask;
 
-        if (action == mir_key_input_event_action_down &&
+        if (action == mir_keyboard_action_down &&
             modifiers == (mir_input_event_modifier_alt | mir_input_event_modifier_ctrl))
         {
             switch (scan_code)

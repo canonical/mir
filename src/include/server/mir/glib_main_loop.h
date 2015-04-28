@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -70,16 +70,11 @@ public:
     void pause_processing_for(void const* owner) override;
     void resume_processing_for(void const* owner) override;
 
-    std::unique_ptr<mir::time::Alarm> notify_in(
-        std::chrono::milliseconds delay,
-        std::function<void()> callback) override;
-
-    std::unique_ptr<mir::time::Alarm> notify_at(
-        mir::time::Timestamp t,
-        std::function<void()> callback) override;
+    std::unique_ptr<mir::time::Alarm> create_alarm(
+        std::function<void()> const& callback) override;
 
     std::unique_ptr<mir::time::Alarm> create_alarm(
-        std::function<void()> callback) override;
+        std::shared_ptr<LockableCallback> const& callback) override;
 
     void reprocess_all_sources();
 

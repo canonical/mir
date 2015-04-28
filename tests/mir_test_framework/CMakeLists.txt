@@ -14,6 +14,8 @@ include_directories(
 add_definitions(
     -DMIR_CLIENT_PLATFORM_PATH="${MIR_CLIENT_PLATFORM_PATH}"
     -DMIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}"
+    -DMIR_CLIENT_PLATFORM_ABI_STRING="${MIR_CLIENT_PLATFORM_ABI}"
+    -DMIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
     )
 
 set(
@@ -24,7 +26,6 @@ set(
   command_line_server_configuration.cpp
   connected_client_headless_server.cpp
   connected_client_with_a_surface.cpp
-  cross_process_sync.cpp
   headless_in_process_server.cpp
   headless_test.cpp
   interprocess_client_server_test.cpp
@@ -44,6 +45,7 @@ set(
   declarative_placement_strategy.cpp
   fake_event_hub_server_configuration.cpp
   any_surface.cpp
+  headless_nested_server_runner.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS
@@ -53,20 +55,15 @@ list(APPEND TEST_FRAMEWORK_SRCS
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
-add_library(
-  mir-test-framework STATIC
+add_library(mir-test-framework-static STATIC
   ${TEST_FRAMEWORK_SRCS}
 )
 
-add_dependencies(mir-test-framework GMock)
+add_dependencies(mir-test-framework-static GMock)
 
-uses_android_input(mir-test-framework)
+uses_android_input(mir-test-framework-static)
 
-target_link_libraries(
-  mir-test-framework
-
-  3rd_party
-  mir-test-doubles
+target_link_libraries(mir-test-framework-static
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -88,17 +85,35 @@ add_library(
 target_link_libraries(
   mirclientplatformstub
 
-  mir-test-framework
+  mir-test-framework-static
   ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
 )
 
 set_target_properties(
   mirclientplatformstub PROPERTIES;
-  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/client-modules
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/client-modules
   OUTPUT_NAME dummy
   PREFIX ""
   LINK_FLAGS "-Wl,--version-script,${symbol_map}"
 )
+
+add_library(
+  mirplatforminputstub MODULE
+  
+  stub_input.cpp
+  fake_input_device_impl.cpp
+  stub_input_platform.cpp
+  )
+
+set_target_properties(
+  mirplatforminputstub PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
+  OUTPUT_NAME input-stub
+  PREFIX ""
+  LINK_FLAGS "-Wl,--version-script,${CMAKE_CURRENT_SOURCE_DIR}/symbols-stub-input.map"
+)
+
+install(TARGETS mirplatforminputstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
 
 set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map)
 add_library(
@@ -111,28 +126,30 @@ add_library(
 target_link_libraries(
   mirplatformgraphicsstub
 
-  mir-test
-  mir-test-framework
-  mir-test-doubles
+  PRIVATE
+  mir-test-static
+  mir-test-framework-static
+  mir-test-doubles-static
+  PUBLIC
   ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
 )
 
 set_target_properties(
   mirplatformgraphicsstub PROPERTIES;
-  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/server-modules
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   OUTPUT_NAME graphics-dummy
   PREFIX ""
   LINK_FLAGS "-Wl,--version-script,${server_symbol_map}"
 )
 
-add_custom_command(TARGET mir-test-framework POST_BUILD
+add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/udev_recordings ${CMAKE_BINARY_DIR}/bin/udev_recordings
+  ${CMAKE_CURRENT_SOURCE_DIR}/udev_recordings ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/udev_recordings
   COMMENT "Copying umockdev recordings to build dir..."
 )
-add_custom_command(TARGET mir-test-framework POST_BUILD
+add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/testing-cursor-theme ${CMAKE_BINARY_DIR}/bin/testing-cursor-theme
+  ${CMAKE_CURRENT_SOURCE_DIR}/testing-cursor-theme ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/testing-cursor-theme
   COMMENT "Copying testing cursor themes to build dir..."
 )
 

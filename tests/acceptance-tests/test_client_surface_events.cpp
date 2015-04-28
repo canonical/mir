@@ -16,17 +16,14 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/debug/surface.h"
 
 #include "mir/shell/shell_wrapper.h"
-
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 
+#include "mir_test/event_matchers.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test_framework/any_surface.h"
 
@@ -38,9 +35,10 @@
 #include <mutex>
 
 namespace mf = mir::frontend;
-namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+namespace mt = mir::test;
+namespace mtf = mir_test_framework;
 
 using namespace testing;
 
@@ -59,7 +57,7 @@ struct MockShell : msh::ShellWrapper
         return surface;
     }
 
-    std::shared_ptr<ms::Surface> latest_surface;
+    std::weak_ptr<ms::Surface> latest_surface;
 };
 
 struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
@@ -69,19 +67,28 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
     std::mutex last_event_mutex;
     MirEventType event_filter{mir_event_type_surface};
     std::condition_variable last_event_cv;
-    MirEvent last_event{};
+    MirEvent const* last_event = nullptr;
     MirSurface* last_event_surface = nullptr;
-    MirEventDelegate delegate{&event_callback, this};
 
     std::shared_ptr<ms::Surface> scene_surface;
+
+    ~ClientSurfaceEvents()
+    {
+        if (last_event)
+            mir_event_unref(last_event);
+    }
 
     static void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
     {
         ClientSurfaceEvents* self = static_cast<ClientSurfaceEvents*>(ctx);
         std::lock_guard<decltype(self->last_event_mutex)> last_event_lock{self->last_event_mutex};
         // Don't overwrite an interesting event with an uninteresting one!
-        if (event->type != self->event_filter) return;
-        self->last_event = *event;
+        if (mir_event_get_type(event) != self->event_filter) return;
+        
+        if (self->last_event)
+            mir_event_unref(self->last_event);
+        
+        self->last_event = mir_event_ref(event);
         self->last_event_surface = surface;
         self->last_event_cv.notify_one();
     }
@@ -90,7 +97,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
     {
         std::unique_lock<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
         return last_event_cv.wait_for(last_event_lock, delay,
-            [&] { return last_event_surface == surface && last_event.type == event_filter; });
+            [&] { return last_event_surface == surface && mir_event_get_type(last_event) == event_filter; });
     }
 
     void set_event_filter(MirEventType type)
@@ -102,7 +109,9 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
     void reset_last_event()
     {
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-        memset(&last_event, 0, sizeof last_event);
+        if (last_event != nullptr)
+            mir_event_unref(last_event);
+        last_event = nullptr;
         last_event_surface = nullptr;
     }
 
@@ -113,7 +122,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 
     std::shared_ptr<ms::Surface> the_latest_surface() const
     {
-        return the_mock_shell()->latest_surface;
+        return the_mock_shell()->latest_surface.lock();
     }
 
     void SetUp() override
@@ -128,12 +137,12 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 
         mtf::ConnectedClientWithASurface::SetUp();
 
-        mir_surface_set_event_handler(surface, &delegate);
+        mir_surface_set_event_handler(surface, &event_callback, this);
 
         scene_surface = the_latest_surface();
 
         other_surface = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(other_surface, nullptr);
+        mir_surface_set_event_handler(other_surface, nullptr, nullptr);
 
         reset_last_event();
     }
@@ -152,45 +161,30 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 
 TEST_F(ClientSurfaceEvents, surface_receives_state_events)
 {
-    int surface_id = mir_debug_surface_id(surface);
-
     {
         mir_wait_for(mir_surface_set_state(surface, mir_surface_state_fullscreen));
-        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_minimized));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_vertmaximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-        EXPECT_THAT(last_event_surface, Eq(surface));
-        EXPECT_THAT(last_event.type, Eq(mir_event_type_surface));
-        EXPECT_THAT(last_event.surface.id, Eq(surface_id));
-        EXPECT_THAT(last_event.surface.attrib, Eq(mir_surface_attrib_state));
-        EXPECT_THAT(last_event.surface.value, Eq(mir_surface_state_fullscreen));
+        EXPECT_THAT(last_event, mt::SurfaceEvent(mir_surface_attrib_state, mir_surface_state_fullscreen));
     }
 
     {
         mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(999)));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-
-        EXPECT_THAT(last_event_surface, Eq(surface));
-        EXPECT_THAT(last_event.type, Eq(mir_event_type_surface));
-        EXPECT_THAT(last_event.surface.id, Eq(surface_id));
-        EXPECT_THAT(last_event.surface.attrib, Eq(mir_surface_attrib_state));
-        EXPECT_THAT(last_event.surface.value, Eq(mir_surface_state_fullscreen));
+        EXPECT_THAT(last_event, mt::SurfaceEvent(mir_surface_attrib_state, mir_surface_state_fullscreen));
     }
 
     reset_last_event();
 
     {
-        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_minimized));
+        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_vertmaximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-        EXPECT_THAT(last_event_surface, Eq(surface));
-        EXPECT_THAT(last_event.type, Eq(mir_event_type_surface));
-        EXPECT_THAT(last_event.surface.id, Eq(surface_id));
-        EXPECT_THAT(last_event.surface.attrib, Eq(mir_surface_attrib_state));
-        EXPECT_THAT(last_event.surface.value, Eq(mir_surface_state_minimized));
+        EXPECT_THAT(last_event, mt::SurfaceEvent(mir_surface_attrib_state, mir_surface_state_vertmaximized));
     }
 
     reset_last_event();
@@ -201,11 +195,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-        EXPECT_THAT(last_event_surface, IsNull());
-        EXPECT_THAT(last_event.type, Eq(0));
-        EXPECT_THAT(last_event.surface.id, Eq(0));
-        EXPECT_THAT(last_event.surface.attrib, Eq(0));
-        EXPECT_THAT(last_event.surface.value, Eq(0));
+        EXPECT_EQ(nullptr, last_event);
     }
 }
 
@@ -223,9 +213,7 @@ TEST_P(OrientationEvents, surface_receives_orientation_events)
 
     std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-    EXPECT_THAT(last_event_surface, Eq(surface));
-    EXPECT_THAT(last_event.type, Eq(mir_event_type_orientation));
-    EXPECT_THAT(last_event.orientation.direction, Eq(direction));
+    EXPECT_THAT(last_event, mt::OrientationEvent(direction));
 }
 
 INSTANTIATE_TEST_CASE_P(ClientSurfaceEvents,
@@ -262,7 +250,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_close_event)
     std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
     EXPECT_THAT(last_event_surface, Eq(surface));
-    EXPECT_THAT(last_event.type, Eq(mir_event_type_close_surface));
+    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_close_surface));
 }
 
 TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)

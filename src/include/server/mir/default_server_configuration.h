@@ -20,6 +20,7 @@
 
 #include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
+#include "mir/shell/window_manager_builder.h"
 
 #include <memory>
 #include <string>
@@ -40,8 +41,13 @@ namespace droidinput = android;
 namespace mir
 {
 class ServerActionQueue;
+class SharedLibrary;
 class SharedLibraryProberReport;
 
+namespace dispatch
+{
+class MultiplexingDispatchable;
+}
 namespace compositor
 {
 class Renderer;
@@ -98,7 +104,6 @@ class SessionListener;
 class SessionCoordinator;
 class SnapshotStrategy;
 class SurfaceCoordinator;
-class SurfaceConfigurator;
 class SurfaceStackModel;
 class SurfaceStack;
 class SceneReport;
@@ -123,6 +128,10 @@ namespace input
 class InputReport;
 class Scene;
 class InputManager;
+class Platform;
+class InputDeviceRegistry;
+class InputDeviceHub;
+class DefaultInputDeviceHub;
 class CompositeEventFilter;
 class InputChannelFactory;
 class CursorListener;
@@ -251,6 +260,7 @@ public:
      * configurable interfaces for modifying shell
      *  @{ */
     virtual auto the_shell() -> std::shared_ptr<shell::Shell>;
+    virtual auto the_window_manager_builder() -> shell::WindowManagerBuilder;
     virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
@@ -272,7 +282,6 @@ public:
     virtual std::shared_ptr<scene::SurfaceStackModel> the_surface_stack_model();
     virtual std::shared_ptr<scene::SurfaceFactory>    the_surface_factory();
     virtual std::shared_ptr<scene::SurfaceCoordinator>the_surface_coordinator();
-    virtual std::shared_ptr<scene::SurfaceConfigurator> the_surface_configurator();
     /** @} */
 
     /** @name scene configuration - dependencies
@@ -306,6 +315,13 @@ public:
     virtual std::shared_ptr<droidinput::InputReaderPolicyInterface> the_input_reader_policy();
     virtual std::shared_ptr<droidinput::InputListenerInterface> the_input_translator();
     virtual std::shared_ptr<input::android::InputThread> the_input_reader_thread();
+
+    // new input reading related parts:
+    virtual std::shared_ptr<input::Platform> the_input_platform();
+    virtual std::shared_ptr<input::InputManager> the_new_input_manager() override;
+    virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
+    virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
+    virtual std::shared_ptr<input::InputDeviceHub> the_input_device_hub();
     /** @} */
 
     /** @name logging configuration - customization
@@ -366,6 +382,10 @@ protected:
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<input::InputManager>    new_input_manager; // currently not used by default
+    CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
+    CachedPtr<input::Platform>    input_platform; // currently not used by default
+    CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer; // currently not used by default
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
     CachedPtr<input::InputSendObserver> input_send_observer;
@@ -402,7 +422,6 @@ protected:
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
-    CachedPtr<scene::SurfaceConfigurator> surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<compositor::CompositorReport> compositor_report;

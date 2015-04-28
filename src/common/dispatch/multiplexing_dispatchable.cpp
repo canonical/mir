@@ -24,7 +24,6 @@
 
 #include <sys/epoll.h>
 #include <poll.h>
-#include <limits.h>
 #include <unistd.h>
 #include <string.h>
 #include <system_error>

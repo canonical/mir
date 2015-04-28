@@ -19,6 +19,8 @@
 #include "server_example_tiling_window_manager.h"
 
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_coordinator.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -33,7 +35,8 @@ using namespace mir::geometry;
 
 me::TilingSurfaceInfo::TilingSurfaceInfo(
     std::shared_ptr<scene::Session> const& session,
-    std::shared_ptr<scene::Surface> const& surface) :
+    std::shared_ptr<scene::Surface> const& surface,
+    scene::SurfaceCreationParameters const& /*params*/) :
     session{session},
     state{mir_surface_state_restored},
     restore_rect{surface->top_left(), surface->size()}
@@ -47,8 +50,11 @@ me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(Tools* const tools) :
 
 void me::TilingWindowManagerPolicy::click(Point cursor)
 {
-    if (const auto session = session_under(cursor))
-        tools->set_focus_to(session);
+    auto const session = session_under(cursor);
+    auto const surface = tools->surface_at(cursor);
+    tools->set_focus_to(session, surface);
+    if (auto const surface = tools->focused_surface())
+        tools->raise({surface});
     old_cursor = cursor;
 }
 
@@ -70,29 +76,27 @@ void me::TilingWindowManagerPolicy::resize(Point cursor)
         {
             auto const& info = tools->info_for(session);
 
-            if (resize(old_surface.lock(), cursor, old_cursor, info.tile))
+            if (resize(tools->focused_surface(), cursor, old_cursor, info.tile))
             {
-                // Still dragging the same old_surface
-            }
-            else if (resize(session->default_surface(), cursor, old_cursor, info.tile))
-            {
-                old_surface = session->default_surface();
+                // Still dragging the same surface
             }
             else
             {
-                for (auto const& ps : info.surfaces)
-                {
-                    auto const new_surface = ps.lock();
+                auto const new_surface = tools->surface_at(old_cursor);
 
+                if (new_surface && tools->info_for(new_surface).session.lock() == session)
+                {
                     if (resize(new_surface, cursor, old_cursor, info.tile))
                     {
-                        old_surface = new_surface;
-                        break;
+                        tools->set_focus_to(session, new_surface);
+                        if (auto const surface = tools->focused_surface())
+                            tools->raise({surface});
                     }
                 }
             }
         }
     }
+
     old_cursor = cursor;
 }
 
@@ -110,9 +114,25 @@ auto me::TilingWindowManagerPolicy::handle_place_new_surface(
     return parameters;
 }
 
+void me::TilingWindowManagerPolicy::generate_decorations_for(
+    std::shared_ptr<ms::Session> const&,
+    std::shared_ptr<ms::Surface> const&,
+    TilingSurfaceInfoMap&)
+{
+}
+
 void me::TilingWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
     tools->info_for(session).surfaces.push_back(surface);
+}
+
+void me::TilingWindowManagerPolicy::handle_modify_surface(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& surface,
+    shell::SurfaceSpecification const& modifications)
+{
+    if (modifications.name.is_set())
+        surface->rename(modifications.name.value());
 }
 
 void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
@@ -128,9 +148,11 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
         }
     }
 
-    if (surfaces.empty() && session == tools->focussed_application().lock())
+    if (surfaces.empty() && session == tools->focused_session())
     {
-        tools->focus_next();
+        tools->focus_next_session();
+        if (auto const surface = tools->focused_surface())
+            tools->raise({surface});
     }
 }
 
@@ -193,43 +215,42 @@ int me::TilingWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surface>
 
 void me::TilingWindowManagerPolicy::drag(Point cursor)
 {
-    if (const auto session = session_under(cursor))
+    if (auto const session = session_under(cursor))
     {
         if (session == session_under(old_cursor))
         {
-            const auto& info = tools->info_for(session);
-            if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
+            auto const& info = tools->info_for(session);
+            if (drag(tools->focused_surface(), cursor, old_cursor, info.tile))
             {
-                // Still dragging the same old_surface
-            }
-            else if (drag(session->default_surface(), cursor, old_cursor, info.tile))
-            {
-                old_surface = session->default_surface();
+                // Still dragging the same surface
             }
             else
             {
-                for (const auto& ps : info.surfaces)
+                auto const new_surface = tools->surface_at(old_cursor);
+
+                if (new_surface && tools->info_for(new_surface).session.lock() == session)
                 {
-                    const auto new_surface = ps.lock();
-                    if (drag(new_surface, cursor, old_cursor, info.tile))
+                    if (resize(new_surface, cursor, old_cursor, info.tile))
                     {
-                        old_surface = new_surface;
-                        break;
+                        tools->set_focus_to(session, new_surface);
+                        if (auto const surface = tools->focused_surface())
+                            tools->raise({surface});
                     }
                 }
             }
         }
     }
+
     old_cursor = cursor;
 }
 
-bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* event)
+bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
 {
-    auto const action = mir_key_input_event_get_action(event);
-    auto const scan_code = mir_key_input_event_get_scan_code(event);
-    auto const modifiers = mir_key_input_event_get_modifiers(event) & modifier_mask;
+    auto const action = mir_keyboard_event_action(event);
+    auto const scan_code = mir_keyboard_event_scan_code(event);
+    auto const modifiers = mir_keyboard_event_modifiers(event) & modifier_mask;
 
-    if (action == mir_key_input_event_action_down && scan_code == KEY_F11)
+    if (action == mir_keyboard_action_down && scan_code == KEY_F11)
     {
         switch (modifiers & modifier_mask)
         {
@@ -249,9 +270,9 @@ bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* eve
             break;
         }
     }
-    else if (action == mir_key_input_event_action_down && scan_code == KEY_F4)
+    else if (action == mir_keyboard_action_down && scan_code == KEY_F4)
     {
-        if (auto const session = tools->focussed_application().lock())
+        if (auto const session = tools->focused_session())
         {
             switch (modifiers & modifier_mask)
             {
@@ -275,17 +296,17 @@ bool me::TilingWindowManagerPolicy::handle_key_event(MirKeyInputEvent const* eve
     return false;
 }
 
-bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchInputEvent const* event)
+bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
 {
-    auto const count = mir_touch_input_event_get_touch_count(event);
+    auto const count = mir_touch_event_point_count(event);
 
     long total_x = 0;
     long total_y = 0;
 
     for (auto i = 0U; i != count; ++i)
     {
-        total_x += mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_x);
-        total_y += mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_y);
+        total_x += mir_touch_event_axis_value(event, i, mir_touch_axis_x);
+        total_y += mir_touch_event_axis_value(event, i, mir_touch_axis_y);
     }
 
     Point const cursor{total_x/count, total_y/count};
@@ -293,15 +314,15 @@ bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchInputEvent const*
     bool is_drag = true;
     for (auto i = 0U; i != count; ++i)
     {
-        switch (mir_touch_input_event_get_touch_action(event, i))
+        switch (mir_touch_event_action(event, i))
         {
-        case mir_touch_input_event_action_up:
+        case mir_touch_action_up:
             return false;
 
-        case mir_touch_input_event_action_down:
+        case mir_touch_action_down:
             is_drag = false;
 
-        case mir_touch_input_event_action_change:
+        case mir_touch_action_change:
             continue;
         }
     }
@@ -318,29 +339,29 @@ bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchInputEvent const*
     }
 }
 
-bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerInputEvent const* event)
+bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* event)
 {
-    auto const action = mir_pointer_input_event_get_action(event);
-    auto const modifiers = mir_pointer_input_event_get_modifiers(event) & modifier_mask;
+    auto const action = mir_pointer_event_action(event);
+    auto const modifiers = mir_pointer_event_modifiers(event) & modifier_mask;
     Point const cursor{
-        mir_pointer_input_event_get_axis_value(event, mir_pointer_input_axis_x),
-        mir_pointer_input_event_get_axis_value(event, mir_pointer_input_axis_y)};
+        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
-    if (action == mir_pointer_input_event_action_button_down)
+    if (action == mir_pointer_action_button_down)
     {
         click(cursor);
         return false;
     }
-    else if (action == mir_pointer_input_event_action_motion &&
+    else if (action == mir_pointer_action_motion &&
              modifiers == mir_input_event_modifier_alt)
     {
-        if (mir_pointer_input_event_get_button_state(event, mir_pointer_input_button_primary))
+        if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
         {
             drag(cursor);
             return true;
         }
 
-        if (mir_pointer_input_event_get_button_state(event, mir_pointer_input_button_tertiary))
+        if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
         {
             resize(cursor);
             return true;
@@ -352,7 +373,7 @@ bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerInputEvent co
 
 void me::TilingWindowManagerPolicy::toggle(MirSurfaceState state)
 {
-    if (auto const session = tools->focussed_application().lock())
+    if (auto const session = tools->focused_session())
     {
         if (auto const surface = session->default_surface())
         {

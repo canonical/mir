@@ -32,6 +32,36 @@ namespace test
 namespace doubles
 {
 
+struct StubDisplayConfigurationOutput : public graphics::DisplayConfigurationOutput
+{
+    StubDisplayConfigurationOutput(
+        geometry::Size px_size, geometry::Size mm_size, MirPixelFormat format, double vrefresh, bool connected) :
+        StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId{0}, px_size, mm_size, format, vrefresh, connected)
+    {
+    }
+
+    StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId id,
+        geometry::Size px_size, geometry::Size mm_size, MirPixelFormat format, double vrefresh, bool connected) :
+        DisplayConfigurationOutput{
+            id,
+            graphics::DisplayConfigurationCardId{0},
+            graphics::DisplayConfigurationOutputType::lvds,
+            {format},
+            {{px_size, vrefresh}},
+            0,
+            mm_size,
+            connected,
+            connected,
+            {0,0},
+            0,
+            format,
+            mir_power_mode_on,
+            mir_orientation_normal
+        }
+    {
+    }
+};
+
 class StubDisplayConfig : public graphics::DisplayConfiguration
 {
 public:
@@ -64,6 +94,8 @@ public:
         {
             outputs[i].connected = connected_used[i].first;
             outputs[i].used = connected_used[i].second;
+            outputs[i].current_format = mir_pixel_format_abgr_8888;
+            outputs[i].id = graphics::DisplayConfigurationOutputId{static_cast<int>(i)};
         }
     }
 
@@ -121,7 +153,7 @@ public:
             graphics::DisplayConfigurationOutput output
             {
                 graphics::DisplayConfigurationOutputId{id},
-                graphics::DisplayConfigurationCardId{0},
+                graphics::DisplayConfigurationCardId{1},
                 graphics::DisplayConfigurationOutputType::vga,
                 std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
                 {{rect.size, 60.0}},

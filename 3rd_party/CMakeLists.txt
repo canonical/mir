@@ -7,17 +7,12 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/android-deps
   )
 
-add_library(
-  3rd_party 
-
-  ${MIR_3RD_PARTY_SOURCES}
-)
-
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES} PARENT_SCOPE)
 set(MIR_INPUT_ANDROID_COMPILE_FLAGS ${MIR_INPUT_ANDROID_COMPILE_FLAGS}
   PARENT_SCOPE)
 
 include_directories(${PROJECT_SOURCE_DIR}/src/include/common)
+include_directories(${PROJECT_SOURCE_DIR}/src/include/platform)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/android-deps)
 add_subdirectory(android-input)
 
@@ -34,10 +29,3 @@ list(
 )
 
 set(MIR_XCURSOR_INCLUDE_DIRECTORIES ${MIR_XCURSOR_INCLUDE_DIRECTORIES} PARENT_SCOPE)
-  
-target_link_libraries(
-  3rd_party
-
-  android-input
-  xcursorloader
-)

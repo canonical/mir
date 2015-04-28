@@ -27,12 +27,9 @@
 #include "hwc_report.h"
 #include "hwc_configuration.h"
 #include "hwc_layers.h"
-#include "hwc_configuration.h"
 #include "hwc_device.h"
 #include "hwc_fb_device.h"
 
-#include "mir/graphics/display_buffer.h"
-#include "mir/graphics/egl_resources.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -47,7 +44,8 @@ mga::HalComponentFactory::HalComponentFactory(
     : buffer_allocator(buffer_allocator),
       res_factory(res_factory),
       hwc_report(hwc_report),
-      force_backup_display(false)
+      force_backup_display(false),
+      num_framebuffers{quirks.num_framebuffers()}
 {
     try
     {
@@ -60,16 +58,18 @@ mga::HalComponentFactory::HalComponentFactory(
     if (force_backup_display || hwc_version == mga::HwcVersion::hwc10)
     {
         fb_native = res_factory->create_fb_native_device();
+        //guarantee always 2 fb's allocated
+        num_framebuffers = std::max(2u, static_cast<unsigned int>(fb_native->numFramebuffers));
     }
 }
 
-std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebuffers(mga::DisplayAttribs const& attribs)
+std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebuffers(mg::DisplayConfigurationOutput const& config)
 {
     return std::unique_ptr<mga::FramebufferBundle>(new mga::Framebuffers(
         *buffer_allocator,
-        attribs.pixel_size,
-        attribs.display_format,
-        attribs.vrefresh_hz, attribs.num_framebuffers));
+        config.modes[config.current_mode_index].size,
+        config.current_format,
+        num_framebuffers));
 }
 
 std::unique_ptr<mga::LayerList> mga::HalComponentFactory::create_layer_list()
@@ -107,14 +107,13 @@ std::unique_ptr<mga::DisplayDevice> mga::HalComponentFactory::create_display_dev
             case mga::HwcVersion::hwc10:
                 return std::unique_ptr<mga::DisplayDevice>{
                     new mga::HwcFbDevice(hwc_wrapper, fb_native)};
-            break;
 
             case mga::HwcVersion::hwc11:
             case mga::HwcVersion::hwc12:
             case mga::HwcVersion::hwc13:
                return std::unique_ptr<mga::DisplayDevice>(
                     new mga::HwcDevice(hwc_wrapper));
-            break;
+
             case mga::HwcVersion::hwc14:
             case mga::HwcVersion::unknown:
             default:

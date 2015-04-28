@@ -16,7 +16,8 @@ export CXX=$(DEB_HOST_GNU_TYPE)-g++-4.9
 %:
 	dh $@ --parallel --fail-missing
 
-#overrding dh_auto_test to get rid of --parallel during testing
+# Enable verbose debugging output from the testsuite
+export MIR_SERVER_LOGGING = on
 override_dh_auto_test:
 	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1 -- ARGS="-V"
 

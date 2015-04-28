@@ -22,6 +22,7 @@
 #include "mir/scene/observer.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/compositor/decoration.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
@@ -225,6 +226,69 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
         ElementsAre(
             SceneElementFor(stub_surface1),
             SceneElementFor(stub_surface2)));
+}
+
+TEST_F(SurfaceStack, decor_name_is_surface_name)
+{
+    using namespace testing;
+
+    ms::SurfaceStack stack{report};
+    auto surface = std::make_shared<ms::BasicSurface>(
+        std::string("Mary had a little lamb"),
+        geom::Rectangle{{},{}},
+        false,
+        std::make_shared<mtd::StubBufferStream>(),
+        std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+    stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    surface->configure(mir_surface_attrib_visibility,
+                       mir_surface_visibility_exposed);
+    post_a_frame(*surface);
+
+    auto elements = stack.scene_elements_for(compositor_id);
+    ASSERT_EQ(1, elements.size());
+
+    auto& element = elements.front();
+
+    auto decor = element->decoration();
+    ASSERT_THAT(decor, Ne(nullptr));
+    EXPECT_EQ(mc::Decoration::Type::surface, decor->type);
+    EXPECT_EQ("Mary had a little lamb", decor->name);
+}
+
+TEST_F(SurfaceStack, gets_surface_renames)
+{
+    using namespace testing;
+
+    ms::SurfaceStack stack{report};
+    auto surface = std::make_shared<ms::BasicSurface>(
+        std::string("username@hostname: /"),
+        geom::Rectangle{{},{}},
+        false,
+        std::make_shared<mtd::StubBufferStream>(),
+        std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+    stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    surface->configure(mir_surface_attrib_visibility,
+                       mir_surface_visibility_exposed);
+    post_a_frame(*surface);
+
+    // (change directory in shell app)
+    surface->rename("username@hostname: ~/Documents");
+
+    auto elements = stack.scene_elements_for(compositor_id);
+    ASSERT_EQ(1, elements.size());
+
+    auto& element = elements.front();
+
+    auto decor = element->decoration();
+    ASSERT_THAT(decor, Ne(nullptr));
+    EXPECT_EQ(mc::Decoration::Type::surface, decor->type);
+    EXPECT_EQ("username@hostname: ~/Documents", decor->name);
 }
 
 TEST_F(SurfaceStack, scene_counts_pending_accurately)
@@ -927,5 +991,47 @@ TEST_F(SurfaceStack, returns_top_visible_surface_under_cursor)
     EXPECT_THAT(stack.surface_at(cursor_over_12),   Eq(stub_surface2));
     EXPECT_THAT(stack.surface_at(cursor_over_1),    Eq(stub_surface1));
     EXPECT_THAT(stack.surface_at(cursor_over_none).get(), IsNull());
+}
+
+TEST_F(SurfaceStack, raise_surfaces_to_top)
+{
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
+
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+
+    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+
+    stack.raise({stub_surface1, stub_surface3});
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface2),
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface3)));
+
+    Mock::VerifyAndClearExpectations(&observer);
+    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+
+    stack.raise({stub_surface2, stub_surface3});
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface2),
+            SceneElementFor(stub_surface3)));
+
+    Mock::VerifyAndClearExpectations(&observer);
+    EXPECT_CALL(observer, surfaces_reordered()).Times(0);
+
+    stack.raise({stub_surface2, stub_surface1, stub_surface3});
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface2),
+            SceneElementFor(stub_surface3)));
 }
 

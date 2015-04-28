@@ -38,11 +38,13 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 ms::SessionManager::SessionManager(std::shared_ptr<SurfaceCoordinator> const& surface_factory,
+    std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
     std::shared_ptr<SessionContainer> const& container,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionEventSink> const& session_event_sink,
     std::shared_ptr<SessionListener> const& session_listener) :
     surface_coordinator(surface_factory),
+    buffer_stream_factory(buffer_stream_factory),
     app_container(container),
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
@@ -80,7 +82,7 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
 {
     std::shared_ptr<Session> new_session =
         std::make_shared<ApplicationSession>(
-            surface_coordinator, client_pid, name, snapshot_strategy, session_listener, sender);
+            surface_coordinator, buffer_stream_factory, client_pid, name, snapshot_strategy, session_listener, sender);
 
     app_container->insert_session(new_session);
 

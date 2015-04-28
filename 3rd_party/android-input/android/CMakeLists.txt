@@ -26,7 +26,7 @@ set(
 
 
 add_library(
-  android-input STATIC
+  android-input-static STATIC
   # The stuff that we want
   frameworks/base/services/input/EventHub.cpp
   frameworks/base/services/input/InputApplication.cpp
@@ -58,19 +58,19 @@ add_library(
 #we don't have binder or skia available on hybris/linux platforms
 if(MIR_USE_BIONIC)
   target_link_libraries(
-    android-input
+    android-input-static
     binder
     skia)
 endif()
 
 target_link_libraries(
-  android-input
+  android-input-static
 
   ${Boost_LIBRARIES}
 )
 
 set_target_properties(
-  android-input
+  android-input-static
   PROPERTIES
   COMPILE_FLAGS ${ANDROID_INPUT_COMPILE_FLAGS}
 )

@@ -25,19 +25,25 @@
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_sender.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/cursor_image.h"
+#include "mir/geometry/displacement.h"
 
 #include "mir/scene/scene_report.h"
+#include "mir/scene/null_surface_observer.h"
 
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
 #include <algorithm>
 
+#include <string.h> // memcpy
+
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
 void ms::SurfaceObservers::attrib_changed(MirSurfaceAttrib attrib, int value)
@@ -104,6 +110,18 @@ void ms::SurfaceObservers::client_surface_close_requested()
 {
     for_each([](std::shared_ptr<SurfaceObserver> const& observer)
         { observer->client_surface_close_requested(); });
+}
+
+void ms::SurfaceObservers::keymap_changed(xkb_rule_names const& rules)
+{
+    for_each([&rules](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->keymap_changed(rules); });
+}
+
+void ms::SurfaceObservers::renamed(char const* name)
+{
+    for_each([name](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->renamed(name); });
 }
 
 
@@ -246,7 +264,7 @@ std::shared_ptr<mg::Buffer> ms::BasicSurface::snapshot_buffer() const
 
 bool ms::BasicSurface::supports_input() const
 {
-    if (server_input_channel)
+    if (server_input_channel  && server_input_channel->client_fd() != -1)
         return true;
     return false;
 }
@@ -323,8 +341,7 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
         return true;
 
     // TODO: Perhaps creates some issues with transformation.
-    auto local_point = geom::Point{geom::X{point.x.as_uint32_t()-surface_rect.top_left.x.as_uint32_t()},
-                                   geom::Y{point.y.as_uint32_t()-surface_rect.top_left.y.as_uint32_t()}};
+    auto local_point = geom::Point{0, 0} + (point-surface_rect.top_left);
 
     for (auto const& rectangle : custom_input_rectangles)
     {
@@ -503,11 +520,6 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
     return new_orientation_mode;
 }
 
-void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
-{
-    targeter->focus_changed(input_channel());
-}
-
 int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = value;
@@ -535,15 +547,13 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
         result = set_preferred_orientation(static_cast<MirOrientationMode>(result));
         break;
     default:
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
-                                               "attribute."));
-        break;
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface attribute."));
     }
 
     return result;
 }
 
-int ms::BasicSurface::query(MirSurfaceAttrib attrib)
+int ms::BasicSurface::query(MirSurfaceAttrib attrib) const
 {
     std::unique_lock<std::mutex> lg(guard);
     switch (attrib)
@@ -574,17 +584,138 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
 {
     {
         std::unique_lock<std::mutex> lock(guard);
+        cursor_stream_adapter.reset();
+        
         cursor_image_ = image;
     }
 
     observers.cursor_image_set_to(*image);
-}
-    
+}    
 
 std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
 {
     std::unique_lock<std::mutex> lock(guard);
     return cursor_image_;
+}
+
+namespace
+{
+struct FramePostObserver : public ms::NullSurfaceObserver
+{
+    FramePostObserver(std::function<void()> const& exec)
+        : exec(exec)
+    {
+    }
+
+    void frame_posted(int /* available */)
+    {
+        exec();
+    }
+    std::function<void()> const exec;
+};
+
+struct CursorImageFromBuffer : public mg::CursorImage
+{
+    CursorImageFromBuffer(mg::Buffer &buffer, geom::Displacement const& hotspot)
+        : buffer_size(buffer.size()),
+          hotspot_(hotspot)
+    {
+        buffer.read([&](unsigned char const* buffer_pixels)
+        {
+            size_t buffer_size_bytes = buffer_size.width.as_int() * buffer_size.height.as_int()
+                * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
+            pixels = std::unique_ptr<unsigned char[]>(
+                new unsigned char[buffer_size_bytes]
+            );
+            memcpy(pixels.get(), buffer_pixels, buffer_size_bytes);
+        });
+    }
+    void const* as_argb_8888() const
+    {
+        return pixels.get();
+    }
+
+    geom::Size size() const
+    {
+        return buffer_size;
+    }
+
+    geom::Displacement hotspot() const
+    {
+        return hotspot_;
+    }
+
+    geom::Size const buffer_size;
+    geom::Displacement const hotspot_;
+
+    std::unique_ptr<unsigned char[]> pixels;
+};
+}
+
+namespace mir
+{
+namespace scene
+{
+struct CursorStreamImageAdapter
+{
+    CursorStreamImageAdapter(ms::BasicSurface &surface, std::shared_ptr<mf::BufferStream> const& stream,
+                             geom::Displacement const& hotspot)
+        : surface(surface),
+          stream(stream),
+          hotspot(hotspot)
+    {
+        post_cursor_image_from_current_buffer();
+        observer = std::make_shared<FramePostObserver>([&](){
+                post_cursor_image_from_current_buffer();
+            });
+        stream->add_observer(observer);
+    }
+
+    ~CursorStreamImageAdapter()
+    {
+        stream->remove_observer(observer);
+    }
+
+    void post_cursor_image_from_current_buffer()
+    {
+        stream->with_most_recent_buffer_do([&](mg::Buffer &buffer)
+            {
+                surface.set_cursor_from_buffer(buffer, hotspot);
+            });
+    }
+
+    ms::BasicSurface &surface;
+
+    std::shared_ptr<mf::BufferStream> const stream;
+    std::shared_ptr<FramePostObserver> observer;
+    geom::Displacement const hotspot;
+}; 
+}
+}
+
+void ms::BasicSurface::set_cursor_from_buffer(mg::Buffer& buffer, geom::Displacement const& hotspot)
+{
+    auto image = std::make_shared<CursorImageFromBuffer>(buffer, hotspot);
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        cursor_image_ = image;
+    }
+    observers.cursor_image_set_to(*image);
+}
+
+// In order to set the cursor image from a buffer stream, we use an adapter pattern,
+// which observes buffers from the stream and copies them 1 by 1 to cursor images.
+// We must be careful, when setting a new cursor image with ms::BasicSurface::set_cursor_image
+// we need to reset the stream adapter (to halt the observation and allow the new static image
+// to be set). Likewise from the adapter we must use set_cursor_from_buffer as
+// opposed to the public set_cursor_from_image in order to avoid resetting the stream
+// adapter.
+void ms::BasicSurface::set_cursor_stream(std::shared_ptr<mf::BufferStream> const& stream,
+                                         geom::Displacement const& hotspot)
+{
+    std::unique_lock<std::mutex> lock(guard);
+
+    cursor_stream_adapter = std::make_unique<ms::CursorStreamImageAdapter>(*this, stream, hotspot);
 }
 
 void ms::BasicSurface::request_client_surface_close()
@@ -741,4 +872,18 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 void ms::BasicSurface::consume(MirEvent const& event)
 {
     input_sender->send_event(event, server_input_channel);
+}
+
+void ms::BasicSurface::set_keymap(xkb_rule_names const& rules)
+{
+    observers.keymap_changed(rules);
+}
+
+void ms::BasicSurface::rename(std::string const& title)
+{
+    if (surface_name != title)
+    {
+        surface_name = title;
+        observers.renamed(surface_name.c_str());
+    }
 }

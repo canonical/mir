@@ -29,6 +29,14 @@ include_directories(
 # TODO: Aim to remove
 include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
 
+add_library(example SHARED library_example.cpp)
+target_link_libraries(example mircommon)
+set_target_properties(
+  example PROPERTIES
+  OUTPUT_NAME example
+  PREFIX ""
+)
+
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
@@ -47,7 +55,10 @@ set(
   test_thread_safe_list.cpp
   test_fatal.cpp
   test_fd.cpp
+  test_flags.cpp
   test_shared_library_prober.cpp
+  test_lockable_callback.cpp
+  test_module_deleter.cpp
 )
 
 add_subdirectory(options/)
@@ -65,12 +76,11 @@ add_subdirectory(examples/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
 
-link_directories(${LIBRARY_OUTPUT_PATH})
+link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 mir_add_wrapped_executable(mir_unit_tests
   ${UNIT_TEST_SOURCES}
   ${MIR_SERVER_OBJECTS}
-  $<TARGET_OBJECTS:mirclientobjects>
   ${MIR_PLATFORM_OBJECTS}
   ${MIR_COMMON_OBJECTS}
 )
@@ -85,17 +95,20 @@ target_link_libraries(
   mir_unit_tests
 
   mirdraw
-  mirclientrpc
-  mirclientlttngstatic
   demo-shell
   mircommon
 
-  mir-test
-  mir-test-framework
-  mir-test-doubles
-  mir-test-doubles-platform
+  mirclient-static
+  mirclientrpc-static
+  mirclientlttng-static
 
-  3rd_party
+  mir-test-static
+  mir-test-framework-static
+  mir-test-doubles-static
+  mir-test-doubles-platform-static
+
+  android-input-static
+  xcursorloader-static
 
   ${PROTOBUF_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
@@ -118,11 +131,12 @@ target_link_libraries(
   ${MIR_PLATFORM_REFERENCES}
   ${MIR_COMMON_REFERENCES}
   ${MIR_SERVER_REFERENCES}
+  ${XKBCOMMON_LIBRARIES}
 )
 
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_unit_tests 
-  mirsharedandroid
+  mirsharedandroid-static
   ${ANDROID_PROPERTIES_LDFLAGS}
 )
 endif()
@@ -140,6 +154,6 @@ endif (MIR_RUN_UNIT_TESTS)
 
 add_custom_command(TARGET mir_unit_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_data ${CMAKE_BINARY_DIR}/bin/test_data
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_data ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_data
   COMMENT "Copying test data to build dir..."
 )

@@ -18,14 +18,18 @@
 
 #include "hwc_configuration.h"
 #include "hwc_wrapper.h"
+#include "mir/raii.h"
 #include "android_format_conversion-inl.h"
+#include "mir/geometry/length.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <chrono>
 
+namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -99,7 +103,56 @@ void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode 
     }
 }
 
-mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName display_name)
+namespace
+{
+int dpi_to_mm(uint32_t dpi, int pixel_num)
+{
+    if (dpi == 0) return 0;
+    float dpi_inches = dpi / 1000.0f; //android multiplies by 1000
+    geom::Length length(pixel_num / dpi_inches, geom::Length::Units::inches);
+    return length.as(geom::Length::Units::millimetres);
+}
+
+mg::DisplayConfigurationOutput populate_config(
+    mga::DisplayName name,
+    geom::Size pixel_size,
+    double vrefresh_hz,
+    geom::Size mm_size,
+    MirPowerMode external_mode,
+    MirPixelFormat display_format,
+    bool connected)
+{
+    geom::Point const origin{0,0};
+    size_t const preferred_format_index{0};
+    size_t const preferred_mode_index{0};
+    std::vector<mg::DisplayConfigurationMode> external_modes;
+    if (connected)
+        external_modes.emplace_back(mg::DisplayConfigurationMode{pixel_size, vrefresh_hz});
+
+    auto type = mg::DisplayConfigurationOutputType::lvds;
+    if (name == mga::DisplayName::external)
+        type = mg::DisplayConfigurationOutputType::displayport;
+    
+    return {
+        static_cast<mg::DisplayConfigurationOutputId>(name),
+        mg::DisplayConfigurationCardId{0},
+        type,
+        {display_format},
+        external_modes,
+        preferred_mode_index,
+        mm_size,
+        connected,
+        connected,
+        origin,
+        preferred_format_index,
+        display_format,
+        external_mode,
+        mir_orientation_normal
+    };
+}
+}
+
+mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(DisplayName display_name)
 {
     auto configs = hwc_device->display_configs(display_name);
     if (configs.empty())
@@ -107,7 +160,7 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
         if (display_name == mga::DisplayName::primary)
             BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
         else   
-            return {{}, {}, 0.0, false, format, quirks.num_framebuffers()};
+            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
     }
 
     /* note: some drivers (qcom msm8960) choke if this is not the same size array
@@ -131,21 +184,32 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
         if (display_name == mga::DisplayName::primary)
             BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
         else   
-            return {{}, {}, 0.0, false, format, quirks.num_framebuffers()};
+            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
     }
 
-    return {
+    return populate_config(
+        display_name,
         {values[0], values[1]},
-        {0, 0}, //TODO: convert DPI to MM and return
         period_to_hz(std::chrono::nanoseconds{values[2]}),
-        true,
+        {dpi_to_mm(values[3], values[0]), dpi_to_mm(values[4], values[1])},
+        mir_power_mode_off,
         format,
-        quirks.num_framebuffers()
-    };
+        true);
 }
 
 mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_changes(
-    std::function<void()> const&)
+    std::function<void()> const& hotplug,
+    std::function<void(DisplayName)> const& vsync)
 {
-    return nullptr;
+    return std::make_shared<
+        mir::raii::PairedCalls<std::function<void()>, std::function<void()>>>(
+        [hotplug, vsync, this]{
+            hwc_device->subscribe_to_events(this,
+                [vsync](DisplayName name, std::chrono::nanoseconds){ vsync(name); },
+                [hotplug](DisplayName, bool){ hotplug(); },
+                []{});
+        },
+        [this]{
+            hwc_device->unsubscribe_from_events(this);
+        });
 }

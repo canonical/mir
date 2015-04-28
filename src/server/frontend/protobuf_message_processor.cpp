@@ -58,6 +58,7 @@ namespace frontend
 namespace detail
 {
 template<> struct result_ptr_t<::mir::protobuf::Buffer>     { typedef ::mir::protobuf::Buffer* type; };
+template<> struct result_ptr_t<::mir::protobuf::BufferStream>     { typedef ::mir::protobuf::BufferStream* type; };
 template<> struct result_ptr_t<::mir::protobuf::Connection> { typedef ::mir::protobuf::Connection* type; };
 template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::protobuf::Surface* type; };
 template<> struct result_ptr_t<::mir::protobuf::Screencast> { typedef ::mir::protobuf::Screencast* type; };
@@ -74,9 +75,35 @@ ParameterMessage parse_parameter(Invocation const& invocation)
     return request;
 }
 
+class SelfDeletingCallback : public google::protobuf::Closure
+{
+public:
+    SelfDeletingCallback(std::function<void()> const& callback)
+    : callback(callback)
+    {
+    }
+
+    void Run() override
+    {
+        struct Deleter
+        {
+          ~Deleter() { delete obj; }
+          SelfDeletingCallback* obj;
+        };
+        Deleter deleter{this};
+        callback();
+    }
+
+ private:
+  ~SelfDeletingCallback() = default;
+  SelfDeletingCallback(SelfDeletingCallback&) = delete;
+  void operator=(const SelfDeletingCallback&) = delete;
+  std::function<void()> callback;
+};
+
 template<typename RequestType, typename ResponseType>
 void invoke(
-    ProtobufMessageProcessor* self,
+    std::shared_ptr<ProtobufMessageProcessor> const& mp,
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
         ::google::protobuf::RpcController* controller,
@@ -88,15 +115,17 @@ void invoke(
 {
     auto const result_message = std::make_shared<ResponseType>();
 
-    auto const callback =
-        google::protobuf::NewCallback<
-            ProtobufMessageProcessor,
-            ::google::protobuf::uint32,
-             std::shared_ptr<ResponseType>>(
-                self,
-                &ProtobufMessageProcessor::send_response,
-                invocation_id,
-                result_message);
+    std::weak_ptr<ProtobufMessageProcessor> weak_mp = mp;
+    auto const response_callback = [weak_mp, invocation_id, result_message]
+    {
+        auto message_processor = weak_mp.lock();
+        if (message_processor)
+        {
+            message_processor->send_response(invocation_id, result_message);
+        }
+    };
+
+    auto callback = new SelfDeletingCallback{response_callback};
 
     try
     {
@@ -108,9 +137,8 @@ void invoke(
     }
     catch (std::exception const& x)
     {
-        delete callback;
         result_message->set_error(boost::diagnostic_information(x));
-        self->send_response(invocation_id, result_message);
+        callback->Run();
     }
 }
 
@@ -179,7 +207,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("next_buffer" == invocation.method_name())
         {
             auto request = parse_parameter<mir::protobuf::SurfaceId>(invocation);
-            invoke(this, display_server.get(), &DisplayServer::next_buffer, invocation.id(), &request);
+            invoke(shared_from_this(), display_server.get(), &DisplayServer::next_buffer, invocation.id(), &request);
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
@@ -187,7 +215,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(
             request.mutable_buffer()->clear_fd();
             for (auto& fd : side_channel_fds)
                 request.mutable_buffer()->add_fd(fd);
-            invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), &request);
+            invoke(shared_from_this(), display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), &request);
         }
         else if ("release_surface" == invocation.method_name())
         {
@@ -205,7 +233,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(
             for (auto& fd : side_channel_fds)
                 request.add_fd(fd);
 
-            invoke(this, display_server.get(), &DisplayServer::platform_operation,
+            invoke(shared_from_this(), display_server.get(), &DisplayServer::platform_operation,
                    invocation.id(), &request);
         }
         else if ("configure_display" == invocation.method_name())
@@ -215,6 +243,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("configure_surface" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::configure_surface, invocation);
+        }
+        else if ("modify_surface" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::modify_surface, invocation);
         }
         else if ("create_screencast" == invocation.method_name())
         {
@@ -227,6 +259,14 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("release_screencast" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::release_screencast, invocation);
+        }
+        else if ("create_buffer_stream" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::create_buffer_stream, invocation);
+        }
+        else if ("release_buffer_stream" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::release_buffer_stream, invocation);
         }
         else if ("configure_cursor" == invocation.method_name())
         {
@@ -314,6 +354,11 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
             {extract_fds_from(response), extract_fds_from(response->mutable_buffer_stream()->mutable_buffer())});
     else
         sender->send_response(id, response, {extract_fds_from(response)});
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::BufferStream* response)
+{
+    sender->send_response(id, response, {extract_fds_from(response->mutable_buffer())});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(

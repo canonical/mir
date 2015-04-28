@@ -50,12 +50,14 @@ char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt               = "enable-touchspots";
 char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
 char const* const mo::debug_opt                   = "debug";
+char const* const mo::nbuffers_opt                = "nbuffers";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
 char const* const mo::lttng_opt_value = "lttng";
 
 char const* const mo::platform_graphics_lib = "platform-graphics-lib";
+char const* const mo::platform_input_lib = "platform-input-lib";
 char const* const mo::platform_path = "platform-path";
 
 namespace
@@ -121,6 +123,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (prompt_socket_opt, "Provide a \"..._trusted\" filename for prompt helper connections")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support (default: autodetect)")
+        (platform_input_lib, po::value<std::string>(),
+            "Library to use for platform input support (default: input-stub.so)")
         (platform_path, po::value<std::string>()->default_value(MIR_SERVER_PLATFORM_PATH),
             "Directory to look for platform libraries (default: " MIR_SERVER_PLATFORM_PATH ")")
         (enable_input_opt, po::value<bool>()->default_value(enable_input_default),
@@ -145,6 +149,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
             "threads in frontend thread pool.")
+        (nbuffers_opt, po::value<int>()->default_value(3),
+            "Number of buffers per surface.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,

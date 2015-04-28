@@ -16,8 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER // Required until wire format changes
-
 #include "mir_protobuf_rpc_channel.h"
 #include "rpc_report.h"
 
@@ -28,6 +26,7 @@
 #include "../lifecycle_control.h"
 #include "../event_sink.h"
 #include "mir/variable_length_array.h"
+#include "mir/events/event_private.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -121,16 +120,22 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
     {
         buffer = static_cast<mir::protobuf::Buffer*>(response);
     }
+    else if (message_type == "mir.protobuf.BufferStream")
+    {
+        auto buffer_stream = static_cast<mir::protobuf::BufferStream*>(response);
+        if (buffer_stream->has_buffer())
+            buffer = buffer_stream->mutable_buffer();
+    }
     else if (message_type == "mir.protobuf.Surface")
     {
         surface = static_cast<mir::protobuf::Surface*>(response);
-        if (surface && surface->has_buffer_stream() && surface->buffer_stream().has_buffer())
+        if (surface->has_buffer_stream() && surface->buffer_stream().has_buffer())
             buffer = surface->mutable_buffer_stream()->mutable_buffer();
     }
     else if (message_type == "mir.protobuf.Screencast")
     {
         auto screencast = static_cast<mir::protobuf::Screencast*>(response);
-        if (screencast && screencast->has_buffer_stream() && screencast->buffer_stream().has_buffer())
+        if (screencast->has_buffer_stream() && screencast->buffer_stream().has_buffer())
             buffer = screencast->mutable_buffer_stream()->mutable_buffer();
     }
     else if (message_type == "mir.protobuf.Platform")
@@ -140,7 +145,7 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
     else if (message_type == "mir.protobuf.Connection")
     {
         auto connection = static_cast<mir::protobuf::Connection*>(response);
-        if (connection && connection->has_platform())
+        if (connection->has_platform())
             platform = connection->mutable_platform();
     }
     else if (message_type == "mir.protobuf.SocketFD")
@@ -283,7 +288,9 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 case mir_event_type_close_surface:
                     surface_map->with_surface_do(e.close_surface.surface_id, send_e);
                     break;
-
+                case mir_event_type_keymap:
+                    surface_map->with_surface_do(e.keymap.surface_id, send_e);
+                    break;
                 default:
                     event_sink->handle_event(e);
                 }

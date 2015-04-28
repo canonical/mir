@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_H_
 
 #include "null_display.h"
+#include "null_display_sync_group.h"
 #include "stub_display_buffer.h"
 #include "stub_display_configuration.h"
 
@@ -37,17 +38,22 @@ namespace doubles
 class StubDisplay : public NullDisplay
 {
 public:
-    StubDisplay(std::vector<geometry::Rectangle> const& output_rects)
-        : output_rects{output_rects}
+    StubDisplay(std::vector<geometry::Rectangle> const& output_rects) :
+        output_rects(output_rects)
     {
-        for (auto const& output_rect : output_rects)
-            display_buffers.emplace_back(output_rect);
+        for (auto const& rect : output_rects)
+            groups.emplace_back(new StubDisplaySyncGroup({rect}));
     }
 
-    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override
+    StubDisplay(unsigned int nbuffers) :
+        StubDisplay(generate_stub_rects(nbuffers))
     {
-        for (auto& db : display_buffers)
-            f(db);
+    }
+
+    void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override
+    {
+        for (auto& group : groups)
+            f(*group);
     }
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override
@@ -59,7 +65,15 @@ public:
 
     std::vector<geometry::Rectangle> const output_rects;
 private:
-    std::vector<StubDisplayBuffer> display_buffers;
+    std::vector<geometry::Rectangle> generate_stub_rects(unsigned int nbuffers)
+    {
+        std::vector<geometry::Rectangle> rects;
+        for (auto i = 0u; i < nbuffers; i++)
+            rects.push_back(geometry::Rectangle{{0,0},{1,1}});
+        return rects;
+    }
+
+    std::vector<std::unique_ptr<StubDisplaySyncGroup>> groups;
 };
 
 }

@@ -18,6 +18,7 @@
 
 #include "src/server/input/cursor_controller.h"
 
+#include "mir/thread_safe_list.h"
 #include "mir/input/surface.h"
 #include "mir/input/scene.h"
 #include "mir/scene/observer.h"
@@ -26,6 +27,7 @@
 #include "mir/graphics/cursor.h"
 
 #include "mir_toolkit/common.h"
+#include "mir_toolkit/cursors.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_scene_surface.h"
@@ -84,6 +86,7 @@ MATCHER_P(CursorNamed, name, "")
 
 struct MockCursor : public mg::Cursor
 {
+    MOCK_METHOD0(show, void());
     MOCK_METHOD1(show, void(mg::CursorImage const&));
     MOCK_METHOD0(hide, void());
     
@@ -182,45 +185,38 @@ struct StubScene : public mtd::StubInputScene
     
     void add_observer(std::shared_ptr<ms::Observer> const& observer) override
     {
-        std::unique_lock<decltype(observer_guard)> lk(observer_guard);
+        observers.add(observer);
 
-        observers.push_back(observer);
-        
         for (auto target : targets)
         {
-            for (auto observer : observers)
+            observers.for_each([&target](std::shared_ptr<ms::Observer> const& observer)
             {
                 observer->surface_exists(target.get());
-            }
+            });
         }
     }
 
     void remove_observer(std::weak_ptr<ms::Observer> const& observer) override
     {
-        std::unique_lock<decltype(observer_guard)> lk(observer_guard);
-        
         auto o = observer.lock();
         assert(o);
 
-        auto it = std::find(observers.begin(), observers.end(), o);
-        observers.erase(it);
+        observers.remove(o);
     }
     
     void add_surface(std::shared_ptr<StubInputSurface> const& surface)
     {
         targets.push_back(surface);
-        for (auto observer : observers)
+        observers.for_each([&surface](std::shared_ptr<ms::Observer> const& observer)
         {
             observer->surface_added(surface.get());
-        }
+        });
     }
     
     // TODO: Should be mi::Surface. See comment on StubInputSurface.
     std::vector<std::shared_ptr<ms::Surface>> targets;
 
-    std::mutex observer_guard;
-
-    std::vector<std::shared_ptr<ms::Observer>> observers;
+    mir::ThreadSafeList<std::shared_ptr<ms::Observer>> observers;
 };
 
 struct TestCursorController : public testing::Test

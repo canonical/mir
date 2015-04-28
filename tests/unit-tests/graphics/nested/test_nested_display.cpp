@@ -16,8 +16,9 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/server/graphics/nested/nested_display.h"
+#include "src/server/graphics/nested/display.h"
 #include "src/server/graphics/nested/host_connection.h"
+#include "src/server/graphics/nested/host_surface.h"
 #include "src/server/report/null/display_report.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #include "src/server/input/null_input_dispatcher.h"
@@ -27,6 +28,7 @@
 #include "mir_test_doubles/mock_gl_config.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_host_connection.h"
+#include "mir_test_doubles/stub_cursor_listener.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test/fake_shared.h"
 
@@ -59,19 +61,19 @@ public:
 
 struct NestedDisplay : testing::Test
 {
-    std::unique_ptr<mgn::NestedDisplay> create_nested_display(
+    std::unique_ptr<mgn::Display> create_nested_display(
         std::shared_ptr<mg::Platform> const& platform,
         std::shared_ptr<mg::GLConfig> const& gl_config)
     {
-        auto nested_display_raw = new mgn::NestedDisplay{
+        auto nested_display_raw = new mgn::Display{
             platform,
             std::make_shared<SingleDisplayHostConnection>(),
             mt::fake_shared(null_input_dispatcher),
             mt::fake_shared(null_display_report),
             mt::fake_shared(default_conf_policy),
-            gl_config};
+            gl_config, std::make_shared<mtd::StubCursorListener>()};
 
-        return std::unique_ptr<mgn::NestedDisplay>{nested_display_raw};
+        return std::unique_ptr<mgn::Display>{nested_display_raw};
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;

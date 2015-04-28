@@ -47,8 +47,6 @@ struct FrontendShell : mf::Shell
 
     void close_session(std::shared_ptr<mf::Session> const& session) override;
 
-    void handle_surface_created(std::shared_ptr<mf::Session> const& session) override;
-
     std::shared_ptr<mf::PromptSession> start_prompt_session_for(
         std::shared_ptr<mf::Session> const& session,
         ms::PromptSessionCreationParameters const& params) override;
@@ -60,6 +58,8 @@ struct FrontendShell : mf::Shell
     void stop_prompt_session(std::shared_ptr<mf::PromptSession> const& prompt_session) override;
 
     mf::SurfaceId create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params) override;
+
+    void modify_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface, SurfaceSpecification const& modifications) override;
 
     void destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface) override;
 

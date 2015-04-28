@@ -19,7 +19,6 @@
 #include "kms_page_flipper.h"
 #include "mir/graphics/display_report.h"
 
-#include <limits>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -37,15 +36,18 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
                        void* data)
 {
     auto page_flip_data = static_cast<mgm::PageFlipEventData*>(data);
-    page_flip_data->pending->erase(page_flip_data->crtc_id);
+    page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id);
 }
 
 }
 
-mgm::KMSPageFlipper::KMSPageFlipper(int drm_fd)
-    : drm_fd{drm_fd},
-      pending_page_flips(),
-      worker_tid()
+mgm::KMSPageFlipper::KMSPageFlipper(
+    int drm_fd,
+    std::shared_ptr<DisplayReport> const& report) :
+    drm_fd{drm_fd},
+    report{report},
+    pending_page_flips(),
+    worker_tid()
 {
 }
 
@@ -56,7 +58,7 @@ bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id, uint32_t fb_id)
     if (pending_page_flips.find(crtc_id) != pending_page_flips.end())
         BOOST_THROW_EXCEPTION(std::logic_error("Page flip for crtc_id is already scheduled"));
 
-    pending_page_flips[crtc_id] = PageFlipEventData{&pending_page_flips, crtc_id};
+    pending_page_flips[crtc_id] = PageFlipEventData{crtc_id, this};
 
     auto ret = drmModePageFlip(drm_fd, crtc_id, fb_id,
                                DRM_MODE_PAGE_FLIP_EVENT,
@@ -153,4 +155,10 @@ std::thread::id mgm::KMSPageFlipper::debug_get_worker_tid()
 bool mgm::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
 {
     return pending_page_flips.find(crtc_id) == pending_page_flips.end();
+}
+
+void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id)
+{
+    report->report_vsync(crtc_id);
+    pending_page_flips.erase(crtc_id);
 }

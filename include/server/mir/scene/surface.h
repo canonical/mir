@@ -66,7 +66,6 @@ public:
     virtual void show() = 0;
     virtual bool visible() const = 0;
     virtual void move_to(geometry::Point const& top_left) = 0;
-    virtual void take_input_focus(std::shared_ptr<shell::InputTargeter> const& targeter) = 0;
 
     /**
      * Sets the input region for this surface.
@@ -90,8 +89,8 @@ public:
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override = 0;
     virtual std::shared_ptr<graphics::CursorImage> cursor_image() const override = 0;
 
-    virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
-    virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) = 0;
+    virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override = 0;
+    virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override = 0;
 
     // TODO input_channel() relates to adding and removing the surface
     // TODO from the scene and is probably not cleanest interface for this.
@@ -104,7 +103,10 @@ public:
     // TODO a legacy of old interactions and needs removing
     virtual int configure(MirSurfaceAttrib attrib, int value) = 0;
     // TODO a legacy of old interactions and needs removing
-    virtual int query(MirSurfaceAttrib attrib) = 0;
+    virtual int query(MirSurfaceAttrib attrib) const = 0;
+
+    virtual void set_keymap(xkb_rule_names const& rules) = 0;
+    virtual void rename(std::string const& title) = 0;
 };
 }
 }

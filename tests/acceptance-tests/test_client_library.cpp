@@ -16,13 +16,12 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_platform_helpers.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test/validity_matchers.h"
 
 #include "src/include/client/mir/client_buffer.h"
@@ -118,17 +117,6 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         return surfaces.size();
     }
 
-    MirEvent last_event{};
-    MirSurface* last_event_surface = nullptr;
-
-    static void event_callback(MirSurface* surface, MirEvent const* event,
-                               void* ctx)
-    {
-        ClientLibrary* self = static_cast<ClientLibrary*>(ctx);
-        self->last_event = *event;
-        self->last_event_surface = surface;
-    }
-
     static void nosey_thread(MirSurface *surf)
     {
         for (int i = 0; i < 10; i++)
@@ -143,6 +131,8 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
                                             mir_surface_state_minimized));
         }
     }
+    
+    mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 }
 
@@ -273,11 +263,11 @@ TEST_F(ClientLibrary, can_set_surface_state)
     mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(999)));
     EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_fullscreen));
 
-    mir_wait_for(mir_surface_set_state(surface, mir_surface_state_minimized));
-    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_minimized));
+    mir_wait_for(mir_surface_set_state(surface, mir_surface_state_horizmaximized));
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_horizmaximized));
 
     mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(888)));
-    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_minimized));
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_horizmaximized));
 
     // Stress-test synchronization logic with some flooding
     for (int i = 0; i < 100; i++)
@@ -287,6 +277,111 @@ TEST_F(ClientLibrary, can_set_surface_state)
         mir_wait_for(mir_surface_set_state(surface, mir_surface_state_fullscreen));
         ASSERT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_fullscreen));
     }
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, can_set_surface_min_width)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width = 640;
+    int const height = 480;
+    auto const format = mir_pixel_format_abgr_8888;
+    auto const spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+
+    int const min_width = 480;
+    EXPECT_TRUE(mir_surface_spec_set_min_width(spec, min_width));
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, can_set_surface_min_height)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width = 640;
+    int const height = 480;
+    auto const format = mir_pixel_format_abgr_8888;
+    auto const spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+
+    int const min_height = 480;
+    EXPECT_TRUE(mir_surface_spec_set_min_height(spec, min_height));
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, can_set_surface_max_width)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width = 640;
+    int const height = 480;
+    auto const format = mir_pixel_format_abgr_8888;
+    auto const spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+
+    int const max_width = 1024;
+    EXPECT_TRUE(mir_surface_spec_set_max_width(spec, max_width));
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, can_set_surface_max_height)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width = 640;
+    int const height = 480;
+    auto const format = mir_pixel_format_abgr_8888;
+    auto const spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+
+    int const max_height = 1024;
+    EXPECT_TRUE(mir_surface_spec_set_max_height(spec, max_height));
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, min_size_respected_when_placing_surface)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width = 6400;
+    int const height = 4800;
+    auto const format = mir_pixel_format_abgr_8888;
+    auto const spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+
+    int const min_width = 4800;
+    int const min_height = 3200;
+
+    mir_surface_spec_set_min_width(spec, min_width);
+    mir_surface_spec_set_min_height(spec, min_height);
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    auto const buffer_stream = mir_surface_get_buffer_stream(surface);
+
+    MirGraphicsRegion graphics_region;
+    mir_buffer_stream_get_graphics_region(buffer_stream, &graphics_region);
+    EXPECT_THAT(graphics_region.width, Ge(min_width));
+    EXPECT_THAT(graphics_region.height, Ge(min_height));
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
@@ -540,7 +635,7 @@ TEST_F(ClientLibrary, highly_threaded_client)
     b.join();
     c.join();
 
-    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_minimized));
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_fullscreen));
 
     mir_surface_release_sync(surface);
 
@@ -846,6 +941,46 @@ TEST_F(ClientLibrary, DISABLED_can_create_buffer_usage_software_surface)
         mir_surface_get_buffer_stream(surface), &graphics_region);
 
     EXPECT_THAT(graphics_region.vaddr, Not(Eq(nullptr)));
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+namespace
+{
+void dummy_event_handler_one(MirSurface*, MirEvent const*, void*)
+{
+}
+
+void dummy_event_handler_two(MirSurface*, MirEvent const*, void*)
+{
+}
+}
+
+/*
+ * Regression test for LP: 1438160
+ */
+TEST_F(ClientLibrary, can_change_event_delegate)
+{
+    using namespace testing;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection,
+                                                                      800, 600,
+                                                                      mir_pixel_format_argb_8888);
+    auto surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    ASSERT_THAT(surface, IsValid());
+
+    /* TODO: When provide-event-fd lands, change this into a better test that actually
+     * tests that the correct event handler is called.
+     *
+     * Without manual dispatch, it's racy to try and test that.
+     */
+    mir_surface_set_event_handler(surface, &dummy_event_handler_one, nullptr);
+    mir_surface_set_event_handler(surface, &dummy_event_handler_two, nullptr);
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);

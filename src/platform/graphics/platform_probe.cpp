@@ -16,14 +16,11 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/logging/logger.h"
+#include "mir/log.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_probe.h"
 
-#include <string>
 #include <boost/throw_exception.hpp>
-
-namespace ml = mir::logging;
 
 std::shared_ptr<mir::SharedLibrary>
 mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> const& modules)
@@ -34,21 +31,25 @@ mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> con
     {
         try
         {
-            auto probe = module->load_function<mir::graphics::PlatformProbe>("probe_graphics_platform",
-                                                                             MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            auto probe = module->load_function<PlatformProbe>(
+                 "probe_graphics_platform",
+                 MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+
             auto module_priority = probe();
             if (module_priority > best_priority_so_far)
             {
                 best_priority_so_far = module_priority;
                 best_module_so_far = module;
             }
+
+            auto describe = module->load_function<DescribeModule>(
+                "describe_graphics_module",
+                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            auto desc = describe();
+            mir::log_info("Found graphics driver: %s", desc->name);
         }
-        catch (std::runtime_error const& err)
+        catch (std::runtime_error const&)
         {
-            // Tried to probe a SharedLibrary that isn't a platform module?
-            ml::log(ml::Severity::warning,
-                    std::string{"Failed to probe module. Not a platform library? Error: "} + err.what(),
-                    "Platform Probing");
         }
     }
     if (best_priority_so_far > mir::graphics::unsupported)

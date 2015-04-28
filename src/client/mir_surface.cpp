@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -23,8 +23,9 @@
 #include "cursor_configuration.h"
 #include "client_buffer_stream_factory.h"
 #include "mir_connection.h"
-#include "mir/input/input_receiver_thread.h"
+#include "mir/dispatch/simple_dispatch_thread.h"
 #include "mir/input/input_platform.h"
+#include "mir/input/xkb_mapper.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -36,6 +37,7 @@ namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
+namespace md = mir::dispatch;
 
 #define SERIALIZE_OPTION_IF_SET(option, message) \
     if (option.is_set()) \
@@ -52,7 +54,8 @@ MirSurfaceSpec::MirSurfaceSpec(
     : connection{connection},
       width{width},
       height{height},
-      pixel_format{format}
+      pixel_format{format},
+      buffer_usage{mir_buffer_usage_hardware}
 {
 }
 
@@ -63,6 +66,7 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
       pixel_format{params.pixel_format},
       buffer_usage{params.buffer_usage}
 {
+    type = mir_surface_type_normal;
     if (params.output_id != mir_display_output_id_invalid)
     {
         output_id = params.output_id;
@@ -70,22 +74,32 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
     }
 }
 
+MirSurfaceSpec::MirSurfaceSpec()
+{
+}
+
 mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
 {
     mir::protobuf::SurfaceParameters message;
 
-    message.set_width(width);
-    message.set_height(height);
-    message.set_pixel_format(pixel_format);
-    message.set_buffer_usage(buffer_usage);
-
+    SERIALIZE_OPTION_IF_SET(width, message);
+    SERIALIZE_OPTION_IF_SET(height, message);
+    SERIALIZE_OPTION_IF_SET(pixel_format, message);
+    SERIALIZE_OPTION_IF_SET(buffer_usage, message);
     SERIALIZE_OPTION_IF_SET(surface_name, message);
     SERIALIZE_OPTION_IF_SET(output_id, message);
     SERIALIZE_OPTION_IF_SET(type, message);
     SERIALIZE_OPTION_IF_SET(state, message);
     SERIALIZE_OPTION_IF_SET(pref_orientation, message);
+    SERIALIZE_OPTION_IF_SET(edge_attachment, message);
+    SERIALIZE_OPTION_IF_SET(min_width, message);
+    SERIALIZE_OPTION_IF_SET(min_height, message);
+    SERIALIZE_OPTION_IF_SET(max_width, message);
+    SERIALIZE_OPTION_IF_SET(max_height, message);
+
     if (parent.is_set() && parent.value() != nullptr)
         message.set_parent_id(parent.value()->id());
+
     if (aux_rect.is_set())
     {
         message.mutable_aux_rect()->set_left(aux_rect.value().left);
@@ -93,7 +107,7 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
         message.mutable_aux_rect()->set_width(aux_rect.value().width);
         message.mutable_aux_rect()->set_height(aux_rect.value().height);
     }
-    SERIALIZE_OPTION_IF_SET(edge_attachment, message);
+
     return message;
 }
 
@@ -118,7 +132,8 @@ MirSurface::MirSurface(
       name{spec.surface_name.value()},
       connection(allocating_connection),
       buffer_stream_factory(buffer_stream_factory),
-      input_platform(input_platform)
+      input_platform(input_platform),
+      keymapper(std::make_shared<mircv::XKBMapper>())
 {
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
@@ -148,11 +163,7 @@ MirSurface::~MirSurface()
 
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (input_thread)
-    {
-        input_thread->stop();
-        input_thread->join();
-    }
+    input_thread.reset();
 
     for (auto i = 0, end = surface.fd_size(); i != end; ++i)
         close(surface.fd(i));
@@ -281,8 +292,20 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
     {
         std::unique_lock<decltype(mutex)> lock(mutex);
         setting.mutable_surfaceid()->CopyFrom(surface.id());
-        if (cursor && cursor->name != mir_disabled_cursor_name)
-            setting.set_name(cursor->name.c_str());
+        if (cursor)
+        {
+            if (cursor->stream != nullptr)
+            {
+                setting.mutable_buffer_stream()->set_value(cursor->stream->rpc_id().as_value());
+                setting.set_hotspot_x(cursor->hotspot_x);
+                setting.set_hotspot_y(cursor->hotspot_y);
+            }
+            else if (cursor->name != mir_disabled_cursor_name)
+            {
+                setting.set_name(cursor->name.c_str());
+            }
+
+        }
     }
     
     configure_cursor_wait_handle.expect_result();
@@ -414,28 +437,25 @@ int MirSurface::attrib(MirSurfaceAttrib at) const
     return attrib_cache[at];
 }
 
-void MirSurface::set_event_handler(MirEventDelegate const* delegate)
+void MirSurface::set_event_handler(mir_surface_event_callback callback,
+                                   void* context)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (input_thread)
-    {
-        input_thread->stop();
-        input_thread->join();
-        input_thread = nullptr;
-    }
+    input_thread.reset();
 
-    if (delegate)
+    if (callback)
     {
-        handle_event_callback = std::bind(delegate->callback, this,
+        handle_event_callback = std::bind(callback, this,
                                           std::placeholders::_1,
-                                          delegate->context);
+                                          context);
 
         if (surface.fd_size() > 0 && handle_event_callback)
         {
-            input_thread = input_platform->create_input_thread(surface.fd(0),
-                                                        handle_event_callback);
-            input_thread->start();
+            auto input_dispatcher = input_platform->create_input_receiver(surface.fd(0),
+                                                                          keymapper,
+                                                                          handle_event_callback);
+            input_thread = std::make_shared<md::SimpleDispatchThread>(input_dispatcher);
         }
     }
 }
@@ -457,6 +477,13 @@ void MirSurface::handle_event(MirEvent const& e)
     case mir_event_type_orientation:
         orientation = mir_orientation_event_get_direction(mir_event_get_orientation_event(&e));
         break;
+    case mir_event_type_keymap:
+    {
+        xkb_rule_names names;
+        mir_keymap_event_get_rules(mir_event_get_keymap_event(&e), &names);
+        keymapper->set_rules(names);
+        break;
+    }
     default:
         break;
     };
@@ -491,4 +518,75 @@ mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
     std::lock_guard<decltype(mutex)> lock(mutex);
     
     return buffer_stream.get();
+}
+
+void MirSurface::on_modified()
+{
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (modify_result.has_error())
+        {
+            // TODO return errors like lp:~vanvugt/mir/wait-result
+        }
+    }
+    modify_wait_handle.result_received();
+}
+
+MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
+{
+    mp::SurfaceModifications mods;
+
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        mods.mutable_surface_id()->set_value(surface.id().value());
+    }
+
+    auto const surface_specification = mods.mutable_surface_specification();
+
+    #define COPY_IF_SET(field)\
+        if (spec.field.is_set())\
+        surface_specification->set_##field(spec.field.value())
+
+    COPY_IF_SET(width);
+    COPY_IF_SET(height);
+    COPY_IF_SET(pixel_format);
+    COPY_IF_SET(buffer_usage);
+    // name is a special case (below)
+    COPY_IF_SET(output_id);
+    COPY_IF_SET(type);
+    COPY_IF_SET(state);
+    // preferred_orientation is a special case (below)
+    // parent_id is a special case (below)
+    // aux_rect is a special case (below)
+    COPY_IF_SET(edge_attachment);
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+    #undef COPY_IF_SET
+
+    if (spec.surface_name.is_set())
+        surface_specification->set_name(spec.surface_name.value());
+
+    if (spec.pref_orientation.is_set())
+        surface_specification->set_preferred_orientation(spec.pref_orientation.value());
+
+    if (spec.parent.is_set() && spec.parent.value())
+        surface_specification->set_parent_id(spec.parent.value()->id());
+
+    if (spec.aux_rect.is_set())
+    {
+        auto const rect = surface_specification->mutable_aux_rect();
+        auto const& value = spec.aux_rect.value();
+        rect->set_left(value.left);
+        rect->set_top(value.top);
+        rect->set_width(value.width);
+        rect->set_height(value.height);
+    }
+
+    modify_wait_handle.expect_result();
+    server->modify_surface(0, &mods, &modify_result,
+              google::protobuf::NewCallback(this, &MirSurface::on_modified));
+
+    return &modify_wait_handle;
 }

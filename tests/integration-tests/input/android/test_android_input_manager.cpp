@@ -17,7 +17,7 @@
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+#include "mir/events/event_private.h"
 
 #include "src/server/input/android/android_input_targeter.h"
 #include "src/server/input/android/android_input_registrar.h"
@@ -283,7 +283,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_c
         .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(std::chrono::nanoseconds(-1))));
 
     input_registrar.add_window_handle_for_surface(&surface);
-    the_input_targeter()->focus_changed(surface.input_channel());
+    the_input_targeter()->set_focus(mt::fake_shared(surface));
 
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_ENTER));
@@ -316,17 +316,17 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
             .Times(1).WillOnce(DoAll(mt::WakeUp(&wait3), Return(std::chrono::nanoseconds(-1))));
     }
 
-    the_input_targeter()->focus_changed(surface1.input_channel());
+    the_input_targeter()->set_focus(mt::fake_shared(surface1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_1));
     wait1.wait_for_at_most_seconds(1);
 
-    the_input_targeter()->focus_changed(surface2.input_channel());
+    the_input_targeter()->set_focus(mt::fake_shared(surface2));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_2));
     wait2.wait_for_at_most_seconds(1);
 
-    the_input_targeter()->focus_changed(surface1.input_channel());
+    the_input_targeter()->set_focus(mt::fake_shared(surface1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_3));
     wait3.wait_for_at_most_seconds(5);

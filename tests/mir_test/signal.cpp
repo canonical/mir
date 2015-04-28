@@ -20,16 +20,10 @@
 
 namespace mt = mir::test;
 
-mt::Signal::Signal()
-    : signalled{false}
-{
-}
-
 void mt::Signal::raise()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
     signalled = true;
-    lock.unlock();
     cv.notify_all();
 }
 
@@ -43,4 +37,10 @@ void mt::Signal::wait()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     cv.wait(lock, [this]() { return signalled; });
+}
+
+void mt::Signal::reset()
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    signalled = false;
 }

@@ -18,8 +18,7 @@
  *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
+#include "mir/events/event_private.h"
 #include "mir/shell/shell_wrapper.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface.h"
@@ -91,8 +90,7 @@ struct InputClient
         surface = mir_surface_create_sync(spec);
         mir_surface_spec_release(spec);
 
-        MirEventDelegate const event_delegate { handle_input, this };
-        mir_surface_set_event_handler(surface, &event_delegate);
+        mir_surface_set_event_handler(surface, handle_input, this);
         mir_buffer_stream_swap_buffers_sync(
             mir_surface_get_buffer_stream(surface));
 
@@ -109,7 +107,7 @@ struct InputClient
     {
         auto const client = static_cast<InputClient*>(context);
 
-        if (ev->type == mir_event_type_surface)
+        if (mir_event_get_type(ev) == mir_event_type_surface)
             return;
 
         client->handler.handle_input(ev);
@@ -623,4 +621,84 @@ TEST_F(TestClientInput, send_mir_input_events_through_surface)
 
             session->default_surface()->consume(key_event);
         });
+}
+
+TEST_F(TestClientInput, clients_receive_keymap_change_events)
+{
+    using namespace testing;
+
+    mt::WaitCondition first_event_received;
+    InputClient client{new_connection(), test_client_name_1};
+
+    xkb_rule_names names;
+    names.rules = "evdev";
+    names.model = "pc105";
+    names.layout = "dvorak";
+    names.variant = "";
+    names.options = "";
+    
+    InSequence seq;
+    EXPECT_CALL(client.handler, handle_input(
+        mt::KeymapEventWithRules(names)))
+        .Times(1).WillOnce(mt::WakeUp(&client.all_events_received));
+
+    client.start();
+
+    server_config().the_session_container()->for_each(
+        [names] (std::shared_ptr<ms::Session> const& session) -> void
+        {
+            session->default_surface()->set_keymap(names);
+        });
+}
+
+
+TEST_F(TestClientInput, keymap_changes_change_keycode_received)
+{
+    using namespace testing;
+
+    xkb_rule_names names;
+    names.rules = "evdev";
+    names.model = "pc105";
+    names.layout = "us";
+    names.variant = "dvorak";
+    names.options = "";
+
+    mt::WaitCondition first_event_received,
+        client_sees_keymap_change;
+    InputClient client{new_connection(), test_client_name_1};
+    
+    InSequence seq;
+    EXPECT_CALL(client.handler, handle_input(AllOf(
+        mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_n)))).Times(1);
+    EXPECT_CALL(client.handler, handle_input(mt::KeyUpEvent()))
+        .Times(1).WillOnce(mt::WakeUp(&first_event_received));
+    EXPECT_CALL(client.handler, handle_input(
+        mt::KeymapEventWithRules(names)))
+        .Times(1).WillOnce(mt::WakeUp(&client_sees_keymap_change));
+    EXPECT_CALL(client.handler, handle_input(AllOf(
+        mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_b)))).Times(1);
+    EXPECT_CALL(client.handler, handle_input(mt::KeyUpEvent()))
+        .Times(1).WillOnce(mt::WakeUp(&client.all_events_received));
+
+    client.start();
+
+    fake_event_hub()->synthesize_event(
+        mis::a_key_down_event().of_scancode(KEY_N));
+    fake_event_hub()->synthesize_event(
+        mis::a_key_up_event().of_scancode(KEY_N));
+
+    first_event_received.wait_for_at_most_seconds(60);
+    
+    server_config().the_session_container()->for_each(
+        [&names] (std::shared_ptr<ms::Session> const& session) -> void
+        {
+            session->default_surface()->set_keymap(names);
+        });
+
+    client_sees_keymap_change.wait_for_at_most_seconds(60);
+
+    fake_event_hub()->synthesize_event(
+        mis::a_key_down_event().of_scancode(KEY_N));
+    fake_event_hub()->synthesize_event(
+        mis::a_key_up_event().of_scancode(KEY_N));
 }

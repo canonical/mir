@@ -16,10 +16,9 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "src/server/input/android/android_input_application_handle.h"
 
+#include "mir/events/event_private.h"
 #include "mir/input/input_channel.h"
 
 #include "mir_test_doubles/mock_input_surface.h"

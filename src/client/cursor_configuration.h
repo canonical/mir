@@ -21,13 +21,25 @@
 
 #include <string>
 
+namespace mir
+{
+namespace client
+{
+class ClientBufferStream;
+}
+}
+
 // Parameters for configuring the apperance and behavior of the system cursor. 
 // Will grow to include cursors specified by raw RGBA data, hotspots, etc...
 struct MirCursorConfiguration 
 {
     MirCursorConfiguration(char const* name);
+    MirCursorConfiguration(mir::client::ClientBufferStream const* stream, int hotspot_x, int hotspot_y);
 
     std::string name;
+    mir::client::ClientBufferStream const* stream;
+    int hotspot_x;
+    int hotspot_y;
 };
 
 #endif // MIR_CLIENT_CURSOR_CONFIGURATION_H_

@@ -84,6 +84,8 @@ public:
 
     virtual void raise(std::weak_ptr<Surface> const& surface) override;
 
+    void raise(SurfaceSet const& surfaces) override;
+
     void add_surface(
         std::shared_ptr<Surface> const& surface,
         DepthId depth,
