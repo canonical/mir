@@ -564,7 +564,6 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_input_platform*;
     mir::DefaultServerConfiguration::the_input_reader*;
     mir::DefaultServerConfiguration::the_input_reader_policy*;
-    mir::DefaultServerConfiguration::the_input_reader_thread*;
     mir::DefaultServerConfiguration::the_input_reading_multiplexer*;
     mir::DefaultServerConfiguration::the_input_region*;
     mir::DefaultServerConfiguration::the_input_registrar*;
@@ -579,7 +578,6 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;
     mir::DefaultServerConfiguration::the_message_processor_report*;
-    mir::DefaultServerConfiguration::the_new_input_manager*;
     mir::DefaultServerConfiguration::the_options*;
     mir::DefaultServerConfiguration::the_pixel_buffer*;
     mir::DefaultServerConfiguration::the_placement_strategy*;
