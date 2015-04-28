@@ -216,6 +216,32 @@ TEST_F(SurfaceStack, stacking_order)
             SceneElementFor(stub_surface3)));
 }
 
+TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
+{
+    using namespace testing;
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
+
+    auto stub_stream1 = std::make_shared<mtd::StubBufferStream>();
+    auto stub_stream2 = std::make_shared<mtd::StubBufferStream>();
+    auto stub_stream3 = std::make_shared<mtd::StubBufferStream>();
+    stub_surface1->add_stream(stub_stream1);
+    stub_surface1->add_stream(stub_stream2);
+    stub_surface3->add_stream(stub_stream3);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_stream1),
+            SceneElementFor(stub_stream2),
+            SceneElementFor(stub_surface2),
+            SceneElementFor(stub_surface3),
+            SceneElementFor(stub_stream3)));
+}
+
 TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
 {
     using namespace testing;
