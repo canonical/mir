@@ -35,8 +35,7 @@
 
 namespace mi = mir::input;
 
-// EventHub still blocks on getEvents
-TEST(DISABLED_EventHub, does_not_block_on_get_events)
+TEST(EventHub, does_not_block_on_get_events)
 {
     mir_test_framework::UdevEnvironment empty_env;
     auto hub = android::sp<android::EventHub>{new android::EventHub{mir::report::null_input_report()}};
@@ -68,11 +67,12 @@ TEST(EventHub, wakes_on_delay)
     std::thread reader{
         [hub,event_hub_triggered]
         {
-            android::RawEvent buffer[10];
-            memset(buffer, 0, sizeof(buffer));
-            hub->getEvents(buffer,10);
+            struct epoll_event pending_event;
+            std::memset(&pending_event, 0, sizeof pending_event);
+            epoll_wait(hub->fd(), &pending_event, 1, -1);
 
-            event_hub_triggered->wake_up_everyone();
+            if (pending_event.data.u32 == android::EventHub::EPOLL_ID_TIMER)
+                event_hub_triggered->wake_up_everyone();
         }};
 
     reader.detach();

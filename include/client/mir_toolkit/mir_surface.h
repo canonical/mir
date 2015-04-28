@@ -628,13 +628,6 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
                                                             MirPixelFormat format);
 
 /**
- * Change the title (name) of a surface.
- *   \param [in] surface  The surface to rename
- *   \param [in] name     The new name
- */
-void mir_surface_set_title(MirSurface* surface, char const* name);
-
-/**
  * Request changes to the specification of a surface. The server will decide
  * whether and how the request can be honoured.
  *

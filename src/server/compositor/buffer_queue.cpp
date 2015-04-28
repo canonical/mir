@@ -24,7 +24,6 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <algorithm>
-#include <cassert>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;

@@ -26,6 +26,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <stdexcept>
 
 namespace geom=mir::geometry;
 namespace mcl=mir::client;
@@ -94,7 +95,7 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     std::weak_ptr<mcl::ClientBuffer> first_allocated_buffer;
 };
 
-struct MirBufferDepositoryTest : public testing::Test
+struct ClientBufferDepository : public testing::Test
 {
     void SetUp()
     {
@@ -120,7 +121,7 @@ MATCHER_P(SizeMatches, value, "")
     return value == arg;
 }
 
-TEST_F(MirBufferDepositoryTest, depository_sets_width_and_height)
+TEST_F(ClientBufferDepository, sets_width_and_height)
 {
     using namespace testing;
 
@@ -131,7 +132,7 @@ TEST_F(MirBufferDepositoryTest, depository_sets_width_and_height)
     depository.deposit_package(package, 8, size, pf);
 }
 
-TEST_F(MirBufferDepositoryTest, depository_new_deposit_changes_current_buffer)
+TEST_F(ClientBufferDepository, changes_current_buffer_on_new_deposit)
 {
     using namespace testing;
 
@@ -147,7 +148,7 @@ TEST_F(MirBufferDepositoryTest, depository_new_deposit_changes_current_buffer)
     EXPECT_NE(buffer1, buffer2);
 }
 
-TEST_F(MirBufferDepositoryTest, depository_sets_buffer_age_to_zero_for_new_buffer)
+TEST_F(ClientBufferDepository, sets_buffer_age_to_zero_for_new_buffer)
 {
     using namespace testing;
 
@@ -159,7 +160,7 @@ TEST_F(MirBufferDepositoryTest, depository_sets_buffer_age_to_zero_for_new_buffe
     EXPECT_EQ(0u, buffer1->age());
 }
 
-TEST_F(MirBufferDepositoryTest, just_sumbitted_buffer_has_age_1)
+TEST_F(ClientBufferDepository, has_age_1_for_just_sumbitted_buffer)
 {
     using namespace testing;
 
@@ -177,7 +178,7 @@ TEST_F(MirBufferDepositoryTest, just_sumbitted_buffer_has_age_1)
     EXPECT_EQ(1u, buffer1->age());
 }
 
-TEST_F(MirBufferDepositoryTest, submitting_buffer_ages_other_buffers)
+TEST_F(ClientBufferDepository, ages_other_buffers_on_new_submission)
 {
     using namespace testing;
 
@@ -204,7 +205,7 @@ TEST_F(MirBufferDepositoryTest, submitting_buffer_ages_other_buffers)
     EXPECT_EQ(0u, buffer3->age());
 }
 
-TEST_F(MirBufferDepositoryTest, double_buffering_reaches_steady_state_age)
+TEST_F(ClientBufferDepository, reaches_steady_state_age_for_double_buffering)
 {
     using namespace testing;
 
@@ -233,7 +234,7 @@ TEST_F(MirBufferDepositoryTest, double_buffering_reaches_steady_state_age)
     EXPECT_EQ(2u, buffer2->age());
 }
 
-TEST_F(MirBufferDepositoryTest, triple_buffering_reaches_steady_state_age)
+TEST_F(ClientBufferDepository, reaches_steady_state_age_when_triple_buffering)
 {
     using namespace testing;
 
@@ -273,7 +274,7 @@ TEST_F(MirBufferDepositoryTest, triple_buffering_reaches_steady_state_age)
     EXPECT_EQ(3u, buffer3->age());
 }
 
-TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
+TEST_F(ClientBufferDepository, destroys_old_buffers)
 {
     using namespace testing;
     const int num_buffers = 3;
@@ -295,7 +296,7 @@ TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
     EXPECT_TRUE(mock_factory->first_buffer_allocated_and_then_freed());
 }
 
-TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_buffer)
+TEST_F(ClientBufferDepository, implicitly_submits_current_buffer_on_deposit)
 {
     using namespace testing;
     const int num_buffers = 3;
@@ -310,7 +311,7 @@ TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_b
     depository.deposit_package(package2, 2, size, pf);
 }
 
-TEST_F(MirBufferDepositoryTest, depository_frees_buffers_after_reaching_capacity)
+TEST_F(ClientBufferDepository, frees_buffers_after_reaching_capacity)
 {
     using namespace testing;
     std::shared_ptr<mcl::ClientBufferDepository> depository;
@@ -334,7 +335,7 @@ TEST_F(MirBufferDepositoryTest, depository_frees_buffers_after_reaching_capacity
     }
 }
 
-TEST_F(MirBufferDepositoryTest, depository_caches_recently_seen_buffer)
+TEST_F(ClientBufferDepository, caches_recently_seen_buffer)
 {
     using namespace testing;
 
@@ -358,7 +359,7 @@ TEST_F(MirBufferDepositoryTest, depository_caches_recently_seen_buffer)
     depository.deposit_package(package3, 8, size, pf);
 }
 
-TEST_F(MirBufferDepositoryTest, depository_creates_new_buffer_for_different_id)
+TEST_F(ClientBufferDepository, creates_new_buffer_for_different_id)
 {
     using namespace testing;
 
@@ -374,7 +375,7 @@ TEST_F(MirBufferDepositoryTest, depository_creates_new_buffer_for_different_id)
     depository.deposit_package(package2, 9, size, pf);
 }
 
-TEST_F(MirBufferDepositoryTest, depository_keeps_last_2_buffers_regardless_of_age)
+TEST_F(ClientBufferDepository, keeps_last_2_buffers_regardless_of_age)
 {
     using namespace testing;
 
@@ -389,7 +390,7 @@ TEST_F(MirBufferDepositoryTest, depository_keeps_last_2_buffers_regardless_of_ag
     depository.deposit_package(package, 8, size, pf);
 }
 
-TEST_F(MirBufferDepositoryTest, depository_keeps_last_3_buffers_regardless_of_age)
+TEST_F(ClientBufferDepository, keeps_last_3_buffers_regardless_of_age)
 {
     using namespace testing;
 
@@ -405,4 +406,55 @@ TEST_F(MirBufferDepositoryTest, depository_keeps_last_3_buffers_regardless_of_ag
     depository.deposit_package(package, 9, size, pf);
     depository.deposit_package(package, 10, size, pf);
     depository.deposit_package(package, 8, size, pf);
+}
+
+TEST_F(ClientBufferDepository, can_decrease_cache_size)
+{
+    using namespace testing;
+    int initial_size{3};
+    int changed_size{2};
+    mcl::ClientBufferDepository depository{mock_factory, initial_size};
+    EXPECT_CALL(*mock_factory, create_buffer(_,_,_))
+        .Times(4);
+
+    depository.deposit_package(package, 8, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 10, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 10, size, pf);
+
+    depository.set_max_buffers(changed_size); //8 should be kicked out
+    depository.deposit_package(package, 8, size, pf);
+}
+
+TEST_F(ClientBufferDepository, can_increase_cache_size)
+{
+    using namespace testing;
+    int initial_size{3};
+    int changed_size{4};
+    mcl::ClientBufferDepository depository{mock_factory, initial_size};
+    EXPECT_CALL(*mock_factory, create_buffer(_,_,_))
+        .Times(4);
+
+    depository.deposit_package(package, 8, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 10, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 10, size, pf);
+    depository.set_max_buffers(changed_size);
+    depository.deposit_package(package, 7, size, pf);
+    depository.deposit_package(package, 8, size, pf);
+}
+
+TEST_F(ClientBufferDepository, cannot_have_zero_size)
+{
+    int initial_size{3};
+    EXPECT_THROW({
+        mcl::ClientBufferDepository depository(mock_factory, 0);
+    }, std::logic_error);
+
+    mcl::ClientBufferDepository depository{mock_factory, initial_size};
+    EXPECT_THROW({
+        depository.set_max_buffers(0);
+    }, std::logic_error);
 }
