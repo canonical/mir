@@ -143,9 +143,13 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
     if (i == surfaces.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("surface_after: surface is not a member of this session"));
 
-    ++i;
+    // Ignore "gloss" surfaces
+    i = std::find_if(++i, end(surfaces),[](Surfaces::value_type const& s)
+        { return s.second->type() != mir_surface_type_gloss; });
+
     if (i == surfaces.end())
         i = surfaces.begin();
+
     return i->second;
 }
 
