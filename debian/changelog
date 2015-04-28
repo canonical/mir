@@ -4,25 +4,36 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
     - Very large release as the previous 0.12 series contained only minimal
       bug fixes...
     - Enhancements:
-      . New demo client for input testing: mir_demo_client_eglsquare
+      . New demo clients for input testing: mir_demo_client_eglsquare and
+        mir_demo_client_target.
+      . mir_demo_client_fingerpaint now processes input asynchronously to
+        drawing for a more fluid experience.
+      . Demos: Introduce support for Alt+` switching of windows in multi-
+        window clients.
       . Large window management redesign in libmirserver.
       . Introduce "buffer streams" properly. This is a generalization of the
         most basic functionality of a surface.
       . Log useful OpenGL information on server start-up.
       . Added client API support for constructing input method surfaces.
-      . Buffer queue size is configurable by --nbuffers=N for demo servers or
-        environment MIR_SERVER_NBUFFERS=N for any server.
+      . Buffer queue size is now configurable by --nbuffers=N for demo servers
+        or environment MIR_SERVER_NBUFFERS=N for any server.
       . Added experimental environment variable MIR_CLIENT_INPUT_RATE=Hz for
         tweaking the input resampling rate a client experiences (0 = off).
+        Also raised the default input rate from 55Hz to 59Hz for visibly
+        smoother touch scrolling.
       . Added keymap setting support for surfaces.
       . Improved automated testing of latency.
-      . Removed automated ABI-checking tests that used SHA1. More reliable
-        ABI checking is coming but not yet automated.
+      . Replaced and rewrote automated ABI checking.
       . Added support and example code for rendering window title strings.
+      . New client APIs for basic window management; setting window titles
+        and self-resizing.
+      . Introduced dynamically loadable input platforms.
       . Added proof-of-concept support for Snappy packaging for Ubuntu Core.
       . Drop support for C++11. Now C++14 is required to build Mir.
       . Deprecated MirEventDelegate. Now you just pass the two fields as
         parameters directly to mir_surface_set_event_handler().
+      . Minor redesign of the new input event API introduced in 0.10/11,
+        so that identifiers are shorter and less convoluted.
       . TODO: mention more enhancements
     - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8

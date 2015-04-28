@@ -32,9 +32,7 @@ namespace geometry
 
 namespace detail
 {
-enum DimensionTag { width, height, x, y, dx, dy, stride };
-
-template<DimensionTag Tag>
+template<typename Tag>
 class IntWrapper
 {
 public:
@@ -61,59 +59,59 @@ private:
     ValueType value;
 };
 
-template<DimensionTag Tag>
+template<typename Tag>
 std::ostream& operator<<(std::ostream& out, IntWrapper<Tag> const& value)
 {
     out << value.as_int();
     return out;
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() == rhs.as_int();
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator != (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() != rhs.as_int();
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator <= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() <= rhs.as_int();
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator >= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() >= rhs.as_int();
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() < rhs.as_int();
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator > (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() > rhs.as_int();
 }
 } // namespace detail
 
-typedef detail::IntWrapper<detail::width> Width;
-typedef detail::IntWrapper<detail::height> Height;
+typedef detail::IntWrapper<struct WidthTag> Width;
+typedef detail::IntWrapper<struct HeightTag> Height;
 // Just to be clear, mir::geometry::Stride is the stride of the buffer in bytes
-typedef detail::IntWrapper<detail::stride> Stride;
+typedef detail::IntWrapper<struct StrideTag> Stride;
 
-typedef detail::IntWrapper<detail::x> X;
-typedef detail::IntWrapper<detail::y> Y;
-typedef detail::IntWrapper<detail::dx> DeltaX;
-typedef detail::IntWrapper<detail::dy> DeltaY;
+typedef detail::IntWrapper<struct XTag> X;
+typedef detail::IntWrapper<struct YTag> Y;
+typedef detail::IntWrapper<struct DeltaXTag> DeltaX;
+typedef detail::IntWrapper<struct DeltaYTag> DeltaY;
 
 // Adding deltas is fine
 inline DeltaX operator+(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_int() + rhs.as_int()); }
