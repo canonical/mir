@@ -246,9 +246,9 @@ TEST_F(BufferStreamTest, with_most_recent_buffer_do_uses_compositor_buffer)
         .WillByDefault(Return(mock_buffer));
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
 
-    mg::Buffer* buf_ptr{nullptr};
+    std::shared_ptr<mg::NativeBuffer> native_buffer;
     buffer_stream.with_most_recent_buffer_do(
-        [&](mg::Buffer& buffer) { buf_ptr = &buffer; });
+        [&](mg::Buffer& buffer) { native_buffer = buffer.native_buffer_handle(); });
 
-    EXPECT_THAT(buffer_stream.lock_compositor_buffer(this).get(), Eq(buf_ptr));
+    EXPECT_THAT(buffer_stream.lock_compositor_buffer(this)->native_buffer_handle(), Eq(native_buffer));
 }
