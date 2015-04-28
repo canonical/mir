@@ -249,7 +249,6 @@ public:
             stop_watch.restart();
         }
 
-        glClearColor(0.0, 1.0, 0.0, 1.0);
         db_compositor->composite(std::move(scene_sequence));
 
         for (auto& m : moveables)

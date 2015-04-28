@@ -25,7 +25,6 @@
 #include <initializer_list>
 #include <list>
 #include <mutex>
-#include <atomic>
 
 #include <pthread.h>
 

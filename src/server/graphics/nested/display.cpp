@@ -33,6 +33,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
@@ -142,12 +143,14 @@ mgn::Display::Display(
     std::shared_ptr<input::InputDispatcher> const& dispatcher,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<mg::GLConfig> const& gl_config) :
+    std::shared_ptr<mg::GLConfig> const& gl_config,
+    std::shared_ptr<mi::CursorListener> const& cursor_listener) :
     platform{platform},
     connection{connection},
     dispatcher{dispatcher},
     display_report{display_report},
     egl_display{connection->egl_native_display(), gl_config},
+    cursor_listener{cursor_listener},
     outputs{}
 {
     std::shared_ptr<DisplayConfiguration> conf(configuration());
@@ -228,6 +231,7 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
                                 host_surface,
                                 area,
                                 dispatcher,
+                                cursor_listener,
                                 output.current_format));
                         have_output_for_group = true;
                     }

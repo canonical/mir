@@ -18,7 +18,6 @@
 
 #include "socket_messenger.h"
 #include "mir/frontend/client_constants.h"
-#include "mir/frontend/session_credentials.h"
 #include "mir/variable_length_array.h"
 #include "mir/fd_socket_transmission.h"
 #include "mir/raii.h"

@@ -22,12 +22,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include <chrono>
-#include <memory>
-#include <vector>
-
 #include <iostream>
-#include <assert.h>
 
 namespace mt = mir::test;
 

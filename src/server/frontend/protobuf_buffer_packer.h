@@ -20,15 +20,21 @@
 #define MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
 
 #include "mir/graphics/buffer_ipc_message.h"
-#include "mir_protobuf.pb.h"
 #include <memory>
 
 namespace mir
 {
+namespace protobuf
+{
+class Buffer;
+class DisplayConfiguration;
+}
+
 namespace graphics
 {
 class DisplayConfiguration;
 }
+
 namespace frontend
 {
 namespace detail
