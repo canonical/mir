@@ -60,7 +60,7 @@ function (mir_discover_tests EXECUTABLE)
     if (LLVM_SYMBOLIZER)
         set(TSAN_EXTRA_OPTIONS "external_symbolizer_path=${LLVM_SYMBOLIZER}")
     endif()
-    list(APPEND test_env "TSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7 ${TSAN_EXTRA_OPTIONS}\"")
+    list(APPEND test_env TSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7 ${TSAN_EXTRA_OPTIONS}\")
     # TSan does not support multi-threaded fork
     # TSan may open fds so "surface_creation_does_not_leak_fds" will not work as written
     # TSan deadlocks when running StreamTransportTest/0.SendsFullMessagesWhenInterrupted - disable it until understood
@@ -73,10 +73,10 @@ function (mir_discover_tests EXECUTABLE)
 
   # Normal
   add_test(${test_name} ${test_cmd})
-  set_property(TEST ${test_name} PROPERTY ENVIRONMENT ${ARGN})
+  set_property(TEST ${test_name} PROPERTY ENVIRONMENT ${test_env})
   if (test_no_memcheck_filter)
     add_test(${test_name}_no_memcheck ${test_cmd_no_memcheck})
-    set_property(TEST ${test_name}_no_memcheck PROPERTY ENVIRONMENT ${ARGN})
+    set_property(TEST ${test_name}_no_memcheck PROPERTY ENVIRONMENT ${test_env})
   endif()
 
   # ptest
