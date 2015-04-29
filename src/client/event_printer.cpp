@@ -22,44 +22,44 @@
 std::ostream& mir::operator<<(std::ostream& out, MirInputEventModifier modifier)
 {
     bool none = true;
-#define TEST_FLAG(base,name) if ((modifier & base ## _ ## name) == base ## _ ## name)\
+#define PRINT_FLAG(base,name) if ((modifier & base ## _ ## name) == base ## _ ## name)\
     {\
         if (!none) out << ' ';\
         out << # name;\
         none= false;\
     }
 
-    TEST_FLAG(mir_input_event_modifier, alt);
-    TEST_FLAG(mir_input_event_modifier, alt_right);
-    TEST_FLAG(mir_input_event_modifier, alt_left);
-    TEST_FLAG(mir_input_event_modifier, shift);
-    TEST_FLAG(mir_input_event_modifier, shift_left);
-    TEST_FLAG(mir_input_event_modifier, shift_right);
-    TEST_FLAG(mir_input_event_modifier, sym);
-    TEST_FLAG(mir_input_event_modifier, function);
-    TEST_FLAG(mir_input_event_modifier, ctrl);
-    TEST_FLAG(mir_input_event_modifier, ctrl_left);
-    TEST_FLAG(mir_input_event_modifier, ctrl_right);
-    TEST_FLAG(mir_input_event_modifier, meta);
-    TEST_FLAG(mir_input_event_modifier, meta_left);
-    TEST_FLAG(mir_input_event_modifier, meta_right);
-    TEST_FLAG(mir_input_event_modifier, caps_lock);
-    TEST_FLAG(mir_input_event_modifier, num_lock);
-    TEST_FLAG(mir_input_event_modifier, scroll_lock);
+    PRINT_FLAG(mir_input_event_modifier, alt);
+    PRINT_FLAG(mir_input_event_modifier, alt_right);
+    PRINT_FLAG(mir_input_event_modifier, alt_left);
+    PRINT_FLAG(mir_input_event_modifier, shift);
+    PRINT_FLAG(mir_input_event_modifier, shift_left);
+    PRINT_FLAG(mir_input_event_modifier, shift_right);
+    PRINT_FLAG(mir_input_event_modifier, sym);
+    PRINT_FLAG(mir_input_event_modifier, function);
+    PRINT_FLAG(mir_input_event_modifier, ctrl);
+    PRINT_FLAG(mir_input_event_modifier, ctrl_left);
+    PRINT_FLAG(mir_input_event_modifier, ctrl_right);
+    PRINT_FLAG(mir_input_event_modifier, meta);
+    PRINT_FLAG(mir_input_event_modifier, meta_left);
+    PRINT_FLAG(mir_input_event_modifier, meta_right);
+    PRINT_FLAG(mir_input_event_modifier, caps_lock);
+    PRINT_FLAG(mir_input_event_modifier, num_lock);
+    PRINT_FLAG(mir_input_event_modifier, scroll_lock);
     if (none) out << "none";
-#undef TEST_FLAG
+#undef PRINT_FLAG
     return out;
 }
 
-#define CASE(base,name) case base ## _ ## name: return out << #name;
+#define PRINT(base,name) case base ## _ ## name: return out << #name;
 
 std::ostream& mir::operator<<(std::ostream& out, MirKeyboardAction action)
 {
     switch (action)
     {
-    CASE(mir_keyboard_action,up);
-    CASE(mir_keyboard_action,down);
-    CASE(mir_keyboard_action,repeat);
+    PRINT(mir_keyboard_action,up);
+    PRINT(mir_keyboard_action,down);
+    PRINT(mir_keyboard_action,repeat);
     default:
         return out << static_cast<int>(action) << "<INVALID>";
     }
@@ -69,9 +69,9 @@ std::ostream& mir::operator<<(std::ostream& out, MirTouchAction action)
 {
     switch (action)
     {
-    CASE(mir_touch_action,up);
-    CASE(mir_touch_action,down);
-    CASE(mir_touch_action,change);
+    PRINT(mir_touch_action,up);
+    PRINT(mir_touch_action,down);
+    PRINT(mir_touch_action,change);
     default:
         return out << static_cast<int>(action) << "<INVALID>";
     }
@@ -81,9 +81,9 @@ std::ostream& mir::operator<<(std::ostream& out, MirTouchTooltype type)
 {
     switch (type)
     {
-    CASE(mir_touch_tooltype,finger);
-    CASE(mir_touch_tooltype,stylus);
-    CASE(mir_touch_tooltype,unknown);
+    PRINT(mir_touch_tooltype,finger);
+    PRINT(mir_touch_tooltype,stylus);
+    PRINT(mir_touch_tooltype,unknown);
     default:
         return out << static_cast<int>(type) << "<INVALID>";
     }
@@ -93,11 +93,11 @@ std::ostream& mir::operator<<(std::ostream& out, MirPointerAction action)
 {
     switch (action)
     {
-    CASE(mir_pointer_action,button_up);
-    CASE(mir_pointer_action,button_down);
-    CASE(mir_pointer_action,enter);
-    CASE(mir_pointer_action,leave);
-    CASE(mir_pointer_action,motion);
+    PRINT(mir_pointer_action,button_up);
+    PRINT(mir_pointer_action,button_down);
+    PRINT(mir_pointer_action,enter);
+    PRINT(mir_pointer_action,leave);
+    PRINT(mir_pointer_action,motion);
     default:
         return out << static_cast<int>(action) << "<INVALID>";
     }
@@ -107,9 +107,9 @@ std::ostream& mir::operator<<(std::ostream& out, MirPromptSessionState state)
 {
     switch (state)
     {
-    CASE(mir_prompt_session_state,started);
-    CASE(mir_prompt_session_state,stopped);
-    CASE(mir_prompt_session_state,suspended);
+    PRINT(mir_prompt_session_state,started);
+    PRINT(mir_prompt_session_state,stopped);
+    PRINT(mir_prompt_session_state,suspended);
     default:
         return out << static_cast<int>(state) << "<INVALID>";
     }
@@ -119,10 +119,10 @@ std::ostream& mir::operator<<(std::ostream& out, MirOrientation orientation)
 {
     switch (orientation)
     {
-    CASE(mir_orientation,right);
-    CASE(mir_orientation,inverted);
-    CASE(mir_orientation,left);
-    CASE(mir_orientation,normal);
+    PRINT(mir_orientation,right);
+    PRINT(mir_orientation,inverted);
+    PRINT(mir_orientation,left);
+    PRINT(mir_orientation,normal);
     default:
         return out << static_cast<int>(orientation) << "<INVALID>";
     }
@@ -132,13 +132,13 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceAttrib attribute)
 {
     switch (attribute)
     {
-    CASE(mir_surface_attrib,type);
-    CASE(mir_surface_attrib,dpi);
-    CASE(mir_surface_attrib,focus);
-    CASE(mir_surface_attrib,state);
-    CASE(mir_surface_attrib,visibility);
-    CASE(mir_surface_attrib,swapinterval);
-    CASE(mir_surface_attrib,preferred_orientation);
+    PRINT(mir_surface_attrib,type);
+    PRINT(mir_surface_attrib,dpi);
+    PRINT(mir_surface_attrib,focus);
+    PRINT(mir_surface_attrib,state);
+    PRINT(mir_surface_attrib,visibility);
+    PRINT(mir_surface_attrib,swapinterval);
+    PRINT(mir_surface_attrib,preferred_orientation);
     default:
         return out << static_cast<int>(attribute) << "<INVALID>";
     }
@@ -148,8 +148,8 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceFocusState state)
 {
     switch (state)
     {
-    CASE(mir_surface,focused);
-    CASE(mir_surface,unfocused);
+    PRINT(mir_surface,focused);
+    PRINT(mir_surface,unfocused);
     default:
         return out << static_cast<int>(state) << "<INVALID>";
     }
@@ -159,8 +159,8 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceVisibility state)
 {
     switch (state)
     {
-    CASE(mir_surface_visibility,exposed);
-    CASE(mir_surface_visibility,occluded);
+    PRINT(mir_surface_visibility,exposed);
+    PRINT(mir_surface_visibility,occluded);
     default:
         return out << static_cast<int>(state) << "<INVALID>";
     }
@@ -170,15 +170,15 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceType type)
 {
     switch (type)
     {
-    CASE(mir_surface_type,normal);
-    CASE(mir_surface_type,utility);
-    CASE(mir_surface_type,dialog);
-    CASE(mir_surface_type,gloss);
-    CASE(mir_surface_type,freestyle);
-    CASE(mir_surface_type,menu);
-    CASE(mir_surface_type,inputmethod);
-    CASE(mir_surface_type,satellite);
-    CASE(mir_surface_type,tip);
+    PRINT(mir_surface_type,normal);
+    PRINT(mir_surface_type,utility);
+    PRINT(mir_surface_type,dialog);
+    PRINT(mir_surface_type,gloss);
+    PRINT(mir_surface_type,freestyle);
+    PRINT(mir_surface_type,menu);
+    PRINT(mir_surface_type,inputmethod);
+    PRINT(mir_surface_type,satellite);
+    PRINT(mir_surface_type,tip);
     default:
         return out << static_cast<int>(type) << "<INVALID>";
     }
@@ -188,18 +188,20 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceState state)
 {
     switch (state)
     {
-    CASE(mir_surface_state,unknown);
-    CASE(mir_surface_state,restored);
-    CASE(mir_surface_state,minimized);
-    CASE(mir_surface_state,maximized);
-    CASE(mir_surface_state,vertmaximized);
-    CASE(mir_surface_state,fullscreen);
-    CASE(mir_surface_state,horizmaximized);
-    CASE(mir_surface_state,hidden);
+    PRINT(mir_surface_state,unknown);
+    PRINT(mir_surface_state,restored);
+    PRINT(mir_surface_state,minimized);
+    PRINT(mir_surface_state,maximized);
+    PRINT(mir_surface_state,vertmaximized);
+    PRINT(mir_surface_state,fullscreen);
+    PRINT(mir_surface_state,horizmaximized);
+    PRINT(mir_surface_state,hidden);
     default:
         return out << static_cast<int>(state) << "<INVALID>";
     }
 }
+
+#undef PRINT
 
 std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
 {
@@ -324,19 +326,19 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceEvent const& event)
     return out << ')';
 }
 
-#define CASE_EVENT(type) case mir_event_type_ ## type : return out << *mir_event_get_ ## type ## _event(&event);
+#define PRINT_EVENT(type) case mir_event_type_ ## type : return out << *mir_event_get_ ## type ## _event(&event);
 
 std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
 {
     auto type = mir_event_get_type(&event);
     switch (type)
     {
-        CASE_EVENT(surface);
-        CASE_EVENT(resize);
-        CASE_EVENT(orientation);
-        CASE_EVENT(close_surface);
-        CASE_EVENT(input);
-        CASE_EVENT(keymap);
+        PRINT_EVENT(surface);
+        PRINT_EVENT(resize);
+        PRINT_EVENT(orientation);
+        PRINT_EVENT(close_surface);
+        PRINT_EVENT(input);
+        PRINT_EVENT(keymap);
     case mir_event_type_prompt_session_state_change:
         return out << *mir_event_get_prompt_session_event(&event);
     default:
