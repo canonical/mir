@@ -138,7 +138,7 @@ mc::BufferQueue::BufferQueue(
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
-      client_keeping_up{true},
+      client_missed_a_frame{false},
       current_compositor_buffer_valid{false},
       the_properties{props},
       force_new_compositor_buffer{false},
@@ -178,22 +178,27 @@ mc::BufferQueue::BufferQueue(
         std::make_shared<BufferQueue::LockableCallback>(this));
 }
 
+bool mc::BufferQueue::client_ahead_of_compositor() const
+{
+    return nbuffers > 1 &&
+           !frame_dropping_enabled &&
+           !client_missed_a_frame &&
+           !ready_to_composite_queue.empty();
+}
+
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
 {
     std::unique_lock<decltype(guard)> lock(guard);
 
     pending_client_notifications.push_back(std::move(complete));
 
-    // A fast client with swap interval one that is also known to be keeping up
-    // and has already provided at least one new frame not yet on screen does
-    // not need to get ahead of the compositor. So throttle it to 2 buffers.
-    /*
-    if (!frame_dropping_enabled &&
-        !force_new_compositor_buffer &&
-        client_keeping_up &&
-        !ready_to_composite_queue.empty())
+    // Fast clients with swap interval == 1 that are keeping up with the
+    // compositor can be further throttled to only use two buffers, so that
+    // their latency is minimized...
+
+    if (client_ahead_of_compositor())
         return;
-    */
+
     if (!free_buffers.empty())
     {
         auto const buffer = free_buffers.back();
@@ -251,14 +256,17 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     std::unique_lock<decltype(guard)> lock(guard);
 
     bool use_current_buffer = false;
-    if (!is_a_current_buffer_user(user_id))
+    if (is_a_current_buffer_user(user_id))   // Primary/fastest display
+    {
+        client_missed_a_frame = ready_to_composite_queue.empty();
+    }
+    else   // Second and subsequent displays sync to the primary one
     {
         use_current_buffer = true;
         current_buffer_users.push_back(user_id);
     }
 
-    client_keeping_up = !ready_to_composite_queue.empty();
-    if (!client_keeping_up)
+    if (ready_to_composite_queue.empty())
     {
         use_current_buffer = true;
     }
@@ -393,7 +401,7 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
     }
 
     /*
-     * Intentionally schedule one more buffer than we need, and for good
+     * Intentionally schedule one more frame than we need, and for good
      * reason... If the compositor is only waking up as often as the client
      * and the client is only producing half frame rate then the compositor
      * would never be able know that's too slow (because we never measure
@@ -402,7 +410,7 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
      * full frame rate (providing the client can at least keep up with half
      * frame rate) and on at least every second frame can detect which clients
      * are failing to keep up, and so we can adjust their queues accordingly.
-     * See "client_keeping_up" in compositor_acquire.
+     * See "client_missed_a_frame" in compositor_acquire.
      */
     if (count)
         ++count;
@@ -493,10 +501,7 @@ void mc::BufferQueue::release(
     if (pending)
         framedrop_policy->swap_unblocked();
 
-    if (pending /*&&
-        (frame_dropping_enabled ||
-         !client_keeping_up ||
-         ready_to_composite_queue.empty())*/)
+    if (pending && !client_ahead_of_compositor())
     {
         give_buffer_to_client(buffer, lock);
     }

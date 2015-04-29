@@ -94,9 +94,11 @@ private:
 
     std::deque<Callback> pending_client_notifications;
 
+    bool client_ahead_of_compositor() const;
+
     int nbuffers;
     bool frame_dropping_enabled;
-    bool client_keeping_up;
+    bool client_missed_a_frame;
     bool current_compositor_buffer_valid;
     graphics::BufferProperties the_properties;
     bool force_new_compositor_buffer;
