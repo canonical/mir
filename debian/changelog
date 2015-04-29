@@ -47,7 +47,7 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
       . Rework to reduce "abstractio leaks" in the graphics platform
       . Add thread sanitizer build option
       . Update KVM Instructions
-      . Update CMAKE to fix use CMAKE_*_OUTPUT_DIRECTORY
+      . Update CMAKE to use CMAKE_*_OUTPUT_DIRECTORY
       . TODO: mention more enhancements
     - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8
