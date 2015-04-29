@@ -402,15 +402,14 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
 
     /*
      * Intentionally schedule one more frame than we need, and for good
-     * reason... If the compositor is only waking up as often as the client
+     * reason... If the compositor is only waking up as often as the client,
      * and the client is only producing half frame rate then the compositor
-     * would never be able know that's too slow (because we never measure
-     * timings, just compare production to consumption proportions). If
-     * however we over-schedule by one frame the compositor will wake up at
-     * full frame rate (providing the client can at least keep up with half
+     * would never know that's not fast enough.
+     *  If however we over-schedule by one frame the compositor will wake up
+     * at full frame rate (providing the client can at least keep up with half
      * frame rate) and on at least every second frame can detect which clients
-     * are failing to keep up, and so we can adjust their queues accordingly.
-     * See "client_missed_a_frame" in compositor_acquire.
+     * are failing to keep up, and so we can adjust their queues accordingly
+     * to better help them keep up. See also "client_ahead_of_compositor".
      */
     if (count)
         ++count;
