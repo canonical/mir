@@ -41,6 +41,19 @@ namespace
 {
 const int64_t device_id_unknown = 0;
 
+MirPointerButton to_pointer_button(int button)
+{
+    switch(button)
+    {
+    case BTN_LEFT: return mir_pointer_button_primary;
+    case BTN_RIGHT: return mir_pointer_button_secondary;
+    case BTN_MIDDLE: return mir_pointer_button_tertiary;
+    case BTN_BACK: return mir_pointer_button_back;
+    case BTN_FORWARD: return mir_pointer_button_forward;
+    }
+    BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mouse button"));
+}
+
 uint32_t to_modifier(int32_t scan_code)
 {
     switch(scan_code)
@@ -162,7 +175,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
 {
     int64_t event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
                              std::chrono::system_clock::now().time_since_epoch()).count();
-    auto action = update_buttons(button.action, button.button);
+    auto action = update_buttons(button.action, to_pointer_button(button.button));
     auto event_modifiers = expand_modifier(modifiers);
     auto button_event = mir::events::make_event(device_id_unknown,
                                                 event_time,
@@ -179,16 +192,16 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
     sink->handle_input(*button_event);
 }
 
-MirPointerAction mtf::FakeInputDeviceImpl::InputDevice::update_buttons(synthesis::EventAction action, int button)
+MirPointerAction mtf::FakeInputDeviceImpl::InputDevice::update_buttons(synthesis::EventAction action, MirPointerButton button)
 {
     if (action == synthesis::EventAction::Down)
     {
-        buttons.push_back(static_cast<MirPointerButton>(button));
+        buttons.push_back(button);
         return mir_pointer_action_button_down;
     }
     else
     {
-        buttons.erase(remove(begin(buttons), end(buttons), static_cast<MirPointerButton>(button)));
+        buttons.erase(remove(begin(buttons), end(buttons), button));
         return mir_pointer_action_button_up;
     }
 }

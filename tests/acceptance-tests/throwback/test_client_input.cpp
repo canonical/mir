@@ -29,6 +29,7 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/fake_event_hub_server_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
+#include "mir_test_framework/placement_applying_shell.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/event_matchers.h"
@@ -141,35 +142,6 @@ struct InputClient
     MirSurface* surface;
 };
 
-using ClientInputRegions = std::map<std::string, std::vector<geom::Rectangle>>;
-
-struct RegionApplyingShell : msh::ShellWrapper
-{
-    RegionApplyingShell(
-        std::shared_ptr<msh::Shell> wrapped_coordinator,
-        ClientInputRegions const& client_input_regions)
-        : msh::ShellWrapper(wrapped_coordinator),
-          client_input_regions(client_input_regions)
-    {
-    }
-
-    mf::SurfaceId create_surface(
-        std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& params) override
-    {
-        auto const id = wrapped->create_surface(session, params);
-
-        auto const surface = session->surface(id);
-
-        if (client_input_regions.find(params.name) != client_input_regions.end())
-            surface->set_input_region(client_input_regions.at(params.name));
-
-        return id;
-    }
-
-    ClientInputRegions const& client_input_regions;
-};
-
 struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
 {
     TestServerConfiguration(geom::Rectangle const& screen_geometry)
@@ -188,14 +160,16 @@ struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
     std::shared_ptr<msh::Shell>
     wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) override
     {
-        return std::make_shared<RegionApplyingShell>(
+        return std::make_shared<mtf::PlacementApplyingShell>(
             wrapped,
-            client_input_regions);
+            client_input_regions, positions, depths);
     }
 
     mtf::SurfaceGeometries client_geometries;
     mtf::SurfaceDepths client_depths;
-    ClientInputRegions client_input_regions;
+    mtf::ClientInputRegions client_input_regions;
+    mtf::ClientDepths depths;
+    mtf::ClientPositions positions;
 };
 
 struct TestClientInput : mtf::InProcessServer

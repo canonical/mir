@@ -67,7 +67,7 @@ private:
         }
 
     private:
-        MirPointerAction update_buttons(synthesis::EventAction action, int button);
+        MirPointerAction update_buttons(synthesis::EventAction action, MirPointerButton button);
         void update_position(int rel_x, int rel_y);
         void map_touch_coordinates(int& x, int& y);
 
