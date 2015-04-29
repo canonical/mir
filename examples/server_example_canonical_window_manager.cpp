@@ -513,37 +513,27 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
             }
         }
     }
-    else if (action == mir_keyboard_action_down && scan_code == KEY_TAB)
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_TAB)
     {
-        switch (modifiers)
-        {
-        case mir_input_event_modifier_alt:
-            tools->focus_next_session();
-            if (auto const surface = tools->focused_surface())
-                select_active_surface(surface);
+        tools->focus_next_session();
+        if (auto const surface = tools->focused_surface())
+            select_active_surface(surface);
 
-            return true;
-
-        default:
-            break;
-        }
+        return true;
     }
-    else if (action == mir_keyboard_action_down && scan_code == KEY_GRAVE)
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_GRAVE)
     {
-        switch (modifiers)
+        if (auto const prev = tools->focused_surface())
         {
-        case mir_input_event_modifier_alt:
-            if (auto const prev = tools->focused_surface())
-            {
-                if (auto const app = tools->focused_session())
-                    select_active_surface(app->surface_after(prev));
-            }
-
-            return true;
-
-        default:
-            break;
+            if (auto const app = tools->focused_session())
+                select_active_surface(app->surface_after(prev));
         }
+
+        return true;
     }
 
     return false;
