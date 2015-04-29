@@ -23,9 +23,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/surface_observers.h"
 
-
 #include <mutex>
-#include <set>
 
 namespace mir
 {
