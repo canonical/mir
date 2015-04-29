@@ -69,7 +69,6 @@ protected:
     BufferStreamSurfaces& operator=(const BufferStreamSurfaces&) = delete;
 
 private:
-
     std::mutex mutable mutex;
     std::shared_ptr<BufferBundle> const buffer_bundle;
     scene::SurfaceObservers observers;
