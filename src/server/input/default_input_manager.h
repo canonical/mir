@@ -25,6 +25,13 @@
 #include <thread>
 #include <atomic>
 
+// TODO after turning into a platform
+namespace android
+{
+class InputReaderInterface;
+class EventHubInterface;
+}
+namespace droidinput = android;
 namespace mir
 {
 namespace dispatch
@@ -35,6 +42,10 @@ class ActionQueue;
 }
 namespace input
 {
+namespace android
+{
+class InputReaderDispatchable;
+}
 class Platform;
 class InputEventHandlerRegister;
 class InputDeviceRegistry;
@@ -42,7 +53,9 @@ class InputDeviceRegistry;
 class DefaultInputManager : public InputManager
 {
 public:
-    DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer);
+    DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+                        std::shared_ptr<droidinput::InputReaderInterface> const& reader,
+                        std::shared_ptr<droidinput::EventHubInterface> const& event_hub);
     ~DefaultInputManager();
     void add_platform(std::shared_ptr<Platform> const& platform) override;
     void start() override;
@@ -50,6 +63,7 @@ public:
 private:
     std::vector<std::shared_ptr<Platform>> platforms;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
+    std::shared_ptr<input::android::InputReaderDispatchable> const legacy_dispatchable;
     std::shared_ptr<dispatch::ActionQueue> const queue;
     std::unique_ptr<dispatch::SimpleDispatchThread> input_thread;
 

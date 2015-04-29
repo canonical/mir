@@ -889,8 +889,8 @@ size_t EventHub::getEvents(RawEvent* buffer, size_t bufferSize) {
         mLock.unlock(); // release lock before poll, must be before release_wake_lock
         release_wake_lock(WAKE_LOCK_ID);
 
-        // blocking wait timeout is handled through timer fd
-        int pollResult = epoll_wait(mEpollFd, mPendingEventItems, EPOLL_MAX_EVENTS, -1);
+        // non blocking call to epoll_wait - blocking happens in dispatch threads
+        int pollResult = epoll_wait(mEpollFd, mPendingEventItems, EPOLL_MAX_EVENTS, 0);
 
         acquire_wake_lock(PARTIAL_WAKE_LOCK, WAKE_LOCK_ID);
         mLock.lock(); // reacquire lock after poll, must be after acquire_wake_lock
