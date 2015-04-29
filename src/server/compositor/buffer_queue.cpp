@@ -137,8 +137,8 @@ mc::BufferQueue::BufferQueue(
     graphics::BufferProperties const& props,
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
+      frame_deadlines_met{0}, // start pessimistically for max smoothness
       frame_dropping_enabled{false},
-      client_missed_a_frame{true}, // start pessimistically for max smoothness
       current_compositor_buffer_valid{false},
       the_properties{props},
       force_new_compositor_buffer{false},
@@ -182,7 +182,7 @@ bool mc::BufferQueue::client_ahead_of_compositor() const
 {
     return nbuffers > 1 &&
            !frame_dropping_enabled &&
-           !client_missed_a_frame &&
+           frame_deadlines_met >= nbuffers &&
            !ready_to_composite_queue.empty();
 }
 
@@ -258,7 +258,10 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     bool use_current_buffer = false;
     if (is_a_current_buffer_user(user_id))   // Primary/fastest display
     {
-        client_missed_a_frame = ready_to_composite_queue.empty();
+        if (ready_to_composite_queue.empty())
+            frame_deadlines_met = 0;
+        else
+            ++frame_deadlines_met;
     }
     else   // Second and subsequent displays sync to the primary one
     {

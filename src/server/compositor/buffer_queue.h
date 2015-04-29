@@ -97,8 +97,8 @@ private:
     bool client_ahead_of_compositor() const;
 
     int nbuffers;
+    int frame_deadlines_met;
     bool frame_dropping_enabled;
-    bool client_missed_a_frame;
     bool current_compositor_buffer_valid;
     graphics::BufferProperties the_properties;
     bool force_new_compositor_buffer;
