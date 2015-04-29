@@ -40,9 +40,6 @@ public:
     BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& swapper);
     ~BufferStreamSurfaces();
 
-    void acquire_client_buffer(std::function<void(graphics::Buffer* buffer)> complete);
-    void release_client_buffer(graphics::Buffer* buf);
-
     //from mf::BufferStream
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
@@ -51,6 +48,9 @@ public:
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
 
     //from mc::BufferStream
+    void acquire_client_buffer(std::function<void(graphics::Buffer* buffer)> complete);
+    void release_client_buffer(graphics::Buffer* buf);
+
     std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(void const* user_id) override;
     std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override;
