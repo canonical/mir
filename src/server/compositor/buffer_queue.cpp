@@ -498,13 +498,9 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
-    bool pending = !pending_client_notifications.empty();
-
-    if (pending)
-        framedrop_policy->swap_unblocked();
-
-    if (pending && !client_ahead_of_compositor())
+    if (!pending_client_notifications.empty() && !client_ahead_of_compositor())
     {
+        framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, lock);
     }
     else if (!frame_dropping_enabled && buffers.size() > size_t(nbuffers))
