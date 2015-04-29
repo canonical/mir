@@ -1393,8 +1393,14 @@ TEST_F(BufferQueueTest, buffers_ready_eventually_reaches_zero)
         // Consume
         for (int m = 0; m < nmonitors; ++m)
         {
-            ASSERT_EQ(1, q.buffers_ready_for_compositor(&monitor[m]));
+            ASSERT_NE(0, q.buffers_ready_for_compositor(&monitor[m]));
+
+            // Double consume to account for the +1 that
+            // buffers_ready_for_compositor adds to do dynamic performance
+            // detection.
             q.compositor_release(q.compositor_acquire(&monitor[m]));
+            q.compositor_release(q.compositor_acquire(&monitor[m]));
+
             ASSERT_EQ(0, q.buffers_ready_for_compositor(&monitor[m]));
         }
     }

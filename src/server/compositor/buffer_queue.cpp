@@ -184,9 +184,16 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
 
     pending_client_notifications.push_back(std::move(complete));
 
-    if (client_keeping_up && !ready_to_composite_queue.empty())
+    // A fast client with swap interval one that is also known to be keeping up
+    // and has already provided at least one new frame not yet on screen does
+    // not need to get ahead of the compositor. So throttle it to 2 buffers.
+    /*
+    if (!frame_dropping_enabled &&
+        !force_new_compositor_buffer &&
+        client_keeping_up &&
+        !ready_to_composite_queue.empty())
         return;
-
+    */
     if (!free_buffers.empty())
     {
         auto const buffer = free_buffers.back();
@@ -195,10 +202,6 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
         return;
     }
 
-    /* No empty buffers, attempt allocating more
-     * TODO: need a good heuristic to switch
-     * between double-buffering to n-buffering
-     */
     int const allocated_buffers = buffers.size();
     if (allocated_buffers < nbuffers)
     {
@@ -485,10 +488,16 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
-    if (!pending_client_notifications.empty() &&
-        ready_to_composite_queue.empty())
-    {
+    bool pending = !pending_client_notifications.empty();
+
+    if (pending)
         framedrop_policy->swap_unblocked();
+
+    if (pending /*&&
+        (frame_dropping_enabled ||
+         !client_keeping_up ||
+         ready_to_composite_queue.empty())*/)
+    {
         give_buffer_to_client(buffer, lock);
     }
     else if (!frame_dropping_enabled && buffers.size() > size_t(nbuffers))
