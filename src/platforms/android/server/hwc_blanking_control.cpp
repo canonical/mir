@@ -259,7 +259,7 @@ void mga::HwcPowerModeControl::power_mode(DisplayName display_name, MirPowerMode
             mode = PowerMode::off;
             break;
         default:
-            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid power mode"));
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid power mode"));
     }
     hwc_device->power_mode(display_name, mode);
 }
