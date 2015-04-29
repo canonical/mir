@@ -227,7 +227,7 @@ mir::geometry::Size ms::BasicSurface::client_size() const
 
 MirPixelFormat ms::BasicSurface::pixel_format() const
 {
-    return surface_buffer_stream->get_stream_pixel_format();
+    return surface_buffer_stream->pixel_format();
 }
 
 std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
@@ -387,7 +387,7 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
 void ms::BasicSurface::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
 {
-    surface_buffer_stream->with_most_recent_buffer_do(exec);
+    exec(*surface_buffer_stream->lock_snapshot_buffer());
 }
 
 
@@ -660,10 +660,7 @@ struct CursorStreamImageAdapter
 
     void post_cursor_image_from_current_buffer()
     {
-        stream->with_most_recent_buffer_do([&](mg::Buffer &buffer)
-            {
-                surface.set_cursor_from_buffer(buffer, hotspot);
-            });
+        surface.set_cursor_from_buffer(*stream->lock_snapshot_buffer(), hotspot);
     }
 
     ms::BasicSurface &surface;

@@ -742,3 +742,10 @@ TEST_F(BasicSurfaceTest, notifies_of_rename)
 
     surface.rename("Steve");
 }
+
+TEST_F(BasicSurfaceTest, with_most_recent_buffer_do_uses_compositor_buffer)
+{
+    EXPECT_CALL(*mock_buffer_stream, lock_snapshot_buffer())
+        .WillOnce(testing::Return(nullptr));
+    surface.with_most_recent_buffer_do([&](mg::Buffer&){});
+}

@@ -40,23 +40,21 @@ public:
     BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& swapper);
     ~BufferStreamSurfaces();
 
+    void acquire_client_buffer(std::function<void(graphics::Buffer* buffer)> complete);
+    void release_client_buffer(graphics::Buffer* buf);
+
     //from mf::BufferStream
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
-    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec) override;
     MirPixelFormat pixel_format() const override;
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
 
     //from mc::BufferStream
-    void acquire_client_buffer(std::function<void(graphics::Buffer* buffer)> complete) override;
-    void release_client_buffer(graphics::Buffer* buf) override;
-
     std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(void const* user_id) override;
     std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override;
 
-    MirPixelFormat get_stream_pixel_format() override;
     geometry::Size stream_size() override;
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;
@@ -71,6 +69,7 @@ protected:
     BufferStreamSurfaces& operator=(const BufferStreamSurfaces&) = delete;
 
 private:
+
     std::mutex mutable mutex;
     std::shared_ptr<BufferBundle> const buffer_bundle;
     scene::SurfaceObservers observers;

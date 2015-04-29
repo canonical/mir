@@ -61,11 +61,6 @@ void mc::BufferStreamSurfaces::release_client_buffer(graphics::Buffer* buf)
     buffer_bundle->client_release(buf);
 }
 
-MirPixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()
-{
-    return buffer_bundle->properties().format;
-}
-
 geom::Size mc::BufferStreamSurfaces::stream_size()
 {
     return buffer_bundle->properties().size;
@@ -127,11 +122,6 @@ bool mc::BufferStreamSurfaces::has_submitted_buffer() const
 {
     std::unique_lock<std::mutex> lk(mutex);
     return first_frame_posted;
-}
-
-void mc::BufferStreamSurfaces::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
-{
-    exec(*lock_snapshot_buffer());
 }
 
 MirPixelFormat mc::BufferStreamSurfaces::pixel_format() const
