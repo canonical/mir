@@ -21,6 +21,7 @@
 
 #include <mir/compositor/buffer_stream.h>
 #include <mir_test_doubles/stub_buffer.h>
+#include "mir_test/current_thread_name.h"
 
 namespace mir
 {
@@ -46,6 +47,7 @@ public:
 
     std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override
     {
+        thread_name = current_thread_name();
         return stub_compositor_buffer;
     }
 
@@ -84,6 +86,7 @@ public:
     StubBuffer stub_client_buffer;
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
     int nready = 0;
+    std::string thread_name;
 };
 
 }
