@@ -138,7 +138,7 @@ mc::BufferQueue::BufferQueue(
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
-      client_missed_a_frame{false},
+      client_missed_a_frame{true}, // start pessimistically for max smoothness
       current_compositor_buffer_valid{false},
       the_properties{props},
       force_new_compositor_buffer{false},
