@@ -161,7 +161,7 @@ auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::S
     return store->insert_or_retrieve(surface);
 }
 
-std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(Id const& id)
+std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(Id const& id) const
 {
     auto uuid = dynamic_cast<UUID const*>(&id);
     if (uuid != nullptr)
