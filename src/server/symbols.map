@@ -581,6 +581,7 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_message_processor_report*;
     mir::DefaultServerConfiguration::the_new_input_manager*;
     mir::DefaultServerConfiguration::the_options*;
+    mir::DefaultServerConfiguration::the_persistent_surface_store*;
     mir::DefaultServerConfiguration::the_pixel_buffer*;
     mir::DefaultServerConfiguration::the_placement_strategy*;
     mir::DefaultServerConfiguration::the_prompt_connection_creator*;

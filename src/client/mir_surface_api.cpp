@@ -657,22 +657,32 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surfac
     return surface->request_persistent_id(callback, context);
 }
 
+namespace
+{
+void assign_surface_id_result(MirSurface*, MirSurfaceId* id, void* context)
+{
+    void** result_ptr = reinterpret_cast<void**>(context);
+    *result_ptr = id;
+}
+}
+
 MirSurfaceId* mir_surface_request_persistent_id_sync(MirSurface* surface)
 {
     mir::require(mir_surface_is_valid(surface));
 
     MirSurfaceId* result = nullptr;
     mir_wait_for(mir_surface_request_persistent_id(surface,
-                                                   reinterpret_cast<mir_surface_id_callback>(assign_result),
+                                                   &assign_surface_id_result,
                                                    &result));
     return result;
 }
 
-bool mir_surface_id_is_valid(MirSurfaceId* /*id*/)
+bool mir_surface_id_is_valid(MirSurfaceId* id)
 {
-    return false;
+    return id != nullptr;
 }
 
-void mir_surface_id_release(MirSurfaceId* /*id*/)
+void mir_surface_id_release(MirSurfaceId* id)
 {
+    delete id;
 }

@@ -17,6 +17,7 @@
  */
 
 #include "frontend_shell.h"
+#include "mir/shell/persistent_surface_store.h"
 #include "mir/shell/shell.h"
 
 #include "mir/scene/session.h"
@@ -87,11 +88,21 @@ void msh::FrontendShell::modify_surface(std::shared_ptr<mf::Session> const& sess
     wrapped->modify_surface(scene_session, surface, modifications);
 }
 
+
 void msh::FrontendShell::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
     wrapped->destroy_surface(scene_session, surface);
 }
+
+std::vector<uint8_t> msh::FrontendShell::persistent_id_for(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface_id)
+{
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    auto const surface = scene_session->surface(surface_id);
+
+    return surface_store->serialise_id(surface_store->id_for_surface(surface));
+}
+
 
 int msh::FrontendShell::set_surface_attribute(
     std::shared_ptr<mf::Session> const& session,

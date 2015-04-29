@@ -231,6 +231,7 @@ void MirSurface::acquired_persistent_id(mir_surface_id_callback callback, void* 
     {
         callback(this, nullptr, context);
     }
+    persistent_id_wait_handle.result_received();
 }
 
 MirWaitHandle* MirSurface::request_persistent_id(mir_surface_id_callback callback, void* context)
