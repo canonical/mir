@@ -265,8 +265,6 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         force_new_compositor_buffer = false;
     }
 
-    fprintf(stderr, "Keeping up: %s\n", client_keeping_up?"Y":"n");
-
     mg::Buffer* buffer_to_release = nullptr;
     if (!use_current_buffer)
     {
