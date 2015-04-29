@@ -20,7 +20,6 @@
 #include "buffer_stream_surfaces.h"
 #include "buffer_bundle.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir/scene/surface_observer.h"
 
 #include "temporary_buffers.h"
 
@@ -118,8 +117,7 @@ void mc::BufferStreamSurfaces::swap_buffers(
          *       The new method of catching up on buffer backlogs is to
          *       query buffers_ready_for_compositor() or Scene::frames_pending
          */
-        for(auto& observer : observers)
-            observer->frame_posted(1);
+        observers.frame_posted(1);
     }
 
     acquire_client_buffer(complete);
@@ -143,12 +141,11 @@ MirPixelFormat mc::BufferStreamSurfaces::pixel_format() const
 
 void mc::BufferStreamSurfaces::add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer)
 {
-    observers.insert(observer);
+    observers.add(observer);
 }
 
-void mc::BufferStreamSurfaces::remove_observer(std::weak_ptr<scene::SurfaceObserver> const& weak_observer)
+void mc::BufferStreamSurfaces::remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer)
 {
-    auto it = observers.find(weak_observer.lock());
-    if (it != observers.end())
-        observers.erase(it);
+    if (auto o = observer.lock())
+        observers.remove(o);
 }
