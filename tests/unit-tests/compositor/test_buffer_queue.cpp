@@ -299,7 +299,7 @@ TEST_F(BufferQueueTest, client_can_acquire_buffers)
 }
 
 /* Regression test for LP: #1315302 */
-TEST_F(BufferQueueTest, DISABLED_clients_can_have_multiple_pending_completions)
+TEST_F(BufferQueueTest, clients_can_have_multiple_pending_completions)
 {
     int const nbuffers = 3;
     mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
@@ -927,7 +927,11 @@ TEST_F(BufferQueueTest, client_framerate_matches_compositor)
     }
 }
 
-/* Regression test LP: #1241369 / LP: #1241371 */
+/*
+ * Regression test LP: #1241369 / LP: #1241371
+ * Please try not to modify this test. On several occasions it has proven to
+ * be smarter than the person modifying it (including me).
+ */
 TEST_F(BufferQueueTest, slow_client_framerate_matches_compositor)
 {
     /* BufferQueue can only satify this for nbuffers >= 3
