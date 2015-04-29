@@ -323,7 +323,6 @@ TEST_F(BufferQueueTest, clients_can_have_multiple_pending_completions)
         q.compositor_release(q.compositor_acquire(this));
 
     EXPECT_THAT(handle1->has_acquired_buffer(), Eq(true));
-    // FIXME: failing:
     EXPECT_THAT(handle2->has_acquired_buffer(), Eq(true));
     EXPECT_THAT(handle1->buffer(), Ne(handle2->buffer()));
 
@@ -927,11 +926,7 @@ TEST_F(BufferQueueTest, client_framerate_matches_compositor)
     }
 }
 
-/*
- * Regression test LP: #1241369 / LP: #1241371
- * Please try not to modify this test. On several occasions it has proven to
- * be smarter than the person modifying it (including me).
- */
+/* Regression test LP: #1241369 / LP: #1241371 */
 TEST_F(BufferQueueTest, slow_client_framerate_matches_compositor)
 {
     /* BufferQueue can only satify this for nbuffers >= 3
@@ -1213,8 +1208,7 @@ TEST_F(BufferQueueTest, partially_composited_client_swaps_when_policy_triggered)
                           basic_properties,
                           policy_factory);
 
-        int prefill = q.buffers_free_for_client();
-        for (int i = 0; i < prefill; i++)
+        for (int i = 0; i < max_ownable_buffers(nbuffers); i++)
         {
             auto client = client_acquire_sync(q);
             q.client_release(client);
@@ -1224,9 +1218,12 @@ TEST_F(BufferQueueTest, partially_composited_client_swaps_when_policy_triggered)
         auto first_swap = client_acquire_async(q);
         auto second_swap = client_acquire_async(q);
 
-        while (!first_swap->has_acquired_buffer())
-            q.compositor_release(q.compositor_acquire(nullptr));
+        ASSERT_FALSE(first_swap->has_acquired_buffer());
+        ASSERT_FALSE(second_swap->has_acquired_buffer());
 
+        q.compositor_acquire(nullptr);
+
+        EXPECT_TRUE(first_swap->has_acquired_buffer());
         EXPECT_FALSE(second_swap->has_acquired_buffer());
 
         /* We have to release a client buffer here; framedropping or not,
