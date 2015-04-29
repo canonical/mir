@@ -68,7 +68,7 @@ extern "C" std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::Clie
     MirPlatformPackage platform;
     context->populate_server_package(platform);
 
-    if (platform.data_items != 0 || platform.fd_items != 0)
+    if (platform.data_items != 0 || platform.fd_items != 1)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create X client platform on non-X server"}));
     }

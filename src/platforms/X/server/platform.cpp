@@ -55,7 +55,7 @@ std::shared_ptr<mg::Display> mgx::Platform::create_display(
 std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
 {
     CALLED
-    return std::make_shared<mgx::IpcOperations>();
+    return std::make_shared<mgx::IpcOperations>(drm);
 }
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const

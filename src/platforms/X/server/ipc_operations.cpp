@@ -23,13 +23,16 @@
 #include "mir/graphics/platform_operation_message.h"
 #include "ipc_operations.h"
 #include "../debug.h"
+#include "display_helpers.h"
 
 #include <boost/throw_exception.hpp>
+#include <iostream>
 
 namespace mg = mir::graphics;
 namespace mgx = mg::X;
 
-mgx::IpcOperations::IpcOperations()
+mgx::IpcOperations::IpcOperations(std::shared_ptr<mgx::helpers::DRMHelper> const& drm)
+    : drm{drm}
 {
     CALLED
 }
@@ -73,5 +76,9 @@ mg::PlatformOperationMessage mgx::IpcOperations::platform_operation(
 std::shared_ptr<mg::PlatformIPCPackage> mgx::IpcOperations::connection_ipc_package()
 {
     CALLED
-    return std::make_shared<mg::PlatformIPCPackage>();
+    auto package = std::make_shared<mg::PlatformIPCPackage>();
+    package->ipc_fds.push_back(dup(drm->fd));
+
+    std::cerr << "*********************** SENDING fd: " << package->ipc_fds[0] << " *****************************" << std::endl;
+    return package;
 }
