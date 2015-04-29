@@ -265,7 +265,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         force_new_compositor_buffer = false;
     }
 
-    //fprintf(stderr, "Keeping up: %s\n", client_keeping_up?"Y":"n");
+    fprintf(stderr, "Keeping up: %s\n", client_keeping_up?"Y":"n");
 
     mg::Buffer* buffer_to_release = nullptr;
     if (!use_current_buffer)
@@ -390,6 +390,21 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
         // queue, but is the current_compositor_buffer, so count that too:
         ++count;
     }
+
+    /*
+     * Intentionally schedule one more buffer than we need, and for good
+     * reason... If the compositor is only waking up as often as the client
+     * and the client is only producing half frame rate then the compositor
+     * would never be able know that's too slow (because we never measure
+     * timings, just compare production to consumption proportions). If
+     * however we over-schedule by one frame the compositor will wake up at
+     * full frame rate (providing the client can at least keep up with half
+     * frame rate) and on at least every second frame can detect which clients
+     * are failing to keep up, and so we can adjust their queues accordingly.
+     * See "client_keeping_up" in compositor_acquire.
+     */
+    if (count)
+        ++count;
 
     return count;
 }
