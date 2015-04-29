@@ -919,17 +919,17 @@ TEST_F(SessionMediator, drm_auth_magic_calls_platform_operation_abstraction)
 TEST_F(SessionMediator, completes_exchange_buffer_when_completion_is_invoked_asynchronously_from_thread_that_initiated_exchange)
 {
     using namespace testing;
-    auto const& mock_surface = stubbed_session->mock_surface_at(mf::SurfaceId{0});
+    auto const& mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
     mtd::StubBuffer stub_buffer1;
     mtd::StubBuffer stub_buffer2;
     std::function<void(mg::Buffer*)> completion_func;
 
     // create
     InSequence seq;
-    EXPECT_CALL(*mock_surface, swap_buffers(_, _))
+    EXPECT_CALL(*mock_stream, swap_buffers(_, _))
         .WillOnce(InvokeArgument<1>(&stub_buffer1));
     // exchange, steal completion function
-    EXPECT_CALL(*mock_surface, swap_buffers(_,_))
+    EXPECT_CALL(*mock_stream, swap_buffers(_,_))
         .WillOnce(SaveArg<1>(&completion_func));
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
