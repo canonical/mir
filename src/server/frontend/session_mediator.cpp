@@ -590,6 +590,7 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
     mir::protobuf::BufferStreamParameters const* request,
     mir::protobuf::BufferStream* response,
     google::protobuf::Closure* done)
+try
 {
     auto lock = std::unique_lock<std::mutex>(session_mutex);
 
@@ -624,10 +625,14 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
             auto buffer = response->mutable_buffer();
             pack_protobuf_buffer(*buffer, client_buffer, msg_type);
 
+            printf("Done.\n");
             done->Run();
         });
 }
-
+catch(...)
+{
+    printf("THOW IN CRE\n");
+}
 void mf::SessionMediator::release_buffer_stream(google::protobuf::RpcController*,
     const mir::protobuf::BufferStreamId* request,
     mir::protobuf::Void*,
@@ -679,6 +684,7 @@ void mf::SessionMediator::configure_cursor(
     mir::protobuf::CursorSetting const* cursor_request,
     mir::protobuf::Void* /* void_response */,
     google::protobuf::Closure* done)
+try
 {
     {
         std::unique_lock<std::mutex> lock(session_mutex);
@@ -714,6 +720,10 @@ void mf::SessionMediator::configure_cursor(
         }
     }
     done->Run();
+}
+catch (...)
+{
+    printf("THROW\n");
 }
 
 void mf::SessionMediator::new_fds_for_prompt_providers(
