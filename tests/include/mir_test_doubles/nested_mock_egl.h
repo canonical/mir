@@ -32,7 +32,6 @@ class NestedMockEGL : public ::testing::NiceMock<MockEGL>
 {
 public:
     NestedMockEGL();
-    ~NestedMockEGL() = default;
 
 private:
     void egl_initialize(EGLint* major, EGLint* minor);
