@@ -204,7 +204,6 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Surface> const& surface,
     CanonicalSurfaceInfoMap& surface_info)
 {
-    tools->info_for(session).surfaces++;
     auto format = mir_pixel_format_xrgb_8888;
     ms::SurfaceCreationParameters params;
     params.of_size(titlebar_size_for_window(surface->size()))
@@ -374,12 +373,10 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
         }
     }
 
-
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        select_active_surface(tools->focused_surface());
     }
 }
 
