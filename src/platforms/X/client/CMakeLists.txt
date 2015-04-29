@@ -28,7 +28,7 @@ add_library(
 set_target_properties(
   mirclientplatformX PROPERTIES
   OUTPUT_NAME X
-  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/client-modules
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/client-modules
   PREFIX ""
   SUFFIX ".so.${MIR_CLIENT_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--version-script,${symbol_map}"
