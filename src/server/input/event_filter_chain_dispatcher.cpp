@@ -82,5 +82,5 @@ void mi::EventFilterChainDispatcher::start()
 
 void mi::EventFilterChainDispatcher::stop()
 {
-     next_dispatcher->start();   
+     next_dispatcher->stop();
 }

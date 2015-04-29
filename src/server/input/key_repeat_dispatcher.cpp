@@ -154,5 +154,5 @@ void mi::KeyRepeatDispatcher::stop()
         cancel_repeats_for_locked(lg, kv.first);
     }
         
-    next_dispatcher->start();   
+    next_dispatcher->stop();
 }
