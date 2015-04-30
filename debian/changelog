@@ -44,18 +44,54 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
         so that identifiers are shorter and less convoluted.
       . Drop libmirclient dependency on client-platform drivers
       . Drop libmirserver dependency on client-platform drivers
-      . Rework to reduce "abstractio leaks" in the graphics platform
+      . Use the ABI version in platform library names and packages
+      . Rework to reduce "abstraction leaks" in the graphics platform
       . Add thread sanitizer build option
       . Update KVM Instructions
       . Update CMAKE to use CMAKE_*_OUTPUT_DIRECTORY
-      . TODO: mention more enhancements
     - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8
       . Mircommon ABI bumped to 4
       . Mirplatform ABI bumped to 7
       . Mirserver ABI bumped to 31
     - Bug fixes:
-      . TODO: insert bug fix info at time of release.
+      . [android] Screencasting causes other clients to stop rendering
+        (LP: #1441759)
+      . [regression] mir_demo_standalone_render_surfaces fails to start on
+        krillin (LP: #1449198)
+      . Fullscreen bypassed clients stutter with double buffers when other
+        clients are running (LP: #1447896)
+      . Flickering showing stale buffers on Krillin (LP: #1444047)
+      . android reports that the gpu can only support 1 simultaneous output
+        (LP: #1446304)
+      . Exceptions thrown due to EGL failures don't include EGL error codes
+        (LP: #1444938)
+      . losing touches in arale when home button is pressed (LP: #1439285)
+      . [krillin] mirscreencast only creates a still picture, not a playable
+        movie (LP: #1439549)
+      . [regression] libmirclient crashes when calling
+        mir_surface_set_event_handler() twice (LP: #1438160)
+      . Dragging objects in a nested server or a client stutters slightly
+        (LP: #1436192)
+      . [regression] Client functions residing in libmircommon (LP: #1415321)
+      . Some protobuf Closure objects can access dead objects (LP: #1433330)
+      . DisplayConfigurationOutput.physical_size_mm is undefined/zero
+        (LP: #1430315)
+      . SessionMediator locks mutexes in one thread and unlocks them in another
+        (LP: #1427976)
+      . ProtobufResponder::send_response_result race (LP: #1428402)
+      . mir_demo_server doesn't emit hover_exit events (LP: #1418569)
+      . [regression] [multimonitor] Clients (sometimes) run at double frame
+        rate if overlapping two monitors (LP: #1420678)
+      . USC - mouse cursor on AMD graphics is drawing incorrectly
+        (LP: #1391975)/(LP: #1417581)
+      . [regression] Clients log verbose info on startup:
+        "Loader: Loading module: ..." (LP: #1414883)
+      . Nested display leaks its EGLContext (LP: #1418910)
+      . Compositing is triggered continously and needlessly when there are
+        occluded surfaces with available buffers (LP: #1418081)
+      . [regression] MIR_CLIENT_PERF_REPORT=log now shows "0" for the surface
+        name (LP: #1415305)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 12 Feb 2015 10:12:11 +0800
 
