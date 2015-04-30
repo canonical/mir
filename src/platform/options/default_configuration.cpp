@@ -63,7 +63,7 @@ char const* const mo::platform_path = "platform-path";
 namespace
 {
 int const default_ipc_threads          = 1;
-bool const enable_input_default        = false;
+bool const enable_input_default        = true;
 
 // Hack around the way Qt loads mir:
 // platform_api and therefore Mir are loaded via dlopen(..., RTLD_LOCAL).
