@@ -25,6 +25,7 @@
 #include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <system_error>
 #include <chrono>
 
 namespace mg = mir::graphics;
@@ -150,19 +151,14 @@ mg::DisplayConfigurationOutput populate_config(
         mir_orientation_normal
     };
 }
-}
 
-mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(DisplayName display_name)
+mg::DisplayConfigurationOutput display_config_for(
+    mga::DisplayName display_name,
+    mga::ConfigId id,
+    MirPixelFormat format,
+    std::shared_ptr<mga::HwcWrapper> const& hwc_device
+)
 {
-    auto configs = hwc_device->display_configs(display_name);
-    if (configs.empty())
-    {
-        if (display_name == mga::DisplayName::primary)
-            BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
-        else   
-            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
-    }
-
     /* note: some drivers (qcom msm8960) choke if this is not the same size array
        as the one surfaceflinger submits */
     static uint32_t const attributes[] =
@@ -176,14 +172,14 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(Displa
     };
 
     int32_t values[sizeof(attributes) / sizeof (attributes[0])] = {};
-    /* the first config is the active one in hwc 1.1 to hwc 1.3. */
-    auto rc = hwc_device->display_attributes(display_name, configs.front(), attributes, values);
+
+    auto rc = hwc_device->display_attributes(display_name, id, attributes, values);
 
     if (rc < 0)
     {
         if (display_name == mga::DisplayName::primary)
-            BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
-        else   
+            BOOST_THROW_EXCEPTION(std::system_error(rc, std::system_category(), "primary display disconnected"));
+        else
             return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
     }
 
@@ -197,19 +193,106 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(Displa
         true);
 }
 
+mga::ConfigChangeSubscription subscribe_to_config_changes(
+    std::shared_ptr<mga::HwcWrapper> const& hwc_device,
+    void const* subscriber,
+    std::function<void()> const& hotplug,
+    std::function<void(mga::DisplayName)> const& vsync)
+{
+    return std::make_shared<
+        mir::raii::PairedCalls<std::function<void()>, std::function<void()>>>(
+        [hotplug, vsync, subscriber, hwc_device]{
+            hwc_device->subscribe_to_events(subscriber,
+                [vsync](mga::DisplayName name, std::chrono::nanoseconds){ vsync(name); },
+                [hotplug](mga::DisplayName, bool){ hotplug(); },
+                []{});
+        },
+        [subscriber, hwc_device]{
+            hwc_device->unsubscribe_from_events(subscriber);
+        });
+}
+}
+
+mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(DisplayName display_name)
+{
+    auto configs = hwc_device->display_configs(display_name);
+    if (configs.empty())
+    {
+        if (display_name == mga::DisplayName::primary)
+            BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
+        else   
+            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
+    }
+
+    return display_config_for(display_name, configs.front(), format, hwc_device);
+}
+
 mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_changes(
     std::function<void()> const& hotplug,
     std::function<void(DisplayName)> const& vsync)
 {
-    return std::make_shared<
-        mir::raii::PairedCalls<std::function<void()>, std::function<void()>>>(
-        [hotplug, vsync, this]{
-            hwc_device->subscribe_to_events(this,
-                [vsync](DisplayName name, std::chrono::nanoseconds){ vsync(name); },
-                [hotplug](DisplayName, bool){ hotplug(); },
-                []{});
-        },
-        [this]{
-            hwc_device->unsubscribe_from_events(this);
-        });
+    return ::subscribe_to_config_changes(hwc_device, this, hotplug, vsync);
+}
+
+mga::HwcPowerModeControl::HwcPowerModeControl(
+    std::shared_ptr<mga::HwcWrapper> const& hwc_device) :
+    hwc_device{hwc_device},
+    format(determine_hwc_fb_format())
+{
+}
+
+void mga::HwcPowerModeControl::power_mode(DisplayName display_name, MirPowerMode mode_request)
+{
+    PowerMode mode;
+    switch (mode_request)
+    {
+        case mir_power_mode_on:
+            mode = PowerMode::normal;
+            break;
+        case mir_power_mode_standby:
+            mode = PowerMode::doze;
+            break;
+        case mir_power_mode_suspend:
+            mode = PowerMode::doze_suspend;
+            break;
+        case mir_power_mode_off:
+            mode = PowerMode::off;
+            break;
+        default:
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid power mode"));
+    }
+    hwc_device->power_mode(display_name, mode);
+}
+
+mg::DisplayConfigurationOutput mga::HwcPowerModeControl::active_config_for(DisplayName display_name)
+{
+    auto configs = hwc_device->display_configs(display_name);
+    if (configs.empty())
+    {
+        if (display_name == mga::DisplayName::primary)
+            BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
+        else
+            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
+    }
+
+    /* the first config is the active one in hwc 1.1 to hwc 1.3. */
+    ConfigId active_config_id = configs.front();
+    if (hwc_device->has_active_config(display_name))
+    {
+        active_config_id = hwc_device->active_config_for(display_name);
+    }
+    else
+    {
+        //If no active config, just choose the first from the list
+        hwc_device->set_active_config(display_name, configs.front());
+    }
+
+    return display_config_for(display_name, active_config_id, format, hwc_device);
+}
+
+mga::ConfigChangeSubscription mga::HwcPowerModeControl::subscribe_to_config_changes(
+    std::function<void()> const& hotplug,
+    std::function<void(DisplayName)> const& vsync)
+{
+    return ::subscribe_to_config_changes(hwc_device, this, hotplug, vsync);
 }
