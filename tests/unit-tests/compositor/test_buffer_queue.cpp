@@ -1552,7 +1552,8 @@ TEST_F(BufferQueueTest, client_never_owns_compositor_buffers)
  * http://code.launchpad.net/~albaguirre/mir/
  * alternative-switching-bundle-implementation/+merge/216606/comments/517048
  */
-TEST_F(BufferQueueTest, buffers_are_not_lost)
+// Disabled - Not a valid test in the presence of dynamic queue throttling
+TEST_F(BufferQueueTest, DISABLED_buffers_are_not_lost)
 {
     for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
