@@ -137,7 +137,6 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<SceneReport> const& report) :
     surface_name(name),
     surface_rect(rect),
-    surface_alpha(1.0f),
     hidden(false),
     input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
@@ -147,7 +146,8 @@ ms::BasicSurface::BasicSurface(
     input_sender(input_sender),
     cursor_image_(cursor_image),
     report(report),
-    parent_(parent)
+    parent_(parent),
+    streams({BufferStreamInfo{mf::BufferStreamId{0}, buffer_stream, {0,0}, 1.0f}})
 {
     report->surface_created(this, surface_name);
 }
@@ -201,7 +201,7 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
 float ms::BasicSurface::alpha() const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return surface_alpha;
+    return info_from_id(primary_id)->alpha;
 }
 
 void ms::BasicSurface::set_hidden(bool hide)
@@ -340,7 +340,7 @@ void ms::BasicSurface::set_alpha(float alpha)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
-        surface_alpha = alpha;
+        info_from_id(primary_id)->alpha = alpha;
     }
     observers.alpha_set_to(alpha);
 }
@@ -833,21 +833,6 @@ private:
 };
 }
 
-#if 0
-std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const* compositor_id) const
-{
-    std::unique_lock<std::mutex> lk(guard);
-
-    return std::make_unique<SurfaceSnapshot>(
-        surface_buffer_stream,
-        compositor_id,
-        surface_rect,
-        transformation_matrix,
-        surface_alpha,
-        nonrectangular,
-        this);
-}
-#endif
 int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 {
     std::unique_lock<std::mutex> lk(guard);
@@ -873,34 +858,42 @@ void ms::BasicSurface::rename(std::string const& title)
     }
 }
 
-std::vector<ms::BasicSurface::BufferStreamInfo>::iterator
-ms::BasicSurface::info_from_id(frontend::BufferStreamId id)
+std::list<ms::BasicSurface::BufferStreamInfo>::iterator
+ms::BasicSurface::info_from_id(frontend::BufferStreamId const& id)
 {
     return std::find_if(streams.begin(), streams.end(),
-        [id](BufferStreamInfo& info) { return info.id == id; });
+        [&](BufferStreamInfo const& info) { return info.id == id; });
+}
+
+std::list<ms::BasicSurface::BufferStreamInfo>::const_iterator
+ms::BasicSurface::info_from_id(frontend::BufferStreamId const& id) const
+{
+    return std::find_if(streams.begin(), streams.end(),
+        [&](BufferStreamInfo const& info) { return info.id == id; });
 }
 
 mf::BufferStreamId ms::BasicSurface::add_stream(
-    std::shared_ptr<mc::BufferStream> const& stream, geom::Point position, float alpha)
+    std::shared_ptr<mc::BufferStream> const& stream, geom::Displacement position, float alpha)
 {
-    auto next_id = mf::BufferStreamId(last_stream_id.as_value() + 1);
-    streams.emplace_back(BufferStreamInfo{next_id, stream, position, alpha});
-    return last_stream_id = next_id;
+    last_stream_id = mf::BufferStreamId(last_stream_id.as_value() + 1);
+    streams.emplace_front(BufferStreamInfo{last_stream_id, stream, position, alpha});
+    return last_stream_id;
 }
 
-void ms::BasicSurface::reposition(mf::BufferStreamId id, geom::Point pt, float alpha)
+void ms::BasicSurface::reposition(mf::BufferStreamId id, geom::Displacement pt, float alpha)
 {
     auto info_it = info_from_id(id);
     if (info_it == streams.end())
         BOOST_THROW_EXCEPTION(std::logic_error("invalid stream id\n"));
     info_it->position = pt;
     info_it->alpha = alpha;
+
 }
 
 void ms::BasicSurface::remove_stream(frontend::BufferStreamId id)
 {
     auto info_it = info_from_id(id);
-    if (info_it == streams.end())
+    if ((info_it == streams.end()) || (id == primary_id))
         BOOST_THROW_EXCEPTION(std::logic_error("invalid stream id\n"));
     streams.erase(info_it);
 }
@@ -917,16 +910,13 @@ void ms::BasicSurface::raise(frontend::BufferStreamId id)
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
 {
     mg::RenderableList list;
+
     for(auto const& info : streams)
     {
         list.emplace_back(std::make_shared<SurfaceSnapshot>(
-            info.stream,
-            id,
-            geometry::Rectangle(info.position, info.stream->stream_size()),
-            transformation_matrix,
-            info.alpha,
-            nonrectangular,
-            info.stream.get()));
+            info.stream, id,
+            geom::Rectangle{surface_rect.top_left + info.position, surface_rect.size},
+            transformation_matrix, info.alpha, nonrectangular, info.stream.get()));
     }
     return std::move(list);
 }

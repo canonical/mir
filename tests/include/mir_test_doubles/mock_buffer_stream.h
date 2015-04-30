@@ -45,6 +45,8 @@ struct MockBufferStream : public compositor::BufferStream
             .WillByDefault(testing::Invoke(this, &MockBufferStream::buffers_ready));
         ON_CALL(*this, has_submitted_buffer())
             .WillByDefault(testing::Return(true));
+        ON_CALL(*this, stream_size())
+            .WillByDefault(testing::Return(geometry::Size{}));
     }
     MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));
     MOCK_METHOD1(release_client_buffer, void(graphics::Buffer*));

@@ -138,7 +138,7 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
     for(auto& surface : surfaces)
     {
         surface = std::make_unique<ms::BasicSurface>(
-                name, rect, false, mock_buffer_stream,
+                name, rect, false, std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(),
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
                 std::shared_ptr<mg::CursorImage>(), report);
         for(auto& renderable : surface->generate_renderables(this))
@@ -762,9 +762,9 @@ MATCHER_P2(IsRenderableOfAttributes, pos, alpha, "is renderable with attributes"
 TEST_F(BasicSurfaceTest, adds_buffer_streams)
 {
     using namespace testing;
-    geom::Point pt0{19,99};
-    geom::Point pt1{21,101};
-    geom::Point pt2{20,9};
+    geom::Displacement d0{19,99};
+    geom::Displacement d1{21,101};
+    geom::Displacement d2{20,9};
     auto alpha0 = 1.0f;
     auto alpha1 = 0.5f;
     auto alpha2 = 0.25f;
@@ -773,61 +773,70 @@ TEST_F(BasicSurfaceTest, adds_buffer_streams)
     auto additional_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto additional_buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
-    auto id0 = surface.add_stream(additional_buffer_stream0, pt0, alpha0);
-    auto id1 = surface.add_stream(additional_buffer_stream1, pt1, alpha1);
-    auto id2 = surface.add_stream(additional_buffer_stream2, pt2, alpha2);
+    auto id0 = surface.add_stream(additional_buffer_stream0, d0, alpha0);
+    auto id1 = surface.add_stream(additional_buffer_stream1, d1, alpha1);
+    auto id2 = surface.add_stream(additional_buffer_stream2, d2, alpha2);
     surface.set_alpha(alpha3);
 
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(4));
-    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(pt0, alpha0));
-    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(pt1, alpha1));
-    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(pt2, alpha2));
-    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(geom::Point{0,0}, alpha3));
+    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(rect.top_left + d2, alpha2));
+    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left + d1, alpha1));
+    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left + d0, alpha0));
+    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left, alpha3));
 
     surface.remove_stream(id0);
     surface.remove_stream(id1);
     surface.remove_stream(id2);
 }
 
-TEST_F(BasicSurfaceTest, cannot_reposition_primary)
+TEST_F(BasicSurfaceTest, cannot_remove_primary)
 {
     mf::BufferStreamId const primary_id{0};
     EXPECT_THROW({
         surface.remove_stream(primary_id);
     }, std::logic_error);
 }
-TEST_F(BasicSurfaceTest, cannot_remove_primary)
+
+TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
 {
-    mf::BufferStreamId const primary_id{0};
-    surface.reposition(primary_id, {0,0}, 0.7f);
-    EXPECT_THROW({
-        surface.reposition(primary_id, {0,1}, 1.0f);
-    }, std::logic_error);
+    using namespace testing;
+    geom::Point pt{10, 20};
+    geom::Displacement d{19,99};
+    auto alpha = 1.0f;
+    auto additional_buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    surface.add_stream(additional_buffer_stream, d, alpha);
+    surface.move_to(pt);
+
+    auto renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(2));
+    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(pt + d, alpha));
+    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(pt, alpha));
 }
 
 TEST_F(BasicSurfaceTest, repositions_buffer_streams)
 {
     using namespace testing;
-    geom::Point pt0{19,99};
-    geom::Point changed_pt0{22,22};
-    geom::Point pt1{21,101};
-    geom::Point pt2{20,9};
+    geom::Displacement d0{19,99};
+    geom::Displacement changed_d0{22,22};
+    geom::Displacement d1{21,101};
+    geom::Displacement d2{20,9};
     auto additional_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto additional_buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto additional_buffer_stream3 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
-    auto id0 = surface.add_stream(additional_buffer_stream1, pt0, 1.0f);
-    auto id1 = surface.add_stream(additional_buffer_stream1, pt1, 1.0f);
-    auto id2 = surface.add_stream(additional_buffer_stream1, pt2, 1.0f);
-    surface.reposition(id1, changed_pt0, 1.0f);
+    auto id0 = surface.add_stream(additional_buffer_stream1, d0, 1.0f);
+    auto id1 = surface.add_stream(additional_buffer_stream2, d1, 1.0f);
+    auto id2 = surface.add_stream(additional_buffer_stream3, d2, 1.0f);
+    surface.reposition(id0, changed_d0, 1.0f);
     surface.raise(id1);
 
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(4));
-    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(pt1, 1.0f));
-    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(pt2, 1.0f));
-    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(geom::Point{0,0}, 1.0f));
-    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(changed_pt0, 1.0f));
+    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(rect.top_left + d2, 1.0f));
+    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left + changed_d0, 1.0f));
+    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left, 1.0f));
+    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left + d1, 1.0f));
     surface.remove_stream(id0);
     surface.remove_stream(id1);
     surface.remove_stream(id2);

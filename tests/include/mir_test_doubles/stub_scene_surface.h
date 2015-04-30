@@ -107,9 +107,9 @@ public:
     void rename(std::string const&) {}
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
     frontend::BufferStreamId add_stream(
-        std::shared_ptr<compositor::BufferStream> const&, geometry::Point, float) override { return frontend::BufferStreamId{0}; };
+        std::shared_ptr<compositor::BufferStream> const&, geometry::Displacement, float) override { return frontend::BufferStreamId{0}; };
     void remove_stream(frontend::BufferStreamId) override {}
-    void reposition(frontend::BufferStreamId, geometry::Point, float) {}
+    void reposition(frontend::BufferStreamId, geometry::Displacement, float) {}
     void raise(frontend::BufferStreamId) override {}
     graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }
 };

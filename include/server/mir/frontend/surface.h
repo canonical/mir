@@ -64,9 +64,9 @@ public:
     //insert a new stream at the bottom-most z-order
     virtual frontend::BufferStreamId add_stream(
         std::shared_ptr<compositor::BufferStream> const& stream,
-        geometry::Point position,
+        geometry::Displacement position,
         float alpha) = 0;
-    virtual void reposition(frontend::BufferStreamId id, geometry::Point pt, float alpha) = 0;
+    virtual void reposition(frontend::BufferStreamId id, geometry::Displacement pt, float alpha) = 0;
     //NOTE: one cannot remove a stream that was never added via add_stream (eg, the primary stream)
     virtual void remove_stream(frontend::BufferStreamId) = 0;
     //raise a bufferstream to the top-most z-order 

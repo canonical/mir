@@ -29,6 +29,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -96,10 +97,10 @@ public:
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
     frontend::BufferStreamId add_stream(
         std::shared_ptr<compositor::BufferStream> const& stream,
-        geometry::Point position, float alpha) override;
+        geometry::Displacement position, float alpha) override;
     void remove_stream(frontend::BufferStreamId) override;
     void raise(frontend::BufferStreamId) override;
-    void reposition(frontend::BufferStreamId id, geometry::Point pt, float alpha) override;
+    void reposition(frontend::BufferStreamId id, geometry::Displacement pt, float alpha) override;
 
     void force_requests_to_complete() override;
 
@@ -174,7 +175,6 @@ private:
     std::string surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;
-    float surface_alpha;
     bool hidden;
     input::InputReceptionMode input_mode;
     const bool nonrectangular;
@@ -187,15 +187,17 @@ private:
     std::weak_ptr<Surface> const parent_;
 
     frontend::BufferStreamId last_stream_id{0};
+    frontend::BufferStreamId const primary_id{0};
     struct BufferStreamInfo
     {
         frontend::BufferStreamId id;
         std::shared_ptr<compositor::BufferStream> stream;
-        geometry::Point position;
+        geometry::Displacement position;
         float alpha;
     };
-    std::vector<BufferStreamInfo> streams;
-    std::vector<BufferStreamInfo>::iterator info_from_id(frontend::BufferStreamId);
+    std::list<BufferStreamInfo> streams;
+    std::list<BufferStreamInfo>::iterator info_from_id(frontend::BufferStreamId const&);
+    std::list<BufferStreamInfo>::const_iterator info_from_id(frontend::BufferStreamId const&) const;
 
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;
