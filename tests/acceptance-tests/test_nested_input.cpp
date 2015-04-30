@@ -81,7 +81,7 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
         stop_server();
     }
 
-    std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
+    std::shared_ptr<MockEventFilter> const mock_event_filter = std::make_shared<MockEventFilter>();
 };
 
 struct NestedInput : public mtf::HeadlessInProcessServer
