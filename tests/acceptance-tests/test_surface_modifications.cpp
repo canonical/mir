@@ -447,3 +447,63 @@ TEST_F(SurfaceModifications, surface_spec_with_max_aspect_ratio_is_respected)
 
     EXPECT_THAT(actual.width.as_float()/actual.height.as_float(), Le(float(aspect_width)/aspect_height));
 }
+
+TEST_F(SurfaceModifications, surface_spec_with_fixed_aspect_ratio_and_size_range_is_respected)
+{
+    auto const aspect_width = 11;
+    auto const aspect_height = 7;
+    auto const min_width = 10*aspect_width;
+    auto const min_height = 10*aspect_height;
+    auto const max_width = 20*aspect_width;
+    auto const max_height = 20*aspect_height;
+    auto const width_inc = 11;
+    auto const height_inc = 7;
+
+    Size actual;
+    EXPECT_CALL(surface_observer, resized_to(_)).Times(AnyNumber()).WillRepeatedly(SaveArg<0>(&actual));
+
+    apply_changes([&](MirSurfaceSpec* spec)
+          {
+              mir_surface_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
+              mir_surface_spec_set_max_aspect_ratio(spec, aspect_width, aspect_height);
+
+              mir_surface_spec_set_min_height(spec, min_height);
+              mir_surface_spec_set_min_width(spec, min_width);
+
+              mir_surface_spec_set_max_height(spec, max_height);
+              mir_surface_spec_set_max_width(spec, max_width);
+
+              mir_surface_spec_set_width_increment(spec, width_inc);
+              mir_surface_spec_set_height_increment(spec, height_inc);
+
+              mir_surface_spec_set_height(spec, min_height);
+              mir_surface_spec_set_width(spec, min_width);
+          });
+
+    ensure_server_has_processed_setup();
+
+    auto const expected_aspect_ratio = FloatEq(float(aspect_width)/aspect_height);
+
+    EXPECT_THAT(actual.width.as_float()/actual.height.as_float(), expected_aspect_ratio);
+    EXPECT_THAT(actual, Eq(Size{min_width, min_height}));
+    
+    for (int delta = 1; delta != 20; ++delta)
+    {
+        auto const shell_surface = this->shell_surface.lock();
+        auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
+
+        // Introduce small variation around "accurate" resize motion
+        auto const jitter = Displacement{delta%2 ? +2 : -2, (delta/2)%2 ? +2 : -2};
+        auto const motion = Displacement{width_inc, height_inc} + jitter;
+
+        generate_alt_click_at(bottom_right);
+        generate_alt_move_to(bottom_right + motion);
+
+        Size const expected_size{
+            std::min(max_width,  min_width  + delta*width_inc),
+            std::min(max_height, min_height + delta*height_inc)};
+
+        EXPECT_THAT(actual.width.as_float()/actual.height.as_float(), expected_aspect_ratio);
+        EXPECT_THAT(actual, Eq(expected_size));
+    };
+}
