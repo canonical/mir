@@ -95,7 +95,6 @@ public:
     std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
     void set_additional_streams(compositor::BufferStreamList const& streams) override;
-    compositor::BufferStreamList streams() const override;
     void force_requests_to_complete() override;
 
     bool supports_input() const override;

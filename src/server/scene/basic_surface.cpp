@@ -241,11 +241,6 @@ void ms::BasicSurface::set_additional_streams(mc::BufferStreamList const& stream
     additional_streams = streams;
 }
 
-mc::BufferStreamList ms::BasicSurface::streams() const
-{
-    return additional_streams;
-}
-
 void ms::BasicSurface::allow_framedropping(bool allow)
 {
     surface_buffer_stream->allow_framedropping(allow);

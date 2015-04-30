@@ -61,7 +61,6 @@ public:
     
     virtual std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const = 0;
     virtual void set_additional_streams(compositor::BufferStreamList const& streams) = 0;
-    virtual compositor::BufferStreamList streams() const = 0;
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;
