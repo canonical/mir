@@ -16,8 +16,6 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir/input/input_device_info.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
@@ -53,8 +51,8 @@ struct TestClientInputNew : mtf::HeadlessInProcessServer
 {
     struct Client
     {
-        static const int surface_width = 640;
-        static const int surface_height = 480;
+        static const int surface_width = 100;
+        static const int surface_height = 100;
         MirSurface* surface{nullptr};
 
         MOCK_METHOD1(handle_input, void(MirEvent const*));
@@ -82,7 +80,7 @@ struct TestClientInputNew : mtf::HeadlessInProcessServer
             mir_buffer_stream_swap_buffers_sync(
                 mir_surface_get_buffer_stream(surface));
 
-            ready_to_accept_events.wait_for_at_most_seconds(1);
+            ready_to_accept_events.wait_for_at_most_seconds(4);
             if (!ready_to_accept_events.woken())
                 BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
         }
@@ -115,7 +113,7 @@ struct TestClientInputNew : mtf::HeadlessInProcessServer
 
     void SetUp() override
     {
-        initial_display_layout(std::vector<geom::Rectangle>({geom::Rectangle({0,0},{1000,800})}));
+        initial_display_layout({screen_geometry});
 
         server.wrap_shell(
             [this](std::shared_ptr<mir::shell::Shell> const& wrapped)
@@ -152,6 +150,7 @@ struct TestClientInputNew : mtf::HeadlessInProcessServer
     mtf::ClientPositions positions;
     mtf::ClientDepths depths;
     std::unique_ptr<Client> first_client, second_client;
+    geom::Rectangle screen_geometry{{0,0}, {1000,800}};
 };
 
 const int TestClientInputNew::Client::surface_width;
@@ -242,25 +241,22 @@ TEST_F(TestClientInputNew, clients_receive_button_events_inside_window)
     all_events_received.wait_for_at_most_seconds(10);
 }
 
-#if 0
-TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
+TEST_F(TestClientInputNew, multiple_clients_receive_pointer_inside_windows)
 {
     using namespace testing;
 
-    second_client = std::make_unique<Client>(new_connection().c_str());
+    first_client.reset();
 
     int const screen_width = screen_geometry.size.width.as_int();
     int const screen_height = screen_geometry.size.height.as_int();
     int const client_height = screen_height / 2;
     int const client_width = screen_width / 2;
 
-    test_server_config().client_geometries[test_client_name_1] =
-        {{0, 0}, {client_width, client_height}};
-    test_server_config().client_geometries[test_client_name_2] =
-        {{screen_width / 2, screen_height / 2}, {client_width, client_height}};
+    positions[first] = {{0, 0}, {client_width, client_height}};
+    positions[second] = {{client_width, client_height}, {client_width, client_height}};
 
-    InputClient client1{new_connection(), test_client_name_1};
-    InputClient client2{new_connection(), test_client_name_2};
+    first_client = std::make_unique<Client>(new_connection().c_str(), first);
+    second_client = std::make_unique<Client>(new_connection().c_str(), second);
 
     {
         InSequence seq;
@@ -277,7 +273,7 @@ TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
         EXPECT_CALL(*second_client,
                     handle_input(
                         mt::PointerEventWithPosition(client_width - 1, client_height - 1)))
-            .WillOnce(mt::WakeUp(all_events_received));
+            .WillOnce(mt::WakeUp(&all_events_received));
     }
 
     // In the bounds of the first surface
@@ -289,5 +285,59 @@ TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
 
     all_events_received.wait_for_at_most_seconds(2);
 }
-#endif
 
+TEST_F(TestClientInputNew, clients_do_not_receive_pointer_outside_input_region)
+{
+    using namespace testing;
+
+    int const client_height = Client::surface_height;
+    int const client_width = Client::surface_width;
+
+    first_client.reset();
+
+    input_regions[first] = {{{0, 0}, {client_width - 80, client_height}},
+                            {{client_width - 20, 0}, {client_width - 80, client_height}}};
+
+    first_client = std::make_unique<Client>(new_connection().c_str(), first);
+
+    EXPECT_CALL(*first_client, handle_input(mt::PointerEnterEvent())).Times(AnyNumber());
+    EXPECT_CALL(*first_client, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
+    EXPECT_CALL(*first_client, handle_input(mt::PointerMovementEvent())).Times(AnyNumber());
+
+    {
+        // We should see two of the three button pairs.
+        InSequence seq;
+        EXPECT_CALL(*first_client, handle_input(mt::ButtonDownEvent(1, 1)));
+        EXPECT_CALL(*first_client, handle_input(mt::ButtonUpEvent(1, 1)));
+        EXPECT_CALL(*first_client, handle_input(mt::ButtonDownEvent(99, 99)));
+        EXPECT_CALL(*first_client, handle_input(mt::ButtonUpEvent(99, 99)))
+            .WillOnce(mt::WakeUp(&all_events_received));
+    }
+
+    // First we will move the cursor in to the input region on the left side of
+    // the window. We should see a click here.
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
+    fake_mouse->emit_event(
+        mis::a_button_down_event()
+            .of_button(BTN_LEFT)
+            .with_action(mis::EventAction::Down));
+    fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
+    // Now in to the dead zone in the center of the window. We should not see
+    // a click here.
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(49, 49));
+    fake_mouse->emit_event(
+        mis::a_button_down_event()
+            .of_button(BTN_LEFT)
+            .with_action(mis::EventAction::Down));
+    fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
+    // Now in to the right edge of the window, in the right input region.
+    // Again we should see a click.
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(49, 49));
+    fake_mouse->emit_event(
+        mis::a_button_down_event()
+            .of_button(BTN_LEFT)
+            .with_action(mis::EventAction::Down));
+    fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
+
+    all_events_received.wait_for_at_most_seconds(5);
+}
