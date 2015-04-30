@@ -36,8 +36,8 @@ add_filter()
 while [ $# -gt 0 ];
 do
     case "$1" in
-        --test-name) shift; testname=$1;;
-        --env) shift; add_env $1;;
+        --test-name) shift; testname="$1";;
+        --env) shift; add_env "$1";;
         --help|-h) print_help_and_exit;;
         --) shift; break;;
         --*) print_help_and_exit;;
@@ -49,9 +49,9 @@ done
 while [ $# -gt 0 ];
 do
     case "$1" in
-        --gtest_filter*) add_filter $1;;
+        --gtest_filter*) add_filter "$1";;
         --*) ;;
-        *) last_cmd=$1;;
+        *) last_cmd="$1";;
     esac
     add_cmd $1
     shift
