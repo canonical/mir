@@ -16,17 +16,20 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "event_filter_chain.h"
+#include "event_filter_chain_dispatcher.h"
 
 namespace mi = mir::input;
 
-mi::EventFilterChain::EventFilterChain(
-    std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& values)
-    : filters(values.begin(), values.end())
+mi::EventFilterChainDispatcher::EventFilterChainDispatcher(
+    std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& values,
+    std::shared_ptr<mi::InputDispatcher> const& next_dispatcher)
+    : filters(values.begin(), values.end()),
+      next_dispatcher(next_dispatcher)
 {
 }
 
-bool mi::EventFilterChain::handle(MirEvent const& event)
+// TODO: It probably makes sense to provide keymapped events.
+bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
 {
     auto it = filters.begin();
     while (it != filters.end())
@@ -43,12 +46,30 @@ bool mi::EventFilterChain::handle(MirEvent const& event)
     return false;
 }
 
-void mi::EventFilterChain::append(std::shared_ptr<EventFilter> const& filter)
+void mi::EventFilterChainDispatcher::append(std::shared_ptr<EventFilter> const& filter)
 {
     filters.push_back(filter);
 }
 
-void mi::EventFilterChain::prepend(std::shared_ptr<EventFilter> const& filter)
+void mi::EventFilterChainDispatcher::prepend(std::shared_ptr<EventFilter> const& filter)
 {
     filters.insert(filters.begin(), filter);
+}
+
+void mi::EventFilterChainDispatcher::dispatch(MirEvent const& event)
+{
+    if (!handle(event))
+        next_dispatcher->dispatch(event);
+}
+
+// Should we start/stop dispatch of filter chain here?
+// Why would we want to?
+void mi::EventFilterChainDispatcher::start()
+{
+    next_dispatcher->start();
+}
+
+void mi::EventFilterChainDispatcher::stop()
+{
+     next_dispatcher->stop();
 }
