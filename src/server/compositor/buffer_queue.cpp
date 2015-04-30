@@ -137,6 +137,7 @@ mc::BufferQueue::BufferQueue(
     graphics::BufferProperties const& props,
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
+      frame_deadlines_threshold{5}, // configurable in future, maybe.
       frame_deadlines_met{0}, // start pessimistically for max smoothness
       frame_dropping_enabled{false},
       current_compositor_buffer_valid{false},
@@ -182,7 +183,7 @@ bool mc::BufferQueue::client_ahead_of_compositor() const
 {
     return nbuffers > 1 &&
            !frame_dropping_enabled &&
-           frame_deadlines_met >= nbuffers &&
+           frame_deadlines_met >= frame_deadlines_threshold &&
            !ready_to_composite_queue.empty();
 }
 

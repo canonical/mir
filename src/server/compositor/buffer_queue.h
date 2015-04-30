@@ -97,6 +97,7 @@ private:
     bool client_ahead_of_compositor() const;
 
     int nbuffers;
+    int frame_deadlines_threshold;
     int frame_deadlines_met;
     bool frame_dropping_enabled;
     bool current_compositor_buffer_valid;
