@@ -185,7 +185,17 @@ private:
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
-    std::vector<compositor::BufferStream> additional_streams;
+
+    frontend::BufferStreamId last_stream_id{0};
+    struct BufferStreamInfo
+    {
+        frontend::BufferStreamId id;
+        std::shared_ptr<compositor::BufferStream> stream;
+        geometry::Point position;
+        float alpha;
+    };
+    std::vector<BufferStreamInfo> streams;
+    std::vector<BufferStreamInfo>::iterator info_from_id(frontend::BufferStreamId);
 
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;
