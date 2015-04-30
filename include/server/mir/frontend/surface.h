@@ -21,6 +21,7 @@
 #define MIR_FRONTEND_SURFACE_H_
 
 #include "mir/frontend/buffer_stream.h"
+#include "mir/frontend/buffer_stream_id.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/displacement.h"
 
@@ -40,7 +41,6 @@ class CursorImage;
 namespace compositor
 {
 class BufferStream;
-using BufferStreamList = std::list<std::shared_ptr<compositor::BufferStream>>;
 }
 namespace frontend
 {
@@ -60,7 +60,17 @@ public:
     virtual void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) = 0;
     
     virtual std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const = 0;
-    virtual void set_additional_streams(compositor::BufferStreamList const& streams) = 0;
+
+    //insert a new stream at the bottom-most z-order
+    virtual frontend::BufferStreamId add_stream(
+        std::shared_ptr<compositor::BufferStream> const& stream,
+        geometry::Point position,
+        float alpha) = 0;
+    virtual void reposition(frontend::BufferStreamId id, geometry::Point pt, float alpha) = 0;
+    //NOTE: one cannot remove a stream that was never added via add_stream (eg, the primary stream)
+    virtual void remove_stream(frontend::BufferStreamId) = 0;
+    //raise a bufferstream to the top-most z-order 
+    virtual void raise(frontend::BufferStreamId) = 0;
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;

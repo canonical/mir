@@ -23,6 +23,7 @@
 #include "mir/input/surface.h"
 #include "mir/scene/surface_buffer_access.h"
 #include "mir/frontend/surface.h"
+#include "mir/compositor/compositor_id.h"
 
 #include <vector>
 
@@ -56,7 +57,7 @@ public:
     /// Size of the surface including window frame (if any)
     virtual geometry::Size size() const = 0;
 
-    virtual std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const = 0;
+    virtual graphics::RenderableList generate_renderables(compositor::CompositorID id) const = 0; 
     virtual int buffers_ready_for_compositor(void const* compositor_id) const = 0;
 
     virtual float alpha() const = 0; //only used in examples/

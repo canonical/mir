@@ -81,7 +81,10 @@ public:
         for (auto const& surface : surfaces)
         {
             if (auto const ss = surface.lock())
-                rects.push_back(ss->compositor_snapshot(this)->screen_position());
+            {
+                for(auto& renderable: ss->generate_renderables(this))
+                    rects.push_back(renderable->screen_position());
+            }
         }
         return rects;
     }

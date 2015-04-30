@@ -235,12 +235,6 @@ std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() cons
     return surface_buffer_stream;
 }
 
-void ms::BasicSurface::set_additional_streams(mc::BufferStreamList const& streams)
-{
-    std::unique_lock<std::mutex> lk(guard);
-    additional_streams = streams;
-}
-
 void ms::BasicSurface::allow_framedropping(bool allow)
 {
     surface_buffer_stream->allow_framedropping(allow);
@@ -839,6 +833,7 @@ private:
 };
 }
 
+#if 0
 std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const* compositor_id) const
 {
     std::unique_lock<std::mutex> lk(guard);
@@ -852,7 +847,7 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
         nonrectangular,
         this);
 }
-
+#endif
 int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 {
     std::unique_lock<std::mutex> lk(guard);
@@ -876,4 +871,30 @@ void ms::BasicSurface::rename(std::string const& title)
         surface_name = title;
         observers.renamed(surface_name.c_str());
     }
+}
+
+mf::BufferStreamId ms::BasicSurface::add_stream(
+    std::shared_ptr<mc::BufferStream> const& stream, geom::Point position, float alpha)
+{
+    (void) stream; (void) position; (void) alpha;
+    return mf::BufferStreamId{0};
+}
+
+void ms::BasicSurface::reposition(mf::BufferStreamId id, geom::Point pt, float alpha)
+{
+    (void) id; (void) pt; (void) alpha;
+}
+
+void ms::BasicSurface::remove_stream(frontend::BufferStreamId)
+{
+}
+
+void ms::BasicSurface::raise(frontend::BufferStreamId)
+{
+}
+
+mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
+{
+    (void) id;
+    return {};
 }

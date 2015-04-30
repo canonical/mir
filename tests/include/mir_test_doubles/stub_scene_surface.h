@@ -62,7 +62,6 @@ public:
     geometry::Rectangle input_bounds() const override { return {{},{}}; }
     bool input_area_contains(mir::geometry::Point const&) const override { return false; }
 
-    virtual std::unique_ptr<graphics::Renderable> compositor_snapshot(void const*) const override { return nullptr; }
     int buffers_ready_for_compositor(void const*) const override { return 0; }
 
     float alpha() const override { return 0.0f;}
@@ -107,7 +106,12 @@ public:
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) {}
     void rename(std::string const&) {}
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
-    void set_additional_streams(compositor::BufferStreamList const&) override {};
+    frontend::BufferStreamId add_stream(
+        std::shared_ptr<compositor::BufferStream> const&, geometry::Point, float) override { return frontend::BufferStreamId{0}; };
+    void remove_stream(frontend::BufferStreamId) override {}
+    void reposition(frontend::BufferStreamId, geometry::Point, float) {}
+    void raise(frontend::BufferStreamId) override {}
+    graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }
 };
 
 }

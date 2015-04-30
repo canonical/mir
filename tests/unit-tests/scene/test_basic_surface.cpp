@@ -120,7 +120,8 @@ TEST_F(BasicSurfaceTest, basics)
     EXPECT_EQ(name, surface.name());
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_EQ(rect.top_left, surface.top_left());
-    EXPECT_FALSE(surface.compositor_snapshot(compositor_id)->shaped());
+    for(auto& renderable : surface.generate_renderables(this))
+        EXPECT_FALSE(renderable->shaped());
 }
 
 TEST_F(BasicSurfaceTest, primary_buffer_stream)
@@ -128,40 +129,40 @@ TEST_F(BasicSurfaceTest, primary_buffer_stream)
     EXPECT_THAT(surface.primary_buffer_stream(), Eq(mock_buffer_stream));
 }
 
-TEST_F(BasicSurfaceTest, id_always_unique)
+TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
 {
-    int const N = 10;
-    std::unique_ptr<ms::BasicSurface> surfaces[N];
+    int const n = 10;
+    std::array<std::unique_ptr<ms::BasicSurface>, n> surfaces;
 
-    for (int i = 0; i < N; ++i)
+    std::multiset<mg::Renderable::ID> ids;
+    for(auto& surface : surfaces)
     {
-        surfaces[i].reset(new ms::BasicSurface(
+        surface = std::make_unique<ms::BasicSurface>(
                 name, rect, false, mock_buffer_stream,
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
-                std::shared_ptr<mg::CursorImage>(), report)
-            );
-
-        for (int j = 0; j < i; ++j)
-        {
-            ASSERT_NE(surfaces[j]->compositor_snapshot(compositor_id)->id(), surfaces[i]->compositor_snapshot(compositor_id)->id());
-        }
+                std::shared_ptr<mg::CursorImage>(), report);
+        for(auto& renderable : surface->generate_renderables(this))
+            ids.insert(renderable->id());
     }
+    for(auto it : ids)
+        EXPECT_THAT(ids.count(it), testing::Eq(1));
 }
 
 TEST_F(BasicSurfaceTest, id_never_invalid)
 {
-    int const N = 10;
-    std::unique_ptr<ms::BasicSurface> surfaces[N];
+    int const n = 10;
+    std::array<std::unique_ptr<ms::BasicSurface>, n> surfaces;
 
-    for (int i = 0; i < N; ++i)
+    std::multiset<mg::Renderable::ID> ids;
+    for(auto& surface : surfaces)
     {
-        surfaces[i].reset(new ms::BasicSurface(
+        surface = std::make_unique<ms::BasicSurface>(
                 name, rect, false, mock_buffer_stream,
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
-                std::shared_ptr<mg::CursorImage>(), report)
-            );
+                std::shared_ptr<mg::CursorImage>(), report);
 
-        ASSERT_TRUE(surfaces[i]->compositor_snapshot(compositor_id)->id());
+        for(auto& renderable : surface->generate_renderables(this))
+            EXPECT_THAT(renderable->id(), testing::Ne(nullptr));
     }
 }
 
@@ -191,12 +192,16 @@ TEST_F(BasicSurfaceTest, update_size)
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_NE(new_size, surface.size());
 
-    auto old_transformation = surface.compositor_snapshot(compositor_id)->transformation();
+    auto renderables = surface.generate_renderables(compositor_id);
+    ASSERT_THAT(renderables.size(), testing::Eq(1));
+    auto old_transformation = renderables[0]->transformation();
 
     surface.resize(new_size);
     EXPECT_EQ(new_size, surface.size());
     // Size no longer affects transformation:
-    EXPECT_EQ(old_transformation, surface.compositor_snapshot(compositor_id)->transformation());
+    renderables = surface.generate_renderables(compositor_id);
+    ASSERT_THAT(renderables.size(), testing::Eq(1));
+    EXPECT_THAT(renderables[0]->transformation(), testing::Eq(old_transformation));
 }
 
 /*
@@ -224,14 +229,18 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
 
     surface.add_observer(observer);
 
-    auto original_transformation = surface.compositor_snapshot(compositor_id)->transformation();
+    auto renderables = surface.generate_renderables(compositor_id);
+    ASSERT_THAT(renderables.size(), testing::Eq(1));
+    auto original_transformation = renderables[0]->transformation();
     glm::mat4 trans{0.1f, 0.5f, 0.9f, 1.3f,
                     0.2f, 0.6f, 1.0f, 1.4f,
                     0.3f, 0.7f, 1.1f, 1.5f,
                     0.4f, 0.8f, 1.2f, 1.6f};
 
     surface.set_transformation(trans);
-    auto got = surface.compositor_snapshot(compositor_id)->transformation();
+    renderables = surface.generate_renderables(compositor_id);
+    ASSERT_THAT(renderables.size(), testing::Eq(1));
+    auto got = renderables[0]->transformation();
     EXPECT_NE(original_transformation, got);
     EXPECT_EQ(trans, got);
 }
@@ -254,7 +263,9 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
     using namespace testing;
 
     EXPECT_THAT(1.0f, FloatEq(surface.alpha()));
-    EXPECT_FALSE(surface.compositor_snapshot(compositor_id)->shaped());
+    auto renderables = surface.generate_renderables(compositor_id);
+    ASSERT_THAT(renderables.size(), testing::Eq(1));
+    EXPECT_FALSE(renderables[0]->shaped());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_visibility)
@@ -743,6 +754,11 @@ TEST_F(BasicSurfaceTest, notifies_of_rename)
     surface.rename("Steve");
 }
 
+MATCHER_P2(IsRenderableOfAttributes, pos, alpha, "is renderable with attributes")
+{
+    return ((pos == arg->screen_position().top_left) && (alpha == arg->alpha()));
+}
+
 TEST_F(BasicSurfaceTest, adds_buffer_streams)
 {
     using namespace testing;
@@ -757,31 +773,33 @@ TEST_F(BasicSurfaceTest, adds_buffer_streams)
     auto additional_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto additional_buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
-    auto id0 = surface.add_stream({additional_buffer_stream0, pt0, alpha0);
-    auto id1 = surface.add_stream({additional_buffer_stream1, pt1, alpha1);
-    auto id2 = surface.add_stream({additional_buffer_stream2, pt2, alpha2);
+    auto id0 = surface.add_stream(additional_buffer_stream0, pt0, alpha0);
+    auto id1 = surface.add_stream(additional_buffer_stream1, pt1, alpha1);
+    auto id2 = surface.add_stream(additional_buffer_stream2, pt2, alpha2);
     surface.set_alpha(alpha3);
 
-    auto renderables = surface.generate_renderables();
-    ASSERT_THAT(renderable.size(), Eq(4);
+    auto renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(4));
     EXPECT_THAT(renderables[0], IsRenderableOfAttributes(pt0, alpha0));
     EXPECT_THAT(renderables[1], IsRenderableOfAttributes(pt1, alpha1));
     EXPECT_THAT(renderables[2], IsRenderableOfAttributes(pt2, alpha2));
-    EXPECT_THAT(renderables[3], IsRenderableOfAttributes({0,0}, alpha3));
+    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(geom::Point{0,0}, alpha3));
 
+    surface.remove_stream(id0);
     surface.remove_stream(id1);
     surface.remove_stream(id2);
-    surface.remove_stream(id3);
 }
 
 TEST_F(BasicSurfaceTest, cannot_reposition_primary)
 {
+    mf::BufferStreamId const primary_id{0};
     EXPECT_THROW({
         surface.remove_stream(primary_id);
     }, std::logic_error);
 }
 TEST_F(BasicSurfaceTest, cannot_remove_primary)
 {
+    mf::BufferStreamId const primary_id{0};
     surface.reposition(primary_id, {0,0}, 0.7f);
     EXPECT_THROW({
         surface.reposition(primary_id, {0,1}, 1.0f);
@@ -792,22 +810,25 @@ TEST_F(BasicSurfaceTest, repositions_buffer_streams)
 {
     using namespace testing;
     geom::Point pt0{19,99};
-    geom::Point twice_pt0 = 2 * pt0;
+    geom::Point changed_pt0{22,22};
     geom::Point pt1{21,101};
     geom::Point pt2{20,9};
     auto additional_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto additional_buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
-    auto id1 = surface.add_stream({additional_buffer_stream1, position, 1.0f);
-    auto id2 = surface.add_stream({additional_buffer_stream1, position, 1.0f);
-    auto id3 = surface.add_stream({additional_buffer_stream1, position, 1.0f);
-    surface.reposition(id1, twice_pt0, 1.0f);
+    auto id0 = surface.add_stream(additional_buffer_stream1, pt0, 1.0f);
+    auto id1 = surface.add_stream(additional_buffer_stream1, pt1, 1.0f);
+    auto id2 = surface.add_stream(additional_buffer_stream1, pt2, 1.0f);
+    surface.reposition(id1, changed_pt0, 1.0f);
     surface.raise(id1);
 
-    auto renderables = surface.generate_renderables();
-    ASSERT_THAT(renderable.size(), Eq(4);
+    auto renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(4));
     EXPECT_THAT(renderables[0], IsRenderableOfAttributes(pt1, 1.0f));
     EXPECT_THAT(renderables[1], IsRenderableOfAttributes(pt2, 1.0f));
-    EXPECT_THAT(renderables[2], IsRenderableOfAttributes({0,0}, 1.0f));
-    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(pt0, 1.0f));
+    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(geom::Point{0,0}, 1.0f));
+    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(changed_pt0, 1.0f));
+    surface.remove_stream(id0);
+    surface.remove_stream(id1);
+    surface.remove_stream(id2);
 }

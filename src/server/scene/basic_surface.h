@@ -94,7 +94,13 @@ public:
 
     std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
-    void set_additional_streams(compositor::BufferStreamList const& streams) override;
+    frontend::BufferStreamId add_stream(
+        std::shared_ptr<compositor::BufferStream> const& stream,
+        geometry::Point position, float alpha) override;
+    void remove_stream(frontend::BufferStreamId) override;
+    void raise(frontend::BufferStreamId) override;
+    void reposition(frontend::BufferStreamId id, geometry::Point pt, float alpha) override;
+
     void force_requests_to_complete() override;
 
     bool supports_input() const override;
@@ -119,7 +125,7 @@ public:
 
     bool visible() const override;
     
-    std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const override;
+    graphics::RenderableList generate_renderables(compositor::CompositorID id) const override;
     int buffers_ready_for_compositor(void const* compositor_id) const override;
 
     void with_most_recent_buffer_do(
@@ -179,7 +185,7 @@ private:
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
-    compositor::BufferStreamList additional_streams;
+    std::vector<compositor::BufferStream> additional_streams;
 
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;
