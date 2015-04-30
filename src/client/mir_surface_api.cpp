@@ -632,3 +632,51 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     // Keep calm and carry on
 }
+
+bool mir_surface_spec_set_width_increment(MirSurfaceSpec *spec, unsigned width_inc)
+try
+{
+    spec->width_inc = width_inc;
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+bool mir_surface_spec_set_height_increment(MirSurfaceSpec *spec, unsigned height_inc)
+try
+{
+    spec->height_inc = height_inc;
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
+try
+{
+    spec->min_aspect = {width, height};
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+bool mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
+try
+{
+    spec->max_aspect = {width, height};
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
