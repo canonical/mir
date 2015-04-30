@@ -264,7 +264,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     {
         if (ready_to_composite_queue.empty())
             frame_deadlines_met = 0;
-        else
+        else if (frame_deadlines_met < frame_deadlines_threshold)
             ++frame_deadlines_met;
     }
     else   // Second and subsequent displays sync to the primary one
