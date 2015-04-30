@@ -21,9 +21,9 @@
 #define MIR_COMPOSITOR_BUFFER_STREAM_SCENE_H_
 
 #include "mir/compositor/buffer_stream.h"
+#include "mir/scene/surface_observers.h"
 
 #include <mutex>
-#include <set>
 
 namespace mir
 {
@@ -73,7 +73,7 @@ protected:
 private:
     std::mutex mutable mutex;
     std::shared_ptr<BufferBundle> const buffer_bundle;
-    std::set<std::shared_ptr<scene::SurfaceObserver>> observers;
+    scene::SurfaceObservers observers;
     bool first_frame_posted;
 };
 
