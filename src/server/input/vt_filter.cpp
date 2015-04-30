@@ -39,6 +39,7 @@ bool mir::input::VTFilter::handle(MirEvent const& event)
 {
     if (event.type == mir_event_type_key &&
         event.key.action == mir_key_action_down &&
+        event.key.repeat_count == 0 &&
         (event.key.modifiers & mir_key_modifier_alt) &&
         (event.key.modifiers & mir_key_modifier_ctrl))
     {

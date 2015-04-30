@@ -47,6 +47,7 @@ extern char const* const touchspots_opt;
 extern char const* const fatal_abort_opt;
 extern char const* const debug_opt;
 extern char const* const nbuffers_opt;
+extern char const* const enable_key_repeat_opt;
 
 extern char const* const name_opt;
 extern char const* const offscreen_opt;

@@ -30,6 +30,7 @@
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
 #include "android/input_translator.h"
+#include "key_repeat_dispatcher.h"
 #include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
 #include "cursor_controller.h"
@@ -201,6 +202,7 @@ mir::DefaultServerConfiguration::the_dispatcher_policy()
         });
 }
 
+// TODO: Remove
 bool mir::DefaultServerConfiguration::is_key_repeat_enabled() const
 {
     return true;
@@ -209,7 +211,12 @@ bool mir::DefaultServerConfiguration::is_key_repeat_enabled() const
 std::shared_ptr<mi::InputDispatcher>
 mir::DefaultServerConfiguration::the_input_dispatcher()
 {
-    return the_event_filter_chain_dispatcher();
+    std::chrono::milliseconds key_repeat_timeout{1};
+    
+    if (!options->get<bool>(options::enable_key_repeat_opt))
+        return the_event_filter_chain_dispatcher();
+    else
+        return std::make_shared<mi::KeyRepeatDispatcher>(the_event_filter_chain_dispatcher(), key_repeat_timeout);
 }
 
 std::shared_ptr<mi::InputDispatcher>
