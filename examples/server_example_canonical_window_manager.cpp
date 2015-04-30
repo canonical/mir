@@ -208,7 +208,6 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Surface> const& surface,
     CanonicalSurfaceInfoMap& surface_info)
 {
-    tools->info_for(session).surfaces++;
     auto format = mir_pixel_format_xrgb_8888;
     ms::SurfaceCreationParameters params;
     params.of_size(titlebar_size_for_window(surface->size()))
@@ -382,12 +381,10 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
         }
     }
 
-
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        select_active_surface(tools->focused_surface());
     }
 }
 
@@ -484,7 +481,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
 
     if (action == mir_keyboard_action_down && scan_code == KEY_F11)
     {
-        switch (modifiers & modifier_mask)
+        switch (modifiers)
         {
         case mir_input_event_modifier_alt:
             toggle(mir_surface_state_maximized);
@@ -506,7 +503,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
     {
         if (auto const session = tools->focused_session())
         {
-            switch (modifiers & modifier_mask)
+            switch (modifiers)
             {
             case mir_input_event_modifier_alt:
                 kill(session->process_id(), SIGTERM);
@@ -523,6 +520,28 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
                 break;
             }
         }
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_TAB)
+    {
+        tools->focus_next_session();
+        if (auto const surface = tools->focused_surface())
+            select_active_surface(surface);
+
+        return true;
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_GRAVE)
+    {
+        if (auto const prev = tools->focused_surface())
+        {
+            if (auto const app = tools->focused_session())
+                select_active_surface(app->surface_after(prev));
+        }
+
+        return true;
     }
 
     return false;
@@ -722,7 +741,7 @@ bool me::CanonicalWindowManagerPolicyCopy::constrained_resize(
     Size const& requested_size,
     bool const left_resize,
     bool const top_resize,
-    Rectangle const& bounds)
+    Rectangle const& /*bounds*/)
 {
     auto const& surface_info = tools->info_for(surface);
 
@@ -816,35 +835,7 @@ bool me::CanonicalWindowManagerPolicyCopy::constrained_resize(
     if (top_resize)
         new_pos.y += new_size.height - requested_size.height;
 
-    if (left_resize)
-    {
-        if (new_pos.x < bounds.top_left.x)
-        {
-            new_size.width = new_size.width + (new_pos.x - bounds.top_left.x);
-            new_pos.x = bounds.top_left.x;
-        }
-    }
-    else
-    {
-        auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
-        if (to_bottom_right.dx < DeltaX{0})
-            new_size.width = new_size.width + to_bottom_right.dx;
-    }
-
-    if (top_resize)
-    {
-        if (new_pos.y < bounds.top_left.y)
-        {
-            new_size.height = new_size.height + (new_pos.y - bounds.top_left.y);
-            new_pos.y = bounds.top_left.y;
-        }
-    }
-    else
-    {
-        auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
-        if (to_bottom_right.dy < DeltaY{0})
-            new_size.height = new_size.height + to_bottom_right.dy;
-    }
+    // placeholder - constrain onscreen
 
     switch (surface_info.state)
     {
@@ -884,7 +875,7 @@ bool me::CanonicalWindowManagerPolicyCopy::constrained_resize(
     return true;
 }
 
-bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
+bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle /*bounds*/)
 {
     if (!surface)
         return false;
@@ -892,23 +883,9 @@ bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> sur
     if (!surface->input_area_contains(from) && !tools->info_for(surface).titlebar)
         return false;
 
-    auto const top_left = surface->top_left();
-    auto const surface_size = surface->size();
-    auto const bottom_right = top_left + as_displacement(surface_size);
-
     auto movement = to - from;
 
-    if (movement.dx < DeltaX{0})
-        movement.dx = std::max(movement.dx, (bounds.top_left - top_left).dx);
-
-    if (movement.dy < DeltaY{0})
-        movement.dy = std::max(movement.dy, (bounds.top_left - top_left).dy);
-
-    if (movement.dx > DeltaX{0})
-        movement.dx = std::min(movement.dx, (bounds.bottom_right() - bottom_right).dx);
-
-    if (movement.dy > DeltaY{0})
-        movement.dy = std::min(movement.dy, (bounds.bottom_right() - bottom_right).dy);
+    // placeholder - constrain onscreen
 
     move_tree(surface, movement);
 
