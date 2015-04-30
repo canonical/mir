@@ -686,3 +686,21 @@ void mir_surface_id_release(MirSurfaceId* id)
 {
     delete id;
 }
+
+bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* /*spec*/,
+                                               MirSurfaceId* /*parent*/,
+                                               MirRectangle* /*attachment_rect*/,
+                                               MirEdgeAttachment /*edge*/)
+{
+    return true;
+}
+
+char const* mir_surface_id_as_string(MirSurfaceId* id)
+{
+    return id->as_string().c_str();
+}
+
+MirSurfaceId* mir_surface_id_from_string(char const* /*id_string*/)
+{
+    return nullptr;
+}
