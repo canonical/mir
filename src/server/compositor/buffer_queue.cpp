@@ -181,10 +181,13 @@ mc::BufferQueue::BufferQueue(
 
 bool mc::BufferQueue::client_ahead_of_compositor() const
 {
-    return nbuffers > 1 &&
-           !frame_dropping_enabled &&
-           frame_deadlines_met >= frame_deadlines_threshold &&
-           !ready_to_composite_queue.empty();
+    bool client_may_starve = ready_to_composite_queue.empty() &&
+                             buffers_owned_by_client.empty();
+
+    return nbuffers > 1 &&  // not possible for single buffered to get ahead
+           !frame_dropping_enabled &&  // never throttle frame-droppers
+           frame_deadlines_met >= frame_deadlines_threshold &&  // is smooth 
+           !client_may_starve;  // throttling the client won't deadlock us
 }
 
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
@@ -421,11 +424,18 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
     return count;
 }
 
+// This function is a kludge used in tests only. It attempts to predict how
+// many calls to client_acquire you can make before it blocks.
+// Future tests should NOT use it.
 int mc::BufferQueue::buffers_free_for_client() const
 {
     std::lock_guard<decltype(guard)> lock(guard);
     int ret = 1;
-    if (nbuffers > 1)
+    if (nbuffers == 1)
+        ret = 1;
+    else if (client_ahead_of_compositor())  // client_acquire will block
+        ret = 0;
+    else
     {
         int nfree = free_buffers.size();
         int future_growth = nbuffers - buffers.size();

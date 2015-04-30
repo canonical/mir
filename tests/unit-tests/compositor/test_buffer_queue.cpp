@@ -414,7 +414,8 @@ TEST_F(BufferQueueTest, throws_on_out_of_order_client_release)
     }
 }
 
-TEST_F(BufferQueueTest, async_client_cycles_through_all_buffers)
+// Disabled - Not a valid test in the presence of dynamic queue throttling
+TEST_F(BufferQueueTest, DISABLED_async_client_cycles_through_all_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
@@ -537,8 +538,7 @@ TEST_F(BufferQueueTest, compositor_acquires_frames_in_order)
         {
             std::deque<mg::BufferID> client_release_sequence;
             std::vector<mg::Buffer *> buffers;
-            int const max_ownable_buffers = nbuffers - 1;
-            for (int i = 0; i < max_ownable_buffers; ++i)
+            for (int i = 0; i < q.buffers_free_for_client(); ++i)
             {
                 auto handle = client_acquire_async(q);
                 ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
