@@ -18,8 +18,8 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
       . Introduce "buffer streams" properly. This is a generalization of the
         most basic functionality of a surface.
       . Log useful OpenGL information on server start-up.
-      . add display and fencing information to the layers in the hwc report
-      . add a report_vsync method to display report
+      . Add display and fencing information to the layers in the HWC report
+      . Add a report_vsync method to display report
       . Support for second display when running on "android" driver stack
       . Server buffering strategy is configurable by --nbuffers=N
         (or environment MIR_SERVER_NBUFFERS=N)
