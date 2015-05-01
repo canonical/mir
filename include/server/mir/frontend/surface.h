@@ -61,8 +61,9 @@ public:
     
     virtual std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const = 0;
 
-    //insert a new stream at the bottom-most z-order
-    virtual frontend::BufferStreamId add_stream(
+    //insert a new stream at the top-most z-order
+    virtual void add_stream(
+        frontend::BufferStreamId stream_id, 
         std::shared_ptr<compositor::BufferStream> const& stream,
         geometry::Displacement position,
         float alpha) = 0;

@@ -772,16 +772,17 @@ TEST_F(BasicSurfaceTest, adds_buffer_streams)
     auto additional_buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto additional_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto additional_buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    mf::BufferStreamId id0{0}, id1{1}, id2{2};
 
-    auto id0 = surface.add_stream(additional_buffer_stream0, d0, alpha0);
-    auto id1 = surface.add_stream(additional_buffer_stream1, d1, alpha1);
-    auto id2 = surface.add_stream(additional_buffer_stream2, d2, alpha2);
+    surface.add_stream(id0, additional_buffer_stream0, d0, alpha0);
+    surface.add_stream(id1, additional_buffer_stream1, d1, alpha1);
+    surface.add_stream(id2, additional_buffer_stream2, d2, alpha2);
     surface.set_alpha(alpha3);
 
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(4));
     EXPECT_THAT(renderables[0], IsRenderableOfAttributes(rect.top_left, alpha3));
-    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left + d0, alpha1));
+    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left + d0, alpha0));
     EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left + d1, alpha1));
     EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left + d2, alpha2));
 
@@ -804,14 +805,15 @@ TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
     geom::Point pt{10, 20};
     geom::Displacement d{19,99};
     auto alpha = 1.0f;
+    mf::BufferStreamId id0{0};
     auto additional_buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    surface.add_stream(additional_buffer_stream, d, alpha);
+    surface.add_stream(id0, additional_buffer_stream, d, alpha);
     surface.move_to(pt);
 
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(2));
-    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(pt + d, alpha));
-    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(pt, alpha));
+    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(pt, alpha));
+    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(pt + d, alpha));
 }
 
 TEST_F(BasicSurfaceTest, repositions_buffer_streams)
@@ -824,19 +826,20 @@ TEST_F(BasicSurfaceTest, repositions_buffer_streams)
     auto additional_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto additional_buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto additional_buffer_stream3 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    mf::BufferStreamId id0{0}, id1{1}, id2{2};
 
-    auto id0 = surface.add_stream(additional_buffer_stream1, d0, 1.0f);
-    auto id1 = surface.add_stream(additional_buffer_stream2, d1, 1.0f);
-    auto id2 = surface.add_stream(additional_buffer_stream3, d2, 1.0f);
+    surface.add_stream(id0, additional_buffer_stream1, d0, 1.0f);
+    surface.add_stream(id1, additional_buffer_stream2, d1, 1.0f);
+    surface.add_stream(id2, additional_buffer_stream3, d2, 1.0f);
     surface.reposition(id0, changed_d0, 1.0f);
     surface.raise(id1);
 
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(4));
-    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(rect.top_left + d2, 1.0f));
-    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left + changed_d0, 1.0f));
-    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left, 1.0f));
-    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left + d1, 1.0f));
+    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(rect.top_left + d1, 1.0f));
+    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left, 1.0f));
+    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left + changed_d0, 1.0f));
+    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left + d2, 1.0f));
     surface.remove_stream(id0);
     surface.remove_stream(id1);
     surface.remove_stream(id2);

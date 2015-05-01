@@ -872,12 +872,11 @@ ms::BasicSurface::info_from_id(frontend::BufferStreamId const& id) const
         [&](BufferStreamInfo const& info) { return info.id == id; });
 }
 
-mf::BufferStreamId ms::BasicSurface::add_stream(
-    std::shared_ptr<mc::BufferStream> const& stream, geom::Displacement position, float alpha)
+void ms::BasicSurface::add_stream(
+    mf::BufferStreamId id, std::shared_ptr<mc::BufferStream> const& stream,
+    geom::Displacement position, float alpha)
 {
-    last_stream_id = mf::BufferStreamId(last_stream_id.as_value() + 1);
-    streams.emplace_front(BufferStreamInfo{last_stream_id, stream, position, alpha});
-    return last_stream_id;
+    streams.emplace_back(BufferStreamInfo{id, stream, position, alpha});
 }
 
 void ms::BasicSurface::reposition(mf::BufferStreamId id, geom::Displacement pt, float alpha)
@@ -903,7 +902,7 @@ void ms::BasicSurface::raise(frontend::BufferStreamId id)
     auto info_it = info_from_id(id);
     if (info_it == streams.end())
         BOOST_THROW_EXCEPTION(std::logic_error("invalid stream id\n"));
-    streams.push_back(*info_it);
+    streams.push_front(*info_it);
     streams.erase(info_it);
 }
 

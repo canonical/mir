@@ -95,7 +95,8 @@ public:
 
     std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
-    frontend::BufferStreamId add_stream(
+    void add_stream(
+        frontend::BufferStreamId,
         std::shared_ptr<compositor::BufferStream> const& stream,
         geometry::Displacement position, float alpha) override;
     void remove_stream(frontend::BufferStreamId) override;
@@ -186,7 +187,6 @@ private:
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
 
-    frontend::BufferStreamId last_stream_id{0};
     frontend::BufferStreamId const primary_id{0};
     struct BufferStreamInfo
     {

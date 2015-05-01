@@ -106,8 +106,9 @@ public:
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) {}
     void rename(std::string const&) {}
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
-    frontend::BufferStreamId add_stream(
-        std::shared_ptr<compositor::BufferStream> const&, geometry::Displacement, float) override { return frontend::BufferStreamId{0}; };
+    void add_stream(
+        frontend::BufferStreamId, std::shared_ptr<compositor::BufferStream> const&,
+        geometry::Displacement, float) override {}
     void remove_stream(frontend::BufferStreamId) override {}
     void reposition(frontend::BufferStreamId, geometry::Displacement, float) {}
     void raise(frontend::BufferStreamId) override {}
