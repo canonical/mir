@@ -41,6 +41,7 @@ set(
   test_shell_control_of_surface_configuration.cpp
   test_render_override.cpp
   test_surface_modifications.cpp
+  test_surface_placement.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")
@@ -60,25 +61,16 @@ mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompi
 
 add_dependencies(mir_acceptance_tests GMock)
 
-target_link_libraries(
-  mir_acceptance_tests
+target_link_libraries(mir_acceptance_tests
+  mir-test-static
+  mir-test-framework-static
+  mir-test-doubles-static
+  mir-test-doubles-platform-static
 
-  mirserver
   mirclient
   mirclient-debug-extension
-  mirplatform
+  mirserver
 
-  mir-test
-  mir-test-framework
-  mir-test-doubles
-  mir-test-doubles-platform
-  3rd_party
-
-  ${PROTOBUF_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

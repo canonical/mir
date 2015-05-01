@@ -28,10 +28,12 @@
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/egl_error.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
@@ -48,7 +50,7 @@ mgn::detail::EGLSurfaceHandle::EGLSurfaceHandle(EGLDisplay display, EGLNativeWin
 {
     if (egl_surface == EGL_NO_SURFACE)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create EGL surface."));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Nested Mir Display Error: Failed to create EGL surface."));
     }
 }
 
@@ -66,7 +68,7 @@ mgn::detail::EGLDisplayHandle::EGLDisplayHandle(
 {
     egl_display = eglGetDisplay(native_display);
     if (egl_display == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Nested Mir Display Error: Failed to fetch EGL display."));
 }
 
 void mgn::detail::EGLDisplayHandle::initialize(MirPixelFormat format)
@@ -76,13 +78,13 @@ void mgn::detail::EGLDisplayHandle::initialize(MirPixelFormat format)
 
     if (eglInitialize(egl_display, &major, &minor) != EGL_TRUE)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Nested Mir Display Error: Failed to initialize EGL."));
     }
 
     egl_context_ = eglCreateContext(egl_display, choose_windowed_es_config(format), EGL_NO_CONTEXT, detail::nested_egl_context_attribs);
 
     if (egl_context_ == EGL_NO_CONTEXT)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create shared EGL context"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create shared EGL context"));
 }
 
 EGLConfig mgn::detail::EGLDisplayHandle::choose_windowed_es_config(MirPixelFormat format) const
@@ -104,7 +106,7 @@ EGLConfig mgn::detail::EGLDisplayHandle::choose_windowed_es_config(MirPixelForma
 
     int res = eglChooseConfig(egl_display, nested_egl_config_attribs, &result, 1, &n);
     if ((res != EGL_TRUE) || (n != 1))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to choose EGL configuration."));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Nested Mir Display Error: Failed to choose EGL configuration."));
 
     return result;
 }
@@ -141,12 +143,14 @@ mgn::Display::Display(
     std::shared_ptr<input::InputDispatcher> const& dispatcher,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<mg::GLConfig> const& gl_config) :
+    std::shared_ptr<mg::GLConfig> const& gl_config,
+    std::shared_ptr<mi::CursorListener> const& cursor_listener) :
     platform{platform},
     connection{connection},
     dispatcher{dispatcher},
     display_report{display_report},
     egl_display{connection->egl_native_display(), gl_config},
+    cursor_listener{cursor_listener},
     outputs{}
 {
     std::shared_ptr<DisplayConfiguration> conf(configuration());
@@ -210,16 +214,13 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
 
                         complete_display_initialization(egl_config_format);
 
-                        MirSurfaceParameters const request_params = {
-                            "Mir nested display",
+                        auto const host_surface = connection->create_surface(
                             area.size.width.as_int(),
                             area.size.height.as_int(),
                             egl_config_format,
+                            "Mir nested display",
                             mir_buffer_usage_hardware,
-                            static_cast<uint32_t>(output.id.as_value())
-                        };
-
-                        auto const host_surface = connection->create_surface(request_params);
+                            static_cast<uint32_t>(output.id.as_value()));
 
                         result[output.id] = std::make_shared<mgn::detail::DisplaySyncGroup>( 
                             std::make_shared<mgn::detail::DisplayBuffer>(
@@ -227,6 +228,7 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
                                 host_surface,
                                 area,
                                 dispatcher,
+                                cursor_listener,
                                 output.current_format));
                         have_output_for_group = true;
                     }

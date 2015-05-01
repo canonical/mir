@@ -207,7 +207,7 @@ MIR_SERVER_31 {
     mir::shell::AbstractShell::destroy_surface*;
     mir::shell::AbstractShell::focused_session*;
     mir::shell::AbstractShell::focused_surface*;
-    mir::shell::AbstractShell::focus_next*;
+    mir::shell::AbstractShell::focus_next_session*;
     mir::shell::AbstractShell::get_surface_attribute*;
     mir::shell::AbstractShell::handle*;
     mir::shell::AbstractShell::open_session*;
@@ -237,7 +237,7 @@ MIR_SERVER_31 {
     mir::shell::ShellWrapper::destroy_surface*;
     mir::shell::ShellWrapper::focused_session*;
     mir::shell::ShellWrapper::focused_surface*;
-    mir::shell::ShellWrapper::focus_next*;
+    mir::shell::ShellWrapper::focus_next_session*;
     mir::shell::ShellWrapper::get_surface_attribute*;
     mir::shell::ShellWrapper::handle*;
     mir::shell::ShellWrapper::modify_surface*;
@@ -310,7 +310,7 @@ MIR_SERVER_31 {
     non-virtual?thunk?to?mir::shell::AbstractShell::destroy_surface*;
     non-virtual?thunk?to?mir::shell::AbstractShell::focused_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::focused_surface*;
-    non-virtual?thunk?to?mir::shell::AbstractShell::focus_next*;
+    non-virtual?thunk?to?mir::shell::AbstractShell::focus_next_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::get_surface_attribute*;
     non-virtual?thunk?to?mir::shell::AbstractShell::handle*;
     non-virtual?thunk?to?mir::shell::AbstractShell::open_session*;
@@ -332,7 +332,7 @@ MIR_SERVER_31 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::destroy_surface*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::focused_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::focused_surface*;
-    non-virtual?thunk?to?mir::shell::ShellWrapper::focus_next*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::focus_next_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::get_surface_attribute*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::handle*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::open_session*;
@@ -468,7 +468,7 @@ MIR_SERVER_31 {
     virtual?thunk?to?mir::shell::AbstractShell::close_session*;
     virtual?thunk?to?mir::shell::AbstractShell::create_surface*;
     virtual?thunk?to?mir::shell::AbstractShell::destroy_surface*;
-    virtual?thunk?to?mir::shell::AbstractShell::focus_next*;
+    virtual?thunk?to?mir::shell::AbstractShell::focus_next_session*;
     virtual?thunk?to?mir::shell::AbstractShell::focused_session*;
     virtual?thunk?to?mir::shell::AbstractShell::get_surface_attribute*;
     virtual?thunk?to?mir::shell::AbstractShell::handle*;
@@ -564,7 +564,6 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_input_platform*;
     mir::DefaultServerConfiguration::the_input_reader*;
     mir::DefaultServerConfiguration::the_input_reader_policy*;
-    mir::DefaultServerConfiguration::the_input_reader_thread*;
     mir::DefaultServerConfiguration::the_input_reading_multiplexer*;
     mir::DefaultServerConfiguration::the_input_region*;
     mir::DefaultServerConfiguration::the_input_registrar*;
@@ -579,7 +578,6 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;
     mir::DefaultServerConfiguration::the_message_processor_report*;
-    mir::DefaultServerConfiguration::the_new_input_manager*;
     mir::DefaultServerConfiguration::the_options*;
     mir::DefaultServerConfiguration::the_persistent_surface_store*;
     mir::DefaultServerConfiguration::the_pixel_buffer*;

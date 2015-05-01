@@ -29,9 +29,6 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
 #include <atomic>
 
 namespace mp = mir::protobuf;

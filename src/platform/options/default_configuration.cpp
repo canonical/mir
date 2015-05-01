@@ -63,7 +63,6 @@ char const* const mo::platform_path = "platform-path";
 namespace
 {
 int const default_ipc_threads          = 1;
-int const default_nbuffers             = 2;
 bool const enable_input_default        = true;
 
 // Hack around the way Qt loads mir:
@@ -150,7 +149,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
             "threads in frontend thread pool.")
-        (nbuffers_opt, po::value<int>()->default_value(default_nbuffers),
+        (nbuffers_opt, po::value<int>()->default_value(3),
             "Number of buffers per surface.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")

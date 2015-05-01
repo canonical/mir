@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/egl_resources.h"
+#include "mir/graphics/egl_error.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -31,7 +32,7 @@ mg::EGLContextStore::EGLContextStore(EGLDisplay egl_display, EGLContext egl_cont
     : egl_display_{egl_display}, egl_context_{egl_context}
 {
     if (egl_context_ == EGL_NO_CONTEXT)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Could not create egl context\n"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Could not create egl context"));
 }
 
 mg::EGLContextStore::~EGLContextStore() noexcept
@@ -62,7 +63,7 @@ mg::EGLSurfaceStore::EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surf
     : egl_display_{egl_display}, egl_surface_{egl_surface}
 {
     if (egl_surface_ == EGL_NO_SURFACE && !allow_no_surface)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Could not create egl surface\n"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Could not create egl surface"));
 }
 
 mg::EGLSurfaceStore::EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface)

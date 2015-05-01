@@ -243,13 +243,8 @@ MirSurface* mir_connection_create_surface_sync(
     MirConnection* connection,
     MirSurfaceParameters const* params)
 {
-    MirSurface* surface = nullptr;
-
-    mir_wait_for(mir_connection_create_surface(connection, params,
-        reinterpret_cast<mir_surface_callback>(assign_result),
-        &surface));
-
-    return surface;
+    MirSurfaceSpec spec{connection, *params};
+    return mir_surface_create_sync(&spec);
 }
 
 __asm__(".symver new_mir_surface_set_event_handler,mir_surface_set_event_handler@@MIR_CLIENT_8.4");
@@ -607,25 +602,16 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-namespace
-{
-MirSurfaceSpec* create_spec_for_changes()
+MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
 try
 {
+    mir::require(mir_connection_is_valid(connection));
     return new MirSurfaceSpec{};
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
-}
-}
-
-MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
-{
-    mir::require(mir_connection_is_valid(connection));
-
-    return create_spec_for_changes();
 }
 
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
@@ -642,12 +628,52 @@ catch (std::exception const& ex)
     // Keep calm and carry on
 }
 
-void mir_surface_set_title(MirSurface* surface, char const* name)
+bool mir_surface_spec_set_width_increment(MirSurfaceSpec *spec, unsigned width_inc)
+try
 {
-    auto const spec = create_spec_for_changes();
-    mir_surface_spec_set_name(spec, name);
-    mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
+    spec->width_inc = width_inc;
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+bool mir_surface_spec_set_height_increment(MirSurfaceSpec *spec, unsigned height_inc)
+try
+{
+    spec->height_inc = height_inc;
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
+try
+{
+    spec->min_aspect = {width, height};
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+bool mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
+try
+{
+    spec->max_aspect = {width, height};
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
 }
 
 MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)

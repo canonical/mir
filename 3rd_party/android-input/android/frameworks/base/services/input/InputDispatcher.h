@@ -516,6 +516,8 @@ private:
         virtual void appendDescription(String8& msg) const;
         void recycle();
 
+        bool is_same_key(KeyEntry* other) const;
+
     protected:
         virtual ~KeyEntry();
     };

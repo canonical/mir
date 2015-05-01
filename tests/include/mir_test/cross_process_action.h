@@ -19,8 +19,7 @@
 #ifndef MIR_TEST_CROSS_PROCESS_ACTION_H_
 #define MIR_TEST_CROSS_PROCESS_ACTION_H_
 
-/* TODO: CrossProcessSync should be in mir_test */
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/cross_process_sync.h"
 
 #include <functional>
 #include <chrono>
@@ -37,8 +36,8 @@ public:
     void operator()(std::chrono::milliseconds timeout = std::chrono::milliseconds{-1});
 
 private:
-    mir_test_framework::CrossProcessSync start_sync;
-    mir_test_framework::CrossProcessSync finish_sync;
+    CrossProcessSync start_sync;
+    CrossProcessSync finish_sync;
 };
 
 }

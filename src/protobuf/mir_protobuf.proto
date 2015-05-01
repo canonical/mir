@@ -31,8 +31,18 @@ message SurfaceParameters {
   optional int32 min_height = 14;
   optional int32 max_width = 15;
   optional int32 max_height = 16;
+  optional int32 width_inc = 17;
+  optional int32 height_inc = 18;
+  optional SurfaceAspectRatio min_aspect = 19;
+  optional SurfaceAspectRatio max_aspect = 20;
 
-  optional PersistentSurfaceId parent_persistent_id = 17;
+  optional PersistentSurfaceId parent_persistent_id = 21;
+}
+
+message SurfaceAspectRatio
+{
+    required uint32 width  = 1;
+    required uint32 height = 2;
 }
 
 // If and when we break our protocol backward-compatibility, this could be
@@ -56,7 +66,12 @@ message SurfaceSpecification {
   optional int32 max_width = 15;
   optional int32 max_height = 16;
 
-  optional PersistentSurfaceId parent_persistent_id = 17;
+  optional int32 width_inc = 17;
+  optional int32 height_inc = 18;
+  optional SurfaceAspectRatio min_aspect = 19;
+  optional SurfaceAspectRatio max_aspect = 20;
+
+  optional PersistentSurfaceId parent_persistent_id = 21;
 }
 
 

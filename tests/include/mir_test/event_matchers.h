@@ -27,6 +27,10 @@
 
 #include <gmock/gmock.h>
 
+
+void PrintTo(MirEvent const& event, std::ostream *os);
+void PrintTo(MirEvent const* event, std::ostream *os);
+
 namespace mir
 {
 namespace test
@@ -146,6 +150,18 @@ MATCHER_P(KeyOfSymbol, keysym, "")
         return false;
 
     if(mir_keyboard_event_key_code(kev) != static_cast<xkb_keysym_t>(keysym))
+        return false;
+
+    return true;
+}
+
+MATCHER_P(KeyOfScanCode, code, "")
+{
+    auto kev = maybe_key_event(to_address(arg));
+    if (kev == nullptr)
+        return false;
+
+    if(mir_keyboard_event_scan_code(kev) != code)
         return false;
 
     return true;
