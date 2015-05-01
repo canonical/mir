@@ -224,7 +224,19 @@ void mf::SessionMediator::create_surface(
     {
         auto persistent_id = request->parent_persistent_id().value();
         std::vector<uint8_t> buffer(persistent_id.begin(), persistent_id.end());
-        params.parent = shell->surface_for_id(buffer);
+        try
+        {
+            params.parent = shell->surface_for_id(buffer);
+        }
+        catch (std::out_of_range /* There ain't no surface with that ID */)
+        {
+            // XXX: This is ugly, but there doesn't seem to be a better way
+            //      to do an “expected” error return from here...
+            response->set_error("Failed to set parent surface: invalid ID");
+            lock.unlock();
+            done->Run();
+            return;
+        }
     }
 
     if (request->has_aux_rect())
