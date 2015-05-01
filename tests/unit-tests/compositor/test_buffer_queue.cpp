@@ -161,14 +161,14 @@ void unthrottled_compositor_thread(mc::BufferQueue &bundle,
    }
 }
 
+std::chrono::milliseconds const throttled_compositor_rate(10);
 void throttled_compositor_thread(mc::BufferQueue &bundle,
                                  std::atomic<bool> &done)
 {
    while (!done)
    {
        bundle.compositor_release(bundle.compositor_acquire(nullptr));
-       using namespace std;
-       this_thread::sleep_for(10ms);
+       std::this_thread::sleep_for(throttled_compositor_rate);
    }
 }
 
@@ -1626,7 +1626,7 @@ TEST_F(BufferQueueTest, DISABLED_buffers_are_not_lost)
 }
 
 // Test that dynamic queue scaling/throttling actually works
-TEST_F(BufferQueueTest, fast_clients_only_get_two_buffers)
+TEST_F(BufferQueueTest, queue_size_scales_with_client_performance)
 {
     for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
@@ -1652,7 +1652,41 @@ TEST_F(BufferQueueTest, fast_clients_only_get_two_buffers)
                 buffers_acquired.insert(handle->buffer());
             handle->release_buffer();
         }
+        // Expect double-buffers for fast clients
+        EXPECT_THAT(buffers_acquired.size(), Eq(2));
 
+        // Now check what happens if the client becomes slow...
+        buffers_acquired.clear();
+        for (int frame = 0; frame < 10; frame++)
+        {
+            auto handle = client_acquire_async(q);
+            handle->wait_for(std::chrono::seconds(1));
+            ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+
+            if (frame > 5)  // Ignore the initial settling/detection period
+                buffers_acquired.insert(handle->buffer());
+
+            // Client is just too slow to keep up:
+            std::this_thread::sleep_for(throttled_compositor_rate * 1.5);
+
+            handle->release_buffer();
+        }
+        // Expect at least triple buffers for sluggish clients
+        EXPECT_THAT(buffers_acquired.size(), Ge(3));
+
+        // And what happens if the client becomes fast again?...
+        buffers_acquired.clear();
+        for (int frame = 0; frame < 100; frame++)
+        {
+            auto handle = client_acquire_async(q);
+            handle->wait_for(std::chrono::seconds(1));
+            ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+
+            if (frame > 10)  // q will start with nbuffers but soon shrink
+                buffers_acquired.insert(handle->buffer());
+            handle->release_buffer();
+        }
+        // Expect double-buffers for fast clients
         EXPECT_THAT(buffers_acquired.size(), Eq(2));
     }
 }
