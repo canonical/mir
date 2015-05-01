@@ -172,12 +172,9 @@ mc::BufferQueue::BufferQueue(
 
 bool mc::BufferQueue::client_ahead_of_compositor() const
 {
-    bool starvation_deadlock_is_possible = ready_to_composite_queue.empty() &&
-                                           buffers_owned_by_client.empty();
-
     return nbuffers > 1 &&
            !frame_dropping_enabled &&
-           !starvation_deadlock_is_possible &&
+           !ready_to_composite_queue.empty() &&
            frame_deadlines_met >= frame_deadlines_threshold;
 }
 
