@@ -322,8 +322,6 @@ bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t ou
  */
 bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode);
 
-bool mir_surface_spec_set_id(MirSurfaceSpec* spec, MirSurfaceId* id);
-
 /**
  * Release the resources held by a MirSurfaceSpec.
  *
@@ -649,13 +647,7 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surfac
 
 MirSurfaceId* mir_surface_request_persistent_id_sync(MirSurface* surface);
 
-MirSurfaceId* mir_surface_id_from_string(char const* id_string);
-
 bool mir_surface_id_is_valid(MirSurfaceId* id);
-
-bool mir_surface_ids_equal(MirSurfaceId* first, MirSurfaceId* second);
-
-char const* mir_surface_id_as_string(MirSurfaceId* id);
 
 void mir_surface_id_release(MirSurfaceId* id);
 
