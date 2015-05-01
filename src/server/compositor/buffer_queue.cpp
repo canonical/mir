@@ -138,7 +138,7 @@ mc::BufferQueue::BufferQueue(
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
       frame_deadlines_threshold{3}, // configurable in future, maybe.
-      frame_deadlines_met{0}, // start pessimistically for max smoothness
+      frame_deadlines_met{0},
       frame_dropping_enabled{false},
       current_compositor_buffer_valid{false},
       the_properties{props},
@@ -181,13 +181,13 @@ mc::BufferQueue::BufferQueue(
 
 bool mc::BufferQueue::client_ahead_of_compositor() const
 {
-    bool client_may_starve = ready_to_composite_queue.empty() &&
-                             buffers_owned_by_client.empty();
+    bool starvation_deadlock_is_possible = ready_to_composite_queue.empty() &&
+                                           buffers_owned_by_client.empty();
 
-    return nbuffers > 1 &&  // not possible for single buffered to get ahead
-           !frame_dropping_enabled &&  // never throttle frame-droppers
-           frame_deadlines_met >= frame_deadlines_threshold &&  // is smooth 
-           !client_may_starve;  // throttling the client won't deadlock us
+    return nbuffers > 1 &&
+           !frame_dropping_enabled &&
+           !starvation_deadlock_is_possible &&
+           frame_deadlines_met >= frame_deadlines_threshold;
 }
 
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
@@ -196,10 +196,11 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
 
     pending_client_notifications.push_back(std::move(complete));
 
-    // Fast clients with swap interval == 1 that are keeping up with the
-    // compositor can be further throttled to only use two buffers, so that
-    // their latency is minimized...
-
+    /*
+     * Fast clients that can be safely throttled should be. This keeps the
+     * number of prefilled buffers limited to one (equivalent to double-
+     * buffering) for minimal latency.
+     */
     if (client_ahead_of_compositor())
         return;
 
@@ -409,24 +410,29 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
 
     /*
      * Intentionally schedule one more frame than we need, and for good
-     * reason... If the compositor is only waking up as often as the client,
-     * and the client is only producing half frame rate then the compositor
-     * would never know that's not fast enough.
-     *  If however we over-schedule by one frame the compositor will wake up
-     * at full frame rate (providing the client can at least keep up with half
-     * frame rate) and on at least every second frame can detect which clients
-     * are failing to keep up, and so we can adjust their queues accordingly
-     * to better help them keep up. See also "client_ahead_of_compositor".
+     * reason... We can only accurately detect frame_deadlines_met in
+     * compositor_acquire if compositor_acquire is still waking up at full
+     * frame rate even with a slow client. This is crucial to scaling the
+     * queue performance dynamically in "client_ahead_of_compositor".
+     *   But don't be concerned; very little is lost by over-scheduling. Under
+     * normal smooth rendering conditions all frames are used (not wasted).
+     * And under sluggish client rendering conditions the extra frame has a
+     * critical role in providing a sample point in which we detect if the
+     * client is keeping up. Only when the compositor changes from active to
+     * idle is the extra frame wasted. Sounds like a reasonable price to pay
+     * for dynamic performance monitoring.
      */
-    if (count)
-        ++count;
+//    if (count)
+//        ++count;
 
     return count;
 }
 
-// This function is a kludge used in tests only. It attempts to predict how
-// many calls to client_acquire you can make before it blocks.
-// Future tests should NOT use it.
+/*
+ * This function is a kludge used in tests only. It attempts to predict how
+ * many calls to client_acquire you can make before it blocks.
+ * Future tests should not use it.
+ */
 int mc::BufferQueue::buffers_free_for_client() const
 {
     std::lock_guard<decltype(guard)> lock(guard);
