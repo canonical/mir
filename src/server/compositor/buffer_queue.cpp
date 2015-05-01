@@ -422,8 +422,8 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
      * idle is the extra frame wasted. Sounds like a reasonable price to pay
      * for dynamic performance monitoring.
      */
-//    if (count)
-//        ++count;
+    if (count)
+        ++count;
 
     return count;
 }
