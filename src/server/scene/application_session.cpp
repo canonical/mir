@@ -134,16 +134,17 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface(mf::SurfaceId id) c
 std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_ptr<ms::Surface> const& before) const
 {
     std::lock_guard<std::mutex> lock(surfaces_and_streams_mutex);
-    auto i = surfaces.begin();
-    for (; i != surfaces.end(); ++i)
+    auto current = surfaces.begin();
+    for (; current != surfaces.end(); ++current)
     {
-        if (i->second == before)
+        if (current->second == before)
             break;
     }
-    if (i == surfaces.end())
+
+    if (current == surfaces.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("surface_after: surface is not a member of this session"));
 
-    i = std::find_if(++i, end(surfaces), [](Surfaces::value_type const& s)
+    auto const can_take_focus = [](Surfaces::value_type const &s)
         {
             switch (s.second->type())
             {
@@ -162,12 +163,14 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
                 // Cannot have input focus - skip it
                 return false;
             }
-        });
+        };
 
-    if (i == surfaces.end())
-        i = surfaces.begin();
+    auto next = std::find_if(++current, end(surfaces), can_take_focus);
 
-    return i->second;
+    if (next == surfaces.end())
+        next = std::find_if(begin(surfaces), current, can_take_focus);
+
+    return next->second;
 }
 
 void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
