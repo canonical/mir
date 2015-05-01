@@ -780,10 +780,10 @@ TEST_F(BasicSurfaceTest, adds_buffer_streams)
 
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(4));
-    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(rect.top_left + d2, alpha2));
-    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left + d1, alpha1));
-    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left + d0, alpha0));
-    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left, alpha3));
+    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(rect.top_left, alpha3));
+    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left + d0, alpha1));
+    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left + d1, alpha1));
+    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left + d2, alpha2));
 
     surface.remove_stream(id0);
     surface.remove_stream(id1);

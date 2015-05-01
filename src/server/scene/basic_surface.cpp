@@ -910,7 +910,6 @@ void ms::BasicSurface::raise(frontend::BufferStreamId id)
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
 {
     mg::RenderableList list;
-
     for(auto const& info : streams)
     {
         list.emplace_back(std::make_shared<SurfaceSnapshot>(

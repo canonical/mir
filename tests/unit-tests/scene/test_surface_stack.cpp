@@ -239,12 +239,12 @@ TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
         ElementsAre(
-            SceneElementForStream(stub_stream2),
-            SceneElementForStream(stub_stream1),
             SceneElementForSurface(stub_surface1),
+            SceneElementForStream(stub_stream1),
+            SceneElementForStream(stub_stream2),
             SceneElementForSurface(stub_surface2),
-            SceneElementForStream(stub_stream3),
-            SceneElementForSurface(stub_surface3)
+            SceneElementForSurface(stub_surface3),
+            SceneElementForStream(stub_stream3)
         ));
 }
 
