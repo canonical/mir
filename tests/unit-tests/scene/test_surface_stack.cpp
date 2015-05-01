@@ -213,10 +213,8 @@ TEST_F(SurfaceStack, stacking_order)
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
-    auto o = stack.scene_elements_for(compositor_id);
-    printf("O.size %i\n", o.size());
     EXPECT_THAT(
-        o,
+        stack.scene_elements_for(compositor_id),
         ElementsAre(
             SceneElementForSurface(stub_surface1),
             SceneElementForSurface(stub_surface2),
@@ -245,8 +243,9 @@ TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
             SceneElementForStream(stub_stream1),
             SceneElementForSurface(stub_surface1),
             SceneElementForSurface(stub_surface2),
-            SceneElementForSurface(stub_surface3),
-            SceneElementForStream(stub_stream3)));
+            SceneElementForStream(stub_stream3),
+            SceneElementForSurface(stub_surface3)
+        ));
 }
 
 TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
