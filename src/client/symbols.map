@@ -192,6 +192,9 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_surface_request_persistent_id_sync;
     mir_surface_id_is_valid;
     mir_surface_id_release;
+    mir_surface_spec_attach_to_foreign_parent;
+    mir_surface_id_as_string;
+    mir_surface_id_from_string;
 } MIR_CLIENT_8.3;
 
 MIR_CLIENT_DETAIL_8 {
