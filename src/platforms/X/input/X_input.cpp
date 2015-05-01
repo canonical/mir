@@ -53,7 +53,7 @@ extern "C" mi::PlatformPriority probe_input_platform(
 namespace
 {
 mir::ModuleProperties const description = {
-    "stub-X",
+    "X-input",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO

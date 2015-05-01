@@ -19,6 +19,7 @@ add_library(
   
   X_input.cpp
   X_input_platform.cpp
+  X_input_device.cpp
   )
 
 set_target_properties(

@@ -33,6 +33,8 @@ class InputDevice;
 
 namespace X
 {
+class XInputDevice;
+
 class XInputPlatform : public mir::input::Platform
 {
 public:
@@ -46,6 +48,7 @@ public:
 private:
     std::shared_ptr<mir::dispatch::ActionQueue> const platform_queue;
     std::shared_ptr<mir::input::InputDeviceRegistry> const registry;
+    std::shared_ptr<mir::input::X::XInputDevice> const device;
 //    static XInputPlatform* stub_input_platform;
 //    static std::vector<std::weak_ptr<mir::input::InputDevice>> device_store;
 };

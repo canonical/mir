@@ -16,46 +16,32 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "X_input_platform.h"
 #include "X_input_device.h"
-
-#include "mir/input/input_device_registry.h"
-#include "mir/dispatch/action_queue.h"
-#include "mir/module_deleter.h"
+#include "mir/dispatch/dispatchable.h"
 #include "../debug.h"
-
-//#include <algorithm>
 
 namespace mi = mir::input;
 namespace mix = mi::X;
+namespace md = mir::dispatch;
 
-mix::XInputPlatform::XInputPlatform(
-    std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry)
-    : platform_queue(mir::make_module_ptr<mir::dispatch::ActionQueue>()),
-      registry(input_device_registry),
-      device(std::make_shared<mix::XInputDevice>())
+std::shared_ptr<md::Dispatchable> mix::XInputDevice::dispatchable()
+{
+    CALLED
+    return nullptr;
+}
+
+void mix::XInputDevice::start(InputSink* /*destination*/)
 {
     CALLED
 }
 
-mix::XInputPlatform::~XInputPlatform()
+void mix::XInputDevice::stop()
 {
     CALLED
 }
 
-void mix::XInputPlatform::start()
+mi::InputDeviceInfo mix::XInputDevice::get_device_info()
 {
     CALLED
-    registry->add_device(device);
-}
-
-std::shared_ptr<mir::dispatch::Dispatchable> mix::XInputPlatform::dispatchable()
-{
-    CALLED
-    return platform_queue;
-}
-
-void mix::XInputPlatform::stop()
-{
-    CALLED
+    return info;
 }
