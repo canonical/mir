@@ -220,6 +220,13 @@ void mf::SessionMediator::create_surface(
     if (request->has_parent_id())
         params.with_parent_id(SurfaceId{request->parent_id()});
 
+    if (request->has_parent_persistent_id())
+    {
+        auto persistent_id = request->parent_persistent_id().value();
+        std::vector<uint8_t> buffer(persistent_id.begin(), persistent_id.end());
+        params.parent = shell->surface_for_id(buffer);
+    }
+
     if (request->has_aux_rect())
     {
         params.with_aux_rect(geom::Rectangle{

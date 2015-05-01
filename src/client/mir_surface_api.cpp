@@ -687,11 +687,14 @@ void mir_surface_id_release(MirSurfaceId* id)
     delete id;
 }
 
-bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* /*spec*/,
-                                               MirSurfaceId* /*parent*/,
-                                               MirRectangle* /*attachment_rect*/,
-                                               MirEdgeAttachment /*edge*/)
+bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
+                                               MirSurfaceId* parent,
+                                               MirRectangle* attachment_rect,
+                                               MirEdgeAttachment edge)
 {
+    spec->parent_id = parent;
+    spec->aux_rect = *attachment_rect;
+    spec->edge_attachment = edge;
     return true;
 }
 

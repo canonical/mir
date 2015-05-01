@@ -103,6 +103,12 @@ std::vector<uint8_t> msh::FrontendShell::persistent_id_for(std::shared_ptr<mf::S
     return surface_store->serialise_id(surface_store->id_for_surface(surface));
 }
 
+std::shared_ptr<ms::Surface> msh::FrontendShell::surface_for_id(const std::vector<uint8_t> &serialised_id)
+{
+    auto const& id = surface_store->deserialise_id(serialised_id);
+    return surface_store->surface_for_id(id);
+}
+
 
 int msh::FrontendShell::set_surface_attribute(
     std::shared_ptr<mf::Session> const& session,
