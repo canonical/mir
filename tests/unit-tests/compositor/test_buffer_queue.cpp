@@ -151,8 +151,7 @@ mg::Buffer* client_acquire_sync(mc::BufferQueue& q)
     return handle->buffer();
 }
 
-void compositor_thread(mc::BufferQueue &bundle,
-                                   std::atomic<bool> &done)
+void compositor_thread(mc::BufferQueue &bundle, std::atomic<bool> &done)
 {
    while (!done)
    {
