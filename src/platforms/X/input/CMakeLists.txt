@@ -1,10 +1,10 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/client
 #  ${CMAKE_SOURCE_DIR}
 #  ${PROJECT_SOURCE_DIR}/src/include/platform
 #  ${PROJECT_SOURCE_DIR}/src/include/common
 #  ${PROJECT_SOURCE_DIR}/src/include/server
-#  ${PROJECT_SOURCE_DIR}/src/include/client
 #  ${Boost_INCLUDE_DIRS}
 #  ${GLESv2_INCLUDE_DIRS}
 #  ${CMAKE_SOURCE_DIR}
@@ -20,7 +20,8 @@ add_library(
   X_input.cpp
   X_input_platform.cpp
   X_input_device.cpp
-  )
+  X_input_sink.cpp
+)
 
 set_target_properties(
   mirplatforminputX PROPERTIES
