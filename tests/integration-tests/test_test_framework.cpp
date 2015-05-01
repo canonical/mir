@@ -20,6 +20,7 @@
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/any_surface.h"
 #include "mir_test/signal.h"
 #include "mir_test/auto_unblock_thread.h"
 
@@ -34,6 +35,7 @@
 #include <dirent.h>
 
 namespace mf = mir::frontend;
+namespace mtf = mir_test_framework;
 
 // We need some tests to prove that errors are reported by the
 // display server test fixture.  But don't want them to fail in
@@ -124,16 +126,8 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
 
              for (int i = 0; i < 16; ++i)
              {
-                MirSurfaceParameters request_params =
-                {
-                    __PRETTY_FUNCTION__,
-                    640, 480,
-                    mir_pixel_format_abgr_8888,
-                    mir_buffer_usage_hardware,
-                    mir_display_output_id_invalid
-                };
+                auto const surface = mtf::make_any_surface(connection);
 
-                auto const surface = mir_connection_create_surface_sync(connection, &request_params);
                 EXPECT_TRUE(mir_surface_is_valid(surface));
                 mir_surface_release_sync(surface);
 

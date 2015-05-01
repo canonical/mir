@@ -45,7 +45,9 @@ public:
     std::vector<int> platform_fd_items() override;
     EGLNativeDisplayType egl_native_display() override;
     std::shared_ptr<MirDisplayConfiguration> create_display_config() override;
-    std::shared_ptr<HostSurface> create_surface(MirSurfaceParameters const&) override;
+    std::shared_ptr<HostSurface> create_surface(
+        int width, int height, MirPixelFormat pf, char const* name,
+        MirBufferUsage usage, uint32_t output_id) override;
     void set_display_config_change_callback(std::function<void()> const& cb) override;
     void apply_display_config(MirDisplayConfiguration&) override;
 
