@@ -427,55 +427,34 @@ TEST_F(BufferQueueTest, slow_clients_get_at_least_triple_buffers)
 
         for (int frame = 0; frame < 100; frame++)
         {
-            auto handle = client_acquire_async(q);
-            handle->wait_for(std::chrono::seconds(1));
-            ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+            if (frame % 3)  // Client keeps up two thirds of the time
+            {
+                auto a = client_acquire_async(q);
+                a->wait_for(std::chrono::seconds(1));
+                ASSERT_THAT(a->has_acquired_buffer(), Eq(true));
 
-            if (frame > 10)  // q will start with nbuffers but soon shrink
-                buffers_acquired.insert(handle->buffer());
-            handle->release_buffer();
+                auto b = client_acquire_async(q);
+                b->wait_for(std::chrono::seconds(1));
+                ASSERT_THAT(b->has_acquired_buffer(), Eq(true));
+    
+                if (frame > 10)  // q will start with nbuffers but soon shrink
+                {
+                    buffers_acquired.insert(a->buffer());
+                    buffers_acquired.insert(b->buffer());
+                }
+
+                a->release_buffer();
+                b->release_buffer();
+            }
 
             int ready = q.buffers_ready_for_compositor(nullptr);
             for (int f = 0; f < ready; ++f)
                 q.compositor_release(q.compositor_acquire(nullptr));
+
+            ASSERT_EQ(0, q.buffers_ready_for_compositor(nullptr));
         }
 
         EXPECT_THAT(buffers_acquired.size(), Ge(3));
-    }
-}
-
-TEST_F(BufferQueueTest, DISABLED_async_client_cycles_through_all_buffers)
-{
-    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
-    {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
-
-        std::atomic<bool> done(false);
-        auto unblock = [&done] { done = true; };
-        mt::AutoUnblockThread compositor(unblock,
-            compositor_thread, std::ref(q), std::ref(done));
-
-        std::unordered_set<uint32_t> ids_acquired;
-        int const max_ownable_buffers = nbuffers - 1;
-        for (int i = 0; i < max_ownable_buffers*2; ++i)
-        {
-            std::vector<mg::Buffer *> client_buffers;
-            for (int acquires = 0; acquires < max_ownable_buffers; ++acquires)
-            {
-                auto handle = client_acquire_async(q);
-                handle->wait_for(std::chrono::seconds(1));
-                ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-                ids_acquired.insert(handle->id().as_value());
-                client_buffers.push_back(handle->buffer());
-            }
-
-            for (auto const& buffer : client_buffers)
-            {
-                q.client_release(buffer);
-            }
-        }
-
-        EXPECT_THAT(ids_acquired.size(), Eq(nbuffers));
     }
 }
 
