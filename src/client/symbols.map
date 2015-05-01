@@ -188,6 +188,10 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_buffer_stream_release;
     mir_buffer_stream_release_sync;
     mir_buffer_stream_is_valid;
+    mir_surface_request_persistent_id;
+    mir_surface_request_persistent_id_sync;
+    mir_surface_id_is_valid;
+    mir_surface_id_release;
 } MIR_CLIENT_8.3;
 
 MIR_CLIENT_DETAIL_8 {
