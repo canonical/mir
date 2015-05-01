@@ -692,6 +692,9 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
                                                MirRectangle* attachment_rect,
                                                MirEdgeAttachment edge)
 {
+    mir::require(mir_surface_id_is_valid(parent));
+    mir::require(attachment_rect != nullptr);
+
     spec->parent_id = parent;
     spec->aux_rect = *attachment_rect;
     spec->edge_attachment = edge;
