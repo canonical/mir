@@ -243,13 +243,8 @@ MirSurface* mir_connection_create_surface_sync(
     MirConnection* connection,
     MirSurfaceParameters const* params)
 {
-    MirSurface* surface = nullptr;
-
-    mir_wait_for(mir_connection_create_surface(connection, params,
-        reinterpret_cast<mir_surface_callback>(assign_result),
-        &surface));
-
-    return surface;
+    MirSurfaceSpec spec{connection, *params};
+    return mir_surface_create_sync(&spec);
 }
 
 __asm__(".symver new_mir_surface_set_event_handler,mir_surface_set_event_handler@@MIR_CLIENT_8.4");

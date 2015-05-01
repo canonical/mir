@@ -60,10 +60,10 @@ class MirClientHostSurface : public mgn::HostSurface
 public:
     MirClientHostSurface(
         MirConnection* mir_connection,
-        MirSurfaceParameters const& surface_parameters)
+        MirSurfaceSpec* spec)
         : mir_connection(mir_connection),
           mir_surface{
-              mir_connection_create_surface_sync(mir_connection, &surface_parameters)}
+              mir_surface_create_sync(spec)}
     {
         if (!mir_surface_is_valid(mir_surface))
         {
@@ -201,11 +201,20 @@ void mgn::MirClientHostConnection::apply_display_config(
 }
 
 std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
-    MirSurfaceParameters const& surface_parameters)
+    int width, int height, MirPixelFormat pf, char const* name,
+    MirBufferUsage usage, uint32_t output_id)
 {
     std::lock_guard<std::mutex> lg(surfaces_mutex);
+    auto spec = mir::raii::deleter_for(
+        mir_connection_create_spec_for_normal_surface(mir_connection, width, height, pf),
+        mir_surface_spec_release);
+
+    mir_surface_spec_set_name(spec.get(), name);
+    mir_surface_spec_set_buffer_usage(spec.get(), usage);
+    mir_surface_spec_set_fullscreen_on_output(spec.get(), output_id);
+
     auto surf = std::shared_ptr<MirClientHostSurface>(
-        new MirClientHostSurface(mir_connection, surface_parameters),
+        new MirClientHostSurface(mir_connection, spec.get()),
         [this](MirClientHostSurface *surf)
         {
             std::lock_guard<std::mutex> lg(surfaces_mutex);

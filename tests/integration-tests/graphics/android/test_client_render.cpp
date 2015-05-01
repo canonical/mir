@@ -74,26 +74,27 @@ struct TestClient
         eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &visual_id);
 
         /* make surface */
-        MirSurfaceParameters surface_parameters;
-        surface_parameters.name = "testsurface";
-        surface_parameters.width = test_width;
-        surface_parameters.height = test_height;
-        surface_parameters.pixel_format = select_format_for_visual_id(visual_id);
-        return mir_connection_create_surface_sync(connection, &surface_parameters);
+        auto const spec = mir_connection_create_spec_for_normal_surface(
+            connection, test_width, test_height, select_format_for_visual_id(visual_id));
+
+        auto const surface = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+        return surface;
     }
 
     static int render_cpu_pattern(mt::CrossProcessSync& process_sync, int num_frames)
     {
         process_sync.wait_for_signal_ready_for();
 
-        MirSurfaceParameters surface_parameters
-        {
-            "testsurface", test_width, test_height, mir_pixel_format_abgr_8888,
-            mir_buffer_usage_software, mir_display_output_id_invalid
-        };
         auto connection = mir_connect_sync(socket_file, "test_renderer");
         EXPECT_THAT(connection, IsValid());
-        auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
+
+        auto const spec = mir_connection_create_spec_for_normal_surface(
+            connection, test_width, test_height, mir_pixel_format_abgr_8888);
+        mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+        auto const surface = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+
         EXPECT_THAT(surface, IsValid());
         MirGraphicsRegion graphics_region;
         for(int i=0u; i < num_frames; i++)

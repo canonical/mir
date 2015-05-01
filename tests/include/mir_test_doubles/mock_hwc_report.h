@@ -45,6 +45,7 @@ struct MockHwcReport : public graphics::android::HwcReport
     MOCK_CONST_METHOD0(report_vsync_off, void());
     MOCK_CONST_METHOD1(report_hwc_version, void(graphics::android::HwcVersion));
     MOCK_CONST_METHOD0(report_legacy_fb_module, void());
+    MOCK_CONST_METHOD1(report_power_mode, void(graphics::android::PowerMode));
 };
 }
 }

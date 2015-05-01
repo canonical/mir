@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,24 +13,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_SURFACE_H_
-#define MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_SURFACE_H_
+#include "mir_test/event_matchers.h"
 
-#include "mir_test_framework/connected_client_headless_server.h"
+#include "mir/event_printer.h"
 
-namespace mir_test_framework
+void PrintTo(MirEvent const& event, std::ostream *os)
 {
-struct ConnectedClientWithASurface : ConnectedClientHeadlessServer
-{
-    MirSurface* surface{nullptr};
-
-    void SetUp() override;
-
-    void TearDown() override;
-};
+    using mir::operator<<;
+    *os << event;
 }
 
-#endif /* MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_SURFACE_H_ */
+void PrintTo(MirEvent const* event, std::ostream *os)
+{
+    if (event)
+        PrintTo(*event, os);
+    else
+        *os << "nullptr";
+}
