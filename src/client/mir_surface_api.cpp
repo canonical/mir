@@ -703,7 +703,7 @@ char const* mir_surface_id_as_string(MirSurfaceId* id)
     return id->as_string().c_str();
 }
 
-MirSurfaceId* mir_surface_id_from_string(char const* /*id_string*/)
+MirSurfaceId* mir_surface_id_from_string(char const* id_string)
 {
-    return nullptr;
+    return new MirSurfaceId{id_string};
 }
