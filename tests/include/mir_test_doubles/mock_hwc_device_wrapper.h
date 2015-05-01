@@ -57,6 +57,11 @@ struct MockHWCDeviceWrapper : public graphics::android::HwcWrapper
     MOCK_CONST_METHOD1(display_configs, std::vector<graphics::android::ConfigId>(graphics::android::DisplayName));
     MOCK_CONST_METHOD4(display_attributes, int(
         graphics::android::DisplayName, graphics::android::ConfigId, uint32_t const*, int32_t*));
+    MOCK_CONST_METHOD2(power_mode, void(graphics::android::DisplayName, graphics::android::PowerMode));
+    MOCK_CONST_METHOD1(has_active_config, bool(graphics::android::DisplayName));
+    MOCK_CONST_METHOD1(active_config_for, graphics::android::ConfigId(graphics::android::DisplayName));
+    MOCK_CONST_METHOD2(set_active_config, void(graphics::android::DisplayName name, graphics::android::ConfigId id));
+
 };
 
 }

@@ -35,7 +35,8 @@ typedef void (*mir_drm_auth_magic_callback)(int status, void *context);
 MirWaitHandle *mir_connection_drm_auth_magic(MirConnection *connection,
                                              unsigned int magic,
                                              mir_drm_auth_magic_callback callback,
-                                             void *context);
+                                             void *context)
+    __attribute__((__deprecated__("Use mir_connection_platform_operation() with operations from mir_toolkit/mesa/platform_operation.h")));
 
 /**
  * Set the gbm_device to be used by the EGL implementation.
@@ -47,7 +48,8 @@ MirWaitHandle *mir_connection_drm_auth_magic(MirConnection *connection,
  *                         0 otherwise
  */
 int mir_connection_drm_set_gbm_device(MirConnection* connection,
-                                      struct gbm_device* dev);
+                                      struct gbm_device* dev)
+    __attribute__((__deprecated__("Use mir_connection_platform_operation() with operations from mir_toolkit/mesa/platform_operation.h")));
 
 #ifdef __cplusplus
 }
