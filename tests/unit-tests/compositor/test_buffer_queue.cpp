@@ -151,12 +151,24 @@ mg::Buffer* client_acquire_sync(mc::BufferQueue& q)
     return handle->buffer();
 }
 
-void compositor_thread(mc::BufferQueue &bundle, std::atomic<bool> &done)
+void unthrottled_compositor_thread(mc::BufferQueue &bundle,
+                                   std::atomic<bool> &done)
 {
    while (!done)
    {
        bundle.compositor_release(bundle.compositor_acquire(nullptr));
        std::this_thread::yield();
+   }
+}
+
+void throttled_compositor_thread(mc::BufferQueue &bundle,
+                                 std::atomic<bool> &done)
+{
+   while (!done)
+   {
+       bundle.compositor_release(bundle.compositor_acquire(nullptr));
+       using namespace std;
+       this_thread::sleep_for(10ms);
    }
 }
 
@@ -414,46 +426,39 @@ TEST_F(BufferQueueTest, throws_on_out_of_order_client_release)
     }
 }
 
-// Test that we detected slowish clients and give them at least triple
-TEST_F(BufferQueueTest, slow_clients_get_at_least_triple_buffers)
+// Disabled - Not a valid test in the presence of dynamic queue throttling
+TEST_F(BufferQueueTest, DISABLED_async_client_cycles_through_all_buffers)
 {
-    for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
-        q.allow_framedropping(false);
 
-        std::unordered_set<mg::Buffer*> buffers_acquired;
+        std::atomic<bool> done(false);
+        auto unblock = [&done] { done = true; };
+        mt::AutoUnblockThread compositor(unblock,
+            unthrottled_compositor_thread, std::ref(q), std::ref(done));
 
-        for (int frame = 0; frame < 100; frame++)
+        std::unordered_set<uint32_t> ids_acquired;
+        int const max_ownable_buffers = nbuffers - 1;
+        for (int i = 0; i < max_ownable_buffers*2; ++i)
         {
-            if (frame % 3)  // Client keeps up two thirds of the time
+            std::vector<mg::Buffer *> client_buffers;
+            for (int acquires = 0; acquires < max_ownable_buffers; ++acquires)
             {
-                auto a = client_acquire_async(q);
-                a->wait_for(std::chrono::seconds(1));
-                ASSERT_THAT(a->has_acquired_buffer(), Eq(true));
-
-                auto b = client_acquire_async(q);
-                b->wait_for(std::chrono::seconds(1));
-                ASSERT_THAT(b->has_acquired_buffer(), Eq(true));
-    
-                if (frame > 10)  // q will start with nbuffers but soon shrink
-                {
-                    buffers_acquired.insert(a->buffer());
-                    buffers_acquired.insert(b->buffer());
-                }
-
-                a->release_buffer();
-                b->release_buffer();
+                auto handle = client_acquire_async(q);
+                handle->wait_for(std::chrono::seconds(1));
+                ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+                ids_acquired.insert(handle->id().as_value());
+                client_buffers.push_back(handle->buffer());
             }
 
-            int ready = q.buffers_ready_for_compositor(nullptr);
-            for (int f = 0; f < ready; ++f)
-                q.compositor_release(q.compositor_acquire(nullptr));
-
-            ASSERT_EQ(0, q.buffers_ready_for_compositor(nullptr));
+            for (auto const& buffer : client_buffers)
+            {
+                q.client_release(buffer);
+            }
         }
 
-        EXPECT_THAT(buffers_acquired.size(), Ge(3));
+        EXPECT_THAT(ids_acquired.size(), Eq(nbuffers));
     }
 }
 
@@ -811,7 +816,7 @@ TEST_F(BufferQueueTest, stress)
 
         auto unblock = [&done]{ done = true;};
 
-        mt::AutoUnblockThread compositor(unblock, compositor_thread,
+        mt::AutoUnblockThread compositor(unblock, unthrottled_compositor_thread,
                                          std::ref(q),
                                          std::ref(done));
         mt::AutoUnblockThread snapshotter1(unblock, snapshot_thread,
@@ -1479,7 +1484,7 @@ TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
         std::atomic<bool> done(false);
 
         auto unblock = [&done]{ done = true; };
-        mt::AutoUnblockThread compositor_thread(unblock, [&]
+        mt::AutoUnblockThread unthrottled_compositor_thread(unblock, [&]
         {
             while (!done)
             {
@@ -1593,7 +1598,7 @@ TEST_F(BufferQueueTest, DISABLED_buffers_are_not_lost)
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
         mt::AutoUnblockThread compositor(unblock,
-           compositor_thread, std::ref(q), std::ref(done));
+           unthrottled_compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<mg::Buffer *> unique_buffers_acquired;
         int const max_ownable_buffers = nbuffers - 1;
@@ -1621,14 +1626,21 @@ TEST_F(BufferQueueTest, DISABLED_buffers_are_not_lost)
 }
 
 // Test that dynamic queue scaling/throttling actually works
-TEST_F(BufferQueueTest, fast_clients_eventually_only_get_two_buffers)
+TEST_F(BufferQueueTest, fast_clients_only_get_two_buffers)
 {
     for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         q.allow_framedropping(false);
 
-        std::unordered_set<mg::Buffer*> buffers_acquired;
+        std::atomic<bool> done(false);
+        auto unblock = [&done] { done = true; };
+
+        // To emulate a "fast" client we use a "slow" compositor
+        mt::AutoUnblockThread compositor(unblock,
+           throttled_compositor_thread, std::ref(q), std::ref(done));
+
+        std::unordered_set<mg::Buffer *> buffers_acquired;
 
         for (int frame = 0; frame < 100; frame++)
         {
@@ -1639,8 +1651,6 @@ TEST_F(BufferQueueTest, fast_clients_eventually_only_get_two_buffers)
             if (frame > 10)  // q will start with nbuffers but soon shrink
                 buffers_acquired.insert(handle->buffer());
             handle->release_buffer();
-
-            q.compositor_release(q.compositor_acquire(nullptr));
         }
 
         EXPECT_THAT(buffers_acquired.size(), Eq(2));
