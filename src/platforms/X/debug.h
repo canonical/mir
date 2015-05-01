@@ -22,10 +22,7 @@
 #define MIR_LOG_COMPONENT "X11-platform"
 #include "mir/log.h"
 
-// Set DEBUG=1 for debug info, 0 for silent operation
-#define DEBUG 1
-
-#if DEBUG
+#if DEBUG || DEBUG_INPUT || DEBUG_CLIENT
 #define CALLED \
 { \
     mir::log_info("%s", __PRETTY_FUNCTION__); \

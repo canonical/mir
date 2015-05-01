@@ -14,6 +14,7 @@ include_directories(
 # This is valid C99, but g++ 4.4 flags it as an error with -pedantic
 #string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 #add_definitions(-D__GBM__)
+add_definitions(-DDEBUG=0)
 
 add_library(
   mirplatformgraphicsXobjects OBJECT

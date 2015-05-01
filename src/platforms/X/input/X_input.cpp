@@ -16,33 +16,37 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-//#include "stub_input_platform.h"
+#include "X_input_platform.h"
 //#include "fake_input_device_impl.h"
 #include "mir/module_properties.h"
 #include "mir/input/platform.h"
+#include "../debug.h"
 
 namespace mo = mir::options;
 namespace mi = mir::input;
+namespace mix = mi::X;
 
 extern "C" mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-    std::shared_ptr<mi::InputDeviceRegistry> const& /* input_device_registry*/,
+    std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::InputReport> const& /*report*/)
 {
-//    return mir::make_module_ptr<mtf::StubInputPlatform>(input_device_registry);
-	return nullptr;
+    CALLED
+    return mir::make_module_ptr<mix::XInputPlatform>(input_device_registry);
 }
 
 extern "C" void add_input_platform_options(
     boost::program_options::options_description& /*config*/)
 {
+    CALLED
     // no options to add yet
 }
 
 extern "C" mi::PlatformPriority probe_input_platform(
     mo::Option const& /*options*/)
 {
+    CALLED
     return mi::PlatformPriority::supported;
 }
 
@@ -58,5 +62,6 @@ mir::ModuleProperties const description = {
 
 extern "C" mir::ModuleProperties const* describe_input_module()
 {
+    CALLED
     return &description;
 }

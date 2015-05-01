@@ -8,6 +8,7 @@ include_directories(
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 #add_definitions(-D__GBM__)
+add_definitions(-DDEBUG_CLIENT=0)
 
 add_library(mirclientplatformXobjects OBJECT
   client_platform_factory.cpp

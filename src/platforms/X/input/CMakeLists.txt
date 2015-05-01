@@ -12,10 +12,13 @@ include_directories(
 #  ${ANDROID_HEADERS_INCLUDE_DIRS}
 )
 
+add_definitions(-DDEBUG_INPUT=1)
+
 add_library(
   mirplatforminputX MODULE
   
   X_input.cpp
+  X_input_platform.cpp
   )
 
 set_target_properties(
