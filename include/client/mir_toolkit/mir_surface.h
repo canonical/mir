@@ -403,7 +403,7 @@ MirWaitHandle *mir_connection_create_surface(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
     mir_surface_callback callback,
-    void *context);
+    void *context) __attribute__((__deprecated__("Use mir_surface_create()")));
 
 /**
  * Create a surface like in mir_connection_create_surface(), but also wait for
@@ -416,7 +416,7 @@ MirWaitHandle *mir_connection_create_surface(
  */
 MirSurface *mir_connection_create_surface_sync(
     MirConnection *connection,
-    MirSurfaceParameters const *params);
+    MirSurfaceParameters const *params) __attribute__((__deprecated__("Use mir_surface_create_sync()")));
 
 /**
  * Set the event handler to be called when events arrive for a surface.
