@@ -375,7 +375,10 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 
     auto parent_id = mir_surface_request_persistent_id_sync(surface);
 
-    auto spec = mir_connection_create_spec_for_input_method(connection, 100, 20,
+    auto im_connection = mir_connect_sync(new_connection().c_str(), "Mock IM connection");
+    ASSERT_THAT(im_connection, IsValid());
+
+    auto spec = mir_connection_create_spec_for_input_method(im_connection, 100, 20,
         mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
@@ -386,4 +389,6 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 
     mir_surface_release_sync(im);
     mir_surface_release_sync(surface);
+
+    mir_connection_release(im_connection);
 }
