@@ -310,7 +310,10 @@ bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const
         {
             if (auto const app = tools->focused_session())
                 if (auto const surface = app->surface_after(prev))
+                {
+                    tools->set_focus_to(app, surface);
                     tools->raise({surface});
+                }
         }
 
         return true;
