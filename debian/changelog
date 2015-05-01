@@ -11,6 +11,7 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
         drawing for a more fluid experience.
       . New, default window manager in mir_demo_server
       . mir_demo_server option (--arw-file) to make socket filename globally rw
+      . mir_demo_server demonstrates use of config file
       . Added support to mir_proving_server for rendering window title strings
       . Demo servers (mir_proving_server, mir_demo_server): Introduce support
         for Alt+` switching of windows in multi-window clients.
@@ -18,6 +19,7 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
       . Introduce "buffer streams" properly. This is a generalization of the
         most basic functionality of a surface.
       . Log useful OpenGL information on server start-up.
+      . Add support for HWC 1.4
       . Add display and fencing information to the layers in the HWC report
       . Add a report_vsync method to display report
       . Support for second display when running on "android" driver stack
@@ -40,6 +42,7 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
       . Drop support for C++11. Now C++14 is required to build Mir.
       . Deprecated MirEventDelegate. Now you just pass the two fields as
         parameters directly to mir_surface_set_event_handler().
+      . Legacy functions for creating surfaces marked deprecated
       . Minor redesign of the new input event API introduced in 0.10/11,
         so that identifiers are shorter and less convoluted.
       . Drop libmirclient dependency on client-platform drivers
