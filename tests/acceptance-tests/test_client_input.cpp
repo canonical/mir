@@ -49,7 +49,7 @@ namespace geom = mir::geometry;
 namespace
 {
 
-struct TestClientInputNew : mtf::HeadlessInProcessServer
+struct TestClientInput : mtf::HeadlessInProcessServer
 {
     struct Client
     {
@@ -173,11 +173,11 @@ struct TestClientInputNew : mtf::HeadlessInProcessServer
     geom::Rectangle screen_geometry{{0,0}, {1000,800}};
 };
 
-const int TestClientInputNew::Client::surface_width;
-const int TestClientInputNew::Client::surface_height;
+const int TestClientInput::Client::surface_width;
+const int TestClientInput::Client::surface_height;
 }
 
-TEST_F(TestClientInputNew, clients_receive_keys)
+TEST_F(TestClientInput, clients_receive_keys)
 {
     using namespace testing;
 
@@ -204,7 +204,7 @@ TEST_F(TestClientInputNew, clients_receive_keys)
     all_events_received.wait_for_at_most_seconds(10);
 }
 
-TEST_F(TestClientInputNew, clients_receive_us_english_mapped_keys)
+TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
 {
     using namespace testing;
 
@@ -220,7 +220,7 @@ TEST_F(TestClientInputNew, clients_receive_us_english_mapped_keys)
     all_events_received.wait_for_at_most_seconds(10);
 }
 
-TEST_F(TestClientInputNew, clients_receive_pointer_inside_window_and_crossing_events)
+TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_events)
 {
     using namespace testing;
 
@@ -245,7 +245,7 @@ TEST_F(TestClientInputNew, clients_receive_pointer_inside_window_and_crossing_ev
     all_events_received.wait_for_at_most_seconds(120);
 }
 
-TEST_F(TestClientInputNew, clients_receive_button_events_inside_window)
+TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 {
     using namespace testing;
 
@@ -261,7 +261,7 @@ TEST_F(TestClientInputNew, clients_receive_button_events_inside_window)
     all_events_received.wait_for_at_most_seconds(10);
 }
 
-TEST_F(TestClientInputNew, multiple_clients_receive_pointer_inside_windows)
+TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
 {
     using namespace testing;
 
@@ -304,7 +304,7 @@ TEST_F(TestClientInputNew, multiple_clients_receive_pointer_inside_windows)
     all_events_received.wait_for_at_most_seconds(2);
 }
 
-TEST_F(TestClientInputNew, clients_do_not_receive_pointer_outside_input_region)
+TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
 {
     using namespace testing;
 
@@ -358,7 +358,7 @@ TEST_F(TestClientInputNew, clients_do_not_receive_pointer_outside_input_region)
     all_events_received.wait_for_at_most_seconds(5);
 }
 
-TEST_F(TestClientInputNew, scene_obscure_motion_events_by_stacking)
+TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
 {
     using namespace testing;
 
@@ -410,7 +410,7 @@ TEST_F(TestClientInputNew, scene_obscure_motion_events_by_stacking)
     second_client->all_events_received.wait_for_at_most_seconds(5);
 }
 
-TEST_F(TestClientInputNew, hidden_clients_do_not_receive_pointer_events)
+TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 {
     using namespace testing;
 
@@ -441,7 +441,7 @@ TEST_F(TestClientInputNew, hidden_clients_do_not_receive_pointer_events)
     first_client->all_events_received.wait_for_at_most_seconds(2);
 }
 
-TEST_F(TestClientInputNew, clients_receive_pointer_within_coordinate_system_of_window)
+TEST_F(TestClientInput, clients_receive_pointer_within_coordinate_system_of_window)
 {
     using namespace testing;
 
@@ -468,7 +468,7 @@ TEST_F(TestClientInputNew, clients_receive_pointer_within_coordinate_system_of_w
 }
 
 // TODO: Consider tests for more input devices with custom mapping (i.e. joysticks...)
-TEST_F(TestClientInputNew, usb_direct_input_devices_work)
+TEST_F(TestClientInput, usb_direct_input_devices_work)
 {
     using namespace ::testing;
 
@@ -518,7 +518,7 @@ TEST_F(TestClientInputNew, usb_direct_input_devices_work)
     first_client->all_events_received.wait_for_at_most_seconds(2);
 }
 
-TEST_F(TestClientInputNew, send_mir_input_events_through_surface)
+TEST_F(TestClientInput, send_mir_input_events_through_surface)
 {
     EXPECT_CALL(*first_client, handle_input(mt::KeyDownEvent()))
         .WillOnce(mt::WakeUp(&first_client->all_events_received));
@@ -531,7 +531,7 @@ TEST_F(TestClientInputNew, send_mir_input_events_through_surface)
     first_client->all_events_received.wait_for_at_most_seconds(2);
 }
 
-TEST_F(TestClientInputNew, clients_receive_keymap_change_events)
+TEST_F(TestClientInput, clients_receive_keymap_change_events)
 {
     using namespace testing;
 
@@ -551,7 +551,7 @@ TEST_F(TestClientInputNew, clients_receive_keymap_change_events)
    first_client->all_events_received.wait_for_at_most_seconds(2);
 }
 
-TEST_F(TestClientInputNew, keymap_changes_change_keycode_received)
+TEST_F(TestClientInput, keymap_changes_change_keycode_received)
 {
     using namespace testing;
 
