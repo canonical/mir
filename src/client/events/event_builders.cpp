@@ -237,8 +237,17 @@ void update_action_mask(MirMotionEvent &mev, MirTouchAction action)
         new_mask = mev.pointer_count == 1 ? mir_motion_action_down : (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) |
                                                                          mir_motion_action_pointer_down;
     else
+    {
+        // in case this is the second added touch and the primary touch point was an up or down action
+        // we have to reset to pointer_up/pointer_down with index information (zero in this case)
+        if (mev.action == mir_motion_action_up)
+            mev.action = mir_motion_action_pointer_up;
+        if (mev.action == mir_motion_action_down)
+            mev.action = mir_motion_action_pointer_down;
+
         new_mask = mir_motion_action_move;
-    
+    }
+
     if (mev.action != mir_motion_action_move && new_mask != mir_motion_action_move)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Only one touch up/down may be reported per event"));

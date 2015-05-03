@@ -40,7 +40,6 @@ namespace msh = mir::shell;
 namespace ms = mir::scene;
 namespace mi = mir::input;
 namespace mt = mir::test;
-namespace mtd = mt::doubles;
 namespace mt = mir::test;
 namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
