@@ -254,8 +254,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
     MirTouchId touch_id = 1;
     float pressure = 1.0f;
 
-    int abs_x = touch.abs_x;
-    int abs_y = touch.abs_y;
+    float abs_x = touch.abs_x;
+    float abs_y = touch.abs_y;
     map_touch_coordinates(abs_x, abs_y);
     // those values would need scaling too as soon as they can be controlled by the caller
     float touch_major = 5.0f;
@@ -266,8 +266,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
                            touch_id,
                            touch_action,
                            mir_touch_tooltype_finger,
-                           float(abs_x),
-                           float(abs_y),
+                           abs_x,
+                           abs_y,
                            pressure,
                            touch_major,
                            touch_minor,
@@ -276,15 +276,15 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
     sink->handle_input(*touch_event);
 }
 
-void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(int& x, int& y)
+void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, float& y)
 {
     // TODO take orientation of input sink into account?
     auto area = sink->bounding_rectangle();
     auto touch_range = FakeInputDevice::maximum_touch_axis_value - FakeInputDevice::minimum_touch_axis_value + 1;
     auto x_scale = area.size.width.as_float() / float(touch_range);
     auto y_scale = area.size.height.as_float() / float(touch_range);
-    x = (x - FakeInputDevice::minimum_touch_axis_value)*x_scale + area.top_left.x.as_int();
-    y = (y - FakeInputDevice::minimum_touch_axis_value)*y_scale + area.top_left.y.as_int();
+    x = (x - float(FakeInputDevice::minimum_touch_axis_value))*x_scale + area.top_left.x.as_float();
+    y = (y - float(FakeInputDevice::minimum_touch_axis_value))*y_scale + area.top_left.y.as_float();
 }
 
 std::shared_ptr<md::Dispatchable> mtf::FakeInputDeviceImpl::InputDevice::dispatchable()

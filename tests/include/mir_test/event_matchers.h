@@ -270,9 +270,9 @@ MATCHER_P2(TouchEvent, x, y, "")
 
     if (mir_touch_event_action(tev, 0) != mir_touch_action_down)
         return false;
-    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) != x)
+    if (abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) - x) > 0.5f)
         return false;
-    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) != y)
+    if (abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) - y) > 0.5f)
         return false;
 
     return true;

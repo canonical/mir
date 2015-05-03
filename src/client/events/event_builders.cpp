@@ -229,10 +229,13 @@ int const MIR_EVENT_ACTION_POINTER_INDEX_SHIFT = 8;
 void update_action_mask(MirMotionEvent &mev, MirTouchAction action)
 {
     int new_mask = (mev.pointer_count - 1) << MIR_EVENT_ACTION_POINTER_INDEX_SHIFT;
+
     if (action == mir_touch_action_up)
-        new_mask = (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) | mir_motion_action_pointer_up;
+        new_mask = mev.pointer_count == 1 ? mir_motion_action_up : (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) |
+                                                                       mir_motion_action_pointer_up;
     else if (action == mir_touch_action_down)
-        new_mask = (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) | mir_motion_action_pointer_down;
+        new_mask = mev.pointer_count == 1 ? mir_motion_action_down : (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) |
+                                                                         mir_motion_action_pointer_down;
     else
         new_mask = mir_motion_action_move;
     
@@ -294,7 +297,7 @@ MirMotionAction old_action_from_pointer_action(MirPointerAction action, MirMotio
     case mir_pointer_action_leave:
         return mir_motion_action_hover_exit;
     case mir_pointer_action_motion:
-        return button_state?mir_motion_action_move:mir_motion_action_hover_move;
+        return button_state ? mir_motion_action_move : mir_motion_action_hover_move;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid pointer action"));
     }
