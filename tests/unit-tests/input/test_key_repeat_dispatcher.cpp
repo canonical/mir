@@ -83,23 +83,6 @@ TEST_F(KeyRepeatDispatcher, forwards_start_stop)
     dispatcher.stop();
 }
 
-TEST_F(KeyRepeatDispatcher, forwards_device_configuration)
-{
-    using namespace ::testing;
-
-    int32_t any_device_id = 7;
-    std::chrono::nanoseconds any_time(11);
-
-    EXPECT_CALL(*mock_next_dispatcher,
-                configuration_changed(any_time));
-    EXPECT_CALL(*mock_next_dispatcher,
-                device_reset(any_device_id, any_time));
-
-
-    dispatcher.configuration_changed(any_time);
-    dispatcher.device_reset(any_device_id, any_time);
-}
-
 namespace
 {
 mir::EventUPtr a_key_down_event()
@@ -124,12 +107,12 @@ TEST_F(KeyRepeatDispatcher, schedules_alarm_to_repeat_key_down)
         WillOnce(DoAll(SaveArg<0>(&alarm_function), Return(mock_alarm)));
     // Once for initial down and again when invoked
     EXPECT_CALL(*mock_alarm, reschedule_in(_)).Times(1).WillOnce(Return(true));
-    EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyDownEvent())).Times(1).WillOnce(Return(true));
-    EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyRepeatEvent())).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyDownEvent())).Times(1);
+    EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyRepeatEvent())).Times(1);
     EXPECT_CALL(*mock_alarm, reschedule_in(_)).Times(1).WillOnce(Return(true));
     // And cancelled on key up
     EXPECT_CALL(*mock_alarm, cancel()).Times(1).WillOnce(Return(true));
-    EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyUpEvent())).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyUpEvent())).Times(1);
 
     // Schedule the repeat
     dispatcher.dispatch(*a_key_down_event());

@@ -208,15 +208,17 @@ bool mir::DefaultServerConfiguration::is_key_repeat_enabled() const
     return true;
 }
 
+
 std::shared_ptr<mi::InputDispatcher>
 mir::DefaultServerConfiguration::the_input_dispatcher()
 {
-    std::chrono::milliseconds key_repeat_timeout{1};
-    
+    std::chrono::milliseconds const key_repeat_timeout{20};
+
+    auto const options = the_options();
     if (!options->get<bool>(options::enable_key_repeat_opt))
         return the_event_filter_chain_dispatcher();
     else
-        return std::make_shared<mi::KeyRepeatDispatcher>(the_event_filter_chain_dispatcher(), key_repeat_timeout);
+        return std::make_shared<mi::KeyRepeatDispatcher>(the_event_filter_chain_dispatcher(), the_main_loop(), key_repeat_timeout);
 }
 
 std::shared_ptr<mi::InputDispatcher>
