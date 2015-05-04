@@ -13,10 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
- *              Andreas Pokorny <andreas.pokorny@canonical.com>
- *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
-
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #ifndef MIR_TEST_FRAMEWORK_PLACEMENT_APPLYING_SHELL_H_
@@ -26,7 +23,6 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/depth_id.h"
 
-// -- move to impl?
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
