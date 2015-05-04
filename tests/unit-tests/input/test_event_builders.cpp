@@ -96,39 +96,6 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
    }   
 }
 
-TEST_F(InputEventBuilder, maps_single_touch_down_to_motion_down)
-{
-    MirTouchAction action =  mir_touch_action_down;
-
-    auto ev = mev::make_event(device_id, timestamp, modifiers);
-    mev::add_touch(*ev, 0, action, mir_touch_tooltype_finger, 0, 0, 0, 0, 0, 0);
-    auto e = ev.get();
-
-    EXPECT_EQ(mir_event_type_input, mir_event_get_type(e));
-    auto ie = mir_event_get_input_event(e);
-    EXPECT_EQ(mir_input_event_type_touch, mir_input_event_get_type(ie));
-    auto tev = mir_input_event_get_touch_event(ie);
-
-    EXPECT_EQ(action, mir_touch_event_action(tev, 0));
-    EXPECT_EQ(mir_motion_action_down, ev->motion.action);
-}
-
-TEST_F(InputEventBuilder, maps_single_touch_up_to_motion_up)
-{
-    MirTouchAction action =  mir_touch_action_up;
-
-    auto ev = mev::make_event(device_id, timestamp, modifiers);
-    mev::add_touch(*ev, 0, action, mir_touch_tooltype_finger, 0, 0, 0, 0, 0, 0);
-    auto e = ev.get();
-
-    EXPECT_EQ(mir_event_type_input, mir_event_get_type(e));
-    auto ie = mir_event_get_input_event(e);
-    EXPECT_EQ(mir_input_event_type_touch, mir_input_event_get_type(ie));
-    auto tev = mir_input_event_get_touch_event(ie);
-
-    EXPECT_EQ(action, mir_touch_event_action(tev, 0));
-    EXPECT_EQ(mir_motion_action_up, ev->motion.action);
-}
 
 TEST_F(InputEventBuilder, makes_valid_pointer_event)
 {

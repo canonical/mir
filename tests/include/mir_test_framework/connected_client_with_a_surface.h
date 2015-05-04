@@ -25,13 +25,11 @@ namespace mir_test_framework
 {
 struct ConnectedClientWithASurface : ConnectedClientHeadlessServer
 {
-    const int surface_width = 640;
-    const int surface_height = 480;
     MirSurface* surface{nullptr};
     MirSurfaceParameters const surface_params =
     {
         "ConnectedClientWithASurfaceFixtureSurface",
-        surface_width, surface_height,
+        640, 480,
         mir_pixel_format_abgr_8888,
         mir_buffer_usage_hardware,
         mir_display_output_id_invalid
