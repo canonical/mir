@@ -110,16 +110,15 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             event.motion.source_id,
             policy_flags,
             event.motion.action,
-            event.motion.flags,
+            0, /* flags */
             event.motion.modifiers,
             event.motion.button_state,
-            event.motion.edge_flags,
+            0, /* edge_flags */
             event.motion.pointer_count,
             pointer_properties.data(),
             pointer_coords.data(),
-            event.motion.x_precision,
-            event.motion.y_precision,
-            std::chrono::nanoseconds(event.motion.down_time));
+            0, 0, /* unused x/y precision */
+            std::chrono::nanoseconds(event.motion.event_time));
 
         dispatcher->notifyMotion(&notify_motion_args);
 

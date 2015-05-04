@@ -179,23 +179,14 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
     event.motion.device_id = 3;
     event.motion.source_id = 4;
     event.motion.action = mir_motion_action_scroll;
-    event.motion.flags = mir_motion_flag_window_is_obscured;
     event.motion.modifiers = 6;
-    event.motion.edge_flags = 7;
     event.motion.button_state =
         static_cast<MirMotionButton>(mir_motion_button_forward | mir_motion_button_secondary);
-    event.motion.x_offset = 0.0f;
-    event.motion.y_offset = 0.0f;
-    event.motion.x_precision = 9.0f;
-    event.motion.y_precision = 10.0f;
-    event.motion.down_time = 11;
 
     auto & pointer = event.motion.pointer_coordinates[0];
     pointer.id = 1;
     pointer.x = 12.0f;
-    pointer.raw_x = 12.0f;
     pointer.y = 13.0f;
-    pointer.raw_y = 13.0f;
     pointer.touch_major = 14.0f;
     pointer.touch_minor = 15.0f;
     pointer.size = 16.0f;
@@ -222,16 +213,15 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
                                           event.motion.source_id,
                                           default_policy_flags,
                                           event.motion.action,
-                                          event.motion.flags,
+                                          0, /* flags */
                                           event.motion.modifiers,
                                           event.motion.button_state,
-                                          event.motion.edge_flags,
+                                          0, /* edge_flags */
                                           event.motion.pointer_count,
                                           expected_properties,
                                           expected_coords,
-                                          event.motion.x_precision,
-                                          event.motion.y_precision,
-                                          std::chrono::nanoseconds(event.motion.down_time));
+                                          0, 0, /* unused x/y precision */
+                                          std::chrono::nanoseconds(event.motion.event_time));
 
     EXPECT_CALL(*dispatcher, notifyMotion(MotionArgsMatches(expected)));
 

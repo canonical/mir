@@ -140,15 +140,8 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     mir_event.motion.device_id = args->deviceId;
     mir_event.motion.source_id = args->source;
     mir_event.motion.action = args->action;
-    mir_event.motion.flags = static_cast<MirMotionFlag>(args->flags);
     mir_event.motion.modifiers = args->metaState;
-    mir_event.motion.edge_flags = args->edgeFlags;
     mir_event.motion.button_state = static_cast<MirMotionButton>(args->buttonState);
-    mir_event.motion.x_offset = 0; // offsets or axis positions are calculated in dispatcher
-    mir_event.motion.y_offset = 0;
-    mir_event.motion.x_precision = args->xPrecision;
-    mir_event.motion.y_precision = args->yPrecision;
-    mir_event.motion.down_time = args->downTime.count();
     mir_event.motion.event_time = args->eventTime.count();
     mir_event.motion.pointer_count = args->pointerCount;
     for(unsigned int i = 0; i < args->pointerCount; i++)
@@ -156,9 +149,6 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
         mir_event.motion.pointer_coordinates[i].id = args->pointerProperties[i].id;
         mir_event.motion.pointer_coordinates[i].x = args->pointerCoords[i].getX();
         mir_event.motion.pointer_coordinates[i].y = args->pointerCoords[i].getY();
-        // offsets or axis positions are calculated in dispatcher:
-        mir_event.motion.pointer_coordinates[i].raw_x = args->pointerCoords[i].getX();
-        mir_event.motion.pointer_coordinates[i].raw_y = args->pointerCoords[i].getY();
         mir_event.motion.pointer_coordinates[i].touch_major =
             args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR);
         mir_event.motion.pointer_coordinates[i].touch_minor =

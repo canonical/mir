@@ -86,10 +86,6 @@ typedef enum {
 } MirMotionAction;
 
 typedef enum {
-    mir_motion_flag_window_is_obscured = 0x1
-} MirMotionFlag;
-
-typedef enum {
     mir_motion_button_primary   = 1 << 0,
     mir_motion_button_secondary = 1 << 1,
     mir_motion_button_tertiary  = 1 << 2,
@@ -127,8 +123,8 @@ typedef struct
 typedef struct
 {
     int id;
-    float x, raw_x;
-    float y, raw_y;
+    float x;
+    float y;
     float touch_major;
     float touch_minor;
     float size;
@@ -137,9 +133,6 @@ typedef struct
     float vscroll;
     float hscroll;
     MirMotionToolType tool_type;
-    int unused1;
-    int unused2;
-    int unused3;
 } MirMotionPointer;
 
 // PRIVATE
@@ -157,27 +150,15 @@ typedef struct
      * this way for now until we can drop SF/Hybris support in QtUbuntu.
      */
     int action;
-    MirMotionFlag flags;
     unsigned int modifiers;
 
-    int32_t edge_flags;
     MirMotionButton button_state;
-    float x_offset;
-    float y_offset;
-    float x_precision;
-    float y_precision;
-    nsecs_t down_time;
     nsecs_t event_time;
 
     size_t pointer_count;
     MirMotionPointer pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
     /* "_coordinates" is a misnomer here because there's plenty more info than
        just coordinates, but renaming it accurately would be an API break */
-
-    int unused0;
-    int unused1;
-    int unused2;
-    int unused3;
 } MirMotionEvent;
 
 struct MirSurfaceEvent

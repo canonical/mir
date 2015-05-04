@@ -281,23 +281,14 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
     expected.motion.device_id = 3;
     expected.motion.source_id = 4;
     expected.motion.action = mir_motion_action_scroll;
-    expected.motion.flags = mir_motion_flag_window_is_obscured;
     expected.motion.modifiers = 6;
-    expected.motion.edge_flags = 7;
     expected.motion.button_state =
         static_cast<MirMotionButton>(mir_motion_button_forward | mir_motion_button_secondary);
-    expected.motion.x_offset = 0.0f;
-    expected.motion.y_offset = 0.0f;
-    expected.motion.x_precision = 9.0f;
-    expected.motion.y_precision = 10.0f;
-    expected.motion.down_time = 11;
 
     auto & pointer = expected.motion.pointer_coordinates[0];
     pointer.id = 1;
     pointer.x = 12.0f;
-    pointer.raw_x = 12.0f;
     pointer.y = 13.0f;
-    pointer.raw_y = 13.0f;
     pointer.touch_major = 14.0f;
     pointer.touch_minor = 15.0f;
     pointer.size = 16.0f;
@@ -326,16 +317,15 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
                                           expected.motion.source_id,
                                           default_policy_flags,
                                           expected.motion.action,
-                                          expected.motion.flags,
+                                          0, /* flags */
                                           expected.motion.modifiers,
                                           expected.motion.button_state,
-                                          expected.motion.edge_flags,
+                                          0, /* edge flags */
                                           expected.motion.pointer_count,
                                           properties,
                                           coords,
-                                          expected.motion.x_precision,
-                                          expected.motion.y_precision,
-                                          std::chrono::nanoseconds(expected.motion.down_time));
+                                          0, 0, /* unused x/y precision */
+                                          std::chrono::nanoseconds(expected.motion.event_time));
 
     translator.notifyMotion(&notified);
 }
@@ -351,7 +341,7 @@ TEST_P(InputTranslatorWithPolicyParam, forwards_policy_modifiers_as_flags_and_mo
                 ).Times(1);
 
     droidinput::NotifyKeyArgs tester(some_time, device_id, source_id,
-                                     0, mir_key_action_down,
+                                     GetParam().policy_flag, mir_key_action_down,
                                      no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
 
     translator.notifyKey(&tester);
