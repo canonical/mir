@@ -505,15 +505,17 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
                                   expected_motion_y_1,
                                   expected_motion_x_2,
                                   expected_motion_y_2)))
+        .Times(AnyNumber())
         .WillOnce(mt::WakeUp(&first_client->all_events_received));
 
     fake_touch_screen->emit_event(mis::a_touch_event()
-                                  .with_action(mis::TouchParameters::Action::Tap)
                                   .at_position({abs_touch_x_1, abs_touch_y_1}));
     // Sleep here to trigger more failures (simulate slow machine)
     // TODO why would that cause failures?b
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    fake_touch_screen->emit_event(mis::a_touch_event().at_position({abs_touch_x_2, abs_touch_y_2}));
+    fake_touch_screen->emit_event(mis::a_touch_event()
+                                  .with_action(mis::TouchParameters::Action::Move)
+                                  .at_position({abs_touch_x_2, abs_touch_y_2}));
 
     first_client->all_events_received.wait_for_at_most_seconds(2);
 }
