@@ -159,8 +159,8 @@ TEST_F(TestClientInputNewEventFilter, event_filter_may_consume_events)
     using namespace ::testing;
 
     InSequence seq;
-    EXPECT_CALL(*mock_event_filter, handle(_)).Times(AtLeast(1)).WillOnce(Return(true));
-    EXPECT_CALL(*mock_event_filter, handle(_)).Times(AtLeast(1)).WillOnce(
+    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(
             DoAll(mt::WakeUp(&all_events_received), Return(true)));
 
     // Since we handle the events in the filter the client should not receive them.
