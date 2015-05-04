@@ -122,7 +122,7 @@ std::string const& MirReference::as_string()
     return string_id;
 }
 
-;MirSurface::MirSurface(std::string const& error)
+MirSurface::MirSurface(std::string const& error)
 {
     surface.set_error(error);
 
