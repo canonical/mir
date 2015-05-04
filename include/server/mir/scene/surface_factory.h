@@ -28,6 +28,7 @@ namespace compositor { class BufferStream; }
 namespace scene
 {
 class Surface;
+
 class SurfaceFactory
 {
 public:

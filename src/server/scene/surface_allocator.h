@@ -41,11 +41,11 @@ class SurfaceAllocator : public SurfaceFactory
 {
 public:
     SurfaceAllocator(
-                     int buffers,
-                     std::shared_ptr<input::InputChannelFactory> const& input_factory,
-                     std::shared_ptr<input::InputSender> const& input_sender,
-                     std::shared_ptr<graphics::CursorImage> const& default_cursor_image,
-                     std::shared_ptr<SceneReport> const& report);
+         int buffers,
+         std::shared_ptr<input::InputChannelFactory> const& input_factory,
+         std::shared_ptr<input::InputSender> const& input_sender,
+         std::shared_ptr<graphics::CursorImage> const& default_cursor_image,
+         std::shared_ptr<SceneReport> const& report);
 
     std::shared_ptr<Surface> create_surface(
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
