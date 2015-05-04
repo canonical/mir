@@ -364,7 +364,7 @@ public:
                 .of_pixel_format(surface_pf)
                 .of_buffer_usage(mg::BufferUsage::hardware);
             mg::BufferProperties properties{params.size, params.pixel_format, params.buffer_usage};
-            auto const stream = buffer_stream_factory->create_buffer_stream(2, properties); 
+            auto const stream = buffer_stream_factory->create_buffer_stream(properties); 
             auto const surface = surface_factory->create_surface(stream, params);
             surface_coordinator->add_surface(surface, params.depth, params.input_mode, nullptr);
 
