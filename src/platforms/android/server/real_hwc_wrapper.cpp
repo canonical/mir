@@ -254,3 +254,39 @@ int mga::RealHwcWrapper::display_attributes(
     return hwc_device->getDisplayAttributes(
         hwc_device.get(), display_name, config.as_value(), attributes, values);
 }
+
+void mga::RealHwcWrapper::power_mode(DisplayName display_name, PowerMode mode) const
+{
+    if (auto rc = hwc_device->setPowerMode(hwc_device.get(), display_name, static_cast<int>(mode)))
+    {
+        std::stringstream ss;
+        ss << "error setting power mode. rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+    }
+    report->report_power_mode(mode);
+}
+
+bool mga::RealHwcWrapper::has_active_config(DisplayName display_name) const
+{
+    int const no_active_config = -1;
+    return hwc_device->getActiveConfig(hwc_device.get(), display_name) != no_active_config;
+}
+
+mga::ConfigId mga::RealHwcWrapper::active_config_for(DisplayName display_name) const
+{
+    int id = hwc_device->getActiveConfig(hwc_device.get(), display_name);
+    if (id == -1)
+    {
+        std::stringstream ss;
+        ss << "No active configuration for display: " << display_name;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+    }
+    return mga::ConfigId{static_cast<uint32_t>(id)};
+}
+
+void mga::RealHwcWrapper::set_active_config(DisplayName display_name, ConfigId id) const
+{
+    int rc = hwc_device->setActiveConfig(hwc_device.get(), display_name, id.as_value());
+    if (rc < 0)
+        BOOST_THROW_EXCEPTION(std::system_error(rc, std::system_category(), "unable to set active display config"));
+}

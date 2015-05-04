@@ -899,3 +899,33 @@ TEST_F(SessionMediator, drm_auth_magic_calls_platform_operation_abstraction)
     EXPECT_THAT(*(reinterpret_cast<int*>(request.data.data())), Eq(magic));
     EXPECT_THAT(drm_response.status_code(), Eq(test_response));
 }
+
+// Regression test for LP: #1441759
+TEST_F(SessionMediator, completes_exchange_buffer_when_completion_is_invoked_asynchronously_from_thread_that_initiated_exchange)
+{
+    using namespace testing;
+    auto const& mock_surface = stubbed_session->mock_surface_at(mf::SurfaceId{0});
+    mtd::StubBuffer stub_buffer1;
+    mtd::StubBuffer stub_buffer2;
+    std::function<void(mg::Buffer*)> completion_func;
+
+    // create
+    InSequence seq;
+    EXPECT_CALL(*mock_surface, swap_buffers(_, _))
+        .WillOnce(InvokeArgument<1>(&stub_buffer1));
+    // exchange, steal completion function
+    EXPECT_CALL(*mock_surface, swap_buffers(_,_))
+        .WillOnce(SaveArg<1>(&completion_func));
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+
+    buffer_request.mutable_id()->set_value(surface_response.id().value());
+    *buffer_request.mutable_buffer() = surface_response.buffer_stream().buffer();
+
+    mediator.exchange_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
+
+    // Execute completion function asynchronously (i.e. not as part of the exchange_buffer
+    // call), but from the same thread that initiated the exchange_buffer operation
+    completion_func(&stub_buffer2);
+}

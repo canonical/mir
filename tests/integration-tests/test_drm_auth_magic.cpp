@@ -91,6 +91,8 @@ void drm_auth_magic_callback(int status, void* client_context)
 
 }
 
+#pragma GCC diagnostic warning "-Wdeprecated-declarations"
+
 TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
 {
     static unsigned int const magic{0x10111213};

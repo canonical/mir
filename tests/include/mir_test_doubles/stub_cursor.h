@@ -13,23 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_test/event_matchers.h"
+#ifndef MIR_TEST_DOUBLES_STUB_CURSOR_H_
+#define MIR_TEST_DOUBLES_STUB_CURSOR_H_
 
-#include "mir/event_printer.h"
+#include "mir/graphics/cursor.h"
 
-void PrintTo(MirEvent const& event, std::ostream *os)
+namespace mir
 {
-    using mir::operator<<;
-    *os << event;
-}
-
-void PrintTo(MirEvent const* event, std::ostream *os)
+namespace test
 {
-    if (event)
-        PrintTo(*event, os);
-    else
-        *os << "nullptr";
+namespace doubles
+{
+
+struct StubCursor : public graphics::Cursor
+{
+    void show() override {}
+    void show(graphics::CursorImage const&) override {}
+    void hide() override {}
+    void move_to(geometry::Point) override {}
+};
+
 }
+}
+} // namespace mir
+
+#endif /* MIR_TEST_DOUBLES_STUB_CURSOR_H_ */
