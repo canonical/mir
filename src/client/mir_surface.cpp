@@ -115,7 +115,6 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
 MirReference::MirReference(std::string const& string_id)
     : string_id{string_id}
 {
-    uuid_parse(string_id.c_str(), id);
 }
 
 std::string const& MirReference::as_string()
@@ -123,12 +122,7 @@ std::string const& MirReference::as_string()
     return string_id;
 }
 
-bool MirReference::operator==(MirReference const& rhs) const
-{
-    return !uuid_compare(id, rhs.id);
-}
-
-MirSurface::MirSurface(std::string const& error)
+;MirSurface::MirSurface(std::string const& error)
 {
     surface.set_error(error);
 

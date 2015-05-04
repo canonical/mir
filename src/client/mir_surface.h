@@ -101,11 +101,8 @@ public:
 
     std::string const& as_string();
 
-    bool operator==(MirReference const& rhs) const;
-
 private:
     std::string const string_id;
-    uuid_t id;
 };
 
 struct MirSurface
