@@ -208,7 +208,7 @@ TEST_F(DefaultWindowManager, forwards_create_surface_parameters_from_placement_s
 
     EXPECT_CALL(placement_strategy, place(_, Ref(params))).Times(1)
         .WillOnce(Return(placed_params));
-    EXPECT_CALL(surface_coordinator, add_surface(_,placed_params.depth,_,_));//placed_params.depth,Ref(placed_params.input_mode),_));
+    EXPECT_CALL(surface_coordinator, add_surface(_,placed_params.depth,placed_params.input_mode,_));
 
     shell.create_surface(session, params);
 }
