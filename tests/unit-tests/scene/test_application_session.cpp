@@ -55,6 +55,7 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 
 struct MockBufferStreamFactory : public ms::BufferStreamFactory
 {
+    MOCK_METHOD1(create_buffer_stream, std::shared_ptr<mc::BufferStream>(mg::BufferProperties const&));
     MOCK_METHOD2(create_buffer_stream, std::shared_ptr<mc::BufferStream>(int, mg::BufferProperties const&));
 };
 
@@ -524,7 +525,7 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
 
     mg::BufferProperties properties(buffer_size, mir_pixel_format_argb_8888, mg::BufferUsage::software);
     
-    EXPECT_CALL(factory, create_buffer_stream(_, properties)).Times(1)
+    EXPECT_CALL(factory, create_buffer_stream(properties)).Times(1)
         .WillOnce(Return(mt::fake_shared(stream)));
 
     auto session = make_application_session_with_buffer_stream_factory(mt::fake_shared(factory));

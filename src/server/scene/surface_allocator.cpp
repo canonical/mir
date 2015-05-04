@@ -36,19 +36,15 @@ static inline bool has_alpha(MirPixelFormat fmt)
 }
 
 ms::SurfaceAllocator::SurfaceAllocator(
-    int nbuffers,
     std::shared_ptr<input::InputChannelFactory> const& input_factory,
     std::shared_ptr<input::InputSender> const& input_sender,
     std::shared_ptr<mg::CursorImage> const& default_cursor_image,
     std::shared_ptr<SceneReport> const& report) :
-    nbuffers(nbuffers),
     input_factory(input_factory),
     input_sender(input_sender),
     default_cursor_image(default_cursor_image),
     report(report)
 {
-    if (nbuffers < 2)
-        throw std::logic_error("nbuffers must be at least 2");
 }
 
 std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(

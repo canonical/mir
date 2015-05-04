@@ -37,6 +37,8 @@ public:
 
     virtual std::shared_ptr<compositor::BufferStream> create_buffer_stream(
         int nbuffers, graphics::BufferProperties const& buffer_properties) = 0;
+    virtual std::shared_ptr<compositor::BufferStream> create_buffer_stream(
+        graphics::BufferProperties const& buffer_properties) = 0;
 
 protected:
     BufferStreamFactory() = default;

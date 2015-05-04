@@ -33,10 +33,9 @@ class StubBufferStreamFactory : public scene::BufferStreamFactory
 {
 public:
     std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        int, graphics::BufferProperties const&) override
-    {
-        return nullptr;
-    }
+        int, graphics::BufferProperties const&) { return nullptr; }
+    std::shared_ptr<compositor::BufferStream> create_buffer_stream(
+        graphics::BufferProperties const&) { return nullptr; }
 };
 
 }

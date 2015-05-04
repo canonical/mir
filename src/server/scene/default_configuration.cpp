@@ -73,7 +73,6 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
         [this]()
         {
             return std::make_shared<ms::SurfaceAllocator>(
-                the_options()->get<int>(options::nbuffers_opt),
                 the_input_channel_factory(),
                 the_input_sender(),
                 the_default_cursor_image(),
