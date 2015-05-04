@@ -96,7 +96,6 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
    }   
 }
 
-
 TEST_F(InputEventBuilder, makes_valid_pointer_event)
 {
     MirPointerAction action = mir_pointer_action_enter;
