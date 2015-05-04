@@ -229,13 +229,25 @@ int const MIR_EVENT_ACTION_POINTER_INDEX_SHIFT = 8;
 void update_action_mask(MirMotionEvent &mev, MirTouchAction action)
 {
     int new_mask = (mev.pointer_count - 1) << MIR_EVENT_ACTION_POINTER_INDEX_SHIFT;
+
     if (action == mir_touch_action_up)
-        new_mask = (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) | mir_motion_action_pointer_up;
+        new_mask = mev.pointer_count == 1 ? mir_motion_action_up : (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) |
+                                                                       mir_motion_action_pointer_up;
     else if (action == mir_touch_action_down)
-        new_mask = (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) | mir_motion_action_pointer_down;
+        new_mask = mev.pointer_count == 1 ? mir_motion_action_down : (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) |
+                                                                         mir_motion_action_pointer_down;
     else
+    {
+        // in case this is the second added touch and the primary touch point was an up or down action
+        // we have to reset to pointer_up/pointer_down with index information (zero in this case)
+        if (mev.action == mir_motion_action_up)
+            mev.action = mir_motion_action_pointer_up;
+        if (mev.action == mir_motion_action_down)
+            mev.action = mir_motion_action_pointer_down;
+
         new_mask = mir_motion_action_move;
-    
+    }
+
     if (mev.action != mir_motion_action_move && new_mask != mir_motion_action_move)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Only one touch up/down may be reported per event"));
@@ -281,7 +293,7 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
 
 namespace
 {
-MirMotionAction old_action_from_pointer_action(MirPointerAction action)
+MirMotionAction old_action_from_pointer_action(MirPointerAction action, MirMotionButton button_state)
 {
     switch (action)
     {
@@ -294,7 +306,7 @@ MirMotionAction old_action_from_pointer_action(MirPointerAction action)
     case mir_pointer_action_leave:
         return mir_motion_action_hover_exit;
     case mir_pointer_action_motion:
-        return mir_motion_action_move;
+        return button_state ? mir_motion_action_move : mir_motion_action_hover_move;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid pointer action"));
     }
@@ -315,7 +327,6 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
     mev.device_id = device_id;
     mev.event_time = timestamp;
     mev.modifiers = old_modifiers_from_new(modifiers);
-    mev.action = old_action_from_pointer_action(action);
     mev.source_id = AINPUT_SOURCE_MOUSE;
     
     int button_state = 0;
@@ -341,6 +352,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
     }
     }
     mev.button_state = static_cast<MirMotionButton>(button_state);
+    mev.action = old_action_from_pointer_action(action, mev.button_state);
 
     mev.pointer_count = 1;
     auto& pc = mev.pointer_coordinates[0];
