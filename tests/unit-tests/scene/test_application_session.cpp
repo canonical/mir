@@ -27,6 +27,7 @@
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_display_configuration.h"
+#include "mir_test_doubles/stub_surface_factory.h"
 #include "mir_test_doubles/stub_buffer_stream_factory.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
@@ -94,15 +95,6 @@ MATCHER_P(HasParent, parent, "")
 {
     return arg.parent.lock() == parent;
 }
-
-struct StubSurfaceFactory : public ms::SurfaceFactory
-{
-    std::shared_ptr<ms::Surface> create_surface(
-        std::shared_ptr<mc::BufferStream> const&, ms::SurfaceCreationParameters const&) override
-    {
-        return make_mock_surface();
-    }
-};
 
 struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
 {
@@ -198,12 +190,11 @@ struct ApplicationSession : public testing::Test
     std::shared_ptr<ms::SnapshotStrategy> const null_snapshot_strategy;
     std::shared_ptr<mtd::StubBufferStreamFactory> const stub_buffer_stream_factory =
         std::make_shared<mtd::StubBufferStreamFactory>();
-    std::shared_ptr<StubSurfaceFactory> const stub_surface_factory{std::make_shared<StubSurfaceFactory>()};
+    std::shared_ptr<mtd::StubSurfaceFactory> const stub_surface_factory{std::make_shared<mtd::StubSurfaceFactory>()};
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream{std::make_shared<mtd::StubBufferStream>()};
     pid_t pid;
     std::string name;
 };
-
 
 struct MockSurfaceFactory : ms::SurfaceFactory
 {

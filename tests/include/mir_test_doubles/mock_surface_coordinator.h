@@ -38,9 +38,7 @@ struct MockSurfaceCoordinator : public scene::SurfaceCoordinator
     MOCK_METHOD1(raise, void(scene::SurfaceCoordinator::SurfaceSet const&));
 
     MOCK_METHOD4(add_surface, void(std::shared_ptr<scene::Surface> const&,
-        scene::DepthId depth,
-        input::InputReceptionMode const& new_mode,
-        scene::Session* session));
+        scene::DepthId depth, input::InputReceptionMode const& new_mode, scene::Session* session));
 
     MOCK_METHOD1(remove_surface, void(std::weak_ptr<scene::Surface> const& surface));
     MOCK_CONST_METHOD1(surface_at, std::shared_ptr<scene::Surface>(geometry::Point));
