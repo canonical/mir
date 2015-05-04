@@ -96,6 +96,10 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
     SERIALIZE_OPTION_IF_SET(min_height, message);
     SERIALIZE_OPTION_IF_SET(max_width, message);
     SERIALIZE_OPTION_IF_SET(max_height, message);
+    SERIALIZE_OPTION_IF_SET(width_inc, message);
+    SERIALIZE_OPTION_IF_SET(height_inc, message);
+    // min_aspect is a special case (below)
+    // max_aspect is a special case (below)
 
     if (parent.is_set() && parent.value() != nullptr)
         message.set_parent_id(parent.value()->id());
@@ -106,6 +110,18 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
         message.mutable_aux_rect()->set_top(aux_rect.value().top);
         message.mutable_aux_rect()->set_width(aux_rect.value().width);
         message.mutable_aux_rect()->set_height(aux_rect.value().height);
+    }
+
+    if (min_aspect.is_set())
+    {
+        message.mutable_min_aspect()->set_width(min_aspect.value().width);
+        message.mutable_min_aspect()->set_height(min_aspect.value().height);
+    }
+
+    if (max_aspect.is_set())
+    {
+        message.mutable_max_aspect()->set_width(max_aspect.value().width);
+        message.mutable_max_aspect()->set_height(max_aspect.value().height);
     }
 
     return message;
@@ -563,6 +579,10 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     COPY_IF_SET(min_height);
     COPY_IF_SET(max_width);
     COPY_IF_SET(max_height);
+    COPY_IF_SET(width_inc);
+    COPY_IF_SET(height_inc);
+    // min_aspect is a special case (below)
+    // max_aspect is a special case (below)
     #undef COPY_IF_SET
 
     if (spec.surface_name.is_set())
@@ -582,6 +602,20 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
         rect->set_top(value.top);
         rect->set_width(value.width);
         rect->set_height(value.height);
+    }
+
+    if (spec.min_aspect.is_set())
+    {
+        auto const aspect = surface_specification->mutable_min_aspect();
+        aspect->set_width(spec.min_aspect.value().width);
+        aspect->set_height(spec.min_aspect.value().height);
+    }
+
+    if (spec.max_aspect.is_set())
+    {
+        auto const aspect = surface_specification->mutable_max_aspect();
+        aspect->set_width(spec.max_aspect.value().width);
+        aspect->set_height(spec.max_aspect.value().height);
     }
 
     modify_wait_handle.expect_result();

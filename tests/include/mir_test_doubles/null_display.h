@@ -57,6 +57,7 @@ class NullDisplay : public graphics::Display
     }
     void pause() override{}
     void resume() override {}
+
     std::shared_ptr<graphics::Cursor> create_hardware_cursor(std::shared_ptr<graphics::CursorImage> const& /* initial_image */) override
     {
          return {}; 

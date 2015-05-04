@@ -64,11 +64,11 @@ public:
                          geometry::Size, MirPixelFormat);
     std::shared_ptr<ClientBuffer> current_buffer();
     uint32_t current_buffer_id() const;
-
+    void set_max_buffers(unsigned int max_buffers);
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
     std::list<std::pair<int, std::shared_ptr<ClientBuffer>>> buffers;
-    unsigned int const max_buffers;
+    unsigned int max_buffers;
 };
 }
 }

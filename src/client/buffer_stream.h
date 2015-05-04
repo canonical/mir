@@ -83,6 +83,7 @@ public:
     
     int swap_interval() const override;
     void set_swap_interval(int interval) override;
+    void set_buffer_cache_size(unsigned int) override;
 
     EGLNativeWindowType egl_native_window() override;
     std::shared_ptr<MemoryRegion> secure_for_cpu_write() override;

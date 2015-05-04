@@ -33,6 +33,8 @@ namespace mir
 {
 namespace shell
 {
+struct SurfaceAspectRatio { unsigned width; unsigned height; };
+
 /// Specification of surface properties requested by client
 struct SurfaceSpecification
 {
@@ -52,6 +54,10 @@ struct SurfaceSpecification
     optional_value<geometry::Height> min_height;
     optional_value<geometry::Width> max_width;
     optional_value<geometry::Height> max_height;
+    mir::optional_value<geometry::DeltaX> width_inc;
+    mir::optional_value<geometry::DeltaY> height_inc;
+    mir::optional_value<SurfaceAspectRatio> min_aspect;
+    mir::optional_value<SurfaceAspectRatio> max_aspect;
 
     // TODO scene::SurfaceCreationParameters overlaps this content but has additional fields:
     //    geometry::Point top_left;

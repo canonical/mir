@@ -21,6 +21,7 @@
 #include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test/cross_process_sync.h"
 #include "mir_test_framework/process.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir_test/cross_process_action.h"
 
@@ -41,6 +42,8 @@ struct ServerDisconnect : mtf::InterprocessClientServerTest
         mtf::InterprocessClientServerTest::SetUp();
         run_in_server([]{});
     }
+
+    mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 
 struct MockEventHandler

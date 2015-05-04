@@ -163,10 +163,14 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_surface_event_get_attribute;
     mir_surface_event_get_attribute_value;
     mir_surface_set_swapinterval;
-    mir_surface_spec_set_min_width;
-    mir_surface_spec_set_min_height;
+    mir_surface_spec_set_height_increment;
+    mir_surface_spec_set_max_aspect_ratio;
     mir_surface_spec_set_max_width;
     mir_surface_spec_set_max_height;
+    mir_surface_spec_set_min_aspect_ratio;
+    mir_surface_spec_set_min_width;
+    mir_surface_spec_set_min_height;
+    mir_surface_spec_set_width_increment;
     mir_surface_swap_buffers;
     mir_surface_swap_buffers_sync;
     mir_touch_event_modifiers;
@@ -210,5 +214,6 @@ MIR_CLIENT_DETAIL_8 {
       mir::client::DefaultConnectionConfiguration::the_input_receiver_report*;
       typeinfo?for?mir::client::DefaultConnectionConfiguration;
       vtable?for?mir::client::DefaultConnectionConfiguration;
+      mir::operator???std::ostream???Mir*
     }; 
 };
