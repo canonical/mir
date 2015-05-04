@@ -73,7 +73,6 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
         [this]()
         {
             return std::make_shared<ms::SurfaceAllocator>(
-                the_buffer_stream_factory(),
                 the_options()->get<int>(options::nbuffers_opt),
                 the_input_channel_factory(),
                 the_input_sender(),
@@ -170,6 +169,7 @@ mir::DefaultServerConfiguration::the_session_coordinator()
         {
             return std::make_shared<ms::SessionManager>(
                     the_surface_coordinator(),
+                    the_surface_factory(),
                     the_buffer_stream_factory(),
                     the_session_container(),
                     the_snapshot_strategy(),
