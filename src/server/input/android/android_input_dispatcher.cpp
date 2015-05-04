@@ -72,11 +72,11 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             event.key.source_id,
             policy_flags,
             event.key.action,
-            event.key.flags,
+            0, /* flags */
             event.key.key_code,
             event.key.scan_code,
             event.key.modifiers,
-            std::chrono::nanoseconds(event.key.down_time));
+            std::chrono::nanoseconds(event.key.event_time));
 
         dispatcher->notifyKey(&notify_key_args);
 

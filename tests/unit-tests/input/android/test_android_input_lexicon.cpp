@@ -54,7 +54,6 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(device_id, mir_ev.key.device_id);
     EXPECT_EQ(source_id, mir_ev.key.source_id);
     EXPECT_EQ(action, mir_ev.key.action);
-    EXPECT_EQ(flags, mir_ev.key.flags);
     EXPECT_EQ((unsigned int)meta_state, mir_ev.key.modifiers);
 
     auto mir_key_ev = &mir_ev.key;
@@ -63,10 +62,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(mir_key_ev->key_code, key_code);
     EXPECT_EQ(mir_key_ev->scan_code, scan_code);
     EXPECT_EQ(mir_key_ev->repeat_count, repeat_count);
-    EXPECT_EQ(mir_key_ev->down_time, down_time.count());
     EXPECT_EQ(mir_key_ev->event_time, event_time.count());
-    // What is this flag and where does it come from?
-    EXPECT_EQ(mir_key_ev->is_system_key, false);
 
     delete android_key_ev;
 }

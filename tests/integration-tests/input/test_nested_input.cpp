@@ -67,14 +67,11 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
     e.key.device_id = 13;
     e.key.source_id = 10;
     e.key.action = mir_key_action_down;
-    e.key.flags = static_cast<MirKeyFlag>(0);
     e.key.modifiers = 0;
     e.key.key_code = 81;
     e.key.scan_code = 176;
     e.key.repeat_count = 0;
-    e.key.down_time = 1234;
     e.key.event_time = 12345;
-    e.key.is_system_key = 0;
 
     EXPECT_CALL(mock_event_filter, handle(mt::MirKeyEventMatches(&e)))
         .WillOnce(Return(true));

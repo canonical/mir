@@ -101,10 +101,7 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
         return;
     uint32_t policy_flags = args->policyFlags;
     int32_t modifiers = args->metaState;
-    int32_t flags = args->flags;
 
-    if ((policy_flags & droidinput::POLICY_FLAG_VIRTUAL) || (flags & AKEY_EVENT_FLAG_VIRTUAL_HARD_KEY))
-        flags |= mir_key_flag_virtual_hard_key;
     if (policy_flags & droidinput::POLICY_FLAG_ALT)
         modifiers |= mir_key_modifier_alt | mir_key_modifier_alt_left;
     if (policy_flags & droidinput::POLICY_FLAG_ALT_GR)
@@ -115,23 +112,17 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
         modifiers |= mir_key_modifier_caps_lock;
     if (policy_flags & droidinput::POLICY_FLAG_FUNCTION)
         modifiers |= mir_key_modifier_function;
-    if (policy_flags & droidinput::POLICY_FLAG_WOKE_HERE)
-        flags |= mir_key_flag_woke_here;
 
     MirEvent mir_event;
     mir_event.type = mir_event_type_key;
     mir_event.key.device_id = args->deviceId;
     mir_event.key.source_id = args->source;
     mir_event.key.action = static_cast<MirKeyAction>(args->action);
-    mir_event.key.flags = static_cast<MirKeyFlag>(flags);
     mir_event.key.modifiers = modifiers;
     mir_event.key.key_code = args->keyCode;
     mir_event.key.scan_code = args->scanCode;
     mir_event.key.repeat_count = 0;
-    mir_event.key.down_time = args->downTime.count();
     mir_event.key.event_time = args->eventTime.count();
-    mir_event.key.is_system_key = false; // TODO: Figure out what this is. //kev->isSystemKey();
-
 
     if (!valid_key_event(mir_event.key))
         return;

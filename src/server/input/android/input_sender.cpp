@@ -241,12 +241,12 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
         event.device_id,
         event.source_id,
         event.action,
-        event.flags,
+        0, /* Flags */
         event.key_code,
         event.scan_code,
         event.modifiers,
         event.repeat_count,
-        std::chrono::nanoseconds(event.down_time),
+        std::chrono::nanoseconds(event.event_time),
         std::chrono::nanoseconds(event.event_time)
         );
 }

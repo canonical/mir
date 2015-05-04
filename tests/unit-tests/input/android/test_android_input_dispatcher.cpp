@@ -247,24 +247,21 @@ TEST_F(AndroidInputDispatcherTest, forwards_all_key_event_paramters_correctly)
     event.key.device_id = 2;
     event.key.source_id = 3;
     event.key.action = mir_key_action_down;
-    event.key.flags = mir_key_flag_long_press;
     event.key.scan_code = 4;
     event.key.key_code = 5;
     event.key.repeat_count = 0;
-    event.key.down_time = 6;
     event.key.modifiers = 7;
-    event.key.is_system_key = false;
 
     droidinput::NotifyKeyArgs expected(std::chrono::nanoseconds(event.key.event_time),
                                        event.key.device_id,
                                        event.key.source_id,
                                        default_policy_flags,
                                        event.key.action,
-                                       event.key.flags,
+                                       0, /* flags */
                                        event.key.key_code,
                                        event.key.scan_code,
                                        event.key.modifiers,
-                                       std::chrono::nanoseconds(event.key.down_time));
+                                       std::chrono::nanoseconds(event.key.event_time));
 
     EXPECT_CALL(*dispatcher, notifyKey(KeyArgsMatches(expected)));
 

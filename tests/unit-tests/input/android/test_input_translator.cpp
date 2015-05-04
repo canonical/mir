@@ -72,7 +72,6 @@ public:
 struct PolicyFlagTestParameter
 {
     const uint32_t policy_flag;
-    const MirKeyFlag expected_key_flag;
     const unsigned int expected_modifiers;
 };
 
@@ -112,7 +111,7 @@ TEST_F(InputTranslator, ignores_invalid_key_events)
     translator.notifyKey(nullptr);
 
     const int32_t invalid_action = 5;
-    droidinput::NotifyKeyArgs key(some_time, device_id, source_id, default_policy_flags, invalid_action, no_flags,
+    droidinput::NotifyKeyArgs key(some_time, device_id, source_id, 0, invalid_action, no_flags,
                                   arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
 
     translator.notifyKey(&key);
@@ -126,7 +125,7 @@ TEST_F(InputTranslator, ignores_invalid_motion_action)
 
     const int32_t invalid_motion_action = 20;
 
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, invalid_motion_action,
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, 0, invalid_motion_action,
                                         no_flags, meta_state, button_state, edge_flags, zero_pointers, properties,
                                         coords, x_precision, y_precision, later_time);
 
@@ -141,7 +140,7 @@ TEST_F(InputTranslator, ignores_motion_action_with_wrong_index)
 
     const int32_t invalid_motion_action = mir_motion_action_pointer_up | (3 << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
 
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, invalid_motion_action,
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, 0, invalid_motion_action,
                                         no_flags, meta_state, button_state, edge_flags, zero_pointers, properties,
                                         coords, x_precision, y_precision, later_time);
 
@@ -161,7 +160,7 @@ TEST_F(InputTranslator, accepts_motion_action_with_existing_index)
     properties[1].id = 2;
     properties[2].id = 3;
 
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, valid_motion_action,
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, 0, valid_motion_action,
                                         no_flags, meta_state, button_state, edge_flags, three_pointers, properties,
                                         coords, x_precision, y_precision, later_time);
 
@@ -180,7 +179,7 @@ TEST_F(InputTranslator, ignores_motion_with_duplicated_pointerids)
     properties[1].id = 1;
     properties[2].id = 3;
 
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, motion_action, no_flags,
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, 0, motion_action, no_flags,
                                         meta_state, button_state, edge_flags, three_pointers, properties, coords,
                                         x_precision, y_precision, later_time);
     translator.notifyMotion(&motion);
@@ -198,7 +197,7 @@ TEST_F(InputTranslator, ignores_motion_with_invalid_pointerids)
     properties[1].id = 1;
     properties[2].id = 3;
 
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, motion_action, no_flags,
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, 0, motion_action, no_flags,
                                         meta_state, button_state, edge_flags, three_pointers, properties, coords,
                                         x_precision, y_precision, later_time);
     translator.notifyMotion(&motion);
@@ -218,7 +217,7 @@ TEST_F(InputTranslator, forwards_pointer_positions)
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_X, x_pos);
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_Y, y_pos);
     
-    droidinput::NotifyMotionArgs motion(some_time, device_id, AINPUT_SOURCE_MOUSE, default_policy_flags, motion_action, no_flags,
+    droidinput::NotifyMotionArgs motion(some_time, device_id, AINPUT_SOURCE_MOUSE, 0, motion_action, no_flags,
                                         meta_state, button_state, edge_flags, one_pointer, properties, coords,
                                         x_precision, y_precision, later_time);
     translator.notifyMotion(&motion);
@@ -232,9 +231,9 @@ TEST_F(InputTranslator, forwards_and_converts_up_down_key_notifications)
     EXPECT_CALL(dispatcher, dispatch(mt::KeyDownEvent())).Times(1);
     EXPECT_CALL(dispatcher, dispatch(mt::KeyUpEvent())).Times(1);
 
-    droidinput::NotifyKeyArgs down(some_time, device_id, source_id, default_policy_flags, mir_key_action_down,
+    droidinput::NotifyKeyArgs down(some_time, device_id, source_id, 0, mir_key_action_down,
                                    no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
-    droidinput::NotifyKeyArgs up(some_time, device_id, source_id, default_policy_flags, mir_key_action_up,
+    droidinput::NotifyKeyArgs up(some_time, device_id, source_id, 0, mir_key_action_up,
                                  no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
 
     translator.notifyKey(&down);
@@ -250,13 +249,10 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
     expected.key.device_id = 2;
     expected.key.source_id = 3;
     expected.key.action = mir_key_action_down;
-    expected.key.flags = mir_key_flag_long_press;
     expected.key.scan_code = 4;
     expected.key.key_code = 5;
     expected.key.repeat_count = 0;
-    expected.key.down_time = 6;
     expected.key.modifiers = 7;
-    expected.key.is_system_key = false;
 
     InSequence seq;
     EXPECT_CALL(dispatcher, dispatch(mt::MirKeyEventMatches(expected))).Times(1);
@@ -266,11 +262,11 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
                                        expected.key.source_id,
                                        default_policy_flags,
                                        expected.key.action,
-                                       expected.key.flags,
+                                       0, /* flags */
                                        expected.key.key_code,
                                        expected.key.scan_code,
                                        expected.key.modifiers,
-                                       std::chrono::nanoseconds(expected.key.down_time));
+                                       std::chrono::nanoseconds(expected.key.event_time));
 
     translator.notifyKey(&notified);
 }
@@ -355,26 +351,24 @@ TEST_P(InputTranslatorWithPolicyParam, forwards_policy_modifiers_as_flags_and_mo
                 ).Times(1);
 
     droidinput::NotifyKeyArgs tester(some_time, device_id, source_id,
-                                     default_policy_flags | GetParam().policy_flag, mir_key_action_down,
+                                     0, mir_key_action_down,
                                      no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
 
     translator.notifyKey(&tester);
 }
 
-const MirKeyFlag default_key_flag = static_cast<MirKeyFlag>(0);
 INSTANTIATE_TEST_CASE_P(VariousPolicyFlags, InputTranslatorWithPolicyParam,
-                        ::testing::Values(PolicyFlagTestParameter{droidinput::POLICY_FLAG_CAPS_LOCK, default_key_flag,
+                        ::testing::Values(PolicyFlagTestParameter{droidinput::POLICY_FLAG_CAPS_LOCK,
                                                                   mir_input_event_modifier_caps_lock},
-                                          PolicyFlagTestParameter{droidinput::POLICY_FLAG_ALT, default_key_flag,
+                                          PolicyFlagTestParameter{droidinput::POLICY_FLAG_ALT,
                                                                   mir_input_event_modifier_alt | mir_input_event_modifier_alt_left},
-                                          PolicyFlagTestParameter{droidinput::POLICY_FLAG_ALT_GR, default_key_flag,
+                                          PolicyFlagTestParameter{droidinput::POLICY_FLAG_ALT_GR,
                                                                   mir_input_event_modifier_alt | mir_input_event_modifier_alt_right},
-                                          PolicyFlagTestParameter{droidinput::POLICY_FLAG_FUNCTION, default_key_flag,
+                                          PolicyFlagTestParameter{droidinput::POLICY_FLAG_FUNCTION,
                                                                   mir_input_event_modifier_function},
-                                          PolicyFlagTestParameter{droidinput::POLICY_FLAG_SHIFT, default_key_flag,
+                                          PolicyFlagTestParameter{droidinput::POLICY_FLAG_SHIFT,
                                                                   mir_input_event_modifier_shift | mir_input_event_modifier_shift_left},
                                           PolicyFlagTestParameter{droidinput::POLICY_FLAG_VIRTUAL,
-                                                                  mir_key_flag_virtual_hard_key,
                                                                   mir_input_event_modifier_none}));
 
 

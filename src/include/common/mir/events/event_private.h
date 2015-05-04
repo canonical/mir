@@ -51,20 +51,6 @@ typedef enum {
 } MirKeyAction;
 
 typedef enum {
-    mir_key_flag_woke_here           = 0x1,
-    mir_key_flag_soft_keyboard       = 0x2,
-    mir_key_flag_keep_touch_mode     = 0x4,
-    mir_key_flag_from_system         = 0x8,
-    mir_key_flag_editor_action       = 0x10,
-    mir_key_flag_canceled            = 0x20,
-    mir_key_flag_virtual_hard_key    = 0x40,
-    mir_key_flag_long_press          = 0x80,
-    mir_key_flag_canceled_long_press = 0x100,
-    mir_key_flag_tracking            = 0x200,
-    mir_key_flag_fallback            = 0x400
-} MirKeyFlag;
-
-typedef enum {
     mir_key_modifier_none        = 0,
     mir_key_modifier_alt         = 0x02,
     mir_key_modifier_alt_left    = 0x10,
@@ -129,16 +115,13 @@ typedef struct
     int32_t device_id;
     int32_t source_id;
     MirKeyAction action;
-    MirKeyFlag flags;
     unsigned int modifiers;
 
     int32_t key_code;
     int32_t scan_code;
     int32_t repeat_count;
-    nsecs_t down_time;
 
     nsecs_t event_time;
-    int is_system_key;
 } MirKeyEvent;
 
 typedef struct
