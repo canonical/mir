@@ -6,6 +6,7 @@ set(
   INPUT_SOURCES
 
   default_input_manager.cpp
+  platform_input_manager.cpp
   default_input_device_hub.cpp
   event_filter_chain.cpp
 
