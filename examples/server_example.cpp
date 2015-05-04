@@ -82,6 +82,9 @@ try
 {
     mir::Server server;
 
+    // Use config options file in e.g. ~/.config/mir/mir_demo_server.config
+    server.set_config_filename("mir/mir_demo_server.config");
+
     // Add example options for display layout, logging, launching clients and timeout
     me::add_display_configuration_options_to(server);
     me::add_log_host_lifecycle_option_to(server);

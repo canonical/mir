@@ -160,23 +160,26 @@ void mf::SessionMediator::advance_buffer(
     std::unique_lock<std::mutex>& lock,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto const tid = std::this_thread::get_id();
+    auto const tid = std::make_shared<std::thread::id>(std::this_thread::get_id());
+    auto const weak_tid = std::weak_ptr<std::thread::id>{tid};
 
     stream.swap_buffers(
         old_buffer,
         // Note: We assume that the lambda will be executed within swap_buffers
         // (in which case the lock reference is valid) or in a different thread
         // altogether (in which case the dangling reference is not accessed)
-        [this, tid, &lock, stream_id, complete](mg::Buffer* new_buffer)
+        [this, weak_tid, &lock, stream_id, complete](mg::Buffer* new_buffer)
         {
-            if (tid == std::this_thread::get_id())
-                lock.unlock();
+            if (auto const tid = weak_tid.lock())
+            {
+                if (*tid == std::this_thread::get_id())
+                    lock.unlock();
+            }
 
             if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
                 complete(new_buffer, mg::BufferIpcMsgType::full_msg);
-
         });
 }
 
@@ -238,8 +241,16 @@ void mf::SessionMediator::create_surface(
     COPY_IF_SET(min_height);
     COPY_IF_SET(max_width);
     COPY_IF_SET(max_height);
+    COPY_IF_SET(width_inc);
+    COPY_IF_SET(height_inc);
 
     #undef COPY_IF_SET
+
+    if (request->has_min_aspect())
+        params.min_aspect = { request->min_aspect().width(), request->min_aspect().height()};
+
+    if (request->has_max_aspect())
+        params.max_aspect = { request->max_aspect().width(), request->max_aspect().height()};
 
     auto const surf_id = shell->create_surface(session, params);
 
@@ -461,6 +472,10 @@ void mf::SessionMediator::modify_surface(
         COPY_IF_SET(min_height);
         COPY_IF_SET(max_width);
         COPY_IF_SET(max_height);
+        COPY_IF_SET(width_inc);
+        COPY_IF_SET(height_inc);
+        // min_aspect is a special case (below)
+        // max_aspect is a special case (below)
 
         #undef COPY_IF_SET
 
@@ -469,6 +484,20 @@ void mf::SessionMediator::modify_surface(
             auto const& rect = surface_specification.aux_rect();
             mods.aux_rect = {{rect.left(), rect.top()}, {rect.width(), rect.height()}};
         }
+
+        if (surface_specification.has_min_aspect())
+            mods.min_aspect =
+                {
+                    surface_specification.min_aspect().width(),
+                    surface_specification.min_aspect().height()
+                };
+
+        if (surface_specification.has_max_aspect())
+            mods.max_aspect =
+                {
+                    surface_specification.max_aspect().width(),
+                    surface_specification.max_aspect().height()
+                };
 
         auto const id = mf::SurfaceId(request->surface_id().value());
 

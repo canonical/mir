@@ -27,6 +27,7 @@
 #include "mir/scene/buffer_stream_factory.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/any_surface.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 
@@ -167,17 +168,8 @@ TEST_F(SwapIntervalSignalTest, swapinterval_test)
 
         void exec()
         {
-            MirSurfaceParameters request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-
             MirConnection* connection = mir_connect_sync(mir_test_socket, "testapp");
-            MirSurface* surface = mir_connection_create_surface_sync(connection, &request_params);
+            MirSurface* surface = mtf::make_any_surface(connection);
 
             //1 is the default swapinterval
             EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
