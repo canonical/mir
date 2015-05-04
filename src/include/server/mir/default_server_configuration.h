@@ -351,7 +351,7 @@ protected:
     virtual std::shared_ptr<droidinput::InputEnumerator> the_input_target_enumerator();
     virtual std::shared_ptr<input::android::InputThread> the_dispatcher_thread();
     virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
-    virtual bool is_key_repeat_enabled() const;
+
     /** @} */
 
     /** @Convenience wrapper functions

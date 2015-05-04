@@ -519,7 +519,6 @@ MIR_SERVER_31 {
 
     mir::DefaultServerConfiguration::clock*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
-    mir::DefaultServerConfiguration::is_key_repeat_enabled*;
     mir::DefaultServerConfiguration::new_ipc_factory*;
     mir::DefaultServerConfiguration::the_android_input_dispatcher*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;

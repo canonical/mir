@@ -56,11 +56,6 @@ struct MockCursorListener : public mi::CursorListener
 
 struct AndroidCursorListenerIntegrationTest : testing::Test, mtf::FakeEventHubServerConfiguration
 {
-    bool is_key_repeat_enabled() const override
-    {
-        return false;
-    }
-
     std::shared_ptr<mi::CursorListener> the_cursor_listener() override
     {
         return mt::fake_shared(cursor_listener);

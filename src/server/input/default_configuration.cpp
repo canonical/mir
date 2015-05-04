@@ -198,16 +198,9 @@ mir::DefaultServerConfiguration::the_dispatcher_policy()
     return android_dispatcher_policy(
         [this]()
         {
-            return std::make_shared<mia::DefaultDispatcherPolicy>(is_key_repeat_enabled());
+            return std::make_shared<mia::DefaultDispatcherPolicy>();
         });
 }
-
-// TODO: Remove
-bool mir::DefaultServerConfiguration::is_key_repeat_enabled() const
-{
-    return true;
-}
-
 
 std::shared_ptr<mi::InputDispatcher>
 mir::DefaultServerConfiguration::the_input_dispatcher()
