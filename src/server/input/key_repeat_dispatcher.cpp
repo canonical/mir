@@ -47,9 +47,12 @@ mi::KeyRepeatDispatcher::KeyboardState& mi::KeyRepeatDispatcher::ensure_state_fo
 
 bool mi::KeyRepeatDispatcher::dispatch(MirEvent const& event)
 {
-    auto iev = mir_event_get_input_event(&event);
-    if (mir_input_event_get_type(iev) == mir_input_event_type_key)
-        handle_key_input(mir_input_event_get_device_id(iev), mir_input_event_get_keyboard_event(iev));
+    if (mir_event_get_type(&event) == mir_event_type_input)
+    {
+        auto iev = mir_event_get_input_event(&event);
+        if (mir_input_event_get_type(iev) == mir_input_event_type_key)
+            handle_key_input(mir_input_event_get_device_id(iev), mir_input_event_get_keyboard_event(iev));
+    }
     return next_dispatcher->dispatch(event);
 }
 

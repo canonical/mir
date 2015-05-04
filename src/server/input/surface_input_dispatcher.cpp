@@ -393,6 +393,7 @@ bool mi::SurfaceInputDispatcher::dispatch(MirEvent const& event)
         if (mir_input_configuration_event_get_action(idev) == mir_input_configuration_action_device_reset)
             device_reset(mir_input_configuration_event_get_device_id(idev),
                          std::chrono::nanoseconds(mir_input_configuration_event_get_time(idev)));
+        return true;
     }
     if (mir_event_get_type(&event) != mir_event_type_input)
         BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got a non-input event"));
