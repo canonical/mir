@@ -375,17 +375,16 @@ TEST_F(ApplicationSession, surface_after_cycles_through_all)
         app_session->destroy_surface(id[i]);
 }
 
-#if 0
 TEST_F(ApplicationSession, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 
     auto mock_surface = make_mock_surface();
 
+    NiceMock<MockSurfaceFactory> surface_factory;
+    ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
-    ON_CALL(surface_coordinator, add_surface(_,_,_,_)).WillByDefault(Return(mock_surface));
-
-    auto app_session = make_application_session_with_coordinator(mt::fake_shared(surface_coordinator));
+    auto app_session = make_application_session(mt::fake_shared(surface_coordinator), mt::fake_shared(surface_factory));
 
     {
         InSequence seq;
@@ -407,10 +406,9 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
     using namespace ::testing;
 
     auto mock_surface = make_mock_surface();
+    NiceMock<MockSurfaceFactory> surface_factory;
+    ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
-
-    EXPECT_CALL(surface_coordinator, add_surface(_, _))
-        .WillOnce(Return(mock_surface));
 
     auto const default_surface_buffer_access =
         std::static_pointer_cast<ms::SurfaceBufferAccess>(mock_surface);
@@ -421,6 +419,7 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
 
     ms::ApplicationSession app_session(
         mt::fake_shared(surface_coordinator),
+        mt::fake_shared(surface_factory),
         stub_buffer_stream_factory,
         pid, name,
         snapshot_strategy,
@@ -440,7 +439,7 @@ TEST_F(ApplicationSession, returns_null_snapshot_if_no_default_surface)
     MockSnapshotCallback mock_snapshot_callback;
 
     ms::ApplicationSession app_session(
-        stub_surface_coordinator,
+        stub_surface_coordinator, stub_surface_factory,
         stub_buffer_stream_factory,
         pid, name,
         snapshot_strategy,
@@ -460,7 +459,7 @@ TEST_F(ApplicationSession, process_id)
     pid_t const session_pid{__LINE__};
 
     ms::ApplicationSession app_session(
-        stub_surface_coordinator,
+        stub_surface_coordinator, stub_surface_factory,
         stub_buffer_stream_factory,
         session_pid, name,
         null_snapshot_strategy,
@@ -468,32 +467,6 @@ TEST_F(ApplicationSession, process_id)
         event_sink);
 
     EXPECT_THAT(app_session.process_id(), Eq(session_pid));
-}
-
-TEST_F(ApplicationSession, fowards_parent_info_to_coordinator)
-{
-    using namespace ::testing;
-
-    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
-    auto mock_surface = make_mock_surface();
-    EXPECT_CALL(surface_coordinator, add_surface(_, _))
-        .WillOnce(Return(mock_surface));
-
-    auto session = make_application_session_with_coordinator(mt::fake_shared(surface_coordinator));
-
-    // Create parent surface
-    ms::SurfaceCreationParameters params;
-    auto parent_id = session->create_surface(params);
-    auto parent = session->get_surface(parent_id);
-
-    EXPECT_CALL(surface_coordinator, add_surface(HasParent(parent), _))
-        .WillOnce(Return(mock_surface));
-
-    params.with_parent_id(parent_id);
-    auto child_id = session->create_surface(params);
-
-    session->destroy_surface(parent_id);
-    session->destroy_surface(child_id);
 }
 
 TEST_F(ApplicationSession, surface_ids_are_bufferstream_ids)
@@ -544,8 +517,10 @@ namespace
 {
 struct ApplicationSessionSender : public ApplicationSession
 {
-    ApplicationSessionSender()
-        : app_session(stub_surface_coordinator, stub_buffer_stream_factory, pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
+    ApplicationSessionSender() :
+        app_session(
+        stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
+        pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
     {
     }
 
@@ -590,4 +565,3 @@ TEST_F(ApplicationSessionSender, stop_prompt_session)
     EXPECT_CALL(sender, handle_event(EqPromptSessionEventState(mir_prompt_session_state_stopped))).Times(1);
     app_session.stop_prompt_session();
 }
-#endif
