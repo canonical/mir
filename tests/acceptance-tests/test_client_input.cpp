@@ -112,13 +112,13 @@ struct TestClientInputNew : mtf::ConnectedClientWithASurface
 }
 
 
-TEST_F(TestClientInputNew, new_clients_receive_us_english_mapped_keys)
+TEST_F(TestClientInputNew, clients_receive_keys)
 {
     using namespace testing;
 
     InSequence seq;
     EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_R))));
-    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyRepeatEvent(), mt::KeyOfSymbol(XKB_KEY_M))));
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_M))));
     EXPECT_CALL(handler, handle_input(AllOf(mt::KeyUpEvent(), mt::KeyOfSymbol(XKB_KEY_M))));
     EXPECT_CALL(handler, handle_input(AllOf(mt::KeyUpEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_R))));
     EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_i))));
@@ -159,8 +159,8 @@ TEST_F(TestClientInputNewEventFilter, event_filter_may_consume_events)
     using namespace ::testing;
 
     InSequence seq;
-    EXPECT_CALL(*mock_event_filter, handle(_)).Times(AtLeast(1)).WillOnce(Return(true));
-    EXPECT_CALL(*mock_event_filter, handle(_)).Times(AtLeast(1)).WillOnce(
+    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(
             DoAll(mt::WakeUp(&all_events_received), Return(true)));
 
     // Since we handle the events in the filter the client should not receive them.

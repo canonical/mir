@@ -249,12 +249,19 @@ TEST_F(SimpleDispatchThreadDeathTest, destroying_dispatcher_from_a_callback_is_a
 
     EXPECT_EXIT(
     {
+        std::mutex mutex;
         md::SimpleDispatchThread* dispatcher;
     
-        auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatcher]() { delete dispatcher; });
+        auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatcher, &mutex]{
+            std::lock_guard<decltype(mutex)> lock{mutex};
+            delete dispatcher;
+        });
         
-        dispatchable->trigger();
-        dispatcher = new md::SimpleDispatchThread{dispatchable};
+        {
+            std::lock_guard<decltype(mutex)> lock{mutex};
+            dispatchable->trigger();
+            dispatcher = new md::SimpleDispatchThread{dispatchable};
+        }
         std::this_thread::sleep_for(10s);
     }, KilledBySignal(SIGABRT), ".*Destroying SimpleDispatchThread.*");
 }

@@ -210,6 +210,7 @@ MIR_SERVER_31 {
     mir::shell::AbstractShell::focus_next_session*;
     mir::shell::AbstractShell::get_surface_attribute*;
     mir::shell::AbstractShell::handle*;
+    mir::shell::AbstractShell::modify_surface*;
     mir::shell::AbstractShell::open_session*;
     mir::shell::AbstractShell::raise*;
     mir::shell::AbstractShell::remove_display*;
