@@ -84,6 +84,10 @@ public:
     {
     }
 
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(int, mg::BufferProperties const& p) override
+    {
+        return create_buffer_stream(p);
+    }
     std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&) override
     {
         return std::make_shared<CountingBufferStream>(render_operations_fd);

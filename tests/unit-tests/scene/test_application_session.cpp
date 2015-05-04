@@ -55,6 +55,7 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 struct MockBufferStreamFactory : public ms::BufferStreamFactory
 {
     MOCK_METHOD1(create_buffer_stream, std::shared_ptr<mc::BufferStream>(mg::BufferProperties const&));
+    MOCK_METHOD2(create_buffer_stream, std::shared_ptr<mc::BufferStream>(int, mg::BufferProperties const&));
 };
 
 
