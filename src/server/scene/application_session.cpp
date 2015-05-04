@@ -143,9 +143,30 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
     if (i == surfaces.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("surface_after: surface is not a member of this session"));
 
-    ++i;
+    i = std::find_if(++i, end(surfaces), [](Surfaces::value_type const& s)
+        {
+            switch (s.second->type())
+            {
+            case mir_surface_type_normal:       /**< AKA "regular"                       */
+            case mir_surface_type_utility:      /**< AKA "floating"                      */
+            case mir_surface_type_dialog:
+            case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+            case mir_surface_type_freestyle:
+            case mir_surface_type_menu:
+            case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+                return true;
+
+            case mir_surface_type_gloss:
+            case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+            default:
+                // Cannot have input focus - skip it
+                return false;
+            }
+        });
+
     if (i == surfaces.end())
         i = surfaces.begin();
+
     return i->second;
 }
 

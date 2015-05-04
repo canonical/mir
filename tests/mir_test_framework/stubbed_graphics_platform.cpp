@@ -316,6 +316,11 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::NestedContext> const& context)
 {
     auto graphics_platform = the_graphics_platform.lock();
+    if (!graphics_platform)
+    {
+        static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
+        the_graphics_platform = graphics_platform = create_stub_platform(default_display_rects);
+    }
     return std::make_shared<GuestPlatformAdapter>(context, graphics_platform);
 }
 
