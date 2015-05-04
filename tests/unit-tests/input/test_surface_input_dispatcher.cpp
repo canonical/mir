@@ -338,7 +338,8 @@ TEST_F(SurfaceInputDispatcher, device_reset_resets_key_state_consistency)
 
     dispatcher.set_focus(surface);
     EXPECT_TRUE(dispatcher.dispatch(*down_event));
-    dispatcher.device_reset(device_id, std::chrono::nanoseconds{1});
+    EXPECT_TRUE(dispatcher.dispatch(
+        *mev::make_event(mir_input_configuration_action_device_reset, device_id, std::chrono::nanoseconds{1})));
     EXPECT_FALSE(dispatcher.dispatch(*release_event));
 }
 
@@ -484,7 +485,8 @@ TEST_F(SurfaceInputDispatcher, gestures_terminated_by_device_reset)
     dispatcher.start();
 
     EXPECT_TRUE(dispatcher.dispatch(*ev_1));
-    dispatcher.device_reset(device_id, std::chrono::nanoseconds{1});    
+    EXPECT_TRUE(dispatcher.dispatch(
+        *mev::make_event(mir_input_configuration_action_device_reset, device_id, std::chrono::nanoseconds{1})));
     EXPECT_TRUE(dispatcher.dispatch(*ev_2));
 }
 
@@ -622,7 +624,8 @@ TEST_F(SurfaceInputDispatcher, touch_gestures_terminated_by_device_reset)
     dispatcher.start();
     
     EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({0, 0})));
-    dispatcher.device_reset(device_id, std::chrono::nanoseconds{1});
+    EXPECT_TRUE(dispatcher.dispatch(
+        *mev::make_event(mir_input_configuration_action_device_reset, device_id, std::chrono::nanoseconds{1})));
     EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({1, 1})));
 }
 

@@ -50,6 +50,10 @@ struct CanonicalSurfaceInfo
     optional_value<geometry::Height> min_height;
     optional_value<geometry::Width> max_width;
     optional_value<geometry::Height> max_height;
+    mir::optional_value<geometry::DeltaX> width_inc;
+    mir::optional_value<geometry::DeltaY> height_inc;
+    mir::optional_value<SurfaceAspectRatio> min_aspect;
+    mir::optional_value<SurfaceAspectRatio> max_aspect;
 };
 
 // standard window management algorithm:
@@ -126,8 +130,8 @@ private:
     void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
     bool constrained_resize(
         std::shared_ptr<scene::Surface> const& surface,
-        geometry::Point new_pos,
-        geometry::Size new_size,
+        geometry::Point const& requested_pos,
+        geometry::Size const& requested_size,
         const bool left_resize,
         const bool top_resize,
         geometry::Rectangle const& bounds);

@@ -27,6 +27,7 @@
 #include <memory>
 #include <vector>
 #include <functional>
+#include <chrono>
 
 namespace mir
 {
@@ -65,6 +66,8 @@ EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
     std::vector<MirPointerButton> const& buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value);
+// Input configuration event
+EventUPtr make_event(MirInputConfigurationAction action, MirInputDeviceId id, std::chrono::nanoseconds time);
 }
 }
 

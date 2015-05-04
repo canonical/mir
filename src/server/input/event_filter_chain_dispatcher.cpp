@@ -56,16 +56,6 @@ void mi::EventFilterChainDispatcher::prepend(std::shared_ptr<EventFilter> const&
     filters.insert(filters.begin(), filter);
 }
 
-void mi::EventFilterChainDispatcher::configuration_changed(std::chrono::nanoseconds when)
-{
-    next_dispatcher->configuration_changed(when);
-}
-
-void mi::EventFilterChainDispatcher::device_reset(int32_t device_id, std::chrono::nanoseconds when)
-{
-    next_dispatcher->device_reset(device_id, when);
-}
-
 bool mi::EventFilterChainDispatcher::dispatch(MirEvent const& event)
 {
     if (!handle(event))

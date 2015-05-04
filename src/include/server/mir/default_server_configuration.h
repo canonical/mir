@@ -305,6 +305,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
+
     virtual std::shared_ptr<input::EventFilterChainDispatcher> the_event_filter_chain_dispatcher();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<input::Scene>  the_input_scene();
@@ -352,7 +353,7 @@ protected:
     virtual std::shared_ptr<droidinput::InputEnumerator> the_input_target_enumerator();
     virtual std::shared_ptr<input::android::InputThread> the_dispatcher_thread();
     virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
-    virtual bool is_key_repeat_enabled() const;
+
     /** @} */
 
     /** @Convenience wrapper functions
@@ -389,6 +390,7 @@ protected:
     CachedPtr<input::Platform>    input_platform; // currently not used by default
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
     CachedPtr<input::InputDispatcher> input_dispatcher;
+    CachedPtr<input::InputDispatcher> surface_input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
     CachedPtr<input::InputSendObserver> input_send_observer;
     CachedPtr<input::InputRegion>     input_region;

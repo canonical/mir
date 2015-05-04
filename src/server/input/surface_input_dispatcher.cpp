@@ -84,11 +84,6 @@ mi::SurfaceInputDispatcher::~SurfaceInputDispatcher()
     scene->remove_observer(scene_observer);
 }
 
-void mi::SurfaceInputDispatcher::configuration_changed(std::chrono::nanoseconds when)
-{
-    (void) when;
-}
-
 namespace
 {
 bool compare_surfaces(std::shared_ptr<mi::Surface> const& input_surface, ms::Surface *surface)
@@ -124,7 +119,7 @@ void mi::SurfaceInputDispatcher::surface_removed(ms::Surface *surface)
     }
 }
 
-void mi::SurfaceInputDispatcher::device_reset(int32_t reset_device_id, std::chrono::nanoseconds /* when */)
+void mi::SurfaceInputDispatcher::device_reset(MirInputDeviceId reset_device_id, std::chrono::nanoseconds /* when */)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
 
@@ -392,6 +387,13 @@ bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEve
 
 bool mi::SurfaceInputDispatcher::dispatch(MirEvent const& event)
 {
+    if (mir_event_get_type(&event) == mir_event_type_input_configuration)
+    {
+        auto idev = mir_event_get_input_configuration_event(&event);
+        if (mir_input_configuration_event_get_action(idev) == mir_input_configuration_action_device_reset)
+            device_reset(mir_input_configuration_event_get_device_id(idev),
+                         std::chrono::nanoseconds(mir_input_configuration_event_get_time(idev)));
+    }
     if (mir_event_get_type(&event) != mir_event_type_input)
         BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got a non-input event"));
     auto iev = mir_event_get_input_event(&event);

@@ -75,8 +75,7 @@ TEST_F(EventFilterChainDispatcher, prepends_appends_filters)
         EXPECT_CALL(*filter3, handle(_)).WillOnce(Return(false));
     }
 
-    // So the filter chain should also reject the event
-    EXPECT_FALSE(filter_chain.handle(*event));
+    filter_chain.handle(*event);
 }
 
 TEST_F(EventFilterChainDispatcher, accepting_event_halts_emission)
@@ -91,8 +90,8 @@ TEST_F(EventFilterChainDispatcher, accepting_event_halts_emission)
         EXPECT_CALL(*filter, handle(_)).Times(1).WillOnce(Return(false));
         EXPECT_CALL(*filter, handle(_)).Times(1).WillOnce(Return(true));
     }
-    // So the chain should accept
-    EXPECT_TRUE(filter_chain.handle(*event));
+
+    filter_chain.handle(*event);
 }
 
 TEST_F(EventFilterChainDispatcher, does_not_own_event_filters)
@@ -103,27 +102,19 @@ TEST_F(EventFilterChainDispatcher, does_not_own_event_filters)
     EXPECT_CALL(*filter, handle(_)).Times(1).WillOnce(Return(true));
     EXPECT_TRUE(filter_chain.handle(*event));
     filter.reset();
+
     EXPECT_FALSE(filter_chain.handle(*event));
 }
 
-TEST_F(EventFilterChainDispatcher, forwards_start_stop_and_device_events)
+TEST_F(EventFilterChainDispatcher, forwards_start_and_stop)
 {
-    int32_t any_device_id = 7;
-    std::chrono::nanoseconds any_time(11);
-    
     auto mock_next_dispatcher = std::make_shared<mtd::MockInputDispatcher>();
     mi::EventFilterChainDispatcher filter_chain({}, mock_next_dispatcher);
 
     InSequence seq;
     EXPECT_CALL(*mock_next_dispatcher, start()).Times(1);
-    EXPECT_CALL(*mock_next_dispatcher,
-                configuration_changed(any_time));
-    EXPECT_CALL(*mock_next_dispatcher,
-                device_reset(any_device_id, any_time));
     EXPECT_CALL(*mock_next_dispatcher, stop()).Times(1);
 
     filter_chain.start();
-    filter_chain.configuration_changed(any_time);
-    filter_chain.device_reset(any_device_id, any_time);
     filter_chain.stop();
 }

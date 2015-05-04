@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -41,8 +41,6 @@ public:
     void prepend(std::shared_ptr<EventFilter> const& filter);
 
     // InputDispatcher
-    void configuration_changed(std::chrono::nanoseconds when) override;
-    void device_reset(int32_t device_id, std::chrono::nanoseconds when) override;
     bool dispatch(MirEvent const& event) override;
     void start() override;
     void stop() override;

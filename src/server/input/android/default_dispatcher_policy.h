@@ -41,7 +41,7 @@ namespace android
 class DefaultDispatcherPolicy : public droidinput::InputDispatcherPolicyInterface
 {
 public:
-    explicit DefaultDispatcherPolicy(bool key_repeat_enabled);
+    DefaultDispatcherPolicy();
     virtual ~DefaultDispatcherPolicy() {}
 
     void notifyConfigurationChanged(std::chrono::nanoseconds when);
@@ -70,8 +70,6 @@ public:
 protected:
     DefaultDispatcherPolicy(const DefaultDispatcherPolicy&) = delete;
     DefaultDispatcherPolicy& operator=(const DefaultDispatcherPolicy&) = delete;
-private:
-    bool key_repeat_enabled;
 };
 
 }

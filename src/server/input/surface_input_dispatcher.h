@@ -47,8 +47,6 @@ public:
     ~SurfaceInputDispatcher();
 
 // mir::input::InputDispatcher
-    void configuration_changed(std::chrono::nanoseconds when) override;
-    void device_reset(int32_t device_id, std::chrono::nanoseconds when) override;
     bool dispatch(MirEvent const& event) override;
     void start() override;
     void stop() override;
@@ -58,6 +56,7 @@ public:
     void clear_focus() override;
     
 private:
+    void device_reset(MirInputDeviceId reset_device_id, std::chrono::nanoseconds when);
     bool dispatch_key(MirInputDeviceId id, MirKeyboardEvent const* kev);
     bool dispatch_pointer(MirInputDeviceId id, MirPointerEvent const* pev);
     bool dispatch_touch(MirInputDeviceId id, MirTouchEvent const* tev);

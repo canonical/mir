@@ -13,32 +13,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NESTED_MOCK_EGL_H_
-#define MIR_TEST_DOUBLES_NESTED_MOCK_EGL_H_
+#include "mir_test/event_matchers.h"
 
-#include "mir_test_doubles/mock_egl.h"
+#include "mir/event_printer.h"
 
-namespace mir
+void PrintTo(MirEvent const& event, std::ostream *os)
 {
-namespace test
-{
-namespace doubles
-{
-/// MockEGL with configuration for operating a nested server.    
-class NestedMockEGL : public ::testing::NiceMock<MockEGL>
-{
-public:
-    NestedMockEGL();
-
-private:
-    void egl_initialize(EGLint* major, EGLint* minor);
-    void egl_choose_config(EGLConfig* config, EGLint*  num_config);
-};
-}
-}
+    using mir::operator<<;
+    *os << event;
 }
 
-#endif /* MIR_TEST_DOUBLES_NESTED_MOCK_EGL_H_ */
+void PrintTo(MirEvent const* event, std::ostream *os)
+{
+    if (event)
+        PrintTo(*event, os);
+    else
+        *os << "nullptr";
+}

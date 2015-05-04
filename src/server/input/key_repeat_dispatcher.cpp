@@ -39,16 +39,6 @@ mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
 {
 }
 
-void mi::KeyRepeatDispatcher::configuration_changed(std::chrono::nanoseconds when)
-{
-    next_dispatcher->configuration_changed(when);
-}
-
-void mi::KeyRepeatDispatcher::device_reset(int32_t device_id, std::chrono::nanoseconds when)
-{
-    next_dispatcher->device_reset(device_id, when);
-}
-
 mi::KeyRepeatDispatcher::KeyboardState& mi::KeyRepeatDispatcher::ensure_state_for_device_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id)
 {
     repeat_state_by_device.insert(std::make_pair(id, KeyboardState()));
@@ -57,8 +47,6 @@ mi::KeyRepeatDispatcher::KeyboardState& mi::KeyRepeatDispatcher::ensure_state_fo
 
 bool mi::KeyRepeatDispatcher::dispatch(MirEvent const& event)
 {
-    if (mir_event_get_type(&event) != mir_event_type_input)
-        return false;
     auto iev = mir_event_get_input_event(&event);
     if (mir_input_event_get_type(iev) == mir_input_event_type_key)
         handle_key_input(mir_input_event_get_device_id(iev), mir_input_event_get_keyboard_event(iev));

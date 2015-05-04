@@ -58,7 +58,13 @@ class CustomMockInputDispatcher :
     public msh::InputTargeter
 {
 public:
-    CustomMockInputDispatcher() = default;
+    CustomMockInputDispatcher()
+    {
+        using namespace ::testing;
+        
+        EXPECT_CALL(*this, dispatch(mt::InputDeviceConfigurationChangedEvent())).Times(AnyNumber());
+        EXPECT_CALL(*this, dispatch(mt::InputDeviceResetEvent())).Times(AnyNumber());
+    }
     // mocks for InputTargeter
     MOCK_METHOD1(set_focus, void(std::shared_ptr<mi::Surface> const& /*focus_surface*/));
     MOCK_METHOD0(clear_focus, void());

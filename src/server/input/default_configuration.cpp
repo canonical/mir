@@ -30,9 +30,9 @@
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
 #include "android/input_translator.h"
+#include "key_repeat_dispatcher.h"
 #include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
-#include "key_repeat_dispatcher.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
@@ -213,32 +213,20 @@ mir::DefaultServerConfiguration::the_dispatcher_policy()
     return android_dispatcher_policy(
         [this]()
         {
-            return std::make_shared<mia::DefaultDispatcherPolicy>(is_key_repeat_enabled());
+            return std::make_shared<mia::DefaultDispatcherPolicy>();
         });
-}
-
-bool mir::DefaultServerConfiguration::is_key_repeat_enabled() const
-{
-    return true;
 }
 
 std::shared_ptr<mi::InputDispatcher>
 mir::DefaultServerConfiguration::the_input_dispatcher()
 {
-    return input_dispatcher(
-        [this]() -> std::shared_ptr<mi::InputDispatcher>
-        {
-            auto const options = the_options();
-            if (!options->get<bool>(options::enable_input_opt))
-                return std::make_shared<mi::NullInputDispatcher>();
-            else
-            {
-                if (the_options()->get<bool>(options::enable_key_repeat_opt))
-                    return std::make_shared<mi::KeyRepeatDispatcher>(the_event_filter_chain_dispatcher(), the_main_loop(), std::chrono::milliseconds(5));
-                else
-                    return the_event_filter_chain_dispatcher();
-            }
-        });
+    std::chrono::milliseconds const key_repeat_timeout{20};
+
+    auto const options = the_options();
+    if (!options->get<bool>(options::enable_key_repeat_opt))
+        return the_event_filter_chain_dispatcher();
+    else
+        return std::make_shared<mi::KeyRepeatDispatcher>(the_event_filter_chain_dispatcher(), the_main_loop(), key_repeat_timeout);
 }
 
 std::shared_ptr<droidinput::EventHubInterface>
