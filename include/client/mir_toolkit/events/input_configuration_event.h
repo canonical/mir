@@ -29,6 +29,17 @@
 extern "C" {
 #endif
 
+/// MirInputConfigurationEvent indicates a configuration change in the input device subsystem. Eventually
+/// it's usage will be required to properly interpret MirInputEvent, for example:
+///    If we receive a button down, and then a device reset, we should not expect
+///    to receive the button up.
+///
+///    Another example, the maximum/minimum axis values for a device may have been reconfigured and
+///    need to be required.
+///
+/// Of course as things stand there is no client input-device introspection API so these events
+/// are difficult to use.
+    
 typedef enum
 {
     mir_input_configuration_action_configuration_changed,
