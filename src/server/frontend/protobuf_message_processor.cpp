@@ -307,9 +307,9 @@ bool mfd::ProtobufMessageProcessor::dispatch(
                 report->exception_handled(display_server.get(), invocation.id(), err);
             }
         }
-        else if ("request_persistent_surface_id" == invocation.method_name())
+        else if ("request_surface_reference" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &protobuf::DisplayServer::request_persistent_surface_id, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::request_surface_reference, invocation);
         }
         else
         {

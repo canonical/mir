@@ -21,13 +21,13 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-TEST(MirSurfaceId, roundtrips_to_string)
+TEST(MirReference, roundtrips_to_string)
 {
     using namespace testing;
 
-    MirSurfaceId id_one{"c43a798c-60d8-4ce3-89f8-3e42f4c5f7af"};
+    MirReference id_one{"c43a798c-60d8-4ce3-89f8-3e42f4c5f7af"};
 
-    MirSurfaceId id_two{id_one.as_string()};
+    MirReference id_two{id_one.as_string()};
 
     EXPECT_THAT(id_one, Eq(id_two));
 }

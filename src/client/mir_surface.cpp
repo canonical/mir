@@ -112,18 +112,18 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
     return message;
 }
 
-MirSurfaceId::MirSurfaceId(std::string const& string_id)
+MirReference::MirReference(std::string const& string_id)
     : string_id{string_id}
 {
     uuid_parse(string_id.c_str(), id);
 }
 
-std::string const& MirSurfaceId::as_string()
+std::string const& MirReference::as_string()
 {
     return string_id;
 }
 
-bool MirSurfaceId::operator==(MirSurfaceId const& rhs) const
+bool MirReference::operator==(MirReference const& rhs) const
 {
     return !uuid_compare(id, rhs.id);
 }
@@ -221,40 +221,40 @@ bool MirSurface::is_valid(MirSurface* query)
     return false;
 }
 
-void MirSurface::acquired_persistent_id(mir_surface_id_callback callback, void* context)
+void MirSurface::acquired_reference(mir_surface_reference_callback callback, void* context)
 {
-    if (!persistent_id.has_error())
+    if (!surface_reference.has_error())
     {
-        callback(this, new MirSurfaceId{persistent_id.value()}, context);
+        callback(this, new MirReference{surface_reference.value()}, context);
     }
     else
     {
         callback(this, nullptr, context);
     }
-    persistent_id_wait_handle.result_received();
+    acquire_reference_wait_handle.result_received();
 }
 
-MirWaitHandle* MirSurface::request_persistent_id(mir_surface_id_callback callback, void* context)
+MirWaitHandle* MirSurface::request_reference(mir_surface_reference_callback callback, void* context)
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
 
-    if (persistent_id.has_value())
+    if (surface_reference.has_value())
     {
-        callback(this, new MirSurfaceId{persistent_id.value()}, context);
+        callback(this, new MirReference{surface_reference.value()}, context);
         return nullptr;
     }
 
-    persistent_id_wait_handle.expect_result();
+    acquire_reference_wait_handle.expect_result();
     try
     {
-        server->request_persistent_surface_id(0, &surface.id(), &persistent_id, gp::NewCallback(this, &MirSurface::acquired_persistent_id, callback, context));
+        server->request_surface_reference(0, &surface.id(), &surface_reference, gp::NewCallback(this, &MirSurface::acquired_reference, callback, context));
     }
     catch (std::exception const& ex)
     {
         surface.set_error(std::string{"Error invoking create surface: "} +
                           boost::diagnostic_information(ex));
     }
-    return &persistent_id_wait_handle;
+    return &acquire_reference_wait_handle;
 }
 
 MirWaitHandle* MirSurface::get_create_wait_handle()

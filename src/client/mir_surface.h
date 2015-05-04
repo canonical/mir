@@ -94,14 +94,14 @@ struct MirSurfaceSpec
     mir::optional_value<int> max_height;
 };
 
-struct MirSurfaceId
+struct MirReference
 {
 public:
-    MirSurfaceId(std::string const& string_id);
+    MirReference(std::string const& string_id);
 
     std::string const& as_string();
 
-    bool operator==(MirSurfaceId const& rhs) const;
+    bool operator==(MirReference const& rhs) const;
 
 private:
     std::string const string_id;
@@ -163,21 +163,21 @@ public:
 
     static bool is_valid(MirSurface* query);
 
-    MirWaitHandle* request_persistent_id(mir_surface_id_callback callback, void* context);
+    MirWaitHandle* request_reference(mir_surface_reference_callback callback, void* context);
 private:
     mutable std::mutex mutex; // Protects all members of *this
 
     void on_configured();
     void on_cursor_configured();
     void created(mir_surface_callback callback, void* context);
-    void acquired_persistent_id(mir_surface_id_callback callback, void* context);
+    void acquired_reference(mir_surface_reference_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
     mir::protobuf::DisplayServer::Stub* server{nullptr};
     mir::protobuf::Debug::Stub* debug{nullptr};
     mir::protobuf::Surface surface;
     mir::protobuf::BufferRequest buffer_request;
-    mir::protobuf::PersistentSurfaceId persistent_id;
+    mir::protobuf::SurfaceReference surface_reference;
     std::string error_message;
     std::string name;
     mir::protobuf::Void void_response;
@@ -191,7 +191,7 @@ private:
     MirWaitHandle create_wait_handle;
     MirWaitHandle configure_wait_handle;
     MirWaitHandle configure_cursor_wait_handle;
-    MirWaitHandle persistent_id_wait_handle;
+    MirWaitHandle acquire_reference_wait_handle;
 
     std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
