@@ -209,7 +209,6 @@ private:
         BufferStreamId surf_id,
         BufferStream& buffer_stream,
         graphics::Buffer* old_buffer,
-        std::unique_lock<std::mutex>& lock,
         std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete);
 
     virtual std::function<void(std::shared_ptr<Session> const&)> prompt_session_connect_handler() const;
@@ -231,7 +230,6 @@ private:
 
     BufferStreamTracker buffer_stream_tracker;
 
-    std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;
     std::weak_ptr<PromptSession> weak_prompt_session;
 };

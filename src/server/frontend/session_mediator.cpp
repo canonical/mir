@@ -127,10 +127,7 @@ void mf::SessionMediator::connect(
     report->session_connect_called(request->application_name());
 
     auto const session = shell->open_session(client_pid_, request->application_name(), event_sink);
-    {
-        std::lock_guard<std::mutex> lock(session_mutex);
-        weak_session = session;
-    }
+    weak_session = session;
     connection_context.handle_client_connect(session);
 
     auto ipc_package = ipc_operations->connection_ipc_package();
@@ -158,21 +155,15 @@ void mf::SessionMediator::advance_buffer(
     BufferStreamId stream_id,
     BufferStream& stream,
     graphics::Buffer* old_buffer,
-    std::unique_lock<std::mutex>& lock,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto const tid = std::this_thread::get_id();
-
     stream.swap_buffers(
         old_buffer,
         // Note: We assume that the lambda will be executed within swap_buffers
         // (in which case the lock reference is valid) or in a different thread
         // altogether (in which case the dangling reference is not accessed)
-        [this, tid, &lock, stream_id, complete](mg::Buffer* new_buffer)
+        [this, stream_id, complete](mg::Buffer* new_buffer)
         {
-            if (tid == std::this_thread::get_id())
-                lock.unlock();
-
             if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
@@ -187,9 +178,6 @@ void mf::SessionMediator::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-
-    std::unique_lock<std::mutex> lock{session_mutex};
-
     auto const session = weak_session.lock();
 
     if (session.get() == nullptr)
@@ -271,7 +259,7 @@ void mf::SessionMediator::create_surface(
 
 
     auto stream_id = mf::BufferStreamId(surf_id.as_value());
-    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id), lock,
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id),
         [this, surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -293,8 +281,6 @@ void mf::SessionMediator::next_buffer(
 {
     SurfaceId const surf_id{request->value()};
 
-    std::unique_lock<std::mutex> lock{session_mutex};
-
     auto const session = weak_session.lock();
 
     if (session.get() == nullptr)
@@ -305,7 +291,7 @@ void mf::SessionMediator::next_buffer(
     auto surface = session->get_surface(surf_id);
     auto stream_id = mf::BufferStreamId{surf_id.as_value()};
 
-    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id), lock,
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id),
         [this, response, done]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -327,7 +313,6 @@ void mf::SessionMediator::exchange_buffer(
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
     ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
 
-    std::unique_lock<std::mutex> lock{session_mutex};
     auto const session = weak_session.lock();
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
@@ -335,7 +320,7 @@ void mf::SessionMediator::exchange_buffer(
     report->session_exchange_buffer_called(session->name());
 
     auto const& surface = session->get_buffer_stream(stream_id);
-    advance_buffer(stream_id, *surface, buffer_stream_tracker.buffer_from(buffer_id), lock,
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.buffer_from(buffer_id),
         [this, response, done]
         (graphics::Buffer* new_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -351,8 +336,6 @@ void mf::SessionMediator::release_surface(
     google::protobuf::Closure* done)
 {
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
@@ -377,8 +360,6 @@ void mf::SessionMediator::disconnect(
     google::protobuf::Closure* done)
 {
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
@@ -406,8 +387,6 @@ void mf::SessionMediator::configure_surface(
     response->set_attrib(attrib);
 
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
@@ -434,8 +413,6 @@ void mf::SessionMediator::modify_surface(
     auto const& surface_specification = request->surface_specification();
 
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-
         auto const session = weak_session.lock();
         if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
@@ -486,7 +463,6 @@ void mf::SessionMediator::configure_display(
     ::google::protobuf::Closure* done)
 {
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
@@ -591,8 +567,6 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
     mir::protobuf::BufferStream* response,
     google::protobuf::Closure* done)
 {
-    auto lock = std::unique_lock<std::mutex>(session_mutex);
-
     auto const session = weak_session.lock();
 
     if (session.get() == nullptr)
@@ -617,7 +591,7 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
     // TODO: Is it guaranteed we get the buffer usage we want?
     response->set_buffer_usage(request->buffer_usage());
 
-    advance_buffer(buffer_stream_id, *stream, buffer_stream_tracker.last_buffer(buffer_stream_id), lock,
+    advance_buffer(buffer_stream_id, *stream, buffer_stream_tracker.last_buffer(buffer_stream_id),
         [this, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -634,8 +608,6 @@ void mf::SessionMediator::release_buffer_stream(google::protobuf::RpcController*
     google::protobuf::Closure* done)
 {
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
@@ -681,8 +653,6 @@ void mf::SessionMediator::configure_cursor(
     google::protobuf::Closure* done)
 {
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
@@ -723,7 +693,6 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
     ::google::protobuf::Closure* done)
 {
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
@@ -755,8 +724,6 @@ void mf::SessionMediator::translate_surface_to_screen(
     ::google::protobuf::Closure *done)
 {
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
@@ -781,7 +748,6 @@ void mf::SessionMediator::drm_auth_magic(
     google::protobuf::Closure* done)
 {
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
@@ -815,7 +781,6 @@ void mf::SessionMediator::platform_operation(
     google::protobuf::Closure* done)
 {
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
@@ -850,7 +815,6 @@ void mf::SessionMediator::start_prompt_session(
     ::google::protobuf::Closure* done)
 {
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
         auto const session = weak_session.lock();
 
         if (!session)
@@ -876,7 +840,6 @@ void mf::SessionMediator::stop_prompt_session(
     ::google::protobuf::Closure* done)
 {
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
         auto const session = weak_session.lock();
 
         if (!session)
