@@ -207,7 +207,7 @@ bool me::WindowManager::handle(MirEvent const& event)
     bool handled = false;
 
     if (event.key.type == mir_event_type_key &&
-        event.key.action == mir_key_action_down)
+        event.key.action == mir_keyboard_action_down)
     {
         if (event.key.modifiers & mir_input_event_modifier_alt &&
             event.key.scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side

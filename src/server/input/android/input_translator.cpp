@@ -31,7 +31,7 @@ namespace
 {
 bool valid_key_event(MirKeyEvent const& key)
 {
-    return key.action == mir_key_action_up || key.action == mir_key_action_down;
+    return key.action == mir_keyboard_action_up || key.action == mir_keyboard_action_down || key.action == mir_keyboard_action_repeat;
 }
 inline int32_t get_index_from_motion_action(int action)
 {
@@ -124,11 +124,10 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
     mir_event.type = mir_event_type_key;
     mir_event.key.device_id = args->deviceId;
     mir_event.key.source_id = args->source;
-    mir_event.key.action = static_cast<MirKeyAction>(args->action);
+    mir_event.key.action = mia::mir_keyboard_action_from_android(args->action, 0 /* repeat_count */);
     mir_event.key.modifiers = mir_modifiers;
     mir_event.key.key_code = args->keyCode;
     mir_event.key.scan_code = args->scanCode;
-    mir_event.key.repeat_count = 0;
     mir_event.key.event_time = args->eventTime.count();
 
     if (!valid_key_event(mir_event.key))

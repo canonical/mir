@@ -236,10 +236,9 @@ TEST_F(AndroidInputDispatcherTest, forwards_all_key_event_paramters_correctly)
     event.key.event_time = 1;
     event.key.device_id = 2;
     event.key.source_id = 3;
-    event.key.action = mir_key_action_down;
+    event.key.action = mir_keyboard_action_down;
     event.key.scan_code = 4;
     event.key.key_code = 5;
-    event.key.repeat_count = 0;
     event.key.modifiers = mir_input_event_modifier_shift;
 
     droidinput::NotifyKeyArgs expected(std::chrono::nanoseconds(event.key.event_time),

@@ -209,22 +209,8 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
 MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev)
 {
     auto const& old_kev = old_kev_from_new(kev);
-    
-    switch (old_kev.action)
-    {
-    case mir_key_action_down:
-        if (old_kev.repeat_count != 0)
-            return mir_keyboard_action_repeat;
-        else
-            return mir_keyboard_action_down;
-    case mir_key_action_up:
-        return mir_keyboard_action_up;
-    default:
-        // TODO:? This means we got key_action_multiple which I dont think is 
-        // actually emitted yet (and never will be as in the future it would fall under text
-        // event in the new model).
-        return mir_keyboard_action_down;
-    }
+
+    return old_kev.action;
 }
 
 xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* kev)

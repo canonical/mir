@@ -39,7 +39,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     const int32_t key_code = 5;
     const int32_t scan_code = 6;
     const int32_t meta_state = AMETA_ALT_ON;
-    const int32_t repeat_count = 8;
+    const int32_t repeat_count = 0;
     auto const down_time = std::chrono::nanoseconds(9);
     auto const event_time = std::chrono::nanoseconds(10);
 
@@ -61,7 +61,6 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(mir_ev.type, mir_event_type_key);
     EXPECT_EQ(mir_key_ev->key_code, key_code);
     EXPECT_EQ(mir_key_ev->scan_code, scan_code);
-    EXPECT_EQ(mir_key_ev->repeat_count, repeat_count);
     EXPECT_EQ(mir_key_ev->event_time, event_time.count());
 
     delete android_key_ev;
