@@ -99,7 +99,7 @@ set(LINKS
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${XKBCOMMON_LIBRARIES}
-  ${UUID_LIBRARIES}
+  ${UUID_LDFLAGS} ${UUID_LIBRARIES}
 )
 target_link_libraries(mirclient ${LINKS})
 target_link_libraries(mirclient-static ${LINKS})
