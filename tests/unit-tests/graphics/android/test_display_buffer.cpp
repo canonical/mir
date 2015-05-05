@@ -152,6 +152,7 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
     EXPECT_CALL(mock_egl, eglDestroyContext(dummy_display, mock_egl.fake_egl_context))
         .Times(AtLeast(1));
 
+    {
     mga::DisplayBuffer db{
         mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
@@ -163,6 +164,8 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
         stub_program_factory,
         orientation,
         mga::OverlayOptimization::enabled};
+    }
+    
     testing::Mock::VerifyAndClearExpectations(&mock_egl);
 }
 
