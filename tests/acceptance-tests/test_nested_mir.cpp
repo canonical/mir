@@ -32,7 +32,7 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/spin_wait.h"
 
-#include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/nested_mock_egl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -43,8 +43,10 @@
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mtf = mir_test_framework;
 namespace msh = mir::shell;
+namespace mtd = mir::test::doubles;
+namespace mtf = mir_test_framework;
+
 using namespace testing;
 
 namespace
@@ -83,51 +85,6 @@ struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
 {
     MOCK_METHOD1(lifecycle_event_occurred, void (MirLifecycleState));
 };
-
-struct NestedMockEGL : NiceMock<mir::test::doubles::MockEGL>
-{
-    NestedMockEGL()
-    {
-        {
-            InSequence init_before_terminate;
-            EXPECT_CALL(*this, eglGetDisplay(_)).Times(1);
-            EXPECT_CALL(*this, eglTerminate(_)).Times(1);
-        }
-
-        EXPECT_CALL(*this, eglCreateWindowSurface(_, _, _, _)).Times(AnyNumber());
-        EXPECT_CALL(*this, eglMakeCurrent(_, _, _, _)).Times(AnyNumber());
-        EXPECT_CALL(*this, eglDestroySurface(_, _)).Times(AnyNumber());
-
-        EXPECT_CALL(*this, eglQueryString(_, _)).Times(AnyNumber());
-
-        provide_egl_extensions();
-
-        EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(AnyNumber()).WillRepeatedly(
-            DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));
-
-        EXPECT_CALL(*this, eglGetCurrentContext()).Times(AnyNumber());
-        EXPECT_CALL(*this, eglCreatePbufferSurface(_, _, _)).Times(AnyNumber());
-
-        EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglCreateImageKHR"))).Times(AnyNumber());
-        EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglDestroyImageKHR"))).Times(AnyNumber());
-        EXPECT_CALL(*this, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES"))).Times(AnyNumber());
-
-        {
-            InSequence context_lifecycle;
-            EXPECT_CALL(*this, eglCreateContext(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return((EGLContext)this));
-            EXPECT_CALL(*this, eglDestroyContext(_, _)).Times(AnyNumber()).WillRepeatedly(Return(EGL_TRUE));
-        }
-    }
-
-private:
-    void egl_initialize(EGLint* major, EGLint* minor) { *major = 1; *minor = 4; }
-    void egl_choose_config(EGLConfig* config, EGLint*  num_config)
-    {
-        *config = this;
-        *num_config = 1;
-    }
-};
-
 
 std::vector<geom::Rectangle> const display_geometry
 {
@@ -171,7 +128,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 {
     NestedServer() { add_to_environment("MIR_SERVER_ENABLE_INPUT","off"); }
 
-    NestedMockEGL mock_egl;
+    mtd::NestedMockEGL mock_egl;
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
