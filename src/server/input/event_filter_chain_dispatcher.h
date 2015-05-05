@@ -36,9 +36,9 @@ public:
                                std::shared_ptr<InputDispatcher> const& next_dispatcher);
 
     // CompositeEventFilter
-    bool handle(MirEvent const& event);
-    void append(std::shared_ptr<EventFilter> const& filter);
-    void prepend(std::shared_ptr<EventFilter> const& filter);
+    bool handle(MirEvent const& event) override;
+    void append(std::shared_ptr<EventFilter> const& filter) override;
+    void prepend(std::shared_ptr<EventFilter> const& filter) override;
 
     // InputDispatcher
     void dispatch(MirEvent const& event) override;
