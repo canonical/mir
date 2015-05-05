@@ -58,4 +58,5 @@ std::shared_ptr<mir::dispatch::Dispatchable> mix::XInputPlatform::dispatchable()
 void mix::XInputPlatform::stop()
 {
     CALLED
+    registry->remove_device(device);
 }
