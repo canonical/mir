@@ -18,12 +18,10 @@
  */
 
 #include "mir/events/event_private.h"
-#include "src/server/input/event_filter_chain.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test_framework/fake_event_hub_server_configuration.h"
-#include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
 #include "mir_test_doubles/stub_touch_visualizer.h"
 #include "mir_test/wait_condition.h"
@@ -63,12 +61,6 @@ struct AndroidCursorListenerIntegrationTest : testing::Test, mtf::FakeEventHubSe
         return false;
     }
 
-    std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
-    {
-        std::initializer_list<std::shared_ptr<mi::EventFilter>const> const& chain{std::static_pointer_cast<mi::EventFilter>(event_filter)};
-        return std::make_shared<mi::EventFilterChain>(chain);
-    }
-
     std::shared_ptr<mi::CursorListener> the_cursor_listener() override
     {
         return mt::fake_shared(cursor_listener);
@@ -89,7 +81,6 @@ struct AndroidCursorListenerIntegrationTest : testing::Test, mtf::FakeEventHubSe
     }
 
     MockCursorListener cursor_listener;
-    std::shared_ptr<mtd::MockEventFilter> event_filter = std::make_shared<mtd::MockEventFilter>();
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mi::InputDispatcher> input_dispatcher;
 };
@@ -105,16 +96,12 @@ TEST_F(AndroidCursorListenerIntegrationTest, cursor_listener_receives_motion)
     static const float x = 100.f;
     static const float y = 100.f;
 
-    EXPECT_CALL(cursor_listener, cursor_moved_to(x, y)).Times(1);
-
-    // The stack doesn't like shutting down while events are still moving through
-    EXPECT_CALL(*event_filter, handle(_))
-            .WillOnce(mt::ReturnFalseAndWakeUp(wait_condition));
+    EXPECT_CALL(cursor_listener, cursor_moved_to(x, y)).Times(1).WillOnce(mt::WakeUp(wait_condition));
 
     fake_event_hub->synthesize_builtin_cursor_added();
     fake_event_hub->synthesize_device_scan_complete();
 
     fake_event_hub->synthesize_event(mis::a_pointer_event().with_movement(x, y));
 
-    wait_condition->wait_for_at_most_seconds(1);
+    wait_condition->wait_for_at_most_seconds(10);
 }
