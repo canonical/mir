@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <stdint.h>
 #include <getopt.h>
+#include <stdlib.h>
 
 typedef struct
 {
@@ -133,13 +134,18 @@ int main(int argc, char *argv[])
     MirConnection *conn;
     Window win[3];
     unsigned int f;
+    int alpha = 0x50;
 
     int arg;
     opterr = 0;
-    while ((arg = getopt (argc, argv, "hm:")) != -1)
+    while ((arg = getopt (argc, argv, "hm:a:")) != -1)
     {
         switch (arg)
         {
+        case 'a':
+            alpha = atoi(optarg);
+            break;
+
         case 'm':
             socket_file = optarg;
             break;
@@ -150,6 +156,7 @@ int main(int argc, char *argv[])
             puts(argv[0]);
             puts("Usage:");
             puts("    -m <Mir server socket>");
+            puts("    -a Alpha for surfaces");
             puts("    -h: this help text");
             return -1;
         }
@@ -200,7 +207,7 @@ int main(int argc, char *argv[])
     win[0].fill.r = 0xff;
     win[0].fill.g = 0x00;
     win[0].fill.b = 0x00;
-    win[0].fill.a = 0x50;
+    win[0].fill.a = alpha;
     premultiply_alpha(&win[0].fill);
 
     mir_surface_spec_set_name(spec, "green");
@@ -210,7 +217,7 @@ int main(int argc, char *argv[])
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
     win[1].fill.b = 0x00;
-    win[1].fill.a = 0x50;
+    win[1].fill.a = alpha;
     premultiply_alpha(&win[1].fill);
 
     mir_surface_spec_set_name(spec, "blue");
@@ -220,7 +227,7 @@ int main(int argc, char *argv[])
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;
     win[2].fill.b = 0xff;
-    win[2].fill.a = 0x50;
+    win[2].fill.a = alpha;
     premultiply_alpha(&win[2].fill);
 
     mir_surface_spec_release(spec);

@@ -70,7 +70,8 @@ private:
     enum class State
     {
         running, stopped
-    } state;
+    };
+    std::atomic<State> state;
 };
 
 }

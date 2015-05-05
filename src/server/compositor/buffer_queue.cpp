@@ -154,19 +154,10 @@ mc::BufferQueue::BufferQueue(
      * If there is increased pressure by the client to acquire
      * more buffers, more will be allocated at that time (up to nbuffers)
      */
-    for(int i = 0; i < std::min(nbuffers, 2); i++)
-    {
-        buffers.push_back(gralloc->alloc_buffer(the_properties));
-    }
+    auto buf = gralloc->alloc_buffer(the_properties);
+    buffers.push_back(buf);
+    current_compositor_buffer = buf.get();
 
-    /* N - 1 for clients, one for compositors */
-    int const buffers_for_client = buffers.size() - 1;
-    for(int i = 0; i < buffers_for_client; i++)
-    {
-        free_buffers.push_back(buffers[i].get());
-    }
-
-    current_compositor_buffer = buffers.back().get();
     /* Special case: with one buffer both clients and compositors
      * need to share the same buffer
      */
