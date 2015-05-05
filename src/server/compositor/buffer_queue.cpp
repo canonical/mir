@@ -140,6 +140,7 @@ mc::BufferQueue::BufferQueue(
     : nbuffers{nbuffers},
       frame_deadlines_threshold{3}, // configurable in future, maybe.
       frame_deadlines_met{0},
+      overlapping_compositors{false},
       frame_dropping_enabled{false},
       current_compositor_buffer_valid{false},
       the_properties{props},
@@ -174,9 +175,10 @@ mc::BufferQueue::BufferQueue(
 bool mc::BufferQueue::client_ahead_of_compositor() const
 {
     return nbuffers > 1 &&
-           !frame_dropping_enabled &&
-           !ready_to_composite_queue.empty() &&
-           frame_deadlines_met >= frame_deadlines_threshold;
+           !frame_dropping_enabled &&  // Never throttle frame droppers
+           !overlapping_compositors &&  // One frame ready will be enough and..
+           !ready_to_composite_queue.empty() &&  // at least one frame is ready
+           frame_deadlines_met >= frame_deadlines_threshold;  // Is smooth
 }
 
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
@@ -244,8 +246,6 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
 
     auto const buffer = pop(buffers_owned_by_client);
     ready_to_composite_queue.push_back(buffer);
-
-    mir::log_info("current buffer users %d", (int)current_buffer_users.size());
 }
 
 std::shared_ptr<mg::Buffer>
@@ -299,6 +299,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_buffer_users.push_back(user_id);
     }
 
+    //overlapping_compositors = !buffers_sent_to_compositor.empty();
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
 
     std::shared_ptr<mg::Buffer> const acquired_buffer =
@@ -323,6 +324,7 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     }
 
     /* Not ready to release it yet, other compositors still reference this buffer */
+
     if (contains(buffer.get(), buffers_sent_to_compositor))
     {
         mir::log_info("Too early");
