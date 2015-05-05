@@ -87,7 +87,7 @@ class MockEGL
 {
 public:
     MockEGL();
-    ~MockEGL();
+    virtual ~MockEGL();
 
     void expect_nested_egl_usage();
     void provide_egl_extensions();
