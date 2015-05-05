@@ -252,7 +252,7 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
     expected.key.scan_code = 4;
     expected.key.key_code = 5;
     expected.key.repeat_count = 0;
-    expected.key.modifiers = 7;
+    expected.key.modifiers = mir_input_event_modifier_shift;
 
     InSequence seq;
     EXPECT_CALL(dispatcher, dispatch(mt::MirKeyEventMatches(expected))).Times(1);
@@ -265,7 +265,7 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
                                        0, /* flags */
                                        expected.key.key_code,
                                        expected.key.scan_code,
-                                       expected.key.modifiers,
+                                       AMETA_SHIFT_ON,
                                        std::chrono::nanoseconds(expected.key.event_time));
 
     translator.notifyKey(&notified);

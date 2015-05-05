@@ -67,7 +67,7 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
     e.key.device_id = 13;
     e.key.source_id = 10;
     e.key.action = mir_key_action_down;
-    e.key.modifiers = 0;
+    e.key.modifiers = mir_input_event_modifier_none;
     e.key.key_code = 81;
     e.key.scan_code = 176;
     e.key.repeat_count = 0;
