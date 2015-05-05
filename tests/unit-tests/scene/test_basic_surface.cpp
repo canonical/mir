@@ -792,9 +792,8 @@ TEST_F(BasicSurfaceTest, adds_buffer_streams)
 
 TEST_F(BasicSurfaceTest, cannot_remove_primary)
 {
-    mf::BufferStreamId const primary_id{0};
     EXPECT_THROW({
-        surface.remove_stream(primary_id);
+        surface.remove_stream(mock_buffer_stream.get());
     }, std::logic_error);
 }
 
@@ -829,7 +828,7 @@ TEST_F(BasicSurfaceTest, repositions_buffer_streams)
     surface.add_stream(buffer_stream1, d1, 1.0f);
     surface.add_stream(buffer_stream2, d2, 1.0f);
     surface.reposition(buffer_stream0.get(), changed_d0, 1.0f);
-    surface.raise(buffer_stream0.get());
+    surface.raise(buffer_stream1.get());
 
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(4));
@@ -837,7 +836,7 @@ TEST_F(BasicSurfaceTest, repositions_buffer_streams)
     EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left, 1.0f));
     EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left + changed_d0, 1.0f));
     EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left + d2, 1.0f));
-    surface.remove_stream(buffer_stream0);
-    surface.remove_stream(buffer_stream1);
-    surface.remove_stream(buffer_stream2);
+    surface.remove_stream(buffer_stream0.get());
+    surface.remove_stream(buffer_stream1.get());
+    surface.remove_stream(buffer_stream2.get());
 }

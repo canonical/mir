@@ -225,7 +225,6 @@ TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
 {
     using namespace testing;
 
-    mir::frontend::BufferStreamId id0{0}, id1{1}, id2{2};
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
@@ -233,9 +232,9 @@ TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
     auto stub_stream1 = std::make_shared<mtd::StubBufferStream>();
     auto stub_stream2 = std::make_shared<mtd::StubBufferStream>();
     auto stub_stream3 = std::make_shared<mtd::StubBufferStream>();
-    stub_surface1->add_stream(id0, stub_stream1, geom::Displacement{2,2}, 1.0f);
-    stub_surface1->add_stream(id1, stub_stream2, geom::Displacement{2,3}, 0.9f);
-    stub_surface3->add_stream(id2, stub_stream3, geom::Displacement{2,4}, 0.8f);
+    stub_surface1->add_stream(stub_stream1, geom::Displacement{2,2}, 1.0f);
+    stub_surface1->add_stream(stub_stream2, geom::Displacement{2,3}, 0.9f);
+    stub_surface3->add_stream(stub_stream3, geom::Displacement{2,4}, 0.8f);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),

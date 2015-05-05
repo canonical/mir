@@ -147,7 +147,7 @@ ms::BasicSurface::BasicSurface(
     cursor_image_(cursor_image),
     report(report),
     parent_(parent),
-    streams({BufferStreamInfo{mf::BufferStreamId{0}, buffer_stream, {0,0}, 1.0f}})
+    streams({BufferStreamInfo{buffer_stream, {0,0}, 1.0f}})
 {
     report->surface_created(this, surface_name);
 }
@@ -201,7 +201,7 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
 float ms::BasicSurface::alpha() const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return info_from_id(primary_id)->alpha;
+    return info_from(surface_buffer_stream.get())->alpha;
 }
 
 void ms::BasicSurface::set_hidden(bool hide)
@@ -340,7 +340,7 @@ void ms::BasicSurface::set_alpha(float alpha)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
-        info_from_id(primary_id)->alpha = alpha;
+        info_from(surface_buffer_stream.get())->alpha = alpha;
     }
     observers.alpha_set_to(alpha);
 }
@@ -859,47 +859,46 @@ void ms::BasicSurface::rename(std::string const& title)
 }
 
 std::list<ms::BasicSurface::BufferStreamInfo>::iterator
-ms::BasicSurface::info_from_id(frontend::BufferStreamId const& id)
+ms::BasicSurface::info_from(compositor::BufferStream const* id)
 {
     return std::find_if(streams.begin(), streams.end(),
-        [&](BufferStreamInfo const& info) { return info.id == id; });
+        [&](BufferStreamInfo const& info) { return info.stream.get() == id; });
 }
 
 std::list<ms::BasicSurface::BufferStreamInfo>::const_iterator
-ms::BasicSurface::info_from_id(frontend::BufferStreamId const& id) const
+ms::BasicSurface::info_from(compositor::BufferStream const* id) const
 {
     return std::find_if(streams.begin(), streams.end(),
-        [&](BufferStreamInfo const& info) { return info.id == id; });
+        [&](BufferStreamInfo const& info) { return info.stream.get() == id; });
 }
 
 void ms::BasicSurface::add_stream(
-    mf::BufferStreamId id, std::shared_ptr<mc::BufferStream> const& stream,
+    std::shared_ptr<mc::BufferStream> const& stream,
     geom::Displacement position, float alpha)
 {
-    streams.emplace_back(BufferStreamInfo{id, stream, position, alpha});
+    streams.emplace_back(BufferStreamInfo{stream, position, alpha});
 }
 
-void ms::BasicSurface::reposition(mf::BufferStreamId id, geom::Displacement pt, float alpha)
+void ms::BasicSurface::reposition(mc::BufferStream const* id, geom::Displacement pt, float alpha)
 {
-    auto info_it = info_from_id(id);
+    auto info_it = info_from(id);
     if (info_it == streams.end())
         BOOST_THROW_EXCEPTION(std::logic_error("invalid stream id\n"));
     info_it->position = pt;
     info_it->alpha = alpha;
-
 }
 
-void ms::BasicSurface::remove_stream(frontend::BufferStreamId id)
+void ms::BasicSurface::remove_stream(compositor::BufferStream const* id)
 {
-    auto info_it = info_from_id(id);
-    if ((info_it == streams.end()) || (id == primary_id))
+    auto info_it = info_from(id);
+    if ((info_it == streams.end()) || (id == surface_buffer_stream.get()))
         BOOST_THROW_EXCEPTION(std::logic_error("invalid stream id\n"));
     streams.erase(info_it);
 }
 
-void ms::BasicSurface::raise(frontend::BufferStreamId id)
+void ms::BasicSurface::raise(compositor::BufferStream const* id)
 {
-    auto info_it = info_from_id(id);
+    auto info_it = info_from(id);
     if (info_it == streams.end())
         BOOST_THROW_EXCEPTION(std::logic_error("invalid stream id\n"));
     streams.push_front(*info_it);

@@ -96,12 +96,11 @@ public:
     std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
     void add_stream(
-        frontend::BufferStreamId,
         std::shared_ptr<compositor::BufferStream> const& stream,
         geometry::Displacement position, float alpha) override;
-    void remove_stream(frontend::BufferStreamId) override;
-    void raise(frontend::BufferStreamId) override;
-    void reposition(frontend::BufferStreamId id, geometry::Displacement pt, float alpha) override;
+    void remove_stream(compositor::BufferStream const*) override;
+    void raise(compositor::BufferStream const*) override;
+    void reposition(compositor::BufferStream const* id, geometry::Displacement pt, float alpha) override;
 
     void force_requests_to_complete() override;
 
@@ -187,17 +186,15 @@ private:
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
 
-    frontend::BufferStreamId const primary_id{0};
     struct BufferStreamInfo
     {
-        frontend::BufferStreamId id;
         std::shared_ptr<compositor::BufferStream> stream;
         geometry::Displacement position;
         float alpha;
     };
     std::list<BufferStreamInfo> streams;
-    std::list<BufferStreamInfo>::iterator info_from_id(frontend::BufferStreamId const&);
-    std::list<BufferStreamInfo>::const_iterator info_from_id(frontend::BufferStreamId const&) const;
+    std::list<BufferStreamInfo>::iterator info_from(compositor::BufferStream const*);
+    std::list<BufferStreamInfo>::const_iterator info_from(compositor::BufferStream const*) const;
 
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;

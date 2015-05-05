@@ -71,11 +71,11 @@ struct MockFrontendSurface : public frontend::Surface
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));
 
     MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());    
-    MOCK_METHOD4(add_stream, void(
-        frontend::BufferStreamId, std::shared_ptr<compositor::BufferStream> const&, geometry::Displacement, float));
-    MOCK_METHOD1(remove_stream, void(frontend::BufferStreamId));
-    MOCK_METHOD1(raise, void(frontend::BufferStreamId));
-    MOCK_METHOD3(reposition, void(frontend::BufferStreamId, geometry::Displacement, float));
+    MOCK_METHOD3(add_stream, void(
+        std::shared_ptr<compositor::BufferStream> const&, geometry::Displacement, float));
+    MOCK_METHOD1(remove_stream, void(compositor::BufferStream const*));
+    MOCK_METHOD1(raise, void(compositor::BufferStream const*));
+    MOCK_METHOD3(reposition, void(compositor::BufferStream const*, geometry::Displacement, float));
     MOCK_CONST_METHOD1(generate_renderables, graphics::RenderableList(compositor::CompositorID));
 };
 }
