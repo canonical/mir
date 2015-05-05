@@ -34,15 +34,31 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 
-mc::BufferStreamFactory::BufferStreamFactory(std::shared_ptr<mg::GraphicBufferAllocator> const& gralloc,
-                                             std::shared_ptr<mc::FrameDroppingPolicyFactory> const& policy_factory)
-        : gralloc(gralloc),
-          policy_factory{policy_factory}
+std::shared_ptr<mir::frontend::BufferStream> mir::frontend::stream_from(std::shared_ptr<mc::BufferStream> const& stream)
+{
+    return stream;
+}
+
+mc::BufferStreamFactory::BufferStreamFactory(
+    std::shared_ptr<mg::GraphicBufferAllocator> const& gralloc,
+    std::shared_ptr<mc::FrameDroppingPolicyFactory> const& policy_factory,
+    unsigned int nbuffers) :
+    gralloc(gralloc),
+    policy_factory{policy_factory},
+    nbuffers(nbuffers)
 {
     assert(gralloc);
     assert(policy_factory);
+    if (nbuffers < 2)
+        throw std::logic_error("nbuffers must be at least 2");
 }
 
+
+std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
+    mg::BufferProperties const& buffer_properties)
+{
+    return create_buffer_stream(nbuffers, buffer_properties);
+}
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
     int nbuffers, mg::BufferProperties const& buffer_properties)

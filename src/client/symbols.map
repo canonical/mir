@@ -214,5 +214,6 @@ MIR_CLIENT_DETAIL_8 {
       mir::client::DefaultConnectionConfiguration::the_input_receiver_report*;
       typeinfo?for?mir::client::DefaultConnectionConfiguration;
       vtable?for?mir::client::DefaultConnectionConfiguration;
+      mir::operator???std::ostream???Mir*
     }; 
 };

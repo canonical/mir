@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_BUFFER_STREAM_H_
 
 #include "mir/compositor/buffer_stream.h"
-
+#include "stub_buffer.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -47,6 +47,10 @@ struct MockBufferStream : public compositor::BufferStream
             .WillByDefault(testing::Return(true));
         ON_CALL(*this, stream_size())
             .WillByDefault(testing::Return(geometry::Size{}));
+        ON_CALL(*this, lock_snapshot_buffer())
+            .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
+        ON_CALL(*this, acquire_client_buffer(testing::_))
+            .WillByDefault(testing::InvokeArgument<0>(nullptr));
     }
     MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));
     MOCK_METHOD1(release_client_buffer, void(graphics::Buffer*));

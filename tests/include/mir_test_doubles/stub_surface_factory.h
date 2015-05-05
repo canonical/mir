@@ -13,13 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Robert Carr <robert.carr@canoniacl.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_BUFFER_STREAM_FACTORY_H_
-#define MIR_TEST_DOUBLES_STUB_BUFFER_STREAM_FACTORY_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SURFACE_FACTORY_H_
+#define MIR_TEST_DOUBLES_STUB_SURFACE_FACTORY_H_
 
-#include "mir/scene/buffer_stream_factory.h"
+#include <mir/scene/surface_factory.h>
+#include <mir_test_doubles/stub_buffer.h>
+#include <mir_test_doubles/mock_surface.h>
 
 namespace mir
 {
@@ -27,15 +29,20 @@ namespace test
 {
 namespace doubles
 {
-struct StubBufferStreamFactory : public scene::BufferStreamFactory
-{
-    std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        int, graphics::BufferProperties const&) { return nullptr; }
-    std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        graphics::BufferProperties const&) { return nullptr; }
-};
-}
-}
-}
 
-#endif // MIR_TEST_DOUBLES_STUB_BUFFER_STREAM_FACTORY_H_
+class StubSurfaceFactory : public scene::SurfaceFactory
+{
+public:
+    std::shared_ptr<scene::Surface> create_surface(
+        std::shared_ptr<compositor::BufferStream> const&,
+        scene::SurfaceCreationParameters const&) override
+    {
+        return std::make_shared<testing::NiceMock<MockSurface>>();
+    }
+};
+
+}
+}
+} // namespace mir
+
+#endif /* MIR_TEST_DOUBLES_STUB_SURFACE_FACTORY_H_ */
