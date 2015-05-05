@@ -769,14 +769,13 @@ TEST_F(BasicSurfaceTest, adds_buffer_streams)
     auto alpha1 = 0.5f;
     auto alpha2 = 0.25f;
     auto alpha3 = 0.125f;
-    auto additional_buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    auto additional_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    auto additional_buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    mf::BufferStreamId id0{0}, id1{1}, id2{2};
+    auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
-    surface.add_stream(id0, additional_buffer_stream0, d0, alpha0);
-    surface.add_stream(id1, additional_buffer_stream1, d1, alpha1);
-    surface.add_stream(id2, additional_buffer_stream2, d2, alpha2);
+    surface.add_stream(buffer_stream0, d0, alpha0);
+    surface.add_stream(buffer_stream1, d1, alpha1);
+    surface.add_stream(buffer_stream2, d2, alpha2);
     surface.set_alpha(alpha3);
 
     auto renderables = surface.generate_renderables(this);
@@ -786,9 +785,9 @@ TEST_F(BasicSurfaceTest, adds_buffer_streams)
     EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left + d1, alpha1));
     EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left + d2, alpha2));
 
-    surface.remove_stream(id0);
-    surface.remove_stream(id1);
-    surface.remove_stream(id2);
+    surface.remove_stream(buffer_stream0.get());
+    surface.remove_stream(buffer_stream1.get());
+    surface.remove_stream(buffer_stream2.get());
 }
 
 TEST_F(BasicSurfaceTest, cannot_remove_primary)
@@ -805,9 +804,8 @@ TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
     geom::Point pt{10, 20};
     geom::Displacement d{19,99};
     auto alpha = 1.0f;
-    mf::BufferStreamId id0{0};
-    auto additional_buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    surface.add_stream(id0, additional_buffer_stream, d, alpha);
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    surface.add_stream(buffer_stream, d, alpha);
     surface.move_to(pt);
 
     auto renderables = surface.generate_renderables(this);
@@ -823,16 +821,15 @@ TEST_F(BasicSurfaceTest, repositions_buffer_streams)
     geom::Displacement changed_d0{22,22};
     geom::Displacement d1{21,101};
     geom::Displacement d2{20,9};
-    auto additional_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    auto additional_buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    auto additional_buffer_stream3 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    mf::BufferStreamId id0{0}, id1{1}, id2{2};
+    auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
-    surface.add_stream(id0, additional_buffer_stream1, d0, 1.0f);
-    surface.add_stream(id1, additional_buffer_stream2, d1, 1.0f);
-    surface.add_stream(id2, additional_buffer_stream3, d2, 1.0f);
-    surface.reposition(id0, changed_d0, 1.0f);
-    surface.raise(id1);
+    surface.add_stream(buffer_stream0, d0, 1.0f);
+    surface.add_stream(buffer_stream1, d1, 1.0f);
+    surface.add_stream(buffer_stream2, d2, 1.0f);
+    surface.reposition(buffer_stream0.get(), changed_d0, 1.0f);
+    surface.raise(buffer_stream0.get());
 
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(4));
@@ -840,7 +837,7 @@ TEST_F(BasicSurfaceTest, repositions_buffer_streams)
     EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left, 1.0f));
     EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left + changed_d0, 1.0f));
     EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left + d2, 1.0f));
-    surface.remove_stream(id0);
-    surface.remove_stream(id1);
-    surface.remove_stream(id2);
+    surface.remove_stream(buffer_stream0);
+    surface.remove_stream(buffer_stream1);
+    surface.remove_stream(buffer_stream2);
 }
