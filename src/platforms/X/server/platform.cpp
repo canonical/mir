@@ -27,6 +27,23 @@ namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace mo = mir::options;
 
+namespace
+{
+Display *x_dpy = nullptr;
+}
+
+__attribute__((constructor)) static void open_X_display()
+{
+    x_dpy = XOpenDisplay(NULL);
+    if (!x_dpy)
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get a display"));
+}
+
+__attribute__((destructor)) static void close_X_display()
+{
+    XCloseDisplay(x_dpy);
+}
+
 mgx::Platform::Platform(std::shared_ptr<DisplayReport> const& /*listener*/)
     : udev{std::make_shared<mir::udev::Context>()},
        drm{std::make_shared<helpers::DRMHelper>()}
@@ -49,7 +66,7 @@ std::shared_ptr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<GLConfig> const& /*gl_config*/)
 {
     CALLED
-    return std::make_shared<mgx::Display>();
+    return std::make_shared<mgx::Display>(x_dpy);
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const

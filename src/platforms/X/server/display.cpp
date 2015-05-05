@@ -33,8 +33,8 @@ namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-mgx::Display::Display()
-    : display_width{1280}, display_height{1024}
+mgx::Display::Display(::Display *dpy)
+    : x_dpy{dpy}, display_width{1280}, display_height{1024}
 {
     EGLint egl_major, egl_minor;
     EGLConfig config;
@@ -50,9 +50,9 @@ mgx::Display::Display()
 
     CALLED
 
-    x_dpy = XOpenDisplay(NULL);
-    if (!x_dpy)
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get a display"));
+//    x_dpy = XOpenDisplay(NULL);
+//    if (!x_dpy)
+//        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get a display"));
 
     egl_dpy = eglGetDisplay(x_dpy);
     if (!egl_dpy)
@@ -237,7 +237,7 @@ mgx::Display::~Display() noexcept
     eglTerminate(egl_dpy);
 
     XDestroyWindow(x_dpy, win);
-    XCloseDisplay(x_dpy);
+//    XCloseDisplay(x_dpy);
 }
 
 void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)

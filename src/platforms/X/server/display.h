@@ -37,7 +37,7 @@ namespace X
 class Display : public graphics::Display
 {
 public:
-    explicit Display();
+    explicit Display(::Display *dpy);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;

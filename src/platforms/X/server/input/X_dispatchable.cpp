@@ -16,32 +16,26 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "X_input_device.h"
 #include "X_dispatchable.h"
 #include "../../debug.h"
 
 namespace mi = mir::input;
 namespace mix = mi::X;
-namespace md = mir::dispatch;
 
-std::shared_ptr<md::Dispatchable> mix::XInputDevice::dispatchable()
+mir::Fd mix::XDispatchable::watch_fd() const
 {
     CALLED
-    return std::make_shared<mix::XDispatchable>();
+    return mir::Fd{0};
 }
 
-void mix::XInputDevice::start(InputSink* /*destination*/)
+bool mix::XDispatchable::dispatch(dispatch::FdEvents /*events*/)
 {
     CALLED
+    return false;
 }
 
-void mix::XInputDevice::stop()
+mir::dispatch::FdEvents mix::XDispatchable::relevant_events() const
 {
     CALLED
-}
-
-mi::InputDeviceInfo mix::XInputDevice::get_device_info()
-{
-    CALLED
-    return info;
+    return dispatch::FdEvent::readable;
 }

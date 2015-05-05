@@ -407,7 +407,7 @@ mir::DefaultServerConfiguration::the_input_manager()
             	auto ret = std::make_shared<mi::PlatformInputManager>(the_input_reading_multiplexer());
                 auto platform = the_input_platform();
                 if (platform)
-                    ret->add_platform(platform);
+                   ret->add_platform(platform);
                 return ret;
             }
         }

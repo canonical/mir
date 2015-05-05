@@ -40,6 +40,7 @@ add_library(
   input/X_input_platform.cpp
   input/X_input_device.cpp
   input/X_input_sink.cpp
+  input/X_dispatchable.cpp
 )
 
 add_library(
