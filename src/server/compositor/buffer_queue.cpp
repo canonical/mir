@@ -334,8 +334,19 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (nbuffers <= 1)
         return;
 
+    /*
+    if (current_compositor_buffer == buffer.get() &&
+        !ready_to_composite_queue.empty())
+    {
+        current_compositor_buffer = pop(ready_to_composite_queue);
+        current_buffer_users.clear();
+    }
+    */
+
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
+    else
+        mir::log_info("Non-release (still visible)");
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferQueue::snapshot_acquire()
@@ -516,7 +527,9 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
-    if (!pending_client_notifications.empty() && !client_ahead_of_compositor())
+    bool ahead = client_ahead_of_compositor();
+    mir::log_info("ahead");
+    if (!pending_client_notifications.empty() && !ahead)
     {
         framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, lock);
