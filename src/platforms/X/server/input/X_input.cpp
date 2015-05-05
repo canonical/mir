@@ -20,7 +20,7 @@
 //#include "fake_input_device_impl.h"
 #include "mir/module_properties.h"
 #include "mir/input/platform.h"
-#include "../debug.h"
+#include "../../debug.h"
 
 namespace mo = mir::options;
 namespace mi = mir::input;

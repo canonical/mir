@@ -1,5 +1,7 @@
 include_directories(
-    ${server_common_include_dirs}
+  ${server_common_include_dirs}
+  ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/client
 )
 
 include_directories(
@@ -15,9 +17,10 @@ include_directories(
 #string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 #add_definitions(-D__GBM__)
 add_definitions(-DDEBUG_SERVER=0)
+add_definitions(-DDEBUG_INPUT=1)
 
 add_library(
-  mirplatformgraphicsXobjects OBJECT
+  mirplatformserverXobjects OBJECT
 
   platform.cpp
   display.cpp
@@ -33,16 +36,20 @@ add_library(
   display_helpers.cpp
   drm_mode_resources.cpp
   drm_close_threadsafe.cpp
+  input/X_input.cpp
+  input/X_input_platform.cpp
+  input/X_input_device.cpp
+  input/X_input_sink.cpp
 )
 
 add_library(
-  mirplatformgraphicsX MODULE
+  mirplatformserverX MODULE
 
-  $<TARGET_OBJECTS:mirplatformgraphicsXobjects>
+  $<TARGET_OBJECTS:mirplatformserverXobjects>
 )
 
 target_link_libraries(
-  mirplatformgraphicsX
+  mirplatformserverX
 
   mirplatform
   EGL
@@ -58,12 +65,12 @@ target_link_libraries(
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(
-  mirplatformgraphicsX PROPERTIES
-  OUTPUT_NAME graphics-X
+  mirplatformserverX PROPERTIES
+  OUTPUT_NAME server-X
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   PREFIX ""
   SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
-install(TARGETS mirplatformgraphicsX LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
+install(TARGETS mirplatformserverX LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

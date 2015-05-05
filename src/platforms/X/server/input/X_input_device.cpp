@@ -16,30 +16,32 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "X_input_sink.h"
-#include "../debug.h"
+#include "X_input_device.h"
+#include "mir/dispatch/dispatchable.h"
+#include "../../debug.h"
 
 namespace mi = mir::input;
 namespace mix = mi::X;
+namespace md = mir::dispatch;
 
-void mix::XInputSink::handle_input(MirEvent& /* event */)
+std::shared_ptr<md::Dispatchable> mix::XInputDevice::dispatchable()
 {
     CALLED
-#if 0
-    // we attach the device id here, since this instance the first being able to maintains the uniqueness of the ids..
-    // TODO avoid the MIR_INCLUDE_DEPRECATED_EVENT_HEADER in some way
-    if (event.type == mir_event_type_key)
-    {
-        event.key.device_id = device_id;
-    }
-    if (event.type == mir_event_type_motion)
-    {
-        event.motion.device_id = device_id;
-    }
-    auto type = mir_event_get_type(&event);
+    return nullptr;
+}
 
-    if (type != mir_event_type_input)
-        BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input event receivd from device"));
-    dispatcher->dispatch(event);
-#endif
+void mix::XInputDevice::start(InputSink* /*destination*/)
+{
+    CALLED
+}
+
+void mix::XInputDevice::stop()
+{
+    CALLED
+}
+
+mi::InputDeviceInfo mix::XInputDevice::get_device_info()
+{
+    CALLED
+    return info;
 }

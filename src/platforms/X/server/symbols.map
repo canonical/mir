@@ -5,5 +5,9 @@ MIR_GRAPHICS_PLATFORM_2 {
    create_host_platform;
    create_guest_platform;
    describe_graphics_module;
+   add_input_platform_options;
+   create_input_platform;
+   probe_input_platform;
+   describe_input_module;
   local: *;
 };
