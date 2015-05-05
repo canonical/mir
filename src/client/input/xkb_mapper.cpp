@@ -90,7 +90,7 @@ void mircv::XKBMapper::update_state_and_map_event(MirEvent &ev)
     
     auto &key_ev = ev.key;
                               
-    xkb_key_direction direction;
+    xkb_key_direction direction = XKB_KEY_DOWN;
 
     bool update_state = true;
     if (key_ev.action == mir_keyboard_action_up)
