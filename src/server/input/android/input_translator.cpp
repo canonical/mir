@@ -124,7 +124,7 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
     mir_event.key.modifiers = mir_modifiers;
     mir_event.key.key_code = args->keyCode;
     mir_event.key.scan_code = args->scanCode;
-    mir_event.key.event_time = args->eventTime.count();
+    mir_event.key.event_time = args->eventTime;
 
     dispatcher->dispatch(mir_event);
 }
@@ -141,7 +141,7 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     mir_event.motion.action = args->action;
     mir_event.motion.modifiers = mia::mir_modifiers_from_android(args->metaState);
     mir_event.motion.button_state = static_cast<MirMotionButton>(args->buttonState);
-    mir_event.motion.event_time = args->eventTime.count();
+    mir_event.motion.event_time = args->eventTime;
     mir_event.motion.pointer_count = args->pointerCount;
     for(unsigned int i = 0; i < args->pointerCount; i++)
     {

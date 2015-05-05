@@ -31,6 +31,7 @@
 #include "mir_toolkit/common.h"
 
 #include <xkbcommon/xkbcommon.h>
+#include <chrono>
 
 #ifdef __cplusplus
 /**
@@ -41,8 +42,6 @@ extern "C" {
 #endif
 /* TODO: To the moon. */
 #define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
-
-typedef int64_t nsecs_t;
 
 typedef enum {
     mir_motion_action_down         = 0,
@@ -89,7 +88,7 @@ typedef struct
     int32_t key_code;
     int32_t scan_code;
 
-    nsecs_t event_time;
+    std::chrono::nanoseconds event_time;
 } MirKeyEvent;
 
 typedef struct
@@ -125,7 +124,7 @@ typedef struct
     MirInputEventModifiers modifiers;
 
     MirMotionButton button_state;
-    nsecs_t event_time;
+    std::chrono::nanoseconds event_time;
 
     size_t pointer_count;
     MirMotionPointer pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];

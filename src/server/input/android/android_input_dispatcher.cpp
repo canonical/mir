@@ -78,7 +78,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             event.key.key_code,
             event.key.scan_code,
             mia::android_modifiers_from_mir(event.key.modifiers),
-            std::chrono::nanoseconds(event.key.event_time));
+            event.key.event_time);
 
         dispatcher->notifyKey(&notify_key_args);
 
@@ -120,7 +120,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             pointer_properties.data(),
             pointer_coords.data(),
             0, 0, /* unused x/y precision */
-            std::chrono::nanoseconds(event.motion.event_time));
+            event.motion.event_time);
 
         dispatcher->notifyMotion(&notify_motion_args);
 

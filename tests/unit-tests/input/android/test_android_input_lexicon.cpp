@@ -61,7 +61,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(mir_ev.type, mir_event_type_key);
     EXPECT_EQ(mir_key_ev->key_code, key_code);
     EXPECT_EQ(mir_key_ev->scan_code, scan_code);
-    EXPECT_EQ(mir_key_ev->event_time, event_time.count());
+    EXPECT_EQ(mir_key_ev->event_time, event_time);
 
     delete android_key_ev;
 }
@@ -135,7 +135,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     auto mir_motion_ev = &mir_ev.motion;
 
     EXPECT_EQ(mir_motion_ev->button_state, button_state);
-    EXPECT_EQ(mir_motion_ev->event_time, event_time.count());
+    EXPECT_EQ(mir_motion_ev->event_time, event_time);
 
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
 
@@ -242,7 +242,7 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     auto mir_motion_ev = &mir_ev.motion;
 
     EXPECT_EQ(mir_motion_ev->button_state, button_state);
-    EXPECT_EQ(mir_motion_ev->event_time, event_time.count());
+    EXPECT_EQ(mir_motion_ev->event_time, event_time);
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
 
     auto pointer = &mir_motion_ev->pointer_coordinates[0];

@@ -249,8 +249,8 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
         event.scan_code,
         mia::android_modifiers_from_mir(event.modifiers),
         repeat_count,
-        std::chrono::nanoseconds(event.event_time),
-        std::chrono::nanoseconds(event.event_time)
+        event.event_time,
+        event.event_time
         );
 }
 
@@ -292,8 +292,8 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_motion_event(uint32_
         0.0f,  // event.x_offset,
         0.0f,  // event.y_offset,
         0, 0, /* unused x/y precision */
-        std::chrono::nanoseconds(event.event_time),
-        std::chrono::nanoseconds(event.event_time),
+        event.event_time,
+        event.event_time,
         event.pointer_count,
         properties,
         coords

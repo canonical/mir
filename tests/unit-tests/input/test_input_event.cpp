@@ -108,16 +108,16 @@ TEST(CommonInputEventProperties, device_id_taken_from_old_style_event)
 
 TEST(CommonInputEventProperties, event_time_taken_from_old_style_event)
 {
-    int64_t event_time_1 = 79, event_time_2 = 83;
+    std::chrono::nanoseconds event_time_1{79}, event_time_2{83};
     auto old_ev = a_motion_ev();
 
     old_ev.motion.event_time = event_time_1;
-    EXPECT_EQ(event_time_1, mir_input_event_get_event_time(
+    EXPECT_EQ(event_time_1.count(), mir_input_event_get_event_time(
         mir_event_get_input_event(&old_ev)));
 
     old_ev.type = mir_event_type_key;
     old_ev.key.event_time = event_time_2;
-    EXPECT_EQ(event_time_2, mir_input_event_get_event_time(
+    EXPECT_EQ(event_time_2.count(), mir_input_event_get_event_time(
         mir_event_get_input_event(&old_ev)));
 }
 
