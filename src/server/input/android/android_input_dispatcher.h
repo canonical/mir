@@ -46,8 +46,6 @@ public:
     AndroidInputDispatcher(std::shared_ptr<droidinput::InputDispatcherInterface> const& dispatcher,
                            std::shared_ptr<InputThread> const& thread);
     ~AndroidInputDispatcher();
-    void configuration_changed(std::chrono::nanoseconds when) override;
-    void device_reset(int32_t device_id, std::chrono::nanoseconds when) override;
     void dispatch(MirEvent const& event) override;
     void start() override;
     void stop() override;

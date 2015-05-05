@@ -46,18 +46,6 @@ mia::AndroidInputDispatcher::~AndroidInputDispatcher()
     stop();
 }
 
-void mia::AndroidInputDispatcher::configuration_changed(std::chrono::nanoseconds when)
-{
-    droidinput::NotifyConfigurationChangedArgs args(when);
-    dispatcher->notifyConfigurationChanged(&args);
-}
-
-void mia::AndroidInputDispatcher::device_reset(int32_t device_id, std::chrono::nanoseconds when)
-{
-    droidinput::NotifyDeviceResetArgs args(when, device_id);
-    dispatcher->notifyDeviceReset(&args);
-}
-
 void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
 {
     static auto const policy_flags = 0;
@@ -123,6 +111,27 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
 
         dispatcher->notifyMotion(&notify_motion_args);
 
+        break;
+    }
+
+    case mir_event_type_input_configuration:
+    {
+        auto &idev = event.input_configuration;
+        switch (idev.action)
+        {
+        case mir_input_configuration_action_configuration_changed:
+        {
+            droidinput::NotifyConfigurationChangedArgs args(idev.when);
+            dispatcher->notifyConfigurationChanged(&args);
+        }
+        case mir_input_configuration_action_device_reset:
+        {
+            droidinput::NotifyDeviceResetArgs args(idev.when, idev.id);
+            dispatcher->notifyDeviceReset(&args);
+        }
+        default:
+            break;
+        }
         break;
     }
 
