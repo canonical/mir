@@ -300,8 +300,6 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     }
 
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
-    mir::log_info("Compositor ID %p: sent %d",
-        user_id, (int)buffers_sent_to_compositor.size());
 
     std::shared_ptr<mg::Buffer> const acquired_buffer =
         buffer_for(current_compositor_buffer, buffers);
