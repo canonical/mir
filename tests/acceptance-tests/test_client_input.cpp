@@ -159,13 +159,15 @@ TEST_F(TestClientInputNewEventFilter, event_filter_may_consume_events)
 {
     using namespace ::testing;
 
-    InSequence seq;
-    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(Return(true));
-    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(
-            DoAll(mt::WakeUp(&all_events_received), Return(true)));
+    EXPECT_CALL(*mock_event_filter, handle(mt::InputConfigurationEvent())).Times(0).WillRepeatedly(Return(false));
 
-    // Since we handle the events in the filter the client should not receive them.
-    EXPECT_CALL(handler, handle_input(_)).Times(0);
+    InSequence seq;
+    EXPECT_CALL(*mock_event_filter, handle(mt::KeyDownEvent())).WillOnce(Return(true));
+    EXPECT_CALL(*mock_event_filter, handle(mt::KeyUpEvent())).WillOnce(
+            DoAll(mt::WakeUp(&all_events_received), Return(true)));
+    EXPECT_CALL(*mock_event_filter, handle(_)).Times(AnyNumber());
+
+    EXPECT_CALL(*mock_event_filter, handle(mt::InputConfigurationEvent())).Times(0).WillRepeatedly(Return(false));
 
     ready_to_accept_events.wait_for_at_most_seconds(5);
 
