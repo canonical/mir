@@ -29,10 +29,6 @@ namespace mia = mir::input::android;
 
 namespace
 {
-bool valid_key_event(MirKeyEvent const& key)
-{
-    return key.action == mir_keyboard_action_up || key.action == mir_keyboard_action_down || key.action == mir_keyboard_action_repeat;
-}
 inline int32_t get_index_from_motion_action(int action)
 {
     // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
@@ -129,9 +125,6 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
     mir_event.key.key_code = args->keyCode;
     mir_event.key.scan_code = args->scanCode;
     mir_event.key.event_time = args->eventTime.count();
-
-    if (!valid_key_event(mir_event.key))
-        return;
 
     dispatcher->dispatch(mir_event);
 }

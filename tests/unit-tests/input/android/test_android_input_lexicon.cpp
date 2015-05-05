@@ -34,7 +34,7 @@ TEST(AndroidInputLexicon, translates_key_events)
 
     const int32_t device_id = 1;
     const int32_t source_id = 2;
-    const int32_t action = 3;
+    const int32_t action = AKEY_EVENT_ACTION_DOWN;
     const int32_t flags = 4;
     const int32_t key_code = 5;
     const int32_t scan_code = 6;
@@ -53,7 +53,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     // Common event properties
     EXPECT_EQ(device_id, mir_ev.key.device_id);
     EXPECT_EQ(source_id, mir_ev.key.source_id);
-    EXPECT_EQ(action, mir_ev.key.action);
+    EXPECT_EQ(mir_keyboard_action_down, mir_ev.key.action);
     EXPECT_EQ(mir_input_event_modifier_alt, mir_ev.key.modifiers);
 
     auto mir_key_ev = &mir_ev.key;

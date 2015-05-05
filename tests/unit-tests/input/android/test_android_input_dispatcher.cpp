@@ -245,7 +245,7 @@ TEST_F(AndroidInputDispatcherTest, forwards_all_key_event_paramters_correctly)
                                        event.key.device_id,
                                        event.key.source_id,
                                        default_policy_flags,
-                                       event.key.action,
+                                       AKEY_EVENT_ACTION_DOWN,
                                        0, /* flags */
                                        event.key.key_code,
                                        event.key.scan_code,
