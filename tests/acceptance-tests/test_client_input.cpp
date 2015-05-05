@@ -17,6 +17,8 @@
  */
 
 #include "mir/input/input_device_info.h"
+#include "mir/input/event_filter.h"
+#include "mir/input/composite_event_filter.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -48,6 +50,17 @@ namespace geom = mir::geometry;
 
 namespace
 {
+
+struct MockEventFilter : public mi::EventFilter
+{
+    // Work around GMock wanting to know how to construct MirEvent
+    MOCK_METHOD1(handle, bool(MirEvent const*));
+    bool handle(MirEvent const& ev)
+    {
+        handle(&ev);
+        return true;
+    }
+};
 
 struct TestClientInput : mtf::HeadlessInProcessServer
 {
@@ -171,6 +184,8 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     mtf::ClientDepths depths;
     std::unique_ptr<Client> first_client, second_client;
     geom::Rectangle screen_geometry{{0,0}, {1000,800}};
+
+    std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
 };
 
 const int TestClientInput::Client::surface_width;
@@ -597,4 +612,35 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
         mis::a_key_up_event().of_scancode(KEY_N));
 
     first_client->all_events_received.wait_for_at_most_seconds(5);
+}
+
+namespace
+{
+struct TestClientInputNewEventFilter : public TestClientInput
+{
+    void SetUp() override
+    {
+        TestClientInput::SetUp();
+        server.the_composite_event_filter()->append(mock_event_filter);
+    }
+    std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
+};
+}
+
+TEST_F(TestClientInputNewEventFilter, event_filter_may_consume_events)
+{
+    using namespace ::testing;
+
+    InSequence seq;
+    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(
+            DoAll(mt::WakeUp(&all_events_received), Return(true)));
+
+    // Since we handle the events in the filter the client should not receive them.
+    EXPECT_CALL(*first_client, handle_input(_)).Times(0);
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
+    fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
+
+    first_client->all_events_received.wait_for_at_most_seconds(10);
 }
