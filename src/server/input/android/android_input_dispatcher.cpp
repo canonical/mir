@@ -114,7 +114,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             event.motion.action,
             0, /* flags */
             mia::android_modifiers_from_mir(event.motion.modifiers),
-            event.motion.button_state,
+            mia::android_pointer_buttons_from_mir(event.motion.button_state),
             0, /* edge_flags */
             event.motion.pointer_count,
             pointer_properties.data(),

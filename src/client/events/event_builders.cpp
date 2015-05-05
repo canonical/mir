@@ -256,29 +256,27 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     mev.action = old_action_from_pointer_action(action);
     mev.source_id = AINPUT_SOURCE_MOUSE;
     
-    int button_state = 0;
     for (auto button : buttons_pressed)
     {
     switch (button)
     {
     case mir_pointer_button_primary:
-        button_state |= mir_motion_button_primary;
+        mev.button_state[mir_pointer_button_primary] = true;
         break;
     case mir_pointer_button_secondary:
-        button_state |= mir_motion_button_secondary;
+        mev.button_state[mir_pointer_button_secondary] = true;
         break;
     case mir_pointer_button_tertiary:
-        button_state |= mir_motion_button_tertiary;
+        mev.button_state[mir_pointer_button_tertiary] = true;
         break;
     case mir_pointer_button_back:
-        button_state |= mir_motion_button_back;
+        mev.button_state[mir_pointer_button_back] = true;
         break;
     case mir_pointer_button_forward:
-        button_state |= mir_motion_button_forward;
+        mev.button_state[mir_pointer_button_forward] = true;
         break;
     }
     }
-    mev.button_state = static_cast<MirMotionButton>(button_state);
 
     mev.pointer_count = 1;
     auto& pc = mev.pointer_coordinates[0];

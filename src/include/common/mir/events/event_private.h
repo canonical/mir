@@ -58,14 +58,6 @@ typedef enum {
 } MirMotionAction;
 
 typedef enum {
-    mir_motion_button_primary   = 1 << 0,
-    mir_motion_button_secondary = 1 << 1,
-    mir_motion_button_tertiary  = 1 << 2,
-    mir_motion_button_back      = 1 << 3,
-    mir_motion_button_forward   = 1 << 4
-} MirMotionButton;
-
-typedef enum {
    mir_motion_tool_type_unknown = 0,
    mir_motion_tool_type_finger  = 1,
    mir_motion_tool_type_stylus  = 2,
@@ -123,7 +115,7 @@ typedef struct
     int action;
     MirInputEventModifiers modifiers;
 
-    MirMotionButton button_state;
+    bool button_state[mir_pointer_button_forward];
     std::chrono::nanoseconds event_time;
 
     size_t pointer_count;

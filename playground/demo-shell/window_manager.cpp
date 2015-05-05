@@ -441,8 +441,7 @@ bool me::WindowManager::handle(MirEvent const& event)
             {
                 geometry::Displacement drag = cursor - old_cursor;
 
-                if (event.motion.button_state ==
-                    mir_motion_button_tertiary)
+                if (event.motion.button_state[mir_pointer_button_tertiary])
                 {  // Resize by mouse middle button
                     resize(*surf, cursor);
                 }
