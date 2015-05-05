@@ -220,7 +220,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     EXPECT_FALSE(mt::fd_is_readable(receiver.watch_fd()));
 }
 
-TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
+TEST_F(AndroidInputReceiverSetup, DISABLED_slow_raw_input_doesnt_cause_frameskipping)
 {  // Regression test for LP: #1372300
     using namespace testing;
     using namespace std::chrono;
