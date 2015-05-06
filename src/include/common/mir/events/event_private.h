@@ -32,6 +32,8 @@
 
 #include <xkbcommon/xkbcommon.h>
 
+#include <chrono>
+
 #ifdef __cplusplus
 /**
  * \addtogroup mir_toolkit
@@ -196,6 +198,15 @@ typedef struct
     int unused2;
     int unused3;
 } MirMotionEvent;
+ 
+struct MirInputConfigurationEvent
+{
+    MirEventType type;
+
+    MirInputConfigurationAction action;
+    std::chrono::nanoseconds when;
+    MirInputDeviceId id;
+};
 
 struct MirSurfaceEvent
 {
@@ -257,6 +268,7 @@ union MirEvent
     MirOrientationEvent orientation;
     MirCloseSurfaceEvent   close_surface;
     MirKeymapEvent keymap;
+    MirInputConfigurationEvent input_configuration;
 };
 
 #ifdef __cplusplus

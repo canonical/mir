@@ -71,17 +71,15 @@ bool UnacceleratedClient::create_surface()
     // TODO: instead of picking the first pixel format, pick a random one!
     MirPixelFormat const pixel_format = display_state.output_formats[0];
     mir_display_config_destroy(display_configuration);
-    MirSurfaceParameters const request_params =
-        {
-            __PRETTY_FUNCTION__,
-            640,
-            480,
-            pixel_format,
-            mir_buffer_usage_software,
-            mir_display_output_id_invalid
-        };
 
-    surface_ = mir_connection_create_surface_sync(connection_, &request_params);
+    auto const spec = mir_connection_create_spec_for_normal_surface(
+        connection_, 640, 480, pixel_format);
+    mir_surface_spec_set_name(spec, __PRETTY_FUNCTION__);
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+
+    surface_ = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     return true;
 }
 

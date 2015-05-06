@@ -93,10 +93,16 @@ for bespoke applications.
    "server_example_input_filter.cpp: print input events to stdout"
  - \subpage server_example_log_options.cpp 
    "server_example_log_options.cpp: replace Mir logger with glog"
- - \subpage server_example_window_manager.cpp 
-   "server_example_window_manager.cpp: How to wire up a window manager"
+ - \subpage server_example_basic_window_manager.h 
+   "server_example_basic_window_manager.h: How to wire up a window manager"
  - \subpage server_example_window_management.cpp 
    "server_example_window_management.cpp: simple window management examples"
+ - \subpage server_example_canonical_window_manager.cpp 
+   "server_example_canonical_window_manager.cpp: canonical window management policy"
+ - \subpage server_example_tiling_window_manager.cpp 
+   "server_example_tiling_window_manager.cpp: an alternative window management policy"
+ - \subpage server_example_custom_compositor.cpp 
+   "server_example_custom_compositor.cpp: demonstrate writing an alternative GL rendering code"
 
 Working on Mir code
 -------------------

@@ -22,6 +22,7 @@ set(
   platform_factory.cpp
   triggered_main_loop.cpp
   stub_buffer.cpp
+  nested_mock_egl.cpp
 )
 
 set(

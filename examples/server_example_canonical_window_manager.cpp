@@ -208,7 +208,6 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Surface> const& surface,
     CanonicalSurfaceInfoMap& surface_info)
 {
-    tools->info_for(session).surfaces++;
     auto format = mir_pixel_format_xrgb_8888;
     ms::SurfaceCreationParameters params;
     params.of_size(titlebar_size_for_window(surface->size()))
@@ -381,12 +380,10 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
         }
     }
 
-
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        select_active_surface(tools->focused_surface());
     }
 }
 
@@ -483,7 +480,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
 
     if (action == mir_keyboard_action_down && scan_code == KEY_F11)
     {
-        switch (modifiers & modifier_mask)
+        switch (modifiers)
         {
         case mir_input_event_modifier_alt:
             toggle(mir_surface_state_maximized);
@@ -505,7 +502,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
     {
         if (auto const session = tools->focused_session())
         {
-            switch (modifiers & modifier_mask)
+            switch (modifiers)
             {
             case mir_input_event_modifier_alt:
                 kill(session->process_id(), SIGTERM);
@@ -522,6 +519,28 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
                 break;
             }
         }
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_TAB)
+    {
+        tools->focus_next_session();
+        if (auto const surface = tools->focused_surface())
+            select_active_surface(surface);
+
+        return true;
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_GRAVE)
+    {
+        if (auto const prev = tools->focused_surface())
+        {
+            if (auto const app = tools->focused_session())
+                select_active_surface(app->surface_after(prev));
+        }
+
+        return true;
     }
 
     return false;

@@ -92,7 +92,14 @@ mia::InputTranslator::InputTranslator(std::shared_ptr<InputDispatcher> const& di
 
 void mia::InputTranslator::notifyConfigurationChanged(const droidinput::NotifyConfigurationChangedArgs* args)
 {
-    dispatcher->configuration_changed(args->eventTime);
+    MirEvent mir_event;
+    mir_event.type = mir_event_type_input_configuration;
+    auto& idev = mir_event.input_configuration;
+    idev.action = mir_input_configuration_action_configuration_changed;
+    idev.when = args->eventTime;
+    idev.id = -1;
+
+    dispatcher->dispatch(mir_event);
 }
 
 void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
@@ -202,7 +209,13 @@ void mia::InputTranslator::notifySwitch(const droidinput::NotifySwitchArgs* /*ar
 
 void mia::InputTranslator::notifyDeviceReset(const droidinput::NotifyDeviceResetArgs* args)
 {
-    dispatcher->device_reset(args->deviceId, args->eventTime);
-    // TODO cannot be expressed through MirEvent
+    MirEvent mir_event;
+    mir_event.type = mir_event_type_input_configuration;
+    auto& idev = mir_event.input_configuration;
+    idev.action = mir_input_configuration_action_device_reset;
+    idev.when = args->eventTime;
+    idev.id = args->deviceId;
+
+    dispatcher->dispatch(mir_event);
 }
 
