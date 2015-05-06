@@ -297,16 +297,14 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_compositor_buffer = pop(ready_to_composite_queue);
         current_compositor_buffer_valid = true;
 
-#if 0
         /*
          * If we just emptied the ready queue above and hold this compositor
-         * buffer for too long (e.g. bypass) then there's a chance the client
+         * buffer for very long (e.g. bypass) then there's a chance the client
          * would starve and miss a frame. Make sure that can't happen, by
          * using more than double buffers...
          */
         if (!buffer_to_release && !client_ahead_of_compositor())
             buffer_to_release = get_a_free_buffer();
-#endif
     }
     else if (current_buffer_users.empty())
     {   // current_buffer_users and ready_to_composite_queue both empty
