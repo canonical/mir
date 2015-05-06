@@ -257,7 +257,10 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     if (is_a_current_buffer_user(user_id))   // Primary/fastest display
     {
         if (ready_to_composite_queue.empty())
+        {
             frame_deadlines_met = 0;
+            mir::log_info("Missed frame");
+        }
         else if (frame_deadlines_met < frame_deadlines_threshold)
             ++frame_deadlines_met;
     }
@@ -311,8 +314,8 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
      * and open up 10-15ms of additional idle time per frame for the client to
      * render in, but that's not enough if you're also trying to feed a
      * multi-monitor cloned setup bypass buffers, as the multiple monitors will
-     * almost always be out of phase requiring an additional frame (16ms) of
-     * holding time.
+     * almost always be out of phase requiring up to one additional frame
+     * (16ms) of holding time.
      *   A the moment we choose to err on the side of safety, forcing triple
      * buffers any time overlapping_compositors is detected. This will keep
      * frame rates smooth but never allow fullscreen bypass clients to be low
@@ -357,19 +360,8 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (nbuffers <= 1)
         return;
 
-    /*
-    if (current_compositor_buffer == buffer.get() &&
-        !ready_to_composite_queue.empty())
-    {
-        current_compositor_buffer = pop(ready_to_composite_queue);
-        current_buffer_users.clear();
-    }
-    */
-
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
-    else
-        mir::log_info("Non-release (still visible)");
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferQueue::snapshot_acquire()
@@ -551,7 +543,8 @@ void mc::BufferQueue::release(
     std::unique_lock<std::mutex> lock)
 {
     bool ahead = client_ahead_of_compositor();
-    mir::log_info("ahead");
+    if (ahead)
+        mir::log_info("ahead");
     if (!pending_client_notifications.empty() && !ahead)
     {
         framedrop_policy->swap_unblocked();
