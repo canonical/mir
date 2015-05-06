@@ -299,6 +299,29 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_buffer_users.push_back(user_id);
     }
 
+    /*
+     * Although normal compositing holds buffers very briefly (<1ms),
+     * bypass/overlays needs to hold them for at least a frame and even close
+     * to two frames if you have multiple clients running to schedule frames
+     * constantly. So if the compositor is holding each buffer for almost two
+     * frames and they're overlapped as they must be for bypass/overlays then
+     * there is close to zero time during which any buffer is free for the
+     * bypass client to fill in time, and so it stutters (LP: #1447896).
+     *   The upcoming 'predictive-bypass' optimization will solve most of this
+     * and open up 10-15ms of additional idle time per frame for the client to
+     * render in, but that's not enough if you're also trying to feed a
+     * multi-monitor cloned setup bypass buffers, as the multiple monitors will
+     * almost always be out of phase requiring an additional frame (16ms) of
+     * holding time.
+     *   A the moment we choose to err on the side of safety, forcing triple
+     * buffers any time overlapping_compositors is detected. This will keep
+     * frame rates smooth but never allow fullscreen bypass clients to be low
+     * latency double-buffered. I suggest in future when predictive-bypass
+     * is completed we could change to disallowing bypass/overlays in
+     * multi-montior clone mode (on at least N-1 of the displays). That would
+     * dramatically reduce the buffer hold duration and it would then be safe
+     * to use double buffering on bypass/overlays.
+     */
     //overlapping_compositors = !buffers_sent_to_compositor.empty();
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
 
