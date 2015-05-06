@@ -35,6 +35,9 @@ int32_t android_keyboard_action_from_mir(MirKeyboardAction action, int32_t& repe
 
 void mir_pointer_buttons_from_android(int32_t android_state, bool (&mir_button_state)[5]);
 int32_t android_pointer_buttons_from_mir(bool const (&mir_button_state)[5]);
+
+MirTouchTooltype mir_tool_type_from_android(int32_t android_tooltype);
+int32_t android_tool_type_from_mir(MirTouchTooltype mir_tooltype);
 }
 }
 }

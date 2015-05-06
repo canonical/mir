@@ -166,7 +166,7 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
             args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_HSCROLL);
 
         mir_event.motion.pointer_coordinates[i].tool_type =
-            static_cast<MirMotionToolType>(args->pointerProperties[i].toolType);
+            mia::mir_tool_type_from_android(args->pointerProperties[i].toolType);
     }
 
     if (!valid_motion_event(mir_event.motion))

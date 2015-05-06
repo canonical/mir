@@ -213,11 +213,10 @@ TEST(TouchEventProperties, tool_type_copied_from_old_pc)
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
 
     auto& old_mev = old_ev.motion;
-    old_mev.pointer_count = 4;
-    old_mev.pointer_coordinates[0].tool_type = mir_motion_tool_type_unknown;
-    old_mev.pointer_coordinates[1].tool_type = mir_motion_tool_type_finger;
-    old_mev.pointer_coordinates[2].tool_type = mir_motion_tool_type_stylus;
-    old_mev.pointer_coordinates[3].tool_type = mir_motion_tool_type_mouse;
+    old_mev.pointer_count = 3;
+    old_mev.pointer_coordinates[0].tool_type = mir_touch_tooltype_unknown;
+    old_mev.pointer_coordinates[1].tool_type = mir_touch_tooltype_finger;
+    old_mev.pointer_coordinates[2].tool_type = mir_touch_tooltype_stylus;
 
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(mir_touch_tooltype_unknown, mir_touch_event_tooltype(tev, 0));

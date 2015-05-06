@@ -97,8 +97,8 @@ public:
         motion_event.motion.pointer_coordinates[0].x = 12;
         motion_event.motion.pointer_coordinates[0].y = 23;
         motion_event.motion.pointer_coordinates[0].pressure = 50;
-        motion_event.motion.pointer_coordinates[0].tool_type = mir_motion_tool_type_finger;
-        motion_event.motion.pointer_coordinates[1].tool_type = mir_motion_tool_type_finger;
+        motion_event.motion.pointer_coordinates[0].tool_type = mir_touch_tooltype_finger;
+        motion_event.motion.pointer_coordinates[1].tool_type = mir_touch_tooltype_finger;
         motion_event.motion.pointer_coordinates[1].x = 55;
         motion_event.motion.pointer_coordinates[1].y = 42;
         motion_event.motion.pointer_coordinates[1].pressure = 50;

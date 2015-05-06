@@ -57,14 +57,6 @@ typedef enum {
     mir_motion_action_hover_exit   = 10
 } MirMotionAction;
 
-typedef enum {
-   mir_motion_tool_type_unknown = 0,
-   mir_motion_tool_type_finger  = 1,
-   mir_motion_tool_type_stylus  = 2,
-   mir_motion_tool_type_mouse   = 3,
-   mir_motion_tool_type_eraser  = 4
-} MirMotionToolType;
-
 // PRIVATE
 // Direct access to MirKeyEvent is deprecated. Please use mir_event_get_input_event
 // and the mir_input_event* family of functions.
@@ -95,7 +87,7 @@ typedef struct
     float orientation;
     float vscroll;
     float hscroll;
-    MirMotionToolType tool_type;
+    MirTouchTooltype tool_type;
 } MirMotionPointer;
 
 // PRIVATE
