@@ -103,8 +103,6 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
     {
         std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
         surfaces[id] = surf;
-        auto const bs_id = static_cast<mf::BufferStreamId>(next_id().as_value());
-        streams[bs_id] = surf->primary_buffer_stream();
     }
 
     session_listener->surface_created(*this, surf);
