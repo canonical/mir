@@ -99,7 +99,6 @@ private:
     int nbuffers;
     int frame_deadlines_threshold;
     int frame_deadlines_met;
-    bool overlapping_compositors;
     bool frame_dropping_enabled;
     bool current_compositor_buffer_valid;
     graphics::BufferProperties the_properties;
