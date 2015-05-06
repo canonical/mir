@@ -677,6 +677,8 @@ bool mir_surface_id_is_valid(MirSurfaceId* id);
 /**
  * \brief Free a MirSurfaceId
  * \param [in] id  The MirSurfaceId to free
+ * \note This frees only the client-side representation; it has no effect on the
+ *       surface referred to by \arg id.
  */
 void mir_surface_id_release(MirSurfaceId* id);
 
