@@ -20,7 +20,6 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/lockable_callback.h"
-#include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -181,7 +180,6 @@ bool mc::BufferQueue::client_ahead_of_compositor() const
 
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
 {
-    mir::log_info("client_acquire");
     std::unique_lock<decltype(guard)> lock(guard);
 
     pending_client_notifications.push_back(std::move(complete));
@@ -227,7 +225,6 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
 
 void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
 {
-    mir::log_info("client_release %p", (void*)released_buffer);
     std::lock_guard<decltype(guard)> lock(guard);
 
     if (buffers_owned_by_client.empty())
@@ -255,10 +252,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     if (is_a_current_buffer_user(user_id))   // Primary/fastest display
     {
         if (ready_to_composite_queue.empty())
-        {
             frame_deadlines_met = 0;
-            mir::log_info("Missed frame");
-        }
         else if (frame_deadlines_met < frame_deadlines_threshold)
             ++frame_deadlines_met;
     }
@@ -295,6 +289,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_compositor_buffer = pop(ready_to_composite_queue);
         current_compositor_buffer_valid = true;
 
+#if 0
         if (!buffer_to_release &&
             !client_ahead_of_compositor() &&
             !free_buffers.empty())
@@ -304,6 +299,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
             buffer_to_release = free_buffers.back();
             free_buffers.pop_back();
         }
+#endif
     }
     else if (current_buffer_users.empty())
     {   // current_buffer_users and ready_to_composite_queue both empty
@@ -318,13 +314,11 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     if (buffer_to_release)
         release(buffer_to_release, std::move(lock));
 
-    mir::log_info("compositor_acquire %p", (void*)acquired_buffer.get());
     return acquired_buffer;
 }
 
 void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const& buffer)
 {
-    mir::log_info("compositor_release %p", (void*)buffer.get());
     std::unique_lock<decltype(guard)> lock(guard);
 
     if (!remove(buffer.get(), buffers_sent_to_compositor))
@@ -334,12 +328,8 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     }
 
     /* Not ready to release it yet, other compositors still reference this buffer */
-
     if (contains(buffer.get(), buffers_sent_to_compositor))
-    {
-        mir::log_info("Too early");
         return;
-    }
 
     if (nbuffers <= 1)
         return;
@@ -502,7 +492,6 @@ void mc::BufferQueue::give_buffer_to_client(
     buffers_owned_by_client.push_back(buffer);
 
     lock.unlock();
-    mir::log_info("client_acquired %p", (void*)buffer);
     try
     {
         give_to_client_cb(buffer);
@@ -526,10 +515,7 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
-    bool ahead = client_ahead_of_compositor();
-    if (ahead)
-        mir::log_info("ahead");
-    if (!pending_client_notifications.empty() && !ahead)
+    if (!pending_client_notifications.empty() && !client_ahead_of_compositor())
     {
         framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, lock);
