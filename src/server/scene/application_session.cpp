@@ -103,8 +103,6 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
     {
         std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
         surfaces[id] = surf;
-        auto const bs_id = static_cast<mf::BufferStreamId>(next_id().as_value());
-        streams[bs_id] = surf->primary_buffer_stream();
     }
 
     session_listener->surface_created(*this, surf);
@@ -136,19 +134,43 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface(mf::SurfaceId id) c
 std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_ptr<ms::Surface> const& before) const
 {
     std::lock_guard<std::mutex> lock(surfaces_and_streams_mutex);
-    auto i = surfaces.begin();
-    for (; i != surfaces.end(); ++i)
+    auto current = surfaces.begin();
+    for (; current != surfaces.end(); ++current)
     {
-        if (i->second == before)
+        if (current->second == before)
             break;
     }
-    if (i == surfaces.end())
+
+    if (current == surfaces.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("surface_after: surface is not a member of this session"));
 
-    ++i;
-    if (i == surfaces.end())
-        i = surfaces.begin();
-    return i->second;
+    auto const can_take_focus = [](Surfaces::value_type const &s)
+        {
+            switch (s.second->type())
+            {
+            case mir_surface_type_normal:       /**< AKA "regular"                       */
+            case mir_surface_type_utility:      /**< AKA "floating"                      */
+            case mir_surface_type_dialog:
+            case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+            case mir_surface_type_freestyle:
+            case mir_surface_type_menu:
+            case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+                return true;
+
+            case mir_surface_type_gloss:
+            case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+            default:
+                // Cannot have input focus - skip it
+                return false;
+            }
+        };
+
+    auto next = std::find_if(++current, end(surfaces), can_take_focus);
+
+    if (next == surfaces.end())
+        next = std::find_if(begin(surfaces), current, can_take_focus);
+
+    return next->second;
 }
 
 void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
@@ -265,7 +287,7 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
 mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
 {
     auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
-    auto stream = buffer_stream_factory->create_buffer_stream(2, props);
+    auto stream = buffer_stream_factory->create_buffer_stream(props);
     stream->allow_framedropping(true);
     
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,24 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_SURFACE_H_
-#define MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_SURFACE_H_
+#ifndef MIR_TEST_DOUBLES_NESTED_MOCK_EGL_H_
+#define MIR_TEST_DOUBLES_NESTED_MOCK_EGL_H_
 
-#include "mir_test_framework/connected_client_headless_server.h"
+#include "mir_test_doubles/mock_egl.h"
 
-namespace mir_test_framework
+namespace mir
 {
-struct ConnectedClientWithASurface : ConnectedClientHeadlessServer
+namespace test
 {
-    MirSurface* surface{nullptr};
+namespace doubles
+{
+/// MockEGL with configuration for operating a nested server.    
+class NestedMockEGL : public ::testing::NiceMock<MockEGL>
+{
+public:
+    NestedMockEGL();
 
-    void SetUp() override;
-
-    void TearDown() override;
+private:
+    void egl_initialize(EGLint* major, EGLint* minor);
+    void egl_choose_config(EGLConfig* config, EGLint*  num_config);
 };
 }
+}
+}
 
-#endif /* MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_SURFACE_H_ */
+#endif /* MIR_TEST_DOUBLES_NESTED_MOCK_EGL_H_ */

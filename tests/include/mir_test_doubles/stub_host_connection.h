@@ -50,7 +50,9 @@ public:
     void apply_display_config(MirDisplayConfiguration&) override {}
 
     std::shared_ptr<graphics::nested::HostSurface>
-        create_surface(MirSurfaceParameters const&) override
+        create_surface(
+            int /*width*/, int /*height*/, MirPixelFormat /*pf*/, char const* /*name*/,
+            MirBufferUsage /*usage*/, uint32_t /*output_id*/) override
     {
         class NullHostSurface : public graphics::nested::HostSurface
         {

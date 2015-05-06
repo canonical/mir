@@ -214,16 +214,13 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
 
                         complete_display_initialization(egl_config_format);
 
-                        MirSurfaceParameters const request_params = {
-                            "Mir nested display",
+                        auto const host_surface = connection->create_surface(
                             area.size.width.as_int(),
                             area.size.height.as_int(),
                             egl_config_format,
+                            "Mir nested display",
                             mir_buffer_usage_hardware,
-                            static_cast<uint32_t>(output.id.as_value())
-                        };
-
-                        auto const host_surface = connection->create_surface(request_params);
+                            static_cast<uint32_t>(output.id.as_value()));
 
                         result[output.id] = std::make_shared<mgn::detail::DisplaySyncGroup>( 
                             std::make_shared<mgn::detail::DisplayBuffer>(

@@ -28,7 +28,7 @@ namespace me = mir::examples;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 
-///\example server_example_custom_display_buffer_compositor.cpp
+///\example server_example_custom_compositor.cpp
 /// Demonstrate writing an alternative GL rendering code
 
 namespace

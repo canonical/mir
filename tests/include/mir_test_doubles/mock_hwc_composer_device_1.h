@@ -52,7 +52,7 @@ public:
     static void hook_registerProcs(struct hwc_composer_device_1* mock_hwc, hwc_procs_t const* procs)
     {
         MockHWCComposerDevice1* mocker = static_cast<MockHWCComposerDevice1*>(mock_hwc);
-        return mocker->registerProcs_interface(mock_hwc, procs);
+        mocker->registerProcs_interface(mock_hwc, procs);
     }
     static int hook_eventControl(struct hwc_composer_device_1* mock_hwc, int disp, int event, int enabled)
     {

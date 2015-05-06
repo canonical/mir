@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,19 +16,20 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "null_input_dispatcher.h"
+#include "mir_test/event_matchers.h"
 
-namespace mi = mir::input;
+#include "mir/event_printer.h"
 
-void mi::NullInputDispatcher::dispatch(MirEvent const& /*event*/)
+void PrintTo(MirEvent const& event, std::ostream *os)
 {
+    using mir::operator<<;
+    *os << event;
 }
 
-void mi::NullInputDispatcher::start()
+void PrintTo(MirEvent const* event, std::ostream *os)
 {
+    if (event)
+        PrintTo(*event, os);
+    else
+        *os << "nullptr";
 }
-
-void mi::NullInputDispatcher::stop()
-{
-}
-

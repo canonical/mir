@@ -667,7 +667,7 @@ bool InputDispatcher::dispatchKeyLocked(std::chrono::nanoseconds currentTime, Ke
                 && (entry->policyFlags & POLICY_FLAG_TRUSTED)
                 && (!(entry->policyFlags & POLICY_FLAG_DISABLE_KEY_REPEAT))) {
             if (mKeyRepeatState.lastKeyEntry
-                    && mKeyRepeatState.lastKeyEntry->keyCode == entry->keyCode) {
+                    && mKeyRepeatState.lastKeyEntry->is_same_key(entry)) {
                 // We have seen two identical key downs in a row which indicates that the device
                 // driver is automatically generating key repeats itself.  We take note of the
                 // repeat here, but we disable our own next key repeat timer since it is clear that
@@ -3743,6 +3743,12 @@ void InputDispatcher::KeyEntry::recycle() {
     interceptKeyWakeupTime = std::chrono::nanoseconds(0);
 }
 
+bool InputDispatcher::KeyEntry::is_same_key(KeyEntry* other) const {
+    if (keyCode != 0)
+        return keyCode == other->keyCode;
+    else
+        return scanCode == other->scanCode;
+}
 
 // --- InputDispatcher::MotionEntry ---
 
