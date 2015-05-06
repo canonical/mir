@@ -21,6 +21,9 @@
 
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_device.h"
+
+#include <X11/Xlib.h>
+
 #include <memory>
 
 namespace mir
@@ -31,20 +34,20 @@ class Dispatchable;
 }
 namespace input
 {
-class InputSink;
 class InputDeviceInfo;
 
 namespace X
 {
+class XDispatchable;
 
 class XInputDevice : public input::InputDevice
 {
 public:
-    XInputDevice() = default;
+    XInputDevice();
     ~XInputDevice() = default;
 
     std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
-    void start(InputSink* destination) override;
+    void start(input::InputSink* destination) override;
     void stop() override;
     InputDeviceInfo get_device_info() override;
 
@@ -53,6 +56,8 @@ protected:
     XInputDevice& operator=(XInputDevice const&) = delete;
 
 private:
+    int fd;
+    std::shared_ptr<XDispatchable> x_dispatchable;
     input::InputDeviceInfo info;
 };
 

@@ -17,25 +17,81 @@
  */
 
 #include "X_dispatchable.h"
+#include "mir/events/event_private.h"
 #include "../../debug.h"
+
+#include <X11/Xlib.h>
 
 namespace mi = mir::input;
 namespace mix = mi::X;
+namespace md = mir::dispatch;
+
+extern ::Display *x_dpy;
+
+mix::XDispatchable::XDispatchable(int raw_fd) : fd(raw_fd), sink(nullptr)
+{
+    CALLED
+}
 
 mir::Fd mix::XDispatchable::watch_fd() const
 {
     CALLED
-    return mir::Fd{0};
+    return fd;
 }
 
-bool mix::XDispatchable::dispatch(dispatch::FdEvents /*events*/)
+bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
 {
     CALLED
-    return false;
+    XEvent xev;
+
+    XNextEvent(x_dpy, &xev);
+
+    if (sink)
+    {
+        if(xev.type == KeyPress)
+        {
+        	MirEvent event;
+
+            mir::log_info("Key pressed");
+
+            event.key.type = mir_event_type_key;
+            event.key.source_id = 0;
+            event.key.action = mir_key_action_down;
+            event.key.flags = static_cast<MirKeyFlag>(0);
+            event.key.modifiers = mir_key_modifier_none;
+            event.key.key_code = XKB_KEY_q;
+            event.key.scan_code = XKB_KEY_q;
+            event.key.repeat_count = 0;
+            event.key.down_time = 1234;
+            event.key.event_time = 12345;
+            event.key.is_system_key = 0;
+
+            sink->handle_input(event);
+        }
+    }
+    else
+    {
+        mir::log_info("input event detected with no sink to handle it");
+    }
+    return true;
 }
 
-mir::dispatch::FdEvents mix::XDispatchable::relevant_events() const
+md::FdEvents mix::XDispatchable::relevant_events() const
 {
     CALLED
-    return dispatch::FdEvent::readable;
+    return md::FdEvent::readable;
+}
+
+void mix::XDispatchable::set_input_sink(mi::InputSink *input_sink)
+{
+    CALLED
+
+    sink = input_sink;
+}
+
+void mix::XDispatchable::unset_input_sink()
+{
+    CALLED
+
+    sink = nullptr;
 }

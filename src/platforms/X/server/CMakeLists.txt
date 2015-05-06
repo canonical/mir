@@ -16,8 +16,7 @@ include_directories(
 # This is valid C99, but g++ 4.4 flags it as an error with -pedantic
 #string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 #add_definitions(-D__GBM__)
-add_definitions(-DDEBUG_SERVER=0)
-add_definitions(-DDEBUG_INPUT=1)
+add_definitions(-DDEBUG_SERVER=1)
 
 add_library(
   mirplatformserverXobjects OBJECT
@@ -39,7 +38,6 @@ add_library(
   input/X_input.cpp
   input/X_input_platform.cpp
   input/X_input_device.cpp
-  input/X_input_sink.cpp
   input/X_dispatchable.cpp
 )
 

@@ -20,6 +20,7 @@
 #define MIR_INPUT_X_DISPATCHABLE_H_
 
 #include "mir/dispatch/dispatchable.h"
+#include "mir/input/input_sink.h"
 
 namespace mir
 {
@@ -27,11 +28,10 @@ namespace input
 {
 namespace X
 {
-
 struct XDispatchable : public dispatch::Dispatchable
 {
 public:
-	XDispatchable() = default;
+	XDispatchable(int raw_fd);
 	~XDispatchable() = default;
 
     XDispatchable(XDispatchable const&) = delete;
@@ -40,6 +40,13 @@ public:
     mir::Fd watch_fd() const override;
     bool dispatch(dispatch::FdEvents events) override;
     dispatch::FdEvents relevant_events() const override;
+
+    void set_input_sink(input::InputSink *input_sink);
+    void unset_input_sink();
+
+private:
+    mir::Fd fd;
+    InputSink *sink;
 };
 
 }

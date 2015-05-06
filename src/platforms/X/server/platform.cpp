@@ -27,10 +27,7 @@ namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace mo = mir::options;
 
-namespace
-{
-Display *x_dpy = nullptr;
-}
+::Display *x_dpy = nullptr;
 
 __attribute__((constructor)) static void open_X_display()
 {
