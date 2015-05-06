@@ -644,11 +644,12 @@ void mir_surface_set_title(MirSurface* surface, char const* name);
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
 /**
- * \brief Request an ID for the surface that can be shared cross-process and across restarts.
+ * \brief Request an ID for the surface that can be shared cross-process and
+ *        across restarts.
  *
- * This call acquires a MirSurfaceId for this MirSurface. This MirSurfaceId can be serialised to
- * a string, stored or sent to another process, and then later deserialised to refer to the same
- * MirSurface.
+ * This call acquires a MirSurfaceId for this MirSurface. This MirSurfaceId
+ * can be serialised to a string, stored or sent to another process, and then
+ * later deserialised to refer to the same MirSurface.
  *
  * \param [in]     surface   The surface to acquire a persistent reference to.
  * \param [in]     callback  Callback to invoke when the request completes.
