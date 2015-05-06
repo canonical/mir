@@ -95,6 +95,7 @@ private:
     std::deque<Callback> pending_client_notifications;
 
     bool client_ahead_of_compositor() const;
+    graphics::Buffer* get_a_free_buffer();
 
     int nbuffers;
     int frame_deadlines_threshold;

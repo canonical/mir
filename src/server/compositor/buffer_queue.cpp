@@ -178,6 +178,25 @@ bool mc::BufferQueue::client_ahead_of_compositor() const
            frame_deadlines_met >= frame_deadlines_threshold;  // Is smooth
 }
 
+mg::Buffer* mc::BufferQueue::get_a_free_buffer()
+{
+    mg::Buffer* buf = nullptr;
+
+    if (!free_buffers.empty())
+    {
+        buf = free_buffers.back();
+        free_buffers.pop_back();
+    }
+    else if (int(buffers.size()) < nbuffers)
+    {
+        auto const& buffer = gralloc->alloc_buffer(the_properties);
+        buffers.push_back(buffer);
+        buf = buffer.get();
+    }
+
+    return buf;
+}
+
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
 {
     std::unique_lock<decltype(guard)> lock(guard);
@@ -192,20 +211,9 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
     if (client_ahead_of_compositor())
         return;
 
-    if (!free_buffers.empty())
+    if (auto buf = get_a_free_buffer())
     {
-        auto const buffer = free_buffers.back();
-        free_buffers.pop_back();
-        give_buffer_to_client(buffer, lock);
-        return;
-    }
-
-    int const allocated_buffers = buffers.size();
-    if (allocated_buffers < nbuffers)
-    {
-        auto const& buffer = gralloc->alloc_buffer(the_properties);
-        buffers.push_back(buffer);
-        give_buffer_to_client(buffer.get(), lock);
+        give_buffer_to_client(buf, lock);
         return;
     }
 
@@ -290,15 +298,14 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_compositor_buffer_valid = true;
 
 #if 0
-        if (!buffer_to_release &&
-            !client_ahead_of_compositor() &&
-            !free_buffers.empty())
-        {
-            // Client is about to get behind and potentially miss a frame, so
-            // try and prevent that by utilizing more than two buffers.
-            buffer_to_release = free_buffers.back();
-            free_buffers.pop_back();
-        }
+        /*
+         * If we just emptied the ready queue above and hold this compositor
+         * buffer for too long (e.g. bypass) then there's a chance the client
+         * would starve and miss a frame. Make sure that can't happen, by
+         * using more than double buffers...
+         */
+        if (!buffer_to_release && !client_ahead_of_compositor())
+            buffer_to_release = get_a_free_buffer();
 #endif
     }
     else if (current_buffer_users.empty())
