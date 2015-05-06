@@ -172,6 +172,25 @@ void throttled_compositor_thread(mc::BufferQueue &bundle,
    }
 }
 
+void overlapping_compositor_thread(mc::BufferQueue &bundle,
+                                   std::atomic<bool> &done)
+{
+   std::shared_ptr<mg::Buffer> b[2];
+   int i = 0;
+
+   b[0] = bundle.compositor_acquire(nullptr);
+   while (!done)
+   {
+       b[i^1] = bundle.compositor_acquire(nullptr);
+       bundle.compositor_release(b[i]);
+       std::this_thread::sleep_for(throttled_compositor_rate);
+       i ^= 1;
+   }
+
+   if (b[i])
+       bundle.compositor_release(b[i]);
+}
+
 void snapshot_thread(mc::BufferQueue &bundle,
                       std::atomic<bool> &done)
 {
@@ -1688,6 +1707,41 @@ TEST_F(BufferQueueTest, queue_size_scales_with_client_performance)
         }
         // Expect double-buffers for fast clients
         EXPECT_THAT(buffers_acquired.size(), Eq(2));
+    }
+}
+
+TEST_F(BufferQueueTest, greedy_compositors_need_triple_buffers)
+{
+    /*
+     * "Greedy" compositors means those that can hold multiple buffers from
+     * the same client simultaneously or a single buffer for a long time.
+     * This usually means bypass/overlays, but can also mean multi-monitor.
+     */
+    for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
+        q.allow_framedropping(false);
+
+        std::atomic<bool> done(false);
+        auto unblock = [&done] { done = true; };
+
+        mt::AutoUnblockThread compositor(unblock,
+           overlapping_compositor_thread, std::ref(q), std::ref(done));
+
+        std::unordered_set<mg::Buffer *> buffers_acquired;
+
+        for (int frame = 0; frame < 100; frame++)
+        {
+            auto handle = client_acquire_async(q);
+            handle->wait_for(std::chrono::seconds(1));
+            ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+
+            if (frame > 50)
+                buffers_acquired.insert(handle->buffer());
+            handle->release_buffer();
+        }
+        // Expect triple buffers for the whole time
+        EXPECT_THAT(buffers_acquired.size(), Ge(3));
     }
 }
 
