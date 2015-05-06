@@ -115,7 +115,7 @@ typedef struct
     int action;
     MirInputEventModifiers modifiers;
 
-    bool button_state[mir_pointer_button_forward];
+    bool button_state[mir_pointer_button_forward + 1];
     std::chrono::nanoseconds event_time;
 
     size_t pointer_count;

@@ -68,11 +68,11 @@ typedef enum {
  * Identifiers for pointer buttons
  */
 typedef enum {
-    mir_pointer_button_primary   = 1,
-    mir_pointer_button_secondary = 2,
-    mir_pointer_button_tertiary  = 3,
-    mir_pointer_button_back      = 4,
-    mir_pointer_button_forward   = 5
+    mir_pointer_button_primary   = 0,
+    mir_pointer_button_secondary = 1,
+    mir_pointer_button_tertiary  = 2,
+    mir_pointer_button_back      = 3,
+    mir_pointer_button_forward   = 4
 } MirPointerButton;
 
 /**
