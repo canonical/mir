@@ -26,7 +26,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/compositor/compositor.h"
-#include "mir/events/event_private.h"
 
 #include <linux/input.h>
 
