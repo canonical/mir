@@ -650,39 +650,39 @@ void mir_surface_set_title(MirSurface* surface, char const* name)
     mir_surface_spec_release(spec);
 }
 
-MirWaitHandle* mir_surface_request_reference(MirSurface* surface, mir_surface_reference_callback callback, void* context)
+MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
 {
     mir::require(mir_surface_is_valid(surface));
 
-    return surface->request_reference(callback, context);
+    return surface->request_persistent_id(callback, context);
 }
 
 namespace
 {
-void assign_surface_id_result(MirSurface*, MirReference* id, void* context)
+void assign_surface_id_result(MirSurface*, MirSurfaceId* id, void* context)
 {
     void** result_ptr = reinterpret_cast<void**>(context);
     *result_ptr = id;
 }
 }
 
-MirReference* mir_surface_request_reference_sync(MirSurface* surface)
+MirSurfaceId* mir_surface_request_persistent_id_sync(MirSurface* surface)
 {
     mir::require(mir_surface_is_valid(surface));
 
-    MirReference* result = nullptr;
-    mir_wait_for(mir_surface_request_reference(surface,
-                                               &assign_surface_id_result,
-                                               &result));
+    MirSurfaceId* result = nullptr;
+    mir_wait_for(mir_surface_request_persistent_id(surface,
+                                                   &assign_surface_id_result,
+                                                   &result));
     return result;
 }
 
-bool mir_reference_is_valid(MirReference* id)
+bool mir_surface_id_is_valid(MirSurfaceId* id)
 {
     return id != nullptr;
 }
 
-void mir_reference_release(MirReference* id)
+void mir_surface_id_release(MirSurfaceId* id)
 {
     delete id;
 }

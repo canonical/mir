@@ -904,10 +904,10 @@ void mf::SessionMediator::stop_prompt_session(
     done->Run();
 }
 
-void mf::SessionMediator::request_surface_reference(
+void mf::SessionMediator::request_persistent_surface_id(
     ::google::protobuf::RpcController*,
     mir::protobuf::SurfaceId const* request,
-    mir::protobuf::SurfaceReference* response,
+    mir::protobuf::PersistentSurfaceId* response,
     google::protobuf::Closure* done)
 {
     auto const session = weak_session.lock();

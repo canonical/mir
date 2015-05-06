@@ -65,7 +65,7 @@ message SurfaceId {
   required int32 value = 1;
 };
 
-message SurfaceReference {
+message PersistentSurfaceId {
   optional string value = 1;
 
   optional string error = 127;
@@ -284,7 +284,7 @@ service DisplayServer {
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
   rpc modify_surface(SurfaceModifications) returns (Void);
-  rpc request_surface_reference(SurfaceId) returns (SurfaceReference);
+  rpc request_persistent_surface_id(SurfaceId) returns (PersistentSurfaceId);
   rpc next_buffer(SurfaceId) returns (Buffer);
   rpc release_surface(SurfaceId) returns (Void);
 

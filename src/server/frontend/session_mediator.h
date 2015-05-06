@@ -200,10 +200,10 @@ public:
         ::mir::protobuf::CoordinateTranslationResponse* response,
         ::google::protobuf::Closure *done) override;
 
-    void request_surface_reference(
+    void request_persistent_surface_id(
         ::google::protobuf::RpcController* controller,
         ::mir::protobuf::SurfaceId const* request,
-        ::mir::protobuf::SurfaceReference* response,
+        ::mir::protobuf::PersistentSurfaceId* response,
         ::google::protobuf::Closure* done) override;
 
 private:
