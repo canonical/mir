@@ -542,6 +542,10 @@ bool me::WindowManager::handle_touch_event(MirTouchEvent const* tev)
 
             handled = true;
         }
+
+        old_pos = surf->top_left();
+        old_size = surf->size();
+        old_pinch_diam = pinch_diam;
     }
 
     auto gesture_ended = last_touch_released(tev);
