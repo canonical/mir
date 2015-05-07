@@ -38,7 +38,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     const int32_t flags = 4;
     const int32_t key_code = 5;
     const int32_t scan_code = 6;
-    const int32_t meta_state = 7;
+    const int32_t meta_state = AMETA_ALT_ON;
     const int32_t repeat_count = 8;
     auto const down_time = std::chrono::nanoseconds(9);
     auto const event_time = std::chrono::nanoseconds(10);
@@ -54,7 +54,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(device_id, mir_ev.key.device_id);
     EXPECT_EQ(source_id, mir_ev.key.source_id);
     EXPECT_EQ(action, mir_ev.key.action);
-    EXPECT_EQ((unsigned int)meta_state, mir_ev.key.modifiers);
+    EXPECT_EQ(mir_input_event_modifier_alt, mir_ev.key.modifiers);
 
     auto mir_key_ev = &mir_ev.key;
     // Key event specific properties
@@ -129,7 +129,6 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     EXPECT_EQ(device_id, mir_ev.motion.device_id);
     EXPECT_EQ(source_id, mir_ev.motion.source_id);
     EXPECT_EQ(action, mir_ev.motion.action);
-    EXPECT_EQ((unsigned int)meta_state, mir_ev.motion.modifiers);
 
     // Motion event specific properties
     EXPECT_EQ(mir_ev.type, mir_event_type_motion);
@@ -237,7 +236,6 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     EXPECT_EQ(device_id, mir_ev.motion.device_id);
     EXPECT_EQ(source_id, mir_ev.motion.source_id);
     EXPECT_EQ(action, mir_ev.motion.action);
-    EXPECT_EQ((unsigned int)meta_state, mir_ev.motion.modifiers);
 
     // Motion event specific properties
     EXPECT_EQ(mir_ev.type, mir_event_type_motion);
