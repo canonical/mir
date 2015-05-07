@@ -102,36 +102,6 @@ TEST_F(InputTranslator, notifies_device_reset)
     translator.notifyDeviceReset(&reset);
 }
 
-TEST_F(InputTranslator, ignores_invalid_motion_action)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(dispatcher, dispatch(_)).Times(0);
-
-    const int32_t invalid_motion_action = 20;
-
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, 0, invalid_motion_action,
-                                        no_flags, meta_state, button_state, edge_flags, zero_pointers, properties,
-                                        coords, x_precision, y_precision, later_time);
-
-    translator.notifyMotion(&motion);
-}
-
-TEST_F(InputTranslator, ignores_motion_action_with_wrong_index)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(dispatcher, dispatch(_)).Times(0);
-
-    const int32_t invalid_motion_action = mir_motion_action_pointer_up | (3 << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
-
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, 0, invalid_motion_action,
-                                        no_flags, meta_state, button_state, edge_flags, zero_pointers, properties,
-                                        coords, x_precision, y_precision, later_time);
-
-    translator.notifyMotion(&motion);
-}
-
 TEST_F(InputTranslator, accepts_motion_action_with_existing_index)
 {
     using namespace ::testing;
@@ -232,7 +202,7 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
     expected.type = mir_event_type_key;
     expected.key.event_time = std::chrono::nanoseconds(1);
     expected.key.device_id = 2;
-    expected.key.source_id = 3;
+    expected.key.source_id = AINPUT_SOURCE_KEYBOARD;
     expected.key.action = mir_keyboard_action_down;
     expected.key.scan_code = 4;
     expected.key.key_code = 5;

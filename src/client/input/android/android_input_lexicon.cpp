@@ -95,7 +95,7 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
                 {
                     auto action = (i == index_with_action) ? mia::mir_touch_action_from_masked_android(masked_action) :
                         mir_touch_action_change;
-                    mev::add_touch(*ev, i, action, mia::mir_tool_type_from_android(mev->getToolType(i)),
+                    mev::add_touch(*ev, mev->getPointerId(i), action, mia::mir_tool_type_from_android(mev->getToolType(i)),
                               mev->getX(i), mev->getY(i),
                               mev->getPressure(i), mev->getTouchMajor(i), mev->getTouchMinor(i),
                               mev->getSize(i));
