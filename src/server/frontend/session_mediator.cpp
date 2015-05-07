@@ -126,10 +126,7 @@ void mf::SessionMediator::connect(
     report->session_connect_called(request->application_name());
 
     auto const session = shell->open_session(client_pid_, request->application_name(), event_sink);
-    {
-        std::lock_guard<std::mutex> lock(session_mutex);
-        weak_session = session;
-    }
+    weak_session = session;
     connection_context.handle_client_connect(session);
 
     auto ipc_package = ipc_operations->connection_ipc_package();
@@ -157,25 +154,12 @@ void mf::SessionMediator::advance_buffer(
     BufferStreamId stream_id,
     BufferStream& stream,
     graphics::Buffer* old_buffer,
-    std::unique_lock<std::mutex>& lock,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto const tid = std::make_shared<std::thread::id>(std::this_thread::get_id());
-    auto const weak_tid = std::weak_ptr<std::thread::id>{tid};
-
     stream.swap_buffers(
         old_buffer,
-        // Note: We assume that the lambda will be executed within swap_buffers
-        // (in which case the lock reference is valid) or in a different thread
-        // altogether (in which case the dangling reference is not accessed)
-        [this, weak_tid, &lock, stream_id, complete](mg::Buffer* new_buffer)
+        [this, stream_id, complete](mg::Buffer* new_buffer)
         {
-            if (auto const tid = weak_tid.lock())
-            {
-                if (*tid == std::this_thread::get_id())
-                    lock.unlock();
-            }
-
             if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
@@ -189,9 +173,6 @@ void mf::SessionMediator::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-
-    std::unique_lock<std::mutex> lock{session_mutex};
-
     auto const session = weak_session.lock();
 
     if (session.get() == nullptr)
@@ -281,7 +262,7 @@ void mf::SessionMediator::create_surface(
 
 
     auto stream_id = mf::BufferStreamId(surf_id.as_value());
-    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id), lock,
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id),
         [this, surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -303,8 +284,6 @@ void mf::SessionMediator::next_buffer(
 {
     SurfaceId const surf_id{request->value()};
 
-    std::unique_lock<std::mutex> lock{session_mutex};
-
     auto const session = weak_session.lock();
 
     if (session.get() == nullptr)
@@ -315,7 +294,7 @@ void mf::SessionMediator::next_buffer(
     auto surface = session->get_surface(surf_id);
     auto stream_id = mf::BufferStreamId{surf_id.as_value()};
 
-    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id), lock,
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id),
         [this, response, done]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -337,7 +316,6 @@ void mf::SessionMediator::exchange_buffer(
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
     ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
 
-    std::unique_lock<std::mutex> lock{session_mutex};
     auto const session = weak_session.lock();
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
@@ -345,7 +323,7 @@ void mf::SessionMediator::exchange_buffer(
     report->session_exchange_buffer_called(session->name());
 
     auto const& surface = session->get_buffer_stream(stream_id);
-    advance_buffer(stream_id, *surface, buffer_stream_tracker.buffer_from(buffer_id), lock,
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.buffer_from(buffer_id),
         [this, response, done]
         (graphics::Buffer* new_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -360,21 +338,17 @@ void mf::SessionMediator::release_surface(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
+    auto session = weak_session.lock();
 
-        auto session = weak_session.lock();
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    report->session_release_surface_called(session->name());
 
-        report->session_release_surface_called(session->name());
+    auto const id = SurfaceId(request->value());
 
-        auto const id = SurfaceId(request->value());
-
-        shell->destroy_surface(session, id);
-        buffer_stream_tracker.remove_buffer_stream(BufferStreamId(request->value()));
-    }
+    shell->destroy_surface(session, id);
+    buffer_stream_tracker.remove_buffer_stream(BufferStreamId(request->value()));
 
     // TODO: We rely on this sending responses synchronously.
     done->Run();
@@ -386,19 +360,15 @@ void mf::SessionMediator::disconnect(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
+    auto session = weak_session.lock();
 
-        auto session = weak_session.lock();
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    report->session_disconnect_called(session->name());
 
-        report->session_disconnect_called(session->name());
-
-        shell->close_session(session);
-        weak_session.reset();
-    }
+    shell->close_session(session);
+    weak_session.reset();
 
     done->Run();
 }
@@ -415,22 +385,18 @@ void mf::SessionMediator::configure_surface(
     response->mutable_surfaceid()->CopyFrom(request->surfaceid());
     response->set_attrib(attrib);
 
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
+    auto session = weak_session.lock();
 
-        auto session = weak_session.lock();
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    report->session_configure_surface_called(session->name());
 
-        report->session_configure_surface_called(session->name());
+    auto const id = mf::SurfaceId(request->surfaceid().value());
+    int value = request->ivalue();
+    int newvalue = shell->set_surface_attribute(session, id, attrib, value);
 
-        auto const id = mf::SurfaceId(request->surfaceid().value());
-        int value = request->ivalue();
-        int newvalue = shell->set_surface_attribute(session, id, attrib, value);
-
-        response->set_ivalue(newvalue);
-    }
+    response->set_ivalue(newvalue);
 
     done->Run();
 }
@@ -443,66 +409,62 @@ void mf::SessionMediator::modify_surface(
 {
     auto const& surface_specification = request->surface_specification();
 
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    msh::SurfaceSpecification mods;
+
+#define COPY_IF_SET(name)\
+    if (surface_specification.has_##name())\
+    mods.name = decltype(mods.name.value())(surface_specification.name())
+
+    COPY_IF_SET(width);
+    COPY_IF_SET(height);
+    COPY_IF_SET(pixel_format);
+    COPY_IF_SET(buffer_usage);
+    COPY_IF_SET(name);
+    COPY_IF_SET(output_id);
+    COPY_IF_SET(type);
+    COPY_IF_SET(state);
+    COPY_IF_SET(preferred_orientation);
+    COPY_IF_SET(parent_id);
+    // aux_rect is a special case (below)
+    COPY_IF_SET(edge_attachment);
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+    COPY_IF_SET(width_inc);
+    COPY_IF_SET(height_inc);
+    // min_aspect is a special case (below)
+    // max_aspect is a special case (below)
+
+#undef COPY_IF_SET
+
+    if (surface_specification.has_aux_rect())
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-
-        auto const session = weak_session.lock();
-        if (!session)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-        msh::SurfaceSpecification mods;
-
-        #define COPY_IF_SET(name)\
-            if (surface_specification.has_##name())\
-                mods.name = decltype(mods.name.value())(surface_specification.name())
-
-        COPY_IF_SET(width);
-        COPY_IF_SET(height);
-        COPY_IF_SET(pixel_format);
-        COPY_IF_SET(buffer_usage);
-        COPY_IF_SET(name);
-        COPY_IF_SET(output_id);
-        COPY_IF_SET(type);
-        COPY_IF_SET(state);
-        COPY_IF_SET(preferred_orientation);
-        COPY_IF_SET(parent_id);
-        // aux_rect is a special case (below)
-        COPY_IF_SET(edge_attachment);
-        COPY_IF_SET(min_width);
-        COPY_IF_SET(min_height);
-        COPY_IF_SET(max_width);
-        COPY_IF_SET(max_height);
-        COPY_IF_SET(width_inc);
-        COPY_IF_SET(height_inc);
-        // min_aspect is a special case (below)
-        // max_aspect is a special case (below)
-
-        #undef COPY_IF_SET
-
-        if (surface_specification.has_aux_rect())
-        {
-            auto const& rect = surface_specification.aux_rect();
-            mods.aux_rect = {{rect.left(), rect.top()}, {rect.width(), rect.height()}};
-        }
-
-        if (surface_specification.has_min_aspect())
-            mods.min_aspect =
-                {
-                    surface_specification.min_aspect().width(),
-                    surface_specification.min_aspect().height()
-                };
-
-        if (surface_specification.has_max_aspect())
-            mods.max_aspect =
-                {
-                    surface_specification.max_aspect().width(),
-                    surface_specification.max_aspect().height()
-                };
-
-        auto const id = mf::SurfaceId(request->surface_id().value());
-
-        shell->modify_surface(session, id, mods);
+        auto const& rect = surface_specification.aux_rect();
+        mods.aux_rect = {{rect.left(), rect.top()}, {rect.width(), rect.height()}};
     }
+
+    if (surface_specification.has_min_aspect())
+        mods.min_aspect =
+        {
+            surface_specification.min_aspect().width(),
+            surface_specification.min_aspect().height()
+        };
+
+    if (surface_specification.has_max_aspect())
+        mods.max_aspect =
+        {
+            surface_specification.max_aspect().width(),
+            surface_specification.max_aspect().height()
+        };
+
+    auto const id = mf::SurfaceId(request->surface_id().value());
+
+    shell->modify_surface(session, id, mods);
 
     done->Run();
 }
@@ -513,43 +475,41 @@ void mf::SessionMediator::configure_display(
     ::mir::protobuf::DisplayConfiguration* response,
     ::google::protobuf::Closure* done)
 {
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
-        auto session = weak_session.lock();
+    auto session = weak_session.lock();
 
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        report->session_configure_display_called(session->name());
+    report->session_configure_display_called(session->name());
 
-        auto config = display_changer->active_configuration();
+    auto config = display_changer->active_configuration();
 
-        config->for_each_output([&](mg::UserDisplayConfigurationOutput& dest){
-            unsigned id = dest.id.as_value();
-            int n = 0;
-            for (; n < request->display_output_size(); ++n)
-            {
-                if (request->display_output(n).output_id() == id)
-                    break;
-            }
-            if (n >= request->display_output_size())
-                return;
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput& dest){
+        unsigned id = dest.id.as_value();
+        int n = 0;
+        for (; n < request->display_output_size(); ++n)
+        {
+            if (request->display_output(n).output_id() == id)
+                break;
+        }
+        if (n >= request->display_output_size())
+            return;
 
-            auto& src = request->display_output(n);
-            dest.used = src.used();
-            dest.top_left = geom::Point{src.position_x(),
-                                        src.position_y()};
-            dest.current_mode_index = src.current_mode();
-            dest.current_format =
+        auto& src = request->display_output(n);
+        dest.used = src.used();
+        dest.top_left = geom::Point{src.position_x(),
+                src.position_y()};
+        dest.current_mode_index = src.current_mode();
+        dest.current_format =
                 static_cast<MirPixelFormat>(src.current_format());
-            dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
-            dest.orientation = static_cast<MirOrientation>(src.orientation());
-        });
+        dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
+        dest.orientation = static_cast<MirOrientation>(src.orientation());
+    });
 
-        display_changer->configure(session, config);
-        auto display_config = display_changer->active_configuration();
-        mfd::pack_protobuf_display_configuration(*response, *display_config);
-    }
+    display_changer->configure(session, config);
+    auto display_config = display_changer->active_configuration();
+    mfd::pack_protobuf_display_configuration(*response, *display_config);
+
     done->Run();
 }
 
@@ -619,8 +579,6 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
     mir::protobuf::BufferStream* response,
     google::protobuf::Closure* done)
 {
-    auto lock = std::unique_lock<std::mutex>(session_mutex);
-
     auto const session = weak_session.lock();
 
     if (session.get() == nullptr)
@@ -645,7 +603,7 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
     // TODO: Is it guaranteed we get the buffer usage we want?
     response->set_buffer_usage(request->buffer_usage());
 
-    advance_buffer(buffer_stream_id, *stream, buffer_stream_tracker.last_buffer(buffer_stream_id), lock,
+    advance_buffer(buffer_stream_id, *stream, buffer_stream_tracker.last_buffer(buffer_stream_id),
         [this, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -661,21 +619,17 @@ void mf::SessionMediator::release_buffer_stream(google::protobuf::RpcController*
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
+    auto session = weak_session.lock();
 
-        auto session = weak_session.lock();
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    report->session_create_surface_called(session->name());
 
-        report->session_create_surface_called(session->name());
+    auto const id = BufferStreamId(request->value());
 
-        auto const id = BufferStreamId(request->value());
-
-        session->destroy_buffer_stream(id);
-        buffer_stream_tracker.remove_buffer_stream(id);
-    }
+    session->destroy_buffer_stream(id);
+    buffer_stream_tracker.remove_buffer_stream(id);
 
     done->Run();
 }
@@ -708,39 +662,36 @@ void mf::SessionMediator::configure_cursor(
     mir::protobuf::Void* /* void_response */,
     google::protobuf::Closure* done)
 {
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    report->session_configure_surface_cursor_called(session->name());
+
+    auto const id = mf::SurfaceId(cursor_request->surfaceid().value());
+    auto const surface = session->get_surface(id);
+
+    if (cursor_request->has_name())
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-
-        auto session = weak_session.lock();
-
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-        report->session_configure_surface_cursor_called(session->name());
-
-        auto const id = mf::SurfaceId(cursor_request->surfaceid().value());
-        auto const surface = session->get_surface(id);
-
-        if (cursor_request->has_name())
-        {
-            auto const& image = cursor_images->image(cursor_request->name(), mi::default_cursor_size);
-            surface->set_cursor_image(image);
-        } 
-        else if (cursor_request->has_buffer_stream())
-        {
-            auto const& stream_id = mf::BufferStreamId(cursor_request->buffer_stream().value());
-            auto hotspot = geom::Displacement{cursor_request->hotspot_x(), cursor_request->hotspot_y()};
-            auto stream = session->get_buffer_stream(stream_id);
-
-            throw_if_unsuitable_for_cursor(*stream);
-
-            surface->set_cursor_stream(stream, hotspot);
-        } 
-        else
-        {
-            surface->set_cursor_image({});
-        }
+        auto const& image = cursor_images->image(cursor_request->name(), mi::default_cursor_size);
+        surface->set_cursor_image(image);
     }
+    else if (cursor_request->has_buffer_stream())
+    {
+        auto const& stream_id = mf::BufferStreamId(cursor_request->buffer_stream().value());
+        auto hotspot = geom::Displacement{cursor_request->hotspot_x(), cursor_request->hotspot_y()};
+        auto stream = session->get_buffer_stream(stream_id);
+
+        throw_if_unsuitable_for_cursor(*stream);
+
+        surface->set_cursor_stream(stream, hotspot);
+    }
+    else
+    {
+        surface->set_cursor_image({});
+    }
+
     done->Run();
 }
 
@@ -750,27 +701,24 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
     ::mir::protobuf::SocketFD* response,
     ::google::protobuf::Closure* done)
 {
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto const connect_handler = prompt_session_connect_handler();
+
+    auto const fds_requested = parameters->number();
+
+    // < 1 is illogical, > 42 is unreasonable
+    if (fds_requested < 1 || fds_requested > 42)
+        BOOST_THROW_EXCEPTION(std::runtime_error("number of fds requested out of range"));
+
+    for (auto i  = 0; i != fds_requested; ++i)
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-        auto session = weak_session.lock();
-
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-        auto const connect_handler = prompt_session_connect_handler();
-
-        auto const fds_requested = parameters->number();
-
-        // < 1 is illogical, > 42 is unreasonable
-        if (fds_requested < 1 || fds_requested > 42)
-            BOOST_THROW_EXCEPTION(std::runtime_error("number of fds requested out of range"));
-
-        for (auto i  = 0; i != fds_requested; ++i)
-        {
-            auto const fd = connection_context.fd_for_new_client(connect_handler);
-            response->add_fd(fd);
-            resource_cache->save_fd(response, mir::Fd{fd});
-        }
+        auto const fd = connection_context.fd_for_new_client(connect_handler);
+        response->add_fd(fd);
+        resource_cache->save_fd(response, mir::Fd{fd});
     }
 
     done->Run();
@@ -782,23 +730,20 @@ void mf::SessionMediator::translate_surface_to_screen(
     ::mir::protobuf::CoordinateTranslationResponse* response,
     ::google::protobuf::Closure *done)
 {
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
+    auto session = weak_session.lock();
 
-        auto session = weak_session.lock();
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    auto const id = mf::SurfaceId(request->surfaceid().value());
 
-        auto const id = mf::SurfaceId(request->surfaceid().value());
+    auto const coords = translator->surface_to_screen(session->get_surface(id),
+                                                      request->x(),
+                                                      request->y());
 
-        auto const coords = translator->surface_to_screen(session->get_surface(id),
-                                                          request->x(),
-                                                          request->y());
+    response->set_x(coords.x.as_uint32_t());
+    response->set_y(coords.y.as_uint32_t());
 
-        response->set_x(coords.x.as_uint32_t());
-        response->set_y(coords.y.as_uint32_t());
-    }
     done->Run();
 }
 
@@ -808,15 +753,12 @@ void mf::SessionMediator::drm_auth_magic(
     mir::protobuf::DRMAuthMagicStatus* response,
     google::protobuf::Closure* done)
 {
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
-        auto session = weak_session.lock();
+    auto session = weak_session.lock();
 
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        report->session_drm_auth_magic_called(session->name());
-    }
+    report->session_drm_auth_magic_called(session->name());
 
     auto const magic = request->magic();
 
@@ -842,13 +784,10 @@ void mf::SessionMediator::platform_operation(
     mir::protobuf::PlatformOperationMessage* response,
     google::protobuf::Closure* done)
 {
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
-        auto session = weak_session.lock();
+    auto session = weak_session.lock();
 
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-    }
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     mg::PlatformOperationMessage platform_request;
     unsigned int const opcode = request->opcode();
@@ -877,23 +816,21 @@ void mf::SessionMediator::start_prompt_session(
     ::mir::protobuf::Void* /*response*/,
     ::google::protobuf::Closure* done)
 {
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
-        auto const session = weak_session.lock();
+    auto const session = weak_session.lock();
 
-        if (!session)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        if (weak_prompt_session.lock())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another prompt session"));
+    if (weak_prompt_session.lock())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another prompt session"));
 
-        ms::PromptSessionCreationParameters parameters;
-        parameters.application_pid = request->application_pid();
+    ms::PromptSessionCreationParameters parameters;
+    parameters.application_pid = request->application_pid();
 
-        report->session_start_prompt_session_called(session->name(), parameters.application_pid);
+    report->session_start_prompt_session_called(session->name(), parameters.application_pid);
 
-        weak_prompt_session = shell->start_prompt_session_for(session, parameters);
-    }
+    weak_prompt_session = shell->start_prompt_session_for(session, parameters);
+
     done->Run();
 }
 
@@ -903,24 +840,22 @@ void mf::SessionMediator::stop_prompt_session(
     ::mir::protobuf::Void*,
     ::google::protobuf::Closure* done)
 {
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
-        auto const session = weak_session.lock();
+    auto const session = weak_session.lock();
 
-        if (!session)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        auto const prompt_session = weak_prompt_session.lock();
+    auto const prompt_session = weak_prompt_session.lock();
 
-        if (!prompt_session)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
+    if (!prompt_session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
 
-        weak_prompt_session.reset();
+    weak_prompt_session.reset();
 
-        report->session_stop_prompt_session_called(session->name());
+    report->session_stop_prompt_session_called(session->name());
 
-        shell->stop_prompt_session(prompt_session);
-    }
+    shell->stop_prompt_session(prompt_session);
+
     done->Run();
 }
 
