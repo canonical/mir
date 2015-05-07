@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_event_filter.h"
 
 #include <androidfw/Input.h>
+#include <string.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -37,6 +38,7 @@ TEST(EventFilterDispatcherPolicy, offers_key_events_to_filter)
 {
     using namespace ::testing;
     droidinput::KeyEvent ev;
+    ev.initialize(0, 0, 0, 0, 0, 0, 0, 0, std::chrono::nanoseconds(0), std::chrono::nanoseconds(0));
     mtd::MockEventFilter filter;
     mia::EventFilterDispatcherPolicy policy(mt::fake_shared(filter), true);
     uint32_t policy_flags;
