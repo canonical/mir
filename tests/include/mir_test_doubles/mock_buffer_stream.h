@@ -49,6 +49,8 @@ struct MockBufferStream : public compositor::BufferStream
             .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
         ON_CALL(*this, acquire_client_buffer(testing::_))
             .WillByDefault(testing::InvokeArgument<0>(nullptr));
+        ON_CALL(*this, swap_buffers(testing::_, testing::_))
+            .WillByDefault(testing::InvokeArgument<1>(nullptr));
     }
     MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));
     MOCK_METHOD1(release_client_buffer, void(graphics::Buffer*));
