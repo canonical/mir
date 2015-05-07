@@ -261,6 +261,8 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     case mir_pointer_button_forward:
         mev.button_state[mir_pointer_button_forward] = true;
         break;
+    default:
+        break;
     }
     }
 
