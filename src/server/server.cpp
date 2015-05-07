@@ -62,6 +62,7 @@ namespace mo = mir::options;
     MACRO(shell)
 
 #define FOREACH_ACCESSOR(MACRO)\
+    MACRO(the_buffer_stream_factory)\
     MACRO(the_compositor)\
     MACRO(the_composite_event_filter)\
     MACRO(the_cursor_listener)\
@@ -77,6 +78,7 @@ namespace mo = mir::options;
     MACRO(the_session_authorizer)\
     MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
+    MACRO(the_surface_factory)\
     MACRO(the_prompt_session_manager)\
     MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
