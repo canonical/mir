@@ -21,6 +21,7 @@
 #include "input_sender.h"
 #include "input_send_entry.h"
 
+#include "mir/input/android/event_conversion_helpers.h"
 #include "mir/input/input_send_observer.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_report.h"
@@ -244,7 +245,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
         0, /* Flags */
         event.key_code,
         event.scan_code,
-        event.modifiers,
+        mia::android_modifiers_from_mir(event.modifiers),
         event.repeat_count,
         std::chrono::nanoseconds(event.event_time),
         std::chrono::nanoseconds(event.event_time)
@@ -284,7 +285,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_motion_event(uint32_
         event.action,
         0, /* flags */
         0, /* edge flags */
-        static_cast<int32_t>(event.modifiers),
+        mia::android_modifiers_from_mir(event.modifiers),
         static_cast<int32_t>(event.button_state),
         0.0f,  // event.x_offset,
         0.0f,  // event.y_offset,

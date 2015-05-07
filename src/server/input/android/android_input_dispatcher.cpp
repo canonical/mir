@@ -21,6 +21,7 @@
 #include "android_input_constants.h"
 #include "android_input_thread.h"
 
+#include "mir/input/android/event_conversion_helpers.h"
 #include "mir/events/event_private.h"
 
 #include <InputListener.h> // NotifyArgs
@@ -63,7 +64,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             0, /* flags */
             event.key.key_code,
             event.key.scan_code,
-            event.key.modifiers,
+            mia::android_modifiers_from_mir(event.key.modifiers),
             std::chrono::nanoseconds(event.key.event_time));
 
         dispatcher->notifyKey(&notify_key_args);
@@ -99,7 +100,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             policy_flags,
             event.motion.action,
             0, /* flags */
-            event.motion.modifiers,
+            mia::android_modifiers_from_mir(event.motion.modifiers),
             event.motion.button_state,
             0, /* edge_flags */
             event.motion.pointer_count,
