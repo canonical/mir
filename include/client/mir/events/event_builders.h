@@ -16,8 +16,6 @@
  * Author: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #ifndef MIR_EVENT_BUILDERS_H_
 #define MIR_EVENT_BUILDERS_H_
 

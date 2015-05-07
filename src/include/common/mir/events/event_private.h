@@ -22,14 +22,17 @@
 //
 // ==================================
 
-#ifndef MIR_TOOLKIT_EVENT_DEPRECATED_H_
-#define MIR_TOOLKIT_EVENT_DEPRECATED_H_
+#ifndef MIR_COMMON_EVENT_PRIVATE_H_
+#define MIR_COMMON_EVENT_PRIVATE_H_
 
 #include <stddef.h>
 #include <stdint.h>
+#include "mir_toolkit/event.h"
 #include "mir_toolkit/common.h"
 
 #include <xkbcommon/xkbcommon.h>
+
+#include <chrono>
 
 #ifdef __cplusplus
 /**
@@ -50,41 +53,6 @@ typedef enum {
 } MirKeyAction;
 
 typedef enum {
-    mir_key_flag_woke_here           = 0x1,
-    mir_key_flag_soft_keyboard       = 0x2,
-    mir_key_flag_keep_touch_mode     = 0x4,
-    mir_key_flag_from_system         = 0x8,
-    mir_key_flag_editor_action       = 0x10,
-    mir_key_flag_canceled            = 0x20,
-    mir_key_flag_virtual_hard_key    = 0x40,
-    mir_key_flag_long_press          = 0x80,
-    mir_key_flag_canceled_long_press = 0x100,
-    mir_key_flag_tracking            = 0x200,
-    mir_key_flag_fallback            = 0x400
-} MirKeyFlag;
-
-typedef enum {
-    mir_key_modifier_none        = 0,
-    mir_key_modifier_alt         = 0x02,
-    mir_key_modifier_alt_left    = 0x10,
-    mir_key_modifier_alt_right   = 0x20,
-    mir_key_modifier_shift       = 0x01,
-    mir_key_modifier_shift_left  = 0x40,
-    mir_key_modifier_shift_right = 0x80,
-    mir_key_modifier_sym         = 0x04,
-    mir_key_modifier_function    = 0x08,
-    mir_key_modifier_ctrl        = 0x1000,
-    mir_key_modifier_ctrl_left   = 0x2000,
-    mir_key_modifier_ctrl_right  = 0x4000,
-    mir_key_modifier_meta        = 0x10000,
-    mir_key_modifier_meta_left   = 0x20000,
-    mir_key_modifier_meta_right  = 0x40000,
-    mir_key_modifier_caps_lock   = 0x100000,
-    mir_key_modifier_num_lock    = 0x200000,
-    mir_key_modifier_scroll_lock = 0x400000
-} MirKeyModifier;
-
-typedef enum {
     mir_motion_action_down         = 0,
     mir_motion_action_up           = 1,
     mir_motion_action_move         = 2,
@@ -97,10 +65,6 @@ typedef enum {
     mir_motion_action_hover_enter  = 9,
     mir_motion_action_hover_exit   = 10
 } MirMotionAction;
-
-typedef enum {
-    mir_motion_flag_window_is_obscured = 0x1
-} MirMotionFlag;
 
 typedef enum {
     mir_motion_button_primary   = 1 << 0,
@@ -118,7 +82,7 @@ typedef enum {
    mir_motion_tool_type_eraser  = 4
 } MirMotionToolType;
 
-// DEPRECATED
+// PRIVATE
 // Direct access to MirKeyEvent is deprecated. Please use mir_event_get_input_event
 // and the mir_input_event* family of functions.
 typedef struct
@@ -128,23 +92,20 @@ typedef struct
     int32_t device_id;
     int32_t source_id;
     MirKeyAction action;
-    MirKeyFlag flags;
-    unsigned int modifiers;
+    MirInputEventModifiers modifiers;
 
     int32_t key_code;
     int32_t scan_code;
     int32_t repeat_count;
-    nsecs_t down_time;
 
     nsecs_t event_time;
-    int is_system_key;
 } MirKeyEvent;
 
 typedef struct
 {
     int id;
-    float x, raw_x;
-    float y, raw_y;
+    float x;
+    float y;
     float touch_major;
     float touch_minor;
     float size;
@@ -153,12 +114,9 @@ typedef struct
     float vscroll;
     float hscroll;
     MirMotionToolType tool_type;
-    int unused1;
-    int unused2;
-    int unused3;
 } MirMotionPointer;
 
-// DEPRECATED
+// PRIVATE
 // Direct access to MirMotionEvent is deprecated. Please use mir_event_get_input_event
 // and the mir_input_event* family of functions.
 typedef struct
@@ -173,28 +131,25 @@ typedef struct
      * this way for now until we can drop SF/Hybris support in QtUbuntu.
      */
     int action;
-    MirMotionFlag flags;
-    unsigned int modifiers;
+    MirInputEventModifiers modifiers;
 
-    int32_t edge_flags;
     MirMotionButton button_state;
-    float x_offset;
-    float y_offset;
-    float x_precision;
-    float y_precision;
-    nsecs_t down_time;
     nsecs_t event_time;
 
     size_t pointer_count;
     MirMotionPointer pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
     /* "_coordinates" is a misnomer here because there's plenty more info than
        just coordinates, but renaming it accurately would be an API break */
-
-    int unused0;
-    int unused1;
-    int unused2;
-    int unused3;
 } MirMotionEvent;
+ 
+struct MirInputConfigurationEvent
+{
+    MirEventType type;
+
+    MirInputConfigurationAction action;
+    std::chrono::nanoseconds when;
+    MirInputDeviceId id;
+};
 
 struct MirSurfaceEvent
 {
@@ -256,6 +211,7 @@ union MirEvent
     MirOrientationEvent orientation;
     MirCloseSurfaceEvent   close_surface;
     MirKeymapEvent keymap;
+    MirInputConfigurationEvent input_configuration;
 };
 
 #ifdef __cplusplus
@@ -263,4 +219,4 @@ union MirEvent
 /**@}*/
 #endif
 
-#endif /* MIR_TOOLKIT_EVENT_DEPRECATED_H_ */
+#endif /* MIR_COMMON_EVENT_PRIVATE_H_ */

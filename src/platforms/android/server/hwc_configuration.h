@@ -67,6 +67,22 @@ private:
     MirPixelFormat format;
 };
 
+class HwcWrapper;
+class HwcPowerModeControl : public HwcConfiguration
+{
+public:
+    HwcPowerModeControl(std::shared_ptr<HwcWrapper> const&);
+    void power_mode(DisplayName, MirPowerMode) override;
+    DisplayConfigurationOutput active_config_for(DisplayName) override;
+    ConfigChangeSubscription subscribe_to_config_changes(
+        std::function<void()> const& hotplug_cb,
+        std::function<void(DisplayName)> const& vsync_cb) override;
+
+private:
+    std::shared_ptr<HwcWrapper> const hwc_device;
+    MirPixelFormat format;
+};
+
 }
 }
 }

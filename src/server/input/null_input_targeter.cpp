@@ -3,11 +3,11 @@ struct NullInputTargeter : public msh::InputTargeter
     NullInputTargeter() = default;
     virtual ~NullInputTargeter() noexcept(true) = default;
 
-    void focus_changed(std::shared_ptr<mi::InputChannel const> const&) override
+    void set_focus(std::shared_ptr<mi::Surface> const&) override
     {
     }
 
-    void focus_cleared() override
+    void clear_focus() override
     {
     }
 };

@@ -125,11 +125,11 @@ TEST_F(FocusSelection, when_surface_created_input_focus_is_set)
             if (!expected)
             {
 
-                EXPECT_CALL(*targeter, focus_cleared()).Times(AtLeast(0));
+                EXPECT_CALL(*targeter, clear_focus()).Times(AtLeast(0));
 
                 {
                     InSequence seq;
-                    EXPECT_CALL(*targeter, focus_changed(_)).Times(1);
+                    EXPECT_CALL(*targeter, set_focus(_)).Times(1);
                     expected = true;
                 }
             }

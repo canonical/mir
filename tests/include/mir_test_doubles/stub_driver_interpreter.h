@@ -42,17 +42,20 @@ public:
     {
     }
 
-    mir::graphics::NativeBuffer* driver_requests_buffer()
+    mir::graphics::NativeBuffer* driver_requests_buffer() override
     {
         return nullptr;
     }
+
     void driver_returns_buffer(ANativeWindowBuffer*, int)
     {
     }
-    void dispatch_driver_request_format(int)
+
+    void dispatch_driver_request_format(int) override
     {
     }
-    int driver_requests_info(int index) const
+
+    int driver_requests_info(int index) const override
     {
         if (index == NATIVE_WINDOW_WIDTH)
             return sz.width.as_uint32_t();
@@ -62,9 +65,14 @@ public:
             return visual_id;
         return 0;
     }
-    void sync_to_display(bool)
+
+    void sync_to_display(bool) override
     {
     }
+
+    void dispatch_driver_request_buffer_count(unsigned int) override
+    {
+    } 
 private:
     mir::geometry::Size sz;
     int visual_id;

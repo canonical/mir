@@ -40,7 +40,7 @@ class FocusController
 public:
     virtual ~FocusController() = default;
 
-    virtual void focus_next() = 0;
+    virtual void focus_next_session() = 0;
 
     virtual auto focused_session() const -> std::shared_ptr<scene::Session> = 0;
 

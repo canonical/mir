@@ -42,8 +42,10 @@ mir::DefaultServerConfiguration::the_buffer_stream_factory()
     return buffer_stream_factory(
         [this]()
         {
-            return std::make_shared<mc::BufferStreamFactory>(the_buffer_allocator(),
-                                                             the_frame_dropping_policy_factory());
+            return std::make_shared<mc::BufferStreamFactory>(
+                the_buffer_allocator(),
+                the_frame_dropping_policy_factory(),
+                the_options()->get<int>(options::nbuffers_opt));
         });
 }
 

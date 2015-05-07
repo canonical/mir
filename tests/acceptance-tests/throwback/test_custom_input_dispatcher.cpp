@@ -16,15 +16,13 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER 
-
 #include "mir/input/input_dispatcher.h"
 
 #include "clients.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/cross_process_sync.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
@@ -34,6 +32,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/scene/observer.h"
+#include "mir/events/event_private.h"
 
 #include "mir_toolkit/event.h"
 
@@ -59,10 +58,16 @@ class CustomMockInputDispatcher :
     public msh::InputTargeter
 {
 public:
-    CustomMockInputDispatcher() = default;
+    CustomMockInputDispatcher()
+    {
+        using namespace ::testing;
+        
+        EXPECT_CALL(*this, dispatch(mt::InputDeviceConfigurationChangedEvent())).Times(AnyNumber());
+        EXPECT_CALL(*this, dispatch(mt::InputDeviceResetEvent())).Times(AnyNumber());
+    }
     // mocks for InputTargeter
-    MOCK_METHOD1(focus_changed, void(std::shared_ptr<mi::InputChannel const> const& /*focus_channel*/));
-    MOCK_METHOD0(focus_cleared, void());
+    MOCK_METHOD1(set_focus, void(std::shared_ptr<mi::Surface> const& /*focus_surface*/));
+    MOCK_METHOD0(clear_focus, void());
 };
 
 struct CustomDispatcherServerConfig : mtf::InputTestingServerConfiguration
@@ -98,7 +103,7 @@ struct CustomDispatcherServerConfig : mtf::InputTestingServerConfiguration
     virtual void input_dispatcher_expectations() {}
 
     mir::CachedPtr<::testing::NiceMock<CustomMockInputDispatcher>> dispatcher;
-    mtf::CrossProcessSync dispatching_done;
+    mt::CrossProcessSync dispatching_done;
     bool expectations_set{false};
 };
 
@@ -166,7 +171,7 @@ TEST_F(CustomInputDispatcher, receives_focus_changes)
             using namespace ::testing;
             auto const dispatcher = the_input_dispatcher_mock();
 
-            EXPECT_CALL(*dispatcher, focus_changed(_)).Times(1)
+            EXPECT_CALL(*dispatcher, set_focus(_)).Times(1)
                 .WillOnce(InvokeWithoutArgs([this] { dispatching_done.signal_ready(); }));
         }
     } server_config;

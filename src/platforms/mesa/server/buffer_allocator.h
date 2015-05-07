@@ -46,6 +46,8 @@ public:
     virtual std::shared_ptr<Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
 
+    std::unique_ptr<Buffer> reconstruct_from(MirBufferPackage* package, MirPixelFormat format);
+
     std::vector<MirPixelFormat> supported_pixel_formats();
 
 private:

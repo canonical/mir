@@ -398,3 +398,8 @@ bool mcl::BufferStream::valid() const
     std::unique_lock<decltype(mutex)> lock(mutex);
     return protobuf_bs.has_id() && !protobuf_bs.has_error();
 }
+
+void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
+{
+    buffer_depository.set_max_buffers(cache_size);
+}

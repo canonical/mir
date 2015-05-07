@@ -28,6 +28,8 @@
 #include <fcntl.h>
 
 #include <atomic>
+#include <exception>
+#include <thread>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -192,32 +194,6 @@ TEST_F(SimpleDispatchThreadTest, only_calls_dispatch_with_remote_closed_when_rel
     EXPECT_FALSE(dispatched_closed->wait_for(std::chrono::seconds{1}));
 }
 
-TEST_F(SimpleDispatchThreadTest, handles_destruction_from_dispatch_callback)
-{
-    using namespace testing;
-    using namespace std::chrono_literals;
-
-    auto dispatched = std::make_shared<mt::Signal>();
-    auto assignment_made = std::make_shared<mt::Signal>();
-    md::SimpleDispatchThread* dispatcher{nullptr};
-
-    auto dispatchable = std::make_shared<mt::TestDispatchable>([dispatched, &dispatcher, assignment_made]()
-                                                               {
-                                                                   assignment_made->wait_for(10s);
-                                                                   delete dispatcher;
-                                                                   dispatched->raise();
-                                                               });
-
-    dispatchable->trigger();
-    dispatchable->trigger();
-
-    dispatcher = new md::SimpleDispatchThread{dispatchable};
-
-    assignment_made->raise();
-
-    EXPECT_TRUE(dispatched->wait_for(10s));
-}
-
 // Regression test for: lp #1439719
 // The bug involves uninitialized memory and is also sensitive to signal
 // timings, so this test does not always catch the problem. However, repeated
@@ -262,4 +238,54 @@ TEST_F(SimpleDispatchThreadTest, keeps_dispatching_after_signal_interruption)
 
     auto const result = child->wait_for_termination(10s);
     EXPECT_TRUE(result.succeeded());
+}
+
+using SimpleDispatchThreadDeathTest = SimpleDispatchThreadTest;
+
+TEST_F(SimpleDispatchThreadDeathTest, destroying_dispatcher_from_a_callback_is_an_error)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    EXPECT_EXIT(
+    {
+        std::mutex mutex;
+        md::SimpleDispatchThread* dispatcher;
+    
+        auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatcher, &mutex]{
+            std::lock_guard<decltype(mutex)> lock{mutex};
+            delete dispatcher;
+        });
+        
+        {
+            std::lock_guard<decltype(mutex)> lock{mutex};
+            dispatchable->trigger();
+            dispatcher = new md::SimpleDispatchThread{dispatchable};
+        }
+        std::this_thread::sleep_for(10s);
+    }, KilledBySignal(SIGABRT), ".*Destroying SimpleDispatchThread.*");
+}
+
+TEST_F(SimpleDispatchThreadTest, executes_exception_handler_with_current_exception)
+{
+    using namespace std::chrono_literals;
+    auto dispatched = std::make_shared<mt::Signal>();
+    std::exception_ptr exception;
+
+    auto dispatchable = std::make_shared<mt::TestDispatchable>(
+        []()
+        {
+            throw std::runtime_error("thrown");
+        });
+
+    md::SimpleDispatchThread dispatcher{dispatchable,
+        [&dispatched,&exception]()
+        {
+            exception = std::current_exception();
+            if (exception)
+                dispatched->raise();
+        }};
+    dispatchable->trigger();
+    EXPECT_TRUE(dispatched->wait_for(10s));
+    EXPECT_TRUE(exception!=nullptr);
 }

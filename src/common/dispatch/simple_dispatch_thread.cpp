@@ -18,7 +18,9 @@
 
 #include "mir/dispatch/simple_dispatch_thread.h"
 #include "mir/dispatch/dispatchable.h"
+#include "mir/logging/logger.h"
 #include "utils.h"
+#include "mir/signal_blocker.h"
 
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -104,6 +106,12 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
 }
 
 md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable> const& dispatchee)
+    : SimpleDispatchThread(dispatchee, []{})
+{}
+
+md::SimpleDispatchThread::SimpleDispatchThread(
+    std::shared_ptr<md::Dispatchable> const& dispatchee,
+    std::function<void()> const& exception_handler)
 {
     int pipefds[2];
     if (pipe(pipefds) < 0)
@@ -114,20 +122,24 @@ md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable>
     }
     shutdown_fd = mir::Fd{pipefds[1]};
     mir::Fd const terminate_fd = mir::Fd{pipefds[0]};
-    eventloop = std::thread{[dispatchee, terminate_fd]()
-                            {
-                                // Our IO threads must not receive any signals
-                                sigset_t all_signals;
-                                sigfillset(&all_signals);
-
-                                if (auto error = pthread_sigmask(SIG_BLOCK, &all_signals, NULL))
-                                    BOOST_THROW_EXCEPTION((
-                                                std::system_error{error,
-                                                                  std::system_category(),
-                                                                  "Failed to block signals on IO thread"}));
-
-                                wait_for_events_forever(dispatchee, terminate_fd);
-                            }};
+    {
+        // The newly spawned thread inherits the current signal mask; block everything
+        // before creating the new thread so that there's no race between thread start
+        // and signal blocking.
+        mir::SignalBlocker block_signals;
+        eventloop = std::thread{
+            [exception_handler, dispatchee, terminate_fd]()
+            {
+                try
+                {
+                    wait_for_events_forever(dispatchee, terminate_fd);
+                }
+                catch(...)
+                {
+                    exception_handler();
+                }
+            }};
+    }
 }
 
 md::SimpleDispatchThread::~SimpleDispatchThread() noexcept
@@ -136,8 +148,13 @@ md::SimpleDispatchThread::~SimpleDispatchThread() noexcept
     if (eventloop.get_id() == std::this_thread::get_id())
     {
         // We're being destroyed from within the dispatch callback
-        // That's OK; we'll exit once we return back to wait_for_events_forever
-        eventloop.detach();
+        // Attempting to join the eventloop will result in a trivial deadlock.
+        // 
+        // The std::thread destructor will call std::terminate() for us, let's
+        // leave a useful message.
+        mir::logging::log(mir::logging::Severity::critical,
+                          "Destroying SimpleDispatchThread from within a dispatch callback. This is a programming error.",
+                          "Dispatch");
     }
     else if (eventloop.joinable())
     {

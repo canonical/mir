@@ -87,9 +87,16 @@ class MockEGL
 {
 public:
     MockEGL();
-    ~MockEGL();
+    virtual ~MockEGL();
 
+    void expect_nested_egl_usage();
     void provide_egl_extensions();
+
+    // Provide a functional version of eglSwapBuffers on stubbed platforms
+    // When enabled, if an instance of mir::client::EGLNativeSurface is passed to
+    // eglCreateWindowSurface, then the returned EGLSurface can be used with
+    // eglSwapBuffers to invoke EGLNativeSurface::request_and_wait_for_next_buffer
+    void provide_stub_platform_buffer_swapping();
 
     typedef void (*generic_function_pointer_t)(void);
 

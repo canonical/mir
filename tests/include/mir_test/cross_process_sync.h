@@ -16,12 +16,14 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_CROSS_PROCESS_SYNC_H_
-#define MIR_TEST_FRAMEWORK_CROSS_PROCESS_SYNC_H_
+#ifndef MIR_TEST_CROSS_PROCESS_SYNC_H_
+#define MIR_TEST_CROSS_PROCESS_SYNC_H_
 
 #include <chrono>
 
-namespace mir_test_framework
+namespace mir
+{
+namespace test
 {
 // A cross-process synchronization primitive that supports simple
 // wait-condition-like scenarios.
@@ -54,5 +56,6 @@ class CrossProcessSync
     unsigned int counter;
 };
 }
+}
 
-#endif // MIR_TEST_FRAMEWORK_CROSS_PROCESS_SYNC_H_
+#endif // MIR_TEST_CROSS_PROCESS_SYNC_H_

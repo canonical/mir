@@ -22,7 +22,7 @@
 #include "mir_test/event_matchers.h"
 
 #include "mir_test_framework/interprocess_client_server_test.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/cross_process_sync.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -117,7 +117,7 @@ TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_
 {
     // We use this for synchronization to ensure the two clients
     // are launched in a defined order.
-    mtf::CrossProcessSync ready_for_second_client;
+    mt::CrossProcessSync ready_for_second_client;
 
     auto const client_one = new_client_process([&]
         {

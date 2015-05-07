@@ -16,9 +16,8 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "src/server/scene/application_session.h"
+#include "mir/events/event_private.h"
 #include "mir/graphics/buffer.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/null_session_listener.h"
@@ -55,6 +54,7 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 
 struct MockBufferStreamFactory : public ms::BufferStreamFactory
 {
+    MOCK_METHOD1(create_buffer_stream, std::shared_ptr<mc::BufferStream>(mg::BufferProperties const&));
     MOCK_METHOD2(create_buffer_stream, std::shared_ptr<mc::BufferStream>(int, mg::BufferProperties const&));
 };
 
@@ -287,6 +287,63 @@ TEST_F(ApplicationSession, default_surface_is_first_surface)
     app_session->destroy_surface(id3);
 }
 
+TEST_F(ApplicationSession, foreign_surface_has_no_successor)
+{
+    auto session1 = make_application_session_with_stubs();
+    ms::SurfaceCreationParameters params;
+    auto id1 = session1->create_surface(params);
+    auto surf1 = session1->surface(id1);
+    auto id2 = session1->create_surface(params);
+
+    auto session2 = make_application_session_with_stubs();
+
+    EXPECT_THROW({session2->surface_after(surf1);},
+                 std::runtime_error);
+
+    session1->destroy_surface(id1);
+    session1->destroy_surface(id2);
+}
+
+TEST_F(ApplicationSession, surface_after_one_is_self)
+{
+    auto session = make_application_session_with_stubs();
+    ms::SurfaceCreationParameters params;
+    auto id = session->create_surface(params);
+    auto surf = session->surface(id);
+
+    EXPECT_EQ(surf, session->surface_after(surf));
+
+    session->destroy_surface(id);
+}
+
+TEST_F(ApplicationSession, surface_after_cycles_through_all)
+{
+    auto app_session = make_application_session_with_stubs();
+
+    ms::SurfaceCreationParameters params;
+
+    int const N = 3;
+    std::shared_ptr<ms::Surface> surf[N];
+    mf::SurfaceId id[N];
+
+    for (int i = 0; i < N; ++i)
+    {
+        id[i] = app_session->create_surface(params);
+        surf[i] = app_session->surface(id[i]);
+
+        if (i > 0)
+            ASSERT_NE(surf[i], surf[i-1]);
+    }
+
+    for (int i = 0; i < N-1; ++i)
+        ASSERT_EQ(surf[i+1], app_session->surface_after(surf[i]));
+
+    EXPECT_EQ(surf[0], app_session->surface_after(surf[N-1]));
+
+    for (int i = 0; i < N; ++i)
+        app_session->destroy_surface(id[i]);
+}
+
 TEST_F(ApplicationSession, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
@@ -436,7 +493,7 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
 
     mg::BufferProperties properties(buffer_size, mir_pixel_format_argb_8888, mg::BufferUsage::software);
     
-    EXPECT_CALL(factory, create_buffer_stream(_, properties)).Times(1)
+    EXPECT_CALL(factory, create_buffer_stream(properties)).Times(1)
         .WillOnce(Return(mt::fake_shared(stream)));
 
     auto session = make_application_session_with_buffer_stream_factory(mt::fake_shared(factory));

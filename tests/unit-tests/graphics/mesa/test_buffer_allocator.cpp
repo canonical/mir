@@ -31,6 +31,7 @@
 #include <cstdlib>
 #include <memory>
 #include <stdexcept>
+#include <system_error>
 #include <algorithm>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -281,3 +282,68 @@ TEST_F(MesaBufferAllocatorTest, alloc_with_unsupported_pixel_format_throws)
         allocator->alloc_buffer(mg::BufferProperties{size, mir_pixel_format_abgr_8888, usage});
     }, std::runtime_error);
 }
+
+MATCHER_P(GbmImportMatch, value, "import data matches")
+{
+    using namespace testing;
+    auto data = reinterpret_cast<struct gbm_import_fd_data*>(arg);
+    EXPECT_THAT(data->fd, Eq(value.fd));
+    EXPECT_THAT(data->width, Eq(value.width));
+    EXPECT_THAT(data->height, Eq(value.height));
+    EXPECT_THAT(data->stride, Eq(value.stride));
+    EXPECT_THAT(data->format, Eq(value.format));
+    return !(::testing::Test::HasFailure());
+}
+
+TEST_F(MesaBufferAllocatorTest, reconstructs_from_native_type)
+{
+    using namespace testing;
+    MirNativeBuffer native_buffer;
+    uint32_t stride {22};
+    native_buffer.fd_items = 1;
+    native_buffer.fd[0] = 33;
+    native_buffer.width = size.width.as_uint32_t(); 
+    native_buffer.height = size.height.as_uint32_t(); 
+    native_buffer.stride = stride;
+    native_buffer.flags = GBM_BO_USE_RENDERING;
+
+    struct gbm_import_fd_data expected_data {
+        native_buffer.fd[0],
+        size.width.as_uint32_t(),
+        size.height.as_uint32_t(),
+        stride,
+        pf 
+    };
+
+    EXPECT_CALL(mock_gbm, gbm_bo_import(_, GBM_BO_IMPORT_FD, GbmImportMatch(expected_data), native_buffer.flags ))
+        .WillOnce(Return(mock_gbm.fake_gbm.bo));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(mock_gbm.fake_gbm.bo));
+
+    auto buffer = allocator->reconstruct_from(&native_buffer, pf);
+    ASSERT_THAT(buffer, Ne(nullptr));
+}
+
+TEST_F(MesaBufferAllocatorTest, reconstruct_throws_with_invalid_native_type)
+{
+    MirNativeBuffer native_buffer;
+    native_buffer.fd_items = 0;
+    EXPECT_THROW({
+        auto buffer = allocator->reconstruct_from(&native_buffer, pf);
+    }, std::logic_error);
+    native_buffer.fd_items = 2;
+    EXPECT_THROW({
+        auto buffer = allocator->reconstruct_from(&native_buffer, pf);
+    }, std::logic_error);
+} 
+
+TEST_F(MesaBufferAllocatorTest, reconstruct_throws_if_gbm_cannot_import)
+{
+    using namespace testing;
+    EXPECT_CALL(mock_gbm, gbm_bo_import(_, _, _, _))
+        .WillOnce(Return(nullptr));
+    MirNativeBuffer native_buffer;
+    native_buffer.fd_items = 1;
+    EXPECT_THROW({
+        auto buffer = allocator->reconstruct_from(&native_buffer, pf);
+    }, std::system_error);
+} 

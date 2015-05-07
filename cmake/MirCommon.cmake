@@ -1,14 +1,9 @@
 cmake_minimum_required (VERSION 2.6)
 # Create target to discover tests
+include (CMakeParseArguments)
 
 include(CMakeDependentOption)
-
-CMAKE_DEPENDENT_OPTION(
-  DISABLE_GTEST_TEST_DISCOVERY
-  "If set to ON, disables fancy test autodiscovery and switches back to classic add_test behavior"
-  OFF
-  "NOT CMAKE_CROSSCOMPILING"
-  ON)
+file(REMOVE ${CMAKE_BINARY_DIR}/discover_all_tests.sh)
 
 option(
   ENABLE_MEMCHECK_OPTION
@@ -28,128 +23,82 @@ if(ENABLE_MEMCHECK_OPTION)
     valgrind)
 
   if(VALGRIND_EXECUTABLE)
-    set(VALGRIND_ARGS "--error-exitcode=1" "--trace-children=yes" "--leak-check=full" "--show-leak-kinds=definite" "--errors-for-leak-kinds=definite")
-    set(VALGRIND_ARGS ${VALGRIND_ARGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_generic")
-    set(VALGRIND_ARGS ${VALGRIND_ARGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_glibc_2.21")
-    set(DISCOVER_FLAGS "--enable-memcheck")
-    set(DISCOVER_FLAGS ${DISCOVER_FLAGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_generic")
-    set(DISCOVER_FLAGS ${DISCOVER_FLAGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_glibc_2.21")
+    set(VALGRIND_CMD "${VALGRIND_EXECUTABLE}" "--error-exitcode=1" "--trace-children=yes" "--leak-check=full" "--show-leak-kinds=definite" "--errors-for-leak-kinds=definite")
+    set(VALGRIND_CMD ${VALGRIND_CMD} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_generic")
+    set(VALGRIND_CMD ${VALGRIND_CMD} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_glibc_2.21")
     if (TARGET_ARCH STREQUAL "arm-linux-gnueabihf")
-        set(VALGRIND_ARGS ${VALGRIND_ARGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_armhf")
-        set(DISCOVER_FLAGS ${DISCOVER_FLAGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_armhf")
+      set(VALGRIND_CMD ${VALGRIND_CMD} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_armhf")
     endif()
   else(VALGRIND_EXECUTABLE)
     message("Not enabling memcheck as valgrind is missing on your system")
   endif(VALGRIND_EXECUTABLE)
 endif(ENABLE_MEMCHECK_OPTION)
 
+function (list_to_string LIST_VAR PREFIX STR_VAR)
+  foreach (value ${LIST_VAR})
+    set(tmp_str "${tmp_str} ${PREFIX} ${value}")
+  endforeach()
+  set(${STR_VAR} "${tmp_str}" PARENT_SCOPE)
+endfunction()
+
 function (mir_discover_tests EXECUTABLE)
-  if(DISABLE_GTEST_TEST_DISCOVERY)
-    execute_process(
-      COMMAND uname -r
-      OUTPUT_VARIABLE KERNEL_VERSION_FULL
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    string(REGEX MATCH "^[0-9]+[.][0-9]+" KERNEL_VERSION ${KERNEL_VERSION_FULL})
-    message(STATUS "Kernel version detected: " ${KERNEL_VERSION})
-    # Some tests expect kernel version 3.11 and up
-    if (${KERNEL_VERSION} VERSION_LESS "3.11")
-        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
-            "--gtest_filter=-*DeathTest.*:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer")
-    else()
-        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
-            "--gtest_filter=-*DeathTest.*")
+  # Set vars
+  set(test_cmd_no_memcheck "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}")
+  set(test_cmd "${test_cmd_no_memcheck}")
+  set(test_env ${ARGN})
+  set(test_name ${EXECUTABLE})
+  set(test_no_memcheck_filter)
+  set(test_exclusion_filter)
+
+  if(ENABLE_MEMCHECK_OPTION)
+    set(test_cmd ${VALGRIND_CMD} ${test_cmd_no_memcheck})
+    set(test_no_memcheck_filter "*DeathTest.*")
+  endif()
+
+  if(cmake_build_type_lower MATCHES "threadsanitizer")
+    find_program(LLVM_SYMBOLIZER llvm-symbolizer-3.6)
+    if (LLVM_SYMBOLIZER)
+        set(TSAN_EXTRA_OPTIONS "external_symbolizer_path=${LLVM_SYMBOLIZER}")
     endif()
+    # Space after ${TSAN_EXTRA_OPTIONS} works around bug in TSAN env. variable parsing 
+    list(APPEND test_env "TSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7 ${TSAN_EXTRA_OPTIONS} \"")
+    # TSan does not support multi-threaded fork
+    # TSan may open fds so "surface_creation_does_not_leak_fds" will not work as written
+    # TSan deadlocks when running StreamTransportTest/0.SendsFullMessagesWhenInterrupted - disable it until understood
+    set(test_exclusion_filter "UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds:StreamTransportTest/0.SendsFullMessagesWhenInterrupted")
+  endif()
 
-    add_test(${EXECUTABLE}_death_tests ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} "--gtest_filter=*DeathTest.*")
-    if (${ARGC} GREATER 1)
-      set_property(TEST ${EXECUTABLE} PROPERTY ENVIRONMENT ${ARGN})
-      set_property(TEST ${EXECUTABLE}_death_tests PROPERTY ENVIRONMENT ${ARGN})
-    endif()
-  else()
-    set(CHECK_TEST_DISCOVERY_TARGET_NAME "check_discover_tests_in_${EXECUTABLE}")
-    set(TEST_DISCOVERY_TARGET_NAME "discover_tests_in_${EXECUTABLE}")
-    message(STATUS "Defining targets: ${CHECK_TEST_DISCOVERY_TARGET_NAME} and ${TEST_DISCOVERY_TARGET_NAME}")
+  # Final commands
+  set(test_cmd "${test_cmd}" "--gtest_filter=-${test_no_memcheck_filter}:${test_exclusion_filter}")
+  set(test_cmd_no_memcheck "${test_cmd_no_memcheck}" "--gtest_filter=${test_no_memcheck_filter}:-${test_exclusion_filter}")
 
-    # These targets are always considered out-of-date, and are always run (at least for normal builds, except for make test/install).
-    add_custom_target(
-      ${CHECK_TEST_DISCOVERY_TARGET_NAME} ALL
-      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests > /dev/null
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      COMMENT "Check that discovering Tests in ${EXECUTABLE} works")
-      
-    if (MIR_BUILD_PLATFORM_ANDROID)
-      add_dependencies(${CHECK_TEST_DISCOVERY_TARGET_NAME} mirplatformgraphicsandroid)
-    endif()
-    
-    if (MIR_BUILD_PLATFORM_MESA)
-      add_dependencies(${CHECK_TEST_DISCOVERY_TARGET_NAME} mirplatformgraphicsmesa)
-    endif()
+  # Normal
+  add_test(${test_name} ${test_cmd})
+  set_property(TEST ${test_name} PROPERTY ENVIRONMENT ${test_env})
+  if (test_no_memcheck_filter)
+    add_test(${test_name}_no_memcheck ${test_cmd_no_memcheck})
+    set_property(TEST ${test_name}_no_memcheck PROPERTY ENVIRONMENT ${test_env})
+  endif()
 
-    if (${ARGC} GREATER 1)
-      foreach (env ${ARGN})
-        list(APPEND EXTRA_ENV_FLAGS "--add-environment" "${env}")
-      endforeach()
-    endif()
-    
-    if(cmake_build_type_lower MATCHES "threadsanitizer")
-        find_program(LLVM_SYMBOLIZER llvm-symbolizer-3.6)
-        if (LLVM_SYMBOLIZER)
-            set(TSAN_EXTRA_OPTIONS "external_symbolizer_path=${LLVM_SYMBOLIZER}")
-        endif()
-        list(APPEND EXTRA_ENV_FLAGS "--add-environment" "TSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7 ${TSAN_EXTRA_OPTIONS}")
-        # TSan does not support multi-threaded fork
-        # TSan may open fds so "surface_creation_does_not_leak_fds" will not work as written
-        # TSan deadlocks when running StreamTransportTest/0.SendsFullMessagesWhenInterrupted - disable it until understood
-        set(EXCLUDED_TESTS "UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds:StreamTransportTest/0.SendsFullMessagesWhenInterrupted")
-    endif()
+  # ptest
+  list_to_string("${test_env}" "--env" discover_env)
+  list_to_string("${test_cmd}" "" discover_cmd)
+  list_to_string("${test_cmd_no_memcheck}" "" discover_cmd_no_memcheck)
 
-    add_custom_target(
-      ${TEST_DISCOVERY_TARGET_NAME} ALL
-      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --exclusions=${EXCLUDED_TESTS} ${DISCOVER_FLAGS}
-      ${EXTRA_ENV_FLAGS}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      COMMENT "Discovering Tests in ${EXECUTABLE}" VERBATIM)
-
-    add_dependencies(
-      ${CHECK_TEST_DISCOVERY_TARGET_NAME}
-      ${EXECUTABLE})
-
-    add_dependencies(
-      ${TEST_DISCOVERY_TARGET_NAME}
-
-      ${CHECK_TEST_DISCOVERY_TARGET_NAME}
-      ${EXECUTABLE}
-      mir_discover_gtest_tests)
-
+  file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} -- ${discover_cmd}\n")
+  if (test_no_memcheck_filter)
+    file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+      "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} -- ${discover_cmd_no_memcheck}\n")
   endif()
 endfunction ()
 
 function (mir_add_memcheck_test)
   if (ENABLE_MEMCHECK_OPTION)
-      if(DISABLE_GTEST_TEST_DISCOVERY)
-	add_custom_target(
-	  memcheck_test ALL
-	)
-	ADD_TEST("memcheck-test" ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error)
-	add_dependencies(
-	  memcheck_test
-
-	  mir_test_memory_error
-	)
-      else()
-        add_custom_target(
-          memcheck_test ALL
-          ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error --memcheck-test ${DISCOVER_FLAGS}
-          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-          COMMENT "Adding memcheck test" VERBATIM)
-
-        add_dependencies(
-          memcheck_test
-
-          mir_discover_gtest_tests
-          mir_test_memory_error)
-      endif()
+    add_custom_target(memcheck_test ALL)
+    mir_add_test(NAME "memcheck-test"
+      COMMAND ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${VALGRIND_CMD} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error)
+    add_dependencies(memcheck_test mir_test_memory_error)
   endif()
 endfunction()
 
@@ -190,7 +139,7 @@ function (mir_add_wrapped_executable TARGET)
   if ("${modifier}" STREQUAL "NOINSTALL")
     list(REMOVE_AT ARGN 0)
   else()
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/${REAL_EXECUTABLE}
+    install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${REAL_EXECUTABLE}
       DESTINATION ${CMAKE_INSTALL_BINDIR}
       RENAME ${TARGET}
     )
@@ -203,7 +152,29 @@ function (mir_add_wrapped_executable TARGET)
   )
 
   add_custom_target(${TARGET}-wrapped
-    ln -fs wrapper ${CMAKE_BINARY_DIR}/bin/${TARGET}
+    ln -fs wrapper ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET}
   )
   add_dependencies(${TARGET} ${TARGET}-wrapped)
+endfunction()
+
+function (mir_add_test)
+  # Add test normally
+  add_test(${ARGN})
+
+  # Add to to discovery for parallel test running
+  set(one_value_args "NAME" WORKING_DIRECTORY)
+  set(multi_value_args "COMMAND")
+  cmake_parse_arguments(MAT "" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+  foreach (cmd ${MAT_COMMAND})
+    set(cmdstr "${cmdstr} \\\"${cmd}\\\"")
+  endforeach()
+
+  file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+    "echo \"add_test(${MAT_NAME} ${cmdstr})\"\n")
+
+  if (MAT_WORKING_DIRECTORY)
+    file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+      "echo \"set_tests_properties(${MAT_NAME} PROPERTIES WORKING_DIRECTORY \\\"${MAT_WORKING_DIRECTORY}\\\")\"\n")
+  endif()
 endfunction()

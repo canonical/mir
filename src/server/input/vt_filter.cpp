@@ -16,9 +16,8 @@
  * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir/input/vt_filter.h"
+#include "mir/events/event_private.h"
 
 #include <linux/input.h>
 #include <linux/vt.h>
@@ -40,8 +39,8 @@ bool mir::input::VTFilter::handle(MirEvent const& event)
 {
     if (event.type == mir_event_type_key &&
         event.key.action == mir_key_action_down &&
-        (event.key.modifiers & mir_key_modifier_alt) &&
-        (event.key.modifiers & mir_key_modifier_ctrl))
+        (event.key.modifiers & mir_input_event_modifier_alt) &&
+        (event.key.modifiers & mir_input_event_modifier_ctrl))
     {
         switch (event.key.scan_code)
         {

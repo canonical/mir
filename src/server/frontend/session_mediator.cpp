@@ -33,7 +33,6 @@
 #include "mir/input/cursor_images.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/geometry/dimensions.h"
-#include "mir/frontend/display_changer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/platform_ipc_operations.h"
@@ -161,23 +160,26 @@ void mf::SessionMediator::advance_buffer(
     std::unique_lock<std::mutex>& lock,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto const tid = std::this_thread::get_id();
+    auto const tid = std::make_shared<std::thread::id>(std::this_thread::get_id());
+    auto const weak_tid = std::weak_ptr<std::thread::id>{tid};
 
     stream.swap_buffers(
         old_buffer,
         // Note: We assume that the lambda will be executed within swap_buffers
         // (in which case the lock reference is valid) or in a different thread
         // altogether (in which case the dangling reference is not accessed)
-        [this, tid, &lock, stream_id, complete](mg::Buffer* new_buffer)
+        [this, weak_tid, &lock, stream_id, complete](mg::Buffer* new_buffer)
         {
-            if (tid == std::this_thread::get_id())
-                lock.unlock();
+            if (auto const tid = weak_tid.lock())
+            {
+                if (*tid == std::this_thread::get_id())
+                    lock.unlock();
+            }
 
             if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
                 complete(new_buffer, mg::BufferIpcMsgType::full_msg);
-
         });
 }
 
@@ -230,6 +232,25 @@ void mf::SessionMediator::create_surface(
 
     if (request->has_edge_attachment())
         params.with_edge_attachment(static_cast<MirEdgeAttachment>(request->edge_attachment()));
+
+    #define COPY_IF_SET(field)\
+        if (request->has_##field())\
+            params.field = decltype(params.field.value())(request->field())
+
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+    COPY_IF_SET(width_inc);
+    COPY_IF_SET(height_inc);
+
+    #undef COPY_IF_SET
+
+    if (request->has_min_aspect())
+        params.min_aspect = { request->min_aspect().width(), request->min_aspect().height()};
+
+    if (request->has_max_aspect())
+        params.max_aspect = { request->max_aspect().width(), request->max_aspect().height()};
 
     auto const surf_id = shell->create_surface(session, params);
 
@@ -420,17 +441,63 @@ void mf::SessionMediator::modify_surface(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
+    auto const& surface_specification = request->surface_specification();
+
     {
         std::unique_lock<std::mutex> lock(session_mutex);
 
-        auto session = weak_session.lock();
+        auto const session = weak_session.lock();
         if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         msh::SurfaceSpecification mods;
-        if (request->has_name())
-            mods.name = request->name();
-        // TODO: More fields soon (LP: #1422522) (LP: #1420573)
+
+        #define COPY_IF_SET(name)\
+            if (surface_specification.has_##name())\
+                mods.name = decltype(mods.name.value())(surface_specification.name())
+
+        COPY_IF_SET(width);
+        COPY_IF_SET(height);
+        COPY_IF_SET(pixel_format);
+        COPY_IF_SET(buffer_usage);
+        COPY_IF_SET(name);
+        COPY_IF_SET(output_id);
+        COPY_IF_SET(type);
+        COPY_IF_SET(state);
+        COPY_IF_SET(preferred_orientation);
+        COPY_IF_SET(parent_id);
+        // aux_rect is a special case (below)
+        COPY_IF_SET(edge_attachment);
+        COPY_IF_SET(min_width);
+        COPY_IF_SET(min_height);
+        COPY_IF_SET(max_width);
+        COPY_IF_SET(max_height);
+        COPY_IF_SET(width_inc);
+        COPY_IF_SET(height_inc);
+        // min_aspect is a special case (below)
+        // max_aspect is a special case (below)
+
+        #undef COPY_IF_SET
+
+        if (surface_specification.has_aux_rect())
+        {
+            auto const& rect = surface_specification.aux_rect();
+            mods.aux_rect = {{rect.left(), rect.top()}, {rect.width(), rect.height()}};
+        }
+
+        if (surface_specification.has_min_aspect())
+            mods.min_aspect =
+                {
+                    surface_specification.min_aspect().width(),
+                    surface_specification.min_aspect().height()
+                };
+
+        if (surface_specification.has_max_aspect())
+            mods.max_aspect =
+                {
+                    surface_specification.max_aspect().width(),
+                    surface_specification.max_aspect().height()
+                };
 
         auto const id = mf::SurfaceId(request->surface_id().value());
 
@@ -561,16 +628,8 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
 
     report->session_create_surface_called(session->name());
     
-    mg::BufferUsage usage = mg::BufferUsage::undefined;
-    auto client_usage = request->buffer_usage();
-    if (client_usage == mir_buffer_usage_hardware)
-    {
-        usage = mg::BufferUsage::hardware;
-    }
-    else
-    {
-        usage = mg::BufferUsage::software;
-    }
+    auto const usage = (request->buffer_usage() == mir_buffer_usage_hardware) ?
+        mg::BufferUsage::hardware : mg::BufferUsage::software;
 
     auto stream_size = geom::Size{geom::Width{request->width()}, geom::Height{request->height()}};
     mg::BufferProperties props(stream_size,

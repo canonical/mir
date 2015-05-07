@@ -22,7 +22,7 @@
 #include "mir/log.h"
 
 #include "mir_toolkit/events/event.h"
-#include "mir_toolkit/events/event_deprecated.h"
+#include "mir/events/event_private.h"
 
 #include "mir_toolkit/events/surface_event.h"
 #include "mir_toolkit/events/resize_event.h"
@@ -140,6 +140,13 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev)
     return &ev->keymap;
 }
 
+MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_input_configuration);
+
+    return &ev->input_configuration;
+}
+
 /* Surface event accessors */
 
 MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev)
@@ -192,6 +199,26 @@ void mir_keymap_event_get_rules(MirKeymapEvent const* ev, xkb_rule_names *out_na
 {
     expect_event_type(ev, mir_event_type_keymap);
     *out_names = ev->rules;
+}
+
+/* Input configuration event accessors */
+
+MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputConfigurationEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_input_configuration);
+    return ev->action;
+}
+
+int64_t mir_input_configuration_event_get_time(MirInputConfigurationEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_input_configuration);
+    return ev->when.count();
+}
+
+MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurationEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_input_configuration);
+    return ev->id;
 }
 
 // TODO: Until we opaquify the MirEvent structure and add

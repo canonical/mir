@@ -35,6 +35,16 @@
 namespace mclr = mir::client::rpc;
 namespace md = mir::dispatch;
 
+void mclr::TransportObservers::on_data_available()
+{
+    for_each([](auto observer) { observer->on_data_available(); });
+}
+
+void mclr::TransportObservers::on_disconnected()
+{
+    for_each([](auto observer) { observer->on_disconnected(); });
+}
+
 mclr::StreamSocketTransport::StreamSocketTransport(mir::Fd const& fd)
     : socket_fd{fd}
 {
@@ -47,8 +57,12 @@ mclr::StreamSocketTransport::StreamSocketTransport(std::string const& socket_pat
 
 void mclr::StreamSocketTransport::register_observer(std::shared_ptr<Observer> const& observer)
 {
-    std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
-    observers.push_back(observer);
+    observers.add(observer);
+}
+
+void mclr::StreamSocketTransport::unregister_observer(std::shared_ptr<Observer> const& observer)
+{
+    observers.remove(observer);
 }
 
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested)
@@ -86,7 +100,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
 
         if (result == 0)
         {
-            notify_disconnected();
+            observers.on_disconnected();
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read message from server: server has shutdown"));
         }
         if (result < 0)
@@ -97,7 +111,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
             }
             if (errno == EPIPE)
             {
-                notify_disconnected();
+                observers.on_disconnected();
                 BOOST_THROW_EXCEPTION(
                             boost::enable_error_info(
                                 socket_disconnected_error("Failed to read message from server"))
@@ -124,7 +138,7 @@ try
 }
 catch (socket_disconnected_error &e)
 {
-    notify_disconnected();
+    observers.on_disconnected();
     throw e;
 }
 
@@ -148,7 +162,7 @@ void mclr::StreamSocketTransport::send_message(
             }
             if (errno == EPIPE)
             {
-                notify_disconnected();
+                observers.on_disconnected();
                 BOOST_THROW_EXCEPTION(
                             boost::enable_error_info(socket_disconnected_error("Failed to send message to server"))
                             << boost::errinfo_errno(errno));
@@ -182,16 +196,16 @@ bool mclr::StreamSocketTransport::dispatch(md::FdEvents events)
             int dummy;
             if (recv(socket_fd, &dummy, sizeof(dummy), MSG_PEEK | MSG_NOSIGNAL) > 0)
             {
-                notify_data_available();
+                observers.on_data_available();
                 return true;
             }
         }
-        notify_disconnected();
+        observers.on_disconnected();
         return false;
     }
     else if (events & md::FdEvent::readable)
     {
-        notify_data_available();
+        observers.on_data_available();
     }
     return true;
 }
@@ -219,32 +233,4 @@ mir::Fd mclr::StreamSocketTransport::open_socket(std::string const& path)
                     << boost::errinfo_errno(errno));
     }
     return fd;
-}
-
-void mclr::StreamSocketTransport::notify_data_available()
-{
-    // TODO: If copying the observers turns out to be slow, replace with
-    // an RCUish data type; this is a read-mostly, write infrequently structure.
-    decltype(observers) observer_copy;
-    {
-        std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
-        observer_copy = observers;
-    }
-    for (auto& observer : observer_copy)
-    {
-        observer->on_data_available();
-    }
-}
-
-void mclr::StreamSocketTransport::notify_disconnected()
-{
-    decltype(observers) observer_copy;
-    {
-        std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
-        observer_copy = observers;
-    }
-    for (auto& observer : observer_copy)
-    {
-        observer->on_disconnected();
-    }
 }

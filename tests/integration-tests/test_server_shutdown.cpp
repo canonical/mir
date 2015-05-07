@@ -27,6 +27,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/any_surface.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test_doubles/stub_renderer.h"
@@ -194,16 +195,7 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
             /* Default lifecycle handler terminates the process on disconnect, so override it */
             mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
 
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-
-            MirSurface* surf = mir_connection_create_surface_sync(connection, &request_params);
+            auto surf = mtf::make_any_surface(connection);
 
             /* Ask for the first buffer (should succeed) */
             mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surf));
@@ -312,16 +304,7 @@ TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clie
 
             ASSERT_TRUE(connection != NULL);
 
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-
-            mir_connection_create_surface_sync(connection, &request_params);
+            mtf::make_any_surface(connection);
 
             surface_created.set();
             server_done.wait();

@@ -58,11 +58,20 @@ Point titlebar_position_for_window(Point window_position)
 
 me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
     std::shared_ptr<scene::Session> const& session,
-    std::shared_ptr<scene::Surface> const& surface) :
+    std::shared_ptr<scene::Surface> const& surface,
+    scene::SurfaceCreationParameters const& params) :
     state{mir_surface_state_restored},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
-    parent{surface->parent()}
+    parent{params.parent},
+    min_width{params.min_width},
+    min_height{params.min_height},
+    max_width{params.max_width},
+    max_height{params.max_height},
+    width_inc{params.width_inc},
+    height_inc{params.height_inc},
+    min_aspect{params.min_aspect},
+    max_aspect{params.max_aspect}
 {
 }
 
@@ -104,12 +113,12 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 -> ms::SurfaceCreationParameters
 {
     auto parameters = request_parameters;
+    parameters.size.height = parameters.size.height + DeltaY{title_bar_height};
 
-    auto width = std::min(display_area.size.width.as_int(), parameters.size.width.as_int());
-    auto height = std::min(display_area.size.height.as_int(), parameters.size.height.as_int());
-    if (!width) width = 1;
-    if (!height) height = 1;
-    parameters.size = Size{width, height};
+    auto const active_display = tools->active_display();
+
+    auto const width = parameters.size.width.as_int();
+    auto const height = parameters.size.height.as_int();
 
     bool positioned = false;
 
@@ -128,18 +137,15 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
     {
         if (auto const default_surface = session->default_surface())
         {
-            // "If an app does not suggest a position for a regular surface when opening
-            // it, and the app has at least one regular surface already open, and there
-            // is room to do so, Mir should place it one title bar’s height below and to
-            // the right (in LTR languages) or to the left (in RTL languages) of the app’s
-            // most recently active window, so that you can see the title bars of both."
             static Displacement const offset{title_bar_height, title_bar_height};
 
             parameters.top_left = default_surface->top_left() + offset;
 
-            // "If there is not room to do that, Mir should place it as if it was the app’s
-            // only regular surface."
-            positioned = display_area.contains(parameters.top_left + as_displacement(parameters.size));
+            geometry::Rectangle display_for_app{default_surface->top_left(), default_surface->size()};
+
+            display_layout->size_to_output(display_for_app);
+
+            positioned = display_for_app.overlaps(Rectangle{parameters.top_left, parameters.size});
         }
     }
 
@@ -154,12 +160,12 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
         if (edge_attachment && mir_edge_attachment_vertical)
         {
-            if (display_area.contains(top_right + Displacement{width, height}))
+            if (active_display.contains(top_right + Displacement{width, height}))
             {
                 parameters.top_left = top_right;
                 positioned = true;
             }
-            else if (display_area.contains(top_left + Displacement{-width, height}))
+            else if (active_display.contains(top_left + Displacement{-width, height}))
             {
                 parameters.top_left = top_left + Displacement{-width, 0};
                 positioned = true;
@@ -168,12 +174,12 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
         if (edge_attachment && mir_edge_attachment_horizontal)
         {
-            if (display_area.contains(bot_left + Displacement{width, height}))
+            if (active_display.contains(bot_left + Displacement{width, height}))
             {
                 parameters.top_left = bot_left;
                 positioned = true;
             }
-            else if (display_area.contains(top_left + Displacement{width, -height}))
+            else if (active_display.contains(top_left + Displacement{width, -height}))
             {
                 parameters.top_left = top_left + Displacement{0, -height};
                 positioned = true;
@@ -183,16 +189,17 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
     if (!positioned)
     {
-        // "If an app does not suggest a position for its only regular surface when
-        // opening it, Mir should position it horizontally centered, and vertically
-        // such that the top margin is half the bottom margin. (Vertical centering
-        // would look too low, and would allow little room for cascading.)"
-        auto centred = display_area.top_left + 0.5*(
-            as_displacement(display_area.size) - as_displacement(parameters.size));
+        auto centred = active_display.top_left + 0.5*(
+            as_displacement(active_display.size) - as_displacement(parameters.size));
 
-        parameters.top_left = centred - DeltaY{(display_area.size.height.as_int()-height)/6};
+        parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
+
+        if (parameters.top_left.y < display_area.top_left.y)
+            parameters.top_left.y = display_area.top_left.y;
     }
 
+    parameters.top_left.y = parameters.top_left.y + DeltaY{title_bar_height};
+    parameters.size.height = parameters.size.height - DeltaY{title_bar_height};
     return parameters;
 }
 
@@ -201,7 +208,6 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Surface> const& surface,
     CanonicalSurfaceInfoMap& surface_info)
 {
-    tools->info_for(session).surfaces++;
     auto format = mir_pixel_format_xrgb_8888;
     ms::SurfaceCreationParameters params;
     params.of_size(titlebar_size_for_window(surface->size()))
@@ -211,17 +217,17 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
         .of_position(titlebar_position_for_window(surface->top_left()))
         .of_type(mir_surface_type_gloss);
     auto id = session->create_surface(params);
-    auto decoration_surface = session->surface(id);
-    decoration_surface->set_alpha(0.9);
-    tools->info_for(surface).decoration = decoration_surface;
-    tools->info_for(surface).children.push_back(decoration_surface);
+    auto titlebar = session->surface(id);
+    titlebar->set_alpha(0.9);
+    tools->info_for(surface).titlebar = titlebar;
+    tools->info_for(surface).children.push_back(titlebar);
 
     //TODO: provide an easier way for the server to write to a surface!
     std::mutex mut;
     std::condition_variable cv;
     mir::graphics::Buffer* written_buffer{nullptr};
 
-    decoration_surface->swap_buffers(
+    titlebar->swap_buffers(
         nullptr,
         [&](mir::graphics::Buffer* buffer)
         {
@@ -239,13 +245,13 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
         cv.wait(lk, [&]{return written_buffer;});
     }
 
-    decoration_surface->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
+    titlebar->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
 
-    CanonicalSurfaceInfoCopy info{session, decoration_surface};
-    info.is_decoration = true;
+    CanonicalSurfaceInfoCopy info{session, titlebar, ms::SurfaceCreationParameters{}};
+    info.is_titlebar = true;
     info.parent = surface;
 
-    surface_info.emplace(decoration_surface, std::move(info));
+    surface_info.emplace(titlebar, std::move(info));
 }
 
 namespace
@@ -318,8 +324,45 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
     std::shared_ptr<scene::Surface> const& surface,
     shell::SurfaceSpecification const& modifications)
 {
+    auto& surface_info = tools->info_for(surface);
+
+    #define COPY_IF_SET(field)\
+        if (modifications.field.is_set())\
+        surface_info.field = modifications.field
+
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(width_inc);
+    COPY_IF_SET(height_inc);
+    COPY_IF_SET(min_aspect);
+    COPY_IF_SET(max_aspect);
+
+    #undef COPY_IF_SET
+
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
+
+    if (modifications.width.is_set() || modifications.height.is_set())
+    {
+        auto new_size = surface->size();
+
+        if (modifications.width.is_set())
+            new_size.width = modifications.width.value();
+
+        if (modifications.height.is_set())
+            new_size.height = modifications.height.value();
+
+        constrained_resize(
+            surface,
+            surface->top_left(),
+            new_size,
+            false,
+            false,
+            display_area);
+    }
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
@@ -338,12 +381,10 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
         }
     }
 
-
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
-        tools->focus_next();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        tools->focus_next_session();
+        select_active_surface(tools->focused_surface());
     }
 }
 
@@ -382,27 +423,27 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
     case mir_surface_state_restored:
         movement = info.restore_rect.top_left - old_pos;
         surface->resize(info.restore_rect.size);
-        info.decoration->resize(titlebar_size_for_window(info.restore_rect.size));
-        info.decoration->show();
+        info.titlebar->resize(titlebar_size_for_window(info.restore_rect.size));
+        info.titlebar->show();
         break;
 
     case mir_surface_state_maximized:
         movement = display_area.top_left - old_pos;
         surface->resize(display_area.size);
-        info.decoration->hide();
+        info.titlebar->hide();
         break;
 
     case mir_surface_state_horizmaximized:
         movement = Point{display_area.top_left.x, info.restore_rect.top_left.y} - old_pos;
         surface->resize({display_area.size.width, info.restore_rect.size.height});
-        info.decoration->resize(titlebar_size_for_window({display_area.size.width, info.restore_rect.size.height}));
-        info.decoration->show();
+        info.titlebar->resize(titlebar_size_for_window({display_area.size.width, info.restore_rect.size.height}));
+        info.titlebar->show();
         break;
 
     case mir_surface_state_vertmaximized:
         movement = Point{info.restore_rect.top_left.x, display_area.top_left.y} - old_pos;
         surface->resize({info.restore_rect.size.width, display_area.size.height});
-        info.decoration->hide();
+        info.titlebar->hide();
         break;
 
     case mir_surface_state_fullscreen:
@@ -440,7 +481,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
 
     if (action == mir_keyboard_action_down && scan_code == KEY_F11)
     {
-        switch (modifiers & modifier_mask)
+        switch (modifiers)
         {
         case mir_input_event_modifier_alt:
             toggle(mir_surface_state_maximized);
@@ -462,7 +503,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
     {
         if (auto const session = tools->focused_session())
         {
-            switch (modifiers & modifier_mask)
+            switch (modifiers)
             {
             case mir_input_event_modifier_alt:
                 kill(session->process_id(), SIGTERM);
@@ -479,6 +520,28 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
                 break;
             }
         }
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_TAB)
+    {
+        tools->focus_next_session();
+        if (auto const surface = tools->focused_surface())
+            select_active_surface(surface);
+
+        return true;
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_GRAVE)
+    {
+        if (auto const prev = tools->focused_surface())
+        {
+            if (auto const app = tools->focused_session())
+                select_active_surface(app->surface_after(prev));
+        }
+
+        return true;
     }
 
     return false;
@@ -553,6 +616,20 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
         {
             resize(cursor);
             return true;
+        }
+    }
+    else if (action == mir_pointer_action_motion && !modifiers)
+    {
+        if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
+        {
+            if (auto const possible_titlebar = tools->surface_at(old_cursor))
+            {
+                if (tools->info_for(possible_titlebar).is_titlebar)
+                {
+                    drag(cursor);
+                    return true;
+                }
+            }
         }
     }
 
@@ -655,38 +732,112 @@ bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> c
 
     Point new_pos = top_left + left_resize*delta.dx + top_resize*delta.dy;
 
-    if (left_resize)
+    return constrained_resize(surface, new_pos, new_size, left_resize, top_resize, bounds);
+}
+
+bool me::CanonicalWindowManagerPolicyCopy::constrained_resize(
+    std::shared_ptr<ms::Surface> const& surface,
+    Point const& requested_pos,
+    Size const& requested_size,
+    bool const left_resize,
+    bool const top_resize,
+    Rectangle const& /*bounds*/)
+{
+    auto const& surface_info = tools->info_for(surface);
+
+    auto const min_width  = surface_info.min_width.is_set()  ? surface_info.min_width.value()  : Width{};
+    auto const min_height = surface_info.min_height.is_set() ? surface_info.min_height.value() : Height{};
+    auto const max_width  = surface_info.max_width.is_set()  ?
+        surface_info.max_width.value()  : Width{std::numeric_limits<int>::max()};
+    auto const max_height = surface_info.max_height.is_set() ?
+        surface_info.max_height.value() : Height{std::numeric_limits<int>::max()};
+
+    Point new_pos = requested_pos;
+    Size new_size = requested_size;
+
+    if (surface_info.min_aspect.is_set())
     {
-        if (new_pos.x < bounds.top_left.x)
+        auto const ar = surface_info.min_aspect.value();
+
+        auto const error = new_size.height.as_int()*long(ar.width) - new_size.width.as_int()*long(ar.height);
+
+        if (error > 0)
         {
-            new_size.width = new_size.width + (new_pos.x - bounds.top_left.x);
-            new_pos.x = bounds.top_left.x;
+            // Add (denominator-1) to numerator to ensure rounding up
+            auto const width_correction  = (error+(ar.height-1))/ar.height;
+            auto const height_correction = (error+(ar.width-1))/ar.width;
+
+            if (width_correction < height_correction)
+            {
+                new_size.width = new_size.width + DeltaX(width_correction);
+            }
+            else
+            {
+                new_size.height = new_size.height - DeltaY(height_correction);
+            }
         }
     }
-    else
+
+    if (surface_info.max_aspect.is_set())
     {
-        auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
-        if (to_bottom_right.dx < DeltaX{0})
-            new_size.width = new_size.width + to_bottom_right.dx;
+        auto const ar = surface_info.max_aspect.value();
+
+        auto const error = new_size.width.as_int()*long(ar.height) - new_size.height.as_int()*long(ar.width);
+
+        if (error > 0)
+        {
+            // Add (denominator-1) to numerator to ensure rounding up
+            auto const height_correction = (error+(ar.width-1))/ar.width;
+            auto const width_correction  = (error+(ar.height-1))/ar.height;
+
+            if (width_correction < height_correction)
+            {
+                new_size.width = new_size.width - DeltaX(width_correction);
+            }
+            else
+            {
+                new_size.height = new_size.height + DeltaY(height_correction);
+            }
+        }
     }
+
+    if (min_width > new_size.width)
+        new_size.width = min_width;
+
+    if (min_height > new_size.height)
+        new_size.height = min_height;
+
+    if (max_width < new_size.width)
+        new_size.width = max_width;
+
+    if (max_height < new_size.height)
+        new_size.height = max_height;
+
+    if (surface_info.width_inc.is_set())
+    {
+        auto const width = new_size.width.as_int() - min_width.as_int();
+        auto inc = surface_info.width_inc.value().as_int();
+        if (width % inc)
+            new_size.width = min_width + DeltaX{inc*(((2L*width + inc)/2)/inc)};
+    }
+
+    if (surface_info.height_inc.is_set())
+    {
+        auto const height = new_size.height.as_int() - min_height.as_int();
+        auto inc = surface_info.height_inc.value().as_int();
+        if (height % inc)
+            new_size.height = min_height + DeltaY{inc*(((2L*height + inc)/2)/inc)};
+    }
+
+    if (left_resize)
+        new_pos.x += new_size.width - requested_size.width;
 
     if (top_resize)
-    {
-        if (new_pos.y < bounds.top_left.y)
-        {
-            new_size.height = new_size.height + (new_pos.y - bounds.top_left.y);
-            new_pos.y = bounds.top_left.y;
-        }
-    }
-    else
-    {
-        auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
-        if (to_bottom_right.dy < DeltaY{0})
-            new_size.height = new_size.height + to_bottom_right.dy;
-    }
+        new_pos.y += new_size.height - requested_size.height;
 
-    auto& info = tools->info_for(surface);
-    switch (info.state)
+    // placeholder - constrain onscreen
+
+    switch (surface_info.state)
     {
     case mir_surface_state_restored:
         break;
@@ -694,15 +845,15 @@ bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> c
     // "A vertically maximised surface is anchored to the top and bottom of
     // the available workspace and can have any width."
     case mir_surface_state_vertmaximized:
-        new_pos.y = old_pos.top_left.y;
-        new_size.height = old_pos.size.height;
+        new_pos.y = surface->top_left().y;
+        new_size.height = surface->size().height;
         break;
 
     // "A horizontally maximised surface is anchored to the left and right of
     // the available workspace and can have any height"
     case mir_surface_state_horizmaximized:
-        new_pos.x = old_pos.top_left.x;
-        new_size.width = old_pos.size.width;
+        new_pos.x = surface->top_left().x;
+        new_size.width = surface->size().width;
         break;
 
     // "A maximised surface is anchored to the top, bottom, left and right of the
@@ -713,45 +864,32 @@ bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> c
         return true;
     }
 
-    info.decoration->resize({new_size.width, Height{title_bar_height}});
+    surface_info.titlebar->resize({new_size.width, Height{title_bar_height}});
     surface->resize(new_size);
 
     // TODO It is rather simplistic to move a tree WRT the top_left of the root
     // TODO when resizing. But for more sophistication we would need to encode
     // TODO some sensible layout rules.
-    move_tree(surface, new_pos-top_left);
+    move_tree(surface, new_pos-surface->top_left());
 
     return true;
 }
 
-bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
+bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle /*bounds*/)
 {
-    if (surface && surface->input_area_contains(from))
-    {
-        auto const top_left = surface->top_left();
-        auto const surface_size = surface->size();
-        auto const bottom_right = top_left + as_displacement(surface_size);
+    if (!surface)
+        return false;
 
-        auto movement = to - from;
+    if (!surface->input_area_contains(from) && !tools->info_for(surface).titlebar)
+        return false;
 
-        if (movement.dx < DeltaX{0})
-            movement.dx = std::max(movement.dx, (bounds.top_left - top_left).dx);
+    auto movement = to - from;
 
-        if (movement.dy < DeltaY{0})
-            movement.dy = std::max(movement.dy, (bounds.top_left - top_left).dy);
+    // placeholder - constrain onscreen
 
-        if (movement.dx > DeltaX{0})
-            movement.dx = std::min(movement.dx, (bounds.bottom_right() - bottom_right).dx);
+    move_tree(surface, movement);
 
-        if (movement.dy > DeltaY{0})
-            movement.dy = std::min(movement.dy, (bounds.bottom_right() - bottom_right).dy);
-
-        move_tree(surface, movement);
-
-        return true;
-    }
-
-    return false;
+    return true;
 }
 
 void me::CanonicalWindowManagerPolicyCopy::move_tree(std::shared_ptr<ms::Surface> const& root, Displacement movement) const

@@ -84,7 +84,7 @@ public:
  *   2. the implementation of these functions is Shell behaviour
  * Simply providing them as part of AbstractShell is probably adequate.
  *  @{ */
-    void focus_next() override;
+    void focus_next_session() override;
 
     std::shared_ptr<scene::Session> focused_session() const override;
 
