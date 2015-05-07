@@ -35,14 +35,11 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.key.device_id = android_event->getDeviceId();
             mir_event.key.source_id = android_event->getSource();
             mir_event.key.action = static_cast<MirKeyAction>(kev->getAction());
-            mir_event.key.flags = static_cast<MirKeyFlag>(kev->getFlags());
             mir_event.key.modifiers = kev->getMetaState();
             mir_event.key.key_code = kev->getKeyCode();
             mir_event.key.scan_code = kev->getScanCode();
             mir_event.key.repeat_count = kev->getRepeatCount();
-            mir_event.key.down_time = kev->getDownTime().count();
             mir_event.key.event_time = kev->getEventTime().count();
-            mir_event.key.is_system_key = false; // TODO: Figure out what this is. //kev->isSystemKey();
             break;
         }
         case AINPUT_EVENT_TYPE_MOTION:
@@ -52,24 +49,15 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.motion.device_id = android_event->getDeviceId();
             mir_event.motion.source_id = android_event->getSource();
             mir_event.motion.action = mev->getAction();
-            mir_event.motion.flags = static_cast<MirMotionFlag>(mev->getFlags());
             mir_event.motion.modifiers = mev->getMetaState();
-            mir_event.motion.edge_flags = mev->getEdgeFlags();
             mir_event.motion.button_state = static_cast<MirMotionButton>(mev->getButtonState());
-            mir_event.motion.x_offset = mev->getXOffset();
-            mir_event.motion.y_offset = mev->getYOffset();
-            mir_event.motion.x_precision = mev->getXPrecision();
-            mir_event.motion.y_precision = mev->getYPrecision();
-            mir_event.motion.down_time = mev->getDownTime().count();
             mir_event.motion.event_time = mev->getEventTime().count();
             mir_event.motion.pointer_count = mev->getPointerCount();
             for(unsigned int i = 0; i < mev->getPointerCount(); i++)
             {
                     mir_event.motion.pointer_coordinates[i].id = mev->getPointerId(i);
                     mir_event.motion.pointer_coordinates[i].x = mev->getX(i);
-                    mir_event.motion.pointer_coordinates[i].raw_x = mev->getRawX(i);
                     mir_event.motion.pointer_coordinates[i].y = mev->getY(i);
-                    mir_event.motion.pointer_coordinates[i].raw_y = mev->getRawY(i);
                     mir_event.motion.pointer_coordinates[i].touch_major = mev->getTouchMajor(i);
                     mir_event.motion.pointer_coordinates[i].touch_minor = mev->getTouchMinor(i);
                     mir_event.motion.pointer_coordinates[i].size = mev->getSize(i);
