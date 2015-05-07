@@ -57,14 +57,10 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
             event.key.type = mir_event_type_key;
             event.key.source_id = 0;
             event.key.action = mir_key_action_down;
-            event.key.flags = static_cast<MirKeyFlag>(0);
-            event.key.modifiers = mir_key_modifier_none;
             event.key.key_code = XKB_KEY_q;
             event.key.scan_code = XKB_KEY_q;
             event.key.repeat_count = 0;
-            event.key.down_time = 1234;
             event.key.event_time = 12345;
-            event.key.is_system_key = 0;
 
             sink->handle_input(event);
         }
