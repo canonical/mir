@@ -213,7 +213,9 @@ void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
     auto const surface = p->second;
     session_listener->destroying_surface(*this, surface);
     surfaces.erase(p);
-    streams.erase(checked_find(mf::BufferStreamId(id.as_value())));
+    auto stream_it = streams.find(mf::BufferStreamId(id.as_value()));
+    if(stream_it != streams.end())
+        streams.erase(stream_it);
 
     lock.unlock();
 

@@ -504,15 +504,13 @@ TEST_F(ApplicationSession, surface_ids_are_bufferstream_ids)
     }, std::runtime_error);
 }
 
-TEST_F(ApplicationSession, cannot_destroy_surface_bstream)
+TEST_F(ApplicationSession, can_destroy_surface_bstream)
 {
     auto session = make_application_session_with_stubs();
     ms::SurfaceCreationParameters params;
-    auto id1 = session->create_surface(params);
-    EXPECT_THROW({
-        session->destroy_buffer_stream(id1);
-    }, std::runtime_error);
-    session->destroy_surface(id1);
+    auto id = session->create_surface(params);
+    session->destroy_buffer_stream(mf::BufferStreamId(id.as_value()));
+    session->destroy_surface(id);
 }
 
 TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
