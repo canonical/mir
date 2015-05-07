@@ -32,6 +32,8 @@
 
 #include <xkbcommon/xkbcommon.h>
 
+#include <chrono>
+
 #ifdef __cplusplus
 /**
  * \addtogroup mir_toolkit
@@ -139,6 +141,15 @@ typedef struct
     /* "_coordinates" is a misnomer here because there's plenty more info than
        just coordinates, but renaming it accurately would be an API break */
 } MirMotionEvent;
+ 
+struct MirInputConfigurationEvent
+{
+    MirEventType type;
+
+    MirInputConfigurationAction action;
+    std::chrono::nanoseconds when;
+    MirInputDeviceId id;
+};
 
 struct MirSurfaceEvent
 {
@@ -200,6 +211,7 @@ union MirEvent
     MirOrientationEvent orientation;
     MirCloseSurfaceEvent   close_surface;
     MirKeymapEvent keymap;
+    MirInputConfigurationEvent input_configuration;
 };
 
 #ifdef __cplusplus

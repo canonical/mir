@@ -138,7 +138,11 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_event_get_prompt_session_event;
     mir_event_get_resize_event;
     mir_event_get_surface_event;
+    mir_event_get_input_configuration_event;
     mir_event_get_type;
+    mir_input_configuration_event_get_action;
+    mir_input_configuration_event_get_time;
+    mir_input_configuration_event_get_device_id;
     mir_event_ref;
     mir_event_unref;
     mir_input_event_get_device_id;
