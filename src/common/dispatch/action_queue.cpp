@@ -22,7 +22,7 @@
 #include <sys/eventfd.h>
 
 mir::dispatch::ActionQueue::ActionQueue()
-    : event_fd{eventfd(0, EFD_CLOEXEC|EFD_NONBLOCK)}
+    : event_fd{eventfd(0, EFD_CLOEXEC|EFD_NONBLOCK|EFD_SEMAPHORE)}
 {
     if (event_fd < 0)
         BOOST_THROW_EXCEPTION((std::system_error{errno,
@@ -47,19 +47,23 @@ bool mir::dispatch::ActionQueue::dispatch(FdEvents events)
     if (events&FdEvent::error)
         return false;
 
-    std::list<std::function<void()>> actions_to_process;
+    if (!consume())
+    {
+        // Another thread has won the race to process this event
+        // That's OK, just bail.
+        return true;
+    }
+
+    std::function<void()> action_to_process;
 
     {
         std::unique_lock<std::mutex> lock(list_lock);
-        consume();
-        std::swap(actions_to_process, actions);
+        action_to_process = actions.front();
+        actions.pop_front();
     }
 
-    while(!actions_to_process.empty())
-    {
-        actions_to_process.front()();
-        actions_to_process.pop_front();
-    }
+    action_to_process();
+
     return true;
 }
 
@@ -68,13 +72,20 @@ mir::dispatch::FdEvents mir::dispatch::ActionQueue::relevant_events() const
     return FdEvent::readable;
 }
 
-void mir::dispatch::ActionQueue::consume()
+bool mir::dispatch::ActionQueue::consume()
 {
     uint64_t num_actions;
     if (read(event_fd, &num_actions, sizeof num_actions) != sizeof num_actions)
+    {
+        if (errno == EAGAIN)
+        {
+            return false;
+        }
         BOOST_THROW_EXCEPTION((std::system_error{errno,
                                                  std::system_category(),
                                                  "Failed to consume action queue notification"}));
+    }
+    return true;
 }
 
 void mir::dispatch::ActionQueue::wake()
