@@ -168,3 +168,37 @@ int32_t mia::android_tool_type_from_mir(MirTouchTooltype mir_tooltype)
     }
 }
 
+MirPointerAction mia::mir_pointer_action_from_masked_android(int32_t masked_android_action)
+{
+    switch (masked_android_action)
+    {
+    case AMOTION_EVENT_ACTION_UP:
+    case AMOTION_EVENT_ACTION_POINTER_UP:
+        return mir_pointer_action_button_up;
+    case AMOTION_EVENT_ACTION_DOWN:
+    case AMOTION_EVENT_ACTION_POINTER_DOWN:
+        return mir_pointer_action_button_down;
+    case AMOTION_EVENT_ACTION_HOVER_ENTER:
+        return mir_pointer_action_enter;
+    case AMOTION_EVENT_ACTION_HOVER_EXIT:
+        return mir_pointer_action_leave;
+    default:
+        return mir_pointer_action_motion;
+
+    }
+}
+
+MirTouchAction mia::mir_touch_action_from_masked_android(int32_t masked_android_action)
+{
+    switch (masked_android_action)
+    {
+    case AMOTION_EVENT_ACTION_UP:
+    case AMOTION_EVENT_ACTION_POINTER_UP:
+        return mir_touch_action_up;
+    case AMOTION_EVENT_ACTION_DOWN:
+    case AMOTION_EVENT_ACTION_POINTER_DOWN:
+        return mir_touch_action_down;
+    default:
+        return mir_touch_action_change;
+    }
+}

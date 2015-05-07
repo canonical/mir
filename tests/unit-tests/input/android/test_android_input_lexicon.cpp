@@ -47,18 +47,17 @@ TEST(AndroidInputLexicon, translates_key_events)
                                scan_code, meta_state, repeat_count,
                                down_time, event_time);
 
-    MirEvent mir_ev;
-    mia::Lexicon::translate(android_key_ev, mir_ev);
+    auto mir_ev = mia::Lexicon::translate(android_key_ev);
 
     // Common event properties
-    EXPECT_EQ(device_id, mir_ev.key.device_id);
-    EXPECT_EQ(source_id, mir_ev.key.source_id);
-    EXPECT_EQ(mir_keyboard_action_down, mir_ev.key.action);
-    EXPECT_EQ(mir_input_event_modifier_alt, mir_ev.key.modifiers);
+    EXPECT_EQ(device_id, mir_ev->key.device_id);
+    EXPECT_EQ(source_id, mir_ev->key.source_id);
+    EXPECT_EQ(mir_keyboard_action_down, mir_ev->key.action);
+    EXPECT_EQ(mir_input_event_modifier_alt, mir_ev->key.modifiers);
 
-    auto mir_key_ev = &mir_ev.key;
+    auto mir_key_ev = &mir_ev->key;
     // Key event specific properties
-    EXPECT_EQ(mir_ev.type, mir_event_type_key);
+    EXPECT_EQ(mir_ev->type, mir_event_type_key);
     EXPECT_EQ(mir_key_ev->key_code, key_code);
     EXPECT_EQ(mir_key_ev->scan_code, scan_code);
     EXPECT_EQ(mir_key_ev->event_time, event_time);
@@ -121,18 +120,17 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
                                   x_precision, y_precision, down_time,
                                   event_time, pointer_count, &pointer_properties, &pointer_coords);
 
-    MirEvent mir_ev;
-    mia::Lexicon::translate(android_motion_ev, mir_ev);
-
+    auto mir_ev = mia::Lexicon::translate(android_motion_ev);
+    
     // Common event properties
-    EXPECT_EQ(device_id, mir_ev.motion.device_id);
-    EXPECT_EQ(source_id, mir_ev.motion.source_id);
-    EXPECT_EQ(action, mir_ev.motion.action);
+    EXPECT_EQ(device_id, mir_ev->motion.device_id);
+    EXPECT_EQ(source_id, mir_ev->motion.source_id);
+    EXPECT_EQ(action, mir_ev->motion.action);
 
     // Motion event specific properties
-    EXPECT_EQ(mir_ev.type, mir_event_type_motion);
+    EXPECT_EQ(mir_ev->type, mir_event_type_motion);
 
-    auto mir_motion_ev = &mir_ev.motion;
+    auto mir_motion_ev = &mir_ev->motion;
 
     EXPECT_EQ(mir_motion_ev->event_time, event_time);
 
@@ -223,18 +221,17 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
                                   down_time, event_time, pointer_count,
                                   pointer_properties, pointer_coords);
 
-    MirEvent mir_ev;
-    mia::Lexicon::translate(android_motion_ev, mir_ev);
+    auto mir_ev = mia::Lexicon::translate(android_motion_ev);
 
     // Common event properties
-    EXPECT_EQ(device_id, mir_ev.motion.device_id);
-    EXPECT_EQ(source_id, mir_ev.motion.source_id);
-    EXPECT_EQ(action, mir_ev.motion.action);
+    EXPECT_EQ(device_id, mir_ev->motion.device_id);
+    EXPECT_EQ(source_id, mir_ev->motion.source_id);
+    EXPECT_EQ(action, mir_ev->motion.action);
 
     // Motion event specific properties
-    EXPECT_EQ(mir_ev.type, mir_event_type_motion);
+    EXPECT_EQ(mir_ev->type, mir_event_type_motion);
 
-    auto mir_motion_ev = &mir_ev.motion;
+    auto mir_motion_ev = &mir_ev->motion;
 
     EXPECT_EQ(mir_motion_ev->event_time, event_time);
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
