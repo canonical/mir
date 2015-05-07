@@ -175,7 +175,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonParameters const& button)
 {
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                             std::chrono::system_clock::now().time_since_epoch());
+        std::chrono::system_clock::now().time_since_epoch());
     auto action = update_buttons(button.action, to_pointer_button(button.button));
     auto event_modifiers = expand_modifier(modifiers);
     auto button_event = mir::events::make_event(device_id_unknown,
