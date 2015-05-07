@@ -72,7 +72,8 @@ typedef enum {
     mir_pointer_button_secondary = 1,
     mir_pointer_button_tertiary  = 2,
     mir_pointer_button_back      = 3,
-    mir_pointer_button_forward   = 4
+    mir_pointer_button_forward   = 4,
+    mir_pointer_button_count     = 5
 } MirPointerButton;
 
 /**

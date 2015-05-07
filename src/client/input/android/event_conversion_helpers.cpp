@@ -102,7 +102,7 @@ int32_t mia::android_keyboard_action_from_mir(MirKeyboardAction action, int32_t&
 }
 
 void mia::mir_pointer_buttons_from_android(int32_t android_state,
-                                           bool (&mir_button_state)[5])
+                                           bool (&mir_button_state)[mir_pointer_button_count])
 {
     memset(mir_button_state, 0, sizeof(mir_button_state));
     
@@ -118,7 +118,7 @@ void mia::mir_pointer_buttons_from_android(int32_t android_state,
         mir_button_state[mir_pointer_button_forward] = true;
 }
 
-int32_t mia::android_pointer_buttons_from_mir(bool const (&mir_button_state)[5])
+int32_t mia::android_pointer_buttons_from_mir(bool const (&mir_button_state)[mir_pointer_button_count])
 {
     int32_t android_state = 0;
     if (mir_button_state[mir_pointer_button_primary])
