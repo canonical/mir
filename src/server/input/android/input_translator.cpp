@@ -19,6 +19,7 @@
 #include "input_translator.h"
 
 #include "mir/input/android/event_conversion_helpers.h"
+#include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
 
 #include "androidfw/Input.h"
@@ -26,45 +27,34 @@
 #include <unordered_set>
 
 namespace mia = mir::input::android;
+namespace mev = mir::events;
 
 namespace
 {
-inline int32_t get_index_from_motion_action(int action)
+std::vector<MirPointerButton> button_vector(int32_t android_button_state)
 {
-    // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
-    return int32_t(action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK)
-        >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+    std::vector<MirPointerButton> ret;
+    if (android_button_state & AMOTION_EVENT_BUTTON_PRIMARY)
+        ret.push_back(mir_pointer_button_primary);
+    if (android_button_state & AMOTION_EVENT_BUTTON_SECONDARY)
+        ret.push_back(mir_pointer_button_secondary);
+    if (android_button_state & AMOTION_EVENT_BUTTON_TERTIARY)
+        ret.push_back(mir_pointer_button_tertiary);
+    if (android_button_state & AMOTION_EVENT_BUTTON_BACK)
+        ret.push_back(mir_pointer_button_back);
+    if (android_button_state & AMOTION_EVENT_BUTTON_FORWARD)
+        ret.push_back(mir_pointer_button_forward);
+    return ret;
 }
+}
+
+namespace
+{
 
 bool valid_motion_event(MirMotionEvent const& motion)
 {
     if (motion.pointer_count > MIR_INPUT_EVENT_MAX_POINTER_COUNT)
         return false;
-
-    // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
-    switch (motion.action & AMOTION_EVENT_ACTION_MASK)
-    {
-    case mir_motion_action_down:
-    case mir_motion_action_up:
-    case mir_motion_action_cancel:
-    case mir_motion_action_move:
-    case mir_motion_action_outside:
-    case mir_motion_action_hover_enter:
-    case mir_motion_action_hover_move:
-    case mir_motion_action_hover_exit:
-    case mir_motion_action_scroll:
-        break;
-    case mir_motion_action_pointer_down:
-    case mir_motion_action_pointer_up:
-        {
-            int32_t index = get_index_from_motion_action(motion.action);
-            if (index < 0 || size_t(index) >= motion.pointer_count)
-                return false;
-            break;
-        }
-    default:
-        return false;
-    }
 
     std::unordered_set<int> ids;
     for (size_t i = 0; i < motion.pointer_count; ++i)
@@ -123,17 +113,15 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
         mir_modifiers &= ~mir_input_event_modifier_none;
     }
 
-    MirEvent mir_event;
-    mir_event.type = mir_event_type_key;
-    mir_event.key.device_id = args->deviceId;
-    mir_event.key.source_id = args->source;
-    mir_event.key.action = mia::mir_keyboard_action_from_android(args->action, 0 /* repeat_count */);
-    mir_event.key.modifiers = mir_modifiers;
-    mir_event.key.key_code = args->keyCode;
-    mir_event.key.scan_code = args->scanCode;
-    mir_event.key.event_time = args->eventTime;
+    auto mir_event = mev::make_event(
+        MirInputDeviceId(args->deviceId),
+        args->eventTime,
+        mia::mir_keyboard_action_from_android(args->action, 0 /* repeat_count */),
+        args->keyCode,
+        args->scanCode,
+        mir_modifiers);
 
-    dispatcher->dispatch(mir_event);
+    dispatcher->dispatch(*mir_event);
 }
 
 void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args)
@@ -141,45 +129,53 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     if (!args)
         return;
 
-    MirEvent mir_event;
-    mir_event.type = mir_event_type_motion;
-    mir_event.motion.device_id = args->deviceId;
-    mir_event.motion.source_id = args->source;
-    mir_event.motion.action = args->action;
-    mir_event.motion.modifiers = mia::mir_modifiers_from_android(args->metaState);
-    mia::mir_pointer_buttons_from_android(args->buttonState, mir_event.motion.button_state);
-    mir_event.motion.event_time = args->eventTime;
-    mir_event.motion.pointer_count = args->pointerCount;
-    for(unsigned int i = 0; i < args->pointerCount; i++)
+    if (args->source == AINPUT_SOURCE_MOUSE ||
+        args->source == AINPUT_SOURCE_TRACKBALL ||
+        args->source == AINPUT_SOURCE_TOUCHPAD)
     {
-        mir_event.motion.pointer_coordinates[i].id = args->pointerProperties[i].id;
-        mir_event.motion.pointer_coordinates[i].x = args->pointerCoords[i].getX();
-        mir_event.motion.pointer_coordinates[i].y = args->pointerCoords[i].getY();
-        mir_event.motion.pointer_coordinates[i].touch_major =
-            args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR);
-        mir_event.motion.pointer_coordinates[i].touch_minor =
-            args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR);
-        mir_event.motion.pointer_coordinates[i].size =
-            args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_SIZE);
-        mir_event.motion.pointer_coordinates[i].pressure =
-            args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_PRESSURE);
-        mir_event.motion.pointer_coordinates[i].orientation =
-            args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_ORIENTATION);
+        printf("Dispatching mouse\n");
+        auto bvec = button_vector(args->buttonState);
+        auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
+                                    args->eventTime,
+                                    mia::mir_modifiers_from_android(args->metaState),
+                                    mia::mir_pointer_action_from_masked_android(args->action & AMOTION_EVENT_ACTION_MASK),
+                                    bvec,
+                                    args->pointerCoords[0].getX(), args->pointerCoords[0].getY(),
+                                    args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_HSCROLL),
+                                    args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_VSCROLL));
 
-        mir_event.motion.pointer_coordinates[i].vscroll =
-            args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_VSCROLL);
+        if (!valid_motion_event(mir_event->motion))
+            return;
+        dispatcher->dispatch(*mir_event);
+    }
+    else
+    {
+        printf("Dispatching touch\n");
+        auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
+                                         args->eventTime,
+                                         mia::mir_modifiers_from_android(args->metaState));
+        auto action = args->action;
+        size_t index_with_action = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+        auto masked_action = action & AMOTION_EVENT_ACTION_MASK;
+        for (unsigned i = 0; i < args->pointerCount; i++)
+        {
+            auto action = (i == index_with_action) ? mia::mir_touch_action_from_masked_android(masked_action) :
+                mir_touch_action_change;
+            mev::add_touch(*mir_event, i, action,
+                           mia::mir_tool_type_from_android(args->pointerProperties[i].toolType),
+                           args->pointerCoords[i].getX(),
+                           args->pointerCoords[i].getY(),
+                           args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_PRESSURE),
+                           args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR),
+                           args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR),
+                           args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_SIZE));
+        }
 
-        mir_event.motion.pointer_coordinates[i].hscroll =
-            args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_HSCROLL);
-
-        mir_event.motion.pointer_coordinates[i].tool_type =
-            mia::mir_tool_type_from_android(args->pointerProperties[i].toolType);
+        if (!valid_motion_event(mir_event->motion))
+            return;
+        dispatcher->dispatch(*mir_event);
     }
 
-    if (!valid_motion_event(mir_event.motion))
-        return;
-
-    dispatcher->dispatch(mir_event);
 }
 
 void mia::InputTranslator::notifySwitch(const droidinput::NotifySwitchArgs* /*args*/)
