@@ -18,6 +18,7 @@
 
 #include "input_translator.h"
 
+#include "mir/input/android/event_conversion_helpers.h"
 #include "mir/events/event_private.h"
 
 #include "androidfw/Input.h"
@@ -107,38 +108,35 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
     if (!args)
         return;
     uint32_t policy_flags = args->policyFlags;
-    int32_t modifiers = args->metaState;
-    int32_t flags = args->flags;
+    MirInputEventModifiers mir_modifiers = mia::mir_modifiers_from_android(args->metaState);
 
-    if ((policy_flags & droidinput::POLICY_FLAG_VIRTUAL) || (flags & AKEY_EVENT_FLAG_VIRTUAL_HARD_KEY))
-        flags |= mir_key_flag_virtual_hard_key;
     if (policy_flags & droidinput::POLICY_FLAG_ALT)
-        modifiers |= mir_key_modifier_alt | mir_key_modifier_alt_left;
+        mir_modifiers |= mir_input_event_modifier_alt | mir_input_event_modifier_alt_left;
     if (policy_flags & droidinput::POLICY_FLAG_ALT_GR)
-        modifiers |= mir_key_modifier_alt | mir_key_modifier_alt_right;
+        mir_modifiers |= mir_input_event_modifier_alt | mir_input_event_modifier_alt_right;
     if (policy_flags & droidinput::POLICY_FLAG_SHIFT)
-        modifiers |= mir_key_modifier_shift | mir_key_modifier_shift_left;
+        mir_modifiers |= mir_input_event_modifier_shift | mir_input_event_modifier_shift_left;
     if (policy_flags & droidinput::POLICY_FLAG_CAPS_LOCK)
-        modifiers |= mir_key_modifier_caps_lock;
+        mir_modifiers |= mir_input_event_modifier_caps_lock;
     if (policy_flags & droidinput::POLICY_FLAG_FUNCTION)
-        modifiers |= mir_key_modifier_function;
-    if (policy_flags & droidinput::POLICY_FLAG_WOKE_HERE)
-        flags |= mir_key_flag_woke_here;
+        mir_modifiers |= mir_input_event_modifier_function;
+
+    // If we've added a modifier to none we have to remove the none flag.
+    if (mir_modifiers != mir_input_event_modifier_none && mir_modifiers & mir_input_event_modifier_none)
+    {
+        mir_modifiers &= ~mir_input_event_modifier_none;
+    }
 
     MirEvent mir_event;
     mir_event.type = mir_event_type_key;
     mir_event.key.device_id = args->deviceId;
     mir_event.key.source_id = args->source;
     mir_event.key.action = static_cast<MirKeyAction>(args->action);
-    mir_event.key.flags = static_cast<MirKeyFlag>(flags);
-    mir_event.key.modifiers = modifiers;
+    mir_event.key.modifiers = mir_modifiers;
     mir_event.key.key_code = args->keyCode;
     mir_event.key.scan_code = args->scanCode;
     mir_event.key.repeat_count = 0;
-    mir_event.key.down_time = args->downTime.count();
     mir_event.key.event_time = args->eventTime.count();
-    mir_event.key.is_system_key = false; // TODO: Figure out what this is. //kev->isSystemKey();
-
 
     if (!valid_key_event(mir_event.key))
         return;
@@ -156,15 +154,8 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     mir_event.motion.device_id = args->deviceId;
     mir_event.motion.source_id = args->source;
     mir_event.motion.action = args->action;
-    mir_event.motion.flags = static_cast<MirMotionFlag>(args->flags);
-    mir_event.motion.modifiers = args->metaState;
-    mir_event.motion.edge_flags = args->edgeFlags;
+    mir_event.motion.modifiers = mia::mir_modifiers_from_android(args->metaState);
     mir_event.motion.button_state = static_cast<MirMotionButton>(args->buttonState);
-    mir_event.motion.x_offset = 0; // offsets or axis positions are calculated in dispatcher
-    mir_event.motion.y_offset = 0;
-    mir_event.motion.x_precision = args->xPrecision;
-    mir_event.motion.y_precision = args->yPrecision;
-    mir_event.motion.down_time = args->downTime.count();
     mir_event.motion.event_time = args->eventTime.count();
     mir_event.motion.pointer_count = args->pointerCount;
     for(unsigned int i = 0; i < args->pointerCount; i++)
@@ -172,9 +163,6 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
         mir_event.motion.pointer_coordinates[i].id = args->pointerProperties[i].id;
         mir_event.motion.pointer_coordinates[i].x = args->pointerCoords[i].getX();
         mir_event.motion.pointer_coordinates[i].y = args->pointerCoords[i].getY();
-        // offsets or axis positions are calculated in dispatcher:
-        mir_event.motion.pointer_coordinates[i].raw_x = args->pointerCoords[i].getX();
-        mir_event.motion.pointer_coordinates[i].raw_y = args->pointerCoords[i].getY();
         mir_event.motion.pointer_coordinates[i].touch_major =
             args->pointerCoords[i].getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR);
         mir_event.motion.pointer_coordinates[i].touch_minor =

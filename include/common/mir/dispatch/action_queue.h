@@ -41,7 +41,7 @@ public:
     bool dispatch(FdEvents events) override;
     FdEvents relevant_events() const override;
 private:
-    void consume();
+    bool consume();
     void wake();
     mir::Fd event_fd;
     std::mutex list_lock;
