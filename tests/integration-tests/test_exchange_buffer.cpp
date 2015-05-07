@@ -86,7 +86,6 @@ struct StubStream : public mc::BufferStream
     void force_requests_to_complete() {};
     int buffers_ready_for_compositor(void const*) const override { return -5; }
     void drop_old_buffers() {}
-    void drop_client_requests() override {}
 
     std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
     std::vector<mg::BufferID> const buffer_id_seq;
