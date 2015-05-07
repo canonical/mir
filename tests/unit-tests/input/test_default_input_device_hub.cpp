@@ -100,6 +100,8 @@ struct InputDeviceHubTest : ::testing::Test
     Nice<MockInputDevice> another_device;
     Nice<MockInputDevice> third_device;
 
+    std::chrono::nanoseconds arbitrary_timestamp;
+
     InputDeviceHubTest()
     {
         using namespace testing;
@@ -241,7 +243,6 @@ TEST_F(InputDeviceHubTest, observers_receive_device_changes)
 TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 {
     using namespace ::testing;
-    int64_t arbitrary_timestamp = 0;
     int64_t unset_input_device_id = 0;
     auto event = mir::events::make_event(unset_input_device_id, arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_A, mir_input_event_modifier_none);
 
@@ -266,7 +267,6 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 TEST_F(InputDeviceHubTest, forwards_touch_spots_to_visualizer)
 {
     using namespace ::testing;
-    int64_t arbitrary_timestamp = 0;
     auto touch_event_1 = mir::events::make_event(0, arbitrary_timestamp, mir_input_event_modifier_none);
     mir::events::add_touch(*touch_event_1, 0, mir_touch_action_down, mir_touch_tooltype_finger,
                            21.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
