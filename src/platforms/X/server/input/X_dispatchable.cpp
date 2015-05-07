@@ -57,6 +57,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
             event.key.type = mir_event_type_key;
             event.key.source_id = 0;
             event.key.action = mir_key_action_down;
+            event.key.modifiers = mir_input_event_modifier_none;
             event.key.key_code = XKB_KEY_q;
             event.key.scan_code = XKB_KEY_q;
             event.key.repeat_count = 0;
