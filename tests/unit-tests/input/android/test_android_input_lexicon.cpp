@@ -54,7 +54,6 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(device_id, mir_ev.key.device_id);
     EXPECT_EQ(source_id, mir_ev.key.source_id);
     EXPECT_EQ(action, mir_ev.key.action);
-    EXPECT_EQ(flags, mir_ev.key.flags);
     EXPECT_EQ((unsigned int)meta_state, mir_ev.key.modifiers);
 
     auto mir_key_ev = &mir_ev.key;
@@ -63,10 +62,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(mir_key_ev->key_code, key_code);
     EXPECT_EQ(mir_key_ev->scan_code, scan_code);
     EXPECT_EQ(mir_key_ev->repeat_count, repeat_count);
-    EXPECT_EQ(mir_key_ev->down_time, down_time.count());
     EXPECT_EQ(mir_key_ev->event_time, event_time.count());
-    // What is this flag and where does it come from?
-    EXPECT_EQ(mir_key_ev->is_system_key, false);
 
     delete android_key_ev;
 }
@@ -133,7 +129,6 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     EXPECT_EQ(device_id, mir_ev.motion.device_id);
     EXPECT_EQ(source_id, mir_ev.motion.source_id);
     EXPECT_EQ(action, mir_ev.motion.action);
-    EXPECT_EQ(flags, mir_ev.motion.flags);
     EXPECT_EQ((unsigned int)meta_state, mir_ev.motion.modifiers);
 
     // Motion event specific properties
@@ -141,13 +136,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
 
     auto mir_motion_ev = &mir_ev.motion;
 
-    EXPECT_EQ(mir_motion_ev->edge_flags, edge_flags);
     EXPECT_EQ(mir_motion_ev->button_state, button_state);
-    EXPECT_EQ(mir_motion_ev->x_offset, x_offset);
-    EXPECT_EQ(mir_motion_ev->y_offset, y_offset);
-    EXPECT_EQ(mir_motion_ev->x_precision, x_precision);
-    EXPECT_EQ(mir_motion_ev->y_precision, y_precision);
-    EXPECT_EQ(mir_motion_ev->down_time, down_time.count());
     EXPECT_EQ(mir_motion_ev->event_time, event_time.count());
 
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
@@ -158,8 +147,6 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     // Notice these two coordinates are offset by x/y offset
     EXPECT_EQ(mir_pointer_coords->x, x_axis + x_offset);
     EXPECT_EQ(mir_pointer_coords->y, y_axis + y_offset);
-    EXPECT_EQ(mir_pointer_coords->raw_x, x_axis);
-    EXPECT_EQ(mir_pointer_coords->raw_y, y_axis);
     EXPECT_EQ(mir_pointer_coords->touch_major, touch_major);
     EXPECT_EQ(mir_pointer_coords->touch_minor, touch_minor);
     EXPECT_EQ(mir_pointer_coords->size, size);
@@ -250,7 +237,6 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     EXPECT_EQ(device_id, mir_ev.motion.device_id);
     EXPECT_EQ(source_id, mir_ev.motion.source_id);
     EXPECT_EQ(action, mir_ev.motion.action);
-    EXPECT_EQ(flags, mir_ev.motion.flags);
     EXPECT_EQ((unsigned int)meta_state, mir_ev.motion.modifiers);
 
     // Motion event specific properties
@@ -258,13 +244,7 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
 
     auto mir_motion_ev = &mir_ev.motion;
 
-    EXPECT_EQ(mir_motion_ev->edge_flags, edge_flags);
     EXPECT_EQ(mir_motion_ev->button_state, button_state);
-    EXPECT_EQ(mir_motion_ev->x_offset, x_offset);
-    EXPECT_EQ(mir_motion_ev->y_offset, y_offset);
-    EXPECT_EQ(mir_motion_ev->x_precision, x_precision);
-    EXPECT_EQ(mir_motion_ev->y_precision, y_precision);
-    EXPECT_EQ(mir_motion_ev->down_time, down_time.count());
     EXPECT_EQ(mir_motion_ev->event_time, event_time.count());
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
 
@@ -275,8 +255,6 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
         EXPECT_EQ(pointer[p].id, pointer_id[p]);
         EXPECT_EQ(pointer[p].x, x_axis[p] + x_offset);
         EXPECT_EQ(pointer[p].y, y_axis[p] + y_offset);
-        EXPECT_EQ(pointer[p].raw_x, x_axis[p]);
-        EXPECT_EQ(pointer[p].raw_y, y_axis[p]);
         EXPECT_EQ(pointer[p].touch_major, touch_major[p]);
         EXPECT_EQ(pointer[p].touch_minor, touch_minor[p]);
         EXPECT_EQ(pointer[p].size, size[p]);

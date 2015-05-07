@@ -241,12 +241,12 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
         event.device_id,
         event.source_id,
         event.action,
-        event.flags,
+        0, /* Flags */
         event.key_code,
         event.scan_code,
         event.modifiers,
         event.repeat_count,
-        std::chrono::nanoseconds(event.down_time),
+        std::chrono::nanoseconds(event.event_time),
         std::chrono::nanoseconds(event.event_time)
         );
 }
@@ -282,15 +282,14 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_motion_event(uint32_
         event.device_id,
         event.source_id,
         event.action,
-        static_cast<int32_t>(event.flags),
-        event.edge_flags,
+        0, /* flags */
+        0, /* edge flags */
         static_cast<int32_t>(event.modifiers),
         static_cast<int32_t>(event.button_state),
         0.0f,  // event.x_offset,
         0.0f,  // event.y_offset,
-        event.x_precision,
-        event.y_precision,
-        std::chrono::nanoseconds(event.down_time),
+        0, 0, /* unused x/y precision */
+        std::chrono::nanoseconds(event.event_time),
         std::chrono::nanoseconds(event.event_time),
         event.pointer_count,
         properties,

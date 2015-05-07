@@ -394,6 +394,28 @@ MATCHER_P(InputDeviceIdMatches, device_id, "")
     return mir_input_event_get_device_id(input_event) == device_id;
 }
 
+MATCHER(InputDeviceConfigurationChangedEvent, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_input_configuration)
+        return false;
+    auto idev = mir_event_get_input_configuration_event(as_address);
+    if (mir_input_configuration_event_get_action(idev) != mir_input_configuration_action_configuration_changed)
+        return false;
+    return true;
+}
+
+MATCHER(InputDeviceResetEvent, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_input_configuration)
+        return false;
+    auto idev = mir_event_get_input_configuration_event(as_address);
+    if (mir_input_configuration_event_get_action(idev) != mir_input_configuration_action_device_reset)
+        return false;
+    return true;
+}
+
 }
 }
 
