@@ -269,8 +269,8 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     auto& pc = mev.pointer_coordinates[mev.pointer_count++];
     pc.id = touch_id;
     pc.tool_type = old_tooltype_from_new(tooltype);
-    pc.x = pc.raw_x = x_axis_value;
-    pc.y = pc.raw_y = y_axis_value;
+    pc.x = x_axis_value;
+    pc.y = y_axis_value;
     pc.pressure = pressure_value;
     pc.touch_major = touch_major_value;
     pc.touch_minor = touch_minor_value;
@@ -344,8 +344,8 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
 
     mev.pointer_count = 1;
     auto& pc = mev.pointer_coordinates[0];
-    pc.x = pc.raw_x = x_axis_value;
-    pc.y = pc.raw_y = y_axis_value;
+    pc.x = x_axis_value;
+    pc.y = y_axis_value;
     pc.hscroll = hscroll_value;
     pc.vscroll = vscroll_value;
     
