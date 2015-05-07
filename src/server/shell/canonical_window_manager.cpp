@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "canonical_window_manager.h"
+#include "mir/shell/canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
