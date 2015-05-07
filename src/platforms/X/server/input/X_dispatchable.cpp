@@ -20,6 +20,7 @@
 #include "mir/events/event_private.h"
 #include "../../debug.h"
 
+#include <chrono>
 #include <X11/Xlib.h>
 
 namespace mi = mir::input;
@@ -61,7 +62,9 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
             event.key.key_code = XKB_KEY_q;
             event.key.scan_code = XKB_KEY_q;
             event.key.repeat_count = 0;
-            event.key.event_time = 12345;
+
+            event.key.event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                       std::chrono::system_clock::now().time_since_epoch()).count();
 
             sink->handle_input(event);
         }

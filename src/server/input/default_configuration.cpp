@@ -404,7 +404,10 @@ mir::DefaultServerConfiguration::the_input_manager()
             }
             else
             {
-            	auto ret = std::make_shared<mi::PlatformInputManager>(the_input_reading_multiplexer());
+                if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
+                        mr::legacy_input::initialize(the_logger());
+
+                auto ret = std::make_shared<mi::PlatformInputManager>(the_input_reading_multiplexer());
                 auto platform = the_input_platform();
                 if (platform)
                    ret->add_platform(platform);
