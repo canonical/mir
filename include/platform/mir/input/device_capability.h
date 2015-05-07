@@ -42,6 +42,7 @@ enum class DeviceCapability : uint32_t
     alpha_numeric = 1<<9 // enough keys for text entry
 };
 
+DeviceCapability mir_enable_enum_bit_operators(DeviceCapability);
 using DeviceCapabilities = mir::Flags<DeviceCapability>;
 
 }
