@@ -231,7 +231,7 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
 
 namespace
 {
-MirMotionAction old_action_from_pointer_action(MirPointerAction action, MirMotionButton button_state)
+MirMotionAction old_action_from_pointer_action(MirPointerAction action, bool buttons_pressed)
 {
     switch (action)
     {
@@ -244,7 +244,7 @@ MirMotionAction old_action_from_pointer_action(MirPointerAction action, MirMotio
     case mir_pointer_action_leave:
         return mir_motion_action_hover_exit;
     case mir_pointer_action_motion:
-        return button_state ? mir_motion_action_move : mir_motion_action_hover_move;
+        return buttons_pressed ? mir_motion_action_move : mir_motion_action_hover_move;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid pointer action"));
     }
@@ -290,7 +290,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
         break;
     }
     }
-    mev.action = old_action_from_pointer_action(action, mev.button_state);
+    mev.action = old_action_from_pointer_action(action, buttons_pressed.size());
 
     mev.pointer_count = 1;
     auto& pc = mev.pointer_coordinates[0];
