@@ -275,7 +275,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     titlebar_info.is_titlebar = true;
     titlebar_info.parent = surface;
 
-    paint_titlebar(titlebar, titlebar_info, 0xFF);
+    paint_titlebar(titlebar, titlebar_info, 0x3F);
 
     surface_map.emplace(titlebar, std::move(titlebar_info));
 }
@@ -286,11 +286,15 @@ class SurfaceReadyObserver : public ms::NullSurfaceObserver,
     public std::enable_shared_from_this<SurfaceReadyObserver>
 {
 public:
+    using ActivateFunction = std::function<void(
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& surface)>;
+
     SurfaceReadyObserver(
-        me::CanonicalWindowManagerPolicyCopy::Tools* const focus_controller,
+        ActivateFunction const& activate,
         std::shared_ptr<ms::Session> const& session,
         std::shared_ptr<ms::Surface> const& surface) :
-        focus_controller{focus_controller},
+        activate{activate},
         session{session},
         surface{surface}
     {
@@ -301,12 +305,12 @@ private:
     {
         if (auto const s = surface.lock())
         {
-            focus_controller->set_focus_to(session.lock(), s);
+            activate(session.lock(), s);
             s->remove_observer(shared_from_this());
         }
     }
 
-    me::CanonicalWindowManagerPolicyCopy::Tools* const focus_controller;
+    ActivateFunction const activate;
     std::weak_ptr<ms::Session> const session;
     std::weak_ptr<ms::Surface> const surface;
 };
@@ -333,8 +337,14 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
         // TODO There's currently no way to insert surfaces into an active (or inactive)
         // TODO window tree while keeping the order stable or consistent with spec.
         // TODO Nor is there a way to update the "default surface" when appropriate!!
-        surface->add_observer(std::make_shared<SurfaceReadyObserver>(tools, session, surface));
-        active_surface_ = surface;
+        surface->add_observer(std::make_shared<SurfaceReadyObserver>(
+            [this](std::shared_ptr<scene::Session> const& /*session*/,
+                   std::shared_ptr<scene::Surface> const& surface)
+                {
+                    select_active_surface(surface);
+                },
+            session,
+            surface));
         break;
 
     case mir_surface_type_gloss:
@@ -678,6 +688,9 @@ void me::CanonicalWindowManagerPolicyCopy::toggle(MirSurfaceState state)
 
 void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr<ms::Surface> const& surface)
 {
+    if (surface == active_surface_.lock())
+        return;
+
     if (auto const active_surface = active_surface_.lock())
     {
         if (auto const titlebar = tools->info_for(active_surface).titlebar)
