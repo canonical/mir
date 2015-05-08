@@ -28,7 +28,7 @@ set(symbol_map ${CMAKE_SOURCE_DIR}/src/client/symbols.map)
 
 add_definitions(-DMIR_CLIENT_PLATFORM_PATH="${MIR_CLIENT_PLATFORM_PATH}/")
 add_definitions(-DCLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}")
-add_definitions(-DMIR_LOGGING_COMPONENT_FALLBACK="mirclient")
+add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mirclient")
 
 set(MIR_CLIENT_SOURCES)
 set(MIR_CLIENT_REFERENCES mircommon)

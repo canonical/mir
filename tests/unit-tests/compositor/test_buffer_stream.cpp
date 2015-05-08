@@ -17,6 +17,7 @@
  */
 
 #include "src/server/compositor/buffer_stream_surfaces.h"
+#include "src/server/scene/legacy_surface_change_notification.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
@@ -38,7 +39,7 @@ protected:
     BufferStreamTest()
     {
         mock_buffer = std::make_shared<mtd::StubBuffer>();
-        mock_bundle = std::make_shared<mtd::MockBufferBundle>();
+        mock_bundle = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
 
         // Two of the tests care about this, the rest should not...
         EXPECT_CALL(*mock_bundle, force_requests_to_complete())
@@ -192,3 +193,62 @@ TEST_F(BufferStreamTest, resizes_bundle)
     buffer_stream.resize(new_size);
 }
 
+TEST_F(BufferStreamTest, swap_buffer)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_bundle, client_acquire(_))
+        .Times(2)
+        .WillRepeatedly(InvokeArgument<0>(mock_buffer.get()));
+    EXPECT_CALL(*mock_bundle, client_release(_))
+        .Times(1);
+
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    mir::graphics::Buffer* buffer = nullptr;
+    auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer;};
+    // The first call is with a nullptr buffer, so no frame posted.
+    buffer_stream.swap_buffers(buffer, callback);
+    // The second call posts the buffer returned by first, and should notify
+    buffer_stream.swap_buffers(buffer, callback);
+}
+
+TEST_F(BufferStreamTest, notifies_on_swap)
+{
+    using namespace testing;
+    ON_CALL(*mock_bundle, client_acquire(_))
+        .WillByDefault(InvokeArgument<0>(mock_buffer.get()));
+    struct MockCallback
+    {
+        MOCK_METHOD0(call, void());
+    };
+    NiceMock<MockCallback> mock_cb;
+    EXPECT_CALL(mock_cb, call()).Times(3);
+    auto observer = std::make_shared<mir::scene::LegacySurfaceChangeNotification>(
+        []{ FAIL() << "buffer stream shouldnt notify of scene changes.";},
+        std::bind(&MockCallback::call, &mock_cb));
+
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    buffer_stream.add_observer(observer);
+
+    mg::Buffer* buffer{nullptr};
+    auto const complete = [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; };
+    buffer_stream.swap_buffers(buffer, complete);
+    buffer_stream.swap_buffers(buffer, complete);
+    buffer_stream.swap_buffers(buffer, complete);
+    buffer_stream.swap_buffers(buffer, complete);
+}
+
+TEST_F(BufferStreamTest, with_most_recent_buffer_do_uses_compositor_buffer)
+{
+    using namespace testing;
+    ON_CALL(*mock_bundle, compositor_acquire(_))
+        .WillByDefault(Return(mock_buffer));
+    ON_CALL(*mock_bundle, snapshot_acquire())
+        .WillByDefault(Return(mock_buffer));
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+
+    std::shared_ptr<mg::NativeBuffer> native_buffer;
+    buffer_stream.with_most_recent_buffer_do(
+        [&](mg::Buffer& buffer) { native_buffer = buffer.native_buffer_handle(); });
+
+    EXPECT_THAT(buffer_stream.lock_compositor_buffer(this)->native_buffer_handle(), Eq(native_buffer));
+}
