@@ -137,7 +137,7 @@ mc::BufferQueue::BufferQueue(
     graphics::BufferProperties const& props,
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
-      frame_deadlines_threshold{3}, // configurable in future, maybe.
+      frame_deadlines_threshold{3},
       frame_deadlines_met{0},
       frame_dropping_enabled{false},
       current_compositor_buffer_valid{false},
@@ -168,6 +168,18 @@ mc::BufferQueue::BufferQueue(
 
     framedrop_policy = policy_provider.create_policy(
         std::make_shared<BufferQueue::LockableCallback>(this));
+}
+
+void mc::BufferQueue::set_scaling_delay(int nframes)
+{
+    std::unique_lock<decltype(guard)> lock(guard);
+    frame_deadlines_threshold = nframes;
+}
+
+int mc::BufferQueue::scaling_delay() const
+{
+    std::unique_lock<decltype(guard)> lock(guard);
+    return frame_deadlines_threshold;
 }
 
 bool mc::BufferQueue::client_ahead_of_compositor() const

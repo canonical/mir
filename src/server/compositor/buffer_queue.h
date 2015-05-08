@@ -65,6 +65,15 @@ public:
     void drop_old_buffers() override;
     void drop_client_requests() override;
 
+    /**
+     * Set the minimum number of smooth frames the client must keep up with
+     * the compositor for in order to qualify for queue scaling (dynamic
+     * double buffering for reduced latency). A negative value means never
+     * but it's recommended that you never change this.
+     */
+    void set_scaling_delay(int nframes);
+    int scaling_delay() const;
+
 private:
     class LockableCallback;
     enum SnapshotWait

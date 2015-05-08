@@ -1661,13 +1661,16 @@ TEST_F(BufferQueueTest, queue_size_scales_with_client_performance)
 
         std::unordered_set<mg::Buffer *> buffers_acquired;
 
+        int const delay = q.scaling_delay();
+        EXPECT_EQ(3, delay);  // expect a sane default
+
         for (int frame = 0; frame < 100; frame++)
         {
             auto handle = client_acquire_async(q);
             handle->wait_for(std::chrono::seconds(1));
             ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
 
-            if (frame > 10)  // q will start with nbuffers but soon shrink
+            if (frame > delay)
                 buffers_acquired.insert(handle->buffer());
             handle->release_buffer();
         }
@@ -1682,7 +1685,7 @@ TEST_F(BufferQueueTest, queue_size_scales_with_client_performance)
             handle->wait_for(std::chrono::seconds(1));
             ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
 
-            if (frame > 5)  // Ignore the initial settling/detection period
+            if (frame > delay)
                 buffers_acquired.insert(handle->buffer());
 
             // Client is just too slow to keep up:
@@ -1701,7 +1704,7 @@ TEST_F(BufferQueueTest, queue_size_scales_with_client_performance)
             handle->wait_for(std::chrono::seconds(1));
             ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
 
-            if (frame > 10)  // q will start with nbuffers but soon shrink
+            if (frame > delay)
                 buffers_acquired.insert(handle->buffer());
             handle->release_buffer();
         }
@@ -1729,6 +1732,7 @@ TEST_F(BufferQueueTest, greedy_compositors_need_triple_buffers)
            overlapping_compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<mg::Buffer *> buffers_acquired;
+        int const delay = q.scaling_delay();
 
         for (int frame = 0; frame < 100; frame++)
         {
@@ -1736,7 +1740,7 @@ TEST_F(BufferQueueTest, greedy_compositors_need_triple_buffers)
             handle->wait_for(std::chrono::seconds(1));
             ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
 
-            if (frame > 50)
+            if (frame > delay)
                 buffers_acquired.insert(handle->buffer());
             handle->release_buffer();
         }
