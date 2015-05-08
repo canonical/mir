@@ -67,8 +67,14 @@ TEST(ActionQueue, executes_action_only_once)
 
     queue.enqueue([&](){++count_executed;});
     queue.dispatch(md::FdEvent::readable);
-    EXPECT_THROW(queue.dispatch(md::FdEvent::readable),std::system_error);
-    EXPECT_THROW(queue.dispatch(md::FdEvent::readable),std::system_error);
+
+    // The queue now doesn't need to be dispatched...
+    EXPECT_FALSE(mt::fd_is_readable(queue.watch_fd()));
+    // ...but might be anyway, in the case of multithreaded dispatching.
+    queue.dispatch(md::FdEvent::readable);
+    queue.dispatch(md::FdEvent::readable);
+
+    // Even so, we expect our action to be executed only once.
     EXPECT_THAT(count_executed, Eq(1));
 }
 

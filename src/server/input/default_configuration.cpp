@@ -417,22 +417,28 @@ mir::DefaultServerConfiguration::the_input_reading_multiplexer()
     );
 }
 
-std::shared_ptr<mi::InputDeviceRegistry>
-mir::DefaultServerConfiguration::the_input_device_registry()
+std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_input_device_registry()
 {
     return default_input_device_hub([this]()
                                     {
                                         return std::make_shared<mi::DefaultInputDeviceHub>(
-                                            the_input_dispatcher(), the_input_reading_multiplexer(), the_main_loop());
+                                            the_input_dispatcher(),
+                                            the_input_reading_multiplexer(),
+                                            the_main_loop(),
+                                            the_touch_visualizer(),
+                                            the_input_region());
                                     });
 }
 
-std::shared_ptr<mi::InputDeviceHub>
-mir::DefaultServerConfiguration::the_input_device_hub()
+std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_device_hub()
 {
     return default_input_device_hub([this]()
                                     {
                                         return std::make_shared<mi::DefaultInputDeviceHub>(
-                                            the_input_dispatcher(), the_input_reading_multiplexer(), the_main_loop());
+                                            the_input_dispatcher(),
+                                            the_input_reading_multiplexer(),
+                                            the_main_loop(),
+                                            the_touch_visualizer(),
+                                            the_input_region());
                                     });
 }

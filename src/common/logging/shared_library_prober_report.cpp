@@ -19,6 +19,7 @@
 
 #include "mir/logging/shared_library_prober_report.h"
 #include "mir/logging/logger.h"
+#include "mir/log.h"
 
 namespace ml = mir::logging;
 
@@ -31,7 +32,7 @@ void ml::SharedLibraryProberReport::probing_path(boost::filesystem::path const& 
 {
     logger->log(ml::Severity::informational,
                 std::string("Loading modules from: ") + path.string(),
-                "Loader");
+                MIR_LOG_COMPONENT);
 }
 
 void ml::SharedLibraryProberReport::probing_failed(boost::filesystem::path const& path, std::exception const& error)
@@ -39,14 +40,14 @@ void ml::SharedLibraryProberReport::probing_failed(boost::filesystem::path const
     logger->log(ml::Severity::error,
                 std::string("Failed to load libraries from path: ") + path.string() +
                 " (error was:" + error.what() + ")",
-                "Loader");
+                MIR_LOG_COMPONENT);
 }
 
 void ml::SharedLibraryProberReport::loading_library(boost::filesystem::path const& filename)
 {
     logger->log(ml::Severity::informational,
                 std::string("Loading module: ") + filename.string(),
-                "Loader");
+                MIR_LOG_COMPONENT);
 }
 
 void ml::SharedLibraryProberReport::loading_failed(boost::filesystem::path const& filename, std::exception const& error)
@@ -54,5 +55,5 @@ void ml::SharedLibraryProberReport::loading_failed(boost::filesystem::path const
     logger->log(ml::Severity::warning,
                 std::string("Failed to load module: ") + filename.string() +
                 " (error was:" + error.what() + ")",
-                "Loader");
+                MIR_LOG_COMPONENT);
 }
