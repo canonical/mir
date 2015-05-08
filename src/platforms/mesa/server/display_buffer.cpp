@@ -268,36 +268,50 @@ void mgm::DisplayBuffer::post()
             fatal_error("Failed to get front buffer object");
     }
 
-    if (needs_set_crtc)
-    {
-        set_crtc(bufobj);
-        needs_set_crtc = false;
-    }
-    else if (!schedule_page_flip(bufobj))
+    /*
+     * Schedule the current front buffer object for display, and wait
+     * for it to be actually displayed (flipped).
+     *
+     * If the flip fails, release the buffer object to make it available
+     * for future rendering.
+     */
+    if (!needs_set_crtc && !schedule_page_flip(bufobj))
     {
         if (!bypass_buf)
             bufobj->release();
         fatal_error("Failed to schedule page flip");
     }
+    else if (needs_set_crtc)
+    {
+        set_crtc(bufobj);
+        needs_set_crtc = false;
+    }
 
-    // These are both null right now due to wait_for_page_flip above.
     if (bypass_buf)
+    {
+        /*
+         * For composited frames we defer wait_for_page_flip till just before
+         * the next frame, but not for bypass frames. Deferring the flip of
+         * bypass frames would increase the time we held
+         * visible_bypass_frame unacceptably, resulting in client stuttering
+         * unless we allocate more buffers (which I'm trying to avoid).
+         * Also, bypass does not need the deferred page flip because it has
+         * no compositing/rendering step for which to save time for.
+         */
         scheduled_bypass_frame = bypass_buf;
-    else
-        scheduled_composite_frame = bufobj;
-
-    /*
-     * As long as we're only driving a single output it's better to wait for
-     * the page flip right now. This ensures the compositor doesn't get an
-     * extra frame ahead of the display (two frames ahead instead of one)
-     * so we get lower visible latency.
-     *   In the case of clone mode however we need to defer wait_for_page_flip
-     * because waiting on multiple monitors' vsyncs synchronously (when those
-     * separate monitors are almost always out of phase) requires an extra
-     * frame of time to avoid stutter (LP: #1213801).
-     */
-    if (outputs.size() == 1)
         wait_for_page_flip();
+    }
+    else
+    {
+        /*
+         * Not in clone mode? We can afford to wait for the page flip then,
+         * making us double-buffered (noticeably less laggy than the triple
+         * buffering that clone mode requires).
+         */
+        scheduled_composite_frame = bufobj;
+        if (outputs.size() == 1)
+            wait_for_page_flip();
+    }
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
