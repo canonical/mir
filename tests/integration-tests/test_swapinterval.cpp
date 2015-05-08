@@ -25,6 +25,8 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/buffer_stream_factory.h"
+#include "src/server/compositor/buffer_stream_surfaces.h"
+#include "src/server/compositor/buffer_bundle.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/any_surface.h"
@@ -50,29 +52,38 @@ namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class CountingBufferStream : public mtd::StubBufferStream
+class CountingBufferStream : public mc::BufferBundle
 {
 public:
-    CountingBufferStream(int render_operations_fd)
-     : render_operations_fd(render_operations_fd)
+    CountingBufferStream(int render_operations_fd) :
+    render_operations_fd(render_operations_fd)
     {
     }
 
-    std::shared_ptr<mg::Buffer> lock_compositor_buffer(void const*) override
+    void client_acquire(std::function<void(mg::Buffer* buffer)> complete)
+        { complete(client_buffer.get()); }
+    void client_release(mg::Buffer*) {}
+    std::shared_ptr<mg::Buffer> compositor_acquire(void const*)
         { return std::make_shared<mtd::StubBuffer>(); }
-
-    std::shared_ptr<mg::Buffer> lock_snapshot_buffer() override
+    void compositor_release(std::shared_ptr<mg::Buffer> const&) {}
+    std::shared_ptr<mg::Buffer> snapshot_acquire()
         { return std::make_shared<mtd::StubBuffer>(); }
+    void snapshot_release(std::shared_ptr<mg::Buffer> const&) {}
+    mg::BufferProperties properties() const { return mg::BufferProperties{}; }
+    void force_requests_to_complete() {}
+    void resize(const geom::Size&) {}
+    int buffers_ready_for_compositor(void const*) const { return 1; }
+    int buffers_free_for_client() const { return 1; }
+    void drop_old_buffers() {}
+    void drop_client_requests() {}
 
-    MirPixelFormat get_stream_pixel_format() override
-        { return mir_pixel_format_abgr_8888; }
-
-    void allow_framedropping(bool) override
+    void allow_framedropping(bool)
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
 
 private:
+    std::shared_ptr<mg::Buffer> client_buffer{std::make_shared<mtd::StubBuffer>()};
     int render_operations_fd;
 };
 
@@ -90,7 +101,8 @@ public:
     }
     std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&) override
     {
-        return std::make_shared<CountingBufferStream>(render_operations_fd);
+        return std::make_shared<mc::BufferStreamSurfaces>(
+            std::make_shared<CountingBufferStream>(render_operations_fd));
     }
 private:
     int render_operations_fd;

@@ -40,8 +40,9 @@ class CursorImage;
 namespace frontend
 {
 class ClientBufferTracker;
+class BufferStream;
 
-class Surface : public BufferStream
+class Surface
 {
 public:
     virtual ~Surface() = default;
@@ -50,7 +51,7 @@ public:
     virtual geometry::Size client_size() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
 
-    virtual void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) = 0;
+    virtual std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const = 0;
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;

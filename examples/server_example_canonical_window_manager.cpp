@@ -223,7 +223,7 @@ void swap_buffers(
 
     auto const old_buffer = surface_buffer;
 
-    surface->swap_buffers(surface_buffer, callback);
+    surface->primary_buffer_stream()->swap_buffers(surface_buffer, callback);
 
     std::unique_lock<decltype(mut)> lk(mut);
     cv.wait(lk, [&]{return old_buffer != surface_buffer;});
