@@ -445,12 +445,14 @@ TEST_F(BufferQueueTest, throws_on_out_of_order_client_release)
     }
 }
 
-// Disabled - Not a valid test in the presence of dynamic queue throttling
-TEST_F(BufferQueueTest, DISABLED_async_client_cycles_through_all_buffers)
+TEST_F(BufferQueueTest, async_client_cycles_through_all_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
+
+        // This test is technically not valid with dynamic queue scaling on
+        q.set_scaling_delay(-1);
 
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
@@ -1583,12 +1585,14 @@ TEST_F(BufferQueueTest, client_never_owns_compositor_buffers)
  * http://code.launchpad.net/~albaguirre/mir/
  * alternative-switching-bundle-implementation/+merge/216606/comments/517048
  */
-// Disabled - Not a valid test in the presence of dynamic queue throttling
-TEST_F(BufferQueueTest, DISABLED_buffers_are_not_lost)
+TEST_F(BufferQueueTest, buffers_are_not_lost)
 {
     for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
+
+        // This test is technically not valid with dynamic queue scaling on
+        q.set_scaling_delay(-1);
 
         void const* main_compositor = reinterpret_cast<void const*>(0);
         void const* second_compositor = reinterpret_cast<void const*>(1);

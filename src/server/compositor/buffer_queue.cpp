@@ -186,7 +186,8 @@ bool mc::BufferQueue::client_ahead_of_compositor() const
 {
     return nbuffers > 1 &&
            !frame_dropping_enabled &&  // Never throttle frame droppers
-           !ready_to_composite_queue.empty() &&  // at least one frame is ready
+           frame_deadlines_threshold >= 0 &&  // Queue scaling enabled
+           !ready_to_composite_queue.empty() &&  // At least one frame is ready
            frame_deadlines_met >= frame_deadlines_threshold;  // Is smooth
 }
 
@@ -439,7 +440,7 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
      * idle is the extra frame wasted. Sounds like a reasonable price to pay
      * for dynamic performance monitoring.
      */
-    if (count)
+    if (count && frame_deadlines_threshold >= 0)
         ++count;
 
     return count;
