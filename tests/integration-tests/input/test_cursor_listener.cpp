@@ -21,7 +21,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_framework/fake_input_device.h"
-#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/fake_input_server_configuration.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
 #include "mir_test_doubles/stub_touch_visualizer.h"
@@ -58,22 +58,7 @@ struct MockCursorListener : public mi::CursorListener
     ~MockCursorListener() noexcept {}
 };
 
-struct InjectStubInputLib
-{
-public:
-    InjectStubInputLib()
-    {
-        setenv("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str(), 1);
-        setenv("MIR_SERVER_TESTS_USE_REAL_INPUT", "1", 1);
-    }
-    ~InjectStubInputLib()
-    {
-        unsetenv("MIR_SERVER_PLATFORM_INPUT_LIB");
-        unsetenv("MIR_SERVER_TESTS_USE_REAL_INPUT");
-    }
-};
-
-struct CursorListenerIntegrationTest : testing::Test, InjectStubInputLib, mtf::StubbedServerConfiguration
+struct CursorListenerIntegrationTest : testing::Test, InjectStubInputLib, mtf::FakeInputServerConfiguration
 {
     bool is_key_repeat_enabled() const override
     {

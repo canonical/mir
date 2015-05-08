@@ -226,6 +226,16 @@ mir::DefaultServerConfiguration::the_event_hub()
         });
 }
 
+std::shared_ptr<mir::input::LegacyInputDispatchable>
+mir::DefaultServerConfiguration::the_legacy_input_dispatchable()
+{
+    return legacy_input_dispatchable(
+        [this]()
+        {
+            return std::make_shared<mia::InputReaderDispatchable>(the_event_hub(), the_input_reader());
+        });
+}
+
 std::shared_ptr<droidinput::InputReaderPolicyInterface>
 mir::DefaultServerConfiguration::the_input_reader_policy()
 {
@@ -393,7 +403,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                         mr::legacy_input::initialize(the_logger());
 
                 auto ret = std::make_shared<mi::DefaultInputManager>(
-                    the_input_reading_multiplexer(), the_input_reader(), the_event_hub());
+                    the_input_reading_multiplexer(), the_legacy_input_dispatchable());
 
                 auto platform = the_input_platform();
                 if (platform)

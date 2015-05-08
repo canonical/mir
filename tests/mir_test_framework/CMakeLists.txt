@@ -43,7 +43,7 @@ set(
   stub_server_platform_factory.cpp
   udev_environment.cpp
   declarative_placement_strategy.cpp
-  fake_event_hub_server_configuration.cpp
+  fake_input_server_configuration.cpp
   any_surface.cpp
   headless_nested_server_runner.cpp
 )

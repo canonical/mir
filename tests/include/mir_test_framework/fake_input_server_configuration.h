@@ -17,42 +17,32 @@
  *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_FAKE_EVENT_HUB_SERVER_CONFIGURATION_H_
-#define MIR_TEST_FAKE_EVENT_HUB_SERVER_CONFIGURATION_H_
+#ifndef MIR_TEST_FAKE_INPUT_SERVER_CONFIGURATION_H_
+#define MIR_TEST_FAKE_INPUT_SERVER_CONFIGURATION_H_
 
 #include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/temporary_environmentvariable.h"
 
 namespace mir
 {
-namespace input
-{
-namespace android
-{
-class FakeEventHub;
-}
-}
-}
-
 namespace mir_test_framework
 {
 
-class FakeEventHubServerConfiguration : public StubbedServerConfiguration
+class FakeInputServerConfiguration : TestingServerConfiguration
 {
 public:
-    using StubbedServerConfiguration::StubbedServerConfiguration;
+    using TestingServerConfiguration::TestingServerConfiguration;
 
-    std::shared_ptr<droidinput::EventHubInterface> the_event_hub() override;
     std::shared_ptr<mir::input::InputManager> the_input_manager() override;
-    std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
-    std::shared_ptr<mir::input::InputSender> the_input_sender() override;
 
     // TODO remove reliance on legacy window management
     auto the_window_manager_builder() -> shell::WindowManagerBuilder override;
 
-    std::shared_ptr<mir::input::android::FakeEventHub> fake_event_hub;
+private:
+    TemporaryEnvironmentValue stub_input_lib{
 };
 
 }
 
-#endif /* MIR_TEST_FAKE_EVENT_HUB_SERVER_CONFIGURATION_H_ */
+#endif /* MIR_TEST_FAKE_INPUT_SERVER_CONFIGURATION_H_ */
