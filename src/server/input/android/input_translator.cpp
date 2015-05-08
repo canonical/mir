@@ -18,6 +18,7 @@
 
 #include "input_translator.h"
 
+#include "mir/input/android/event_conversion_helpers.h"
 #include "mir/events/event_private.h"
 
 #include "androidfw/Input.h"
@@ -107,25 +108,31 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
     if (!args)
         return;
     uint32_t policy_flags = args->policyFlags;
-    int32_t modifiers = args->metaState;
+    MirInputEventModifiers mir_modifiers = mia::mir_modifiers_from_android(args->metaState);
 
     if (policy_flags & droidinput::POLICY_FLAG_ALT)
-        modifiers |= mir_key_modifier_alt | mir_key_modifier_alt_left;
+        mir_modifiers |= mir_input_event_modifier_alt | mir_input_event_modifier_alt_left;
     if (policy_flags & droidinput::POLICY_FLAG_ALT_GR)
-        modifiers |= mir_key_modifier_alt | mir_key_modifier_alt_right;
+        mir_modifiers |= mir_input_event_modifier_alt | mir_input_event_modifier_alt_right;
     if (policy_flags & droidinput::POLICY_FLAG_SHIFT)
-        modifiers |= mir_key_modifier_shift | mir_key_modifier_shift_left;
+        mir_modifiers |= mir_input_event_modifier_shift | mir_input_event_modifier_shift_left;
     if (policy_flags & droidinput::POLICY_FLAG_CAPS_LOCK)
-        modifiers |= mir_key_modifier_caps_lock;
+        mir_modifiers |= mir_input_event_modifier_caps_lock;
     if (policy_flags & droidinput::POLICY_FLAG_FUNCTION)
-        modifiers |= mir_key_modifier_function;
+        mir_modifiers |= mir_input_event_modifier_function;
+
+    // If we've added a modifier to none we have to remove the none flag.
+    if (mir_modifiers != mir_input_event_modifier_none && mir_modifiers & mir_input_event_modifier_none)
+    {
+        mir_modifiers &= ~mir_input_event_modifier_none;
+    }
 
     MirEvent mir_event;
     mir_event.type = mir_event_type_key;
     mir_event.key.device_id = args->deviceId;
     mir_event.key.source_id = args->source;
     mir_event.key.action = static_cast<MirKeyAction>(args->action);
-    mir_event.key.modifiers = modifiers;
+    mir_event.key.modifiers = mir_modifiers;
     mir_event.key.key_code = args->keyCode;
     mir_event.key.scan_code = args->scanCode;
     mir_event.key.repeat_count = 0;
@@ -147,7 +154,7 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     mir_event.motion.device_id = args->deviceId;
     mir_event.motion.source_id = args->source;
     mir_event.motion.action = args->action;
-    mir_event.motion.modifiers = args->metaState;
+    mir_event.motion.modifiers = mia::mir_modifiers_from_android(args->metaState);
     mir_event.motion.button_state = static_cast<MirMotionButton>(args->buttonState);
     mir_event.motion.event_time = args->eventTime.count();
     mir_event.motion.pointer_count = args->pointerCount;

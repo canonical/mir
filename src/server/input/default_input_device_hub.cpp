@@ -22,11 +22,12 @@
 
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_device.h"
-#include "mir/input/input_device_info.h"
-#include "mir/input/input_sink.h"
+#include "mir/input/input_device_observer.h"
+#include "mir/input/input_region.h"
 #include "mir/events/event_private.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/server_action_queue.h"
+#define MIR_LOG_COMPONENT "Input"
 #include "mir/log.h"
 
 #include "boost/throw_exception.hpp"
@@ -39,8 +40,11 @@ namespace mi = mir::input;
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::InputDispatcher> const& input_dispatcher,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
-    std::shared_ptr<mir::ServerActionQueue> const& observer_queue)
-    : input_dispatcher(input_dispatcher), input_dispatchable{input_multiplexer}, observer_queue(observer_queue)
+    std::shared_ptr<mir::ServerActionQueue> const& observer_queue,
+    std::shared_ptr<TouchVisualizer> const& touch_visualizer,
+    std::shared_ptr<InputRegion> const& input_region)
+    : input_dispatcher(input_dispatcher), input_dispatchable{input_multiplexer}, observer_queue(observer_queue),
+      touch_visualizer(touch_visualizer), input_region(input_region)
 {
 }
 
@@ -58,7 +62,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
     if (it == end(devices))
     {
-        devices.push_back(std::make_unique<RegisteredDevice>(device, input_dispatcher, input_dispatchable));
+        devices.push_back(std::make_unique<RegisteredDevice>(device, input_dispatcher, input_dispatchable, this));
 
         auto info = devices.back()->get_device_info();
 
@@ -74,7 +78,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     }
     else
     {
-        log(logging::Severity::error, "Input device %s added twice", device->get_device_info().name.c_str());
+        log_error("Input device %s added twice", device->get_device_info().name.c_str());
         BOOST_THROW_EXCEPTION(std::logic_error("Input device already managed by server"));
     }
 }
@@ -106,7 +110,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
         });
     if (pos == end(devices))
     {
-        log(logging::Severity::error, "Input device %s not found", device->get_device_info().name.c_str());
+        log_error("Input device %s not found", device->get_device_info().name.c_str());
         BOOST_THROW_EXCEPTION(std::logic_error("Input device not managed by server"));
     }
 
@@ -116,8 +120,9 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
 mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     std::shared_ptr<InputDevice> const& dev,
     std::shared_ptr<InputDispatcher> const& dispatcher,
-    std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer)
-    : device_id(create_new_device_id()), device(dev), dispatcher(dispatcher), multiplexer(multiplexer)
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+    DefaultInputDeviceHub *hub)
+    : device_id(create_new_device_id()), device(dev), dispatcher(dispatcher), multiplexer(multiplexer), hub(hub)
 {
 }
 
@@ -156,7 +161,36 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
 
     if (type != mir_event_type_input)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input event receivd from device"));
+
+    update_spots(mir_event_get_input_event(&event));
     dispatcher->dispatch(event);
+}
+
+void mi::DefaultInputDeviceHub::RegisteredDevice::update_spots(MirInputEvent const* event)
+{
+    if (mir_input_event_get_type(event) != mir_input_event_type_touch)
+        return;
+
+    auto const* touch_event = mir_input_event_get_touch_event(event);
+    auto count = mir_touch_event_point_count(touch_event);
+    touch_spots.reserve(count);
+    touch_spots.clear();
+    for (decltype(count) i = 0; i != count; ++i)
+    {
+        if (mir_touch_event_action(touch_event, i) == mir_touch_action_up)
+            continue;
+        touch_spots.push_back(mi::TouchVisualizer::Spot{
+            {mir_touch_event_axis_value(touch_event, i, mir_touch_axis_x),
+             mir_touch_event_axis_value(touch_event, i, mir_touch_axis_y)},
+            mir_touch_event_axis_value(touch_event, i, mir_touch_axis_pressure)});
+    }
+
+    hub->update_spots();
+}
+
+std::vector<mir::input::TouchVisualizer::Spot> const& mi::DefaultInputDeviceHub::RegisteredDevice::spots() const
+{
+    return touch_spots;
 }
 
 bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr<InputDevice> const& dev) const
@@ -174,6 +208,17 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
 {
     multiplexer->remove_watch(device->dispatchable());
     device->stop();
+}
+
+void mi::DefaultInputDeviceHub::RegisteredDevice::confine_pointer(mir::geometry::Point& position)
+{
+    hub->input_region->confine(position);
+}
+
+mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_rectangle() const
+{
+    // TODO touchscreens only need the bounding rectangle of one output
+    return hub->input_region->bounding_rectangle();
 }
 
 void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver> const& observer)
@@ -227,4 +272,14 @@ void mi::DefaultInputDeviceHub::remove_device_info(int32_t id)
     }
 
     infos.erase(info_it, end(infos));
+}
+
+void mi::DefaultInputDeviceHub::update_spots()
+{
+    std::vector<TouchVisualizer::Spot> spots;
+
+    for (auto const& dev : devices)
+        spots.insert(end(spots), begin(dev->spots()), end(dev->spots()));
+
+    touch_visualizer->visualize_touches(spots);
 }

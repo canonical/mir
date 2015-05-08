@@ -53,27 +53,6 @@ typedef enum {
 } MirKeyAction;
 
 typedef enum {
-    mir_key_modifier_none        = 0,
-    mir_key_modifier_alt         = 0x02,
-    mir_key_modifier_alt_left    = 0x10,
-    mir_key_modifier_alt_right   = 0x20,
-    mir_key_modifier_shift       = 0x01,
-    mir_key_modifier_shift_left  = 0x40,
-    mir_key_modifier_shift_right = 0x80,
-    mir_key_modifier_sym         = 0x04,
-    mir_key_modifier_function    = 0x08,
-    mir_key_modifier_ctrl        = 0x1000,
-    mir_key_modifier_ctrl_left   = 0x2000,
-    mir_key_modifier_ctrl_right  = 0x4000,
-    mir_key_modifier_meta        = 0x10000,
-    mir_key_modifier_meta_left   = 0x20000,
-    mir_key_modifier_meta_right  = 0x40000,
-    mir_key_modifier_caps_lock   = 0x100000,
-    mir_key_modifier_num_lock    = 0x200000,
-    mir_key_modifier_scroll_lock = 0x400000
-} MirKeyModifier;
-
-typedef enum {
     mir_motion_action_down         = 0,
     mir_motion_action_up           = 1,
     mir_motion_action_move         = 2,
@@ -113,7 +92,7 @@ typedef struct
     int32_t device_id;
     int32_t source_id;
     MirKeyAction action;
-    unsigned int modifiers;
+    MirInputEventModifiers modifiers;
 
     int32_t key_code;
     int32_t scan_code;
@@ -152,7 +131,7 @@ typedef struct
      * this way for now until we can drop SF/Hybris support in QtUbuntu.
      */
     int action;
-    unsigned int modifiers;
+    MirInputEventModifiers modifiers;
 
     MirMotionButton button_state;
     nsecs_t event_time;

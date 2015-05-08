@@ -209,7 +209,7 @@ bool me::WindowManager::handle(MirEvent const& event)
     if (event.key.type == mir_event_type_key &&
         event.key.action == mir_key_action_down)
     {
-        if (event.key.modifiers & mir_key_modifier_alt &&
+        if (event.key.modifiers & mir_input_event_modifier_alt &&
             event.key.scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
         {
             focus_controller->focus_next_session();
@@ -217,7 +217,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                 focus_controller->raise({surface});
             return true;
         }
-        else if (event.key.modifiers & mir_key_modifier_alt &&
+        else if (event.key.modifiers & mir_input_event_modifier_alt &&
                  event.key.scan_code == KEY_GRAVE)
         {
             if (auto const prev = focus_controller->focused_surface())
@@ -229,7 +229,7 @@ bool me::WindowManager::handle(MirEvent const& event)
             }
             return true;
         }
-        else if (event.key.modifiers & mir_key_modifier_alt &&
+        else if (event.key.modifiers & mir_input_event_modifier_alt &&
                  event.key.scan_code == KEY_F4)
         {
             auto const surf = focus_controller->focused_surface();
@@ -237,7 +237,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                 surf->request_client_surface_close();
             return true;
         }
-        else if ((event.key.modifiers & mir_key_modifier_alt &&
+        else if ((event.key.modifiers & mir_input_event_modifier_alt &&
                   event.key.scan_code == KEY_P) ||
                  (event.key.scan_code == KEY_POWER))
         {
@@ -258,15 +258,15 @@ bool me::WindowManager::handle(MirEvent const& event)
                 compositor->start();
             return true;
         }
-        else if ((event.key.modifiers & mir_key_modifier_alt) &&
-                 (event.key.modifiers & mir_key_modifier_ctrl) &&
+        else if ((event.key.modifiers & mir_input_event_modifier_alt) &&
+                 (event.key.modifiers & mir_input_event_modifier_ctrl) &&
                  (event.key.scan_code == KEY_ESC))
         {
             std::abort();
             return true;
         }
-        else if ((event.key.modifiers & mir_key_modifier_alt) &&
-                 (event.key.modifiers & mir_key_modifier_ctrl) &&
+        else if ((event.key.modifiers & mir_input_event_modifier_alt) &&
+                 (event.key.modifiers & mir_input_event_modifier_ctrl) &&
                  (event.key.scan_code == KEY_L) &&
                  focus_controller)
         {
@@ -276,8 +276,8 @@ bool me::WindowManager::handle(MirEvent const& event)
                 app->set_lifecycle_state(mir_lifecycle_state_will_suspend);
             }
         }
-        else if ((event.key.modifiers & mir_key_modifier_alt) &&
-                 (event.key.modifiers & mir_key_modifier_ctrl))
+        else if ((event.key.modifiers & mir_input_event_modifier_alt) &&
+                 (event.key.modifiers & mir_input_event_modifier_ctrl))
         {
             MirOrientation orientation = mir_orientation_normal;
             bool rotating = true;
@@ -366,13 +366,13 @@ bool me::WindowManager::handle(MirEvent const& event)
             compositor->start();
             return true;
         }
-        else if (event.key.modifiers & mir_key_modifier_meta &&
+        else if (event.key.modifiers & mir_input_event_modifier_meta &&
                  event.key.scan_code == KEY_N)
         {
             toggle(inverse);
             return true;
         }
-        else if (event.key.modifiers & mir_key_modifier_meta &&
+        else if (event.key.modifiers & mir_input_event_modifier_meta &&
                  event.key.scan_code == KEY_C)
         {
             toggle(contrast);
@@ -389,7 +389,7 @@ bool me::WindowManager::handle(MirEvent const& event)
 
         float new_zoom_mag = 0.0f;  // zero means unchanged
 
-        if (event.motion.modifiers & mir_key_modifier_meta &&
+        if (event.motion.modifiers & mir_input_event_modifier_meta &&
             action == mir_motion_action_scroll)
         {
             zoom_exponent += event.motion.pointer_coordinates[0].vscroll;
@@ -421,7 +421,7 @@ bool me::WindowManager::handle(MirEvent const& event)
 
         auto const surf = focus_controller->focused_surface();
         if (surf &&
-            (event.motion.modifiers & mir_key_modifier_alt ||
+            (event.motion.modifiers & mir_input_event_modifier_alt ||
              fingers >= 3))
         {
             geometry::Displacement pinch_dir;

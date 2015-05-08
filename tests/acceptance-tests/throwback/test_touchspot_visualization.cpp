@@ -18,12 +18,17 @@
 
 #include "mir/input/touch_visualizer.h"
 
-#include "mir_test/fake_event_hub.h"
+#include "mir/input/device_capability.h"
+#include "mir/input/input_device_info.h"
+
 #include "mir_test/barrier.h"
 #include "mir_test/fake_shared.h"
 
 #include "mir_test_framework/deferred_in_process_server.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
+#include "mir_test_framework/executable_path.h"
+#include "mir_test_framework/fake_input_device.h"
+#include "mir_test_framework/stub_server_platform_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -39,6 +44,9 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
+//TODO not yet configured at the input simulating device
+const auto minimum_touch = mtf::FakeInputDevice::minimum_touch_axis_value;
+const auto maximum_touch = mtf::FakeInputDevice::maximum_touch_axis_value;
 
 ACTION_P(UnblockBarrier, barrier)
 {
@@ -91,10 +99,6 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
     mt::Barrier& test_complete;
 
     MockTouchVisualizer mock_visualizer;
-
-    std::function<void(mtf::InputTestingServerConfiguration& server)> produce_events;
-    std::function<void(MockTouchVisualizer& visualizer, mt::Barrier& test_complete)> expect_touchspots;
-
     static geom::Rectangle const display_bounds;    
     
     ServerConfiguration(mt::Barrier& test_complete)
@@ -102,22 +106,11 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
           test_complete(test_complete)
     {
     }
+    void inject_input() override{}
     
     std::shared_ptr<mi::TouchVisualizer> the_touch_visualizer() override
     {
         return mt::fake_shared(mock_visualizer);
-    }
-    
-    void inject_input() override
-    {
-        produce_events(*this);
-    }
-    
-    void establish_expectations()
-    {
-        // We need to do this before we start the input stack to avoid races
-        // with the initial spot clearing.
-        expect_touchspots(mock_visualizer, test_complete);
     }
 };
 
@@ -126,14 +119,18 @@ geom::Rectangle const ServerConfiguration::display_bounds = {{0, 0}, {1600, 1600
 struct TestTouchspotVisualizations : mtf::DeferredInProcessServer
 {
     mt::Barrier test_complete_fence{2};
+    int env_setup = setenv("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str(), 1);
     ServerConfiguration server_configuration{test_complete_fence};
+
+    std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{
+        mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "ts", "ts-uid" , mi::DeviceCapability::touchscreen|mi::DeviceCapability::multitouch})
+        };
+
 
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
 
     void start_server()
     {
-        server_configuration.establish_expectations();
-
         DeferredInProcessServer::start_server();
         server_configuration.exec();
     }
@@ -145,12 +142,9 @@ struct TestTouchspotVisualizations : mtf::DeferredInProcessServer
         DeferredInProcessServer::TearDown();
     }
 };
-    
+
 geom::Point transform_to_screen_space(geom::Point in_touchpad_space)
 {
-    auto minimum_touch = mi::android::FakeEventHub::TouchScreenMinAxisValue;
-    auto maximum_touch = mi::android::FakeEventHub::TouchScreenMaxAxisValue;
-    
     auto display_width = ServerConfiguration::display_bounds.size.width.as_uint32_t();
     auto display_height = ServerConfiguration::display_bounds.size.height.as_uint32_t();
     
@@ -166,59 +160,45 @@ using namespace ::testing;
 
 TEST_F(TestTouchspotVisualizations, touch_is_given_to_touchspot_visualizer)
 {
-    auto minimum_touch = mi::android::FakeEventHub::TouchScreenMinAxisValue;
-
     static geom::Point abs_touch = { minimum_touch, minimum_touch };
     static std::vector<geom::Point> expected_spots = { transform_to_screen_space(abs_touch) };
-    
-    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
-        {
-            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch));
-            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch)
-                .with_action(mis::TouchParameters::Action::Release));
-        };
-    server_configuration.expect_touchspots = [&](MockTouchVisualizer &visualizer, mt::Barrier& test_complete)
-        {
-            InSequence seq;
 
-            // First we will see the spots cleared, as this is the start of a new gesture.
-            EXPECT_CALL(visualizer, visualize_touches(NoSpots())).Times(1);
-            EXPECT_CALL(visualizer, visualize_touches(TouchedSpotsAt(expected_spots)));
-            EXPECT_CALL(visualizer, visualize_touches(NoSpots())).Times(1).
-                WillOnce(UnblockBarrier(&test_complete));
-        };
+    InSequence seq;
+    // First we will see the spots cleared, as this is the start of a new gesture.
+    EXPECT_CALL(server_configuration.mock_visualizer, visualize_touches(NoSpots())).Times(AtMost(1));
+    EXPECT_CALL(server_configuration.mock_visualizer, visualize_touches(TouchedSpotsAt(expected_spots)));
+    EXPECT_CALL(server_configuration.mock_visualizer, visualize_touches(NoSpots())).Times(1).
+        WillOnce(UnblockBarrier(&server_configuration.test_complete));
+
     start_server();
+
+    fake_touch_screen->emit_event(mis::a_touch_event().at_position(abs_touch));
+    fake_touch_screen->emit_event(mis::a_touch_event().at_position(abs_touch)
+                                  .with_action(mis::TouchParameters::Action::Release));
 }
 
 TEST_F(TestTouchspotVisualizations, touchspots_follow_gesture)
 {
-    auto minimum_touch = mi::android::FakeEventHub::TouchScreenMinAxisValue;
-    auto maximum_touch = mi::android::FakeEventHub::TouchScreenMaxAxisValue;
-
     static geom::Point abs_touch = { minimum_touch, minimum_touch };
     static geom::Point abs_touch_2 = { maximum_touch, maximum_touch };
     static std::vector<geom::Point> expected_spots_1 =
        { transform_to_screen_space(abs_touch) };
     static std::vector<geom::Point> expected_spots_2 = 
        { transform_to_screen_space(abs_touch_2) };
-    
-    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
-        {
-            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch));
-            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch_2)
-                .with_action(mis::TouchParameters::Action::Move));
-            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch_2)
-                .with_action(mis::TouchParameters::Action::Release));
-        };
-    server_configuration.expect_touchspots = [&](MockTouchVisualizer &visualizer, mt::Barrier& test_complete)
-        {
-            InSequence seq;
 
-            EXPECT_CALL(visualizer, visualize_touches(NoSpots())).Times(1);
-            EXPECT_CALL(visualizer, visualize_touches(TouchedSpotsAt(expected_spots_1))).Times(1);
-            EXPECT_CALL(visualizer, visualize_touches(TouchedSpotsAt(expected_spots_2))).Times(1);
-            EXPECT_CALL(visualizer, visualize_touches(NoSpots())).
-                Times(1).WillOnce(UnblockBarrier(&test_complete));
-        };
+    InSequence seq;
+
+    EXPECT_CALL(server_configuration.mock_visualizer, visualize_touches(NoSpots())).Times(AtMost(1));
+    EXPECT_CALL(server_configuration.mock_visualizer, visualize_touches(TouchedSpotsAt(expected_spots_1))).Times(1);
+    EXPECT_CALL(server_configuration.mock_visualizer, visualize_touches(TouchedSpotsAt(expected_spots_2))).Times(1);
+    EXPECT_CALL(server_configuration.mock_visualizer, visualize_touches(NoSpots())).
+                Times(1).WillOnce(UnblockBarrier(&server_configuration.test_complete));
+
     start_server();
+
+    fake_touch_screen->emit_event(mis::a_touch_event().at_position(abs_touch));
+    fake_touch_screen->emit_event(mis::a_touch_event().at_position(abs_touch_2)
+        .with_action(mis::TouchParameters::Action::Move));
+    fake_touch_screen->emit_event(mis::a_touch_event().at_position(abs_touch_2)
+        .with_action(mis::TouchParameters::Action::Release));
 }

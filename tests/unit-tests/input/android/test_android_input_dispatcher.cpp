@@ -179,7 +179,7 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
     event.motion.device_id = 3;
     event.motion.source_id = 4;
     event.motion.action = mir_motion_action_scroll;
-    event.motion.modifiers = 6;
+    event.motion.modifiers = mir_input_event_modifier_shift,
     event.motion.button_state =
         static_cast<MirMotionButton>(mir_motion_button_forward | mir_motion_button_secondary);
 
@@ -214,7 +214,7 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
                                           default_policy_flags,
                                           event.motion.action,
                                           0, /* flags */
-                                          event.motion.modifiers,
+                                          AMETA_SHIFT_ON,
                                           event.motion.button_state,
                                           0, /* edge_flags */
                                           event.motion.pointer_count,
@@ -240,7 +240,7 @@ TEST_F(AndroidInputDispatcherTest, forwards_all_key_event_paramters_correctly)
     event.key.scan_code = 4;
     event.key.key_code = 5;
     event.key.repeat_count = 0;
-    event.key.modifiers = 7;
+    event.key.modifiers = mir_input_event_modifier_shift;
 
     droidinput::NotifyKeyArgs expected(std::chrono::nanoseconds(event.key.event_time),
                                        event.key.device_id,
@@ -250,7 +250,7 @@ TEST_F(AndroidInputDispatcherTest, forwards_all_key_event_paramters_correctly)
                                        0, /* flags */
                                        event.key.key_code,
                                        event.key.scan_code,
-                                       event.key.modifiers,
+                                       AMETA_SHIFT_ON,
                                        std::chrono::nanoseconds(event.key.event_time));
 
     EXPECT_CALL(*dispatcher, notifyKey(KeyArgsMatches(expected)));
