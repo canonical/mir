@@ -279,7 +279,7 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
 
     auto p = streams.find(id);
     if (p == streams.end())
-        return checked_find(mf::SurfaceId(id.as_value()))->second;
+        return checked_find(mf::SurfaceId(id.as_value()))->second->primary_buffer_stream();
     else 
         return p->second;
 }
