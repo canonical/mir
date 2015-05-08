@@ -18,7 +18,6 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "DisplayServer"
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 #include "mir/main_loop.h"
@@ -98,6 +97,14 @@ struct mir::DisplayServer::Private
     {
         try
         {
+            TryButRevertIfUnwinding comm{
+                [this] { connector->stop(); },
+                [this] { connector->start(); }};
+
+            TryButRevertIfUnwinding prompt{
+                [this] { prompt_connector->stop(); },
+                [this] { prompt_connector->start(); }};
+
             TryButRevertIfUnwinding dispatcher{
                 [this] { input_dispatcher->stop(); },
                 [this] { input_dispatcher->start(); }};
@@ -109,14 +116,6 @@ struct mir::DisplayServer::Private
             TryButRevertIfUnwinding display_config_processing{
                 [this] { display_changer->pause_display_config_processing(); },
                 [this] { display_changer->resume_display_config_processing(); }};
-
-            TryButRevertIfUnwinding prompt{
-                [this] { prompt_connector->stop(); },
-                [this] { prompt_connector->start(); }};
-
-            TryButRevertIfUnwinding comm{
-                [this] { connector->stop(); },
-                [this] { connector->start(); }};
 
             TryButRevertIfUnwinding comp{
                 [this] { compositor->stop(); },
@@ -146,14 +145,6 @@ struct mir::DisplayServer::Private
                 [this] { compositor->start(); },
                 [this] { compositor->stop(); }};
 
-            TryButRevertIfUnwinding comm{
-                [this] { connector->start(); },
-                [this] { connector->stop(); }};
-
-            TryButRevertIfUnwinding prompt{
-                [this] { prompt_connector->start(); },
-                [this] { prompt_connector->stop(); }};
-
             TryButRevertIfUnwinding display_config_processing{
                 [this] { display_changer->resume_display_config_processing(); },
                 [this] { display_changer->pause_display_config_processing(); }};
@@ -162,7 +153,15 @@ struct mir::DisplayServer::Private
                 [this] { input_manager->start(); },
                 [this] { input_manager->stop(); }};
 
-            input_dispatcher->start();
+            TryButRevertIfUnwinding dispatcher{
+                [this] { input_dispatcher->start(); },
+                [this] { input_dispatcher->stop(); }};
+
+            TryButRevertIfUnwinding prompt{
+                [this] { prompt_connector->start(); },
+                [this] { prompt_connector->stop(); }};
+
+            connector->start();
         }
         catch(std::runtime_error const&)
         {
@@ -213,19 +212,19 @@ void mir::DisplayServer::run()
     mir::log_info("Mir version " MIR_VERSION);
 
     p->compositor->start();
-    p->connector->start();
-    p->prompt_connector->start();
     p->input_manager->start();
     p->input_dispatcher->start();
+    p->prompt_connector->start();
+    p->connector->start();
 
     p->server_status_listener->started();
 
     p->main_loop->run();
 
+    p->connector->stop();
+    p->prompt_connector->stop();
     p->input_dispatcher->stop();
     p->input_manager->stop();
-    p->prompt_connector->stop();
-    p->connector->stop();
     p->compositor->stop();
 }
 
