@@ -169,10 +169,10 @@ struct TestClientInput : mtf::HeadlessInProcessServer
 
 }
 
+using namespace ::testing;
+
 TEST_F(TestClientInput, clients_receive_keys)
 {
-    using namespace testing;
-
     Client first_client(new_connection(), first);
 
     InSequence seq;
@@ -200,8 +200,6 @@ TEST_F(TestClientInput, clients_receive_keys)
 
 TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
 {
-    using namespace testing;
-
     Client first_client(new_connection(), first);
 
     InSequence seq;
@@ -218,8 +216,6 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
 
 TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_events)
 {
-    using namespace testing;
-
     positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     Client first_client(new_connection(), first);
 
@@ -241,8 +237,6 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
 
 TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 {
-    using namespace testing;
-
     Client first_client(new_connection(), first);
     // The cursor starts at (0, 0).
     EXPECT_CALL(first_client, handle_input(mt::ButtonDownEvent(0, 0)))
@@ -258,8 +252,6 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 
 TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
 {
-    using namespace testing;
-
     int const screen_width = screen_geometry.size.width.as_int();
     int const screen_height = screen_geometry.size.height.as_int();
     int const client_height = screen_height / 2;
@@ -301,8 +293,6 @@ TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
 
 TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
 {
-    using namespace testing;
-
     int const client_height = surface_height;
     int const client_width = surface_width;
 
@@ -355,8 +345,6 @@ TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
 
 TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
 {
-    using namespace testing;
-
     auto smaller_geometry = screen_geometry;
     smaller_geometry.size.width =
         geom::Width{screen_geometry.size.width.as_uint32_t() / 2};
@@ -407,8 +395,6 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
 
 TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 {
-    using namespace testing;
-
     depths[second] = ms::DepthId{1};
     positions[second] = {{0,0}, {surface_width, surface_height}};
 
@@ -439,8 +425,6 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 
 TEST_F(TestClientInput, clients_receive_pointer_within_coordinate_system_of_window)
 {
-    using namespace testing;
-
     int const screen_width = screen_geometry.size.width.as_int();
     int const screen_height = screen_geometry.size.height.as_int();
     int const client_height = screen_height / 2;
@@ -466,8 +450,6 @@ TEST_F(TestClientInput, clients_receive_pointer_within_coordinate_system_of_wind
 // TODO: Consider tests for more input devices with custom mapping (i.e. joysticks...)
 TEST_F(TestClientInput, usb_direct_input_devices_work)
 {
-    using namespace ::testing;
-
     float const minimum_touch = mtf::FakeInputDevice::minimum_touch_axis_value;
     float const maximum_touch = mtf::FakeInputDevice::maximum_touch_axis_value;
     auto const display_width = screen_geometry.size.width.as_float();
@@ -533,8 +515,6 @@ TEST_F(TestClientInput, send_mir_input_events_through_surface)
 
 TEST_F(TestClientInput, clients_receive_keymap_change_events)
 {
-    using namespace testing;
-
     Client first_client(new_connection(), first);
 
     xkb_rule_names names;
@@ -555,7 +535,6 @@ TEST_F(TestClientInput, clients_receive_keymap_change_events)
 
 TEST_F(TestClientInput, keymap_changes_change_keycode_received)
 {
-    using namespace testing;
     Client first_client(new_connection(), first);
 
     xkb_rule_names names;
@@ -600,22 +579,11 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
     first_client.all_events_received.wait_for_at_most_seconds(5);
 }
 
-namespace
+TEST_F(TestClientInput, event_filter_may_consume_events)
 {
-struct TestClientInputNewEventFilter : public TestClientInput
-{
-    void SetUp() override
-    {
-        TestClientInput::SetUp();
-        server.the_composite_event_filter()->append(mock_event_filter);
-    }
     std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
-};
-}
+    server.the_composite_event_filter()->append(mock_event_filter);
 
-TEST_F(TestClientInputNewEventFilter, event_filter_may_consume_events)
-{
-    using namespace ::testing;
     Client first_client(new_connection(), first);
 
     InSequence seq;

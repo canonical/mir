@@ -33,7 +33,6 @@
 
 namespace mir_test_framework
 {
-
 using ClientInputRegions = std::map<std::string, std::vector<mir::geometry::Rectangle>>;
 using ClientPositions = std::map<std::string, mir::geometry::Rectangle>;
 using ClientDepths = std::map<std::string, mir::scene::DepthId>;
@@ -44,41 +43,12 @@ struct PlacementApplyingShell : mir::shell::ShellWrapper
         std::shared_ptr<mir::shell::Shell> wrapped_coordinator,
         ClientInputRegions const& client_input_regions,
         ClientPositions const& client_positions,
-        ClientDepths const& client_depths)
-        : mir::shell::ShellWrapper(wrapped_coordinator),
-          client_input_regions(client_input_regions),
-          client_positions(client_positions),
-          client_depths(client_depths)
-    {
-    }
+        ClientDepths const& client_depths);
 
     mir::frontend::SurfaceId create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
-        mir::scene::SurfaceCreationParameters const& params) override
-    {
-        auto creation_parameters = params;
-
-        auto depth = client_depths.find(params.name);
-        if (depth != client_depths.end())
-            creation_parameters.depth = depth->second;
-
-        auto const id = wrapped->create_surface(session, creation_parameters);
-        auto const surface = session->surface(id);
-
-        auto position= client_positions.find(params.name);
-        if (position != client_positions.end())
-        {
-            surface->move_to(position->second.top_left);
-            surface->resize(position->second.size);
-        }
-
-        auto regions = client_input_regions.find(params.name);
-        if (regions != client_input_regions.end())
-            surface->set_input_region(regions->second);
-
-        return id;
-    }
-
+        mir::scene::SurfaceCreationParameters const& params) override;
+private:
     ClientInputRegions const& client_input_regions;
     ClientPositions const& client_positions;
     ClientDepths const& client_depths;
