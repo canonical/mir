@@ -250,34 +250,10 @@ TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
     EXPECT_EQ(size, surface.size());
 }
 
-TEST_F(SurfaceCreation, test_surface_next_buffer)
+TEST_F(SurfaceCreation, constructed_stream_is_primary)
 {
     using namespace testing;
-
-    mtd::StubBuffer graphics_resource;
-
-    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_))
-        .Times(1)
-        .WillOnce(InvokeArgument<0>(&graphics_resource));
-
-    surface.swap_buffers(
-        nullptr,
-        [&graphics_resource](mg::Buffer* result){ EXPECT_THAT(result, Eq(&graphics_resource)); });
-}
-
-TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
-{
-    using namespace testing;
-
-    mtd::StubBuffer stub_buffer;
-
-    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_))
-        .Times(1)
-        .WillOnce(InvokeArgument<0>(&stub_buffer));
-
-    surface.swap_buffers(
-        nullptr,
-        [&stub_buffer](mg::Buffer* result){ EXPECT_THAT(result, Eq(&stub_buffer)); });
+    EXPECT_THAT(surface.primary_buffer_stream(), Eq(mock_buffer_stream));
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
@@ -418,24 +394,6 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
         .Times(1);
 
     surface.allow_framedropping(true);
-}
-
-TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
-{
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(
-        change_notification,
-        [this](int){change_notification();});
-    surface.add_observer(observer);
-
-    mg::Buffer* buffer{nullptr};
-
-    auto const complete = [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; };
-    surface.swap_buffers(buffer, complete);
-    surface.swap_buffers(buffer, complete);
-    surface.swap_buffers(buffer, complete);
-    surface.swap_buffers(buffer, complete);
-
-    EXPECT_EQ(3, notification_count);
 }
 
 TEST_F(SurfaceCreation, input_fds)

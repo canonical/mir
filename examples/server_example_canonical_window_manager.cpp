@@ -227,7 +227,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::condition_variable cv;
     mir::graphics::Buffer* written_buffer{nullptr};
 
-    titlebar->swap_buffers(
+    titlebar->primary_buffer_stream()->swap_buffers(
         nullptr,
         [&](mir::graphics::Buffer* buffer)
         {
@@ -245,8 +245,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
         cv.wait(lk, [&]{return written_buffer;});
     }
 
-    titlebar->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
-
+    titlebar->primary_buffer_stream()->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
     CanonicalSurfaceInfoCopy info{session, titlebar, ms::SurfaceCreationParameters{}};
     info.is_titlebar = true;
     info.parent = surface;
