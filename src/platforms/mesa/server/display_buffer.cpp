@@ -273,7 +273,10 @@ void mgm::DisplayBuffer::post()
     }
 
     if (needs_set_crtc)
+    {
         set_crtc(bufobj);
+        needs_set_crtc = false;
+    }
     else if (!schedule_page_flip(bufobj))
     {
         if (!bypass_buf)
@@ -361,7 +364,6 @@ void mgm::DisplayBuffer::set_crtc(BufferObject const* forced_frame)
         if (!output->set_crtc(forced_frame->get_drm_fb_id()))
             fatal_error("Failed to set DRM CRTC");
     }
-    needs_set_crtc = false;
 }
 
 bool mgm::DisplayBuffer::schedule_page_flip(BufferObject* bufobj)
