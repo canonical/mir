@@ -203,6 +203,53 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
     return parameters;
 }
 
+namespace
+{
+//TODO: provide an easier way for the server to write to a surface!
+void paint_titlebar(
+    std::shared_ptr<ms::Surface> const& titlebar,
+    mir::examples::CanonicalSurfaceInfoCopy& titlebar_info,
+    int intensity)
+{
+    auto const format = titlebar->pixel_format();
+
+    std::mutex mut;
+    std::condition_variable cv;
+
+    auto const callback = [&](mir::graphics::Buffer* buffer)
+        {
+            //TODO: this is painful to use mg::Buffer::write()
+            std::unique_lock<decltype(mut)> lk(mut);
+            titlebar_info.buffer = buffer;
+            cv.notify_all();
+        };
+
+    if (auto const old_buffer = titlebar_info.buffer)
+        /* already have a buffer */;
+    else
+    {
+        titlebar->swap_buffers(titlebar_info.buffer, callback);
+
+        std::unique_lock<decltype(mut)> lk(mut);
+        cv.wait(lk, [&]{return old_buffer != titlebar_info.buffer;});
+    }
+
+    auto const sz = titlebar_info.buffer->size().height.as_int() *
+                    titlebar_info.buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
+    std::vector<unsigned char> pixels(sz, intensity);
+    titlebar_info.buffer->write(pixels.data(), sz);
+
+    {
+        auto const old_buffer = titlebar_info.buffer;
+
+        titlebar->swap_buffers(titlebar_info.buffer, callback);
+
+        std::unique_lock<decltype(mut)> lk(mut);
+        cv.wait(lk, [&]{return old_buffer != titlebar_info.buffer;});
+    }
+}
+}
+
 void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
@@ -228,41 +275,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     titlebar_info.is_titlebar = true;
     titlebar_info.parent = surface;
 
-    //TODO: provide an easier way for the server to write to a surface!
-    std::mutex mut;
-    std::condition_variable cv;
-
-    auto const callback = [&](mir::graphics::Buffer* buffer)
-        {
-            //TODO: this is painful to use mg::Buffer::write()
-            std::unique_lock<decltype(mut)> lk(mut);
-            titlebar_info.buffer = buffer;
-            cv.notify_all();
-        };
-
-    if (auto const old_buffer = titlebar_info.buffer)
-        /* already have a buffer */;
-    else
-    {
-        titlebar->swap_buffers(titlebar_info.buffer, callback);
-
-        std::unique_lock<decltype(mut)> lk(mut);
-        cv.wait(lk, [&]{return old_buffer != titlebar_info.buffer;});
-    }
-
-    auto const sz = titlebar_info.buffer->size().height.as_int() *
-        titlebar_info.buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
-    std::vector<unsigned char> pixels(sz, 0xFF);
-    titlebar_info.buffer->write(pixels.data(), sz);
-
-    {
-        auto const old_buffer = titlebar_info.buffer;
-
-        titlebar->swap_buffers(titlebar_info.buffer, callback);
-
-        std::unique_lock<decltype(mut)> lk(mut);
-        cv.wait(lk, [&]{return old_buffer != titlebar_info.buffer;});
-    }
+    paint_titlebar(titlebar, titlebar_info, 0xFF);
 
     surface_map.emplace(titlebar, std::move(titlebar_info));
 }
@@ -665,6 +678,14 @@ void me::CanonicalWindowManagerPolicyCopy::toggle(MirSurfaceState state)
 
 void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr<ms::Surface> const& surface)
 {
+    if (auto const active_surface = active_surface_.lock())
+    {
+        if (auto const titlebar = tools->info_for(active_surface).titlebar)
+        {
+            paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
+        }
+    }
+
     if (!surface)
     {
         active_surface_.reset();
@@ -682,6 +703,10 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
     case mir_surface_type_freestyle:
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        if (auto const titlebar = tools->info_for(surface).titlebar)
+        {
+            paint_titlebar(titlebar, tools->info_for(titlebar), 0xFF);
+        }
         tools->set_focus_to(info_for.session.lock(), surface);
         raise_tree(surface);
         active_surface_ = surface;
