@@ -203,9 +203,32 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
     return parameters;
 }
 
+//TODO: provide an easier way for the server to write to a surface!
+//TODO: this is painful to use mg::Buffer::write()
 namespace
 {
-//TODO: provide an easier way for the server to write to a surface!
+void swap_buffers(
+    std::shared_ptr<ms::Surface> const& surface,
+    mir::graphics::Buffer*& surface_buffer)
+{
+    std::mutex mut;
+    std::condition_variable cv;
+
+    auto const callback = [&](mir::graphics::Buffer* buffer)
+        {
+            std::unique_lock<decltype(mut)> lk(mut);
+            surface_buffer = buffer;
+            cv.notify_one();
+        };
+
+    auto const old_buffer = surface_buffer;
+
+    surface->swap_buffers(surface_buffer, callback);
+
+    std::unique_lock<decltype(mut)> lk(mut);
+    cv.wait(lk, [&]{return old_buffer != surface_buffer;});
+}
+
 void paint_titlebar(
     std::shared_ptr<ms::Surface> const& titlebar,
     mir::examples::CanonicalSurfaceInfoCopy& titlebar_info,
@@ -213,40 +236,16 @@ void paint_titlebar(
 {
     auto const format = titlebar->pixel_format();
 
-    std::mutex mut;
-    std::condition_variable cv;
-
-    auto const callback = [&](mir::graphics::Buffer* buffer)
-        {
-            //TODO: this is painful to use mg::Buffer::write()
-            std::unique_lock<decltype(mut)> lk(mut);
-            titlebar_info.buffer = buffer;
-            cv.notify_all();
-        };
-
-    if (auto const old_buffer = titlebar_info.buffer)
-        /* already have a buffer */;
-    else
-    {
-        titlebar->swap_buffers(titlebar_info.buffer, callback);
-
-        std::unique_lock<decltype(mut)> lk(mut);
-        cv.wait(lk, [&]{return old_buffer != titlebar_info.buffer;});
-    }
+    if (!titlebar_info.buffer)
+        swap_buffers(titlebar, titlebar_info.buffer);
 
     auto const sz = titlebar_info.buffer->size().height.as_int() *
                     titlebar_info.buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
+
     std::vector<unsigned char> pixels(sz, intensity);
     titlebar_info.buffer->write(pixels.data(), sz);
 
-    {
-        auto const old_buffer = titlebar_info.buffer;
-
-        titlebar->swap_buffers(titlebar_info.buffer, callback);
-
-        std::unique_lock<decltype(mut)> lk(mut);
-        cv.wait(lk, [&]{return old_buffer != titlebar_info.buffer;});
-    }
+    swap_buffers(titlebar, titlebar_info.buffer);
 }
 }
 
