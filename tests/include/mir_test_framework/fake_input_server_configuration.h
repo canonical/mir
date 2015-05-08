@@ -21,14 +21,14 @@
 #define MIR_TEST_FAKE_INPUT_SERVER_CONFIGURATION_H_
 
 #include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/temporary_environmentvariable.h"
+#include "mir_test_framework/temporary_environment_value.h"
 
 namespace mir
 {
 namespace mir_test_framework
 {
 
-class FakeInputServerConfiguration : TestingServerConfiguration
+class FakeInputServerConfiguration : public TestingServerConfiguration
 {
 public:
     using TestingServerConfiguration::TestingServerConfiguration;
@@ -40,7 +40,8 @@ public:
     auto the_window_manager_builder() -> shell::WindowManagerBuilder override;
 
 private:
-    TemporaryEnvironmentValue stub_input_lib{
+    TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str()};
+    TemporaryEnvironmentValue real_input{"MIR_SERVER_TESTS_USE_REAL_INPUT", "1"};
 };
 
 }

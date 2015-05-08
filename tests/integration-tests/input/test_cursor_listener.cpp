@@ -23,6 +23,7 @@
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/fake_input_server_configuration.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
+#include "mir_test_framework/temporary_environment_value.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
 #include "mir_test_doubles/stub_touch_visualizer.h"
 #include "mir_test/wait_condition.h"
@@ -41,10 +42,8 @@
 #include <cstdlib>
 
 namespace mi = mir::input;
-namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
 namespace mt = mir::test;
-namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
 namespace
@@ -58,7 +57,7 @@ struct MockCursorListener : public mi::CursorListener
     ~MockCursorListener() noexcept {}
 };
 
-struct CursorListenerIntegrationTest : testing::Test, InjectStubInputLib, mtf::FakeInputServerConfiguration
+struct CursorListenerIntegrationTest : testing::Test, mtf::FakeInputServerConfiguration
 {
     bool is_key_repeat_enabled() const override
     {
