@@ -29,6 +29,8 @@
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/compositor/buffer_stream.h"
+#include "src/server/compositor/buffer_bundle.h"
+#include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/mir_connection.h"
 #include <chrono>
@@ -55,14 +57,14 @@ MATCHER(DidNotTimeOut, "did not time out")
     return arg;
 }
 
-struct StubStream : public mc::BufferStream
+struct StubBundle : public mc::BufferBundle
 {
-    StubStream(std::vector<mg::BufferID> const& ids) :
+    StubBundle(std::vector<mg::BufferID> const& ids) :
         buffer_id_seq(ids)
     {
     }
 
-    void acquire_client_buffer(std::function<void(mg::Buffer* buffer)> complete)
+    void client_acquire(std::function<void(mg::Buffer* buffer)> complete)
     {
         std::shared_ptr<mg::Buffer> stub_buffer;
         if (buffers_acquired < buffer_id_seq.size())
@@ -73,36 +75,37 @@ struct StubStream : public mc::BufferStream
         client_buffers.push_back(stub_buffer);
         complete(stub_buffer.get());
     }
-
-    void release_client_buffer(mg::Buffer*) {}
-    std::shared_ptr<mg::Buffer> lock_compositor_buffer(void const*)
-    { return std::make_shared<mtd::StubBuffer>(); }
-    std::shared_ptr<mg::Buffer> lock_snapshot_buffer()
-    { return std::make_shared<mtd::StubBuffer>(); }
-    MirPixelFormat get_stream_pixel_format() { return mir_pixel_format_abgr_8888; }
-    geom::Size stream_size() { return geom::Size{1,212121}; }
-    void resize(geom::Size const&) {};
-    void allow_framedropping(bool) {};
-    void force_requests_to_complete() {};
-    int buffers_ready_for_compositor(void const*) const override { return -5; }
+    void client_release(mg::Buffer*) {}
+    std::shared_ptr<mg::Buffer> compositor_acquire(void const*)
+        { return std::make_shared<mtd::StubBuffer>(); }
+    void compositor_release(std::shared_ptr<mg::Buffer> const&) {}
+    std::shared_ptr<mg::Buffer> snapshot_acquire()
+        { return std::make_shared<mtd::StubBuffer>(); }
+    void snapshot_release(std::shared_ptr<mg::Buffer> const&) {}
+    mg::BufferProperties properties() const { return mg::BufferProperties{}; }
+    void allow_framedropping(bool) {}
+    void force_requests_to_complete() {}
+    void resize(const geom::Size&) {}
+    int buffers_ready_for_compositor(void const*) const { return 1; }
+    int buffers_free_for_client() const { return 1; }
     void drop_old_buffers() {}
-    void drop_client_requests() override {}
+    void drop_client_requests() {}
 
     std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
     std::vector<mg::BufferID> const buffer_id_seq;
     unsigned int buffers_acquired{0};
 };
 
-struct StubStreamFactory : public msc::BufferStreamFactory
+struct StubBundleFactory : public msc::BufferStreamFactory
 {
-    StubStreamFactory(std::vector<mg::BufferID> const& ids) :
+    StubBundleFactory(std::vector<mg::BufferID> const& ids) :
         buffer_id_seq(ids)
     {}
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(int, mg::BufferProperties const& p) override
     { return create_buffer_stream(p); }
     std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&) override
-    { return std::make_shared<StubStream>(buffer_id_seq); }
+    { return std::make_shared<mc::BufferStreamSurfaces>(std::make_shared<StubBundle>(buffer_id_seq)); }
     std::vector<mg::BufferID> const buffer_id_seq;
 };
 
@@ -178,7 +181,7 @@ struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
     ExchangeServerConfiguration(
         std::vector<mg::BufferID> const& id_seq,
         std::shared_ptr<mg::PlatformIpcOperations> const& ipc_ops) :
-        stream_factory{std::make_shared<StubStreamFactory>(id_seq)},
+        stream_factory{std::make_shared<StubBundleFactory>(id_seq)},
         platform{std::make_shared<StubPlatform>(ipc_ops)}
     {
     }

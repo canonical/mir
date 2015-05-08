@@ -85,6 +85,12 @@ public:
 
     void drop_old_buffers() override {}
     void drop_client_requests() override {}
+    void swap_buffers(graphics::Buffer*, std::function<void(graphics::Buffer* new_buffer)>) {}
+    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const&) {}
+    MirPixelFormat pixel_format() const { return mir_pixel_format_abgr_8888; }
+    void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) {}
+    void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) {}
+    bool has_submitted_buffer() const { return true; }
 
     StubBuffer stub_client_buffer;
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
