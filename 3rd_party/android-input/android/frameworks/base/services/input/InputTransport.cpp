@@ -14,7 +14,7 @@
 #define DEBUG_CHANNEL_LIFECYCLE 0
 
 // Log debug messages about transport actions
-#define DEBUG_TRANSPORT_ACTIONS 0
+#define DEBUG_TRANSPORT_ACTIONS 1
 
 // Log debug messages about touch event resampling
 #define DEBUG_RESAMPLING 0

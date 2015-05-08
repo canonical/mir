@@ -22,6 +22,7 @@
 
 #include <chrono>
 #include <X11/Xlib.h>
+#include <linux/input.h>
 
 namespace mi = mir::input;
 namespace mix = mi::X;
@@ -57,10 +58,10 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
 
             event.key.type = mir_event_type_key;
             event.key.source_id = 0;
-            event.key.action = mir_key_action_down;
+            event.key.action = mir_key_action_up;
             event.key.modifiers = mir_input_event_modifier_none;
             event.key.key_code = XKB_KEY_q;
-            event.key.scan_code = XKB_KEY_q;
+            event.key.scan_code = KEY_Q;
             event.key.repeat_count = 0;
 
             event.key.event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
