@@ -150,17 +150,17 @@ TEST(KeyInputEventProperties, keycode_scancode_and_modifiers_taken_from_old_styl
 {
     xkb_keysym_t key_code = 171;
     int scan_code = 31;
-    MirKeyModifier old_modifiers = mir_key_modifier_shift;
+    MirInputEventModifiers modifiers = mir_input_event_modifier_shift;
 
     auto old_ev = a_key_ev();
     old_ev.key.key_code = key_code;
     old_ev.key.scan_code = scan_code;
-    old_ev.key.modifiers = old_modifiers;
+    old_ev.key.modifiers = modifiers;
 
     auto new_kev = mir_input_event_get_keyboard_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(key_code, mir_keyboard_event_key_code(new_kev));
     EXPECT_EQ(scan_code, mir_keyboard_event_scan_code(new_kev));
-    EXPECT_EQ(mir_input_event_modifier_shift, mir_keyboard_event_modifiers(new_kev));
+    EXPECT_EQ(modifiers, mir_keyboard_event_modifiers(new_kev));
 }
 
 TEST(TouchEventProperties, touch_count_taken_from_pointer_count)
@@ -296,12 +296,13 @@ INSTANTIATE_TEST_CASE_P(StylusDeviceClassTest,
 
 TEST(PointerInputEventProperties, modifiers_taken_from_old_style_ev)
 {
+    MirInputEventModifiers modifiers = mir_input_event_modifier_shift;
     auto old_ev = a_motion_ev(AINPUT_SOURCE_MOUSE);
-    old_ev.motion.modifiers = mir_key_modifier_shift;
+    old_ev.motion.modifiers = modifiers;
     
     auto pointer_event = 
         mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
-    EXPECT_EQ(mir_input_event_modifier_shift, mir_pointer_event_modifiers(pointer_event));
+    EXPECT_EQ(modifiers, mir_pointer_event_modifiers(pointer_event));
 }
 
 namespace

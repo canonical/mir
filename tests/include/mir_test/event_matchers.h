@@ -386,6 +386,36 @@ MATCHER_P(OrientationEvent, direction, "")
     return true;
 }
 
+MATCHER_P(InputDeviceIdMatches, device_id, "")
+{
+    if (mir_event_get_type(to_address(arg)) != mir_event_type_input)
+        return false;
+    auto input_event = mir_event_get_input_event(to_address(arg));
+    return mir_input_event_get_device_id(input_event) == device_id;
+}
+
+MATCHER(InputDeviceConfigurationChangedEvent, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_input_configuration)
+        return false;
+    auto idev = mir_event_get_input_configuration_event(as_address);
+    if (mir_input_configuration_event_get_action(idev) != mir_input_configuration_action_configuration_changed)
+        return false;
+    return true;
+}
+
+MATCHER(InputDeviceResetEvent, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_input_configuration)
+        return false;
+    auto idev = mir_event_get_input_configuration_event(as_address);
+    if (mir_input_configuration_event_get_action(idev) != mir_input_configuration_action_device_reset)
+        return false;
+    return true;
+}
+
 }
 }
 

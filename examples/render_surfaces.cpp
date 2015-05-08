@@ -371,7 +371,7 @@ public:
             {
                 mg::Buffer* buffer{nullptr};
                 auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
-                surface->swap_buffers(buffer, complete); // Fetch buffer for rendering
+                surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Fetch buffer for rendering
                 {
                     gl_context->make_current();
 
@@ -384,7 +384,7 @@ public:
 
                     gl_context->release_current();
                 }
-                surface->swap_buffers(buffer, complete); // Post rendered buffer
+                surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Post rendered buffer
             }
 
             /*

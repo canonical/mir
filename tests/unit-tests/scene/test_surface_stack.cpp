@@ -17,6 +17,7 @@
  */
 
 #include "src/server/scene/surface_stack.h"
+#include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/observer.h"
@@ -31,6 +32,7 @@
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -57,7 +59,7 @@ namespace
 void post_a_frame(ms::Surface& s)
 {
     mtd::StubBuffer old_buffer;
-    s.swap_buffers(&old_buffer, [](mg::Buffer*){});
+    s.primary_buffer_stream()->swap_buffers(&old_buffer, [](mg::Buffer*){});
 }
 
 MATCHER_P(SurfaceWithInputReceptionMode, mode, "")
@@ -167,6 +169,7 @@ struct SurfaceStack : public ::testing::Test
             std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
+        invisible_stub_surface->set_hidden(true);
     }
 
     ms::SurfaceCreationParameters default_params;
@@ -294,13 +297,22 @@ TEST_F(SurfaceStack, gets_surface_renames)
 TEST_F(SurfaceStack, scene_counts_pending_accurately)
 {
     using namespace testing;
-
     ms::SurfaceStack stack{report};
+    mtd::StubBuffer stub_buffer;
+    int ready = 0;
+    auto mock_queue = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
+    ON_CALL(*mock_queue, buffers_ready_for_compositor(_))
+        .WillByDefault(InvokeWithoutArgs([&]{return ready;}));
+    ON_CALL(*mock_queue, client_release(_))
+        .WillByDefault(InvokeWithoutArgs([&]{ready++;}));
+    ON_CALL(*mock_queue, compositor_acquire(_))
+        .WillByDefault(InvokeWithoutArgs([&]{ready--; return mt::fake_shared(stub_buffer); }));
+ 
     auto surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
-        std::make_shared<mtd::StubBufferStream>(),
+        std::make_shared<mc::BufferStreamSurfaces>(mock_queue),
         std::shared_ptr<mir::input::InputChannel>(),
         std::shared_ptr<mir::input::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),

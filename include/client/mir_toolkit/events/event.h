@@ -43,7 +43,8 @@ typedef enum
     /* Type for new style input event will be returned from mir_event_get_type
        when old style event type was mir_event_type_key or mir_event_type_motion */
     mir_event_type_input,
-    mir_event_type_keymap
+    mir_event_type_keymap,
+    mir_event_type_input_configuration,
 } MirEventType;
 
 typedef struct MirSurfaceEvent MirSurfaceEvent;
@@ -53,6 +54,7 @@ typedef struct MirOrientationEvent MirOrientationEvent;
 typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
+typedef struct MirInputConfigurationEvent MirInputConfigurationEvent;
 
 typedef union MirEvent MirEvent;
 
@@ -67,6 +69,7 @@ typedef union MirEvent MirEvent;
 #include "mir_toolkit/events/orientation_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"
 #include "mir_toolkit/events/keymap_event.h"
+#include "mir_toolkit/events/input_configuration_event.h"
 
 #ifdef __cplusplus
 /**
@@ -155,6 +158,16 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
  * \return           The associated MirKeymapEvent
  */
 MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev);
+
+/*
+ * Retrieve the MirInputConfiguration associated with a MirEvent of
+ * type mir_event_type_input_configuration. The event signifies that the
+ * input device configuration has changed.
+ *
+ * \param [in] event The event
+ * \return           The associated MirInputConfigurationEvent
+ */
+MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* ev);
 
 /*
  * 
