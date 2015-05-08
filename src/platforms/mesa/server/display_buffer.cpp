@@ -243,6 +243,9 @@ void mgm::DisplayBuffer::finish_scheduled_frame()
 
     if (scheduled_bypass_frame || scheduled_composite_frame)
     {
+        // Why are both of these grouped into a single statement?
+        // Because in either case both types of frame need releasing each time.
+
         visible_bypass_frame = scheduled_bypass_frame;
         scheduled_bypass_frame = nullptr;
     
