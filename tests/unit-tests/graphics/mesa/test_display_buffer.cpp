@@ -141,7 +141,6 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
         mock_egl.fake_egl_context);
 
     auto original_count = mock_bypassable_buffer.use_count();
-    EXPECT_EQ(1, original_count);
 
     EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
     EXPECT_EQ(original_count+1, mock_bypassable_buffer.use_count());
