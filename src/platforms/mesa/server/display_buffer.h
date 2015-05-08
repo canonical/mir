@@ -81,7 +81,7 @@ private:
 
     BufferObject* visible_composite_frame;
     BufferObject* scheduled_composite_frame;
-    std::shared_ptr<graphics::Buffer> visible_bypass_frame;
+    std::shared_ptr<graphics::Buffer> visible_bypass_frame, scheduled_bypass_frame;
     std::shared_ptr<Buffer> bypass_buf{nullptr};
     BufferObject* bypass_bufobj{nullptr};
     std::shared_ptr<Platform> const platform;

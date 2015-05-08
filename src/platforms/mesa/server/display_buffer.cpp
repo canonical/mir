@@ -239,34 +239,23 @@ void mgm::DisplayBuffer::gl_swap_buffers()
 
 void mgm::DisplayBuffer::finish_scheduled_frame()
 {
-    // TODO
+    wait_for_page_flip();
+
+    if (scheduled_bypass_frame || scheduled_composite_frame)
+    {
+        visible_bypass_frame = scheduled_bypass_frame;
+        scheduled_bypass_frame = nullptr;
+    
+        if (visible_composite_frame)
+            visible_composite_frame->release();
+        visible_composite_frame = scheduled_composite_frame;
+        scheduled_composite_frame = nullptr;
+    }
 }
 
 void mgm::DisplayBuffer::post()
 {
-    /*
-     * We might not have waited for the previous frame to page flip yet.
-     * This is good because it maximizes the time available to spend rendering
-     * each frame. Just remember wait_for_page_flip() must be called at some
-     * point before the next schedule_page_flip().
-     */
-    wait_for_page_flip();
-
-    /*
-     * Switching from bypass to compositing? Now is the earliest safe time
-     * we can unreference the bypass buffer...
-     */
-    if (scheduled_composite_frame)
-        visible_bypass_frame = nullptr;
-    /*
-     * Release the last flipped buffer object (which is not displayed anymore)
-     * to make it available for future rendering.
-     */
-    if (visible_composite_frame)
-        visible_composite_frame->release();
-
-    visible_composite_frame = scheduled_composite_frame;
-    scheduled_composite_frame = nullptr;
+    finish_scheduled_frame();
 
     mgm::BufferObject *bufobj;
     if (bypass_buf)
@@ -298,57 +287,21 @@ void mgm::DisplayBuffer::post()
         set_crtc(*bufobj);
     }
 
+    // scheduled_*_frame are both null right now (from finish_scheduled_frame)
     if (bypass_buf)
-    {
-        /*
-         * For composited frames we defer wait_for_page_flip till just before
-         * the next frame, but not for bypass frames. Deferring the flip of
-         * bypass frames would increase the time we held
-         * visible_bypass_frame unacceptably, resulting in client stuttering
-         * unless we allocate more buffers (which I'm trying to avoid).
-         * Also, bypass does not need the deferred page flip because it has
-         * no compositing/rendering step for which to save time for.
-         */
-        wait_for_page_flip();
-        scheduled_composite_frame = nullptr;
-
-        /*
-         * Keep a reference to the buffer being bypassed for the entire
-         * duration of the frame. This ensures the buffer doesn't get reused by
-         * the client while its on-screen, which would be seen as tearing or
-         * worse.
-         */
-        visible_bypass_frame = bypass_buf;
-    }
+        scheduled_bypass_frame = bypass_buf;
     else
-    {
-        /*
-         * Not in clone mode? We can afford to wait for the page flip then,
-         * making us double-buffered (noticeably less laggy than the triple
-         * buffering that clone mode requires).
-         */
-        if (outputs.size() == 1)
-        {
-            wait_for_page_flip();
-
-            /*
-             * bufobj is now physically on screen. Release the old frame...
-             */
-            if (visible_composite_frame)
-            {
-                visible_composite_frame->release();
-                visible_composite_frame = nullptr;
-            }
-
-            /*
-             * visible_composite_frame will be set correctly on the next iteration
-             * Don't do it here or else bufobj would be released while still
-             * on screen (hence tearing and artefacts).
-             */
-        }
-
         scheduled_composite_frame = bufobj;
-    }
+
+    /*
+     * So long as we're only driving a single output it's better to wait for
+     * the page flip right now. This ensures the compositor doesn't get an
+     * extra frame ahead of the display (two frames ahead instead of one).
+     * In the case of clone mode however, we need the extra time to account
+     * for waiting on multiple monitors' vsyncs.
+     */
+    if (outputs.size() == 1)
+        finish_scheduled_frame();
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
