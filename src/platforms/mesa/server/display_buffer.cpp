@@ -237,25 +237,6 @@ void mgm::DisplayBuffer::gl_swap_buffers()
     bypass_bufobj = nullptr;
 }
 
-void mgm::DisplayBuffer::finish_scheduled_frame()
-{
-    wait_for_page_flip();
-
-    if (scheduled_bypass_frame || scheduled_composite_frame)
-    {
-        // Why are both of these grouped into a single statement?
-        // Because in either case both types of frame need releasing each time.
-
-        visible_bypass_frame = scheduled_bypass_frame;
-        scheduled_bypass_frame = nullptr;
-    
-        if (visible_composite_frame)
-            visible_composite_frame->release();
-        visible_composite_frame = scheduled_composite_frame;
-        scheduled_composite_frame = nullptr;
-    }
-}
-
 void mgm::DisplayBuffer::set_crtc(BufferObject const* forced_frame)
 {
     for (auto& output : outputs)
@@ -267,7 +248,13 @@ void mgm::DisplayBuffer::set_crtc(BufferObject const* forced_frame)
 
 void mgm::DisplayBuffer::post()
 {
-    finish_scheduled_frame();
+    /*
+     * We might not have waited for the previous frame to page flip yet.
+     * This is good because it maximizes the time available to spend rendering
+     * each frame. Just remember wait_for_page_flip() must be called at some
+     * point before the next schedule_page_flip().
+     */
+    wait_for_page_flip();
 
     mgm::BufferObject *bufobj;
     if (bypass_buf)
@@ -293,7 +280,7 @@ void mgm::DisplayBuffer::post()
         fatal_error("Failed to schedule page flip");
     }
 
-    // These are both null right now due to finish_scheduled_frame above.
+    // These are both null right now due to wait_for_page_flip above.
     if (bypass_buf)
         scheduled_bypass_frame = bypass_buf;
     else
@@ -304,13 +291,13 @@ void mgm::DisplayBuffer::post()
      * the page flip right now. This ensures the compositor doesn't get an
      * extra frame ahead of the display (two frames ahead instead of one)
      * so we get lower visible latency.
-     *   In the case of clone mode however we need to defer finish_scheduled_-
-     * frame because waiting on multiple monitors' vsyncs synchronously (when
-     * those separate monitors are almost always out of phase) requires an
-     * extra frame of time to avoid stutter (LP: #1213801).
+     *   In the case of clone mode however we need to defer wait_for_page_flip
+     * because waiting on multiple monitors' vsyncs synchronously (when those
+     * separate monitors are almost always out of phase) requires an extra
+     * frame of time to avoid stutter (LP: #1213801).
      */
     if (outputs.size() == 1)
-        finish_scheduled_frame();
+        wait_for_page_flip();
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
@@ -390,6 +377,20 @@ void mgm::DisplayBuffer::wait_for_page_flip()
             output->wait_for_page_flip();
 
         page_flips_pending = false;
+    }
+
+    if (scheduled_bypass_frame || scheduled_composite_frame)
+    {
+        // Why are both of these grouped into a single statement?
+        // Because in either case both types of frame need releasing each time.
+
+        visible_bypass_frame = scheduled_bypass_frame;
+        scheduled_bypass_frame = nullptr;
+    
+        if (visible_composite_frame)
+            visible_composite_frame->release();
+        visible_composite_frame = scheduled_composite_frame;
+        scheduled_composite_frame = nullptr;
     }
 }
 
