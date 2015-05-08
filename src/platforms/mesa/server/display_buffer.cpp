@@ -143,11 +143,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     if (!scheduled_composite_frame)
         fatal_error("Failed to get frontbuffer");
 
-    for (auto& output : outputs)
-    {
-        if (!output->set_crtc(scheduled_composite_frame->get_drm_fb_id()))
-            fatal_error("Failed to set DRM crtc");
-    }
+    set_crtc(*scheduled_composite_frame);
 
     egl.release_current();
 
@@ -241,6 +237,11 @@ void mgm::DisplayBuffer::gl_swap_buffers()
     bypass_bufobj = nullptr;
 }
 
+void mgm::DisplayBuffer::finish_scheduled_frame()
+{
+    // TODO
+}
+
 void mgm::DisplayBuffer::post()
 {
     /*
@@ -294,12 +295,7 @@ void mgm::DisplayBuffer::post()
     }
     else if (needs_set_crtc)
     {
-        for (auto& output : outputs)
-        {
-            if (!output->set_crtc(bufobj->get_drm_fb_id()))
-                fatal_error("Failed to set DRM crtc");
-        }
-        needs_set_crtc = false;
+        set_crtc(*bufobj);
     }
 
     if (bypass_buf)
@@ -408,6 +404,15 @@ mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
     return bufobj;
 }
 
+void mgm::DisplayBuffer::set_crtc(BufferObject const& bufobj)
+{
+    for (auto& output : outputs)
+    {
+        if (!output->set_crtc(bufobj.get_drm_fb_id()))
+            fatal_error("Failed to set DRM CRTC");
+    }
+    needs_set_crtc = false;
+}
 
 bool mgm::DisplayBuffer::schedule_page_flip(BufferObject* bufobj)
 {

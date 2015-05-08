@@ -76,6 +76,8 @@ private:
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
     bool schedule_page_flip(BufferObject* bufobj);
+    void finish_scheduled_frame();
+    void set_crtc(BufferObject const&);
 
     BufferObject* visible_composite_frame;
     BufferObject* scheduled_composite_frame;
