@@ -206,7 +206,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
-    CanonicalSurfaceInfoMap& surface_info)
+    CanonicalSurfaceInfoMap& surface_map)
 {
     auto format = mir_pixel_format_xrgb_8888;
     ms::SurfaceCreationParameters params;
@@ -219,39 +219,52 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     auto id = session->create_surface(params);
     auto titlebar = session->surface(id);
     titlebar->set_alpha(0.9);
-    tools->info_for(surface).titlebar = titlebar;
-    tools->info_for(surface).children.push_back(titlebar);
+
+    auto& surface_info = tools->info_for(surface);
+    surface_info.titlebar = titlebar;
+    surface_info.children.push_back(titlebar);
+
+    CanonicalSurfaceInfoCopy titlebar_info{session, titlebar, ms::SurfaceCreationParameters{}};
+    titlebar_info.is_titlebar = true;
+    titlebar_info.parent = surface;
 
     //TODO: provide an easier way for the server to write to a surface!
     std::mutex mut;
     std::condition_variable cv;
-    mir::graphics::Buffer* written_buffer{nullptr};
 
-    titlebar->swap_buffers(
-        nullptr,
-        [&](mir::graphics::Buffer* buffer)
+    auto const callback = [&](mir::graphics::Buffer* buffer)
         {
             //TODO: this is painful to use mg::Buffer::write()
-            auto const sz = buffer->size().height.as_int() *
-                 buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
-            std::vector<unsigned char> pixels(sz, 0xFF);
-            buffer->write(pixels.data(), sz);
             std::unique_lock<decltype(mut)> lk(mut);
-            written_buffer = buffer;
+            titlebar_info.buffer = buffer;
             cv.notify_all();
-        });
+        };
+
+    if (auto const old_buffer = titlebar_info.buffer)
+        /* already have a buffer */;
+    else
     {
+        titlebar->swap_buffers(titlebar_info.buffer, callback);
+
         std::unique_lock<decltype(mut)> lk(mut);
-        cv.wait(lk, [&]{return written_buffer;});
+        cv.wait(lk, [&]{return old_buffer != titlebar_info.buffer;});
     }
 
-    titlebar->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
+    auto const sz = titlebar_info.buffer->size().height.as_int() *
+        titlebar_info.buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
+    std::vector<unsigned char> pixels(sz, 0xFF);
+    titlebar_info.buffer->write(pixels.data(), sz);
 
-    CanonicalSurfaceInfoCopy info{session, titlebar, ms::SurfaceCreationParameters{}};
-    info.is_titlebar = true;
-    info.parent = surface;
+    {
+        auto const old_buffer = titlebar_info.buffer;
 
-    surface_info.emplace(titlebar, std::move(info));
+        titlebar->swap_buffers(titlebar_info.buffer, callback);
+
+        std::unique_lock<decltype(mut)> lk(mut);
+        cv.wait(lk, [&]{return old_buffer != titlebar_info.buffer;});
+    }
+
+    surface_map.emplace(titlebar, std::move(titlebar_info));
 }
 
 namespace
