@@ -86,7 +86,7 @@ MirKeyboardAction mia::mir_keyboard_action_from_android(int32_t android_action, 
     }
 }
 
-int32_t mia::android_keyboard_action_from_mir(MirKeyboardAction action, int32_t& repeat_count_out)
+int32_t mia::android_keyboard_action_from_mir(int32_t& repeat_count_out, MirKeyboardAction action)
 {
     repeat_count_out = 0;
     switch (action)
