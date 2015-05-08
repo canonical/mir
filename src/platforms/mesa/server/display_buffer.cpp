@@ -272,36 +272,30 @@ void mgm::DisplayBuffer::post()
             fatal_error("Failed to get front buffer object");
     }
 
-    /*
-     * Schedule the current front buffer object for display, and wait
-     * for it to be actually displayed (flipped).
-     *
-     * If the flip fails, release the buffer object to make it available
-     * for future rendering.
-     */
-    if (!needs_set_crtc && !schedule_page_flip(bufobj))
+    if (needs_set_crtc)
+        set_crtc(*bufobj);
+    else if (!schedule_page_flip(bufobj))
     {
         if (!bypass_buf)
             bufobj->release();
         fatal_error("Failed to schedule page flip");
     }
-    else if (needs_set_crtc)
-    {
-        set_crtc(*bufobj);
-    }
 
-    // scheduled_*_frame are both null right now (from finish_scheduled_frame)
+    // These are both null right now due to finish_scheduled_frame above.
     if (bypass_buf)
         scheduled_bypass_frame = bypass_buf;
     else
         scheduled_composite_frame = bufobj;
 
     /*
-     * So long as we're only driving a single output it's better to wait for
+     * As long as we're only driving a single output it's better to wait for
      * the page flip right now. This ensures the compositor doesn't get an
-     * extra frame ahead of the display (two frames ahead instead of one).
-     * In the case of clone mode however, we need the extra time to account
-     * for waiting on multiple monitors' vsyncs.
+     * extra frame ahead of the display (two frames ahead instead of one)
+     * so we get lower visible latency.
+     *   In the case of clone mode however we need to defer finish_scheduled_-
+     * frame because waiting on multiple monitors' vsyncs synchronously (when
+     * those separate monitors are almost always out of phase) requires an
+     * extra frame of time to avoid stutter (LP: #1213801).
      */
     if (outputs.size() == 1)
         finish_scheduled_frame();
