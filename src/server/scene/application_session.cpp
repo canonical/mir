@@ -279,7 +279,7 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
 
     auto p = streams.find(id);
     if (p == streams.end())
-        return checked_find(mf::SurfaceId(id.as_value()))->second;
+        return checked_find(mf::SurfaceId(id.as_value()))->second->primary_buffer_stream();
     else 
         return p->second;
 }
@@ -287,7 +287,7 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
 mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
 {
     auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
-    auto stream = std::make_shared<ms::SurfacelessBufferStream>(buffer_stream_factory->create_buffer_stream(2, props));
+    auto stream = std::make_shared<ms::SurfacelessBufferStream>(buffer_stream_factory->create_buffer_stream(props));
     
     {
         std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);

@@ -389,7 +389,7 @@ bool me::WindowManager::handle_pointer_event(MirPointerEvent const* pev)
 
    if (modifiers & mir_input_event_modifier_meta &&
        action == mir_pointer_action_motion)
-    {
+   {
         zoom_exponent += vscroll;
 
         // Negative exponents do work too, but disable them until

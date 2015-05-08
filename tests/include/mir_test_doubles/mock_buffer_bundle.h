@@ -33,9 +33,10 @@ struct MockBufferBundle : public compositor::BufferBundle
 {
 public:
     MockBufferBundle()
-    {}
-    ~MockBufferBundle() noexcept
-    {}
+    {
+        ON_CALL(*this, buffers_ready_for_compositor(testing::_))
+            .WillByDefault(testing::Return(1));
+    }
 
     MOCK_METHOD1(client_acquire,     void(std::function<void(graphics::Buffer*)>));
     MOCK_METHOD1(client_release,     void(graphics::Buffer*));
@@ -49,7 +50,7 @@ public:
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_METHOD1(resize, void(const geometry::Size &));
     MOCK_METHOD0(drop_old_buffers, void());
-    int buffers_ready_for_compositor(void const*) const override { return 1; }
+    MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
     int buffers_free_for_client() const override { return 1; }
     void drop_client_requests() override {}
 };

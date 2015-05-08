@@ -21,6 +21,8 @@
 #define MIR_INPUT_INPUT_SINK_H_
 
 #include "mir_toolkit/event.h"
+#include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
 
 namespace mir
 {
@@ -32,6 +34,16 @@ public:
     InputSink() = default;
     virtual ~InputSink() = default;
     virtual void handle_input(MirEvent& event) = 0;
+    /**
+     * Confine position of a pointer
+     */
+    virtual void confine_pointer(mir::geometry::Point& position) = 0;
+
+    /**!
+     * Obtain the bounding rectangle of the destination area for this input sink
+     */
+    virtual mir::geometry::Rectangle bounding_rectangle() const = 0;
+
 private:
     InputSink(InputSink const&) = delete;
     InputSink& operator=(InputSink const&) = delete;
