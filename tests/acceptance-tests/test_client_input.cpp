@@ -207,10 +207,8 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
     EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_dollar))))
         .WillOnce(mt::WakeUp(&all_events_received));
 
-    fake_keyboard->emit_event(
-        mis::a_key_down_event().of_scancode(KEY_LEFTSHIFT));
-    fake_keyboard->emit_event(
-        mis::a_key_down_event().of_scancode(KEY_4));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_LEFTSHIFT));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_4));
     all_events_received.wait_for_at_most_seconds(10);
 }
 
@@ -227,10 +225,8 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
         .WillOnce(mt::WakeUp(&all_events_received));
     // But we should not receive an event for the second movement outside of our surface!
 
-    fake_mouse->emit_event(
-        mis::a_pointer_event().with_movement(surface_width - 1, surface_height - 1));
-    fake_mouse->emit_event(
-        mis::a_pointer_event().with_movement(2, 2));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(surface_width - 1, surface_height - 1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(2, 2));
 
     all_events_received.wait_for_at_most_seconds(120);
 }
@@ -242,10 +238,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
     EXPECT_CALL(first_client, handle_input(mt::ButtonDownEvent(0, 0)))
         .WillOnce(mt::WakeUp(&all_events_received));
 
-    fake_mouse->emit_event(
-        mis::a_button_down_event()
-            .of_button(BTN_LEFT)
-            .with_action(mis::EventAction::Down));
+    fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
 
     all_events_received.wait_for_at_most_seconds(10);
 }
@@ -266,27 +259,21 @@ TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
     {
         InSequence seq;
         EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
-        EXPECT_CALL(first_client,
-                    handle_input(
-                        mt::PointerEventWithPosition(client_width - 1, client_height - 1)));
+        EXPECT_CALL(first_client, handle_input(mt::PointerEventWithPosition(client_width - 1, client_height - 1)));
         EXPECT_CALL(first_client, handle_input(mt::PointerLeaveEvent()));
     }
 
     {
         InSequence seq;
         EXPECT_CALL(second_client, handle_input(mt::PointerEnterEvent()));
-        EXPECT_CALL(second_client,
-                    handle_input(
-                        mt::PointerEventWithPosition(client_width - 1, client_height - 1)))
+        EXPECT_CALL(second_client, handle_input(mt::PointerEventWithPosition(client_width - 1, client_height - 1)))
             .WillOnce(mt::WakeUp(&all_events_received));
     }
 
     // In the bounds of the first surface
-    fake_mouse->emit_event(
-        mis::a_pointer_event().with_movement(screen_width / 2 - 1, screen_height / 2 - 1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(client_width - 1, client_height - 1));
     // In the bounds of the second surface
-    fake_mouse->emit_event(
-        mis::a_pointer_event().with_movement(screen_width / 2, screen_height / 2));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(client_width, client_height));
 
     all_events_received.wait_for_at_most_seconds(2);
 }
@@ -318,26 +305,19 @@ TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
     // First we will move the cursor in to the input region on the left side of
     // the window. We should see a click here.
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
-    fake_mouse->emit_event(
-        mis::a_button_down_event()
-            .of_button(BTN_LEFT)
-            .with_action(mis::EventAction::Down));
+    fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
+
     // Now in to the dead zone in the center of the window. We should not see
     // a click here.
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(49, 49));
-    fake_mouse->emit_event(
-        mis::a_button_down_event()
-            .of_button(BTN_LEFT)
-            .with_action(mis::EventAction::Down));
+    fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
+
     // Now in to the right edge of the window, in the right input region.
     // Again we should see a click.
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(49, 49));
-    fake_mouse->emit_event(
-        mis::a_button_down_event()
-            .of_button(BTN_LEFT)
-            .with_action(mis::EventAction::Down));
+    fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
 
     all_events_received.wait_for_at_most_seconds(5);
@@ -385,8 +365,7 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
     fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
     // Now we move to the unobscured region of client 1
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(500, 0));
-    fake_mouse->emit_event(
-        mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+    fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
 
     first_client.all_events_received.wait_for_at_most_seconds(5);
@@ -524,10 +503,9 @@ TEST_F(TestClientInput, clients_receive_keymap_change_events)
     names.variant = "";
     names.options = "";
 
-    InSequence seq;
-    EXPECT_CALL(first_client, handle_keymap(
-            mt::KeymapEventWithRules(names)))
-        .Times(1).WillOnce(mt::WakeUp(&first_client.all_events_received));
+    EXPECT_CALL(first_client, handle_keymap(mt::KeymapEventWithRules(names)))
+        .Times(1)
+        .WillOnce(mt::WakeUp(&first_client.all_events_received));
 
     server.the_shell()->focused_surface()->set_keymap(names);
     first_client.all_events_received.wait_for_at_most_seconds(2);
@@ -548,22 +526,18 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
         client_sees_keymap_change;
 
     InSequence seq;
-    EXPECT_CALL(first_client, handle_input(AllOf(
-        mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_n)))).Times(1);
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_n))));
     EXPECT_CALL(first_client, handle_input(mt::KeyUpEvent()))
-        .Times(1).WillOnce(mt::WakeUp(&first_event_received));
-    EXPECT_CALL(first_client, handle_keymap(
-        mt::KeymapEventWithRules(names)))
-        .Times(1).WillOnce(mt::WakeUp(&client_sees_keymap_change));
-    EXPECT_CALL(first_client, handle_input(AllOf(
-        mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_b)))).Times(1);
-    EXPECT_CALL(first_client, handle_input(mt::KeyUpEvent()))
-        .Times(1).WillOnce(mt::WakeUp(&first_client.all_events_received));
+        .WillOnce(mt::WakeUp(&first_event_received));
+    EXPECT_CALL(first_client, handle_keymap(mt::KeymapEventWithRules(names)))
+        .WillOnce(mt::WakeUp(&client_sees_keymap_change));
 
-    fake_keyboard->emit_event(
-        mis::a_key_down_event().of_scancode(KEY_N));
-    fake_keyboard->emit_event(
-        mis::a_key_up_event().of_scancode(KEY_N));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_b))));
+    EXPECT_CALL(first_client, handle_input(mt::KeyUpEvent()))
+        .WillOnce(mt::WakeUp(&first_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_N));
+    fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_N));
 
     first_event_received.wait_for_at_most_seconds(60);
 
@@ -571,10 +545,8 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
 
     client_sees_keymap_change.wait_for_at_most_seconds(60);
 
-    fake_keyboard->emit_event(
-        mis::a_key_down_event().of_scancode(KEY_N));
-    fake_keyboard->emit_event(
-        mis::a_key_up_event().of_scancode(KEY_N));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_N));
+    fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_N));
 
     first_client.all_events_received.wait_for_at_most_seconds(5);
 }
