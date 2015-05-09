@@ -104,12 +104,11 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                 "describe_graphics_module",
                 MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
             auto description = describe_module();
-            ml::log(ml::Severity::informational,
-                    std::string{"Selected driver: "} + description->name + " (version " +
-                    std::to_string(description->major_version) + "." +
-                    std::to_string(description->minor_version) + "." +
-                    std::to_string(description->micro_version) + ")",
-                    "Platform Loader");
+            mir::log_info("Selected driver: %s (version %d.%d.%d)",
+                          description->name,
+                          description->major_version,
+                          description->minor_version,
+                          description->micro_version);
 
             if (!the_options()->is_set(options::host_socket_opt))
                 return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());

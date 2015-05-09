@@ -28,6 +28,8 @@
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_scene_session.h"
+#include "mir_test_doubles/stub_surface_factory.h"
+#include "mir_test_doubles/stub_buffer_stream_factory.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_surface_coordinator.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
@@ -35,7 +37,6 @@
 #include "mir_test_doubles/null_session_event_sink.h"
 #include "mir_test_doubles/null_prompt_session_manager.h"
 #include "mir_test_doubles/mock_input_targeter.h"
-#include "mir_test_doubles/stub_buffer_stream_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -70,10 +71,12 @@ struct TestDefaultWindowManager : public testing::Test
     NiceMock<mtd::MockInputTargeter> input_targeter;
     std::shared_ptr<mf::Session> new_session;
     ms::NullSessionListener session_listener;
+    mtd::StubSurfaceFactory surface_factory;
     mtd::StubBufferStreamFactory buffer_stream_factory;
     NiceMock<MockSessionManager> session_manager
         {
             mt::fake_shared(surface_coordinator),
+            mt::fake_shared(surface_factory),
             mt::fake_shared(buffer_stream_factory),
             mt::fake_shared(container),
             std::make_shared<mtd::NullSnapshotStrategy>(),
