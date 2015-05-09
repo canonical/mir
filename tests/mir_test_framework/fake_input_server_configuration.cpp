@@ -25,17 +25,27 @@ namespace mi = mir::input;
 namespace ms = mir::shell;
 namespace mia = mir::input::android;
 
-std::shared_ptr<mi::InputManager> mtf::FakeEventHubServerConfiguration::the_input_manager()
+
+mtf::FakeInputServerConfiguration::FakeInputServerConfiguration()
+{
+}
+
+mtf::FakeInputServerConfiguration::FakeInputServerConfiguration(std::vector<mir::geometry::Rectangle> const& display_rects)
+    : TestingServerConfiguration(display_rects)
+{
+}
+
+std::shared_ptr<mi::InputManager> mtf::FakeInputServerConfiguration::the_input_manager()
 {
     return DefaultServerConfiguration::the_input_manager();
 }
 
-std::shared_ptr<ms::InputTargeter> mtf::FakeEventHubServerConfiguration::the_input_targeter()
+std::shared_ptr<ms::InputTargeter> mtf::FakeInputServerConfiguration::the_input_targeter()
 {
     return DefaultServerConfiguration::the_input_targeter();
 }
 
-auto mtf::FakeEventHubServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
+auto mtf::FakeInputServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
 {
     return [&](ms::FocusController* focus_controller)
         { return std::make_shared<ms::DefaultWindowManager>(

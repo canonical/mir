@@ -16,7 +16,6 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_LOG_COMPONENT "Server"
 #include "mir/server.h"
 
 #include "mir/emergency_cleanup.h"

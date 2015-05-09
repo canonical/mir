@@ -29,7 +29,9 @@ namespace doubles
 {
 struct StubBufferStreamFactory : public scene::BufferStreamFactory
 {
-    std::shared_ptr<compositor::BufferStream> create_buffer_stream(int,
+    std::shared_ptr<compositor::BufferStream> create_buffer_stream(
+        int, graphics::BufferProperties const&) { return nullptr; }
+    std::shared_ptr<compositor::BufferStream> create_buffer_stream(
         graphics::BufferProperties const&) { return nullptr; }
 };
 }

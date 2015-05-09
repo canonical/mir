@@ -51,7 +51,6 @@ class CustomMockInputTargeter :
     public msh::InputTargeter
 {
 public:
-    // mocks for InputTargeter
     MOCK_METHOD1(set_focus, void(std::shared_ptr<mi::Surface> const& /*focus_surface*/));
     MOCK_METHOD0(clear_focus, void());
 };

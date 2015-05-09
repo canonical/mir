@@ -374,6 +374,7 @@ protected:
     CachedPtr<droidinput::InputReaderPolicyInterface> input_reader_policy;
     CachedPtr<droidinput::InputReaderInterface> input_reader;
     CachedPtr<droidinput::InputListenerInterface> input_translator;
+    CachedPtr<input::LegacyInputDispatchable> legacy_input_dispatchable;
 
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   prompt_connector;

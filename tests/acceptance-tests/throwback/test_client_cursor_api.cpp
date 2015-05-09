@@ -20,9 +20,12 @@
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/input/cursor_images.h"
+#include "mir/input/input_device_info.h"
 
 #include "mir_test_framework/in_process_server.h"
-#include "mir_test_framework/fake_event_hub_server_configuration.h"
+#include "mir_test_framework/fake_input_device.h"
+#include "mir_test_framework/stub_server_platform_factory.h"
+#include "mir_test_framework/fake_input_server_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
@@ -31,7 +34,6 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/spin_wait.h"
 #include "mir_test/wait_condition.h"
-#include "mir_test/fake_event_hub.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -210,12 +212,12 @@ struct NamedCursorClient : CursorClient
     std::string const cursor_name;
 };
 
-struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
+struct TestServerConfiguration : mtf::FakeInputServerConfiguration
 {
     std::shared_ptr<mir::scene::PlacementStrategy> the_placement_strategy() override
     {
         return std::make_shared<mtf::DeclarativePlacementStrategy>(
-            FakeEventHubServerConfiguration::the_placement_strategy(),
+            FakeInputServerConfiguration::the_placement_strategy(),
             client_geometries, client_depths);
     }
 
@@ -251,11 +253,6 @@ struct TestClientCursorAPI : mtf::InProcessServer
         return server_configuration_;
     }
 
-    std::shared_ptr<mir::input::android::FakeEventHub> fake_event_hub()
-    {
-        return server_configuration_.fake_event_hub;
-    }
-
     void expect_client_shutdown()
     {
         using namespace testing;
@@ -274,6 +271,10 @@ struct TestClientCursorAPI : mtf::InProcessServer
     TestServerConfiguration server_configuration_;
     mir::test::WaitCondition expectations_satisfied;
     mtf::UsingStubClientPlatform using_stub_client_platform;
+
+    std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
+        mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "mouse", "mouse-uid" , mi::DeviceCapability::pointer})
+        };
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
 };
@@ -296,7 +297,7 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
     EXPECT_CALL(test_server_config().cursor, hide())
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
-    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
@@ -318,8 +319,8 @@ TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
     EXPECT_CALL(test_server_config().cursor, show(DefaultCursorImage()))
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
-    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
-    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(2, 0));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(2, 0));
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
@@ -345,8 +346,8 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
     EXPECT_CALL(test_server_config().cursor, show(CursorNamed(client_cursor_2)))
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
-    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
-    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
@@ -370,7 +371,7 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
     EXPECT_CALL(test_server_config().cursor, show(CursorNamed(client_cursor_2)))
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
-    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 

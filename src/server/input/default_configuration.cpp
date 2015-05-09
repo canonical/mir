@@ -30,6 +30,7 @@
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
 #include "android/input_translator.h"
+#include "android/input_reader_dispatchable.h"
 #include "display_input_region.h"
 #include "event_filter_chain.h"
 #include "cursor_controller.h"

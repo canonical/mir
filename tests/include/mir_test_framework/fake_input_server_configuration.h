@@ -20,18 +20,18 @@
 #ifndef MIR_TEST_FAKE_INPUT_SERVER_CONFIGURATION_H_
 #define MIR_TEST_FAKE_INPUT_SERVER_CONFIGURATION_H_
 
-#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_framework/temporary_environment_value.h"
+#include "mir_test_framework/executable_path.h"
 
-namespace mir
-{
 namespace mir_test_framework
 {
 
 class FakeInputServerConfiguration : public TestingServerConfiguration
 {
 public:
-    using TestingServerConfiguration::TestingServerConfiguration;
+    FakeInputServerConfiguration();
+    FakeInputServerConfiguration(std::vector<mir::geometry::Rectangle> const& display_rects);
 
     std::shared_ptr<mir::input::InputManager> the_input_manager() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
@@ -40,7 +40,7 @@ public:
     auto the_window_manager_builder() -> shell::WindowManagerBuilder override;
 
 private:
-    TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str()};
+    TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", server_platform("input-stub.so").c_str()};
     TemporaryEnvironmentValue real_input{"MIR_SERVER_TESTS_USE_REAL_INPUT", "1"};
 };
 
