@@ -138,7 +138,11 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_event_get_prompt_session_event;
     mir_event_get_resize_event;
     mir_event_get_surface_event;
+    mir_event_get_input_configuration_event;
     mir_event_get_type;
+    mir_input_configuration_event_get_action;
+    mir_input_configuration_event_get_time;
+    mir_input_configuration_event_get_device_id;
     mir_event_ref;
     mir_event_unref;
     mir_input_event_get_device_id;
@@ -200,6 +204,8 @@ MIR_CLIENT_DETAIL_8 {
       mir::events::make_event*;
       mir::events::add_touch*;
       mir::input::android::Lexicon::translate*;
+      mir::input::android::android_modifiers_from_mir*;
+      mir::input::android::mir_modifiers_from_android*;
       mir::client::DefaultConnectionConfiguration::DefaultConnectionConfiguration*;
       mir::client::DefaultConnectionConfiguration::the_surface_map*;
       mir::client::DefaultConnectionConfiguration::the_rpc_channel*;

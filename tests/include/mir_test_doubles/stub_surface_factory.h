@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,14 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SURFACE_FACTORY_H_
+#define MIR_TEST_DOUBLES_STUB_SURFACE_FACTORY_H_
 
-#include "mir/input/input_dispatcher.h"
-#include <gmock/gmock.h>
+#include <mir/scene/surface_factory.h>
+#include <mir_test_doubles/stub_buffer.h>
+#include <mir_test_doubles/mock_surface.h>
 
 namespace mir
 {
@@ -29,15 +30,19 @@ namespace test
 namespace doubles
 {
 
-struct MockInputDispatcher : public mir::input::InputDispatcher
+class StubSurfaceFactory : public scene::SurfaceFactory
 {
-    MOCK_METHOD1(dispatch, void(MirEvent const&));
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
+public:
+    std::shared_ptr<scene::Surface> create_surface(
+        std::shared_ptr<compositor::BufferStream> const&,
+        scene::SurfaceCreationParameters const&) override
+    {
+        return std::make_shared<testing::NiceMock<MockSurface>>();
+    }
 };
 
 }
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
+#endif /* MIR_TEST_DOUBLES_STUB_SURFACE_FACTORY_H_ */
