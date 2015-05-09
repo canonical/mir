@@ -46,6 +46,7 @@ set(
   fake_input_server_configuration.cpp
   any_surface.cpp
   headless_nested_server_runner.cpp
+  placement_applying_shell.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS
