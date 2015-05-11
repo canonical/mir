@@ -381,13 +381,11 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
     observers.reception_mode_set_to(mode);
 }
 
-#if 0
 void ms::BasicSurface::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
 {
     surface_buffer_stream->with_most_recent_buffer_do(exec);
 }
-#endif
 
 MirSurfaceType ms::BasicSurface::type() const
 {    

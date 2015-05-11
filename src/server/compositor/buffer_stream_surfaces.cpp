@@ -120,12 +120,11 @@ bool mc::BufferStreamSurfaces::has_submitted_buffer() const
     return first_frame_posted;
 }
 
-#if 0
 void mc::BufferStreamSurfaces::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
 {
     exec(*lock_snapshot_buffer());
 }
-#endif
+
 MirPixelFormat mc::BufferStreamSurfaces::pixel_format() const
 {
     return buffer_bundle->properties().format;
