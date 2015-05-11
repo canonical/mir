@@ -257,12 +257,6 @@ void old_mir_surface_set_event_handler(MirSurface* surface,
 }
 // <--- Deprecated
 
-MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface* surface)
-{
-    return mir_buffer_stream_get_egl_native_window(
-        mir_surface_get_buffer_stream(surface));
-}
-
 bool mir_surface_is_valid(MirSurface* surface)
 {
     return MirSurface::is_valid(surface);
@@ -276,42 +270,6 @@ char const* mir_surface_get_error_message(MirSurface* surface)
 void mir_surface_get_parameters(MirSurface* surface, MirSurfaceParameters* parameters)
 {
     *parameters = surface->get_parameters();
-}
-
-namespace
-{
-void buffer_to_surface_thunk(MirBufferStream* /* stream */, void* context)
-{
-    auto cb = static_cast<std::function<void()>*>(context);
-    (*cb)();
-}
-}
-
-MirWaitHandle* mir_surface_swap_buffers(
-    MirSurface* surface,
-    mir_surface_callback callback,
-    void* context)
-try
-{
-    auto shim_callback = new std::function<void()>;
-    *shim_callback = [surface, callback, context, shim_callback] ()
-    {
-        if (callback)
-            callback(surface, context);
-        delete shim_callback;
-    };
-    return mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), buffer_to_surface_thunk, shim_callback);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
-void mir_surface_swap_buffers_sync(MirSurface* surface)
-{
-    mir_buffer_stream_swap_buffers_sync(
-        mir_surface_get_buffer_stream(surface));
 }
 
 MirWaitHandle* mir_surface_release(
