@@ -139,16 +139,6 @@ void mi::SurfaceInputDispatcher::device_reset(MirInputDeviceId reset_device_id, 
         touch_state_by_id.erase(touch_it);
 }
 
-namespace
-{
-MirEvent copy_to_repeat_ev(MirKeyboardEvent const* kev)
-{
-    MirEvent repeat_ev(*reinterpret_cast<MirEvent const*>(kev));
-    repeat_ev.key.repeat_count = 1;
-    return repeat_ev;
-}
-}
-
 bool mi::SurfaceInputDispatcher::dispatch_key(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
@@ -160,17 +150,10 @@ bool mi::SurfaceInputDispatcher::dispatch_key(MirInputDeviceId id, MirKeyboardEv
     if (!strong_focus)
         return false;
 
-    // Translate repeated downs to repeat
-    MirKeyboardEvent const* to_deliver = kev;
     if (!focus_surface_key_state.handle_event(id, kev))
-    {
-        auto rep_ev = copy_to_repeat_ev(kev);
-        if (focus_surface_key_state.handle_event(id, (MirKeyboardEvent const*)&rep_ev))
-            to_deliver = reinterpret_cast<MirKeyboardEvent const*>(&rep_ev);
-        else
-            return false;
-    }
-    deliver(strong_focus, to_deliver);
+        return false;
+    
+    deliver(strong_focus, kev);
 
     return true;
 }

@@ -88,12 +88,14 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
     }
     case mir_keyboard_action_down:
     {
+        MirEvent ev = copy_to_repeat_ev(kev);
+
         auto it = device_state.repeat_alarms_by_scancode.find(scan_code);
         if (it != device_state.repeat_alarms_by_scancode.end())
         {
-            return;
+            // When we receive a duplicated down we just replace the action
+            next_dispatcher->dispatch(ev);            
         }
-        MirEvent ev = copy_to_repeat_ev(kev);
         auto& capture_alarm = device_state.repeat_alarms_by_scancode[scan_code];
         std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm([this, &capture_alarm, ev]() mutable
             {
@@ -108,7 +110,7 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
         device_state.repeat_alarms_by_scancode[scan_code] = {alarm};
     }
     case mir_keyboard_action_repeat:
-        // TODO: Maybe we should consume existing repeats
+        // Should we consume existing repeats?
         break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Unexpected key event action"));
