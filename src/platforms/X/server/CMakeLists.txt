@@ -2,6 +2,7 @@ include_directories(
   ${server_common_include_dirs}
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/client
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
 )
 
 include_directories(
@@ -26,15 +27,14 @@ add_library(
   display_configuration.cpp
   gl_context.cpp
   buffer_allocator.cpp
-  anonymous_shm_file.cpp
-  shm_buffer.cpp
+  ../../mesa/server/anonymous_shm_file.cpp
+  ../../mesa/server/shm_buffer.cpp
   ipc_operations.cpp
   display_group.cpp
   display_buffer.cpp
   gbm_buffer.cpp
   display_helpers.cpp
-  drm_mode_resources.cpp
-  drm_close_threadsafe.cpp
+  ../../mesa/server/drm_close_threadsafe.cpp
   input/X_input.cpp
   input/X_input_platform.cpp
   input/X_input_device.cpp

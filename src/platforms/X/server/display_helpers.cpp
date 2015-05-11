@@ -31,8 +31,10 @@
 #include <xf86drm.h>
 #include <fcntl.h>
 
-namespace mgx = mir::graphics::X;
-namespace mgxh = mir::graphics::X::helpers;
+namespace mg = mir::graphics;
+namespace mgx = mg::X;
+namespace mgm = mg::mesa;
+namespace mgxh = mgx::helpers;
 
 /*************
  * DRMHelper *
@@ -216,7 +218,7 @@ int mgxh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
 mgxh::DRMHelper::~DRMHelper()
 {
     if (fd >= 0)
-        mgx::drm_close_threadsafe(fd);
+        mgm::drm_close_threadsafe(fd);
 }
 
 /*************

@@ -46,7 +46,7 @@ typedef std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>> GBMSurfac
 namespace helpers
 {
 
-class DRMHelper : public DRMAuthentication
+class DRMHelper : public mesa::DRMAuthentication
 {
 public:
     DRMHelper() : fd{-1} {}

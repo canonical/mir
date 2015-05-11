@@ -38,12 +38,13 @@
 
 namespace mg  = mir::graphics;
 namespace mgx = mg::X;
+namespace mgm = mg::mesa;
 namespace geom = mir::geometry;
 
 namespace
 {
 
-class EGLImageBufferTextureBinder : public mgx::BufferTextureBinder
+class EGLImageBufferTextureBinder : public mgm::BufferTextureBinder
 {
 public:
     EGLImageBufferTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
@@ -211,10 +212,10 @@ std::shared_ptr<mg::Buffer> mgx::BufferAllocator::alloc_software_buffer(
     size_t const size_in_bytes =
         stride.as_int() * buffer_properties.size.height.as_int();
     auto const shm_file =
-        std::make_shared<mgx::AnonymousShmFile>(size_in_bytes);
+        std::make_shared<mgm::AnonymousShmFile>(size_in_bytes);
 
     auto const buffer =
-        std::make_shared<ShmBuffer>(shm_file, buffer_properties.size,
+        std::make_shared<mgm::ShmBuffer>(shm_file, buffer_properties.size,
                                     buffer_properties.format);
 
     return buffer;
