@@ -117,7 +117,7 @@ TEST_F(SurfaceComposition, does_not_send_client_buffers_to_dead_surfaces)
     while (called_back)
     {
         called_back = false;
-        surface->swap_buffers(old_buffer, callback);
+        surface->primary_buffer_stream()->swap_buffers(old_buffer, callback);
     }
 
     auto const renderable = surface->compositor_snapshot(this);

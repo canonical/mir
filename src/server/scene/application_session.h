@@ -39,12 +39,14 @@ class Surface;
 class SurfaceCoordinator;
 class SnapshotStrategy;
 class BufferStreamFactory;
+class SurfaceFactory;
 
 class ApplicationSession : public Session
 {
 public:
     ApplicationSession(
         std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
         pid_t pid,
         std::string const& session_name,
@@ -90,6 +92,7 @@ protected:
 
 private:
     std::shared_ptr<SurfaceCoordinator> const surface_coordinator;
+    std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     pid_t const pid;
     std::string const session_name;

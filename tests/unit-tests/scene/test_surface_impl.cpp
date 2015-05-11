@@ -250,31 +250,6 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
     surface->configure(mir_surface_attrib_focus, mir_surface_unfocused);
 }
 
-TEST_F(Surface, with_most_recent_buffer_do_uses_compositor_buffer)
-{
-    auto stub_buffer_stream = std::make_shared<mtd::StubBufferStream>();
-
-    ms::BasicSurface surf(
-        std::string("stub"),
-        geom::Rectangle{{},{}},
-        false,
-        stub_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_input_sender,
-        std::shared_ptr<mg::CursorImage>(),
-        report);
-
-    mg::Buffer* buf_ptr{nullptr};
-
-    surf.with_most_recent_buffer_do(
-        [&](mg::Buffer& buffer)
-        {
-            buf_ptr = &buffer;
-        });
-
-    EXPECT_EQ(stub_buffer_stream->stub_compositor_buffer.get(), buf_ptr);
-}
-
 TEST_F(Surface, emits_client_close_events)
 {
     using namespace testing;

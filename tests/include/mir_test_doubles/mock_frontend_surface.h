@@ -31,15 +31,13 @@ namespace doubles
 {
 struct MockFrontendSurface : public frontend::Surface
 {
-    MockFrontendSurface(std::shared_ptr<graphics::Buffer> const& buffer, int input_fd)
+    MockFrontendSurface(std::shared_ptr<graphics::Buffer> const&, int input_fd)
     {
         using namespace testing;
         ON_CALL(*this, client_size())
             .WillByDefault(Return(geometry::Size()));
         ON_CALL(*this, pixel_format())
             .WillByDefault(Return(MirPixelFormat()));
-        ON_CALL(*this, swap_buffers(_, _))
-            .WillByDefault(InvokeArgument<1>(buffer.get()));
         ON_CALL(*this, supports_input())
             .WillByDefault(Return(true));
         ON_CALL(*this, client_input_fd())
@@ -55,7 +53,6 @@ struct MockFrontendSurface : public frontend::Surface
 
     MOCK_METHOD0(destroy, void());
     MOCK_METHOD0(force_requests_to_complete, void());
-    MOCK_METHOD2(swap_buffers, void(graphics::Buffer*, std::function<void(graphics::Buffer*)> complete));
 
     MOCK_CONST_METHOD0(client_size, geometry::Size());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
@@ -72,7 +69,8 @@ struct MockFrontendSurface : public frontend::Surface
 
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));
-    MOCK_METHOD1(with_most_recent_buffer_do, void(std::function<void(graphics::Buffer&)> const&));
+
+    MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());    
 };
 }
 }
