@@ -57,7 +57,7 @@ namespace
 {
 struct NativeWindowDeleter
 {
-    NativeWindowDeleter(mclx::NativeSurface* window)
+    NativeWindowDeleter(mclm::NativeSurface* window)
      : window(window) {}
 
     void operator()(EGLNativeWindowType* type)
@@ -67,7 +67,7 @@ struct NativeWindowDeleter
     }
 
 private:
-    mclx::NativeSurface* window;
+    mclm::NativeSurface* window;
 };
 }
 
@@ -93,7 +93,7 @@ std::shared_ptr<EGLNativeWindowType> mclx::ClientPlatform::create_egl_native_win
 {
     CALLED
 
-    auto native_window = new NativeSurface(*client_surface);
+    auto native_window = new mclm::NativeSurface(*client_surface);
     auto egl_native_window = new EGLNativeWindowType;
     *egl_native_window = reinterpret_cast<EGLNativeWindowType>(native_window);
     NativeWindowDeleter deleter(native_window);

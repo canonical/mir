@@ -16,7 +16,7 @@ add_library(mirclientplatformXobjects OBJECT
   client_platform.cpp
   client_buffer_factory.cpp
   client_buffer.cpp
-  native_surface.cpp
+  ../../mesa/client/native_surface.cpp
   ../../mesa/client/mesa_native_display_container.cpp
 )
 
