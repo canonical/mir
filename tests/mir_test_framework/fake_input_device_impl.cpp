@@ -197,12 +197,12 @@ MirPointerAction mtf::FakeInputDeviceImpl::InputDevice::update_buttons(synthesis
 {
     if (action == synthesis::EventAction::Down)
     {
-        buttons.push_back(button);
+        buttons |= button;
         return mir_pointer_action_button_down;
     }
     else
     {
-        buttons.erase(remove(begin(buttons), end(buttons), button));
+        buttons |= ~button;
         return mir_pointer_action_button_up;
     }
 }

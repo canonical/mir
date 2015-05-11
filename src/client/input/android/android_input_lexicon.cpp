@@ -31,25 +31,6 @@
 namespace mia = mir::input::android;
 namespace mev = mir::events;
 
-namespace
-{
-std::vector<MirPointerButton> button_vector(int32_t android_button_state)
-{
-    std::vector<MirPointerButton> ret;
-    if (android_button_state & AMOTION_EVENT_BUTTON_PRIMARY)
-        ret.push_back(mir_pointer_button_primary);
-    if (android_button_state & AMOTION_EVENT_BUTTON_SECONDARY)
-        ret.push_back(mir_pointer_button_secondary);
-    if (android_button_state & AMOTION_EVENT_BUTTON_TERTIARY)
-        ret.push_back(mir_pointer_button_tertiary);
-    if (android_button_state & AMOTION_EVENT_BUTTON_BACK)
-        ret.push_back(mir_pointer_button_back);
-    if (android_button_state & AMOTION_EVENT_BUTTON_FORWARD)
-        ret.push_back(mir_pointer_button_forward);
-    return ret;
-}
-}
-
 mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_event)
 {
     switch(android_event->getType())
@@ -72,12 +53,11 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
                 source_class == AINPUT_SOURCE_TOUCHPAD)
             {
                 droidinput::MotionEvent const* mev = static_cast<const droidinput::MotionEvent*>(android_event);
-                auto bvec = button_vector(mev->getButtonState());
                 return mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
                                        mev->getEventTime(),
                                        mia::mir_modifiers_from_android(mev->getMetaState()),
                                        mia::mir_pointer_action_from_masked_android(mev->getAction() & AMOTION_EVENT_ACTION_MASK),
-                                       bvec,
+                                       mia::mir_pointer_buttons_from_android(mev->getButtonState()),
                                        mev->getX(0), mev->getY(0),
                                        mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, 0),
                                        mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0));

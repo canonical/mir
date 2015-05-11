@@ -260,9 +260,9 @@ void mf::SessionMediator::create_surface(
         setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
-
+    auto stream = surface->primary_buffer_stream();
     auto stream_id = mf::BufferStreamId(surf_id.as_value());
-    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id),
+    advance_buffer(stream_id, *stream, buffer_stream_tracker.last_buffer(stream_id),
         [this, surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -292,9 +292,10 @@ void mf::SessionMediator::next_buffer(
     report->session_next_buffer_called(session->name());
 
     auto surface = session->get_surface(surf_id);
+    auto stream = surface->primary_buffer_stream();
     auto stream_id = mf::BufferStreamId{surf_id.as_value()};
 
-    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id),
+    advance_buffer(stream_id, *stream, buffer_stream_tracker.last_buffer(stream_id),
         [this, response, done]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {

@@ -61,7 +61,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             event.key.device_id,
             event.key.source_id,
             policy_flags,
-            mia::android_keyboard_action_from_mir(event.key.action, ignored_repeat_count),
+            mia::android_keyboard_action_from_mir(ignored_repeat_count, event.key.action),
             0, /* flags */
             event.key.key_code,
             event.key.scan_code,
@@ -102,7 +102,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             event.motion.action,
             0, /* flags */
             mia::android_modifiers_from_mir(event.motion.modifiers),
-            mia::android_pointer_buttons_from_mir(event.motion.button_state),
+            mia::android_pointer_buttons_from_mir(event.motion.buttons),
             0, /* edge_flags */
             event.motion.pointer_count,
             pointer_properties.data(),

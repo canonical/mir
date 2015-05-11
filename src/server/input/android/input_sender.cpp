@@ -238,7 +238,7 @@ void mia::InputSender::ActiveTransfer::subscribe()
 droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t seq, MirKeyEvent const& event)
 {
     int32_t repeat_count = 0;
-    auto android_action = mia::android_keyboard_action_from_mir(event.action, repeat_count);
+    auto android_action = mia::android_keyboard_action_from_mir(repeat_count, event.action);
     return publisher.publishKeyEvent(
         seq,
         event.device_id,
@@ -288,7 +288,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_motion_event(uint32_
         0, /* flags */
         0, /* edge flags */
         mia::android_modifiers_from_mir(event.modifiers),
-        mia::android_pointer_buttons_from_mir(event.button_state),
+        mia::android_pointer_buttons_from_mir(event.buttons),
         0.0f,  // event.x_offset,
         0.0f,  // event.y_offset,
         0, 0, /* unused x/y precision */

@@ -181,9 +181,8 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
     event.motion.device_id = 3;
     event.motion.source_id = 4;
     event.motion.action = mir_motion_action_scroll;
-    event.motion.modifiers = mir_input_event_modifier_shift,
-    event.motion.button_state[mir_pointer_button_forward] = true;
-    event.motion.button_state[mir_pointer_button_secondary] = true;
+    event.motion.modifiers = mir_input_event_modifier_shift;
+    event.motion.buttons = mir_pointer_button_forward | mir_pointer_button_secondary;
 
     auto & pointer = event.motion.pointer_coordinates[0];
     pointer.id = 1;
