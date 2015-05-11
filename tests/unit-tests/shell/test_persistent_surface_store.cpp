@@ -105,8 +105,8 @@ TEST(PersistentSurfaceStore, can_roundtrip_ids_to_strings)
 
     auto& id_one = store.id_for_surface(surface);
 
-    auto buf = store.serialise_id(id_one);
-    auto& id_two = store.deserialise_id(buf);
+    auto buf = store.serialize_id(id_one);
+    auto& id_two = store.deserialize_id(buf);
 
     EXPECT_THAT(id_one, Eq(std::ref(id_two)));
 }
@@ -119,7 +119,7 @@ TEST(PersistentSurfaceStore, deserialising_wildly_incorrect_buffer_raises_except
 
     std::vector<uint8_t> buf(5, 'a');
 
-    EXPECT_THROW(store.deserialise_id(buf), std::invalid_argument);
+    EXPECT_THROW(store.deserialize_id(buf), std::invalid_argument);
 }
 
 TEST(PersistentSurfaceStore, deserialising_invalid_buffer_raises_exception)
@@ -131,5 +131,5 @@ TEST(PersistentSurfaceStore, deserialising_invalid_buffer_raises_exception)
     // This is the right size, but isn't a UUID because it lacks the XX-XX-XX structure
     std::vector<uint8_t> buf(36, 'a');
 
-    EXPECT_THROW(store.deserialise_id(buf), std::invalid_argument);
+    EXPECT_THROW(store.deserialize_id(buf), std::invalid_argument);
 }

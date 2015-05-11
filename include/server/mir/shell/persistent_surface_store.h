@@ -71,22 +71,22 @@ public:
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) const = 0;
 
     /**
-     * \brief Deserialise an ID from its serialised form
-     * \param [in] buffer    Buffer containing the serialised form of an ID
-     * \return               The deserialised ID
+     * \brief Deserialize an ID from its serialized form
+     * \param [in] buffer    Buffer containing the serialized form of an ID
+     * \return               The deserialized ID
      * \throw  std::invalid_argument if \arg buffer does not contain a valid
-     *         serialised ID
-     * \throw  std::out_of_range if \arg buffer contains a valid serialised ID, but
+     *         serialized ID
+     * \throw  std::out_of_range if \arg buffer contains a valid serialized ID, but
      *         the PersistentSurfaceStore has no Surface with that ID.
      */
-    virtual Id const& deserialise_id(std::vector<uint8_t> const& buffer) const = 0;
+    virtual Id const& deserialize_id(std::vector<uint8_t> const& buffer) const = 0;
     /**
-     * \brief Write a serialised form of \arg id to a buffer. This can then be stored,
+     * \brief Write a serialized form of \arg id to a buffer. This can then be stored,
      *        sent cross-process, etc.
-     * \param [in] id    ID to serialise
-     * \return   A buffer containing a serialised representation of \arg id.
+     * \param [in] id    ID to serialize
+     * \return   A buffer containing a serialized representation of \arg id.
      */
-    virtual std::vector<uint8_t> serialise_id(Id const& id) const = 0;
+    virtual std::vector<uint8_t> serialize_id(Id const& id) const = 0;
 };
 }
 }

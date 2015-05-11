@@ -648,8 +648,8 @@ void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
  *        across restarts.
  *
  * This call acquires a MirSurfaceId for this MirSurface. This MirSurfaceId
- * can be serialised to a string, stored or sent to another process, and then
- * later deserialised to refer to the same surface.
+ * can be serialized to a string, stored or sent to another process, and then
+ * later deserialized to refer to the same surface.
  *
  * \param [in]     surface   The surface to acquire a persistent reference to.
  * \param [in]     callback  Callback to invoke when the request completes.

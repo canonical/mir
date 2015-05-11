@@ -37,7 +37,7 @@ public:
     bool operator==(Id const& rhs) const override;
 
     std::size_t hash() const;
-    std::vector<uint8_t> serialise() const;
+    std::vector<uint8_t> serialize() const;
 private:
     uuid_t value;
 };
@@ -81,7 +81,7 @@ std::size_t UUID::hash() const
            std::hash<uint64_t>()(*reinterpret_cast<uint64_t const*>(value + 8));
 }
 
-std::vector<uint8_t> UUID::serialise() const
+std::vector<uint8_t> UUID::serialize() const
 {
     std::vector<uint8_t> buf(37);
     uuid_unparse(value, reinterpret_cast<char*>(buf.data()));
@@ -171,17 +171,17 @@ std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(
     return {};
 }
 
-std::vector<uint8_t> msh::DefaultPersistentSurfaceStore::serialise_id(Id const& id) const
+std::vector<uint8_t> msh::DefaultPersistentSurfaceStore::serialize_id(Id const& id) const
 {
-    return reinterpret_cast<UUID const&>(id).serialise();
+    return reinterpret_cast<UUID const&>(id).serialize();
 }
 
-auto msh::DefaultPersistentSurfaceStore::deserialise_id(std::vector<uint8_t> const& buf) const
+auto msh::DefaultPersistentSurfaceStore::deserialize_id(std::vector<uint8_t> const& buf) const
     -> Id const&
 {
     if (buf.size() != 36)
     {
-        BOOST_THROW_EXCEPTION((std::invalid_argument{"Failed to deserialise: data has invalid length"}));
+        BOOST_THROW_EXCEPTION((std::invalid_argument{"Failed to deserialize: data has invalid length"}));
     }
     UUID uuid{buf};
 
