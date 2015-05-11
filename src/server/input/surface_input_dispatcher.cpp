@@ -143,7 +143,7 @@ namespace
 {
 MirEvent copy_to_repeat_ev(MirKeyboardEvent const* kev)
 {
-    MirEvent repeat_ev(reinterpret_cast<MirEvent const*>(kev));
+    MirEvent repeat_ev(*reinterpret_cast<MirEvent const*>(kev));
     repeat_ev.key.repeat_count = 1;
     return repeat_ev;
 }
