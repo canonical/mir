@@ -43,6 +43,7 @@ public:
     //from mf::BufferStream
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
+    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec) override;
     MirPixelFormat pixel_format() const override;
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
