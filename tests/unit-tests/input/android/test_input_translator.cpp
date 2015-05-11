@@ -87,7 +87,7 @@ TEST_F(InputTranslator, notifies_configuration_change)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(dispatcher, configuration_changed(some_time)).Times(1);
+    EXPECT_CALL(dispatcher, dispatch(mt::InputDeviceConfigurationChangedEvent())).Times(1);
 
     droidinput::NotifyConfigurationChangedArgs change(some_time);
     translator.notifyConfigurationChanged(&change);
@@ -97,7 +97,7 @@ TEST_F(InputTranslator, notifies_device_reset)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(dispatcher, device_reset(device_id,later_time)).Times(1);
+    EXPECT_CALL(dispatcher, dispatch(mt::InputDeviceResetEvent())).Times(1);
 
     droidinput::NotifyDeviceResetArgs reset(later_time, device_id);
     translator.notifyDeviceReset(&reset);

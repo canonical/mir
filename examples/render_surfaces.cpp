@@ -364,15 +364,14 @@ public:
                 .of_pixel_format(surface_pf)
                 .of_buffer_usage(mg::BufferUsage::hardware);
             mg::BufferProperties properties{params.size, params.pixel_format, params.buffer_usage};
-            auto s = buffer_stream_factory->create_buffer_stream(properties); 
-            auto const stream = mir::frontend::stream_from(s);
-            auto const surface = surface_factory->create_surface(s, params);
+            auto stream = buffer_stream_factory->create_buffer_stream(properties); 
+            auto const surface = surface_factory->create_surface(stream, params);
             surface_coordinator->add_surface(surface, params.depth, params.input_mode, nullptr);
 
             {
                 mg::Buffer* buffer{nullptr};
                 auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
-                stream->swap_buffers(buffer, complete); // Fetch buffer for rendering
+                surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Fetch buffer for rendering
                 {
                     gl_context->make_current();
 
@@ -385,7 +384,7 @@ public:
 
                     gl_context->release_current();
                 }
-                stream->swap_buffers(buffer, complete); // Post rendered buffer
+                surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Post rendered buffer
             }
 
             /*

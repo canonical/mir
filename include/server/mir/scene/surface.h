@@ -21,7 +21,6 @@
 
 #include "mir/graphics/renderable.h"
 #include "mir/input/surface.h"
-#include "mir/scene/surface_buffer_access.h"
 #include "mir/frontend/surface.h"
 #include "mir/compositor/compositor_id.h"
 
@@ -40,8 +39,7 @@ class SurfaceObserver;
 
 class Surface :
     public input::Surface,
-    public frontend::Surface,
-    public SurfaceBufferAccess
+    public frontend::Surface
 {
 public:
     // resolve ambiguous member function names
@@ -90,8 +88,8 @@ public:
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override = 0;
     virtual std::shared_ptr<graphics::CursorImage> cursor_image() const override = 0;
 
-    virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override = 0;
-    virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override = 0;
+    virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
+    virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) = 0;
 
     // TODO input_channel() relates to adding and removing the surface
     // TODO from the scene and is probably not cleanest interface for this.

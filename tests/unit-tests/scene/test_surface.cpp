@@ -231,7 +231,7 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_buffer_stream, get_stream_pixel_format())
+    EXPECT_CALL(*mock_buffer_stream, pixel_format())
         .Times(1)
         .WillOnce(Return(pf));
 

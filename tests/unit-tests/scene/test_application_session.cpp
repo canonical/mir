@@ -67,7 +67,7 @@ public:
     ~MockSnapshotStrategy() noexcept {}
 
     MOCK_METHOD2(take_snapshot_of,
-                void(std::shared_ptr<ms::SurfaceBufferAccess> const&,
+                void(std::shared_ptr<mf::BufferStream> const&,
                      ms::SnapshotCallback const&));
 };
 
@@ -139,6 +139,18 @@ struct ApplicationSession : public testing::Test
            event_sink);
     }
     
+    std::shared_ptr<ms::ApplicationSession> make_application_session(
+        std::shared_ptr<ms::BufferStreamFactory> const& bstream_factory,
+        std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
+    {
+        return std::make_shared<ms::ApplicationSession>(
+           stub_surface_coordinator, surface_factory, bstream_factory,
+           pid, name,
+           null_snapshot_strategy,
+           stub_session_listener,
+           event_sink);
+    }
+
     std::shared_ptr<ms::ApplicationSession> make_application_session(
         std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
@@ -396,17 +408,19 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
 {
     using namespace ::testing;
 
+    std::shared_ptr<mf::BufferStream> const stub_stream = std::make_shared<mtd::MockBufferStream>();
     auto mock_surface = make_mock_surface();
+    ON_CALL(*mock_surface, primary_buffer_stream())
+        .WillByDefault(Return(stub_stream));
     NiceMock<MockSurfaceFactory> surface_factory;
     ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
 
-    auto const default_surface_buffer_access =
-        std::static_pointer_cast<ms::SurfaceBufferAccess>(mock_surface);
+    EXPECT_CALL(surface_coordinator, add_surface(_,_,_,_));
+
     auto const snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
 
-    EXPECT_CALL(*snapshot_strategy,
-                take_snapshot_of(default_surface_buffer_access, _));
+    EXPECT_CALL(*snapshot_strategy, take_snapshot_of(stub_stream, _));
 
     ms::ApplicationSession app_session(
         mt::fake_shared(surface_coordinator),
@@ -464,18 +478,39 @@ TEST_F(ApplicationSession, surface_ids_are_bufferstream_ids)
 {
     using namespace ::testing;
 
-    auto app_session = make_application_session_with_stubs();
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
+    NiceMock<MockBufferStreamFactory> mock_bufferstream_factory;
+    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
+    std::shared_ptr<ms::Surface> mock_surface = make_mock_surface();
+    auto stub_bstream = std::make_shared<mtd::StubBufferStream>();
+    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_))
+        .WillOnce(Return(stub_bstream));
+    EXPECT_CALL(mock_surface_factory, create_surface(std::shared_ptr<mc::BufferStream>(stub_bstream),_))
+        .WillOnce(Return(mock_surface));
+    auto session = make_application_session(
+        mt::fake_shared(mock_bufferstream_factory),
+        mt::fake_shared(mock_surface_factory));
 
     ms::SurfaceCreationParameters params;
 
-    auto id1 = app_session->create_surface(params);
-    EXPECT_TRUE(app_session->get_buffer_stream(mf::BufferStreamId(id1.as_value())) != nullptr);
+    auto id1 = session->create_surface(params);
+    EXPECT_THAT(session->get_buffer_stream(mf::BufferStreamId(id1.as_value())), Eq(stub_bstream));
+    EXPECT_THAT(session->get_surface(id1), Eq(mock_surface));
 
-    app_session->destroy_surface(id1);
+    session->destroy_surface(id1);
 
     EXPECT_THROW({
-            app_session->get_buffer_stream(mf::BufferStreamId(id1.as_value()));
+            session->get_buffer_stream(mf::BufferStreamId(id1.as_value()));
     }, std::runtime_error);
+}
+
+TEST_F(ApplicationSession, can_destroy_surface_bstream)
+{
+    auto session = make_application_session_with_stubs();
+    ms::SurfaceCreationParameters params;
+    auto id = session->create_surface(params);
+    session->destroy_buffer_stream(mf::BufferStreamId(id.as_value()));
+    session->destroy_surface(id);
 }
 
 TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
