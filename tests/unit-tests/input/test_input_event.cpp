@@ -356,13 +356,13 @@ TEST(PointerInputEventProperties, button_state_translated)
 {
     auto old_ev = a_motion_ev(AINPUT_SOURCE_MOUSE);
 
-    old_ev.motion.button_state[mir_pointer_button_primary] = true;
+    old_ev.motion.buttons = mir_pointer_button_primary;
     auto pev = mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
     
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
     EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_secondary));
 
-    old_ev.motion.button_state[mir_pointer_button_secondary] = true;
+    old_ev.motion.buttons |=  mir_pointer_button_secondary;
 
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_secondary));

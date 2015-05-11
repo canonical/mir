@@ -266,8 +266,7 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
     expected.motion.source_id = 4;
     expected.motion.action = mir_motion_action_scroll;
     expected.motion.modifiers = 6;
-    expected.motion.button_state[mir_pointer_button_forward] = true;
-    expected.motion.button_state[mir_pointer_button_secondary] = true;
+    expected.motion.buttons = mir_pointer_button_forward | mir_pointer_button_secondary;
 
     auto & pointer = expected.motion.pointer_coordinates[0];
     pointer.id = 1;

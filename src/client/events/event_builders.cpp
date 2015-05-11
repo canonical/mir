@@ -253,7 +253,7 @@ MirMotionAction old_action_from_pointer_action(MirPointerAction action, bool but
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers, MirPointerAction action,
-    std::vector<MirPointerButton> const& buttons_pressed,
+    MirPointerButtons buttons_pressed,                               
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value)
 {
@@ -266,31 +266,9 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     mev.event_time = timestamp;
     mev.modifiers = modifiers;
     mev.source_id = AINPUT_SOURCE_MOUSE;
-
-    for (auto button : buttons_pressed)
-    {
-    switch (button)
-    {
-    case mir_pointer_button_primary:
-        mev.button_state[mir_pointer_button_primary] = true;
-        break;
-    case mir_pointer_button_secondary:
-        mev.button_state[mir_pointer_button_secondary] = true;
-        break;
-    case mir_pointer_button_tertiary:
-        mev.button_state[mir_pointer_button_tertiary] = true;
-        break;
-    case mir_pointer_button_back:
-        mev.button_state[mir_pointer_button_back] = true;
-        break;
-    case mir_pointer_button_forward:
-        mev.button_state[mir_pointer_button_forward] = true;
-        break;
-    default:
-        break;
-    }
-    }
-    mev.action = old_action_from_pointer_action(action, buttons_pressed.size());
+    mev.buttons = buttons_pressed;
+    
+    mev.action = old_action_from_pointer_action(action, buttons_pressed);
 
     mev.pointer_count = 1;
     auto& pc = mev.pointer_coordinates[0];
