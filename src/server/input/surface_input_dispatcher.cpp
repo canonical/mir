@@ -141,11 +141,9 @@ void mi::SurfaceInputDispatcher::device_reset(MirInputDeviceId reset_device_id, 
 
 namespace
 {
-inline MirEvent copy_to_repeat_ev(MirKeyboardEvent const* kev)
+MirEvent copy_to_repeat_ev(MirKeyboardEvent const* kev)
 {
-    MirEvent repeat_ev;
-    memcpy(&repeat_ev, kev, sizeof(MirEvent));
-
+    MirEvent repeat_ev(reinterpret_cast<MirEvent const*>(kev));
     repeat_ev.key.repeat_count = 1;
     return repeat_ev;
 }

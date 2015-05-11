@@ -58,11 +58,10 @@ bool mi::KeyRepeatDispatcher::dispatch(MirEvent const& event)
 
 namespace
 {
-inline std::shared_ptr<MirEvent> copy_to_repeat_ev(MirKeyboardEvent const* kev)
+MirEvent copy_to_repeat_ev(MirKeyboardEvent const* kev)
 {
-    auto repeat_ev = std::make_shared<MirEvent>();
-    memcpy(repeat_ev.get(), kev, sizeof(MirEvent));
-    repeat_ev->key.repeat_count = 1;
+    MirEvent repeat_ev(reinterpret_cast<MirEvent const*>(kev));
+    repeat_ev.key.repeat_count = 1;
     return repeat_ev;
 }
 }
@@ -94,7 +93,7 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
         {
             return;
         }
-        std::shared_ptr<MirEvent> ev = copy_to_repeat_ev(kev);
+        auto ev = copy_to_repeat_ev(kev);
         auto &capture_alarm = device_state.repeat_alarms_by_scancode[scan_code];
         std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm([this, &capture_alarm, ev]()
             {
