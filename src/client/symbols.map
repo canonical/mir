@@ -51,7 +51,6 @@ MIR_CLIENT_8 {
     mir_surface_get_egl_native_window;
     mir_surface_get_error_message;
     mir_surface_get_focus;
-    mir_surface_get_id;
     mir_surface_get_orientation;
     mir_surface_get_parameters;
     mir_surface_get_state;
@@ -64,7 +63,6 @@ MIR_CLIENT_8 {
     mir_surface_set_event_handler;
     mir_surface_set_state;
     mir_surface_set_swapinterval;
-    mir_surface_set_type;
     mir_surface_spec_release;
     mir_surface_swap_buffers;
     mir_surface_swap_buffers_sync;
