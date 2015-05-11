@@ -203,3 +203,10 @@ MirTouchAction mia::mir_touch_action_from_masked_android(int32_t masked_android_
         return mir_touch_action_change;
     }
 }
+
+bool mia::android_source_id_is_pointer_device(int32_t source_id)
+{
+    return source_id == AINPUT_SOURCE_MOUSE ||
+        source_id == AINPUT_SOURCE_TRACKBALL ||
+        source_id == AINPUT_SOURCE_TOUCHPAD;
+}

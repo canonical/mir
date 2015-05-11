@@ -46,6 +46,8 @@ int32_t android_tool_type_from_mir(MirTouchTooltype mir_tooltype);
 
 MirPointerAction mir_pointer_action_from_masked_android(int32_t android_action);
 MirTouchAction mir_touch_action_from_masked_android(int32_t android_action);
+
+bool android_source_id_is_pointer_device(int32_t source_id);
 }
 }
 }

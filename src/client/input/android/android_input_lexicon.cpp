@@ -47,10 +47,7 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
         }
         case AINPUT_EVENT_TYPE_MOTION:
         {
-            auto source_class = android_event->getSource();
-            if (source_class == AINPUT_SOURCE_MOUSE ||
-                source_class == AINPUT_SOURCE_TRACKBALL ||
-                source_class == AINPUT_SOURCE_TOUCHPAD)
+            if (mia::android_source_id_is_pointer_device(android_event->getSource()))
             {
                 droidinput::MotionEvent const* mev = static_cast<const droidinput::MotionEvent*>(android_event);
                 return mev::make_event(MirInputDeviceId(android_event->getDeviceId()),

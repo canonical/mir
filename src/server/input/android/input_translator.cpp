@@ -110,9 +110,7 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     if (!args)
         return;
 
-    if (args->source == AINPUT_SOURCE_MOUSE ||
-        args->source == AINPUT_SOURCE_TRACKBALL ||
-        args->source == AINPUT_SOURCE_TOUCHPAD)
+    if (mia::android_source_id_is_pointer_device(args->source))
     {
         auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
                                     args->eventTime,
