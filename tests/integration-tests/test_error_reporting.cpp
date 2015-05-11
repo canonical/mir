@@ -216,7 +216,9 @@ TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
         class BoobytrappedSurfaceFactory : public mir::scene::SurfaceFactory
         {
             std::shared_ptr<mir::scene::Surface>
-            create_surface(mir::scene::SurfaceCreationParameters const&) override
+            create_surface(
+                std::shared_ptr<mir::compositor::BufferStream> const&,
+                mir::scene::SurfaceCreationParameters const&) override
             {
                 throw std::runtime_error{test_exception_text};
             }

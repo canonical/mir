@@ -18,7 +18,6 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "DisplayServer"
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 #include "mir/main_loop.h"

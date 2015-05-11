@@ -138,7 +138,6 @@ ms::BasicSurface::BasicSurface(
     surface_name(name),
     surface_rect(rect),
     surface_alpha(1.0f),
-    first_frame_posted(false),
     hidden(false),
     input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
@@ -231,25 +230,9 @@ MirPixelFormat ms::BasicSurface::pixel_format() const
     return surface_buffer_stream->get_stream_pixel_format();
 }
 
-void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(mg::Buffer* new_buffer)> complete)
+std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
 {
-    if (old_buffer)
-    {
-        surface_buffer_stream->release_client_buffer(old_buffer);
-        {
-            std::unique_lock<std::mutex> lk(guard);
-            first_frame_posted = true;
-        }
-
-        /*
-         * TODO: In future frame_posted() could be made parameterless.
-         *       The new method of catching up on buffer backlogs is to
-         *       query buffers_ready_for_compositor() or Scene::frames_pending
-         */
-        observers.frame_posted(1);
-    }
-
-    surface_buffer_stream->acquire_client_buffer(complete);
+    return surface_buffer_stream;
 }
 
 void ms::BasicSurface::allow_framedropping(bool allow)
@@ -384,7 +367,7 @@ bool ms::BasicSurface::visible() const
 
 bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
 {
-    return !hidden && first_frame_posted;
+    return !hidden && surface_buffer_stream->has_submitted_buffer();
 }
 
 mi::InputReceptionMode ms::BasicSurface::reception_mode() const
@@ -404,8 +387,7 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
 void ms::BasicSurface::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
 {
-    auto buf = snapshot_buffer();
-    exec(*buf);
+    surface_buffer_stream->with_most_recent_buffer_do(exec);
 }
 
 
@@ -771,6 +753,7 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
 void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
     observers.add(observer);
+    surface_buffer_stream->add_observer(observer);
 }
 
 void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& observer)
@@ -779,6 +762,7 @@ void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& obs
     if (!o)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
     observers.remove(o);
+    surface_buffer_stream->remove_observer(o);
 }
 
 std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const
