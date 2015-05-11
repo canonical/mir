@@ -27,6 +27,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/fake_event_hub_server_configuration.h"
 #include "mir_test_framework/any_surface.h"
 
 #include "mir_test/fake_event_hub.h"
@@ -119,42 +120,6 @@ public:
 
 private:
     std::string const flag_file;
-};
-
-struct FakeEventHubServerConfig : TestingServerConfiguration
-{
-    std::shared_ptr<droidinput::EventHubInterface> the_event_hub() override
-    {
-        return the_fake_event_hub();
-    }
-
-    std::shared_ptr<mi::InputManager> the_input_manager() override
-    {
-        return DefaultServerConfiguration::the_input_manager();
-    }
-
-    std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override
-    {
-        return DefaultServerConfiguration::the_input_targeter();
-    }
-
-    std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override
-    {
-        return DefaultServerConfiguration::the_input_dispatcher();
-    }
-
-
-    std::shared_ptr<mia::FakeEventHub> the_fake_event_hub()
-    {
-        if (!fake_event_hub)
-        {
-            fake_event_hub = std::make_shared<mia::FakeEventHub>();
-        }
-
-        return fake_event_hub;
-    }
-
-    std::shared_ptr<mia::FakeEventHub> fake_event_hub;
 };
 }
 
@@ -286,7 +251,7 @@ TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clie
     Flag resources_freed_success{"resources_free_success_7e9c69fc.tmp"};
     Flag resources_freed_failure{"resources_free_failure_7e9c69fc.tmp"};
 
-    auto server_config = std::make_shared<FakeEventHubServerConfig>();
+    auto server_config = std::make_shared<mtf::FakeEventHubServerConfiguration>();
     launch_server_process(*server_config);
 
     struct ClientConfig : TestingClientConfiguration
@@ -383,7 +348,7 @@ TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clie
 TEST(ServerShutdownWithThreadException,
      server_releases_resources_on_abnormal_input_thread_termination)
 {
-    auto server_config = std::make_shared<FakeEventHubServerConfig>();
+    auto server_config = std::make_shared<mtf::FakeEventHubServerConfiguration>();
     auto fake_event_hub = server_config->the_fake_event_hub();
 
     std::thread server{
@@ -414,9 +379,9 @@ TEST(ServerShutdownWithThreadException,
 TEST(ServerShutdownWithThreadException,
      server_releases_resources_on_abnormal_main_thread_termination)
 {
-    // Use the FakeEventHubServerConfig to get the production input components
+    // Use the FakeEventHubServerConfiguration to get the production input components
     // (with the exception of EventHub, of course).
-    auto server_config = std::make_shared<FakeEventHubServerConfig>();
+    auto server_config = std::make_shared<mtf::FakeEventHubServerConfiguration>();
 
     std::thread server{
         [&]
