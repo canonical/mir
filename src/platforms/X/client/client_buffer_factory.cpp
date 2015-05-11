@@ -23,9 +23,10 @@
 
 namespace mcl=mir::client;
 namespace mclx=mir::client::X;
+namespace mclm=mir::client::mesa;
 
 mclx::ClientBufferFactory::ClientBufferFactory(
-    std::shared_ptr<BufferFileOps> const& buffer_file_ops)
+    std::shared_ptr<mclm::BufferFileOps> const& buffer_file_ops)
     : buffer_file_ops{buffer_file_ops}
 {
     CALLED

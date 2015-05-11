@@ -30,15 +30,19 @@ namespace mir
 {
 namespace client
 {
+
+namespace mesa
+{
+class BufferFileOps;
+}
+
 namespace X
 {
-
-class BufferFileOps;
 
 class ClientBuffer : public AgingBuffer
 {
 public:
-    ClientBuffer(std::shared_ptr<BufferFileOps> const& buffer_file_ops,
+    ClientBuffer(std::shared_ptr<mesa::BufferFileOps> const& buffer_file_ops,
                  std::shared_ptr<MirBufferPackage> const& buffer_package,
                  geometry::Size size,
                  MirPixelFormat pf);
@@ -54,7 +58,7 @@ public:
     void fill_update_msg(MirBufferPackage&) override;
 
 private:
-    std::shared_ptr<BufferFileOps> const buffer_file_ops;
+    std::shared_ptr<mesa::BufferFileOps> const buffer_file_ops;
     std::shared_ptr<MirBufferPackage> const creation_package;
     geometry::Rectangle const rect;
     MirPixelFormat const buffer_pf;

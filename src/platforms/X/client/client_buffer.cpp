@@ -31,6 +31,7 @@
 
 namespace mcl=mir::client;
 namespace mclx=mir::client::X;
+namespace mclm=mir::client::mesa;
 namespace geom=mir::geometry;
 
 namespace
@@ -43,7 +44,7 @@ struct NullDeleter
 
 struct ShmMemoryRegion : mcl::MemoryRegion
 {
-    ShmMemoryRegion(std::shared_ptr<mclx::BufferFileOps> const& buffer_file_ops,
+    ShmMemoryRegion(std::shared_ptr<mclm::BufferFileOps> const& buffer_file_ops,
                     int buffer_fd, geom::Size const& size_param,
                     geom::Stride stride_param, MirPixelFormat format_param)
         : buffer_file_ops{buffer_file_ops},
@@ -72,14 +73,14 @@ struct ShmMemoryRegion : mcl::MemoryRegion
         buffer_file_ops->unmap(vaddr.get(), size_in_bytes);
     }
 
-    std::shared_ptr<mclx::BufferFileOps> const buffer_file_ops;
+    std::shared_ptr<mclm::BufferFileOps> const buffer_file_ops;
     size_t const size_in_bytes;
 };
 
 }
 
 mclx::ClientBuffer::ClientBuffer(
-    std::shared_ptr<mclx::BufferFileOps> const& buffer_file_ops,
+    std::shared_ptr<mclm::BufferFileOps> const& buffer_file_ops,
     std::shared_ptr<MirBufferPackage> const& package,
     geom::Size size, MirPixelFormat pf)
     : buffer_file_ops{buffer_file_ops},

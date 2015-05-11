@@ -26,21 +26,25 @@ namespace mir
 {
 namespace client
 {
+
+namespace mesa
+{
+class BufferFileOps;
+}
+
 namespace X
 {
-
-class BufferFileOps;
 
 class ClientBufferFactory : public client::ClientBufferFactory
 {
 public:
-    explicit ClientBufferFactory(std::shared_ptr<BufferFileOps> const& buffer_file_ops);
+    explicit ClientBufferFactory(std::shared_ptr<mesa::BufferFileOps> const& buffer_file_ops);
 
     std::shared_ptr<client::ClientBuffer> create_buffer(
         std::shared_ptr<MirBufferPackage> const& package,
         geometry::Size size, MirPixelFormat pf);
 private:
-    std::shared_ptr<BufferFileOps> const buffer_file_ops;
+    std::shared_ptr<mesa::BufferFileOps> const buffer_file_ops;
 };
 
 }

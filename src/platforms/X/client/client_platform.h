@@ -28,16 +28,19 @@ namespace client
 {
 class EGLNativeDisplayContainer;
 
+namespace mesa
+{
+class BufferFileOps;
+}
+
 namespace X
 {
-
-class BufferFileOps;
 
 class ClientPlatform : public client::ClientPlatform
 {
 public:
     ClientPlatform(ClientContext* const context,
-                   std::shared_ptr<BufferFileOps> const& buffer_file_ops,
+                   std::shared_ptr<mesa::BufferFileOps> const& buffer_file_ops,
                    EGLNativeDisplayContainer& display_container);
 
     MirPlatformType platform_type() const override;
@@ -49,7 +52,7 @@ public:
     MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
 private:
     ClientContext* const context;
-    std::shared_ptr<BufferFileOps> const buffer_file_ops;
+    std::shared_ptr<mesa::BufferFileOps> const buffer_file_ops;
     EGLNativeDisplayContainer& display_container;
 };
 

@@ -31,6 +31,7 @@
 
 namespace mcl=mir::client;
 namespace mclx=mcl::X;
+namespace mclm=mcl::mesa;
 namespace geom=mir::geometry;
 
 namespace
@@ -72,7 +73,7 @@ private:
 
 mclx::ClientPlatform::ClientPlatform(
         ClientContext* const context,
-        std::shared_ptr<BufferFileOps> const& buffer_file_ops,
+        std::shared_ptr<mclm::BufferFileOps> const& buffer_file_ops,
         mcl::EGLNativeDisplayContainer& display_container)
     : context{context},
       buffer_file_ops{buffer_file_ops},

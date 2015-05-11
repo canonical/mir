@@ -3,6 +3,7 @@ include_directories(${client_common_include_dirs})
 include_directories(
     ${DRM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
+    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/client
 )
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)

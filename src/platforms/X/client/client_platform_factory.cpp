@@ -30,11 +30,12 @@
 
 namespace mcl = mir::client;
 namespace mclx = mcl::X;
+namespace mclm = mcl::mesa;
 
 namespace
 {
 
-struct RealBufferFileOps : public mclx::BufferFileOps
+struct RealBufferFileOps : public mclm::BufferFileOps
 {
     int close(int fd) const
     {
