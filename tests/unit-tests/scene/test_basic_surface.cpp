@@ -77,7 +77,7 @@ void post_a_frame(ms::BasicSurface& surface)
      * that use it.
      */
     mtd::StubBuffer buffer;
-    surface.swap_buffers(&buffer, [&](mir::graphics::Buffer*){});
+    surface.primary_buffer_stream()->swap_buffers(&buffer, [&](mir::graphics::Buffer*){});
 }
 
 struct BasicSurfaceTest : public testing::Test
@@ -121,6 +121,11 @@ TEST_F(BasicSurfaceTest, basics)
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_EQ(rect.top_left, surface.top_left());
     EXPECT_FALSE(surface.compositor_snapshot(compositor_id)->shaped());
+}
+
+TEST_F(BasicSurfaceTest, primary_buffer_stream)
+{
+    EXPECT_THAT(surface.primary_buffer_stream(), Eq(mock_buffer_stream));
 }
 
 TEST_F(BasicSurfaceTest, id_always_unique)
@@ -256,11 +261,11 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
 {
     using namespace testing;
     mtd::StubBuffer mock_buffer;
-    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_)).Times(2)
-        .WillRepeatedly(InvokeArgument<0>(&mock_buffer));
-
-    mir::graphics::Buffer* buffer = nullptr;
-    auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
+    EXPECT_CALL(*mock_buffer_stream, has_submitted_buffer())
+        .Times(3)
+        .WillOnce(Return(false))
+        .WillOnce(Return(false))
+        .WillOnce(Return(true));
 
     // Must be a fresh surface to guarantee no frames posted yet...
     ms::BasicSurface surface{
@@ -282,12 +287,6 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
     surface.set_hidden(true);
     EXPECT_FALSE(surface.visible());
 
-    // The second call posts the buffer returned by first
-    surface.swap_buffers(buffer, callback);
-    surface.swap_buffers(buffer, callback);
-
-    EXPECT_FALSE(surface.visible());
-
     surface.set_hidden(false);
     EXPECT_TRUE(surface.visible());
 
@@ -304,25 +303,6 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
     surface.add_observer(observer);
 
     surface.set_hidden(true);
-}
-
-TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
-{
-    using namespace testing;
-    mtd::StubBuffer mock_buffer;
-    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_)).Times(2)
-        .WillRepeatedly(InvokeArgument<0>(&mock_buffer));
-
-    surface.add_observer(observer);
-
-    mir::graphics::Buffer* buffer = nullptr;
-    auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
-
-    EXPECT_CALL(mock_callback, call()).Times(1);
-
-    // The second call posts the buffer returned by first
-    surface.swap_buffers(buffer, callback);
-    surface.swap_buffers(buffer, callback);
 }
 
 // a 1x1 window at (1,1) will get events at (1,1)
@@ -368,6 +348,10 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
 
 TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
 {
+    EXPECT_CALL(*mock_buffer_stream, has_submitted_buffer())
+        .WillOnce(testing::Return(false))
+        .WillOnce(testing::Return(true));
+
     ms::BasicSurface surface{
         name,
         geom::Rectangle{{0,0}, {100,100}},
@@ -379,7 +363,6 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
         report};
 
     EXPECT_FALSE(surface.input_area_contains({50,50}));
-    post_a_frame(surface);
     EXPECT_TRUE(surface.input_area_contains({50,50}));
 }
 

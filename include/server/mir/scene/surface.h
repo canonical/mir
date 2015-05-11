@@ -89,8 +89,8 @@ public:
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override = 0;
     virtual std::shared_ptr<graphics::CursorImage> cursor_image() const override = 0;
 
-    virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override = 0;
-    virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override = 0;
+    virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
+    virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) = 0;
 
     // TODO input_channel() relates to adding and removing the surface
     // TODO from the scene and is probably not cleanest interface for this.
