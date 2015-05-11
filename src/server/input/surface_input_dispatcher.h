@@ -61,11 +61,6 @@ private:
     bool dispatch_pointer(MirInputDeviceId id, MirPointerEvent const* pev);
     bool dispatch_touch(MirInputDeviceId id, MirTouchEvent const* tev);
 
-    void deliver(std::shared_ptr<input::Surface> const& surface, MirTouchEvent const* tev);
-    void deliver(std::shared_ptr<input::Surface> const& surface, MirPointerEvent const* pev);
-    void deliver(std::shared_ptr<input::Surface> const& surface, MirKeyboardEvent const* kev);
-    void deliver(std::shared_ptr<input::Surface> const& surface, MirEvent const* ev);
-
     void send_enter_exit_event(std::shared_ptr<input::Surface> const& surface,
                                MirPointerEvent const* triggering_ev, MirPointerAction action);
 

@@ -69,6 +69,27 @@ struct InputDispatcherSceneObserver : public ms::Observer
 
     std::function<void(ms::Surface*)> const on_removed;
 };
+
+template <typename T>
+void deliver(std::shared_ptr<mi::Surface> const& surface, T const* ev)
+{
+    MirEvent to_deliver;
+    memcpy(&to_deliver, ev, sizeof(MirEvent));
+    
+    if (to_deliver.type == mir_event_type_motion)
+    {
+        auto sx = surface->input_bounds().top_left.x.as_int();
+        auto sy = surface->input_bounds().top_left.y.as_int();
+
+        for (unsigned i = 0; i < to_deliver.motion.pointer_count; i++)
+        {
+            to_deliver.motion.pointer_coordinates[i].x -= sx;
+            to_deliver.motion.pointer_coordinates[i].y -= sy;
+        }
+    }
+    surface->consume(to_deliver);
+}
+
 }
 
 mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> const& scene)
@@ -190,40 +211,6 @@ std::vector<MirPointerButton> buttons_in_vector(MirPointerEvent const* pev)
     return buttons;
 }
        
-}
-
-void mi::SurfaceInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirTouchEvent const* tev)
-{
-    deliver(surface, reinterpret_cast<MirEvent const*>(tev));
-}
-
-void mi::SurfaceInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirPointerEvent const* pev)
-{
-    deliver(surface, reinterpret_cast<MirEvent const*>(pev));
-}
-
-void mi::SurfaceInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirKeyboardEvent const* kev)
-{
-    deliver(surface, reinterpret_cast<MirEvent const*>(kev));
-}
-
-void mi::SurfaceInputDispatcher::deliver(std::shared_ptr<mi::Surface> const& surface, MirEvent const* ev)
-{
-    MirEvent to_deliver;
-    memcpy(&to_deliver, ev, sizeof(MirEvent));
-    
-    if (ev->type == mir_event_type_motion)
-    {
-        auto sx = surface->input_bounds().top_left.x.as_int();
-        auto sy = surface->input_bounds().top_left.y.as_int();
-
-        for (unsigned i = 0; i < ev->motion.pointer_count; i++)
-        {
-            to_deliver.motion.pointer_coordinates[i].x -= sx;
-            to_deliver.motion.pointer_coordinates[i].y -= sy;
-        }
-    }
-    surface->consume(to_deliver);
 }
 
 std::shared_ptr<mi::Surface> mi::SurfaceInputDispatcher::find_target_surface(geom::Point const& point)
@@ -376,8 +363,10 @@ bool mi::SurfaceInputDispatcher::dispatch(MirEvent const& event)
                          std::chrono::nanoseconds(mir_input_configuration_event_get_time(idev)));
         return true;
     }
+    
     if (mir_event_get_type(&event) != mir_event_type_input)
-        BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got a non-input event"));
+        BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got an unexpected event type"));
+    
     auto iev = mir_event_get_input_event(&event);
     auto id = mir_input_event_get_device_id(iev);
     switch (mir_input_event_get_type(iev))
