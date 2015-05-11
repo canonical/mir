@@ -38,8 +38,8 @@ MirKeyboardAction mir_keyboard_action_from_android(int32_t android_action, int32
 // action we must also fetch a repeat count for the android event.
 int32_t android_keyboard_action_from_mir(int32_t& repeat_count_out, MirKeyboardAction action);
 
-void mir_pointer_buttons_from_android(int32_t android_state, bool (&mir_button_state)[mir_pointer_button_count]);
-int32_t android_pointer_buttons_from_mir(bool const (&mir_button_state)[mir_pointer_button_count]);
+MirPointerButtons mir_pointer_buttons_from_android(int32_t android_state);
+int32_t android_pointer_buttons_from_mir(MirPointerButtons buttons);
 
 MirTouchTooltype mir_tool_type_from_android(int32_t android_tooltype);
 int32_t android_tool_type_from_mir(MirTouchTooltype mir_tooltype);

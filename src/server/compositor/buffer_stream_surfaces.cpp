@@ -35,6 +35,7 @@ mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> con
 
 mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 {
+    buffer_bundle->drop_client_requests();
     force_requests_to_complete();
 }
 
@@ -94,11 +95,6 @@ int mc::BufferStreamSurfaces::buffers_ready_for_compositor(void const* user_id) 
 void mc::BufferStreamSurfaces::drop_old_buffers()
 {
     buffer_bundle->drop_old_buffers();
-}
-
-void mc::BufferStreamSurfaces::drop_client_requests()
-{
-    buffer_bundle->drop_client_requests();
 }
 
 void mc::BufferStreamSurfaces::swap_buffers(

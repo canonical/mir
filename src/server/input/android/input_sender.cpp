@@ -288,7 +288,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_motion_event(uint32_
         0, /* flags */
         0, /* edge flags */
         mia::android_modifiers_from_mir(event.modifiers),
-        mia::android_pointer_buttons_from_mir(event.button_state),
+        mia::android_pointer_buttons_from_mir(event.buttons),
         0.0f,  // event.x_offset,
         0.0f,  // event.y_offset,
         0, 0, /* unused x/y precision */
