@@ -302,7 +302,7 @@ TEST_F(SurfaceInputDispatcher, key_state_is_consistent_per_client)
     EXPECT_FALSE(dispatcher.dispatch(*up_event));
 }
 
-TEST_F(SurfaceInputDispatcher, inconsistent_key_down_translated_to_repeat)
+TEST_F(SurfaceInputDispatcher, inconsistent_key_down_dropped)
 {
     using namespace ::testing;
     
@@ -313,14 +313,13 @@ TEST_F(SurfaceInputDispatcher, inconsistent_key_down_translated_to_repeat)
 
     InSequence seq;
     EXPECT_CALL(*surface, consume(mt::MirKeyEventMatches(*event))).Times(1);
-    EXPECT_CALL(*surface, consume(mt::KeyRepeatEvent())).Times(2);
 
     dispatcher.start();
 
     dispatcher.set_focus(surface);
     EXPECT_TRUE(dispatcher.dispatch(*event));
-    EXPECT_TRUE(dispatcher.dispatch(*event));
-    EXPECT_TRUE(dispatcher.dispatch(*event));
+    EXPECT_FALSE(dispatcher.dispatch(*event));
+    EXPECT_FALSE(dispatcher.dispatch(*event));
 }
 
 TEST_F(SurfaceInputDispatcher, device_reset_resets_key_state_consistency)
