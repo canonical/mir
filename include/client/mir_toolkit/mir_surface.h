@@ -383,42 +383,6 @@ bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrienta
 void mir_surface_spec_release(MirSurfaceSpec* spec);
 
 /**
- * Request a new Mir surface on the supplied connection with the supplied
- * parameters. The returned handle remains valid until the surface has been
- * released.
- *   \warning callback could be called from another thread. You must do any
- *            locking appropriate to protect your data accessed in the
- *            callback.
- *   \note    This will soon be deprecated. Use the *_spec_for_* / mir_surface_create()
- *            two-stage process instead.
- *   \param [in] connection          The connection
- *   \param [in] surface_parameters  Request surface parameters
- *   \param [in] callback            Callback function to be invoked when
- *                                   request completes
- *   \param [in,out] context         User data passed to the callback function
- *   \return                         A handle that can be passed to
- *                                   mir_wait_for
- */
-MirWaitHandle *mir_connection_create_surface(
-    MirConnection *connection,
-    MirSurfaceParameters const *surface_parameters,
-    mir_surface_callback callback,
-    void *context) __attribute__((__deprecated__("Use mir_surface_create()")));
-
-/**
- * Create a surface like in mir_connection_create_surface(), but also wait for
- * creation to complete and return the resulting surface.
- *   \note    This will soon be deprecated. Use the create_spec_for/mir_surface_create()
- *            two-stage process instead.
- *   \param [in] connection  The connection
- *   \param [in] params      Parameters describing the desired surface
- *   \return                 The resulting surface
- */
-MirSurface *mir_connection_create_surface_sync(
-    MirConnection *connection,
-    MirSurfaceParameters const *params) __attribute__((__deprecated__("Use mir_surface_create_sync()")));
-
-/**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do
  *            any locking appropriate to protect your data accessed in the
@@ -476,33 +440,6 @@ char const *mir_surface_get_error_message(MirSurface *surface);
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
 
 /**
- * Get the underlying platform type so the buffer obtained in "raw" representation
- * in mir_surface_get_current_buffer() can be understood
- *   \pre                     The surface is valid
- *   \param [in] surface      The surface
- *   \return                  One of mir_platform_type_android or mir_platform_type_gbm
- */
-MirPlatformType mir_surface_get_platform_type(MirSurface *surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
-
-/**
- * Get a surface's buffer in "raw" representation.
- *   \pre                         The surface is valid
- *   \param [in] surface          The surface
- *   \param [out] buffer_package  Structure to be populated
- */
-void mir_surface_get_current_buffer(MirSurface *surface, MirNativeBuffer **buffer_package) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
-
-/**
- * Get a surface's graphics_region, i.e., map the graphics buffer to main
- * memory.
- *   \pre                          The surface is valid
- *   \param [in] surface           The surface
- *   \param [out] graphics_region  Structure to be populated
- */
-void mir_surface_get_graphics_region(
-    MirSurface *surface,
-    MirGraphicsRegion *graphics_region) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
-                                                                          /**
  * Advance a surface's buffer. The returned handle remains valid until the next
  * call to mir_surface_swap_buffers, until the surface has been released or the
  * connection to the server has been released.

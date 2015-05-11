@@ -229,24 +229,6 @@ void mir_surface_spec_release(MirSurfaceSpec* spec)
     delete spec;
 }
 
-MirWaitHandle* mir_connection_create_surface(
-    MirConnection* connection,
-    MirSurfaceParameters const* params,
-    mir_surface_callback callback,
-    void* context)
-{
-    MirSurfaceSpec spec{connection, *params};
-    return mir_surface_create(&spec, callback, context);
-}
-
-MirSurface* mir_connection_create_surface_sync(
-    MirConnection* connection,
-    MirSurfaceParameters const* params)
-{
-    MirSurfaceSpec spec{connection, *params};
-    return mir_surface_create_sync(&spec);
-}
-
 __asm__(".symver new_mir_surface_set_event_handler,mir_surface_set_event_handler@@MIR_CLIENT_8.4");
 extern "C"
 void new_mir_surface_set_event_handler(MirSurface* surface,
@@ -294,21 +276,6 @@ char const* mir_surface_get_error_message(MirSurface* surface)
 void mir_surface_get_parameters(MirSurface* surface, MirSurfaceParameters* parameters)
 {
     *parameters = surface->get_parameters();
-}
-
-MirPlatformType mir_surface_get_platform_type(MirSurface* surface)
-{
-    return mir_buffer_stream_get_platform_type(mir_surface_get_buffer_stream(surface));
-}
-
-void mir_surface_get_current_buffer(MirSurface* surface, MirNativeBuffer** buffer_package_out)
-{
-    mir_buffer_stream_get_current_buffer(mir_surface_get_buffer_stream(surface), buffer_package_out);
-}
-
-void mir_surface_get_graphics_region(MirSurface* surface, MirGraphicsRegion* graphics_region)
-{
-    mir_buffer_stream_get_graphics_region(mir_surface_get_buffer_stream(surface), graphics_region);
 }
 
 namespace

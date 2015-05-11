@@ -1,5 +1,4 @@
-_IR_CLIENT_8 {
-n_get_display_info
+MIR_CLIENT_8 {
  global:
     mir_arrow_cursor_name;
     mir_busy_cursor_name;
@@ -13,8 +12,6 @@ n_get_display_info
     mir_connection_create_screencast_sync;
     mir_connection_create_spec_for_input_method;
     mir_connection_create_spec_for_modal_dialog;
-    mir_connection_create_surface;
-    mir_connection_create_surface_sync;
     mir_connection_get_available_surface_formats;
     mir_connection_get_egl_native_display;
     mir_connection_get_error_message;
@@ -50,16 +47,13 @@ n_get_display_info
     mir_prompt_session_release_sync;
     mir_screencast_release_sync;
     mir_surface_configure_cursor;
-    mir_surface_get_current_buffer;
     mir_surface_get_dpi;
     mir_surface_get_egl_native_window;
     mir_surface_get_error_message;
     mir_surface_get_focus;
-    mir_surface_get_graphics_region;
     mir_surface_get_id;
     mir_surface_get_orientation;
     mir_surface_get_parameters;
-    mir_surface_get_platform_type;
     mir_surface_get_state;
     mir_surface_get_swapinterval;
     mir_surface_get_type;
