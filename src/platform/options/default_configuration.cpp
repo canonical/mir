@@ -47,11 +47,11 @@ char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
-char const* const mo::touchspots_opt               = "enable-touchspots";
+char const* const mo::touchspots_opt              = "enable-touchspots";
 char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::nbuffers_opt                = "nbuffers";
-char const* const mo::enable_key_repeat_opt        = "enable-key-repeat";
+char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
