@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_BUFFER_STREAM_H_
 
 #include "mir/compositor/buffer_stream.h"
-
+#include "stub_buffer.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -43,6 +43,12 @@ struct MockBufferStream : public compositor::BufferStream
     {
         ON_CALL(*this, buffers_ready_for_compositor(::testing::_))
             .WillByDefault(testing::Invoke(this, &MockBufferStream::buffers_ready));
+        ON_CALL(*this, lock_snapshot_buffer())
+            .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
+        ON_CALL(*this, acquire_client_buffer(testing::_))
+            .WillByDefault(testing::InvokeArgument<0>(nullptr));
+        ON_CALL(*this, swap_buffers(testing::_, testing::_))
+            .WillByDefault(testing::InvokeArgument<1>(nullptr));
         ON_CALL(*this, has_submitted_buffer())
             .WillByDefault(testing::Return(true));
     }
