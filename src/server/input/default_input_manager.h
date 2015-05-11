@@ -53,7 +53,8 @@ class InputDeviceRegistry;
 class DefaultInputManager : public InputManager
 {
 public:
-    DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+    DefaultInputManager(bool read_input,
+                        std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
                         std::shared_ptr<droidinput::InputReaderInterface> const& reader,
                         std::shared_ptr<droidinput::EventHubInterface> const& event_hub);
     ~DefaultInputManager();
@@ -61,6 +62,7 @@ public:
     void start() override;
     void stop() override;
 private:
+    bool const read_input;
     std::vector<std::shared_ptr<Platform>> platforms;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     std::shared_ptr<input::android::InputReaderDispatchable> const legacy_dispatchable;

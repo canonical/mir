@@ -43,7 +43,6 @@
 #include "null_input_channel_factory.h"
 #include "default_input_device_hub.h"
 #include "default_input_manager.h"
-#include "platform_input_manager.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/platform.h"
@@ -388,14 +387,14 @@ mir::DefaultServerConfiguration::the_input_manager()
             bool input_reading_required = input_opt && !options->is_set(options::host_socket_opt);
                 // TODO nested input handling (== host_socket) should fold into a platform
 
-            input_reading_required = false;
             if (input_reading_required)
             {
                 if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
                         mr::legacy_input::initialize(the_logger());
 
+                // TODO: hardcoding false for now but it should differentiate between mir-on-x and nested platforms
                 auto ret = std::make_shared<mi::DefaultInputManager>(
-                    the_input_reading_multiplexer(), the_input_reader(), the_event_hub());
+                    false, the_input_reading_multiplexer(), the_input_reader(), the_event_hub());
 
                 auto platform = the_input_platform();
                 if (platform)
@@ -403,16 +402,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                 return ret;
             }
             else
-            {
-                if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
-                        mr::legacy_input::initialize(the_logger());
-
-                auto ret = std::make_shared<mi::PlatformInputManager>(the_input_reading_multiplexer());
-                auto platform = the_input_platform();
-                if (platform)
-                   ret->add_platform(platform);
-                return ret;
-            }
+                return std::make_shared<mi::NullInputManager>();
         }
     );
 }
