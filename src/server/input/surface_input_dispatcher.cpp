@@ -102,18 +102,18 @@ void mi::SurfaceInputDispatcher::surface_removed(ms::Surface *surface)
         set_focus_locked(lg, nullptr);
     }
 
-    for (auto &kv : pointer_state_by_id)
+    for (auto& kv : pointer_state_by_id)
     {
-        auto &state = kv.second;
+        auto& state = kv.second;
         if (compare_surfaces(state.current_target, surface))
             state.current_target.reset();
         if (compare_surfaces(state.gesture_owner, surface))
             state.gesture_owner.reset();
     }
 
-    for (auto &kv : touch_state_by_id)
+    for (auto& kv : touch_state_by_id)
     {
-        auto &state = kv.second;
+        auto& state = kv.second;
         if (compare_surfaces(state.gesture_owner, surface))
             state.gesture_owner.reset();
     }

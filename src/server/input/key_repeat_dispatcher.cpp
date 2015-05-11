@@ -94,7 +94,7 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
             return;
         }
         MirEvent ev = copy_to_repeat_ev(kev);
-        auto &capture_alarm = device_state.repeat_alarms_by_scancode[scan_code];
+        auto& capture_alarm = device_state.repeat_alarms_by_scancode[scan_code];
         std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm([this, &capture_alarm, ev]() mutable
             {
                 std::lock_guard<std::mutex> lg(repeat_state_mutex);
