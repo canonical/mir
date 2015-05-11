@@ -45,6 +45,16 @@ std::shared_ptr<ms::InputTargeter> mtf::FakeInputServerConfiguration::the_input_
     return DefaultServerConfiguration::the_input_targeter();
 }
 
+std::shared_ptr<mi::InputDispatcher> mtf::FakeInputServerConfiguration::the_input_dispatcher()
+{
+    return DefaultServerConfiguration::the_input_dispatcher();
+}
+
+std::shared_ptr<mi::InputSender> mtf::FakeInputServerConfiguration::the_input_sender()
+{
+    return DefaultServerConfiguration::the_input_sender();
+}
+
 auto mtf::FakeInputServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
 {
     return [&](ms::FocusController* focus_controller)

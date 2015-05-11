@@ -149,7 +149,12 @@ std::shared_ptr<mi::InputSender> mtf::StubbedServerConfiguration::the_input_send
 
 std::shared_ptr<mi::LegacyInputDispatchable> mtf::StubbedServerConfiguration::the_legacy_input_dispatchable()
 {
-    return std::make_shared<mtd::StubLegacyInputDispatchable>();
+    auto options = the_options();
+
+    if (options->get<bool>("tests-use-real-input"))
+        return DefaultServerConfiguration::the_legacy_input_dispatchable();
+    else
+        return std::make_shared<mtd::StubLegacyInputDispatchable>();
 }
 
 std::shared_ptr<mg::Cursor> mtf::StubbedServerConfiguration::the_cursor()

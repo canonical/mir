@@ -34,14 +34,15 @@ public:
     FakeInputServerConfiguration(std::vector<mir::geometry::Rectangle> const& display_rects);
 
     std::shared_ptr<mir::input::InputManager> the_input_manager() override;
+    std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
+    std::shared_ptr<mir::input::InputSender> the_input_sender() override;
 
     // TODO remove reliance on legacy window management
     auto the_window_manager_builder() -> shell::WindowManagerBuilder override;
 
 private:
     TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", server_platform("input-stub.so").c_str()};
-    TemporaryEnvironmentValue real_input{"MIR_SERVER_TESTS_USE_REAL_INPUT", "1"};
 };
 
 }
