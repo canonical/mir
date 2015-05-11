@@ -363,16 +363,16 @@ struct DisplayServerMainLoopEvents : testing::Test
     void expect_start()
     {
         EXPECT_CALL(*mock_compositor, start()).Times(1);
-        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
+        EXPECT_CALL(*mock_connector, start()).Times(1);
     }
 
     void expect_pause()
     {
+        EXPECT_CALL(*mock_connector, stop()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_connector, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()).Times(1);
     }
@@ -381,16 +381,16 @@ struct DisplayServerMainLoopEvents : testing::Test
     {
         EXPECT_CALL(*mock_display, resume()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
-        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
+        EXPECT_CALL(*mock_connector, start()).Times(1);
     }
 
     void expect_stop()
     {
+        EXPECT_CALL(*mock_connector, stop()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_connector, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
     }
 
@@ -504,18 +504,18 @@ TEST_F(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause
         expect_start();
 
         /* Pause failure */
+        EXPECT_CALL(*mock_connector, stop()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_connector, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause())
             .WillOnce(Throw(std::runtime_error("")));
 
         /* Attempt to continue */
         EXPECT_CALL(*mock_compositor, start()).Times(1);
-        EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
+        EXPECT_CALL(*mock_connector, start()).Times(1);
 
         expect_stop();
     }

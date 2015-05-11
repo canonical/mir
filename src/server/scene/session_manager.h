@@ -35,11 +35,13 @@ class SnapshotStrategy;
 class SurfaceCoordinator;
 class PromptSessionManager;
 class BufferStreamFactory;
+class SurfaceFactory;
 
 class SessionManager : public SessionCoordinator
 {
 public:
     explicit SessionManager(std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,
+                            std::shared_ptr<SurfaceFactory> const& surface_factory,
                             std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
                             std::shared_ptr<SessionContainer> const& app_container,
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
@@ -65,6 +67,7 @@ protected:
 
 private:
     std::shared_ptr<SurfaceCoordinator> const surface_coordinator;
+    std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
