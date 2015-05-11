@@ -30,6 +30,8 @@
 #include "mir/options/option.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_coordinator.h"
+#include "mir/scene/buffer_stream_factory.h"
+#include "mir/scene/surface_factory.h"
 #include "mir/server.h"
 #include "mir/report_exception.h"
 
@@ -331,6 +333,8 @@ public:
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
 
         auto const display = the_display();
+        auto const buffer_stream_factory = the_buffer_stream_factory();
+        auto const surface_factory = the_surface_factory();
         auto const surface_coordinator = the_surface_coordinator();
         auto const gl_context = the_display()->create_gl_context();
 
@@ -355,16 +359,19 @@ public:
         int i = 0;
         for (auto& m : moveables)
         {
-            auto const s = surface_coordinator->add_surface(
-                    ms::a_surface().of_size(surface_size)
-                                   .of_pixel_format(surface_pf)
-                                   .of_buffer_usage(mg::BufferUsage::hardware),
-                    nullptr);
+            auto params = ms::a_surface()
+                .of_size(surface_size)
+                .of_pixel_format(surface_pf)
+                .of_buffer_usage(mg::BufferUsage::hardware);
+            mg::BufferProperties properties{params.size, params.pixel_format, params.buffer_usage};
+            auto const stream = buffer_stream_factory->create_buffer_stream(properties); 
+            auto const surface = surface_factory->create_surface(stream, params);
+            surface_coordinator->add_surface(surface, params.depth, params.input_mode, nullptr);
 
             {
                 mg::Buffer* buffer{nullptr};
                 auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
-                s->swap_buffers(buffer, complete); // Fetch buffer for rendering
+                surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Fetch buffer for rendering
                 {
                     gl_context->make_current();
 
@@ -377,7 +384,7 @@ public:
 
                     gl_context->release_current();
                 }
-                s->swap_buffers(buffer, complete); // Post rendered buffer
+                surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Post rendered buffer
             }
 
             /*
@@ -387,8 +394,8 @@ public:
             uint32_t const x = w * (0.5 + 0.25 * cos(i * angular_step)) - surface_side / 2.0;
             uint32_t const y = h * (0.5 + 0.25 * sin(i * angular_step)) - surface_side / 2.0;
 
-            s->move_to({x, y});
-            m = Moveable(s, display_size,
+            surface->move_to({x, y});
+            m = Moveable(surface, display_size,
                     cos(0.1f + i * M_PI / 6.0f) * w / 3.0f,
                     sin(0.1f + i * M_PI / 6.0f) * h / 3.0f,
                     glm::vec3{(i % 3 == 0) * 1.0f, (i % 3 == 1) * 1.0f, (i % 3 == 2) * 1.0f},
