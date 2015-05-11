@@ -43,10 +43,10 @@ struct MockBufferStream : public compositor::BufferStream
     {
         ON_CALL(*this, buffers_ready_for_compositor(::testing::_))
             .WillByDefault(testing::Invoke(this, &MockBufferStream::buffers_ready));
-        ON_CALL(*this, has_submitted_buffer())
-            .WillByDefault(testing::Return(true));
         ON_CALL(*this, lock_snapshot_buffer())
             .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
+        ON_CALL(*this, has_submitted_buffer())
+            .WillByDefault(testing::Return(true));
         ON_CALL(*this, acquire_client_buffer(testing::_))
             .WillByDefault(testing::InvokeArgument<0>(nullptr));
         ON_CALL(*this, swap_buffers(testing::_, testing::_))
@@ -68,7 +68,6 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
     MOCK_METHOD0(drop_old_buffers, void());
-    MOCK_METHOD0(drop_client_requests, void());
 
     MOCK_METHOD2(swap_buffers, void(graphics::Buffer*, std::function<void(graphics::Buffer*)>));
     MOCK_METHOD1(with_most_recent_buffer_do, void(std::function<void(graphics::Buffer&)> const&));

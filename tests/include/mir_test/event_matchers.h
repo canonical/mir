@@ -386,6 +386,14 @@ MATCHER_P(OrientationEvent, direction, "")
     return true;
 }
 
+MATCHER_P(InputDeviceIdMatches, device_id, "")
+{
+    if (mir_event_get_type(to_address(arg)) != mir_event_type_input)
+        return false;
+    auto input_event = mir_event_get_input_event(to_address(arg));
+    return mir_input_event_get_device_id(input_event) == device_id;
+}
+
 MATCHER(InputDeviceConfigurationChangedEvent, "")
 {
     auto as_address = to_address(arg);

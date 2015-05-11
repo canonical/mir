@@ -23,8 +23,10 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
+#include "mir/geometry/point.h"
 
-namespace mi = mir::input;
+#include <vector>
+
 namespace mir
 {
 namespace dispatch
@@ -38,28 +40,43 @@ namespace mir_test_framework
 class FakeInputDeviceImpl : public FakeInputDevice
 {
 public:
-    FakeInputDeviceImpl(mi::InputDeviceInfo const& info);
+    FakeInputDeviceImpl(mir::input::InputDeviceInfo const& info);
     void emit_event(synthesis::KeyParameters const& key_params) override;
+    void emit_event(synthesis::ButtonParameters const& button) override;
+    void emit_event(synthesis::MotionParameters const& motion) override;
+    void emit_event(synthesis::TouchParameters const& touch) override;
+
 private:
-    class InputDevice : public mi::InputDevice
+    class InputDevice : public mir::input::InputDevice
     {
     public:
-        InputDevice(mi::InputDeviceInfo const& info,
+        InputDevice(mir::input::InputDeviceInfo const& info,
                     std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable);
         std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
-        void start(mi::InputSink* destination) override;
+
+        void start(mir::input::InputSink* destination) override;
         void stop() override;
 
         void synthesize_events(synthesis::KeyParameters const& key_params);
-        mi::InputDeviceInfo get_device_info() override
+        void synthesize_events(synthesis::ButtonParameters const& button);
+        void synthesize_events(synthesis::MotionParameters const& motion);
+        void synthesize_events(synthesis::TouchParameters const& touch);
+        mir::input::InputDeviceInfo get_device_info() override
         {
             return info;
         }
 
-        mi::InputSink* sink{nullptr};
-        mi::InputDeviceInfo info;
+    private:
+        MirPointerAction update_buttons(synthesis::EventAction action, MirPointerButton button);
+        void update_position(int rel_x, int rel_y);
+        void map_touch_coordinates(float& x, float& y);
+
+        mir::input::InputSink* sink{nullptr};
+        mir::input::InputDeviceInfo info;
         std::shared_ptr<mir::dispatch::Dispatchable> const queue;
         uint32_t modifiers{0};
+        mir::geometry::Point pos, scroll;
+        std::vector<MirPointerButton> buttons;
     };
     std::shared_ptr<mir::dispatch::ActionQueue> queue;
     std::shared_ptr<InputDevice> device;

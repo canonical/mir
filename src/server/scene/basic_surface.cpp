@@ -174,9 +174,6 @@ void ms::BasicSurface::force_requests_to_complete()
 ms::BasicSurface::~BasicSurface() noexcept
 {
     report->surface_deleted(this, surface_name);
-
-    if (surface_buffer_stream) // some tests use null for surface_buffer_stream
-        surface_buffer_stream->drop_client_requests();
 }
 
 std::shared_ptr<mc::BufferStream> ms::BasicSurface::buffer_stream() const
@@ -383,6 +380,14 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
     }
     observers.reception_mode_set_to(mode);
 }
+
+#if 0
+void ms::BasicSurface::with_most_recent_buffer_do(
+    std::function<void(mg::Buffer&)> const& exec)
+{
+    surface_buffer_stream->with_most_recent_buffer_do(exec);
+}
+#endif
 
 MirSurfaceType ms::BasicSurface::type() const
 {    

@@ -19,6 +19,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_lexicon.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_receiver.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_platform.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/event_conversion_helpers.cpp
 )
 
 set(ANDROID_SHARED_INPUT_SOURCES ${ANDROID_SHARED_INPUT_SOURCES} PARENT_SCOPE)
