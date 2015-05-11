@@ -34,7 +34,6 @@
 #include <functional>
 #include <mutex>
 #include <unordered_set>
-#include <uuid/uuid.h>
 
 namespace mir
 {

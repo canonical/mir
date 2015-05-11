@@ -29,7 +29,6 @@
 
 #include <cassert>
 #include <unistd.h>
-#include <uuid/uuid.h>
 
 #include <boost/exception/diagnostic_information.hpp>
 
