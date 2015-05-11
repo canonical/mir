@@ -122,11 +122,6 @@ void mi::KeyRepeatDispatcher::cancel_repeats_for_locked(std::lock_guard<std::mut
     {
         return;
     }
-    for (auto& kv : it->second.repeat_alarms_by_scancode)
-    {
-        auto& alarm = kv.second;
-        alarm->cancel();
-    }
     repeat_state_by_device.erase(it);
 }
 
