@@ -153,7 +153,7 @@ extern "C" std::shared_ptr<Platform> create_guest_platform(
     std::shared_ptr<NestedContext> const& nested_context);
 
 /**
- * Function prototype used to add platform specific options to the platform-independant server options.
+ * Function prototype used to add platform specific options to the platform-independent server options.
  *
  * \param [in] config a boost::program_options that can be appended with new options
  *
