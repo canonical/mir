@@ -44,11 +44,13 @@ class Shell;
 }
 namespace scene
 {
+class BufferStreamFactory; 
 class PromptSessionListener;
 class PromptSessionManager;
 class SessionListener;
 class SessionCoordinator;
 class SurfaceCoordinator;
+class SurfaceFactory;
 }
 
 class Fd;
@@ -326,6 +328,12 @@ public:
 
     /// \return the display layout.
     auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;
+
+    /// \return the buffer stream factory
+    auto the_buffer_stream_factory() const -> std::shared_ptr<scene::BufferStreamFactory>;
+
+    /// \return the surface factory
+    auto the_surface_factory() const -> std::shared_ptr<scene::SurfaceFactory>;
 
     /// \return the surface coordinator.
     auto the_surface_coordinator() const -> std::shared_ptr<scene::SurfaceCoordinator>;
