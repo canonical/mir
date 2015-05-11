@@ -387,6 +387,7 @@ void ms::BasicSurface::with_most_recent_buffer_do(
     surface_buffer_stream->with_most_recent_buffer_do(exec);
 }
 
+
 MirSurfaceType ms::BasicSurface::type() const
 {    
     std::unique_lock<std::mutex> lg(guard);
