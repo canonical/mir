@@ -35,6 +35,7 @@
 #include "mir_test_doubles/stub_display.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_renderer.h"
+#include "mir_test_doubles/stub_surface_factory.h"
 #include "mir_test_doubles/null_pixel_buffer.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 
@@ -94,6 +95,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
 
     ms::ApplicationSession session{
         conf.the_surface_coordinator(),
+        std::make_shared<mtd::StubSurfaceFactory>(),
         std::make_shared<mtd::StubBufferStreamFactory>(),
         __LINE__,
         "stress",
