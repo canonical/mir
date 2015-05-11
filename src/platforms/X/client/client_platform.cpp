@@ -86,7 +86,7 @@ std::shared_ptr<mcl::ClientBufferFactory> mclx::ClientPlatform::create_buffer_fa
 {
     CALLED
 
-    return std::make_shared<mclx::ClientBufferFactory>(buffer_file_ops);
+    return std::make_shared<mclm::ClientBufferFactory>(buffer_file_ops);
 }
 
 std::shared_ptr<EGLNativeWindowType> mclx::ClientPlatform::create_egl_native_window(EGLNativeSurface* client_surface)

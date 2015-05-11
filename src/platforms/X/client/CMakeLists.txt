@@ -14,8 +14,8 @@ add_definitions(-DDEBUG_CLIENT=0)
 add_library(mirclientplatformXobjects OBJECT
   client_platform_factory.cpp
   client_platform.cpp
-  client_buffer_factory.cpp
-  client_buffer.cpp
+  ../../mesa/client/client_buffer_factory.cpp
+  ../../mesa/client/client_buffer.cpp
   ../../mesa/client/native_surface.cpp
   ../../mesa/client/mesa_native_display_container.cpp
 )
