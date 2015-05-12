@@ -358,7 +358,6 @@ TEST_F(SurfaceCreation, impossible_resize_clamps)
     }
 }
 
-#if 0
 TEST_F(SurfaceCreation, test_surface_set_alpha)
 {
     using namespace testing;
@@ -367,15 +366,19 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
 
     surface.set_alpha(alpha);
     EXPECT_FLOAT_EQ(alpha, surface.alpha());
-    EXPECT_FLOAT_EQ(alpha, surface.compositor_snapshot(nullptr)->alpha());
+    auto renderables = surface.generate_renderables(nullptr);
+    ASSERT_THAT(renderables.size(), Ge(1));
+    EXPECT_FLOAT_EQ(alpha, renderables[0]->alpha());
     
     alpha = 0.1;
 
     surface.set_alpha(alpha);
     EXPECT_FLOAT_EQ(alpha, surface.alpha());
-    EXPECT_FLOAT_EQ(alpha, surface.compositor_snapshot(nullptr)->alpha());
+    renderables = surface.generate_renderables(nullptr);
+    ASSERT_THAT(renderables.size(), Ge(1));
+    EXPECT_FLOAT_EQ(alpha, renderables[0]->alpha());
 }
-#endif
+
 // Perhaps this test and the following (surface_allow_framedropping)
 //  would be better as a test of state, e.g. set up a request which blocks.
 TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)

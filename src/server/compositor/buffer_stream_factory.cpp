@@ -34,11 +34,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 
-std::shared_ptr<mir::frontend::BufferStream> mir::frontend::stream_from(std::shared_ptr<mc::BufferStream> const& stream)
-{
-    return stream;
-}
-
 mc::BufferStreamFactory::BufferStreamFactory(
     std::shared_ptr<mg::GraphicBufferAllocator> const& gralloc,
     std::shared_ptr<mc::FrameDroppingPolicyFactory> const& policy_factory,

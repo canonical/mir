@@ -26,7 +26,6 @@
 
 #include "mir_toolkit/common.h"
 
-#include <list>
 #include <string>
 #include <memory>
 
@@ -55,9 +54,6 @@ public:
     virtual geometry::Size client_size() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
 
-    virtual void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) = 0;
-    virtual void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) = 0;
-    
     virtual std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const = 0;
 
     //insert a new stream at the top-most z-order

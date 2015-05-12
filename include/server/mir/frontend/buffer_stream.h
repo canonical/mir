@@ -34,7 +34,7 @@ namespace scene
 {
 class SurfaceObserver;
 }
-namespace compositor { class BufferStream; }
+
 namespace frontend
 {
 
@@ -60,7 +60,6 @@ protected:
     BufferStream& operator=(BufferStream const&) = delete;
 };
 
-std::shared_ptr<BufferStream> stream_from(std::shared_ptr<compositor::BufferStream> const&);
 }
 }
 

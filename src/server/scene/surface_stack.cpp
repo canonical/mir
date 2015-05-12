@@ -48,7 +48,7 @@ class SurfaceSceneElement : public mc::SceneElement
 public:
     SurfaceSceneElement(
         std::string name,
-        std::shared_ptr<mg::Renderable> renderable,
+        std::shared_ptr<mg::Renderable> const& renderable,
         std::shared_ptr<ms::RenderingTracker> const& tracker,
         mc::CompositorID id)
         : renderable_{renderable},

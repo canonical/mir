@@ -30,7 +30,6 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/compositor/buffer_stream.h"
 
 #include <boost/throw_exception.hpp>
 

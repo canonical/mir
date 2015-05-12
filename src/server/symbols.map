@@ -20,7 +20,6 @@ MIR_SERVER_31 {
     mir::compositor::DisplayListener::DisplayListener*;
     mir::compositor::DisplayListener::operator*;
     mir::compositor::Scene::Scene*;
-    mir::frontend::stream_from*;
     mir::frontend::PromptSession::operator*;
     mir::frontend::PromptSession::?PromptSession*;
     mir::frontend::PromptSession::PromptSession*;

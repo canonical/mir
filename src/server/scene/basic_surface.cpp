@@ -387,6 +387,7 @@ void ms::BasicSurface::with_most_recent_buffer_do(
     surface_buffer_stream->with_most_recent_buffer_do(exec);
 }
 
+
 MirSurfaceType ms::BasicSurface::type() const
 {    
     std::unique_lock<std::mutex> lg(guard);
@@ -871,28 +872,28 @@ void ms::BasicSurface::add_stream(
     streams.emplace_back(BufferStreamInfo{stream, position, alpha});
 }
 
-void ms::BasicSurface::reposition(mc::BufferStream const* id, geom::Displacement pt, float alpha)
+void ms::BasicSurface::reposition(mc::BufferStream const* stream, geom::Displacement pt, float alpha)
 {
-    auto info_it = info_from(id);
+    auto info_it = info_from(stream);
     if (info_it == streams.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid stream id\n"));
+        BOOST_THROW_EXCEPTION(std::logic_error("invalid stream"));
     info_it->position = pt;
     info_it->alpha = alpha;
 }
 
-void ms::BasicSurface::remove_stream(compositor::BufferStream const* id)
+void ms::BasicSurface::remove_stream(compositor::BufferStream const* stream)
 {
-    auto info_it = info_from(id);
-    if ((info_it == streams.end()) || (id == surface_buffer_stream.get()))
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid stream id\n"));
+    auto info_it = info_from(stream);
+    if ((info_it == streams.end()) || (stream == surface_buffer_stream.get()))
+        BOOST_THROW_EXCEPTION(std::logic_error("invalid stream"));
     streams.erase(info_it);
 }
 
-void ms::BasicSurface::raise(compositor::BufferStream const* id)
+void ms::BasicSurface::raise(compositor::BufferStream const* stream)
 {
-    auto info_it = info_from(id);
+    auto info_it = info_from(stream);
     if (info_it == streams.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid stream id\n"));
+        BOOST_THROW_EXCEPTION(std::logic_error("invalid stream"));
     streams.push_front(*info_it);
     streams.erase(info_it);
 }

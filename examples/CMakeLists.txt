@@ -6,7 +6,7 @@ mir_add_wrapped_executable(mir_demo_standalone_render_surfaces
 target_link_libraries(mir_demo_standalone_render_surfaces
   mirserver
   exampleserverconfig
- ${Boost_LIBRARIES}
+  ${Boost_LIBRARIES}
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")

@@ -98,9 +98,9 @@ public:
     void add_stream(
         std::shared_ptr<compositor::BufferStream> const& stream,
         geometry::Displacement position, float alpha) override;
-    void remove_stream(compositor::BufferStream const*) override;
-    void raise(compositor::BufferStream const*) override;
-    void reposition(compositor::BufferStream const* id, geometry::Displacement pt, float alpha) override;
+    void remove_stream(compositor::BufferStream const* stream) override;
+    void raise(compositor::BufferStream const* stream) override;
+    void reposition(compositor::BufferStream const* stream, geometry::Displacement pt, float alpha) override;
 
     void force_requests_to_complete() override;
 
