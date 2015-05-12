@@ -327,7 +327,6 @@ void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms
         }
     }
 
-
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
         active_surface_.reset();

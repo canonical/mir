@@ -418,6 +418,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
 
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
+        active_surface_.reset();
         tools->focus_next_session();
         select_active_surface(tools->focused_surface());
     }
@@ -700,7 +701,9 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
             }
         }
 
-        tools->set_focus_to({}, {});
+        if (active_surface_.lock())
+            tools->set_focus_to({}, {});
+
         active_surface_.reset();
         return;
     }
