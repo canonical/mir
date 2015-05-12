@@ -42,7 +42,7 @@ struct InputReaderDispatchable : LegacyInputDispatchable
     Fd watch_fd() const override;
     bool dispatch(mir::dispatch::FdEvents events) override;
     mir::dispatch::FdEvents relevant_events() const override;
-    void start();
+    void start() override;
 
 private:
     std::shared_ptr<droidinput::EventHubInterface> const event_hub;
