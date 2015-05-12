@@ -127,9 +127,9 @@ extern "C" mg::PlatformPriority probe_graphics_platform()
 
 mir::ModuleProperties const description = {
     "X",
-    0,
-    1,
-    0
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO
 };
 
 extern "C" mir::ModuleProperties const* describe_graphics_module()
