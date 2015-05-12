@@ -356,7 +356,7 @@ mir::DefaultServerConfiguration::the_input_platform()
                 options->get<std::string>(options::platform_input_lib));
             auto create = lib->load_function<mi::CreatePlatform>(
                 "create_input_platform",
-                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+                MIR_SERVER_INPUT_PLATFORM_VERSION);
             return create(the_options(), the_emergency_cleanup(), the_input_device_registry(), the_input_report());
         });
 }
