@@ -49,6 +49,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
+#include "mir_protobuf.pb.h"
 
 #include "gmock_set_arg.h"
 #include <boost/exception/errinfo_errno.hpp>
@@ -943,4 +944,35 @@ TEST_F(SessionMediator, completes_exchange_buffer_when_completion_is_invoked_asy
     // Execute completion function asynchronously (i.e. not as part of the exchange_buffer
     // call), but from the same thread that initiated the exchange_buffer operation
     completion_func(&stub_buffer2);
+}
+
+TEST_F(SessionMediator, arrangement_of_bufferstreams)
+{
+    using namespace testing;
+//    InSequence seq;
+//    EXPECT_CALL(session, add_surface(mf_id));
+
+    mp::BufferStreamParameters stream_request;
+    mp::BufferStream stream_response1;
+    mp::BufferStream stream_response2;
+    mp::BufferStream stream_response3;
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+    mediator.create_buffer_stream(nullptr, &stream_request, &stream_response1, null_callback.get());
+    mediator.create_buffer_stream(nullptr, &stream_request, &stream_response2, null_callback.get());
+    mediator.create_buffer_stream(nullptr, &stream_request, &stream_response3, null_callback.get());
+
+    mp::SurfaceModifications mods;
+    mods.mutable_surface_id()->set_value(surface_response.id().value());
+
+    for(auto i = 0u; i < 3; i++)
+    {
+        auto stream = mods.mutable_surface_specification()->add_stream();
+        stream->set_displacement_x(30);
+        stream->set_displacement_y(28);
+    }
+
+    mp::Void null;
+    mediator.modify_surface(nullptr, &mods, &null, null_callback.get());
 }
