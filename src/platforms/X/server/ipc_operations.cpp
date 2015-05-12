@@ -22,7 +22,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "ipc_operations.h"
-#include "../debug.h"
+#include "debug.h"
 #include "display_helpers.h"
 
 #include <boost/throw_exception.hpp>

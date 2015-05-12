@@ -18,7 +18,7 @@
  */
 
 #include "gl_context.h"
-#include "../debug.h"
+#include "debug.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 

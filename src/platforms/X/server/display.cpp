@@ -23,7 +23,7 @@
 #include "display.h"
 #include "display_buffer.h"
 #include "gl_context.h"
-#include "../debug.h"
+#include "debug.h"
 
 #include <boost/throw_exception.hpp>
 #include <fcntl.h>

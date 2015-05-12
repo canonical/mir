@@ -18,7 +18,7 @@
 
 #include "X_input_device.h"
 #include "X_dispatchable.h"
-#include "../../debug.h"
+#include "../debug.h"
 
 namespace mi = mir::input;
 namespace mix = mi::X;

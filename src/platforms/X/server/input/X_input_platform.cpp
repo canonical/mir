@@ -22,7 +22,7 @@
 #include "mir/input/input_device_registry.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/module_deleter.h"
-#include "../../debug.h"
+#include "../debug.h"
 
 //#include <algorithm>
 

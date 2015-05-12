@@ -34,7 +34,7 @@
 #include <fcntl.h>
 #include <xf86drm.h>
 
-#include "../debug.h"
+#include "debug.h"
 
 namespace mg  = mir::graphics;
 namespace mgx = mg::X;

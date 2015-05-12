@@ -18,7 +18,7 @@
  */
 
 #include "display_buffer.h"
-#include "../debug.h"
+#include "debug.h"
 #include <boost/throw_exception.hpp>
 
 namespace mg=mir::graphics;

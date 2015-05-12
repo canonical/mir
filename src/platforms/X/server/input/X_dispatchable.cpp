@@ -18,7 +18,7 @@
 
 #include "X_dispatchable.h"
 #include "mir/events/event_private.h"
-#include "../../debug.h"
+#include "../debug.h"
 
 #include <chrono>
 #include <X11/Xlib.h>

@@ -18,7 +18,7 @@
  */
 
 #include "display_group.h"
-#include "../debug.h"
+#include "debug.h"
 
 namespace mg = mir::graphics;
 namespace mgx = mg::X;

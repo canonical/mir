@@ -22,7 +22,7 @@
 #define MIR_LOG_COMPONENT "X11-platform"
 #include "mir/log.h"
 
-#if DEBUG_SERVER || DEBUG_CLIENT
+#if DEBUG_SERVER
 #define CALLED \
 { \
     mir::log_info("%s", __PRETTY_FUNCTION__); \
