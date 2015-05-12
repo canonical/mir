@@ -401,7 +401,6 @@ TEST(ServerShutdownWithThreadException,
 
     device_registry->add_device(dev);
     server.join();
-    //device_registry->remove_device(dev);
     dev.reset();
     device_registry.reset();
 
