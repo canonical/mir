@@ -144,7 +144,7 @@ void mtf::FakeInputDeviceImpl::emit_event(synthesis::TouchParameters const& touc
 
 mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& info,
                                                    std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable)
-    : info(info), queue{dispatchable}
+    : info(info), queue{dispatchable}, buttons{0}
 {
 }
 
