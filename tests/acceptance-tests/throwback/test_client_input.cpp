@@ -19,6 +19,7 @@
  */
 
 #include "mir/events/event_private.h"
+#include "mir/events/event_builders.h"
 #include "mir/shell/shell_wrapper.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface.h"
@@ -48,6 +49,7 @@ namespace mtf = mir_test_framework;
 namespace mis = mir::input::synthesis;
 namespace mia = mir::input::android;
 namespace msh = mir::shell;
+namespace mev = mir::events;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 
@@ -614,12 +616,9 @@ TEST_F(TestClientInput, send_mir_input_events_through_surface)
     server_config().the_session_container()->for_each(
         [] (std::shared_ptr<ms::Session> const& session) -> void
         {
-            MirEvent key_event;
-            std::memset(&key_event, 0, sizeof key_event);
-            key_event.type = mir_event_type_key;
-            key_event.key.action = mir_keyboard_action_down;
-
-            session->default_surface()->consume(key_event);
+            session->default_surface()->consume(*mev::make_event(
+                MirInputDeviceId(0), std::chrono::nanoseconds(0),
+                mir_keyboard_action_down, 0, 0, mir_input_event_modifier_none));
         });
 }
 
