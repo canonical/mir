@@ -86,6 +86,9 @@ private:
     enum {top_edge, vmiddle, bottom_edge} yedge = vmiddle;
     void save_edges(scene::Surface& surf, geometry::Point const& p);
     void resize(scene::Surface& surf, geometry::Point const& cursor) const;
+    bool handle_key_event(MirKeyboardEvent const* event);
+    bool handle_touch_event(MirTouchEvent const* event);
+    bool handle_pointer_event(MirPointerEvent const* event);
 };
 
 }

@@ -25,6 +25,7 @@
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/scene/surface_factory.h"
 
 #include "src/server/scene/default_session_container.h"
 #include "src/server/scene/session_event_sink.h"
@@ -37,6 +38,7 @@
 #include "mir_test_doubles/null_prompt_session_manager.h"
 #include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test_doubles/stub_buffer_stream_factory.h"
+#include "mir_test_doubles/stub_surface_factory.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -109,6 +111,7 @@ struct DefaultWindowManager : Test
 
     NiceMock<MockSessionManager> session_manager{
         mt::fake_shared(surface_coordinator),
+        std::make_shared<mtd::StubSurfaceFactory>(),
         std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(container),
         std::make_shared<mtd::NullSnapshotStrategy>(),
@@ -134,8 +137,6 @@ struct DefaultWindowManager : Test
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
         ON_CALL(session_manager, set_focus_to(_)).
             WillByDefault(Invoke(&session_manager, &MockSessionManager::unmocked_set_focus_to));
-        ON_CALL(surface_coordinator, add_surface(_,_))
-            .WillByDefault(Return(mt::fake_shared(mock_surface)));
     }
 };
 }
@@ -207,7 +208,7 @@ TEST_F(DefaultWindowManager, forwards_create_surface_parameters_from_placement_s
 
     EXPECT_CALL(placement_strategy, place(_, Ref(params))).Times(1)
         .WillOnce(Return(placed_params));
-    EXPECT_CALL(surface_coordinator, add_surface(placed_params, _));
+    EXPECT_CALL(surface_coordinator, add_surface(_,placed_params.depth,placed_params.input_mode,_));
 
     shell.create_surface(session, params);
 }

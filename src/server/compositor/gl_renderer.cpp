@@ -16,7 +16,6 @@
  *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "GL"
 #include "mir/compositor/gl_renderer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/recently_used_cache.h"
@@ -100,10 +99,10 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
 {
     struct {GLenum id; char const* label;} const glstrings[] =
     {
-        {GL_VENDOR,   "vendor"},
-        {GL_RENDERER, "renderer"},
-        {GL_VERSION,  "version"},
-        {GL_SHADING_LANGUAGE_VERSION,  "SL version"},
+        {GL_VENDOR,   "GL vendor"},
+        {GL_RENDERER, "GL renderer"},
+        {GL_VERSION,  "GL version"},
+        {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
     };
 
     for (auto& s : glstrings)
@@ -115,7 +114,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
 
     GLint max_texture_size = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-    mir::log_info("max texture size = %d", max_texture_size);
+    mir::log_info("GL max texture size = %d", max_texture_size);
 
     GLint rbits = 0, gbits = 0, bbits = 0, abits = 0, dbits = 0, sbits = 0;
     glGetIntegerv(GL_RED_BITS, &rbits);
@@ -124,7 +123,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
     glGetIntegerv(GL_ALPHA_BITS, &abits);
     glGetIntegerv(GL_DEPTH_BITS, &dbits);
     glGetIntegerv(GL_STENCIL_BITS, &sbits);
-    mir::log_info("framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
+    mir::log_info("GL framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
                   rbits, gbits, bbits, abits, dbits, sbits);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);

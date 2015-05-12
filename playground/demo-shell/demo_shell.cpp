@@ -28,7 +28,10 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/renderer_factory.h"
+#include "mir/options/option.h"
 #include "mir/shell/default_window_manager.h"
+#include "server_example_tiling_window_manager.h"
+#include "mir/shell/canonical_window_manager.h"
 #include "server_example_host_lifecycle_event_listener.h"
 
 #include <iostream>
@@ -45,6 +48,9 @@ namespace mir
 {
 namespace examples
 {
+using CanonicalWindowManager = msh::BasicWindowManager<msh::CanonicalWindowManagerPolicy, msh::CanonicalSessionInfo, msh::CanonicalSurfaceInfo>;
+using TilingWindowManager = me::BasicWindowManagerCopy<me::TilingWindowManagerPolicy, me::TilingSessionInfo, me::TilingSurfaceInfo>;
+
 
 class DisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
@@ -102,11 +108,28 @@ public:
 
     auto the_window_manager_builder() -> shell::WindowManagerBuilder override
     {
-        return [&](shell::FocusController* focus_controller)
-            { return std::make_shared<shell::DefaultWindowManager>(
-                focus_controller,
-                the_placement_strategy(),
-                the_session_coordinator()); };
+        return [this](shell::FocusController* focus_controller)
+            -> std::shared_ptr<msh::WindowManager>
+            {
+                auto const options = the_options();
+                auto const selection = options->get<std::string>(wm_option);
+
+                if (selection == wm_tiling)
+                {
+                    return std::make_shared<TilingWindowManager>(focus_controller);
+                }
+                else if (selection == wm_canonical)
+                {
+                    return std::make_shared<CanonicalWindowManager>(
+                        focus_controller,
+                        the_shell_display_layout());
+                }
+
+                return std::make_shared<shell::DefaultWindowManager>(
+                    focus_controller,
+                    the_placement_strategy(),
+                    the_session_coordinator());
+            };
     }
 
     std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override
