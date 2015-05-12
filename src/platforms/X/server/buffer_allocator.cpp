@@ -165,10 +165,10 @@ std::shared_ptr<mg::Buffer> mgx::BufferAllocator::alloc_hardware_buffer(
 //    return alloc_software_buffer(buffer_properties);
     uint32_t bo_flags{GBM_BO_USE_RENDERING};
 
-    uint32_t const gbm_format = mgx::mir_format_to_gbm_format(buffer_properties.format);
+    uint32_t const gbm_format = mgm::mir_format_to_gbm_format(buffer_properties.format);
 
     if (!is_pixel_format_supported(buffer_properties.format) ||
-        gbm_format == mgx::invalid_gbm_format)
+        gbm_format == mgm::invalid_gbm_format)
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error("Trying to create GBM buffer with unsupported pixel format"));
@@ -191,7 +191,7 @@ std::shared_ptr<mg::Buffer> mgx::BufferAllocator::alloc_hardware_buffer(
 
     /* Create the GBMBuffer */
     auto const buffer =
-        std::make_shared<GBMBuffer>(bo, bo_flags, std::move(texture_binder));
+        std::make_shared<mgm::GBMBuffer>(bo, bo_flags, std::move(texture_binder));
 
     return buffer;
 }

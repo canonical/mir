@@ -32,7 +32,7 @@ add_library(
   ipc_operations.cpp
   display_group.cpp
   display_buffer.cpp
-  gbm_buffer.cpp
+  ../../mesa/server/gbm_buffer.cpp
   display_helpers.cpp
   ../../mesa/server/drm_close_threadsafe.cpp
   input/X_input.cpp
