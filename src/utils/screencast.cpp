@@ -196,6 +196,37 @@ std::string mir_pixel_format_to_string(MirPixelFormat format)
     }
 }
 
+typedef void (*Filter)(void* pixels, int width);
+
+void null_filter(void *, int)
+{
+}
+
+void opacify_axxx_8888(void* pixels, int width)
+{
+    uint8_t *p = static_cast<uint8_t*>(pixels);
+    for (int x = 0; x < width; ++x, p += 4)
+        *p = 0xff;
+}
+
+Filter choose_filter(bool keep_alpha, MirPixelFormat format)
+{
+    if (keep_alpha)
+        return null_filter;
+
+    switch(format)
+    {
+    case mir_pixel_format_abgr_8888:
+    case mir_pixel_format_argb_8888:
+    case mir_pixel_format_xbgr_8888:
+    case mir_pixel_format_xrgb_8888:
+        return opacify_axxx_8888;
+    case mir_pixel_format_bgr_888:
+    default:
+        return null_filter;
+    }
+}
+
 std::string to_file_extension(std::string format)
 {
     std::string ext{"."};
@@ -257,12 +288,15 @@ class BufferStreamScreencast : public Screencast
 public:
     BufferStreamScreencast(int num_captures, double capture_fps,
                            MirScreencastParameters* params,
-                           MirBufferStream* buffer_stream)
+                           MirBufferStream* buffer_stream,
+                           bool keep_alpha)
         : Screencast(num_captures, capture_fps),
           region(graphics_region_for(buffer_stream)),
           line_size{region.width * MIR_BYTES_PER_PIXEL(region.pixel_format)},
           buffer_stream{buffer_stream},
-          pixel_format_{mir_pixel_format_to_string(params->pixel_format)}
+          pixel_format_{mir_pixel_format_to_string(params->pixel_format)},
+          filter{choose_filter(keep_alpha, region.pixel_format)},
+          tmp_line(line_size)
     {
     }
 
@@ -277,7 +311,14 @@ public:
         auto addr = region.vaddr + (region.height - 1)*region.stride;
         for (int i = 0; i < region.height; i++)
         {
-            stream.write(addr, line_size);
+            auto src = addr;
+            if (filter != null_filter)
+            {
+                memcpy(tmp_line.data(), addr, line_size);
+                filter(tmp_line.data(), region.width);
+                src = tmp_line.data();
+            }
+            stream.write(src, line_size);
             addr -= region.stride;
         }
 
@@ -289,6 +330,8 @@ private:
     int const line_size;
     MirBufferStream* buffer_stream;
     std::string pixel_format_;
+    Filter filter;
+    std::vector<char> tmp_line;
 };
 
 class EGLScreencast : public Screencast
@@ -296,10 +339,12 @@ class EGLScreencast : public Screencast
 public:
     EGLScreencast(int num_captures, double capture_fps,
                   MirConnection* connection, MirScreencastParameters* params,
-                  MirBufferStream* buffer_stream)
+                  MirBufferStream* buffer_stream,
+                  bool keep_alpha)
         : Screencast(num_captures, capture_fps),
           width{params->width},
-          height{params->height}
+          height{params->height},
+          filter{filter}
     {
         static EGLint const attribs[] = {
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -350,6 +395,8 @@ public:
         else
             read_pixel_format = GL_RGBA;
 
+        filter = choose_filter(keep_alpha, params->pixel_format);
+
         int const rgba_pixel_size{4};
         auto const frame_size_bytes = rgba_pixel_size * width * height;
         buffer.resize(frame_size_bytes);
@@ -367,6 +414,15 @@ public:
     {
         void* data = buffer.data();
         glReadPixels(0, 0, width, height, read_pixel_format, GL_UNSIGNED_BYTE, data);
+
+        if (filter != null_filter)
+        {
+            uint8_t* d = static_cast<uint8_t*>(data);
+            // Either GL pixel format is 4 bytes... GL_BGRA_EXT/GL_RGBA
+            auto stride = width * 4;
+            for (unsigned y = 0; y < height; ++y, d += stride)
+                filter(d, width);
+        }
 
         auto write_out_future = std::async(
             std::launch::async,
@@ -394,22 +450,24 @@ private:
     EGLSurface egl_surface;
     EGLConfig egl_config;
     GLenum read_pixel_format;
+    Filter filter;
 };
 
 std::unique_ptr<Screencast> create_screencast(int num_captures, double capture_fps,
                                               MirConnection* connection,
                                               MirScreencastParameters* params,
-                                              MirBufferStream* buffer_stream)
+                                              MirBufferStream* buffer_stream,
+                                              bool keep_alpha)
 {
     try
     {
-        return std::make_unique<BufferStreamScreencast>(num_captures, capture_fps, params, buffer_stream);
+        return std::make_unique<BufferStreamScreencast>(num_captures, capture_fps, params, buffer_stream, keep_alpha);
     }
     catch(...)
     {
     }
     // Fallback to EGL if MirBufferStream can't be used directly
-    return std::make_unique<EGLScreencast>(num_captures, capture_fps, connection, params, buffer_stream);
+    return std::make_unique<EGLScreencast>(num_captures, capture_fps, connection, params, buffer_stream, keep_alpha);
 }
 }
 
@@ -423,6 +481,7 @@ try
     std::vector<int> screen_region;
     std::vector<int> requested_size;
     bool use_std_out = false;
+    bool keep_alpha = true;
     bool query_params_only = false;
     int capture_interval = 1;
 
@@ -447,6 +506,7 @@ try
             po::value<std::vector<int>>(&screen_region)->multitoken(),
             "screen region to capture [left top width height]")
         ("stdout", po::value<bool>(&use_std_out)->zero_tokens(), "use stdout for output (--file is ignored)")
+        ("alpha", po::value<bool>(&keep_alpha), "include the true alpha channel contents (keep translucency) or \"off\" to force an opaque image")
         ("query",
             po::value<bool>(&query_params_only)->zero_tokens(),
             "only queries the colorspace and output size used but does not start screencast")
@@ -531,7 +591,7 @@ try
     if (buffer_stream == nullptr)
         throw std::runtime_error("Failed to obtain buffer stream from screencast");
 
-    auto screencast = create_screencast(number_of_captures, capture_fps, connection.get(), &params, buffer_stream);
+    auto screencast = create_screencast(number_of_captures, capture_fps, connection.get(), &params, buffer_stream, keep_alpha);
 
     if (output_filename.empty() && !use_std_out)
     {
