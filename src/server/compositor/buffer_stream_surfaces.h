@@ -43,6 +43,7 @@ public:
     //from mf::BufferStream
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
+    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec) override;
     MirPixelFormat pixel_format() const override;
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
@@ -61,7 +62,6 @@ public:
     void force_requests_to_complete() override;
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
-    void drop_client_requests() override;
     bool has_submitted_buffer() const override;
 
 protected:

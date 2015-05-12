@@ -204,6 +204,8 @@ MIR_CLIENT_DETAIL_8 {
       mir::events::make_event*;
       mir::events::add_touch*;
       mir::input::android::Lexicon::translate*;
+      mir::input::android::android_modifiers_from_mir*;
+      mir::input::android::mir_modifiers_from_android*;
       mir::client::DefaultConnectionConfiguration::DefaultConnectionConfiguration*;
       mir::client::DefaultConnectionConfiguration::the_surface_map*;
       mir::client::DefaultConnectionConfiguration::the_rpc_channel*;

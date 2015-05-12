@@ -35,6 +35,7 @@ mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> con
 
 mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 {
+    buffer_bundle->drop_client_requests();
     force_requests_to_complete();
 }
 
@@ -66,6 +67,11 @@ geom::Size mc::BufferStreamSurfaces::stream_size()
     return buffer_bundle->properties().size;
 }
 
+void mc::BufferStreamSurfaces::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
+{
+    exec(*lock_snapshot_buffer());
+}
+
 void mc::BufferStreamSurfaces::resize(geom::Size const& size)
 {
     buffer_bundle->resize(size);
@@ -89,11 +95,6 @@ int mc::BufferStreamSurfaces::buffers_ready_for_compositor(void const* user_id) 
 void mc::BufferStreamSurfaces::drop_old_buffers()
 {
     buffer_bundle->drop_old_buffers();
-}
-
-void mc::BufferStreamSurfaces::drop_client_requests()
-{
-    buffer_bundle->drop_client_requests();
 }
 
 void mc::BufferStreamSurfaces::swap_buffers(

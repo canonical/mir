@@ -58,6 +58,8 @@ struct CanonicalSurfaceInfoCopy
     mir::optional_value<geometry::DeltaY> height_inc;
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
+
+    graphics::Buffer* buffer{nullptr};
 };
 
 // standard window management algorithm:
@@ -113,7 +115,7 @@ public:
 
     void generate_decorations_for(
         std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface,
-        CanonicalSurfaceInfoMap& surface_info);
+        CanonicalSurfaceInfoMap& surface_map);
 
 private:
     static const int modifier_mask =

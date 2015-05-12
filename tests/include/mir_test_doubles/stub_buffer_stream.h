@@ -71,7 +71,6 @@ public:
     int buffers_ready_for_compositor(void const*) const override { return nready; }
 
     void drop_old_buffers() override {}
-    void drop_client_requests() override {}
     void swap_buffers(graphics::Buffer* b, std::function<void(graphics::Buffer*)> complete) override
     {
         if (b) ++nready;

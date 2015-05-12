@@ -21,6 +21,7 @@
 
 #include "mir/graphics/renderable.h"
 #include "mir/input/surface.h"
+#include "mir/scene/surface_buffer_access.h"
 #include "mir/frontend/surface.h"
 #include "mir/compositor/compositor_id.h"
 
@@ -39,7 +40,8 @@ class SurfaceObserver;
 
 class Surface :
     public input::Surface,
-    public frontend::Surface
+    public frontend::Surface,
+    public SurfaceBufferAccess
 {
 public:
     // resolve ambiguous member function names
