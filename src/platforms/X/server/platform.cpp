@@ -32,13 +32,12 @@ namespace mo = mir::options;
 __attribute__((constructor)) static void open_X_display()
 {
     x_dpy = XOpenDisplay(NULL);
-    if (!x_dpy)
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get a display"));
 }
 
 __attribute__((destructor)) static void close_X_display()
 {
-    XCloseDisplay(x_dpy);
+    if (x_dpy)
+        XCloseDisplay(x_dpy);
 }
 
 mgx::Platform::Platform(std::shared_ptr<DisplayReport> const& /*listener*/)
@@ -107,22 +106,23 @@ extern "C" void add_graphics_platform_options(boost::program_options::options_de
 
 extern "C" mg::PlatformPriority probe_graphics_platform()
 {
-#if 0
-    auto udev = std::make_shared<mir::udev::Context>();
-
-    mir::udev::Enumerator drm_devices{udev};
-    drm_devices.match_subsystem("drm");
-    drm_devices.match_sysname("card[0-9]*");
-    drm_devices.scan_devices();
-
-    for (auto& device : drm_devices)
+    if (x_dpy)
     {
-        static_cast<void>(device);
-        return mg::PlatformPriority::best;
+        auto udev = std::make_shared<mir::udev::Context>();
+
+        mir::udev::Enumerator drm_devices{udev};
+        drm_devices.match_subsystem("drm");
+        drm_devices.match_sysname("renderD[0-9]*");
+        drm_devices.scan_devices();
+
+        for (auto& device : drm_devices)
+        {
+            static_cast<void>(device);
+
+            return mg::PlatformPriority::best;
+        }
     }
-#endif
-    CALLED
-    return mg::PlatformPriority::best;
+    return mg::PlatformPriority::unsupported;
 }
 
 mir::ModuleProperties const description = {

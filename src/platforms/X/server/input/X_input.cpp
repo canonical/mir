@@ -47,7 +47,7 @@ extern "C" mi::PlatformPriority probe_input_platform(
     mo::Option const& /*options*/)
 {
     CALLED
-    return mi::PlatformPriority::supported;
+    return mi::PlatformPriority::best;
 }
 
 namespace
