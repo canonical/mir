@@ -384,17 +384,25 @@ mir::DefaultServerConfiguration::the_input_manager()
         {
             auto const options = the_options();
             bool input_opt = options->get<bool>(options::enable_input_opt);
-            bool input_reading_required = input_opt && !options->is_set(options::host_socket_opt);
-                // TODO nested input handling (== host_socket) should fold into a platform
+            bool host_platform = input_opt && !options->is_set(options::host_socket_opt);
+            // TODO nested input handling (== host_socket) should fold into a platform
 
-            if (input_reading_required)
+            if (host_platform)
             {
                 if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
                         mr::legacy_input::initialize(the_logger());
 
-                // TODO: hardcoding false for now but it should differentiate between mir-on-x and nested platforms
+                auto lib = std::make_shared<mir::SharedLibrary>(
+                    options->get<std::string>(options::platform_input_lib));
+                auto describe = lib->load_function<mi::DescribeModule>(
+                    "describe_input_module",
+                    MIR_SERVER_INPUT_PLATFORM_VERSION);
+                auto props = describe();
                 auto ret = std::make_shared<mi::DefaultInputManager>(
-                    false, the_input_reading_multiplexer(), the_input_reader(), the_event_hub());
+                	strncmp(props->name, "X-input", strlen(props->name)),
+                	the_input_reading_multiplexer(),
+                	the_input_reader(),
+                	the_event_hub());
 
                 auto platform = the_input_platform();
                 if (platform)

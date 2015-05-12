@@ -24,8 +24,9 @@
 #include <mir/module_deleter.h>
 
 #include <boost/program_options/options_description.hpp>
-
 #include <memory>
+
+#include "mir/module_properties.h"
 
 namespace mir
 {
@@ -137,6 +138,15 @@ extern "C" typedef PlatformPriority(*ProbePlatform)(
  */
 extern "C" PlatformPriority probe_input_platform(
     options::Option const& options);
+extern "C" typedef ModuleProperties const*(*DescribeModule)();
+/**
+ * describe_input_module should return a description of the input platform.
+ *
+ * This function needs to be implemented by each platform.
+ *
+ * \ingroup platform_enablement
+ */
+extern "C" ModuleProperties const* describe_input_module();
 }
 }
 
