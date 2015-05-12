@@ -204,9 +204,9 @@ void null_filter(void *, int)
 
 void opacify_axxx_8888(void* pixels, int width)
 {
-    uint8_t *p = static_cast<uint8_t*>(pixels);
-    for (int x = 0; x < width; ++x, p += 4)
-        *p = 0xff;
+    uint32_t *p = static_cast<uint32_t*>(pixels);
+    for (int x = 0; x < width; ++x, ++p)
+        *p |= 0xff000000;
 }
 
 Filter choose_filter(bool keep_alpha, MirPixelFormat format)
@@ -312,6 +312,13 @@ public:
         for (int i = 0; i < region.height; i++)
         {
             auto src = addr;
+            /*
+             * Filter as required. While this might look like extra work it's
+             * not really. In realistic use cases where you're piping the
+             * image into an encoder of some sort, you'd disable this filter
+             * because the encoder would very likely do it's own pixel
+             * processing.
+             */
             if (filter != null_filter)
             {
                 memcpy(tmp_line.data(), addr, line_size);
@@ -415,6 +422,13 @@ public:
         void* data = buffer.data();
         glReadPixels(0, 0, width, height, read_pixel_format, GL_UNSIGNED_BYTE, data);
 
+        /*
+         * Filter as required. While this might look like extra work it's
+         * not really. In realistic use cases where you're piping the
+         * image into an encoder of some sort, you'd disable this filter
+         * because the encoder would very likely do it's own pixel
+         * processing.
+         */
         if (filter != null_filter)
         {
             uint8_t* d = static_cast<uint8_t*>(data);
