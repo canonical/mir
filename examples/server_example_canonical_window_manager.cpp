@@ -690,16 +690,17 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
     if (surface == active_surface_.lock())
         return;
 
-    if (auto const active_surface = active_surface_.lock())
-    {
-        if (auto const titlebar = tools->info_for(active_surface).titlebar)
-        {
-            paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
-        }
-    }
-
     if (!surface)
     {
+        if (auto const active_surface = active_surface_.lock())
+        {
+            if (auto const titlebar = tools->info_for(active_surface).titlebar)
+            {
+                paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
+            }
+        }
+
+        tools->set_focus_to({}, {});
         active_surface_.reset();
         return;
     }
@@ -715,6 +716,13 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
     case mir_surface_type_freestyle:
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        if (auto const active_surface = active_surface_.lock())
+        {
+            if (auto const titlebar = tools->info_for(active_surface).titlebar)
+            {
+                paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
+            }
+        }
         if (auto const titlebar = tools->info_for(surface).titlebar)
         {
             paint_titlebar(titlebar, tools->info_for(titlebar), 0xFF);
