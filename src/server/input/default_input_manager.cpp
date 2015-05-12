@@ -70,10 +70,9 @@ void mi::DefaultInputManager::add_platform(std::shared_ptr<Platform> const& plat
 
 void mi::DefaultInputManager::start()
 {
-    if (state == State::running)
+    auto expected = State::stopped;
+    if (!state.compare_exchange_strong(expected, State::running))
         return;
-
-    state = State::running;
 
     multiplexer->add_watch(queue);
     multiplexer->add_watch(legacy_dispatchable);
@@ -104,6 +103,9 @@ void mi::DefaultInputManager::start()
         multiplexer,
         [this,weak_started_promise]()
         {
+            unregister_dispatchables();
+            stop_platforms();
+
             state = State::stopped;
             if (auto started_promise = weak_started_promise.lock())
                 started_promise->set_exception(std::current_exception());
@@ -115,30 +117,36 @@ void mi::DefaultInputManager::start()
 
 void mi::DefaultInputManager::stop()
 {
-    if (state == State::stopped)
+    auto expected = State::running;
+    if (!state.compare_exchange_strong(expected, State::stopped))
         return;
-    std::mutex m;
-    std::unique_lock<std::mutex> lock(m);
-    std::condition_variable cv;
-    bool done = false;
 
-    queue->enqueue([&]()
+    auto const stop_promise = std::make_shared<std::promise<void>>();
+
+    queue->enqueue([stop_promise,this]()
                    {
-                       for (auto const platform : platforms)
-                       {
-                           multiplexer->remove_watch(platform->dispatchable());
-                           platform->stop();
-                       }
+                       stop_platforms();
 
-                       std::unique_lock<std::mutex> lock(m);
-                       done = true;
-                       cv.notify_one();
+                       stop_promise->set_value();
                    });
-    cv.wait(lock, [&]{return done;});
-    state = State::stopped;
 
+    stop_promise->get_future().wait();
     input_thread.reset();
 
+    unregister_dispatchables();
+}
+
+void mi::DefaultInputManager::stop_platforms()
+{
+    for (auto const platform : platforms)
+    {
+        multiplexer->remove_watch(platform->dispatchable());
+        platform->stop();
+    }
+}
+
+void mi::DefaultInputManager::unregister_dispatchables()
+{
     multiplexer->remove_watch(legacy_dispatchable);
     multiplexer->remove_watch(queue);
 }

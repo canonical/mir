@@ -50,6 +50,8 @@ public:
     void start() override;
     void stop() override;
 private:
+    void stop_platforms();
+    void unregister_dispatchables();
     std::vector<std::shared_ptr<Platform>> platforms;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     std::shared_ptr<input::LegacyInputDispatchable> const legacy_dispatchable;
