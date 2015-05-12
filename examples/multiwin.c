@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <stdint.h>
 #include <getopt.h>
+#include <stdlib.h>
 
 typedef struct
 {
@@ -119,10 +120,11 @@ static void clear_region(const MirGraphicsRegion *region, const Color *color)
 static void draw_window(Window *win)
 {
     MirGraphicsRegion region;
+    MirBufferStream *bs = mir_surface_get_buffer_stream(win->surface);
 
-    mir_surface_get_graphics_region(win->surface, &region);
+    mir_buffer_stream_get_graphics_region(bs, &region);
     clear_region(&region, &win->fill);
-    mir_surface_swap_buffers_sync(win->surface);
+    mir_buffer_stream_swap_buffers_sync(bs);
 }
 
 static char const *socket_file = NULL;
@@ -132,13 +134,18 @@ int main(int argc, char *argv[])
     MirConnection *conn;
     Window win[3];
     unsigned int f;
+    int alpha = 0x50;
 
     int arg;
     opterr = 0;
-    while ((arg = getopt (argc, argv, "hm:")) != -1)
+    while ((arg = getopt (argc, argv, "hm:a:")) != -1)
     {
         switch (arg)
         {
+        case 'a':
+            alpha = atoi(optarg);
+            break;
+
         case 'm':
             socket_file = optarg;
             break;
@@ -149,6 +156,7 @@ int main(int argc, char *argv[])
             puts(argv[0]);
             puts("Usage:");
             puts("    -m <Mir server socket>");
+            puts("    -a Alpha for surfaces");
             puts("    -h: this help text");
             return -1;
         }
@@ -157,7 +165,7 @@ int main(int argc, char *argv[])
     conn = mir_connect_sync(socket_file, argv[0]);
     if (!mir_connection_is_valid(conn))
     {
-        fprintf(stderr, "Could not connect to a display server.\n");
+        fprintf(stderr, "Could not connect to a display server: %s\n", mir_connection_get_error_message(conn));
         return 1;
     }
 
@@ -199,7 +207,7 @@ int main(int argc, char *argv[])
     win[0].fill.r = 0xff;
     win[0].fill.g = 0x00;
     win[0].fill.b = 0x00;
-    win[0].fill.a = 0x50;
+    win[0].fill.a = alpha;
     premultiply_alpha(&win[0].fill);
 
     mir_surface_spec_set_name(spec, "green");
@@ -209,7 +217,7 @@ int main(int argc, char *argv[])
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
     win[1].fill.b = 0x00;
-    win[1].fill.a = 0x50;
+    win[1].fill.a = alpha;
     premultiply_alpha(&win[1].fill);
 
     mir_surface_spec_set_name(spec, "blue");
@@ -219,7 +227,7 @@ int main(int argc, char *argv[])
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;
     win[2].fill.b = 0xff;
-    win[2].fill.a = 0x50;
+    win[2].fill.a = alpha;
     premultiply_alpha(&win[2].fill);
 
     mir_surface_spec_release(spec);

@@ -16,8 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER // Required until wire format changes
-
 #include "mir_protobuf_rpc_channel.h"
 #include "rpc_report.h"
 
@@ -28,6 +26,7 @@
 #include "../lifecycle_control.h"
 #include "../event_sink.h"
 #include "mir/variable_length_array.h"
+#include "mir/events/event_private.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -120,6 +119,12 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
     if (message_type == "mir.protobuf.Buffer")
     {
         buffer = static_cast<mir::protobuf::Buffer*>(response);
+    }
+    else if (message_type == "mir.protobuf.BufferStream")
+    {
+        auto buffer_stream = static_cast<mir::protobuf::BufferStream*>(response);
+        if (buffer_stream && buffer_stream->has_buffer())
+            buffer = buffer_stream->mutable_buffer();
     }
     else if (message_type == "mir.protobuf.Surface")
     {
@@ -283,7 +288,9 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 case mir_event_type_close_surface:
                     surface_map->with_surface_do(e.close_surface.surface_id, send_e);
                     break;
-
+                case mir_event_type_keymap:
+                    surface_map->with_surface_do(e.keymap.surface_id, send_e);
+                    break;
                 default:
                     event_sink->handle_event(e);
                 }

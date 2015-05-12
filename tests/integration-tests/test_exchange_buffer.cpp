@@ -19,6 +19,7 @@
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/any_surface.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display.h"
@@ -98,7 +99,8 @@ struct StubStreamFactory : public msc::BufferStreamFactory
         buffer_id_seq(ids)
     {}
 
-    std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&) override
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(
+        int, mg::BufferProperties const&) override
     { return std::make_shared<StubStream>(buffer_id_seq); }
     std::vector<mg::BufferID> const buffer_id_seq;
 };
@@ -241,15 +243,8 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
 TEST_F(ExchangeBufferTest, exchanges_happen)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-    auto surface = mir_connection_create_surface_sync(connection, &request_params);
+    auto surface = mtf::make_any_surface(connection);
+
     auto rpc_channel = connection->rpc_channel();
     mp::DisplayServer::Stub server(
         rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
@@ -282,15 +277,8 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     EXPECT_THAT(write(file, test_string.c_str(), test_string.size()), Gt(0));
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-    auto surface = mir_connection_create_surface_sync(connection, &request_params);
+    auto surface = mtf::make_any_surface(connection);
+
     auto rpc_channel = connection->rpc_channel();
     mp::DisplayServer::Stub server(
             rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);

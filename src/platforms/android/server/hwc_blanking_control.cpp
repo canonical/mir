@@ -18,14 +18,17 @@
 
 #include "hwc_configuration.h"
 #include "hwc_wrapper.h"
+#include "mir/raii.h"
 #include "android_format_conversion-inl.h"
 #include "mir/geometry/length.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <system_error>
 #include <chrono>
 
+namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
@@ -110,19 +113,52 @@ int dpi_to_mm(uint32_t dpi, int pixel_num)
     geom::Length length(pixel_num / dpi_inches, geom::Length::Units::inches);
     return length.as(geom::Length::Units::millimetres);
 }
+
+mg::DisplayConfigurationOutput populate_config(
+    mga::DisplayName name,
+    geom::Size pixel_size,
+    double vrefresh_hz,
+    geom::Size mm_size,
+    MirPowerMode external_mode,
+    MirPixelFormat display_format,
+    bool connected)
+{
+    geom::Point const origin{0,0};
+    size_t const preferred_format_index{0};
+    size_t const preferred_mode_index{0};
+    std::vector<mg::DisplayConfigurationMode> external_modes;
+    if (connected)
+        external_modes.emplace_back(mg::DisplayConfigurationMode{pixel_size, vrefresh_hz});
+
+    auto type = mg::DisplayConfigurationOutputType::lvds;
+    if (name == mga::DisplayName::external)
+        type = mg::DisplayConfigurationOutputType::displayport;
+    
+    return {
+        static_cast<mg::DisplayConfigurationOutputId>(name),
+        mg::DisplayConfigurationCardId{0},
+        type,
+        {display_format},
+        external_modes,
+        preferred_mode_index,
+        mm_size,
+        connected,
+        connected,
+        origin,
+        preferred_format_index,
+        display_format,
+        external_mode,
+        mir_orientation_normal
+    };
 }
 
-mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName display_name)
+mg::DisplayConfigurationOutput display_config_for(
+    mga::DisplayName display_name,
+    mga::ConfigId id,
+    MirPixelFormat format,
+    std::shared_ptr<mga::HwcWrapper> const& hwc_device
+)
 {
-    auto configs = hwc_device->display_configs(display_name);
-    if (configs.empty())
-    {
-        if (display_name == mga::DisplayName::primary)
-            BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
-        else   
-            return {{}, {}, 0.0, false, format, quirks.num_framebuffers()};
-    }
-
     /* note: some drivers (qcom msm8960) choke if this is not the same size array
        as the one surfaceflinger submits */
     static uint32_t const attributes[] =
@@ -136,20 +172,127 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
     };
 
     int32_t values[sizeof(attributes) / sizeof (attributes[0])] = {};
-    /* the first config is the active one in hwc 1.1 to hwc 1.3. */
-    hwc_device->display_attributes(display_name, configs.front(), attributes, values);
-    return {
+
+    auto rc = hwc_device->display_attributes(display_name, id, attributes, values);
+
+    if (rc < 0)
+    {
+        if (display_name == mga::DisplayName::primary)
+            BOOST_THROW_EXCEPTION(std::system_error(rc, std::system_category(), "primary display disconnected"));
+        else
+            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
+    }
+
+    return populate_config(
+        display_name,
         {values[0], values[1]},
-        {dpi_to_mm(values[3], values[0]), dpi_to_mm(values[4], values[1])},
         period_to_hz(std::chrono::nanoseconds{values[2]}),
-        true,
+        {dpi_to_mm(values[3], values[0]), dpi_to_mm(values[4], values[1])},
+        mir_power_mode_off,
         format,
-        quirks.num_framebuffers()
-    };
+        true);
+}
+
+mga::ConfigChangeSubscription subscribe_to_config_changes(
+    std::shared_ptr<mga::HwcWrapper> const& hwc_device,
+    void const* subscriber,
+    std::function<void()> const& hotplug,
+    std::function<void(mga::DisplayName)> const& vsync)
+{
+    return std::make_shared<
+        mir::raii::PairedCalls<std::function<void()>, std::function<void()>>>(
+        [hotplug, vsync, subscriber, hwc_device]{
+            hwc_device->subscribe_to_events(subscriber,
+                [vsync](mga::DisplayName name, std::chrono::nanoseconds){ vsync(name); },
+                [hotplug](mga::DisplayName, bool){ hotplug(); },
+                []{});
+        },
+        [subscriber, hwc_device]{
+            hwc_device->unsubscribe_from_events(subscriber);
+        });
+}
+}
+
+mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(DisplayName display_name)
+{
+    auto configs = hwc_device->display_configs(display_name);
+    if (configs.empty())
+    {
+        if (display_name == mga::DisplayName::primary)
+            BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
+        else   
+            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
+    }
+
+    return display_config_for(display_name, configs.front(), format, hwc_device);
 }
 
 mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_changes(
-    std::function<void()> const&)
+    std::function<void()> const& hotplug,
+    std::function<void(DisplayName)> const& vsync)
 {
-    return nullptr;
+    return ::subscribe_to_config_changes(hwc_device, this, hotplug, vsync);
+}
+
+mga::HwcPowerModeControl::HwcPowerModeControl(
+    std::shared_ptr<mga::HwcWrapper> const& hwc_device) :
+    hwc_device{hwc_device},
+    format(determine_hwc_fb_format())
+{
+}
+
+void mga::HwcPowerModeControl::power_mode(DisplayName display_name, MirPowerMode mode_request)
+{
+    PowerMode mode;
+    switch (mode_request)
+    {
+        case mir_power_mode_on:
+            mode = PowerMode::normal;
+            break;
+        case mir_power_mode_standby:
+            mode = PowerMode::doze;
+            break;
+        case mir_power_mode_suspend:
+            mode = PowerMode::doze_suspend;
+            break;
+        case mir_power_mode_off:
+            mode = PowerMode::off;
+            break;
+        default:
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid power mode"));
+    }
+    hwc_device->power_mode(display_name, mode);
+}
+
+mg::DisplayConfigurationOutput mga::HwcPowerModeControl::active_config_for(DisplayName display_name)
+{
+    auto configs = hwc_device->display_configs(display_name);
+    if (configs.empty())
+    {
+        if (display_name == mga::DisplayName::primary)
+            BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
+        else
+            return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
+    }
+
+    /* the first config is the active one in hwc 1.1 to hwc 1.3. */
+    ConfigId active_config_id = configs.front();
+    if (hwc_device->has_active_config(display_name))
+    {
+        active_config_id = hwc_device->active_config_for(display_name);
+    }
+    else
+    {
+        //If no active config, just choose the first from the list
+        hwc_device->set_active_config(display_name, configs.front());
+    }
+
+    return display_config_for(display_name, active_config_id, format, hwc_device);
+}
+
+mga::ConfigChangeSubscription mga::HwcPowerModeControl::subscribe_to_config_changes(
+    std::function<void()> const& hotplug,
+    std::function<void(DisplayName)> const& vsync)
+{
+    return ::subscribe_to_config_changes(hwc_device, this, hotplug, vsync);
 }

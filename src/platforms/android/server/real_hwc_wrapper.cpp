@@ -99,8 +99,7 @@ mga::RealHwcWrapper::~RealHwcWrapper()
 void mga::RealHwcWrapper::prepare(
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
-    //TODO: convert report to reporting multimonitor
-    if (displays[0]) report->report_list_submitted_to_prepare(*displays[0]);
+    report->report_list_submitted_to_prepare(displays);
     if (auto rc = hwc_device->prepare(hwc_device.get(), num_displays(displays),
         const_cast<hwc_display_contents_1**>(displays.data())))
     {
@@ -109,13 +108,13 @@ void mga::RealHwcWrapper::prepare(
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 
-    if (displays[0]) report->report_prepare_done(*displays[0]);
+    report->report_prepare_done(displays);
 }
 
 void mga::RealHwcWrapper::set(
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
-    if (displays[0]) report->report_set_list(*displays[0]);
+    report->report_set_list(displays);
     if (auto rc = hwc_device->set(hwc_device.get(), num_displays(displays),
         const_cast<hwc_display_contents_1**>(displays.data())))
     {
@@ -123,6 +122,7 @@ void mga::RealHwcWrapper::set(
         ss << "error during hwc prepare(). rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+    report->report_set_done(displays);
 }
 
 void mga::RealHwcWrapper::vsync_signal_on(DisplayName display_name) const
@@ -248,9 +248,45 @@ std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName disp
     return config_ids;
 }
 
-void mga::RealHwcWrapper::display_attributes(
+int mga::RealHwcWrapper::display_attributes(
     DisplayName display_name, ConfigId config, uint32_t const* attributes, int32_t* values) const
 {
-    hwc_device->getDisplayAttributes(
+    return hwc_device->getDisplayAttributes(
         hwc_device.get(), display_name, config.as_value(), attributes, values);
+}
+
+void mga::RealHwcWrapper::power_mode(DisplayName display_name, PowerMode mode) const
+{
+    if (auto rc = hwc_device->setPowerMode(hwc_device.get(), display_name, static_cast<int>(mode)))
+    {
+        std::stringstream ss;
+        ss << "error setting power mode. rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+    }
+    report->report_power_mode(mode);
+}
+
+bool mga::RealHwcWrapper::has_active_config(DisplayName display_name) const
+{
+    int const no_active_config = -1;
+    return hwc_device->getActiveConfig(hwc_device.get(), display_name) != no_active_config;
+}
+
+mga::ConfigId mga::RealHwcWrapper::active_config_for(DisplayName display_name) const
+{
+    int id = hwc_device->getActiveConfig(hwc_device.get(), display_name);
+    if (id == -1)
+    {
+        std::stringstream ss;
+        ss << "No active configuration for display: " << display_name;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+    }
+    return mga::ConfigId{static_cast<uint32_t>(id)};
+}
+
+void mga::RealHwcWrapper::set_active_config(DisplayName display_name, ConfigId id) const
+{
+    int rc = hwc_device->setActiveConfig(hwc_device.get(), display_name, id.as_value());
+    if (rc < 0)
+        BOOST_THROW_EXCEPTION(std::system_error(rc, std::system_category(), "unable to set active display config"));
 }

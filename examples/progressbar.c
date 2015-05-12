@@ -184,11 +184,12 @@ static void copy_region(const MirGraphicsRegion *dest,
 static void redraw(MirSurface *surface, const MirGraphicsRegion *canvas)
 {
     MirGraphicsRegion backbuffer;
+    MirBufferStream *bs = mir_surface_get_buffer_stream(surface);
 
-    mir_surface_get_graphics_region(surface, &backbuffer);
+    mir_buffer_stream_get_graphics_region(bs, &backbuffer);
     clear_region(&backbuffer, background);
     copy_region(&backbuffer, canvas);
-    mir_surface_swap_buffers_sync(surface);
+    mir_buffer_stream_swap_buffers_sync(bs);
 }
 
 int main(int argc, char *argv[])
@@ -200,7 +201,7 @@ int main(int argc, char *argv[])
     unsigned int const pf_size = 32;
     MirPixelFormat formats[pf_size];
     unsigned int valid_formats;
-    int sleep_usec = 50000;
+    int hz = 20;
 
     if (argc > 1)
     {
@@ -208,13 +209,13 @@ int main(int argc, char *argv[])
 
         if (sscanf(argv[1], "%d", &rate) == 1 && rate > 0)
         {
-            sleep_usec = 1000000 / rate;
+            hz = rate;
         }
         else
         {
             fprintf(stderr, "Usage: %s [repeat rate in Hz]\n"
                             "Default repeat rate is %d\n",
-                    argv[0], 1000000 / sleep_usec);
+                    argv[0], hz);
 
             return 1;
         }
@@ -223,7 +224,7 @@ int main(int argc, char *argv[])
     conn = mir_connect_sync(NULL, argv[0]);
     if (!mir_connection_is_valid(conn))
     {
-        fprintf(stderr, "Could not connect to a display server.\n");
+        fprintf(stderr, "Could not connect to a display server: %s\n", mir_connection_get_error_message(conn));
         return 1;
     }
 
@@ -258,7 +259,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    mir_surface_spec_set_name(spec, "Progress Bars");
+    {
+        char name[128];
+        snprintf(name, sizeof(name)-1, "Progress Bars (%dHz)", hz);
+        name[sizeof(name)-1] = '\0';
+        mir_surface_spec_set_name(spec, name);
+    }
+
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
     surf = mir_surface_create_sync(spec);
@@ -298,7 +305,7 @@ int main(int argc, char *argv[])
                 draw_box(&canvas, x, y, box_width, foreground);
 
                 redraw(surf, &canvas);
-                usleep(sleep_usec);
+                usleep(1000000 / hz);
             }
 
             free(canvas.vaddr);

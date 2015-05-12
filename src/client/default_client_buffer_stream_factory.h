@@ -30,26 +30,29 @@ class Logger;
 namespace client
 {
 class ClientBufferFactory;
-class EGLNativeWindowFactory;
+class ClientPlatform;
 
 class DefaultClientBufferStreamFactory : public ClientBufferStreamFactory
 {
 public:
-    DefaultClientBufferStreamFactory(std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
-        std::shared_ptr<EGLNativeWindowFactory> const& native_window_factory,
+    DefaultClientBufferStreamFactory(
+        std::shared_ptr<ClientPlatform> const& native_window_factory,
         std::shared_ptr<logging::Logger> const& logger);
     virtual ~DefaultClientBufferStreamFactory() = default;
 
     std::shared_ptr<ClientBufferStream> make_consumer_stream(protobuf::DisplayServer& server,
-       protobuf::BufferStream const& protobuf_bs);
+       protobuf::BufferStream const& protobuf_bs, std::string const& surface_name);
     std::shared_ptr<ClientBufferStream> make_producer_stream(protobuf::DisplayServer& server,
-       protobuf::BufferStream const& protobuf_bs);
+       protobuf::BufferStream const& protobuf_bs, std::string const& surface_name);
+
+    ClientBufferStream* make_producer_stream(protobuf::DisplayServer& server,
+       protobuf::BufferStreamParameters const& params,
+       mir_buffer_stream_callback callback, void* context);
 
 private:
-    std::shared_ptr<ClientBufferFactory> const client_buffer_factory;
-    std::shared_ptr<EGLNativeWindowFactory> const native_window_factory;
+    std::shared_ptr<ClientPlatform> const client_platform;
     std::shared_ptr<logging::Logger> const logger;
-    
+
 };
 }
 }

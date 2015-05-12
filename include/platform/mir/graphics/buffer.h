@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_BUFFER_H_
+#ifndef MIR_GRAPHICS_BUFFER_H_
+#define MIR_GRAPHICS_BUFFER_H_
 
 #include "mir/graphics/native_buffer.h"
 #include "mir/graphics/buffer_id.h"
@@ -25,6 +25,7 @@
 #include "mir_toolkit/common.h"
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -42,10 +43,11 @@ public:
     virtual geometry::Stride stride() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
     virtual void gl_bind_to_texture() = 0;
-    /* TODO: remove this function, as it is specific to the mesa platform */
-    virtual bool can_bypass() const = 0;
-    
+    //FIXME: correct mg::Buffer::write, it requires that the user does too much to use it correctly,
+    //       (ie, it forces them to figure out what size is proper, alloc a buffer, fill it, and then
+    //       copy the data into the buffer)
     virtual void write(unsigned char const* pixels, size_t size) = 0;
+    virtual void read(std::function<void(unsigned char const*)> const& do_with_pixels) = 0;
 
 protected:
     Buffer() = default;
@@ -53,4 +55,4 @@ protected:
 
 }
 }
-#endif // MIR_COMPOSITOR_BUFFER_H_
+#endif // MIR_GRAPHICS_BUFFER_H_

@@ -84,11 +84,15 @@ public:
 
     virtual void raise(std::weak_ptr<Surface> const& surface) override;
 
+    void raise(SurfaceSet const& surfaces) override;
+
     void add_surface(
         std::shared_ptr<Surface> const& surface,
         DepthId depth,
         input::InputReceptionMode input_mode) override;
     
+    auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> override;
+
     void add_observer(std::shared_ptr<Observer> const& observer) override;
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
     

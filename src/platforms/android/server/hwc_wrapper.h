@@ -21,6 +21,7 @@
 
 #include "mir/int_wrapper.h"
 #include "display_name.h"
+#include "power_mode.h"
 #include <array>
 #include <functional>
 #include <chrono>
@@ -59,8 +60,12 @@ public:
     virtual void display_on(DisplayName) const = 0;
     virtual void display_off(DisplayName) const = 0;
     virtual std::vector<ConfigId> display_configs(DisplayName) const = 0;
-    virtual void display_attributes(
+    virtual int display_attributes(
         DisplayName, ConfigId, uint32_t const* attributes, int32_t* values) const = 0;
+    virtual void power_mode(DisplayName, PowerMode mode) const = 0;
+    virtual bool has_active_config(DisplayName) const = 0;
+    virtual ConfigId active_config_for(DisplayName name) const = 0;
+    virtual void set_active_config(DisplayName name, ConfigId id) const = 0;
 
 protected:
     HwcWrapper() = default;

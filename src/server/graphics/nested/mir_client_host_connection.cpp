@@ -17,14 +17,19 @@
  */
 
 #include "mir_client_host_connection.h"
+#include "host_surface.h"
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_drm.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir/graphics/cursor_image.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
+
+#include <algorithm>
 #include <stdexcept>
+
+#include <string.h>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -55,9 +60,10 @@ class MirClientHostSurface : public mgn::HostSurface
 public:
     MirClientHostSurface(
         MirConnection* mir_connection,
-        MirSurfaceParameters const& surface_parameters)
-        : mir_surface{
-              mir_connection_create_surface_sync(mir_connection, &surface_parameters)}
+        MirSurfaceSpec* spec)
+        : mir_connection(mir_connection),
+          mir_surface{
+              mir_surface_create_sync(spec)}
     {
         if (!mir_surface_is_valid(mir_surface))
         {
@@ -74,15 +80,53 @@ public:
     EGLNativeWindowType egl_native_window() override
     {
         return reinterpret_cast<EGLNativeWindowType>(
-            mir_surface_get_egl_native_window(mir_surface));
+            mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(mir_surface)));
     }
 
-    void set_event_handler(MirEventDelegate const* handler) override
+    void set_event_handler(mir_surface_event_callback cb, void* context) override
     {
-        mir_surface_set_event_handler(mir_surface, handler);
+        mir_surface_set_event_handler(mir_surface, cb, context);
+    }
+
+    void set_cursor_image(mg::CursorImage const& image)
+    {
+        auto image_width = image.size().width.as_int();
+        auto image_height = image.size().height.as_int();
+        auto pixels_size = image_width * image_height
+            * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888);
+
+        // TODO: Maybe the stream should be preserved.
+        auto bs = mir_connection_create_buffer_stream_sync(mir_connection,
+                                                           image_width,
+                                                           image_height,
+                                                           mir_pixel_format_argb_8888,
+                                                           mir_buffer_usage_software);
+        
+        MirGraphicsRegion g;
+        mir_buffer_stream_get_graphics_region(bs, &g);
+        if ((g.height * g.stride) !=
+            pixels_size)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Cursor BufferStream not compatible with requested cursor image"));
+        memcpy(g.vaddr, image.as_argb_8888(), pixels_size);
+        mir_buffer_stream_swap_buffers_sync(bs);
+
+        auto conf = mir_cursor_configuration_from_buffer_stream(bs,
+            image.hotspot().dx.as_int(), image.hotspot().dy.as_int());
+        
+        mir_surface_configure_cursor(mir_surface, conf);
+        mir_cursor_configuration_destroy(conf);
+        mir_buffer_stream_release_sync(bs);
+    }
+
+    void hide_cursor()
+    {
+        auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+        mir_surface_configure_cursor(mir_surface, conf);
+        mir_cursor_configuration_destroy(conf);
     }
 
 private:
+    MirConnection* const mir_connection;
     MirSurface* const mir_surface;
 
 };
@@ -157,19 +201,30 @@ void mgn::MirClientHostConnection::apply_display_config(
 }
 
 std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
-    MirSurfaceParameters const& surface_parameters)
+    int width, int height, MirPixelFormat pf, char const* name,
+    MirBufferUsage usage, uint32_t output_id)
 {
-    return std::make_shared<MirClientHostSurface>(
-        mir_connection, surface_parameters);
-}
+    std::lock_guard<std::mutex> lg(surfaces_mutex);
+    auto spec = mir::raii::deleter_for(
+        mir_connection_create_spec_for_normal_surface(mir_connection, width, height, pf),
+        mir_surface_spec_release);
 
-void mgn::MirClientHostConnection::drm_set_gbm_device(struct gbm_device* dev)
-{
-    if (!mir_connection_drm_set_gbm_device(mir_connection, dev))
-    {
-        std::string const msg("Nested Mir failed to set the gbm device");
-        BOOST_THROW_EXCEPTION(std::runtime_error(msg));
-    }
+    mir_surface_spec_set_name(spec.get(), name);
+    mir_surface_spec_set_buffer_usage(spec.get(), usage);
+    mir_surface_spec_set_fullscreen_on_output(spec.get(), output_id);
+
+    auto surf = std::shared_ptr<MirClientHostSurface>(
+        new MirClientHostSurface(mir_connection, spec.get()),
+        [this](MirClientHostSurface *surf)
+        {
+            std::lock_guard<std::mutex> lg(surfaces_mutex);
+            auto it = std::find(surfaces.begin(), surfaces.end(), surf);
+            surfaces.erase(it);
+            delete surf;
+        });
+
+    surfaces.push_back(surf.get());
+    return surf;
 }
 
 mg::PlatformOperationMessage mgn::MirClientHostConnection::platform_operation(
@@ -199,4 +254,24 @@ mg::PlatformOperationMessage mgn::MirClientHostConnection::platform_operation(
         {static_cast<uint8_t const*>(reply_data.data),
          static_cast<uint8_t const*>(reply_data.data) + reply_data.size},
         {reply_fds.fds, reply_fds.fds + reply_fds.num_fds}};
+}
+
+void mgn::MirClientHostConnection::set_cursor_image(mg::CursorImage const& image)
+{
+    std::lock_guard<std::mutex> lg(surfaces_mutex);
+    for (auto s : surfaces)
+    {
+        auto surface = static_cast<MirClientHostSurface*>(s);
+        surface->set_cursor_image(image);
+    }
+}
+
+void mgn::MirClientHostConnection::hide_cursor()
+{
+    std::lock_guard<std::mutex> lg(surfaces_mutex);
+    for (auto s : surfaces)
+    {
+        auto surface = static_cast<MirClientHostSurface*>(s);
+        surface->hide_cursor();
+    }
 }

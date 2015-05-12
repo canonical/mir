@@ -29,8 +29,6 @@ namespace compositor
 {
 class RendererFactory;
 
-// TODO this is ideally an implementation class. It is only in a public header
-// TODO because it is used in some example code (which probably needs rethinking).
 class DefaultDisplayBufferCompositorFactory : public DisplayBufferCompositorFactory
 {
 public:

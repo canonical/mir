@@ -1,9 +1,0 @@
-MIR_GRAPHICS_PLATFORM_1 {
-  global: 
-   add_graphics_platform_options;
-   probe_graphics_platform;
-   create_host_platform;
-   create_guest_platform;
-   describe_graphics_module;
-  local: *;
-};

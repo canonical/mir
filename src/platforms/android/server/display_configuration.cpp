@@ -23,66 +23,27 @@ namespace geom = mir::geometry;
 
 namespace
 {
-int const primary_id{0};
-int const external_id{1};
-geom::Point const origin{0,0};
-size_t const preferred_format_index{0};
-size_t const preferred_mode_index{0};
-
-mg::DisplayConfigurationOutput external_output(
-    mga::DisplayAttribs const& external_attribs)
+enum DisplayIds
 {
-    std::vector<mg::DisplayConfigurationMode> external_modes;
-    if (external_attribs.connected)
-    {
-        external_modes.emplace_back(
-            mg::DisplayConfigurationMode{external_attribs.pixel_size, external_attribs.vrefresh_hz});
-    }
-
-    bool used{false};
-    return {
-        mg::DisplayConfigurationOutputId{external_id},
-        mg::DisplayConfigurationCardId{0},
-        mg::DisplayConfigurationOutputType::displayport,
-        {external_attribs.display_format},
-        external_modes,
-        preferred_mode_index,
-        external_attribs.mm_size,
-        external_attribs.connected,
-        used,
-        origin,
-        preferred_format_index,
-        external_attribs.display_format,
-        mir_power_mode_on,
-        mir_orientation_normal
-    };
-}
+    primary_id,
+    external_id,
+    max_displays
+};
 }
 
 mga::DisplayConfiguration::DisplayConfiguration(
-    mga::DisplayAttribs const& primary_attribs,
-    mga::DisplayAttribs const& external_attribs) :
-    configurations{{
-        mg::DisplayConfigurationOutput{
-            mg::DisplayConfigurationOutputId{primary_id},
-            mg::DisplayConfigurationCardId{0},
-            mg::DisplayConfigurationOutputType::lvds,
-            {primary_attribs.display_format},
-            {mg::DisplayConfigurationMode{primary_attribs.pixel_size, primary_attribs.vrefresh_hz}},
-            preferred_mode_index,
-            primary_attribs.mm_size,
-            primary_attribs.connected,
-            true,
-            origin,
-            preferred_format_index,
-            primary_attribs.display_format,
-            mir_power_mode_on,
-            mir_orientation_normal
-        }, 
-        external_output(external_attribs)
-    }},
-    card{mg::DisplayConfigurationCardId{0}, 1}
+    mg::DisplayConfigurationOutput primary_config,
+    MirPowerMode primary_mode,
+    mg::DisplayConfigurationOutput external_config,
+    MirPowerMode external_mode) :
+    configurations{
+        {std::move(primary_config),
+        std::move(external_config)}
+    },
+    card{mg::DisplayConfigurationCardId{0}, max_displays}
 {
+    primary().power_mode = primary_mode;
+    external().power_mode = external_mode;
 }
 
 mga::DisplayConfiguration::DisplayConfiguration(DisplayConfiguration const& other) :
@@ -122,9 +83,14 @@ void mga::DisplayConfiguration::for_each_output(std::function<void(mg::UserDispl
     }
 }
 
-mg::DisplayConfigurationOutput const& mga::DisplayConfiguration::primary_config()
+mg::DisplayConfigurationOutput& mga::DisplayConfiguration::primary()
 {
     return configurations[primary_id];
+}
+
+mg::DisplayConfigurationOutput& mga::DisplayConfiguration::external()
+{
+    return configurations[external_id];
 }
 
 mg::DisplayConfigurationOutput& mga::DisplayConfiguration::operator[](mg::DisplayConfigurationOutputId const& disp_id)

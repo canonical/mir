@@ -49,13 +49,12 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
         std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
         surface_observers[surface] = observer;
     }
-    
-    scene_notify_change();
 }
 
 void ms::LegacySceneChangeNotification::surface_added(ms::Surface* surface)
 {
     add_surface_observer(surface);
+    scene_notify_change();
 }
 
 void ms::LegacySceneChangeNotification::surface_exists(ms::Surface* surface)

@@ -19,10 +19,11 @@
 #ifndef MIR_TEST_DOUBLES_SHELL_H_
 #define MIR_TEST_DOUBLES_SHELL_H_
 
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
-#include "mir/frontend/surface_id.h"
+
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
+#include "mir/shell/surface_specification.h"
 
 #include <gmock/gmock.h>
 
@@ -42,8 +43,6 @@ struct MockShell : public frontend::Shell
 
     MOCK_METHOD1(close_session, void(std::shared_ptr<frontend::Session> const&));
 
-    MOCK_METHOD1(handle_surface_created, void(std::shared_ptr<frontend::Session> const&));
-
     MOCK_METHOD2(start_prompt_session_for, std::shared_ptr<frontend::PromptSession>(
         std::shared_ptr<frontend::Session> const&,
         scene::PromptSessionCreationParameters const&));
@@ -53,6 +52,7 @@ struct MockShell : public frontend::Shell
     MOCK_METHOD1(stop_prompt_session, void(std::shared_ptr<frontend::PromptSession> const&));
 
     MOCK_METHOD2(create_surface, frontend::SurfaceId(std::shared_ptr<frontend::Session> const&, scene::SurfaceCreationParameters const& params));
+    MOCK_METHOD3(modify_surface, void(std::shared_ptr<frontend::Session> const&, frontend::SurfaceId, shell::SurfaceSpecification const&));
     MOCK_METHOD2(destroy_surface, void(std::shared_ptr<frontend::Session> const&, frontend::SurfaceId));
 
     MOCK_METHOD4(set_surface_attribute, int(

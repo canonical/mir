@@ -68,12 +68,12 @@ TEST_F(OffscreenDisplayTest, orientation_normal)
         mr::null_display_report()};
 
     int count = 0;
-    display.for_each_display_buffer(
-        [&](mg::DisplayBuffer& db)
-        {
+    display.for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([&](mg::DisplayBuffer& db) {
             ++count;
             EXPECT_EQ(mir_orientation_normal, db.orientation());
         });
+    });
 
     EXPECT_TRUE(count);
 }
@@ -88,6 +88,17 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
         .Times(AtLeast(1))
         .WillRepeatedly(SetArgPointee<1>(fbo));
 
+    /* Provide unique EGL contexts */
+    std::vector<int> contexts;
+    EXPECT_CALL(mock_egl, eglCreateContext(_,_,_,_))
+        .Times(AtLeast(1))
+        .WillRepeatedly(WithoutArgs(Invoke(
+            [&] ()
+            {
+                contexts.push_back(0);
+                return reinterpret_cast<EGLContext>(&contexts.back());
+            })));
+
     mgo::Display display{
         native_display,
         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
@@ -96,9 +107,8 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
     Mock::VerifyAndClearExpectations(&mock_gl);
 
     /* Binds the GL framebuffer objects */
-    display.for_each_display_buffer(
-        [this](mg::DisplayBuffer& db)
-        {
+    display.for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([&](mg::DisplayBuffer& db) {
             EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,Ne(EGL_NO_CONTEXT)));
             EXPECT_CALL(mock_gl, glBindFramebuffer(_,Ne(0)));
 
@@ -107,6 +117,14 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
             Mock::VerifyAndClearExpectations(&mock_egl);
             Mock::VerifyAndClearExpectations(&mock_gl);
         });
+    });
+
+    /* Contexts are released at teardown */
+    display.for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([&](mg::DisplayBuffer&) {
+            EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,EGL_NO_CONTEXT));
+        });
+    });
 }
 
 TEST_F(OffscreenDisplayTest, restores_previous_state_on_fbo_setup_failure)

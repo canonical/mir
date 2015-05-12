@@ -54,12 +54,15 @@ int get_output_width()
             width = w.ws_col;
     }
 
+    // If width is zero we likely don't have a terminal
+    if (width == 0) width = 80;
+
     return width;
 }
 
 string ordinary_cmd_line_pattern()
 {
-    static const char* pattern = "ADD_TEST(\"%s.%s\" \"%s\" \"--gtest_filter=%s\")\n";
+    static const char* pattern = "ADD_TEST(\"%s.%s\" \"%s\" \"--gtest_filter=%s:-%s\")\n";
     return pattern;
 }
 
@@ -77,7 +80,7 @@ vector<string> valgrind_cmd_patterns(vector<string> const& suppressions)
     vector<string> gtest_patterns{
         "%s",
         "--gtest_death_test_use_fork",
-        "--gtest_filter=%s"
+        "--gtest_filter=%s:-%s"
     };
 
     patterns.insert(patterns.end(), gtest_patterns.begin(), gtest_patterns.end());
@@ -121,11 +124,25 @@ struct Configuration
     {
     }
 
+    std::string exclusions_for(string const& test)
+    {
+        if (test.size() < 2)
+            return {};
+
+        // assuming test name is Foo.*
+        std::string test_name{test.substr(0, test.size() - 2)};
+        if (exclusions.find(test_name) != std::string::npos)
+            return exclusions;
+
+        return {};
+    }
+
     const char* executable;
     bool enable_memcheck;
     bool memcheck_test;
     std::vector<std::pair<std::string, std::string>> extra_environment;
     std::vector<std::string> suppressions;
+    std::string exclusions;
 };
 
 bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& config)
@@ -136,6 +153,7 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
         {"memcheck-test", no_argument, 0, 0},
         {"add-environment", required_argument, 0, 0},
         {"suppressions", required_argument, 0, 0},
+        {"exclusions", required_argument, 0, 0},
         {0, 0, 0, 0}
     };
 
@@ -180,12 +198,17 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
         {
             config.suppressions.push_back(std::string(optarg));
         }
+        else if (!strcmp(optname, "exclusions"))
+        {
+            config.exclusions = optarg;
+        }
+
     }
 
     return true;
 }
 
-string prepareMemcheckTestLine(string const& exe, vector<string> const& suppressions)
+string prepareMemcheckTestLine(string const& exe, vector<string> const& suppressions, std::string const& exclusions)
 {
     stringstream ss;
 
@@ -199,19 +222,20 @@ string prepareMemcheckTestLine(string const& exe, vector<string> const& suppress
              sizeof(cmd_line),
              ss.str().c_str(),
              exe.c_str(),
-             "*"
+             "*",
+             exclusions.c_str()
              );
 
     return cmd_line;
 }
 
-void emitMemcheckTest(string const& exe, vector<string> const& suppressions)
+void emitMemcheckTest(string const& exe, vector<string> const& suppressions, std::string const& exclusions)
 {
     ifstream CTestTestfile("CTestTestfile.cmake", ifstream::in);
     bool need_memcheck_test = true;
     string line;
 
-    string memcheckTestLine = prepareMemcheckTestLine(exe, suppressions);
+    string memcheckTestLine = prepareMemcheckTestLine(exe, suppressions, exclusions);
 
     if (CTestTestfile.is_open())
     {
@@ -237,7 +261,6 @@ void emitMemcheckTest(string const& exe, vector<string> const& suppressions)
         }
     }
 }
-}
 
 bool is_death_test(string const& test)
 {
@@ -246,9 +269,11 @@ bool is_death_test(string const& test)
     bool death_test = false;
     if (test.size() > strlen("DeathTest.*"))
        death_test = test.substr(test.size() - strlen("DeathTest.*"),
-				strlen("DeathTest")) == "DeathTest";
+                                strlen("DeathTest")) == "DeathTest";
 
     return death_test;
+}
+
 }
 
 int main (int argc, char **argv)
@@ -269,7 +294,7 @@ int main (int argc, char **argv)
 
     if (config.memcheck_test)
     {
-        emitMemcheckTest(config.executable, config.suppressions);
+        emitMemcheckTest(config.executable, config.suppressions, config.exclusions);
         return 0;
     }
 
@@ -316,23 +341,27 @@ int main (int argc, char **argv)
         {
             static char cmd_line[1024] = "";
 
-            // Don't run AnonymousShmFile.* tests on older kernels
-            if (!kernel_supports_O_TMPFILE && *test == "AnonymousShmFile.*")
-            	continue;
+
+            if (!kernel_supports_O_TMPFILE)
+            {
+                // Don't run AnonymousShmFile.* tests on older kernels
+                if (*test == "AnonymousShmFile.*")
+                    continue;
+                if (*test == "MesaBufferAllocatorTest.*")
+                    config.exclusions.append("MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer");
+            }
 
             snprintf(
                 cmd_line,
                 sizeof(cmd_line),
                 (config.enable_memcheck && !is_death_test(*test)) ?
-		    memcheck_cmd_line_pattern(config.suppressions).c_str() :
+                    memcheck_cmd_line_pattern(config.suppressions).c_str() :
                     ordinary_cmd_line_pattern().c_str(),
                 test_suite.c_str(),
                 elide_string_left(*test, output_width/2).c_str(),
                 config.executable,
-                // Don't run MesaBufferAllocatorTest.{software_buffers_dont_bypass|creates_software_rendering_buffer} tests on older kernels
-                ((*test == "MesaBufferAllocatorTest.*") && !kernel_supports_O_TMPFILE)
-                    ? "MesaBufferAllocatorTest.*:-MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer"
-                    : test->c_str());
+                test->c_str(),
+                config.exclusions_for(*test).c_str());
 
             if (testfilecmake.good())
             {

@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_HOST_CONNECTION_H_
 
 #include "src/server/graphics/nested/host_connection.h"
+#include "src/server/graphics/nested/host_surface.h"
 #include "mir/graphics/platform_operation_message.h"
 
 namespace mir
@@ -49,23 +50,31 @@ public:
     void apply_display_config(MirDisplayConfiguration&) override {}
 
     std::shared_ptr<graphics::nested::HostSurface>
-        create_surface(MirSurfaceParameters const&) override
+        create_surface(
+            int /*width*/, int /*height*/, MirPixelFormat /*pf*/, char const* /*name*/,
+            MirBufferUsage /*usage*/, uint32_t /*output_id*/) override
     {
         class NullHostSurface : public graphics::nested::HostSurface
         {
         public:
             EGLNativeWindowType egl_native_window() override { return {}; }
-            void set_event_handler(MirEventDelegate const*) override {}
+            void set_event_handler(mir_surface_event_callback, void*) override {}
         };
 
         return std::make_shared<NullHostSurface>();
     }
 
-    void drm_set_gbm_device(struct gbm_device*) override {}
     graphics::PlatformOperationMessage platform_operation(
         unsigned int, graphics::PlatformOperationMessage const&) override
     {
         return {{},{}};
+    }
+
+    void set_cursor_image(graphics::CursorImage const&)
+    {
+    }
+    void hide_cursor()
+    {
     }
 };
 

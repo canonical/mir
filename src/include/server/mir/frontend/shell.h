@@ -33,6 +33,8 @@ namespace scene
 struct SurfaceCreationParameters;
 struct PromptSessionCreationParameters;
 }
+namespace shell { class SurfaceSpecification; }
+
 namespace frontend
 {
 class EventSink;
@@ -51,8 +53,6 @@ public:
 
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
 
-    virtual void handle_surface_created(std::shared_ptr<Session> const& session) = 0;
-
     virtual std::shared_ptr<PromptSession> start_prompt_session_for(std::shared_ptr<Session> const& session,
                                                                   scene::PromptSessionCreationParameters const& params) = 0;
     virtual void add_prompt_provider_for(std::shared_ptr<PromptSession> const& prompt_session,
@@ -60,6 +60,7 @@ public:
     virtual void stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) = 0;
 
     virtual SurfaceId create_surface(std::shared_ptr<Session> const& session, scene::SurfaceCreationParameters const& params) = 0;
+    virtual void modify_surface(std::shared_ptr<Session> const& session, SurfaceId surface, shell::SurfaceSpecification const& modifications) = 0;
     virtual void destroy_surface(std::shared_ptr<Session> const& session, SurfaceId surface) = 0;
 
     virtual int set_surface_attribute(

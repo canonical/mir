@@ -295,11 +295,11 @@ static void display_change_callback(MirConnection *connection, void *context)
     ctx->reconfigure = 1;
 }
 
-static void handle_key_input_event(struct ClientContext *ctx, MirKeyInputEvent const* event)
+static void handle_keyboard_event(struct ClientContext *ctx, MirKeyboardEvent const* event)
 {
-    if (mir_key_input_event_get_action(event) != mir_key_input_event_action_up)
+    if (mir_keyboard_event_action(event) != mir_keyboard_action_up)
         return;
-    xkb_keysym_t key_code = mir_key_input_event_get_key_code(event);
+    xkb_keysym_t key_code = mir_keyboard_event_key_code(event);
 
     if (key_code >= XKB_KEY_1 &&
         key_code <= XKB_KEY_9)
@@ -340,7 +340,7 @@ static void event_callback(
     if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
         return;
     
-    handle_key_input_event(ctx, mir_input_event_get_key_input_event(input_event));
+    handle_keyboard_event(ctx, mir_input_event_get_keyboard_event(input_event));
 }
 
 int main(int argc, char *argv[])
@@ -368,8 +368,7 @@ int main(int argc, char *argv[])
     mir_connection_set_display_config_change_callback(
         connection, display_change_callback, &ctx);
 
-    struct MirEventDelegate ed = {event_callback, &ctx};
-    mir_surface_set_event_handler(surface, &ed);
+    mir_surface_set_event_handler(surface, event_callback, &ctx);
 
     time_t start = time(NULL);
 

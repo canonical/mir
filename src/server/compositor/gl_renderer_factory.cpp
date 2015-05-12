@@ -17,10 +17,7 @@
  */
 
 #include "gl_renderer_factory.h"
-#include "mir/compositor/recently_used_cache.h"
 #include "mir/compositor/gl_renderer.h"
-#include "mir/graphics/gl_program.h"
-#include "mir/geometry/rectangle.h"
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -30,8 +27,5 @@ std::unique_ptr<mc::Renderer>
 mc::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect,
         DestinationAlpha dest_alpha)
 {
-    auto raw = new GLRenderer(
-        std::unique_ptr<mg::GLTextureCache>(new RecentlyUsedCache()),
-        rect, dest_alpha);
-    return std::unique_ptr<mc::Renderer>(raw);
+    return std::make_unique<GLRenderer>(rect, dest_alpha);
 }

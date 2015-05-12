@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -37,12 +37,16 @@
 
 namespace mir
 {
+namespace dispatch
+{
+class SimpleDispatchThread;
+}
 namespace input
 {
 namespace receiver
 {
 class InputPlatform;
-class InputReceiverThread;
+class XKBMapper;
 }
 }
 namespace client
@@ -57,20 +61,23 @@ struct MemoryRegion;
 
 struct MirSurfaceSpec
 {
-    MirSurfaceSpec() = default;
+    MirSurfaceSpec();
     MirSurfaceSpec(MirConnection* connection, int width, int height, MirPixelFormat format);
     MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params);
 
     mir::protobuf::SurfaceParameters serialize() const;
 
+    struct AspectRatio { unsigned width; unsigned height; };
+
     // Required parameters
     MirConnection* connection{nullptr};
-    int width{-1};
-    int height{-1};
-    MirPixelFormat pixel_format{mir_pixel_format_invalid};
-    MirBufferUsage buffer_usage{mir_buffer_usage_hardware};
 
     // Optional parameters
+    mir::optional_value<int> width;
+    mir::optional_value<int> height;
+    mir::optional_value<MirPixelFormat> pixel_format;
+    mir::optional_value<MirBufferUsage> buffer_usage;
+
     mir::optional_value<std::string> surface_name;
     mir::optional_value<uint32_t> output_id;
 
@@ -81,6 +88,15 @@ struct MirSurfaceSpec
     mir::optional_value<MirSurface*> parent;
     mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
+
+    mir::optional_value<int> min_width;
+    mir::optional_value<int> min_height;
+    mir::optional_value<int> max_width;
+    mir::optional_value<int> max_height;
+    mir::optional_value<int> width_inc;
+    mir::optional_value<int> height_inc;
+    mir::optional_value<AspectRatio> min_aspect;
+    mir::optional_value<AspectRatio> max_aspect;
 };
 
 struct MirSurface
@@ -109,16 +125,8 @@ public:
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
-    MirWaitHandle* next_buffer(mir_surface_callback callback, void * context);
+
     MirWaitHandle* get_create_wait_handle();
-
-    MirNativeBuffer* get_current_buffer_package();
-    MirPlatformType platform_type();
-    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
-    uint32_t get_current_buffer_id() const;
-    void get_cpu_region(MirGraphicsRegion& region);
-    EGLNativeWindowType generate_native_window();
-
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
 
     // TODO: Some sort of extension mechanism so that this can be moved
@@ -134,12 +142,15 @@ public:
 
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
-    void set_event_handler(MirEventDelegate const* delegate);
+    void set_event_handler(mir_surface_event_callback callback,
+                           void* context);
     void handle_event(MirEvent const& e);
 
-    /* mir::client::EGLNativeSurface */
-    void request_and_wait_for_next_buffer();
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
+
+    mir::client::ClientBufferStream* get_buffer_stream();
+
+    MirWaitHandle* modify(MirSurfaceSpec const& changes);
 
     static bool is_valid(MirSurface* query);
 private:
@@ -147,7 +158,6 @@ private:
 
     void on_configured();
     void on_cursor_configured();
-    void process_incoming_buffer();
     void created(mir_surface_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
@@ -159,6 +169,10 @@ private:
     std::string name;
     mir::protobuf::Void void_response;
 
+    void on_modified();
+    MirWaitHandle modify_wait_handle;
+    mir::protobuf::Void modify_result;
+
     MirConnection* const connection{nullptr};
 
     MirWaitHandle create_wait_handle;
@@ -168,6 +182,7 @@ private:
     std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
+    std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 
     mir::protobuf::SurfaceSetting configure_result;
 
@@ -176,7 +191,7 @@ private:
     MirOrientation orientation = mir_orientation_normal;
 
     std::function<void(MirEvent const*)> handle_event_callback;
-    std::shared_ptr<mir::input::receiver::InputReceiverThread> input_thread;
+    std::shared_ptr<mir::dispatch::SimpleDispatchThread> input_thread;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

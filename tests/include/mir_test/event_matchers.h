@@ -20,15 +20,16 @@
 #ifndef MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 #define MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
-
 #include "mir_toolkit/event.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <gmock/gmock.h>
+
+
+void PrintTo(MirEvent const& event, std::ostream *os);
+void PrintTo(MirEvent const* event, std::ostream *os);
 
 namespace mir
 {
@@ -58,34 +59,34 @@ inline MirEvent const& to_ref(MirEvent const& event)
     return event;
 }
 
-inline MirKeyInputEvent const* maybe_key_event(MirEvent const* event)
+inline MirKeyboardEvent const* maybe_key_event(MirEvent const* event)
 {
     if (mir_event_get_type(event) != mir_event_type_input)
         return nullptr;
     auto input_event = mir_event_get_input_event(event);
     if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
         return nullptr;
-    return mir_input_event_get_key_input_event(input_event);
+    return mir_input_event_get_keyboard_event(input_event);
 }
 
-inline MirTouchInputEvent const* maybe_touch_event(MirEvent const* event)
+inline MirTouchEvent const* maybe_touch_event(MirEvent const* event)
 {
     if (mir_event_get_type(event) != mir_event_type_input)
         return nullptr;
     auto input_event = mir_event_get_input_event(event);
     if (mir_input_event_get_type(input_event) != mir_input_event_type_touch)
         return nullptr;
-    return mir_input_event_get_touch_input_event(input_event);
+    return mir_input_event_get_touch_event(input_event);
 }
 
-inline MirPointerInputEvent const* maybe_pointer_event(MirEvent const* event)
+inline MirPointerEvent const* maybe_pointer_event(MirEvent const* event)
 {
     if (mir_event_get_type(event) != mir_event_type_input)
         return nullptr;
     auto input_event = mir_event_get_input_event(event);
     if (mir_input_event_get_type(input_event) != mir_input_event_type_pointer)
         return nullptr;
-    return mir_input_event_get_pointer_input_event(input_event);
+    return mir_input_event_get_pointer_event(input_event);
 }
 /**
  * \}
@@ -97,7 +98,7 @@ MATCHER(KeyDownEvent, "")
     if (kev == nullptr)
         return false;
     
-    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_down)
+    if (mir_keyboard_event_action(kev) != mir_keyboard_action_down)
         return false;
 
     return true;
@@ -109,7 +110,7 @@ MATCHER(KeyRepeatEvent, "")
     if (kev == nullptr)
         return false;
     
-    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_repeat)
+    if (mir_keyboard_event_action(kev) != mir_keyboard_action_repeat)
         return false;
 
     return true;
@@ -121,7 +122,7 @@ MATCHER(KeyUpEvent, "")
     if (kev == nullptr)
         return false;
     
-    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_up)
+    if (mir_keyboard_event_action(kev) != mir_keyboard_action_up)
         return false;
 
     return true;
@@ -133,9 +134,9 @@ MATCHER_P(KeyWithModifiers, modifiers, "")
     if (kev == nullptr)
         return false;
     
-    if(mir_key_input_event_get_modifiers(kev) != modifiers)
+    if(mir_keyboard_event_modifiers(kev) != modifiers)
         {
-            printf("modifiers: %d vs expected %d \n", mir_key_input_event_get_modifiers(kev), modifiers);
+            printf("modifiers: %d vs expected %d \n", mir_keyboard_event_modifiers(kev), modifiers);
         return false;
         }
     
@@ -148,7 +149,19 @@ MATCHER_P(KeyOfSymbol, keysym, "")
     if (kev == nullptr)
         return false;
 
-    if(mir_key_input_event_get_key_code(kev) != static_cast<xkb_keysym_t>(keysym))
+    if(mir_keyboard_event_key_code(kev) != static_cast<xkb_keysym_t>(keysym))
+        return false;
+
+    return true;
+}
+
+MATCHER_P(KeyOfScanCode, code, "")
+{
+    auto kev = maybe_key_event(to_address(arg));
+    if (kev == nullptr)
+        return false;
+
+    if(mir_keyboard_event_scan_code(kev) != code)
         return false;
 
     return true;
@@ -162,10 +175,10 @@ MATCHER_P(MirKeyEventMatches, event, "")
     if (expected == nullptr || actual == nullptr)
         return false;
     
-    return  mir_key_input_event_get_action(expected) == mir_key_input_event_get_action(actual) &&
-        mir_key_input_event_get_key_code(expected) == mir_key_input_event_get_key_code(actual) &&
-        mir_key_input_event_get_scan_code(expected) == mir_key_input_event_get_scan_code(actual) &&
-        mir_key_input_event_get_modifiers(expected) == mir_key_input_event_get_modifiers(actual);
+    return  mir_keyboard_event_action(expected) == mir_keyboard_event_action(actual) &&
+        mir_keyboard_event_key_code(expected) == mir_keyboard_event_key_code(actual) &&
+        mir_keyboard_event_scan_code(expected) == mir_keyboard_event_scan_code(actual) &&
+        mir_keyboard_event_modifiers(expected) == mir_keyboard_event_modifiers(actual);
 }
 
 MATCHER_P(MirTouchEventMatches, event, "")
@@ -176,19 +189,19 @@ MATCHER_P(MirTouchEventMatches, event, "")
     if (expected == nullptr || actual == nullptr)
         return false;
 
-    auto tc = mir_touch_input_event_get_touch_count(actual);
-    if (mir_touch_input_event_get_touch_count(expected) != tc)
+    auto tc = mir_touch_event_point_count(actual);
+    if (mir_touch_event_point_count(expected) != tc)
         return false;
 
     for (unsigned i = 0; i != tc; i++)
     {
-        if (mir_touch_input_event_get_touch_id(actual, i) !=  mir_touch_input_event_get_touch_id(expected, i) ||
-            mir_touch_input_event_get_touch_action(actual, i) !=  mir_touch_input_event_get_touch_action(expected, i) ||
-            mir_touch_input_event_get_touch_tooltype(actual, i) != mir_touch_input_event_get_touch_tooltype(expected, i) ||
-            mir_touch_input_event_get_touch_axis_value(actual, i, mir_touch_input_axis_x) != 
-                mir_touch_input_event_get_touch_axis_value(expected, i, mir_touch_input_axis_x) ||
-            mir_touch_input_event_get_touch_axis_value(actual, i, mir_touch_input_axis_y) != 
-                mir_touch_input_event_get_touch_axis_value(expected, i, mir_touch_input_axis_y))
+        if (mir_touch_event_id(actual, i) !=  mir_touch_event_id(expected, i) ||
+            mir_touch_event_action(actual, i) !=  mir_touch_event_action(expected, i) ||
+            mir_touch_event_tooltype(actual, i) != mir_touch_event_tooltype(expected, i) ||
+            mir_touch_event_axis_value(actual, i, mir_touch_axis_x) != 
+                mir_touch_event_axis_value(expected, i, mir_touch_axis_x) ||
+            mir_touch_event_axis_value(actual, i, mir_touch_axis_y) != 
+                mir_touch_event_axis_value(expected, i, mir_touch_axis_y))
         {
             return false;
         }
@@ -201,7 +214,7 @@ MATCHER(PointerEnterEvent, "")
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
-    if (mir_pointer_input_event_get_action(pev) == mir_pointer_input_event_action_enter)
+    if (mir_pointer_event_action(pev) == mir_pointer_action_enter)
         return true;
     return false;
 }
@@ -211,7 +224,7 @@ MATCHER(PointerLeaveEvent, "")
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
-    if (mir_pointer_input_event_get_action(pev) == mir_pointer_input_event_action_leave)
+    if (mir_pointer_event_action(pev) == mir_pointer_action_leave)
         return true;
     return false;
 }
@@ -221,13 +234,13 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
-    if (mir_pointer_input_event_get_action(pev) != mir_pointer_input_event_action_button_down)
+    if (mir_pointer_event_action(pev) != mir_pointer_action_button_down)
         return false;
-    if (mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary) == false)
+    if (mir_pointer_event_button_state(pev, mir_pointer_button_primary) == false)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x) != x)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_y) != y)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
         return false;
     return true;
 }
@@ -237,13 +250,13 @@ MATCHER_P2(ButtonUpEvent, x, y, "")
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
-    if (mir_pointer_input_event_get_action(pev) != mir_pointer_input_event_action_button_up)
+    if (mir_pointer_event_action(pev) != mir_pointer_action_button_up)
         return false;
-    if (mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary) == true)
+    if (mir_pointer_event_button_state(pev, mir_pointer_button_primary) == true)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x) != x)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_y) != y)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
         return false;
     return true;
 }
@@ -254,11 +267,11 @@ MATCHER_P2(TouchEvent, x, y, "")
     if (tev == nullptr)
         return false;
 
-    if (mir_touch_input_event_get_touch_action(tev, 0) != mir_touch_input_event_action_down)
+    if (mir_touch_event_action(tev, 0) != mir_touch_action_down)
         return false;
-    if (mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_x) != x)
+    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) != x)
         return false;
-    if (mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_y) != y)
+    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) != y)
         return false;
 
     return true;
@@ -269,11 +282,11 @@ MATCHER_P2(PointerEventWithPosition, x, y, "")
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
-    if (mir_pointer_input_event_get_action(pev) != mir_pointer_input_event_action_motion)
+    if (mir_pointer_event_action(pev) != mir_pointer_action_motion)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x) != x)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
-    if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_y) != y)
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
         return false;
     return true;
 }
@@ -284,11 +297,11 @@ MATCHER_P4(TouchEventInDirection, x0, y0, x1, y1, "")
     if (tev == nullptr)
         return false;
 
-    if (mir_touch_input_event_get_touch_action(tev, 0) != mir_touch_input_event_action_change)
+    if (mir_touch_event_action(tev, 0) != mir_touch_action_change)
         return false;
 
-    auto x2 = mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_x);
-    auto y2 = mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_y);
+    auto x2 = mir_touch_event_axis_value(tev, 0, mir_touch_axis_x);
+    auto y2 = mir_touch_event_axis_value(tev, 0, mir_touch_axis_y);
 
     float dx1 = x1 - x0;
     float dy1 = y1 - y0;
@@ -309,7 +322,7 @@ MATCHER(TouchMovementEvent, "")
     if (tev == nullptr)
         return false;
 
-    if (mir_touch_input_event_get_touch_action(tev, 0) != mir_touch_input_event_action_change)
+    if (mir_touch_event_action(tev, 0) != mir_touch_action_change)
         return false;
 
     return true;
@@ -321,7 +334,7 @@ MATCHER(PointerMovementEvent, "")
     if (pev == nullptr)
         return false;
 
-    if (mir_pointer_input_event_get_action(pev) != mir_pointer_input_event_action_motion)
+    if (mir_pointer_event_action(pev) != mir_pointer_action_motion)
         return false;
 
     return true;
@@ -336,6 +349,39 @@ MATCHER_P2(SurfaceEvent, attrib, value, "")
     if (mir_surface_event_get_attribute(surface_ev) != attrib)
         return false;
     if (mir_surface_event_get_attribute_value(surface_ev) != value)
+        return false;
+    return true;
+}
+
+MATCHER_P(KeymapEventWithRules, expected_rules, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_keymap)
+        return false;
+    auto kmev = mir_event_get_keymap_event(as_address);
+    xkb_rule_names received_rules;
+    mir_keymap_event_get_rules(kmev, &received_rules);
+
+    if (strcmp(received_rules.rules, expected_rules.rules) != 0)
+        return false;
+    if (strcmp(received_rules.layout, expected_rules.layout) != 0)
+        return false;
+    if (strcmp(received_rules.model, expected_rules.model) != 0)
+        return false;
+    if (strcmp(received_rules.variant, expected_rules.variant) != 0)
+        return false;
+    if (strcmp(received_rules.options, expected_rules.options) != 0)
+        return false;
+    return true;
+}
+
+MATCHER_P(OrientationEvent, direction, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_orientation)
+        return false;
+    auto oev = mir_event_get_orientation_event(as_address);
+    if (mir_orientation_event_get_direction(oev) != direction)
         return false;
     return true;
 }

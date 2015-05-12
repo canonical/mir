@@ -130,7 +130,7 @@ std::shared_ptr<MirNativeBuffer> mgm::GBMBuffer::native_buffer_handle() const
     temp->fd_items = 1;
     temp->fd[0] = prime_fd;
     temp->stride = stride().as_uint32_t();
-    temp->flags = can_bypass() ? mir_buffer_flag_can_scanout : 0;
+    temp->flags = (bo_flags & GBM_BO_USE_SCANOUT) ? mir_buffer_flag_can_scanout : 0;
     temp->bo = gbm_handle.get();
 
     auto const& dim = size();
@@ -140,12 +140,12 @@ std::shared_ptr<MirNativeBuffer> mgm::GBMBuffer::native_buffer_handle() const
     return temp;
 }
 
-bool mgm::GBMBuffer::can_bypass() const
-{
-    return bo_flags & GBM_BO_USE_SCANOUT;
-}
-
 void mgm::GBMBuffer::write(unsigned char const* /* pixels */, size_t /* size */)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Direct write to GBM hardware allocated buffer not supported"));
+}
+
+void mgm::GBMBuffer::read(std::function<void(unsigned char const*)> const& /* do_with_pixels */)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("Direct read from GBM hardware allocated buffer not supported"));
 }

@@ -96,8 +96,8 @@ mgm::DisplayBuffer::DisplayBuffer(
     MirOrientation rot,
     GLConfig const& gl_config,
     EGLContext shared_context)
-    : last_flipped_bufobj{nullptr},
-      scheduled_bufobj{nullptr},
+    : visible_composite_frame{nullptr},
+      scheduled_composite_frame{nullptr},
       platform(platform),
       listener(listener),
       drm(*platform->drm),
@@ -139,13 +139,13 @@ mgm::DisplayBuffer::DisplayBuffer(
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
-    scheduled_bufobj = get_front_buffer_object();
-    if (!scheduled_bufobj)
+    scheduled_composite_frame = get_front_buffer_object();
+    if (!scheduled_composite_frame)
         fatal_error("Failed to get frontbuffer");
 
     for (auto& output : outputs)
     {
-        if (!output->set_crtc(scheduled_bufobj->get_drm_fb_id()))
+        if (!output->set_crtc(scheduled_composite_frame->get_drm_fb_id()))
             fatal_error("Failed to set DRM crtc");
     }
 
@@ -163,14 +163,14 @@ mgm::DisplayBuffer::DisplayBuffer(
 mgm::DisplayBuffer::~DisplayBuffer()
 {
     /*
-     * There is no need to destroy last_flipped_bufobj manually.
+     * There is no need to destroy visible_composite_frame manually.
      * It will be destroyed when its gbm_surface gets destroyed.
      */
-    if (last_flipped_bufobj)
-        last_flipped_bufobj->release();
+    if (visible_composite_frame)
+        visible_composite_frame->release();
 
-    if (scheduled_bufobj)
-        scheduled_bufobj->release();
+    if (scheduled_composite_frame)
+        scheduled_composite_frame->release();
 }
 
 geom::Rectangle mgm::DisplayBuffer::view_area() const
@@ -204,11 +204,22 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
         auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
         if (bypass_it != renderable_list.rend())
         {
-            auto bypass_buf = (*bypass_it)->buffer();
-            if (bypass_buf->can_bypass() &&
-                bypass_buf->size() == geom::Size{fb_width,fb_height})
+            auto bypass_buffer = (*bypass_it)->buffer();
+            auto native = bypass_buffer->native_buffer_handle();
+            auto gbm_native = static_cast<mgm::GBMNativeBuffer*>(native.get());
+            auto bufobj = get_buffer_object(gbm_native->bo);
+            if (bufobj &&
+                native->flags & mir_buffer_flag_can_scanout &&
+                bypass_buffer->size() == geom::Size{fb_width,fb_height})
             {
-                return flip(bypass_buf);
+                bypass_buf = bypass_buffer;
+                bypass_bufobj = bufobj;
+                return true;
+            }
+            else
+            {
+                bypass_buf = nullptr;
+                bypass_bufobj = nullptr;
             }
         }
     }
@@ -216,19 +227,21 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     return false;
 }
 
-void mgm::DisplayBuffer::flip()
+void mgm::DisplayBuffer::for_each_display_buffer(
+    std::function<void(graphics::DisplayBuffer&)> const& f)
 {
-    flip(nullptr);
+    f(*this);
 }
 
 void mgm::DisplayBuffer::gl_swap_buffers()
 {
     if (!egl.swap_buffers())
         fatal_error("Failed to perform buffer swap");
+    bypass_buf = nullptr;
+    bypass_bufobj = nullptr;
 }
 
-bool mgm::DisplayBuffer::flip(
-    std::shared_ptr<graphics::Buffer> bypass_buf)
+void mgm::DisplayBuffer::post()
 {
     /*
      * We might not have waited for the previous frame to page flip yet.
@@ -242,27 +255,22 @@ bool mgm::DisplayBuffer::flip(
      * Switching from bypass to compositing? Now is the earliest safe time
      * we can unreference the bypass buffer...
      */
-    if (scheduled_bufobj)
-        last_flipped_bypass_buf = nullptr;
+    if (scheduled_composite_frame)
+        visible_bypass_frame = nullptr;
     /*
      * Release the last flipped buffer object (which is not displayed anymore)
      * to make it available for future rendering.
      */
-    if (last_flipped_bufobj)
-        last_flipped_bufobj->release();
+    if (visible_composite_frame)
+        visible_composite_frame->release();
 
-    last_flipped_bufobj = scheduled_bufobj;
-    scheduled_bufobj = nullptr;
+    visible_composite_frame = scheduled_composite_frame;
+    scheduled_composite_frame = nullptr;
 
     mgm::BufferObject *bufobj;
     if (bypass_buf)
     {
-        auto native = bypass_buf->native_buffer_handle();
-        auto gbm_native = static_cast<mgm::GBMNativeBuffer*>(native.get());
-        bufobj = get_buffer_object(gbm_native->bo);
-        // If bypass fails, just fall back to compositing.
-        if (!bufobj)
-            return false;
+        bufobj = bypass_bufobj;
     }
     else
     {
@@ -300,13 +308,13 @@ bool mgm::DisplayBuffer::flip(
          * For composited frames we defer wait_for_page_flip till just before
          * the next frame, but not for bypass frames. Deferring the flip of
          * bypass frames would increase the time we held
-         * last_flipped_bypass_buf unacceptably, resulting in client stuttering
+         * visible_bypass_frame unacceptably, resulting in client stuttering
          * unless we allocate more buffers (which I'm trying to avoid).
          * Also, bypass does not need the deferred page flip because it has
          * no compositing/rendering step for which to save time for.
          */
         wait_for_page_flip();
-        scheduled_bufobj = nullptr;
+        scheduled_composite_frame = nullptr;
 
         /*
          * Keep a reference to the buffer being bypassed for the entire
@@ -314,7 +322,7 @@ bool mgm::DisplayBuffer::flip(
          * the client while its on-screen, which would be seen as tearing or
          * worse.
          */
-        last_flipped_bypass_buf = bypass_buf;
+        visible_bypass_frame = bypass_buf;
     }
     else
     {
@@ -330,23 +338,21 @@ bool mgm::DisplayBuffer::flip(
             /*
              * bufobj is now physically on screen. Release the old frame...
              */
-            if (last_flipped_bufobj)
+            if (visible_composite_frame)
             {
-                last_flipped_bufobj->release();
-                last_flipped_bufobj = nullptr;
+                visible_composite_frame->release();
+                visible_composite_frame = nullptr;
             }
 
             /*
-             * last_flipped_bufobj will be set correctly on the next iteration
+             * visible_composite_frame will be set correctly on the next iteration
              * Don't do it here or else bufobj would be released while still
              * on screen (hence tearing and artefacts).
              */
         }
 
-        scheduled_bufobj = bufobj;
+        scheduled_composite_frame = bufobj;
     }
-
-    return true;
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()

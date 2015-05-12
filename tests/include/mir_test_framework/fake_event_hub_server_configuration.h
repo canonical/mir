@@ -47,6 +47,9 @@ public:
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<mir::input::InputSender> the_input_sender() override;
 
+    // TODO remove reliance on legacy window management
+    auto the_window_manager_builder() -> shell::WindowManagerBuilder override;
+
     std::shared_ptr<mir::input::android::FakeEventHub> fake_event_hub;
 };
 

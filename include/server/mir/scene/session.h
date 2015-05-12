@@ -54,6 +54,12 @@ public:
     virtual void destroy_surface(frontend::SurfaceId surface) = 0;
 
     virtual std::shared_ptr<Surface> surface(frontend::SurfaceId surface) const = 0;
+    virtual std::shared_ptr<Surface> surface_after(std::shared_ptr<Surface> const&) const = 0;
+
+    virtual std::shared_ptr<frontend::BufferStream> get_buffer_stream(frontend::BufferStreamId stream) const = 0;
+
+    virtual frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const& props) = 0;
+    virtual void destroy_buffer_stream(frontend::BufferStreamId stream) = 0;
 };
 }
 }

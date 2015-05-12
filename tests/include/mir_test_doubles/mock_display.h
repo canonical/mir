@@ -35,7 +35,7 @@ namespace doubles
 struct MockDisplay : public graphics::Display
 {
 public:
-    MOCK_METHOD1(for_each_display_buffer, void (std::function<void(graphics::DisplayBuffer&)> const&));
+    MOCK_METHOD1(for_each_display_sync_group, void (std::function<void(graphics::DisplaySyncGroup&)> const&));
     MOCK_CONST_METHOD0(configuration, std::unique_ptr<graphics::DisplayConfiguration>());
     MOCK_METHOD1(configure, void(graphics::DisplayConfiguration const&));
     MOCK_METHOD2(register_configuration_change_handler,

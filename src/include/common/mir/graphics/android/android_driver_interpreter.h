@@ -35,6 +35,7 @@ public:
     virtual NativeBuffer* driver_requests_buffer() = 0;
     virtual void driver_returns_buffer(ANativeWindowBuffer*, int fence) = 0;
     virtual void dispatch_driver_request_format(int format) = 0;
+    virtual void dispatch_driver_request_buffer_count(unsigned int count) = 0;
     virtual int driver_requests_info(int key) const = 0;
     virtual void sync_to_display(bool sync) = 0;
 protected:

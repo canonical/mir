@@ -22,12 +22,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include <chrono>
-#include <memory>
-#include <vector>
-
 #include <iostream>
-#include <assert.h>
 
 namespace mt = mir::test;
 
@@ -39,13 +34,15 @@ MirSurface *create_surface(MirConnection *connection)
     MirPixelFormat pixel_format;
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
-    MirSurfaceParameters const surface_params = { "frame-uniformity-test",
-        1024, 1024, /* TODO: Ensure fullscreen? */
-        pixel_format,
-        mir_buffer_usage_hardware, 
-        mir_display_output_id_invalid};
+
+    auto const spec = mir_connection_create_spec_for_normal_surface(
+        connection, 1024, 1024, pixel_format);
+    mir_surface_spec_set_name(spec, "frame-uniformity-test");
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
     
-    auto surface = mir_connection_create_surface_sync(connection, &surface_params);
     if (!mir_surface_is_valid(surface))
     {
         std::cerr << "Surface creation failed: " << mir_surface_get_error_message(surface) << std::endl;
@@ -64,8 +61,7 @@ void input_callback(MirSurface * /* surface */, MirEvent const* event, void* con
 
 void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier& client_ready, std::chrono::high_resolution_clock::duration duration, std::shared_ptr<TouchSamples> const& results)
 {
-    MirEventDelegate event_handler = { input_callback, results.get() };
-    mir_surface_set_event_handler(surface, &event_handler);
+    mir_surface_set_event_handler(surface, input_callback, results.get());
     
     client_ready.ready();
 
@@ -73,7 +69,7 @@ void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier& client_rea
     auto end_time = std::chrono::high_resolution_clock::now() + duration;
     while (std::chrono::high_resolution_clock::now() < end_time)
     {
-        mir_surface_swap_buffers_sync(surface);
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
         results->record_frame_time(std::chrono::high_resolution_clock::now());
     }
 }

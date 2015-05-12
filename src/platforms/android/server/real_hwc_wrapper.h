@@ -63,8 +63,12 @@ public:
     void display_on(DisplayName) const override;
     void display_off(DisplayName) const override;
     std::vector<ConfigId> display_configs(DisplayName) const override;
-    void display_attributes(
+    int display_attributes(
         DisplayName, ConfigId, uint32_t const* attributes, int32_t* values) const override;
+    void power_mode(DisplayName , PowerMode mode) const override;
+    bool has_active_config(DisplayName name) const override;
+    ConfigId active_config_for(DisplayName name) const override;
+    void set_active_config(DisplayName name, ConfigId id) const override;
 
     void vsync(DisplayName, std::chrono::nanoseconds) noexcept;
     void hotplug(DisplayName, bool) noexcept;

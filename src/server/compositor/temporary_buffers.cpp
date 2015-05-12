@@ -85,13 +85,13 @@ std::shared_ptr<mg::NativeBuffer> mc::TemporaryBuffer::native_buffer_handle() co
     return buffer->native_buffer_handle();
 }
 
-bool mc::TemporaryBuffer::can_bypass() const
-{
-    return buffer->can_bypass();
-}
-
 void mc::TemporaryBuffer::write(unsigned char const*, size_t)
 {
     BOOST_THROW_EXCEPTION(
         std::runtime_error("Write to temporary buffer snapshot is ill advised and indicates programmer error"));
+}
+
+void mc::TemporaryBuffer::read(std::function<void(unsigned char const*)> const& exec)
+{
+    buffer->read(exec);
 }

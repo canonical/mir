@@ -44,11 +44,7 @@ public:
     HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper);
 
     bool compatible_renderlist(RenderableList const& renderlist) override;
-    void commit(
-        DisplayName,
-        LayerList&,
-        SwappingGLContext const& context,
-        RenderableListCompositor const& list_compositor) override;
+    void commit(std::list<DisplayContents> const& contents) override;
     void content_cleared() override;
 
 private:

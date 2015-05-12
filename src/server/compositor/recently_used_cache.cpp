@@ -19,7 +19,6 @@
 
 #include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/buffer.h"
-#include "mir/geometry/rectangle.h"
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;

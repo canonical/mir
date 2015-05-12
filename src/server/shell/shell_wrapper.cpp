@@ -17,6 +17,7 @@
  */
 
 #include "mir/shell/shell_wrapper.h"
+#include "mir/geometry/point.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -40,24 +41,22 @@ void msh::ShellWrapper::close_session(std::shared_ptr<ms::Session> const& sessio
     wrapped->close_session(session);
 }
 
-void msh::ShellWrapper::focus_next()
+void msh::ShellWrapper::focus_next_session()
 {
-    wrapped->focus_next();
+    wrapped->focus_next_session();
 }
 
-std::weak_ptr<ms::Session> msh::ShellWrapper::focussed_application() const
+std::shared_ptr<ms::Session> msh::ShellWrapper::focused_session() const
 {
-    return wrapped->focussed_application();
+    return wrapped->focused_session();
 }
 
-void msh::ShellWrapper::set_focus_to(std::shared_ptr<scene::Session> const& focus)
-{
-    wrapped->set_focus_to(focus);
-}
+void msh::ShellWrapper::set_focus_to(
+    std::shared_ptr<scene::Session> const& focus_session,
+    std::shared_ptr<scene::Surface> const& focus_surface)
 
-void msh::ShellWrapper::handle_surface_created(std::shared_ptr<ms::Session> const& session)
 {
-    wrapped->handle_surface_created(session);
+    wrapped->set_focus_to(focus_session, focus_surface);
 }
 
 std::shared_ptr<ms::PromptSession> msh::ShellWrapper::start_prompt_session_for(
@@ -84,6 +83,11 @@ mf::SurfaceId msh::ShellWrapper::create_surface(std::shared_ptr<ms::Session> con
     return wrapped->create_surface(session, params);
 }
 
+void msh::ShellWrapper::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
+{
+    wrapped->modify_surface(session, surface, modifications);
+}
+
 void msh::ShellWrapper::destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface)
 {
     wrapped->destroy_surface(session, surface);
@@ -103,4 +107,34 @@ int msh::ShellWrapper::get_surface_attribute(
     MirSurfaceAttrib attrib)
 {
     return wrapped->get_surface_attribute(surface, attrib);
+}
+
+void msh::ShellWrapper::add_display(geometry::Rectangle const& area)
+{
+    wrapped->add_display(area);
+}
+
+void msh::ShellWrapper::remove_display(geometry::Rectangle const& area)
+{
+    wrapped->remove_display(area);
+}
+
+bool msh::ShellWrapper::handle(MirEvent const& event)
+{
+    return wrapped->handle(event);
+}
+
+auto msh::ShellWrapper::focused_surface() const -> std::shared_ptr<scene::Surface>
+{
+    return wrapped->focused_surface();
+}
+
+auto msh::ShellWrapper::surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface>
+{
+    return wrapped->surface_at(cursor);
+}
+
+void msh::ShellWrapper::raise(SurfaceSet const& surfaces)
+{
+    return wrapped->raise(surfaces);
 }

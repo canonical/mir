@@ -17,10 +17,11 @@
  */
 
 #include "frontend_shell.h"
-#include "default_shell.h"
+#include "mir/shell/shell.h"
 
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/prompt_session.h"
 
 namespace mf = mir::frontend;
@@ -40,12 +41,6 @@ void msh::FrontendShell::close_session(std::shared_ptr<mf::Session> const& sessi
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
 
     wrapped->close_session(scene_session);
-}
-
-void msh::FrontendShell::handle_surface_created(std::shared_ptr<mf::Session> const& session)
-{
-    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    wrapped->handle_surface_created(scene_session);
 }
 
 std::shared_ptr<mf::PromptSession> msh::FrontendShell::start_prompt_session_for(
@@ -75,7 +70,21 @@ void msh::FrontendShell::stop_prompt_session(std::shared_ptr<mf::PromptSession> 
 mf::SurfaceId msh::FrontendShell::create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    return wrapped->create_surface(scene_session, params);
+
+    auto populated_params = params;
+
+    if (populated_params.parent_id.is_set())
+        populated_params.parent = scene_session->surface(populated_params.parent_id.value());
+
+    return wrapped->create_surface(scene_session, populated_params);
+}
+
+void msh::FrontendShell::modify_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface_id, SurfaceSpecification const& modifications)
+{
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    auto const surface = scene_session->surface(surface_id);
+
+    wrapped->modify_surface(scene_session, surface, modifications);
 }
 
 void msh::FrontendShell::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)

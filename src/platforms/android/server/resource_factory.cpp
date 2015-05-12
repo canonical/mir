@@ -80,6 +80,7 @@ mga::ResourceFactory::create_hwc_wrapper(std::shared_ptr<mga::HwcReport> const& 
         case HWC_DEVICE_API_VERSION_1_1: version = mga::HwcVersion::hwc11; break;
         case HWC_DEVICE_API_VERSION_1_2: version = mga::HwcVersion::hwc12; break;
         case HWC_DEVICE_API_VERSION_1_3: version = mga::HwcVersion::hwc13; break;
+        case HWC_DEVICE_API_VERSION_1_4: version = mga::HwcVersion::hwc14; break;
         default: version = mga::HwcVersion::unknown; break;
     }
     

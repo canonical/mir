@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2014,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -77,7 +77,7 @@ public:
 
             auto const conf = configuration(sock);
 
-            std::unique_ptr<MirConnection> connection{new MirConnection(*conf)};
+            auto connection = std::make_unique<MirConnection>(*conf);
             auto const result = connection->connect(name, callback, context);
             connection.release();
             return result;
@@ -369,9 +369,12 @@ void platform_operation_to_auth_magic_callback(
             static_cast<AuthMagicPlatformOperationContext*>(context)};
 
     auto response_data = mir_platform_message_get_data(response_msg.get());
-    auto auth_response = reinterpret_cast<MirMesaAuthMagicResponse const*>(response_data.data);
+    MirMesaAuthMagicResponse auth_response{-1};
 
-    auth_magic_context->callback(auth_response->status, auth_magic_context->context);
+    if (response_data.size == sizeof(auth_response))
+        std::memcpy(&auth_response, response_data.data, response_data.size);
+
+    auth_magic_context->callback(auth_response.status, auth_magic_context->context);
 }
 
 void assign_set_gbm_device_status(
@@ -382,11 +385,13 @@ void assign_set_gbm_device_status(
         &mir_platform_message_release);
 
     auto const response_data = mir_platform_message_get_data(response_msg.get());
-    auto const set_gbm_device_response_ptr =
-        reinterpret_cast<MirMesaSetGBMDeviceResponse const*>(response_data.data);
+    MirMesaSetGBMDeviceResponse set_gbm_device_response{-1};
+
+    if (response_data.size == sizeof(set_gbm_device_response))
+        std::memcpy(&set_gbm_device_response, response_data.data, response_data.size);
 
     auto status_ptr = static_cast<int*>(context);
-    *status_ptr = set_gbm_device_response_ptr->status;
+    *status_ptr = set_gbm_device_response.status;
 }
 
 }

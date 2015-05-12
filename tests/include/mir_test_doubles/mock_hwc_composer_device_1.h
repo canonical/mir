@@ -35,6 +35,9 @@ public:
     MockHWCComposerDevice1()
     {
         using namespace testing;
+        //have mocked hw start with the external display off
+        ON_CALL(*this, getDisplayConfigs_interface(_,HWC_DISPLAY_EXTERNAL,_,_))
+            .WillByDefault(Return(-1));
         common.version = HWC_DEVICE_API_VERSION_1_1;
 
         registerProcs = hook_registerProcs;
@@ -49,7 +52,7 @@ public:
     static void hook_registerProcs(struct hwc_composer_device_1* mock_hwc, hwc_procs_t const* procs)
     {
         MockHWCComposerDevice1* mocker = static_cast<MockHWCComposerDevice1*>(mock_hwc);
-        return mocker->registerProcs_interface(mock_hwc, procs);
+        mocker->registerProcs_interface(mock_hwc, procs);
     }
     static int hook_eventControl(struct hwc_composer_device_1* mock_hwc, int disp, int event, int enabled)
     {

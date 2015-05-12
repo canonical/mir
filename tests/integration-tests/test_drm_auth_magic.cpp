@@ -35,6 +35,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstring>
+
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -89,6 +91,8 @@ void drm_auth_magic_callback(int status, void* client_context)
 
 }
 
+#pragma GCC diagnostic warning "-Wdeprecated-declarations"
+
 TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
 {
     static unsigned int const magic{0x10111213};
@@ -102,9 +106,9 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
             if (!platform)
             {
                 mg::PlatformOperationMessage pkg;
-                pkg.data.resize(sizeof(MirMesaAuthMagicResponse));
-                *(reinterpret_cast<MirMesaAuthMagicResponse*>(pkg.data.data())) =
-                    auth_magic_response;
+                pkg.data.resize(sizeof(auth_magic_response));
+                std::memcpy(pkg.data.data(), &auth_magic_response,
+                            sizeof(auth_magic_response));
 
                 auto ipc_ops = std::make_shared<NiceMock<MockAuthenticatingIpcOps>>();
                 EXPECT_CALL(*ipc_ops, platform_operation(_,_))

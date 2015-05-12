@@ -27,6 +27,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/any_surface.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test_doubles/stub_renderer.h"
@@ -58,7 +59,7 @@ public:
     }
 };
 
-void null_surface_callback(MirSurface*, void*)
+void null_buffer_stream_callback(MirBufferStream*, void*)
 {
 }
 
@@ -194,21 +195,12 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
             /* Default lifecycle handler terminates the process on disconnect, so override it */
             mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
 
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-
-            MirSurface* surf = mir_connection_create_surface_sync(connection, &request_params);
+            auto surf = mtf::make_any_surface(connection);
 
             /* Ask for the first buffer (should succeed) */
-            mir_surface_swap_buffers_sync(surf);
+            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surf));
             /* Ask for the first second buffer (should block) */
-            mir_surface_swap_buffers(surf, null_surface_callback, nullptr);
+            mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surf), null_buffer_stream_callback, nullptr);
 
             next_buffer_done.set();
             server_done.wait();
@@ -312,16 +304,7 @@ TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clie
 
             ASSERT_TRUE(connection != NULL);
 
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-
-            mir_connection_create_surface_sync(connection, &request_params);
+            mtf::make_any_surface(connection);
 
             surface_created.set();
             server_done.wait();
@@ -404,7 +387,7 @@ TEST(ServerShutdownWithThreadException,
     auto fake_event_hub = server_config->the_fake_event_hub();
 
     std::thread server{
-        [&]
+        [&server_config]
         {
             EXPECT_THROW(
                 mir::run_mir(*server_config, [](mir::DisplayServer&){}),

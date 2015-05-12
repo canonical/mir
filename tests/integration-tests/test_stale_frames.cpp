@@ -27,6 +27,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/any_surface.h"
 #include "mir_test_doubles/stub_renderer.h"
 
 #include <gtest/gtest.h>
@@ -149,16 +150,7 @@ struct StaleFrames : BasicFixture
 
     void client_create_surface()
     {
-        MirSurfaceParameters const request_params =
-        {
-            __PRETTY_FUNCTION__,
-            640, 480,
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware,
-            mir_display_output_id_invalid
-        };
-
-        surface = mir_connection_create_surface_sync(connection, &request_params);
+        surface = mtf::make_any_surface(connection);
         ASSERT_TRUE(mir_surface_is_valid(surface));
     }
 
@@ -192,15 +184,17 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
     std::set<mg::BufferID> stale_buffers;
 
     stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
-    mir_surface_swap_buffers_sync(surface);
+
+    auto bs = mir_surface_get_buffer_stream(surface);
+    mir_buffer_stream_swap_buffers_sync(bs);
 
     stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
-    mir_surface_swap_buffers_sync(surface);
+    mir_buffer_stream_swap_buffers_sync(bs);
 
     EXPECT_THAT(stale_buffers.size(), Eq(2));
 
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
-    mir_surface_swap_buffers_sync(surface);
+    mir_buffer_stream_swap_buffers_sync(bs);
 
     start_compositor();
 
@@ -218,11 +212,12 @@ TEST_F(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
 
     stop_compositor();
 
-    mir_surface_swap_buffers_sync(surface);
-    mir_surface_swap_buffers_sync(surface);
+    auto bs = mir_surface_get_buffer_stream(surface);
+    mir_buffer_stream_swap_buffers_sync(bs);
+    mir_buffer_stream_swap_buffers_sync(bs);
 
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
-    mir_surface_swap_buffers_sync(surface);
+    mir_buffer_stream_swap_buffers_sync(bs);
 
     start_compositor();
 

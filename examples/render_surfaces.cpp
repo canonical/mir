@@ -139,10 +139,10 @@ public:
     Moveable(std::shared_ptr<ms::Surface> const& s, const geom::Size& display_size,
              float dx, float dy, const glm::vec3& rotation_axis, float alpha_offset)
         : surface(s), display_size(display_size),
-          x{static_cast<float>(s->top_left().x.as_uint32_t())},
-          y{static_cast<float>(s->top_left().y.as_uint32_t())},
-          w{static_cast<float>(s->size().width.as_uint32_t())},
-          h{static_cast<float>(s->size().height.as_uint32_t())},
+          x{s->top_left().x.as_float()},
+          y{s->top_left().y.as_float()},
+          w{s->size().width.as_float()},
+          h{s->size().height.as_float()},
           dx{dx},
           dy{dy},
           rotation_axis(rotation_axis),
@@ -249,7 +249,6 @@ public:
             stop_watch.restart();
         }
 
-        glClearColor(0.0, 1.0, 0.0, 1.0);
         db_compositor->composite(std::move(scene_sequence));
 
         for (auto& m : moveables)
@@ -337,9 +336,12 @@ public:
 
         /* TODO: Get proper configuration */
         geom::Rectangles view_area;
-        display->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)
+        display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group)
         {
-            view_area.add(db.view_area());
+            group.for_each_display_buffer([&](mg::DisplayBuffer& db)
+            {
+                view_area.add(db.view_area());
+            });
         });
         geom::Size const display_size{view_area.bounding_rectangle().size};
         uint32_t const surface_side{300};

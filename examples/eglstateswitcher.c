@@ -65,8 +65,26 @@ int main(int argc, char *argv[])
         puts("Requesting state: " #new_state);\
         *state = new_state
 
+#define PRINT_STATE(state)\
+    case state:\
+        puts("Current state: " #state);\
+        break
+
 void toggle_surface_state(MirSurface* const surface, MirSurfaceState* state)
 {
+    switch (mir_surface_get_state(surface))
+    {
+    PRINT_STATE(mir_surface_state_unknown);
+    PRINT_STATE(mir_surface_state_restored);
+    PRINT_STATE(mir_surface_state_minimized);
+    PRINT_STATE(mir_surface_state_fullscreen);
+    PRINT_STATE(mir_surface_state_maximized);
+    PRINT_STATE(mir_surface_state_vertmaximized);
+    PRINT_STATE(mir_surface_state_horizmaximized);
+    default:
+        puts("Current state: unknown");
+    }
+
     switch (*state)
     {
     case mir_surface_state_restored:

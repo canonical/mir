@@ -22,6 +22,7 @@
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_display_sync_group.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
@@ -75,18 +76,18 @@ class MockGraphicBufferAllocator : public mtd::StubBufferAllocator
 class StubDisplay : public mtd::NullDisplay
 {
 public:
-    StubDisplay()
-        : display_buffer{geom::Rectangle{geom::Point{0,0}, geom::Size{1600,1600}}}
+    StubDisplay() :
+        display_sync_group{geom::Size{1600,1600}}
     {
     }
 
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
-        f(display_buffer);
+        f(display_sync_group);
     }
 
 private:
-    mtd::StubDisplayBuffer display_buffer;
+    mtd::StubDisplaySyncGroup display_sync_group;
 };
 
 struct SurfaceSync
@@ -216,18 +217,19 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 {
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
+    MirSurfaceSpec* surface_spec;
 
-    MirSurfaceParameters const request_params
+    void SetUp() override
     {
-        "Arbitrary surface name",
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
+        mtf::BasicClientServerFixture<BufferCounterConfig>::SetUp();
+        surface_spec = mir_connection_create_spec_for_normal_surface(
+            connection, 640, 480, mir_pixel_format_abgr_8888);
+    }
 
     void TearDown() override
     {
+        mir_surface_spec_release(surface_spec);
+
         mtf::BasicClientServerFixture<BufferCounterConfig>::TearDown();
 
         using  Counter = BufferCounterConfig::CountingStubBuffer;
@@ -245,7 +247,7 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync+i);
+        mir_surface_create(surface_spec, create_surface_callback, ssync+i);
 
     for (int i = 0; i != max_surface_count; ++i)
         wait_for_surface_create(ssync+i);
@@ -260,7 +262,7 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destroyed)
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed_if_client_disconnects_without_releasing_surfaces)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync+i);
+        mir_surface_create(surface_spec, create_surface_callback, ssync+i);
 
     for (int i = 0; i != max_surface_count; ++i)
         wait_for_surface_create(ssync+i);

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,7 +16,7 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+#include "mir/events/event_private.h"
 
 #include "src/server/input/android/android_input_channel.h"
 #include "src/server/input/android/input_sender.h"
@@ -323,7 +323,7 @@ TEST_F(AndroidInputSender, alarm_created_for_input_send)
 
     register_surface();
 
-    EXPECT_CALL(loop, notify_in(_,_));
+    EXPECT_CALL(loop, create_alarm(An<std::function<void()> const&>()));
     sender.send_event(key_event, channel);
 }
 

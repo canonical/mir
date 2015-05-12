@@ -54,9 +54,7 @@ void msh::GraphicsDisplayLayout::clip_to_output(geometry::Rectangle& rect)
         rectangles.confine(br_closed);
 
         rect.top_left = tl_closed;
-        rect.size =
-            geom::Size{br_closed.x.as_int() - tl_closed.x.as_int() + 1,
-                       br_closed.y.as_int() - tl_closed.y.as_int() + 1};
+        rect.size = as_size(br_closed - tl_closed + geom::Displacement{1, 1});
     }
     else
     {
@@ -98,20 +96,22 @@ geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& 
     int max_area = -1;
     geometry::Rectangle best = rect;
 
-    display->for_each_display_buffer(
-        [&](mg::DisplayBuffer const& db)
-        {
-            auto const& screen = db.view_area();
-            auto const& overlap = rect.intersection_with(screen);
-            int area = overlap.size.width.as_int() *
-                       overlap.size.height.as_int();
-
-            if (area > max_area)
+    display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group) 
+    {
+        group.for_each_display_buffer([&](mg::DisplayBuffer const& db)
             {
-                best = screen;
-                max_area = area;
-            }
-        });
+                auto const& screen = db.view_area();
+                auto const& overlap = rect.intersection_with(screen);
+                int area = overlap.size.width.as_int() *
+                           overlap.size.height.as_int();
+
+                if (area > max_area)
+                {
+                    best = screen;
+                    max_area = area;
+                }
+            });
+    });
 
     return best;
 }

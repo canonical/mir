@@ -269,27 +269,23 @@ InputReader::~InputReader() {
 
 void InputReader::loopOnce() {
     int32_t oldGeneration;
-    int32_t timeoutMillis;
     bool inputDevicesChanged = false;
     Vector<InputDeviceInfo> inputDevices;
     { // acquire lock
         AutoMutex _l(mLock);
 
         oldGeneration = mGeneration;
-        timeoutMillis = -1;
 
         uint32_t changes = mConfigurationChangesToRefresh;
         if (changes) {
+            if (0 == (changes & InputReaderConfiguration::CHANGE_MUST_REOPEN))
+                mEventHub->wake();
             mConfigurationChangesToRefresh = 0;
-            timeoutMillis = 0;
             refreshConfigurationLocked(changes);
-        } else if (mNextTimeout != std::chrono::nanoseconds(LLONG_MAX)) {
-            std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
-            timeoutMillis = toMillisecondTimeoutDelay(now, mNextTimeout);
         }
     } // release lock
 
-    size_t count = mEventHub->getEvents(timeoutMillis, mEventBuffer, EVENT_BUFFER_SIZE);
+    size_t count = mEventHub->getEvents(mEventBuffer, EVENT_BUFFER_SIZE);
 
     { // acquire lock
         AutoMutex _l(mLock);
@@ -574,7 +570,8 @@ void InputReader::fadePointerLocked() {
 void InputReader::requestTimeoutAtTimeLocked(std::chrono::nanoseconds when) {
     if (when < mNextTimeout) {
         mNextTimeout = when;
-        mEventHub->wake();
+        std::chrono::nanoseconds now = systemTime(SYSTEM_TIME_MONOTONIC);
+        mEventHub->wakeIn(toMillisecondTimeoutDelay(now, mNextTimeout));
     }
 }
 

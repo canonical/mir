@@ -34,6 +34,7 @@ struct HwcConfiguration : public testing::Test
         std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>()};
     mga::DisplayName display{mga::DisplayName::primary};
     mga::HwcBlankingControl config{mock_hwc_wrapper};
+    mga::HwcPowerModeControl power_mode_config{mock_hwc_wrapper};
 };
 
 TEST_F(HwcConfiguration, fb_format_selection)
@@ -68,7 +69,7 @@ TEST_F(HwcConfiguration, fb_format_selection)
         .InSequence(seq);
 
     mga::HwcBlankingControl hwc_config{mock_hwc_wrapper};
-    EXPECT_EQ(mir_pixel_format_argb_8888, hwc_config.active_attribs_for(mga::DisplayName::primary).display_format);
+    EXPECT_EQ(mir_pixel_format_argb_8888, hwc_config.active_config_for(mga::DisplayName::primary).current_format);
 }
 
 //not all hwc implementations give a hint about their framebuffer formats in their configuration.
@@ -92,7 +93,7 @@ TEST_F(HwcConfiguration, format_selection_failure_default)
         .InSequence(seq);
 
     mga::HwcBlankingControl hwc_config{mock_hwc_wrapper};
-    EXPECT_EQ(mir_pixel_format_abgr_8888, hwc_config.active_attribs_for(mga::DisplayName::primary).display_format);
+    EXPECT_EQ(mir_pixel_format_abgr_8888, hwc_config.active_config_for(mga::DisplayName::primary).current_format);
 }
 
 TEST_F(HwcConfiguration, turns_screen_on)
@@ -123,6 +124,21 @@ TEST_F(HwcConfiguration, turns_screen_off_for_off_suspend_and_standby)
     //translate this into blanking the screen
     config.power_mode(display, mir_power_mode_suspend);
     config.power_mode(display, mir_power_mode_standby);
+}
+
+TEST_F(HwcConfiguration, translates_mir_power_mode_to_hwc_power_mode)
+{
+    testing::InSequence seq;
+
+    EXPECT_CALL(*mock_hwc_wrapper, power_mode(display, mga::PowerMode::off));
+    EXPECT_CALL(*mock_hwc_wrapper, power_mode(display, mga::PowerMode::doze_suspend));
+    EXPECT_CALL(*mock_hwc_wrapper, power_mode(display, mga::PowerMode::doze));
+    EXPECT_CALL(*mock_hwc_wrapper, power_mode(display, mga::PowerMode::normal));
+
+    power_mode_config.power_mode(display, mir_power_mode_off);
+    power_mode_config.power_mode(display, mir_power_mode_suspend);
+    power_mode_config.power_mode(display, mir_power_mode_standby);
+    power_mode_config.power_mode(display, mir_power_mode_on);
 }
 
 TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
@@ -169,14 +185,17 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
                 }
                 //the attribute list should be at least this long, as some qcom drivers always deref attribute_list[5]
                 EXPECT_EQ(5, i);
+                return 0;
             }));
 
     auto vrefresh_hz = 1000.0 / vrefresh_period.count();
-    auto attribs = config.active_attribs_for(display);
-    EXPECT_THAT(attribs.pixel_size, Eq(px_size));
-    EXPECT_THAT(attribs.mm_size, Eq(mm_size));
-    EXPECT_THAT(attribs.vrefresh_hz, Eq(vrefresh_hz));
+    auto attribs = config.active_config_for(display);
+    ASSERT_THAT(attribs.modes.size(), Eq(1));
+    EXPECT_THAT(attribs.modes[0].size, Eq(px_size));
+    EXPECT_THAT(attribs.modes[0].vrefresh_hz, Eq(vrefresh_hz));
+    EXPECT_THAT(attribs.physical_size_mm, Eq(mm_size));
     EXPECT_TRUE(attribs.connected);
+    EXPECT_TRUE(attribs.used);
 }
 
 //the primary display should not be disconnected, but this is how to tell if the external one is
@@ -187,12 +206,28 @@ TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
         .WillByDefault(Return(std::vector<mga::ConfigId>{}));
 
     EXPECT_THROW({
-        config.active_attribs_for(mga::DisplayName::primary);
+        config.active_config_for(mga::DisplayName::primary);
     }, std::runtime_error);
-    auto external_attribs = config.active_attribs_for(mga::DisplayName::external);
-    EXPECT_THAT(external_attribs.pixel_size, Eq(geom::Size{0,0}));
-    EXPECT_THAT(external_attribs.vrefresh_hz, Eq(0.0));
+    auto external_attribs = config.active_config_for(mga::DisplayName::external);
+    EXPECT_THAT(external_attribs.modes.size(), Eq(0));
     EXPECT_FALSE(external_attribs.connected);
+    EXPECT_FALSE(external_attribs.used);
+}
+
+//some devices (bq) only report an error later in the display attributes call, make sure to report disconnected on error to this call. 
+TEST_F(HwcConfiguration, display_attributes_failure_indicates_problem_for_primary_disconnect_for_secondary)
+{
+    using namespace testing;
+    ON_CALL(*mock_hwc_wrapper, display_attributes(_,_,_,_))
+        .WillByDefault(Return(-22));
+
+    EXPECT_THROW({
+        config.active_config_for(mga::DisplayName::primary);
+    }, std::runtime_error);
+    auto external_attribs = config.active_config_for(mga::DisplayName::external);
+    EXPECT_THAT(external_attribs.modes.size(), Eq(0));
+    EXPECT_FALSE(external_attribs.connected);
+    EXPECT_FALSE(external_attribs.used);
 }
 
 TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
@@ -205,9 +240,10 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
                 int i = 0;
                 while(attribute_list[i] != HWC_DISPLAY_NO_ATTRIBUTE)
                     values[i++] = 0;
+                return 0;
             }));
-    auto attribs = config.active_attribs_for(mga::DisplayName::external);
-    EXPECT_THAT(attribs.vrefresh_hz, Eq(0.0f));
+    auto attribs = config.active_config_for(mga::DisplayName::external);
+    EXPECT_THAT(attribs.modes[attribs.current_mode_index].vrefresh_hz, Eq(0.0f));
 }
 
 TEST_F(HwcConfiguration, no_fpe_from_malformed_dpi)
@@ -220,7 +256,63 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_dpi)
                 int i = 0;
                 while(attribute_list[i] != HWC_DISPLAY_NO_ATTRIBUTE)
                     values[i++] = 0;
+                return 0;
             }));
-    auto attribs = config.active_attribs_for(mga::DisplayName::external);
-    EXPECT_THAT(attribs.mm_size, Eq(geom::Size{0,0}));
+    auto attribs = config.active_config_for(mga::DisplayName::external);
+    EXPECT_THAT(attribs.physical_size_mm, Eq(geom::Size{0,0}));
+}
+
+TEST_F(HwcConfiguration, subscribes_to_hotplug_and_vsync)
+{
+    using namespace testing;
+    std::function<void(mga::DisplayName, bool)> hotplug_fn([](mga::DisplayName, bool){});
+    std::function<void(mga::DisplayName, std::chrono::nanoseconds)> vsync_fn(
+        [](mga::DisplayName, std::chrono::nanoseconds){});
+    EXPECT_CALL(*mock_hwc_wrapper, subscribe_to_events(_,_,_,_))
+        .WillOnce(DoAll(SaveArg<1>(&vsync_fn), SaveArg<2>(&hotplug_fn)));
+    EXPECT_CALL(*mock_hwc_wrapper, unsubscribe_from_events_(_));
+
+    unsigned int hotplug_call_count{0};
+    unsigned int vsync_call_count{0};
+    auto subscription = config.subscribe_to_config_changes(
+        [&]{ hotplug_call_count++; }, [&](mga::DisplayName){ vsync_call_count++; });
+    hotplug_fn(mga::DisplayName::primary, true);
+    hotplug_fn(mga::DisplayName::primary, true);
+    vsync_fn(mga::DisplayName::primary, std::chrono::nanoseconds(33));
+    EXPECT_THAT(hotplug_call_count, Eq(2));
+    EXPECT_THAT(vsync_call_count, Eq(1));
+}
+
+TEST_F(HwcConfiguration, sets_active_config_when_needed)
+{
+    using namespace testing;
+
+    std::vector<mga::ConfigId> config_ids{mga::ConfigId{0xA1}, mga::ConfigId{0xBEE}};
+    mga::DisplayName display_name{mga::DisplayName::primary};
+
+    EXPECT_CALL(*mock_hwc_wrapper, display_configs(display))
+        .WillOnce(Return(config_ids));
+    EXPECT_CALL(*mock_hwc_wrapper, has_active_config(display_name))
+        .WillOnce(Return(false));
+    EXPECT_CALL(*mock_hwc_wrapper, set_active_config(display_name, config_ids[0]));
+
+    power_mode_config.active_config_for(display_name);
+}
+
+TEST_F(HwcConfiguration, uses_given_active_config_id)
+{
+    using namespace testing;
+
+    std::vector<mga::ConfigId> config_ids{mga::ConfigId{0xA1}, mga::ConfigId{0xBEE}};
+    mga::DisplayName display_name{mga::DisplayName::external};
+
+    EXPECT_CALL(*mock_hwc_wrapper, display_configs(display_name))
+        .WillOnce(Return(config_ids));
+    EXPECT_CALL(*mock_hwc_wrapper, has_active_config(display_name))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_hwc_wrapper, active_config_for(display_name))
+        .WillOnce(Return(config_ids[1]));
+    EXPECT_CALL(*mock_hwc_wrapper, display_attributes(display_name, config_ids[1], _, _));
+
+    power_mode_config.active_config_for(display_name);
 }

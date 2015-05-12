@@ -38,13 +38,15 @@ class ServerRenderWindow : public AndroidDriverInterpreter
 {
 public:
     ServerRenderWindow(std::shared_ptr<FramebufferBundle> const& fb_bundle,
+                       MirPixelFormat format,
                        std::shared_ptr<InterpreterResourceCache> const&);
 
-    graphics::NativeBuffer* driver_requests_buffer();
-    void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd);
-    void dispatch_driver_request_format(int format);
-    int driver_requests_info(int key) const;
-    void sync_to_display(bool sync);
+    graphics::NativeBuffer* driver_requests_buffer() override;
+    void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd) override;
+    void dispatch_driver_request_format(int format) override;
+    void dispatch_driver_request_buffer_count(unsigned int count) override;
+    int driver_requests_info(int key) const override;
+    void sync_to_display(bool sync) override;
 
 private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;

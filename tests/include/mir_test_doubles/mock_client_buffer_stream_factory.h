@@ -20,6 +20,10 @@
 #define MIR_TEST_DOUBLES_MOCK_CLIENT_BUFFER_STREAM_FACTORY_H_
 
 #include "src/client/client_buffer_stream_factory.h"
+#include "src/client/buffer_stream.h"
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -30,10 +34,12 @@ namespace doubles
 
 struct MockClientBufferStreamFactory : public client::ClientBufferStreamFactory
 {
-    MOCK_METHOD2(make_consumer_stream, std::shared_ptr<client::ClientBufferStream>(protobuf::DisplayServer&,
-        protobuf::BufferStream const&));
-    MOCK_METHOD2(make_producer_stream, std::shared_ptr<client::ClientBufferStream>(protobuf::DisplayServer&,
-        protobuf::BufferStream const&));
+    MOCK_METHOD3(make_consumer_stream, std::shared_ptr<client::ClientBufferStream>(protobuf::DisplayServer&,
+        protobuf::BufferStream const&, std::string const&));
+    MOCK_METHOD3(make_producer_stream, std::shared_ptr<client::ClientBufferStream>(protobuf::DisplayServer&,
+        protobuf::BufferStream const&, std::string const&));
+    MOCK_METHOD4(make_producer_stream, client::ClientBufferStream*(protobuf::DisplayServer&,
+        protobuf::BufferStreamParameters const&, mir_buffer_stream_callback callback, void* context));
 };
 
 }

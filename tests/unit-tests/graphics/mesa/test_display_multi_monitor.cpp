@@ -296,6 +296,10 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
         /* The shared context is made current finally */
         EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,shared_context))
             .Times(1);
+
+        /* Contexts are released at teardown */
+        EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,EGL_NO_CONTEXT))
+            .Times(AtLeast(1));
     }
 
     auto display = create_display_cloned(create_platform());
@@ -354,18 +358,16 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
     auto display = create_display_cloned(create_platform());
 
     /* First frame: Page flips are scheduled, but not waited for */
-    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group)
     {
-        buffer.gl_swap_buffers();
-        buffer.flip();
+        group.post();
     });
 
     /* Second frame: Previous page flips finish (drmHandleEvent) and new ones
        are scheduled */
-    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group)
     {
-        buffer.gl_swap_buffers();
-        buffer.flip();
+        group.post();
     });
 }
 

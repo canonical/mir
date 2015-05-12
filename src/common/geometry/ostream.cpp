@@ -17,7 +17,6 @@
  */
 
 #include "mir/geometry/displacement.h"
-#include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/rectangles.h"

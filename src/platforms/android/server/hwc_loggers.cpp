@@ -52,6 +52,14 @@ private:
     std::ios_base::fmtflags const old_flags;
 };
 
+struct DisplayName{ unsigned int const name; };
+std::ostream& operator<<(std::ostream& str, DisplayName d)
+{
+    if (d.name == HWC_DISPLAY_PRIMARY) str <<  "primary ";
+    if (d.name == HWC_DISPLAY_EXTERNAL) str << "external";
+    return str;
+}
+
 struct LayerNumber{ unsigned int const num; };
 std::ostream& operator<<(std::ostream& str, LayerNumber l)
 {
@@ -132,6 +140,23 @@ std::ostream& operator<<(std::ostream& str, HwcRect r)
                << HwcRectMember{r.rect.bottom} << "}";
 }
 
+struct HwcFloatRectMember { float member; };
+std::ostream& operator<<(std::ostream& str, HwcFloatRectMember rect)
+{
+    StreamFormatter stream_format(str, rect_entry_column_size, std::ios_base::right);
+    return str << rect.member;
+}
+
+struct HwcFloatRect { hwc_frect_t const& rect; };
+std::ostream& operator<<(std::ostream& str, HwcFloatRect r)
+{
+    return str << "{"
+               << HwcFloatRectMember{r.rect.left} << ","
+               << HwcFloatRectMember{r.rect.top} << ","
+               << HwcFloatRectMember{r.rect.right} << ","
+               << HwcFloatRectMember{r.rect.bottom} << "}";
+}
+
 std::ostream& operator<<(std::ostream& str, mga::OverlayOptimization opt)
 {
     if (opt == mga::OverlayOptimization::enabled)
@@ -153,49 +178,114 @@ std::ostream& operator<<(std::ostream& str, mga::HwcVersion version)
     }
     return str;
 }
+
+std::ostream& operator<<(std::ostream& str, mga::PowerMode power_mode)
+{
+    switch (power_mode)
+    {
+        case mga::PowerMode::off: str << "off"; break;
+        case mga::PowerMode::doze: str << "doze"; break;
+        case mga::PowerMode::normal: str << "on(normal)"; break;
+        case mga::PowerMode::doze_suspend: str << "doze(suspend)"; break;
+        default: break;
+    }
+    return str;
+}
 }
 
-void mga::HwcFormattedLogger::report_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_list_submitted_to_prepare(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
     std::cout << "before prepare():" << std::endl
-              << " # | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | "
+              << " # | display  | Type      | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | "
               << std::endl;
-    for(auto i = 0u; i < list.numHwLayers; i++)
-        std::cout << LayerNumber{i}
-                  << separator
-                  << HwcRect{list.hwLayers[i].displayFrame}
-                  << separator
-                  << HwcRect{list.hwLayers[i].sourceCrop}
-                  << separator
-                  << HwcRotation{list.hwLayers[i].transform}
-                  << separator
-                  << HwcBlending{list.hwLayers[i].blending}
-                  << separator
-                  << std::endl;
+    for(auto i = 0u; i < displays.size(); i++)
+    {
+        if (!displays[i]) continue;
+        for(auto j = 0u; j < displays[i]->numHwLayers; j++)
+        {
+            std::cout << LayerNumber{j}
+                      << separator
+                      << DisplayName{i}
+                      << separator
+                      << HwcType{displays[i]->hwLayers[j].compositionType, displays[i]->hwLayers[j].flags}
+                      << separator
+                      << HwcRect{displays[i]->hwLayers[j].displayFrame}
+                      << separator;
+
+            if (hwc_version < HwcVersion::hwc13)
+                std::cout << HwcRect{displays[i]->hwLayers[j].sourceCrop};
+            else
+                std::cout << HwcFloatRect{displays[i]->hwLayers[j].sourceCropf};
+
+            std::cout << separator
+                      << HwcRotation{displays[i]->hwLayers[j].transform}
+                      << separator
+                      << HwcBlending{displays[i]->hwLayers[j].blending}
+                      << separator
+                      << std::endl;
+        }
+    }
 }
 
-void mga::HwcFormattedLogger::report_prepare_done(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_prepare_done(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
     std::cout << "after prepare():" << std::endl
-              << " # | Type      | " << std::endl;
-    for(auto i = 0u; i < list.numHwLayers; i++)
-        std::cout << LayerNumber{i}
-                  << separator
-                  << HwcType{list.hwLayers[i].compositionType,list.hwLayers[i].flags}
-                  << separator
-                  << std::endl;
+              << " # | display  | Type      | " << std::endl;
+    for(auto i = 0u; i < displays.size(); i++)
+    {
+        if (!displays[i]) continue;
+        for(auto j = 0u; j < displays[i]->numHwLayers; j++)
+            std::cout << LayerNumber{j}
+                      << separator
+                      << DisplayName{i}
+                      << separator
+                      << HwcType{displays[i]->hwLayers[j].compositionType, displays[i]->hwLayers[j].flags}
+                      << separator
+                      << std::endl;
+    }
 }
 
-void mga::HwcFormattedLogger::report_set_list(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_set_list(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
     std::cout << "set list():" << std::endl
-              << " # | handle" << std::endl;
+              << " # | display  | Type      | handle | acquireFenceFd" << std::endl;
 
-    for(auto i = 0u; i < list.numHwLayers; i++)
-        std::cout << LayerNumber{i}
-                  << separator
-                  << list.hwLayers[i].handle
-                  << std::endl;
+    for(auto i = 0u; i < displays.size(); i++)
+    {
+        if (!displays[i]) continue;
+        for(auto j = 0u; j < displays[i]->numHwLayers; j++)
+            std::cout << LayerNumber{j}
+                      << separator
+                      << DisplayName{i}
+                      << separator
+                      << HwcType{displays[i]->hwLayers[j].compositionType, displays[i]->hwLayers[j].flags}
+                      << separator
+                      << displays[i]->hwLayers[j].handle
+                      << separator
+                      << displays[i]->hwLayers[j].acquireFenceFd
+                      << std::endl;
+    }
+}
+
+void mga::HwcFormattedLogger::report_set_done(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
+{
+    std::cout << "after set():" << std::endl
+              << " # | display  | releaseFenceFd" << std::endl;
+    for(auto i = 0u; i < displays.size(); i++)
+    {
+        if (!displays[i]) continue;
+        for(auto j = 0u; j < displays[i]->numHwLayers; j++)
+            std::cout << LayerNumber{j}
+                      << separator
+                      << DisplayName{i}
+                      << separator
+                      << displays[i]->hwLayers[j].releaseFenceFd
+                      << std::endl;
+    }
 }
 
 void mga::HwcFormattedLogger::report_overlay_optimization(OverlayOptimization overlay_optimization) const
@@ -233,9 +323,19 @@ void mga::HwcFormattedLogger::report_legacy_fb_module() const
     std::cout << "Legacy FB module" << std::endl;
 }
 
-void mga::NullHwcReport::report_list_submitted_to_prepare(hwc_display_contents_1_t const&) const {}
-void mga::NullHwcReport::report_prepare_done(hwc_display_contents_1_t const&) const {}
-void mga::NullHwcReport::report_set_list(hwc_display_contents_1_t const&) const {}
+void mga::HwcFormattedLogger::report_power_mode(PowerMode mode) const
+{
+    std::cout << "HWC: power mode: " << mode << std::endl;
+}
+
+void mga::NullHwcReport::report_list_submitted_to_prepare(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const {}
+void mga::NullHwcReport::report_prepare_done(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const {}
+void mga::NullHwcReport::report_set_list(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const {}
+void mga::NullHwcReport::report_set_done(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const {}
 void mga::NullHwcReport::report_overlay_optimization(OverlayOptimization) const {}
 void mga::NullHwcReport::report_display_on() const {}
 void mga::NullHwcReport::report_display_off() const {}
@@ -243,3 +343,4 @@ void mga::NullHwcReport::report_vsync_on() const {}
 void mga::NullHwcReport::report_vsync_off() const {}
 void mga::NullHwcReport::report_hwc_version(mga::HwcVersion) const {}
 void mga::NullHwcReport::report_legacy_fb_module() const {}
+void mga::NullHwcReport::report_power_mode(PowerMode) const {}

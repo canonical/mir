@@ -47,7 +47,7 @@ TEST_F(ServerWithoutActiveOutputs, creates_valid_client_surface)
 
     auto const surface = mtf::make_any_surface(connection);
 
-    EXPECT_THAT(mir_surface_is_valid(surface), Eq(mir_true))
+    EXPECT_THAT(mir_surface_is_valid(surface), Eq(true))
         << mir_surface_get_error_message(surface);
 
     mir_surface_release_sync(surface);

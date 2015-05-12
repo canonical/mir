@@ -21,6 +21,9 @@
 
 #include <gmock/gmock.h>
 
+#include <unordered_map>
+#include <thread>
+
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
@@ -86,7 +89,14 @@ public:
     MockEGL();
     ~MockEGL();
 
+    void expect_nested_egl_usage();
     void provide_egl_extensions();
+
+    // Provide a functional version of eglSwapBuffers on stubbed platforms
+    // When enabled, if an instance of mir::client::EGLNativeSurface is passed to
+    // eglCreateWindowSurface, then the returned EGLSurface can be used with
+    // eglSwapBuffers to invoke EGLNativeSurface::request_and_wait_for_next_buffer
+    void provide_stub_platform_buffer_swapping();
 
     typedef void (*generic_function_pointer_t)(void);
 
@@ -143,6 +153,7 @@ public:
     EGLContext fake_egl_context;
     EGLImageKHR fake_egl_image;
     int fake_visual_id;
+    std::unordered_map<std::thread::id,EGLContext> current_contexts;
 };
 
 }

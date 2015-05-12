@@ -18,6 +18,8 @@
  */
 
 #include "mir/glib_main_loop.h"
+#include "mir/lockable_callback_wrapper.h"
+#include "mir/basic_callback.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -34,15 +36,14 @@ public:
     AlarmImpl(
         GMainContext* main_context,
         std::shared_ptr<mir::time::Clock> const& clock,
-        std::function<void()> const& callback,
-        std::function<void()> const& lock,
-        std::function<void()> const& unlock)
+        std::shared_ptr<mir::LockableCallback> const& callback,
+        std::function<void()> const& exception_handler)
         : main_context{main_context},
           clock{clock},
-          callback{callback},
-          ext_lock{lock},
-          ext_unlock{unlock},
-          state_{State::cancelled}
+          state_{State::cancelled},
+          exception_handler{exception_handler},
+          wrapped_callback{std::make_shared<mir::LockableCallbackWrapper>(
+              callback, [this] { state_ = State::triggered; })}
     {
     }
 
@@ -74,9 +75,8 @@ public:
         gsource = mir::detail::add_timer_gsource(
             main_context,
             clock,
-            [&] { state_ = State::triggered; callback(); },
-            ext_lock,
-            ext_unlock,
+            wrapped_callback,
+            exception_handler,
             time_point);
 
         return true;
@@ -86,10 +86,9 @@ private:
     mutable std::mutex alarm_mutex;
     GMainContext* main_context;
     std::shared_ptr<mir::time::Clock> const clock;
-    std::function<void()> const callback;
-    std::function<void()> const ext_lock;
-    std::function<void()> const ext_unlock;
     State state_;
+    std::function<void()> exception_handler;
+    std::shared_ptr<mir::LockableCallback> wrapped_callback;
     mir::detail::GSourceHandle gsource;
 };
 
@@ -230,48 +229,23 @@ bool mir::GLibMainLoop::should_process_actions_for(void const* owner)
     return iter == do_not_process.end();
 }
 
-std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::notify_in(
-    std::chrono::milliseconds delay,
-    std::function<void()> const& callback)
-{
-    auto alarm = create_alarm(callback);
-
-    alarm->reschedule_in(delay);
-
-    return alarm;
-}
-
-std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::notify_at(
-    mir::time::Timestamp t,
-    std::function<void()> const& callback)
-{
-    auto alarm = create_alarm(callback);
-
-    alarm->reschedule_for(t);
-
-    return alarm;
-}
-
 std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::create_alarm(
     std::function<void()> const& callback)
 {
-    return create_alarm(callback, []{}, []{});
+    return create_alarm(std::make_shared<BasicCallback>(callback));
 }
 
 std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::create_alarm(
-    std::function<void()> const& callback,
-    std::function<void()> const& lock,
-    std::function<void()> const& unlock)
+    std::shared_ptr<LockableCallback> const& callback)
 {
-    auto const callback_with_exception_handling =
-        [this, callback]
+    auto const exception_hander =
+        [this]
         {
-            try { callback(); }
-            catch (...) { handle_exception(std::current_exception()); }
+            handle_exception(std::current_exception());
         };
 
-    return std::unique_ptr<mir::time::Alarm>{
-        new AlarmImpl(main_context, clock, callback_with_exception_handling, lock, unlock)};
+    return std::make_unique<AlarmImpl>(
+        main_context, clock, callback, exception_hander);
 }
 
 void mir::GLibMainLoop::reprocess_all_sources()

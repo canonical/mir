@@ -22,6 +22,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/coordinate_translator.h"
 #include "mir/frontend/display_changer.h"
@@ -32,7 +33,6 @@
 #include "mir/input/cursor_images.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/geometry/dimensions.h"
-#include "mir/frontend/display_changer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/platform_ipc_operations.h"
@@ -42,6 +42,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
+#include "mir/frontend/buffer_stream.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
 
@@ -51,9 +52,11 @@
 #include "../../src/platforms/mesa/include/mir_toolkit/mesa/platform_operation.h"
 
 #include "mir/geometry/rectangles.h"
-#include "surface_tracker.h"
+#include "buffer_stream_tracker.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
+
+#include "mir_toolkit/client_types.h"
 
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -62,8 +65,10 @@
 #include <mutex>
 #include <thread>
 #include <functional>
+#include <cstring>
 
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mf = mir::frontend;
 namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
@@ -94,7 +99,7 @@ mf::SessionMediator::SessionMediator(
     connection_context(connection_context),
     cursor_images(cursor_images),
     translator{translator},
-    surface_tracker{static_cast<size_t>(client_buffer_cache_size)}
+    buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
 
@@ -149,29 +154,32 @@ void mf::SessionMediator::connect(
 }
 
 void mf::SessionMediator::advance_buffer(
-    SurfaceId surf_id,
-    Surface& surface,
+    BufferStreamId stream_id,
+    BufferStream& stream,
     graphics::Buffer* old_buffer,
     std::unique_lock<std::mutex>& lock,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto const tid = std::this_thread::get_id();
+    auto const tid = std::make_shared<std::thread::id>(std::this_thread::get_id());
+    auto const weak_tid = std::weak_ptr<std::thread::id>{tid};
 
-    surface.swap_buffers(
+    stream.swap_buffers(
         old_buffer,
         // Note: We assume that the lambda will be executed within swap_buffers
         // (in which case the lock reference is valid) or in a different thread
         // altogether (in which case the dangling reference is not accessed)
-        [this, tid, &lock, surf_id, complete](mg::Buffer* new_buffer)
+        [this, weak_tid, &lock, stream_id, complete](mg::Buffer* new_buffer)
         {
-            if (tid == std::this_thread::get_id())
-                lock.unlock();
+            if (auto const tid = weak_tid.lock())
+            {
+                if (*tid == std::this_thread::get_id())
+                    lock.unlock();
+            }
 
-            if (surface_tracker.track_buffer(surf_id, new_buffer))
+            if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
                 complete(new_buffer, mg::BufferIpcMsgType::full_msg);
-
         });
 }
 
@@ -225,6 +233,25 @@ void mf::SessionMediator::create_surface(
     if (request->has_edge_attachment())
         params.with_edge_attachment(static_cast<MirEdgeAttachment>(request->edge_attachment()));
 
+    #define COPY_IF_SET(field)\
+        if (request->has_##field())\
+            params.field = decltype(params.field.value())(request->field())
+
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+    COPY_IF_SET(width_inc);
+    COPY_IF_SET(height_inc);
+
+    #undef COPY_IF_SET
+
+    if (request->has_min_aspect())
+        params.min_aspect = { request->min_aspect().width(), request->min_aspect().height()};
+
+    if (request->has_max_aspect())
+        params.max_aspect = { request->max_aspect().width(), request->max_aspect().height()};
+
     auto const surf_id = shell->create_surface(session, params);
 
     auto surface = session->get_surface(surf_id);
@@ -252,7 +279,9 @@ void mf::SessionMediator::create_surface(
         setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
-    advance_buffer(surf_id, *surface, surface_tracker.last_buffer(surf_id), lock,
+
+    auto stream_id = mf::BufferStreamId(surf_id.as_value());
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id), lock,
         [this, surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -262,12 +291,7 @@ void mf::SessionMediator::create_surface(
                          client_buffer,
                          msg_type);
 
-            // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
-            // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client.
-            // To achieve this order we rely on done->Run() sending messages synchronously. As documented in mfd::SocketMessenger::send.
-            // this will require additional synchronization if mfd::SocketMessenger::send changes.
             done->Run();
-            shell->handle_surface_created(session);
         });
 }
 
@@ -289,7 +313,9 @@ void mf::SessionMediator::next_buffer(
     report->session_next_buffer_called(session->name());
 
     auto surface = session->get_surface(surf_id);
-    advance_buffer(surf_id, *surface, surface_tracker.last_buffer(surf_id), lock,
+    auto stream_id = mf::BufferStreamId{surf_id.as_value()};
+
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.last_buffer(stream_id), lock,
         [this, response, done]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -304,11 +330,12 @@ void mf::SessionMediator::exchange_buffer(
     mir::protobuf::Buffer* response,
     google::protobuf::Closure* done)
 {
-    mf::SurfaceId const surface_id{request->id().value()};
+    mf::BufferStreamId const stream_id{request->id().value()};
+
     mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    ipc_operations->unpack_buffer(request_msg, *surface_tracker.last_buffer(surface_id));
+    ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
 
     std::unique_lock<std::mutex> lock{session_mutex};
     auto const session = weak_session.lock();
@@ -317,8 +344,8 @@ void mf::SessionMediator::exchange_buffer(
 
     report->session_exchange_buffer_called(session->name());
 
-    auto const& surface = session->get_surface(surface_id);
-    advance_buffer(surface_id, *surface, surface_tracker.buffer_from(buffer_id), lock,
+    auto const& surface = session->get_buffer_stream(stream_id);
+    advance_buffer(stream_id, *surface, buffer_stream_tracker.buffer_from(buffer_id), lock,
         [this, response, done]
         (graphics::Buffer* new_buffer, graphics::BufferIpcMsgType msg_type)
         {
@@ -346,7 +373,7 @@ void mf::SessionMediator::release_surface(
         auto const id = SurfaceId(request->value());
 
         shell->destroy_surface(session, id);
-        surface_tracker.remove_surface(id);
+        buffer_stream_tracker.remove_buffer_stream(BufferStreamId(request->value()));
     }
 
     // TODO: We rely on this sending responses synchronously.
@@ -403,6 +430,78 @@ void mf::SessionMediator::configure_surface(
         int newvalue = shell->set_surface_attribute(session, id, attrib, value);
 
         response->set_ivalue(newvalue);
+    }
+
+    done->Run();
+}
+
+void mf::SessionMediator::modify_surface(
+    google::protobuf::RpcController*, // controller,
+    const mir::protobuf::SurfaceModifications* request,
+    mir::protobuf::Void* /*response*/,
+    google::protobuf::Closure* done)
+{
+    auto const& surface_specification = request->surface_specification();
+
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+
+        auto const session = weak_session.lock();
+        if (!session)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        msh::SurfaceSpecification mods;
+
+        #define COPY_IF_SET(name)\
+            if (surface_specification.has_##name())\
+                mods.name = decltype(mods.name.value())(surface_specification.name())
+
+        COPY_IF_SET(width);
+        COPY_IF_SET(height);
+        COPY_IF_SET(pixel_format);
+        COPY_IF_SET(buffer_usage);
+        COPY_IF_SET(name);
+        COPY_IF_SET(output_id);
+        COPY_IF_SET(type);
+        COPY_IF_SET(state);
+        COPY_IF_SET(preferred_orientation);
+        COPY_IF_SET(parent_id);
+        // aux_rect is a special case (below)
+        COPY_IF_SET(edge_attachment);
+        COPY_IF_SET(min_width);
+        COPY_IF_SET(min_height);
+        COPY_IF_SET(max_width);
+        COPY_IF_SET(max_height);
+        COPY_IF_SET(width_inc);
+        COPY_IF_SET(height_inc);
+        // min_aspect is a special case (below)
+        // max_aspect is a special case (below)
+
+        #undef COPY_IF_SET
+
+        if (surface_specification.has_aux_rect())
+        {
+            auto const& rect = surface_specification.aux_rect();
+            mods.aux_rect = {{rect.left(), rect.top()}, {rect.width(), rect.height()}};
+        }
+
+        if (surface_specification.has_min_aspect())
+            mods.min_aspect =
+                {
+                    surface_specification.min_aspect().width(),
+                    surface_specification.min_aspect().height()
+                };
+
+        if (surface_specification.has_max_aspect())
+            mods.max_aspect =
+                {
+                    surface_specification.max_aspect().width(),
+                    surface_specification.max_aspect().height()
+                };
+
+        auto const id = mf::SurfaceId(request->surface_id().value());
+
+        shell->modify_surface(session, id, mods);
     }
 
     done->Run();
@@ -515,6 +614,73 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
+void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
+    mir::protobuf::BufferStreamParameters const* request,
+    mir::protobuf::BufferStream* response,
+    google::protobuf::Closure* done)
+{
+    auto lock = std::unique_lock<std::mutex>(session_mutex);
+
+    auto const session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    report->session_create_surface_called(session->name());
+    
+    auto const usage = (request->buffer_usage() == mir_buffer_usage_hardware) ?
+        mg::BufferUsage::hardware : mg::BufferUsage::software;
+
+    auto stream_size = geom::Size{geom::Width{request->width()}, geom::Height{request->height()}};
+    mg::BufferProperties props(stream_size,
+        static_cast<MirPixelFormat>(request->pixel_format()),
+        usage);
+    
+    auto const buffer_stream_id = session->create_buffer_stream(props);
+    auto stream = session->get_buffer_stream(buffer_stream_id);
+    
+    response->mutable_id()->set_value(buffer_stream_id.as_value());
+    response->set_pixel_format(stream->pixel_format());
+
+    // TODO: Is it guaranteed we get the buffer usage we want?
+    response->set_buffer_usage(request->buffer_usage());
+
+    advance_buffer(buffer_stream_id, *stream, buffer_stream_tracker.last_buffer(buffer_stream_id), lock,
+        [this, response, done, session]
+        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
+        {
+            auto buffer = response->mutable_buffer();
+            pack_protobuf_buffer(*buffer, client_buffer, msg_type);
+
+            done->Run();
+        });
+}
+
+void mf::SessionMediator::release_buffer_stream(google::protobuf::RpcController*,
+    const mir::protobuf::BufferStreamId* request,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        report->session_create_surface_called(session->name());
+
+        auto const id = BufferStreamId(request->value());
+
+        session->destroy_buffer_stream(id);
+        buffer_stream_tracker.remove_buffer_stream(id);
+    }
+
+    done->Run();
+}
+
+
 std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::prompt_session_connect_handler() const
 {
     return [this](std::shared_ptr<mf::Session> const& session)
@@ -525,6 +691,15 @@ std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::pr
 
         shell->add_prompt_provider_for(prompt_session, session);
     };
+}
+
+namespace
+{
+void throw_if_unsuitable_for_cursor(mf::BufferStream& stream)
+{
+    if (stream.pixel_format() != mir_pixel_format_argb_8888)
+        BOOST_THROW_EXCEPTION(std::logic_error("Only argb8888 buffer streams may currently be attached to the cursor"));
+}
 }
 
 void mf::SessionMediator::configure_cursor(
@@ -550,7 +725,17 @@ void mf::SessionMediator::configure_cursor(
         {
             auto const& image = cursor_images->image(cursor_request->name(), mi::default_cursor_size);
             surface->set_cursor_image(image);
-        }
+        } 
+        else if (cursor_request->has_buffer_stream())
+        {
+            auto const& stream_id = mf::BufferStreamId(cursor_request->buffer_stream().value());
+            auto hotspot = geom::Displacement{cursor_request->hotspot_x(), cursor_request->hotspot_y()};
+            auto stream = session->get_buffer_stream(stream_id);
+
+            throw_if_unsuitable_for_cursor(*stream);
+
+            surface->set_cursor_stream(stream, hotspot);
+        } 
         else
         {
             surface->set_cursor_image({});
@@ -635,18 +820,18 @@ void mf::SessionMediator::drm_auth_magic(
 
     auto const magic = request->magic();
 
+    MirMesaAuthMagicRequest const auth_magic_request{magic};
     mg::PlatformOperationMessage platform_request;
-    platform_request.data.resize(sizeof(MirMesaAuthMagicRequest));
-    auto const auth_magic_request_ptr =
-        reinterpret_cast<MirMesaAuthMagicRequest*>(platform_request.data.data());
-    *auth_magic_request_ptr = MirMesaAuthMagicRequest{magic};
+    platform_request.data.resize(sizeof(auth_magic_request));
+    std::memcpy(platform_request.data.data(), &auth_magic_request, sizeof(auth_magic_request));
 
     auto const platform_response = ipc_operations->platform_operation(
         MirMesaPlatformOperation::auth_magic, platform_request);
 
-    auto const auth_magic_response_ptr =
-        reinterpret_cast<MirMesaAuthMagicResponse const*>(platform_response.data.data());
-    response->set_status_code(auth_magic_response_ptr->status);
+    MirMesaAuthMagicResponse auth_magic_response{-1};
+    std::memcpy(&auth_magic_response, platform_response.data.data(),
+                platform_response.data.size());
+    response->set_status_code(auth_magic_response.status);
 
     done->Run();
 }

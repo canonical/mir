@@ -23,7 +23,7 @@
 #include "mir/graphics/android/native_buffer.h"
 #include "src/platforms/android/server/android_graphic_buffer_allocator.h"
 
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/cross_process_sync.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/validity_matchers.h"
@@ -74,31 +74,32 @@ struct TestClient
         eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &visual_id);
 
         /* make surface */
-        MirSurfaceParameters surface_parameters;
-        surface_parameters.name = "testsurface";
-        surface_parameters.width = test_width;
-        surface_parameters.height = test_height;
-        surface_parameters.pixel_format = select_format_for_visual_id(visual_id);
-        return mir_connection_create_surface_sync(connection, &surface_parameters);
+        auto const spec = mir_connection_create_spec_for_normal_surface(
+            connection, test_width, test_height, select_format_for_visual_id(visual_id));
+
+        auto const surface = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+        return surface;
     }
 
-    static int render_cpu_pattern(mtf::CrossProcessSync& process_sync, int num_frames)
+    static int render_cpu_pattern(mt::CrossProcessSync& process_sync, int num_frames)
     {
         process_sync.wait_for_signal_ready_for();
 
-        MirSurfaceParameters surface_parameters
-        {
-            "testsurface", test_width, test_height, mir_pixel_format_abgr_8888,
-            mir_buffer_usage_software, mir_display_output_id_invalid
-        };
         auto connection = mir_connect_sync(socket_file, "test_renderer");
         EXPECT_THAT(connection, IsValid());
-        auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
+
+        auto const spec = mir_connection_create_spec_for_normal_surface(
+            connection, test_width, test_height, mir_pixel_format_abgr_8888);
+        mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+        auto const surface = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+
         EXPECT_THAT(surface, IsValid());
         MirGraphicsRegion graphics_region;
         for(int i=0u; i < num_frames; i++)
         {
-            mir_surface_get_graphics_region(surface, &graphics_region);
+            mir_buffer_stream_get_graphics_region(mir_surface_get_buffer_stream(surface), &graphics_region);
             if (i % 2)
             {
                 draw_pattern1.draw(graphics_region);
@@ -107,7 +108,7 @@ struct TestClient
             {
                 draw_pattern0.draw(graphics_region);
             }
-            mir_surface_swap_buffers_sync(surface);
+            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
         }
 
         mir_surface_release_sync(surface);
@@ -116,7 +117,7 @@ struct TestClient
     }
 
     //performs num_frames renders, in red, green, blue repeating pattern
-    static int render_rgb_with_gl(mtf::CrossProcessSync& process_sync, int num_frames)
+    static int render_rgb_with_gl(mt::CrossProcessSync& process_sync, int num_frames)
     {
         process_sync.wait_for_signal_ready_for();
 
@@ -144,7 +145,7 @@ struct TestClient
         EXPECT_THAT(mir_surface, IsValid());
 
         auto native_window = static_cast<EGLNativeWindowType>(
-            mir_surface_get_egl_native_window(mir_surface));
+            mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(mir_surface)));
 
         egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
         context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
@@ -351,16 +352,16 @@ struct TestClientIPCRender : public testing::Test
     static std::shared_ptr<mtf::Process> render_double_client_process;
     static std::shared_ptr<mtf::Process> render_accelerated_process;
     static std::shared_ptr<mtf::Process> render_accelerated_process_double;
-    static mtf::CrossProcessSync sync1, sync2, sync3, sync4;
+    static mt::CrossProcessSync sync1, sync2, sync3, sync4;
 };
 
-mtf::CrossProcessSync TestClientIPCRender::sync1;
+mt::CrossProcessSync TestClientIPCRender::sync1;
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_single_client_process;
-mtf::CrossProcessSync TestClientIPCRender::sync2;
+mt::CrossProcessSync TestClientIPCRender::sync2;
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_double_client_process;
-mtf::CrossProcessSync TestClientIPCRender::sync3;
+mt::CrossProcessSync TestClientIPCRender::sync3;
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_accelerated_process;
-mtf::CrossProcessSync TestClientIPCRender::sync4;
+mt::CrossProcessSync TestClientIPCRender::sync4;
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_accelerated_process_double;
 
 TEST_F(TestClientIPCRender, test_render_single)

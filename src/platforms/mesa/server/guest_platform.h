@@ -48,7 +48,7 @@ public:
     EGLNativeDisplayType egl_native_display() const override;
 
 private:
-    std::shared_ptr<NestedContext> nested_context;
+    std::shared_ptr<NestedContext> const nested_context;
     helpers::GBMHelper gbm;
     std::shared_ptr<PlatformIpcOperations> ipc_ops;
 };

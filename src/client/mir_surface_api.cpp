@@ -48,7 +48,9 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
                                                               int width, int height,
                                                               MirPixelFormat format)
 {
-    return new MirSurfaceSpec{connection, width, height, format};
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_normal;
+    return spec;
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_menu(MirConnection* connection,
@@ -137,6 +139,7 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
                                   mir_surface_callback callback, void* context)
 {
     mir::require(requested_specification != nullptr);
+    mir::require(requested_specification->type.is_set());
 
     auto conn = requested_specification->connection;
     mir::require(mir_connection_is_valid(conn));
@@ -169,6 +172,30 @@ bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width)
 bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height)
 {
     spec->height = height;
+    return true;
+}
+
+bool mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width)
+{
+    spec->min_width = min_width;
+    return true;
+}
+
+bool mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height)
+{
+    spec->min_height = min_height;
+    return true;
+}
+
+bool mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width)
+{
+    spec->max_width = max_width;
+    return true;
+}
+
+bool mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height)
+{
+    spec->max_height = max_height;
     return true;
 }
 
@@ -216,24 +243,42 @@ MirSurface* mir_connection_create_surface_sync(
     MirConnection* connection,
     MirSurfaceParameters const* params)
 {
-    MirSurface* surface = nullptr;
-
-    mir_wait_for(mir_connection_create_surface(connection, params,
-        reinterpret_cast<mir_surface_callback>(assign_result),
-        &surface));
-
-    return surface;
+    MirSurfaceSpec spec{connection, *params};
+    return mir_surface_create_sync(&spec);
 }
 
-void mir_surface_set_event_handler(MirSurface* surface,
-                                   MirEventDelegate const* event_handler)
+__asm__(".symver new_mir_surface_set_event_handler,mir_surface_set_event_handler@@MIR_CLIENT_8.4");
+extern "C"
+void new_mir_surface_set_event_handler(MirSurface* surface,
+                                       mir_surface_event_callback callback,
+                                       void* context)
 {
-    surface->set_event_handler(event_handler);
+    surface->set_event_handler(callback, context);
 }
+
+// Deprecated but ABI backward compatible --->
+typedef struct MirEventDelegate
+{
+    mir_surface_event_callback callback;
+    void *context;
+} MirEventDelegate;
+
+__asm__(".symver old_mir_surface_set_event_handler,mir_surface_set_event_handler@MIR_CLIENT_8");
+extern "C"
+void old_mir_surface_set_event_handler(MirSurface* surface,
+                                       MirEventDelegate const* delegate)
+{
+    if (delegate)
+        surface->set_event_handler(delegate->callback, delegate->context);
+    else
+        surface->set_event_handler(nullptr, nullptr);
+}
+// <--- Deprecated
 
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface* surface)
 {
-    return reinterpret_cast<MirEGLNativeWindowType>(surface->generate_native_window());
+    return mir_buffer_stream_get_egl_native_window(
+        mir_surface_get_buffer_stream(surface));
 }
 
 bool mir_surface_is_valid(MirSurface* surface)
@@ -253,17 +298,26 @@ void mir_surface_get_parameters(MirSurface* surface, MirSurfaceParameters* param
 
 MirPlatformType mir_surface_get_platform_type(MirSurface* surface)
 {
-    return surface->platform_type();
+    return mir_buffer_stream_get_platform_type(mir_surface_get_buffer_stream(surface));
 }
 
 void mir_surface_get_current_buffer(MirSurface* surface, MirNativeBuffer** buffer_package_out)
 {
-    *buffer_package_out = surface->get_current_buffer_package();
+    mir_buffer_stream_get_current_buffer(mir_surface_get_buffer_stream(surface), buffer_package_out);
 }
 
 void mir_surface_get_graphics_region(MirSurface* surface, MirGraphicsRegion* graphics_region)
 {
-    surface->get_cpu_region(*graphics_region);
+    mir_buffer_stream_get_graphics_region(mir_surface_get_buffer_stream(surface), graphics_region);
+}
+
+namespace
+{
+void buffer_to_surface_thunk(MirBufferStream* /* stream */, void* context)
+{
+    auto cb = static_cast<std::function<void()>*>(context);
+    (*cb)();
+}
 }
 
 MirWaitHandle* mir_surface_swap_buffers(
@@ -272,7 +326,14 @@ MirWaitHandle* mir_surface_swap_buffers(
     void* context)
 try
 {
-    return surface->next_buffer(callback, context);
+    auto shim_callback = new std::function<void()>;
+    *shim_callback = [surface, callback, context, shim_callback] ()
+    {
+        if (callback)
+            callback(surface, context);
+        delete shim_callback;
+    };
+    return mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), buffer_to_surface_thunk, shim_callback);
 }
 catch (std::exception const& ex)
 {
@@ -282,9 +343,8 @@ catch (std::exception const& ex)
 
 void mir_surface_swap_buffers_sync(MirSurface* surface)
 {
-    mir_wait_for(mir_surface_swap_buffers(surface,
-        reinterpret_cast<mir_surface_callback>(assign_result),
-        nullptr));
+    mir_buffer_stream_swap_buffers_sync(
+        mir_surface_get_buffer_stream(surface));
 }
 
 MirWaitHandle* mir_surface_release(
@@ -529,4 +589,89 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrient
     }
 
     return result;
+}
+
+MirBufferStream *mir_surface_get_buffer_stream(MirSurface *surface)
+try
+{
+    return reinterpret_cast<MirBufferStream*>(surface->get_buffer_stream());
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
+try
+{
+    mir::require(mir_connection_is_valid(connection));
+    return new MirSurfaceSpec{};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
+}
+
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
+try
+{
+    mir::require(mir_surface_is_valid(surface));
+    mir::require(spec);
+
+    surface->modify(*spec);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    // Keep calm and carry on
+}
+
+bool mir_surface_spec_set_width_increment(MirSurfaceSpec *spec, unsigned width_inc)
+try
+{
+    spec->width_inc = width_inc;
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+bool mir_surface_spec_set_height_increment(MirSurfaceSpec *spec, unsigned height_inc)
+try
+{
+    spec->height_inc = height_inc;
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
+try
+{
+    spec->min_aspect = {width, height};
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+bool mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
+try
+{
+    spec->max_aspect = {width, height};
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
 }

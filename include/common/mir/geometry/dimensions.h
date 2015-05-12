@@ -32,9 +32,7 @@ namespace geometry
 
 namespace detail
 {
-enum DimensionTag { width, height, x, y, dx, dy, stride };
-
-template<DimensionTag Tag>
+template<typename Tag>
 class IntWrapper
 {
 public:
@@ -61,59 +59,59 @@ private:
     ValueType value;
 };
 
-template<DimensionTag Tag>
+template<typename Tag>
 std::ostream& operator<<(std::ostream& out, IntWrapper<Tag> const& value)
 {
     out << value.as_int();
     return out;
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() == rhs.as_int();
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator != (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() != rhs.as_int();
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator <= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() <= rhs.as_int();
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator >= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() >= rhs.as_int();
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() < rhs.as_int();
 }
 
-template<DimensionTag Tag>
+template<typename Tag>
 inline bool operator > (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() > rhs.as_int();
 }
 } // namespace detail
 
-typedef detail::IntWrapper<detail::width> Width;
-typedef detail::IntWrapper<detail::height> Height;
+typedef detail::IntWrapper<struct WidthTag> Width;
+typedef detail::IntWrapper<struct HeightTag> Height;
 // Just to be clear, mir::geometry::Stride is the stride of the buffer in bytes
-typedef detail::IntWrapper<detail::stride> Stride;
+typedef detail::IntWrapper<struct StrideTag> Stride;
 
-typedef detail::IntWrapper<detail::x> X;
-typedef detail::IntWrapper<detail::y> Y;
-typedef detail::IntWrapper<detail::dx> DeltaX;
-typedef detail::IntWrapper<detail::dy> DeltaY;
+typedef detail::IntWrapper<struct XTag> X;
+typedef detail::IntWrapper<struct YTag> Y;
+typedef detail::IntWrapper<struct DeltaXTag> DeltaX;
+typedef detail::IntWrapper<struct DeltaYTag> DeltaY;
 
 // Adding deltas is fine
 inline DeltaX operator+(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_int() + rhs.as_int()); }
@@ -126,10 +124,24 @@ inline X operator+(X lhs, DeltaX rhs) { return X(lhs.as_int() + rhs.as_int()); }
 inline Y operator+(Y lhs, DeltaY rhs) { return Y(lhs.as_int() + rhs.as_int()); }
 inline X operator-(X lhs, DeltaX rhs) { return X(lhs.as_int() - rhs.as_int()); }
 inline Y operator-(Y lhs, DeltaY rhs) { return Y(lhs.as_int() - rhs.as_int()); }
+inline X& operator+=(X& lhs, DeltaX rhs) { return lhs = X(lhs.as_int() + rhs.as_int()); }
+inline Y& operator+=(Y& lhs, DeltaY rhs) { return lhs = Y(lhs.as_int() + rhs.as_int()); }
+inline X& operator-=(X& lhs, DeltaX rhs) { return lhs = X(lhs.as_int() - rhs.as_int()); }
+inline Y& operator-=(Y& lhs, DeltaY rhs) { return lhs = Y(lhs.as_int() - rhs.as_int()); }
+
+// Adding deltas to Width and Height is fine
+inline Width operator+(Width lhs, DeltaX rhs) { return Width(lhs.as_int() + rhs.as_int()); }
+inline Height operator+(Height lhs, DeltaY rhs) { return Height(lhs.as_int() + rhs.as_int()); }
+inline Width operator-(Width lhs, DeltaX rhs) { return Width(lhs.as_int() - rhs.as_int()); }
+inline Height operator-(Height lhs, DeltaY rhs) { return Height(lhs.as_int() - rhs.as_int()); }
 
 // Subtracting coordinates is fine
 inline DeltaX operator-(X lhs, X rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
 inline DeltaY operator-(Y lhs, Y rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
+
+//Subtracting Width and Height is fine
+inline DeltaX operator-(Width lhs, Width rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
+inline DeltaY operator-(Height lhs, Height rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
 
 // Multiplying by a scalar value is fine
 template<typename Scalar>

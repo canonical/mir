@@ -16,7 +16,6 @@ message SurfaceParameters {
   required int32 height = 2;
   required int32 pixel_format = 3;
   required int32 buffer_usage = 4;
-  // TODO: Make required when we bump protobuf and server ABI
   optional string surface_name = 5;
   optional uint32 output_id = 6;
 
@@ -27,6 +26,53 @@ message SurfaceParameters {
   
   optional Rectangle aux_rect = 11;
   optional int32 edge_attachment = 12;
+
+  optional int32 min_width = 13;
+  optional int32 min_height = 14;
+  optional int32 max_width = 15;
+  optional int32 max_height = 16;
+  optional int32 width_inc = 17;
+  optional int32 height_inc = 18;
+  optional SurfaceAspectRatio min_aspect = 19;
+  optional SurfaceAspectRatio max_aspect = 20;
+}
+
+message SurfaceAspectRatio
+{
+    required uint32 width  = 1;
+    required uint32 height = 2;
+}
+
+// If and when we break our protocol backward-compatibility, this could be
+// merged with SurfaceParameters...
+message SurfaceSpecification {
+  optional int32 width = 1;
+  optional int32 height = 2;
+  optional int32 pixel_format = 3;
+  optional int32 buffer_usage = 4;
+  optional string name = 5;
+  optional uint32 output_id = 6;
+  optional int32 type = 7;
+  optional int32 state = 8;
+  optional int32 preferred_orientation = 9;
+  optional int32 parent_id = 10;
+  optional Rectangle aux_rect = 11;
+  optional int32 edge_attachment = 12;
+
+  optional int32 min_width = 13;
+  optional int32 min_height = 14;
+  optional int32 max_width = 15;
+  optional int32 max_height = 16;
+  optional int32 width_inc = 17;
+  optional int32 height_inc = 18;
+  optional SurfaceAspectRatio min_aspect = 19;
+  optional SurfaceAspectRatio max_aspect = 20;
+}
+
+
+message SurfaceModifications {
+  required SurfaceId surface_id = 1;
+  required SurfaceSpecification surface_specification = 2;
 }
 
 message SurfaceId {
@@ -37,8 +83,15 @@ message BufferStreamId {
   required int32 value = 1;
 };
 
+message BufferStreamParameters {
+    required int32 width = 1;
+    required int32 height = 2;
+    required int32 pixel_format = 3;
+    required int32 buffer_usage = 4;
+};
+
 message BufferRequest {
-  optional SurfaceId id = 1;
+  optional BufferStreamId id = 1;
   optional Buffer buffer = 2;
 };
 
@@ -93,16 +146,9 @@ message DisplayOutput {
   optional sint32 orientation = 16;
 }
 
-// DEPRECATED
-message DisplayInfo {
-  required uint32 width = 1;
-  required uint32 height = 2;
-  repeated uint32 supported_pixel_format = 3;
-}
-
 message Connection {
   optional Platform platform = 1;
-  optional DisplayInfo display_info = 2;
+//  optional DisplayInfo display_info = 2;
   repeated DisplayOutput display_output = 3;
   optional DisplayConfiguration display_configuration = 4;
   repeated uint32 surface_pixel_format = 5;
@@ -210,6 +256,10 @@ message CursorSetting {
   required SurfaceId surfaceid = 1;
   // No name is interpreted as disabled cursor.
   optional string name = 2;
+  // If we supply a buffer stream we must supply hotspot x and y
+  optional BufferStreamId buffer_stream = 3;
+  optional int32 hotspot_x = 4;
+  optional int32 hotspot_y = 5;
 }
 
 message SocketFDRequest {
@@ -241,6 +291,7 @@ service DisplayServer {
   rpc connect(ConnectParameters) returns (Connection);
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
+  rpc modify_surface(SurfaceModifications) returns (Void);
   rpc next_buffer(SurfaceId) returns (Buffer);
   rpc release_surface(SurfaceId) returns (Void);
 
@@ -254,6 +305,9 @@ service DisplayServer {
   rpc create_screencast(ScreencastParameters) returns (Screencast);
   rpc screencast_buffer(ScreencastId) returns (Buffer);
   rpc release_screencast(ScreencastId) returns (Void);
+
+  rpc create_buffer_stream(BufferStreamParameters) returns (BufferStream);
+  rpc release_buffer_stream(BufferStreamId) returns (Void);
 
   rpc configure_cursor(CursorSetting) returns (Void);
   rpc new_fds_for_prompt_providers(SocketFDRequest) returns (SocketFD);

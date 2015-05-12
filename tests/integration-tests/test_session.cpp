@@ -31,13 +31,16 @@
 #include "mir/frontend/connector.h"
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
+#include "mir_test_doubles/stub_buffer_stream_factory.h"
 #include "mir_test_doubles/stub_display.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_renderer.h"
 #include "mir_test_doubles/null_pixel_buffer.h"
+#include "mir_test_framework/stubbed_server_configuration.h"
 
 #include <gtest/gtest.h>
 #include <condition_variable>
+#include <atomic>
 
 namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
@@ -51,31 +54,8 @@ namespace geom = mir::geometry;
 namespace
 {
 
-struct TestServerConfiguration : public mir::DefaultServerConfiguration
+struct TestServerConfiguration : public mir_test_framework::StubbedServerConfiguration
 {
-    TestServerConfiguration() : DefaultServerConfiguration(0, nullptr) {}
-
-    std::shared_ptr<mi::InputManager> the_input_manager() override
-    {
-        if (!input_manager)
-            input_manager = std::make_shared<mi::NullInputManager>();
-
-        return input_manager;
-    }
-
-    std::shared_ptr<mf::Connector> the_connector() override
-    {
-        struct NullConnector : public mf::Connector
-        {
-            void start() {}
-            void stop() {}
-            int client_socket_fd() const override { return 0; }
-            int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override { return 0; }
-        };
-
-        return std::make_shared<NullConnector>();
-    }
-
     std::shared_ptr<mg::GraphicBufferAllocator> the_buffer_allocator() override
     {
         return buffer_allocator(
@@ -84,47 +64,6 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
                 return std::make_shared<mtd::StubBufferAllocator>();
             });
     }
-
-    std::shared_ptr<mc::RendererFactory> the_renderer_factory() override
-    {
-        struct StubRendererFactory : public mc::RendererFactory
-        {
-            std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&,
-                mc::DestinationAlpha)
-            {
-                auto raw = new mtd::StubRenderer{};
-                return std::unique_ptr<mtd::StubRenderer>(raw);
-            }
-        };
-
-        return std::make_shared<StubRendererFactory>();
-    }
-
-
-    std::shared_ptr<ms::PixelBuffer> the_pixel_buffer() override
-    {
-        return pixel_buffer(
-            []
-            {
-                return std::make_shared<mtd::NullPixelBuffer>();
-            });
-    }
-
-    std::shared_ptr<mg::Display> the_display() override
-    {
-        return display(
-            []()
-            {
-                return std::make_shared<mtd::StubDisplay>(
-                    std::vector<geom::Rectangle>{
-                        {{0,0},{100,100}},
-                        {{100,0},{100,100}},
-                        {{0,100},{100,100}}
-                    });
-            });
-    }
-
-    std::shared_ptr<mi::NullInputManager> input_manager;
 };
 
 void swap_buffers_blocking(mf::Surface& surf, mg::Buffer*& buffer)
@@ -155,6 +94,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
 
     ms::ApplicationSession session{
         conf.the_surface_coordinator(),
+        std::make_shared<mtd::StubBufferStreamFactory>(),
         __LINE__,
         "stress",
         conf.the_snapshot_strategy(),
@@ -185,8 +125,8 @@ TEST(ApplicationSession, stress_test_take_snapshot)
         {
             for (int i = 0; i < 500; ++i)
             {
-                bool snapshot_taken1 = false;
-                bool snapshot_taken2 = false;
+                std::atomic<bool> snapshot_taken1{false};
+                std::atomic<bool> snapshot_taken2{false};
 
                 session.take_snapshot(
                     [&](ms::Snapshot const&) { snapshot_taken1 = true; });

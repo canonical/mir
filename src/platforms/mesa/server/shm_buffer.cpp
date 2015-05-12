@@ -87,14 +87,14 @@ std::shared_ptr<MirNativeBuffer> mgm::ShmBuffer::native_buffer_handle() const
     return native_buffer;
 }
 
-bool mgm::ShmBuffer::can_bypass() const
-{
-    return false;
-}
-
 void mgm::ShmBuffer::write(unsigned char const* data, size_t data_size)
 {
     if (data_size != stride_.as_uint32_t()*size().height.as_uint32_t())
         BOOST_THROW_EXCEPTION(std::logic_error("Size is not equal to number of pixels in buffer"));
     memcpy(pixels, data, data_size);
+}
+
+void mgm::ShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
+{
+    do_with_pixels(static_cast<unsigned char const*>(pixels));
 }

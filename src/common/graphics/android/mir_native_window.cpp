@@ -149,14 +149,8 @@ mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> 
 int mga::MirNativeWindow::setSwapInterval(int interval)
 try
 {
-    if (interval == 0)
-    {
-        driver_interpreter->sync_to_display(false);
-    }
-    else
-    {
-        driver_interpreter->sync_to_display(true);
-    }
+    driver_interpreter->sync_to_display(interval != 0);
+
     return 0;
 }
 catch (std::exception const& e)
@@ -258,12 +252,13 @@ try
     va_list args;
     va_copy(args, arg_list);
 
-    int driver_format;
     switch(key)
     {
         case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
-            driver_format = va_arg(args, int);
-            driver_interpreter->dispatch_driver_request_format(driver_format);
+            driver_interpreter->dispatch_driver_request_format(va_arg(args, int));
+            break;
+        case NATIVE_WINDOW_SET_BUFFER_COUNT:
+            driver_interpreter->dispatch_driver_request_buffer_count(va_arg(args, int));
             break;
         default:
             break;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,24 +14,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ *              Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_screencast.h"
+#include "mir_toolkit/mir_buffer_stream.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
-
 #include "mir/raii.h"
-
-#include <boost/program_options.hpp>
-
-#include <getopt.h>
-#include <csignal>
 
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+#include <boost/program_options.hpp>
+
+#include <algorithm>
+#include <string>
 #include <fstream>
 #include <sstream>
 #include <thread>
@@ -41,13 +41,14 @@
 #include <vector>
 #include <utility>
 #include <chrono>
+#include <csignal>
 
 namespace po = boost::program_options;
 
 namespace
 {
 
-volatile sig_atomic_t running = 1;
+std::atomic<bool> running;
 
 /* On devices with android based openGL drivers, the vendor dispatcher table
  * may be optimized if USE_FAST_TLS_KEY is set, which hardcodes a TLS slot where
@@ -60,17 +61,8 @@ thread_local int dummy_tls[2];
 
 void shutdown(int)
 {
-    running = 0;
+    running = false;
 }
-
-void read_pixels(GLenum format, mir::geometry::Size const& size, void* buffer)
-{
-    auto width = size.width.as_uint32_t();
-    auto height = size.height.as_uint32_t();
-
-    glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, buffer);
-}
-
 
 uint32_t get_first_valid_output_id(MirDisplayConfiguration const& display_config)
 {
@@ -184,9 +176,130 @@ double get_capture_rate_limit(MirDisplayConfiguration const& display_config, Mir
     return highest_refresh_rate;
 }
 
-struct EGLSetup
+std::string mir_pixel_format_to_string(MirPixelFormat format)
 {
-    EGLSetup(MirConnection* connection, MirScreencast* screencast)
+    // Don't know of any big endian platform supported by mir
+    switch(format)
+    {
+    case mir_pixel_format_abgr_8888:
+        return "RGBA";
+    case mir_pixel_format_xbgr_8888:
+        return "RGBX";
+    case mir_pixel_format_argb_8888:
+        return "BGRA";
+    case mir_pixel_format_xrgb_8888:
+        return "BGRX";
+    case mir_pixel_format_bgr_888:
+        return "RGB";
+    default:
+        throw std::logic_error("Invalid pixel format");
+    }
+}
+
+std::string to_file_extension(std::string format)
+{
+    std::string ext{"."};
+    ext.append(format);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    return ext;
+}
+
+MirGraphicsRegion graphics_region_for(MirBufferStream* buffer_stream)
+{
+    MirGraphicsRegion region{0, 0, 0, mir_pixel_format_invalid, nullptr};
+    mir_buffer_stream_get_graphics_region(buffer_stream, &region);
+
+    if (region.vaddr == nullptr)
+        throw std::runtime_error("Failed to obtain screencast buffer");
+
+    return region;
+}
+
+class Screencast
+{
+public:
+    virtual ~Screencast() = default;
+    virtual std::string pixel_format() = 0;
+
+    void run(std::ostream& stream)
+    {
+        while (running && (number_of_captures != 0))
+        {
+            auto time_point = std::chrono::steady_clock::now() + capture_period;
+
+            capture_to(stream);
+
+            if (number_of_captures > 0)
+                number_of_captures--;
+
+            std::this_thread::sleep_until(time_point);
+        }
+    }
+
+    virtual void capture_to(std::ostream& stream) = 0;
+
+protected:
+    Screencast(int number_of_captures, double capture_fps)
+        : number_of_captures{number_of_captures},
+          capture_period{1.0/capture_fps}
+    {
+    }
+
+private:
+    int number_of_captures;
+    std::chrono::duration<double> capture_period;
+    Screencast(Screencast const&) = delete;
+    Screencast& operator=(Screencast const&) = delete;
+};
+
+class BufferStreamScreencast : public Screencast
+{
+public:
+    BufferStreamScreencast(int num_captures, double capture_fps,
+                           MirScreencastParameters* params,
+                           MirBufferStream* buffer_stream)
+        : Screencast(num_captures, capture_fps),
+          region(graphics_region_for(buffer_stream)),
+          line_size{region.width * MIR_BYTES_PER_PIXEL(region.pixel_format)},
+          buffer_stream{buffer_stream},
+          pixel_format_{mir_pixel_format_to_string(params->pixel_format)}
+    {
+    }
+
+    std::string pixel_format() override
+    {
+        return pixel_format_;
+    }
+
+    void capture_to(std::ostream& stream) override
+    {
+        // Contents are rendered up-side down, read them bottom to top
+        auto addr = region.vaddr + (region.height - 1)*region.stride;
+        for (int i = 0; i < region.height; i++)
+        {
+            stream.write(addr, line_size);
+            addr -= region.stride;
+        }
+
+        mir_buffer_stream_swap_buffers_sync(buffer_stream);
+    }
+
+private:
+    MirGraphicsRegion const region;
+    int const line_size;
+    MirBufferStream* buffer_stream;
+    std::string pixel_format_;
+};
+
+class EGLScreencast : public Screencast
+{
+public:
+    EGLScreencast(int num_captures, double capture_fps,
+                  MirConnection* connection, MirScreencastParameters* params,
+                  MirBufferStream* buffer_stream)
+        : Screencast(num_captures, capture_fps),
+          width{params->width},
+          height{params->height}
     {
         static EGLint const attribs[] = {
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -207,7 +320,7 @@ struct EGLSetup
 
         auto native_window =
             reinterpret_cast<EGLNativeWindowType>(
-                mir_screencast_egl_native_window(screencast));
+                mir_buffer_stream_get_egl_native_window(buffer_stream));
 
         egl_display = eglGetDisplay(native_display);
 
@@ -236,9 +349,13 @@ struct EGLSetup
             read_pixel_format = GL_BGRA_EXT;
         else
             read_pixel_format = GL_RGBA;
+
+        int const rgba_pixel_size{4};
+        auto const frame_size_bytes = rgba_pixel_size * width * height;
+        buffer.resize(frame_size_bytes);
     }
 
-    ~EGLSetup()
+    ~EGLScreencast()
     {
         eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         eglDestroySurface(egl_display, egl_surface);
@@ -246,17 +363,32 @@ struct EGLSetup
         eglTerminate(egl_display);
     }
 
-    void swap_buffers() const
+    void capture_to(std::ostream& stream) override
     {
+        void* data = buffer.data();
+        glReadPixels(0, 0, width, height, read_pixel_format, GL_UNSIGNED_BYTE, data);
+
+        auto write_out_future = std::async(
+            std::launch::async,
+            [this, &stream] {
+            stream.write(buffer.data(), buffer.size());
+            });
+
         if (eglSwapBuffers(egl_display, egl_surface) != EGL_TRUE)
             throw std::runtime_error("Failed to swap screencast surface buffers");
+
+        write_out_future.wait();
     }
 
-    GLenum pixel_read_format() const
+    std::string pixel_format() override
     {
-        return read_pixel_format;
+        return read_pixel_format == GL_BGRA_EXT ? "BGRA" : "RGBA";
     }
 
+private:
+    unsigned int const width;
+    unsigned int const height;
+    std::vector<char> buffer;
     EGLDisplay egl_display;
     EGLContext egl_context;
     EGLSurface egl_surface;
@@ -264,44 +396,21 @@ struct EGLSetup
     GLenum read_pixel_format;
 };
 
-void do_screencast(EGLSetup const& egl_setup,
-                   mir::geometry::Size const& size,
-                   int32_t number_of_captures,
-                   double capture_fps,
-                   std::ostream& out_stream)
+std::unique_ptr<Screencast> create_screencast(int num_captures, double capture_fps,
+                                              MirConnection* connection,
+                                              MirScreencastParameters* params,
+                                              MirBufferStream* buffer_stream)
 {
-    static int const rgba_pixel_size{4};
-    auto const frame_size_bytes = rgba_pixel_size *
-                                  size.width.as_uint32_t() *
-                                  size.height.as_uint32_t();
-
-    std::vector<char> frame_data(frame_size_bytes, 0);
-    auto format = egl_setup.pixel_read_format();
-
-    auto capture_period = std::chrono::duration<double>(1.0/capture_fps);
-
-    while (running && (number_of_captures != 0))
+    try
     {
-        auto time_point = std::chrono::steady_clock::now() + capture_period;
-
-        read_pixels(format, size, frame_data.data());
-
-        auto write_out_future = std::async(
-                std::launch::async,
-                [&out_stream, &frame_data] {
-                    out_stream.write(frame_data.data(), frame_data.size());
-                });
-
-        egl_setup.swap_buffers();
-        write_out_future.wait();
-
-        if (number_of_captures > 0)
-            number_of_captures--;
-
-        std::this_thread::sleep_until(time_point);
+        return std::make_unique<BufferStreamScreencast>(num_captures, capture_fps, params, buffer_stream);
     }
+    catch(...)
+    {
+    }
+    // Fallback to EGL if MirBufferStream can't be used directly
+    return std::make_unique<EGLScreencast>(num_captures, capture_fps, connection, params, buffer_stream);
 }
-
 }
 
 int main(int argc, char* argv[])
@@ -377,6 +486,7 @@ try
         return EXIT_SUCCESS;
     }
 
+    running = true;
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
@@ -410,32 +520,34 @@ try
     double capture_rate_limit = get_capture_rate_limit(*display_config, params);
     double capture_fps = capture_rate_limit/capture_interval;
 
-    auto const screencast = mir::raii::deleter_for(
+    auto const mir_screencast = mir::raii::deleter_for(
         mir_connection_create_screencast_sync(connection.get(), &params),
         [](MirScreencast* s) { if (s) mir_screencast_release_sync(s); });
 
-    if (screencast == nullptr)
+    if (mir_screencast == nullptr)
         throw std::runtime_error("Failed to create screencast");
 
-    EGLSetup egl_setup{connection.get(), screencast.get()};
-    mir::geometry::Size screencast_size {params.width, params.height};
+    auto buffer_stream = mir_screencast_get_buffer_stream(mir_screencast.get());
+    if (buffer_stream == nullptr)
+        throw std::runtime_error("Failed to obtain buffer stream from screencast");
+
+    auto screencast = create_screencast(number_of_captures, capture_fps, connection.get(), &params, buffer_stream);
 
     if (output_filename.empty() && !use_std_out)
     {
         std::stringstream ss;
         ss << "/tmp/mir_screencast_" ;
-        ss << screencast_size.width << "x" << screencast_size.height;
+        ss << params.width << "x" << params.height;
         ss << "_" << capture_fps << "Hz";
-        ss << (egl_setup.pixel_read_format() == GL_BGRA_EXT ? ".bgra" : ".rgba");
+        ss << to_file_extension(screencast->pixel_format());
         output_filename = ss.str();
     }
 
     if (query_params_only)
     {
-       std::cout << "Colorspace: " <<
-           (egl_setup.pixel_read_format() == GL_BGRA_EXT ? "BGRA" : "RGBA") << std::endl;
+       std::cout << "Colorspace: " << screencast->pixel_format() << std::endl;
        std::cout << "Output size: " <<
-           screencast_size.width << "x" << screencast_size.height << std::endl;
+           params.width << "x" << params.height << std::endl;
        std::cout << "Capture rate (Hz): " << capture_fps << std::endl;
        std::cout << "Output to: " <<
            (use_std_out ? "standard out" : output_filename) << std::endl;
@@ -444,12 +556,12 @@ try
 
     if (use_std_out)
     {
-        do_screencast(egl_setup, screencast_size, number_of_captures, capture_fps, std::cout);
+        screencast->run(std::cout);
     }
     else
     {
         std::ofstream file_stream(output_filename);
-        do_screencast(egl_setup, screencast_size, number_of_captures, capture_fps, file_stream);
+        screencast->run(file_stream);
     }
 
     return EXIT_SUCCESS;

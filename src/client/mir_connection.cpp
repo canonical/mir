@@ -16,8 +16,6 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
@@ -252,14 +250,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
          */
         auto default_lifecycle_event_handler = [this](MirLifecycleState transition)
             {
-                bool const expect_connection_lost = [&]
-                    {
-                        std::lock_guard<decltype(mutex)> lock(mutex);
-                        return disconnecting;
-                    }();
-
-                if (transition == mir_lifecycle_connection_lost &&
-                    !expect_connection_lost)
+                if (transition == mir_lifecycle_connection_lost && !disconnecting)
                 {
                     /*
                      * We need to use kill() instead of raise() to ensure the signal
@@ -472,8 +463,7 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
 std::shared_ptr<mir::client::ClientBufferStreamFactory> MirConnection::get_client_buffer_stream_factory()
 {
     if (!buffer_stream_factory)
-        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(platform->create_buffer_factory(), 
-            platform, the_logger());
+        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(platform, the_logger());
     return buffer_stream_factory;
 }
 
