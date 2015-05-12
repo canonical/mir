@@ -156,14 +156,12 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{mtf::add_fake_input_device(mi::InputDeviceInfo{
         0, "touch screen", "touch-screen-uid", mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})};
 
-    mir::test::WaitCondition all_events_received;
     std::string first{"first"};
     std::string second{"second"};
     mtf::ClientInputRegions input_regions;
     mtf::ClientPositions positions;
     mtf::ClientDepths depths;
     geom::Rectangle screen_geometry{{0,0}, {1000,800}};
-
     std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
 };
 
@@ -184,7 +182,7 @@ TEST_F(TestClientInput, clients_receive_keys)
     EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyUpEvent(), mt::KeyOfSymbol(XKB_KEY_i))));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_r))));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyUpEvent(), mt::KeyOfSymbol(XKB_KEY_r)))).WillOnce(
-        mt::WakeUp(&all_events_received));
+        mt::WakeUp(&first_client.all_events_received));
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
@@ -195,7 +193,7 @@ TEST_F(TestClientInput, clients_receive_keys)
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_R));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_R));
 
-    all_events_received.wait_for_at_most_seconds(10);
+    first_client.all_events_received.wait_for_at_most_seconds(10);
 }
 
 TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
@@ -205,11 +203,11 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
     InSequence seq;
     EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_L))));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_dollar))))
-        .WillOnce(mt::WakeUp(&all_events_received));
+        .WillOnce(mt::WakeUp(&first_client.all_events_received));
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_LEFTSHIFT));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_4));
-    all_events_received.wait_for_at_most_seconds(10);
+    first_client.all_events_received.wait_for_at_most_seconds(10);
 }
 
 TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_events)
@@ -222,13 +220,13 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
     EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
     EXPECT_CALL(first_client, handle_input(mt::PointerEventWithPosition(surface_width - 1, surface_height - 1)));
     EXPECT_CALL(first_client, handle_input(mt::PointerLeaveEvent()))
-        .WillOnce(mt::WakeUp(&all_events_received));
+        .WillOnce(mt::WakeUp(&first_client.all_events_received));
     // But we should not receive an event for the second movement outside of our surface!
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(surface_width - 1, surface_height - 1));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(2, 2));
 
-    all_events_received.wait_for_at_most_seconds(120);
+    first_client.all_events_received.wait_for_at_most_seconds(120);
 }
 
 TEST_F(TestClientInput, clients_receive_button_events_inside_window)
@@ -236,11 +234,11 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
     Client first_client(new_connection(), first);
     // The cursor starts at (0, 0).
     EXPECT_CALL(first_client, handle_input(mt::ButtonDownEvent(0, 0)))
-        .WillOnce(mt::WakeUp(&all_events_received));
+        .WillOnce(mt::WakeUp(&first_client.all_events_received));
 
     fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
 
-    all_events_received.wait_for_at_most_seconds(10);
+    first_client.all_events_received.wait_for_at_most_seconds(10);
 }
 
 TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
@@ -260,14 +258,15 @@ TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
         InSequence seq;
         EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
         EXPECT_CALL(first_client, handle_input(mt::PointerEventWithPosition(client_width - 1, client_height - 1)));
-        EXPECT_CALL(first_client, handle_input(mt::PointerLeaveEvent()));
+        EXPECT_CALL(first_client, handle_input(mt::PointerLeaveEvent()))
+            .WillOnce(mt::WakeUp(&first_client.all_events_received));
     }
 
     {
         InSequence seq;
         EXPECT_CALL(second_client, handle_input(mt::PointerEnterEvent()));
         EXPECT_CALL(second_client, handle_input(mt::PointerEventWithPosition(client_width - 1, client_height - 1)))
-            .WillOnce(mt::WakeUp(&all_events_received));
+            .WillOnce(mt::WakeUp(&second_client.all_events_received));
     }
 
     // In the bounds of the first surface
@@ -275,7 +274,8 @@ TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
     // In the bounds of the second surface
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(client_width, client_height));
 
-    all_events_received.wait_for_at_most_seconds(2);
+    first_client.all_events_received.wait_for_at_most_seconds(2);
+    second_client.all_events_received.wait_for_at_most_seconds(2);
 }
 
 TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
@@ -299,7 +299,7 @@ TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
         EXPECT_CALL(first_client, handle_input(mt::ButtonUpEvent(1, 1)));
         EXPECT_CALL(first_client, handle_input(mt::ButtonDownEvent(99, 99)));
         EXPECT_CALL(first_client, handle_input(mt::ButtonUpEvent(99, 99)))
-            .WillOnce(mt::WakeUp(&all_events_received));
+            .WillOnce(mt::WakeUp(&first_client.all_events_received));
     }
 
     // First we will move the cursor in to the input region on the left side of
@@ -320,7 +320,7 @@ TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
     fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
 
-    all_events_received.wait_for_at_most_seconds(5);
+    first_client.all_events_received.wait_for_at_most_seconds(5);
 }
 
 TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
@@ -561,7 +561,7 @@ TEST_F(TestClientInput, event_filter_may_consume_events)
     InSequence seq;
     EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(Return(true));
     EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(
-            DoAll(mt::WakeUp(&all_events_received), Return(true)));
+            DoAll(mt::WakeUp(&first_client.all_events_received), Return(true)));
 
     // Since we handle the events in the filter the client should not receive them.
     EXPECT_CALL(first_client, handle_input(_)).Times(0);
