@@ -47,12 +47,6 @@ extern "C" {
 typedef int64_t nsecs_t;
 
 typedef enum {
-    mir_key_action_down     = 0,
-    mir_key_action_up       = 1,
-    mir_key_action_multiple = 2
-} MirKeyAction;
-
-typedef enum {
     mir_motion_action_down         = 0,
     mir_motion_action_up           = 1,
     mir_motion_action_move         = 2,
@@ -91,12 +85,11 @@ typedef struct
 
     int32_t device_id;
     int32_t source_id;
-    MirKeyAction action;
+    MirKeyboardAction action;
     MirInputEventModifiers modifiers;
 
     int32_t key_code;
     int32_t scan_code;
-    int32_t repeat_count;
 
     nsecs_t event_time;
 } MirKeyEvent;

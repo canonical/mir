@@ -102,21 +102,6 @@ TEST_F(InputTranslator, notifies_device_reset)
     translator.notifyDeviceReset(&reset);
 }
 
-TEST_F(InputTranslator, ignores_invalid_key_events)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(dispatcher, dispatch(_)).Times(0);
-
-    translator.notifyKey(nullptr);
-
-    const int32_t invalid_action = 5;
-    droidinput::NotifyKeyArgs key(some_time, device_id, source_id, 0, invalid_action, no_flags,
-                                  arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
-
-    translator.notifyKey(&key);
-}
-
 TEST_F(InputTranslator, ignores_invalid_motion_action)
 {
     using namespace ::testing;
@@ -231,9 +216,9 @@ TEST_F(InputTranslator, forwards_and_converts_up_down_key_notifications)
     EXPECT_CALL(dispatcher, dispatch(mt::KeyDownEvent())).Times(1);
     EXPECT_CALL(dispatcher, dispatch(mt::KeyUpEvent())).Times(1);
 
-    droidinput::NotifyKeyArgs down(some_time, device_id, source_id, 0, mir_key_action_down,
+    droidinput::NotifyKeyArgs down(some_time, device_id, source_id, 0, AKEY_EVENT_ACTION_DOWN,
                                    no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
-    droidinput::NotifyKeyArgs up(some_time, device_id, source_id, 0, mir_key_action_up,
+    droidinput::NotifyKeyArgs up(some_time, device_id, source_id, 0, AKEY_EVENT_ACTION_UP,
                                  no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
 
     translator.notifyKey(&down);
@@ -248,10 +233,9 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
     expected.key.event_time = 1;
     expected.key.device_id = 2;
     expected.key.source_id = 3;
-    expected.key.action = mir_key_action_down;
+    expected.key.action = mir_keyboard_action_down;
     expected.key.scan_code = 4;
     expected.key.key_code = 5;
-    expected.key.repeat_count = 0;
     expected.key.modifiers = mir_input_event_modifier_shift;
 
     InSequence seq;
@@ -261,7 +245,7 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
                                        expected.key.device_id,
                                        expected.key.source_id,
                                        default_policy_flags,
-                                       expected.key.action,
+                                       AKEY_EVENT_ACTION_DOWN,
                                        0, /* flags */
                                        expected.key.key_code,
                                        expected.key.scan_code,
@@ -341,7 +325,7 @@ TEST_P(InputTranslatorWithPolicyParam, forwards_policy_modifiers_as_flags_and_mo
                 ).Times(1);
 
     droidinput::NotifyKeyArgs tester(some_time, device_id, source_id,
-                                     GetParam().policy_flag, mir_key_action_down,
+                                     GetParam().policy_flag, AKEY_EVENT_ACTION_DOWN,
                                      no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
 
     translator.notifyKey(&tester);

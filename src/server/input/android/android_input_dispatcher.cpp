@@ -55,12 +55,13 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
     {
     case mir_event_type_key:
     {
+        int32_t ignored_repeat_count = 0;
         droidinput::NotifyKeyArgs const notify_key_args(
             std::chrono::nanoseconds(event.key.event_time),
             event.key.device_id,
             event.key.source_id,
             policy_flags,
-            event.key.action,
+            mia::android_keyboard_action_from_mir(ignored_repeat_count, event.key.action),
             0, /* flags */
             event.key.key_code,
             event.key.scan_code,

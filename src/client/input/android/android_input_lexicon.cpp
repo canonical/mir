@@ -35,11 +35,10 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.type = mir_event_type_key;
             mir_event.key.device_id = android_event->getDeviceId();
             mir_event.key.source_id = android_event->getSource();
-            mir_event.key.action = static_cast<MirKeyAction>(kev->getAction());
+            mir_event.key.action = mia::mir_keyboard_action_from_android(kev->getAction(), kev->getRepeatCount());
             mir_event.key.modifiers = mia::mir_modifiers_from_android(kev->getMetaState());
             mir_event.key.key_code = kev->getKeyCode();
             mir_event.key.scan_code = kev->getScanCode();
-            mir_event.key.repeat_count = kev->getRepeatCount();
             mir_event.key.event_time = kev->getEventTime().count();
             break;
         }
