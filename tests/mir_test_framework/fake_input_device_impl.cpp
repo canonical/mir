@@ -151,8 +151,9 @@ mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& in
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyParameters const& key_params)
 {
     xkb_keysym_t key_code = 0;
-    int64_t event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                             std::chrono::system_clock::now().time_since_epoch()).count();
+
+    auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::system_clock::now().time_since_epoch());
 
     auto input_action =
         (key_params.action == synthesis::EventAction::Down) ? mir_keyboard_action_down : mir_keyboard_action_up;
@@ -173,8 +174,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonParameters const& button)
 {
-    int64_t event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                             std::chrono::system_clock::now().time_since_epoch()).count();
+    auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::system_clock::now().time_since_epoch());
     auto action = update_buttons(button.action, to_pointer_button(button.button));
     auto event_modifiers = expand_modifier(modifiers);
     auto button_event = mir::events::make_event(device_id_unknown,
@@ -211,8 +212,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
 
-    int64_t event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                             std::chrono::system_clock::now().time_since_epoch()).count();
+    auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::system_clock::now().time_since_epoch());
     auto event_modifiers = expand_modifier(modifiers);
     update_position(pointer.rel_x, pointer.rel_y);
     auto pointer_event = mir::events::make_event(device_id_unknown,
@@ -239,8 +240,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
 
-    int64_t event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                             std::chrono::system_clock::now().time_since_epoch()).count();
+    auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::system_clock::now().time_since_epoch());
     auto event_modifiers = expand_modifier(modifiers);
 
     auto touch_event = mir::events::make_event(device_id_unknown, event_time, event_modifiers);
