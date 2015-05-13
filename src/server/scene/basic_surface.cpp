@@ -650,9 +650,10 @@ struct CursorStreamImageAdapter
 
     void post_cursor_image_from_current_buffer()
     {
-        stream->with_most_recent_buffer_do([this](mg::Buffer& buffer) {
-            surface.set_cursor_from_buffer(buffer, hotspot);
-        });
+        stream->with_most_recent_buffer_do([&](mg::Buffer &buffer)
+            {
+                surface.set_cursor_from_buffer(buffer, hotspot);
+            });
     }
 
     ms::BasicSurface &surface;
