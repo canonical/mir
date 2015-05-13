@@ -112,7 +112,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         EmergencyCleanupRegistry& emergency_cleanup_registry,
                         BypassOption bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
-      drm{std::make_shared<helpers::DRMHelper>()},
+      drm{std::make_shared<helpers::DRMHelper>(false)},
       listener{listener},
       vt{vt},
       bypass_option_{bypass_option}

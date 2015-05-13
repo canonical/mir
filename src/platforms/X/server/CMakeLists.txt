@@ -27,13 +27,14 @@ add_library(
   display_configuration.cpp
   gl_context.cpp
   buffer_allocator.cpp
+  ../../mesa/server/drm_mode_resources.cpp
   ../../mesa/server/anonymous_shm_file.cpp
   ../../mesa/server/shm_buffer.cpp
   ipc_operations.cpp
   display_group.cpp
   display_buffer.cpp
   ../../mesa/server/gbm_buffer.cpp
-  display_helpers.cpp
+  ../../mesa/server/display_helpers.cpp
   ../../mesa/server/drm_close_threadsafe.cpp
   input/X_input.cpp
   input/X_input_platform.cpp

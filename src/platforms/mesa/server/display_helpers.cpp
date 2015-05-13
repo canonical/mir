@@ -199,13 +199,16 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
 
     mir::udev::Enumerator devices(udev);
     devices.match_subsystem("drm");
-    devices.match_sysname("card[0-9]*");
+    if (X_platform)
+        devices.match_sysname("renderD[0-9]*");
+    else
+        devices.match_sysname("card[0-9]*");
 
     devices.scan_devices();
 
     for(auto& device : devices)
     {
-        if ((error = is_appropriate_device(udev, device)))
+        if (!X_platform && (error = is_appropriate_device(udev, device)))
             continue;
 
         // If directly opening the DRM device is good enough for X it's good enough for us!
@@ -216,33 +219,38 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
             continue;
         }
 
-        // Check that the drm device is usable by setting the interface version we use (1.4)
-        drmSetVersion sv;
-        sv.drm_di_major = 1;
-        sv.drm_di_minor = 4;
-        sv.drm_dd_major = -1;     /* Don't care */
-        sv.drm_dd_minor = -1;     /* Don't care */
-
-        if ((error = -drmSetInterfaceVersion(tmp_fd, &sv)))
+        if (!X_platform)
         {
+            // Check that the drm device is usable by setting the interface version we use (1.4)
+            drmSetVersion sv;
+            sv.drm_di_major = 1;
+            sv.drm_di_minor = 4;
+            sv.drm_dd_major = -1;     /* Don't care */
+            sv.drm_dd_minor = -1;     /* Don't care */
+
+            if ((error = -drmSetInterfaceVersion(tmp_fd, &sv)))
+            {
+                close(tmp_fd);
+                tmp_fd = -1;
+                continue;
+            }
+
+            // Stop if this device has connections to display on
+            if (count_connections(tmp_fd) > 0)
+                break;
+
             close(tmp_fd);
             tmp_fd = -1;
-            continue;
         }
-
-        // Stop if this device has connections to display on
-        if (count_connections(tmp_fd) > 0)
+        else
             break;
-
-        close(tmp_fd);
-        tmp_fd = -1;
     }
 
     if (tmp_fd < 0)
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
-                std::runtime_error("Error opening DRM device")) << boost::errinfo_errno(error));
+                std::runtime_error("Error opening DRM/render device")) << boost::errinfo_errno(error));
     }
 
     return tmp_fd;

@@ -23,15 +23,15 @@
 #include "mir/graphics/platform_operation_message.h"
 #include "ipc_operations.h"
 #include "debug.h"
-#include "display_helpers.h"
 
 #include <boost/throw_exception.hpp>
 #include <iostream>
 
 namespace mg = mir::graphics;
 namespace mgx = mg::X;
+namespace mgm = mg::mesa;
 
-mgx::IpcOperations::IpcOperations(std::shared_ptr<mgx::helpers::DRMHelper> const& drm)
+mgx::IpcOperations::IpcOperations(std::shared_ptr<mgm::helpers::DRMHelper> const& drm)
     : drm{drm}
 {
     CALLED

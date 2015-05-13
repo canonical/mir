@@ -42,7 +42,7 @@ __attribute__((destructor)) static void close_X_display()
 
 mgx::Platform::Platform(std::shared_ptr<DisplayReport> const& /*listener*/)
     : udev{std::make_shared<mir::udev::Context>()},
-       drm{std::make_shared<helpers::DRMHelper>()}
+       drm{std::make_shared<mesa::helpers::DRMHelper>(true)}
 {
    CALLED
 

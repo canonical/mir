@@ -21,7 +21,7 @@
 #define MIR_GRAPHICS_X_IPC_OPERATIONS_H_
 
 #include "mir/graphics/platform_ipc_operations.h"
-#include "display_helpers.h"
+#include "../../mesa/server/display_helpers.h"
 
 namespace mir
 {
@@ -33,7 +33,7 @@ namespace X
 class IpcOperations : public PlatformIpcOperations
 {
 public:
-    IpcOperations(std::shared_ptr<helpers::DRMHelper> const& drm);
+    IpcOperations(std::shared_ptr<mesa::helpers::DRMHelper> const& drm);
 
     void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const override;
     void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const override;
@@ -42,7 +42,7 @@ public:
         unsigned int const opcode,
         PlatformOperationMessage const& message) override;
 
-    std::shared_ptr<helpers::DRMHelper> const& drm;
+    std::shared_ptr<mesa::helpers::DRMHelper> const& drm;
 };
 
 }

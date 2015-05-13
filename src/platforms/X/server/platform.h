@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_X_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "display_helpers.h"
+#include "../../mesa/server/display_helpers.h"
 
 namespace mir
 {
@@ -48,8 +48,8 @@ public:
 private:
     //    Display *display;
     std::shared_ptr<mir::udev::Context> udev;
-    std::shared_ptr<helpers::DRMHelper> const drm;
-    helpers::GBMHelper gbm;
+    std::shared_ptr<mesa::helpers::DRMHelper> const drm;
+    mesa::helpers::GBMHelper gbm;
 };
 
 }
