@@ -25,7 +25,6 @@
 
 namespace mir
 {
-namespace frontend { class BufferStream; }
 namespace scene
 {
 class SurfaceBufferAccess;
@@ -36,7 +35,7 @@ public:
     virtual ~SnapshotStrategy() = default;
 
     virtual void take_snapshot_of(
-        std::shared_ptr<frontend::BufferStream> const& stream,
+        std::shared_ptr<SurfaceBufferAccess> const& surface_buffer_access,
         SnapshotCallback const& snapshot_taken) = 0;
 
 protected:

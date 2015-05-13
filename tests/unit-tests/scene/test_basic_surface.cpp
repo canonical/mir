@@ -816,3 +816,37 @@ TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
     EXPECT_THAT(renderables[0], IsRenderableOfAttributes(pt, alpha));
     EXPECT_THAT(renderables[1], IsRenderableOfAttributes(pt + d, alpha));
 }
+
+//TODO: (kdub) This should be a temporary behavior while the buffer stream the surface was created
+//with is still more important than the rest of the streams. Eventually, one should be able to 
+//remove the created-with bufferstream.
+TEST_F(BasicSurfaceTest, cannot_remove_primary_buffer_stream_for_now)
+{
+    using namespace testing;
+    geom::Displacement d0{19,99};
+    geom::Displacement d1{21,101};
+    geom::Displacement d2{20,9};
+    auto alpha0 = 1.0f;
+    auto alpha1 = 0.5f;
+    auto alpha2 = 0.25f;
+    auto alpha3 = 0.125f;
+    auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+
+    std::list<ms::StreamInfo> streams = {
+        { buffer_stream0, d0, alpha0 },
+        { buffer_stream1, d1, alpha1 },
+        { buffer_stream2, d2, alpha2 }
+    };
+    surface.set_streams(streams);
+
+    auto renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(4));
+    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(rect.top_left, alpha3));
+    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left + d0, alpha0));
+    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left + d1, alpha1));
+    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left + d2, alpha2));
+
+}
+

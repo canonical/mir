@@ -26,7 +26,6 @@
 
 #include "mir_toolkit/common.h"
 
-#include <list>
 #include <string>
 #include <memory>
 
@@ -37,10 +36,7 @@ namespace graphics
 class Buffer;
 class CursorImage;
 }
-namespace compositor
-{
-class BufferStream;
-}
+
 namespace frontend
 {
 class ClientBufferTracker;

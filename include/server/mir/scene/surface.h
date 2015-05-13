@@ -26,6 +26,7 @@
 #include "mir/compositor/compositor_id.h"
 
 #include <vector>
+#include <list>
 
 namespace mir
 {
@@ -33,7 +34,7 @@ namespace input { class InputChannel; }
 namespace shell { class InputTargeter; }
 namespace geometry { struct Rectangle; }
 namespace graphics { class CursorImage; }
-
+namespace compositor { class BufferStream; }
 namespace scene
 {
 struct StreamInfo
@@ -116,7 +117,6 @@ public:
     virtual void set_keymap(xkb_rule_names const& rules) = 0;
     virtual void rename(std::string const& title) = 0;
     virtual void set_streams(std::list<StreamInfo> const& streams) = 0;
-
 };
 }
 }
