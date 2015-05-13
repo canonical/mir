@@ -68,3 +68,35 @@ int32_t mia::android_modifiers_from_mir(MirInputEventModifiers mir_modifiers)
     if (mir_modifiers & mir_input_event_modifier_scroll_lock) ret |= AMETA_SCROLL_LOCK_ON;
     return ret;
 }
+
+MirKeyboardAction mia::mir_keyboard_action_from_android(int32_t android_action, int32_t repeat_count)
+{
+    if (repeat_count > 0)
+        return mir_keyboard_action_repeat;
+    
+    switch (android_action)
+    {
+    case AKEY_EVENT_ACTION_DOWN:
+    case AKEY_EVENT_ACTION_MULTIPLE:
+        return mir_keyboard_action_down;
+    case AKEY_EVENT_ACTION_UP:
+        return mir_keyboard_action_up;
+    default:
+        return mir_keyboard_action_down;
+    }
+}
+
+int32_t mia::android_keyboard_action_from_mir(int32_t& repeat_count_out, MirKeyboardAction action)
+{
+    repeat_count_out = 0;
+    switch (action)
+    {
+    case mir_keyboard_action_repeat:
+        repeat_count_out = 1;
+    case mir_keyboard_action_down:
+        return AKEY_EVENT_ACTION_DOWN;
+    case mir_keyboard_action_up:
+    default:
+        return AKEY_EVENT_ACTION_UP;
+    }
+}

@@ -89,7 +89,7 @@ public:
 
         key_event.type = mir_event_type_key;
         key_event.key.scan_code = 32;
-        key_event.key.action = mir_key_action_down;
+        key_event.key.action = mir_keyboard_action_down;
 
         motion_event.type = mir_event_type_motion;
         motion_event.motion.pointer_count = 2;
