@@ -18,12 +18,13 @@
 
 #include "platform.h"
 #include "display.h"
-#include "buffer_allocator.h"
+#include "../../mesa/server/buffer_allocator.h"
 #include "../../mesa/server/ipc_operations.h"
 #include "mir/udev/wrapper.h"
 #include "debug.h"
 
 namespace mg = mir::graphics;
+namespace mgm = mg::mesa;
 namespace mgx = mg::X;
 namespace mo = mir::options;
 
@@ -53,7 +54,7 @@ mgx::Platform::Platform(std::shared_ptr<DisplayReport> const& /*listener*/)
 std::shared_ptr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator()
 {
     CALLED
-    return std::make_shared<mgx::BufferAllocator>(gbm.device);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, true);
 }
 
 std::shared_ptr<mg::Display> mgx::Platform::create_display(

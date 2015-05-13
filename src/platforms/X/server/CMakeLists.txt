@@ -26,7 +26,7 @@ add_library(
   display.cpp
   display_configuration.cpp
   gl_context.cpp
-  buffer_allocator.cpp
+  ../../mesa/server/buffer_allocator.cpp
   ../../mesa/server/drm_mode_resources.cpp
   ../../mesa/server/anonymous_shm_file.cpp
   ../../mesa/server/shm_buffer.cpp

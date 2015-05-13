@@ -87,7 +87,7 @@ mgm::GuestPlatform::GuestPlatform(
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::GuestPlatform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, false);
 }
 
 extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
