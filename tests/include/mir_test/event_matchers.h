@@ -229,14 +229,14 @@ MATCHER(PointerLeaveEvent, "")
     return false;
 }
 
-MATCHER_P2(ButtonDownEvent, x, y, "")
+inline bool button_event_matches(MirEvent *event, float x, float y, MirPointerAction action, MirPointerButtons button_state)
 {
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
     if (mir_pointer_event_action(pev) != mir_pointer_action_button_down)
         return false;
-    if (mir_pointer_event_button_state(pev, mir_pointer_button_primary) == false)
+    if (mir_pointer_event_buttons(pev) != button_state)
         return false;
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
@@ -245,21 +245,25 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
     return true;
 }
 
+MATCHER_P2(ButtonDownEvent, x, y, "")
+{
+    return button_event_matches(arg, x, y, mir_pointer_action_down, mir_pointer_button_primary);
+}
+
 MATCHER_P2(ButtonUpEvent, x, y, "")
 {
-    auto pev = maybe_pointer_event(to_address(arg));
-    if (pev == nullptr)
-        return false;
-    if (mir_pointer_event_action(pev) != mir_pointer_action_button_up)
-        return false;
-    if (mir_pointer_event_button_state(pev, mir_pointer_button_primary) == true)
-        return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
-        return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
-        return false;
-    return true;
+    return button_event_matches(arg, x, y, mir_pointer_action_up, mir_pointer_button_primary);
 }
+
+MATCHER_P3(ButtonUpEvent, x, y, buttons, "")
+{
+    return button_event_matches(arg, x, y, mir_pointer_action_down, buttons);
+}
+
+MATCHER_P3(ButtonUpEvent, x, y, buttons, "")
+{
+    return button_event_matches(arg, x, y, mir_pointer_action_up, buttons);
+} 
 
 MATCHER_P2(TouchEvent, x, y, "")
 {
@@ -269,9 +273,9 @@ MATCHER_P2(TouchEvent, x, y, "")
 
     if (mir_touch_event_action(tev, 0) != mir_touch_action_down)
         return false;
-    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) != x)
+    if (std::abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) - x) > 0.5f)
         return false;
-    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) != y)
+    if (std::abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) - y) > 0.5f)
         return false;
 
     return true;
