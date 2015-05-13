@@ -36,6 +36,13 @@ namespace graphics { class CursorImage; }
 
 namespace scene
 {
+struct StreamInfo
+{
+    std::shared_ptr<compositor::BufferStream> stream;
+    geometry::Displacement position;
+    float alpha;
+};
+
 class SurfaceObserver;
 
 class Surface :
@@ -108,6 +115,8 @@ public:
 
     virtual void set_keymap(xkb_rule_names const& rules) = 0;
     virtual void rename(std::string const& title) = 0;
+    virtual void set_streams(std::list<StreamInfo> const& streams) = 0;
+
 };
 }
 }

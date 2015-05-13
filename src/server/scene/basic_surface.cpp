@@ -147,7 +147,7 @@ ms::BasicSurface::BasicSurface(
     cursor_image_(cursor_image),
     report(report),
     parent_(parent),
-    streams({BufferStreamInfo{buffer_stream, {0,0}, 1.0f}})
+    streams({StreamInfo{buffer_stream, {0,0}, 1.0f}})
 {
     report->surface_created(this, surface_name);
 }
@@ -851,51 +851,24 @@ void ms::BasicSurface::rename(std::string const& title)
     }
 }
 
-std::list<ms::BasicSurface::BufferStreamInfo>::iterator
+std::list<ms::StreamInfo>::iterator
 ms::BasicSurface::info_from(compositor::BufferStream const* id)
 {
     return std::find_if(streams.begin(), streams.end(),
-        [&](BufferStreamInfo const& info) { return info.stream.get() == id; });
+        [&](StreamInfo const& info) { return info.stream.get() == id; });
 }
 
-std::list<ms::BasicSurface::BufferStreamInfo>::const_iterator
+std::list<ms::StreamInfo>::const_iterator
 ms::BasicSurface::info_from(compositor::BufferStream const* id) const
 {
     return std::find_if(streams.begin(), streams.end(),
-        [&](BufferStreamInfo const& info) { return info.stream.get() == id; });
+        [&](StreamInfo const& info) { return info.stream.get() == id; });
 }
 
-void ms::BasicSurface::add_stream(
-    std::shared_ptr<mc::BufferStream> const& stream,
-    geom::Displacement position, float alpha)
+void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 {
-    streams.emplace_back(BufferStreamInfo{stream, position, alpha});
-}
-
-void ms::BasicSurface::reposition(mc::BufferStream const* stream, geom::Displacement pt, float alpha)
-{
-    auto info_it = info_from(stream);
-    if (info_it == streams.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid stream"));
-    info_it->position = pt;
-    info_it->alpha = alpha;
-}
-
-void ms::BasicSurface::remove_stream(compositor::BufferStream const* stream)
-{
-    auto info_it = info_from(stream);
-    if ((info_it == streams.end()) || (stream == surface_buffer_stream.get()))
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid stream"));
-    streams.erase(info_it);
-}
-
-void ms::BasicSurface::raise(compositor::BufferStream const* stream)
-{
-    auto info_it = info_from(stream);
-    if (info_it == streams.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("invalid stream"));
-    streams.push_front(*info_it);
-    streams.erase(info_it);
+    std::unique_lock<std::mutex> lk(guard);
+    streams = s;
 }
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const

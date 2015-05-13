@@ -224,27 +224,36 @@ TEST_F(SurfaceStack, stacking_order)
 TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
 {
     using namespace testing;
+    auto stub_stream0 = std::make_shared<mtd::StubBufferStream>();
+    auto stub_stream1 = std::make_shared<mtd::StubBufferStream>();
+    auto stub_stream2 = std::make_shared<mtd::StubBufferStream>();
+    std::list<ms::StreamInfo> streams = {
+        { stub_surface1->buffer_stream(), {0,0}, 1.0f},
+        { stub_stream0, {2,2}, 1.0f },
+        { stub_stream1, {2,3}, 0.9f },
+    };
+    stub_surface1->set_streams(streams);
+
+    streams = {
+        { stub_stream2, {2,4}, 0.8f },
+        { stub_surface3->buffer_stream(), {0,0}, 1.0f}
+    };
+    stub_surface3->set_streams(streams);
 
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
-    auto stub_stream1 = std::make_shared<mtd::StubBufferStream>();
-    auto stub_stream2 = std::make_shared<mtd::StubBufferStream>();
-    auto stub_stream3 = std::make_shared<mtd::StubBufferStream>();
-    stub_surface1->add_stream(stub_stream1, geom::Displacement{2,2}, 1.0f);
-    stub_surface1->add_stream(stub_stream2, geom::Displacement{2,3}, 0.9f);
-    stub_surface3->add_stream(stub_stream3, geom::Displacement{2,4}, 0.8f);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
         ElementsAre(
             SceneElementForSurface(stub_surface1),
+            SceneElementForStream(stub_stream0),
             SceneElementForStream(stub_stream1),
-            SceneElementForStream(stub_stream2),
             SceneElementForSurface(stub_surface2),
-            SceneElementForSurface(stub_surface3),
-            SceneElementForStream(stub_stream3)
+            SceneElementForStream(stub_stream2),
+            SceneElementForSurface(stub_surface3)
         ));
 }
 

@@ -26,6 +26,7 @@
 
 #include "mir_toolkit/common.h"
 
+#include <list>
 #include <string>
 #include <memory>
 
@@ -55,17 +56,6 @@ public:
     virtual MirPixelFormat pixel_format() const = 0;
 
     virtual std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const = 0;
-
-    //insert a new stream at the top-most z-order
-    virtual void add_stream(
-        std::shared_ptr<compositor::BufferStream> const& stream,
-        geometry::Displacement position,
-        float alpha) = 0;
-    virtual void reposition(compositor::BufferStream const*, geometry::Displacement pt, float alpha) = 0;
-    //NOTE: one cannot remove a stream that was never added via add_stream (eg, the primary stream)
-    virtual void remove_stream(compositor::BufferStream const*) = 0;
-    //raise a bufferstream to the top-most z-order 
-    virtual void raise(compositor::BufferStream const*) = 0;
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;

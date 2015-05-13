@@ -106,12 +106,7 @@ public:
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) {}
     void rename(std::string const&) {}
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
-    void add_stream(
-        std::shared_ptr<compositor::BufferStream> const&,
-        geometry::Displacement, float) override {}
-    void remove_stream(compositor::BufferStream const*) override {}
-    void reposition(compositor::BufferStream const*, geometry::Displacement, float) {}
-    void raise(compositor::BufferStream const*) override {}
+    void set_streams(std::list<scene::StreamInfo> const&) override {}
     graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }
 };
 
