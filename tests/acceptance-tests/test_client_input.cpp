@@ -19,6 +19,8 @@
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
 #include "mir/input/input_device_info.h"
+#include "mir/input/event_filter.h"
+#include "mir/input/composite_event_filter.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -48,6 +50,17 @@ namespace
 struct MockInputHandler
 {
     MOCK_METHOD1(handle_input, void(MirEvent const*));
+};
+
+struct MockEventFilter : public mi::EventFilter
+{
+    // Work around GMock wanting to know how to construct MirEvent
+    MOCK_METHOD1(handle, bool(MirEvent const*));
+    bool handle(MirEvent const& ev)
+    {
+        handle(&ev);
+        return true;
+    }
 };
 
 struct TestClientInputNew : mtf::ConnectedClientWithASurface
@@ -93,18 +106,19 @@ struct TestClientInputNew : mtf::ConnectedClientWithASurface
     mir::test::WaitCondition all_events_received;
     mir::test::WaitCondition ready_to_accept_events;
 
+    std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
 };
 
 }
 
 
-TEST_F(TestClientInputNew, new_clients_receive_us_english_mapped_keys)
+TEST_F(TestClientInputNew, clients_receive_keys)
 {
     using namespace testing;
 
     InSequence seq;
     EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_R))));
-    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyRepeatEvent(), mt::KeyOfSymbol(XKB_KEY_M))));
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_M))));
     EXPECT_CALL(handler, handle_input(AllOf(mt::KeyUpEvent(), mt::KeyOfSymbol(XKB_KEY_M))));
     EXPECT_CALL(handler, handle_input(AllOf(mt::KeyUpEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_R))));
     EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_i))));
@@ -123,6 +137,39 @@ TEST_F(TestClientInputNew, new_clients_receive_us_english_mapped_keys)
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_I));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_R));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_R));
+
+    all_events_received.wait_for_at_most_seconds(10);
+}
+
+namespace
+{
+struct TestClientInputNewEventFilter : public TestClientInputNew
+{
+    void SetUp() override
+    {
+        TestClientInputNew::SetUp();
+        server.the_composite_event_filter()->append(mock_event_filter);
+    }
+    std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
+};
+}
+
+TEST_F(TestClientInputNewEventFilter, event_filter_may_consume_events)
+{
+    using namespace ::testing;
+
+    InSequence seq;
+    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(
+            DoAll(mt::WakeUp(&all_events_received), Return(true)));
+
+    // Since we handle the events in the filter the client should not receive them.
+    EXPECT_CALL(handler, handle_input(_)).Times(0);
+
+    ready_to_accept_events.wait_for_at_most_seconds(5);
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
+    fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
 
     all_events_received.wait_for_at_most_seconds(10);
 }

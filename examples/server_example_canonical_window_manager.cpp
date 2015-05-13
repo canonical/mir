@@ -203,12 +203,57 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
     return parameters;
 }
 
+//TODO: provide an easier way for the server to write to a surface!
+//TODO: this is painful to use mg::Buffer::write()
+namespace
+{
+void swap_buffers(
+    std::shared_ptr<ms::Surface> const& surface,
+    mir::graphics::Buffer*& surface_buffer)
+{
+    std::mutex mut;
+    std::condition_variable cv;
+
+    auto const callback = [&](mir::graphics::Buffer* buffer)
+        {
+            std::unique_lock<decltype(mut)> lk(mut);
+            surface_buffer = buffer;
+            cv.notify_one();
+        };
+
+    auto const old_buffer = surface_buffer;
+
+    surface->primary_buffer_stream()->swap_buffers(surface_buffer, callback);
+
+    std::unique_lock<decltype(mut)> lk(mut);
+    cv.wait(lk, [&]{return old_buffer != surface_buffer;});
+}
+
+void paint_titlebar(
+    std::shared_ptr<ms::Surface> const& titlebar,
+    mir::examples::CanonicalSurfaceInfoCopy& titlebar_info,
+    int intensity)
+{
+    auto const format = titlebar->pixel_format();
+
+    if (!titlebar_info.buffer)
+        swap_buffers(titlebar, titlebar_info.buffer);
+
+    auto const sz = titlebar_info.buffer->size().height.as_int() *
+                    titlebar_info.buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
+
+    std::vector<unsigned char> pixels(sz, intensity);
+    titlebar_info.buffer->write(pixels.data(), sz);
+
+    swap_buffers(titlebar, titlebar_info.buffer);
+}
+}
+
 void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
-    CanonicalSurfaceInfoMap& surface_info)
+    CanonicalSurfaceInfoMap& surface_map)
 {
-    tools->info_for(session).surfaces++;
     auto format = mir_pixel_format_xrgb_8888;
     ms::SurfaceCreationParameters params;
     params.of_size(titlebar_size_for_window(surface->size()))
@@ -220,38 +265,18 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     auto id = session->create_surface(params);
     auto titlebar = session->surface(id);
     titlebar->set_alpha(0.9);
-    tools->info_for(surface).titlebar = titlebar;
-    tools->info_for(surface).children.push_back(titlebar);
 
-    //TODO: provide an easier way for the server to write to a surface!
-    std::mutex mut;
-    std::condition_variable cv;
-    mir::graphics::Buffer* written_buffer{nullptr};
+    auto& surface_info = tools->info_for(surface);
+    surface_info.titlebar = titlebar;
+    surface_info.children.push_back(titlebar);
 
-    titlebar->primary_buffer_stream()->swap_buffers(
-        nullptr,
-        [&](mir::graphics::Buffer* buffer)
-        {
-            //TODO: this is painful to use mg::Buffer::write()
-            auto const sz = buffer->size().height.as_int() *
-                 buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
-            std::vector<unsigned char> pixels(sz, 0xFF);
-            buffer->write(pixels.data(), sz);
-            std::unique_lock<decltype(mut)> lk(mut);
-            written_buffer = buffer;
-            cv.notify_all();
-        });
-    {
-        std::unique_lock<decltype(mut)> lk(mut);
-        cv.wait(lk, [&]{return written_buffer;});
-    }
+    CanonicalSurfaceInfoCopy titlebar_info{session, titlebar, ms::SurfaceCreationParameters{}};
+    titlebar_info.is_titlebar = true;
+    titlebar_info.parent = surface;
 
-    titlebar->primary_buffer_stream()->swap_buffers(written_buffer, [](mir::graphics::Buffer*){});
-    CanonicalSurfaceInfoCopy info{session, titlebar, ms::SurfaceCreationParameters{}};
-    info.is_titlebar = true;
-    info.parent = surface;
+    paint_titlebar(titlebar, titlebar_info, 0x3F);
 
-    surface_info.emplace(titlebar, std::move(info));
+    surface_map.emplace(titlebar, std::move(titlebar_info));
 }
 
 namespace
@@ -260,11 +285,15 @@ class SurfaceReadyObserver : public ms::NullSurfaceObserver,
     public std::enable_shared_from_this<SurfaceReadyObserver>
 {
 public:
+    using ActivateFunction = std::function<void(
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& surface)>;
+
     SurfaceReadyObserver(
-        me::CanonicalWindowManagerPolicyCopy::Tools* const focus_controller,
+        ActivateFunction const& activate,
         std::shared_ptr<ms::Session> const& session,
         std::shared_ptr<ms::Surface> const& surface) :
-        focus_controller{focus_controller},
+        activate{activate},
         session{session},
         surface{surface}
     {
@@ -275,12 +304,12 @@ private:
     {
         if (auto const s = surface.lock())
         {
-            focus_controller->set_focus_to(session.lock(), s);
+            activate(session.lock(), s);
             s->remove_observer(shared_from_this());
         }
     }
 
-    me::CanonicalWindowManagerPolicyCopy::Tools* const focus_controller;
+    ActivateFunction const activate;
     std::weak_ptr<ms::Session> const session;
     std::weak_ptr<ms::Surface> const surface;
 };
@@ -307,8 +336,14 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
         // TODO There's currently no way to insert surfaces into an active (or inactive)
         // TODO window tree while keeping the order stable or consistent with spec.
         // TODO Nor is there a way to update the "default surface" when appropriate!!
-        surface->add_observer(std::make_shared<SurfaceReadyObserver>(tools, session, surface));
-        active_surface_ = surface;
+        surface->add_observer(std::make_shared<SurfaceReadyObserver>(
+            [this](std::shared_ptr<scene::Session> const& /*session*/,
+                   std::shared_ptr<scene::Surface> const& surface)
+                {
+                    select_active_surface(surface);
+                },
+            session,
+            surface));
         break;
 
     case mir_surface_type_gloss:
@@ -381,12 +416,10 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
         }
     }
 
-
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        select_active_surface(tools->focused_surface());
     }
 }
 
@@ -483,7 +516,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
 
     if (action == mir_keyboard_action_down && scan_code == KEY_F11)
     {
-        switch (modifiers & modifier_mask)
+        switch (modifiers)
         {
         case mir_input_event_modifier_alt:
             toggle(mir_surface_state_maximized);
@@ -505,7 +538,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
     {
         if (auto const session = tools->focused_session())
         {
-            switch (modifiers & modifier_mask)
+            switch (modifiers)
             {
             case mir_input_event_modifier_alt:
                 kill(session->process_id(), SIGTERM);
@@ -522,6 +555,28 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
                 break;
             }
         }
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_TAB)
+    {
+        tools->focus_next_session();
+        if (auto const surface = tools->focused_surface())
+            select_active_surface(surface);
+
+        return true;
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_GRAVE)
+    {
+        if (auto const prev = tools->focused_surface())
+        {
+            if (auto const app = tools->focused_session())
+                select_active_surface(app->surface_after(prev));
+        }
+
+        return true;
     }
 
     return false;
@@ -632,6 +687,17 @@ void me::CanonicalWindowManagerPolicyCopy::toggle(MirSurfaceState state)
 
 void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr<ms::Surface> const& surface)
 {
+    if (surface == active_surface_.lock())
+        return;
+
+    if (auto const active_surface = active_surface_.lock())
+    {
+        if (auto const titlebar = tools->info_for(active_surface).titlebar)
+        {
+            paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
+        }
+    }
+
     if (!surface)
     {
         active_surface_.reset();
@@ -649,6 +715,10 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
     case mir_surface_type_freestyle:
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        if (auto const titlebar = tools->info_for(surface).titlebar)
+        {
+            paint_titlebar(titlebar, tools->info_for(titlebar), 0xFF);
+        }
         tools->set_focus_to(info_for.session.lock(), surface);
         raise_tree(surface);
         active_surface_ = surface;

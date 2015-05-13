@@ -1,4 +1,4 @@
-MIR_SERVER_31 {
+MIR_SERVER_32 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -172,6 +172,7 @@ MIR_SERVER_31 {
     mir::ServerStatusListener::ServerStatusListener*;
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
+    mir::Server::the_buffer_stream_factory*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
     mir::Server::the_cursor*;
@@ -193,6 +194,7 @@ MIR_SERVER_31 {
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_configurator*;
     mir::Server::the_surface_coordinator*;
+    mir::Server::the_surface_factory*;
     mir::Server::the_touch_visualizer*;
     mir::Server::wrap_cursor_listener*;
     mir::Server::wrap_display_buffer_compositor_factory*;
@@ -210,6 +212,7 @@ MIR_SERVER_31 {
     mir::shell::AbstractShell::focus_next_session*;
     mir::shell::AbstractShell::get_surface_attribute*;
     mir::shell::AbstractShell::handle*;
+    mir::shell::AbstractShell::modify_surface*;
     mir::shell::AbstractShell::open_session*;
     mir::shell::AbstractShell::raise*;
     mir::shell::AbstractShell::remove_display*;

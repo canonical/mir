@@ -27,6 +27,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/any_surface.h"
 #include "mir_test_doubles/stub_renderer.h"
 
 #include <gtest/gtest.h>
@@ -149,16 +150,7 @@ struct StaleFrames : BasicFixture
 
     void client_create_surface()
     {
-        MirSurfaceParameters const request_params =
-        {
-            __PRETTY_FUNCTION__,
-            640, 480,
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware,
-            mir_display_output_id_invalid
-        };
-
-        surface = mir_connection_create_surface_sync(connection, &request_params);
+        surface = mtf::make_any_surface(connection);
         ASSERT_TRUE(mir_surface_is_valid(surface));
     }
 

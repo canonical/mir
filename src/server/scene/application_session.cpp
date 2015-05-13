@@ -26,6 +26,7 @@
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/session_listener.h"
+#include "mir/scene/surface_factory.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
@@ -46,6 +47,7 @@ namespace mev = mir::events;
 
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::shared_ptr<ms::BufferStreamFactory> const& buffer_stream_factory,
     pid_t pid,
     std::string const& session_name,
@@ -53,6 +55,7 @@ ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<mf::EventSink> const& sink) :
     surface_coordinator(surface_coordinator),
+    surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
     pid(pid),
     session_name(session_name),
@@ -87,27 +90,30 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
 
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
+    mg::BufferProperties buffer_properties{params.size,
+                                           params.pixel_format,
+                                           params.buffer_usage};
 
     auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
-    auto surf = surface_coordinator->add_surface(params, this);
+    auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
+    auto surface = surface_factory->create_surface(buffer_stream, params);
+    surface_coordinator->add_surface(surface, params.depth, params.input_mode, this);
 
     if (params.state.is_set())
-        surf->configure(mir_surface_attrib_state, params.state.value());
+        surface->configure(mir_surface_attrib_state, params.state.value());
     if (params.type.is_set())
-        surf->configure(mir_surface_attrib_type, params.type.value());
+        surface->configure(mir_surface_attrib_type, params.type.value());
     if (params.preferred_orientation.is_set())
-        surf->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation.value());
+        surface->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation.value());
 
-    surf->add_observer(observer);
+    surface->add_observer(observer);
 
     {
         std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
-        surfaces[id] = surf;
-        auto const bs_id = static_cast<mf::BufferStreamId>(next_id().as_value());
-        streams[bs_id] = surf->primary_buffer_stream();
+        surfaces[id] = surface;
     }
 
-    session_listener->surface_created(*this, surf);
+    session_listener->surface_created(*this, surface);
     return id;
 }
 
@@ -136,19 +142,43 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface(mf::SurfaceId id) c
 std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_ptr<ms::Surface> const& before) const
 {
     std::lock_guard<std::mutex> lock(surfaces_and_streams_mutex);
-    auto i = surfaces.begin();
-    for (; i != surfaces.end(); ++i)
+    auto current = surfaces.begin();
+    for (; current != surfaces.end(); ++current)
     {
-        if (i->second == before)
+        if (current->second == before)
             break;
     }
-    if (i == surfaces.end())
+
+    if (current == surfaces.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("surface_after: surface is not a member of this session"));
 
-    ++i;
-    if (i == surfaces.end())
-        i = surfaces.begin();
-    return i->second;
+    auto const can_take_focus = [](Surfaces::value_type const &s)
+        {
+            switch (s.second->type())
+            {
+            case mir_surface_type_normal:       /**< AKA "regular"                       */
+            case mir_surface_type_utility:      /**< AKA "floating"                      */
+            case mir_surface_type_dialog:
+            case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+            case mir_surface_type_freestyle:
+            case mir_surface_type_menu:
+            case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+                return true;
+
+            case mir_surface_type_gloss:
+            case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+            default:
+                // Cannot have input focus - skip it
+                return false;
+            }
+        };
+
+    auto next = std::find_if(++current, end(surfaces), can_take_focus);
+
+    if (next == surfaces.end())
+        next = std::find_if(begin(surfaces), current, can_take_focus);
+
+    return next->second;
 }
 
 void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
@@ -265,7 +295,7 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
 mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
 {
     auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
-    auto stream = std::make_shared<ms::SurfacelessBufferStream>(buffer_stream_factory->create_buffer_stream(2, props));
+    auto stream = std::make_shared<ms::SurfacelessBufferStream>(buffer_stream_factory->create_buffer_stream(props));
     
     {
         std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
