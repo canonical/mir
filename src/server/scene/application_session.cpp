@@ -228,7 +228,7 @@ void ms::ApplicationSession::force_requests_to_complete()
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     for (auto& id_s : surfaces)
     {
-        id_s.second->force_requests_to_complete();
+        id_s.second->buffer_stream()->force_requests_to_complete();
     }
 }
 
