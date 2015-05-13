@@ -56,6 +56,9 @@ mir::Fd mgmh::DRMHelper::authenticated_fd()
             std::runtime_error(
                 "Tried to get authenticated DRM fd before setting up the DRM master"));
 
+    if (X_platform)
+        return mir::Fd{IntOwnedFd{fd}};
+
     char* busid = drmGetBusid(fd);
     if (!busid)
         BOOST_THROW_EXCEPTION(

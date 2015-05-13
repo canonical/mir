@@ -53,8 +53,8 @@ struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 };
 }
 
-mgm::IpcOperations::IpcOperations(std::shared_ptr<DRMAuthentication> const& drm_auth) :
-    drm_auth{drm_auth}
+mgm::IpcOperations::IpcOperations(bool const X_platform, std::shared_ptr<DRMAuthentication> const& drm) :
+    drm{drm}, X_platform{X_platform}
 {
 }
 
@@ -86,6 +86,10 @@ void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
     unsigned int const op, mg::PlatformOperationMessage const& request)
 {
+    if (X_platform)
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Invalid platform operation"));
+
     if (op == MirMesaPlatformOperation::auth_magic)
     {
         MirMesaAuthMagicRequest auth_magic_request;
@@ -103,7 +107,7 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
 
         try
         {
-            drm_auth->auth_magic(auth_magic_request.magic);
+            drm->auth_magic(auth_magic_request.magic);
             auth_magic_response.status = 0;
         }
         catch (std::exception const& e)
@@ -129,7 +133,7 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
                 std::runtime_error("Invalid request message for auth_fd platform operation"));
         }
 
-        return mg::PlatformOperationMessage{{},{drm_auth->authenticated_fd()}};
+        return mg::PlatformOperationMessage{{},{drm->authenticated_fd()}};
     }
     else
     {
@@ -140,5 +144,11 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
 {
-    return std::make_shared<MesaPlatformIPCPackage>(drm_auth->authenticated_fd());
+    if (X_platform)
+    {
+        auto package = std::make_shared<mg::PlatformIPCPackage>();
+        package->ipc_fds.push_back(dup(drm->authenticated_fd()));
+        return package;
+    }
+    return std::make_shared<MesaPlatformIPCPackage>(drm->authenticated_fd());
 }

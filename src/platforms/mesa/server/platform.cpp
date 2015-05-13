@@ -152,7 +152,7 @@ std::shared_ptr<mg::Display> mgm::Platform::create_display(
 
 std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
 {
-    return std::make_shared<mgm::IpcOperations>(drm);
+    return std::make_shared<mgm::IpcOperations>(false, drm);
 }
 
 EGLNativeDisplayType mgm::Platform::egl_native_display() const

@@ -19,7 +19,7 @@
 #include "platform.h"
 #include "display.h"
 #include "buffer_allocator.h"
-#include "ipc_operations.h"
+#include "../../mesa/server/ipc_operations.h"
 #include "mir/udev/wrapper.h"
 #include "debug.h"
 
@@ -68,7 +68,7 @@ std::shared_ptr<mg::Display> mgx::Platform::create_display(
 std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
 {
     CALLED
-    return std::make_shared<mgx::IpcOperations>(drm);
+    return std::make_shared<mg::mesa::IpcOperations>(true, drm);
 }
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const

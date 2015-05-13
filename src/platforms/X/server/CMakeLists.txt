@@ -30,7 +30,7 @@ add_library(
   ../../mesa/server/drm_mode_resources.cpp
   ../../mesa/server/anonymous_shm_file.cpp
   ../../mesa/server/shm_buffer.cpp
-  ipc_operations.cpp
+  ../../mesa/server/ipc_operations.cpp
   display_group.cpp
   display_buffer.cpp
   ../../mesa/server/gbm_buffer.cpp
