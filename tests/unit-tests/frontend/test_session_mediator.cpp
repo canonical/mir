@@ -355,16 +355,11 @@ TEST_F(SessionMediator, calling_methods_after_connect_works)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     EXPECT_NO_THROW({
-    printf("CREate\n");
         mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
-    printf("oza\n");
         *buffer_request.mutable_buffer() = surface_response.buffer_stream().buffer();
         buffer_request.mutable_id()->set_value(surface_response.id().value());
-    printf("oza\n");
         mediator.next_buffer(nullptr, &surface_id_request, &buffer_response, null_callback.get());
-    printf("oza\n");
         mediator.exchange_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
-    printf("oza\n");
         mediator.release_surface(nullptr, &surface_id_request, nullptr, null_callback.get());
     });
 

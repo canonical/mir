@@ -144,6 +144,7 @@ void mf::SessionMediator::connect(
 
     for (auto pf : surface_pixel_formats)
         response->add_surface_pixel_format(static_cast<::google::protobuf::uint32>(pf));
+
     resource_cache->save_resource(response, ipc_package);
 
     done->Run();
