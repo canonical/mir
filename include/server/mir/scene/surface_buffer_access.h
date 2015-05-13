@@ -30,18 +30,18 @@ class Buffer;
 namespace scene
 {
 
-class SurfaceBufferAccess
+class BufferAccess
 {
 public:
-    virtual ~SurfaceBufferAccess() = default;
+    virtual ~BufferAccess() = default;
 
     virtual void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec) = 0;
 
 protected:
-    SurfaceBufferAccess() = default;
-    SurfaceBufferAccess(SurfaceBufferAccess const&) = delete;
-    SurfaceBufferAccess& operator=(SurfaceBufferAccess const&) = delete;
+    BufferAccess() = default;
+    BufferAccess(BufferAccess const&) = delete;
+    BufferAccess& operator=(BufferAccess const&) = delete;
 };
 
 }

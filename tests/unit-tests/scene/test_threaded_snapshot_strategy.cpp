@@ -43,10 +43,10 @@ namespace geom = mir::geometry;
 namespace
 {
 
-class StubSurfaceBufferAccess : public ms::SurfaceBufferAccess
+class StubBufferAccess : public ms::BufferAccess
 {
 public:
-    ~StubSurfaceBufferAccess() noexcept {}
+    ~StubBufferAccess() noexcept {}
 
     void with_most_recent_buffer_do(
         std::function<void(mg::Buffer&)> const& exec)
@@ -72,7 +72,7 @@ public:
 
 struct ThreadedSnapshotStrategyTest : testing::Test
 {
-    StubSurfaceBufferAccess buffer_access;
+    StubBufferAccess buffer_access;
 };
 
 }

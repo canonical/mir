@@ -39,8 +39,7 @@ class SurfaceObserver;
 
 class Surface :
     public input::Surface,
-    public frontend::Surface,
-    public SurfaceBufferAccess
+    public frontend::Surface
 {
 public:
     // resolve ambiguous member function names
