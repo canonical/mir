@@ -33,6 +33,8 @@
 #include <random>
 
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <libevdev/libevdev-uinput.h>
 
 namespace mt = mir::test;
@@ -93,6 +95,9 @@ struct MockInputHandler
     MOCK_METHOD1(handle_input, void(MirEvent const*));
 };
 
+// Template string:
+// X is replaced with random alphabetic character
+// # is replaced with pid
 std::string available_filename(std::string const& tmpl)
 {
     std::random_device rd;
@@ -109,6 +114,8 @@ std::string available_filename(std::string const& tmpl)
         {
             if (c == 'X')
                 s += random_char(gen);
+            else if (c == '#')
+                s += std::to_string(getpid());
             else
                 s += c;
         }
@@ -120,8 +127,8 @@ std::string available_filename(std::string const& tmpl)
 
 struct InputEvents : testing::Test
 {
-    std::string const host_socket{available_filename("/tmp/host_mir_socket_XXXXXX")};
-    std::string const nested_socket{available_filename("/tmp/nested_mir_socket_XXXXXX")};
+    std::string const host_socket{available_filename("/tmp/host_mir_socket_#_XXXXXX")};
+    std::string const nested_socket{available_filename("/tmp/nested_mir_socket_#_XXXXXX")};
     std::string const server_path{mtf::executable_path() + "/mir_demo_server_minimal"};
 
     InputEvents()
