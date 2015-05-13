@@ -43,6 +43,11 @@ TEST(EventFilterDispatcherPolicy, offers_key_events_to_filter)
     mia::EventFilterDispatcherPolicy policy(mt::fake_shared(filter), true);
     uint32_t policy_flags;
 
+    ev.initialize(0, 0, 0, 0, 0, 0, 0, 0,
+                  std::chrono::nanoseconds(0),
+                  std::chrono::nanoseconds(0));
+                  
+
     EXPECT_CALL(filter, handle(_)).Times(1).WillOnce(Return(false));
 
     // The policy filters ALL key events before queuing

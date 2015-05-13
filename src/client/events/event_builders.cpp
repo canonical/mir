@@ -92,7 +92,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
     return make_event_uptr(e);
 }
 
-mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers)
 {
@@ -142,7 +142,7 @@ enum
 };
 }
 
-mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers)
 {
     MirEvent *e = new MirEvent;
@@ -251,7 +251,7 @@ MirMotionAction old_action_from_pointer_action(MirPointerAction action, MirMotio
 }
 }
 
-mir::EventUPtr mev::make_event(MirInputDeviceId device_id, int64_t timestamp,
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers, MirPointerAction action,
     std::vector<MirPointerButton> const& buttons_pressed,
     float x_axis_value, float y_axis_value,

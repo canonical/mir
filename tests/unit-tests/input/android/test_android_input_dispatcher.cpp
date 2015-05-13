@@ -175,7 +175,7 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
     MirEvent event;
     event.type = mir_event_type_motion;
     event.motion.pointer_count = 1;
-    event.motion.event_time = 2;
+    event.motion.event_time = std::chrono::nanoseconds(2);
     event.motion.device_id = 3;
     event.motion.source_id = 4;
     event.motion.action = mir_motion_action_scroll;
@@ -208,7 +208,7 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
     expected_properties[0].id = pointer.id;
     expected_properties[0].toolType = pointer.tool_type;
 
-    droidinput::NotifyMotionArgs expected(std::chrono::nanoseconds(event.motion.event_time),
+    droidinput::NotifyMotionArgs expected(event.motion.event_time,
                                           event.motion.device_id,
                                           event.motion.source_id,
                                           default_policy_flags,
@@ -233,7 +233,7 @@ TEST_F(AndroidInputDispatcherTest, forwards_all_key_event_paramters_correctly)
     using namespace ::testing;
     MirEvent event;
     event.type = mir_event_type_key;
-    event.key.event_time = 1;
+    event.key.event_time = std::chrono::nanoseconds(1);
     event.key.device_id = 2;
     event.key.source_id = 3;
     event.key.action = mir_keyboard_action_down;
@@ -250,7 +250,7 @@ TEST_F(AndroidInputDispatcherTest, forwards_all_key_event_paramters_correctly)
                                        event.key.key_code,
                                        event.key.scan_code,
                                        AMETA_SHIFT_ON,
-                                       std::chrono::nanoseconds(event.key.event_time));
+                                       event.key.event_time);
 
     EXPECT_CALL(*dispatcher, notifyKey(KeyArgsMatches(expected)));
 

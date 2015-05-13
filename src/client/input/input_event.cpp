@@ -184,9 +184,9 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
     switch (old_ev->type)
     {
     case mir_event_type_motion:
-        return old_ev->motion.event_time;
+        return old_ev->motion.event_time.count();
     case mir_event_type_key:
-        return old_ev->key.event_time;
+        return old_ev->key.event_time.count();
     default:
         abort();
     }

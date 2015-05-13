@@ -230,7 +230,7 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
     using namespace ::testing;
     MirEvent expected;
     expected.type = mir_event_type_key;
-    expected.key.event_time = 1;
+    expected.key.event_time = std::chrono::nanoseconds(1);
     expected.key.device_id = 2;
     expected.key.source_id = 3;
     expected.key.action = mir_keyboard_action_down;
@@ -250,7 +250,7 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
                                        expected.key.key_code,
                                        expected.key.scan_code,
                                        AMETA_SHIFT_ON,
-                                       std::chrono::nanoseconds(expected.key.event_time));
+                                       expected.key.event_time);
 
     translator.notifyKey(&notified);
 }
@@ -261,7 +261,7 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
     MirEvent expected;
     expected.type = mir_event_type_motion;
     expected.motion.pointer_count = 1;
-    expected.motion.event_time = 2;
+    expected.motion.event_time = std::chrono::nanoseconds(2);
     expected.motion.device_id = 3;
     expected.motion.source_id = 4;
     expected.motion.action = mir_motion_action_scroll;
@@ -309,7 +309,7 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
                                           properties,
                                           coords,
                                           0, 0, /* unused x/y precision */
-                                          std::chrono::nanoseconds(expected.motion.event_time));
+                                          expected.motion.event_time);
 
     translator.notifyMotion(&notified);
 }
