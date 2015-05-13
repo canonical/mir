@@ -46,11 +46,6 @@ std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_compositor_buffer(
         buffer_bundle, user_id);
 }
 
-std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_snapshot_buffer()
-{
-    return std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle);
-}
-
 void mc::BufferStreamSurfaces::acquire_client_buffer(
     std::function<void(graphics::Buffer* buffer)> complete)
 {
@@ -65,11 +60,6 @@ void mc::BufferStreamSurfaces::release_client_buffer(graphics::Buffer* buf)
 geom::Size mc::BufferStreamSurfaces::stream_size()
 {
     return buffer_bundle->properties().size;
-}
-
-void mc::BufferStreamSurfaces::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
-{
-    exec(*lock_snapshot_buffer());
 }
 
 void mc::BufferStreamSurfaces::resize(geom::Size const& size)
@@ -123,6 +113,11 @@ bool mc::BufferStreamSurfaces::has_submitted_buffer() const
 {
     std::unique_lock<std::mutex> lk(mutex);
     return first_frame_posted;
+}
+
+void mc::BufferStreamSurfaces::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
+{
+    exec(*std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle));
 }
 
 MirPixelFormat mc::BufferStreamSurfaces::pixel_format() const

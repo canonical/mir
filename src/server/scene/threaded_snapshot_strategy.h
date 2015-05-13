@@ -39,7 +39,7 @@ public:
     ~ThreadedSnapshotStrategy() noexcept;
 
     void take_snapshot_of(
-        std::shared_ptr<frontend::BufferStream> const& buffer_stream,
+        std::shared_ptr<SurfaceBufferAccess> const& surface_buffer_access,
         SnapshotCallback const& snapshot_taken);
 
 private:

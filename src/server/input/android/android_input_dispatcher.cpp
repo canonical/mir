@@ -55,17 +55,18 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
     {
     case mir_event_type_key:
     {
+        int32_t ignored_repeat_count = 0;
         droidinput::NotifyKeyArgs const notify_key_args(
             std::chrono::nanoseconds(event.key.event_time),
             event.key.device_id,
             event.key.source_id,
             policy_flags,
-            event.key.action,
+            mia::android_keyboard_action_from_mir(ignored_repeat_count, event.key.action),
             0, /* flags */
             event.key.key_code,
             event.key.scan_code,
             mia::android_modifiers_from_mir(event.key.modifiers),
-            std::chrono::nanoseconds(event.key.event_time));
+            event.key.event_time);
 
         dispatcher->notifyKey(&notify_key_args);
 
@@ -107,7 +108,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             pointer_properties.data(),
             pointer_coords.data(),
             0, 0, /* unused x/y precision */
-            std::chrono::nanoseconds(event.motion.event_time));
+            event.motion.event_time);
 
         dispatcher->notifyMotion(&notify_motion_args);
 

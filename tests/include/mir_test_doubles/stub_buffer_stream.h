@@ -45,12 +45,6 @@ public:
         return stub_compositor_buffer;
     }
 
-    std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override
-    {
-        thread_name = current_thread_name();
-        return stub_compositor_buffer;
-    }
-
     geometry::Size stream_size() override
     {
         return geometry::Size();
@@ -76,7 +70,11 @@ public:
         if (b) ++nready;
         complete(&stub_client_buffer);
     }
-    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const&) {}
+    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& fn)
+    {
+        thread_name = current_thread_name();
+        fn(*stub_compositor_buffer);
+    }
     MirPixelFormat pixel_format() const { return mir_pixel_format_abgr_8888; }
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) {}
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) {}
