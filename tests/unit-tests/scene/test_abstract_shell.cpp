@@ -132,6 +132,8 @@ struct AbstractShell : Test
         ON_CALL(surface_factory, create_surface(_,_))
             .WillByDefault(Return(mt::fake_shared(mock_surface)));
     }
+
+    std::chrono::nanoseconds const event_timestamp = std::chrono::nanoseconds(0);
 };
 }
 
@@ -239,7 +241,6 @@ TEST_F(AbstractShell, remove_display_adds_display_to_window_manager)
 
 TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 {
-    int64_t const timestamp{0};
     MirKeyboardAction const action{mir_keyboard_action_down};
     xkb_keysym_t const key_code{0};
     int const scan_code{0};
@@ -247,7 +248,7 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 
     auto const event = mir::events::make_event(
         mir_input_event_type_key,
-        timestamp,
+        event_timestamp,
         action,
         key_code,
         scan_code,
@@ -263,12 +264,11 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 
 TEST_F(AbstractShell, touch_input_events_are_handled_by_window_manager)
 {
-    int64_t const timestamp{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
 
     auto const event = mir::events::make_event(
         mir_input_event_type_touch,
-        timestamp,
+        event_timestamp,
         modifiers);
 
     EXPECT_CALL(*wm, handle_touch_event(_))
@@ -281,7 +281,6 @@ TEST_F(AbstractShell, touch_input_events_are_handled_by_window_manager)
 
 TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
 {
-    int64_t const timestamp{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
     MirPointerAction const action{mir_pointer_action_button_down};
     std::vector<MirPointerButton> const buttons_pressed{mir_pointer_button_primary};
@@ -292,7 +291,7 @@ TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
 
     auto const event = mir::events::make_event(
         mir_input_event_type_pointer,
-        timestamp,
+        event_timestamp,
         modifiers,
         action,
         buttons_pressed,
