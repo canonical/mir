@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_BUFFER_STREAM_H_
 #define MIR_FRONTEND_BUFFER_STREAM_H_
 
-#include "mir/scene/surface_buffer_access.h"
+#include "mir/scene/buffer_access.h"
 #include <mir_toolkit/common.h>
 
 #include <functional>

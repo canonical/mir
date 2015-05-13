@@ -18,7 +18,7 @@
 
 #include "src/server/scene/threaded_snapshot_strategy.h"
 #include "src/server/scene/pixel_buffer.h"
-#include "mir/scene/surface_buffer_access.h"
+#include "mir/scene/buffer_access.h"
 #include "mir/graphics/buffer.h"
 
 #include "mir_test_doubles/stub_buffer.h"

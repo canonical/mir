@@ -18,7 +18,7 @@
 
 #include "threaded_snapshot_strategy.h"
 #include "pixel_buffer.h"
-#include "mir/scene/surface_buffer_access.h"
+#include "mir/scene/buffer_access.h"
 #include "mir/thread_name.h"
 
 #include <deque>

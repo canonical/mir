@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SCENE_SURFACE_BUFFER_ACCESS_H_
-#define MIR_SCENE_SURFACE_BUFFER_ACCESS_H_
+#ifndef MIR_SCENE_BUFFER_ACCESS_H_
+#define MIR_SCENE_BUFFER_ACCESS_H_
 
 #include <functional>
 
@@ -47,4 +47,4 @@ protected:
 }
 }
 
-#endif /* MIR_SCENE_SURFACE_BUFFER_ACCESS_H_ */
+#endif /* MIR_SCENE_BUFFER_ACCESS_H_ */

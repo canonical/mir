@@ -21,7 +21,6 @@
 
 #include "mir/graphics/renderable.h"
 #include "mir/input/surface.h"
-#include "mir/scene/surface_buffer_access.h"
 #include "mir/frontend/surface.h"
 
 #include <vector>
