@@ -45,6 +45,8 @@ struct MockSurface : public scene::BasicSurface
             {},
             mir::report::null_scene_report())
     {
+        ON_CALL(*this, primary_buffer_stream())
+            .WillByDefault(testing::Return(std::make_shared<testing::NiceMock<MockBufferStream>>()));
     }
 
     ~MockSurface() noexcept {}
@@ -65,6 +67,7 @@ struct MockSurface : public scene::BasicSurface
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));
+    MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());
 };
 
 }

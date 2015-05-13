@@ -72,7 +72,7 @@ TEST_F(BufferStreamTest, pixel_format_query)
         .WillOnce(testing::Return(properties));
 
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
-    auto returned_pf = buffer_stream.get_stream_pixel_format();
+    auto returned_pf = buffer_stream.pixel_format();
     EXPECT_EQ(format, returned_pf);
 }
 
@@ -235,20 +235,4 @@ TEST_F(BufferStreamTest, notifies_on_swap)
     buffer_stream.swap_buffers(buffer, complete);
     buffer_stream.swap_buffers(buffer, complete);
     buffer_stream.swap_buffers(buffer, complete);
-}
-
-TEST_F(BufferStreamTest, with_most_recent_buffer_do_uses_compositor_buffer)
-{
-    using namespace testing;
-    ON_CALL(*mock_bundle, compositor_acquire(_))
-        .WillByDefault(Return(mock_buffer));
-    ON_CALL(*mock_bundle, snapshot_acquire())
-        .WillByDefault(Return(mock_buffer));
-    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
-
-    std::shared_ptr<mg::NativeBuffer> native_buffer;
-    buffer_stream.with_most_recent_buffer_do(
-        [&](mg::Buffer& buffer) { native_buffer = buffer.native_buffer_handle(); });
-
-    EXPECT_THAT(buffer_stream.lock_compositor_buffer(this)->native_buffer_handle(), Eq(native_buffer));
 }
