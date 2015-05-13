@@ -92,8 +92,6 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
 
     void generate_alt_click_at(Point const& click_position)
     {
-        MirInputDeviceId const device_id{7};
-        int64_t const timestamp{39};
         auto const modifiers = mir_input_event_modifier_alt;
         std::vector<MirPointerButton> depressed_buttons{mir_pointer_button_tertiary};
 
@@ -111,8 +109,6 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
 
     void generate_alt_move_to(Point const& drag_position)
     {
-        MirInputDeviceId const device_id{7};
-        int64_t const timestamp{39};
         auto const modifiers = mir_input_event_modifier_alt;
         std::vector<MirPointerButton> depressed_buttons{mir_pointer_button_tertiary};
 
@@ -156,6 +152,8 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         mir_surface_spec_release(spec);
     }
 
+    MirInputDeviceId const device_id = MirInputDeviceId(7);
+    std::chrono::nanoseconds const timestamp = std::chrono::nanoseconds(39);
     MockSurfaceObserver surface_observer;
     std::weak_ptr<ms::Surface> shell_surface;
 };

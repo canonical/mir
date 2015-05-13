@@ -108,16 +108,16 @@ TEST(CommonInputEventProperties, device_id_taken_from_old_style_event)
 
 TEST(CommonInputEventProperties, event_time_taken_from_old_style_event)
 {
-    int64_t event_time_1 = 79, event_time_2 = 83;
+    std::chrono::nanoseconds event_time_1{79}, event_time_2{83};
     auto old_ev = a_motion_ev();
 
     old_ev.motion.event_time = event_time_1;
-    EXPECT_EQ(event_time_1, mir_input_event_get_event_time(
+    EXPECT_EQ(event_time_1.count(), mir_input_event_get_event_time(
         mir_event_get_input_event(&old_ev)));
 
     old_ev.type = mir_event_type_key;
     old_ev.key.event_time = event_time_2;
-    EXPECT_EQ(event_time_2, mir_input_event_get_event_time(
+    EXPECT_EQ(event_time_2.count(), mir_input_event_get_event_time(
         mir_event_get_input_event(&old_ev)));
 }
 
@@ -125,25 +125,13 @@ TEST(KeyInputEventProperties, up_and_down_actions_copied_from_old_style_event)
 {
     auto old_ev = a_key_ev();
 
-    old_ev.key.action = mir_key_action_down;
-    old_ev.key.repeat_count = 0;
+    old_ev.key.action = mir_keyboard_action_down;
     
     auto new_kev = mir_input_event_get_keyboard_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(mir_keyboard_action_down, mir_keyboard_event_action(new_kev));
 
-    old_ev.key.action = mir_key_action_up;
+    old_ev.key.action = mir_keyboard_action_up;
     EXPECT_EQ(mir_keyboard_action_up, mir_keyboard_event_action(new_kev));
-}
-
-TEST(KeyInputEventProperties, repeat_action_produced_from_non_zero_repeat_count_in_old_style_event)
-{
-    auto old_ev = a_key_ev();
-
-    old_ev.key.action = mir_key_action_down;
-    old_ev.key.repeat_count = 1;
-
-    auto new_kev = mir_input_event_get_keyboard_event(mir_event_get_input_event(&old_ev));
-    EXPECT_EQ(mir_keyboard_action_repeat, mir_keyboard_event_action(new_kev));
 }
 
 TEST(KeyInputEventProperties, keycode_scancode_and_modifiers_taken_from_old_style_event)

@@ -119,7 +119,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         auto const click_position = display.top_left + 0.5*as_displacement(display.size);
 
         MirInputDeviceId const device_id{7};
-        int64_t const timestamp{39};
+
         auto const modifiers = mir_input_event_modifier_none;
         std::vector<MirPointerButton> depressed_buttons{mir_pointer_button_primary};
 
@@ -129,7 +129,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_button_down;
 
-        auto const click_event = mev::make_event(device_id, timestamp, modifiers,
+        auto const click_event = mev::make_event(device_id, std::chrono::nanoseconds(1), modifiers,
             action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
 
         server.the_shell()->handle(*click_event);
