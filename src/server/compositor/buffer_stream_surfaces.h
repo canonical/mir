@@ -54,7 +54,6 @@ public:
 
     std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(void const* user_id) override;
-    std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override;
 
     geometry::Size stream_size() override;
     void resize(geometry::Size const& size) override;

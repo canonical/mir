@@ -74,7 +74,9 @@ public:
 
     void take_snapshot(WorkItem const& wi)
     {
-        pixels->fill_from(*wi.stream->lock_snapshot_buffer());
+        wi.stream->with_most_recent_buffer_do([this](mir::graphics::Buffer& buffer) {
+            pixels->fill_from(buffer);
+        });
 
         wi.snapshot_taken(
             ms::Snapshot{pixels->size(),

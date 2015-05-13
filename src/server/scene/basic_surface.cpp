@@ -237,11 +237,6 @@ void ms::BasicSurface::allow_framedropping(bool allow)
     surface_buffer_stream->allow_framedropping(allow);
 }
 
-std::shared_ptr<mg::Buffer> ms::BasicSurface::snapshot_buffer() const
-{
-    return surface_buffer_stream->lock_snapshot_buffer();
-}
-
 bool ms::BasicSurface::supports_input() const
 {
     if (server_input_channel  && server_input_channel->client_fd() != -1)
@@ -655,7 +650,9 @@ struct CursorStreamImageAdapter
 
     void post_cursor_image_from_current_buffer()
     {
-        surface.set_cursor_from_buffer(*stream->lock_snapshot_buffer(), hotspot);
+        stream->with_most_recent_buffer_do([this](mg::Buffer& buffer) {
+            surface.set_cursor_from_buffer(buffer, hotspot);
+        });
     }
 
     ms::BasicSurface &surface;
@@ -690,7 +687,9 @@ void ms::BasicSurface::set_cursor_stream(std::shared_ptr<mf::BufferStream> const
     std::unique_lock<std::mutex> lock(guard);
 
     cursor_stream_adapter = std::make_unique<ms::CursorStreamImageAdapter>(*this, stream, hotspot);
-    cursor_image_ = std::make_shared<CursorImageFromBuffer>(*stream->lock_snapshot_buffer(), hotspot); 
+    stream->with_most_recent_buffer_do([this, &hotspot](mg::Buffer& buffer) {
+        cursor_image_ = std::make_shared<CursorImageFromBuffer>(buffer, hotspot); 
+    });
 }
 
 void ms::BasicSurface::request_client_surface_close()

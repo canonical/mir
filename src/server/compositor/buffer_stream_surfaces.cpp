@@ -46,11 +46,6 @@ std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_compositor_buffer(
         buffer_bundle, user_id);
 }
 
-std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_snapshot_buffer()
-{
-    return std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle);
-}
-
 void mc::BufferStreamSurfaces::acquire_client_buffer(
     std::function<void(graphics::Buffer* buffer)> complete)
 {
@@ -69,7 +64,7 @@ geom::Size mc::BufferStreamSurfaces::stream_size()
 
 void mc::BufferStreamSurfaces::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
 {
-    exec(*lock_snapshot_buffer());
+    exec(*std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle));
 }
 
 void mc::BufferStreamSurfaces::resize(geom::Size const& size)
