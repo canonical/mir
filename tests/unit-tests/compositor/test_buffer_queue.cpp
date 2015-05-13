@@ -1668,7 +1668,7 @@ TEST_F(BufferQueueTest, queue_size_scales_with_client_performance)
         int const delay = q.scaling_delay();
         EXPECT_EQ(3, delay);  // expect a sane default
 
-        for (int frame = 0; frame < 100; frame++)
+        for (int frame = 0; frame < 10; frame++)
         {
             auto handle = client_acquire_async(q);
             handle->wait_for(std::chrono::seconds(1));
@@ -1702,7 +1702,7 @@ TEST_F(BufferQueueTest, queue_size_scales_with_client_performance)
 
         // And what happens if the client becomes fast again?...
         buffers_acquired.clear();
-        for (int frame = 0; frame < 100; frame++)
+        for (int frame = 0; frame < 10; frame++)
         {
             auto handle = client_acquire_async(q);
             handle->wait_for(std::chrono::seconds(1));
@@ -1738,7 +1738,7 @@ TEST_F(BufferQueueTest, greedy_compositors_need_triple_buffers)
         std::unordered_set<mg::Buffer *> buffers_acquired;
         int const delay = q.scaling_delay();
 
-        for (int frame = 0; frame < 100; frame++)
+        for (int frame = 0; frame < 10; frame++)
         {
             auto handle = client_acquire_async(q);
             handle->wait_for(std::chrono::seconds(1));
@@ -1760,7 +1760,7 @@ TEST_F(BufferQueueTest, compositor_double_rate_of_slow_client)
         mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         q.allow_framedropping(false);
 
-        for (int frame = 0; frame < 100; frame++)
+        for (int frame = 0; frame < 10; frame++)
         {
             ASSERT_EQ(0, q.buffers_ready_for_compositor(this));
             q.client_release(client_acquire_sync(q));
