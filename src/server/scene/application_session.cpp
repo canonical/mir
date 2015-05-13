@@ -184,7 +184,7 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
 void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
 {
     if (auto surface = default_surface())
-        snapshot_strategy->take_snapshot_of(surface->primary_buffer_stream(), snapshot_taken);
+        snapshot_strategy->take_snapshot_of(surface, snapshot_taken);
     else
         snapshot_taken(Snapshot());
 }
