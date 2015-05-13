@@ -166,11 +166,6 @@ ms::BasicSurface::BasicSurface(
 {
 }
 
-void ms::BasicSurface::force_requests_to_complete()
-{
-    surface_buffer_stream->force_requests_to_complete();
-}
-
 ms::BasicSurface::~BasicSurface() noexcept
 {
     report->surface_deleted(this, surface_name);
@@ -222,19 +217,9 @@ mir::geometry::Size ms::BasicSurface::client_size() const
     return size();
 }
 
-MirPixelFormat ms::BasicSurface::pixel_format() const
-{
-    return surface_buffer_stream->pixel_format();
-}
-
 std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
 {
     return surface_buffer_stream;
-}
-
-void ms::BasicSurface::allow_framedropping(bool allow)
-{
-    surface_buffer_stream->allow_framedropping(allow);
 }
 
 bool ms::BasicSurface::supports_input() const
@@ -446,7 +431,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
     {
         swapinterval_ = interval;
         bool allow_dropping = (interval == 0);
-        allow_framedropping(allow_dropping);
+        surface_buffer_stream->allow_framedropping(allow_dropping);
 
         lg.unlock();
         observers.attrib_changed(mir_surface_attrib_swapinterval, interval);

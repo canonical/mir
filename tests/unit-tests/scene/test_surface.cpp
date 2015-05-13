@@ -227,19 +227,6 @@ struct SurfaceCreation : public ::testing::Test
 
 }
 
-TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_buffer_stream, pixel_format())
-        .Times(1)
-        .WillOnce(Return(pf));
-
-    auto ret_pf = surface.pixel_format();
-
-    EXPECT_EQ(ret_pf, pf);
-}
-
 TEST_F(SurfaceCreation, test_surface_gets_right_name)
 {
     EXPECT_EQ(surface_name, surface.name());
@@ -377,27 +364,6 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
     renderables = surface.generate_renderables(nullptr);
     ASSERT_THAT(renderables.size(), Ge(1));
     EXPECT_FLOAT_EQ(alpha, renderables[0]->alpha());
-}
-
-// Perhaps this test and the following (surface_allow_framedropping)
-//  would be better as a test of state, e.g. set up a request which blocks.
-TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_buffer_stream, force_requests_to_complete()).Times(Exactly(1));
-
-    surface.force_requests_to_complete();
-}
-
-TEST_F(SurfaceCreation, test_surface_allow_framedropping)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_buffer_stream, allow_framedropping(true))
-        .Times(1);
-
-    surface.allow_framedropping(true);
 }
 
 TEST_F(SurfaceCreation, input_fds)

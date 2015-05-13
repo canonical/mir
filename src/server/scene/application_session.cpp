@@ -235,9 +235,9 @@ pid_t ms::ApplicationSession::process_id() const
 void ms::ApplicationSession::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
-    for (auto& id_s : surfaces)
+    for (auto& stream : streams)
     {
-        id_s.second->force_requests_to_complete();
+        stream.second->force_requests_to_complete();
     }
 }
 
