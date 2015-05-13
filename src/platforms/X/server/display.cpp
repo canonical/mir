@@ -50,10 +50,6 @@ mgx::Display::Display(::Display *dpy)
 
     CALLED
 
-//    x_dpy = XOpenDisplay(NULL);
-//    if (!x_dpy)
-//        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get a display"));
-
     egl_dpy = eglGetDisplay(x_dpy);
     if (!egl_dpy)
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot get an egl display"));
@@ -151,77 +147,6 @@ mgx::Display::Display(::Display *dpy)
 
     XMapWindow(x_dpy, win);
 
-//    if (!eglMakeCurrent(egl_dpy, egl_surf, egl_surf, egl_ctx))
-//        BOOST_THROW_EXCEPTION(std::logic_error("eglMakeCurrent failed"));
-
-//    glViewport(0, 0, (GLint) width, (GLint) height);
-
-#if 0
-    GLint att[] = { GLX_RGBA, GLX_DOUBLEBUFFER, None };
-    vi = glXChooseVisual(dpy, 0, att);
-
-    int maj, min;
-    glXQueryVersion(dpy, &maj, &min);
-    std::cout<< "\tglX version : (" << maj << ',' << min << ')' << std::endl;
-
-    int bits;
-    glXGetConfig(dpy, vi, GLX_BUFFER_SIZE, &bits);
-    std::cout<< "\tNumber of bits selected : " << bits << std::endl;
-
-    int rgba;
-    glXGetConfig(dpy, vi, GLX_RGBA, &rgba);
-    std::cout<< "\tRGBA selected : " << (rgba ? "Yes" : "No") << std::endl;
-
-    int alpha;
-    glXGetConfig(dpy, vi, GLX_ALPHA_SIZE, &alpha);
-    std::cout<< "\tALPHA exists: " << (alpha ? "Yes" : "No") << std::endl;
-
-    if (bits == 32)
-    {
-        if (alpha)
-            pf = mir_pixel_format_argb_8888;
-        else
-            pf = mir_pixel_format_xrgb_8888;
-    }
-    else if (bits == 24)
-        pf = mir_pixel_format_bgr_888;
-
-    auto root = DefaultRootWindow(dpy);
-
-    if (!vi)
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get a display"));
-
-    cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
-
-    XSetWindowAttributes swa;
-    swa.colormap = cmap;
-    swa.event_mask = ExposureMask;
-
-    win = XCreateWindow(dpy, root, 0, 0, 1280, 1024, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
-
-    XMapWindow(dpy, win);
-    XStoreName(dpy, win, "Mir on X");
-
-    glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
-
-    glXMakeCurrent(dpy, win, glc);
-
-    XEvent xev;
-    while(1)
-    {
-       XNextEvent(dpy, &xev);
-
-       if(xev.type == Expose)
-           break;
-    }
-    XGetWindowAttributes(dpy, win, &gwa);
-    glViewport(0, 0, gwa.width, gwa.height);
-
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glXSwapBuffers(dpy, win);
-#endif
-
     display_group = std::make_unique<mgx::DisplayGroup>(
         std::make_unique<mgx::DisplayBuffer>(geom::Size{display_width, display_height},
                                              egl_dpy,
@@ -256,30 +181,6 @@ std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 void mgx::Display::configure(mg::DisplayConfiguration const& /*new_configuration*/)
 {
 	CALLED
-#if 0
-    if (!new_configuration.valid())
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
-
-    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
-
-    new_configuration.for_each_output([this](mg::DisplayConfigurationOutput const& output)
-    {
-        if (output.current_format != config[output.id].current_format)
-            BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
-
-        config[output.id].orientation = output.orientation;
-        if (config.primary().id == output.id)
-        {
-            power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
-            displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation);
-        }
-        else if (config.external().connected)
-        {
-            power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
-            displays.configure(mga::DisplayName::external, output.power_mode, output.orientation);
-        }
-    });
-#endif
 }
 
 void mgx::Display::register_configuration_change_handler(
