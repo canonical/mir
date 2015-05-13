@@ -617,7 +617,7 @@ TEST_F(TestClientInput, send_mir_input_events_through_surface)
             MirEvent key_event;
             std::memset(&key_event, 0, sizeof key_event);
             key_event.type = mir_event_type_key;
-            key_event.key.action = mir_key_action_down;
+            key_event.key.action = mir_keyboard_action_down;
 
             session->default_surface()->consume(key_event);
         });
