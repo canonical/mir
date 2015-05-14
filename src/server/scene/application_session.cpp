@@ -19,7 +19,6 @@
 #include "application_session.h"
 #include "snapshot_strategy.h"
 #include "default_session_container.h"
-#include "surfaceless_buffer_stream.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
@@ -28,6 +27,7 @@
 #include "mir/scene/session_listener.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/buffer_stream_factory.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
 
@@ -295,7 +295,8 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
 mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
 {
     auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
-    auto stream = std::make_shared<ms::SurfacelessBufferStream>(buffer_stream_factory->create_buffer_stream(props));
+    auto stream = buffer_stream_factory->create_buffer_stream(props);
+    stream->allow_framedropping(true);
     
     {
         std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);

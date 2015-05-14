@@ -202,7 +202,7 @@ MirPointerAction mtf::FakeInputDeviceImpl::InputDevice::update_buttons(synthesis
     }
     else
     {
-        buttons |= ~button;
+        buttons &= ~button;
         return mir_pointer_action_button_up;
     }
 }

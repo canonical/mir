@@ -196,6 +196,7 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_buffer_stream_release;
     mir_buffer_stream_release_sync;
     mir_buffer_stream_is_valid;
+    mir_pointer_event_buttons; # Move to 8.5
 } MIR_CLIENT_8.3;
 
 MIR_CLIENT_DETAIL_8 {
