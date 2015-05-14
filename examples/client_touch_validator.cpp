@@ -19,10 +19,16 @@
  */
 
 #include "eglapp.h"
+
+#include <mir_toolkit/mir_client_library.h>
+
+#include <GLES2/gl2.h>
+
+#include <set>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <GLES2/gl2.h>
 
 namespace
 {
@@ -33,7 +39,7 @@ namespace
 //     2. No touches appear before a down
 //     3. Only one touch comes up or down at a time.
 
-bool validate_events(MirTouchEvent const* last_event, MirTouchEvent *event)
+bool validate_events(MirTouchEvent const* last_event, MirTouchEvent const* event)
 {
     std::set<MirTouchId> must_be_present;
     std::set<MirTouchId> may_not_be_present;
@@ -41,7 +47,7 @@ bool validate_events(MirTouchEvent const* last_event, MirTouchEvent *event)
     for (size_t i = 0; i < mir_touch_event_point_count(last_event); i++)
     {
         auto id = mir_touch_event_id(last_event, i);
-        auto action = mir_touch_event_action(last_event, action);
+        auto action = mir_touch_event_action(last_event, i);
         if (action == mir_touch_action_change)
             must_be_present.insert(id);
         else if (action == mir_touch_action_down)
@@ -93,6 +99,7 @@ bool validate_events(MirTouchEvent const* last_event, MirTouchEvent *event)
     
 class TouchState
 {
+public:
     TouchState() : last_event(nullptr) {}
     ~TouchState() { if (last_event) mir_event_unref(last_event); }
     
@@ -100,27 +107,28 @@ class TouchState
     {
         if (!last_event)
         {
-            last_event = event;
+            last_event = mir_event_ref(reinterpret_cast<MirEvent const*>(event));
             return;
         }
-        if (!validate_events(last_event, event))
+        if (!validate_events(reinterpret_cast<MirTouchEvent const*>(last_event), event))
             abort();
         
         mir_event_unref(last_event);
-        last_event = mir_event_ref(event);
+        last_event = mir_event_ref(reinterpret_cast<MirEvent const*>(event));
     }
 private:
-    MirTouchEvent const* last_event;
+    MirEvent const* last_event;
 };
 
 void on_input_event(TouchState *state, MirInputEvent const *event)
 {
     if (mir_input_event_get_type(event) != mir_input_event_type_touch)
         return;
-    auto tev = mir_input_event_get_touch_input_event();
+    auto tev = mir_input_event_get_touch_event(event);
+    state->record_event(tev);
 }
     
-void on_event(MirSurface *surface, const MirEvent *event, void *context)
+    void on_event(MirSurface * /*surface*/, const MirEvent *event, void *context)
 {
     TouchState *state = (TouchState*)context;
 
@@ -130,7 +138,7 @@ void on_event(MirSurface *surface, const MirEvent *event, void *context)
         on_input_event(state, mir_event_get_input_event(event));
         break;
     case mir_event_type_close_surface:
-        raise(SIGTERM);
+        abort();
         break;
     default:
         break;
@@ -151,7 +159,7 @@ int main(int argc, char *argv[])
     if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
 
-    TouchState t;
+    TouchState state;
 
     MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
