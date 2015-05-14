@@ -92,7 +92,6 @@ public:
 
     MirPixelFormat pixel_format() const override;
 
-    std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
     void force_requests_to_complete() override;
 

@@ -24,7 +24,6 @@
 #include "mir/frontend/session.h"
 #include "mir/input/composite_event_filter.h"
 
-#include "mir_test/fake_event_hub.h"
 #include "mir_test/wait_condition.h"
 
 #include <boost/throw_exception.hpp>
@@ -41,7 +40,6 @@ namespace mi = mir::input;
 namespace ms = mir::shell;
 namespace mia = mi::android;
 namespace geom = mir::geometry;
-namespace mtd = mir::test::doubles;
 
 mtf::InputTestingServerConfiguration::InputTestingServerConfiguration()
 {
@@ -95,19 +93,4 @@ std::shared_ptr<mi::InputDispatcher> mtf::InputTestingServerConfiguration::the_i
 std::shared_ptr<mi::InputSender> mtf::InputTestingServerConfiguration::the_input_sender()
 {
     return DefaultServerConfiguration::the_input_sender();
-}
-
-std::shared_ptr<droidinput::EventHubInterface> mtf::InputTestingServerConfiguration::the_event_hub()
-{
-    if (!fake_event_hub)
-    {
-        fake_event_hub = std::make_shared<mia::FakeEventHub>();
-
-        fake_event_hub->synthesize_builtin_keyboard_added();
-        fake_event_hub->synthesize_builtin_cursor_added();
-        fake_event_hub->synthesize_usb_touchscreen_added();
-        fake_event_hub->synthesize_device_scan_complete();
-    }
-
-    return fake_event_hub;
 }

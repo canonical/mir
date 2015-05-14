@@ -438,6 +438,12 @@ bool mir_pointer_event_button_state(MirPointerEvent const* pev,
    }
 }
 
+MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* pev)
+{
+   auto const& old_mev = old_mev_from_new(pev);
+   return old_mev.buttons;
+}
+
 float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis axis)
 {
    auto const& old_mev = old_mev_from_new(pev);

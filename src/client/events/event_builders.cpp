@@ -231,14 +231,14 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
 
 namespace
 {
-MirMotionAction old_action_from_pointer_action(MirPointerAction action, bool buttons_pressed)
+MirMotionAction old_action_from_pointer_action(MirPointerAction action, int buttons_pressed)
 {
     switch (action)
     {
     case mir_pointer_action_button_up:
-        return mir_motion_action_up;
+        return buttons_pressed == 0 ? mir_motion_action_up : mir_motion_action_pointer_up;
     case mir_pointer_action_button_down:
-        return mir_motion_action_down;
+        return buttons_pressed == 1 ? mir_motion_action_down : mir_motion_action_pointer_down;
     case mir_pointer_action_enter:
         return mir_motion_action_hover_enter;
     case mir_pointer_action_leave:
@@ -248,6 +248,17 @@ MirMotionAction old_action_from_pointer_action(MirPointerAction action, bool but
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid pointer action"));
     }
+}
+int count_buttons(MirPointerButtons buttons)
+{
+    int ret = 0;
+    if (buttons & mir_pointer_button_primary) ret++;
+    if (buttons & mir_pointer_button_secondary) ret++;
+    if (buttons & mir_pointer_button_tertiary) ret++;
+    if (buttons & mir_pointer_button_forward) ret++;
+    if (buttons & mir_pointer_button_back) ret++;
+
+    return ret;
 }
 }
 
@@ -268,7 +279,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     mev.source_id = AINPUT_SOURCE_MOUSE;
     mev.buttons = buttons_pressed;
     
-    mev.action = old_action_from_pointer_action(action, buttons_pressed);
+    mev.action = old_action_from_pointer_action(action, count_buttons(buttons_pressed));
 
     mev.pointer_count = 1;
     auto& pc = mev.pointer_coordinates[0];
