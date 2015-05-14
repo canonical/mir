@@ -406,13 +406,6 @@ void mir_surface_set_event_handler(MirSurface *surface,
 MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface);
 
 /**
- * Get a window type that can be used for OpenGL ES 2.0 acceleration.
- *   \param [in] surface  The surface
- *   \return              An EGLNativeWindowType that the client can use
- */
-MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
-
-/**
  * Test for a valid surface
  *   \param [in] surface  The surface
  *   \return              True if the supplied surface is valid, or
@@ -438,31 +431,6 @@ char const *mir_surface_get_error_message(MirSurface *surface);
  *   \param [out] parameters  Structure to be populated
  */
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
-
-/**
- * Advance a surface's buffer. The returned handle remains valid until the next
- * call to mir_surface_swap_buffers, until the surface has been released or the
- * connection to the server has been released.
- *   \warning callback could be called from another thread. You must do any
- *            locking appropriate to protect your data accessed in the
- *            callback.
- *   \param [in] surface      The surface
- *   \param [in] callback     Callback function to be invoked when the request
- *                            completes
- *   \param [in,out] context  User data passed to the callback function
- *   \return                  A handle that can be passed to mir_wait_for
- */
-MirWaitHandle *mir_surface_swap_buffers(
-    MirSurface *surface,
-    mir_surface_callback callback,
-    void *context) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
-
-/**
- * Advance a surface's buffer as in mir_surface_swap_buffers(), but also wait
- * for the operation to complete.
- *   \param [in] surface  The surface whose buffer to advance
- */
-void mir_surface_swap_buffers_sync(MirSurface *surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
 
 /**
  * Release the supplied surface and any associated buffer. The returned wait

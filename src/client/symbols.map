@@ -48,7 +48,6 @@ MIR_CLIENT_8 {
     mir_screencast_release_sync;
     mir_surface_configure_cursor;
     mir_surface_get_dpi;
-    mir_surface_get_egl_native_window;
     mir_surface_get_error_message;
     mir_surface_get_focus;
     mir_surface_get_orientation;
@@ -64,8 +63,6 @@ MIR_CLIENT_8 {
     mir_surface_set_state;
     mir_surface_set_swapinterval;
     mir_surface_spec_release;
-    mir_surface_swap_buffers;
-    mir_surface_swap_buffers_sync;
     mir_vertical_resize_cursor_name;
     mir_vsplit_resize_cursor_name;
     mir_wait_for;
