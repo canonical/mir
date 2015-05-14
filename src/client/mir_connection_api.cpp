@@ -20,7 +20,6 @@
 
 #include "mir_connection_api.h"
 #include "mir_toolkit/mir_connection.h"
-#include "mir_toolkit/mir_client_library_drm.h"
 #include "mir/default_configuration.h"
 #include "mir/raii.h"
 
@@ -343,104 +342,4 @@ MirWaitHandle* old_mir_connection_platform_operation(
     mir_platform_operation_callback callback, void* context)
 {
     return new_mir_connection_platform_operation(connection, request, callback, context);
-}
-
-/**************************
- * DRM specific functions *
- **************************/
-
-namespace
-{
-
-struct AuthMagicPlatformOperationContext
-{
-    mir_drm_auth_magic_callback callback;
-    void* context;
-};
-
-void platform_operation_to_auth_magic_callback(
-    MirConnection*, MirPlatformMessage* response, void* context)
-{
-    auto const response_msg = mir::raii::deleter_for(
-        response,
-        &mir_platform_message_release);
-    auto const auth_magic_context =
-        std::unique_ptr<AuthMagicPlatformOperationContext>{
-            static_cast<AuthMagicPlatformOperationContext*>(context)};
-
-    auto response_data = mir_platform_message_get_data(response_msg.get());
-    MirMesaAuthMagicResponse auth_response{-1};
-
-    if (response_data.size == sizeof(auth_response))
-        std::memcpy(&auth_response, response_data.data, response_data.size);
-
-    auth_magic_context->callback(auth_response.status, auth_magic_context->context);
-}
-
-void assign_set_gbm_device_status(
-    MirConnection*, MirPlatformMessage* response, void* context)
-{
-    auto const response_msg = mir::raii::deleter_for(
-        response,
-        &mir_platform_message_release);
-
-    auto const response_data = mir_platform_message_get_data(response_msg.get());
-    MirMesaSetGBMDeviceResponse set_gbm_device_response{-1};
-
-    if (response_data.size == sizeof(set_gbm_device_response))
-        std::memcpy(&set_gbm_device_response, response_data.data, response_data.size);
-
-    auto status_ptr = static_cast<int*>(context);
-    *status_ptr = set_gbm_device_response.status;
-}
-
-}
-
-MirWaitHandle* mir_connection_drm_auth_magic(MirConnection* connection,
-                                             unsigned int magic,
-                                             mir_drm_auth_magic_callback callback,
-                                             void* context)
-{
-    auto const msg = mir::raii::deleter_for(
-        mir_platform_message_create(MirMesaPlatformOperation::auth_magic),
-        &mir_platform_message_release);
-
-    auto const auth_magic_op_context =
-        new AuthMagicPlatformOperationContext{callback, context};
-
-    MirMesaAuthMagicRequest request;
-    request.magic = magic;
-
-    mir_platform_message_set_data(msg.get(), &request, sizeof(request));
-
-    return new_mir_connection_platform_operation(
-        connection,
-        msg.get(),
-        platform_operation_to_auth_magic_callback,
-        auth_magic_op_context);
-}
-
-int mir_connection_drm_set_gbm_device(MirConnection* connection,
-                                      struct gbm_device* gbm_dev)
-{
-    MirMesaSetGBMDeviceRequest const request{gbm_dev};
-
-    auto const msg = mir::raii::deleter_for(
-        mir_platform_message_create(MirMesaPlatformOperation::set_gbm_device),
-        &mir_platform_message_release);
-
-    mir_platform_message_set_data(msg.get(), &request, sizeof(request));
-
-    static int const success{0};
-    int status{-1};
-
-    auto wh = new_mir_connection_platform_operation(
-        connection,
-        msg.get(),
-        assign_set_gbm_device_status,
-        &status);
-
-    mir_wait_for(wh);
-
-    return status == success;
 }
