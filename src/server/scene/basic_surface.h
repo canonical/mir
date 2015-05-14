@@ -85,7 +85,7 @@ public:
 
     std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
-    float alpha() const override;
+//    float alpha() const override;
     void set_hidden(bool is_hidden);
 
     geometry::Size size() const override;
@@ -109,7 +109,7 @@ public:
     geometry::Rectangle input_bounds() const override;
     bool input_area_contains(geometry::Point const& point) const override;
     void consume(MirEvent const& event) override;
-    void set_alpha(float alpha) override;
+//    void set_alpha(float alpha) override;
     void set_orientation(MirOrientation orientation) override;
     void set_transformation(glm::mat4 const&) override;
 

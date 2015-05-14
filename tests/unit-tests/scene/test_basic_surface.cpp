@@ -754,9 +754,9 @@ TEST_F(BasicSurfaceTest, notifies_of_rename)
     surface.rename("Steve");
 }
 
-MATCHER_P2(IsRenderableOfAttributes, pos, alpha, "is renderable with attributes")
+MATCHER_P1(IsRenderableOfPosition, pos, "is renderable with attributes")
 {
-    return ((pos == arg->screen_position().top_left) && (alpha == arg->alpha()));
+    return (pos == arg->screen_position().top_left);
 }
 
 TEST_F(BasicSurfaceTest, adds_buffer_streams)
@@ -765,28 +765,24 @@ TEST_F(BasicSurfaceTest, adds_buffer_streams)
     geom::Displacement d0{19,99};
     geom::Displacement d1{21,101};
     geom::Displacement d2{20,9};
-    auto alpha0 = 1.0f;
-    auto alpha1 = 0.5f;
-    auto alpha2 = 0.25f;
-    auto alpha3 = 0.125f;
     auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, alpha3},
-        { buffer_stream0, d0, alpha0 },
-        { buffer_stream1, d1, alpha1 },
-        { buffer_stream2, d2, alpha2 }
+        { mock_buffer_stream, {0,0}},
+        { buffer_stream0, d0 },
+        { buffer_stream1, d1 },
+        { buffer_stream2, d2 }
     };
     surface.set_streams(streams);
 
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(4));
-    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(rect.top_left, alpha3));
-    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left + d0, alpha0));
-    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left + d1, alpha1));
-    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left + d2, alpha2));
+    EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left));
+    EXPECT_THAT(renderables[1], IsRenderableOfPosition(rect.top_left + d0));
+    EXPECT_THAT(renderables[2], IsRenderableOfPosition(rect.top_left + d1));
+    EXPECT_THAT(renderables[3], IsRenderableOfPosition(rect.top_left + d2));
 
 }
 
@@ -806,15 +802,15 @@ TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
     surface.set_streams(streams);
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(2));
-    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(rect.top_left, alpha));
-    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left + d, alpha));
+    EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left, alpha));
+    EXPECT_THAT(renderables[1], IsRenderableOfPosition(rect.top_left + d, alpha));
 
     surface.move_to(pt);
 
     renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(2));
-    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(pt, alpha));
-    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(pt + d, alpha));
+    EXPECT_THAT(renderables[0], IsRenderableOfPosition(pt, alpha));
+    EXPECT_THAT(renderables[1], IsRenderableOfPosition(pt + d, alpha));
 }
 
 //TODO: (kdub) This should be a temporary behavior while the buffer stream the surface was created
@@ -826,27 +822,47 @@ TEST_F(BasicSurfaceTest, cannot_remove_primary_buffer_stream_for_now)
     geom::Displacement d0{19,99};
     geom::Displacement d1{21,101};
     geom::Displacement d2{20,9};
-    auto alpha0 = 1.0f;
-    auto alpha1 = 0.5f;
-    auto alpha2 = 0.25f;
-    auto alpha3 = 0.125f;
     auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     std::list<ms::StreamInfo> streams = {
-        { buffer_stream0, d0, alpha0 },
-        { buffer_stream1, d1, alpha1 },
-        { buffer_stream2, d2, alpha2 }
+        { buffer_stream0, d0 },
+        { buffer_stream1, d1 },
+        { buffer_stream2, d2 }
     };
     surface.set_streams(streams);
 
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(4));
-    EXPECT_THAT(renderables[0], IsRenderableOfAttributes(rect.top_left, alpha3));
-    EXPECT_THAT(renderables[1], IsRenderableOfAttributes(rect.top_left + d0, alpha0));
-    EXPECT_THAT(renderables[2], IsRenderableOfAttributes(rect.top_left + d1, alpha1));
-    EXPECT_THAT(renderables[3], IsRenderableOfAttributes(rect.top_left + d2, alpha2));
+    EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left));
+    EXPECT_THAT(renderables[1], IsRenderableOfPosition(rect.top_left + d0));
+    EXPECT_THAT(renderables[2], IsRenderableOfPosition(rect.top_left + d1));
+    EXPECT_THAT(renderables[3], IsRenderableOfPosition(rect.top_left + d2));
 
 }
 
+//TODO: per-stream alpha seems useful
+TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
+{
+    using namespace testing;
+    auto alpha = 0.3;
+    
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    std::list<ms::StreamInfo> streams = {
+        { mock_buffer_stream, {0,0} },
+        { buffer_stream, {0,0} }
+    };
+
+    surface.set_streams(streams);
+    auto renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(2));
+    EXPECT_THAT(renderables[0], IsRenderableOfAlpha(1.0f));
+    EXPECT_THAT(renderables[1], IsRenderableOfAlpha(1.0f));
+
+    surface.set_alpha(alpha);
+    renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(2));
+    EXPECT_THAT(renderables[0], IsRenderableOfAlpha(alpha));
+    EXPECT_THAT(renderables[1], IsRenderableOfAlpha(alpha));
+}
