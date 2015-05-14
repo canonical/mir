@@ -31,8 +31,8 @@ namespace X
 struct XDispatchable : public dispatch::Dispatchable
 {
 public:
-	XDispatchable(int raw_fd);
-	~XDispatchable() = default;
+    XDispatchable(int raw_fd);
+    ~XDispatchable() = default;
 
     XDispatchable(XDispatchable const&) = delete;
     XDispatchable& operator=(XDispatchable const&) = delete;

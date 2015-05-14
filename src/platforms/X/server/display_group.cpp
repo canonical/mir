@@ -26,12 +26,14 @@ namespace mgx = mg::X;
 mgx::DisplayGroup::DisplayGroup(std::unique_ptr<mgx::DisplayBuffer> primary_buffer)
 {
     CALLED
+
     display_buffer = std::move(primary_buffer);
 }
 
 void mgx::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
     CALLED
+
     f(*display_buffer);
 }
 

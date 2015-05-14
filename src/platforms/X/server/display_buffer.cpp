@@ -26,17 +26,18 @@ namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
 mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
-		                          EGLDisplay const d,
+                                  EGLDisplay const d,
                                   EGLSurface const s,
                                   EGLContext const c)
                                   : size{sz}, egl_dpy{d}, egl_surf{s}, egl_ctx{c}
 {
-	CALLED
+    CALLED
 }
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
 {
-	CALLED
+    CALLED
+
     int width = size.width.as_int();
     int height = size.height.as_int();
 
@@ -45,39 +46,45 @@ geom::Rectangle mgx::DisplayBuffer::view_area() const
 
 void mgx::DisplayBuffer::make_current()
 {
-	CALLED
+    CALLED
+
     if (!eglMakeCurrent(egl_dpy, egl_surf, egl_surf, egl_ctx))
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot make current"));
 }
 
 void mgx::DisplayBuffer::release_current()
 {
-	CALLED
+    CALLED
+
     if (!eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot make uncurrent"));
 }
 
 bool mgx::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& /*renderlist*/)
 {
-	CALLED
+    CALLED
+
     return false;
 }
 
 void mgx::DisplayBuffer::gl_swap_buffers()
 {
-	CALLED
-	if (!eglSwapBuffers(egl_dpy, egl_surf))
+    CALLED
+
+    if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot swap"));
 }
 
 MirOrientation mgx::DisplayBuffer::orientation() const
 {
-	CALLED
+    CALLED
+
     return mir_orientation_normal;
 }
 
 bool mgx::DisplayBuffer::uses_alpha() const
 {
-	CALLED
+    CALLED
+
     return false;
 }

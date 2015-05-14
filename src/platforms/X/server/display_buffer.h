@@ -35,7 +35,7 @@ namespace X
 class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-	DisplayBuffer(geometry::Size const sz, EGLDisplay const d, EGLSurface const s, EGLContext const c);
+    DisplayBuffer(geometry::Size const sz, EGLDisplay const d, EGLSurface const s, EGLContext const c);
 
     geometry::Rectangle view_area() const override;
     void make_current() override;

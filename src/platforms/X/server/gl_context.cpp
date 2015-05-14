@@ -35,6 +35,7 @@ mgx::XGLContext::XGLContext(EGLDisplay const d, EGLSurface const s, EGLContext c
 void mgx::XGLContext::make_current() const
 {
     CALLED
+
     if (!eglMakeCurrent(egl_dpy, egl_surf, egl_surf, egl_ctx))
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot make current"));
 }
@@ -42,6 +43,7 @@ void mgx::XGLContext::make_current() const
 void mgx::XGLContext::release_current() const
 {
     CALLED
+
     if (!eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot make uncurrent"));
 }

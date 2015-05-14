@@ -32,13 +32,14 @@ namespace X
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-	DisplayConfiguration(MirPixelFormat pf, int width, int height);
+    DisplayConfiguration(MirPixelFormat pf, int width, int height);
 
     virtual ~DisplayConfiguration() = default;
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
+
 private:
     DisplayConfigurationOutput configuration;
     DisplayConfigurationCard card;

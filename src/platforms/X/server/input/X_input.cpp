@@ -32,6 +32,7 @@ extern "C" mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mi::InputReport> const& /*report*/)
 {
     CALLED
+
     return mir::make_module_ptr<mix::XInputPlatform>(input_device_registry);
 }
 
@@ -45,6 +46,7 @@ extern "C" mi::PlatformPriority probe_input_platform(
     mo::Option const& /*options*/)
 {
     CALLED
+
     return mi::PlatformPriority::best;
 }
 
@@ -61,5 +63,6 @@ mir::ModuleProperties const description = {
 extern "C" mir::ModuleProperties const* describe_input_module()
 {
     CALLED
+
     return &description;
 }

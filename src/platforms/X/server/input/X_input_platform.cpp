@@ -40,17 +40,20 @@ mix::XInputPlatform::XInputPlatform(
 void mix::XInputPlatform::start()
 {
     CALLED
+
     registry->add_device(device);
 }
 
 std::shared_ptr<md::Dispatchable> mix::XInputPlatform::dispatchable()
 {
     CALLED
+
     return platform_queue;
 }
 
 void mix::XInputPlatform::stop()
 {
     CALLED
+
     registry->remove_device(device);
 }

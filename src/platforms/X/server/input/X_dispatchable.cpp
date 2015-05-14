@@ -39,13 +39,15 @@ mix::XDispatchable::XDispatchable(int raw_fd)
 mir::Fd mix::XDispatchable::watch_fd() const
 {
     CALLED
+
     return fd;
 }
 
 bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
 {
-    CALLED
     XEvent xev;
+
+    CALLED
 
     XNextEvent(x_dpy, &xev);
 
@@ -72,15 +74,15 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
         }
     }
     else
-    {
         mir::log_info("input event detected with no sink to handle it");
-    }
+
     return true;
 }
 
 md::FdEvents mix::XDispatchable::relevant_events() const
 {
     CALLED
+
     return md::FdEvent::readable;
 }
 
