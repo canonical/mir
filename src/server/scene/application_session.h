@@ -31,7 +31,7 @@ namespace frontend
 {
 class EventSink;
 }
-
+namespace compositor { class BufferStream; }
 namespace scene
 {
 class SessionListener;
@@ -105,8 +105,9 @@ private:
     std::atomic<int> next_surface_id;
 
     typedef std::map<frontend::SurfaceId, std::shared_ptr<Surface>> Surfaces;
-    typedef std::map<frontend::BufferStreamId, std::shared_ptr<frontend::BufferStream>> Streams;
+    typedef std::map<frontend::BufferStreamId, std::shared_ptr<compositor::BufferStream>> Streams;
     Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
+    Streams::const_iterator checked_find(frontend::BufferStreamId id) const;
     std::mutex mutable surfaces_and_streams_mutex;
     Surfaces surfaces;
     Streams streams;
