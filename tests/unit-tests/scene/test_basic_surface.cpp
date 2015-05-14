@@ -866,3 +866,42 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
     EXPECT_THAT(renderables[0], IsRenderableOfAlpha(alpha));
     EXPECT_THAT(renderables[1], IsRenderableOfAlpha(alpha));
 }
+
+TEST_F(BasicSurfaceTest, visibility_depends)
+{
+    using namespace testing;
+    geom::Displacement displacement{3,-2};
+    auto mock_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto mock_buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    EXPECT_CALL(mock_buffer_stream, has_submitted_buffer())
+        .Times(3)
+        .WillOnce(Return(false))
+        .WillOnce(Return(false))
+        .WillOnce(Return(true));
+    EXPECT_CALL(mock_buffer_stream1, has_submitted_buffer())
+        .Times(3)
+        .WillOnce(Return(false))
+        .WillOnce(Return(true))
+        .WillOnce(Return(true));
+    std::list<ms::StreamInfo> streams = {
+        { mock_buffer_stream, {0,0} },
+        { mock_buffer_stream1, displacement },
+    };
+    surface.set_streams(streams);
+
+
+    auto renderables = surface.generate_renderables(this);
+    EXPECT_FALSE(surface.visible());
+    ASSERT_THAT(renderables.size(), Eq(0));
+
+    renderables = surface.generate_renderables(this);
+    EXPECT_TRUE(surface.visible());
+    ASSERT_THAT(renderables.size(), Eq(1));
+    EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left + displacement));
+
+    renderables = surface.generate_renderables(this);
+    EXPECT_TRUE(surface.visible());
+    ASSERT_THAT(renderables.size(), Eq(2));
+    EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left));
+    EXPECT_THAT(renderables[1], IsRenderableOfPosition(rect.top_left + displacement));
+}
