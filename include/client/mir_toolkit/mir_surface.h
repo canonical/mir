@@ -489,18 +489,6 @@ MirWaitHandle *mir_surface_release(
 void mir_surface_release_sync(MirSurface *surface);
 
 /**
- * \deprecated Use mir_debug_surface_id()
- */
-__attribute__((__deprecated__("Use mir_debug_surface_id()")))
-int mir_surface_get_id(MirSurface *surface);
-
-/**
- * \deprecated Use the mir_connection_create_spec_for_xxx family of APIs
- */
-__attribute__((__deprecated__("Use mir_connection_create_spec_for_xxx()")))
-MirWaitHandle* mir_surface_set_type(MirSurface *surface, MirSurfaceType type);
-
-/**
  * Get the type (purpose) of a surface.
  *   \param [in] surface  The surface to query
  *   \return              The type of the surface
