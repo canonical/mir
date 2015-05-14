@@ -189,6 +189,8 @@ private:
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
 
     std::unique_ptr<CursorStreamImageAdapter> cursor_stream_adapter;
+
+    float surface_alpha;
 };
 
 }

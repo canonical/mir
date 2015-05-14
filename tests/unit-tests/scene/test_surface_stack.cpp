@@ -228,15 +228,15 @@ TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
     auto stub_stream1 = std::make_shared<mtd::StubBufferStream>();
     auto stub_stream2 = std::make_shared<mtd::StubBufferStream>();
     std::list<ms::StreamInfo> streams = {
-        { stub_surface1->buffer_stream(), {0,0}, 1.0f},
-        { stub_stream0, {2,2}, 1.0f },
-        { stub_stream1, {2,3}, 0.9f },
+        { stub_surface1->buffer_stream(), {0,0} },
+        { stub_stream0, {2,2} },
+        { stub_stream1, {2,3} },
     };
     stub_surface1->set_streams(streams);
 
     streams = {
-        { stub_stream2, {2,4}, 0.8f },
-        { stub_surface3->buffer_stream(), {0,0}, 1.0f}
+        { stub_stream2, {2,4} },
+        { stub_surface3->buffer_stream(), {0,0} }
     };
     stub_surface3->set_streams(streams);
 

@@ -41,7 +41,6 @@ struct StreamInfo
 {
     std::shared_ptr<compositor::BufferStream> stream;
     geometry::Displacement position;
-    float alpha;
 };
 
 class SurfaceObserver;

@@ -754,9 +754,14 @@ TEST_F(BasicSurfaceTest, notifies_of_rename)
     surface.rename("Steve");
 }
 
-MATCHER_P1(IsRenderableOfPosition, pos, "is renderable with attributes")
+MATCHER_P(IsRenderableOfPosition, pos, "is renderable with position")
 {
     return (pos == arg->screen_position().top_left);
+}
+
+MATCHER_P(IsRenderableOfAlpha, alpha, "is renderable with alpha")
+{
+    return (alpha == arg->alpha());
 }
 
 TEST_F(BasicSurfaceTest, adds_buffer_streams)
@@ -791,28 +796,28 @@ TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
     using namespace testing;
     geom::Point pt{10, 20};
     geom::Displacement d{19,99};
-    auto alpha = 1.0f;
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, alpha },
-        { buffer_stream, d, alpha }
+        { mock_buffer_stream, {0,0}},
+        { buffer_stream, d }
     };
 
     surface.set_streams(streams);
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(2));
-    EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left, alpha));
-    EXPECT_THAT(renderables[1], IsRenderableOfPosition(rect.top_left + d, alpha));
+    EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left));
+    EXPECT_THAT(renderables[1], IsRenderableOfPosition(rect.top_left + d));
 
     surface.move_to(pt);
 
     renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(2));
-    EXPECT_THAT(renderables[0], IsRenderableOfPosition(pt, alpha));
-    EXPECT_THAT(renderables[1], IsRenderableOfPosition(pt + d, alpha));
+    EXPECT_THAT(renderables[0], IsRenderableOfPosition(pt));
+    EXPECT_THAT(renderables[1], IsRenderableOfPosition(pt + d));
 }
 
+#if 0
 //TODO: (kdub) This should be a temporary behavior while the buffer stream the surface was created
 //with is still more important than the rest of the streams. Eventually, one should be able to 
 //remove the created-with bufferstream.
@@ -841,20 +846,18 @@ TEST_F(BasicSurfaceTest, cannot_remove_primary_buffer_stream_for_now)
     EXPECT_THAT(renderables[3], IsRenderableOfPosition(rect.top_left + d2));
 
 }
-
+#endif
 TEST_F(BasicSurfaceTest, showing_brings_all_streams_up_to_date)
 {
     using namespace testing;
-    auto alpha = 0.3;
-    
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::list<ms::StreamInfo> streams = {
         { mock_buffer_stream, {0,0} },
         { buffer_stream, {0,0} }
     };
 
-    EXPECT_CALL(buffer_stream, drop_client_buffers()).Times(Exactly(1));
-    EXPECT_CALL(mock_buffer_stream, drop_client_buffers()).Times(Exactly(1));
+    EXPECT_CALL(*buffer_stream, drop_old_buffers()).Times(Exactly(1));
+    EXPECT_CALL(*mock_buffer_stream, drop_old_buffers()).Times(Exactly(1));
 
     surface.hide();
     surface.show();
@@ -889,7 +892,6 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
 TEST_F(BasicSurfaceTest, changing_inverval_effects_all_streams)
 {
     using namespace testing;
-    auto alpha = 0.3;
     
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::list<ms::StreamInfo> streams = {
@@ -897,8 +899,8 @@ TEST_F(BasicSurfaceTest, changing_inverval_effects_all_streams)
         { buffer_stream, {0,0} }
     };
 
-    EXPECT_CALL(mock_buffer_stream, allow_framedropping(true));
-    EXPECT_CALL(buffer_stream, allow_framedropping(true));
+    EXPECT_CALL(*mock_buffer_stream, allow_framedropping(true));
+    EXPECT_CALL(*buffer_stream, allow_framedropping(true));
 
     surface.set_streams(streams);
     surface.configure(mir_surface_attrib_swapinterval, 0);
@@ -907,19 +909,14 @@ TEST_F(BasicSurfaceTest, changing_inverval_effects_all_streams)
 TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
 {
     using namespace testing;
+    auto stream1_visible = false;
+    auto stream2_visible = false;
     geom::Displacement displacement{3,-2};
     auto mock_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    auto mock_buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    EXPECT_CALL(mock_buffer_stream, has_submitted_buffer())
-        .Times(3)
-        .WillOnce(Return(false))
-        .WillOnce(Return(false))
-        .WillOnce(Return(true));
-    EXPECT_CALL(mock_buffer_stream1, has_submitted_buffer())
-        .Times(3)
-        .WillOnce(Return(false))
-        .WillOnce(Return(true))
-        .WillOnce(Return(true));
+    ON_CALL(*mock_buffer_stream, has_submitted_buffer())
+        .WillByDefault(Invoke([&stream1_visible] { return stream1_visible; }));
+    ON_CALL(*mock_buffer_stream1, has_submitted_buffer())
+        .WillByDefault(Invoke([&stream2_visible] { return stream2_visible; }));
     std::list<ms::StreamInfo> streams = {
         { mock_buffer_stream, {0,0} },
         { mock_buffer_stream1, displacement },
@@ -930,11 +927,13 @@ TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
     EXPECT_FALSE(surface.visible());
     ASSERT_THAT(renderables.size(), Eq(0));
 
+    stream2_visible = true;
     renderables = surface.generate_renderables(this);
     EXPECT_TRUE(surface.visible());
     ASSERT_THAT(renderables.size(), Eq(1));
     EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left + displacement));
 
+    stream2_visible = true;
     renderables = surface.generate_renderables(this);
     EXPECT_TRUE(surface.visible());
     ASSERT_THAT(renderables.size(), Eq(2));

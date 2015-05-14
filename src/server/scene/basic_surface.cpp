@@ -147,7 +147,8 @@ ms::BasicSurface::BasicSurface(
     cursor_image_(cursor_image),
     report(report),
     parent_(parent),
-    streams({StreamInfo{buffer_stream, {0,0}, 1.0f}})
+    streams({StreamInfo{buffer_stream, {0,0}}}),
+    surface_alpha(1.0f)
 {
     report->surface_created(this, surface_name);
 }
@@ -193,7 +194,7 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
 float ms::BasicSurface::alpha() const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return info_from(surface_buffer_stream.get())->alpha;
+    return surface_alpha;
 }
 
 void ms::BasicSurface::set_hidden(bool hide)
@@ -317,7 +318,7 @@ void ms::BasicSurface::set_alpha(float alpha)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
-        info_from(surface_buffer_stream.get())->alpha = alpha;
+        surface_alpha = alpha;
     }
     observers.alpha_set_to(alpha);
 }
@@ -864,7 +865,7 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
         list.emplace_back(std::make_shared<SurfaceSnapshot>(
             info.stream, id,
             geom::Rectangle{surface_rect.top_left + info.position, surface_rect.size},
-            transformation_matrix, info.alpha, nonrectangular, info.stream.get()));
+            transformation_matrix, surface_alpha, nonrectangular, info.stream.get()));
     }
     return std::move(list);
 }
