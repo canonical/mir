@@ -817,9 +817,8 @@ TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
     EXPECT_THAT(renderables[1], IsRenderableOfPosition(pt + d));
 }
 
-#if 0
 //TODO: (kdub) This should be a temporary behavior while the buffer stream the surface was created
-//with is still more important than the rest of the streams. Eventually, one should be able to 
+//with is still more important than the rest of the streams. One will soon be able to 
 //remove the created-with bufferstream.
 TEST_F(BasicSurfaceTest, cannot_remove_primary_buffer_stream_for_now)
 {
@@ -832,21 +831,18 @@ TEST_F(BasicSurfaceTest, cannot_remove_primary_buffer_stream_for_now)
     auto buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     std::list<ms::StreamInfo> streams = {
-        { buffer_stream0, d0 },
-        { buffer_stream1, d1 },
-        { buffer_stream2, d2 }
+        { mock_buffer_stream, {0,0} },
     };
     surface.set_streams(streams);
-
     auto renderables = surface.generate_renderables(this);
-    ASSERT_THAT(renderables.size(), Eq(4));
+    ASSERT_THAT(renderables.size(), Eq(1));
     EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left));
-    EXPECT_THAT(renderables[1], IsRenderableOfPosition(rect.top_left + d0));
-    EXPECT_THAT(renderables[2], IsRenderableOfPosition(rect.top_left + d1));
-    EXPECT_THAT(renderables[3], IsRenderableOfPosition(rect.top_left + d2));
 
+    EXPECT_THROW({
+        surface.set_streams({});
+    }, std::logic_error);
 }
-#endif
+
 TEST_F(BasicSurfaceTest, showing_brings_all_streams_up_to_date)
 {
     using namespace testing;

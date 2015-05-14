@@ -43,8 +43,6 @@ struct MockBufferStream : public compositor::BufferStream
     {
         ON_CALL(*this, buffers_ready_for_compositor(::testing::_))
             .WillByDefault(testing::Invoke(this, &MockBufferStream::buffers_ready));
-        ON_CALL(*this, stream_size())
-            .WillByDefault(testing::Return(geometry::Size{}));
         ON_CALL(*this, with_most_recent_buffer_do(testing::_))
             .WillByDefault(testing::InvokeArgument<0>(*std::make_shared<StubBuffer>()));
         ON_CALL(*this, acquire_client_buffer(testing::_))

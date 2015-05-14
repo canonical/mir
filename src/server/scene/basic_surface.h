@@ -164,6 +164,7 @@ private:
     std::string surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;
+    float surface_alpha;
     bool hidden;
     input::InputReceptionMode input_mode;
     const bool nonrectangular;
@@ -175,10 +176,7 @@ private:
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
 
-    std::list<StreamInfo>::iterator info_from(compositor::BufferStream const*);
-    std::list<StreamInfo>::const_iterator info_from(compositor::BufferStream const*) const;
     std::list<StreamInfo> streams;
-
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;
     MirSurfaceState state_ = mir_surface_state_restored;
@@ -189,8 +187,6 @@ private:
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
 
     std::unique_ptr<CursorStreamImageAdapter> cursor_stream_adapter;
-
-    float surface_alpha;
 };
 
 }

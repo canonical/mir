@@ -137,6 +137,7 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<SceneReport> const& report) :
     surface_name(name),
     surface_rect(rect),
+    surface_alpha(1.0f),
     hidden(false),
     input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
@@ -147,8 +148,7 @@ ms::BasicSurface::BasicSurface(
     cursor_image_(cursor_image),
     report(report),
     parent_(parent),
-    streams({StreamInfo{buffer_stream, {0,0}}}),
-    surface_alpha(1.0f)
+    streams({StreamInfo{buffer_stream, {0,0}}})
 {
     report->surface_created(this, surface_name);
 }
@@ -739,7 +739,8 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
 void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
     observers.add(observer);
-    surface_buffer_stream->add_observer(observer);
+    for(auto& info : streams) 
+        info.stream->add_observer(observer);
 }
 
 void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& observer)
@@ -748,7 +749,8 @@ void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& obs
     if (!o)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
     observers.remove(o);
-    surface_buffer_stream->remove_observer(o);
+    for(auto& info : streams) 
+        info.stream->remove_observer(observer);
 }
 
 std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const
@@ -844,23 +846,16 @@ void ms::BasicSurface::rename(std::string const& title)
     }
 }
 
-std::list<ms::StreamInfo>::iterator
-ms::BasicSurface::info_from(compositor::BufferStream const* id)
-{
-    return std::find_if(streams.begin(), streams.end(),
-        [&](StreamInfo const& info) { return info.stream.get() == id; });
-}
-
-std::list<ms::StreamInfo>::const_iterator
-ms::BasicSurface::info_from(compositor::BufferStream const* id) const
-{
-    return std::find_if(streams.begin(), streams.end(),
-        [&](StreamInfo const& info) { return info.stream.get() == id; });
-}
-
 void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 {
     std::unique_lock<std::mutex> lk(guard);
+
+    if(s.end() == std::find_if(s.begin(), s.end(),
+        [this] (ms::StreamInfo const& info) { return info.stream == surface_buffer_stream; }))
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("cannot remove the created-with buffer stream yet"));
+    }
+
     streams = s;
 }
 
