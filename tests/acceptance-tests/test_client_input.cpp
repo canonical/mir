@@ -261,7 +261,8 @@ TEST_F(TestClientInput, clients_receive_many_button_events_inside_window)
     expect_buttons(buttons &= ~mir_pointer_button_forward);
     expect_buttons(buttons &= ~mir_pointer_button_tertiary);
     expect_buttons(buttons &= ~mir_pointer_button_secondary);
-    expect_buttons(buttons &= ~mir_pointer_button_primary);
+    EXPECT_CALL(first_client, handle_input(mt::ButtonsDown(0, 0, 0))).WillOnce(
+        mt::WakeUp(&first_client.all_events_received));
 
     auto press_button = [&](int button) {
         fake_mouse->emit_event(mis::a_button_down_event().of_button(button).with_action(mis::EventAction::Down));
@@ -278,8 +279,7 @@ TEST_F(TestClientInput, clients_receive_many_button_events_inside_window)
     release_button(BTN_FORWARD);
     release_button(BTN_MIDDLE);
     release_button(BTN_RIGHT);
-    fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT).with_action(mis::EventAction::Up))
-        .WillOnce(mt::WakeUp(&first_client.all_events_received));
+    release_button(BTN_LEFT);
 
     first_client.all_events_received.wait_for_at_most_seconds(10);
 }

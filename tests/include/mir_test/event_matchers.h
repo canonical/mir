@@ -135,10 +135,9 @@ MATCHER_P(KeyWithModifiers, modifiers, "")
         return false;
     
     if(mir_keyboard_event_modifiers(kev) != modifiers)
-        {
-            printf("modifiers: %d vs expected %d \n", mir_keyboard_event_modifiers(kev), modifiers);
+    {
         return false;
-        }
+    }
     
     return true;
 }
@@ -254,7 +253,7 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
 MATCHER_P2(ButtonUpEvent, x, y, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
-    return button_event_matches(pev, x, y, mir_pointer_action_button_up, mir_pointer_button_primary);
+    return button_event_matches(pev, x, y, mir_pointer_action_button_up, 0);
 }
 
 MATCHER_P3(ButtonsDown, x, y, buttons, "")
