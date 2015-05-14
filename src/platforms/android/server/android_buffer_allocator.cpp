@@ -88,7 +88,7 @@ std::unique_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::reconstruct_from
         native_window_buffer,
         //TODO: we should have an android platform function for accessing the fence.
         std::make_shared<mga::SyncFence>(std::make_shared<mga::RealSyncFileOps>(), mir::Fd()),
-        mga::BufferAccess::read);
+        mga::StreamDepiction::read);
     return std::make_unique<Buffer>(
         reinterpret_cast<gralloc_module_t const*>(hw_module), native_handle, egl_extensions);
 }

@@ -90,7 +90,7 @@ TEST_F(AndroidClientBuffer, packs_memory_region_correctly)
 TEST_F(AndroidClientBuffer, update_from_package_merges_fence_when_present)
 {
     mga::NativeFence fake_fence{213};
-    EXPECT_CALL(*mock_native_buffer, update_usage(fake_fence, mga::BufferAccess::read))
+    EXPECT_CALL(*mock_native_buffer, update_usage(fake_fence, mga::StreamDepiction::read))
         .Times(1);
     mcla::Buffer buffer(mock_registrar, package, pf);
 

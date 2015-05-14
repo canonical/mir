@@ -80,7 +80,7 @@ void mcla::Buffer::update_from(MirBufferPackage const& update_package)
         (update_package.data[0] == static_cast<int>(mga::BufferFlag::fenced)))
     {
         auto fence_fd = update_package.fd[0];
-        native_buffer->update_usage(fence_fd, mga::BufferAccess::read);
+        native_buffer->update_usage(fence_fd, mga::StreamDepiction::read);
     }
 }
 

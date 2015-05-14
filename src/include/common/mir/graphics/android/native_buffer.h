@@ -34,7 +34,7 @@ enum class BufferFlag
     unfenced = 0,
     fenced
 };
-enum class BufferAccess
+enum class StreamDepiction
 {
     read,
     write
@@ -50,8 +50,8 @@ public:
     virtual buffer_handle_t handle() const = 0;
     virtual android::NativeFence copy_fence() const = 0;
 
-    virtual void ensure_available_for(android::BufferAccess intent) = 0;
-    virtual void update_usage(android::NativeFence& fence, android::BufferAccess current_usage) = 0;
+    virtual void ensure_available_for(android::StreamDepiction intent) = 0;
+    virtual void update_usage(android::NativeFence& fence, android::StreamDepiction current_usage) = 0;
 
 protected:
     NativeBuffer() = default;

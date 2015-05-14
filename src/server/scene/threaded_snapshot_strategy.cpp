@@ -18,7 +18,7 @@
 
 #include "threaded_snapshot_strategy.h"
 #include "pixel_buffer.h"
-#include "mir/scene/buffer_access.h"
+#include "mir/scene/stream_depiction.h"
 #include "mir/thread_name.h"
 
 #include <deque>
@@ -35,7 +35,7 @@ namespace scene
 
 struct WorkItem
 {
-    std::shared_ptr<BufferAccess> const stream;
+    std::shared_ptr<StreamDepiction> const stream;
     ms::SnapshotCallback const snapshot_taken;
 };
 
@@ -123,7 +123,7 @@ ms::ThreadedSnapshotStrategy::~ThreadedSnapshotStrategy() noexcept
 }
 
 void ms::ThreadedSnapshotStrategy::take_snapshot_of(
-    std::shared_ptr<BufferAccess> const& surface_buffer_access,
+    std::shared_ptr<StreamDepiction> const& surface_buffer_access,
     SnapshotCallback const& snapshot_taken)
 {
     functor->schedule_snapshot(WorkItem{surface_buffer_access, snapshot_taken});

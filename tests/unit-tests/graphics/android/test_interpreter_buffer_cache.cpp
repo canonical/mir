@@ -90,7 +90,7 @@ TEST_F(InterpreterResourceTest, update_usage_for)
     int fence_fd = 44;
     mga::InterpreterCache cache;
 
-    EXPECT_CALL(*native_buffer1, update_usage(fence_fd, mga::BufferAccess::write))
+    EXPECT_CALL(*native_buffer1, update_usage(fence_fd, mga::StreamDepiction::write))
         .Times(1);
 
     cache.store_buffer(stub_buffer1, native_buffer1);

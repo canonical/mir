@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_BUFFER_STREAM_H_
 #define MIR_FRONTEND_BUFFER_STREAM_H_
 
-#include "mir/scene/buffer_access.h"
+#include "mir/scene/stream_depiction.h"
 #include <mir_toolkit/common.h>
 
 #include <functional>
@@ -39,7 +39,7 @@ class SurfaceObserver;
 namespace frontend
 {
 
-class BufferStream : public scene::BufferAccess
+class BufferStream : public scene::StreamDepiction
 {
 public:
     virtual ~BufferStream() = default;

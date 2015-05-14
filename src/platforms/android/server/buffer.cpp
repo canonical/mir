@@ -74,7 +74,7 @@ MirPixelFormat mga::Buffer::pixel_format() const
 void mga::Buffer::gl_bind_to_texture()
 {
     std::unique_lock<std::mutex> lk(content_lock);
-    native_buffer->ensure_available_for(mga::BufferAccess::read);
+    native_buffer->ensure_available_for(mga::StreamDepiction::read);
 
     DispContextPair current
     {
@@ -139,7 +139,7 @@ void mga::Buffer::write(unsigned char const* data, size_t data_size)
 {
     std::unique_lock<std::mutex> lk(content_lock);
 
-    native_buffer->ensure_available_for(mga::BufferAccess::write);
+    native_buffer->ensure_available_for(mga::StreamDepiction::write);
     
     auto bpp = MIR_BYTES_PER_PIXEL(pixel_format());
     size_t buffer_size_bytes = size().height.as_int() * size().width.as_int() * bpp;
@@ -172,7 +172,7 @@ void mga::Buffer::read(std::function<void(unsigned char const*)> const& do_with_
 {
     std::unique_lock<std::mutex> lk(content_lock);
 
-    native_buffer->ensure_available_for(mga::BufferAccess::read);
+    native_buffer->ensure_available_for(mga::StreamDepiction::read);
     auto buffer_size = size();
 
     unsigned char* vaddr{nullptr};

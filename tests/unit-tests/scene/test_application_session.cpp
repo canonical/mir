@@ -67,7 +67,7 @@ public:
     ~MockSnapshotStrategy() noexcept {}
 
     MOCK_METHOD2(take_snapshot_of,
-                void(std::shared_ptr<ms::BufferAccess> const&,
+                void(std::shared_ptr<ms::StreamDepiction> const&,
                      ms::SnapshotCallback const&));
 };
 
@@ -405,7 +405,7 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
 
     auto const snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
 
-    EXPECT_CALL(*snapshot_strategy, take_snapshot_of(std::shared_ptr<ms::BufferAccess>(mock_stream), _));
+    EXPECT_CALL(*snapshot_strategy, take_snapshot_of(std::shared_ptr<ms::StreamDepiction>(mock_stream), _));
 
     ms::ApplicationSession app_session(
         mt::fake_shared(surface_coordinator),

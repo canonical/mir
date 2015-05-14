@@ -23,22 +23,22 @@ namespace mga=mir::graphics::android;
 mga::AndroidNativeBuffer::AndroidNativeBuffer(
     std::shared_ptr<ANativeWindowBuffer> const& anwb,
     std::shared_ptr<Fence> const& fence,
-    BufferAccess access)
+    StreamDepiction access)
     : fence(fence),
       access(access),
       native_window_buffer(anwb)
 {
 }
 
-void mga::AndroidNativeBuffer::ensure_available_for(BufferAccess intent)
+void mga::AndroidNativeBuffer::ensure_available_for(StreamDepiction intent)
 {
-    if ((access == mga::BufferAccess::read) && (intent == mga::BufferAccess::read))
+    if ((access == mga::StreamDepiction::read) && (intent == mga::StreamDepiction::read))
         return;
   
     fence->wait();
 }
 
-void mga::AndroidNativeBuffer::update_usage(NativeFence& merge_fd, BufferAccess updated_access)
+void mga::AndroidNativeBuffer::update_usage(NativeFence& merge_fd, StreamDepiction updated_access)
 {
     fence->merge_with(merge_fd);
     access = updated_access;

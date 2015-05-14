@@ -18,7 +18,7 @@
 
 #include "src/server/scene/threaded_snapshot_strategy.h"
 #include "src/server/scene/pixel_buffer.h"
-#include "mir/scene/buffer_access.h"
+#include "mir/scene/stream_depiction.h"
 #include "mir/graphics/buffer.h"
 
 #include "mir_test_doubles/stub_buffer.h"
@@ -43,10 +43,10 @@ namespace geom = mir::geometry;
 namespace
 {
 
-class StubBufferAccess : public ms::BufferAccess
+class StubStreamDepiction : public ms::StreamDepiction
 {
 public:
-    ~StubBufferAccess() noexcept {}
+    ~StubStreamDepiction() noexcept {}
 
     void with_most_recent_buffer_do(
         std::function<void(mg::Buffer&)> const& exec)
@@ -72,7 +72,7 @@ public:
 
 struct ThreadedSnapshotStrategyTest : testing::Test
 {
-    StubBufferAccess buffer_access;
+    StubStreamDepiction buffer_access;
 };
 
 }

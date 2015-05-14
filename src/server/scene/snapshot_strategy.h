@@ -27,7 +27,7 @@ namespace mir
 {
 namespace scene
 {
-class BufferAccess;
+class StreamDepiction;
 
 class SnapshotStrategy
 {
@@ -35,7 +35,7 @@ public:
     virtual ~SnapshotStrategy() = default;
 
     virtual void take_snapshot_of(
-        std::shared_ptr<BufferAccess> const& surface_buffer_access,
+        std::shared_ptr<StreamDepiction> const& surface_buffer_access,
         SnapshotCallback const& snapshot_taken) = 0;
 
 protected:

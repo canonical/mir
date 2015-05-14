@@ -158,7 +158,7 @@ void mga::HWCLayer::release_buffer()
     if ((hwc_layer->compositionType != HWC_FRAMEBUFFER) && associated_buffer)
     {
         auto const& native_buffer = associated_buffer->native_buffer_handle();
-        native_buffer->update_usage(hwc_layer->releaseFenceFd, mga::BufferAccess::read);
+        native_buffer->update_usage(hwc_layer->releaseFenceFd, mga::StreamDepiction::read);
         hwc_layer->releaseFenceFd = -1;
         hwc_layer->acquireFenceFd = -1;
     }

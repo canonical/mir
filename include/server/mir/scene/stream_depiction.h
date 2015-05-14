@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SCENE_BUFFER_ACCESS_H_
-#define MIR_SCENE_BUFFER_ACCESS_H_
+#ifndef MIR_SCENE_STREAM_DEPICTION_H_
+#define MIR_SCENE_STREAM_DEPICTION_H_
 
 #include <functional>
 
@@ -30,21 +30,21 @@ class Buffer;
 namespace scene
 {
 
-class BufferAccess
+class StreamDepiction
 {
 public:
-    virtual ~BufferAccess() = default;
+    virtual ~StreamDepiction() = default;
 
     virtual void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec) = 0;
 
 protected:
-    BufferAccess() = default;
-    BufferAccess(BufferAccess const&) = delete;
-    BufferAccess& operator=(BufferAccess const&) = delete;
+    StreamDepiction() = default;
+    StreamDepiction(StreamDepiction const&) = delete;
+    StreamDepiction& operator=(StreamDepiction const&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_SCENE_BUFFER_ACCESS_H_ */
+#endif /* MIR_SCENE_STREAM_DEPICTION_H_ */

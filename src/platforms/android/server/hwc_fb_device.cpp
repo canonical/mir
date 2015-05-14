@@ -87,7 +87,7 @@ void mga::HwcFbDevice::commit(std::list<DisplayContents> const& contents)
 
     auto& buffer = *context.last_rendered_buffer();
     auto native_buffer = buffer.native_buffer_handle();
-    native_buffer->ensure_available_for(mga::BufferAccess::read);
+    native_buffer->ensure_available_for(mga::StreamDepiction::read);
     if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
