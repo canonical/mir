@@ -35,12 +35,11 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.type = mir_event_type_key;
             mir_event.key.device_id = android_event->getDeviceId();
             mir_event.key.source_id = android_event->getSource();
-            mir_event.key.action = static_cast<MirKeyAction>(kev->getAction());
+            mir_event.key.action = mia::mir_keyboard_action_from_android(kev->getAction(), kev->getRepeatCount());
             mir_event.key.modifiers = mia::mir_modifiers_from_android(kev->getMetaState());
             mir_event.key.key_code = kev->getKeyCode();
             mir_event.key.scan_code = kev->getScanCode();
-            mir_event.key.repeat_count = kev->getRepeatCount();
-            mir_event.key.event_time = kev->getEventTime().count();
+            mir_event.key.event_time = kev->getEventTime();
             break;
         }
         case AINPUT_EVENT_TYPE_MOTION:
@@ -52,7 +51,7 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.motion.action = mev->getAction();
             mir_event.motion.modifiers = mia::mir_modifiers_from_android(mev->getMetaState());
             mir_event.motion.button_state = static_cast<MirMotionButton>(mev->getButtonState());
-            mir_event.motion.event_time = mev->getEventTime().count();
+            mir_event.motion.event_time = mev->getEventTime();
             mir_event.motion.pointer_count = mev->getPointerCount();
             for(unsigned int i = 0; i < mev->getPointerCount(); i++)
             {

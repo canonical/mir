@@ -438,20 +438,24 @@ bool me::WindowManager::handle_pointer_event(MirPointerEvent const* pev)
 
             handled = true;
         }
-        if (action == mir_pointer_action_motion && vscroll)
-        {
-            float alpha = surf->alpha();
-            alpha += 0.1f * vscroll;
-            if (alpha < 0.0f)
-                alpha = 0.0f;
-            else if (alpha > 1.0f)
-                alpha = 1.0f;
-            surf->set_alpha(alpha);
-            handled = true;
-        }
 
         old_pos = surf->top_left();
         old_size = surf->size();
+    }
+
+    if (surf && 
+        (modifiers & mir_input_event_modifier_alt) &&
+        action == mir_pointer_action_motion &&
+        vscroll)
+    {
+        float alpha = surf->alpha();
+        alpha += 0.1f * vscroll;
+        if (alpha < 0.0f)
+            alpha = 0.0f;
+        else if (alpha > 1.0f)
+            alpha = 1.0f;
+        surf->set_alpha(alpha);
+        handled = true;
     }
 
     old_cursor = cursor;
