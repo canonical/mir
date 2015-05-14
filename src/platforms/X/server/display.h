@@ -69,19 +69,7 @@ private:
     MirPixelFormat pf;
     int const      display_width;
     int const      display_height;
-#if 0
-    XVisualInfo       *vi;
-    Colormap          cmap;
-    Window            root;
-    GLXContext        glc;
-    XWindowAttributes gwa;
-#endif
     std::unique_ptr<DisplayGroup> display_group;
-//    std::mutex mutable configuration_mutex;
-//    bool mutable configuration_dirty{false};
-//    DisplayConfiguration mutable config;
-//    PbufferGLContext gl_context;
-//    DisplayGroup mutable displays;
 };
 
 }

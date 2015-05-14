@@ -23,10 +23,12 @@
 
 namespace mir
 {
+
 namespace dispatch
 {
 class ActionQueue;
 }
+
 namespace input
 {
 class InputDevice;
@@ -35,22 +37,20 @@ namespace X
 {
 class XInputDevice;
 
-class XInputPlatform : public mir::input::Platform
+class XInputPlatform : public input::Platform
 {
 public:
-    explicit XInputPlatform(std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry);
-    ~XInputPlatform();
+    explicit XInputPlatform(std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry);
+    ~XInputPlatform() = default;
 
-    std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
+    std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;
 
 private:
-    std::shared_ptr<mir::dispatch::ActionQueue> const platform_queue;
-    std::shared_ptr<mir::input::InputDeviceRegistry> const registry;
-    std::shared_ptr<mir::input::X::XInputDevice> const device;
-//    static XInputPlatform* stub_input_platform;
-//    static std::vector<std::weak_ptr<mir::input::InputDevice>> device_store;
+    std::shared_ptr<dispatch::ActionQueue> const platform_queue;
+    std::shared_ptr<input::InputDeviceRegistry> const registry;
+    std::shared_ptr<XInputDevice> const device;
 };
 
 }

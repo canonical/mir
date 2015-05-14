@@ -23,7 +23,6 @@
 #include "mir_toolkit/common.h"
 #include "mir/graphics/display.h"
 #include "display_buffer.h"
-//#include <mutex>
 
 namespace mir
 {

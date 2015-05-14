@@ -20,7 +20,6 @@
 #include "gl_context.h"
 #include "debug.h"
 #include <boost/throw_exception.hpp>
-#include <stdexcept>
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
@@ -29,11 +28,6 @@ mgx::XGLContext::XGLContext(EGLDisplay const d, EGLSurface const s, EGLContext c
     : egl_dpy{d},
       egl_surf{s},
       egl_ctx{c}
-{
-    CALLED
-}
-
-mgx::XGLContext::~XGLContext()
 {
     CALLED
 }

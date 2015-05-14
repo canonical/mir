@@ -23,6 +23,8 @@
 #include "mir/udev/wrapper.h"
 #include "debug.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 namespace mgx = mg::X;
@@ -74,9 +76,8 @@ std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() 
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
-//    return gbm.device;
     CALLED
-	return 0;
+    return eglGetDisplay(x_dpy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -93,11 +94,13 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
 }
 
 extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
-    std::shared_ptr<mg::DisplayReport> const& report,
+    std::shared_ptr<mg::DisplayReport> const& /*report*/,
     std::shared_ptr<mg::NestedContext> const&)
 {
     CALLED
-    return std::make_shared<mgx::Platform>(report);
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Guest platform isn't supported under X"));
+    return nullptr;
 }
 
 extern "C" void add_graphics_platform_options(boost::program_options::options_description& /*config*/)

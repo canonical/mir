@@ -32,7 +32,6 @@ mgx::DisplayGroup::DisplayGroup(std::unique_ptr<mgx::DisplayBuffer> primary_buff
 void mgx::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
     CALLED
-//    std::unique_lock<decltype(guard)> lk(guard);
     f(*display_buffer);
 }
 

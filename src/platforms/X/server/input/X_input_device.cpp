@@ -56,5 +56,6 @@ void mix::XInputDevice::stop()
 mi::InputDeviceInfo mix::XInputDevice::get_device_info()
 {
     CALLED
+
     return info;
 }

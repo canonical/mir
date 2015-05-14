@@ -24,14 +24,14 @@
 
 #include <X11/Xlib.h>
 
-#include <memory>
-
 namespace mir
 {
+
 namespace dispatch
 {
 class Dispatchable;
 }
+
 namespace input
 {
 class InputDeviceInfo;
@@ -58,7 +58,7 @@ protected:
 private:
     int fd;
     std::shared_ptr<XDispatchable> x_dispatchable;
-    input::InputDeviceInfo info;
+    InputDeviceInfo info;
 };
 
 }

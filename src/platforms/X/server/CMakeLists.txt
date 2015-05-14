@@ -13,10 +13,6 @@ include_directories(
     ${UDEV_INCLUDE_DIRS}
 )
 
-# gbm.h and drm.h have trailing commas at the end of enum definitions
-# This is valid C99, but g++ 4.4 flags it as an error with -pedantic
-#string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-#add_definitions(-D__GBM__)
 add_definitions(-DDEBUG_SERVER=0)
 
 add_library(
@@ -26,20 +22,20 @@ add_library(
   display.cpp
   display_configuration.cpp
   gl_context.cpp
+  display_group.cpp
+  display_buffer.cpp
+  input/X_input.cpp
+  input/X_input_platform.cpp
+  input/X_input_device.cpp
+  input/X_dispatchable.cpp
   ../../mesa/server/buffer_allocator.cpp
   ../../mesa/server/drm_mode_resources.cpp
   ../../mesa/server/anonymous_shm_file.cpp
   ../../mesa/server/shm_buffer.cpp
   ../../mesa/server/ipc_operations.cpp
-  display_group.cpp
-  display_buffer.cpp
   ../../mesa/server/gbm_buffer.cpp
   ../../mesa/server/display_helpers.cpp
   ../../mesa/server/drm_close_threadsafe.cpp
-  input/X_input.cpp
-  input/X_input_platform.cpp
-  input/X_input_device.cpp
-  input/X_dispatchable.cpp
 )
 
 add_library(
@@ -58,8 +54,6 @@ target_link_libraries(
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
-#  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-#  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)

@@ -30,7 +30,8 @@ namespace md = mir::dispatch;
 
 extern ::Display *x_dpy;
 
-mix::XDispatchable::XDispatchable(int raw_fd) : fd(raw_fd), sink(nullptr)
+mix::XDispatchable::XDispatchable(int raw_fd)
+    : fd(raw_fd), sink(nullptr)
 {
     CALLED
 }

@@ -41,7 +41,7 @@ public:
     bool dispatch(dispatch::FdEvents events) override;
     dispatch::FdEvents relevant_events() const override;
 
-    void set_input_sink(input::InputSink *input_sink);
+    void set_input_sink(InputSink *input_sink);
     void unset_input_sink();
 
 private:

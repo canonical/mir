@@ -35,7 +35,7 @@ class XGLContext : public graphics::GLContext
 {
 public:
 	XGLContext(EGLDisplay const d, EGLSurface const s, EGLContext const c);
-	~XGLContext();
+	~XGLContext() = default;
     void make_current() const override;
     void release_current() const override;
 

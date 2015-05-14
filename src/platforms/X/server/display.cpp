@@ -57,7 +57,7 @@ mgx::Display::Display(::Display *dpy)
     if (!eglInitialize(egl_dpy, &egl_major, &egl_minor))
         BOOST_THROW_EXCEPTION(std::logic_error("eglInitialize failed"));
 
-    std::cout<<"EGL Version "<<egl_major<<'.'<<egl_minor << std::endl;
+    mir::log_info("EGL Version %d.%d", egl_major, egl_minor);
 
     EGLint const att[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -103,7 +103,7 @@ mgx::Display::Display(::Display *dpy)
                         0, visInfo->depth, InputOutput,
                         visInfo->visual, mask, &attr);
 
-    std::cout<<"depth="<<visInfo->depth<<std::endl;
+    mir::log_info("Pixel depth = %d", visInfo->depth);
 
     //TODO: handle others
     assert(visInfo->depth==24);
@@ -162,7 +162,6 @@ mgx::Display::~Display() noexcept
     eglTerminate(egl_dpy);
 
     XDestroyWindow(x_dpy, win);
-//    XCloseDisplay(x_dpy);
 }
 
 void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
@@ -174,7 +173,6 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
 	CALLED
-//    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     return std::make_unique<mgx::DisplayConfiguration>(pf, display_width, display_height);
 }
 

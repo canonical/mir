@@ -22,8 +22,6 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "gl_context.h"
-//#include "mir/graphics/gl_program_factory.h"
-//#include "display_configuration.h"
 
 #include <EGL/egl.h>
 

@@ -17,7 +17,6 @@
  */
 
 #include "X_input_platform.h"
-//#include "fake_input_device_impl.h"
 #include "mir/module_properties.h"
 #include "mir/input/platform.h"
 #include "../debug.h"
@@ -40,7 +39,6 @@ extern "C" void add_input_platform_options(
     boost::program_options::options_description& /*config*/)
 {
     CALLED
-    // no options to add yet
 }
 
 extern "C" mi::PlatformPriority probe_input_platform(

@@ -24,21 +24,15 @@
 #include "mir/module_deleter.h"
 #include "../debug.h"
 
-//#include <algorithm>
-
 namespace mi = mir::input;
+namespace md = mir::dispatch;
 namespace mix = mi::X;
 
 mix::XInputPlatform::XInputPlatform(
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry)
-    : platform_queue(mir::make_module_ptr<mir::dispatch::ActionQueue>()),
+    : platform_queue(mir::make_module_ptr<md::ActionQueue>()),
       registry(input_device_registry),
       device(std::make_shared<mix::XInputDevice>())
-{
-    CALLED
-}
-
-mix::XInputPlatform::~XInputPlatform()
 {
     CALLED
 }
@@ -49,7 +43,7 @@ void mix::XInputPlatform::start()
     registry->add_device(device);
 }
 
-std::shared_ptr<mir::dispatch::Dispatchable> mix::XInputPlatform::dispatchable()
+std::shared_ptr<md::Dispatchable> mix::XInputPlatform::dispatchable()
 {
     CALLED
     return platform_queue;
