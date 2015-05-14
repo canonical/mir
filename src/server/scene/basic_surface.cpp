@@ -824,7 +824,10 @@ private:
 int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return surface_buffer_stream->buffers_ready_for_compositor(id);
+    auto max_buf = 0;
+    for(auto info : streams)
+        max_buf = std::max(max_buf, info.stream->buffers_ready_for_compositor(id));
+    return max_buf;
 }
 
 void ms::BasicSurface::consume(MirEvent const& event)
