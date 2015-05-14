@@ -432,7 +432,8 @@ int ms::BasicSurface::set_swap_interval(int interval)
     {
         swapinterval_ = interval;
         bool allow_dropping = (interval == 0);
-        surface_buffer_stream->allow_framedropping(allow_dropping);
+        for(auto& info : streams) 
+            info.stream->allow_framedropping(allow_dropping);
 
         lg.unlock();
         observers.attrib_changed(mir_surface_attrib_swapinterval, interval);
@@ -722,7 +723,10 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
         visibility_ = new_visibility;
         lg.unlock();
         if (new_visibility == mir_surface_visibility_exposed)
-            surface_buffer_stream->drop_old_buffers();
+        {
+            for(auto& info : streams)
+                info.stream->drop_old_buffers();
+        }
         observers.attrib_changed(mir_surface_attrib_visibility, visibility_);
     }
 
