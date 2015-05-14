@@ -110,7 +110,7 @@ const char* mrl::InputReport::component()
 
 namespace
 {
-#define PRINT_EV_ENUM(value, name) if (type == name) { return # name; }
+#define PRINT_EV_ENUM(value, name) if (value == name) { return # name; }
 
 std::string print_evdev_type(int type)
 {
