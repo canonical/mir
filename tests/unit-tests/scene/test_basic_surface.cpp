@@ -842,7 +842,26 @@ TEST_F(BasicSurfaceTest, cannot_remove_primary_buffer_stream_for_now)
 
 }
 
-//TODO: per-stream alpha seems useful
+TEST_F(BasicSurfaceTest, showing_brings_all_streams_up_to_date)
+{
+    using namespace testing;
+    auto alpha = 0.3;
+    
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    std::list<ms::StreamInfo> streams = {
+        { mock_buffer_stream, {0,0} },
+        { buffer_stream, {0,0} }
+    };
+
+    EXPECT_CALL(buffer_stream, drop_client_buffers()).Times(Exactly(1));
+    EXPECT_CALL(mock_buffer_stream, drop_client_buffers()).Times(Exactly(1));
+
+    surface.hide();
+    surface.show();
+    surface.show();
+}
+
+//TODO: per-stream alpha and swapinterval seems useful
 TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
 {
     using namespace testing;
@@ -867,7 +886,25 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
     EXPECT_THAT(renderables[1], IsRenderableOfAlpha(alpha));
 }
 
-TEST_F(BasicSurfaceTest, visibility_depends)
+TEST_F(BasicSurfaceTest, changing_inverval_effects_all_streams)
+{
+    using namespace testing;
+    auto alpha = 0.3;
+    
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    std::list<ms::StreamInfo> streams = {
+        { mock_buffer_stream, {0,0} },
+        { buffer_stream, {0,0} }
+    };
+
+    EXPECT_CALL(mock_buffer_stream, allow_framedropping(true));
+    EXPECT_CALL(buffer_stream, allow_framedropping(true));
+
+    surface.set_streams(streams);
+    surface.configure(mir_surface_attrib_swapinterval, 0);
+}
+
+TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
 {
     using namespace testing;
     geom::Displacement displacement{3,-2};
@@ -888,7 +925,6 @@ TEST_F(BasicSurfaceTest, visibility_depends)
         { mock_buffer_stream1, displacement },
     };
     surface.set_streams(streams);
-
 
     auto renderables = surface.generate_renderables(this);
     EXPECT_FALSE(surface.visible());
