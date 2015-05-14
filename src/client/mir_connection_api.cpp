@@ -255,20 +255,7 @@ void mir_connection_get_available_surface_formats(
         connection->available_surface_formats(formats, format_size, *num_valid_formats);
 }
 
-extern "C"
-{
-MirWaitHandle* new_mir_connection_platform_operation(
-    MirConnection* connection,
-    MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context);
-MirWaitHandle* old_mir_connection_platform_operation(
-    MirConnection* connection, int /* opcode */,
-    MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context);
-}
-
-__asm__(".symver new_mir_connection_platform_operation,mir_connection_platform_operation@@MIR_CLIENT_8.3");
-MirWaitHandle* new_mir_connection_platform_operation(
+MirWaitHandle* mir_connection_platform_operation(
     MirConnection* connection,
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context)
@@ -282,15 +269,4 @@ MirWaitHandle* new_mir_connection_platform_operation(
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
-
-}
-
-// TODO: Remove when we bump so name
-__asm__(".symver old_mir_connection_platform_operation,mir_connection_platform_operation@MIR_CLIENT_8");
-MirWaitHandle* old_mir_connection_platform_operation(
-    MirConnection* connection, int /* opcode */,
-    MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context)
-{
-    return new_mir_connection_platform_operation(connection, request, callback, context);
 }

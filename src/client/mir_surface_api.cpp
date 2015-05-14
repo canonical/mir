@@ -229,33 +229,14 @@ void mir_surface_spec_release(MirSurfaceSpec* spec)
     delete spec;
 }
 
-__asm__(".symver new_mir_surface_set_event_handler,mir_surface_set_event_handler@@MIR_CLIENT_8.4");
 extern "C"
-void new_mir_surface_set_event_handler(MirSurface* surface,
+void mir_surface_set_event_handler(MirSurface* surface,
                                        mir_surface_event_callback callback,
                                        void* context)
 {
     surface->set_event_handler(callback, context);
 }
 
-// Deprecated but ABI backward compatible --->
-typedef struct MirEventDelegate
-{
-    mir_surface_event_callback callback;
-    void *context;
-} MirEventDelegate;
-
-__asm__(".symver old_mir_surface_set_event_handler,mir_surface_set_event_handler@MIR_CLIENT_8");
-extern "C"
-void old_mir_surface_set_event_handler(MirSurface* surface,
-                                       MirEventDelegate const* delegate)
-{
-    if (delegate)
-        surface->set_event_handler(delegate->callback, delegate->context);
-    else
-        surface->set_event_handler(nullptr, nullptr);
-}
-// <--- Deprecated
 
 bool mir_surface_is_valid(MirSurface* surface)
 {
