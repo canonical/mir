@@ -96,7 +96,13 @@ mgx::Display::Display(::Display *dpy)
     attr.background_pixel = 0;
     attr.border_pixel = 0;
     attr.colormap = XCreateColormap(x_dpy, root, visInfo->visual, AllocNone);
-    attr.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask;
+    attr.event_mask = StructureNotifyMask |
+                      ExposureMask        |
+                      KeyPressMask        |
+                      KeyReleaseMask      |
+                      ButtonPressMask     |
+                      ButtonReleaseMask;
+
     mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
 
     win = XCreateWindow(x_dpy, root, 0, 0, 1280, 1024,
@@ -119,7 +125,7 @@ mgx::Display::Display(::Display *dpy)
         sizehints.flags = USSize | USPosition;
         XSetNormalHints(x_dpy, win, &sizehints);
         XSetStandardProperties(x_dpy, win, title, title,
-                                   None, (char **)NULL, 0, &sizehints);
+                               None, (char **)NULL, 0, &sizehints);
     }
 
     egl_ctx = eglCreateContext(egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);

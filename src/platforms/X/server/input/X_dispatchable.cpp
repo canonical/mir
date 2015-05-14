@@ -53,24 +53,41 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
 
     if (sink)
     {
-        if(xev.type == KeyPress)
+        switch (xev.type)
+        {
+        case KeyPress:
+        case KeyRelease:
         {
         	MirEvent event;
 
-            mir::log_info("Key pressed");
+            mir::log_info("Key event");
 
             event.key.type = mir_event_type_key;
+            event.key.device_id = 0;
             event.key.source_id = 0;
-            event.key.action = mir_key_action_up;
+            event.key.action = xev.type == KeyPress ?
+                                   mir_key_action_down : mir_key_action_up;
             event.key.modifiers = mir_input_event_modifier_none;
             event.key.key_code = XKB_KEY_q;
             event.key.scan_code = KEY_Q;
             event.key.repeat_count = 0;
 
+            // TODO: read time from X
             event.key.event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                        std::chrono::system_clock::now().time_since_epoch()).count();
 
             sink->handle_input(event);
+            break;
+        }
+
+        case MappingNotify:
+            mir::log_info("Mapping changed at server. Refreshing the cache.");
+        	XRefreshKeyboardMapping((XMappingEvent*)&xev);
+        	break;
+
+        default:
+            mir::log_info("Unrecognized event");
+            break;
         }
     }
     else
