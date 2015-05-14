@@ -104,6 +104,15 @@ bool mir_pointer_event_button_state(MirPointerEvent const* event,
     MirPointerButton button);
 
 /**
+ * Retreive the pointer button state as a masked set of values.
+ *
+ * \param [in] event         The pointer event
+ *
+ * \return                   The button state
+ */
+MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event);
+
+/**
  * Retrieve the axis value reported by a given pointer event.
  *
  *  \param [in] event       The pointer event
