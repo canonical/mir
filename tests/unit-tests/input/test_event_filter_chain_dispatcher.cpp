@@ -42,7 +42,7 @@ std::shared_ptr<mtd::MockEventFilter> mock_filter()
 
 struct EventFilterChainDispatcher : public ::testing::Test
 {
-    mir::EventUPtr const event = mir::events::make_event(MirInputDeviceId(), 0,
+    mir::EventUPtr const event = mir::events::make_event(MirInputDeviceId(), std::chrono::nanoseconds(0),
         MirKeyboardAction(), xkb_keysym_t(), 0, MirInputEventModifiers());
 };
 }
