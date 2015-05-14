@@ -345,7 +345,10 @@ bool ms::BasicSurface::visible() const
 
 bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
 {
-    return !hidden && surface_buffer_stream->has_submitted_buffer();
+    bool visible{false};
+    for(auto info : streams)
+        visible |= info.stream->has_submitted_buffer();
+    return !hidden && visible;
 }
 
 mi::InputReceptionMode ms::BasicSurface::reception_mode() const

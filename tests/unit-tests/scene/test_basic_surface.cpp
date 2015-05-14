@@ -272,11 +272,9 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
 {
     using namespace testing;
     mtd::StubBuffer mock_buffer;
-    EXPECT_CALL(*mock_buffer_stream, has_submitted_buffer())
-        .Times(3)
-        .WillOnce(Return(false))
-        .WillOnce(Return(false))
-        .WillOnce(Return(true));
+    auto submitted_buffer = false;
+    ON_CALL(*mock_buffer_stream, has_submitted_buffer())
+        .WillByDefault(Invoke([&submitted_buffer] { return submitted_buffer; }));
 
     // Must be a fresh surface to guarantee no frames posted yet...
     ms::BasicSurface surface{
@@ -299,6 +297,7 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
     EXPECT_FALSE(surface.visible());
 
     surface.set_hidden(false);
+    submitted_buffer = true;
     EXPECT_TRUE(surface.visible());
 
     surface.configure(mir_surface_attrib_state, mir_surface_state_hidden);
@@ -927,18 +926,15 @@ TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
 
     auto renderables = surface.generate_renderables(this);
     EXPECT_FALSE(surface.visible());
-    ASSERT_THAT(renderables.size(), Eq(0));
+    EXPECT_THAT(renderables.size(), Eq(2));
 
     stream2_visible = true;
     renderables = surface.generate_renderables(this);
     EXPECT_TRUE(surface.visible());
-    ASSERT_THAT(renderables.size(), Eq(1));
-    EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left + displacement));
+    EXPECT_THAT(renderables.size(), Eq(2));
 
-    stream2_visible = true;
+    stream1_visible = true;
     renderables = surface.generate_renderables(this);
     EXPECT_TRUE(surface.visible());
-    ASSERT_THAT(renderables.size(), Eq(2));
-    EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left));
-    EXPECT_THAT(renderables[1], IsRenderableOfPosition(rect.top_left + displacement));
+    EXPECT_THAT(renderables.size(), Eq(2));
 }
