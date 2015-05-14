@@ -200,7 +200,7 @@ mg::Buffer* mc::BufferQueue::get_a_free_buffer()
         buf = free_buffers.back();
         free_buffers.pop_back();
     }
-    else if (int(buffers.size()) < nbuffers)
+    else if (static_cast<int>(buffers.size()) < nbuffers)
     {
         auto const& buffer = gralloc->alloc_buffer(the_properties);
         buffers.push_back(buffer);
