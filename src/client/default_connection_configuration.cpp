@@ -39,8 +39,6 @@
 #include "mir_event_distributor.h"
 #include "mir/shared_library_prober.h"
 
-#include <dlfcn.h>
-
 namespace mcl = mir::client;
 
 namespace

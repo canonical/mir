@@ -25,8 +25,6 @@
 #include "mir/logging/null_shared_library_prober_report.h"
 #include "mir/graphics/platform_probe.h"
 
-#include <dlfcn.h>
-
 namespace mo = mir::options;
 
 char const* const mo::server_socket_opt           = "file,f";
