@@ -922,12 +922,12 @@ TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
 
     auto renderables = surface.generate_renderables(this);
     EXPECT_FALSE(surface.visible());
-    EXPECT_THAT(renderables.size(), Eq(2));
+    EXPECT_THAT(renderables.size(), Eq(0));
 
     stream2_visible = true;
     renderables = surface.generate_renderables(this);
     EXPECT_TRUE(surface.visible());
-    EXPECT_THAT(renderables.size(), Eq(2));
+    EXPECT_THAT(renderables.size(), Eq(1));
 
     stream1_visible = true;
     renderables = surface.generate_renderables(this);
