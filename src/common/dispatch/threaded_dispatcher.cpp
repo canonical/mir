@@ -18,6 +18,7 @@
 
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/dispatch/dispatchable.h"
+#include "mir/signal_blocker.h"
 #include "mir/thread_name.h"
 
 #include "mir/raii.h"
@@ -190,6 +191,7 @@ md::ThreadedDispatcher::ThreadedDispatcher(std::string const& name,
     // as desired.
     dispatcher->add_watch(dispatchee, md::DispatchReentrancy::reentrant);
 
+    mir::SignalBlocker blocker;
     threadpool.emplace_back(&dispatch_loop, name_base, thread_exiter, dispatcher, exception_handler);
 }
 
@@ -222,6 +224,7 @@ md::ThreadedDispatcher::~ThreadedDispatcher() noexcept
 void md::ThreadedDispatcher::add_thread()
 {
     std::lock_guard<decltype(thread_pool_mutex)> lock{thread_pool_mutex};
+    mir::SignalBlocker blocker;
     threadpool.emplace_back(&dispatch_loop, name_base, thread_exiter, dispatcher, exception_handler);
 }
 
@@ -247,14 +250,6 @@ void md::ThreadedDispatcher::dispatch_loop(std::string const& name,
                                            std::shared_ptr<Dispatchable> dispatcher,
                                            std::function<void()> const& exception_handler)
 {
-    sigset_t all_signals;
-    sigfillset(&all_signals);
-
-    if (auto error = pthread_sigmask(SIG_BLOCK, &all_signals, NULL))
-        BOOST_THROW_EXCEPTION((std::system_error{error,
-                                                 std::system_category(),
-                                                 "Failed to block signals on IO thread"}));
-
     mir::set_thread_name(name);
 
     // This does not have to be std::atomic<bool> because thread_register is guaranteed to
