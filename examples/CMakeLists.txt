@@ -185,6 +185,25 @@ target_link_libraries(mir_demo_server
   ${Boost_LIBRARIES}
 )
 
+add_library(mir_demo_server_loadable MODULE
+  server_example.cpp
+  glog_logger.cpp
+  server_example_test_client.cpp
+)
+
+mir_add_wrapped_executable(mir_demo_server_loader
+  mir_demo_server_loader.cpp
+)
+target_link_libraries(mir_demo_server_loader dl)
+
+target_link_libraries(mir_demo_server_loadable
+  mirserver
+  exampleserverconfig
+  ${GLog_LIBRARY}
+  ${GFlags_LIBRARY}
+  ${Boost_LIBRARIES}
+)
+
 mir_add_wrapped_executable(mir_demo_server_minimal server_minimal.cpp)
 target_link_libraries(mir_demo_server_minimal mirserver)
 
