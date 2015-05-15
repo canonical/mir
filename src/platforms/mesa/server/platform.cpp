@@ -34,7 +34,6 @@
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <dlfcn.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
