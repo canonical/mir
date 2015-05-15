@@ -316,15 +316,10 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
     streams.erase(p);
 }
 
-struct StreamConfig
-{
-    mf::BufferStreamId id;
-    geom::Displacement displacement;
-    float alpha;
-};
-
 void ms::ApplicationSession::configure_streams(mf::SurfaceId id, std::list<StreamConfig> const& config)
 {
+    (void) id; (void) config;
+#if 0
     auto surf = checked_find(id);
     auto surf_stream_it = surf_stream_map.find(id);
 
@@ -348,4 +343,5 @@ void ms::ApplicationSession::configure_streams(mf::SurfaceId id, std::list<Strea
     if (surf_streams_it != surf_stream_map.end())
         for(auto& streams : *surface_stream_it)
             surf->remove_stream(streams.get());
+#endif
 }

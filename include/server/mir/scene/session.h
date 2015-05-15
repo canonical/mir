@@ -21,8 +21,10 @@
 
 #include "mir/frontend/session.h"
 #include "mir/scene/snapshot.h"
+#include "mir/geometry/displacement.h"
 
 #include <sys/types.h>
+#include <list>
 
 namespace mir
 {
@@ -30,6 +32,12 @@ namespace scene
 {
 class Surface;
 struct SurfaceCreationParameters;
+
+struct StreamConfig
+{
+    frontend::BufferStreamId id;
+    geometry::Displacement displacement;
+};
 
 class Session : public frontend::Session
 {
@@ -60,6 +68,7 @@ public:
 
     virtual frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const& props) = 0;
     virtual void destroy_buffer_stream(frontend::BufferStreamId stream) = 0;
+    virtual void configure_streams(frontend::SurfaceId id, std::list<StreamConfig> const& config) = 0;
 };
 }
 }

@@ -206,10 +206,18 @@ public:
         mock_surfaces.erase(surface);
     }
 
+    void configure_streams(mf::SurfaceId id, std::list<ms::StreamConfig> const& config)
+    {
+        last_config = config;
+        last_config_surface_id = id;
+    }
+
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
     static int const testing_client_input_fd;
     int last_surface_id;
+    std::list<ms::StreamConfig> last_config;
+    mf::SurfaceId last_config_surface_id;
 };
 
 int const StubbedSession::testing_client_input_fd{11};
@@ -946,33 +954,40 @@ TEST_F(SessionMediator, completes_exchange_buffer_when_completion_is_invoked_asy
     completion_func(&stub_buffer2);
 }
 
+MATCHER(ConfigEq, "")
+{
+    return (std::get<0>(arg).id == std::get<1>(arg).id) &&
+           (std::get<0>(arg).displacement == std::get<1>(arg).displacement);
+}
+
 TEST_F(SessionMediator, arrangement_of_bufferstreams)
 {
     using namespace testing;
-//    InSequence seq;
-//    EXPECT_CALL(session, add_surface(mf_id));
-
     mp::BufferStreamParameters stream_request;
-    mp::BufferStream stream_response1;
-    mp::BufferStream stream_response2;
-    mp::BufferStream stream_response3;
-
+    std::array<geom::Displacement,2> displacement = { geom::Displacement{-12,11}, geom::Displacement{4,-3} };
+    std::array<mp::BufferStream,2> streams;
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
-    mediator.create_buffer_stream(nullptr, &stream_request, &stream_response1, null_callback.get());
-    mediator.create_buffer_stream(nullptr, &stream_request, &stream_response2, null_callback.get());
-    mediator.create_buffer_stream(nullptr, &stream_request, &stream_response3, null_callback.get());
+    for (auto &stream : streams)
+        mediator.create_buffer_stream(nullptr, &stream_request, &stream, null_callback.get());
+
+    std::list<ms::StreamConfig> expected_list = {
+        {mf::BufferStreamId(streams[0].id().value()), displacement[0]},
+        {mf::BufferStreamId(streams[1].id().value()), displacement[1]}
+    };
 
     mp::SurfaceModifications mods;
     mods.mutable_surface_id()->set_value(surface_response.id().value());
-
-    for(auto i = 0u; i < 3; i++)
+    for (auto i = 0u; i < streams.size(); i++)
     {
         auto stream = mods.mutable_surface_specification()->add_stream();
-        stream->set_displacement_x(30);
-        stream->set_displacement_y(28);
+        stream->mutable_id()->set_value(streams[i].id().value());
+        stream->set_displacement_x(displacement[i].dx.as_int());
+        stream->set_displacement_y(displacement[i].dy.as_int());
     }
 
     mp::Void null;
     mediator.modify_surface(nullptr, &mods, &null, null_callback.get());
+    EXPECT_THAT(stubbed_session->last_config_surface_id.as_value(), Eq(surface_response.id().value()));
+    EXPECT_THAT(stubbed_session->last_config, Pointwise(ConfigEq(), expected_list));
 }
