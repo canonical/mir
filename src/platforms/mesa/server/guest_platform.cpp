@@ -71,10 +71,11 @@ void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* gbm_dev
         BOOST_THROW_EXCEPTION(std::runtime_error(msg));
     }
 }
+}
 
 // Hack around the way mesa loads mir: This hack makes the
 // necessary symbols global.
-void ensure_loaded_with_rtld_global()
+void mgm::ensure_loaded_with_rtld_global()
 {
     Dl_info info;
 
@@ -83,7 +84,6 @@ void ensure_loaded_with_rtld_global()
     safe_dladdr_t *safe_dladdr = (safe_dladdr_t*)&dladdr;
     safe_dladdr(&ensure_loaded_with_rtld_global, &info);
     dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
-}
 }
 
 mgm::GuestPlatform::GuestPlatform(
