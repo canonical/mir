@@ -22,7 +22,9 @@
 
 #include <chrono>
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <linux/input.h>
+#include <inttypes.h>
 
 namespace mi = mir::input;
 namespace mix = mi::X;
@@ -59,8 +61,15 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
         case KeyRelease:
         {
         	MirEvent event;
+            XKeyEvent &xkev = (XKeyEvent &)xev;
+            static const int STRMAX = 32;
+            char str[STRMAX];
+            KeySym keysym;
 
-            mir::log_info("Key event");
+            auto count = XLookupString(&xkev, str, STRMAX, &keysym, NULL);
+
+            mir::log_info("Key event : type=%d, serial=%u, send_event=%d, display=%p, window=%p, root=%p, subwindow=%p, time=%d, x=%d, y=%d, x_root=%d, y_root=%d, state=%0X, keycode=%d, same_screen=%d",
+                xkev.type, xkev.serial, xkev.send_event, xkev.display, xkev.window, xkev.root, xkev.subwindow, xkev.time, xkev.x, xkev.y, xkev.x_root, xkev.y_root, xkev.state, xkev.keycode, xkev.same_screen);
 
             event.key.type = mir_event_type_key;
             event.key.device_id = 0;
@@ -68,13 +77,16 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
             event.key.action = xev.type == KeyPress ?
                                    mir_key_action_down : mir_key_action_up;
             event.key.modifiers = mir_input_event_modifier_none;
-            event.key.key_code = XKB_KEY_q;
-            event.key.scan_code = KEY_Q;
+            event.key.key_code = keysym;
+            event.key.scan_code = xkev.keycode-8;
             event.key.repeat_count = 0;
 
-            // TODO: read time from X
+            // TODO: read time from xkev
             event.key.event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                        std::chrono::system_clock::now().time_since_epoch()).count();
+
+            for (int i=0; i<count; i++)
+                mir::log_info("buffer[%d]='%c', key_code=%d, scan_code=%d, event_time=%" PRId64, i, str[i], keysym, xkev.keycode-8, event.key.event_time);
 
             sink->handle_input(event);
             break;
@@ -86,7 +98,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
         	break;
 
         default:
-            mir::log_info("Unrecognized event");
+            mir::log_info("Uninteresting event");
             break;
         }
     }
