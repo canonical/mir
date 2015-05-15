@@ -34,6 +34,7 @@
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <dlfcn.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -104,6 +105,21 @@ struct RealPosixProcessOperations : public mgm::PosixProcessOperations
         return ::setsid();
     }
 };
+
+// Hack around the way mesa loads mir: This hack makes the
+// necessary symbols global.
+extern "C" int __attribute__((constructor))
+ensure_loaded_with_rtld_global()
+{
+    Dl_info info;
+
+    // Cast dladdr itself to work around g++-4.8 warnings (LP: #1366134)
+    typedef int (safe_dladdr_t)(int(*func)(), Dl_info *info);
+    safe_dladdr_t *safe_dladdr = (safe_dladdr_t*)&dladdr;
+    safe_dladdr(&ensure_loaded_with_rtld_global, &info);
+    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
+    return 0;
+}
 }
 
 mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
@@ -116,7 +132,6 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
       vt{vt},
       bypass_option_{bypass_option}
 {
-    ensure_loaded_with_rtld_global();
     drm->setup(udev);
     gbm.setup(*drm);
 

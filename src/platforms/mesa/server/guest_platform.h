@@ -52,8 +52,6 @@ private:
     helpers::GBMHelper gbm;
     std::shared_ptr<PlatformIpcOperations> ipc_ops;
 };
-
-void ensure_loaded_with_rtld_global();
 }
 }
 }

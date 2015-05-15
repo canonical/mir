@@ -58,15 +58,17 @@ constexpr size_t division_ceiling(size_t a, size_t b)
 
 // Hack around the way mesa loads mir: This hack makes the
 // necessary symbols global.
-void ensure_loaded_with_rtld_global()
+extern "C" int __attribute__((constructor))
+ensure_loaded_with_rtld_global_mesa_client()
 {
     Dl_info info;
 
     // Cast dladdr itself to work around g++-4.8 warnings (LP: #1366134)
-    typedef int (safe_dladdr_t)(void(*func)(), Dl_info *info);
+    typedef int (safe_dladdr_t)(int(*func)(), Dl_info *info);
     safe_dladdr_t *safe_dladdr = (safe_dladdr_t*)&dladdr;
-    safe_dladdr(&ensure_loaded_with_rtld_global, &info);
+    safe_dladdr(&ensure_loaded_with_rtld_global_mesa_client, &info);
     dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
+    return 0;
 }
 }
 
@@ -79,7 +81,6 @@ mclm::ClientPlatform::ClientPlatform(
       display_container(display_container),
       gbm_dev{nullptr}
 {
-    ensure_loaded_with_rtld_global();
 }
 
 std::shared_ptr<mcl::ClientBufferFactory> mclm::ClientPlatform::create_buffer_factory()
