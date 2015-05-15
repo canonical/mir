@@ -22,7 +22,7 @@
 #include "mir/input/platform.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/threaded_dispatcher.h"
 
 #include "mir/main_loop.h"
 #include "mir/thread_name.h"
@@ -86,7 +86,6 @@ void mi::DefaultInputManager::start()
 
     queue->enqueue([this,weak_started_promise]()
                    {
-                        mir::set_thread_name("Mir/InputReader");
                         for (auto const& platform : platforms)
                         {
                             platform->start();
@@ -100,7 +99,8 @@ void mi::DefaultInputManager::start()
                         started_promise->set_value();
                    });
 
-    input_thread = std::make_unique<dispatch::SimpleDispatchThread>(
+    input_thread = std::make_unique<dispatch::ThreadedDispatcher>(
+        "Mir/Input Reader",
         multiplexer,
         [this,weak_started_promise]()
         {

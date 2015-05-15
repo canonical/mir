@@ -37,7 +37,7 @@ namespace mir
 namespace dispatch
 {
 class MultiplexingDispatchable;
-class SimpleDispatchThread;
+class ThreadedDispatcher;
 class ActionQueue;
 }
 namespace input
@@ -65,7 +65,7 @@ private:
     std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     std::shared_ptr<input::android::InputReaderDispatchable> const legacy_dispatchable;
     std::shared_ptr<dispatch::ActionQueue> const queue;
-    std::unique_ptr<dispatch::SimpleDispatchThread> input_thread;
+    std::unique_ptr<dispatch::ThreadedDispatcher> input_thread;
 
     enum class State
     {
