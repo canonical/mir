@@ -33,6 +33,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <cstring>
+#include <dlfcn.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -71,12 +72,25 @@ void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* gbm_dev
     }
 }
 
+// Hack around the way mesa loads mir: This hack makes the
+// necessary symbols global.
+void ensure_loaded_with_rtld_global()
+{
+    Dl_info info;
+
+    // Cast dladdr itself to work around g++-4.8 warnings (LP: #1366134)
+    typedef int (safe_dladdr_t)(void(*func)(), Dl_info *info);
+    safe_dladdr_t *safe_dladdr = (safe_dladdr_t*)&dladdr;
+    safe_dladdr(&ensure_loaded_with_rtld_global, &info);
+    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
+}
 }
 
 mgm::GuestPlatform::GuestPlatform(
     std::shared_ptr<NestedContext> const& nested_context)
     : nested_context{nested_context}
 {
+    ensure_loaded_with_rtld_global();
     auto const fds = nested_context->platform_fd_items();
     gbm.setup(fds.at(0));
     set_guest_gbm_device(*nested_context, gbm.device);
