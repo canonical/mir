@@ -60,7 +60,9 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     lifecycle_control(lifecycle_control),
     event_sink(event_sink),
     disconnected(false),
-    transport{std::move(transport)}
+    transport{std::move(transport)},
+    delayed_processor{std::make_shared<md::ActionQueue>()},
+    multiplexer{this->transport, delayed_processor}
 {
     class NullDeleter
     {
@@ -198,6 +200,12 @@ void mclr::MirProtobufRpcChannel::CallMethod(
 
     pending_calls.save_completion_details(invocation, response, callback);
 
+    if (prioritise_next_request)
+    {
+        id_to_wait_for = invocation.id();
+        prioritise_next_request = false;
+    }
+
     send_message(invocation, invocation, fds);
 }
 
@@ -317,7 +325,7 @@ void mclr::MirProtobufRpcChannel::on_data_available()
      */
     std::lock_guard<decltype(read_mutex)> lock(read_mutex);
 
-    mir::protobuf::wire::Result result;
+    auto result = std::make_unique<mir::protobuf::wire::Result>();
     try
     {
         uint16_t message_size;
@@ -327,9 +335,9 @@ void mclr::MirProtobufRpcChannel::on_data_available()
         body_bytes.resize(message_size);
         transport->receive_data(body_bytes.data(), message_size);
 
-        result.ParseFromArray(body_bytes.data(), message_size);
+        result->ParseFromArray(body_bytes.data(), message_size);
 
-        rpc_report->result_receipt_succeeded(result);
+        rpc_report->result_receipt_succeeded(*result);
     }
     catch (std::exception const& x)
     {
@@ -339,14 +347,35 @@ void mclr::MirProtobufRpcChannel::on_data_available()
 
     try
     {
-        for (int i = 0; i != result.events_size(); ++i)
+        for (int i = 0; i != result->events_size(); ++i)
         {
-            process_event_sequence(result.events(i));
+            process_event_sequence(result->events(i));
         }
 
-        if (result.has_id())
+        if (result->has_id())
         {
-            pending_calls.complete_response(result);
+            if (id_to_wait_for)
+            {
+                if (result->id() == id_to_wait_for.value())
+                {
+                    pending_calls.complete_response(*result);
+                    multiplexer.add_watch(delayed_processor);
+                }
+                else
+                {
+                    // It's too difficult to convince C++ to move this lambda everywhere, so
+                    // just give up and let it pretend its a shared_ptr.
+                    std::shared_ptr<mir::protobuf::wire::Result> appeaser{std::move(result)};
+                    delayed_processor->enqueue([delayed_result = std::move(appeaser), this]() mutable
+                    {
+                        pending_calls.complete_response(*delayed_result);
+                    });
+                }
+            }
+            else
+            {
+                pending_calls.complete_response(*result);
+            }
         }
     }
     catch (std::exception const& x)
@@ -354,7 +383,7 @@ void mclr::MirProtobufRpcChannel::on_data_available()
         // TODO: This is dangerous as an error in result processing could cause a wait handle
         // to never fire. Could perhaps fix by catching and setting error on the response before invoking
         // callback ~racarr
-        rpc_report->result_processing_failed(result, x);
+        rpc_report->result_processing_failed(*result, x);
     }
 }
 
@@ -365,15 +394,21 @@ void mclr::MirProtobufRpcChannel::on_disconnected()
 
 mir::Fd mir::client::rpc::MirProtobufRpcChannel::watch_fd() const
 {
-    return transport->watch_fd();
+    return multiplexer.watch_fd();
 }
 
 bool mir::client::rpc::MirProtobufRpcChannel::dispatch(md::FdEvents events)
 {
-    return transport->dispatch(events);
+    return multiplexer.dispatch(events);
 }
 
 md::FdEvents mclr::MirProtobufRpcChannel::relevant_events() const
 {
-    return transport->relevant_events();
+    return multiplexer.relevant_events();
+}
+
+void mclr::MirProtobufRpcChannel::process_next_request_first()
+{
+    prioritise_next_request = true;
+    multiplexer.remove_watch(delayed_processor);
 }

@@ -48,6 +48,8 @@ namespace mtd = mir::test::doubles;
 namespace md = mir::dispatch;
 namespace mt = mir::test;
 
+namespace mt = mir::test;
+
 namespace
 {
 
@@ -91,7 +93,6 @@ public:
         ON_CALL(*this, send_message(_,_))
             .WillByDefault(Invoke(std::bind(&MockStreamTransport::send_message_default,
                                             this, std::placeholders::_1)));
-
     }
 
     void add_server_message(std::vector<uint8_t> const& message)
@@ -426,4 +427,88 @@ TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_only_once)
         std::runtime_error);
 
     EXPECT_TRUE(disconnected);
+}
+
+namespace
+{
+void set_flag(bool* flag)
+{
+    *flag = true;
+}
+}
+
+TEST_F(MirProtobufRpcChannelTest, delays_messages_not_requested)
+{
+    using namespace ::testing;
+
+    auto typed_channel = std::dynamic_pointer_cast<mclr::MirProtobufRpcChannel>(channel);
+
+    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mir::protobuf::DRMMagic request;
+    mir::protobuf::DRMAuthMagicStatus reply;
+
+    bool first_response_called{false};
+    bool second_response_called{false};
+    channel_user.drm_auth_magic(nullptr,
+                                &request,
+                                &reply,
+                                google::protobuf::NewCallback(&set_flag, &first_response_called));
+
+    typed_channel->process_next_request_first();
+    channel_user.drm_auth_magic(nullptr,
+                                &request,
+                                &reply,
+                                google::protobuf::NewCallback(&set_flag, &second_response_called));
+
+    mir::protobuf::wire::Invocation wire_request;
+    mir::protobuf::wire::Result wire_reply;
+
+    wire_request.ParseFromArray(transport->sent_messages.front().data() + sizeof(uint16_t),
+                                transport->sent_messages.front().size() - sizeof(uint16_t));
+
+    transport->sent_messages.pop_front();
+
+    wire_reply.set_id(wire_request.id());
+    wire_reply.set_response(reply.SerializeAsString());
+
+    std::vector<uint8_t> buffer(wire_reply.ByteSize() + sizeof(uint16_t));
+    *reinterpret_cast<uint16_t*>(buffer.data()) = htobe16(wire_reply.ByteSize());
+    ASSERT_TRUE(wire_reply.SerializeToArray(buffer.data() + sizeof(uint16_t), buffer.size() - sizeof(uint16_t)));
+
+    transport->add_server_message(buffer);
+
+    wire_request.ParseFromArray(transport->sent_messages.front().data() + sizeof(uint16_t),
+                                transport->sent_messages.front().size() - sizeof(uint16_t));
+
+    transport->sent_messages.pop_front();
+
+    wire_reply.set_id(wire_request.id());
+    wire_reply.set_response(reply.SerializeAsString());
+
+    buffer.resize(wire_reply.ByteSize() + sizeof(uint16_t));
+    *reinterpret_cast<uint16_t*>(buffer.data()) = htobe16(wire_reply.ByteSize());
+    ASSERT_TRUE(wire_reply.SerializeToArray(buffer.data() + sizeof(uint16_t), buffer.size() - sizeof(uint16_t)));
+
+    transport->add_server_message(buffer);
+
+    // Read the first message; this should be queued for later processing...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_FALSE(first_response_called);
+    EXPECT_FALSE(second_response_called);
+
+    // Read the second message; this should be processed immediately...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_FALSE(first_response_called);
+    EXPECT_TRUE(second_response_called);
+
+    // Now, the first message should be ready to be processed...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_TRUE(first_response_called);
+    EXPECT_TRUE(second_response_called);
 }
