@@ -38,8 +38,6 @@ struct GLMark2Test : testing::Test, mtf::AsyncServerRunner
     enum ResultFileType {raw, json};
     virtual void run_glmark2(char const* output_filename, ResultFileType file_type)
     {
-        unsetenv("MIR_CLIENT_PLATFORM_PATH");
-
         auto const cmd = "MIR_SOCKET=" + new_connection() + " glmark2-es2-mir --fullscreen";
         mir::test::Popen p(cmd);
        
