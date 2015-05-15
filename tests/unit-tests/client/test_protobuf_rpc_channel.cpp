@@ -512,3 +512,112 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_not_requested)
     EXPECT_TRUE(first_response_called);
     EXPECT_TRUE(second_response_called);
 }
+
+TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
+{
+    using namespace ::testing;
+
+    auto typed_channel = std::dynamic_pointer_cast<mclr::MirProtobufRpcChannel>(channel);
+
+    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mir::protobuf::DRMMagic drm_request;
+    mir::protobuf::DRMAuthMagicStatus drm_reply;
+
+    mir::protobuf::Buffer buffer_reply;
+    mir::protobuf::BufferRequest buffer_request;
+
+    bool first_response_called{false};
+    bool second_response_called{false};
+
+
+    channel_user.exchange_buffer(nullptr,
+                                 &buffer_request,
+                                 &buffer_reply,
+                                 google::protobuf::NewCallback(&set_flag, &first_response_called));
+
+    typed_channel->process_next_request_first();
+    channel_user.drm_auth_magic(nullptr,
+                                &drm_request,
+                                &drm_reply,
+                                google::protobuf::NewCallback(&set_flag, &second_response_called));
+
+
+    std::initializer_list<mir::Fd> fds = {mir::Fd{open("/dev/null", O_RDONLY)},
+                                          mir::Fd{open("/dev/null", O_RDONLY)},
+                                          mir::Fd{open("/dev/null", O_RDONLY)}};
+
+    {
+        mir::protobuf::Buffer reply_message;
+
+        for (auto fd : fds)
+            reply_message.add_fd(fd);
+        reply_message.set_fds_on_side_channel(fds.size());
+
+        mir::protobuf::wire::Invocation request;
+        mir::protobuf::wire::Result reply;
+
+        request.ParseFromArray(transport->sent_messages.front().data() + sizeof(uint16_t),
+                               transport->sent_messages.front().size() - sizeof(uint16_t));
+
+        transport->sent_messages.pop_front();
+
+        reply.set_id(request.id());
+        reply.set_response(reply_message.SerializeAsString());
+
+        ASSERT_TRUE(reply.has_id());
+        ASSERT_TRUE(reply.has_response());
+
+        std::vector<uint8_t> buffer(reply.ByteSize() + sizeof(uint16_t));
+        *reinterpret_cast<uint16_t*>(buffer.data()) = htobe16(reply.ByteSize());
+        ASSERT_TRUE(reply.SerializeToArray(buffer.data() + sizeof(uint16_t), buffer.size() - sizeof(uint16_t)));
+
+        transport->add_server_message(buffer);
+
+        // Because our protocol is a bit silly...
+        std::vector<uint8_t> dummy = {1};
+        transport->add_server_message(dummy, fds);
+    }
+
+    {
+        mir::protobuf::DRMAuthMagicStatus reply;
+
+        mir::protobuf::wire::Invocation wire_request;
+        mir::protobuf::wire::Result wire_reply;
+
+        wire_request.ParseFromArray(transport->sent_messages.front().data() + sizeof(uint16_t),
+                                    transport->sent_messages.front().size() - sizeof(uint16_t));
+
+        transport->sent_messages.pop_front();
+
+        wire_reply.set_id(wire_request.id());
+        wire_reply.set_response(reply.SerializeAsString());
+
+        std::vector<uint8_t> buffer(wire_reply.ByteSize() + sizeof(uint16_t));
+        *reinterpret_cast<uint16_t*>(buffer.data()) = htobe16(wire_reply.ByteSize());
+        ASSERT_TRUE(wire_reply.SerializeToArray(buffer.data() + sizeof(uint16_t), buffer.size() - sizeof(uint16_t)));
+
+        transport->add_server_message(buffer);
+    }
+
+    // Read the first message; this should be queued for later processing...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_FALSE(first_response_called);
+    EXPECT_FALSE(second_response_called);
+
+    // Read the second message; this should be processed immediately...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_FALSE(first_response_called);
+    EXPECT_TRUE(second_response_called);
+
+    // Now, the first message should be ready to be processed...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_TRUE(first_response_called);
+    EXPECT_TRUE(second_response_called);
+}
+

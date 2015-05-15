@@ -97,7 +97,7 @@ private:
     detail::SendBuffer header_bytes;
     detail::SendBuffer body_bytes;
 
-    void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
+    void receive_file_descriptors(google::protobuf::Message* response);
     template<class MessageType>
     void receive_any_file_descriptors_for(MessageType* response);
     void send_message(mir::protobuf::wire::Invocation const& body,

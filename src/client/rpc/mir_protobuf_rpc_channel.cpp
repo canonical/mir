@@ -107,8 +107,7 @@ void mclr::MirProtobufRpcChannel::receive_any_file_descriptors_for(MessageType* 
     }
 }
 
-void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
-    google::protobuf::Closure* complete)
+void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Message* response)
 {
     auto const message_type = response->GetTypeName();
 
@@ -165,7 +164,6 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
     receive_any_file_descriptors_for(platform);
     receive_any_file_descriptors_for(socket_fd);
     receive_any_file_descriptors_for(platform_operation_message);
-    complete->Run();
 }
 
 void mclr::MirProtobufRpcChannel::CallMethod(
@@ -195,10 +193,7 @@ void mclr::MirProtobufRpcChannel::CallMethod(
 
     rpc_report->invocation_requested(invocation);
 
-    std::shared_ptr<google::protobuf::Closure> callback(
-        google::protobuf::NewPermanentCallback(this, &MirProtobufRpcChannel::receive_file_descriptors, response, complete));
-
-    pending_calls.save_completion_details(invocation, response, callback);
+    pending_calls.save_completion_details(invocation, response, complete);
 
     if (prioritise_next_request)
     {
@@ -354,6 +349,10 @@ void mclr::MirProtobufRpcChannel::on_data_available()
 
         if (result->has_id())
         {
+            auto result_message = pending_calls.message_for_result(*result);
+            result_message->ParseFromString(result->response());
+            receive_file_descriptors(result_message);
+
             if (id_to_wait_for)
             {
                 if (result->id() == id_to_wait_for.value())
