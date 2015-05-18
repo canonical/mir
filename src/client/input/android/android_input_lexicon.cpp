@@ -71,7 +71,7 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
                            mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, i);
 
                     mir_event.motion.pointer_coordinates[i].tool_type =
-                           static_cast<MirMotionToolType>(mev->getToolType(i));
+                        mia::mir_tool_type_from_android(mev->getToolType(i));
             }
             break;
         }

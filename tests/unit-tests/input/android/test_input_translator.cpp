@@ -279,7 +279,7 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
     pointer.orientation = 18.0f;
     pointer.vscroll = 19.0f;
     pointer.hscroll = 20.0f;
-    pointer.tool_type = mir_motion_tool_type_finger;
+    pointer.tool_type = mir_touch_tooltype_finger;
 
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_X, pointer.x);
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_Y, pointer.y);
@@ -291,7 +291,7 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, pointer.vscroll);
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, pointer.hscroll);
     properties[0].id = pointer.id;
-    properties[0].toolType = pointer.tool_type;
+    properties[0].toolType = AMOTION_EVENT_TOOL_TYPE_FINGER;
     InSequence seq;
     EXPECT_CALL(dispatcher, dispatch(mt::MirTouchEventMatches(expected))).Times(1);
 
