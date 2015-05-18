@@ -39,7 +39,7 @@ namespace
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirOrientation orientation)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_orientation;
@@ -50,7 +50,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirOrientation o
 
 mir::EventUPtr mev::make_event(MirPromptSessionState state)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_prompt_session_state_change;
@@ -60,7 +60,7 @@ mir::EventUPtr mev::make_event(MirPromptSessionState state)
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, geom::Size const& size)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_resize;
@@ -72,7 +72,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, geom::Size const
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_surface;
@@ -84,7 +84,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_close_surface;
@@ -127,7 +127,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_key;
@@ -146,7 +146,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_motion;
@@ -255,7 +255,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_motion;
@@ -280,7 +280,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, xkb_rule_names const& rules)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_keymap;

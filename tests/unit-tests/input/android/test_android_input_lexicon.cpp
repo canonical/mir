@@ -202,7 +202,7 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
 
     auto mir_ev = mia::Lexicon::translate(android_motion_ev);
 
-        EXPECT_EQ(mir_event_type_input, mir_event_get_type(mir_ev.get()));
+    EXPECT_EQ(mir_event_type_input, mir_event_get_type(mir_ev.get()));
     auto iev = mir_event_get_input_event(mir_ev.get());
 
     // Common event properties
@@ -223,6 +223,6 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
         EXPECT_EQ(size[i], mir_touch_event_axis_value(tev, i, mir_touch_axis_size));
         EXPECT_EQ(pressure[i], mir_touch_event_axis_value(tev, i, mir_touch_axis_pressure));
     }
-    
+
     delete android_motion_ev;
 }
