@@ -424,18 +424,24 @@ bool mir_pointer_event_button_state(MirPointerEvent const* pev,
    switch (button)
    {
    case mir_pointer_button_primary:
-       return old_mev.button_state & mir_motion_button_primary;
+       return old_mev.buttons & mir_pointer_button_primary;
    case mir_pointer_button_secondary:
-       return old_mev.button_state & mir_motion_button_secondary;
+       return old_mev.buttons & mir_pointer_button_secondary;
    case mir_pointer_button_tertiary:
-       return old_mev.button_state & mir_motion_button_tertiary;
+       return old_mev.buttons & mir_pointer_button_tertiary;
    case mir_pointer_button_back:
-       return old_mev.button_state & mir_motion_button_back;
+       return old_mev.buttons & mir_pointer_button_back;
    case mir_pointer_button_forward:
-       return old_mev.button_state & mir_motion_button_forward;
+       return old_mev.buttons & mir_pointer_button_forward;
    default:
        return false;
    }
+}
+
+MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* pev)
+{
+   auto const& old_mev = old_mev_from_new(pev);
+   return old_mev.buttons;
 }
 
 float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis axis)

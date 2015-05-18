@@ -100,3 +100,37 @@ int32_t mia::android_keyboard_action_from_mir(int32_t& repeat_count_out, MirKeyb
         return AKEY_EVENT_ACTION_UP;
     }
 }
+
+MirPointerButtons mia::mir_pointer_buttons_from_android(int32_t android_state)
+{
+    MirPointerButtons buttons = 0;
+    
+    if (android_state & AMOTION_EVENT_BUTTON_PRIMARY)
+        buttons |= mir_pointer_button_primary;
+    if (android_state & AMOTION_EVENT_BUTTON_SECONDARY)
+        buttons |= mir_pointer_button_secondary;
+    if (android_state & AMOTION_EVENT_BUTTON_TERTIARY)
+        buttons |= mir_pointer_button_tertiary;
+    if (android_state & AMOTION_EVENT_BUTTON_BACK)
+        buttons |= mir_pointer_button_back;
+    if (android_state & AMOTION_EVENT_BUTTON_FORWARD)
+        buttons |= mir_pointer_button_forward;
+
+    return buttons;
+}
+
+int32_t mia::android_pointer_buttons_from_mir(MirPointerButtons buttons)
+{
+    int32_t android_state = 0;
+    if (buttons & mir_pointer_button_primary)
+        android_state |= AMOTION_EVENT_BUTTON_PRIMARY;
+    if (buttons & mir_pointer_button_secondary)
+        android_state |= AMOTION_EVENT_BUTTON_SECONDARY;
+    if (buttons & mir_pointer_button_tertiary)
+        android_state |= AMOTION_EVENT_BUTTON_TERTIARY;
+    if (buttons & mir_pointer_button_back)
+        android_state |= AMOTION_EVENT_BUTTON_BACK;
+    if (buttons & mir_pointer_button_forward)
+        android_state |= AMOTION_EVENT_BUTTON_FORWARD;
+    return android_state;
+}

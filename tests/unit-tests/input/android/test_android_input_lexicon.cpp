@@ -78,7 +78,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     const int32_t flags = 4;
     const int32_t edge_flags = 5;
     const int32_t meta_state = 6;
-    const int32_t button_state = 7;
+    const int32_t button_state = 0;
     const float x_offset = 8;
     const float y_offset = 9;
     const float x_precision = 10;
@@ -134,7 +134,6 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
 
     auto mir_motion_ev = &mir_ev.motion;
 
-    EXPECT_EQ(mir_motion_ev->button_state, button_state);
     EXPECT_EQ(mir_motion_ev->event_time, event_time);
 
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
@@ -170,7 +169,6 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     const int32_t flags = 4;
     const int32_t edge_flags = 5;
     const int32_t meta_state = 6;
-    const int32_t button_state = 7;
     const float x_offset = 8;
     const float y_offset = 9;
     const float x_precision = 10;
@@ -223,7 +221,7 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     }
 
     android_motion_ev->initialize(device_id, source_id, action, flags,
-                                  edge_flags, meta_state, button_state,
+                                  edge_flags, meta_state, 0,
                                   x_offset, y_offset, x_precision, y_precision,
                                   down_time, event_time, pointer_count,
                                   pointer_properties, pointer_coords);
@@ -241,7 +239,6 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
 
     auto mir_motion_ev = &mir_ev.motion;
 
-    EXPECT_EQ(mir_motion_ev->button_state, button_state);
     EXPECT_EQ(mir_motion_ev->event_time, event_time);
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
 
