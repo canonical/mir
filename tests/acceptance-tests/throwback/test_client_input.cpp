@@ -303,7 +303,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 
     InputClient client{new_connection(), test_client_name_1};
 
-    // The cursor starts at (0, 0).
+    EXPECT_CALL(client.handler, handle_input(mt::PointerEnterEvent()));
     EXPECT_CALL(client.handler, handle_input(mt::ButtonDownEvent(0, 0)))
         .WillOnce(mt::WakeUp(&client.all_events_received));
 

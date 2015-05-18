@@ -120,6 +120,7 @@ MIRPLATFORM_7 {
     mir::options::debug_opt*;
     mir::options::nbuffers_opt*;
     mir::options::enable_input_opt*;
+    mir::options::enable_key_repeat_opt*;
     mir::options::fatal_abort_opt*;
     mir::options::frontend_threads_opt*;
     mir::options::glog*;

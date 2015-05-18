@@ -25,6 +25,7 @@
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
+#include "mir_test_framework/temporary_environment_value.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/spin_wait.h"
 #include "mir_test/event_matchers.h"
@@ -158,18 +159,50 @@ TEST_F(TestClientInputNewEventFilter, event_filter_may_consume_events)
 {
     using namespace ::testing;
 
-    InSequence seq;
-    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(Return(true));
-    EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(
-            DoAll(mt::WakeUp(&all_events_received), Return(true)));
+    EXPECT_CALL(*mock_event_filter, handle(mt::InputConfigurationEvent())).Times(0).WillRepeatedly(Return(false));
 
-    // Since we handle the events in the filter the client should not receive them.
-    EXPECT_CALL(handler, handle_input(_)).Times(0);
+    InSequence seq;
+    EXPECT_CALL(*mock_event_filter, handle(mt::KeyDownEvent())).WillOnce(Return(true));
+    EXPECT_CALL(*mock_event_filter, handle(mt::KeyUpEvent())).WillOnce(
+            DoAll(mt::WakeUp(&all_events_received), Return(true)));
+    EXPECT_CALL(*mock_event_filter, handle(_)).Times(AnyNumber());
+
+    EXPECT_CALL(*mock_event_filter, handle(mt::InputConfigurationEvent())).Times(0).WillRepeatedly(Return(false));
 
     ready_to_accept_events.wait_for_at_most_seconds(5);
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
+
+    all_events_received.wait_for_at_most_seconds(10);
+}
+
+namespace
+{
+struct TestClientInputKeyRepeat : public TestClientInputNew
+{
+    TestClientInputKeyRepeat()
+        : enable_key_repeat("MIR_SERVER_ENABLE_KEY_REPEAT", "true")
+    {
+    }
+    mtf::TemporaryEnvironmentValue enable_key_repeat;
+};
+}
+
+TEST_F(TestClientInputKeyRepeat, keys_are_repeated_to_clients)
+{
+    using namespace testing;
+
+    InSequence seq;
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_R))));
+    EXPECT_CALL(handler, handle_input(AllOf(mt::KeyRepeatEvent(),
+        mt::KeyOfSymbol(XKB_KEY_Shift_R)))).WillOnce(mt::WakeUp(&all_events_received));
+    // Extra repeats before we shut down.
+    EXPECT_CALL(handler, handle_input(mt::KeyRepeatEvent())).Times(AnyNumber());
+
+    ready_to_accept_events.wait_for_at_most_seconds(5);
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
 
     all_events_received.wait_for_at_most_seconds(10);
 }

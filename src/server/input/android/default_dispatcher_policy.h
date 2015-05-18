@@ -38,11 +38,11 @@ namespace android
 {
 //class EventFilter;
 
-class EventFilterDispatcherPolicy : public droidinput::InputDispatcherPolicyInterface
+class DefaultDispatcherPolicy : public droidinput::InputDispatcherPolicyInterface
 {
 public:
-    EventFilterDispatcherPolicy(std::shared_ptr<EventFilter> const& event_filter, bool key_repeat_enabled);
-    virtual ~EventFilterDispatcherPolicy() {}
+    DefaultDispatcherPolicy();
+    virtual ~DefaultDispatcherPolicy() {}
 
     void notifyConfigurationChanged(std::chrono::nanoseconds when);
     std::chrono::nanoseconds notifyANR(droidinput::sp<droidinput::InputApplicationHandle> const& inputApplicationHandle,
@@ -68,11 +68,8 @@ public:
     bool checkInjectEventsPermissionNonReentrant(int32_t injectorPid, int32_t injectorUid);
 
 protected:
-    EventFilterDispatcherPolicy(const EventFilterDispatcherPolicy&) = delete;
-    EventFilterDispatcherPolicy& operator=(const EventFilterDispatcherPolicy&) = delete;
-private:
-    std::shared_ptr<EventFilter> event_filter;
-    bool key_repeat_enabled;
+    DefaultDispatcherPolicy(const DefaultDispatcherPolicy&) = delete;
+    DefaultDispatcherPolicy& operator=(const DefaultDispatcherPolicy&) = delete;
 };
 
 }

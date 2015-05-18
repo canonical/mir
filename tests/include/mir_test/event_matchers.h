@@ -277,6 +277,22 @@ MATCHER_P2(TouchEvent, x, y, "")
     return true;
 }
 
+MATCHER_P2(TouchUpEvent, x, y, "")
+{
+    auto tev = maybe_touch_event(to_address(arg));
+    if (tev == nullptr)
+        return false;
+
+    if (mir_touch_event_action(tev, 0) != mir_touch_action_up)
+        return false;
+    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) != x)
+        return false;
+    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) != y)
+        return false;
+
+    return true;
+}
+
 MATCHER_P2(PointerEventWithPosition, x, y, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
@@ -386,12 +402,21 @@ MATCHER_P(OrientationEvent, direction, "")
     return true;
 }
 
+
 MATCHER_P(InputDeviceIdMatches, device_id, "")
 {
     if (mir_event_get_type(to_address(arg)) != mir_event_type_input)
         return false;
     auto input_event = mir_event_get_input_event(to_address(arg));
     return mir_input_event_get_device_id(input_event) == device_id;
+}
+
+MATCHER(InputConfigurationEvent, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_input_configuration)
+        return true;
+    return false;
 }
 
 MATCHER(InputDeviceConfigurationChangedEvent, "")
