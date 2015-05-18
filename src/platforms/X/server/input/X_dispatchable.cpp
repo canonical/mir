@@ -75,15 +75,19 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
             event.key.device_id = 0;
             event.key.source_id = 0;
             event.key.action = xev.type == KeyPress ?
-                                   mir_key_action_down : mir_key_action_up;
+                                   mir_keyboard_action_down : mir_keyboard_action_up;
             event.key.modifiers = mir_input_event_modifier_none;
             event.key.key_code = keysym;
             event.key.scan_code = xkev.keycode-8;
-            event.key.repeat_count = 0;
 
             // TODO: read time from xkev
-            event.key.event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                       std::chrono::system_clock::now().time_since_epoch()).count();
+//            event.key.event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+//                                       std::chrono::system_clock::now().time_since_epoch()).count();
+
+            std::chrono::time_point<std::chrono::system_clock> tp;
+            std::chrono::milliseconds msec(xkev.time);
+            tp += msec;
+            event.key.event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch());
 
             for (int i=0; i<count; i++)
                 mir::log_info("buffer[%d]='%c', key_code=%d, scan_code=%d, event_time=%" PRId64, i, str[i], keysym, xkev.keycode-8, event.key.event_time);

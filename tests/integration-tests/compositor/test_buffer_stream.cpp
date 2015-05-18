@@ -335,8 +335,7 @@ void snapshot_loop(mc::BufferStream &stream,
 {
     while (!done.load())
     {
-        auto out_region = stream.lock_snapshot_buffer();
-        ASSERT_NE(nullptr, out_region);
+        stream.with_most_recent_buffer_do([](mg::Buffer&){});
         std::this_thread::yield();
     }
 }

@@ -3589,7 +3589,7 @@ Thomas Voss
     </SUMMARY>
     <BODY>
       <p>
-        There are two acceptable formats for initializer lists:
+        There are three acceptable formats for initializer lists:
       </p>
       <CODE_SNIPPET>
         // When it all fits on one line:
@@ -3604,6 +3604,21 @@ Thomas Voss
         MyClass::MyClass(int var) :
             some_var_(var),            // 4 space indent
             some_other_var_(var + 1)
+        {
+            ...
+            do_something();
+            ...
+        }
+      </CODE_SNIPPET>
+      <p>
+        or
+      </p>
+      <CODE_SNIPPET>
+        // When it requires multiple lines, indent 4 spaces, putting the colon on
+        // the first initializer line and commas at the end of the line.
+        MyClass::MyClass(int var)
+            : some_var_(var),            // 4 space indent
+              some_other_var_(var + 1)
         {
             ...
             do_something();

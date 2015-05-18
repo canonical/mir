@@ -26,7 +26,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/compositor/compositor.h"
-#include "mir/events/event_private.h"
 
 #include <linux/input.h>
 
@@ -80,17 +79,18 @@ void me::WindowManager::force_redraw()
 namespace
 {
 
-mir::geometry::Point average_pointer(MirMotionEvent const& motion)
+mir::geometry::Point average_pointer(MirTouchEvent const* tev)
 {
     using namespace mir;
     using namespace geometry;
 
-    int x = 0, y = 0, count = static_cast<int>(motion.pointer_count);
+    int x = 0, y = 0;
+    int count = mir_touch_event_point_count(tev);
 
     for (int i = 0; i < count; i++)
     {
-        x += motion.pointer_coordinates[i].x;
-        y += motion.pointer_coordinates[i].y;
+        x += mir_touch_event_axis_value(tev, i, mir_touch_axis_x);
+        y += mir_touch_event_axis_value(tev, i, mir_touch_axis_y);
     }
 
     x /= count;
@@ -99,20 +99,20 @@ mir::geometry::Point average_pointer(MirMotionEvent const& motion)
     return Point{x, y};
 }
 
-float measure_pinch(MirMotionEvent const& motion,
+float measure_pinch(MirTouchEvent const* tev,
                     mir::geometry::Displacement& dir)
 {
-    int count = static_cast<int>(motion.pointer_count);
+    int count = mir_touch_event_point_count(tev);
     int max = 0;
 
     for (int i = 0; i < count; i++)
     {
         for (int j = 0; j < i; j++)
         {
-            int dx = motion.pointer_coordinates[i].x -
-                     motion.pointer_coordinates[j].x;
-            int dy = motion.pointer_coordinates[i].y -
-                     motion.pointer_coordinates[j].y;
+            int dx = mir_touch_event_axis_value(tev, i, mir_touch_axis_x) -
+                mir_touch_event_axis_value(tev, j, mir_touch_axis_x);
+            int dy = mir_touch_event_axis_value(tev, i, mir_touch_axis_y) -
+                mir_touch_event_axis_value(tev, j, mir_touch_axis_y);
 
             int sqr = dx*dx + dy*dy;
 
@@ -196,13 +196,16 @@ void me::WindowManager::resize(scene::Surface& surf,
     surf.resize({right-left, bottom-top});
 }
 
-bool me::WindowManager::handle_key_event(MirEvent const& event)
+bool me::WindowManager::handle_key_event(MirKeyboardEvent const* kev)
 {
     // TODO: Fix android configuration and remove static hack ~racarr
     static bool display_off = false;
 
-    auto modifiers = event.key.modifiers;
-    auto scan_code = event.key.scan_code;
+    if (mir_keyboard_event_action(kev) != mir_keyboard_action_down)
+        return false;
+
+    auto modifiers = mir_keyboard_event_modifiers(kev);
+    auto scan_code = mir_keyboard_event_scan_code(kev);
     
     if (modifiers & mir_input_event_modifier_alt &&
         scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
@@ -369,21 +372,25 @@ bool me::WindowManager::handle_key_event(MirEvent const& event)
     return false;
 }
 
-bool me::WindowManager::handle_motion_event(MirEvent const& event)
+
+bool me::WindowManager::handle_pointer_event(MirPointerEvent const* pev)
 {
     bool handled = false;
-    geometry::Point cursor = average_pointer(event.motion);
 
-    // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
-    MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & ~0xff00);
-    auto const& modifiers = event.motion.modifiers;
+    geometry::Point cursor{mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
+                           mir_pointer_event_axis_value(pev, mir_pointer_axis_y)};
+    auto action = mir_pointer_event_action(pev);
+    auto modifiers = mir_pointer_event_modifiers(pev);
+    auto vscroll = mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll);
+    auto primary_button_pressed = mir_pointer_event_button_state(pev, mir_pointer_button_primary);
+    auto tertiary_button_pressed = mir_pointer_event_button_state(pev, mir_pointer_button_tertiary);
 
     float new_zoom_mag = 0.0f;  // zero means unchanged
 
    if (modifiers & mir_input_event_modifier_meta &&
-        action == mir_motion_action_scroll)
-    {
-        zoom_exponent += event.motion.pointer_coordinates[0].vscroll;
+       action == mir_pointer_action_motion)
+   {
+        zoom_exponent += vscroll;
 
         // Negative exponents do work too, but disable them until
         // there's a clear edge to the desktop.
@@ -405,8 +412,87 @@ bool me::WindowManager::handle_motion_event(MirEvent const& event)
     if (zoom_exponent || new_zoom_mag)
         force_redraw();
 
-    int fingers = static_cast<int>(event.motion.pointer_count);
-    if (action == mir_motion_action_down || fingers > max_fingers)
+    auto const surf = focus_controller->focused_surface();
+    if (surf &&
+        (modifiers & mir_input_event_modifier_alt) && (primary_button_pressed || tertiary_button_pressed))
+    {
+        // Start of a gesture: When the latest finger/button goes down
+        if (action == mir_pointer_action_button_down)
+        {
+            click = cursor;
+            save_edges(*surf, click);
+            handled = true;
+        }
+        else if (action == mir_pointer_action_motion)
+        {
+            geometry::Displacement drag = cursor - old_cursor;
+
+            if (tertiary_button_pressed)
+            {  // Resize by mouse middle button
+                resize(*surf, cursor);
+            }
+            else
+            {
+                surf->move_to(old_pos + drag);
+            }
+
+            handled = true;
+        }
+
+        old_pos = surf->top_left();
+        old_size = surf->size();
+    }
+
+    if (surf && 
+        (modifiers & mir_input_event_modifier_alt) &&
+        action == mir_pointer_action_motion &&
+        vscroll)
+    {
+        float alpha = surf->alpha();
+        alpha += 0.1f * vscroll;
+        if (alpha < 0.0f)
+            alpha = 0.0f;
+        else if (alpha > 1.0f)
+            alpha = 1.0f;
+        surf->set_alpha(alpha);
+        handled = true;
+    }
+
+    old_cursor = cursor;
+    return handled;
+}
+
+namespace
+{
+bool any_touches_went_down(MirTouchEvent const* tev)
+{
+    auto count = mir_touch_event_point_count(tev);
+    for (unsigned i = 0; i < count; i++)
+    {
+        if (mir_touch_event_action(tev, i) == mir_touch_action_down)
+            return true;
+    }
+    return false;
+}
+bool last_touch_released(MirTouchEvent const* tev)
+{
+    auto count = mir_touch_event_point_count(tev);
+    if (count > 1)
+        return false;
+    return mir_touch_event_action(tev, 0) == mir_touch_action_up;
+}
+}
+
+bool me::WindowManager::handle_touch_event(MirTouchEvent const* tev)
+{
+    bool handled = false;
+    geometry::Point cursor = average_pointer(tev);
+
+    auto const& modifiers = mir_touch_event_modifiers(tev);
+
+    int fingers = mir_touch_event_point_count(tev);
+
+    if (fingers > max_fingers)
         max_fingers = fingers;
 
     auto const surf = focus_controller->focused_surface();
@@ -416,30 +502,20 @@ bool me::WindowManager::handle_motion_event(MirEvent const& event)
     {
         geometry::Displacement pinch_dir;
         auto pinch_diam =
-            measure_pinch(event.motion, pinch_dir);
+            measure_pinch(tev, pinch_dir);
 
         // Start of a gesture: When the latest finger/button goes down
-        if (action == mir_motion_action_down ||
-            action == mir_motion_action_pointer_down)
+        if (any_touches_went_down(tev))
         {
             click = cursor;
             save_edges(*surf, click);
             handled = true;
         }
-        else if (event.motion.action == mir_motion_action_move &&
-                 max_fingers <= 3)  // Avoid accidental movement
+        else if(max_fingers <= 3)  // Avoid accidental movement
         {
             geometry::Displacement drag = cursor - old_cursor;
 
-            if (event.motion.button_state ==
-                mir_motion_button_tertiary)
-            {  // Resize by mouse middle button
-                resize(*surf, cursor);
-            }
-            else
-            { // Move surface (by mouse or 3 fingers)
-                surf->move_to(old_pos + drag);
-            }
+            surf->move_to(old_pos + drag);
 
             if (fingers == 3)
             {  // Resize by pinch/zoom
@@ -469,25 +545,15 @@ bool me::WindowManager::handle_motion_event(MirEvent const& event)
 
             handled = true;
         }
-        else if (action == mir_motion_action_scroll)
-        {
-            float alpha = surf->alpha();
-            alpha += 0.1f *
-                     event.motion.pointer_coordinates[0].vscroll;
-            if (alpha < 0.0f)
-                alpha = 0.0f;
-            else if (alpha > 1.0f)
-                alpha = 1.0f;
-            surf->set_alpha(alpha);
-            handled = true;
-        }
 
         old_pos = surf->top_left();
         old_size = surf->size();
         old_pinch_diam = pinch_diam;
     }
 
-    if (max_fingers == 4 && action == mir_motion_action_up)
+    auto gesture_ended = last_touch_released(tev);
+
+    if (max_fingers == 4 && gesture_ended)
     { // Four fingers released
         geometry::Displacement dir = cursor - click;
         if (abs(dir.dx.as_int()) >= min_swipe_distance)
@@ -499,7 +565,7 @@ bool me::WindowManager::handle_motion_event(MirEvent const& event)
         }
     }
 
-    if (fingers == 1 && action == mir_motion_action_up)
+    if (fingers == 1 && gesture_ended)
         max_fingers = 0;
 
     old_cursor = cursor;
@@ -512,15 +578,26 @@ bool me::WindowManager::handle(MirEvent const& event)
     assert(display);
     assert(compositor);
 
-    if (event.key.type == mir_event_type_key &&
-        event.key.action == mir_key_action_down)
+    if (mir_event_get_type(&event) != mir_event_type_input)
+        return false;
+    auto iev = mir_event_get_input_event(&event);
+    auto input_type = mir_input_event_get_type(iev);
+    
+    if (input_type == mir_input_event_type_key)
     {
-        return handle_key_event(event);
+        return handle_key_event(mir_input_event_get_keyboard_event(iev));
     }
-    else if (event.type == mir_event_type_motion &&
+    else if (input_type == mir_input_event_type_pointer &&
              focus_controller)
     {
-        return handle_motion_event(event);
+        return handle_pointer_event(mir_input_event_get_pointer_event(iev));
     }
+    else if (input_type == mir_input_event_type_touch &&
+             focus_controller)
+    {
+        return handle_touch_event(mir_input_event_get_touch_event(iev));
+    }
+
+
     return false;
 }

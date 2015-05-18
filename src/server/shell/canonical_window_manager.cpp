@@ -196,11 +196,15 @@ class SurfaceReadyObserver : public ms::NullSurfaceObserver,
     public std::enable_shared_from_this<SurfaceReadyObserver>
 {
 public:
+    using ActivateFunction = std::function<void(
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& surface)>;
+
     SurfaceReadyObserver(
-        msh::CanonicalWindowManagerPolicy::Tools* const focus_controller,
+        ActivateFunction const& activate,
         std::shared_ptr<ms::Session> const& session,
         std::shared_ptr<ms::Surface> const& surface) :
-        focus_controller{focus_controller},
+        activate{activate},
         session{session},
         surface{surface}
     {
@@ -211,12 +215,12 @@ private:
     {
         if (auto const s = surface.lock())
         {
-            focus_controller->set_focus_to(session.lock(), s);
+            activate(session.lock(), s);
             s->remove_observer(shared_from_this());
         }
     }
 
-    msh::CanonicalWindowManagerPolicy::Tools* const focus_controller;
+    ActivateFunction const activate;
     std::weak_ptr<ms::Session> const session;
     std::weak_ptr<ms::Surface> const surface;
 };
@@ -243,8 +247,14 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
         // TODO There's currently no way to insert surfaces into an active (or inactive)
         // TODO window tree while keeping the order stable or consistent with spec.
         // TODO Nor is there a way to update the "default surface" when appropriate!!
-        surface->add_observer(std::make_shared<SurfaceReadyObserver>(tools, session, surface));
-        active_surface_ = surface;
+        surface->add_observer(std::make_shared<SurfaceReadyObserver>(
+            [this](std::shared_ptr<scene::Session> const& /*session*/,
+                   std::shared_ptr<scene::Surface> const& surface)
+                {
+                    select_active_surface(surface);
+                },
+            session,
+            surface));
         break;
 
     case mir_surface_type_gloss:
@@ -317,12 +327,11 @@ void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms
         }
     }
 
-
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
+        active_surface_.reset();
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        select_active_surface(tools->focused_surface());
     }
 }
 
@@ -550,6 +559,9 @@ void msh::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms
 {
     if (!surface)
     {
+        if (active_surface_.lock())
+            tools->set_focus_to({}, {});
+
         active_surface_.reset();
         return;
     }
