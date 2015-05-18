@@ -253,6 +253,8 @@ MIR_SERVER_32 {
     mir::shell::ShellWrapper::start_prompt_session_for*;
     mir::shell::ShellWrapper::stop_prompt_session*;
     mir::shell::ShellWrapper::surface_at*;
+    mir::shell::SurfaceReadyObserver::SurfaceReadyObserver*;
+    mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
     mir::shell::WindowManager::operator*;
     mir::shell::WindowManager::?WindowManager*;
     mir::shell::WindowManager::WindowManager*;
@@ -346,6 +348,7 @@ MIR_SERVER_32 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::start_prompt_session_for*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::stop_prompt_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::surface_at*;
+    non-virtual?thunk?to?mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
     non-virtual?thunk?to?mir::shell::WindowManager::?WindowManager*;
     non-virtual?thunk?to?mir::time::Alarm::?Alarm*;
     non-virtual?thunk?to?mir::time::AlarmFactory::?AlarmFactory*;
@@ -403,6 +406,7 @@ MIR_SERVER_32 {
     typeinfo?for?mir::shell::InputTargeter;
     typeinfo?for?mir::shell::Shell;
     typeinfo?for?mir::shell::ShellWrapper;
+    typeinfo?for?mir::shell::SurfaceReadyObserver;
     typeinfo?for?mir::shell::WindowManager;
     typeinfo?for?mir::time::Alarm;
     typeinfo?for?mir::time::AlarmFactory;
@@ -460,6 +464,7 @@ MIR_SERVER_32 {
     vtable?for?mir::shell::InputTargeter;
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellWrapper;
+    vtable?for?mir::shell::SurfaceReadyObserver;
     vtable?for?mir::shell::WindowManager;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::AlarmFactory;
