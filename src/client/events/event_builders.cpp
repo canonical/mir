@@ -92,25 +92,6 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
     return make_event_uptr(e);
 }
 
-mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    MirKeyboardAction action, xkb_keysym_t key_code,
-    int scan_code, MirInputEventModifiers modifiers)
-{
-    MirEvent *e = new MirEvent;
-    memset(e, 0, sizeof (MirEvent));
-
-    e->type = mir_event_type_key;
-    auto& kev = e->key;
-    kev.device_id = device_id;
-    kev.event_time = timestamp;
-    kev.action = action;
-    kev.key_code = key_code;
-    kev.scan_code = scan_code;
-    kev.modifiers = modifiers;
-
-    return make_event_uptr(e);
-}
-
 namespace
 {
 // Never exposed in old event, so lets avoid leaking it in to a header now.
@@ -140,6 +121,26 @@ enum
 
     AINPUT_SOURCE_ANY = 0xffffff00
 };
+}
+
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    MirKeyboardAction action, xkb_keysym_t key_code,
+    int scan_code, MirInputEventModifiers modifiers)
+{
+    MirEvent *e = new MirEvent;
+    memset(e, 0, sizeof (MirEvent));
+
+    e->type = mir_event_type_key;
+    auto& kev = e->key;
+    kev.device_id = device_id;
+    kev.source_id = AINPUT_SOURCE_KEYBOARD;
+    kev.event_time = timestamp;
+    kev.action = action;
+    kev.key_code = key_code;
+    kev.scan_code = scan_code;
+    kev.modifiers = modifiers;
+
+    return make_event_uptr(e);
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -264,7 +265,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     mev.modifiers = modifiers;
     mev.source_id = AINPUT_SOURCE_MOUSE;
     mev.buttons = buttons_pressed;
-    
+
     mev.action = old_action_from_pointer_action(action, count_buttons(buttons_pressed));
 
     mev.pointer_count = 1;
