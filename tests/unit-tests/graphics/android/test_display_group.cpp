@@ -39,7 +39,6 @@ struct StubConfigurableDB : mga::ConfigurableDisplayBuffer
     void gl_swap_buffers() override {}
     bool post_renderables_if_optimizable(mg::RenderableList const&) override { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
-    bool uses_alpha() const override { return false; }
     void configure(MirPowerMode, MirOrientation) override {}
     mga::DisplayContents contents() override
     {
