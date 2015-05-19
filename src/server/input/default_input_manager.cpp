@@ -136,7 +136,7 @@ void mi::DefaultInputManager::stop()
 
 void mi::DefaultInputManager::stop_platforms()
 {
-    for (auto const platform : platforms)
+    for (auto const& platform : platforms)
     {
         multiplexer->remove_watch(platform->dispatchable());
         platform->stop();
