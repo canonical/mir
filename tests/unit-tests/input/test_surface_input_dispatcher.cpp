@@ -21,6 +21,7 @@
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
 #include "mir/scene/observer.h"
+#include "mir/thread_safe_list.h"
 
 #include "mir_test/event_matchers.h"
 #include "mir_test/fake_shared.h"
@@ -68,24 +69,18 @@ struct StubInputScene : public mtd::StubInputScene
 {
     std::shared_ptr<mtd::MockSurface> add_surface(geom::Rectangle const& geometry)
     {
-        std::lock_guard<std::mutex> lg(surface_guard);
-        
         auto surface = std::make_shared<MockSurfaceWithGeometry>(geometry);
-        surfaces.push_back(surface);
+        surfaces.add(surface);
 
         observer->surface_added(surface.get());
         
         return surface;
     }
 
-    void remove_surface(std::shared_ptr<mi::Surface> const& surface)
+    void remove_surface(std::shared_ptr<ms::Surface> const& surface)
     {
-        std::lock_guard<std::mutex> lg(surface_guard);
-        auto it = std::find(surfaces.begin(), surfaces.end(), surface);
-        assert(it != surfaces.end());
-        auto surf = *it;
-        surfaces.erase(it);
-        observer->surface_removed(surf.get());
+        surfaces.remove(surface);
+        observer->surface_removed(surface.get());
     }
 
     std::shared_ptr<mtd::MockSurface> add_surface()
@@ -95,20 +90,18 @@ struct StubInputScene : public mtd::StubInputScene
     
     void for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& exec) override
     {
-        std::lock_guard<std::mutex> lg(surface_guard);
-        for (auto const& surface : surfaces)
+	surfaces.for_each([&exec](std::shared_ptr<mi::Surface> const& surface) {
             exec(surface);
+        });
     }
 
     void add_observer(std::shared_ptr<ms::Observer> const& new_observer) override
     {
-        std::lock_guard<std::mutex> lg(surface_guard);
         assert(observer == nullptr);
         observer = new_observer;
-        for (auto const& surface : surfaces)
-        {
-            observer->surface_exists(surface.get());
-        }
+	surfaces.for_each([this](std::shared_ptr<ms::Surface> const& surface) {
+		observer->surface_exists(surface.get());
+        });
     }
     
     void remove_observer(std::weak_ptr<ms::Observer> const& /* remove_observer */) override
@@ -118,8 +111,7 @@ struct StubInputScene : public mtd::StubInputScene
         observer.reset();
     }
     
-    std::mutex surface_guard;
-    std::vector<std::shared_ptr<ms::Surface>> surfaces;
+    mir::ThreadSafeList<std::shared_ptr<ms::Surface>> surfaces;
 
     std::shared_ptr<ms::Observer> observer;
 };
