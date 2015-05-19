@@ -19,6 +19,7 @@
 #include "mir/graphics/renderable.h"
 #include "mir_test_doubles/fake_renderable.h"
 #include "mir_test_doubles/mock_gl.h"
+#include "mir_test_doubles/mock_egl.h"
 #include "playground/demo-shell/demo_renderer.h"
 #include <gtest/gtest.h>
 
@@ -30,6 +31,7 @@ namespace mc = mir::compositor;
 struct DemoRenderer : public testing::Test
 {
     testing::NiceMock<mtd::MockGL> mock_gl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
     geom::Rectangle region{{0, 0}, {100, 100}};
     int const shadow_radius{20};
     int const titlebar_height{5};

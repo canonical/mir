@@ -29,6 +29,7 @@
 #include <mir_test_doubles/mock_buffer_stream.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir_test_doubles/mock_gl.h>
+#include <mir_test_doubles/mock_egl.h>
 
 using testing::SetArgPointee;
 using testing::InSequence;
@@ -142,6 +143,7 @@ public:
     }
 
     testing::NiceMock<mtd::MockGL> mock_gl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     mir::geometry::Rectangle display_area;
     std::shared_ptr<testing::NiceMock<mtd::MockRenderable>> renderable;
