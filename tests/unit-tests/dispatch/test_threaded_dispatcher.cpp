@@ -263,9 +263,9 @@ TEST_F(ThreadedDispatcherDeathTest, exceptions_in_threadpool_trigger_termination
     constexpr char const* exception_msg = "Ducks! Ducks attack!";
 
     auto dispatchable = std::make_shared<mt::TestDispatchable>([]()
-                                                               {
-                                                                   throw std::runtime_error{exception_msg};
-                                                               });
+    {
+        throw std::runtime_error{exception_msg};
+    });
 
     dispatchable->trigger();
 
@@ -286,21 +286,21 @@ TEST_F(ThreadedDispatcherTest, sets_thread_names_appropriately)
     constexpr char const* threadname_base{"Madness Thread"};
 
     auto dispatchable = std::make_shared<mt::TestDispatchable>([dispatched]()
-                                                               {
-                                                                   static std::atomic<int> dispatch_count{0};
-                                                                   char buffer[80] = {0};
-                                                                   pthread_getname_np(pthread_self(), buffer, sizeof(buffer));
-                                                                   EXPECT_THAT(buffer, StartsWith(threadname_base));
+    {
+        static std::atomic<int> dispatch_count{0};
+        char buffer[80] = {0};
+        pthread_getname_np(pthread_self(), buffer, sizeof(buffer));
+        EXPECT_THAT(buffer, StartsWith(threadname_base));
 
-                                                                   if (++dispatch_count == threadcount)
-                                                                   {
-                                                                       dispatched->raise();
-                                                                   }
-                                                                   else
-                                                                   {
-                                                                       dispatched->wait_for(10s);
-                                                                   }
-                                                               });
+        if (++dispatch_count == threadcount)
+        {
+            dispatched->raise();
+        }
+        else
+        {
+            dispatched->wait_for(10s);
+        }
+    });
 
     md::ThreadedDispatcher dispatcher{threadname_base, dispatchable};
 
