@@ -58,14 +58,12 @@ public:
     void release_current() override;
     void gl_swap_buffers() override;
     MirOrientation orientation() const override;
-    bool uses_alpha() const override;
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     DisplayBuffer(DisplayBuffer const&) = delete;
     DisplayBuffer operator=(DisplayBuffer const&) = delete;
 private:
-    bool const uses_alpha_;
     EGLDisplayHandle const& egl_display;
     std::shared_ptr<HostSurface> const host_surface;
     EGLConfig const egl_config;

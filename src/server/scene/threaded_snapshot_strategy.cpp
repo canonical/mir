@@ -35,7 +35,7 @@ namespace scene
 
 struct WorkItem
 {
-    std::shared_ptr<SurfaceBufferAccess> const surface_buffer_access;
+    std::shared_ptr<SurfaceBufferAccess> const stream;
     ms::SnapshotCallback const snapshot_taken;
 };
 
@@ -73,12 +73,9 @@ public:
 
     void take_snapshot(WorkItem const& wi)
     {
-        wi.surface_buffer_access->with_most_recent_buffer_do(
-            [this](graphics::Buffer& buffer)
-            {
-                pixels->fill_from(buffer);
-            });
-
+        wi.stream->with_most_recent_buffer_do([this](mir::graphics::Buffer& buffer) {
+            pixels->fill_from(buffer);
+        });
 
         wi.snapshot_taken(
             ms::Snapshot{pixels->size(),

@@ -234,7 +234,8 @@ void paint_titlebar(
     mir::examples::CanonicalSurfaceInfoCopy& titlebar_info,
     int intensity)
 {
-    auto const format = titlebar->pixel_format();
+    auto stream = titlebar->primary_buffer_stream();
+    auto const format = stream->pixel_format();
 
     if (!titlebar_info.buffer)
         swap_buffers(titlebar, titlebar_info.buffer);
@@ -418,6 +419,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
 
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
+        active_surface_.reset();
         tools->focus_next_session();
         select_active_surface(tools->focused_surface());
     }
@@ -690,16 +692,19 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
     if (surface == active_surface_.lock())
         return;
 
-    if (auto const active_surface = active_surface_.lock())
-    {
-        if (auto const titlebar = tools->info_for(active_surface).titlebar)
-        {
-            paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
-        }
-    }
-
     if (!surface)
     {
+        if (auto const active_surface = active_surface_.lock())
+        {
+            if (auto const titlebar = tools->info_for(active_surface).titlebar)
+            {
+                paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
+            }
+        }
+
+        if (active_surface_.lock())
+            tools->set_focus_to({}, {});
+
         active_surface_.reset();
         return;
     }
@@ -715,6 +720,13 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
     case mir_surface_type_freestyle:
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        if (auto const active_surface = active_surface_.lock())
+        {
+            if (auto const titlebar = tools->info_for(active_surface).titlebar)
+            {
+                paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
+            }
+        }
         if (auto const titlebar = tools->info_for(surface).titlebar)
         {
             paint_titlebar(titlebar, tools->info_for(titlebar), 0xFF);

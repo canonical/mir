@@ -168,6 +168,7 @@ struct TestClientInput : mtf::HeadlessInProcessServer
 }
 
 using namespace ::testing;
+using namespace std::chrono_literals;
 
 TEST_F(TestClientInput, clients_receive_keys)
 {
@@ -484,7 +485,7 @@ TEST_F(TestClientInput, send_mir_input_events_through_surface)
     EXPECT_CALL(first_client, handle_input(mt::KeyDownEvent()))
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
 
-    auto key_event = mir::events::make_event(MirInputDeviceId{0}, 0, mir_keyboard_action_down, 0, KEY_M,
+    auto key_event = mir::events::make_event(MirInputDeviceId{0}, 0ns, mir_keyboard_action_down, 0, KEY_M,
                                              mir_input_event_modifier_none);
 
     server.the_shell()->focused_surface()->consume(*key_event);
