@@ -32,7 +32,7 @@ struct StubRenderableListCompositor : public graphics::android::RenderableListCo
 {
     void render(
         graphics::RenderableList const&,
-        geometry::PointOffset,
+        geometry::Displacement,
         graphics::android::SwappingGLContext const&) const
     {
     }

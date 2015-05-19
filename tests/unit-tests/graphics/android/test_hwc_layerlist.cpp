@@ -58,7 +58,7 @@ struct LayerListTest : public testing::Test
     hwc_layer_1_t fbtarget;
     hwc_layer_1_t skip;
     hwc_rect_t visible_rect;
-    geom::PointOffset offset;
+    geom::Displacement offset;
 };
 }
 
@@ -214,7 +214,7 @@ TEST_F(LayerListTest, offset_origin_does_not_affect_skip_and_target)
 {
     using namespace testing;
 
-    geom::PointOffset offset{199, 299};
+    geom::Displacement offset{199, 299};
     mga::LayerList list(layer_adapter, {}, offset);
     list.setup_fb(stub_fb);
     auto l = list.native_list();
@@ -226,7 +226,7 @@ TEST_F(LayerListTest, offset_origin_does_not_affect_skip_and_target)
 TEST_F(LayerListTest, list_is_offset_for_nonorigin_displays)
 {
     using namespace testing;
-    geom::PointOffset offset{199, 299};
+    geom::Displacement offset{199, 299};
     geom::Rectangle not_offset_rect{geom::Point{250, 200}, buffer1->size()};
     mg::RenderableList renderable_list {std::make_shared<mtd::StubRenderable>(buffer1, not_offset_rect)};
 

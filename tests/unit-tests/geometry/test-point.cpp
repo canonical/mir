@@ -54,20 +54,3 @@ TEST(geometry, point_is_usable)
     EXPECT_EQ(X(x), p.x);
     EXPECT_EQ(Y(y), p.y);
 }
-
-TEST(geometry, point_offset)
-{
-    using namespace geom;
-    Point const pointx2y4{X(2), Y(4)};
-    Point const pointx9y11{X(9), Y(19)};
-
-    geom::Point pt;
-    auto offset = pointx2y4 - pointx9y11;
-    auto offset_pt = pt - offset;
-    EXPECT_THAT(offset.dx, Eq(DeltaX(-7)));
-    EXPECT_THAT(offset.dy, Eq(DeltaY(-15)));
-
-    auto pt2 = offset_pt + offset;
-
-    EXPECT_THAT(pt2, Eq(pt));
-}

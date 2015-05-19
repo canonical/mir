@@ -98,7 +98,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
     {
         return std::unique_ptr<graphics::android::LayerList>(
             new graphics::android::LayerList(
-                std::make_shared<graphics::android::IntegerSourceCrop>(), {}, geometry::PointOffset{0,0}));
+                std::make_shared<graphics::android::IntegerSourceCrop>(), {}, geometry::Displacement{0,0}));
     }
 
     std::unique_ptr<graphics::android::FramebufferBundle> create_framebuffers(graphics::DisplayConfigurationOutput const&) override

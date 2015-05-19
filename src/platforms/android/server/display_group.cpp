@@ -65,7 +65,7 @@ bool mga::DisplayGroup::display_present(DisplayName name) const
 }
 
 void mga::DisplayGroup::configure(
-    DisplayName name, MirPowerMode mode, MirOrientation orientation, geom::PointOffset pt)
+    DisplayName name, MirPowerMode mode, MirOrientation orientation, geom::Displacement pt)
 {
     std::unique_lock<decltype(guard)> lk(guard);
     auto it = dbs.find(name);

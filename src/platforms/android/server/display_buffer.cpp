@@ -39,7 +39,7 @@ mga::DisplayBuffer::DisplayBuffer(
     mga::GLContext const& shared_gl_context,
     mg::GLProgramFactory const& program_factory,
     MirOrientation orientation,
-    geom::PointOffset offset,
+    geom::Displacement offset,
     mga::OverlayOptimization overlay_option)
     : display_name(display_name),
       layer_list(std::move(layer_list)),
@@ -113,7 +113,7 @@ bool mga::DisplayBuffer::uses_alpha() const
     return false;
 }
 
-void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::PointOffset offset)
+void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::Displacement offset)
 {
     power_mode_ = power_mode;
     offset_from_origin = offset;

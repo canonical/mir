@@ -23,7 +23,7 @@
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 mg::GLPrimitive mg::tessellate_renderable_into_rectangle(
-    mg::Renderable const& renderable, geom::PointOffset const& offset)
+    mg::Renderable const& renderable, geom::Displacement const& offset)
 {
     auto const& buf_size = renderable.buffer()->size();
     auto rect = renderable.screen_position();

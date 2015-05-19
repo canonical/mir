@@ -32,7 +32,7 @@ namespace doubles
 struct MockRenderableListCompositor : public graphics::android::RenderableListCompositor
 {
     MOCK_CONST_METHOD3(render,
-        void(graphics::RenderableList const&, geometry::PointOffset, graphics::android::SwappingGLContext const&));
+        void(graphics::RenderableList const&, geometry::Displacement, graphics::android::SwappingGLContext const&));
 };
 
 }

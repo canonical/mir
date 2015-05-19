@@ -84,7 +84,7 @@ void mga::LayerList::update_list_mode(mg::RenderableList const& renderlist)
         mode = Mode::no_extra_layers;
 }
 
-void mga::LayerList::update_list(RenderableList const& renderlist, geometry::PointOffset offset)
+void mga::LayerList::update_list(RenderableList const& renderlist, geometry::Displacement offset)
 {
     renderable_list = renderlist;
     update_list_mode(renderlist);
@@ -160,7 +160,7 @@ mga::NativeFence mga::LayerList::retirement_fence()
 mga::LayerList::LayerList(
     std::shared_ptr<LayerAdapter> const& layer_adapter,
     RenderableList const& renderlist,
-    geometry::PointOffset list_offset) :
+    geometry::Displacement list_offset) :
     layer_adapter{layer_adapter}
 {
     update_list(renderlist, list_offset);

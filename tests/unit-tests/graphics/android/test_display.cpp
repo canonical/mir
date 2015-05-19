@@ -808,7 +808,7 @@ TEST_F(Display, can_configure_positioning_of_dbs)
 {
     using namespace testing;
     auto origin = geom::Point{0,0};
-    geom::PointOffset offset{493,999};
+    geom::Displacement offset{493,999};
     auto new_location = origin - offset;
 
     mga::Display display(

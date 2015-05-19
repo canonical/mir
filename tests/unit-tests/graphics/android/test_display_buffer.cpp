@@ -64,7 +64,7 @@ struct DisplayBuffer : public ::testing::Test
         std::make_shared<testing::NiceMock<mtd::MockDisplayDevice>>()};
     geom::Size const display_size{433,232};
     double const refresh_rate{60.0};
-    geom::PointOffset top_left{0,0};
+    geom::Displacement top_left{0,0};
     std::unique_ptr<mga::LayerList> list{
         new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, top_left)};
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle{
@@ -301,7 +301,7 @@ TEST_F(DisplayBuffer, reports_position_correctly)
 {
     using namespace testing;
     geom::Point origin;
-    geom::PointOffset offset{100, 100};
+    geom::Displacement offset{100, 100};
 
     EXPECT_THAT(db.view_area().top_left, Eq(origin));
     db.configure(mir_power_mode_on, orientation, offset);

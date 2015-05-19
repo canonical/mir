@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_TESSELLATION_HELPERS_H_
 #define MIR_GRAPHICS_TESSELLATION_HELPERS_H_
 #include "mir/graphics/gl_primitive.h"
-#include "mir/geometry/point.h"
+#include "mir/geometry/displacement.h"
 
 namespace mir
 {
@@ -27,7 +27,7 @@ namespace graphics
 {
 class Renderable;
 GLPrimitive tessellate_renderable_into_rectangle(
-    Renderable const& renderable, geometry::PointOffset const& offset);
+    Renderable const& renderable, geometry::Displacement const& offset);
 }
 }
 #endif /* MIR_GRAPHICS_TESSELLATION_HELPERS_H_ */

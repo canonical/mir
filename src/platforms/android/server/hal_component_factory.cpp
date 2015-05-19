@@ -74,7 +74,7 @@ std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebu
 
 std::unique_ptr<mga::LayerList> mga::HalComponentFactory::create_layer_list()
 {
-    geom::PointOffset offset{0,0};
+    geom::Displacement offset{0,0};
     if (force_backup_display)
         return std::unique_ptr<mga::LayerList>(
             new mga::LayerList(std::make_shared<mga::Hwc10Adapter>(), {}, offset));

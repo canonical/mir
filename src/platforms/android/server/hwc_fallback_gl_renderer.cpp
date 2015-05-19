@@ -99,7 +99,7 @@ mga::HWCFallbackGLRenderer::HWCFallbackGLRenderer(
 }
 
 void mga::HWCFallbackGLRenderer::render(
-    RenderableList const& renderlist, geom::PointOffset offset, SwappingGLContext const& context) const
+    RenderableList const& renderlist, geom::Displacement offset, SwappingGLContext const& context) const
 {
     glUseProgram(*program);
 

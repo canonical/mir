@@ -146,7 +146,7 @@ void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
                                 mg::Renderable const& renderable) const
 {
     primitives.resize(1);
-    primitives[0] = mg::tessellate_renderable_into_rectangle(renderable, geom::PointOffset{0,0});
+    primitives[0] = mg::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
 }
 
 void mc::GLRenderer::render(mg::RenderableList const& renderables) const

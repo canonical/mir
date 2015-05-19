@@ -113,7 +113,7 @@ public:
             .WillByDefault(SetArgPointee<1>(texid));
     }
 
-    geom::PointOffset offset;
+    geom::Displacement offset;
     GLint const display_transform_uniform_loc{1};
     GLint const position_attr_loc{2};
     GLint const texcoord_attr_loc{3};
@@ -245,7 +245,7 @@ TEST_F(HWCFallbackGLRenderer, computes_vertex_coordinates_correctly)
 TEST_F(HWCFallbackGLRenderer, computes_vertex_coordinates_correctly_with_offset)
 {
     using namespace testing;
-    geom::PointOffset offset{100, 50};
+    geom::Displacement offset{100, 50};
     geom::Rectangle rect{{100,200},{50, 60}};
     geom::Rectangle offset_rect{rect.top_left - offset, rect.size};
  

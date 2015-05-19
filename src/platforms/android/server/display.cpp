@@ -126,7 +126,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
         gl_context,
         *gl_program_factory,
         mir_orientation_normal,
-        geom::PointOffset{0,0},
+        geom::Displacement{0,0},
         overlay_option));
 }
 }
@@ -251,7 +251,7 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
         if (output.current_format != config[output.id].current_format)
             BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
 
-        geom::PointOffset offset(
+        geom::Displacement offset(
             config[output.id].top_left.x - output.top_left.x,
             config[output.id].top_left.y - output.top_left.y);
 

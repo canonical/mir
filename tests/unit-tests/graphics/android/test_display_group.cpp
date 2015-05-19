@@ -40,7 +40,7 @@ struct StubConfigurableDB : mga::ConfigurableDisplayBuffer
     bool post_renderables_if_optimizable(mg::RenderableList const&) override { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
     bool uses_alpha() const override { return false; }
-    void configure(MirPowerMode, MirOrientation, mir::geometry::PointOffset) override {}
+    void configure(MirPowerMode, MirOrientation, mir::geometry::Displacement) override {}
     mga::DisplayContents contents() override
     {
         return mga::DisplayContents{mga::DisplayName::primary, list, offset, context, compositor};
@@ -49,7 +49,7 @@ struct StubConfigurableDB : mga::ConfigurableDisplayBuffer
     mga::LayerList mutable list{std::make_shared<mga::IntegerSourceCrop>(), {}, offset};
     mtd::StubRenderableListCompositor mutable compositor;
     mtd::StubSwappingGLContext mutable context;
-    mir::geometry::PointOffset offset;
+    mir::geometry::Displacement offset;
 };
 }
 
