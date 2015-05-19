@@ -47,9 +47,8 @@ public:
     void add_thread();
     void remove_thread();
 
-private:
     class ThreadShutdownRequestHandler;
-    friend class ThreadShutdownRequestHandler;
+private:
 
     std::string const name_base;
 
@@ -60,12 +59,6 @@ private:
     std::vector<std::thread> threadpool;
 
     std::function<void()> const exception_handler;
-
-    static void dispatch_loop(std::string const& name,
-                              std::shared_ptr<ThreadShutdownRequestHandler> thread_register,
-                              std::shared_ptr<Dispatchable> dispatcher,
-                              std::function<void()> const& exception_handler);
-
 };
 
 }

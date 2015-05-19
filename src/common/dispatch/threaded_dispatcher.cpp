@@ -170,6 +170,52 @@ private:
     bool shutting_down;
 };
 
+namespace
+{
+void dispatch_loop(std::string const& name,
+    std::shared_ptr<md::ThreadedDispatcher::ThreadShutdownRequestHandler> thread_register,
+    std::shared_ptr<md::Dispatchable> dispatcher,
+    std::function<void()> const& exception_handler)
+{
+    mir::set_thread_name(name);
+
+    // This does not have to be std::atomic<bool> because thread_register is guaranteed to
+    // only ever be dispatch()ed from one thread at a time.
+    bool running{true};
+
+    auto thread_registrar = mir::raii::paired_calls(
+    [&running, thread_register]()
+    {
+        thread_register->register_thread(running);
+    },
+    [thread_register]()
+    {
+        thread_register->unregister_thread();
+    });
+
+    try
+    {
+        struct pollfd waiter;
+        waiter.fd = dispatcher->watch_fd();
+        waiter.events = POLL_IN;
+        while (running)
+        {
+            if (poll(&waiter, 1, -1) < 0)
+            {
+                BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                         std::system_category(),
+                                                         "Failed to wait for event"}));
+            }
+            dispatcher->dispatch(md::FdEvent::readable);
+        }
+    }
+    catch(...)
+    {
+        exception_handler();
+    }
+}
+}
+
 md::ThreadedDispatcher::ThreadedDispatcher(std::string const& name, std::shared_ptr<Dispatchable> const& dispatchee)
     : ThreadedDispatcher(name, dispatchee, [](){ throw; })
 {
@@ -243,47 +289,4 @@ void md::ThreadedDispatcher::remove_thread()
     });
     dying_thread->join();
     threadpool.erase(dying_thread);
-}
-
-void md::ThreadedDispatcher::dispatch_loop(std::string const& name,
-                                           std::shared_ptr<ThreadShutdownRequestHandler> thread_register,
-                                           std::shared_ptr<Dispatchable> dispatcher,
-                                           std::function<void()> const& exception_handler)
-{
-    mir::set_thread_name(name);
-
-    // This does not have to be std::atomic<bool> because thread_register is guaranteed to
-    // only ever be dispatch()ed from one thread at a time.
-    bool running{true};
-
-    auto thread_registrar = mir::raii::paired_calls(
-    [&running, thread_register]()
-    {
-        thread_register->register_thread(running);
-    },
-    [thread_register]()
-    {
-        thread_register->unregister_thread();
-    });
-
-    try
-    {
-        struct pollfd waiter;
-        waiter.fd = dispatcher->watch_fd();
-        waiter.events = POLL_IN;
-        while (running)
-        {
-            if (poll(&waiter, 1, -1) < 0)
-            {
-                BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                         std::system_category(),
-                                                         "Failed to wait for event"}));
-            }
-            dispatcher->dispatch(md::FdEvent::readable);
-        }
-    }
-    catch(...)
-    {
-        exception_handler();
-    }
 }
