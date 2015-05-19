@@ -804,19 +804,39 @@ TEST_F(Display, reports_vsync)
     vsync_fn(mga::DisplayName::primary);
 }
 
-TEST_F(Display, can_configure_positioning_of_dbs)
+TEST_F(Display, reports_correct_card_information)
 {
     using namespace testing;
-    auto origin = geom::Point{0,0};
-    geom::Displacement offset{493,999};
-    auto new_location = origin - offset;
-
     mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
         mga::OverlayOptimization::enabled);
+
+    int num_cards = 0;
+    display.configuration()->for_each_card(
+        [&](mg::DisplayConfigurationCard const& config)
+        {
+            EXPECT_THAT(config.max_simultaneous_outputs, Eq(2));
+            num_cards++;
+        });
+    EXPECT_THAT(num_cards, Eq(1));
+}
+
+TEST_F(Display, can_configure_positioning_of_dbs)
+{
+    using namespace testing;
+    auto origin = geom::Point{0,0};
+    geom::Displacement offset{493,999};
+    auto new_location = origin - offset;
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
     auto config = display.configuration();
     config->for_each_output([&](mg::UserDisplayConfigurationOutput& disp_conf) {
         disp_conf.top_left = disp_conf.top_left + offset;
@@ -828,3 +848,4 @@ TEST_F(Display, can_configure_positioning_of_dbs)
         EXPECT_THAT(disp_conf.top_left, Eq(new_location));
     });
 }
+

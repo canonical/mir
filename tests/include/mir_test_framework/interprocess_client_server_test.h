@@ -20,7 +20,7 @@
 #define MIR_TEST_FRAMEWORK_INTERPROCESS_CLIENT_SERVER_TEST_H_
 
 #include "mir_test_framework/headless_test.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/cross_process_sync.h"
 
 namespace mir_test_framework
 {
@@ -65,7 +65,7 @@ private:
     pid_t server_process_id{0};
     pid_t client_process_id{0};
     std::shared_ptr<Process> server_process;
-    CrossProcessSync shutdown_sync;
+    mir::test::CrossProcessSync shutdown_sync;
     char const* process_tag = "test";
     std::function<void()> server_setup = []{};
     bool server_signal_expected{false};

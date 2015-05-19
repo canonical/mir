@@ -26,6 +26,7 @@
 #include <random>
 #include <fstream>
 
+namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 namespace geom = mir::geometry;
 
@@ -102,7 +103,7 @@ mtf::TestingServerConfiguration::the_server_status_listener()
 {
     struct TestingServerStatusListener : public mir::ServerStatusListener
     {
-        TestingServerStatusListener(CrossProcessSync const& sync,
+        TestingServerStatusListener(mt::CrossProcessSync const& sync,
                                     std::function<void(void)> const& on_start)
             : server_started_sync{sync},
               on_start{on_start}
@@ -117,7 +118,7 @@ mtf::TestingServerConfiguration::the_server_status_listener()
             on_start();
         }
 
-        CrossProcessSync server_started_sync;
+        mt::CrossProcessSync server_started_sync;
         std::function<void(void)> const on_start;
     };
 
