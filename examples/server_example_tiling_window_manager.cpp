@@ -35,7 +35,8 @@ using namespace mir::geometry;
 
 me::TilingSurfaceInfo::TilingSurfaceInfo(
     std::shared_ptr<scene::Session> const& session,
-    std::shared_ptr<scene::Surface> const& surface) :
+    std::shared_ptr<scene::Surface> const& surface,
+    scene::SurfaceCreationParameters const& /*params*/) :
     session{session},
     state{mir_surface_state_restored},
     restore_rect{surface->top_left(), surface->size()}
@@ -149,7 +150,7 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
 
     if (surfaces.empty() && session == tools->focused_session())
     {
-        tools->focus_next();
+        tools->focus_next_session();
         if (auto const surface = tools->focused_surface())
             tools->raise({surface});
     }
@@ -290,6 +291,32 @@ bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const
                 break;
             }
         }
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_TAB)
+    {
+        tools->focus_next_session();
+        if (auto const surface = tools->focused_surface())
+            tools->raise({surface});
+
+        return true;
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_GRAVE)
+    {
+        if (auto const prev = tools->focused_surface())
+        {
+            if (auto const app = tools->focused_session())
+                if (auto const surface = app->surface_after(prev))
+                {
+                    tools->set_focus_to(app, surface);
+                    tools->raise({surface});
+                }
+        }
+
+        return true;
     }
 
     return false;

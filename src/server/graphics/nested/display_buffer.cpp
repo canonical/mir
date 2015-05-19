@@ -21,11 +21,14 @@
 #include "host_connection.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/graphics/pixel_format_utils.h"
+#include "mir/input/cursor_listener.h"
+#include "mir/graphics/egl_error.h"
 #include "mir/events/event_private.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
@@ -35,14 +38,15 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<HostSurface> const& host_surface,
     geometry::Rectangle const& area,
     std::shared_ptr<input::InputDispatcher> const& dispatcher,
+    std::shared_ptr<mi::CursorListener> const& cursor_listener,
     MirPixelFormat preferred_format) :
-    uses_alpha_{mg::contains_alpha(preferred_format)},
     egl_display(egl_display),
     host_surface{host_surface},
     egl_config{egl_display.choose_windowed_es_config(preferred_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{area.top_left, area.size},
     dispatcher{dispatcher},
+    cursor_listener{cursor_listener},
     egl_surface{egl_display, host_surface->egl_native_window(), egl_config}
 {
     host_surface->set_event_handler(event_thunk, this);
@@ -56,7 +60,7 @@ geom::Rectangle mgn::detail::DisplayBuffer::view_area() const
 void mgn::detail::DisplayBuffer::make_current()
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to update EGL surface.\n"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Nested Mir Display Error: Failed to update EGL surface"));
 }
 
 void mgn::detail::DisplayBuffer::release_current()
@@ -83,11 +87,6 @@ MirOrientation mgn::detail::DisplayBuffer::orientation() const
     return mir_orientation_normal;
 }
 
-bool mgn::detail::DisplayBuffer::uses_alpha() const
-{
-    return uses_alpha_;
-}
-
 mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept
 {
 }
@@ -107,11 +106,20 @@ catch (std::exception const&)
 
 void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
 {
+    if (mir_event_get_type(&event) != mir_event_type_input)
+        return;
+    auto iev = mir_event_get_input_event(&event);
+
+    if (mir_input_event_get_type(iev) == mir_input_event_type_pointer)
+    {
+        auto pev = mir_input_event_get_pointer_event(iev);
+        auto x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x) + area.top_left.x.as_float();
+        auto y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y) + area.top_left.y.as_float();
+        cursor_listener->cursor_moved_to(x, y);
+    }
     if (event.type == mir_event_type_motion)
     {
         auto my_event = event;
-        my_event.motion.x_offset += area.top_left.x.as_float();
-        my_event.motion.y_offset += area.top_left.y.as_float();
         dispatcher->dispatch(my_event);
     }
     else

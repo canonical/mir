@@ -27,6 +27,10 @@
 
 #include <gmock/gmock.h>
 
+
+void PrintTo(MirEvent const& event, std::ostream *os);
+void PrintTo(MirEvent const* event, std::ostream *os);
+
 namespace mir
 {
 namespace test
@@ -151,6 +155,18 @@ MATCHER_P(KeyOfSymbol, keysym, "")
     return true;
 }
 
+MATCHER_P(KeyOfScanCode, code, "")
+{
+    auto kev = maybe_key_event(to_address(arg));
+    if (kev == nullptr)
+        return false;
+
+    if(mir_keyboard_event_scan_code(kev) != code)
+        return false;
+
+    return true;
+}
+
 MATCHER_P(MirKeyEventMatches, event, "")
 {
     auto expected = maybe_key_event(to_address(event));
@@ -253,9 +269,9 @@ MATCHER_P2(TouchEvent, x, y, "")
 
     if (mir_touch_event_action(tev, 0) != mir_touch_action_down)
         return false;
-    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) != x)
+    if (std::abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) - x) > 0.5f)
         return false;
-    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) != y)
+    if (std::abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) - y) > 0.5f)
         return false;
 
     return true;
@@ -366,6 +382,36 @@ MATCHER_P(OrientationEvent, direction, "")
         return false;
     auto oev = mir_event_get_orientation_event(as_address);
     if (mir_orientation_event_get_direction(oev) != direction)
+        return false;
+    return true;
+}
+
+MATCHER_P(InputDeviceIdMatches, device_id, "")
+{
+    if (mir_event_get_type(to_address(arg)) != mir_event_type_input)
+        return false;
+    auto input_event = mir_event_get_input_event(to_address(arg));
+    return mir_input_event_get_device_id(input_event) == device_id;
+}
+
+MATCHER(InputDeviceConfigurationChangedEvent, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_input_configuration)
+        return false;
+    auto idev = mir_event_get_input_configuration_event(as_address);
+    if (mir_input_configuration_event_get_action(idev) != mir_input_configuration_action_configuration_changed)
+        return false;
+    return true;
+}
+
+MATCHER(InputDeviceResetEvent, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_input_configuration)
+        return false;
+    auto idev = mir_event_get_input_configuration_event(as_address);
+    if (mir_input_configuration_event_get_action(idev) != mir_input_configuration_action_device_reset)
         return false;
     return true;
 }

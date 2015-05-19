@@ -21,6 +21,7 @@
 #include "android_input_constants.h"
 #include "android_input_thread.h"
 
+#include "mir/input/android/event_conversion_helpers.h"
 #include "mir/events/event_private.h"
 
 #include <InputListener.h> // NotifyArgs
@@ -46,18 +47,6 @@ mia::AndroidInputDispatcher::~AndroidInputDispatcher()
     stop();
 }
 
-void mia::AndroidInputDispatcher::configuration_changed(std::chrono::nanoseconds when)
-{
-    droidinput::NotifyConfigurationChangedArgs args(when);
-    dispatcher->notifyConfigurationChanged(&args);
-}
-
-void mia::AndroidInputDispatcher::device_reset(int32_t device_id, std::chrono::nanoseconds when)
-{
-    droidinput::NotifyDeviceResetArgs args(when, device_id);
-    dispatcher->notifyDeviceReset(&args);
-}
-
 void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
 {
     static auto const policy_flags = 0;
@@ -66,17 +55,18 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
     {
     case mir_event_type_key:
     {
+        int32_t ignored_repeat_count = 0;
         droidinput::NotifyKeyArgs const notify_key_args(
             std::chrono::nanoseconds(event.key.event_time),
             event.key.device_id,
             event.key.source_id,
             policy_flags,
-            event.key.action,
-            event.key.flags,
+            mia::android_keyboard_action_from_mir(ignored_repeat_count, event.key.action),
+            0, /* flags */
             event.key.key_code,
             event.key.scan_code,
-            event.key.modifiers,
-            std::chrono::nanoseconds(event.key.down_time));
+            mia::android_modifiers_from_mir(event.key.modifiers),
+            event.key.event_time);
 
         dispatcher->notifyKey(&notify_key_args);
 
@@ -110,19 +100,39 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             event.motion.source_id,
             policy_flags,
             event.motion.action,
-            event.motion.flags,
-            event.motion.modifiers,
+            0, /* flags */
+            mia::android_modifiers_from_mir(event.motion.modifiers),
             event.motion.button_state,
-            event.motion.edge_flags,
+            0, /* edge_flags */
             event.motion.pointer_count,
             pointer_properties.data(),
             pointer_coords.data(),
-            event.motion.x_precision,
-            event.motion.y_precision,
-            std::chrono::nanoseconds(event.motion.down_time));
+            0, 0, /* unused x/y precision */
+            event.motion.event_time);
 
         dispatcher->notifyMotion(&notify_motion_args);
 
+        break;
+    }
+
+    case mir_event_type_input_configuration:
+    {
+        auto &idev = event.input_configuration;
+        switch (idev.action)
+        {
+        case mir_input_configuration_action_configuration_changed:
+        {
+            droidinput::NotifyConfigurationChangedArgs args(idev.when);
+            dispatcher->notifyConfigurationChanged(&args);
+        }
+        case mir_input_configuration_action_device_reset:
+        {
+            droidinput::NotifyDeviceResetArgs args(idev.when, idev.id);
+            dispatcher->notifyDeviceReset(&args);
+        }
+        default:
+            break;
+        }
         break;
     }
 

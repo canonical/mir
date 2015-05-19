@@ -22,6 +22,7 @@
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
 #include "mock_buffer_stream.h"
+#include "stub_input_channel.h"
 
 #include <gmock/gmock.h>
 
@@ -40,11 +41,13 @@ struct MockSurface : public scene::BasicSurface
             {{},{}},
             true,
             std::make_shared<testing::NiceMock<MockBufferStream>>(),
-            {},
+            std::make_shared<StubInputChannel>(),
             {},
             {},
             mir::report::null_scene_report())
     {
+        ON_CALL(*this, primary_buffer_stream())
+            .WillByDefault(testing::Return(std::make_shared<testing::NiceMock<MockBufferStream>>()));
     }
 
     ~MockSurface() noexcept {}
@@ -63,9 +66,9 @@ struct MockSurface : public scene::BasicSurface
     MOCK_CONST_METHOD0(client_input_fd, int());
 
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
-    MOCK_METHOD1(take_input_focus, void(std::shared_ptr<shell::InputTargeter> const&));
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));
+    MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());
 };
 
 }

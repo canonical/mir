@@ -106,6 +106,12 @@ void wait_for_events_forever(std::shared_ptr<md::Dispatchable> const& dispatchee
 }
 
 md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable> const& dispatchee)
+    : SimpleDispatchThread(dispatchee, []{})
+{}
+
+md::SimpleDispatchThread::SimpleDispatchThread(
+    std::shared_ptr<md::Dispatchable> const& dispatchee,
+    std::function<void()> const& exception_handler)
 {
     int pipefds[2];
     if (pipe(pipefds) < 0)
@@ -121,7 +127,18 @@ md::SimpleDispatchThread::SimpleDispatchThread(std::shared_ptr<md::Dispatchable>
         // before creating the new thread so that there's no race between thread start
         // and signal blocking.
         mir::SignalBlocker block_signals;
-        eventloop = std::thread{&wait_for_events_forever, dispatchee, terminate_fd};
+        eventloop = std::thread{
+            [exception_handler, dispatchee, terminate_fd]()
+            {
+                try
+                {
+                    wait_for_events_forever(dispatchee, terminate_fd);
+                }
+                catch(...)
+                {
+                    exception_handler();
+                }
+            }};
     }
 }
 

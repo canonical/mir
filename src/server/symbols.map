@@ -1,4 +1,4 @@
-MIR_SERVER_31 {
+MIR_SERVER_32 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -172,6 +172,7 @@ MIR_SERVER_31 {
     mir::ServerStatusListener::ServerStatusListener*;
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
+    mir::Server::the_buffer_stream_factory*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
     mir::Server::the_cursor*;
@@ -193,6 +194,7 @@ MIR_SERVER_31 {
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_configurator*;
     mir::Server::the_surface_coordinator*;
+    mir::Server::the_surface_factory*;
     mir::Server::the_touch_visualizer*;
     mir::Server::wrap_cursor_listener*;
     mir::Server::wrap_display_buffer_compositor_factory*;
@@ -207,9 +209,10 @@ MIR_SERVER_31 {
     mir::shell::AbstractShell::destroy_surface*;
     mir::shell::AbstractShell::focused_session*;
     mir::shell::AbstractShell::focused_surface*;
-    mir::shell::AbstractShell::focus_next*;
+    mir::shell::AbstractShell::focus_next_session*;
     mir::shell::AbstractShell::get_surface_attribute*;
     mir::shell::AbstractShell::handle*;
+    mir::shell::AbstractShell::modify_surface*;
     mir::shell::AbstractShell::open_session*;
     mir::shell::AbstractShell::raise*;
     mir::shell::AbstractShell::remove_display*;
@@ -237,7 +240,7 @@ MIR_SERVER_31 {
     mir::shell::ShellWrapper::destroy_surface*;
     mir::shell::ShellWrapper::focused_session*;
     mir::shell::ShellWrapper::focused_surface*;
-    mir::shell::ShellWrapper::focus_next*;
+    mir::shell::ShellWrapper::focus_next_session*;
     mir::shell::ShellWrapper::get_surface_attribute*;
     mir::shell::ShellWrapper::handle*;
     mir::shell::ShellWrapper::modify_surface*;
@@ -250,6 +253,8 @@ MIR_SERVER_31 {
     mir::shell::ShellWrapper::start_prompt_session_for*;
     mir::shell::ShellWrapper::stop_prompt_session*;
     mir::shell::ShellWrapper::surface_at*;
+    mir::shell::SurfaceReadyObserver::SurfaceReadyObserver*;
+    mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
     mir::shell::WindowManager::operator*;
     mir::shell::WindowManager::?WindowManager*;
     mir::shell::WindowManager::WindowManager*;
@@ -310,7 +315,7 @@ MIR_SERVER_31 {
     non-virtual?thunk?to?mir::shell::AbstractShell::destroy_surface*;
     non-virtual?thunk?to?mir::shell::AbstractShell::focused_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::focused_surface*;
-    non-virtual?thunk?to?mir::shell::AbstractShell::focus_next*;
+    non-virtual?thunk?to?mir::shell::AbstractShell::focus_next_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::get_surface_attribute*;
     non-virtual?thunk?to?mir::shell::AbstractShell::handle*;
     non-virtual?thunk?to?mir::shell::AbstractShell::open_session*;
@@ -332,7 +337,7 @@ MIR_SERVER_31 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::destroy_surface*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::focused_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::focused_surface*;
-    non-virtual?thunk?to?mir::shell::ShellWrapper::focus_next*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::focus_next_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::get_surface_attribute*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::handle*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::open_session*;
@@ -343,6 +348,7 @@ MIR_SERVER_31 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::start_prompt_session_for*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::stop_prompt_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::surface_at*;
+    non-virtual?thunk?to?mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
     non-virtual?thunk?to?mir::shell::WindowManager::?WindowManager*;
     non-virtual?thunk?to?mir::time::Alarm::?Alarm*;
     non-virtual?thunk?to?mir::time::AlarmFactory::?AlarmFactory*;
@@ -400,6 +406,7 @@ MIR_SERVER_31 {
     typeinfo?for?mir::shell::InputTargeter;
     typeinfo?for?mir::shell::Shell;
     typeinfo?for?mir::shell::ShellWrapper;
+    typeinfo?for?mir::shell::SurfaceReadyObserver;
     typeinfo?for?mir::shell::WindowManager;
     typeinfo?for?mir::time::Alarm;
     typeinfo?for?mir::time::AlarmFactory;
@@ -457,6 +464,7 @@ MIR_SERVER_31 {
     vtable?for?mir::shell::InputTargeter;
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellWrapper;
+    vtable?for?mir::shell::SurfaceReadyObserver;
     vtable?for?mir::shell::WindowManager;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::AlarmFactory;
@@ -468,7 +476,7 @@ MIR_SERVER_31 {
     virtual?thunk?to?mir::shell::AbstractShell::close_session*;
     virtual?thunk?to?mir::shell::AbstractShell::create_surface*;
     virtual?thunk?to?mir::shell::AbstractShell::destroy_surface*;
-    virtual?thunk?to?mir::shell::AbstractShell::focus_next*;
+    virtual?thunk?to?mir::shell::AbstractShell::focus_next_session*;
     virtual?thunk?to?mir::shell::AbstractShell::focused_session*;
     virtual?thunk?to?mir::shell::AbstractShell::get_surface_attribute*;
     virtual?thunk?to?mir::shell::AbstractShell::handle*;
@@ -489,7 +497,6 @@ MIR_SERVER_31 {
     mir::compositor::GLRenderer::GLRenderer*;
     mir::compositor::GLRenderer::?GLRenderer*;
     mir::compositor::GLRenderer::Program::Program*;
-    mir::compositor::GLRenderer::destination_alpha*;
     mir::compositor::GLRenderer::draw*;
     mir::compositor::GLRenderer::render*;
     mir::compositor::GLRenderer::set_rotation*;
@@ -564,7 +571,6 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_input_platform*;
     mir::DefaultServerConfiguration::the_input_reader*;
     mir::DefaultServerConfiguration::the_input_reader_policy*;
-    mir::DefaultServerConfiguration::the_input_reader_thread*;
     mir::DefaultServerConfiguration::the_input_reading_multiplexer*;
     mir::DefaultServerConfiguration::the_input_region*;
     mir::DefaultServerConfiguration::the_input_registrar*;
@@ -579,7 +585,6 @@ MIR_SERVER_31 {
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;
     mir::DefaultServerConfiguration::the_message_processor_report*;
-    mir::DefaultServerConfiguration::the_new_input_manager*;
     mir::DefaultServerConfiguration::the_options*;
     mir::DefaultServerConfiguration::the_persistent_surface_store*;
     mir::DefaultServerConfiguration::the_pixel_buffer*;

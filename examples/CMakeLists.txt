@@ -185,6 +185,32 @@ target_link_libraries(mir_demo_server
   ${Boost_LIBRARIES}
 )
 
+add_library(mir_demo_server_loadable MODULE
+  server_example.cpp
+  glog_logger.cpp
+  server_example_test_client.cpp
+)
+
+target_link_libraries(mir_demo_server_loadable
+  mirserver
+  exampleserverconfig
+  ${GLog_LIBRARY}
+  ${GFlags_LIBRARY}
+  ${Boost_LIBRARIES}
+)
+
+install(TARGETS mir_demo_server_loadable
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+mir_add_wrapped_executable(mir_demo_server_loader
+  mir_demo_server_loader.cpp
+)
+
+target_link_libraries(mir_demo_server_loader
+  dl
+)
+
 mir_add_wrapped_executable(mir_demo_server_minimal server_minimal.cpp)
 target_link_libraries(mir_demo_server_minimal mirserver)
 
@@ -201,7 +227,7 @@ if (MIR_ENABLE_TESTS)
   # Regression tests for LP: #1415321
 
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-symbols
-  add_test(NAME Clients-only-use-client-symbols
+  mir_add_test(NAME Clients-only-use-client-symbols
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     COMMAND /bin/sh -c "!(nm -u .mir_demo_client_* mir_demo_client* | grep -v @@MIR_CLIENT | grep 'U mir_')"
   )
@@ -209,13 +235,13 @@ if (MIR_ENABLE_TESTS)
 # We use a slightly weaker version of the test with clang as that generates spurious NEEDED
 if (NOT "${CMAKE_CXX_COMPILER}" MATCHES "clang")
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
-  add_test(NAME Clients-only-use-client-ABI
+  mir_add_test(NAME Clients-only-use-client-ABI
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     COMMAND /bin/sh -c "!(objdump -p .mir_demo_client_* mir_demo_client*  | grep NEEDED | grep libmir | grep -v libmirclient)"
   )
 else()
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
-  add_test(NAME Clients-only-use-client-ABI
+  mir_add_test(NAME Clients-only-use-client-ABI
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     COMMAND /bin/sh -c "!(nm -u .mir_demo_client_* mir_demo_client* | grep -v @@MIR_CLIENT | grep @@MIR_)"
   )

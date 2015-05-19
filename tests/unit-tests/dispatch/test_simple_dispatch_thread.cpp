@@ -28,6 +28,7 @@
 #include <fcntl.h>
 
 #include <atomic>
+#include <exception>
 #include <thread>
 
 #include <gtest/gtest.h>
@@ -248,13 +249,43 @@ TEST_F(SimpleDispatchThreadDeathTest, destroying_dispatcher_from_a_callback_is_a
 
     EXPECT_EXIT(
     {
+        std::mutex mutex;
         md::SimpleDispatchThread* dispatcher;
     
-        auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatcher]() { delete dispatcher; });
+        auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatcher, &mutex]{
+            std::lock_guard<decltype(mutex)> lock{mutex};
+            delete dispatcher;
+        });
         
-        dispatchable->trigger();
-        dispatcher = new md::SimpleDispatchThread{dispatchable};
+        {
+            std::lock_guard<decltype(mutex)> lock{mutex};
+            dispatchable->trigger();
+            dispatcher = new md::SimpleDispatchThread{dispatchable};
+        }
         std::this_thread::sleep_for(10s);
     }, KilledBySignal(SIGABRT), ".*Destroying SimpleDispatchThread.*");
 }
 
+TEST_F(SimpleDispatchThreadTest, executes_exception_handler_with_current_exception)
+{
+    using namespace std::chrono_literals;
+    auto dispatched = std::make_shared<mt::Signal>();
+    std::exception_ptr exception;
+
+    auto dispatchable = std::make_shared<mt::TestDispatchable>(
+        []()
+        {
+            throw std::runtime_error("thrown");
+        });
+
+    md::SimpleDispatchThread dispatcher{dispatchable,
+        [&dispatched,&exception]()
+        {
+            exception = std::current_exception();
+            if (exception)
+                dispatched->raise();
+        }};
+    dispatchable->trigger();
+    EXPECT_TRUE(dispatched->wait_for(10s));
+    EXPECT_TRUE(exception!=nullptr);
+}

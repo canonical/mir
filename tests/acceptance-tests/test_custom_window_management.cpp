@@ -179,7 +179,10 @@ TEST_F(CustomWindowManagement, surface_rename_modifies_surface)
 
     EXPECT_CALL(window_manager, modify_surface(_,_,_));
 
-    mir_surface_set_title(surface, new_title);
+    auto const spec = mir_connection_create_spec_for_changes(client.connection);
+    mir_surface_spec_set_name(spec, new_title);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
 
     mir_surface_release_sync(surface);
 }
@@ -265,4 +268,7 @@ TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct
 
         received.wait_for(400ms);
     }
+
+    for (auto const surface : client_surface)
+        mir_surface_release_sync(surface);
 }

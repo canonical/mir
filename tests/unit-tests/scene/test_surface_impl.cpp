@@ -256,34 +256,9 @@ TEST_F(Surface, take_input_focus)
     using namespace ::testing;
 
     mtd::MockInputTargeter targeter;
-    EXPECT_CALL(targeter, focus_changed(_)).Times(1);
+    EXPECT_CALL(targeter, set_focus(_)).Times(1);
 
-    surface->take_input_focus(mt::fake_shared(targeter));
-}
-
-TEST_F(Surface, with_most_recent_buffer_do_uses_compositor_buffer)
-{
-    auto stub_buffer_stream = std::make_shared<mtd::StubBufferStream>();
-
-    ms::BasicSurface surf(
-        std::string("stub"),
-        geom::Rectangle{{},{}},
-        false,
-        stub_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_input_sender,
-        std::shared_ptr<mg::CursorImage>(),
-        report);
-
-    mg::Buffer* buf_ptr{nullptr};
-
-    surf.with_most_recent_buffer_do(
-        [&](mg::Buffer& buffer)
-        {
-            buf_ptr = &buffer;
-        });
-
-    EXPECT_EQ(stub_buffer_stream->stub_compositor_buffer.get(), buf_ptr);
+    targeter.set_focus(surface);
 }
 
 TEST_F(Surface, emits_client_close_events)

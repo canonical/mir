@@ -20,7 +20,6 @@
 #define MIR_FRONTEND_BUFFER_STREAM_TRACKER_H_
 
 #include "mir/frontend/buffer_stream_id.h"
-#include "client_buffer_tracker.h"
 #include "mir/graphics/buffer_id.h"
 
 #include <unordered_map>
@@ -46,7 +45,7 @@ public:
     /* track a buffer as associated with a buffer stream
      * \warning the buffer must correspond to a single buffer stream id
      * \param buffer_stream_id id that the the buffer is associated with
-     * \param buffer     buffer to be tracked (TODO: should be a shared_ptr)
+     * \param buffer     buffer to be tracked
      * \returns          true if the buffer is already tracked
      *                   false if the buffer is not tracked
      */
@@ -54,17 +53,16 @@ public:
     /* removes the buffer stream id from all tracking */
     void remove_buffer_stream(BufferStreamId);
 
-    /* Access the buffer resource that the id corresponds to.
-       TODO: should really be a weak or shared ptr */
+    /* Access the buffer resource that the id corresponds to. */
     graphics::Buffer* buffer_from(graphics::BufferID) const;
 
 private:
     size_t const client_cache_size;
     std::unordered_map<BufferStreamId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
 
-//TODO: deprecate below this line once exchange_buffer is the normal way to request a new buffer
 public:
     /* accesses the last buffer given to track_buffer() for the given BufferStreamId */
+    //TODO: once next_buffer rpc call is fully deprecated, this can be removed.
     graphics::Buffer* last_buffer(BufferStreamId) const;
 private:
     mutable std::mutex mutex;

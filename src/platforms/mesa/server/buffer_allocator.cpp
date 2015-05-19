@@ -23,6 +23,7 @@
 #include "anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "mir/graphics/egl_extensions.h"
+#include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
 #include <boost/throw_exception.hpp>
 
@@ -86,7 +87,7 @@ private:
                                                           reinterpret_cast<void*>(bo_raw),
                                                           image_attrs);
             if (egl_image == EGL_NO_IMAGE_KHR)
-                BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGLImage from GBM bo"));
+                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage from GBM bo"));
         }
     }
 

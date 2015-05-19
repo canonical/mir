@@ -152,6 +152,7 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
     EXPECT_CALL(mock_egl, eglDestroyContext(dummy_display, mock_egl.fake_egl_context))
         .Times(AtLeast(1));
 
+    {
     mga::DisplayBuffer db{
         mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
@@ -163,6 +164,8 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
         stub_program_factory,
         orientation,
         mga::OverlayOptimization::enabled};
+    }
+    
     testing::Mock::VerifyAndClearExpectations(&mock_egl);
 }
 
@@ -235,11 +238,6 @@ TEST_F(DisplayBuffer, notifies_list_that_content_is_cleared)
     db.configure(mir_power_mode_suspend, mir_orientation_normal);
     db.configure(mir_power_mode_standby, mir_orientation_normal);
     db.configure(mir_power_mode_on, mir_orientation_normal);
-}
-
-TEST_F(DisplayBuffer, does_not_use_alpha)
-{
-    EXPECT_FALSE(db.uses_alpha());
 }
 
 TEST_F(DisplayBuffer, reject_list_if_option_disabled)

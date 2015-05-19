@@ -27,6 +27,7 @@
 #include <memory>
 #include <vector>
 #include <functional>
+#include <chrono>
 
 namespace mir
 {
@@ -48,19 +49,19 @@ EventUPtr make_event(frontend::SurfaceId const& surface_id);
 EventUPtr make_event(frontend::SurfaceId const& surface_id, xkb_rule_names const& names);
 
 // Key event
-EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
+EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers);
 
 // Touch event
-EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
+EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers);
 void add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
     float pressure_value, float touch_major_value, float touch_minor_value, float size_value);
 
 // Pointer event
-EventUPtr make_event(MirInputDeviceId device_id, int64_t timestamp,
+EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers, MirPointerAction action,
     std::vector<MirPointerButton> const& buttons_pressed,
     float x_axis_value, float y_axis_value,

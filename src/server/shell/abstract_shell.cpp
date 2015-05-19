@@ -128,7 +128,7 @@ int msh::AbstractShell::get_surface_attribute(
 }
 
 
-void msh::AbstractShell::focus_next()
+void msh::AbstractShell::focus_next_session()
 {
     std::unique_lock<std::mutex> lock(focus_mutex);
     auto session = focus_session.lock();
@@ -140,7 +140,8 @@ void msh::AbstractShell::focus_next()
     if (session)
         surface = session->default_surface();
 
-    set_focus_to_locked(lock, session, surface);}
+    set_focus_to_locked(lock, session, surface);
+}
 
 std::shared_ptr<ms::Session> msh::AbstractShell::focused_session() const
 {
@@ -168,35 +169,41 @@ void msh::AbstractShell::set_focus_to_locked(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface)
 {
-    if (surface)
-    {
-        auto current_focus = focus_surface.lock();
+    auto const current_focus = focus_surface.lock();
 
-        if (surface != current_focus)
+    if (surface != current_focus)
+    {
+        focus_surface = surface;
+
+        if (current_focus)
+            current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+
+        if (surface)
         {
             // Ensure the surface has really taken the focus before notifying it that it is focused
-            surface->take_input_focus(input_targeter);
-            if (current_focus)
-                current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
-
+            input_targeter->set_focus(surface);
             surface->configure(mir_surface_attrib_focus, mir_surface_focused);
-            focus_surface = surface;
+        }
+        else
+        {
+            input_targeter->clear_focus();
         }
     }
-    else
-    {
-        input_targeter->focus_cleared();
-    }
 
-    focus_session = session;
+    auto const current_session = focus_session.lock();
 
-    if (session)
+    if (session != current_session)
     {
-        session_coordinator->set_focus_to(session);
-    }
-    else
-    {
-        session_coordinator->unset_focus();
+        focus_session = session;
+
+        if (session)
+        {
+            session_coordinator->set_focus_to(session);
+        }
+        else
+        {
+            session_coordinator->unset_focus();
+        }
     }
 }
 

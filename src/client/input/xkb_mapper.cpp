@@ -90,17 +90,14 @@ void mircv::XKBMapper::update_state_and_map_event(MirEvent &ev)
     
     auto &key_ev = ev.key;
                               
-    xkb_key_direction direction;
+    xkb_key_direction direction = XKB_KEY_DOWN;
 
     bool update_state = true;
-    if (key_ev.action == mir_key_action_up)
+    if (key_ev.action == mir_keyboard_action_up)
         direction = XKB_KEY_UP;
-    else if (key_ev.action == mir_key_action_down)
+    else if (key_ev.action == mir_keyboard_action_down)
         direction = XKB_KEY_DOWN;
-    else // mir_key_action_multiple does not correspond to a physical keypress
-        update_state = false;
-
-    if (key_ev.repeat_count > 0)
+    else if (key_ev.action == mir_keyboard_action_repeat)
         update_state = false;
 
     uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code);

@@ -143,11 +143,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     if (!scheduled_composite_frame)
         fatal_error("Failed to get frontbuffer");
 
-    for (auto& output : outputs)
-    {
-        if (!output->set_crtc(scheduled_composite_frame->get_drm_fb_id()))
-            fatal_error("Failed to set DRM crtc");
-    }
+    set_crtc(scheduled_composite_frame);
 
     egl.release_current();
 
@@ -188,11 +184,6 @@ void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rec
 {
     rotation = rot;
     area = a;
-}
-
-bool mgm::DisplayBuffer::uses_alpha() const
-{
-    return false;
 }
 
 bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderable_list)
@@ -241,6 +232,15 @@ void mgm::DisplayBuffer::gl_swap_buffers()
     bypass_bufobj = nullptr;
 }
 
+void mgm::DisplayBuffer::set_crtc(BufferObject const* forced_frame)
+{
+    for (auto& output : outputs)
+    {
+        if (!output->set_crtc(forced_frame->get_drm_fb_id()))
+            fatal_error("Failed to set DRM CRTC");
+    }
+}
+
 void mgm::DisplayBuffer::post()
 {
     /*
@@ -250,22 +250,6 @@ void mgm::DisplayBuffer::post()
      * point before the next schedule_page_flip().
      */
     wait_for_page_flip();
-
-    /*
-     * Switching from bypass to compositing? Now is the earliest safe time
-     * we can unreference the bypass buffer...
-     */
-    if (scheduled_composite_frame)
-        visible_bypass_frame = nullptr;
-    /*
-     * Release the last flipped buffer object (which is not displayed anymore)
-     * to make it available for future rendering.
-     */
-    if (visible_composite_frame)
-        visible_composite_frame->release();
-
-    visible_composite_frame = scheduled_composite_frame;
-    scheduled_composite_frame = nullptr;
 
     mgm::BufferObject *bufobj;
     if (bypass_buf)
@@ -294,11 +278,7 @@ void mgm::DisplayBuffer::post()
     }
     else if (needs_set_crtc)
     {
-        for (auto& output : outputs)
-        {
-            if (!output->set_crtc(bufobj->get_drm_fb_id()))
-                fatal_error("Failed to set DRM crtc");
-        }
+        set_crtc(bufobj);
         needs_set_crtc = false;
     }
 
@@ -313,16 +293,8 @@ void mgm::DisplayBuffer::post()
          * Also, bypass does not need the deferred page flip because it has
          * no compositing/rendering step for which to save time for.
          */
+        scheduled_bypass_frame = bypass_buf;
         wait_for_page_flip();
-        scheduled_composite_frame = nullptr;
-
-        /*
-         * Keep a reference to the buffer being bypassed for the entire
-         * duration of the frame. This ensures the buffer doesn't get reused by
-         * the client while its on-screen, which would be seen as tearing or
-         * worse.
-         */
-        visible_bypass_frame = bypass_buf;
     }
     else
     {
@@ -331,27 +303,9 @@ void mgm::DisplayBuffer::post()
          * making us double-buffered (noticeably less laggy than the triple
          * buffering that clone mode requires).
          */
-        if (outputs.size() == 1)
-        {
-            wait_for_page_flip();
-
-            /*
-             * bufobj is now physically on screen. Release the old frame...
-             */
-            if (visible_composite_frame)
-            {
-                visible_composite_frame->release();
-                visible_composite_frame = nullptr;
-            }
-
-            /*
-             * visible_composite_frame will be set correctly on the next iteration
-             * Don't do it here or else bufobj would be released while still
-             * on screen (hence tearing and artefacts).
-             */
-        }
-
         scheduled_composite_frame = bufobj;
+        if (outputs.size() == 1)
+            wait_for_page_flip();
     }
 }
 
@@ -432,6 +386,20 @@ void mgm::DisplayBuffer::wait_for_page_flip()
             output->wait_for_page_flip();
 
         page_flips_pending = false;
+    }
+
+    if (scheduled_bypass_frame || scheduled_composite_frame)
+    {
+        // Why are both of these grouped into a single statement?
+        // Because in either case both types of frame need releasing each time.
+
+        visible_bypass_frame = scheduled_bypass_frame;
+        scheduled_bypass_frame = nullptr;
+    
+        if (visible_composite_frame)
+            visible_composite_frame->release();
+        visible_composite_frame = scheduled_composite_frame;
+        scheduled_composite_frame = nullptr;
     }
 }
 

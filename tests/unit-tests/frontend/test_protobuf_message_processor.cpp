@@ -22,7 +22,9 @@
 #include "src/server/frontend/protobuf_message_processor.h"
 #include "mir_test/fake_shared.h"
 #include "mir_protobuf_wire.pb.h"
+
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;

@@ -28,6 +28,7 @@
 #include "mir_test_doubles/mock_gl_config.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_host_connection.h"
+#include "mir_test_doubles/stub_cursor_listener.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test/fake_shared.h"
 
@@ -70,7 +71,7 @@ struct NestedDisplay : testing::Test
             mt::fake_shared(null_input_dispatcher),
             mt::fake_shared(null_display_report),
             mt::fake_shared(default_conf_policy),
-            gl_config};
+            gl_config, std::make_shared<mtd::StubCursorListener>()};
 
         return std::unique_ptr<mgn::Display>{nested_display_raw};
     }
@@ -115,6 +116,26 @@ TEST_F(NestedDisplay, respects_gl_config)
     auto const nested_display = create_nested_display(
         null_platform,
         mt::fake_shared(mock_gl_config));
+}
+
+TEST_F(NestedDisplay, has_alpha_channel)
+{
+    using namespace testing;
+
+    // mt::build_trivial_configuration sets mir_pixel_format_abgr_8888
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    mtd::EGLConfigContainsAttrib(EGL_ALPHA_SIZE, 8),
+                    _,_,_))
+        .Times(AtLeast(1))
+        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                        SetArgPointee<4>(1),
+                        Return(EGL_TRUE)));
+
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(stub_gl_config));
 }
 
 TEST_F(NestedDisplay, does_not_change_host_display_configuration_at_construction)
