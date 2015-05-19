@@ -53,7 +53,7 @@ public:
         GLContext const& shared_gl_context,
         GLProgramFactory const& program_factory,
         MirOrientation orientation,
-        geometry::Displacement position,
+        geometry::Displacement offset,
         OverlayOptimization overlay_option);
 
     geometry::Rectangle view_area() const override;

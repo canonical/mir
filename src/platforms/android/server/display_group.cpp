@@ -70,13 +70,7 @@ void mga::DisplayGroup::configure(
     std::unique_lock<decltype(guard)> lk(guard);
     auto it = dbs.find(name);
     if (it != dbs.end())
-    {
-        printf("AND THROUGH.\n");
         it->second->configure(mode, orientation, offset);
-    } else
-    {
-        printf("WWWWT?\n");
-    }
 }
 
 void mga::DisplayGroup::post()

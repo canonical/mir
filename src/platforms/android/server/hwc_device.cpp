@@ -47,10 +47,7 @@ bool plane_alpha_is_translucent(mg::Renderable const& renderable)
 bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
 {
     if (list.empty())
-    {
-        printf("LIST EMPTY\n");
         return false;
-    }
 
     for (auto const& renderable : list)
     {
