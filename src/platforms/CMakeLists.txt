@@ -59,7 +59,3 @@ endif()
 if (MIR_BUILD_PLATFORM_ANDROID)
   add_subdirectory(android/)
 endif()
-
-if (MIR_BUILD_PLATFORM_X)
-  add_subdirectory(X/)
-endif()

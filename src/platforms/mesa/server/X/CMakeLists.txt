@@ -3,7 +3,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/KMS
-  ${CMAKE_CURRENT_SOURCE_DIR}/../mesa/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../include
 )
 
 include_directories(
@@ -29,14 +29,14 @@ add_library(
   input/X_input_platform.cpp
   input/X_input_device.cpp
   input/X_dispatchable.cpp
-  ../mesa/server/KMS/buffer_allocator.cpp
-  ../mesa/server/KMS/drm_mode_resources.cpp
-  ../mesa/server/KMS/anonymous_shm_file.cpp
-  ../mesa/server/KMS/shm_buffer.cpp
-  ../mesa/server/KMS/ipc_operations.cpp
-  ../mesa/server/KMS/gbm_buffer.cpp
-  ../mesa/server/KMS/display_helpers.cpp
-  ../mesa/server/KMS/drm_close_threadsafe.cpp
+  ../KMS/buffer_allocator.cpp
+  ../KMS/drm_mode_resources.cpp
+  ../KMS/anonymous_shm_file.cpp
+  ../KMS/shm_buffer.cpp
+  ../KMS/ipc_operations.cpp
+  ../KMS/gbm_buffer.cpp
+  ../KMS/display_helpers.cpp
+  ../KMS/drm_close_threadsafe.cpp
 )
 
 add_library(
