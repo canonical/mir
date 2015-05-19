@@ -157,16 +157,15 @@ TEST_F(TestDefaultWindowManager, sets_input_focus)
     mtd::StubSceneSession app1;
     NiceMock<mtd::MockSurface> mock_surface;
 
+    auto const surface = mt::fake_shared(mock_surface);
     {
         InSequence seq;
-        EXPECT_CALL(input_targeter, set_focus(Eq(mt::fake_shared(mock_surface)))).Times(1);
+        EXPECT_CALL(input_targeter, set_focus(Eq(surface))).Times(1);
         // When we have no default surface.
-        EXPECT_CALL(input_targeter, clear_focus()).Times(1);
-        // When we have no session.
         EXPECT_CALL(input_targeter, clear_focus()).Times(1);
     }
 
-    shell.set_focus_to(mt::fake_shared(app1), mt::fake_shared(mock_surface));
+    shell.set_focus_to(mt::fake_shared(app1), surface);
     shell.set_focus_to(mt::fake_shared(app1), std::shared_ptr<ms::Surface>());
     shell.set_focus_to(std::shared_ptr<ms::Session>(), std::shared_ptr<ms::Surface>());
 }

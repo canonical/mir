@@ -25,6 +25,7 @@
 #include "std/MirLog.h"
 #include <std/Log.h>
 
+#include <linux/input.h>
 
 #include <sstream>
 #include <cstring>
@@ -107,14 +108,91 @@ const char* mrl::InputReport::component()
     return s;
 }
 
+namespace
+{
+#define PRINT_EV_ENUM(value, name) if (value == name) { return # name; }
+
+std::string print_evdev_type(int type)
+{
+    std::stringstream out;
+    PRINT_EV_ENUM(type, EV_SYN);
+    PRINT_EV_ENUM(type, EV_KEY);
+    PRINT_EV_ENUM(type, EV_REL);
+    PRINT_EV_ENUM(type, EV_ABS);
+    PRINT_EV_ENUM(type, EV_MSC);
+    PRINT_EV_ENUM(type, EV_SW);
+    PRINT_EV_ENUM(type, EV_LED);
+    PRINT_EV_ENUM(type, EV_SND);
+    PRINT_EV_ENUM(type, EV_REP);
+    PRINT_EV_ENUM(type, EV_FF);
+    PRINT_EV_ENUM(type, EV_PWR);
+    PRINT_EV_ENUM(type, EV_FF);
+    PRINT_EV_ENUM(type, EV_MAX);
+    PRINT_EV_ENUM(type, EV_CNT);
+
+    return std::to_string(type);
+}
+
+// Currently we only support pretty printing for ABS_ events as ABS_MT is the hardest protocol to debug
+std::string print_evdev_code(int type, int code)
+{
+    if (type == EV_ABS)
+    {
+        PRINT_EV_ENUM(code, ABS_X);
+        PRINT_EV_ENUM(code, ABS_Y);
+        PRINT_EV_ENUM(code, ABS_Z);
+        PRINT_EV_ENUM(code, ABS_RX);
+        PRINT_EV_ENUM(code, ABS_RY);
+        PRINT_EV_ENUM(code, ABS_RZ);
+        PRINT_EV_ENUM(code, ABS_THROTTLE);
+        PRINT_EV_ENUM(code, ABS_RUDDER);
+        PRINT_EV_ENUM(code, ABS_WHEEL);
+        PRINT_EV_ENUM(code, ABS_GAS);
+        PRINT_EV_ENUM(code, ABS_BRAKE);
+        PRINT_EV_ENUM(code, ABS_HAT0X);
+        PRINT_EV_ENUM(code, ABS_HAT0Y);
+        PRINT_EV_ENUM(code, ABS_HAT1X);
+        PRINT_EV_ENUM(code, ABS_HAT1Y);
+        PRINT_EV_ENUM(code, ABS_HAT2X);
+        PRINT_EV_ENUM(code, ABS_HAT2Y);
+        PRINT_EV_ENUM(code, ABS_HAT3X);
+        PRINT_EV_ENUM(code, ABS_HAT3Y);
+        PRINT_EV_ENUM(code, ABS_PRESSURE);
+        PRINT_EV_ENUM(code, ABS_DISTANCE);
+        PRINT_EV_ENUM(code, ABS_TILT_X);
+        PRINT_EV_ENUM(code, ABS_TILT_Y);
+        PRINT_EV_ENUM(code, ABS_TOOL_WIDTH);
+        PRINT_EV_ENUM(code, ABS_VOLUME);
+        PRINT_EV_ENUM(code, ABS_MISC);
+        PRINT_EV_ENUM(code, ABS_MT_SLOT);
+        PRINT_EV_ENUM(code, ABS_MT_TOUCH_MAJOR);
+        PRINT_EV_ENUM(code, ABS_MT_TOUCH_MINOR);
+        PRINT_EV_ENUM(code, ABS_MT_WIDTH_MAJOR);
+        PRINT_EV_ENUM(code, ABS_MT_WIDTH_MINOR);
+        PRINT_EV_ENUM(code, ABS_MT_ORIENTATION);
+        PRINT_EV_ENUM(code, ABS_MT_POSITION_X);
+        PRINT_EV_ENUM(code, ABS_MT_POSITION_Y);
+        PRINT_EV_ENUM(code, ABS_MT_TOOL_TYPE);
+        PRINT_EV_ENUM(code, ABS_MT_BLOB_ID);
+        PRINT_EV_ENUM(code, ABS_MT_TRACKING_ID);
+        PRINT_EV_ENUM(code, ABS_MT_PRESSURE);
+        PRINT_EV_ENUM(code, ABS_MT_DISTANCE);
+        // input.h from android doesn't have these even though modern kernels do.
+        //        PRINT_EV_ENUM(code, ABS_MT_TOOL_X);
+        //        PRINT_EV_ENUM(code, ABS_MT_TOOL_Y);
+    }
+    return std::to_string(code);
+}
+}
+
 void mrl::InputReport::received_event_from_kernel(int64_t when, int type, int code, int value)
 {
     std::stringstream ss;
 
     ss << "Received event"
        << " time=" << ml::input_timestamp(std::chrono::nanoseconds(when))
-       << " type=" << type
-       << " code=" << code
+       << " type=" << print_evdev_type(type)
+       << " code=" << print_evdev_code(type, code)
        << " value=" << value;
 
     logger->log(ml::Severity::informational, ss.str(), component());

@@ -42,6 +42,7 @@ namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace geom = mir::geometry;
+using namespace std::literals::chrono_literals;
 
 namespace mir
 {
@@ -368,7 +369,7 @@ TEST_F(InputDeviceHubTest, forwards_pointer_updates_to_cursor_listener)
 
     auto x = 12.2f, y = 14.3f;
     std::vector<MirPointerButton> none_pressed;
-    auto event = mir::events::make_event(0, 0, mir_input_event_modifier_none, mir_pointer_action_motion, none_pressed,
+    auto event = mir::events::make_event(0, 0ns, mir_input_event_modifier_none, mir_pointer_action_motion, none_pressed,
                                          x, y, 0.0f, 0.0f);
 
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(x, y)).Times(1);

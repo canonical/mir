@@ -118,6 +118,26 @@ TEST_F(NestedDisplay, respects_gl_config)
         mt::fake_shared(mock_gl_config));
 }
 
+TEST_F(NestedDisplay, has_alpha_channel)
+{
+    using namespace testing;
+
+    // mt::build_trivial_configuration sets mir_pixel_format_abgr_8888
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    mtd::EGLConfigContainsAttrib(EGL_ALPHA_SIZE, 8),
+                    _,_,_))
+        .Times(AtLeast(1))
+        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                        SetArgPointee<4>(1),
+                        Return(EGL_TRUE)));
+
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(stub_gl_config));
+}
+
 TEST_F(NestedDisplay, does_not_change_host_display_configuration_at_construction)
 {
     using namespace testing;
