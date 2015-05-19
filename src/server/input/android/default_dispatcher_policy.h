@@ -42,7 +42,7 @@ class DefaultDispatcherPolicy : public droidinput::InputDispatcherPolicyInterfac
 {
 public:
     DefaultDispatcherPolicy();
-    virtual ~DefaultDispatcherPolicy() {}
+    virtual ~DefaultDispatcherPolicy() = default;
 
     void notifyConfigurationChanged(std::chrono::nanoseconds when);
     std::chrono::nanoseconds notifyANR(droidinput::sp<droidinput::InputApplicationHandle> const& inputApplicationHandle,

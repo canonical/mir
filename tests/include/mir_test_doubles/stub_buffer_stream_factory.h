@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_BUFFER_STREAM_FACTORY_H_
 
 #include "mir/scene/buffer_stream_factory.h"
+#include "stub_buffer_stream.h"
 
 namespace mir
 {
@@ -30,9 +31,9 @@ namespace doubles
 struct StubBufferStreamFactory : public scene::BufferStreamFactory
 {
     std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        int, graphics::BufferProperties const&) { return nullptr; }
+        int, graphics::BufferProperties const& p) { return create_buffer_stream(p); }
     std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        graphics::BufferProperties const&) { return nullptr; }
+        graphics::BufferProperties const&) { return std::make_shared<StubBufferStream>(); }
 };
 }
 }

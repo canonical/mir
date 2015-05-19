@@ -46,7 +46,7 @@ public:
     SurfaceInputDispatcher(std::shared_ptr<input::Scene> const& scene);
     ~SurfaceInputDispatcher();
 
-// mir::input::InputDispatcher
+    // mir::input::InputDispatcher
     bool dispatch(MirEvent const& event) override;
     void start() override;
     void stop() override;
@@ -62,7 +62,7 @@ private:
     bool dispatch_touch(MirInputDeviceId id, MirTouchEvent const* tev);
 
     void send_enter_exit_event(std::shared_ptr<input::Surface> const& surface,
-                               MirPointerEvent const* triggering_ev, MirPointerAction action);
+        MirPointerEvent const* triggering_ev, MirPointerAction action);
 
     std::shared_ptr<input::Surface> find_target_surface(geometry::Point const& target);
 

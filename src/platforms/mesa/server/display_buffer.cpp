@@ -186,11 +186,6 @@ void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rec
     area = a;
 }
 
-bool mgm::DisplayBuffer::uses_alpha() const
-{
-    return false;
-}
-
 bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderable_list)
 {
     if ((rotation == mir_orientation_normal) &&
