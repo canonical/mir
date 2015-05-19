@@ -13,35 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_DEVICE_HUB_H_
-#define MIR_INPUT_INPUT_DEVICE_HUB_H_
+#ifndef MIR_TEST_DOUBLES_STUB_CURSOR_H_
+#define MIR_TEST_DOUBLES_STUB_CURSOR_H_
 
-#include <memory>
+#include "mir/graphics/cursor.h"
 
 namespace mir
 {
-namespace input
+namespace test
 {
-class InputDeviceInfo;
-class InputDeviceObserver;
-
-class InputDeviceHub
+namespace doubles
 {
-public:
-    InputDeviceHub() = default;
-    virtual ~InputDeviceHub() = default;
 
-    virtual void add_observer(std::shared_ptr<InputDeviceObserver> const&) = 0;
-    virtual void remove_observer(std::weak_ptr<InputDeviceObserver> const&) = 0;
-
-    InputDeviceHub(InputDeviceHub const&) = delete;
-    InputDeviceHub& operator=(InputDeviceHub const&) = delete;
+struct StubCursor : public graphics::Cursor
+{
+    void show() override {}
+    void show(graphics::CursorImage const&) override {}
+    void hide() override {}
+    void move_to(geometry::Point) override {}
 };
 
 }
 }
+} // namespace mir
 
-#endif
+#endif /* MIR_TEST_DOUBLES_STUB_CURSOR_H_ */

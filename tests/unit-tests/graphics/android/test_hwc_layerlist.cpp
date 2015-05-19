@@ -235,7 +235,7 @@ TEST_F(LayerListTest, list_is_offset_for_nonorigin_displays)
 
     hwc_layer_1 expected_layer;
     hwc_rect_t visible_rect;
-    geom::Point expected_point{not_offset_rect.top_left + offset};
+    geom::Point expected_point{51, -99};
     geom::Rectangle expected_rectangle{expected_point, buffer1->size()};
     mt::fill_hwc_layer(expected_layer, &visible_rect, expected_rectangle, *buffer1, HWC_FRAMEBUFFER, 0);
 
