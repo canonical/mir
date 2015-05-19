@@ -827,9 +827,8 @@ TEST_F(Display, reports_correct_card_information)
 TEST_F(Display, can_configure_positioning_of_dbs)
 {
     using namespace testing;
-    auto origin = geom::Point{0,0};
-    geom::Displacement offset{493,999};
-    auto new_location = origin - offset;
+    auto new_location = geom::Point{493,999};
+    auto another_new_location = geom::Point{540,221};
     mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
@@ -839,13 +838,17 @@ TEST_F(Display, can_configure_positioning_of_dbs)
 
     auto config = display.configuration();
     config->for_each_output([&](mg::UserDisplayConfigurationOutput& disp_conf) {
-        disp_conf.top_left = disp_conf.top_left + offset;
+        disp_conf.top_left = new_location;
     });
     display.configure(*config);
 
     config = display.configuration();
-    config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf) {
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput& disp_conf) {
         EXPECT_THAT(disp_conf.top_left, Eq(new_location));
+        disp_conf.top_left = another_new_location; 
+    });
+
+    config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf) {
+        EXPECT_THAT(disp_conf.top_left, Eq(another_new_location));
     });
 }
-

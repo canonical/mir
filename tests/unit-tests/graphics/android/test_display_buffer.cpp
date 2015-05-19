@@ -126,6 +126,14 @@ TEST_F(DisplayBuffer, rotation_transposes_dimensions_and_reports_correctly)
     EXPECT_EQ(db.orientation(), mir_orientation_right);
 }
 
+TEST_F(DisplayBuffer, reports_correct_size)
+{
+    auto view_area = db.view_area();
+    geom::Point origin_pt{geom::X{0}, geom::Y{0}};
+    EXPECT_EQ(display_size, view_area.size);
+    EXPECT_EQ(origin_pt, view_area.top_left);
+}
+
 TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
 {
     testing::Mock::VerifyAndClearExpectations(&mock_egl);
@@ -305,5 +313,5 @@ TEST_F(DisplayBuffer, reports_position_correctly)
 
     EXPECT_THAT(db.view_area().top_left, Eq(origin));
     db.configure(mir_power_mode_on, orientation, offset);
-    EXPECT_THAT(db.view_area().top_left, Eq(geom::Point{origin - offset}));
+    EXPECT_THAT(db.view_area().top_left, Eq(geom::Point{origin + offset}));
 }

@@ -247,7 +247,7 @@ TEST_F(HWCFallbackGLRenderer, computes_vertex_coordinates_correctly_with_offset)
     using namespace testing;
     geom::Displacement offset{100, 50};
     geom::Rectangle rect{{100,200},{50, 60}};
-    geom::Rectangle offset_rect{rect.top_left - offset, rect.size};
+    geom::Rectangle offset_rect{{0, 150}, rect.size};
  
     mg::RenderableList renderlist{std::make_shared<mtd::StubRenderable>(rect)};
     std::vector<Vertex> expected_vertices {

@@ -65,12 +65,18 @@ bool mga::DisplayGroup::display_present(DisplayName name) const
 }
 
 void mga::DisplayGroup::configure(
-    DisplayName name, MirPowerMode mode, MirOrientation orientation, geom::Displacement pt)
+    DisplayName name, MirPowerMode mode, MirOrientation orientation, geom::Displacement offset)
 {
     std::unique_lock<decltype(guard)> lk(guard);
     auto it = dbs.find(name);
     if (it != dbs.end())
-        it->second->configure(mode, orientation, pt);
+    {
+        printf("AND THROUGH.\n");
+        it->second->configure(mode, orientation, offset);
+    } else
+    {
+        printf("WWWWT?\n");
+    }
 }
 
 void mga::DisplayGroup::post()

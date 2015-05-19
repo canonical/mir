@@ -111,6 +111,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     mg::DisplayConfigurationOutput const& config,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
     mga::PbufferGLContext const& gl_context,
+    geom::Displacement displacement,
     mga::OverlayOptimization overlay_option)
 {
     std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(config)};
@@ -126,7 +127,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
         gl_context,
         *gl_program_factory,
         mir_orientation_normal,
-        geom::Displacement{0,0},
+        displacement,
         overlay_option));
 }
 }
@@ -161,6 +162,7 @@ mga::Display::Display(
             config.primary(),
             gl_program_factory,
             gl_context,
+            geom::Displacement{0,0},
             overlay_option))
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
@@ -176,7 +178,8 @@ mga::Display::Display(
                 config.external(),
                 gl_program_factory,
                 gl_context,
-                mga::OverlayOptimization::disabled));
+                geom::Displacement{0,0},
+                mga::OverlayOptimization::enabled));
     }
 
     display_report->report_successful_setup_of_native_resources();
@@ -224,7 +227,8 @@ void mga::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
                 config.external(),
                 gl_program_factory,
                 gl_context,
-                mga::OverlayOptimization::disabled));
+                config.external().top_left - origin,
+                mga::OverlayOptimization::enabled));
     if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
         displays.remove(mga::DisplayName::external);
 
@@ -251,12 +255,11 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
         if (output.current_format != config[output.id].current_format)
             BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
 
-        geom::Displacement offset(
-            config[output.id].top_left.x - output.top_left.x,
-            config[output.id].top_left.y - output.top_left.y);
-
         config[output.id].orientation = output.orientation;
-        config[output.id].top_left = config[output.id].top_left + offset;
+
+        geom::Displacement offset(output.top_left - origin);
+        config[output.id].top_left = output.top_left;
+
         if (config.primary().id == output.id)
         {
             power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);

@@ -65,7 +65,7 @@ geom::Rectangle mga::DisplayBuffer::view_area() const
         std::swap(width, height);
 
     geom::Point origin;
-    return {origin - offset_from_origin, {width,height}};
+    return {origin + offset_from_origin, {width,height}};
 }
 
 void mga::DisplayBuffer::make_current()
@@ -81,7 +81,9 @@ void mga::DisplayBuffer::release_current()
 bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
 {
     if (!overlay_enabled || !display_device->compatible_renderlist(renderlist))
+    {
         return false;
+    }
 
     layer_list->update_list(renderlist, offset_from_origin);
 
