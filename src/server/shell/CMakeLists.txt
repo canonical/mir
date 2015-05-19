@@ -9,6 +9,7 @@ set(
   default_configuration.cpp
   default_window_manager.cpp
   shell_wrapper.cpp
+  surface_ready_observer.cpp
 )
 
 add_library(
