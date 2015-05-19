@@ -234,7 +234,8 @@ void paint_titlebar(
     mir::examples::CanonicalSurfaceInfoCopy& titlebar_info,
     int intensity)
 {
-    auto const format = titlebar->pixel_format();
+    auto stream = titlebar->primary_buffer_stream();
+    auto const format = stream->pixel_format();
 
     if (!titlebar_info.buffer)
         swap_buffers(titlebar, titlebar_info.buffer);

@@ -65,8 +65,6 @@ public:
 
     MirOrientation orientation() const override;
 
-    bool uses_alpha() const override;
-
 private:
     geometry::Rectangle const rect;
     graphics::Buffer& buffer;

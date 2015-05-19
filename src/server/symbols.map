@@ -492,7 +492,6 @@ MIR_SERVER_32 {
     mir::compositor::GLRenderer::GLRenderer*;
     mir::compositor::GLRenderer::?GLRenderer*;
     mir::compositor::GLRenderer::Program::Program*;
-    mir::compositor::GLRenderer::destination_alpha*;
     mir::compositor::GLRenderer::draw*;
     mir::compositor::GLRenderer::render*;
     mir::compositor::GLRenderer::set_rotation*;
