@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     float const opacity = mir_eglapp_background_opacity;
     Color const orange = {0.866666667f, 0.282352941f, 0.141414141f, opacity};
 
-    unsigned int width = 120, height = 120;
+    unsigned int width = 300, height = 200;
 
     if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
@@ -50,10 +50,18 @@ int main(int argc, char *argv[])
     mir_eglapp_swap_buffers();
 
     MirConnection* const connection = mir_eglapp_native_connection();
-    MirPixelFormat const format = select_pixel_format(connection);
     MirSurface* const parent = mir_eglapp_native_surface();
 
-    MirSurface* tooltip = create_tooltip(connection, parent, format);
+    MirSurfaceSpec* const spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_set_name(spec, "tooltip example");
+    mir_surface_spec_set_min_width(spec, width/2);
+    mir_surface_spec_set_max_width(spec, width*2);
+    mir_surface_spec_set_min_height(spec, height/2);
+    mir_surface_spec_set_max_height(spec, height*2);
+    mir_surface_apply_spec(parent, spec);
+    mir_surface_spec_release(spec);
+
+    MirSurface* tooltip = create_tooltip(connection, parent, select_pixel_format(connection));
     while (mir_eglapp_running())
     {
     }
@@ -92,12 +100,17 @@ static MirPixelFormat select_pixel_format(MirConnection* connection)
 static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* const parent, const MirPixelFormat format)
 {
     MirRectangle zone = { 0, 0, 10, 10 };
-
+    int const width = 50;
+    int const height = 20;
     MirSurfaceSpec* const spec = mir_connection_create_spec_for_tooltip(
-        connection, 20, 20, format, parent, &zone);
+        connection, width, height, format, parent, &zone);
 
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     mir_surface_spec_set_name(spec, "tooltip");
+    mir_surface_spec_set_min_width(spec, width);
+    mir_surface_spec_set_max_width(spec, width);
+    mir_surface_spec_set_min_height(spec, height);
+    mir_surface_spec_set_max_height(spec, height);
 
     MirSurface* tooltip = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
