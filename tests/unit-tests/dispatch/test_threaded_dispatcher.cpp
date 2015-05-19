@@ -193,7 +193,7 @@ TEST_F(ThreadedDispatcherTest, dispatches_multiple_dispatchees_simultaneously)
     using namespace testing;
 
     auto first_dispatched = std::make_shared<mt::Signal>();
-    auto second_dispatched = std::make_shared<mt::Signal>();;
+    auto second_dispatched = std::make_shared<mt::Signal>();
 
     // Set up two dispatchables that can run given two threads of execution,
     // but will deadlock if run sequentially.
