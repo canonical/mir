@@ -18,8 +18,8 @@
 
 #include "platform.h"
 #include "display.h"
-#include "../../mesa/server/buffer_allocator.h"
-#include "../../mesa/server/ipc_operations.h"
+#include "buffer_allocator.h"
+#include "ipc_operations.h"
 #include "mir/udev/wrapper.h"
 #include "debug.h"
 

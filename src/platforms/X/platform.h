@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_X_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "../../mesa/server/display_helpers.h"
+#include "display_helpers.h"
 
 namespace mir
 {
