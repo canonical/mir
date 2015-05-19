@@ -74,7 +74,7 @@ template <typename T>
 void deliver(std::shared_ptr<mi::Surface> const& surface, T const* ev)
 {
     MirEvent to_deliver;
-    memcpy(&to_deliver, ev, sizeof(MirEvent));
+    to_deliver = *reinterpret_cast<MirEvent const*>(ev);
     
     if (to_deliver.type == mir_event_type_motion)
     {
