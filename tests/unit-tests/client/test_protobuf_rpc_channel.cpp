@@ -48,8 +48,6 @@ namespace mtd = mir::test::doubles;
 namespace md = mir::dispatch;
 namespace mt = mir::test;
 
-namespace mt = mir::test;
-
 namespace
 {
 
