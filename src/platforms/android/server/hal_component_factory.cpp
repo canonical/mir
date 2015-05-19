@@ -89,8 +89,6 @@ std::unique_ptr<mga::LayerList> mga::HalComponentFactory::create_layer_list()
             return std::unique_ptr<mga::LayerList>(
                 new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, offset));
         case mga::HwcVersion::hwc13:
-            return std::unique_ptr<mga::LayerList>(
-                new mga::LayerList(std::make_shared<mga::FloatSourceCrop>(), {}, offset));
         case mga::HwcVersion::hwc14:
             return std::unique_ptr<mga::LayerList>(
                 new mga::LayerList(std::make_shared<mga::FloatSourceCrop>(), {}, offset));
