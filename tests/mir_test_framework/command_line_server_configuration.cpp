@@ -43,6 +43,12 @@ void mir_test_framework::configure_from_commandline(mir::Server& server)
     server.set_command_line(::argc, ::argv);
 }
 
+char const* mir_test_framework::get_argv(int index)
+{
+    if (index > argc) return nullptr;
+    return argv[index];
+}
+
 int main(int argc, char** argv)
 {
     // Override this standard gtest message
