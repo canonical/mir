@@ -146,17 +146,17 @@ add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 # Default to mesa backend, but build all of them
 set(
   MIR_PLATFORM
-  mesa;android;X
+  KMS;android;X
   CACHE
   STRING
-  "a list of graphics backends to build (options are 'mesa' or 'android')"
+  "a list of graphics backends to build (options are 'KMS', 'android' or 'X')"
 )
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
 foreach(platform IN LISTS MIR_PLATFORM)
-  if (platform STREQUAL "mesa")
-    set(MIR_BUILD_PLATFORM_MESA TRUE)
+  if (platform STREQUAL "KMS")
+    set(MIR_BUILD_PLATFORM_KMS TRUE)
   endif()
   if (platform STREQUAL "android")
      set(MIR_BUILD_PLATFORM_ANDROID TRUE)
@@ -165,6 +165,10 @@ foreach(platform IN LISTS MIR_PLATFORM)
      set(MIR_BUILD_PLATFORM_X TRUE)
   endif()
 endforeach(platform)
+
+if (MIR_BUILD_PLATFORM_KMS OR MIR_BUILD_PLATFORM_X)
+  set(MIR_BUILD_PLATFORM_MESA TRUE)
+endif()
 
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
