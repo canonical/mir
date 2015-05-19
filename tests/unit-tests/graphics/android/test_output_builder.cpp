@@ -21,6 +21,7 @@
 #include "src/platforms/android/server/resource_factory.h"
 #include "src/platforms/android/server/graphic_buffer_allocator.h"
 #include "src/platforms/android/server/hwc_loggers.h"
+#include "src/platforms/android/server/hwc_configuration.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test/fake_shared.h"
@@ -128,6 +129,20 @@ TEST_F(HalComponentFactory, builds_hwc_version_11_and_later)
         mock_resource_factory,
         mock_hwc_report);
     factory.create_display_device();
+}
+
+TEST_F(HalComponentFactory, allocates_correct_hwc_configuration)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
+        .WillOnce(Return(std::make_tuple(mock_wrapper, mga::HwcVersion::hwc14)));
+
+    mga::HalComponentFactory factory(
+        mt::fake_shared(mock_buffer_allocator),
+        mock_resource_factory,
+        mock_hwc_report);
+    auto hwc_config = factory.create_hwc_configuration();
+    EXPECT_THAT(dynamic_cast<mga::HwcPowerModeControl*>(hwc_config.get()), Ne(nullptr));
 }
 
 TEST_F(HalComponentFactory, hwc_failure_falls_back_to_fb)

@@ -63,9 +63,7 @@ public:
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     MirOrientation orientation() const override;
-    bool uses_alpha() const override;
     void configure(MirPowerMode power_mode, MirOrientation orientation, geometry::Displacement) override;
-
     DisplayContents contents() override;
     MirPowerMode power_mode() const override;
 private:

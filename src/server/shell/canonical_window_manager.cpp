@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "canonical_window_manager.h"
+#include "mir/shell/canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
@@ -26,6 +26,8 @@
 
 #include <linux/input.h>
 #include <csignal>
+
+#include <climits>
 
 namespace msh = mir::shell;
 namespace ms = mir::scene;
@@ -43,11 +45,15 @@ msh::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
     state{mir_surface_state_restored},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
-    parent{surface->parent()},
+    parent{params.parent},
     min_width{params.min_width},
     min_height{params.min_height},
     max_width{params.max_width},
-    max_height{params.max_height}
+    max_height{params.max_height},
+    width_inc{params.width_inc},
+    height_inc{params.height_inc},
+    min_aspect{params.min_aspect},
+    max_aspect{params.max_aspect}
 {
 }
 
@@ -190,11 +196,15 @@ class SurfaceReadyObserver : public ms::NullSurfaceObserver,
     public std::enable_shared_from_this<SurfaceReadyObserver>
 {
 public:
+    using ActivateFunction = std::function<void(
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& surface)>;
+
     SurfaceReadyObserver(
-        msh::CanonicalWindowManagerPolicy::Tools* const focus_controller,
+        ActivateFunction const& activate,
         std::shared_ptr<ms::Session> const& session,
         std::shared_ptr<ms::Surface> const& surface) :
-        focus_controller{focus_controller},
+        activate{activate},
         session{session},
         surface{surface}
     {
@@ -205,12 +215,12 @@ private:
     {
         if (auto const s = surface.lock())
         {
-            focus_controller->set_focus_to(session.lock(), s);
+            activate(session.lock(), s);
             s->remove_observer(shared_from_this());
         }
     }
 
-    msh::CanonicalWindowManagerPolicy::Tools* const focus_controller;
+    ActivateFunction const activate;
     std::weak_ptr<ms::Session> const session;
     std::weak_ptr<ms::Surface> const surface;
 };
@@ -237,8 +247,14 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
         // TODO There's currently no way to insert surfaces into an active (or inactive)
         // TODO window tree while keeping the order stable or consistent with spec.
         // TODO Nor is there a way to update the "default surface" when appropriate!!
-        surface->add_observer(std::make_shared<SurfaceReadyObserver>(tools, session, surface));
-        active_surface_ = surface;
+        surface->add_observer(std::make_shared<SurfaceReadyObserver>(
+            [this](std::shared_ptr<scene::Session> const& /*session*/,
+                   std::shared_ptr<scene::Surface> const& surface)
+                {
+                    select_active_surface(surface);
+                },
+            session,
+            surface));
         break;
 
     case mir_surface_type_gloss:
@@ -256,20 +272,24 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 {
     auto& surface_info = tools->info_for(surface);
 
+    #define COPY_IF_SET(field)\
+        if (modifications.field.is_set())\
+        surface_info.field = modifications.field
+
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(min_height);
+    COPY_IF_SET(max_width);
+    COPY_IF_SET(max_height);
+    COPY_IF_SET(min_width);
+    COPY_IF_SET(width_inc);
+    COPY_IF_SET(height_inc);
+    COPY_IF_SET(min_aspect);
+    COPY_IF_SET(max_aspect);
+
+    #undef COPY_IF_SET
+
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
-
-    if (modifications.min_width.is_set())
-        surface_info.min_width = modifications.min_width;
-
-    if (modifications.min_height.is_set())
-        surface_info.min_height = modifications.min_height;
-
-    if (modifications.max_width.is_set())
-        surface_info.max_width = modifications.max_width;
-
-    if (modifications.max_height.is_set())
-        surface_info.max_height = modifications.max_height;
 
     if (modifications.width.is_set() || modifications.height.is_set())
     {
@@ -307,12 +327,11 @@ void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms
         }
     }
 
-
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
+        active_surface_.reset();
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        select_active_surface(tools->focused_surface());
     }
 }
 
@@ -540,6 +559,9 @@ void msh::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms
 {
     if (!surface)
     {
+        if (active_surface_.lock())
+            tools->set_focus_to({}, {});
+
         active_surface_.reset();
         return;
     }
@@ -623,83 +645,105 @@ bool msh::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> cons
 
 bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     std::shared_ptr<ms::Surface> const& surface,
-    Point new_pos,
-    Size new_size,
+    Point const& requested_pos,
+    Size const& requested_size,
     bool const left_resize,
     bool const top_resize,
-    Rectangle const& bounds)
+    Rectangle const& /*bounds*/)
 {
     auto const& surface_info = tools->info_for(surface);
 
-    if (surface_info.min_width.is_set() && surface_info.min_width.value() > new_size.width)
-    {
-        if (left_resize)
-        {
-            new_pos.x += surface_info.min_width.value() - new_size.width;
-        }
+    auto const min_width  = surface_info.min_width.is_set()  ? surface_info.min_width.value()  : Width{};
+    auto const min_height = surface_info.min_height.is_set() ? surface_info.min_height.value() : Height{};
+    auto const max_width  = surface_info.max_width.is_set()  ?
+        surface_info.max_width.value()  : Width{std::numeric_limits<int>::max()};
+    auto const max_height = surface_info.max_height.is_set() ?
+        surface_info.max_height.value() : Height{std::numeric_limits<int>::max()};
 
-        new_size.width = surface_info.min_width.value();
+    Point new_pos = requested_pos;
+    Size new_size = requested_size;
+
+    if (surface_info.min_aspect.is_set())
+    {
+        auto const ar = surface_info.min_aspect.value();
+
+        auto const error = new_size.height.as_int()*long(ar.width) - new_size.width.as_int()*long(ar.height);
+
+        if (error > 0)
+        {
+            // Add (denominator-1) to numerator to ensure rounding up
+            auto const width_correction  = (error+(ar.height-1))/ar.height;
+            auto const height_correction = (error+(ar.width-1))/ar.width;
+
+            if (width_correction < height_correction)
+            {
+                new_size.width = new_size.width + DeltaX(width_correction);
+            }
+            else
+            {
+                new_size.height = new_size.height - DeltaY(height_correction);
+            }
+        }
     }
 
-    if (surface_info.min_height.is_set() && surface_info.min_height.value() > new_size.height)
+    if (surface_info.max_aspect.is_set())
     {
-        if (top_resize)
-        {
-            new_pos.y += surface_info.min_height.value() - new_size.height;
-        }
+        auto const ar = surface_info.max_aspect.value();
 
-        new_size.height = surface_info.min_height.value();
+        auto const error = new_size.width.as_int()*long(ar.height) - new_size.height.as_int()*long(ar.width);
+
+        if (error > 0)
+        {
+            // Add (denominator-1) to numerator to ensure rounding up
+            auto const height_correction = (error+(ar.width-1))/ar.width;
+            auto const width_correction  = (error+(ar.height-1))/ar.height;
+
+            if (width_correction < height_correction)
+            {
+                new_size.width = new_size.width - DeltaX(width_correction);
+            }
+            else
+            {
+                new_size.height = new_size.height + DeltaY(height_correction);
+            }
+        }
     }
 
-    if (surface_info.max_width.is_set() && surface_info.max_width.value() < new_size.width)
-    {
-        if (left_resize)
-        {
-            new_pos.x += surface_info.max_width.value() - new_size.width;
-        }
+    if (min_width > new_size.width)
+        new_size.width = min_width;
 
-        new_size.width = surface_info.max_width.value();
+    if (min_height > new_size.height)
+        new_size.height = min_height;
+
+    if (max_width < new_size.width)
+        new_size.width = max_width;
+
+    if (max_height < new_size.height)
+        new_size.height = max_height;
+
+    if (surface_info.width_inc.is_set())
+    {
+        auto const width = new_size.width.as_int() - min_width.as_int();
+        auto inc = surface_info.width_inc.value().as_int();
+        if (width % inc)
+            new_size.width = min_width + DeltaX{inc*(((2L*width + inc)/2)/inc)};
     }
 
-    if (surface_info.max_height.is_set() && surface_info.max_height.value() < new_size.height)
+    if (surface_info.height_inc.is_set())
     {
-        if (top_resize)
-        {
-            new_pos.y += surface_info.max_height.value() - new_size.height;
-        }
-
-        new_size.height = surface_info.max_height.value();
+        auto const height = new_size.height.as_int() - min_height.as_int();
+        auto inc = surface_info.height_inc.value().as_int();
+        if (height % inc)
+            new_size.height = min_height + DeltaY{inc*(((2L*height + inc)/2)/inc)};
     }
 
     if (left_resize)
-    {
-        if (new_pos.x < bounds.top_left.x)
-        {
-            new_size.width = new_size.width + (new_pos.x - bounds.top_left.x);
-            new_pos.x = bounds.top_left.x;
-        }
-    }
-    else
-    {
-        auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
-        if (to_bottom_right.dx < DeltaX{0})
-            new_size.width = new_size.width + to_bottom_right.dx;
-    }
+        new_pos.x += new_size.width - requested_size.width;
 
     if (top_resize)
-    {
-        if (new_pos.y < bounds.top_left.y)
-        {
-            new_size.height = new_size.height + (new_pos.y - bounds.top_left.y);
-            new_pos.y = bounds.top_left.y;
-        }
-    }
-    else
-    {
-        auto to_bottom_right = bounds.bottom_right() - (new_pos + as_displacement(new_size));
-        if (to_bottom_right.dy < DeltaY{0})
-            new_size.height = new_size.height + to_bottom_right.dy;
-    }
+        new_pos.y += new_size.height - requested_size.height;
+
+    // placeholder - constrain onscreen
 
     switch (surface_info.state)
     {
@@ -738,27 +782,13 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     return true;
 }
 
-bool msh::CanonicalWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
+bool msh::CanonicalWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle /*bounds*/)
 {
     if (surface && surface->input_area_contains(from))
     {
-        auto const top_left = surface->top_left();
-        auto const surface_size = surface->size();
-        auto const bottom_right = top_left + as_displacement(surface_size);
-
         auto movement = to - from;
 
-        if (movement.dx < DeltaX{0})
-            movement.dx = std::max(movement.dx, (bounds.top_left - top_left).dx);
-
-        if (movement.dy < DeltaY{0})
-            movement.dy = std::max(movement.dy, (bounds.top_left - top_left).dy);
-
-        if (movement.dx > DeltaX{0})
-            movement.dx = std::min(movement.dx, (bounds.bottom_right() - bottom_right).dx);
-
-        if (movement.dy > DeltaY{0})
-            movement.dy = std::min(movement.dy, (bounds.bottom_right() - bottom_right).dy);
+        // placeholder - constrain onscreen
 
         move_tree(surface, movement);
 

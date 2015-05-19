@@ -50,6 +50,7 @@ mga::HalComponentFactory::HalComponentFactory(
     try
     {
         std::tie(hwc_wrapper, hwc_version) = res_factory->create_hwc_wrapper(hwc_report);
+        hwc_report->set_version(hwc_version);
     } catch (...)
     {
         force_backup_display = true;
@@ -91,6 +92,8 @@ std::unique_ptr<mga::LayerList> mga::HalComponentFactory::create_layer_list()
             return std::unique_ptr<mga::LayerList>(
                 new mga::LayerList(std::make_shared<mga::FloatSourceCrop>(), {}, offset));
         case mga::HwcVersion::hwc14:
+            return std::unique_ptr<mga::LayerList>(
+                new mga::LayerList(std::make_shared<mga::FloatSourceCrop>(), {}, offset));
         case mga::HwcVersion::unknown:
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("unknown or unsupported hwc version"));
@@ -116,10 +119,10 @@ std::unique_ptr<mga::DisplayDevice> mga::HalComponentFactory::create_display_dev
             case mga::HwcVersion::hwc11:
             case mga::HwcVersion::hwc12:
             case mga::HwcVersion::hwc13:
+            case mga::HwcVersion::hwc14:
                return std::unique_ptr<mga::DisplayDevice>(
                     new mga::HwcDevice(hwc_wrapper));
 
-            case mga::HwcVersion::hwc14:
             case mga::HwcVersion::unknown:
             default:
                 BOOST_THROW_EXCEPTION(std::runtime_error("unknown or unsupported hwc version"));
@@ -131,6 +134,8 @@ std::unique_ptr<mga::HwcConfiguration> mga::HalComponentFactory::create_hwc_conf
 {
     if (force_backup_display || hwc_version == mga::HwcVersion::hwc10)
         return std::unique_ptr<mga::HwcConfiguration>(new mga::FbControl(fb_native));
-    else
+    else if (hwc_version < mga::HwcVersion::hwc14)
         return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcBlankingControl(hwc_wrapper));
+    else
+        return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcPowerModeControl(hwc_wrapper));
 }

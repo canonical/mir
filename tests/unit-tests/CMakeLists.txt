@@ -33,7 +33,6 @@ add_library(example SHARED library_example.cpp)
 target_link_libraries(example mircommon)
 set_target_properties(
   example PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
   OUTPUT_NAME example
   PREFIX ""
 )
@@ -77,7 +76,7 @@ add_subdirectory(examples/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
 
-link_directories(${LIBRARY_OUTPUT_PATH})
+link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 mir_add_wrapped_executable(mir_unit_tests
   ${UNIT_TEST_SOURCES}
@@ -155,6 +154,6 @@ endif (MIR_RUN_UNIT_TESTS)
 
 add_custom_command(TARGET mir_unit_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_data ${CMAKE_BINARY_DIR}/bin/test_data
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_data ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_data
   COMMENT "Copying test data to build dir..."
 )

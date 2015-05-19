@@ -22,6 +22,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/scene/surface_factory.h"
 
 #include "src/server/scene/default_session_container.h"
 #include "src/server/scene/session_event_sink.h"
@@ -86,6 +87,13 @@ struct MockSessionManager : ms::SessionManager
     { ms::SessionManager::set_focus_to(focus); }
 };
 
+struct MockSurfaceFactory : public ms::SurfaceFactory
+{
+    MOCK_METHOD2(create_surface, std::shared_ptr<ms::Surface>(
+        std::shared_ptr<mir::compositor::BufferStream> const&,
+        ms::SurfaceCreationParameters const&));
+};
+
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
 
 struct AbstractShell : Test
@@ -95,9 +103,11 @@ struct AbstractShell : Test
     NiceMock<MockSessionContainer> session_container;
     NiceMock<MockSessionEventSink> session_event_sink;
     NiceMock<mtd::MockSessionListener> session_listener;
+    NiceMock<MockSurfaceFactory> surface_factory;
 
     NiceMock<MockSessionManager> session_manager{
         mt::fake_shared(surface_coordinator),
+        mt::fake_shared(surface_factory),
         std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(session_container),
         std::make_shared<mtd::NullSnapshotStrategy>(),
@@ -119,9 +129,11 @@ struct AbstractShell : Test
         ON_CALL(session_container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
         ON_CALL(session_manager, set_focus_to(_)).
             WillByDefault(Invoke(&session_manager, &MockSessionManager::unmocked_set_focus_to));
-        ON_CALL(surface_coordinator, add_surface(_,_))
+        ON_CALL(surface_factory, create_surface(_,_))
             .WillByDefault(Return(mt::fake_shared(mock_surface)));
     }
+
+    std::chrono::nanoseconds const event_timestamp = std::chrono::nanoseconds(0);
 };
 }
 
@@ -184,7 +196,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
 
-    EXPECT_CALL(surface_coordinator, add_surface(placed_params, _));
+    EXPECT_CALL(surface_coordinator, add_surface(_,placed_params.depth,placed_params.input_mode,_));
 
     EXPECT_CALL(*wm, add_surface(session, Ref(params), _)).WillOnce(Invoke(
         [&](std::shared_ptr<ms::Session> const& session,
@@ -229,7 +241,6 @@ TEST_F(AbstractShell, remove_display_adds_display_to_window_manager)
 
 TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 {
-    int64_t const timestamp{0};
     MirKeyboardAction const action{mir_keyboard_action_down};
     xkb_keysym_t const key_code{0};
     int const scan_code{0};
@@ -237,7 +248,7 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 
     auto const event = mir::events::make_event(
         mir_input_event_type_key,
-        timestamp,
+        event_timestamp,
         action,
         key_code,
         scan_code,
@@ -253,12 +264,11 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 
 TEST_F(AbstractShell, touch_input_events_are_handled_by_window_manager)
 {
-    int64_t const timestamp{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
 
     auto const event = mir::events::make_event(
         mir_input_event_type_touch,
-        timestamp,
+        event_timestamp,
         modifiers);
 
     EXPECT_CALL(*wm, handle_touch_event(_))
@@ -271,7 +281,6 @@ TEST_F(AbstractShell, touch_input_events_are_handled_by_window_manager)
 
 TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
 {
-    int64_t const timestamp{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
     MirPointerAction const action{mir_pointer_action_button_down};
     std::vector<MirPointerButton> const buttons_pressed{mir_pointer_button_primary};
@@ -282,7 +291,7 @@ TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
 
     auto const event = mir::events::make_event(
         mir_input_event_type_pointer,
-        timestamp,
+        event_timestamp,
         modifiers,
         action,
         buttons_pressed,
@@ -372,7 +381,7 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
     auto const session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
     NiceMock<mtd::MockSurface> dummy_surface;
 
-    EXPECT_CALL(surface_coordinator, add_surface(_,_)).Times(AnyNumber())
+    EXPECT_CALL(surface_factory, create_surface(_,_)).Times(AnyNumber())
         .WillOnce(Return(mt::fake_shared(dummy_surface)))
         .WillOnce(Return(mt::fake_shared(mock_surface)));
     EXPECT_CALL(session_container, successor_of(session1)).

@@ -68,7 +68,6 @@ public:
 
     MirOrientation orientation() const override;
     void set_orientation(MirOrientation const rot, geometry::Rectangle const& a);
-    bool uses_alpha() const override;
     void schedule_set_crtc();
     void wait_for_page_flip();
 
@@ -76,10 +75,11 @@ private:
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
     bool schedule_page_flip(BufferObject* bufobj);
+    void set_crtc(BufferObject const*);
 
     BufferObject* visible_composite_frame;
     BufferObject* scheduled_composite_frame;
-    std::shared_ptr<graphics::Buffer> visible_bypass_frame;
+    std::shared_ptr<graphics::Buffer> visible_bypass_frame, scheduled_bypass_frame;
     std::shared_ptr<Buffer> bypass_buf{nullptr};
     BufferObject* bypass_bufobj{nullptr};
     std::shared_ptr<Platform> const platform;

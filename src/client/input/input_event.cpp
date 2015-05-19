@@ -184,9 +184,9 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
     switch (old_ev->type)
     {
     case mir_event_type_motion:
-        return old_ev->motion.event_time;
+        return old_ev->motion.event_time.count();
     case mir_event_type_key:
-        return old_ev->key.event_time;
+        return old_ev->key.event_time.count();
     default:
         abort();
     }
@@ -209,22 +209,8 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
 MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev)
 {
     auto const& old_kev = old_kev_from_new(kev);
-    
-    switch (old_kev.action)
-    {
-    case mir_key_action_down:
-        if (old_kev.repeat_count != 0)
-            return mir_keyboard_action_repeat;
-        else
-            return mir_keyboard_action_down;
-    case mir_key_action_up:
-        return mir_keyboard_action_up;
-    default:
-        // TODO:? This means we got key_action_multiple which I dont think is 
-        // actually emitted yet (and never will be as in the future it would fall under text
-        // event in the new model).
-        return mir_keyboard_action_down;
-    }
+
+    return old_kev.action;
 }
 
 xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* kev)
@@ -239,66 +225,17 @@ int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev)
     return old_kev.scan_code;
 }
 
-namespace
-{
-MirInputEventModifiers old_modifiers_to_new(unsigned int old_modifier)
-{
-    MirInputEventModifiers modifier = 0;
-
-    if (old_modifier & mir_key_modifier_none)
-        modifier |= mir_input_event_modifier_none;
-    if (old_modifier & mir_key_modifier_alt)
-        modifier |= mir_input_event_modifier_alt;
-    if (old_modifier & mir_key_modifier_alt_left)
-        modifier |= mir_input_event_modifier_alt_left;
-    if (old_modifier & mir_key_modifier_alt_right)
-        modifier |= mir_input_event_modifier_alt_right;
-    if (old_modifier & mir_key_modifier_shift)
-        modifier |= mir_input_event_modifier_shift;
-    if (old_modifier & mir_key_modifier_shift_left)
-        modifier |= mir_input_event_modifier_shift_left;
-    if (old_modifier & mir_key_modifier_shift_right)
-        modifier |= mir_input_event_modifier_shift_right;
-    if (old_modifier & mir_key_modifier_sym)
-        modifier |= mir_input_event_modifier_sym;
-    if (old_modifier & mir_key_modifier_function)
-        modifier |= mir_input_event_modifier_function;
-    if (old_modifier & mir_key_modifier_ctrl)
-        modifier |= mir_input_event_modifier_ctrl;
-    if (old_modifier & mir_key_modifier_ctrl_left)
-        modifier |= mir_input_event_modifier_ctrl_left;
-    if (old_modifier & mir_key_modifier_ctrl_right)
-        modifier |= mir_input_event_modifier_ctrl_right;
-    if (old_modifier & mir_key_modifier_meta)
-        modifier |= mir_input_event_modifier_meta;
-    if (old_modifier & mir_key_modifier_meta_left)
-        modifier |= mir_input_event_modifier_meta_left;
-    if (old_modifier & mir_key_modifier_meta_right)
-        modifier |= mir_input_event_modifier_meta_right;
-    if (old_modifier & mir_key_modifier_caps_lock)
-        modifier |= mir_input_event_modifier_caps_lock;
-    if (old_modifier & mir_key_modifier_num_lock)
-        modifier |= mir_input_event_modifier_num_lock;
-    if (old_modifier & mir_key_modifier_scroll_lock)
-        modifier |= mir_input_event_modifier_scroll_lock;
-
-    if (modifier)
-        return modifier;
-    return mir_input_event_modifier_none;
-}
-}
-
 MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev)
 {    
     auto const& old_kev = old_kev_from_new(kev);
-    return old_modifiers_to_new(old_kev.modifiers);
+    return old_kev.modifiers;
 }
 /* Touch event accessors */
 
 MirInputEventModifiers mir_touch_event_modifiers(MirTouchEvent const* tev)
 {    
     auto const& old_mev = old_mev_from_new(tev);
-    return old_modifiers_to_new(old_mev.modifiers);
+    return old_mev.modifiers;
 }
 
 MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev)
@@ -453,7 +390,7 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
 MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev)
 {    
     auto const& old_mev = old_mev_from_new(pev);
-    return old_modifiers_to_new(old_mev.modifiers);
+    return old_mev.modifiers;
 }
 
 MirPointerAction mir_pointer_event_action(MirPointerEvent const* pev)

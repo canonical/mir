@@ -33,7 +33,6 @@ MIRPLATFORM_7 {
     mir::graphics::DisplayBuffer::orientation*;
     mir::graphics::DisplayBuffer::post_renderables_if_optimizable*;
     mir::graphics::DisplayBuffer::release_current*;
-    mir::graphics::DisplayBuffer::uses_alpha*;
     mir::graphics::DisplayBuffer::view_area*;
     mir::graphics::Display::configuration*;
     mir::graphics::DisplayConfiguration::DisplayConfiguration*;
