@@ -79,12 +79,10 @@ public:
      * set_input_region({geom::Rectangle{}}).
      */
     virtual void set_input_region(std::vector<geometry::Rectangle> const& region) = 0;
-    virtual void allow_framedropping(bool) = 0;
     virtual void resize(geometry::Size const& size) = 0;
     virtual void set_transformation(glm::mat4 const& t) = 0;
     virtual void set_alpha(float alpha) = 0;
     virtual void set_orientation(MirOrientation orientation) = 0;
-    virtual void force_requests_to_complete() = 0;
     
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override = 0;
     virtual std::shared_ptr<graphics::CursorImage> cursor_image() const override = 0;

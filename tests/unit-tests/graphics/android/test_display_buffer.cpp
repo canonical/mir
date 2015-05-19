@@ -240,11 +240,6 @@ TEST_F(DisplayBuffer, notifies_list_that_content_is_cleared)
     db.configure(mir_power_mode_on, mir_orientation_normal);
 }
 
-TEST_F(DisplayBuffer, does_not_use_alpha)
-{
-    EXPECT_FALSE(db.uses_alpha());
-}
-
 TEST_F(DisplayBuffer, reject_list_if_option_disabled)
 {
     using namespace testing;
