@@ -28,6 +28,7 @@
 
 #include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test_doubles/mock_prompt_session_listener.h"
+#include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test/popen.h"
@@ -384,9 +385,7 @@ TEST_F(PromptSessionClientAPI,
 
 TEST_F(PromptSessionClientAPI, client_pid_is_associated_with_session)
 {
-    char const* const client_launch = access("bin/mir_demo_client_basic", X_OK) ?
-        "mir_demo_client_basic -m" :
-        "bin/mir_demo_client_basic -m";
+    auto const client_launch = mtf::executable_path() + "/mir_demo_client_basic -m";
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
