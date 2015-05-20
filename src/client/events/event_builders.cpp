@@ -16,6 +16,9 @@
  * Author: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "event-builders"
+
+#include "mir/log.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
 
@@ -238,7 +241,7 @@ void update_action_mask(MirMotionEvent &mev, MirTouchAction action)
     
     if (mev.action != mir_motion_action_move && new_mask != mir_motion_action_move)
     {
-        BOOST_THROW_EXCEPTION(std::logic_error("Only one touch up/down may be reported per event"));
+        mir::log_error("Only one touch up/down should be reported per event");
     }
     if (new_mask == mir_motion_action_move)
         return;
