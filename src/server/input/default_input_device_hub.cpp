@@ -23,6 +23,7 @@
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
+#include "mir/input/cursor_listener.h"
 #include "mir/input/input_region.h"
 #include "mir/events/event_private.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -42,9 +43,10 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue,
     std::shared_ptr<TouchVisualizer> const& touch_visualizer,
+    std::shared_ptr<CursorListener> const& cursor_listener,
     std::shared_ptr<InputRegion> const& input_region)
     : input_dispatcher(input_dispatcher), input_dispatchable{input_multiplexer}, observer_queue(observer_queue),
-      touch_visualizer(touch_visualizer), input_region(input_region)
+      touch_visualizer(touch_visualizer), cursor_listener(cursor_listener), input_region(input_region)
 {
 }
 
@@ -163,7 +165,20 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input event receivd from device"));
 
     update_spots(mir_event_get_input_event(&event));
+    notify_cursor_listener(mir_event_get_input_event(&event));
     dispatcher->dispatch(event);
+}
+
+void mi::DefaultInputDeviceHub::RegisteredDevice::notify_cursor_listener(MirInputEvent const* event)
+{
+    if (mir_input_event_get_type(event) != mir_input_event_type_pointer)
+        return;
+
+    auto pointer_ev = mir_input_event_get_pointer_event(event);
+    hub->cursor_listener->cursor_moved_to(
+        mir_pointer_event_axis_value(pointer_ev, mir_pointer_axis_x),
+        mir_pointer_event_axis_value(pointer_ev, mir_pointer_axis_y)
+        );
 }
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::update_spots(MirInputEvent const* event)
