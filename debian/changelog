@@ -1,3 +1,17 @@
+mir (0.13.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.13.1 (https://launchpad.net/mir/+milestone/0.13.1)
+    - ABI summary: No ABI break. Servers and clients do not need rebuilding.
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI unchanged at 4
+      . Mirplatform ABI unchanged at 7
+      . Mirserver ABI unchanged at 31
+    - Bug fixes:
+      . Can't load app purchase UI without a U1 account (LP: #1450377)
+      . Crash because uncaught exception in mir::events::add_touch (LP: #1437357)
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 20 May 2015 15:33:26 -0500
+
 mir (0.13.0+15.04.20150512-0ubuntu1) vivid; urgency=medium
 
   [ Alan Griffiths ]
