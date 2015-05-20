@@ -385,8 +385,6 @@ TEST_F(PromptSessionClientAPI,
 
 TEST_F(PromptSessionClientAPI, client_pid_is_associated_with_session)
 {
-    auto const client_launch = mtf::executable_path() + "/mir_demo_client_basic -m";
-
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     auto const server_pid = getpid();
@@ -407,7 +405,8 @@ TEST_F(PromptSessionClientAPI, client_pid_is_associated_with_session)
     EXPECT_CALL(*this, process_line(StrEq("Surface released")));
     EXPECT_CALL(*this, process_line(StrEq("Connection released")));
 
-    mir::test::Popen output(std::string(client_launch) + fd_connect_string(actual_fds[0]));
+    auto const command = mtf::executable_path() + "/mir_demo_client_basic -m" + fd_connect_string(actual_fds[0]);
+    mir::test::Popen output(command);
 
     std::string line;
     while (output.get_line(line)) process_line(line);
