@@ -864,6 +864,7 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
 {
+    std::unique_lock<std::mutex> lk(guard);
     mg::RenderableList list;
     for(auto const& info : streams)
     {
