@@ -439,6 +439,7 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
                                             the_input_reading_multiplexer(),
                                             the_main_loop(),
                                             the_touch_visualizer(),
+                                            the_cursor_listener(),
                                             the_input_region());
                                     });
 }
@@ -452,6 +453,7 @@ std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_d
                                             the_input_reading_multiplexer(),
                                             the_main_loop(),
                                             the_touch_visualizer(),
+                                            the_cursor_listener(),
                                             the_input_region());
                                     });
 }
