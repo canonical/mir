@@ -1,5 +1,6 @@
 include_directories(
     ${server_common_include_dirs}
+    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
 )
 
 include_directories(
@@ -19,25 +20,17 @@ add_library(
   mirplatformgraphicsmesaobjects OBJECT
 
   platform.cpp
-  buffer_allocator.cpp
-  gbm_buffer.cpp
   cursor.cpp
-  display_helpers.cpp
   display.cpp
   real_kms_display_configuration.cpp
-  drm_mode_resources.cpp
   display_buffer.cpp
   real_kms_output.cpp
   real_kms_output_container.cpp
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
-  drm_close_threadsafe.cpp
-  guest_platform.cpp
-  anonymous_shm_file.cpp
-  shm_buffer.cpp
   bypass.cpp
-  ipc_operations.cpp
   nested_authentication.cpp
+  guest_platform.cpp
 )
 
 add_library(
@@ -50,6 +43,7 @@ target_link_libraries(
   mirplatformgraphicsmesa
 
   mirplatform
+  mirsharedmesaservercommon-static
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}

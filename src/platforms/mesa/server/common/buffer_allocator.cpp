@@ -22,6 +22,7 @@
 #include "buffer_texture_binder.h"
 #include "anonymous_shm_file.h"
 #include "shm_buffer.h"
+#include "display_helpers.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"

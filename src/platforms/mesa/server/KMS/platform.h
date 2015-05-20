@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_MESA_PLATFORM_H_
 #define MIR_GRAPHICS_MESA_PLATFORM_H_
 
+#include "platform_common.h"
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
 
@@ -29,11 +30,6 @@ namespace graphics
 {
 namespace mesa
 {
-enum class BypassOption
-{
-    allowed,
-    prohibited
-};
 
 class VirtualTerminal;
 class InternalNativeDisplay;
