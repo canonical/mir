@@ -441,19 +441,3 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
     EXPECT_FALSE(db.post_renderables_if_optimizable(list));
 }
 
-TEST_F(MesaDisplayBufferTest, does_not_use_alpha)
-{
-    geometry::Rectangle const area{{12,34}, {56,78}};
-
-    graphics::mesa::DisplayBuffer db(
-        create_platform(),
-        null_display_report(),
-        {mock_kms_output},
-        nullptr,
-        area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
-
-    EXPECT_FALSE(db.uses_alpha());
-}

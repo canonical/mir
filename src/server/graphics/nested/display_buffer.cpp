@@ -40,7 +40,6 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<input::InputDispatcher> const& dispatcher,
     std::shared_ptr<mi::CursorListener> const& cursor_listener,
     MirPixelFormat preferred_format) :
-    uses_alpha_{mg::contains_alpha(preferred_format)},
     egl_display(egl_display),
     host_surface{host_surface},
     egl_config{egl_display.choose_windowed_es_config(preferred_format)},
@@ -86,11 +85,6 @@ MirOrientation mgn::detail::DisplayBuffer::orientation() const
      * native display.
      */
     return mir_orientation_normal;
-}
-
-bool mgn::detail::DisplayBuffer::uses_alpha() const
-{
-    return uses_alpha_;
 }
 
 mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept

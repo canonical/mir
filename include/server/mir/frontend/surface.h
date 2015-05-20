@@ -49,7 +49,6 @@ public:
 
     /// Size of the client area of the surface (excluding any decorations)
     virtual geometry::Size client_size() const = 0;
-    virtual MirPixelFormat pixel_format() const = 0;
 
     virtual std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const = 0;
 
