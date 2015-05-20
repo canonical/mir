@@ -70,7 +70,6 @@ void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* gbm_dev
         BOOST_THROW_EXCEPTION(std::runtime_error(msg));
     }
 }
-
 }
 
 mgm::GuestPlatform::GuestPlatform(

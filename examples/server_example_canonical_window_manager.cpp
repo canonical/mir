@@ -22,6 +22,7 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/shell/display_layout.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/shell/surface_ready_observer.h"
 #include "mir/geometry/displacement.h"
 
 #include "mir/graphics/buffer.h"
@@ -234,7 +235,8 @@ void paint_titlebar(
     mir::examples::CanonicalSurfaceInfoCopy& titlebar_info,
     int intensity)
 {
-    auto const format = titlebar->pixel_format();
+    auto stream = titlebar->primary_buffer_stream();
+    auto const format = stream->pixel_format();
 
     if (!titlebar_info.buffer)
         swap_buffers(titlebar, titlebar_info.buffer);
@@ -279,42 +281,6 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     surface_map.emplace(titlebar, std::move(titlebar_info));
 }
 
-namespace
-{
-class SurfaceReadyObserver : public ms::NullSurfaceObserver,
-    public std::enable_shared_from_this<SurfaceReadyObserver>
-{
-public:
-    using ActivateFunction = std::function<void(
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& surface)>;
-
-    SurfaceReadyObserver(
-        ActivateFunction const& activate,
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& surface) :
-        activate{activate},
-        session{session},
-        surface{surface}
-    {
-    }
-
-private:
-    void frame_posted(int) override
-    {
-        if (auto const s = surface.lock())
-        {
-            activate(session.lock(), s);
-            s->remove_observer(shared_from_this());
-        }
-    }
-
-    ActivateFunction const activate;
-    std::weak_ptr<ms::Session> const session;
-    std::weak_ptr<ms::Surface> const surface;
-};
-}
-
 void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = surface->parent())
@@ -336,7 +302,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
         // TODO There's currently no way to insert surfaces into an active (or inactive)
         // TODO window tree while keeping the order stable or consistent with spec.
         // TODO Nor is there a way to update the "default surface" when appropriate!!
-        surface->add_observer(std::make_shared<SurfaceReadyObserver>(
+        surface->add_observer(std::make_shared<shell::SurfaceReadyObserver>(
             [this](std::shared_ptr<scene::Session> const& /*session*/,
                    std::shared_ptr<scene::Surface> const& surface)
                 {

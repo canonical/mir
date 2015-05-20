@@ -1,5 +1,6 @@
-mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.13.0+15.04.20150512-0ubuntu1) vivid; urgency=medium
 
+  [ Alan Griffiths ]
   * New upstream release 0.13.0 (https://launchpad.net/mir/+milestone/0.13.0)
     - Very large release as the previous 0.12 series contained only minimal
       bug fixes...
@@ -159,7 +160,7 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1446304)
       . Support dynamic mouse cursor icons (LP: #1447839)
 
- -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 30 Apr 2015 12:35:00 +0001
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 12 May 2015 13:12:55 +0000
 
 mir (0.12.1+15.04.20150324-0ubuntu1) vivid; urgency=medium
 

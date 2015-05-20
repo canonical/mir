@@ -31,15 +31,13 @@ namespace compositor
 {
 
 class Renderer;
-enum class DestinationAlpha;
 
 class RendererFactory
 {
 public:
     virtual ~RendererFactory() = default;
 
-    virtual std::unique_ptr<Renderer> create_renderer_for(geometry::Rectangle const& rect,
-        DestinationAlpha dest_alpha) = 0;
+    virtual std::unique_ptr<Renderer> create_renderer_for(geometry::Rectangle const& rect) = 0;
 
 protected:
     RendererFactory() = default;
