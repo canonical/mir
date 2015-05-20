@@ -34,12 +34,12 @@ TEST(AndroidInputLexicon, translates_key_events)
 
     const int32_t device_id = 1;
     const int32_t source_id = 2;
-    const int32_t action = 3;
+    const int32_t action = AKEY_EVENT_ACTION_DOWN;
     const int32_t flags = 4;
     const int32_t key_code = 5;
     const int32_t scan_code = 6;
     const int32_t meta_state = AMETA_ALT_ON;
-    const int32_t repeat_count = 8;
+    const int32_t repeat_count = 0;
     auto const down_time = std::chrono::nanoseconds(9);
     auto const event_time = std::chrono::nanoseconds(10);
 
@@ -53,7 +53,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     // Common event properties
     EXPECT_EQ(device_id, mir_ev.key.device_id);
     EXPECT_EQ(source_id, mir_ev.key.source_id);
-    EXPECT_EQ(action, mir_ev.key.action);
+    EXPECT_EQ(mir_keyboard_action_down, mir_ev.key.action);
     EXPECT_EQ(mir_input_event_modifier_alt, mir_ev.key.modifiers);
 
     auto mir_key_ev = &mir_ev.key;
@@ -61,8 +61,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(mir_ev.type, mir_event_type_key);
     EXPECT_EQ(mir_key_ev->key_code, key_code);
     EXPECT_EQ(mir_key_ev->scan_code, scan_code);
-    EXPECT_EQ(mir_key_ev->repeat_count, repeat_count);
-    EXPECT_EQ(mir_key_ev->event_time, event_time.count());
+    EXPECT_EQ(mir_key_ev->event_time, event_time);
 
     delete android_key_ev;
 }
@@ -136,7 +135,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     auto mir_motion_ev = &mir_ev.motion;
 
     EXPECT_EQ(mir_motion_ev->button_state, button_state);
-    EXPECT_EQ(mir_motion_ev->event_time, event_time.count());
+    EXPECT_EQ(mir_motion_ev->event_time, event_time);
 
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
 
@@ -243,7 +242,7 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     auto mir_motion_ev = &mir_ev.motion;
 
     EXPECT_EQ(mir_motion_ev->button_state, button_state);
-    EXPECT_EQ(mir_motion_ev->event_time, event_time.count());
+    EXPECT_EQ(mir_motion_ev->event_time, event_time);
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
 
     auto pointer = &mir_motion_ev->pointer_coordinates[0];

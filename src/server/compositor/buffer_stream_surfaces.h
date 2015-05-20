@@ -49,14 +49,12 @@ public:
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
 
     //from mc::BufferStream
-    void acquire_client_buffer(std::function<void(graphics::Buffer* buffer)> complete) override;
-    void release_client_buffer(graphics::Buffer* buf) override;
+    void acquire_client_buffer(std::function<void(graphics::Buffer* buffer)> complete);
+    void release_client_buffer(graphics::Buffer* buf);
 
     std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(void const* user_id) override;
-    std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override;
 
-    MirPixelFormat get_stream_pixel_format() override;
     geometry::Size stream_size() override;
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;

@@ -37,13 +37,10 @@ namespace graphics { class GLTextureCache; }
 namespace compositor
 {
 
-enum class DestinationAlpha;
-
 class GLRenderer : public Renderer
 {
 public:
-    GLRenderer(geometry::Rectangle const& display_area,
-               DestinationAlpha dest_alpha);
+    GLRenderer(geometry::Rectangle const& display_area);
     virtual ~GLRenderer();
 
     // These are called with a valid GL context:
@@ -73,8 +70,6 @@ protected:
      */
     virtual void tessellate(std::vector<graphics::GLPrimitive>& primitives,
                             graphics::Renderable const& renderable) const;
-
-    DestinationAlpha destination_alpha() const;
 
     GLfloat clear_color[4];
 
@@ -108,7 +103,6 @@ protected:
 private:
     std::unique_ptr<graphics::GLTextureCache> const texture_cache;
     float rotation;
-    DestinationAlpha const dest_alpha;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords, screen_rotation;
 

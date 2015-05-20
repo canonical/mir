@@ -29,6 +29,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -90,15 +91,11 @@ public:
     geometry::Size size() const override;
     geometry::Size client_size() const override;
 
-    MirPixelFormat pixel_format() const override;
-
-    std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
-    void force_requests_to_complete() override;
+    void set_streams(std::list<scene::StreamInfo> const& streams) override;
 
     bool supports_input() const override;
     int client_input_fd() const override;
-    void allow_framedropping(bool) override;
     std::shared_ptr<input::InputChannel> input_channel() const override;
     input::InputReceptionMode reception_mode() const override;
     void set_reception_mode(input::InputReceptionMode mode) override;
@@ -118,7 +115,7 @@ public:
 
     bool visible() const override;
     
-    std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const override;
+    graphics::RenderableList generate_renderables(compositor::CompositorID id) const override;
     int buffers_ready_for_compositor(void const* compositor_id) const override;
 
     void with_most_recent_buffer_do(
@@ -179,6 +176,7 @@ private:
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
 
+    std::list<StreamInfo> streams;
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;
     MirSurfaceState state_ = mir_surface_state_restored;

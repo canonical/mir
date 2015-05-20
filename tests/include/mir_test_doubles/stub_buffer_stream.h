@@ -21,6 +21,7 @@
 
 #include <mir/compositor/buffer_stream.h>
 #include <mir_test_doubles/stub_buffer.h>
+#include "mir_test/current_thread_name.h"
 
 namespace mir
 {
@@ -37,31 +38,11 @@ public:
         stub_compositor_buffer = std::make_shared<StubBuffer>();
     }
 
-    void acquire_client_buffer(
-        std::function<void(graphics::Buffer* buffer)> complete) override
-    {
-        complete(&stub_client_buffer);
-    }
-
-    void release_client_buffer(graphics::Buffer*) override
-    {
-        ++nready;
-    }
 
     std::shared_ptr<graphics::Buffer> lock_compositor_buffer(void const*) override
     {
         --nready;
         return stub_compositor_buffer;
-    }
-
-    std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override
-    {
-        return stub_compositor_buffer;
-    }
-
-    MirPixelFormat get_stream_pixel_format() override
-    {
-        return MirPixelFormat();
     }
 
     geometry::Size stream_size() override
@@ -84,8 +65,16 @@ public:
     int buffers_ready_for_compositor(void const*) const override { return nready; }
 
     void drop_old_buffers() override {}
-    void swap_buffers(graphics::Buffer*, std::function<void(graphics::Buffer* new_buffer)>) {}
-    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const&) {}
+    void swap_buffers(graphics::Buffer* b, std::function<void(graphics::Buffer*)> complete) override
+    {
+        if (b) ++nready;
+        complete(&stub_client_buffer);
+    }
+    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& fn)
+    {
+        thread_name = current_thread_name();
+        fn(*stub_compositor_buffer);
+    }
     MirPixelFormat pixel_format() const { return mir_pixel_format_abgr_8888; }
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) {}
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) {}
@@ -94,6 +83,7 @@ public:
     StubBuffer stub_client_buffer;
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
     int nready = 0;
+    std::string thread_name;
 };
 
 }

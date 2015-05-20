@@ -147,7 +147,8 @@ ms::BasicSurface::BasicSurface(
     input_sender(input_sender),
     cursor_image_(cursor_image),
     report(report),
-    parent_(parent)
+    parent_(parent),
+    streams({StreamInfo{buffer_stream, {0,0}}})
 {
     report->surface_created(this, surface_name);
 }
@@ -164,11 +165,6 @@ ms::BasicSurface::BasicSurface(
     BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, nonrectangular,buffer_stream,
                  input_channel, input_sender, cursor_image, report)
 {
-}
-
-void ms::BasicSurface::force_requests_to_complete()
-{
-    surface_buffer_stream->force_requests_to_complete();
 }
 
 ms::BasicSurface::~BasicSurface() noexcept
@@ -222,24 +218,9 @@ mir::geometry::Size ms::BasicSurface::client_size() const
     return size();
 }
 
-MirPixelFormat ms::BasicSurface::pixel_format() const
-{
-    return surface_buffer_stream->get_stream_pixel_format();
-}
-
 std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
 {
     return surface_buffer_stream;
-}
-
-void ms::BasicSurface::allow_framedropping(bool allow)
-{
-    surface_buffer_stream->allow_framedropping(allow);
-}
-
-std::shared_ptr<mg::Buffer> ms::BasicSurface::snapshot_buffer() const
-{
-    return surface_buffer_stream->lock_snapshot_buffer();
 }
 
 bool ms::BasicSurface::supports_input() const
@@ -364,7 +345,10 @@ bool ms::BasicSurface::visible() const
 
 bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
 {
-    return !hidden && surface_buffer_stream->has_submitted_buffer();
+    bool visible{false};
+    for(auto info : streams)
+        visible |= info.stream->has_submitted_buffer();
+    return !hidden && visible;
 }
 
 mi::InputReceptionMode ms::BasicSurface::reception_mode() const
@@ -451,7 +435,8 @@ int ms::BasicSurface::set_swap_interval(int interval)
     {
         swapinterval_ = interval;
         bool allow_dropping = (interval == 0);
-        allow_framedropping(allow_dropping);
+        for(auto& info : streams) 
+            info.stream->allow_framedropping(allow_dropping);
 
         lg.unlock();
         observers.attrib_changed(mir_surface_attrib_swapinterval, interval);
@@ -641,12 +626,10 @@ struct CursorStreamImageAdapter
                              geom::Displacement const& hotspot)
         : surface(surface),
           stream(stream),
+          observer{std::make_shared<FramePostObserver>(
+            [this](){ post_cursor_image_from_current_buffer(); })},
           hotspot(hotspot)
     {
-        post_cursor_image_from_current_buffer();
-        observer = std::make_shared<FramePostObserver>([&](){
-                post_cursor_image_from_current_buffer();
-            });
         stream->add_observer(observer);
     }
 
@@ -695,6 +678,9 @@ void ms::BasicSurface::set_cursor_stream(std::shared_ptr<mf::BufferStream> const
     std::unique_lock<std::mutex> lock(guard);
 
     cursor_stream_adapter = std::make_unique<ms::CursorStreamImageAdapter>(*this, stream, hotspot);
+    stream->with_most_recent_buffer_do([this, &hotspot](mg::Buffer& buffer) {
+        cursor_image_ = std::make_shared<CursorImageFromBuffer>(buffer, hotspot); 
+    });
 }
 
 void ms::BasicSurface::request_client_surface_close()
@@ -740,7 +726,10 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
         visibility_ = new_visibility;
         lg.unlock();
         if (new_visibility == mir_surface_visibility_exposed)
-            surface_buffer_stream->drop_old_buffers();
+        {
+            for(auto& info : streams)
+                info.stream->drop_old_buffers();
+        }
         observers.attrib_changed(mir_surface_attrib_visibility, visibility_);
     }
 
@@ -750,7 +739,8 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
 void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
     observers.add(observer);
-    surface_buffer_stream->add_observer(observer);
+    for(auto& info : streams) 
+        info.stream->add_observer(observer);
 }
 
 void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& observer)
@@ -759,7 +749,8 @@ void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& obs
     if (!o)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
     observers.remove(o);
-    surface_buffer_stream->remove_observer(o);
+    for(auto& info : streams) 
+        info.stream->remove_observer(observer);
 }
 
 std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const
@@ -830,24 +821,13 @@ private:
 };
 }
 
-std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const* compositor_id) const
-{
-    std::unique_lock<std::mutex> lk(guard);
-
-    return std::make_unique<SurfaceSnapshot>(
-        surface_buffer_stream,
-        compositor_id,
-        surface_rect,
-        transformation_matrix,
-        surface_alpha,
-        nonrectangular,
-        this);
-}
-
 int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return surface_buffer_stream->buffers_ready_for_compositor(id);
+    auto max_buf = 0;
+    for(auto info : streams)
+        max_buf = std::max(max_buf, info.stream->buffers_ready_for_compositor(id));
+    return max_buf;
 }
 
 void ms::BasicSurface::consume(MirEvent const& event)
@@ -867,4 +847,34 @@ void ms::BasicSurface::rename(std::string const& title)
         surface_name = title;
         observers.renamed(surface_name.c_str());
     }
+}
+
+void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    if(s.end() == std::find_if(s.begin(), s.end(),
+        [this] (ms::StreamInfo const& info) { return info.stream == surface_buffer_stream; }))
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("cannot remove the created-with buffer stream yet"));
+    }
+
+    streams = s;
+}
+
+mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
+{
+    std::unique_lock<std::mutex> lk(guard);
+    mg::RenderableList list;
+    for(auto const& info : streams)
+    {
+        if (info.stream->has_submitted_buffer())
+        {
+            list.emplace_back(std::make_shared<SurfaceSnapshot>(
+                info.stream, id,
+                geom::Rectangle{surface_rect.top_left + info.position, surface_rect.size},
+                transformation_matrix, surface_alpha, nonrectangular, info.stream.get()));
+        }
+    }
+    return std::move(list);
 }

@@ -19,21 +19,12 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/compositor_report.h"
 #include "mir/compositor/scene_element.h"
-#include "mir/compositor/destination_alpha.h"
 #include "demo_compositor.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
-
-namespace
-{
-mc::DestinationAlpha destination_alpha(mg::DisplayBuffer const& db)
-{
-    return db.uses_alpha() ? mc::DestinationAlpha::generate_from_source : mc::DestinationAlpha::opaque;
-}
-}
 
 std::mutex                              me::DemoCompositor::instances_mutex;
 std::unordered_set<me::DemoCompositor*> me::DemoCompositor::instances;
@@ -47,7 +38,6 @@ me::DemoCompositor::DemoCompositor(
     zoom_mag{1.0f},
     renderer(
         display_buffer.view_area(),
-        destination_alpha(display_buffer),
         30.0f, //titlebar_height
         80.0f) //shadow_radius
 {

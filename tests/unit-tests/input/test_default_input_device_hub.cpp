@@ -31,6 +31,7 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
+#include "mir/input/cursor_listener.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -41,6 +42,7 @@ namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace geom = mir::geometry;
+using namespace std::literals::chrono_literals;
 
 namespace mir
 {
@@ -73,6 +75,13 @@ struct MockInputDeviceObserver : public mi::InputDeviceObserver
     MOCK_METHOD0(changes_complete, void());
 };
 
+struct MockCursorListener : public mi::CursorListener
+{
+    MOCK_METHOD2(cursor_moved_to, void(float, float));
+
+    ~MockCursorListener() noexcept {}
+};
+
 struct MockInputDevice : public mi::InputDevice
 {
     mir::dispatch::ActionQueue queue;
@@ -90,15 +99,18 @@ struct InputDeviceHubTest : ::testing::Test
     mtd::TriggeredMainLoop observer_loop;
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
     Nice<mtd::MockInputRegion> mock_region;
+    Nice<MockCursorListener> mock_cursor_listener;
     Nice<MockTouchVisualizer> mock_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_dispatcher), mt::fake_shared(multiplexer),
                                   mt::fake_shared(observer_loop), mt::fake_shared(mock_visualizer),
-                                  mt::fake_shared(mock_region)};
+                                  mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region)};
     Nice<MockInputDeviceObserver> mock_observer;
     Nice<MockInputDevice> device;
     Nice<MockInputDevice> another_device;
     Nice<MockInputDevice> third_device;
+
+    std::chrono::nanoseconds arbitrary_timestamp;
 
     InputDeviceHubTest()
     {
@@ -241,7 +253,6 @@ TEST_F(InputDeviceHubTest, observers_receive_device_changes)
 TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 {
     using namespace ::testing;
-    int64_t arbitrary_timestamp = 0;
     int64_t unset_input_device_id = 0;
     auto event = mir::events::make_event(unset_input_device_id, arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_A, mir_input_event_modifier_none);
 
@@ -266,7 +277,6 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 TEST_F(InputDeviceHubTest, forwards_touch_spots_to_visualizer)
 {
     using namespace ::testing;
-    int64_t arbitrary_timestamp = 0;
     auto touch_event_1 = mir::events::make_event(0, arbitrary_timestamp, mir_input_event_modifier_none);
     mir::events::add_touch(*touch_event_1, 0, mir_touch_action_down, mir_touch_tooltype_finger,
                            21.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
@@ -351,4 +361,22 @@ TEST_F(InputDeviceHubTest, confines_pointer_movement)
 
     EXPECT_THAT(pos1, Eq(confined_pos));
     EXPECT_THAT(pos2, Eq(confined_pos));
+}
+
+TEST_F(InputDeviceHubTest, forwards_pointer_updates_to_cursor_listener)
+{
+    using namespace ::testing;
+
+    auto x = 12.2f, y = 14.3f;
+    std::vector<MirPointerButton> none_pressed;
+    auto event = mir::events::make_event(0, 0ns, mir_input_event_modifier_none, mir_pointer_action_motion, none_pressed,
+                                         x, y, 0.0f, 0.0f);
+
+    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(x, y)).Times(1);
+
+    mi::InputSink* sink;
+    capture_input_sink(device, sink);
+    hub.add_device(mt::fake_shared(device));
+
+    sink->handle_input(*event);
 }

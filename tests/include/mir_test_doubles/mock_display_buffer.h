@@ -45,7 +45,6 @@ public:
     MOCK_METHOD0(gl_swap_buffers, void());
     MOCK_METHOD1(post_renderables_if_optimizable, bool(graphics::RenderableList const&));
     MOCK_CONST_METHOD0(orientation, MirOrientation());
-    MOCK_CONST_METHOD0(uses_alpha, bool());
 };
 
 }
