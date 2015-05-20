@@ -106,6 +106,10 @@ add_library(
   stub_input_platform.cpp
   )
 
+target_link_libraries(mirplatforminputstub
+  mirclient
+)
+
 set_target_properties(
   mirplatforminputstub PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules

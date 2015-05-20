@@ -25,8 +25,6 @@
 #include "mir/logging/null_shared_library_prober_report.h"
 #include "mir/graphics/platform_probe.h"
 
-#include <dlfcn.h>
-
 namespace mo = mir::options;
 
 char const* const mo::server_socket_opt           = "file,f";
@@ -64,22 +62,6 @@ namespace
 {
 int const default_ipc_threads          = 1;
 bool const enable_input_default        = true;
-
-// Hack around the way Qt loads mir:
-// platform_api and therefore Mir are loaded via dlopen(..., RTLD_LOCAL).
-// While this is sensible for a plugin it would mean that some symbols
-// cannot be resolved by the Mir platform plugins. This hack makes the
-// necessary symbols global.
-void ensure_loaded_with_rtld_global()
-{
-    Dl_info info;
-
-    // Cast dladdr itself to work around g++-4.8 warnings (LP: #1366134)
-    typedef int (safe_dladdr_t)(void(*func)(), Dl_info *info);
-    safe_dladdr_t *safe_dladdr = (safe_dladdr_t*)&dladdr;
-    safe_dladdr(&ensure_loaded_with_rtld_global, &info);
-    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
-}
 }
 
 mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
@@ -178,8 +160,6 @@ void mo::DefaultConfiguration::add_platform_options()
         "");
     mo::ProgramOption options;
     options.parse_arguments(program_options, argc, argv);
-
-    ensure_loaded_with_rtld_global();
 
     // TODO: We should just load all the platform plugins we can and present their options.
     auto env_libname = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB");
