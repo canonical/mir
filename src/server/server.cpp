@@ -172,7 +172,7 @@ public:
 class StubRendererFactory : public mir::compositor::RendererFactory
 {
 public:
-    auto create_renderer_for(mir::geometry::Rectangle const&, mir::compositor::DestinationAlpha)
+    auto create_renderer_for(mir::geometry::Rectangle const&)
     -> std::unique_ptr<mir::compositor::Renderer>
     {
         return std::make_unique<StubRenderer>();

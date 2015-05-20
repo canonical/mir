@@ -18,13 +18,13 @@
 
 #include "mir/shell/default_window_manager.h"
 
-#include "mir/scene/null_surface_observer.h"
 #include "mir/scene/placement_strategy.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/focus_controller.h"
+#include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/surface_specification.h"
 
 namespace mf = mir::frontend;
@@ -55,38 +55,6 @@ void msh::DefaultWindowManager::remove_session(std::shared_ptr<scene::Session> c
         focus_controller->set_focus_to(next_session, {});
 }
 
-namespace
-{
-class SurfaceReadyObserver : public ms::NullSurfaceObserver,
-    public std::enable_shared_from_this<SurfaceReadyObserver>
-{
-public:
-    SurfaceReadyObserver(
-        msh::FocusController* const focus_controller,
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& surface) :
-        focus_controller{focus_controller},
-        session{session},
-        surface{surface}
-    {
-    }
-
-private:
-    void frame_posted(int) override
-    {
-        if (auto const s = surface.lock())
-        {
-            focus_controller->set_focus_to(session.lock(), s);
-            s->remove_observer(shared_from_this());
-        }
-    }
-
-    msh::FocusController* const focus_controller;
-    std::weak_ptr<ms::Session> const session;
-    std::weak_ptr<ms::Surface> const surface;
-};
-}
-
 auto msh::DefaultWindowManager::add_surface(
     std::shared_ptr<scene::Session> const& session,
     scene::SurfaceCreationParameters const& params,
@@ -96,7 +64,14 @@ auto msh::DefaultWindowManager::add_surface(
     auto const result = build(session, placement_strategy->place(*session, params));
     auto const surface = session->surface(result);
 
-    surface->add_observer(std::make_shared<SurfaceReadyObserver>(focus_controller, session, surface));
+    surface->add_observer(std::make_shared<SurfaceReadyObserver>(
+        [this](std::shared_ptr<scene::Session> const& session,
+               std::shared_ptr<scene::Surface> const& surface)
+            {
+                focus_controller->set_focus_to(session, surface);
+            },
+        session,
+        surface));
 
     return result;
 }
