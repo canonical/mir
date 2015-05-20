@@ -36,8 +36,6 @@ namespace mir_test_framework
     -> std::shared_ptr<mir::options::DefaultConfiguration>;
 
     void configure_from_commandline(mir::Server& server);
-
-    char const* get_argv(int index);
 }
 
 #endif /* MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION */

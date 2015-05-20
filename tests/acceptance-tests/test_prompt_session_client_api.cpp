@@ -28,7 +28,6 @@
 
 #include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test_doubles/mock_prompt_session_listener.h"
-#include "mir_test_framework/command_line_server_configuration.h"
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test/popen.h"
@@ -385,11 +384,9 @@ TEST_F(PromptSessionClientAPI,
 
 TEST_F(PromptSessionClientAPI, client_pid_is_associated_with_session)
 {
-    std::string command(mtf::get_argv(0));
-
-    auto edit_point = command.rfind('/');
-    edit_point = (edit_point == std::string::npos) ? 0 : edit_point+1;
-    command.replace(edit_point, std::string::npos, "mir_demo_client_basic -m");
+    char const* const client_launch = access("bin/mir_demo_client_basic", X_OK) ?
+        "mir_demo_client_basic -m" :
+        "bin/mir_demo_client_basic -m";
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -411,7 +408,7 @@ TEST_F(PromptSessionClientAPI, client_pid_is_associated_with_session)
     EXPECT_CALL(*this, process_line(StrEq("Surface released")));
     EXPECT_CALL(*this, process_line(StrEq("Connection released")));
 
-    mir::test::Popen output(command + fd_connect_string(actual_fds[0]));
+    mir::test::Popen output(std::string(client_launch) + fd_connect_string(actual_fds[0]));
 
     std::string line;
     while (output.get_line(line)) process_line(line);
