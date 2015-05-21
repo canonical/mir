@@ -173,15 +173,16 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
     std::memset(expected_coords, 0, sizeof(expected_coords));
     std::memset(expected_properties, 0, sizeof(expected_properties));
     MirEvent event;
+    std::memset(&event, 0, sizeof(event));
+    
     event.type = mir_event_type_motion;
     event.motion.pointer_count = 1;
     event.motion.event_time = std::chrono::nanoseconds(2);
     event.motion.device_id = 3;
     event.motion.source_id = 4;
     event.motion.action = mir_motion_action_scroll;
-    event.motion.modifiers = mir_input_event_modifier_shift,
-    event.motion.button_state =
-        static_cast<MirMotionButton>(mir_motion_button_forward | mir_motion_button_secondary);
+    event.motion.modifiers = mir_input_event_modifier_shift;
+    event.motion.buttons = mir_pointer_button_forward | mir_pointer_button_secondary;
 
     auto & pointer = event.motion.pointer_coordinates[0];
     pointer.id = 1;
@@ -215,7 +216,7 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
                                           event.motion.action,
                                           0, /* flags */
                                           AMETA_SHIFT_ON,
-                                          event.motion.button_state,
+                                          AMOTION_EVENT_BUTTON_FORWARD | AMOTION_EVENT_BUTTON_SECONDARY,
                                           0, /* edge_flags */
                                           event.motion.pointer_count,
                                           expected_properties,

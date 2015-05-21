@@ -242,6 +242,49 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
     first_client.all_events_received.wait_for_at_most_seconds(10);
 }
 
+TEST_F(TestClientInput, clients_receive_many_button_events_inside_window)
+{
+    Client first_client(new_connection(), first);
+    // The cursor starts at (0, 0).
+
+    InSequence seq;
+    auto expect_buttons = [&](MirPointerButtons b) {
+        EXPECT_CALL(first_client, handle_input(mt::ButtonsDown(0, 0, b)));
+    };
+
+    MirPointerButtons buttons = mir_pointer_button_primary;
+    expect_buttons(buttons);
+    expect_buttons(buttons |= mir_pointer_button_secondary);
+    expect_buttons(buttons |= mir_pointer_button_tertiary);
+    expect_buttons(buttons |= mir_pointer_button_forward);
+    expect_buttons(buttons |= mir_pointer_button_back);
+    expect_buttons(buttons &= ~mir_pointer_button_back);
+    expect_buttons(buttons &= ~mir_pointer_button_forward);
+    expect_buttons(buttons &= ~mir_pointer_button_tertiary);
+    expect_buttons(buttons &= ~mir_pointer_button_secondary);
+    EXPECT_CALL(first_client, handle_input(mt::ButtonsDown(0, 0, 0))).WillOnce(
+        mt::WakeUp(&first_client.all_events_received));
+
+    auto press_button = [&](int button) {
+        fake_mouse->emit_event(mis::a_button_down_event().of_button(button).with_action(mis::EventAction::Down));
+    };
+    auto release_button = [&](int button) {
+        fake_mouse->emit_event(mis::a_button_up_event().of_button(button).with_action(mis::EventAction::Up));
+    };
+    press_button(BTN_LEFT);
+    press_button(BTN_RIGHT);
+    press_button(BTN_MIDDLE);
+    press_button(BTN_FORWARD);
+    press_button(BTN_BACK);
+    release_button(BTN_BACK);
+    release_button(BTN_FORWARD);
+    release_button(BTN_MIDDLE);
+    release_button(BTN_RIGHT);
+    release_button(BTN_LEFT);
+
+    first_client.all_events_received.wait_for_at_most_seconds(10);
+}
+
 TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
 {
     int const screen_width = screen_geometry.size.width.as_int();

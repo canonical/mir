@@ -61,15 +61,21 @@ enum
 MirEvent a_key_ev()
 {
     MirEvent key_ev;
+    memset(&key_ev, 0, sizeof(key_ev));
+    
     key_ev.type = mir_event_type_key;
+    
     return key_ev;
 }
 
 MirEvent a_motion_ev(int device_class = AINPUT_SOURCE_UNKNOWN)
 {
     MirEvent motion_ev;
+    memset(&motion_ev, 0, sizeof(motion_ev));
+    
     motion_ev.type = mir_event_type_motion;
     motion_ev.motion.source_id = device_class;
+    
     return motion_ev;
 }
 
@@ -350,13 +356,13 @@ TEST(PointerInputEventProperties, button_state_translated)
 {
     auto old_ev = a_motion_ev(AINPUT_SOURCE_MOUSE);
 
-    old_ev.motion.button_state = mir_motion_button_primary;
+    old_ev.motion.buttons = mir_pointer_button_primary;
     auto pev = mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
     
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
     EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_secondary));
 
-    old_ev.motion.button_state = static_cast<MirMotionButton>(old_ev.motion.button_state | (mir_motion_button_secondary));
+    old_ev.motion.buttons |=  mir_pointer_button_secondary;
 
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_secondary));

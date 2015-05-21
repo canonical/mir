@@ -50,7 +50,7 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.motion.source_id = android_event->getSource();
             mir_event.motion.action = mev->getAction();
             mir_event.motion.modifiers = mia::mir_modifiers_from_android(mev->getMetaState());
-            mir_event.motion.button_state = static_cast<MirMotionButton>(mev->getButtonState());
+            mir_event.motion.buttons = mia::mir_pointer_buttons_from_android(mev->getButtonState());
             mir_event.motion.event_time = mev->getEventTime();
             mir_event.motion.pointer_count = mev->getPointerCount();
             for(unsigned int i = 0; i < mev->getPointerCount(); i++)
