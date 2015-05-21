@@ -18,7 +18,7 @@
 
 #include "mir_protobuf.pb.h"
 #include "src/client/default_connection_configuration.h"
-#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/dispatch/dispatchable.h"
 
 #include "mir/frontend/connector.h"
@@ -78,7 +78,8 @@ struct MirScreencastTest : public testing::Test
         protobuf_server =
             std::make_shared<mir::protobuf::DisplayServer::Stub>(rpc_channel.get());
         eventloop =
-            std::make_shared<md::SimpleDispatchThread>(
+            std::make_shared<md::ThreadedDispatcher>(
+                "Mir/Client IPC",
                 std::dynamic_pointer_cast<md::Dispatchable>(rpc_channel));
     }
 
@@ -87,7 +88,7 @@ struct MirScreencastTest : public testing::Test
     std::shared_ptr<mt::TestProtobufServer> test_server;
     std::shared_ptr<google::protobuf::RpcChannel> rpc_channel;
     std::shared_ptr<mir::protobuf::DisplayServer> protobuf_server;
-    std::shared_ptr<mir::dispatch::SimpleDispatchThread> eventloop;
+    std::shared_ptr<mir::dispatch::ThreadedDispatcher> eventloop;
 };
 
 }

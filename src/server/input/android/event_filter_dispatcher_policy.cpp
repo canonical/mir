@@ -54,12 +54,11 @@ bool mia::EventFilterDispatcherPolicy::isKeyRepeatEnabled()
 
 bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* input_event, uint32_t /*policy_flags*/)
 {
-    MirEvent mir_ev;
-    mia::Lexicon::translate(input_event, mir_ev);
+    auto mir_ev = mia::Lexicon::translate(input_event);
 
     // TODO: Use XKBMapper
 
-    return !event_filter->handle(mir_ev);
+    return !event_filter->handle(*mir_ev);
 }
 
 void mia::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const droidinput::KeyEvent* /*key_event*/, uint32_t& policy_flags)
