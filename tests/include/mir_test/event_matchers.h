@@ -170,11 +170,11 @@ MATCHER_P(MirKeyEventMatches, event, "")
 {
     auto expected = maybe_key_event(to_address(event));
     auto actual = maybe_key_event(to_address(arg));
-    
+
     if (expected == nullptr || actual == nullptr)
         return false;
-    
-    return  mir_keyboard_event_action(expected) == mir_keyboard_event_action(actual) &&
+
+    return mir_keyboard_event_action(expected) == mir_keyboard_event_action(actual) &&
         mir_keyboard_event_key_code(expected) == mir_keyboard_event_key_code(actual) &&
         mir_keyboard_event_scan_code(expected) == mir_keyboard_event_scan_code(actual) &&
         mir_keyboard_event_modifiers(expected) == mir_keyboard_event_modifiers(actual);
