@@ -23,6 +23,7 @@
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
+namespace geom = mir::geometry;
 
 mga::DisplayGroup::DisplayGroup(
     std::shared_ptr<mga::DisplayDevice> const& device,
@@ -63,12 +64,13 @@ bool mga::DisplayGroup::display_present(DisplayName name) const
     return (dbs.end() != dbs.find(name));
 }
 
-void mga::DisplayGroup::configure(DisplayName name, MirPowerMode mode, MirOrientation orientation)
+void mga::DisplayGroup::configure(
+    DisplayName name, MirPowerMode mode, MirOrientation orientation, geom::Displacement offset)
 {
     std::unique_lock<decltype(guard)> lk(guard);
     auto it = dbs.find(name);
     if (it != dbs.end())
-        it->second->configure(mode, orientation);
+        it->second->configure(mode, orientation, offset);
 }
 
 void mga::DisplayGroup::post()
