@@ -1,7 +1,3 @@
-#include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
-
-#add_definitions( -DANDROID )
-
 include_directories(
     ${server_common_include_dirs}
     ${DRM_INCLUDE_DIRS}
