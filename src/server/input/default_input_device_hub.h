@@ -46,6 +46,7 @@ class InputSink;
 class InputDeviceObserver;
 class TouchVisualizer;
 class InputRegion;
+class CursorListener;
 
 class DefaultInputDeviceHub : public InputDeviceRegistry, public InputDeviceHub
 {
@@ -54,6 +55,7 @@ public:
                           std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
                           std::shared_ptr<ServerActionQueue> const& observer_queue,
                           std::shared_ptr<TouchVisualizer> const& touch_visualizer,
+                          std::shared_ptr<CursorListener> const& cursor_listener,
                           std::shared_ptr<InputRegion> const& input_region);
 
     // InputDeviceRegistry - calls from mi::Platform
@@ -72,6 +74,7 @@ private:
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
     std::shared_ptr<ServerActionQueue> const observer_queue;
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
+    std::shared_ptr<CursorListener> const cursor_listener;
     std::shared_ptr<InputRegion> const input_region;
 
     struct RegisteredDevice : public InputSink
@@ -89,6 +92,7 @@ private:
         std::vector<TouchVisualizer::Spot> const& spots() const;
     private:
         void update_spots(MirInputEvent const* event);
+        void notify_cursor_listener(MirInputEvent const* event);
         static int32_t create_new_device_id();
         int32_t device_id;
         std::shared_ptr<InputDevice> const device;

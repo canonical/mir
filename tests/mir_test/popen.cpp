@@ -48,7 +48,7 @@ bool mt::Popen::get_line(std::string& line)
             line.append(got);
     } while (got && !feof(in) && !line.empty() && line.back() != '\n');
 
-    if (line.back() == '\n')
+    if (!line.empty() && line.back() == '\n')
         line.pop_back();
 
     return !line.empty() || !feof(in);

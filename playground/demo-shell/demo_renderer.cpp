@@ -24,7 +24,6 @@
 #endif
 #include "demo_renderer.h"
 #include <mir/graphics/renderable.h>
-#include <mir/compositor/destination_alpha.h>
 #include <mir/log.h>
 #include <cmath>
 
@@ -179,10 +178,9 @@ static const GLchar contrast_fshader[] =
 
 DemoRenderer::DemoRenderer(
     Rectangle const& display_area,
-    compositor::DestinationAlpha dest_alpha,
     float const titlebar_height,
     float const shadow_radius) :
-    GLRenderer(display_area, dest_alpha),
+    GLRenderer(display_area),
     titlebar_height{titlebar_height},
     shadow_radius{shadow_radius},
     corner_radius{0.5f},

@@ -17,7 +17,6 @@
  */
 
 #include "default_display_buffer_compositor_factory.h"
-#include "mir/compositor/destination_alpha.h"
 #include "mir/compositor/renderer_factory.h"
 #include "mir/compositor/renderer.h"
 #include "mir/graphics/display_buffer.h"
@@ -39,9 +38,7 @@ std::unique_ptr<mc::DisplayBufferCompositor>
 mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     graphics::DisplayBuffer& display_buffer)
 {
-    auto dest_alpha = display_buffer.uses_alpha() ?
-        DestinationAlpha::generate_from_source : DestinationAlpha::opaque;
-    auto renderer = renderer_factory->create_renderer_for(display_buffer.view_area(), dest_alpha);
+    auto renderer = renderer_factory->create_renderer_for(display_buffer.view_area());
     return std::make_unique<DefaultDisplayBufferCompositor>(
          display_buffer, std::move(renderer), report);
 }

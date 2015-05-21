@@ -17,6 +17,7 @@
  */
 
 #include "mir/events/event_private.h"
+#include "mir/events/event_builders.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/legacy_surface_change_notification.h"
 #include "src/server/report/null_report_factory.h"
@@ -47,6 +48,7 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mev = mir::events;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
@@ -227,19 +229,6 @@ struct SurfaceCreation : public ::testing::Test
 
 }
 
-TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_buffer_stream, pixel_format())
-        .Times(1)
-        .WillOnce(Return(pf));
-
-    auto ret_pf = surface.pixel_format();
-
-    EXPECT_EQ(ret_pf, pf);
-}
-
 TEST_F(SurfaceCreation, test_surface_gets_right_name)
 {
     EXPECT_EQ(surface_name, surface.name());
@@ -375,27 +364,6 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
     EXPECT_FLOAT_EQ(alpha, surface.compositor_snapshot(nullptr)->alpha());
 }
 
-// Perhaps this test and the following (surface_allow_framedropping)
-//  would be better as a test of state, e.g. set up a request which blocks.
-TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_buffer_stream, force_requests_to_complete()).Times(Exactly(1));
-
-    surface.force_requests_to_complete();
-}
-
-TEST_F(SurfaceCreation, test_surface_allow_framedropping)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_buffer_stream, allow_framedropping(true))
-        .Times(1);
-
-    surface.allow_framedropping(true);
-}
-
 TEST_F(SurfaceCreation, input_fds)
 {
     using namespace testing;
@@ -432,16 +400,16 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
         std::shared_ptr<mg::CursorImage>(),
         report);
 
-    MirEvent key_event;
-    MirEvent motion_event;
-    std::memset(&key_event, 0, sizeof(key_event));
-    std::memset(&motion_event, 0, sizeof(motion_event));
-    key_event.type = mir_event_type_key;
-    motion_event.type = mir_event_type_motion;
+    auto key_event = mev::make_event(MirInputDeviceId(0), std::chrono::nanoseconds(0),
+                                     mir_keyboard_action_down, 0, 0, mir_input_event_modifier_none);
+    auto touch_event = mev::make_event(MirInputDeviceId(0), std::chrono::nanoseconds(0),
+                                       mir_input_event_modifier_none);
+    mev::add_touch(*touch_event, 0, mir_touch_action_change, mir_touch_tooltype_finger, 0, 0,
+        0, 0, 0, 0);
 
-    EXPECT_CALL(mock_sender, send_event(mt::MirKeyEventMatches(key_event), _)).Times(1);
-    EXPECT_CALL(mock_sender, send_event(mt::MirTouchEventMatches(motion_event), _)).Times(1);
+    EXPECT_CALL(mock_sender, send_event(mt::MirKeyEventMatches(*key_event), _)).Times(1);
+    EXPECT_CALL(mock_sender, send_event(mt::MirTouchEventMatches(*touch_event), _)).Times(1);
 
-    surface.consume(key_event);
-    surface.consume(motion_event);
+    surface.consume(*key_event);
+    surface.consume(*touch_event);
 }

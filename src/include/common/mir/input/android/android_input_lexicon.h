@@ -21,6 +21,7 @@
 #define MIR_INPUT_ANDROID_INPUT_LEXICON_H_
 
 #include "mir_toolkit/event.h"
+#include "mir/events/event_builders.h"
 
 namespace android
 {
@@ -41,7 +42,7 @@ namespace android
 class Lexicon
 {
 public:
-    static void translate(const droidinput::InputEvent *android_event, MirEvent &mir_event);
+    static EventUPtr translate(droidinput::InputEvent const* android_event);
 };
 
 }

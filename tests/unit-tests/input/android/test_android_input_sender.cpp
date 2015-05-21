@@ -17,6 +17,7 @@
  */
 
 #include "mir/events/event_private.h"
+#include "mir/events/event_builders.h"
 
 #include "src/server/input/android/android_input_channel.h"
 #include "src/server/input/android/input_sender.h"
@@ -45,6 +46,7 @@
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace mia = mi::android;
+namespace mev = mir::events;
 namespace mt = mir::test;
 namespace mr = mir::report;
 namespace mtd = mt::doubles;
@@ -80,28 +82,22 @@ public:
 class AndroidInputSender : public ::testing::Test
 {
 public:
+    int const test_scan_code = 32;
+    size_t const test_pointer_count = 2;
+    float test_x_coord[2] = {12, 23};
+    float test_y_coord[2] = {17, 9};
+    
     AndroidInputSender()
+        : key_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), mir_keyboard_action_down,
+                                    7, test_scan_code, mir_input_event_modifier_none)),
+          motion_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(-1), mir_input_event_modifier_none))
     {
         using namespace ::testing;
 
-        std::memset(&key_event, 0, sizeof key_event);
-        std::memset(&motion_event, 0, sizeof motion_event);
-
-        key_event.type = mir_event_type_key;
-        key_event.key.scan_code = 32;
-        key_event.key.action = mir_keyboard_action_down;
-
-        motion_event.type = mir_event_type_motion;
-        motion_event.motion.pointer_count = 2;
-        motion_event.motion.device_id = 3;
-        motion_event.motion.pointer_coordinates[0].x = 12;
-        motion_event.motion.pointer_coordinates[0].y = 23;
-        motion_event.motion.pointer_coordinates[0].pressure = 50;
-        motion_event.motion.pointer_coordinates[0].tool_type = mir_motion_tool_type_finger;
-        motion_event.motion.pointer_coordinates[1].tool_type = mir_motion_tool_type_finger;
-        motion_event.motion.pointer_coordinates[1].x = 55;
-        motion_event.motion.pointer_coordinates[1].y = 42;
-        motion_event.motion.pointer_coordinates[1].pressure = 50;
+        mev::add_touch(*motion_event, 0, mir_touch_action_change, mir_touch_tooltype_finger, test_x_coord[0], test_y_coord[0],
+                       24, 25, 26, 27);
+        mev::add_touch(*motion_event, 1, mir_touch_action_change, mir_touch_tooltype_finger, test_x_coord[1], test_y_coord[1],
+                       24, 25, 26, 27);
 
         ON_CALL(event_factory, createKeyEvent()).WillByDefault(Return(&client_key_event));
         ON_CALL(event_factory, createMotionEvent()).WillByDefault(Return(&client_motion_event));
@@ -125,8 +121,8 @@ public:
     mtd::TriggeredMainLoop loop;
     testing::NiceMock<mtd::MockInputSendObserver> observer;
 
-    MirEvent key_event;
-    MirEvent motion_event;
+    mir::EventUPtr key_event;
+    mir::EventUPtr motion_event;
 
     droidinput::MotionEvent client_motion_event;
     droidinput::KeyEvent client_key_event;
@@ -151,7 +147,7 @@ TEST_F(AndroidInputSender, subscribes_to_scene)
 
 TEST_F(AndroidInputSender, throws_on_unknown_channel)
 {
-    EXPECT_THROW(sender.send_event(key_event, channel), boost::exception);
+    EXPECT_THROW(sender.send_event(*key_event, channel), boost::exception);
 }
 
 TEST_F(AndroidInputSender,throws_on_deregistered_channels)
@@ -159,7 +155,7 @@ TEST_F(AndroidInputSender,throws_on_deregistered_channels)
     register_surface();
     deregister_surface();
 
-    EXPECT_THROW(sender.send_event(key_event, channel), boost::exception);
+    EXPECT_THROW(sender.send_event(*key_event, channel), boost::exception);
 }
 
 TEST_F(AndroidInputSender, first_send_on_surface_registers_server_fd)
@@ -169,7 +165,7 @@ TEST_F(AndroidInputSender, first_send_on_surface_registers_server_fd)
 
     EXPECT_CALL(loop, register_fd_handler(ElementsAre(channel->server_fd()),_,_));
 
-    sender.send_event(key_event, channel);
+    sender.send_event(*key_event, channel);
 }
 
 TEST_F(AndroidInputSender, second_send_on_surface_does_not_register_server_fd)
@@ -179,8 +175,8 @@ TEST_F(AndroidInputSender, second_send_on_surface_does_not_register_server_fd)
 
     EXPECT_CALL(loop, register_fd_handler(ElementsAre(channel->server_fd()),_,_)).Times(1);
 
-    sender.send_event(key_event, channel);
-    sender.send_event(key_event, channel);
+    sender.send_event(*key_event, channel);
+    sender.send_event(*key_event, channel);
 }
 
 TEST_F(AndroidInputSender, removal_of_surface_after_send_unregisters_server_fd)
@@ -190,8 +186,8 @@ TEST_F(AndroidInputSender, removal_of_surface_after_send_unregisters_server_fd)
 
     EXPECT_CALL(loop, unregister_fd_handler(_)).Times(1);
 
-    sender.send_event(key_event, channel);
-    sender.send_event(key_event, channel);
+    sender.send_event(*key_event, channel);
+    sender.send_event(*key_event, channel);
     deregister_surface();
 
     Mock::VerifyAndClearExpectations(&loop);
@@ -201,12 +197,12 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_key_events)
 {
     register_surface();
 
-    sender.send_event(key_event, channel);
+    sender.send_event(*key_event, channel);
 
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
 
     EXPECT_EQ(&client_key_event, event);
-    EXPECT_EQ(key_event.key.scan_code, client_key_event.getScanCode());
+    EXPECT_EQ(test_scan_code, client_key_event.getScanCode());
 }
 
 TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
@@ -214,24 +210,21 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
     using namespace ::testing;
     register_surface();
 
-    sender.send_event(motion_event, channel);
+    sender.send_event(*motion_event, channel);
 
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
 
     EXPECT_EQ(&client_motion_event, event);
-    EXPECT_EQ(motion_event.motion.pointer_count, client_motion_event.getPointerCount());
-    EXPECT_EQ(motion_event.motion.device_id, client_motion_event.getDeviceId());
+    EXPECT_EQ(test_pointer_count, client_motion_event.getPointerCount());
     EXPECT_EQ(0, client_motion_event.getXOffset());
     EXPECT_EQ(0, client_motion_event.getYOffset());
 
-    auto const& expected_coords = motion_event.motion.pointer_coordinates;
-
-    for (size_t i = 0; i != motion_event.motion.pointer_count; ++i)
+    for (size_t i = 0; i != test_pointer_count; ++i)
     {
-        EXPECT_EQ(expected_coords[i].x, client_motion_event.getRawX(i)) << "When i=" << i;
-        EXPECT_EQ(expected_coords[i].x, client_motion_event.getX(i)) << "When i=" << i;
-        EXPECT_EQ(expected_coords[i].y, client_motion_event.getRawY(i)) << "When i=" << i;
-        EXPECT_EQ(expected_coords[i].y, client_motion_event.getY(i)) << "When i=" << i;
+        EXPECT_EQ(test_x_coord[i], client_motion_event.getRawX(i)) << "When i=" << i;
+        EXPECT_EQ(test_x_coord[i], client_motion_event.getX(i)) << "When i=" << i;
+        EXPECT_EQ(test_y_coord[i], client_motion_event.getRawY(i)) << "When i=" << i;
+        EXPECT_EQ(test_y_coord[i], client_motion_event.getY(i)) << "When i=" << i;
     }
 }
 
@@ -242,7 +235,7 @@ TEST_F(AndroidInputSender, response_keeps_fd_registered)
 
     EXPECT_CALL(loop, unregister_fd_handler(_)).Times(0);
 
-    sender.send_event(key_event, channel);
+    sender.send_event(*key_event, channel);
     consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event);
     consumer.sendFinishedSignal(seq, true);
     loop.trigger_pending_fds();
@@ -254,11 +247,11 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_consumed)
 {
     register_surface();
 
-    sender.send_event(motion_event, channel);
+    sender.send_event(*motion_event, channel);
 
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
     EXPECT_CALL(observer,
-                send_suceeded(mt::MirTouchEventMatches(motion_event),
+                send_suceeded(mt::MirTouchEventMatches(*motion_event),
                               &stub_surface,
                               mi::InputSendObserver::consumed));
 
@@ -270,11 +263,11 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_not_consum
 {
     register_surface();
 
-    sender.send_event(motion_event, channel);
+    sender.send_event(*motion_event, channel);
 
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
     EXPECT_CALL(observer,
-                send_suceeded(mt::MirTouchEventMatches(motion_event),
+                send_suceeded(mt::MirTouchEventMatches(*motion_event),
                               &stub_surface,
                               mi::InputSendObserver::not_consumed));
 
@@ -286,21 +279,25 @@ TEST_F(AndroidInputSender, unordered_finish_signal_triggers_the_right_callback)
 {
     register_surface();
 
-    sender.send_event(motion_event, channel);
-    sender.send_event(key_event, channel);
+    auto another_key_event = mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), mir_keyboard_action_down,
+                                             9, test_scan_code, mir_input_event_modifier_none);
+
+    sender.send_event(*key_event, channel);
+    sender.send_event(*another_key_event, channel);
 
     uint32_t first_sequence, second_sequence;
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &first_sequence, &event));
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &second_sequence, &event));
 
     EXPECT_CALL(observer,
-                send_suceeded(mt::MirKeyEventMatches(key_event),
+                send_suceeded(mt::MirKeyEventMatches(*another_key_event),
                               &stub_surface,
                               mi::InputSendObserver::consumed));
     EXPECT_CALL(observer,
-                send_suceeded(mt::MirTouchEventMatches(motion_event),
+                send_suceeded(mt::MirKeyEventMatches(*key_event),
                               &stub_surface,
                               mi::InputSendObserver::not_consumed));
+    
     consumer.sendFinishedSignal(second_sequence, true);
     consumer.sendFinishedSignal(first_sequence, false);
     loop.trigger_pending_fds();
@@ -310,10 +307,10 @@ TEST_F(AndroidInputSender, observer_notified_on_disapeared_surface )
 {
     register_surface();
 
-    sender.send_event(key_event, channel);
+    sender.send_event(*key_event, channel);
     EXPECT_CALL(
         observer,
-        send_failed(mt::MirKeyEventMatches(key_event), &stub_surface, mir::input::InputSendObserver::surface_disappeared));
+        send_failed(mt::MirKeyEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::surface_disappeared));
     deregister_surface();
 }
 
@@ -324,17 +321,17 @@ TEST_F(AndroidInputSender, alarm_created_for_input_send)
     register_surface();
 
     EXPECT_CALL(loop, create_alarm(An<std::function<void()> const&>()));
-    sender.send_event(key_event, channel);
+    sender.send_event(*key_event, channel);
 }
 
 TEST_F(AndroidInputSender, observer_informed_on_response_timeout)
 {
     register_surface();
 
-    sender.send_event(key_event, channel);
+    sender.send_event(*key_event, channel);
     EXPECT_CALL(
         observer,
-        send_failed(mt::MirKeyEventMatches(key_event), &stub_surface, mir::input::InputSendObserver::no_response_received));
+        send_failed(mt::MirKeyEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::no_response_received));
 
     loop.fire_all_alarms();
 }
@@ -345,7 +342,7 @@ TEST_F(AndroidInputSender, observer_informed_about_closed_socket_on_send_event)
 
     EXPECT_CALL(
         observer,
-        send_failed(mt::MirKeyEventMatches(key_event), &stub_surface, mir::input::InputSendObserver::socket_error));
+        send_failed(mt::MirKeyEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::socket_error));
     ::close(channel->client_fd());
-    sender.send_event(key_event, channel);
+    sender.send_event(*key_event, channel);
 }

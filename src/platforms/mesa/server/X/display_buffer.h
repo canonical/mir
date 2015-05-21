@@ -44,7 +44,6 @@ public:
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     MirOrientation orientation() const override;
-    bool uses_alpha() const override;
 
 private:
     geometry::Size const size;

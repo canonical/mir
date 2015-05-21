@@ -81,10 +81,3 @@ MirOrientation mgx::DisplayBuffer::orientation() const
 
     return mir_orientation_normal;
 }
-
-bool mgx::DisplayBuffer::uses_alpha() const
-{
-    CALLED
-
-    return false;
-}
