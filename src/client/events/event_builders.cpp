@@ -198,20 +198,6 @@ void update_action_mask(MirMotionEvent &mev, MirTouchAction action)
     mev.action = new_mask;
 }
 
-MirMotionToolType old_tooltype_from_new(MirTouchTooltype tooltype)
-{
-   switch (tooltype)
-   {
-   case mir_touch_tooltype_unknown:
-       return mir_motion_tool_type_unknown;
-   case mir_touch_tooltype_finger:
-       return mir_motion_tool_type_finger;
-   case mir_touch_tooltype_stylus:
-       return mir_motion_tool_type_stylus;
-   default:
-       BOOST_THROW_EXCEPTION(std::logic_error("Invalid tooltype specified"));
-   }
-}
 }
 
 void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
@@ -221,7 +207,7 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     auto& mev = event.motion;
     auto& pc = mev.pointer_coordinates[mev.pointer_count++];
     pc.id = touch_id;
-    pc.tool_type = old_tooltype_from_new(tooltype);
+    pc.tool_type = tooltype;
     pc.x = x_axis_value;
     pc.y = y_axis_value;
     pc.pressure = pressure_value;

@@ -134,3 +134,38 @@ int32_t mia::android_pointer_buttons_from_mir(MirPointerButtons buttons)
         android_state |= AMOTION_EVENT_BUTTON_FORWARD;
     return android_state;
 }
+
+MirTouchTooltype mia::mir_tool_type_from_android(int32_t android_tooltype)
+{
+    switch (android_tooltype)
+    {
+    case AMOTION_EVENT_TOOL_TYPE_FINGER:
+        return mir_touch_tooltype_finger;
+    case AMOTION_EVENT_TOOL_TYPE_STYLUS:
+        return mir_touch_tooltype_stylus;
+    // Pointer events do not have tool types in Mir
+    case AMOTION_EVENT_TOOL_TYPE_MOUSE:
+        return mir_touch_tooltype_unknown;
+    case AMOTION_EVENT_TOOL_TYPE_ERASER:
+        return mir_touch_tooltype_stylus;
+    case AMOTION_EVENT_TOOL_TYPE_UNKNOWN:
+    default:
+        return mir_touch_tooltype_unknown;
+
+    }
+}
+
+int32_t mia::android_tool_type_from_mir(MirTouchTooltype mir_tooltype)
+{
+    switch (mir_tooltype)
+    {
+    case mir_touch_tooltype_finger:
+        return AMOTION_EVENT_TOOL_TYPE_FINGER;
+    case mir_touch_tooltype_stylus:
+        return AMOTION_EVENT_TOOL_TYPE_STYLUS;
+    case mir_touch_tooltype_unknown:
+    default:
+        return AMOTION_EVENT_TOOL_TYPE_UNKNOWN;
+    }
+}
+

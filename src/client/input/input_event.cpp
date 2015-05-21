@@ -328,18 +328,7 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
         abort();
     }
 
-    switch (old_mev.pointer_coordinates[touch_index].tool_type)
-    {
-    case mir_motion_tool_type_finger:
-        return mir_touch_tooltype_finger;
-    case mir_motion_tool_type_stylus:
-    case mir_motion_tool_type_eraser:
-        return mir_touch_tooltype_stylus;
-    case mir_motion_tool_type_mouse:
-    case mir_motion_tool_type_unknown:
-    default:
-        return mir_touch_tooltype_unknown;
-    }
+    return old_mev.pointer_coordinates[touch_index].tool_type;
 }
 
 float mir_touch_event_axis_value(MirTouchEvent const* event,
