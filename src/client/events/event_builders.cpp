@@ -42,7 +42,7 @@ namespace
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirOrientation orientation)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_orientation;
@@ -53,7 +53,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirOrientation o
 
 mir::EventUPtr mev::make_event(MirPromptSessionState state)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_prompt_session_state_change;
@@ -63,7 +63,7 @@ mir::EventUPtr mev::make_event(MirPromptSessionState state)
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, geom::Size const& size)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_resize;
@@ -75,7 +75,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, geom::Size const
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_surface;
@@ -87,30 +87,11 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_close_surface;
     e->close_surface.surface_id = surface_id.as_value();
-    return make_event_uptr(e);
-}
-
-mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    MirKeyboardAction action, xkb_keysym_t key_code,
-    int scan_code, MirInputEventModifiers modifiers)
-{
-    MirEvent *e = new MirEvent;
-    memset(e, 0, sizeof (MirEvent));
-
-    e->type = mir_event_type_key;
-    auto& kev = e->key;
-    kev.device_id = device_id;
-    kev.event_time = timestamp;
-    kev.action = action;
-    kev.key_code = key_code;
-    kev.scan_code = scan_code;
-    kev.modifiers = modifiers;
-
     return make_event_uptr(e);
 }
 
@@ -146,9 +127,29 @@ enum
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    MirKeyboardAction action, xkb_keysym_t key_code,
+    int scan_code, MirInputEventModifiers modifiers)
+{
+    auto e = new MirEvent;
+    memset(e, 0, sizeof (MirEvent));
+
+    e->type = mir_event_type_key;
+    auto& kev = e->key;
+    kev.device_id = device_id;
+    kev.source_id = AINPUT_SOURCE_KEYBOARD;
+    kev.event_time = timestamp;
+    kev.action = action;
+    kev.key_code = key_code;
+    kev.scan_code = scan_code;
+    kev.modifiers = modifiers;
+
+    return make_event_uptr(e);
+}
+
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_motion;
@@ -257,7 +258,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_motion;
@@ -267,7 +268,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     mev.modifiers = modifiers;
     mev.source_id = AINPUT_SOURCE_MOUSE;
     mev.buttons = buttons_pressed;
-    
+
     mev.action = old_action_from_pointer_action(action, count_buttons(buttons_pressed));
 
     mev.pointer_count = 1;
@@ -282,7 +283,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, xkb_rule_names const& rules)
 {
-    MirEvent *e = new MirEvent;
+    auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
 
     e->type = mir_event_type_keymap;
