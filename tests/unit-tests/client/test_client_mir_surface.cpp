@@ -30,8 +30,8 @@
 #include "src/client/mir_connection.h"
 #include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/null_rpc_report.h"
-#include "mir/dispatch/simple_dispatch_thread.h"
 #include "mir/dispatch/dispatchable.h"
+#include "mir/dispatch/threaded_dispatcher.h"
 
 #include "mir/frontend/connector.h"
 #include "mir/input/input_platform.h"

@@ -283,7 +283,7 @@ TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
 {
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
     MirPointerAction const action{mir_pointer_action_button_down};
-    std::vector<MirPointerButton> const buttons_pressed{mir_pointer_button_primary};
+    auto const buttons_pressed = mir_pointer_button_primary;
     float const x_axis_value{0.0};
     float const y_axis_value{0.0};
     float const hscroll_value{0.0};

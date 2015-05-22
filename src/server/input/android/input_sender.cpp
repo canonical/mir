@@ -276,7 +276,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_motion_event(uint32_
         coords[i].setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, event.pointer_coordinates[i].orientation);
         coords[i].setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, event.pointer_coordinates[i].vscroll);
         coords[i].setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, event.pointer_coordinates[i].hscroll);
-        properties[i].toolType = event.pointer_coordinates[i].tool_type;
+        properties[i].toolType = mia::android_tool_type_from_mir(event.pointer_coordinates[i].tool_type);
         properties[i].id = event.pointer_coordinates[i].id;
     }
 
@@ -288,7 +288,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_motion_event(uint32_
         0, /* flags */
         0, /* edge flags */
         mia::android_modifiers_from_mir(event.modifiers),
-        static_cast<int32_t>(event.button_state),
+        mia::android_pointer_buttons_from_mir(event.buttons),
         0.0f,  // event.x_offset,
         0.0f,  // event.y_offset,
         0, 0, /* unused x/y precision */
