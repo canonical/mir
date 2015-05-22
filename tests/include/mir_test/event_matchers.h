@@ -245,6 +245,22 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
     return true;
 }
 
+MATCHER_P3(ButtonDownEventWithButton, x, y, button, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    if (pev == nullptr)
+        return false;
+    if (mir_pointer_event_action(pev) != mir_pointer_action_button_down)
+        return false;
+    if (mir_pointer_event_button_state(pev, button) == false)
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
+        return false;
+    return true;
+}
+
 MATCHER_P2(ButtonUpEvent, x, y, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
@@ -253,6 +269,22 @@ MATCHER_P2(ButtonUpEvent, x, y, "")
     if (mir_pointer_event_action(pev) != mir_pointer_action_button_up)
         return false;
     if (mir_pointer_event_button_state(pev, mir_pointer_button_primary) == true)
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
+        return false;
+    return true;
+}
+
+MATCHER_P3(ButtonUpEventWithButton, x, y, button, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    if (pev == nullptr)
+        return false;
+    if (mir_pointer_event_action(pev) != mir_pointer_action_button_down)
+        return false;
+    if (mir_pointer_event_button_state(pev, button) == true)
         return false;
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
