@@ -17,6 +17,7 @@
  */
 
 #include "mir/events/event_private.h"
+#include "mir/events/event_builders.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/scene/surface_event_source.h"
@@ -44,6 +45,7 @@ namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mev = mir::events;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
@@ -176,13 +178,8 @@ TEST_F(Surface, emits_resize_events)
 
     surface->add_observer(observer);
 
-    MirEvent e;
-    memset(&e, 0, sizeof e);
-    e.type = mir_event_type_resize;
-    e.resize.surface_id = stub_id.as_value();
-    e.resize.width = new_size.width.as_int();
-    e.resize.height = new_size.height.as_int();
-    EXPECT_CALL(*sink, handle_event(e))
+    auto e = mev::make_event(stub_id, new_size);
+    EXPECT_CALL(*sink, handle_event(*e))
         .Times(1);
 
     surface->resize(new_size);
@@ -200,22 +197,12 @@ TEST_F(Surface, emits_resize_events_only_on_change)
 
     surface->add_observer(observer);
 
-    MirEvent e;
-    memset(&e, 0, sizeof e);
-    e.type = mir_event_type_resize;
-    e.resize.surface_id = stub_id.as_value();
-    e.resize.width = new_size.width.as_int();
-    e.resize.height = new_size.height.as_int();
-    EXPECT_CALL(*sink, handle_event(e))
+    auto e = mev::make_event(stub_id, new_size);
+    EXPECT_CALL(*sink, handle_event(*e))
         .Times(1);
 
-    MirEvent e2;
-    memset(&e2, 0, sizeof e2);
-    e2.type = mir_event_type_resize;
-    e2.resize.surface_id = stub_id.as_value();
-    e2.resize.width = new_size2.width.as_int();
-    e2.resize.height = new_size2.height.as_int();
-    EXPECT_CALL(*sink, handle_event(e2))
+    auto e2 = mev::make_event(stub_id, new_size2);
+    EXPECT_CALL(*sink, handle_event(*e2))
         .Times(1);
 
     surface->resize(new_size);

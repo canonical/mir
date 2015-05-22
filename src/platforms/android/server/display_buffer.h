@@ -53,6 +53,7 @@ public:
         GLContext const& shared_gl_context,
         GLProgramFactory const& program_factory,
         MirOrientation orientation,
+        geometry::Displacement offset,
         OverlayOptimization overlay_option);
 
     geometry::Rectangle view_area() const override;
@@ -62,7 +63,7 @@ public:
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     MirOrientation orientation() const override;
-    void configure(MirPowerMode power_mode, MirOrientation orientation) override;
+    void configure(MirPowerMode power_mode, MirOrientation orientation, geometry::Displacement) override;
     DisplayContents contents() override;
     MirPowerMode power_mode() const override;
 private:
@@ -75,6 +76,7 @@ private:
     HWCFallbackGLRenderer overlay_program;
     bool overlay_enabled;
     MirOrientation orientation_;
+    geometry::Displacement offset_from_origin;
     MirPowerMode power_mode_;
 };
 

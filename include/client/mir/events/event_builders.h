@@ -25,7 +25,6 @@
 #include "mir/frontend/surface_id.h"
 
 #include <memory>
-#include <vector>
 #include <functional>
 #include <chrono>
 
@@ -63,7 +62,7 @@ void add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
 // Pointer event
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers, MirPointerAction action,
-    std::vector<MirPointerButton> const& buttons_pressed,
+    MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value);
 }

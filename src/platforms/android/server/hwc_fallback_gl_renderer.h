@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_FALLBACK_GL_RENDERER_H_
 #define MIR_GRAPHICS_ANDROID_HWC_FALLBACK_GL_RENDERER_H_
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
 #include "mir/graphics/gl_program.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/gl_texture_cache.h"
@@ -39,7 +40,7 @@ class RenderableListCompositor
 {
 public:
     virtual ~RenderableListCompositor() = default;
-    virtual void render(RenderableList const&, SwappingGLContext const&) const = 0;
+    virtual void render(RenderableList const&, geometry::Displacement list_offset, SwappingGLContext const&) const = 0;
 protected:
     RenderableListCompositor() = default;
 private:
@@ -55,7 +56,7 @@ public:
         graphics::GLContext const& gl_context,
         geometry::Rectangle const& screen_position);
 
-    void render(RenderableList const&, SwappingGLContext const&) const;
+    void render(RenderableList const&, geometry::Displacement, SwappingGLContext const&) const;
 private:
     std::unique_ptr<graphics::GLProgram> program;
     std::unique_ptr<graphics::GLTextureCache> texture_cache;

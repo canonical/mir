@@ -23,7 +23,7 @@
 #include "cursor_configuration.h"
 #include "client_buffer_stream_factory.h"
 #include "mir_connection.h"
-#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/xkb_mapper.h"
 
@@ -471,7 +471,7 @@ void MirSurface::set_event_handler(mir_surface_event_callback callback,
             auto input_dispatcher = input_platform->create_input_receiver(surface.fd(0),
                                                                           keymapper,
                                                                           handle_event_callback);
-            input_thread = std::make_shared<md::SimpleDispatchThread>(input_dispatcher);
+            input_thread = std::make_shared<md::ThreadedDispatcher>("Input dispatch", input_dispatcher);
         }
     }
 }
