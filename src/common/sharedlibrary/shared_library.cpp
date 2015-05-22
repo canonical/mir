@@ -26,7 +26,7 @@
 #include <stdexcept>
 
 mir::SharedLibrary::SharedLibrary(char const* library_name) :
-    so(dlopen(library_name, RTLD_NOW | RTLD_GLOBAL))
+    so(dlopen(library_name, RTLD_NOW | RTLD_LOCAL))
 {
     if (!so)
     {

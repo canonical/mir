@@ -100,3 +100,113 @@ int32_t mia::android_keyboard_action_from_mir(int32_t& repeat_count_out, MirKeyb
         return AKEY_EVENT_ACTION_UP;
     }
 }
+
+MirPointerButtons mia::mir_pointer_buttons_from_android(int32_t android_state)
+{
+    MirPointerButtons buttons = 0;
+    
+    if (android_state & AMOTION_EVENT_BUTTON_PRIMARY)
+        buttons |= mir_pointer_button_primary;
+    if (android_state & AMOTION_EVENT_BUTTON_SECONDARY)
+        buttons |= mir_pointer_button_secondary;
+    if (android_state & AMOTION_EVENT_BUTTON_TERTIARY)
+        buttons |= mir_pointer_button_tertiary;
+    if (android_state & AMOTION_EVENT_BUTTON_BACK)
+        buttons |= mir_pointer_button_back;
+    if (android_state & AMOTION_EVENT_BUTTON_FORWARD)
+        buttons |= mir_pointer_button_forward;
+
+    return buttons;
+}
+
+int32_t mia::android_pointer_buttons_from_mir(MirPointerButtons buttons)
+{
+    int32_t android_state = 0;
+    if (buttons & mir_pointer_button_primary)
+        android_state |= AMOTION_EVENT_BUTTON_PRIMARY;
+    if (buttons & mir_pointer_button_secondary)
+        android_state |= AMOTION_EVENT_BUTTON_SECONDARY;
+    if (buttons & mir_pointer_button_tertiary)
+        android_state |= AMOTION_EVENT_BUTTON_TERTIARY;
+    if (buttons & mir_pointer_button_back)
+        android_state |= AMOTION_EVENT_BUTTON_BACK;
+    if (buttons & mir_pointer_button_forward)
+        android_state |= AMOTION_EVENT_BUTTON_FORWARD;
+    return android_state;
+}
+
+MirTouchTooltype mia::mir_tool_type_from_android(int32_t android_tooltype)
+{
+    switch (android_tooltype)
+    {
+    case AMOTION_EVENT_TOOL_TYPE_FINGER:
+        return mir_touch_tooltype_finger;
+    case AMOTION_EVENT_TOOL_TYPE_STYLUS:
+        return mir_touch_tooltype_stylus;
+    // Pointer events do not have tool types in Mir
+    case AMOTION_EVENT_TOOL_TYPE_MOUSE:
+        return mir_touch_tooltype_unknown;
+    case AMOTION_EVENT_TOOL_TYPE_ERASER:
+        return mir_touch_tooltype_stylus;
+    case AMOTION_EVENT_TOOL_TYPE_UNKNOWN:
+    default:
+        return mir_touch_tooltype_unknown;
+
+    }
+}
+
+int32_t mia::android_tool_type_from_mir(MirTouchTooltype mir_tooltype)
+{
+    switch (mir_tooltype)
+    {
+    case mir_touch_tooltype_finger:
+        return AMOTION_EVENT_TOOL_TYPE_FINGER;
+    case mir_touch_tooltype_stylus:
+        return AMOTION_EVENT_TOOL_TYPE_STYLUS;
+    case mir_touch_tooltype_unknown:
+    default:
+        return AMOTION_EVENT_TOOL_TYPE_UNKNOWN;
+    }
+}
+
+MirPointerAction mia::mir_pointer_action_from_masked_android(int32_t masked_android_action)
+{
+    switch (masked_android_action)
+    {
+    case AMOTION_EVENT_ACTION_UP:
+    case AMOTION_EVENT_ACTION_POINTER_UP:
+        return mir_pointer_action_button_up;
+    case AMOTION_EVENT_ACTION_DOWN:
+    case AMOTION_EVENT_ACTION_POINTER_DOWN:
+        return mir_pointer_action_button_down;
+    case AMOTION_EVENT_ACTION_HOVER_ENTER:
+        return mir_pointer_action_enter;
+    case AMOTION_EVENT_ACTION_HOVER_EXIT:
+        return mir_pointer_action_leave;
+    default:
+        return mir_pointer_action_motion;
+
+    }
+}
+
+MirTouchAction mia::mir_touch_action_from_masked_android(int32_t masked_android_action)
+{
+    switch (masked_android_action)
+    {
+    case AMOTION_EVENT_ACTION_UP:
+    case AMOTION_EVENT_ACTION_POINTER_UP:
+        return mir_touch_action_up;
+    case AMOTION_EVENT_ACTION_DOWN:
+    case AMOTION_EVENT_ACTION_POINTER_DOWN:
+        return mir_touch_action_down;
+    default:
+        return mir_touch_action_change;
+    }
+}
+
+bool mia::android_source_id_is_pointer_device(int32_t source_id)
+{
+    return source_id == AINPUT_SOURCE_MOUSE ||
+        source_id == AINPUT_SOURCE_TRACKBALL ||
+        source_id == AINPUT_SOURCE_TOUCHPAD;
+}

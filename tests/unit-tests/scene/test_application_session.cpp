@@ -140,6 +140,18 @@ struct ApplicationSession : public testing::Test
     }
     
     std::shared_ptr<ms::ApplicationSession> make_application_session(
+        std::shared_ptr<ms::BufferStreamFactory> const& bstream_factory,
+        std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
+    {
+        return std::make_shared<ms::ApplicationSession>(
+           stub_surface_coordinator, surface_factory, bstream_factory,
+           pid, name,
+           null_snapshot_strategy,
+           stub_session_listener,
+           event_sink);
+    }
+
+    std::shared_ptr<ms::ApplicationSession> make_application_session(
         std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
     {
@@ -464,18 +476,43 @@ TEST_F(ApplicationSession, surface_ids_are_bufferstream_ids)
 {
     using namespace ::testing;
 
-    auto app_session = make_application_session_with_stubs();
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
+    NiceMock<MockBufferStreamFactory> mock_bufferstream_factory;
+    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
+    std::shared_ptr<ms::Surface> mock_surface = make_mock_surface();
+    auto stub_bstream = std::make_shared<mtd::StubBufferStream>();
+    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_))
+        .WillOnce(Return(stub_bstream));
+    EXPECT_CALL(mock_surface_factory, create_surface(std::shared_ptr<mc::BufferStream>(stub_bstream),_))
+        .WillOnce(Return(mock_surface));
+    auto session = make_application_session(
+        mt::fake_shared(mock_bufferstream_factory),
+        mt::fake_shared(mock_surface_factory));
 
     ms::SurfaceCreationParameters params;
 
-    auto id1 = app_session->create_surface(params);
-    EXPECT_TRUE(app_session->get_buffer_stream(mf::BufferStreamId(id1.as_value())) != nullptr);
+    auto id1 = session->create_surface(params);
+    EXPECT_THAT(session->get_buffer_stream(mf::BufferStreamId(id1.as_value())), Eq(stub_bstream));
+    EXPECT_THAT(session->get_surface(id1), Eq(mock_surface));
 
-    app_session->destroy_surface(id1);
+    session->destroy_surface(id1);
 
     EXPECT_THROW({
-            app_session->get_buffer_stream(mf::BufferStreamId(id1.as_value()));
+            session->get_buffer_stream(mf::BufferStreamId(id1.as_value()));
     }, std::runtime_error);
+}
+
+TEST_F(ApplicationSession, can_destroy_surface_bstream)
+{
+    auto session = make_application_session_with_stubs();
+    ms::SurfaceCreationParameters params;
+    auto id = session->create_surface(params);
+    mf::BufferStreamId stream_id(id.as_value());
+    session->destroy_buffer_stream(stream_id);
+    EXPECT_THROW({
+        session->get_buffer_stream(stream_id);
+    }, std::runtime_error);
+    session->destroy_surface(id);
 }
 
 TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)

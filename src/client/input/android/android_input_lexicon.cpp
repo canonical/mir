@@ -19,63 +19,68 @@
 
 #include "mir/input/android/android_input_lexicon.h"
 #include "mir/input/android/event_conversion_helpers.h"
-#include "mir/events/event_private.h"
+#include "mir/events/event_builders.h"
 
 #include <androidfw/Input.h>
 
-namespace mia = mir::input::android;
+#include <boost/throw_exception.hpp>
 
-void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEvent &mir_event)
+#include <vector>
+#include <stdexcept>
+
+namespace mia = mir::input::android;
+namespace mev = mir::events;
+
+mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_event)
 {
     switch(android_event->getType())
     {
         case AINPUT_EVENT_TYPE_KEY:
         {
-            const droidinput::KeyEvent* kev = static_cast<const droidinput::KeyEvent*>(android_event);
-            mir_event.type = mir_event_type_key;
-            mir_event.key.device_id = android_event->getDeviceId();
-            mir_event.key.source_id = android_event->getSource();
-            mir_event.key.action = mia::mir_keyboard_action_from_android(kev->getAction(), kev->getRepeatCount());
-            mir_event.key.modifiers = mia::mir_modifiers_from_android(kev->getMetaState());
-            mir_event.key.key_code = kev->getKeyCode();
-            mir_event.key.scan_code = kev->getScanCode();
-            mir_event.key.event_time = kev->getEventTime();
-            break;
+            auto kev = static_cast<const droidinput::KeyEvent*>(android_event);
+            return mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
+                                   kev->getEventTime(),
+                                   mia::mir_keyboard_action_from_android(kev->getAction(), kev->getRepeatCount()),
+                                   kev->getKeyCode(),
+                                   kev->getScanCode(),
+                                   mia::mir_modifiers_from_android(kev->getMetaState()));
         }
         case AINPUT_EVENT_TYPE_MOTION:
         {
-            const droidinput::MotionEvent* mev = static_cast<const droidinput::MotionEvent*>(android_event);
-            mir_event.type = mir_event_type_motion;
-            mir_event.motion.device_id = android_event->getDeviceId();
-            mir_event.motion.source_id = android_event->getSource();
-            mir_event.motion.action = mev->getAction();
-            mir_event.motion.modifiers = mia::mir_modifiers_from_android(mev->getMetaState());
-            mir_event.motion.button_state = static_cast<MirMotionButton>(mev->getButtonState());
-            mir_event.motion.event_time = mev->getEventTime();
-            mir_event.motion.pointer_count = mev->getPointerCount();
-            for(unsigned int i = 0; i < mev->getPointerCount(); i++)
+            if (mia::android_source_id_is_pointer_device(android_event->getSource()))
             {
-                    mir_event.motion.pointer_coordinates[i].id = mev->getPointerId(i);
-                    mir_event.motion.pointer_coordinates[i].x = mev->getX(i);
-                    mir_event.motion.pointer_coordinates[i].y = mev->getY(i);
-                    mir_event.motion.pointer_coordinates[i].touch_major = mev->getTouchMajor(i);
-                    mir_event.motion.pointer_coordinates[i].touch_minor = mev->getTouchMinor(i);
-                    mir_event.motion.pointer_coordinates[i].size = mev->getSize(i);
-                    mir_event.motion.pointer_coordinates[i].pressure = mev->getPressure(i);
-                    mir_event.motion.pointer_coordinates[i].orientation = mev->getOrientation(i);
-
-                    mir_event.motion.pointer_coordinates[i].vscroll =
-                           mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, i);
-
-                    mir_event.motion.pointer_coordinates[i].hscroll =
-                           mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, i);
-
-                    mir_event.motion.pointer_coordinates[i].tool_type =
-                           static_cast<MirMotionToolType>(mev->getToolType(i));
+                auto mev = static_cast<const droidinput::MotionEvent*>(android_event);
+                return mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
+                                       mev->getEventTime(),
+                                       mia::mir_modifiers_from_android(mev->getMetaState()),
+                                       mia::mir_pointer_action_from_masked_android(mev->getAction() & AMOTION_EVENT_ACTION_MASK),
+                                       mia::mir_pointer_buttons_from_android(mev->getButtonState()),
+                                       mev->getX(0), mev->getY(0),
+                                       mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, 0),
+                                       mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0));
             }
-            break;
+            else
+            {
+                auto mev = static_cast<const droidinput::MotionEvent*>(android_event);
+                auto ev = mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
+                                          mev->getEventTime(),
+                                          mia::mir_modifiers_from_android(mev->getMetaState()));
+                auto action = mev->getAction();
+                size_t index_with_action = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+                auto masked_action = action & AMOTION_EVENT_ACTION_MASK;
+                for (unsigned i = 0; i < mev->getPointerCount(); i++)
+                {
+                    auto action = (i == index_with_action) ? mia::mir_touch_action_from_masked_android(masked_action) :
+                        mir_touch_action_change;
+                    mev::add_touch(*ev, mev->getPointerId(i), action, mia::mir_tool_type_from_android(mev->getToolType(i)),
+                        mev->getX(i), mev->getY(i),
+                        mev->getPressure(i), mev->getTouchMajor(i),
+			mev->getTouchMinor(i), mev->getSize(i));
+                }
+                return ev;
+            }
         }
+    default:
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid android event"));
     }
-
 }
-

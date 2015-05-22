@@ -135,10 +135,9 @@ MATCHER_P(KeyWithModifiers, modifiers, "")
         return false;
     
     if(mir_keyboard_event_modifiers(kev) != modifiers)
-        {
-            printf("modifiers: %d vs expected %d \n", mir_keyboard_event_modifiers(kev), modifiers);
+    {
         return false;
-        }
+    }
     
     return true;
 }
@@ -171,11 +170,11 @@ MATCHER_P(MirKeyEventMatches, event, "")
 {
     auto expected = maybe_key_event(to_address(event));
     auto actual = maybe_key_event(to_address(arg));
-    
+
     if (expected == nullptr || actual == nullptr)
         return false;
-    
-    return  mir_keyboard_event_action(expected) == mir_keyboard_event_action(actual) &&
+
+    return mir_keyboard_event_action(expected) == mir_keyboard_event_action(actual) &&
         mir_keyboard_event_key_code(expected) == mir_keyboard_event_key_code(actual) &&
         mir_keyboard_event_scan_code(expected) == mir_keyboard_event_scan_code(actual) &&
         mir_keyboard_event_modifiers(expected) == mir_keyboard_event_modifiers(actual);
@@ -229,20 +228,26 @@ MATCHER(PointerLeaveEvent, "")
     return false;
 }
 
-MATCHER_P2(ButtonDownEvent, x, y, "")
+inline bool button_event_matches(MirPointerEvent const* pev, float x, float y, MirPointerAction action, MirPointerButtons button_state,
+                                  bool check_action = true)
 {
-    auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
-    if (mir_pointer_event_action(pev) != mir_pointer_action_button_down)
+    if (check_action && mir_pointer_event_action(pev) != action)
         return false;
-    if (mir_pointer_event_button_state(pev, mir_pointer_button_primary) == false)
+    if (mir_pointer_event_buttons(pev) != button_state)
         return false;
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
         return false;
     return true;
+}
+
+MATCHER_P2(ButtonDownEvent, x, y, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    return button_event_matches(pev, x, y, mir_pointer_action_button_down, mir_pointer_button_primary);
 }
 
 MATCHER_P3(ButtonDownEventWithButton, x, y, button, "")
@@ -264,17 +269,13 @@ MATCHER_P3(ButtonDownEventWithButton, x, y, button, "")
 MATCHER_P2(ButtonUpEvent, x, y, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
-    if (pev == nullptr)
-        return false;
-    if (mir_pointer_event_action(pev) != mir_pointer_action_button_up)
-        return false;
-    if (mir_pointer_event_button_state(pev, mir_pointer_button_primary) == true)
-        return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
-        return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
-        return false;
-    return true;
+    return button_event_matches(pev, x, y, mir_pointer_action_button_up, 0);
+}
+
+MATCHER_P3(ButtonsDown, x, y, buttons, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    return button_event_matches(pev, x, y, mir_pointer_action_button_down, buttons, false);
 }
 
 MATCHER_P3(ButtonUpEventWithButton, x, y, button, "")

@@ -43,20 +43,21 @@ struct MockBufferStream : public compositor::BufferStream
     {
         ON_CALL(*this, buffers_ready_for_compositor(::testing::_))
             .WillByDefault(testing::Invoke(this, &MockBufferStream::buffers_ready));
-        ON_CALL(*this, lock_snapshot_buffer())
-            .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
+        ON_CALL(*this, with_most_recent_buffer_do(testing::_))
+            .WillByDefault(testing::InvokeArgument<0>(*std::make_shared<StubBuffer>()));
         ON_CALL(*this, acquire_client_buffer(testing::_))
             .WillByDefault(testing::InvokeArgument<0>(nullptr));
         ON_CALL(*this, swap_buffers(testing::_, testing::_))
             .WillByDefault(testing::InvokeArgument<1>(nullptr));
         ON_CALL(*this, has_submitted_buffer())
             .WillByDefault(testing::Return(true));
+        ON_CALL(*this, pixel_format())
+            .WillByDefault(testing::Return(mir_pixel_format_abgr_8888));
     }
     MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));
     MOCK_METHOD1(release_client_buffer, void(graphics::Buffer*));
     MOCK_METHOD1(lock_compositor_buffer,
                  std::shared_ptr<graphics::Buffer>(void const*));
-    MOCK_METHOD0(lock_snapshot_buffer, std::shared_ptr<graphics::Buffer>());
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));
 
