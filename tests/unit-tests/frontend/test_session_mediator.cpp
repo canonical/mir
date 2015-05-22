@@ -206,19 +206,10 @@ public:
         mock_surfaces.erase(surface);
     }
 
-    void modify_surface(mf::SurfaceId id, std::list<msh::StreamSpecification> const& config)
-    {
-        printf("MOD SURF\n");
-        last_config = config;
-        last_config_surface_id = id;
-    }
-
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
     static int const testing_client_input_fd;
     int last_surface_id;
-    std::list<msh::StreamSpecification> last_config;
-    mf::SurfaceId last_config_surface_id;
 };
 
 int const StubbedSession::testing_client_input_fd{11};

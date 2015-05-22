@@ -21,17 +21,13 @@
 
 #include "mir/frontend/session.h"
 #include "mir/scene/snapshot.h"
-#include "mir/geometry/displacement.h"
 
 #include <sys/types.h>
 #include <list>
 
 namespace mir
 {
-namespace shell
-{
-struct StreamSpecification;
-}
+namespace shell { struct StreamSpecification; }
 namespace scene
 {
 class Surface;

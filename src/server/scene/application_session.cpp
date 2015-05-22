@@ -313,7 +313,6 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
     streams.erase(checked_find(id));
 }
 
-void ms::ApplicationSession::configure_streams(mf::SurfaceId id, std::list<shell::StreamSpecification> const& config)
+void ms::ApplicationSession::configure_streams(mf::SurfaceId, std::list<shell::StreamSpecification> const&)
 {
-    (void) id; (void) config;
 }
