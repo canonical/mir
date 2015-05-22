@@ -946,13 +946,13 @@ TEST_F(SessionMediator, completes_exchange_buffer_when_completion_is_invoked_asy
     completion_func(&stub_buffer2);
 }
 
-MATCHER(ConfigEq, "")
+MATCHER(ConfigEq, "stream configurations are equivalent")
 {
     return (std::get<0>(arg).stream_id == std::get<1>(arg).stream_id) &&
            (std::get<0>(arg).displacement == std::get<1>(arg).displacement);
 }
 
-MATCHER_P(StreamsAre, value, "")
+MATCHER_P(StreamsAre, value, "configuration streams match")
 {
     if(!arg.streams.is_set())
         return false;
@@ -963,20 +963,17 @@ MATCHER_P(StreamsAre, value, "")
 TEST_F(SessionMediator, arrangement_of_bufferstreams)
 {
     using namespace testing;
+    mp::Void null;
+    mp::SurfaceModifications mods;
     mp::BufferStreamParameters stream_request;
-    std::array<geom::Displacement,2> displacement = { geom::Displacement{-12,11}, geom::Displacement{4,-3} };
     std::array<mp::BufferStream,2> streams;
+    std::array<geom::Displacement,2> displacement = {
+        geom::Displacement{-12,11}, geom::Displacement{4,-3} };
+
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
     for (auto &stream : streams)
         mediator.create_buffer_stream(nullptr, &stream_request, &stream, null_callback.get());
-
-    std::list<msh::StreamSpecification> expected_list = {
-        {mf::BufferStreamId(streams[0].id().value()), displacement[0]},
-        {mf::BufferStreamId(streams[1].id().value()), displacement[1]}
-    };
-
-    mp::SurfaceModifications mods;
     mods.mutable_surface_id()->set_value(surface_response.id().value());
     for (auto i = 0u; i < streams.size(); i++)
     {
@@ -986,9 +983,12 @@ TEST_F(SessionMediator, arrangement_of_bufferstreams)
         stream->set_displacement_y(displacement[i].dy.as_int());
     }
 
-    mf::SurfaceId surf_id{surface_response.id().value()};
-    EXPECT_CALL(*shell, modify_surface(_, surf_id, StreamsAre(expected_list)));
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()};
+        StreamsAre({
+            {mf::BufferStreamId(streams[0].id().value()), displacement[0]},
+            {mf::BufferStreamId(streams[1].id().value()), displacement[1]}
+        })));
 
-    mp::Void null;
     mediator.modify_surface(nullptr, &mods, &null, null_callback.get());
 }
