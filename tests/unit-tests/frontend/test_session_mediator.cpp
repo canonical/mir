@@ -206,7 +206,7 @@ public:
         mock_surfaces.erase(surface);
     }
 
-    void configure_streams(mf::SurfaceId id, std::list<ms::StreamConfig> const& config)
+    void configure_streams(mf::SurfaceId id, std::list<msh::StreamSpecification> const& config)
     {
         last_config = config;
         last_config_surface_id = id;
@@ -216,7 +216,7 @@ public:
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
     static int const testing_client_input_fd;
     int last_surface_id;
-    std::list<ms::StreamConfig> last_config;
+    std::list<msh::StreamSpecification> last_config;
     mf::SurfaceId last_config_surface_id;
 };
 
@@ -956,7 +956,7 @@ TEST_F(SessionMediator, completes_exchange_buffer_when_completion_is_invoked_asy
 
 MATCHER(ConfigEq, "")
 {
-    return (std::get<0>(arg).id == std::get<1>(arg).id) &&
+    return (std::get<0>(arg).stream_id == std::get<1>(arg).stream_id) &&
            (std::get<0>(arg).displacement == std::get<1>(arg).displacement);
 }
 
@@ -971,7 +971,7 @@ TEST_F(SessionMediator, arrangement_of_bufferstreams)
     for (auto &stream : streams)
         mediator.create_buffer_stream(nullptr, &stream_request, &stream, null_callback.get());
 
-    std::list<ms::StreamConfig> expected_list = {
+    std::list<msh::StreamSpecification> expected_list = {
         {mf::BufferStreamId(streams[0].id().value()), displacement[0]},
         {mf::BufferStreamId(streams[1].id().value()), displacement[1]}
     };

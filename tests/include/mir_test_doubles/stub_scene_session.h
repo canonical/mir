@@ -117,7 +117,7 @@ struct StubSceneSession : public scene::Session
         return frontend::BufferStreamId();
     }
 
-    void configure_streams(frontend::SurfaceId, std::list<scene::StreamConfig> const&)
+    void configure_streams(frontend::SurfaceId, std::list<shell::StreamSpecification> const&)
     {
     }
 

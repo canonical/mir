@@ -28,16 +28,14 @@
 
 namespace mir
 {
+namespace shell
+{
+struct StreamSpecification;
+}
 namespace scene
 {
 class Surface;
 struct SurfaceCreationParameters;
-
-struct StreamConfig
-{
-    frontend::BufferStreamId id;
-    geometry::Displacement displacement;
-};
 
 class Session : public frontend::Session
 {
@@ -68,7 +66,7 @@ public:
 
     virtual frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const& props) = 0;
     virtual void destroy_buffer_stream(frontend::BufferStreamId stream) = 0;
-    virtual void configure_streams(frontend::SurfaceId id, std::list<StreamConfig> const& config) = 0;
+    virtual void configure_streams(frontend::SurfaceId id, std::list<shell::StreamSpecification> const& config) = 0;
 };
 }
 }
