@@ -206,8 +206,9 @@ public:
         mock_surfaces.erase(surface);
     }
 
-    void configure_streams(mf::SurfaceId id, std::list<msh::StreamSpecification> const& config)
+    void modify_surface(mf::SurfaceId id, std::list<msh::StreamSpecification> const& config)
     {
+        printf("MOD SURF\n");
         last_config = config;
         last_config_surface_id = id;
     }
@@ -960,6 +961,14 @@ MATCHER(ConfigEq, "")
            (std::get<0>(arg).displacement == std::get<1>(arg).displacement);
 }
 
+MATCHER_P(StreamsAre, value, "")
+{
+    if(!arg.streams.is_set())
+        return false;
+    EXPECT_THAT(arg.streams.value(), testing::Pointwise(ConfigEq(), value));
+    return !(::testing::Test::HasFailure());
+}
+
 TEST_F(SessionMediator, arrangement_of_bufferstreams)
 {
     using namespace testing;
@@ -986,8 +995,9 @@ TEST_F(SessionMediator, arrangement_of_bufferstreams)
         stream->set_displacement_y(displacement[i].dy.as_int());
     }
 
+    mf::SurfaceId surf_id{surface_response.id().value()};
+    EXPECT_CALL(*shell, modify_surface(_, surf_id, StreamsAre(expected_list)));
+
     mp::Void null;
     mediator.modify_surface(nullptr, &mods, &null, null_callback.get());
-    EXPECT_THAT(stubbed_session->last_config_surface_id.as_value(), Eq(surface_response.id().value()));
-    EXPECT_THAT(stubbed_session->last_config, Pointwise(ConfigEq(), expected_list));
 }

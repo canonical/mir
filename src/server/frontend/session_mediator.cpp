@@ -148,6 +148,7 @@ void mf::SessionMediator::connect(
     resource_cache->save_resource(response, ipc_package);
 
     done->Run();
+    printf("CONNECT IS DUN\n");
 }
 
 void mf::SessionMediator::advance_buffer(
@@ -442,6 +443,16 @@ void mf::SessionMediator::modify_surface(
     // max_aspect is a special case (below)
 
 #undef COPY_IF_SET
+    std::vector<msh::StreamSpecification> stream_spec;
+    for(auto& stream : surface_specification.stream())
+    {
+        stream_spec.emplace_back(
+            msh::StreamSpecification{
+                mf::BufferStreamId{stream.id().value()},
+                geom::Displacement{stream.displacement_x(), stream.displacement_y()}});
+    }
+    printf("Mods %i\n", (int)stream_spec.size());
+    mods.streams = std::move(stream_spec);
 
     if (surface_specification.has_aux_rect())
     {
@@ -465,6 +476,7 @@ void mf::SessionMediator::modify_surface(
 
     auto const id = mf::SurfaceId(request->surface_id().value());
 
+    printf("MODDDD\n");
     shell->modify_surface(session, id, mods);
 
     done->Run();
