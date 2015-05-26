@@ -40,7 +40,7 @@ namespace scene
 struct StreamInfo
 {
     std::shared_ptr<compositor::BufferStream> stream;
-    geometry::Displacement position;
+    geometry::Displacement displacement;
 };
 
 class SurfaceObserver;
