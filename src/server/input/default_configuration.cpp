@@ -30,6 +30,7 @@
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
 #include "android/input_translator.h"
+#include "android/input_reader_dispatchable.h"
 #include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
 #include "cursor_controller.h"
@@ -238,6 +239,16 @@ mir::DefaultServerConfiguration::the_event_hub()
         });
 }
 
+std::shared_ptr<mir::input::LegacyInputDispatchable>
+mir::DefaultServerConfiguration::the_legacy_input_dispatchable()
+{
+    return legacy_input_dispatchable(
+        [this]()
+        {
+            return std::make_shared<mia::InputReaderDispatchable>(the_event_hub(), the_input_reader());
+        });
+}
+
 std::shared_ptr<droidinput::InputReaderPolicyInterface>
 mir::DefaultServerConfiguration::the_input_reader_policy()
 {
@@ -405,7 +416,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                         mr::legacy_input::initialize(the_logger());
 
                 auto ret = std::make_shared<mi::DefaultInputManager>(
-                    the_input_reading_multiplexer(), the_input_reader(), the_event_hub());
+                    the_input_reading_multiplexer(), the_legacy_input_dispatchable());
 
                 auto platform = the_input_platform();
                 if (platform)
@@ -438,6 +449,7 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
                                             the_input_reading_multiplexer(),
                                             the_main_loop(),
                                             the_touch_visualizer(),
+                                            the_cursor_listener(),
                                             the_input_region());
                                     });
 }
@@ -451,6 +463,7 @@ std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_d
                                             the_input_reading_multiplexer(),
                                             the_main_loop(),
                                             the_touch_visualizer(),
+                                            the_cursor_listener(),
                                             the_input_region());
                                     });
 }

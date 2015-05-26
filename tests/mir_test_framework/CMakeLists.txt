@@ -46,6 +46,7 @@ set(
   fake_event_hub_server_configuration.cpp
   any_surface.cpp
   headless_nested_server_runner.cpp
+  placement_applying_shell.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS
@@ -104,6 +105,10 @@ add_library(
   fake_input_device_impl.cpp
   stub_input_platform.cpp
   )
+
+target_link_libraries(mirplatforminputstub
+  mirclient
+)
 
 set_target_properties(
   mirplatforminputstub PROPERTIES

@@ -28,6 +28,7 @@
 
 #include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test_doubles/mock_prompt_session_listener.h"
+#include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test/popen.h"
@@ -382,10 +383,7 @@ TEST_F(PromptSessionClientAPI,
     mir_prompt_session_release_sync(prompt_session);
 }
 
-// TODO we need a nice way to run this (and similar tests that require a
-// TODO separate client process) in CI. Disabled as we can't be sure the
-// TODO mir_demo_client_basic executable is about.
-TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
+TEST_F(PromptSessionClientAPI, client_pid_is_associated_with_session)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -407,8 +405,8 @@ TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
     EXPECT_CALL(*this, process_line(StrEq("Surface released")));
     EXPECT_CALL(*this, process_line(StrEq("Connection released")));
 
-    mir::test::Popen output(std::string("bin/mir_demo_client_basic -m ") +
-        fd_connect_string(actual_fds[0]));
+    auto const command = mtf::executable_path() + "/mir_demo_client_basic -m" + fd_connect_string(actual_fds[0]);
+    mir::test::Popen output(command);
 
     std::string line;
     while (output.get_line(line)) process_line(line);

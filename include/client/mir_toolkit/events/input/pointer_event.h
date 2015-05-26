@@ -68,12 +68,13 @@ typedef enum {
  * Identifiers for pointer buttons
  */
 typedef enum {
-    mir_pointer_button_primary   = 1,
-    mir_pointer_button_secondary = 2,
-    mir_pointer_button_tertiary  = 3,
-    mir_pointer_button_back      = 4,
-    mir_pointer_button_forward   = 5
+    mir_pointer_button_primary   = 1 << 0,
+    mir_pointer_button_secondary = 1 << 1,
+    mir_pointer_button_tertiary  = 1 << 2,
+    mir_pointer_button_back      = 1 << 3,
+    mir_pointer_button_forward   = 1 << 4
 } MirPointerButton;
+typedef unsigned int MirPointerButtons;
 
 /**
  * Retrieve the modifier keys pressed when the pointer action occured.
@@ -101,6 +102,15 @@ MirPointerAction mir_pointer_event_action(MirPointerEvent const* event);
  */
 bool mir_pointer_event_button_state(MirPointerEvent const* event,
     MirPointerButton button);
+
+/**
+ * Retreive the pointer button state as a masked set of values.
+ *
+ * \param [in] event         The pointer event
+ *
+ * \return                   The button state
+ */
+MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event);
 
 /**
  * Retrieve the axis value reported by a given pointer event.

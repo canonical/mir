@@ -31,6 +31,8 @@ mi::EventFilterChainDispatcher::EventFilterChainDispatcher(
 // TODO: It probably makes sense to provide keymapped events.
 bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
 {
+    std::lock_guard<std::mutex> lg(filter_guard);
+    
     auto it = filters.begin();
     while (it != filters.end())
     {
@@ -48,11 +50,15 @@ bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
 
 void mi::EventFilterChainDispatcher::append(std::shared_ptr<EventFilter> const& filter)
 {
+    std::lock_guard<std::mutex> lg(filter_guard);
+
     filters.push_back(filter);
 }
 
 void mi::EventFilterChainDispatcher::prepend(std::shared_ptr<EventFilter> const& filter)
 {
+    std::lock_guard<std::mutex> lg(filter_guard);
+        
     filters.insert(filters.begin(), filter);
 }
 
