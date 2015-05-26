@@ -19,6 +19,8 @@
 #ifndef MIR_INPUT_INPUT_DEVICE_HUB_H_
 #define MIR_INPUT_INPUT_DEVICE_HUB_H_
 
+#include <memory>
+
 namespace mir
 {
 namespace input

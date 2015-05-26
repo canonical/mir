@@ -31,24 +31,6 @@
 #include <atomic>
 #include <thread>
 
-namespace mir
-{
-namespace input
-{
-namespace android
-{
-class FakeEventHub;
-}
-}
-namespace test
-{
-namespace doubles
-{
-class FakeEventHubInputConfiguration;
-}
-}
-}
-
 namespace mir_test_framework
 {
 
@@ -61,20 +43,16 @@ public:
     void on_start() override;
     void on_exit() override;
 
-    std::shared_ptr<droidinput::EventHubInterface> the_event_hub() override;
     std::shared_ptr<mir::input::InputManager> the_input_manager() override;
     std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<mir::input::InputSender> the_input_sender() override;
-
-    std::shared_ptr<mir::input::android::FakeEventHub> fake_event_hub;
 
 protected:
     virtual void inject_input() = 0;
 
     void wait_until_client_appears(std::string const& surface_name);
 
-private:
     std::thread input_injection_thread;
 };
 

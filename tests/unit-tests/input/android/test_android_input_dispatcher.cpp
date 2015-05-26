@@ -16,7 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/events/event_private.h"
+#include "mir/events/event_builders.h"
+
 #include "src/server/input/android/android_input_dispatcher.h"
 #include "src/server/input/android/android_input_thread.h"
 #include "src/server/input/android/android_input_constants.h"
@@ -36,6 +37,7 @@ namespace droidinput = android;
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
+namespace mev = mir::events;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
@@ -76,6 +78,10 @@ struct AndroidInputDispatcherTest : public testing::Test
     std::shared_ptr<MockInputThread> dispatcher_thread = std::make_shared<MockInputThread>();
     mia::AndroidInputDispatcher input_dispatcher{dispatcher,dispatcher_thread};
     const uint32_t default_policy_flags = 0;
+
+    int32_t const device_id = 1;
+    int32_t const touch_id = 2;
+    std::chrono::nanoseconds const timestamp = std::chrono::nanoseconds(2);
 };
 
 }
@@ -167,106 +173,70 @@ MATCHER_P(KeyArgsMatches, expected, "")
 TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
 {
     using namespace ::testing;
-    droidinput::PointerCoords expected_coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
-    droidinput::PointerProperties expected_properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+    droidinput::PointerCoords expected_coords[1];
+    droidinput::PointerProperties expected_properties[1];
 
     std::memset(expected_coords, 0, sizeof(expected_coords));
     std::memset(expected_properties, 0, sizeof(expected_properties));
-    MirEvent event;
-    event.type = mir_event_type_motion;
-    event.motion.pointer_count = 1;
-    event.motion.event_time = 2;
-    event.motion.device_id = 3;
-    event.motion.source_id = 4;
-    event.motion.action = mir_motion_action_scroll;
-    event.motion.flags = mir_motion_flag_window_is_obscured;
-    event.motion.modifiers = 6;
-    event.motion.edge_flags = 7;
-    event.motion.button_state =
-        static_cast<MirMotionButton>(mir_motion_button_forward | mir_motion_button_secondary);
-    event.motion.x_offset = 0.0f;
-    event.motion.y_offset = 0.0f;
-    event.motion.x_precision = 9.0f;
-    event.motion.y_precision = 10.0f;
-    event.motion.down_time = 11;
 
-    auto & pointer = event.motion.pointer_coordinates[0];
-    pointer.id = 1;
-    pointer.x = 12.0f;
-    pointer.raw_x = 12.0f;
-    pointer.y = 13.0f;
-    pointer.raw_y = 13.0f;
-    pointer.touch_major = 14.0f;
-    pointer.touch_minor = 15.0f;
-    pointer.size = 16.0f;
-    pointer.pressure = 17.0f;
-    pointer.orientation = 18.0f;
-    pointer.vscroll = 19.0f;
-    pointer.hscroll = 20.0f;
-    pointer.tool_type = mir_motion_tool_type_finger;
+    float x = 12.0f, y = 13.0f, touch_major = 14.0f, touch_minor = 15.0f,
+        size = 16.0f, pressure = 17.0f;
+    
+    auto event = mev::make_event(MirInputDeviceId(device_id), timestamp, mir_input_event_modifier_shift);
 
-    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_X, pointer.x);
-    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_Y, pointer.y);
-    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR, pointer.touch_major);
-    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR, pointer.touch_minor);
-    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_SIZE, pointer.size);
-    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, pointer.pressure);
-    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, pointer.orientation);
-    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, pointer.vscroll);
-    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, pointer.hscroll);
-    expected_properties[0].id = pointer.id;
-    expected_properties[0].toolType = pointer.tool_type;
+    mev::add_touch(*event, MirTouchId(touch_id), mir_touch_action_change,
+                   mir_touch_tooltype_finger, x, y, pressure, touch_major, touch_minor, size);
 
-    droidinput::NotifyMotionArgs expected(std::chrono::nanoseconds(event.motion.event_time),
-                                          event.motion.device_id,
-                                          event.motion.source_id,
+    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_X, x);
+    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_Y, y);
+    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR, touch_major);
+    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR, touch_minor);
+    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_SIZE, size);
+    expected_coords[0].setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, pressure);
+    expected_properties[0].id = touch_id;
+    expected_properties[0].toolType = AMOTION_EVENT_TOOL_TYPE_FINGER;
+
+    droidinput::NotifyMotionArgs expected(timestamp,
+                                          device_id,
+                                          AINPUT_SOURCE_TOUCHSCREEN,
                                           default_policy_flags,
-                                          event.motion.action,
-                                          event.motion.flags,
-                                          event.motion.modifiers,
-                                          event.motion.button_state,
-                                          event.motion.edge_flags,
-                                          event.motion.pointer_count,
+                                          AMOTION_EVENT_ACTION_MOVE,
+                                          0, /* flags */
+                                          AMETA_SHIFT_ON,
+                                          0,
+                                          0, /* edge_flags */
+                                          1,
                                           expected_properties,
                                           expected_coords,
-                                          event.motion.x_precision,
-                                          event.motion.y_precision,
-                                          std::chrono::nanoseconds(event.motion.down_time));
+                                          0, 0, /* unused x/y precision */
+                                          timestamp);
 
     EXPECT_CALL(*dispatcher, notifyMotion(MotionArgsMatches(expected)));
 
-    input_dispatcher.dispatch(event);
+    input_dispatcher.dispatch(*event);
 }
 
 TEST_F(AndroidInputDispatcherTest, forwards_all_key_event_paramters_correctly)
 {
     using namespace ::testing;
-    MirEvent event;
-    event.type = mir_event_type_key;
-    event.key.event_time = 1;
-    event.key.device_id = 2;
-    event.key.source_id = 3;
-    event.key.action = mir_key_action_down;
-    event.key.flags = mir_key_flag_long_press;
-    event.key.scan_code = 4;
-    event.key.key_code = 5;
-    event.key.repeat_count = 0;
-    event.key.down_time = 6;
-    event.key.modifiers = 7;
-    event.key.is_system_key = false;
 
-    droidinput::NotifyKeyArgs expected(std::chrono::nanoseconds(event.key.event_time),
-                                       event.key.device_id,
-                                       event.key.source_id,
+    xkb_keysym_t key_code = 5;
+    int scan_code = 6;
+    auto event = mev::make_event(MirInputDeviceId(device_id), timestamp, mir_keyboard_action_down, key_code, scan_code,
+                                 mir_input_event_modifier_shift);
+
+    droidinput::NotifyKeyArgs expected(timestamp,
+                                       device_id,
+                                       AINPUT_SOURCE_KEYBOARD,
                                        default_policy_flags,
-                                       event.key.action,
-                                       event.key.flags,
-                                       event.key.key_code,
-                                       event.key.scan_code,
-                                       event.key.modifiers,
-                                       std::chrono::nanoseconds(event.key.down_time));
+                                       AKEY_EVENT_ACTION_DOWN,
+                                       0, /* flags */
+                                       key_code,
+                                       scan_code,
+                                       AMETA_SHIFT_ON,
+                                       timestamp);
 
     EXPECT_CALL(*dispatcher, notifyKey(KeyArgsMatches(expected)));
 
-    input_dispatcher.dispatch(event);
+    input_dispatcher.dispatch(*event);
 }

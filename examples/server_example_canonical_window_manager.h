@@ -54,6 +54,12 @@ struct CanonicalSurfaceInfoCopy
     optional_value<geometry::Height> min_height;
     optional_value<geometry::Width> max_width;
     optional_value<geometry::Height> max_height;
+    mir::optional_value<geometry::DeltaX> width_inc;
+    mir::optional_value<geometry::DeltaY> height_inc;
+    mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
+    mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
+
+    graphics::Buffer* buffer{nullptr};
 };
 
 // standard window management algorithm:
@@ -109,7 +115,7 @@ public:
 
     void generate_decorations_for(
         std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface,
-        CanonicalSurfaceInfoMap& surface_info);
+        CanonicalSurfaceInfoMap& surface_map);
 
 private:
     static const int modifier_mask =
@@ -132,8 +138,8 @@ private:
     void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
     bool constrained_resize(
         std::shared_ptr<scene::Surface> const& surface,
-        geometry::Point new_pos,
-        geometry::Size new_size,
+        geometry::Point const& requested_pos,
+        geometry::Size const& requested_size,
         const bool left_resize,
         const bool top_resize,
         geometry::Rectangle const& bounds);

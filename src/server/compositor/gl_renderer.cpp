@@ -16,10 +16,8 @@
  *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "GL"
 #include "mir/compositor/gl_renderer.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/compositor/destination_alpha.h"
 #include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
@@ -92,22 +90,19 @@ mc::GLRenderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-mc::GLRenderer::GLRenderer(
-    geom::Rectangle const& display_area,
-    DestinationAlpha dest_alpha)
-    : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
+mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
+    : clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
       texture_cache(std::make_unique<RecentlyUsedCache>()),
-      rotation(NAN), // ensure the first set_rotation succeeds
-      dest_alpha(dest_alpha)
+      rotation(NAN) // ensure the first set_rotation succeeds
 {
     struct {GLenum id; char const* label;} const glstrings[] =
     {
-        {GL_VENDOR,   "vendor"},
-        {GL_RENDERER, "renderer"},
-        {GL_VERSION,  "version"},
-        {GL_SHADING_LANGUAGE_VERSION,  "SL version"},
+        {GL_VENDOR,   "GL vendor"},
+        {GL_RENDERER, "GL renderer"},
+        {GL_VERSION,  "GL version"},
+        {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
     };
 
     for (auto& s : glstrings)
@@ -119,7 +114,7 @@ mc::GLRenderer::GLRenderer(
 
     GLint max_texture_size = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-    mir::log_info("max texture size = %d", max_texture_size);
+    mir::log_info("GL max texture size = %d", max_texture_size);
 
     GLint rbits = 0, gbits = 0, bbits = 0, abits = 0, dbits = 0, sbits = 0;
     glGetIntegerv(GL_RED_BITS, &rbits);
@@ -128,16 +123,13 @@ mc::GLRenderer::GLRenderer(
     glGetIntegerv(GL_ALPHA_BITS, &abits);
     glGetIntegerv(GL_DEPTH_BITS, &dbits);
     glGetIntegerv(GL_STENCIL_BITS, &sbits);
-    mir::log_info("framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
+    mir::log_info("GL framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
                   rbits, gbits, bbits, abits, dbits, sbits);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     set_viewport(display_area);
     set_rotation(0.0f);
-
-    if (dest_alpha != DestinationAlpha::opaque)
-        clear_color[3] = 0.0f;
 }
 
 mc::GLRenderer::~GLRenderer() = default;
@@ -146,7 +138,7 @@ void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
                                 mg::Renderable const& renderable) const
 {
     primitives.resize(1);
-    primitives[0] = mg::tessellate_renderable_into_rectangle(renderable);
+    primitives[0] = mg::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
 }
 
 void mc::GLRenderer::render(mg::RenderableList const& renderables) const
@@ -154,9 +146,6 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
-
-    if (dest_alpha == DestinationAlpha::opaque)
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 
     ++frameno;
     for (auto const& r : renderables)
@@ -297,7 +286,3 @@ void mc::GLRenderer::suspend()
     texture_cache->invalidate();
 }
 
-mc::DestinationAlpha mc::GLRenderer::destination_alpha() const
-{
-    return dest_alpha;
-}

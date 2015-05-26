@@ -22,6 +22,7 @@
 
 #include "default_display_configuration_policy.h"
 #include "nested/mir_client_host_connection.h"
+#include "nested/cursor.h"
 #include "nested/display.h"
 #include "offscreen/display.h"
 #include "software_cursor.h"
@@ -103,12 +104,11 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                 "describe_graphics_module",
                 MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
             auto description = describe_module();
-            ml::log(ml::Severity::informational,
-                    std::string{"Selected driver: "} + description->name + " (version " +
-                    std::to_string(description->major_version) + "." +
-                    std::to_string(description->minor_version) + "." +
-                    std::to_string(description->micro_version) + ")",
-                    "Platform Loader");
+            mir::log_info("Selected driver: %s (version %d.%d.%d)",
+                          description->name,
+                          description->major_version,
+                          description->minor_version,
+                          description->micro_version);
 
             if (!the_options()->is_set(options::host_socket_opt))
                 return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());
@@ -151,7 +151,8 @@ mir::DefaultServerConfiguration::the_display()
                     the_input_dispatcher(),
                     the_display_report(),
                     the_display_configuration_policy(),
-                    the_gl_config());
+                    the_gl_config(),
+                    the_cursor_listener());
             }
             {
                 return the_graphics_platform()->create_display(
@@ -168,6 +169,9 @@ mir::DefaultServerConfiguration::the_cursor()
     return cursor(
         [this]() -> std::shared_ptr<mg::Cursor>
         {
+            if (the_options()->is_set(options::host_socket_opt))
+                return std::make_shared<mgn::Cursor>(the_host_connection(), the_default_cursor_image());
+            
             // We try to create a hardware cursor, if this fails we use a software cursor
             auto hardware_cursor = the_display()->create_hardware_cursor(the_default_cursor_image());
             if (hardware_cursor)

@@ -24,7 +24,7 @@
 #include "src/server/frontend/session_mediator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/cross_process_sync.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_event_sink.h"

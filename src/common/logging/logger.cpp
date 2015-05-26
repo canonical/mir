@@ -30,13 +30,14 @@ std::shared_ptr<ml::Logger> the_logger;
 
 std::shared_ptr<ml::Logger> get_logger()
 {
+    std::lock_guard<decltype(log_mutex)> lock{log_mutex};
+
     if (auto const result = the_logger)
     {
         return result;
     }
     else
     {
-        std::lock_guard<decltype(log_mutex)> lock{log_mutex};
         if (!the_logger)
             the_logger = std::make_shared<ml::DumbConsoleLogger>();
 

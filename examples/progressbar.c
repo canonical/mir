@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
     conn = mir_connect_sync(NULL, argv[0]);
     if (!mir_connection_is_valid(conn))
     {
-        fprintf(stderr, "Could not connect to a display server.\n");
+        fprintf(stderr, "Could not connect to a display server: %s\n", mir_connection_get_error_message(conn));
         return 1;
     }
 

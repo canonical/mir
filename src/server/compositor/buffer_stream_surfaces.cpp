@@ -27,13 +27,15 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle)
-    : buffer_bundle(buffer_bundle)
+mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle) :
+    buffer_bundle(buffer_bundle),
+    first_frame_posted{false}
 {
 }
 
 mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 {
+    buffer_bundle->drop_client_requests();
     force_requests_to_complete();
 }
 
@@ -42,11 +44,6 @@ std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_compositor_buffer(
 {
     return std::make_shared<mc::TemporaryCompositorBuffer>(
         buffer_bundle, user_id);
-}
-
-std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_snapshot_buffer()
-{
-    return std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle);
 }
 
 void mc::BufferStreamSurfaces::acquire_client_buffer(
@@ -58,11 +55,6 @@ void mc::BufferStreamSurfaces::acquire_client_buffer(
 void mc::BufferStreamSurfaces::release_client_buffer(graphics::Buffer* buf)
 {
     buffer_bundle->client_release(buf);
-}
-
-MirPixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()
-{
-    return buffer_bundle->properties().format;
 }
 
 geom::Size mc::BufferStreamSurfaces::stream_size()
@@ -95,7 +87,51 @@ void mc::BufferStreamSurfaces::drop_old_buffers()
     buffer_bundle->drop_old_buffers();
 }
 
-void mc::BufferStreamSurfaces::drop_client_requests()
+void mc::BufferStreamSurfaces::swap_buffers(
+    mg::Buffer* old_buffer, std::function<void(mg::Buffer* new_buffer)> complete)
 {
-    buffer_bundle->drop_client_requests();
+    if (old_buffer)
+    {
+        release_client_buffer(old_buffer);
+        {
+            std::unique_lock<std::mutex> lk(mutex);
+            first_frame_posted = true;
+        }
+
+        /*
+         * TODO: In future frame_posted() could be made parameterless.
+         *       The new method of catching up on buffer backlogs is to
+         *       query buffers_ready_for_compositor() or Scene::frames_pending
+         */
+        observers.frame_posted(1);
+    }
+
+    acquire_client_buffer(complete);
+}
+
+bool mc::BufferStreamSurfaces::has_submitted_buffer() const
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    return first_frame_posted;
+}
+
+void mc::BufferStreamSurfaces::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
+{
+    exec(*std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle));
+}
+
+MirPixelFormat mc::BufferStreamSurfaces::pixel_format() const
+{
+    return buffer_bundle->properties().format;
+}
+
+void mc::BufferStreamSurfaces::add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer)
+{
+    observers.add(observer);
+}
+
+void mc::BufferStreamSurfaces::remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer)
+{
+    if (auto o = observer.lock())
+        observers.remove(o);
 }

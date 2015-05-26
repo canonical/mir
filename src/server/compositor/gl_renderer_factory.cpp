@@ -24,8 +24,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
 std::unique_ptr<mc::Renderer>
-mc::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect,
-        DestinationAlpha dest_alpha)
+mc::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect)
 {
-    return std::make_unique<GLRenderer>(rect, dest_alpha);
+    return std::make_unique<GLRenderer>(rect);
 }

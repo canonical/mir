@@ -29,8 +29,8 @@
 #include "android/event_filter_dispatcher_policy.h"
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
-#include "android/android_input_manager.h"
 #include "android/input_translator.h"
+#include "android/input_reader_dispatchable.h"
 #include "display_input_region.h"
 #include "event_filter_chain.h"
 #include "cursor_controller.h"
@@ -217,31 +217,6 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
         });
 }
 
-std::shared_ptr<mi::InputManager>
-mir::DefaultServerConfiguration::the_input_manager()
-{
-    return input_manager(
-        [&, this]() -> std::shared_ptr<mi::InputManager>
-        {
-            auto const options = the_options();
-            bool input_reading_required =
-                options->get<bool>(options::enable_input_opt) &&
-                !options->is_set(options::host_socket_opt);
-
-            if (input_reading_required)
-            {
-                if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
-                        mr::legacy_input::initialize(the_logger());
-
-                return std::make_shared<mia::InputManager>(
-                    the_event_hub(),
-                    the_input_reader_thread());
-            }
-            else
-                return std::make_shared<mi::NullInputManager>();
-        });
-}
-
 std::shared_ptr<droidinput::EventHubInterface>
 mir::DefaultServerConfiguration::the_event_hub()
 {
@@ -249,6 +224,16 @@ mir::DefaultServerConfiguration::the_event_hub()
         [this]()
         {
             return std::make_shared<droidinput::EventHub>(the_input_report());
+        });
+}
+
+std::shared_ptr<mir::input::LegacyInputDispatchable>
+mir::DefaultServerConfiguration::the_legacy_input_dispatchable()
+{
+    return legacy_input_dispatchable(
+        [this]()
+        {
+            return std::make_shared<mia::InputReaderDispatchable>(the_event_hub(), the_input_reader());
         });
 }
 
@@ -269,16 +254,6 @@ mir::DefaultServerConfiguration::the_input_reader()
         [this]()
         {
             return std::make_shared<droidinput::InputReader>(the_event_hub(), the_input_reader_policy(), the_input_translator());
-        });
-}
-
-std::shared_ptr<mia::InputThread>
-mir::DefaultServerConfiguration::the_input_reader_thread()
-{
-    return input_reader_thread(
-        [this]()
-        {
-            return std::make_shared<mia::CommonInputThread>("Mir/InputReader", new droidinput::InputReaderThread(the_input_reader()));
         });
 }
 
@@ -398,20 +373,38 @@ mir::DefaultServerConfiguration::the_input_platform()
 }
 
 std::shared_ptr<mi::InputManager>
-mir::DefaultServerConfiguration::the_new_input_manager()
+mir::DefaultServerConfiguration::the_input_manager()
 {
-    return new_input_manager(
+    // As the input configuration is structured now, if there is no
+    // InputReader (as in the nested case) there will be nothing to instate
+    // and keep alive the cursor and its controller.
+    // We use the CursorControllingInputManager for this purpose.
+    struct CursorControllingInputManager : public mi::NullInputManager
+    {
+        CursorControllingInputManager(
+            std::shared_ptr<mi::CursorListener> const& cursor_listener)
+            : cursor_listener(cursor_listener)
+        {
+        }
+
+        std::shared_ptr<mi::CursorListener> const cursor_listener;
+    };
+
+    return input_manager(
         [this]() -> std::shared_ptr<mi::InputManager>
         {
             auto const options = the_options();
-            bool input_reading_required =
-                options->get<bool>(options::enable_input_opt) &&
-                !options->is_set(options::host_socket_opt);
+            bool input_opt = options->get<bool>(options::enable_input_opt);
+            bool input_reading_required = input_opt && !options->is_set(options::host_socket_opt);
                 // TODO nested input handling (== host_socket) should fold into a platform
 
             if (input_reading_required)
             {
-                auto ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
+                if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
+                        mr::legacy_input::initialize(the_logger());
+
+                auto ret = std::make_shared<mi::DefaultInputManager>(
+                    the_input_reading_multiplexer(), the_legacy_input_dispatchable());
 
                 auto platform = the_input_platform();
                 if (platform)
@@ -435,22 +428,30 @@ mir::DefaultServerConfiguration::the_input_reading_multiplexer()
     );
 }
 
-std::shared_ptr<mi::InputDeviceRegistry>
-mir::DefaultServerConfiguration::the_input_device_registry()
+std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_input_device_registry()
 {
     return default_input_device_hub([this]()
                                     {
                                         return std::make_shared<mi::DefaultInputDeviceHub>(
-                                            the_input_dispatcher(), the_input_reading_multiplexer(), the_main_loop());
+                                            the_input_dispatcher(),
+                                            the_input_reading_multiplexer(),
+                                            the_main_loop(),
+                                            the_touch_visualizer(),
+                                            the_cursor_listener(),
+                                            the_input_region());
                                     });
 }
 
-std::shared_ptr<mi::InputDeviceHub>
-mir::DefaultServerConfiguration::the_input_device_hub()
+std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_device_hub()
 {
     return default_input_device_hub([this]()
                                     {
                                         return std::make_shared<mi::DefaultInputDeviceHub>(
-                                            the_input_dispatcher(), the_input_reading_multiplexer(), the_main_loop());
+                                            the_input_dispatcher(),
+                                            the_input_reading_multiplexer(),
+                                            the_main_loop(),
+                                            the_touch_visualizer(),
+                                            the_cursor_listener(),
+                                            the_input_region());
                                     });
 }

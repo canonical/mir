@@ -10,10 +10,6 @@ Build-Depends: cmake,
                doxygen,
                xsltproc,
                graphviz,
-# We rely on C++11 features, and to prevent from ABI breaks
-# in libstdc++ causing us issues, we explicitly select a G++
-# version.
-               g++-4.9,
                libboost-dev,
                libboost-date-time-dev,
                libboost-program-options-dev,
@@ -42,6 +38,7 @@ Build-Depends: cmake,
                libglib2.0-dev,
                libfreetype6-dev,
                abi-compliance-checker,
+               libevdev-dev,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
@@ -64,7 +61,7 @@ Description: Display server for Ubuntu - RPC definitions
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver31
+Package: libmirserver32
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -130,7 +127,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver31 (= ${binary:Version}),
+Depends: libmirserver32 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,

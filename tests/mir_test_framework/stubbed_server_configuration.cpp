@@ -27,12 +27,14 @@
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_renderer.h"
 #include "mir_test_doubles/stub_input_sender.h"
+#include "mir_test_doubles/stub_legacy_input_dispatchable.h"
 
 #include "mir/compositor/renderer_factory.h"
 #include "src/server/input/null_input_manager.h"
 #include "src/server/input/null_input_dispatcher.h"
 #include "src/server/input/null_input_targeter.h"
 #include "mir_test_doubles/null_logger.h"
+#include "mir_test_doubles/stub_cursor.h"
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
@@ -46,18 +48,10 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-class StubCursor : public mg::Cursor
-{
-    void show() override {}
-    void show(mg::CursorImage const&) override {}
-    void hide() override {}
-    void move_to(geom::Point) override {}
-};
-
 class StubRendererFactory : public mc::RendererFactory
 {
 public:
-    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&, mc::DestinationAlpha)
+    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
     {
         return std::unique_ptr<mc::Renderer>(new mtd::StubRenderer());
     }
@@ -153,9 +147,19 @@ std::shared_ptr<mi::InputSender> mtf::StubbedServerConfiguration::the_input_send
         return std::make_shared<mtd::StubInputSender>();
 }
 
+std::shared_ptr<mi::LegacyInputDispatchable> mtf::StubbedServerConfiguration::the_legacy_input_dispatchable()
+{
+    auto options = the_options();
+
+    if (options->get<bool>("tests-use-real-input"))
+        return DefaultServerConfiguration::the_legacy_input_dispatchable();
+    else
+        return std::make_shared<mtd::StubLegacyInputDispatchable>();
+}
+
 std::shared_ptr<mg::Cursor> mtf::StubbedServerConfiguration::the_cursor()
 {
-    return std::make_shared<StubCursor>();
+    return std::make_shared<mtd::StubCursor>();
 }
 
 std::shared_ptr<ml::Logger> mtf::StubbedServerConfiguration::the_logger()

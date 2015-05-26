@@ -30,11 +30,12 @@ namespace mir
 namespace dispatch
 {
 class MultiplexingDispatchable;
-class SimpleDispatchThread;
+class ThreadedDispatcher;
 class ActionQueue;
 }
 namespace input
 {
+class LegacyInputDispatchable;
 class Platform;
 class InputEventHandlerRegister;
 class InputDeviceRegistry;
@@ -42,7 +43,8 @@ class InputDeviceRegistry;
 class DefaultInputManager : public InputManager
 {
 public:
-    DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer);
+    DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+                        std::shared_ptr<LegacyInputDispatchable> const& legacy_dispatchable);
     ~DefaultInputManager();
     void add_platform(std::shared_ptr<Platform> const& platform) override;
     void start() override;
@@ -50,13 +52,15 @@ public:
 private:
     std::vector<std::shared_ptr<Platform>> platforms;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
+    std::shared_ptr<input::LegacyInputDispatchable> const legacy_dispatchable;
     std::shared_ptr<dispatch::ActionQueue> const queue;
-    std::unique_ptr<dispatch::SimpleDispatchThread> input_thread;
+    std::unique_ptr<dispatch::ThreadedDispatcher> input_thread;
 
     enum class State
     {
         running, stopped
-    } state;
+    };
+    std::atomic<State> state;
 };
 
 }

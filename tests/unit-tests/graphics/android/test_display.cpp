@@ -803,3 +803,52 @@ TEST_F(Display, reports_vsync)
 
     vsync_fn(mga::DisplayName::primary);
 }
+
+TEST_F(Display, reports_correct_card_information)
+{
+    using namespace testing;
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    int num_cards = 0;
+    display.configuration()->for_each_card(
+        [&](mg::DisplayConfigurationCard const& config)
+        {
+            EXPECT_THAT(config.max_simultaneous_outputs, Eq(2));
+            num_cards++;
+        });
+    EXPECT_THAT(num_cards, Eq(1));
+}
+
+TEST_F(Display, can_configure_positioning_of_dbs)
+{
+    using namespace testing;
+    auto new_location = geom::Point{493,999};
+    auto another_new_location = geom::Point{540,221};
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    auto config = display.configuration();
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput& disp_conf) {
+        disp_conf.top_left = new_location;
+    });
+    display.configure(*config);
+
+    config = display.configuration();
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput& disp_conf) {
+        EXPECT_THAT(disp_conf.top_left, Eq(new_location));
+        disp_conf.top_left = another_new_location; 
+    });
+
+    config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf) {
+        EXPECT_THAT(disp_conf.top_left, Eq(another_new_location));
+    });
+}

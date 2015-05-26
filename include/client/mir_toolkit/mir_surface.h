@@ -239,6 +239,32 @@ bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
 bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
 
 /**
+ * Set the requested width increment, in pixels.
+ * Defines an arithmetic progression of sizes starting with min_width (if set, otherwise 0)
+ * into which the surface prefers to be resized.
+ *
+ * \param [in] spec       Specification to mutate
+ * \param [in] width_inc  Requested width increment.
+ * \return                False if width increment is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to
+ *          create a surface of any specific width or height.
+ */
+bool mir_surface_spec_set_width_increment(MirSurfaceSpec *spec, unsigned width_inc);
+
+/**
+ * Set the requested height increment, in pixels
+ * Defines an arithmetic progression of sizes starting with min_height (if set, otherwise 0)
+ * into which the surface prefers to be resized.
+ *
+ * \param [in] spec       Specification to mutate
+ * \param [in] height_inc Requested height increment.
+ * \return                False if height increment is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to
+ *          create a surface of any specific width or height.
+ */
+bool mir_surface_spec_set_height_increment(MirSurfaceSpec *spec, unsigned height_inc);
+
+/**
  * Set the minimum width, in pixels
  *
  * \param [in] spec     Specification to mutate
@@ -280,6 +306,33 @@ bool mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width);
  *          surface of any specific width or height.
  */
 bool mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height);
+
+/**
+ * Set the minimum aspect ratio. This is the minimum ratio of surface width to height.
+ * It is independent of orientation changes and/or preferences.
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    numerator
+ * \param [in] height   denominator
+ * \return              False if minimum aspect is invalid for a surface of this type
+ * \note    The requested aspect ratio is a hint only. The server is not guaranteed
+ *          to create a surface of any specific aspect.
+ */
+bool mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
+
+/**
+ * Set the maximum aspect ratio. This is the maximum ratio of surface width to height.
+ * It is independent of orientation changes and/or preferences.
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    numerator
+ * \param [in] height   denominator
+ * \return              False if maximum aspect is invalid for a surface of this type
+ * \note    The requested aspect ratio is a hint only. The server is not guaranteed
+ *          to create a surface of any specific aspect.
+ */
+bool mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
+
 /**
  * Set the requested pixel format.
  * \param [in] spec     Specification to mutate
@@ -350,7 +403,7 @@ MirWaitHandle *mir_connection_create_surface(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
     mir_surface_callback callback,
-    void *context);
+    void *context) __attribute__((__deprecated__("Use mir_surface_create()")));
 
 /**
  * Create a surface like in mir_connection_create_surface(), but also wait for
@@ -363,7 +416,7 @@ MirWaitHandle *mir_connection_create_surface(
  */
 MirSurface *mir_connection_create_surface_sync(
     MirConnection *connection,
-    MirSurfaceParameters const *params);
+    MirSurfaceParameters const *params) __attribute__((__deprecated__("Use mir_surface_create_sync()")));
 
 /**
  * Set the event handler to be called when events arrive for a surface.
@@ -626,13 +679,6 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
                                                             int width,
                                                             int height,
                                                             MirPixelFormat format);
-
-/**
- * Change the title (name) of a surface.
- *   \param [in] surface  The surface to rename
- *   \param [in] name     The new name
- */
-void mir_surface_set_title(MirSurface* surface, char const* name);
 
 /**
  * Request changes to the specification of a surface. The server will decide
