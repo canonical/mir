@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/common.h"
 #include "mir/graphics/display.h"
+#include "mir/geometry/displacement.h"
 #include "display_name.h"
 #include <map>
 #include <mutex>
@@ -46,7 +47,7 @@ public:
 
     void add(DisplayName name, std::unique_ptr<ConfigurableDisplayBuffer> buffer);
     void remove(DisplayName name);
-    void configure(DisplayName name, MirPowerMode, MirOrientation);
+    void configure(DisplayName name, MirPowerMode, MirOrientation, geometry::Displacement);
     bool display_present(DisplayName name) const;
 
 private:

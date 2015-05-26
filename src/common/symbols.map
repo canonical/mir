@@ -24,8 +24,10 @@ MIR_COMMON_4 {
     mir::dispatch::MultiplexingDispatchable::relevant_events*;
     mir::dispatch::MultiplexingDispatchable::remove_watch*;
     mir::dispatch::MultiplexingDispatchable::watch_fd*;
-    mir::dispatch::SimpleDispatchThread::?SimpleDispatchThread*;
-    mir::dispatch::SimpleDispatchThread::SimpleDispatchThread*;
+    mir::dispatch::ThreadedDispatcher::ThreadedDispatcher*;
+    mir::dispatch::ThreadedDispatcher::?ThreadedDispatcher*;
+    mir::dispatch::ThreadedDispatcher::add_thread*;
+    mir::dispatch::ThreadedDispatcher::remove_thread*;
     mir::Fd::Fd*;
     mir::Fd::invalid*;
     mir::Fd::operator*;
@@ -73,7 +75,7 @@ MIR_COMMON_4 {
     typeinfo?for?mir::dispatch::ActionQueue;
     typeinfo?for?mir::dispatch::Dispatchable;
     typeinfo?for?mir::dispatch::MultiplexingDispatchable;
-    typeinfo?for?mir::dispatch::SimpleDispatchThread;
+    typeinfo?for?mir::dispatch::ThreadedDispatcher;
     typeinfo?for?mir::Fd;
     typeinfo?for?mir::geometry::Displacement;
     typeinfo?for?mir::geometry::Length;
@@ -88,7 +90,7 @@ MIR_COMMON_4 {
     vtable?for?mir::dispatch::ActionQueue;
     vtable?for?mir::dispatch::Dispatchable;
     vtable?for?mir::dispatch::MultiplexingDispatchable;
-    vtable?for?mir::dispatch::SimpleDispatchThread;
+    vtable?for?mir::dispatch::ThreadedDispatcher;
     vtable?for?mir::Fd;
     vtable?for?mir::geometry::Displacement;
     vtable?for?mir::geometry::Length;

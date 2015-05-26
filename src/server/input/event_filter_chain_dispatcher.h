@@ -47,7 +47,7 @@ public:
     void stop() override;
     
 private:
-    std::mutex filter_mutex;
+    std::mutex filter_guard;
     
     std::vector<std::weak_ptr<EventFilter>> filters;
     std::shared_ptr<InputDispatcher> const next_dispatcher;

@@ -205,6 +205,11 @@ void mf::BasicConnector::create_session_for(
 {
     report->creating_session_for(server_socket->native_handle());
 
+    /* We set the SO_PASSCRED socket option in order to receive credentials */
+    auto const optval = 1;
+    if (setsockopt(server_socket->native_handle(), SOL_SOCKET, SO_PASSCRED, &optval, sizeof(optval)) == -1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set SO_PASSCRED"));
+
     connection_creator->create_connection_for(server_socket, {connect_handler, this});
 }
 

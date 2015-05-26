@@ -121,7 +121,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         MirInputDeviceId const device_id{7};
 
         auto const modifiers = mir_input_event_modifier_none;
-        std::vector<MirPointerButton> depressed_buttons{mir_pointer_button_primary};
+        auto const depressed_buttons = mir_pointer_button_primary;
 
         auto const x_axis_value = click_position.x.as_float();
         auto const y_axis_value = click_position.y.as_float();

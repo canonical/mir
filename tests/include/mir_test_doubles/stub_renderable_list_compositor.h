@@ -30,7 +30,10 @@ namespace doubles
 
 struct StubRenderableListCompositor : public graphics::android::RenderableListCompositor
 {
-    void render(graphics::RenderableList const&, graphics::android::SwappingGLContext const&) const
+    void render(
+        graphics::RenderableList const&,
+        geometry::Displacement,
+        graphics::android::SwappingGLContext const&) const
     {
     }
 };
