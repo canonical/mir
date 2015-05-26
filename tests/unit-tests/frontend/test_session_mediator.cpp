@@ -984,8 +984,8 @@ TEST_F(SessionMediator, arrangement_of_bufferstreams)
     }
 
     EXPECT_CALL(*shell, modify_surface(_,
-        mf::SurfaceId{surface_response.id().value()};
-        StreamsAre({
+        mf::SurfaceId{surface_response.id().value()},
+        StreamsAre(std::vector<msh::StreamSpecification>{
             {mf::BufferStreamId(streams[0].id().value()), displacement[0]},
             {mf::BufferStreamId(streams[1].id().value()), displacement[1]}
         })));
