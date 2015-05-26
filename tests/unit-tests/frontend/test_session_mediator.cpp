@@ -967,8 +967,8 @@ TEST_F(SessionMediator, arrangement_of_bufferstreams)
     mp::SurfaceModifications mods;
     mp::BufferStreamParameters stream_request;
     std::array<mp::BufferStream,2> streams;
-    std::array<geom::Displacement,2> displacement = {
-        geom::Displacement{-12,11}, geom::Displacement{4,-3} };
+    std::array<geom::Displacement,2> displacement = { {
+        geom::Displacement{-12,11}, geom::Displacement{4,-3} } };
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
