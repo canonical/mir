@@ -779,6 +779,7 @@ bool msh::CanonicalWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surfac
     // available workspace. For example, if the launcher is always-visible then
     // the left-edge of the surface is anchored to the right-edge of the launcher."
     case mir_surface_state_maximized:
+    case mir_surface_state_fullscreen:
     default:
         return true;
     }
