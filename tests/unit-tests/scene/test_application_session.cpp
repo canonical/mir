@@ -515,44 +515,53 @@ TEST_F(ApplicationSession, can_destroy_surface_bstream)
     session->destroy_surface(id);
 }
 
+MATCHER(StreamEq, "")
+{
+    (void) arg;
+    return true;
+}
+
 TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
 {
     using namespace testing;
-    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
+    NiceMock<MockBufferStreamFactory> mock_bufferstream_factory;
     NiceMock<MockSurfaceFactory> mock_surface_factory;
+
     auto mock_surface = make_mock_surface();
     EXPECT_CALL(mock_surface_factory, create_surface(_,_))
         .WillOnce(Return(mock_surface));
-    EXPECT_CALL(*mock_surface, set_streams(_)); 
-
+    
+    std::array<std::shared_ptr<mc::BufferStream>,3> streams{
+        std::make_shared<mtd::StubBufferStream>(),
+        std::make_shared<mtd::StubBufferStream>(),
+        std::make_shared<mtd::StubBufferStream>()
+    };
+    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_))
+        .WillOnce(Return(streams[0]))
+        .WillOnce(Return(streams[1]))
+        .WillOnce(Return(streams[2]));
 
     auto stream_properties = mg::BufferProperties{{8,8}, mir_pixel_format_argb_8888, mg::BufferUsage::hardware};
     auto session = make_application_session(
-        mt::fake_shared(surface_coordinator), mt::fake_shared(mock_surface_factory));
+        mt::fake_shared(mock_bufferstream_factory),
+        mt::fake_shared(mock_surface_factory));
     auto surface_id = session->create_surface(ms::a_surface().of_position({1,1}));
     auto surface = session->get_surface(surface_id);
     auto stream_id0 = mf::BufferStreamId(surface_id.as_value()); 
     auto stream_id1 = session->create_buffer_stream(stream_properties);
     auto stream_id2 = session->create_buffer_stream(stream_properties);
-    auto stream_id3 = session->create_buffer_stream(stream_properties);
 
-    session->configure_streams(
-        surface_id,
-        {
-            {stream_id2, geom::Displacement{0,3}},
-            {stream_id1, geom::Displacement{0,2}},
-            {stream_id0, geom::Displacement{-1,1}},
-            {stream_id3, geom::Displacement{0,-4}}}
-    );
-
-#if 0
-    auto renderables = surface->generate_renderables_for(this);
-    ASSERT_THAT(renderables.size(), Eq(4));
-    EXPECT_THAT(renderables[0]->screen_position().top_left, Eq(geom::Point{1,4}));
-    EXPECT_THAT(renderables[1]->screen_position().top_left, Eq(geom::Point{1,3}));
-    EXPECT_THAT(renderables[2]->screen_position().top_left, Eq(geom::Point{0,2}));
-    EXPECT_THAT(renderables[3]->screen_position().top_left, Eq(geom::Point{1,-3}));
-#endif
+    std::list<ms::StreamInfo> info {
+        {streams[2], geom::Displacement{0,3}},
+        {streams[0], geom::Displacement{-1,1}},
+        {streams[1], geom::Displacement{0,2}}
+    };
+    EXPECT_CALL(*mock_surface, set_streams(Pointwise(StreamEq(), info)));
+    session->configure_streams(surface_id, {
+        {stream_id2, geom::Displacement{0,3}},
+        {stream_id0, geom::Displacement{-1,1}},
+        {stream_id1, geom::Displacement{0,2}}
+    });
 }
 
 TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
