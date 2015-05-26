@@ -313,6 +313,11 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
     streams.erase(checked_find(id));
 }
 
-void ms::ApplicationSession::configure_streams(mf::SurfaceId, std::list<shell::StreamSpecification> const&)
+void ms::ApplicationSession::configure_streams(
+    mf::SurfaceId surface_id, std::list<shell::StreamSpecification> const& streams)
 {
+    std::list<ms::StreamInfo> list;
+    for(auto& stream : streams)
+        list.emplace_back(ms::StreamInfo{checked_find(stream.stream_id)->second, stream.displacement});
+    surface(surface_id)->set_streams(list); 
 }
