@@ -79,7 +79,7 @@ typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context);
  *   \param [in,out] client_context  context provided by client in calling
  *                                   mir_connect
  */
-typedef void (*mir_buffer_stream_callback)(MirBufferStream *surface, void *client_context);
+typedef void (*mir_buffer_stream_callback)(MirBufferStream *stream, void *client_context);
 
 /**
  * Callback for handling of surface events.
