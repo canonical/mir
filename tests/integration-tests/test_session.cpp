@@ -97,7 +97,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
 
     ms::ApplicationSession session{
         conf.the_surface_coordinator(),
-        std::make_shared<mtd::StubSurfaceFactory>(),
+        conf.the_surface_factory(),
         std::make_shared<mtd::StubBufferStreamFactory>(),
         __LINE__,
         "stress",
