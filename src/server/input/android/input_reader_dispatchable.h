@@ -19,7 +19,7 @@
 #ifndef MIR_INPUT_ANDROID_INPUT_READER_DISPATCHABLE_H_
 #define MIR_INPUT_ANDROID_INPUT_READER_DISPATCHABLE_H_
 
-#include "mir/dispatch/dispatchable.h"
+#include "mir/input/legacy_input_dispatchable.h"
 
 namespace android
 {
@@ -35,14 +35,14 @@ namespace input
 namespace android
 {
 
-struct InputReaderDispatchable : mir::dispatch::Dispatchable
+struct InputReaderDispatchable : LegacyInputDispatchable
 {
     InputReaderDispatchable(std::shared_ptr<droidinput::EventHubInterface> const& event_hub,
                             std::shared_ptr<droidinput::InputReaderInterface> const& reader);
     Fd watch_fd() const override;
     bool dispatch(mir::dispatch::FdEvents events) override;
     mir::dispatch::FdEvents relevant_events() const override;
-    void start();
+    void start() override;
 
 private:
     std::shared_ptr<droidinput::EventHubInterface> const event_hub;

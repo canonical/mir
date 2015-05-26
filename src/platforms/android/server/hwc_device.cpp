@@ -108,7 +108,7 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
             if (rejected_renderables.empty())
                 content.context.swap_buffers();
             else
-                content.compositor.render(std::move(rejected_renderables), content.context);
+                content.compositor.render(std::move(rejected_renderables), content.list_offset, content.context);
             content.list.setup_fb(content.context.last_rendered_buffer());
             content.list.swap_occurred();
         }
