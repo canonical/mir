@@ -62,7 +62,7 @@ public:
 
     virtual frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const& props) = 0;
     virtual void destroy_buffer_stream(frontend::BufferStreamId stream) = 0;
-    virtual void configure_streams(frontend::SurfaceId id, std::list<shell::StreamSpecification> const& config) = 0;
+    virtual void configure_streams(Surface& surface, std::list<shell::StreamSpecification> const& config) = 0;
 };
 }
 }

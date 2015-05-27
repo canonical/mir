@@ -545,9 +545,7 @@ TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
     auto session = make_application_session(
         mt::fake_shared(mock_bufferstream_factory),
         mt::fake_shared(mock_surface_factory));
-    auto surface_id = session->create_surface(ms::a_surface().of_position({1,1}));
-    auto surface = session->get_surface(surface_id);
-    auto stream_id0 = mf::BufferStreamId(surface_id.as_value()); 
+    auto stream_id0 = mf::BufferStreamId(session->create_surface(ms::a_surface().of_position({1,1})).as_value());
     auto stream_id1 = session->create_buffer_stream(stream_properties);
     auto stream_id2 = session->create_buffer_stream(stream_properties);
 
@@ -557,7 +555,7 @@ TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
         {streams[1], geom::Displacement{0,2}}
     };
     EXPECT_CALL(*mock_surface, set_streams(Pointwise(StreamEq(), info)));
-    session->configure_streams(surface_id, {
+    session->configure_streams(*mock_surface, {
         {stream_id2, geom::Displacement{0,3}},
         {stream_id0, geom::Displacement{-1,1}},
         {stream_id1, geom::Displacement{0,2}}

@@ -314,10 +314,10 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
 }
 
 void ms::ApplicationSession::configure_streams(
-    mf::SurfaceId surface_id, std::list<shell::StreamSpecification> const& streams)
+    ms::Surface& surface, std::list<shell::StreamSpecification> const& streams)
 {
     std::list<ms::StreamInfo> list;
     for(auto& stream : streams)
         list.emplace_back(ms::StreamInfo{checked_find(stream.stream_id)->second, stream.displacement});
-    surface(surface_id)->set_streams(list); 
+    surface.set_streams(list); 
 }
