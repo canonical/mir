@@ -65,19 +65,26 @@ bool const enable_input_default        = true;
 }
 
 mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
-    DefaultConfiguration(
-        argc, argv,
-        [](int argc, char const* const* argv)
+    DefaultConfiguration(argc, argv, std::string{})
+{
+}
+
+mo::DefaultConfiguration::DefaultConfiguration(
+    int argc,
+    char const* argv[],
+    std::string const& config_file) :
+    DefaultConfiguration(argc, argv, [](int argc, char const* const* argv)
         {
             if (argc)
             {
                 std::ostringstream help_text;
                 help_text << "Unknown command line options:";
-                for (auto opt = argv; opt != argv+argc ; ++opt)
+                for (auto opt = argv; opt != argv + argc; ++opt)
                     help_text << ' ' << *opt;
                 BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
             }
-        })
+        },
+        config_file)
 {
 }
 
@@ -85,6 +92,16 @@ mo::DefaultConfiguration::DefaultConfiguration(
     int argc,
     char const* argv[],
     std::function<void(int argc, char const* const* argv)> const& handler) :
+    DefaultConfiguration(argc, argv, handler, std::string{})
+{
+}
+
+mo::DefaultConfiguration::DefaultConfiguration(
+    int argc,
+    char const* argv[],
+    std::function<void(int argc, char const* const* argv)> const& handler,
+    std::string const& config_file) :
+    config_file{config_file},
     argc(argc),
     argv(argv),
     unparsed_arguments_handler{handler},

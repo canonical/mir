@@ -32,22 +32,26 @@ class DefaultConfiguration : public Configuration
 {
 public:
     DefaultConfiguration(int argc, char const* argv[]);
+    DefaultConfiguration(int argc, char const* argv[], std::string const& config_file);
     DefaultConfiguration(
-        int argc,
-        char const* argv[],
-        std::function<void(int argc, char const* const* argv)> const& handler);
+        int argc, char const* argv[], std::function <void(
+        int argc, char const* const* argv)> const& handler);
+    DefaultConfiguration(
+            int argc, char const* argv[], std::function <void(
+            int argc, char const* const* argv)> const& handler,
+            std::string const& config_file);
     virtual ~DefaultConfiguration() = default;
 
     // add_options() allows users to add their own options. This MUST be called
     // before the first invocation of the_options() - typically during initialization.
     boost::program_options::options_description_easy_init add_options();
 
-    std::string config_file;
-
 private:
     // MUST be the first member to ensure it's destroyed last, lest we attempt to
     // call destructors in DSOs we've unloaded.
     std::shared_ptr<SharedLibrary> platform_graphics_library;
+
+    std::string const config_file;
 
     void add_platform_options();
     // accessed via the base interface, when access to add_options() has been "lost"

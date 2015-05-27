@@ -233,11 +233,9 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
     std::shared_ptr<mo::DefaultConfiguration> result;
 
     if (command_line_hander)
-        result = std::make_shared<mo::DefaultConfiguration>(argc, argv, command_line_hander);
+        result = std::make_shared<mo::DefaultConfiguration>(argc, argv, command_line_hander, config_file);
     else
-        result = std::make_shared<mo::DefaultConfiguration>(argc, argv);
-
-    result->config_file = config_file;
+        result = std::make_shared<mo::DefaultConfiguration>(argc, argv, config_file);
 
     return result;
 }
