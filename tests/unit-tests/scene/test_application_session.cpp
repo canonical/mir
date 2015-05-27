@@ -515,6 +515,53 @@ TEST_F(ApplicationSession, can_destroy_surface_bstream)
     session->destroy_surface(id);
 }
 
+MATCHER(StreamEq, "")
+{
+    return (std::get<0>(arg).stream == std::get<1>(arg).stream) &&
+        (std::get<0>(arg).position == std::get<1>(arg).position);
+}
+
+TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
+{
+    using namespace testing;
+    NiceMock<MockBufferStreamFactory> mock_bufferstream_factory;
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
+
+    auto mock_surface = make_mock_surface();
+    EXPECT_CALL(mock_surface_factory, create_surface(_,_))
+        .WillOnce(Return(mock_surface));
+    
+    std::array<std::shared_ptr<mc::BufferStream>,3> streams{
+        std::make_shared<mtd::StubBufferStream>(),
+        std::make_shared<mtd::StubBufferStream>(),
+        std::make_shared<mtd::StubBufferStream>()
+    };
+    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_))
+        .WillOnce(Return(streams[0]))
+        .WillOnce(Return(streams[1]))
+        .WillOnce(Return(streams[2]));
+
+    auto stream_properties = mg::BufferProperties{{8,8}, mir_pixel_format_argb_8888, mg::BufferUsage::hardware};
+    auto session = make_application_session(
+        mt::fake_shared(mock_bufferstream_factory),
+        mt::fake_shared(mock_surface_factory));
+    auto stream_id0 = mf::BufferStreamId(session->create_surface(ms::a_surface().of_position({1,1})).as_value());
+    auto stream_id1 = session->create_buffer_stream(stream_properties);
+    auto stream_id2 = session->create_buffer_stream(stream_properties);
+
+    std::list<ms::StreamInfo> info {
+        {streams[2], geom::Displacement{0,3}},
+        {streams[0], geom::Displacement{-1,1}},
+        {streams[1], geom::Displacement{0,2}}
+    };
+    EXPECT_CALL(*mock_surface, set_streams(Pointwise(StreamEq(), info)));
+    session->configure_streams(*mock_surface, {
+        {stream_id2, geom::Displacement{0,3}},
+        {stream_id0, geom::Displacement{-1,1}},
+        {stream_id1, geom::Displacement{0,2}}
+    });
+}
+
 TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
 {
     using namespace ::testing;

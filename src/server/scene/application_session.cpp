@@ -312,3 +312,12 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     streams.erase(checked_find(id));
 }
+
+void ms::ApplicationSession::configure_streams(
+    ms::Surface& surface, std::list<shell::StreamSpecification> const& streams)
+{
+    std::list<ms::StreamInfo> list;
+    for(auto& stream : streams)
+        list.emplace_back(ms::StreamInfo{checked_find(stream.stream_id)->second, stream.displacement});
+    surface.set_streams(list); 
+}
