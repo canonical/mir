@@ -25,7 +25,7 @@
 
 #include <memory>
 #include <mutex>
-#include <map>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace mir
@@ -80,7 +80,7 @@ private:
 
         void clear();
 
-        std::map<MirInputDeviceId, std::unordered_set<int>> depressed_scancodes;
+        std::unordered_map<MirInputDeviceId, std::unordered_set<int>> depressed_scancodes;
     } focus_surface_key_state;
 
     // Look in to homognizing index on KeyInputState and PointerInputState (wrt to device id)
@@ -89,14 +89,14 @@ private:
         std::shared_ptr<input::Surface> current_target;
         std::shared_ptr<input::Surface> gesture_owner;
     };
-    std::map<MirInputDeviceId, PointerInputState> pointer_state_by_id;
+    std::unordered_map<MirInputDeviceId, PointerInputState> pointer_state_by_id;
     PointerInputState& ensure_pointer_state(MirInputDeviceId id);
 
     struct TouchInputState
     {
         std::shared_ptr<input::Surface> gesture_owner;
     };
-    std::map<MirInputDeviceId, TouchInputState> touch_state_by_id;
+    std::unordered_map<MirInputDeviceId, TouchInputState> touch_state_by_id;
     TouchInputState& ensure_touch_state(MirInputDeviceId id);
     
     std::shared_ptr<input::Scene> const scene;

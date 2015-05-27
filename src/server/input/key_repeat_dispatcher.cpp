@@ -116,16 +116,6 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
     }
 }
 
-void mi::KeyRepeatDispatcher::cancel_repeats_for_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id)
-{
-    auto it = repeat_state_by_device.find(id);
-    if (it == repeat_state_by_device.end())
-    {
-        return;
-    }
-    repeat_state_by_device.erase(it);
-}
-
 void mi::KeyRepeatDispatcher::start()
 {
     next_dispatcher->start();
@@ -135,10 +125,7 @@ void mi::KeyRepeatDispatcher::stop()
 {
     std::lock_guard<std::mutex> lg(repeat_state_mutex);
     
-    for (auto kv : repeat_state_by_device)
-    {
-        cancel_repeats_for_locked(lg, kv.first);
-    }
+    repeat_state_by_device.clear();
         
     next_dispatcher->stop();
 }

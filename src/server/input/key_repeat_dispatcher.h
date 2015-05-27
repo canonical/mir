@@ -24,7 +24,7 @@
 #include <memory>
 #include <chrono>
 #include <mutex>
-#include <map>
+#include <unordered_map>
 
 namespace mir
 {
@@ -57,12 +57,11 @@ private:
 
     struct KeyboardState
     {
-        std::map<int, std::shared_ptr<mir::time::Alarm>> repeat_alarms_by_scancode;
+        std::unordered_map<int, std::shared_ptr<mir::time::Alarm>> repeat_alarms_by_scancode;
     };
-    std::map<MirInputDeviceId, KeyboardState> repeat_state_by_device;
+    std::unordered_map<MirInputDeviceId, KeyboardState> repeat_state_by_device;
     KeyboardState& ensure_state_for_device_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id);
 
-    void cancel_repeats_for_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id);
     void handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* ev);
 };
 
