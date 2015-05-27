@@ -39,7 +39,7 @@ namespace mir
 {
 namespace dispatch
 {
-class SimpleDispatchThread;
+class ThreadedDispatcher;
 }
 namespace input
 {
@@ -191,7 +191,7 @@ private:
     MirOrientation orientation = mir_orientation_normal;
 
     std::function<void(MirEvent const*)> handle_event_callback;
-    std::shared_ptr<mir::dispatch::SimpleDispatchThread> input_thread;
+    std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

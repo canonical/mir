@@ -160,6 +160,13 @@ MIR_CLIENT_DETAIL_9 {
       mir::input::android::mir_modifiers_from_android*;
       mir::input::android::mir_keyboard_action_from_android*;
       mir::input::android::android_keyboard_action_from_mir*;
+      mir::input::android::mir_pointer_buttons_from_android*;
+      mir::input::android::android_pointer_buttons_from_mir*;
+      mir::input::android::mir_tool_type_from_android*;
+      mir::input::android::android_tool_type_from_mir*;
+      mir::input::android::mir_pointer_action_from_masked_android*;
+      mir::input::android::mir_touch_action_from_masked_android*;
+      mir::input::android::android_source_id_is_pointer_device*;
       mir::client::DefaultConnectionConfiguration::DefaultConnectionConfiguration*;
       mir::client::DefaultConnectionConfiguration::the_surface_map*;
       mir::client::DefaultConnectionConfiguration::the_rpc_channel*;

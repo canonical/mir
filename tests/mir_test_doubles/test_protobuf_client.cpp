@@ -26,7 +26,7 @@
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "mir/dispatch/dispatchable.h"
-#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/events/event_private.h"
 
 #include <thread>
@@ -46,7 +46,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mtd::NullClientEventSink>())),
-    eventloop{std::make_shared<md::SimpleDispatchThread>(std::dynamic_pointer_cast<md::Dispatchable>(channel))},
+    eventloop{std::make_shared<md::ThreadedDispatcher>("Mir/TestIPC", std::dynamic_pointer_cast<md::Dispatchable>(channel))},
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),

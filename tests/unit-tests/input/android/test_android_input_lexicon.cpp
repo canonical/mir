@@ -17,7 +17,6 @@
  */
 
 #include "mir/input/android/android_input_lexicon.h"
-#include "mir/events/event_private.h"
 
 #include <androidfw/Input.h>
 
@@ -33,7 +32,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     auto android_key_ev = new android::KeyEvent();
 
     const int32_t device_id = 1;
-    const int32_t source_id = 2;
+    const int32_t source_id = AINPUT_SOURCE_KEYBOARD;
     const int32_t action = AKEY_EVENT_ACTION_DOWN;
     const int32_t flags = 4;
     const int32_t key_code = 5;
@@ -47,21 +46,20 @@ TEST(AndroidInputLexicon, translates_key_events)
                                scan_code, meta_state, repeat_count,
                                down_time, event_time);
 
-    MirEvent mir_ev;
-    mia::Lexicon::translate(android_key_ev, mir_ev);
+    auto mir_ev = mia::Lexicon::translate(android_key_ev);
 
-    // Common event properties
-    EXPECT_EQ(device_id, mir_ev.key.device_id);
-    EXPECT_EQ(source_id, mir_ev.key.source_id);
-    EXPECT_EQ(mir_keyboard_action_down, mir_ev.key.action);
-    EXPECT_EQ(mir_input_event_modifier_alt, mir_ev.key.modifiers);
+    EXPECT_EQ(mir_event_type_input, mir_event_get_type(mir_ev.get()));
+    auto iev = mir_event_get_input_event(mir_ev.get());
+    EXPECT_EQ(device_id, mir_input_event_get_device_id(iev));
+    EXPECT_EQ(event_time.count(), mir_input_event_get_event_time(iev));
 
-    auto mir_key_ev = &mir_ev.key;
-    // Key event specific properties
-    EXPECT_EQ(mir_ev.type, mir_event_type_key);
-    EXPECT_EQ(mir_key_ev->key_code, key_code);
-    EXPECT_EQ(mir_key_ev->scan_code, scan_code);
-    EXPECT_EQ(mir_key_ev->event_time, event_time);
+    EXPECT_EQ(mir_input_event_type_key, mir_input_event_get_type(iev));
+    auto kev = mir_input_event_get_keyboard_event(iev);
+    EXPECT_EQ(mir_keyboard_action_down, mir_keyboard_event_action(kev));
+    EXPECT_EQ(mir_input_event_modifier_alt, mir_keyboard_event_modifiers(kev));
+
+    EXPECT_EQ(key_code, mir_keyboard_event_key_code(kev));
+    EXPECT_EQ(scan_code, mir_keyboard_event_scan_code(kev));
 
     delete android_key_ev;
 }
@@ -73,12 +71,12 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
 
     // Common event properties
     const int32_t device_id = 1;
-    const int32_t source_id = 2;
-    const int32_t action = 3;
+    const int32_t source_id = AINPUT_SOURCE_TOUCHSCREEN;
+    const int32_t action = AMOTION_EVENT_ACTION_MOVE;
     const int32_t flags = 4;
     const int32_t edge_flags = 5;
     const int32_t meta_state = 6;
-    const int32_t button_state = 7;
+    const int32_t button_state = 0;
     const float x_offset = 8;
     const float y_offset = 9;
     const float x_precision = 10;
@@ -88,7 +86,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     const size_t pointer_count = 1;
 
     // Pointer specific properties (i.e. per touch)
-    const int pointer_id = 1;
+    const int pointer_id = 0;
     droidinput::PointerProperties pointer_properties;
     pointer_properties.id = pointer_id;
 
@@ -101,9 +99,6 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     const float size = 500.0;
     const float pressure = 600.0;
     const float orientation = 700.0;
-    const float vscroll = 800.0;
-    const float hscroll = 900.0;
-    const MirMotionToolType tool_type = mir_motion_tool_type_mouse;
 
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_X, x_axis);
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_Y, y_axis);
@@ -112,47 +107,34 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_SIZE, size);
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, pressure);
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, orientation);
-    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, vscroll);
-    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, hscroll);
-    pointer_properties.toolType = tool_type;
+    pointer_properties.toolType = AMOTION_EVENT_TOOL_TYPE_UNKNOWN;
 
     android_motion_ev->initialize(device_id, source_id, action, flags, edge_flags,
                                   meta_state, button_state, x_offset, y_offset,
                                   x_precision, y_precision, down_time,
                                   event_time, pointer_count, &pointer_properties, &pointer_coords);
 
-    MirEvent mir_ev;
-    mia::Lexicon::translate(android_motion_ev, mir_ev);
+    auto mir_ev = mia::Lexicon::translate(android_motion_ev);
+
+    EXPECT_EQ(mir_event_type_input, mir_event_get_type(mir_ev.get()));
+    auto iev = mir_event_get_input_event(mir_ev.get());
 
     // Common event properties
-    EXPECT_EQ(device_id, mir_ev.motion.device_id);
-    EXPECT_EQ(source_id, mir_ev.motion.source_id);
-    EXPECT_EQ(action, mir_ev.motion.action);
+    EXPECT_EQ(device_id, mir_input_event_get_device_id(iev));
+    EXPECT_EQ(event_time.count(), mir_input_event_get_event_time(iev));
+    EXPECT_EQ(mir_input_event_type_touch, mir_input_event_get_type(iev));
 
-    // Motion event specific properties
-    EXPECT_EQ(mir_ev.type, mir_event_type_motion);
-
-    auto mir_motion_ev = &mir_ev.motion;
-
-    EXPECT_EQ(mir_motion_ev->button_state, button_state);
-    EXPECT_EQ(mir_motion_ev->event_time, event_time);
-
-    EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
-
-    auto mir_pointer_coords = &mir_motion_ev->pointer_coordinates[0];
-
-    EXPECT_EQ(mir_pointer_coords->id, pointer_id);
+    auto tev = mir_input_event_get_touch_event(iev);
+    EXPECT_EQ(pointer_count, mir_touch_event_point_count(tev));
+    
+    EXPECT_EQ(pointer_id, mir_touch_event_id(tev, 0));
     // Notice these two coordinates are offset by x/y offset
-    EXPECT_EQ(mir_pointer_coords->x, x_axis + x_offset);
-    EXPECT_EQ(mir_pointer_coords->y, y_axis + y_offset);
-    EXPECT_EQ(mir_pointer_coords->touch_major, touch_major);
-    EXPECT_EQ(mir_pointer_coords->touch_minor, touch_minor);
-    EXPECT_EQ(mir_pointer_coords->size, size);
-    EXPECT_EQ(mir_pointer_coords->pressure, pressure);
-    EXPECT_EQ(mir_pointer_coords->orientation, orientation);
-    EXPECT_EQ(mir_pointer_coords->vscroll, vscroll);
-    EXPECT_EQ(mir_pointer_coords->hscroll, hscroll);
-    EXPECT_EQ(mir_pointer_coords->tool_type, tool_type);
+    EXPECT_EQ(x_axis + x_offset, mir_touch_event_axis_value(tev, 0, mir_touch_axis_x));
+    EXPECT_EQ(y_axis + y_offset, mir_touch_event_axis_value(tev, 0, mir_touch_axis_y));
+    EXPECT_EQ(touch_major, mir_touch_event_axis_value(tev, 0, mir_touch_axis_touch_major));
+    EXPECT_EQ(touch_minor, mir_touch_event_axis_value(tev, 0, mir_touch_axis_touch_minor));
+    EXPECT_EQ(size, mir_touch_event_axis_value(tev, 0, mir_touch_axis_size));
+    EXPECT_EQ(pressure, mir_touch_event_axis_value(tev, 0, mir_touch_axis_pressure));
 
 
     delete android_motion_ev;
@@ -165,12 +147,11 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
 
     // Common event properties
     const int32_t device_id = 1;
-    const int32_t source_id = 2;
+    const int32_t source_id = AINPUT_SOURCE_TOUCHSCREEN;
     const int32_t action = 3 | (2 << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
     const int32_t flags = 4;
     const int32_t edge_flags = 5;
     const int32_t meta_state = 6;
-    const int32_t button_state = 7;
     const float x_offset = 8;
     const float y_offset = 9;
     const float x_precision = 10;
@@ -193,11 +174,6 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     const float size[2] = {500.0, 5000.0};
     const float pressure[2] = {600.0, 6000.0};
     const float orientation[2] = {700.0, 7000.0};
-    const float vscroll[2] = {800.0, 8000.0};
-    const float hscroll[2] = {900.0, 9000.0};
-
-    const MirMotionToolType tool_types[2] = {mir_motion_tool_type_mouse,
-                                             mir_motion_tool_type_finger};
 
     for (size_t p = 0; p < pointer_count; p++)
     {
@@ -214,52 +190,38 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
                                        pressure[p]);
         pointer_coords[p].setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION,
                                        orientation[p]);
-        pointer_coords[p].setAxisValue(AMOTION_EVENT_AXIS_VSCROLL,
-                                       vscroll[p]);
-        pointer_coords[p].setAxisValue(AMOTION_EVENT_AXIS_HSCROLL,
-                                       hscroll[p]);
 
-        pointer_properties[p].toolType = tool_types[p];
+        pointer_properties[p].toolType = AMOTION_EVENT_TOOL_TYPE_UNKNOWN;
     }
 
     android_motion_ev->initialize(device_id, source_id, action, flags,
-                                  edge_flags, meta_state, button_state,
+                                  edge_flags, meta_state, 0,
                                   x_offset, y_offset, x_precision, y_precision,
                                   down_time, event_time, pointer_count,
                                   pointer_properties, pointer_coords);
 
-    MirEvent mir_ev;
-    mia::Lexicon::translate(android_motion_ev, mir_ev);
+    auto mir_ev = mia::Lexicon::translate(android_motion_ev);
+
+    EXPECT_EQ(mir_event_type_input, mir_event_get_type(mir_ev.get()));
+    auto iev = mir_event_get_input_event(mir_ev.get());
 
     // Common event properties
-    EXPECT_EQ(device_id, mir_ev.motion.device_id);
-    EXPECT_EQ(source_id, mir_ev.motion.source_id);
-    EXPECT_EQ(action, mir_ev.motion.action);
+    EXPECT_EQ(device_id, mir_input_event_get_device_id(iev));
+    EXPECT_EQ(event_time.count(), mir_input_event_get_event_time(iev));
+    EXPECT_EQ(mir_input_event_type_touch, mir_input_event_get_type(iev));
 
-    // Motion event specific properties
-    EXPECT_EQ(mir_ev.type, mir_event_type_motion);
+    auto tev = mir_input_event_get_touch_event(iev);
+    EXPECT_EQ(pointer_count, mir_touch_event_point_count(tev));
 
-    auto mir_motion_ev = &mir_ev.motion;
-
-    EXPECT_EQ(mir_motion_ev->button_state, button_state);
-    EXPECT_EQ(mir_motion_ev->event_time, event_time);
-    EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
-
-    auto pointer = &mir_motion_ev->pointer_coordinates[0];
-
-    for (size_t p = 0; p < pointer_count; p++)
+    for (unsigned i = 0; i < pointer_count; i++)
     {
-        EXPECT_EQ(pointer[p].id, pointer_id[p]);
-        EXPECT_EQ(pointer[p].x, x_axis[p] + x_offset);
-        EXPECT_EQ(pointer[p].y, y_axis[p] + y_offset);
-        EXPECT_EQ(pointer[p].touch_major, touch_major[p]);
-        EXPECT_EQ(pointer[p].touch_minor, touch_minor[p]);
-        EXPECT_EQ(pointer[p].size, size[p]);
-        EXPECT_EQ(pointer[p].pressure, pressure[p]);
-        EXPECT_EQ(pointer[p].orientation, orientation[p]);
-        EXPECT_EQ(pointer[p].vscroll, vscroll[p]);
-        EXPECT_EQ(pointer[p].hscroll, hscroll[p]);
-        EXPECT_EQ(pointer[p].tool_type, tool_types[p]);
+        EXPECT_EQ(pointer_id[i], mir_touch_event_id(tev, i));
+        EXPECT_EQ(x_axis[i] + x_offset, mir_touch_event_axis_value(tev, i, mir_touch_axis_x));
+        EXPECT_EQ(y_axis[i] + y_offset, mir_touch_event_axis_value(tev, i, mir_touch_axis_y));
+        EXPECT_EQ(touch_major[i], mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_major));
+        EXPECT_EQ(touch_minor[i], mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_minor));
+        EXPECT_EQ(size[i], mir_touch_event_axis_value(tev, i, mir_touch_axis_size));
+        EXPECT_EQ(pressure[i], mir_touch_event_axis_value(tev, i, mir_touch_axis_pressure));
     }
 
     delete android_motion_ev;

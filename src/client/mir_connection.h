@@ -71,7 +71,7 @@ class Logger;
 
 namespace dispatch
 {
-class SimpleDispatchThread;
+class ThreadedDispatcher;
 }
 }
 
@@ -188,7 +188,7 @@ private:
 
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 
-    std::unique_ptr<mir::dispatch::SimpleDispatchThread> const eventloop;
+    std::unique_ptr<mir::dispatch::ThreadedDispatcher> const eventloop;
     
     std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
 

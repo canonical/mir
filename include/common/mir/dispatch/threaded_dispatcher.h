@@ -19,8 +19,14 @@
 #ifndef MIR_DISPATCH_SIMPLE_DISPATCH_THREAD_H_
 #define MIR_DISPATCH_SIMPLE_DISPATCH_THREAD_H_
 
+#include <string>
 #include <memory>
 #include <thread>
+#include <vector>
+#include <mutex>
+#include <condition_variable>
+
+#include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/fd.h"
 
 namespace mir
@@ -29,18 +35,30 @@ namespace dispatch
 {
 class Dispatchable;
 
-
-class SimpleDispatchThread
+class ThreadedDispatcher
 {
 public:
-    SimpleDispatchThread(std::shared_ptr<Dispatchable> const& dispatchee);
-    SimpleDispatchThread(std::shared_ptr<Dispatchable> const& dispatchee,
-                         std::function<void()> const& exception_handler);
-    ~SimpleDispatchThread() noexcept;
+    ThreadedDispatcher(std::string const& name, std::shared_ptr<Dispatchable> const& dispatchee);
+    ThreadedDispatcher(std::string const& name,
+                       std::shared_ptr<Dispatchable> const& dispatchee,
+                       std::function<void()> const& exception_handler);
+    ~ThreadedDispatcher() noexcept;
 
+    void add_thread();
+    void remove_thread();
+
+    class ThreadShutdownRequestHandler;
 private:
-    Fd shutdown_fd;
-    std::thread eventloop;
+
+    std::string const name_base;
+
+    std::shared_ptr<ThreadShutdownRequestHandler> thread_exiter;
+    std::shared_ptr<MultiplexingDispatchable> dispatcher;
+
+    std::mutex thread_pool_mutex;
+    std::vector<std::thread> threadpool;
+
+    std::function<void()> const exception_handler;
 };
 
 }

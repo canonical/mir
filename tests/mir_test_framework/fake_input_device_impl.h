@@ -25,8 +25,6 @@
 #include "mir/input/input_device_info.h"
 #include "mir/geometry/point.h"
 
-#include <vector>
-
 namespace mir
 {
 namespace dispatch
@@ -76,7 +74,7 @@ private:
         std::shared_ptr<mir::dispatch::Dispatchable> const queue;
         uint32_t modifiers{0};
         mir::geometry::Point pos, scroll;
-        std::vector<MirPointerButton> buttons;
+        MirPointerButtons buttons;
     };
     std::shared_ptr<mir::dispatch::ActionQueue> queue;
     std::shared_ptr<InputDevice> device;
