@@ -42,6 +42,8 @@ public:
     // before the first invocation of the_options() - typically during initialization.
     boost::program_options::options_description_easy_init add_options();
 
+    std::string config_file;
+
 private:
     // MUST be the first member to ensure it's destroyed last, lest we attempt to
     // call destructors in DSOs we've unloaded.

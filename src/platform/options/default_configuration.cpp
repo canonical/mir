@@ -268,7 +268,9 @@ void mo::DefaultConfiguration::parse_environment(
 }
 
 void mo::DefaultConfiguration::parse_config_file(
-    boost::program_options::options_description& /*desc*/,
-    mo::ProgramOption& /*options*/) const
+    boost::program_options::options_description& desc,
+    mo::ProgramOption& options) const
 {
+    if (!config_file.empty())
+        options.parse_file(desc, config_file);
 }
