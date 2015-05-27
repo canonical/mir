@@ -151,39 +151,39 @@ struct FakeKeyboard
 struct FakePointer
 {
     FakePointer(MirInputDeviceId id = 0)
-        : id(id)
+        : id(id),
+          buttons(0)
     {
     }
 
     mir::EventUPtr move_to(geom::Point const& location)
     {
         return mev::make_event(id, std::chrono::nanoseconds(0),
-	    0, mir_pointer_action_motion, buttons_pressed,
+            0, mir_pointer_action_motion, buttons,
             location.x.as_int(), location.y.as_int(),
             0, 0);
     }
     mir::EventUPtr release_button(geom::Point const& location, MirPointerButton button = mir_pointer_button_primary)
     {
-        buttons_pressed.erase(std::remove_if(buttons_pressed.begin(), buttons_pressed.end(), [&button](MirPointerButton b){
-            return b == button;
-        }));
+        buttons &= ~button;
 
         return mev::make_event(id, std::chrono::nanoseconds(0),
-	    0, mir_pointer_action_button_up, buttons_pressed,
+            0, mir_pointer_action_button_up, buttons,
             location.x.as_int(), location.y.as_int(),
             0, 0);
     }
     mir::EventUPtr press_button(geom::Point const& location, MirPointerButton button = mir_pointer_button_primary)
     {
-        buttons_pressed.push_back(button);
+        buttons |= button;
+        
         return mev::make_event(id, std::chrono::nanoseconds(0),
-	    0, mir_pointer_action_button_down, buttons_pressed,
+            0, mir_pointer_action_button_down, buttons,
             location.x.as_int(), location.y.as_int(),
             0, 0);
     }
 
-    std::vector<MirPointerButton> buttons_pressed;
     MirInputDeviceId const id;
+    MirPointerButtons buttons;
 };
 
 struct FakeToucher

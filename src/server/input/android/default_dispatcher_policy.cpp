@@ -23,8 +23,7 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::DefaultDispatcherPolicy::DefaultDispatcherPolicy(bool key_repeat_enabled) :
-  key_repeat_enabled(key_repeat_enabled)
+mia::DefaultDispatcherPolicy::DefaultDispatcherPolicy()
 {
 }
 
@@ -46,9 +45,10 @@ void mia::DefaultDispatcherPolicy::getDispatcherConfiguration(droidinput::InputD
 {
 }
 
+// Mir implements key repeat outside of the android stack.
 bool mia::DefaultDispatcherPolicy::isKeyRepeatEnabled()
 {
-    return key_repeat_enabled;
+    return false;
 }
 
 bool mia::DefaultDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* /* input_event */, uint32_t /*policy_flags*/)

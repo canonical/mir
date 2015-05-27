@@ -388,7 +388,6 @@ protected:
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
-    CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::SurfaceInputDispatcher>    new_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default

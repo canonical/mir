@@ -200,17 +200,6 @@ bool is_gesture_terminator(MirPointerEvent const* pev)
     for_pressed_buttons(pev, [&any_pressed](MirPointerButton){ any_pressed = true; });
     return !any_pressed && mir_pointer_event_action(pev) == mir_pointer_action_button_up;
 }
-
-std::vector<MirPointerButton> buttons_in_vector(MirPointerEvent const* pev)
-{
-    std::vector<MirPointerButton> buttons;
-    for_pressed_buttons(pev, [&buttons](MirPointerButton button)
-    {
-        buttons.push_back(button);
-    });
-    return buttons;
-}
-       
 }
 
 std::shared_ptr<mi::Surface> mi::SurfaceInputDispatcher::find_target_surface(geom::Point const& point)
@@ -232,7 +221,7 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
     deliver(surface, &*mev::make_event(mir_input_event_get_device_id(iev),
                                        std::chrono::nanoseconds(mir_input_event_get_event_time(iev)),
                                        mir_pointer_event_modifiers(pev),
-                                       action, buttons_in_vector(pev),
+                                       action, mir_pointer_event_buttons(pev),
                                        mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
                                        mir_pointer_event_axis_value(pev,mir_pointer_axis_y),
                                        mir_pointer_event_axis_value(pev,mir_pointer_axis_hscroll),
