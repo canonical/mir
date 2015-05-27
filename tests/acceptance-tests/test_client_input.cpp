@@ -256,6 +256,7 @@ TEST_F(TestClientInput, clients_receive_many_button_events_inside_window)
     };
 
     MirPointerButtons buttons = mir_pointer_button_primary;
+    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
     expect_buttons(buttons);
     expect_buttons(buttons |= mir_pointer_button_secondary);
     expect_buttons(buttons |= mir_pointer_button_tertiary);
@@ -266,7 +267,7 @@ TEST_F(TestClientInput, clients_receive_many_button_events_inside_window)
     expect_buttons(buttons &= ~mir_pointer_button_tertiary);
     expect_buttons(buttons &= ~mir_pointer_button_secondary);
     EXPECT_CALL(first_client, handle_input(mt::ButtonsDown(0, 0, 0))).WillOnce(
-        mt::WakeUp(&first_client.all_events_received));
+    mt::WakeUp(&first_client.all_events_received));
 
     auto press_button = [&](int button) {
         fake_mouse->emit_event(mis::a_button_down_event().of_button(button).with_action(mis::EventAction::Down));
