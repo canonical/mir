@@ -21,10 +21,13 @@
 #include "mir/graphics/buffer.h"
 
 namespace mg = mir::graphics;
-mg::GLPrimitive mg::tessellate_renderable_into_rectangle(mg::Renderable const& renderable)
+namespace geom = mir::geometry;
+mg::GLPrimitive mg::tessellate_renderable_into_rectangle(
+    mg::Renderable const& renderable, geom::Displacement const& offset)
 {
     auto const& buf_size = renderable.buffer()->size();
-    auto const& rect = renderable.screen_position();
+    auto rect = renderable.screen_position();
+    rect.top_left = rect.top_left - offset;
     GLfloat left = rect.top_left.x.as_int();
     GLfloat right = left + rect.size.width.as_int();
     GLfloat top = rect.top_left.y.as_int();

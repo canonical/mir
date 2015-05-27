@@ -26,6 +26,7 @@
 #include "mir_test_doubles/mock_input_reader.h"
 
 #include "mir/input/platform.h"
+#include "src/server/input/android/input_reader_dispatchable.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 
@@ -37,6 +38,7 @@
 namespace mt = mir::test;
 namespace md = mir::dispatch;
 namespace mtd = mir::test::doubles;
+namespace mia = mir::input::android;
 
 using namespace ::testing;
 
@@ -50,7 +52,8 @@ struct DefaultInputManagerTest : ::testing::Test
     mir::Fd event_hub_fd{eventfd(0, EFD_CLOEXEC|EFD_NONBLOCK)};
     NiceMock<mtd::MockEventHub> event_hub;
     NiceMock<mtd::MockInputReader> reader;
-    mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer), mt::fake_shared(reader), mt::fake_shared(event_hub)};
+    mia::InputReaderDispatchable dispatchable{mt::fake_shared(event_hub), mt::fake_shared(reader)};
+    mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer), mt::fake_shared(dispatchable)};
 
     DefaultInputManagerTest()
     {
