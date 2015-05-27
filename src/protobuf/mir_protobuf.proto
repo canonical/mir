@@ -35,6 +35,7 @@ message SurfaceParameters {
   optional int32 height_inc = 18;
   optional SurfaceAspectRatio min_aspect = 19;
   optional SurfaceAspectRatio max_aspect = 20;
+  repeated StreamConfiguration stream = 21; 
 }
 
 message SurfaceAspectRatio
