@@ -26,13 +26,13 @@
 #include "android/android_input_reader_policy.h"
 #include "android/android_input_registrar.h"
 #include "android/android_input_target_enumerator.h"
-#include "android/event_filter_dispatcher_policy.h"
+#include "android/default_dispatcher_policy.h"
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
 #include "android/input_translator.h"
 #include "android/input_reader_dispatchable.h"
 #include "display_input_region.h"
-#include "event_filter_chain.h"
+#include "event_filter_chain_dispatcher.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
@@ -83,11 +83,17 @@ std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_regi
 std::shared_ptr<mi::CompositeEventFilter>
 mir::DefaultServerConfiguration::the_composite_event_filter()
 {
-    return composite_event_filter(
-        [this]() -> std::shared_ptr<mi::CompositeEventFilter>
+    return the_event_filter_chain_dispatcher();
+}
+
+std::shared_ptr<mi::EventFilterChainDispatcher>
+mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
+{
+    return event_filter_chain_dispatcher(
+        [this]() -> std::shared_ptr<mi::EventFilterChainDispatcher>
         {
             std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
-            return std::make_shared<mi::EventFilterChain>(filter_list);
+            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_surface_input_dispatcher());
         });
 }
 
@@ -192,7 +198,7 @@ mir::DefaultServerConfiguration::the_dispatcher_policy()
     return android_dispatcher_policy(
         [this]()
         {
-            return std::make_shared<mia::EventFilterDispatcherPolicy>(the_composite_event_filter(), is_key_repeat_enabled());
+            return std::make_shared<mia::DefaultDispatcherPolicy>(is_key_repeat_enabled());
         });
 }
 
@@ -204,7 +210,13 @@ bool mir::DefaultServerConfiguration::is_key_repeat_enabled() const
 std::shared_ptr<mi::InputDispatcher>
 mir::DefaultServerConfiguration::the_input_dispatcher()
 {
-    return input_dispatcher(
+    return the_event_filter_chain_dispatcher();
+}
+
+std::shared_ptr<mi::InputDispatcher>
+mir::DefaultServerConfiguration::the_surface_input_dispatcher()
+{
+    return surface_input_dispatcher(
         [this]() -> std::shared_ptr<mi::InputDispatcher>
         {
             auto const options = the_options();

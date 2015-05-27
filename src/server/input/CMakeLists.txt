@@ -7,7 +7,7 @@ set(
 
   default_input_manager.cpp
   default_input_device_hub.cpp
-  event_filter_chain.cpp
+  event_filter_chain_dispatcher.cpp
 
   null_input_channel_factory.cpp
   null_input_dispatcher.cpp

@@ -552,6 +552,7 @@ MIR_SERVER_32 {
     mir::DefaultServerConfiguration::the_display_report*;
     mir::DefaultServerConfiguration::the_emergency_cleanup*;
     mir::DefaultServerConfiguration::the_event_hub*;
+    mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
     mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     mir::DefaultServerConfiguration::the_focus_controller*;
     mir::DefaultServerConfiguration::the_frame_dropping_policy_factory*;
@@ -613,6 +614,7 @@ MIR_SERVER_32 {
     mir::DefaultServerConfiguration::the_socket_file*;
     mir::DefaultServerConfiguration::the_surface_configurator*;
     mir::DefaultServerConfiguration::the_surface_coordinator*;
+    mir::DefaultServerConfiguration::the_surface_input_dispatcher*;
     mir::DefaultServerConfiguration::the_surface_factory*;
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
