@@ -16,6 +16,7 @@ MIR_CLIENT_9 {
     mir_connect;
     mir_connection_api_impl;
     mir_connection_apply_display_config;
+    mir_connection_create_buffer_stream;
     mir_connection_create_buffer_stream_sync;
     mir_connection_create_display_config;
     mir_connection_create_prompt_session_sync;
@@ -84,6 +85,7 @@ MIR_CLIENT_9 {
     mir_platform_message_set_fds;
     mir_pointer_event_action;
     mir_pointer_event_axis_value;
+    mir_pointer_event_buttons;
     mir_pointer_event_button_state;
     mir_pointer_event_modifiers;
     mir_pointing_hand_cursor_name;
@@ -136,8 +138,6 @@ MIR_CLIENT_9 {
     mir_surface_spec_set_preferred_orientation;
     mir_surface_spec_set_width;
     mir_surface_spec_set_width_increment;
-    mir_surface_swap_buffers;
-    mir_surface_swap_buffers_sync;
     mir_touch_event_action;
     mir_touch_event_axis_value;
     mir_touch_event_id;
