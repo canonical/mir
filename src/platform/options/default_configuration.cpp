@@ -242,6 +242,10 @@ void mo::DefaultConfiguration::parse_arguments(
         {
             std::ostringstream help_text;
             help_text << desc;
+
+            if (!config_file.empty())
+                help_text << "These can also be set in a config file: " << config_file << '\n';
+
             BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
         }
     }
