@@ -252,6 +252,7 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     std::vector<geom::Displacement> displacements;
     for(auto& o : info)
         displacements.emplace_back(geom::Displacement{o.x, o.y});
+
 #if 0
     num_streams = mir_surface_num_streams(surface);
     EXPECT_THAT(num_streams, Eq(streams.size() + 1));
