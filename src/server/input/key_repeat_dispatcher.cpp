@@ -82,7 +82,6 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
         {
             return;
         }
-        it->second->cancel();
         device_state.repeat_alarms_by_scancode.erase(it);
         break;
     }
