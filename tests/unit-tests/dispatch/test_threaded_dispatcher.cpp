@@ -317,7 +317,7 @@ TEST_F(ThreadedDispatcherTest, sets_thread_names_appropriately)
 // The bug involves uninitialized memory and is also sensitive to signal
 // timings, so this test does not always catch the problem. However, repeated
 // runs (~300, YMMV) consistently fail when run against the problematic code.
-TEST_F(ThreadedDispatcherTest, keeps_dispatching_after_signal_interruption)
+TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
 {
     using namespace std::chrono_literals;
     mt::CrossProcessAction stop_and_restart_process;
@@ -325,21 +325,30 @@ TEST_F(ThreadedDispatcherTest, keeps_dispatching_after_signal_interruption)
     auto child = mir_test_framework::fork_and_run_in_a_different_process(
         [&]
         {
-            auto dispatched = std::make_shared<mt::Signal>();
-            auto dispatchable = std::make_shared<mt::TestDispatchable>(
-                [dispatched]() { dispatched->raise(); });
+            {
+                auto dispatched = std::make_shared<mt::Signal>();
+                auto dispatchable = std::make_shared<mt::TestDispatchable>(
+                    [dispatched]() { dispatched->raise(); });
 
-            md::ThreadedDispatcher dispatcher{"Test thread", dispatchable};
-            // Ensure the dispatcher has started
-            dispatchable->trigger();
-            EXPECT_TRUE(dispatched->wait_for(1s));
+                md::ThreadedDispatcher dispatcher{"Test thread", dispatchable};
+                // Ensure the dispatcher has started
+                dispatchable->trigger();
+                EXPECT_TRUE(dispatched->wait_for(1s));
 
-            stop_and_restart_process();
+                stop_and_restart_process();
 
-            dispatched->reset();
-            // The dispatcher shouldn't have been affected by the signal
-            dispatchable->trigger();
-            EXPECT_TRUE(dispatched->wait_for(1s));
+                dispatched->reset();
+                // The dispatcher shouldn't have been affected by the signal
+                dispatchable->trigger();
+                EXPECT_TRUE(dispatched->wait_for(1s));
+
+                // Because we terminate this process with an explicit call to
+                // exit(), objects on the stack are not destroyed.
+                // We need to destroy the stop_and_restart_process object 
+                // manually to avoid fd leaks.
+                stop_and_restart_process.~CrossProcessAction();
+            }
+
             exit(HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
         },
         []{ return 1; });
