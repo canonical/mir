@@ -21,6 +21,9 @@
 
 #include <memory>
 #include <vector>
+#include <array>
+#include <uuid/uuid.h>
+
 
 namespace mir
 {
@@ -43,15 +46,7 @@ namespace shell
 class PersistentSurfaceStore
 {
 public:
-    /**
-     * An opaque identifier tied to this PersistentSurfaceStore
-     */
-    class Id
-    {
-    public:
-        virtual ~Id() = default;
-        virtual bool operator==(Id const& rhs) const = 0;
-    };
+    class Id;
 
     virtual ~PersistentSurfaceStore() = default;
 
@@ -62,33 +57,62 @@ public:
      *                for the lifetime of the PersistentSurfaceStore.
      * \note If \arg surface has not yet had an ID generated, this generates its ID.
      */
-    virtual Id const& id_for_surface(std::shared_ptr<scene::Surface> const& surface) = 0;
+    virtual Id id_for_surface(std::shared_ptr<scene::Surface> const& surface) = 0;
     /**
      * \brief Lookup Surface by ID.
      * \param [in] id    ID of surface to lookup
      * \return           The surface with ID \arg id.
      */
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) const = 0;
-
-    /**
-     * \brief Deserialize an ID from its serialized form
-     * \param [in] buffer    Buffer containing the serialized form of an ID
-     * \return               The deserialized ID
-     * \throw  std::invalid_argument if \arg buffer does not contain a valid
-     *         serialized ID
-     * \throw  std::out_of_range if \arg buffer contains a valid serialized ID, but
-     *         the PersistentSurfaceStore has no Surface with that ID.
-     */
-    virtual Id const& deserialize_id(std::vector<uint8_t> const& buffer) const = 0;
-    /**
-     * \brief Write a serialized form of \arg id to a buffer. This can then be stored,
-     *        sent cross-process, etc.
-     * \param [in] id    ID to serialize
-     * \return   A buffer containing a serialized representation of \arg id.
-     */
-    virtual std::vector<uint8_t> serialize_id(Id const& id) const = 0;
 };
 }
+}
+
+namespace std
+{
+template<>
+struct hash<mir::shell::PersistentSurfaceStore::Id>;
+}
+
+namespace mir
+{
+namespace shell
+{
+
+class PersistentSurfaceStore::Id final
+{
+public:
+    Id();
+
+    Id(Id const& rhs);
+    Id& operator=(Id const& rhs);
+
+    bool operator==(Id const& rhs) const;
+
+    std::vector<uint8_t> serialize_id() const;
+    static Id deserialize_id(std::vector<uint8_t> const& buffer);
+
+private:
+    friend struct std::hash<Id>;
+
+    Id(std::array<char, 37> const& buffer);
+
+    uuid_t uuid;
+};
+
+}
+}
+
+namespace std
+{
+template<>
+struct hash<mir::shell::PersistentSurfaceStore::Id>
+{
+    typedef mir::shell::PersistentSurfaceStore::Id argument_type;
+    typedef std::size_t result_type;
+
+    result_type operator()(argument_type const& uuid) const;
+};
 }
 
 #endif // MIR_SHELL_PERSISTENT_SURFACE_STORE_H_

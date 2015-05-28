@@ -11,6 +11,7 @@ set(
   shell_wrapper.cpp
   surface_ready_observer.cpp
   default_persistent_surface_store.cpp
+  persistent_surface_store.cpp
 )
 
 add_library(

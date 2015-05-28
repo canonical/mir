@@ -100,7 +100,7 @@ std::vector<uint8_t> msh::FrontendShell::persistent_id_for(std::shared_ptr<mf::S
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
     auto const surface = scene_session->surface(surface_id);
 
-    return surface_store->serialize_id(surface_store->id_for_surface(surface));
+    return surface_store->id_for_surface(surface).serialize_id();
 }
 
 
