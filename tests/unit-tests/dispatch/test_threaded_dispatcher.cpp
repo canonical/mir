@@ -342,6 +342,10 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
                 dispatchable->trigger();
                 EXPECT_TRUE(dispatched->wait_for(1s));
 
+                // Because we terminate this process with an explicit call to
+                // exit(), objects on the stack are not destroyed.
+                // We need to destroy the stop_and_restart_process object 
+                // manually to avoid fd leaks.
                 stop_and_restart_process.~CrossProcessAction();
             }
 
