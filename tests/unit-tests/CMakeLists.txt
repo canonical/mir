@@ -6,8 +6,8 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   add_definitions(-DMIR_BUILD_PLATFORM_ANDROID)
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA)
-  add_definitions(-DMIR_BUILD_PLATFORM_MESA)
+if (MIR_BUILD_PLATFORM_KMS)
+  add_definitions(-DMIR_BUILD_PLATFORM_KMS)
 endif()
 
 include_directories(
@@ -135,7 +135,7 @@ target_link_libraries(
   ${XKBCOMMON_LIBRARIES}
 )
 
-if (MIR_BUILD_PLATFORM_MESA)
+if (MIR_BUILD_PLATFORM_KMS)
 target_link_libraries(mir_unit_tests
   mirsharedmesaservercommon-static
 )
