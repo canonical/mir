@@ -22,7 +22,7 @@ if(MIR_TEST_PLATFORM STREQUAL "android")
   add_subdirectory("android")
 endif()
 
-if(MIR_TEST_PLATFORM STREQUAL "mesa")
+if(MIR_TEST_PLATFORM STREQUAL "KMS")
   add_subdirectory("mesa")
 endif()
 

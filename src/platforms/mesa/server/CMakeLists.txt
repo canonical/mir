@@ -1,4 +1,4 @@
-if (MIR_BUILD_PLATFORM_MESA)
+if (MIR_BUILD_PLATFORM_KMS OR MIR_BUILD_PLATFORM_X)
   add_subdirectory(common/)
 endif()
 

@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platforms/mesa/server/ipc_operations.h"
-#include "src/platforms/mesa/server/drm_authentication.h"
+#include "src/platforms/mesa/server/common/ipc_operations.h"
+#include "src/platforms/mesa/server/common/drm_authentication.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
@@ -68,7 +68,7 @@ struct IpcOperations : public ::testing::Test
     }
 
     MockDRMOperations mock_drm_ops;
-    mgm::IpcOperations ipc_ops{mt::fake_shared(mock_drm_ops)};
+    mgm::IpcOperations ipc_ops{false, mt::fake_shared(mock_drm_ops)};
     MirBufferPackage native_handle;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
     geom::Stride dummy_stride{4390};

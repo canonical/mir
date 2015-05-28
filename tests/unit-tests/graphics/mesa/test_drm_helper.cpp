@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/mesa/server/display_helpers.h"
+#include "src/platforms/mesa/server/common/display_helpers.h"
 #include "mir/udev/wrapper.h"
 
 #include "mir_test_framework/udev_environment.h"
@@ -50,7 +50,7 @@ public:
 protected:       
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     mtf::UdevEnvironment fake_devices;
-    mgm::helpers::DRMHelper drm_helper;
+    mgm::helpers::DRMHelper drm_helper{false};
 };
 
 }

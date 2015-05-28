@@ -53,7 +53,7 @@ struct DefaultInputManagerTest : ::testing::Test
     NiceMock<mtd::MockEventHub> event_hub;
     NiceMock<mtd::MockInputReader> reader;
     mia::InputReaderDispatchable dispatchable{mt::fake_shared(event_hub), mt::fake_shared(reader)};
-    mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer), mt::fake_shared(dispatchable)};
+    mir::input::DefaultInputManager input_manager{false, mt::fake_shared(multiplexer), mt::fake_shared(dispatchable)};
 
     DefaultInputManagerTest()
     {

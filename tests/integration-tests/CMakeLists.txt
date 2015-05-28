@@ -52,7 +52,7 @@ if (MIR_TEST_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
 
-if(MIR_TEST_PLATFORM STREQUAL "mesa")
+if(MIR_TEST_PLATFORM STREQUAL "KMS")
   include_directories(
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
@@ -116,6 +116,12 @@ target_link_libraries(
   ${MIR_COMMON_REFERENCES}
   ${MIR_SERVER_REFERENCES}
 )
+
+if (MIR_BUILD_PLATFORM_KMS)
+target_link_libraries(mir_integration_tests
+  mirsharedmesaservercommon-static
+)
+endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_integration_tests

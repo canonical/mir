@@ -16,9 +16,9 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "src/platforms/mesa/server/platform.h"
+#include "src/platforms/mesa/server/KMS/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "src/platforms/mesa/server/buffer_allocator.h"
+#include "src/platforms/mesa/server/common/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 
 #include "mir_test_doubles/mock_drm.h"
@@ -63,7 +63,7 @@ protected:
 
         platform = mtd::create_mesa_platform_with_null_dependencies();
         allocator.reset(new mgm::BufferAllocator(
-            platform->gbm.device, mgm::BypassOption::allowed));
+            platform->gbm.device, mgm::BypassOption::allowed, false));
     }
 
     // Defaults
@@ -145,7 +145,8 @@ TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
 
     mgm::BufferAllocator alloc(
         platform->gbm.device,
-        mgm::BypassOption::prohibited);
+        mgm::BypassOption::prohibited,
+        false);
     auto buf = alloc.alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
     EXPECT_FALSE(buf->native_buffer_handle()->flags & mir_buffer_flag_can_scanout);
