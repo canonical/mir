@@ -689,23 +689,6 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
  */
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
-/** The number of streams currently associated with the surface.
- *
- *  \param [in] surface  The surface of interest
- *  \return              The number of streams associated with spec
- */
-unsigned int mir_surface_num_streams(MirSurface* surface);
-
-/**
- * Retreive the buffer stream at the index specified
- *  \param [in]  surface  The surface of interest
- *  \param [in]  index    The index of the buffer stream info in the surface.
- *                        An index of 0 is the bottom-most surface; and index of
- *                        (mir_surface_num_streams() - 1) is the top-most surface.
- *  \param [out] info     The info for buffer stream at the index.
- */ 
-void mir_surface_buffer_stream_info_at(MirSurface* surface, unsigned int index, MirBufferStreamInfo*);
-
 /** Set the streams associated with the spec.
  *  streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
  *  On application of the spec, A stream that is present in the surface,

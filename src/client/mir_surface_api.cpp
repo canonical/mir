@@ -629,24 +629,16 @@ catch (std::exception const& ex)
 }
 
 void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size)
+try
 {
     std::vector<MirBufferStreamInfo> copy;
     for(auto i = 0u; i < size; i++)
         copy.emplace_back(streams[i]);
     spec->streams = copy;
 }
-
-unsigned int mir_surface_num_streams(MirSurface* surface)
+catch (std::exception const& ex)
 {
-    (void) surface;
-    return 1;
-}
-
-void mir_surface_buffer_stream_info_at(MirSurface* surface, unsigned int index, MirBufferStreamInfo* info)
-{
-    (void) surface;
-    (void) index;
-    (void) info;
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 bool mir_surface_spec_set_width_increment(MirSurfaceSpec *spec, unsigned width_inc)

@@ -22,6 +22,7 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/renderable.h"
+#include "mir/graphics/cursor.h"
 #include "mir/geometry/displacement.h"
 
 #include <mutex>
@@ -97,17 +98,10 @@ struct Ordering
 {
     void note_scene_element_sequence(mc::SceneElementSequence& sequence)
     {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        //TODO: HACK remove the cursor to scan the actual renderables
-        auto const it = std::find_if(sequence.begin(), sequence.end(),
-            [](std::shared_ptr<mc::SceneElement> e) {
-                return e->renderable()->screen_position().top_left == geom::Point{-7,-4}; });
-        if (it != sequence.end())
-            sequence.erase(it);
-
         if (sequence.empty())
             return;
 
+        std::unique_lock<decltype(mutex)> lk(mutex);
         displacements.clear();
 
         auto first_position = (*sequence.begin())->renderable()->screen_position().top_left;
@@ -199,6 +193,7 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
             });
 
         ConnectedClientWithASurface::SetUp();
+        server.the_cursor()->hide();
 
         primary_stream = std::unique_ptr<Stream>(
             new Stream(mir_surface_get_buffer_stream(surface), geom::Point{0,0}));
@@ -253,28 +248,6 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     for(auto& o : info)
         displacements.emplace_back(geom::Displacement{o.x, o.y});
 
-#if 0
-    num_streams = mir_surface_num_streams(surface);
-    EXPECT_THAT(num_streams, Eq(streams.size() + 1));
-
-    std::vector<geom::Point> points;
-    for(auto i = 0u; i < num_streams; i++)
-    {
-        MirBufferStreamInfo info{nullptr, 0, 0};
-        mir_surface_buffer_stream_info_at(surface, i, &info);
-        points.emplace_back(geom::Point{info.x, info.y});
-        if (i == 0)
-        {
-            EXPECT_THAT(info.stream, Eq(primary_stream->handle()));
-            EXPECT_THAT(points.back(), Eq(primary_stream->position()));
-        }
-        else
-        {
-            EXPECT_THAT(info.stream, Eq(streams[i-1]->handle()));
-            EXPECT_THAT(points.back(), Eq(streams[i-1]->position()));
-        }
-    } 
-#endif
     //check that the compositor rendered correctly
     using namespace std::literals::chrono_literals;
     EXPECT_TRUE(ordering->wait_for_another_post_within(1s))
