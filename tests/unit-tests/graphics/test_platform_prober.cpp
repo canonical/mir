@@ -47,7 +47,7 @@ std::vector<std::shared_ptr<mir::SharedLibrary>> available_platforms()
     std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
 
 #ifdef MIR_BUILD_PLATFORM_KMS
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-mesa")));
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-KMS")));
 #endif
 #ifdef MIR_BUILD_PLATFORM_ANDROID
     modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-android")));
@@ -123,7 +123,7 @@ TEST(ServerPlatformProbe, LoadsMesaPlatformWhenDrmDevicePresent)
     auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
-    EXPECT_THAT(description->name, HasSubstr("mesa"));
+    EXPECT_THAT(description->name, HasSubstr("KMS"));
 }
 #endif
 

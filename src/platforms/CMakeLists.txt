@@ -53,7 +53,7 @@ set(client_common_include_dirs
 add_subdirectory(common/)
 
 if (MIR_BUILD_PLATFORM_KMS)
-    add_subdirectory(mesa/)
+  add_subdirectory(mesa/)
 endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)

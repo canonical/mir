@@ -143,19 +143,19 @@ endif(MIR_DISABLE_EPOLL_REACTOR)
 
 add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 
-# Default to mesa backend, but build all of them
+# Default to KMS backend, but build all of them
 set(
   MIR_PLATFORM
-  mesa;android
+  KMS;android
   CACHE
   STRING
-  "a list of graphics backends to build (options are 'mesa' or 'android')"
+  "a list of graphics backends to build (options are 'KMS' or 'android')"
 )
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
 foreach(platform IN LISTS MIR_PLATFORM)
-  if (platform STREQUAL "mesa")
+  if (platform STREQUAL "KMS")
     set(MIR_BUILD_PLATFORM_KMS TRUE)
   endif()
   if (platform STREQUAL "android")
