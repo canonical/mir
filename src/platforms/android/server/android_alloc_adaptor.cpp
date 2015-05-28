@@ -60,7 +60,7 @@ std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     auto width = static_cast<int>(size.width.as_uint32_t());
     auto height = static_cast<int>(size.height.as_uint32_t());
     auto usage_flag = convert_to_android_usage(usage);
-    auto ret = alloc_dev->alloc(alloc_dev.get(), width, height,
+    auto ret = alloc_dev->alloc(alloc_dev.get(), quirks.aligned_width(width), height,
                            format, usage_flag, &buf_handle, &stride);
 
     if (( ret ) || (buf_handle == NULL) || (stride == 0))

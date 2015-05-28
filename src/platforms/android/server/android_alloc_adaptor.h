@@ -19,6 +19,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
 
 #include "graphic_alloc_adaptor.h"
+#include "device_quirks.h"
 
 #include <hardware/gralloc.h>
 #include <memory>
@@ -42,6 +43,7 @@ public:
 
 private:
     std::shared_ptr<struct alloc_device_t> alloc_dev;
+    DeviceQuirks quirks{PropertiesOps{}};
     int convert_to_android_usage(BufferUsage usage);
 };
 
