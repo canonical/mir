@@ -914,6 +914,32 @@ bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> sur
 
     // placeholder - constrain onscreen
 
+    switch (tools->info_for(surface).state)
+    {
+    case mir_surface_state_restored:
+        break;
+
+    // "A vertically maximised surface is anchored to the top and bottom of
+    // the available workspace and can have any width."
+    case mir_surface_state_vertmaximized:
+        movement.dy = DeltaY(0);
+        break;
+
+    // "A horizontally maximised surface is anchored to the left and right of
+    // the available workspace and can have any height"
+    case mir_surface_state_horizmaximized:
+        movement.dx = DeltaX(0);
+        break;
+
+    // "A maximised surface is anchored to the top, bottom, left and right of the
+    // available workspace. For example, if the launcher is always-visible then
+    // the left-edge of the surface is anchored to the right-edge of the launcher."
+    case mir_surface_state_maximized:
+    case mir_surface_state_fullscreen:
+    default:
+        return true;
+    }
+
     move_tree(surface, movement);
 
     return true;
