@@ -79,7 +79,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             {
                 std::ostringstream help_text;
                 help_text << "Unknown command line options:";
-                for (auto opt = argv; opt != argv + argc; ++opt)
+                for (auto opt = argv; opt != argv+argc; ++opt)
                     help_text << ' ' << *opt;
                 BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
             }
