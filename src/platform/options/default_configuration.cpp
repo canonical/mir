@@ -96,6 +96,27 @@ mo::DefaultConfiguration::DefaultConfiguration(
 {
 }
 
+namespace
+{
+std::string description_text(char const* program, std::string const& config_file)
+{
+    std::string result{
+        "Command-line options (e.g. \"--host-socket=/tmp/mir_socket\").\n\n"
+        "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\".\n"
+        "(E.g. \"MIR_SERVER_HOST_SOCKET=/tmp/mir_socket\")\n\n"};
+
+    if (program)
+        result = std::string{"usage: "} + program + " [options]\n\n" + result;
+
+    if (!config_file.empty())
+        result +=
+        "Config file entries are long form (e.g. \"host-socket=/tmp/mir_socket\").\n"
+        "The config file (" + config_file + ") is located via the XDG Base Directory Specification.\n\n";
+
+    return result + "user options";
+}
+}
+
 mo::DefaultConfiguration::DefaultConfiguration(
     int argc,
     char const* argv[],
@@ -106,8 +127,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
     argv(argv),
     unparsed_arguments_handler{handler},
     program_options(std::make_shared<boost::program_options::options_description>(
-    "Command-line options.\n"
-    "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\""))
+        description_text(argv[0], config_file)))
 {
     using namespace options;
     namespace po = boost::program_options;
@@ -259,10 +279,6 @@ void mo::DefaultConfiguration::parse_arguments(
         {
             std::ostringstream help_text;
             help_text << desc;
-
-            if (!config_file.empty())
-                help_text << "These can also be set in a config file: " << config_file << '\n';
-
             BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
         }
     }
