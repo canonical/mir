@@ -32,7 +32,7 @@ mi::EventFilterChainDispatcher::EventFilterChainDispatcher(
 bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
 {
     std::lock_guard<std::mutex> lg(filter_guard);
-
+    
     auto it = filters.begin();
     while (it != filters.end())
     {
@@ -58,15 +58,14 @@ void mi::EventFilterChainDispatcher::append(std::shared_ptr<EventFilter> const& 
 void mi::EventFilterChainDispatcher::prepend(std::shared_ptr<EventFilter> const& filter)
 {
     std::lock_guard<std::mutex> lg(filter_guard);
-
+        
     filters.insert(filters.begin(), filter);
 }
 
-bool mi::EventFilterChainDispatcher::dispatch(MirEvent const& event)
+void mi::EventFilterChainDispatcher::dispatch(MirEvent const& event)
 {
     if (!handle(event))
-        return next_dispatcher->dispatch(event);
-    return true;
+        next_dispatcher->dispatch(event);
 }
 
 // Should we start/stop dispatch of filter chain here?
