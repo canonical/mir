@@ -42,7 +42,7 @@ mt::GraphicsRegionFactory::~GraphicsRegionFactory()
 std::shared_ptr<MirGraphicsRegion> mt::GraphicsRegionFactory::graphic_region_from_handle(
     mir::graphics::NativeBuffer& native_buffer)
 {
-    native_buffer.ensure_available_for(mga::StreamDepiction::write);
+    native_buffer.ensure_available_for(mga::BufferAccess::write);
     auto anwb = native_buffer.anwb();
     char* vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;

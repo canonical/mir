@@ -242,7 +242,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
 TEST_F(HWCLayersTest, buffer_fence_updates)
 {
     int fake_fence = 552;
-    EXPECT_CALL(*native_handle_1, update_usage(fake_fence, mga::StreamDepiction::read))
+    EXPECT_CALL(*native_handle_1, update_usage(fake_fence, mga::BufferAccess::read))
         .Times(1);
     mga::HWCLayer layer(
         layer_adapter, list, list_index,

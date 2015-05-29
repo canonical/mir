@@ -92,21 +92,21 @@ TEST_F(AndroidBuffer, returns_native_buffer_times_two)
     int acquire_fake_fence_fd1 = 948;
     int acquire_fake_fence_fd2 = 954;
 
-    EXPECT_CALL(*mock_native_buffer, update_usage(acquire_fake_fence_fd1, mga::StreamDepiction::write))
+    EXPECT_CALL(*mock_native_buffer, update_usage(acquire_fake_fence_fd1, mga::BufferAccess::write))
         .Times(1);
-    EXPECT_CALL(*mock_native_buffer, update_usage(acquire_fake_fence_fd2, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer, update_usage(acquire_fake_fence_fd2, mga::BufferAccess::read))
         .Times(1);
 
     mga::Buffer buffer(&gralloc, mock_native_buffer, extensions);
     {
         auto native_resource = buffer.native_buffer_handle();
         EXPECT_EQ(mock_native_buffer, native_resource);
-        native_resource->update_usage(acquire_fake_fence_fd1, mga::StreamDepiction::write);
+        native_resource->update_usage(acquire_fake_fence_fd1, mga::BufferAccess::write);
     }
     {
         auto native_resource = buffer.native_buffer_handle();
         EXPECT_EQ(mock_native_buffer, native_resource);
-        native_resource->update_usage(acquire_fake_fence_fd2, mga::StreamDepiction::read);
+        native_resource->update_usage(acquire_fake_fence_fd2, mga::BufferAccess::read);
     }
 }
 
@@ -166,7 +166,7 @@ TEST_F(AndroidBuffer, writes_pixels)
     auto const mapped_pixels = std::shared_ptr<unsigned char>(
         static_cast<unsigned char*>(::operator new(sizeof(unsigned char) * strided_sz)));
 
-    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::StreamDepiction::write));
+    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::write));
     EXPECT_CALL(gralloc, lock_interface(
         &gralloc,_, GRALLOC_USAGE_SW_WRITE_OFTEN, 0, 0, size.width.as_int(), size.height.as_int(), _))
         .WillOnce(DoAll(SetArgPointee<7>(mapped_pixels.get()), Return(0)));
@@ -211,7 +211,7 @@ TEST_F(AndroidBuffer, reads_pixels)
     auto const mapped_pixels = std::shared_ptr<unsigned char>(
         static_cast<unsigned char*>(::operator new(sizeof(unsigned char) * strided_sz)));
 
-    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::StreamDepiction::read));
+    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::read));
     EXPECT_CALL(gralloc, lock_interface(
         &gralloc,_, GRALLOC_USAGE_SW_READ_OFTEN, 0, 0, size.width.as_int(), size.height.as_int(), _))
         .WillOnce(DoAll(SetArgPointee<7>(mapped_pixels.get()), Return(0)));

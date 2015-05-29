@@ -44,8 +44,8 @@ struct StubAndroidNativeBuffer : public graphics::NativeBuffer
     auto handle() const -> buffer_handle_t override { return &native_handle; }
     auto copy_fence() const -> graphics::android::NativeFence override { return -1; }
 
-    void ensure_available_for(graphics::android::StreamDepiction) {}
-    void update_usage(graphics::android::NativeFence&, graphics::android::StreamDepiction) {}
+    void ensure_available_for(graphics::android::BufferAccess) {}
+    void update_usage(graphics::android::NativeFence&, graphics::android::BufferAccess) {}
 
     ANativeWindowBuffer stub_anwb;
     native_handle_t native_handle;

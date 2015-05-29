@@ -82,7 +82,7 @@ std::shared_ptr<mg::NativeBuffer> create_native_buffer(
     anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     anwb->handle = handle.get();
 
-    return std::make_shared<mga::AndroidNativeBuffer>(anwb, fence, mga::StreamDepiction::read);
+    return std::make_shared<mga::AndroidNativeBuffer>(anwb, fence, mga::BufferAccess::read);
 }
 }
 std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(

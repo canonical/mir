@@ -246,7 +246,7 @@ TEST_F(HwcDevice, sets_and_updates_fences)
     EXPECT_CALL(*mock_device, set(MatchesPrimaryList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
-    EXPECT_CALL(*mock_native_buffer3, update_usage(fb_release_fence, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer3, update_usage(fb_release_fence, mga::BufferAccess::read))
         .InSequence(seq);
 
     mga::HwcDevice device(mock_device);
@@ -298,7 +298,7 @@ TEST_F(HwcDevice, commits_correct_list_with_rejected_renderables)
     EXPECT_CALL(*mock_device, set(MatchesPrimaryList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
-    EXPECT_CALL(*mock_native_buffer3, update_usage(fb_release_fence, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer3, update_usage(fb_release_fence, mga::BufferAccess::read))
         .InSequence(seq);
 
     mga::HwcDevice device(mock_device);
@@ -360,9 +360,9 @@ TEST_F(HwcDevice, commits_correct_list_when_all_accepted_as_overlays)
     EXPECT_CALL(*mock_device, set(MatchesPrimaryList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
-    EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence1, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence1, mga::BufferAccess::read))
         .InSequence(seq);
-    EXPECT_CALL(*mock_native_buffer2, update_usage(release_fence2, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer2, update_usage(release_fence2, mga::BufferAccess::read))
         .InSequence(seq);
 
     mga::HwcDevice device(mock_device);
@@ -652,7 +652,7 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_even_across_list_changes)
     EXPECT_CALL(*mock_device, set(MatchesPrimaryList(expected_list1)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences));
-    EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence1, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence1, mga::BufferAccess::read))
         .InSequence(seq);
 
     //end first post, second post
@@ -666,9 +666,9 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_even_across_list_changes)
     EXPECT_CALL(*mock_device, set(MatchesPrimaryList(expected_list2)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences2));
-    EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence2, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence2, mga::BufferAccess::read))
         .InSequence(seq);
-    EXPECT_CALL(*mock_native_buffer2, update_usage(release_fence3, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer2, update_usage(release_fence3, mga::BufferAccess::read))
         .InSequence(seq);
     //end second post
 
@@ -757,9 +757,9 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
     EXPECT_CALL(*mock_device, set(MatchesPrimaryList(expected_list1)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences));
-    EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence1, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence1, mga::BufferAccess::read))
         .InSequence(seq);
-    EXPECT_CALL(*mock_native_buffer2, update_usage(release_fence2, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer2, update_usage(release_fence2, mga::BufferAccess::read))
         .InSequence(seq);
 
     //end first post, second post
@@ -770,9 +770,9 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
     EXPECT_CALL(*mock_device, set(MatchesPrimaryList(expected_list2)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences2));
-    EXPECT_CALL(*mock_native_buffer2, update_usage(release_fence3, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer2, update_usage(release_fence3, mga::BufferAccess::read))
         .InSequence(seq);
-    EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence4, mga::StreamDepiction::read))
+    EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence4, mga::BufferAccess::read))
         .InSequence(seq);
     //end second post
 
