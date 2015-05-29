@@ -48,13 +48,25 @@ std::vector<T> values_from_to(T f, T t)
     return v;
 }
 
-void execute_in_forked_process(testing::Test* test, std::function<void()> const& f)
+struct OnScopeExit
+{
+    ~OnScopeExit() { f(); }
+    std::function<void()> const f;
+};
+
+void execute_in_forked_process(
+    testing::Test* test,
+    std::function<void()> const& f,
+    std::function<void()> const& cleanup)
 {
     auto const pid = fork();
 
     if (!pid)
     {
-        f();
+        {
+            OnScopeExit on_scope_exit{cleanup};
+            f();
+        }
         exit(test->HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
     }
     else
@@ -70,6 +82,7 @@ void execute_in_forked_process(testing::Test* test, std::function<void()> const&
 struct GLibMainLoopTest : ::testing::Test
 {
     mir::GLibMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
+    std::function<void()> const destroy_glib_main_loop{[this]{ ml.~GLibMainLoop(); }};
 };
 
 }
@@ -248,7 +261,7 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_signal_handler)
 {
     // Execute in forked process to work around
     // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61643
-    // causing subsequent tests to fail (e.g. MultiThreadedCompositor.*)
+    // causing subsequent tests to fail (e.g. MultiThreadedCompositor.*).
     execute_in_forked_process(this,
         [&]
         {
@@ -260,7 +273,11 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_signal_handler)
             kill(getpid(), signum);
 
             EXPECT_THROW({ ml.run(); }, std::runtime_error);
-        });
+        },
+        // Since we terminate the forked process with an exit() call, objects on
+        // the stack are not destroyed. We need to manually destroy the
+        // GLibMainLoop object to avoid fd leaks.
+        destroy_glib_main_loop);
 }
 
 TEST_F(GLibMainLoopTest, handles_fd)
@@ -500,7 +517,11 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_fd_handler)
             EXPECT_EQ(1, write(p.write_fd(), &data_to_write, 1));
 
             EXPECT_THROW({ ml.run(); }, std::runtime_error);
-        });
+        },
+        // Since we terminate the forked process with an exit() call, objects on
+        // the stack are not destroyed. We need to manually destroy the
+        // GLibMainLoop object to avoid fd leaks.
+        destroy_glib_main_loop);
 }
 
 TEST_F(GLibMainLoopTest, can_unregister_fd_from_within_fd_handler)
@@ -735,7 +756,11 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_server_action)
             ml.enqueue(this, [] { throw std::runtime_error(""); });
 
             EXPECT_THROW({ ml.run(); }, std::runtime_error);
-        });
+        },
+        // Since we terminate the forked process with an exit() call, objects on
+        // the stack are not destroyed. We need to manually destroy the
+        // GLibMainLoop object to avoid fd leaks.
+        destroy_glib_main_loop);
 }
 
 TEST_F(GLibMainLoopTest, can_be_rerun_after_exception)
@@ -754,7 +779,11 @@ TEST_F(GLibMainLoopTest, can_be_rerun_after_exception)
 
             ml.enqueue(this, [&] { ml.stop(); });
             ml.run();
-        });
+        },
+        // Since we terminate the forked process with an exit() call, objects on
+        // the stack are not destroyed. We need to manually destroy the
+        // GLibMainLoop object to avoid fd leaks.
+        destroy_glib_main_loop);
 }
 
 namespace
@@ -810,6 +839,7 @@ struct GLibMainLoopAlarmTest : ::testing::Test
     std::shared_ptr<AdvanceableClock> clock = std::make_shared<AdvanceableClock>();
     mir::GLibMainLoop ml{clock};
     std::chrono::milliseconds delay{50};
+    std::function<void()> const destroy_glib_main_loop{[this]{ ml.~GLibMainLoop(); }};
 };
 
 }
@@ -1027,7 +1057,7 @@ TEST_F(GLibMainLoopAlarmTest, propagates_exception_from_alarm)
 {
     // Execute in forked process to work around
     // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61643
-    // causing subsequent tests to fail (e.g. MultiThreadedCompositor.*)
+    // causing subsequent tests to fail (e.g. MultiThreadedCompositor.*).
     execute_in_forked_process(this,
         [&]
         {
@@ -1035,7 +1065,11 @@ TEST_F(GLibMainLoopAlarmTest, propagates_exception_from_alarm)
             alarm->reschedule_in(std::chrono::milliseconds{0});
 
             EXPECT_THROW({ ml.run(); }, std::runtime_error);
-        });
+        },
+        // Since we terminate the forked process with an exit() call, objects on
+        // the stack are not destroyed. We need to manually destroy the
+        // GLibMainLoop object to avoid fd leaks.
+        destroy_glib_main_loop);
 }
 
 TEST_F(GLibMainLoopAlarmTest, can_reschedule_alarm_from_within_alarm_callback)
@@ -1106,5 +1140,6 @@ TEST(GLibMainLoopForkTest, handles_signals_when_created_in_forked_process)
 
     // In problematic implementations the main loop in the forked process
     // doesn't handle signals, and thus hangs forever.
-    execute_in_forked_process(this, [&] { check_mainloop_signal_handling(); });
+    auto const no_cleanup = []{};
+    execute_in_forked_process(this, [&] { check_mainloop_signal_handling(); }, no_cleanup);
 }
