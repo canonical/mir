@@ -22,13 +22,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
-#include <thread>
 #include <memory>
-#include <chrono>
-#include <iostream>
-#include <cstring>
-#include <unistd.h>
-#include <signal.h>
 
 namespace mir
 {
