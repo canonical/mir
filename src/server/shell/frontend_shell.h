@@ -71,7 +71,7 @@ struct FrontendShell : mf::Shell
 
     std::vector<uint8_t> persistent_id_for(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface) override;
 
-    std::shared_ptr<ms::Surface> surface_for_id(std::vector<uint8_t> const& serialised_id) override;
+    std::shared_ptr<ms::Surface> surface_for_id(std::vector<uint8_t> const& serialized_id) override;
 
     int set_surface_attribute(
         std::shared_ptr<mf::Session> const& session,

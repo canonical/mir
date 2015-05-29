@@ -685,40 +685,40 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surfac
 
 namespace
 {
-void assign_surface_id_result(MirSurface*, MirSurfaceId* id, void* context)
+void assign_surface_id_result(MirSurface*, MirPersistentId* id, void* context)
 {
     void** result_ptr = reinterpret_cast<void**>(context);
     *result_ptr = id;
 }
 }
 
-MirSurfaceId* mir_surface_request_persistent_id_sync(MirSurface* surface)
+MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
 {
     mir::require(mir_surface_is_valid(surface));
 
-    MirSurfaceId* result = nullptr;
+    MirPersistentId* result = nullptr;
     mir_wait_for(mir_surface_request_persistent_id(surface,
                                                    &assign_surface_id_result,
                                                    &result));
     return result;
 }
 
-bool mir_surface_id_is_valid(MirSurfaceId* id)
+bool mir_persistent_id_is_valid(MirPersistentId* id)
 {
     return id != nullptr;
 }
 
-void mir_surface_id_release(MirSurfaceId* id)
+void mir_persistent_id_release(MirPersistentId* id)
 {
     delete id;
 }
 
 bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
-                                               MirSurfaceId* parent,
+                                               MirPersistentId* parent,
                                                MirRectangle* attachment_rect,
                                                MirEdgeAttachment edge)
 {
-    mir::require(mir_surface_id_is_valid(parent));
+    mir::require(mir_persistent_id_is_valid(parent));
     mir::require(attachment_rect != nullptr);
 
     spec->parent_id = parent;
@@ -727,12 +727,12 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
     return true;
 }
 
-char const* mir_surface_id_as_string(MirSurfaceId* id)
+char const* mir_persistent_id_as_string(MirPersistentId *id)
 {
     return id->as_string().c_str();
 }
 
-MirSurfaceId* mir_surface_id_from_string(char const* id_string)
+MirPersistentId* mir_persistent_id_from_string(char const* id_string)
 {
-    return new MirSurfaceId{id_string};
+    return new MirPersistentId{id_string};
 }

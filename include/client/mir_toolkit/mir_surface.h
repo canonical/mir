@@ -382,7 +382,7 @@ bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrienta
  * to text entry widgets of other processes.
  *
  * \param [in] spec             Specification to mutate
- * \param [in] parent           A MirSurfaceId reference to the parent surface
+ * \param [in] parent           A MirPersistentId reference to the parent surface
  * \param [in] attachment_rect  A rectangle specifying the region (in parent surface coordinates)
  *                              that the created surface should be attached to.
  * \param [in] edge             The preferred edge direction to attach to. Use
@@ -395,7 +395,7 @@ bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrienta
  *          a close event.
  */
 bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
-                                               MirSurfaceId* parent,
+                                               MirPersistentId* parent,
                                                MirRectangle* attachment_rect,
                                                MirEdgeAttachment edge);
 
@@ -714,11 +714,12 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
 /**
- * \brief Request an ID for the surface that can be shared cross-process and across restarts.
+ * \brief Request an ID for the surface that can be shared cross-process and
+ *        across restarts.
  *
- * This call acquires a MirSurfaceId for this MirSurface. This MirSurfaceId can be serialised to
- * a string, stored or sent to another process, and then later deserialised to refer to the same
- * MirSurface.
+ * This call acquires a MirPersistentId for this MirSurface. This MirPersistentId
+ * can be serialized to a string, stored or sent to another process, and then
+ * later deserialized to refer to the same surface.
  *
  * \param [in]     surface   The surface to acquire a persistent reference to.
  * \param [in]     callback  Callback to invoke when the request completes.
@@ -729,26 +730,28 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surfac
 
 /**
  * \brief Request a persistent ID for a surface and wait for the result
- * \param [in] surface  The surface to aquire a persistent ID for.
- * \return A MirSurfaceId. This MirSurfaceId is owned by the calling code, and must
- *         be freed with a call to mir_surface_id_release()
+ * \param [in] surface  The surface to acquire a persistent ID for.
+ * \return A MirPersistentId. This MirPersistentId is owned by the calling code, and must
+ *         be freed with a call to mir_persistent_id_release()
  */
-MirSurfaceId* mir_surface_request_persistent_id_sync(MirSurface* surface);
+MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface);
 
 /**
- * \brief Check the validity of a MirSurfaceId
- * \param [in] id  The MirSurfaceId
- * \return True iff the MirSurfaceId contains a valid ID value.
+ * \brief Check the validity of a MirPersistentId
+ * \param [in] id  The MirPersistentId
+ * \return True iff the MirPersistentId contains a valid ID value.
  *
- * \note This does not guarantee that the ID refers to a currently valid MirSurface.
+ * \note This does not guarantee that the ID refers to a currently valid object.
  */
-bool mir_surface_id_is_valid(MirSurfaceId* id);
+bool mir_persistent_id_is_valid(MirPersistentId* id);
 
 /**
- * \brief Free a MirSurfaceId
- * \param [in] id  The MirSurfaceId to free
+ * \brief Free a MirPersistentId
+ * \param [in] id  The MirPersistentId to free
+ * \note This frees only the client-side representation; it has no effect on the
+ *       object referred to by \arg id.
  */
-void mir_surface_id_release(MirSurfaceId* id);
+void mir_persistent_id_release(MirPersistentId* id);
 
 /**
  * \brief Get a string representation of a MirSurfaceId
@@ -758,14 +761,14 @@ void mir_surface_id_release(MirSurfaceId* id);
  *
  * \see mir_surface_id_from_string
  */
-char const* mir_surface_id_as_string(MirSurfaceId* id);
+char const* mir_persistent_id_as_string(MirPersistentId* id);
 
 /**
  * \brief Deserialise a string representation of a MirSurfaceId
  * \param [in] string_representation  Serialised representation of the ID
  * \return The deserialised MirSurfaceId
  */
-MirSurfaceId* mir_surface_id_from_string(char const* string_representation);
+MirPersistentId* mir_persistent_id_from_string(char const* string_representation);
 
 #ifdef __cplusplus
 }

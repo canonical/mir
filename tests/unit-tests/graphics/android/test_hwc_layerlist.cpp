@@ -58,12 +58,13 @@ struct LayerListTest : public testing::Test
     hwc_layer_1_t fbtarget;
     hwc_layer_1_t skip;
     hwc_rect_t visible_rect;
+    geom::Displacement offset;
 };
 }
 
 TEST_F(LayerListTest, list_defaults)
 {
-    mga::LayerList layerlist{layer_adapter, {}};
+    mga::LayerList layerlist{layer_adapter, {}, offset};
 
     auto list = layerlist.native_list();
     EXPECT_EQ(-1, list->retireFenceFd);
@@ -76,21 +77,21 @@ TEST_F(LayerListTest, list_defaults)
 TEST_F(LayerListTest, list_iterators)
 {
     size_t additional_layers = 2;
-    mga::LayerList list(layer_adapter, {});
+    mga::LayerList list(layer_adapter, {}, offset);
     EXPECT_EQ(std::distance(list.begin(), list.end()), additional_layers);
 
     additional_layers = 1;
-    mga::LayerList list2(layer_adapter, renderables);
+    mga::LayerList list2(layer_adapter, renderables, offset);
     EXPECT_EQ(std::distance(list2.begin(), list2.end()), additional_layers + renderables.size());
 
-    mga::LayerList list3(std::make_shared<mga::Hwc10Adapter>(), renderables);
+    mga::LayerList list3(std::make_shared<mga::Hwc10Adapter>(), renderables, offset);
     EXPECT_EQ(std::distance(list3.begin(), list3.end()), renderables.size());
 }
 
 TEST_F(LayerListTest, keeps_track_of_needs_commit)
 {
     size_t fb_target_size{1};
-    mga::LayerList list(layer_adapter, renderables);
+    mga::LayerList list(layer_adapter, renderables, offset);
 
     auto i = 0;
     for (auto& layer : list)
@@ -107,7 +108,7 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
         std::make_shared<mtd::StubRenderable>(buffer2),
         std::make_shared<mtd::StubRenderable>()
     };
-    list.update_list(list2);
+    list.update_list(list2, offset);
 
     i = 0;
     for (auto& layer : list)
@@ -121,7 +122,7 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
 
     ASSERT_THAT(list.native_list()->numHwLayers, testing::Eq(list2.size() + fb_target_size));
     list.native_list()->hwLayers[2].compositionType = HWC_OVERLAY;
-    list.update_list(list2);
+    list.update_list(list2, offset);
 
     i = 0;
     for (auto& layer : list)
@@ -137,7 +138,7 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
 TEST_F(LayerListTest, setup_fb_hwc10)
 {
     using namespace testing;
-    mga::LayerList list(std::make_shared<mga::Hwc10Adapter>(), {});
+    mga::LayerList list(std::make_shared<mga::Hwc10Adapter>(), {}, offset);
     list.setup_fb(stub_fb);
 
     auto l = list.native_list();
@@ -148,7 +149,7 @@ TEST_F(LayerListTest, setup_fb_hwc10)
 TEST_F(LayerListTest, setup_fb_without_skip)
 {
     using namespace testing;
-    mga::LayerList list(layer_adapter, renderables);
+    mga::LayerList list(layer_adapter, renderables, offset);
     list.setup_fb(stub_fb);
 
     auto l = list.native_list();
@@ -159,7 +160,7 @@ TEST_F(LayerListTest, setup_fb_without_skip)
 TEST_F(LayerListTest, setup_fb_with_skip)
 {
     using namespace testing;
-    mga::LayerList list(layer_adapter, {});
+    mga::LayerList list(layer_adapter, {}, offset);
     list.setup_fb(stub_fb);
     auto l = list.native_list();
     ASSERT_THAT(l->numHwLayers, Eq(2));
@@ -170,7 +171,7 @@ TEST_F(LayerListTest, setup_fb_with_skip)
 TEST_F(LayerListTest, generate_rejected_renderables)
 {
     using namespace testing;
-    mga::LayerList list(layer_adapter, renderables);
+    mga::LayerList list(layer_adapter, renderables, offset);
 
     auto l = list.native_list();
     ASSERT_THAT(l->numHwLayers, Eq(4));
@@ -182,7 +183,7 @@ TEST_F(LayerListTest, generate_rejected_renderables)
 TEST_F(LayerListTest, swap_not_needed_when_all_layers_overlay)
 {
     using namespace testing;
-    mga::LayerList list(layer_adapter, renderables);
+    mga::LayerList list(layer_adapter, renderables, offset);
     auto l = list.native_list();
     ASSERT_THAT(l->numHwLayers, Eq(4));
     for (auto i = 0u; i < 3; i++)
@@ -195,7 +196,7 @@ TEST_F(LayerListTest, swap_not_needed_when_all_layers_overlay)
 TEST_F(LayerListTest, swap_needed_when_one_layer_is_gl_rendered)
 {
     using namespace testing;
-    mga::LayerList list(layer_adapter, renderables);
+    mga::LayerList list(layer_adapter, renderables, offset);
     auto l = list.native_list();
     for (auto i = 0u; i < 3; i++)
         l->hwLayers[i].compositionType = HWC_OVERLAY;
@@ -205,6 +206,41 @@ TEST_F(LayerListTest, swap_needed_when_one_layer_is_gl_rendered)
 
 TEST_F(LayerListTest, swap_needed_when_gl_is_forced)
 {
-    mga::LayerList list(layer_adapter, {});
+    mga::LayerList list(layer_adapter, {}, offset);
     EXPECT_TRUE(list.needs_swapbuffers());
+}
+
+TEST_F(LayerListTest, offset_origin_does_not_affect_skip_and_target)
+{
+    using namespace testing;
+
+    geom::Displacement offset{199, 299};
+    mga::LayerList list(layer_adapter, {}, offset);
+    list.setup_fb(stub_fb);
+    auto l = list.native_list();
+    ASSERT_THAT(l->numHwLayers, Eq(2));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(skip));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(fbtarget));
+}
+
+TEST_F(LayerListTest, list_is_offset_for_nonorigin_displays)
+{
+    using namespace testing;
+    geom::Displacement offset{199, 299};
+    geom::Rectangle not_offset_rect{geom::Point{250, 200}, buffer1->size()};
+    mg::RenderableList renderable_list {std::make_shared<mtd::StubRenderable>(buffer1, not_offset_rect)};
+
+    mga::LayerList list(layer_adapter, renderable_list, offset);
+    list.setup_fb(stub_fb);
+
+    hwc_layer_1 expected_layer;
+    hwc_rect_t visible_rect;
+    geom::Point expected_point{51, -99};
+    geom::Rectangle expected_rectangle{expected_point, buffer1->size()};
+    mt::fill_hwc_layer(expected_layer, &visible_rect, expected_rectangle, *buffer1, HWC_FRAMEBUFFER, 0);
+
+    auto l = list.native_list();
+    ASSERT_THAT(l->numHwLayers, Eq(2));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(expected_layer));
+    EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(fbtarget));
 }

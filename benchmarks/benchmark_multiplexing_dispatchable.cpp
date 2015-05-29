@@ -17,12 +17,12 @@
  */
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/simple_dispatch_thread.h"
 
 #include <iostream>
 #include <vector>
 #include <memory>
 #include <chrono>
+#include <thread>
 #include <poll.h>
 #include <unistd.h>
 

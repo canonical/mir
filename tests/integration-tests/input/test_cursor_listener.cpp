@@ -18,12 +18,12 @@
  */
 
 #include "mir/events/event_private.h"
-#include "src/server/input/event_filter_chain.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test/fake_event_hub.h"
-#include "mir_test_framework/fake_event_hub_server_configuration.h"
-#include "mir_test_doubles/mock_event_filter.h"
+#include "mir_test_framework/fake_input_device.h"
+#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/stub_server_platform_factory.h"
+#include "mir_test_framework/temporary_environment_value.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
 #include "mir_test_doubles/stub_touch_visualizer.h"
 #include "mir_test/wait_condition.h"
@@ -32,17 +32,18 @@
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_manager.h"
+#include "mir/input/input_device_info.h"
+#include "mir_test_framework/executable_path.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <thread>
+#include <cstdlib>
 
 namespace mi = mir::input;
-namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
 namespace mt = mir::test;
-namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
 namespace
@@ -56,17 +57,14 @@ struct MockCursorListener : public mi::CursorListener
     ~MockCursorListener() noexcept {}
 };
 
-struct AndroidCursorListenerIntegrationTest : testing::Test, mtf::FakeEventHubServerConfiguration
+struct CursorListenerIntegrationTest : testing::Test, mtf::StubbedServerConfiguration
 {
+    mtf::TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str()};
+    mtf::TemporaryEnvironmentValue real_input{"MIR_SERVER_TESTS_USE_REAL_INPUT", "1"};
+
     bool is_key_repeat_enabled() const override
     {
         return false;
-    }
-
-    std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
-    {
-        std::initializer_list<std::shared_ptr<mi::EventFilter>const> const& chain{std::static_pointer_cast<mi::EventFilter>(event_filter)};
-        return std::make_shared<mi::EventFilterChain>(chain);
     }
 
     std::shared_ptr<mi::CursorListener> the_cursor_listener() override
@@ -89,14 +87,17 @@ struct AndroidCursorListenerIntegrationTest : testing::Test, mtf::FakeEventHubSe
     }
 
     MockCursorListener cursor_listener;
-    std::shared_ptr<mtd::MockEventFilter> event_filter = std::make_shared<mtd::MockEventFilter>();
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mi::InputDispatcher> input_dispatcher;
+
+    std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
+        mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "mouse", "mouse-uid" , mi::DeviceCapability::pointer})
+        };
 };
 
 }
 
-TEST_F(AndroidCursorListenerIntegrationTest, cursor_listener_receives_motion)
+TEST_F(CursorListenerIntegrationTest, cursor_listener_receives_motion)
 {
     using namespace ::testing;
 
@@ -105,16 +106,9 @@ TEST_F(AndroidCursorListenerIntegrationTest, cursor_listener_receives_motion)
     static const float x = 100.f;
     static const float y = 100.f;
 
-    EXPECT_CALL(cursor_listener, cursor_moved_to(x, y)).Times(1);
+    EXPECT_CALL(cursor_listener, cursor_moved_to(x, y)).Times(1).WillOnce(mt::WakeUp(wait_condition));
 
-    // The stack doesn't like shutting down while events are still moving through
-    EXPECT_CALL(*event_filter, handle(_))
-            .WillOnce(mt::ReturnFalseAndWakeUp(wait_condition));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(x, y));
 
-    fake_event_hub->synthesize_builtin_cursor_added();
-    fake_event_hub->synthesize_device_scan_complete();
-
-    fake_event_hub->synthesize_event(mis::a_pointer_event().with_movement(x, y));
-
-    wait_condition->wait_for_at_most_seconds(1);
+    wait_condition->wait_for_at_most_seconds(10);
 }

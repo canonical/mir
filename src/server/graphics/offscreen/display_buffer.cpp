@@ -157,8 +157,3 @@ MirOrientation mgo::DisplayBuffer::orientation() const
      */
     return mir_orientation_normal;
 }
-
-bool mgo::DisplayBuffer::uses_alpha() const
-{
-    return false;
-}

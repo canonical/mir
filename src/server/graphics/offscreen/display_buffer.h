@@ -68,7 +68,6 @@ public:
     void gl_swap_buffers() override;
 
     MirOrientation orientation() const override;
-    bool uses_alpha() const override;
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override; 
 

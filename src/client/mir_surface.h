@@ -39,7 +39,7 @@ namespace mir
 {
 namespace dispatch
 {
-class SimpleDispatchThread;
+class ThreadedDispatcher;
 }
 namespace input
 {
@@ -86,7 +86,7 @@ struct MirSurfaceSpec
     mir::optional_value<MirOrientationMode> pref_orientation;
 
     mir::optional_value<MirSurface*> parent;
-    mir::optional_value<MirSurfaceId*> parent_id;
+    mir::optional_value<MirPersistentId*> parent_id;
     mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
 
@@ -100,10 +100,10 @@ struct MirSurfaceSpec
     mir::optional_value<AspectRatio> max_aspect;
 };
 
-struct MirSurfaceId
+struct MirPersistentId
 {
 public:
-    MirSurfaceId(std::string const& string_id);
+    MirPersistentId(std::string const& string_id);
 
     std::string const& as_string();
 
@@ -208,7 +208,7 @@ private:
     MirOrientation orientation = mir_orientation_normal;
 
     std::function<void(MirEvent const*)> handle_event_callback;
-    std::shared_ptr<mir::dispatch::SimpleDispatchThread> input_thread;
+    std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

@@ -21,7 +21,7 @@
 
 
 #include "default_placement_strategy.h"
-#include "canonical_window_manager.h"
+#include "mir/shell/canonical_window_manager.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
 #include "default_persistent_surface_store.h"

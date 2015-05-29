@@ -26,24 +26,33 @@ add_env()
 add_cmd()
 {
     cmd="$cmd \"$1\""
-    last_cmd=$1
+}
+
+add_filter()
+{
+    filter="$filter $1"
 }
 
 while [ $# -gt 0 ];
 do
     case "$1" in
-        --test-name) shift; testname=$1;;
-        --env) shift; add_env $1;;
+        --test-name) shift; testname="$1";;
+        --env) shift; add_env "$1";;
         --help|-h) print_help_and_exit;;
         --) shift; break;;
         --*) print_help_and_exit;;
-        *) add_cmd $1
+        *) break;;
     esac
     shift
 done
 
 while [ $# -gt 0 ];
 do
+    case "$1" in
+        --gtest_filter*) add_filter "$1";;
+        --*) ;;
+        *) last_cmd="$1";;
+    esac
     add_cmd $1
     shift
 done
@@ -53,7 +62,7 @@ then
     testname=$(basename $last_cmd)
 fi
 
-tests=$($last_cmd --gtest_list_tests | grep -v '^ ' | cut -d' ' -f1 | grep '\.' | sed 's/$/*/')
+tests=$($last_cmd --gtest_list_tests $filter | grep -v '^ ' | cut -d' ' -f1 | grep '\.' | sed 's/$/*/')
 
 for t in $tests;
 do

@@ -23,13 +23,12 @@
 #include "cursor_configuration.h"
 #include "client_buffer_stream_factory.h"
 #include "mir_connection.h"
-#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/xkb_mapper.h"
 
 #include <cassert>
 #include <unistd.h>
-#include <uuid/uuid.h>
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -134,12 +133,12 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
     return message;
 }
 
-MirSurfaceId::MirSurfaceId(std::string const& string_id)
+MirPersistentId::MirPersistentId(std::string const& string_id)
     : string_id{string_id}
 {
 }
 
-std::string const& MirSurfaceId::as_string()
+std::string const&MirPersistentId::as_string()
 {
     return string_id;
 }
@@ -241,7 +240,7 @@ void MirSurface::acquired_persistent_id(mir_surface_id_callback callback, void* 
 {
     if (!persistent_id.has_error())
     {
-        callback(this, new MirSurfaceId{persistent_id.value()}, context);
+        callback(this, new MirPersistentId{persistent_id.value()}, context);
     }
     else
     {
@@ -256,7 +255,7 @@ MirWaitHandle* MirSurface::request_persistent_id(mir_surface_id_callback callbac
 
     if (persistent_id.has_value())
     {
-        callback(this, new MirSurfaceId{persistent_id.value()}, context);
+        callback(this, new MirPersistentId{persistent_id.value()}, context);
         return nullptr;
     }
 
@@ -524,7 +523,7 @@ void MirSurface::set_event_handler(mir_surface_event_callback callback,
             auto input_dispatcher = input_platform->create_input_receiver(surface.fd(0),
                                                                           keymapper,
                                                                           handle_event_callback);
-            input_thread = std::make_shared<md::SimpleDispatchThread>(input_dispatcher);
+            input_thread = std::make_shared<md::ThreadedDispatcher>("Input dispatch", input_dispatcher);
         }
     }
 }

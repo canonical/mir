@@ -20,12 +20,14 @@
 #include "mir/events/event_private.h"
 #include "mir/graphics/buffer.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/scene/surface_factory.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_coordinator.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_display_configuration.h"
+#include "mir_test_doubles/stub_surface_factory.h"
 #include "mir_test_doubles/stub_buffer_stream_factory.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
@@ -54,6 +56,7 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 
 struct MockBufferStreamFactory : public ms::BufferStreamFactory
 {
+    MOCK_METHOD1(create_buffer_stream, std::shared_ptr<mc::BufferStream>(mg::BufferProperties const&));
     MOCK_METHOD2(create_buffer_stream, std::shared_ptr<mc::BufferStream>(int, mg::BufferProperties const&));
 };
 
@@ -101,10 +104,9 @@ struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
     void raise(SurfaceSet const&) override
     {
     }
-    std::shared_ptr<ms::Surface> add_surface(ms::SurfaceCreationParameters const&,
-        ms::Session*) override
+    void add_surface(
+        std::shared_ptr<ms::Surface> const&, ms::DepthId, mi::InputReceptionMode const&, ms::Session*) override
     {
-        return make_mock_surface();
     }
     void remove_surface(std::weak_ptr<ms::Surface> const&) override
     {
@@ -130,18 +132,41 @@ struct ApplicationSession : public testing::Test
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_stubs()
     {
         return std::make_shared<ms::ApplicationSession>(
-           stub_surface_coordinator, stub_buffer_stream_factory,
+           stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
            event_sink);
     }
     
+    std::shared_ptr<ms::ApplicationSession> make_application_session(
+        std::shared_ptr<ms::BufferStreamFactory> const& bstream_factory,
+        std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
+    {
+        return std::make_shared<ms::ApplicationSession>(
+           stub_surface_coordinator, surface_factory, bstream_factory,
+           pid, name,
+           null_snapshot_strategy,
+           stub_session_listener,
+           event_sink);
+    }
+
+    std::shared_ptr<ms::ApplicationSession> make_application_session(
+        std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
+    {
+        return std::make_shared<ms::ApplicationSession>(
+           surface_coordinator, surface_factory, stub_buffer_stream_factory,
+           pid, name,
+           null_snapshot_strategy,
+           stub_session_listener,
+           event_sink);
+    }
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_coordinator(
         std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator)
     {
         return std::make_shared<ms::ApplicationSession>(
-           surface_coordinator, stub_buffer_stream_factory,
+           surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
@@ -152,7 +177,7 @@ struct ApplicationSession : public testing::Test
         std::shared_ptr<ms::SessionListener> const& session_listener)
     {
         return std::make_shared<ms::ApplicationSession>(
-           stub_surface_coordinator, stub_buffer_stream_factory,
+           stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
            pid, name,
            null_snapshot_strategy,
            session_listener,
@@ -164,7 +189,7 @@ struct ApplicationSession : public testing::Test
         std::shared_ptr<ms::BufferStreamFactory> const& buffer_stream_factory)
     {
         return std::make_shared<ms::ApplicationSession>(
-           stub_surface_coordinator, buffer_stream_factory,
+           stub_surface_coordinator, stub_surface_factory, buffer_stream_factory,
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
@@ -175,24 +200,34 @@ struct ApplicationSession : public testing::Test
     std::shared_ptr<ms::NullSessionListener> const stub_session_listener;
     std::shared_ptr<StubSurfaceCoordinator> const stub_surface_coordinator;
     std::shared_ptr<ms::SnapshotStrategy> const null_snapshot_strategy;
-    std::shared_ptr<mtd::StubBufferStreamFactory> const stub_buffer_stream_factory = std::make_shared<mtd::StubBufferStreamFactory>();
-    
+    std::shared_ptr<mtd::StubBufferStreamFactory> const stub_buffer_stream_factory =
+        std::make_shared<mtd::StubBufferStreamFactory>();
+    std::shared_ptr<mtd::StubSurfaceFactory> const stub_surface_factory{std::make_shared<mtd::StubSurfaceFactory>()};
+    std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream{std::make_shared<mtd::StubBufferStream>()};
     pid_t pid;
     std::string name;
 };
 
+struct MockSurfaceFactory : ms::SurfaceFactory
+{
+    MOCK_METHOD2(create_surface, std::shared_ptr<ms::Surface>(
+        std::shared_ptr<mc::BufferStream> const&, ms::SurfaceCreationParameters const& params));
+};
 }
 
-TEST_F(ApplicationSession, uses_coordinator_to_create_surface)
+TEST_F(ApplicationSession, adds_created_surface_to_coordinator)
 {
     using namespace ::testing;
 
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
-    auto mock_surface = make_mock_surface();
-    EXPECT_CALL(surface_coordinator, add_surface(_, _))
-        .WillOnce(Return(mock_surface));
+    std::shared_ptr<ms::Surface> mock_surface = make_mock_surface();
 
-    auto session = make_application_session_with_coordinator(mt::fake_shared(surface_coordinator));
+    EXPECT_CALL(mock_surface_factory, create_surface(_,_))
+        .WillOnce(Return(mock_surface));
+    EXPECT_CALL(surface_coordinator, add_surface(mock_surface,_,_,_));
+    auto session = make_application_session(
+        mt::fake_shared(surface_coordinator), mt::fake_shared(mock_surface_factory));
 
     ms::SurfaceCreationParameters params;
     auto surf = session->create_surface(params);
@@ -349,10 +384,10 @@ TEST_F(ApplicationSession, session_visbility_propagates_to_surfaces)
 
     auto mock_surface = make_mock_surface();
 
+    NiceMock<MockSurfaceFactory> surface_factory;
+    ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
-    ON_CALL(surface_coordinator, add_surface(_, _)).WillByDefault(Return(mock_surface));
-
-    auto app_session = make_application_session_with_coordinator(mt::fake_shared(surface_coordinator));
+    auto app_session = make_application_session(mt::fake_shared(surface_coordinator), mt::fake_shared(surface_factory));
 
     {
         InSequence seq;
@@ -374,10 +409,9 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
     using namespace ::testing;
 
     auto mock_surface = make_mock_surface();
+    NiceMock<MockSurfaceFactory> surface_factory;
+    ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
-
-    EXPECT_CALL(surface_coordinator, add_surface(_, _))
-        .WillOnce(Return(mock_surface));
 
     auto const default_surface_buffer_access =
         std::static_pointer_cast<ms::SurfaceBufferAccess>(mock_surface);
@@ -388,6 +422,7 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
 
     ms::ApplicationSession app_session(
         mt::fake_shared(surface_coordinator),
+        mt::fake_shared(surface_factory),
         stub_buffer_stream_factory,
         pid, name,
         snapshot_strategy,
@@ -407,7 +442,7 @@ TEST_F(ApplicationSession, returns_null_snapshot_if_no_default_surface)
     MockSnapshotCallback mock_snapshot_callback;
 
     ms::ApplicationSession app_session(
-        stub_surface_coordinator,
+        stub_surface_coordinator, stub_surface_factory,
         stub_buffer_stream_factory,
         pid, name,
         snapshot_strategy,
@@ -427,7 +462,7 @@ TEST_F(ApplicationSession, process_id)
     pid_t const session_pid{__LINE__};
 
     ms::ApplicationSession app_session(
-        stub_surface_coordinator,
+        stub_surface_coordinator, stub_surface_factory,
         stub_buffer_stream_factory,
         session_pid, name,
         null_snapshot_strategy,
@@ -437,48 +472,47 @@ TEST_F(ApplicationSession, process_id)
     EXPECT_THAT(app_session.process_id(), Eq(session_pid));
 }
 
-TEST_F(ApplicationSession, fowards_parent_info_to_coordinator)
-{
-    using namespace ::testing;
-
-    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
-    auto mock_surface = make_mock_surface();
-    EXPECT_CALL(surface_coordinator, add_surface(_, _))
-        .WillOnce(Return(mock_surface));
-
-    auto session = make_application_session_with_coordinator(mt::fake_shared(surface_coordinator));
-
-    // Create parent surface
-    ms::SurfaceCreationParameters params;
-    auto parent_id = session->create_surface(params);
-    auto parent = session->get_surface(parent_id);
-
-    EXPECT_CALL(surface_coordinator, add_surface(HasParent(parent), _))
-        .WillOnce(Return(mock_surface));
-
-    params.with_parent_id(parent_id);
-    auto child_id = session->create_surface(params);
-
-    session->destroy_surface(parent_id);
-    session->destroy_surface(child_id);
-}
-
 TEST_F(ApplicationSession, surface_ids_are_bufferstream_ids)
 {
     using namespace ::testing;
 
-    auto app_session = make_application_session_with_stubs();
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
+    NiceMock<MockBufferStreamFactory> mock_bufferstream_factory;
+    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
+    std::shared_ptr<ms::Surface> mock_surface = make_mock_surface();
+    auto stub_bstream = std::make_shared<mtd::StubBufferStream>();
+    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_))
+        .WillOnce(Return(stub_bstream));
+    EXPECT_CALL(mock_surface_factory, create_surface(std::shared_ptr<mc::BufferStream>(stub_bstream),_))
+        .WillOnce(Return(mock_surface));
+    auto session = make_application_session(
+        mt::fake_shared(mock_bufferstream_factory),
+        mt::fake_shared(mock_surface_factory));
 
     ms::SurfaceCreationParameters params;
 
-    auto id1 = app_session->create_surface(params);
-    EXPECT_TRUE(app_session->get_buffer_stream(mf::BufferStreamId(id1.as_value())) != nullptr);
+    auto id1 = session->create_surface(params);
+    EXPECT_THAT(session->get_buffer_stream(mf::BufferStreamId(id1.as_value())), Eq(stub_bstream));
+    EXPECT_THAT(session->get_surface(id1), Eq(mock_surface));
 
-    app_session->destroy_surface(id1);
+    session->destroy_surface(id1);
 
     EXPECT_THROW({
-            app_session->get_buffer_stream(mf::BufferStreamId(id1.as_value()));
+            session->get_buffer_stream(mf::BufferStreamId(id1.as_value()));
     }, std::runtime_error);
+}
+
+TEST_F(ApplicationSession, can_destroy_surface_bstream)
+{
+    auto session = make_application_session_with_stubs();
+    ms::SurfaceCreationParameters params;
+    auto id = session->create_surface(params);
+    mf::BufferStreamId stream_id(id.as_value());
+    session->destroy_buffer_stream(stream_id);
+    EXPECT_THROW({
+        session->get_buffer_stream(stream_id);
+    }, std::runtime_error);
+    session->destroy_surface(id);
 }
 
 TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
@@ -492,7 +526,7 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
 
     mg::BufferProperties properties(buffer_size, mir_pixel_format_argb_8888, mg::BufferUsage::software);
     
-    EXPECT_CALL(factory, create_buffer_stream(_, properties)).Times(1)
+    EXPECT_CALL(factory, create_buffer_stream(properties)).Times(1)
         .WillOnce(Return(mt::fake_shared(stream)));
 
     auto session = make_application_session_with_buffer_stream_factory(mt::fake_shared(factory));
@@ -511,8 +545,10 @@ namespace
 {
 struct ApplicationSessionSender : public ApplicationSession
 {
-    ApplicationSessionSender()
-        : app_session(stub_surface_coordinator, stub_buffer_stream_factory, pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
+    ApplicationSessionSender() :
+        app_session(
+        stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
+        pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
     {
     }
 

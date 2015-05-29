@@ -17,7 +17,7 @@
  */
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/fd.h"
 #include "mir_test/pipe.h"
 #include "mir_test/signal.h"
@@ -217,8 +217,8 @@ TEST(MultiplexingDispatchableTest, individual_dispatchee_is_not_concurrent)
     auto dispatcher = std::make_shared<md::MultiplexingDispatchable>();
     dispatcher->add_watch(dispatchee);
 
-    md::SimpleDispatchThread first_loop{dispatcher};
-    md::SimpleDispatchThread second_loop{dispatcher};
+    md::ThreadedDispatcher eventloop{"Gerry", dispatcher};
+    eventloop.add_thread();
 
     EXPECT_TRUE(second_dispatch->wait_for(std::chrono::seconds{5}));
 }
@@ -315,7 +315,7 @@ TEST(MultiplexingDispatchableTest, removal_is_threadsafe)
 
     dispatchee->trigger();
 
-    md::SimpleDispatchThread eventloop{dispatcher};
+    md::ThreadedDispatcher eventloop{"Tempura", dispatcher};
 
     EXPECT_TRUE(in_dispatch->wait_for(std::chrono::seconds{1}));
 
@@ -366,10 +366,10 @@ TEST(MultiplexingDispatchableTest, stress_test_threading)
 
     auto dispatcher = std::make_shared<md::MultiplexingDispatchable>();
 
-    std::vector<std::shared_ptr<md::SimpleDispatchThread>> eventloops;
+    auto event_dispatcher = std::make_shared<md::ThreadedDispatcher>("Hello Kitty", dispatcher);
     for (int i = 0 ; i < dispatchee_count + 5 ; ++i)
     {
-        eventloops.push_back(std::make_shared<md::SimpleDispatchThread>(dispatcher));
+        event_dispatcher->add_thread();
     }
 
     std::vector<std::shared_ptr<mt::Signal>> canary_tomb;
@@ -397,7 +397,7 @@ TEST(MultiplexingDispatchableTest, stress_test_threading)
 
     dispatchees.clear();
     dispatcher.reset();
-    eventloops.clear();
+    event_dispatcher.reset();
 
     for (auto headstone : canary_tomb)
     {
@@ -456,8 +456,8 @@ TEST(MultiplexingDispatchableTest, multiple_removals_are_threadsafe)
 
     first_dispatchee->trigger();
 
-    md::SimpleDispatchThread eventloop_one{dispatcher};
-    md::SimpleDispatchThread eventloop_two{dispatcher};
+    md::ThreadedDispatcher eventloop_one{"Bob", dispatcher};
+    md::ThreadedDispatcher eventloop_two{"Gerry", dispatcher};
 
     EXPECT_TRUE(in_dispatch->wait_for(std::chrono::seconds{1}));
 
@@ -481,7 +481,12 @@ TEST(MultiplexingDispatchableTest, automatic_removals_are_threadsafe)
 
     dispatcher->add_watch(dispatchee, md::DispatchReentrancy::reentrant);
 
-    md::SimpleDispatchThread one{dispatcher}, two{dispatcher}, three{dispatcher}, four{dispatcher};
+    md::ThreadedDispatcher eventloop{"Avocado", dispatcher};
 
+    eventloop.add_thread();
+    eventloop.add_thread();
+    eventloop.add_thread();
+    eventloop.add_thread();
+    
     dispatchee->trigger();
 }

@@ -138,7 +138,11 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_event_get_prompt_session_event;
     mir_event_get_resize_event;
     mir_event_get_surface_event;
+    mir_event_get_input_configuration_event;
     mir_event_get_type;
+    mir_input_configuration_event_get_action;
+    mir_input_configuration_event_get_time;
+    mir_input_configuration_event_get_device_id;
     mir_event_ref;
     mir_event_unref;
     mir_input_event_get_device_id;
@@ -194,11 +198,12 @@ MIR_CLIENT_8.4 {   # New in Mir 0.13
     mir_buffer_stream_is_valid;
     mir_surface_request_persistent_id;
     mir_surface_request_persistent_id_sync;
-    mir_surface_id_is_valid;
-    mir_surface_id_release;
+    mir_persistent_id_is_valid;
+    mir_persistent_id_release;
+    mir_pointer_event_buttons; # Move to 8.5
     mir_surface_spec_attach_to_foreign_parent;
-    mir_surface_id_as_string;
-    mir_surface_id_from_string;
+    mir_persistent_id_as_string;
+    mir_persistent_id_from_string;
 } MIR_CLIENT_8.3;
 
 MIR_CLIENT_DETAIL_8 {
@@ -207,6 +212,17 @@ MIR_CLIENT_DETAIL_8 {
       mir::events::make_event*;
       mir::events::add_touch*;
       mir::input::android::Lexicon::translate*;
+      mir::input::android::android_modifiers_from_mir*;
+      mir::input::android::mir_modifiers_from_android*;
+      mir::input::android::mir_keyboard_action_from_android*;
+      mir::input::android::android_keyboard_action_from_mir*;
+      mir::input::android::mir_pointer_buttons_from_android*;
+      mir::input::android::android_pointer_buttons_from_mir*;
+      mir::input::android::mir_tool_type_from_android*;
+      mir::input::android::android_tool_type_from_mir*;
+      mir::input::android::mir_pointer_action_from_masked_android*;
+      mir::input::android::mir_touch_action_from_masked_android*;
+      mir::input::android::android_source_id_is_pointer_device*;
       mir::client::DefaultConnectionConfiguration::DefaultConnectionConfiguration*;
       mir::client::DefaultConnectionConfiguration::the_surface_map*;
       mir::client::DefaultConnectionConfiguration::the_rpc_channel*;

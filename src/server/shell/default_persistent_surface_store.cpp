@@ -25,100 +25,23 @@
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 
-namespace
-{
-class UUID : public msh::PersistentSurfaceStore::Id
-{
-public:
-    UUID();
-    UUID(std::vector<uint8_t> const& buf);
-    UUID(UUID const& copy_from);
-
-    bool operator==(Id const& rhs) const override;
-
-    std::size_t hash() const;
-    std::vector<uint8_t> serialise() const;
-private:
-    uuid_t value;
-};
-
-UUID::UUID()
-{
-    uuid_generate(value);
-}
-
-UUID::UUID(std::vector<uint8_t> const& buf)
-{
-    char buffer[37];
-    std::copy(buf.cbegin(), buf.cend(), buffer);
-    buffer[36] = '\0';
-    if (uuid_parse(buffer, value) != 0)
-    {
-        using namespace std::literals::string_literals;
-        BOOST_THROW_EXCEPTION((std::invalid_argument{"Failed to parse "s +
-                               buffer + " as UUID"s}));
-    }
-}
-
-UUID::UUID(UUID const& copy_from)
-{
-    std::copy(copy_from.value, copy_from.value + sizeof(copy_from.value), value);
-}
-
-bool UUID::operator==(msh::PersistentSurfaceStore::Id const& rhs) const
-{
-    auto rhs_resolved = dynamic_cast<UUID const*>(&rhs);
-    if (rhs_resolved)
-    {
-        return !uuid_compare(value, rhs_resolved->value);
-    }
-    return false;
-}
-
-std::size_t UUID::hash() const
-{
-    return std::hash<uint64_t>()(*reinterpret_cast<uint64_t const*>(value)) ^
-           std::hash<uint64_t>()(*reinterpret_cast<uint64_t const*>(value + 8));
-}
-
-std::vector<uint8_t> UUID::serialise() const
-{
-    std::vector<uint8_t> buf(37);
-    uuid_unparse(value, reinterpret_cast<char*>(buf.data()));
-    buf.resize(36);
-    return buf;
-}
-}
-
-namespace std
-{
-template<>
-struct hash<UUID>
-{
-    typedef UUID argument_type;
-    typedef std::size_t result_type;
-
-    result_type operator()(argument_type const& uuid) const
-    {
-        return uuid.hash();
-    }
-};
-}
-
 class msh::DefaultPersistentSurfaceStore::SurfaceIdBimap
 {
 public:
-    UUID const& insert_or_retrieve(std::shared_ptr<scene::Surface> const& surface);
+    using Id = PersistentSurfaceStore::Id;
 
-    std::shared_ptr<scene::Surface> operator[](UUID const& id) const;
-    UUID const& operator[](std::shared_ptr<scene::Surface> const& surface) const;
+    Id const& insert_or_retrieve(std::shared_ptr<scene::Surface> const& surface);
+
+    std::shared_ptr<scene::Surface> operator[](Id const& id) const;
+    Id const& operator[](std::shared_ptr<scene::Surface> const& surface) const;
 
 private:
-    std::unordered_map<UUID, std::shared_ptr<scene::Surface>> id_to_surface;
-    std::unordered_map<scene::Surface const*, UUID const*> surface_to_id;
+    std::unordered_map<Id, std::weak_ptr<scene::Surface>> id_to_surface;
+    std::unordered_map<scene::Surface const*, Id const*> surface_to_id;
 };
 
-UUID const& msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::insert_or_retrieve(std::shared_ptr<scene::Surface> const& surface)
+auto msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::insert_or_retrieve(std::shared_ptr<scene::Surface> const& surface)
+    -> Id const&
 {
     auto element = surface_to_id.insert(std::make_pair(surface.get(), nullptr));
     if (!element.second)
@@ -128,22 +51,23 @@ UUID const& msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::insert_or_retrie
     }
     else
     {
-        auto new_element = id_to_surface.insert(std::make_pair(UUID{}, surface));
-        // Update the surface_to_id map element from nullptr to our new UUID
+        auto new_element = id_to_surface.insert(std::make_pair(Id{}, surface));
+        // Update the surface_to_id map element from nullptr to our new Id
         element.first->second = &new_element.first->first;
         return *element.first->second;
     }
 }
 
-UUID const& msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::operator[](std::shared_ptr<scene::Surface> const& surface) const
+auto msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::operator[](std::shared_ptr<scene::Surface> const& surface) const
+    -> Id const&
 {
     return *surface_to_id.at(surface.get());
 }
 
-auto msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::operator[](UUID const& id) const
+auto msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::operator[](Id const& id) const
     -> std::shared_ptr<scene::Surface>
 {
-    return id_to_surface.at(id);
+    return id_to_surface.at(id).lock();
 }
 
 msh::DefaultPersistentSurfaceStore::DefaultPersistentSurfaceStore()
@@ -156,35 +80,12 @@ msh::DefaultPersistentSurfaceStore::~DefaultPersistentSurfaceStore()
 }
 
 auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::Surface> const& surface)
-    -> Id const&
+    -> Id
 {
     return store->insert_or_retrieve(surface);
 }
 
 std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(Id const& id) const
 {
-    auto uuid = dynamic_cast<UUID const*>(&id);
-    if (uuid != nullptr)
-    {
-        return (*store)[*uuid];
-    }
-    return {};
-}
-
-std::vector<uint8_t> msh::DefaultPersistentSurfaceStore::serialise_id(Id const& id) const
-{
-    return reinterpret_cast<UUID const&>(id).serialise();
-}
-
-auto msh::DefaultPersistentSurfaceStore::deserialise_id(std::vector<uint8_t> const& buf) const
-    -> Id const&
-{
-    if (buf.size() != 36)
-    {
-        BOOST_THROW_EXCEPTION((std::invalid_argument{"Failed to deserialise: data has invalid length"}));
-    }
-    UUID uuid{buf};
-
-    auto surface = (*store)[uuid];
-    return (*store)[surface];
+    return (*store)[id];
 }

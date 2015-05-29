@@ -20,9 +20,10 @@
 #include "android/input_reader_dispatchable.h"
 
 #include "mir/input/platform.h"
+#include "mir/input/legacy_input_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/threaded_dispatcher.h"
 
 #include "mir/main_loop.h"
 #include "mir/thread_name.h"
@@ -30,14 +31,14 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <future>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
 
 mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-                                             std::shared_ptr<droidinput::InputReaderInterface> const& reader,
-                                             std::shared_ptr<droidinput::EventHubInterface> const& event_hub)
-    : multiplexer{multiplexer}, legacy_dispatchable{std::make_shared<mia::InputReaderDispatchable>(event_hub, reader)}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
+                                             std::shared_ptr<LegacyInputDispatchable>  const& legacy_dispatchable)
+    : multiplexer{multiplexer}, legacy_dispatchable{legacy_dispatchable}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
 {
 }
 
@@ -79,9 +80,12 @@ void mi::DefaultInputManager::start()
 
     legacy_dispatchable->start();
 
-    queue->enqueue([this]()
+    auto const started_promise = std::make_shared<std::promise<void>>();
+    auto const weak_started_promise = std::weak_ptr<std::promise<void>>(started_promise);
+    auto started_future = started_promise->get_future();
+
+    queue->enqueue([this,weak_started_promise]()
                    {
-                        mir::set_thread_name("Mir/InputReader");
                         for (auto const& platform : platforms)
                         {
                             platform->start();
@@ -90,15 +94,23 @@ void mi::DefaultInputManager::start()
                         // TODO: Udev monitoring is still not separated yet - an initial scan is necessary to open
                         // devices, this will be triggered through the first call to dispatch->InputReader->loopOnce.
                         legacy_dispatchable->dispatch(dispatch::FdEvent::readable);
+                        auto const started_promise =
+                            std::shared_ptr<std::promise<void>>(weak_started_promise);
+                        started_promise->set_value();
                    });
 
-    input_thread = std::make_unique<dispatch::SimpleDispatchThread>(
+    input_thread = std::make_unique<dispatch::ThreadedDispatcher>(
+        "Mir/Input Reader",
         multiplexer,
-        [this]()
+        [this,weak_started_promise]()
         {
             state = State::stopped;
+            if (auto started_promise = weak_started_promise.lock())
+                started_promise->set_exception(std::current_exception());
             mir::terminate_with_current_exception();
         });
+
+    started_future.wait();
 }
 
 void mi::DefaultInputManager::stop()

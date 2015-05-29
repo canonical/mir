@@ -46,7 +46,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <uuid/uuid.h>
 
 #include <errno.h>
 
@@ -945,10 +944,10 @@ TEST_F(ClientLibrary, can_get_persistent_surface_id)
     ASSERT_THAT(surface, IsValid());
 
     auto surface_id = mir_surface_request_persistent_id_sync(surface);
-    EXPECT_TRUE(mir_surface_id_is_valid(surface_id));
+    EXPECT_TRUE(mir_persistent_id_is_valid(surface_id));
 
     mir_surface_release_sync(surface);
-    mir_surface_id_release(surface_id);
+    mir_persistent_id_release(surface_id);
     mir_connection_release(connection);
 }
 
@@ -965,10 +964,10 @@ TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
     ASSERT_THAT(main_surface, IsValid());
 
     auto main_surface_id = mir_surface_request_persistent_id_sync(main_surface);
-    ASSERT_TRUE(mir_surface_id_is_valid(main_surface_id));
+    ASSERT_TRUE(mir_persistent_id_is_valid(main_surface_id));
 
     // Serialise & deserialise the ID
-    auto im_parent_id = mir_surface_id_from_string(mir_surface_id_as_string(main_surface_id));
+    auto im_parent_id = mir_persistent_id_from_string(mir_persistent_id_as_string(main_surface_id));
 
     auto im_client = mir_connect_sync(new_connection().c_str(), "IM Client");
     surface_spec = mir_connection_create_spec_for_input_method(im_client,
@@ -989,8 +988,8 @@ TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
     EXPECT_THAT(im_surface, IsValid());
 
     mir_surface_spec_release(surface_spec);
-    mir_surface_id_release(main_surface_id);
-    mir_surface_id_release(im_parent_id);
+    mir_persistent_id_release(main_surface_id);
+    mir_persistent_id_release(im_parent_id);
     mir_surface_release_sync(main_surface);
     mir_surface_release_sync(im_surface);
     mir_connection_release(first_client);

@@ -256,7 +256,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
     ASSERT_THAT(connection, IsValid());
 
     // An ID that parses as valid, but doesn't correspond to any
-    auto invalid_id = mir_surface_id_from_string("05f223a2-39e5-48b9-9416-b0ce837351b6");
+    auto invalid_id = mir_persistent_id_from_string("05f223a2-39e5-48b9-9416-b0ce837351b6");
 
     auto spec = mir_connection_create_spec_for_input_method(connection,
                                                             200, 200,
@@ -342,10 +342,10 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_rectangle)
 
     auto spec = mir_connection_create_spec_for_input_method(connection, 100, 100, mir_pixel_format_argb_8888);
 
-    auto id = mir_surface_id_from_string("fa69b2e9-d507-4005-be61-5068f40a5aec");
+    auto id = mir_persistent_id_from_string("fa69b2e9-d507-4005-be61-5068f40a5aec");
 
     EXPECT_DEATH(mir_surface_spec_attach_to_foreign_parent(spec, id, nullptr, mir_edge_attachment_any), "");
 
-    mir_surface_id_release(id);
+    mir_persistent_id_release(id);
     mir_connection_release(connection);
 }

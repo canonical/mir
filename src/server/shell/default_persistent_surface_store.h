@@ -31,11 +31,8 @@ public:
     DefaultPersistentSurfaceStore();
     ~DefaultPersistentSurfaceStore() override;
 
-    virtual Id const& id_for_surface(std::shared_ptr<scene::Surface> const& surface) override;
-    virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) const override;
-
-    virtual std::vector<uint8_t> serialise_id(Id const& id) const override;
-    virtual Id const& deserialise_id(std::vector<uint8_t> const& buf) const override;
+    Id id_for_surface(std::shared_ptr<scene::Surface> const& surface) override;
+    std::shared_ptr<scene::Surface> surface_for_id(Id const& id) const override;
 
 private:
     class SurfaceIdBimap;

@@ -26,6 +26,7 @@
 #include "mir_test_doubles/mock_input_reader.h"
 
 #include "mir/input/platform.h"
+#include "src/server/input/android/input_reader_dispatchable.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 
@@ -37,6 +38,7 @@
 namespace mt = mir::test;
 namespace md = mir::dispatch;
 namespace mtd = mir::test::doubles;
+namespace mia = mir::input::android;
 
 using namespace ::testing;
 
@@ -50,14 +52,13 @@ struct DefaultInputManagerTest : ::testing::Test
     mir::Fd event_hub_fd{eventfd(0, EFD_CLOEXEC|EFD_NONBLOCK)};
     NiceMock<mtd::MockEventHub> event_hub;
     NiceMock<mtd::MockInputReader> reader;
-    mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer), mt::fake_shared(reader), mt::fake_shared(event_hub)};
+    mia::InputReaderDispatchable dispatchable{mt::fake_shared(event_hub), mt::fake_shared(reader)};
+    mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer), mt::fake_shared(dispatchable)};
 
     DefaultInputManagerTest()
     {
         ON_CALL(event_hub, fd())
             .WillByDefault(Return(event_hub_fd));
-        ON_CALL(platform, dispatchable())
-            .WillByDefault(Return(mt::fake_shared(platform_dispatchable)));
         ON_CALL(platform, dispatchable())
             .WillByDefault(Return(mt::fake_shared(platform_dispatchable)));
     }
@@ -94,28 +95,31 @@ TEST_F(DefaultInputManagerTest, flushes_event_hub_before_anything_to_fulfill_leg
     EXPECT_TRUE(wait_for_multiplexer_dispatch());
 }
 
-TEST_F(DefaultInputManagerTest, flushes_then_loops_once_to_initiate_device_scan_after_start)
+TEST_F(DefaultInputManagerTest, flushes_then_loops_once_to_initiate_device_scan_on_start)
 {
     testing::InSequence seq;
     EXPECT_CALL(event_hub, flush()).Times(1);
     EXPECT_CALL(reader, loopOnce()).Times(1);
 
     input_manager.start();
-    Mock::VerifyAndClearExpectations(&event_hub);
 
-    EXPECT_TRUE(wait_for_multiplexer_dispatch());
+    // start() is synchronous, all start-up operations should be finished at this point
+    Mock::VerifyAndClearExpectations(&event_hub);
+    Mock::VerifyAndClearExpectations(&reader);
 }
 
 TEST_F(DefaultInputManagerTest, starts_platforms_on_start)
 {
     EXPECT_CALL(platform, start()).Times(1);
-    EXPECT_CALL(platform, dispatchable()).Times(2);
-    EXPECT_CALL(platform, stop()).Times(1);
+    EXPECT_CALL(platform, dispatchable()).Times(1);
 
     input_manager.add_platform(mt::fake_shared(platform));
     input_manager.start();
 
-    EXPECT_TRUE(wait_for_multiplexer_dispatch());
+    // start() is synchronous, all start-up operations should be finished at this point
+    Mock::VerifyAndClearExpectations(&platform);
+
+    EXPECT_CALL(platform, stop()).Times(1);
 }
 
 TEST_F(DefaultInputManagerTest, starts_platforms_after_start)
