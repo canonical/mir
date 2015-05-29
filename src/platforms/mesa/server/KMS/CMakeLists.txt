@@ -55,7 +55,7 @@ set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(
   mirplatformgraphicsmesa PROPERTIES
-  OUTPUT_NAME graphics-KMS
+  OUTPUT_NAME graphics-kms
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   PREFIX ""
   SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
