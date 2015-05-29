@@ -3,5 +3,5 @@ if (MIR_BUILD_PLATFORM_MESA)
 endif()
 
 if (MIR_BUILD_PLATFORM_MESA)
-  add_subdirectory(KMS/)
+  add_subdirectory(kms/)
 endif()

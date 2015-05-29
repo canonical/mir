@@ -23,7 +23,7 @@
 
 #include "mir_test_framework/udev_environment.h"
 
-#include "src/platforms/mesa/server/KMS/platform.h"
+#include "src/platforms/mesa/server/kms/platform.h"
 #include "src/platforms/mesa/server/common/gbm_buffer.h"
 #include "src/platforms/mesa/server/common/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"

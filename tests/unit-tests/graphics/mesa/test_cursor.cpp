@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/mesa/server/KMS/cursor.h"
-#include "src/platforms/mesa/server/KMS/kms_output.h"
-#include "src/platforms/mesa/server/KMS/kms_output_container.h"
-#include "src/platforms/mesa/server/KMS/kms_display_configuration.h"
+#include "src/platforms/mesa/server/kms/cursor.h"
+#include "src/platforms/mesa/server/kms/kms_output.h"
+#include "src/platforms/mesa/server/kms/kms_output_container.h"
+#include "src/platforms/mesa/server/kms/kms_display_configuration.h"
 
 #include "mir/graphics/cursor_image.h"
 
