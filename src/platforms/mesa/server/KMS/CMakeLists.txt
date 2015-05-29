@@ -19,18 +19,18 @@ add_definitions(-D__GBM__)
 add_library(
   mirplatformgraphicsmesaobjects OBJECT
 
-  platform.cpp
+  bypass.cpp
   cursor.cpp
   display.cpp
-  real_kms_display_configuration.cpp
   display_buffer.cpp
-  real_kms_output.cpp
-  real_kms_output_container.cpp
+  guest_platform.cpp
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
-  bypass.cpp
   nested_authentication.cpp
-  guest_platform.cpp
+  platform.cpp
+  real_kms_display_configuration.cpp
+  real_kms_output.cpp
+  real_kms_output_container.cpp
 )
 
 add_library(
