@@ -75,18 +75,23 @@ std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebu
 
 std::unique_ptr<mga::LayerList> mga::HalComponentFactory::create_layer_list()
 {
+    geom::Displacement offset{0,0};
     if (force_backup_display)
-        return std::unique_ptr<mga::LayerList>(new mga::LayerList(std::make_shared<mga::Hwc10Adapter>(), {}));
+        return std::unique_ptr<mga::LayerList>(
+            new mga::LayerList(std::make_shared<mga::Hwc10Adapter>(), {}, offset));
     switch (hwc_version)
     {
         case mga::HwcVersion::hwc10:
-            return std::unique_ptr<mga::LayerList>(new mga::LayerList(std::make_shared<mga::Hwc10Adapter>(), {}));
+            return std::unique_ptr<mga::LayerList>(
+                new mga::LayerList(std::make_shared<mga::Hwc10Adapter>(), {}, offset));
         case mga::HwcVersion::hwc11:
         case mga::HwcVersion::hwc12:
-            return std::unique_ptr<mga::LayerList>(new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
+            return std::unique_ptr<mga::LayerList>(
+                new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, offset));
         case mga::HwcVersion::hwc13:
         case mga::HwcVersion::hwc14:
-            return std::unique_ptr<mga::LayerList>(new mga::LayerList(std::make_shared<mga::FloatSourceCrop>(), {}));
+            return std::unique_ptr<mga::LayerList>(
+                new mga::LayerList(std::make_shared<mga::FloatSourceCrop>(), {}, offset));
         case mga::HwcVersion::unknown:
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("unknown or unsupported hwc version"));

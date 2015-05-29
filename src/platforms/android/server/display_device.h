@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_
 #define MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_
 
+#include "mir/geometry/displacement.h"
 #include "mir/graphics/renderable.h"
 #include "mir_toolkit/common.h"
 #include "display_name.h"
@@ -42,6 +43,7 @@ struct DisplayContents
 {
     DisplayName name;
     LayerList& list;
+    geometry::Displacement list_offset;
     SwappingGLContext& context;
     RenderableListCompositor& compositor; 
 };

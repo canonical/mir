@@ -20,9 +20,10 @@
 #include "android/input_reader_dispatchable.h"
 
 #include "mir/input/platform.h"
+#include "mir/input/legacy_input_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/threaded_dispatcher.h"
 
 #include "mir/main_loop.h"
 #include "mir/thread_name.h"
@@ -36,9 +37,8 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 
 mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-                                             std::shared_ptr<droidinput::InputReaderInterface> const& reader,
-                                             std::shared_ptr<droidinput::EventHubInterface> const& event_hub)
-    : multiplexer{multiplexer}, legacy_dispatchable{std::make_shared<mia::InputReaderDispatchable>(event_hub, reader)}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
+                                             std::shared_ptr<LegacyInputDispatchable>  const& legacy_dispatchable)
+    : multiplexer{multiplexer}, legacy_dispatchable{legacy_dispatchable}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
 {
 }
 
@@ -86,7 +86,6 @@ void mi::DefaultInputManager::start()
 
     queue->enqueue([this,weak_started_promise]()
                    {
-                        mir::set_thread_name("Mir/InputReader");
                         for (auto const& platform : platforms)
                         {
                             platform->start();
@@ -100,7 +99,8 @@ void mi::DefaultInputManager::start()
                         started_promise->set_value();
                    });
 
-    input_thread = std::make_unique<dispatch::SimpleDispatchThread>(
+    input_thread = std::make_unique<dispatch::ThreadedDispatcher>(
+        "Mir/Input Reader",
         multiplexer,
         [this,weak_started_promise]()
         {

@@ -19,7 +19,7 @@
 #include "mir/shell/canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
-#include "mir/scene/null_surface_observer.h"
+#include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/display_layout.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/geometry/displacement.h"
@@ -147,7 +147,7 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
         auto const top_right= aux_rect.top_right()  -Point{} + parent_top_left;
         auto const bot_left = aux_rect.bottom_left()-Point{} + parent_top_left;
 
-        if (edge_attachment && mir_edge_attachment_vertical)
+        if (edge_attachment & mir_edge_attachment_vertical)
         {
             if (active_display.contains(top_right + Displacement{width, height}))
             {
@@ -161,7 +161,7 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
             }
         }
 
-        if (edge_attachment && mir_edge_attachment_horizontal)
+        if (edge_attachment & mir_edge_attachment_horizontal)
         {
             if (active_display.contains(bot_left + Displacement{width, height}))
             {
@@ -190,38 +190,6 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
     return parameters;
 }
 
-namespace
-{
-class SurfaceReadyObserver : public ms::NullSurfaceObserver,
-    public std::enable_shared_from_this<SurfaceReadyObserver>
-{
-public:
-    SurfaceReadyObserver(
-        msh::CanonicalWindowManagerPolicy::Tools* const focus_controller,
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& surface) :
-        focus_controller{focus_controller},
-        session{session},
-        surface{surface}
-    {
-    }
-
-private:
-    void frame_posted(int) override
-    {
-        if (auto const s = surface.lock())
-        {
-            focus_controller->set_focus_to(session.lock(), s);
-            s->remove_observer(shared_from_this());
-        }
-    }
-
-    msh::CanonicalWindowManagerPolicy::Tools* const focus_controller;
-    std::weak_ptr<ms::Session> const session;
-    std::weak_ptr<ms::Surface> const surface;
-};
-}
-
 void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = surface->parent())
@@ -243,8 +211,14 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
         // TODO There's currently no way to insert surfaces into an active (or inactive)
         // TODO window tree while keeping the order stable or consistent with spec.
         // TODO Nor is there a way to update the "default surface" when appropriate!!
-        surface->add_observer(std::make_shared<SurfaceReadyObserver>(tools, session, surface));
-        active_surface_ = surface;
+        surface->add_observer(std::make_shared<SurfaceReadyObserver>(
+            [this](std::shared_ptr<scene::Session> const& /*session*/,
+                   std::shared_ptr<scene::Surface> const& surface)
+                {
+                    select_active_surface(surface);
+                },
+            session,
+            surface));
         break;
 
     case mir_surface_type_gloss:
@@ -317,12 +291,11 @@ void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms
         }
     }
 
-
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
+        active_surface_.reset();
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        select_active_surface(tools->focused_surface());
     }
 }
 
@@ -550,6 +523,9 @@ void msh::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms
 {
     if (!surface)
     {
+        if (active_surface_.lock())
+            tools->set_focus_to({}, {});
+
         active_surface_.reset();
         return;
     }
@@ -772,18 +748,45 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
 
 bool msh::CanonicalWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle /*bounds*/)
 {
-    if (surface && surface->input_area_contains(from))
+    if (!surface)
+        return false;
+
+    if (!surface->input_area_contains(from))
+        return false;
+
+    auto movement = to - from;
+
+    // placeholder - constrain onscreen
+
+    switch (tools->info_for(surface).state)
     {
-        auto movement = to - from;
+    case mir_surface_state_restored:
+        break;
 
-        // placeholder - constrain onscreen
+    // "A vertically maximised surface is anchored to the top and bottom of
+    // the available workspace and can have any width."
+    case mir_surface_state_vertmaximized:
+        movement.dy = DeltaY(0);
+        break;
 
-        move_tree(surface, movement);
+    // "A horizontally maximised surface is anchored to the left and right of
+    // the available workspace and can have any height"
+    case mir_surface_state_horizmaximized:
+        movement.dx = DeltaX(0);
+        break;
 
+    // "A maximised surface is anchored to the top, bottom, left and right of the
+    // available workspace. For example, if the launcher is always-visible then
+    // the left-edge of the surface is anchored to the right-edge of the launcher."
+    case mir_surface_state_maximized:
+    case mir_surface_state_fullscreen:
+    default:
         return true;
     }
 
-    return false;
+    move_tree(surface, movement);
+
+    return true;
 }
 
 void msh::CanonicalWindowManagerPolicy::move_tree(std::shared_ptr<ms::Surface> const& root, Displacement movement) const

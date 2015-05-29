@@ -99,8 +99,7 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
 TEST_F(InputEventBuilder, makes_valid_pointer_event)
 {
     MirPointerAction action = mir_pointer_action_enter;
-    std::vector<MirPointerButton> depressed_buttons = 
-        {mir_pointer_button_back, mir_pointer_button_tertiary};
+    auto depressed_buttons = mir_pointer_button_back | mir_pointer_button_tertiary;
     float x_axis_value = 3.9, y_axis_value = 7.4, hscroll_value = .9, vscroll_value = .3;
     auto ev = mev::make_event(device_id, timestamp, modifiers, 
         action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
@@ -162,11 +161,10 @@ TEST_F(InputEventBuilder, maps_single_touch_up_to_motion_up)
 
 TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
 {
-    std::vector<MirPointerButton> no_pressed_buttons;
     float x_axis_value = 3.9, y_axis_value = 7.4, hscroll_value = .9, vscroll_value = .3;
     MirPointerAction action = mir_pointer_action_motion;
     auto ev = mev::make_event(device_id, timestamp, modifiers,
-        action, no_pressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+        action, 0, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
     auto e = ev.get();
 
     auto ie = mir_event_get_input_event(e);

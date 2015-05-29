@@ -42,6 +42,8 @@ class BufferStream : public frontend::BufferStream
 public:
     virtual ~BufferStream() = default;
 
+    virtual void with_most_recent_buffer_do(
+        std::function<void(graphics::Buffer&)> const& exec) = 0;
     virtual std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(void const* user_id) = 0;
     virtual geometry::Size stream_size() = 0;

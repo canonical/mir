@@ -347,3 +347,57 @@ TEST_F(HWCLayersTest, has_float_sourcecrop)
         mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
+
+TEST_F(HWCLayersTest, list_can_be_offset_for_nonorigin_displays)
+{
+    using namespace testing;
+
+    geom::Point offset{199, 299};
+
+    hwc_rect_t crop
+    {
+        0,0,
+        buffer_size.width.as_int(),
+        buffer_size.height.as_int()
+    };
+
+    hwc_rect_t screen_pos
+    {
+        screen_position.top_left.x.as_int(),
+        screen_position.top_left.y.as_int(),
+        screen_position.bottom_right().x.as_int(),
+        screen_position.bottom_right().y.as_int()
+    };
+
+    hwc_region_t visible_region {1, &screen_pos};
+    hwc_layer_1 expected_layer;
+
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
+    expected_layer.hints = 0;
+    expected_layer.flags = 0;
+    expected_layer.handle = native_handle_1->handle();
+    expected_layer.transform = 0;
+    expected_layer.blending = HWC_BLENDING_PREMULT;
+    expected_layer.sourceCrop = crop;
+    expected_layer.displayFrame = screen_pos;
+    expected_layer.visibleRegionScreen = visible_region;
+    expected_layer.acquireFenceFd = -1;
+    expected_layer.releaseFenceFd = -1;
+    expected_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
+
+    mga::HWCLayer layer(layer_adapter, list, list_index);
+    layer.setup_layer(
+        mga::LayerType::gl_rendered,
+        screen_position,
+        true,
+        mock_buffer);
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
+
+    expected_layer.blending = HWC_BLENDING_NONE;
+    layer.setup_layer(
+        mga::LayerType::gl_rendered,
+        screen_position,
+        false,
+        mock_buffer);
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
+}

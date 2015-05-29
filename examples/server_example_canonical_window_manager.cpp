@@ -22,6 +22,7 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/shell/display_layout.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/shell/surface_ready_observer.h"
 #include "mir/geometry/displacement.h"
 
 #include "mir/graphics/buffer.h"
@@ -158,7 +159,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
         auto const top_right= aux_rect.top_right()  -Point{} + parent_top_left;
         auto const bot_left = aux_rect.bottom_left()-Point{} + parent_top_left;
 
-        if (edge_attachment && mir_edge_attachment_vertical)
+        if (edge_attachment & mir_edge_attachment_vertical)
         {
             if (active_display.contains(top_right + Displacement{width, height}))
             {
@@ -172,7 +173,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
             }
         }
 
-        if (edge_attachment && mir_edge_attachment_horizontal)
+        if (edge_attachment & mir_edge_attachment_horizontal)
         {
             if (active_display.contains(bot_left + Displacement{width, height}))
             {
@@ -234,7 +235,8 @@ void paint_titlebar(
     mir::examples::CanonicalSurfaceInfoCopy& titlebar_info,
     int intensity)
 {
-    auto const format = titlebar->pixel_format();
+    auto stream = titlebar->primary_buffer_stream();
+    auto const format = stream->pixel_format();
 
     if (!titlebar_info.buffer)
         swap_buffers(titlebar, titlebar_info.buffer);
@@ -279,42 +281,6 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     surface_map.emplace(titlebar, std::move(titlebar_info));
 }
 
-namespace
-{
-class SurfaceReadyObserver : public ms::NullSurfaceObserver,
-    public std::enable_shared_from_this<SurfaceReadyObserver>
-{
-public:
-    using ActivateFunction = std::function<void(
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& surface)>;
-
-    SurfaceReadyObserver(
-        ActivateFunction const& activate,
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& surface) :
-        activate{activate},
-        session{session},
-        surface{surface}
-    {
-    }
-
-private:
-    void frame_posted(int) override
-    {
-        if (auto const s = surface.lock())
-        {
-            activate(session.lock(), s);
-            s->remove_observer(shared_from_this());
-        }
-    }
-
-    ActivateFunction const activate;
-    std::weak_ptr<ms::Session> const session;
-    std::weak_ptr<ms::Surface> const surface;
-};
-}
-
 void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
     if (auto const parent = surface->parent())
@@ -336,7 +302,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
         // TODO There's currently no way to insert surfaces into an active (or inactive)
         // TODO window tree while keeping the order stable or consistent with spec.
         // TODO Nor is there a way to update the "default surface" when appropriate!!
-        surface->add_observer(std::make_shared<SurfaceReadyObserver>(
+        surface->add_observer(std::make_shared<shell::SurfaceReadyObserver>(
             [this](std::shared_ptr<scene::Session> const& /*session*/,
                    std::shared_ptr<scene::Surface> const& surface)
                 {
@@ -418,6 +384,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
 
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
+        active_surface_.reset();
         tools->focus_next_session();
         select_active_surface(tools->focused_surface());
     }
@@ -690,16 +657,19 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
     if (surface == active_surface_.lock())
         return;
 
-    if (auto const active_surface = active_surface_.lock())
-    {
-        if (auto const titlebar = tools->info_for(active_surface).titlebar)
-        {
-            paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
-        }
-    }
-
     if (!surface)
     {
+        if (auto const active_surface = active_surface_.lock())
+        {
+            if (auto const titlebar = tools->info_for(active_surface).titlebar)
+            {
+                paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
+            }
+        }
+
+        if (active_surface_.lock())
+            tools->set_focus_to({}, {});
+
         active_surface_.reset();
         return;
     }
@@ -715,6 +685,13 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
     case mir_surface_type_freestyle:
     case mir_surface_type_menu:
     case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        if (auto const active_surface = active_surface_.lock())
+        {
+            if (auto const titlebar = tools->info_for(active_surface).titlebar)
+            {
+                paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
+            }
+        }
         if (auto const titlebar = tools->info_for(surface).titlebar)
         {
             paint_titlebar(titlebar, tools->info_for(titlebar), 0xFF);
@@ -936,6 +913,32 @@ bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> sur
     auto movement = to - from;
 
     // placeholder - constrain onscreen
+
+    switch (tools->info_for(surface).state)
+    {
+    case mir_surface_state_restored:
+        break;
+
+    // "A vertically maximised surface is anchored to the top and bottom of
+    // the available workspace and can have any width."
+    case mir_surface_state_vertmaximized:
+        movement.dy = DeltaY(0);
+        break;
+
+    // "A horizontally maximised surface is anchored to the left and right of
+    // the available workspace and can have any height"
+    case mir_surface_state_horizmaximized:
+        movement.dx = DeltaX(0);
+        break;
+
+    // "A maximised surface is anchored to the top, bottom, left and right of the
+    // available workspace. For example, if the launcher is always-visible then
+    // the left-edge of the surface is anchored to the right-edge of the launcher."
+    case mir_surface_state_maximized:
+    case mir_surface_state_fullscreen:
+    default:
+        return true;
+    }
 
     move_tree(surface, movement);
 
