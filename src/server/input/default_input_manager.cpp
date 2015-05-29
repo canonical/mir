@@ -31,6 +31,30 @@
 
 #include <future>
 
+namespace
+{
+template<typename Function>
+struct OnUnwind
+{
+    OnUnwind(Function && fun)
+        : function(fun)
+    {
+    }
+
+    ~OnUnwind()
+    {
+        if (std::uncaught_exception())
+            function();
+    }
+    Function const& function;
+};
+template <typename Function>
+auto on_unwind(Function && fun) -> OnUnwind<Function>
+{
+    return OnUnwind<Function>(std::forward<Function>(fun));
+}
+}
+
 namespace mi = mir::input;
 
 mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
@@ -115,6 +139,8 @@ void mi::DefaultInputManager::start()
 
 void mi::DefaultInputManager::stop()
 {
+    auto reset_thread = on_unwind([this]{input_thread.reset();});
+
     auto expected = State::running;
     if (!state.compare_exchange_strong(expected, State::stopped))
         return;
