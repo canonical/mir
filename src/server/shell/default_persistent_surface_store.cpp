@@ -36,7 +36,7 @@ public:
     Id const& operator[](std::shared_ptr<scene::Surface> const& surface) const;
 
 private:
-    std::unordered_map<Id, std::shared_ptr<scene::Surface>> id_to_surface;
+    std::unordered_map<Id, std::weak_ptr<scene::Surface>> id_to_surface;
     std::unordered_map<scene::Surface const*, Id const*> surface_to_id;
 };
 
@@ -67,7 +67,7 @@ auto msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::operator[](std::shared_
 auto msh::DefaultPersistentSurfaceStore::SurfaceIdBimap::operator[](Id const& id) const
     -> std::shared_ptr<scene::Surface>
 {
-    return id_to_surface.at(id);
+    return id_to_surface.at(id).lock();
 }
 
 msh::DefaultPersistentSurfaceStore::DefaultPersistentSurfaceStore()

@@ -94,3 +94,31 @@ TEST(DefaultPersistentSurfaceStore, retrieves_correct_surface)
     EXPECT_THAT(looked_up_surface_one, Eq(surface_one));
     EXPECT_THAT(looked_up_surface_two, Eq(surface_two));
 }
+
+TEST(DefaultPersistentSurfaceStore, looking_up_destroyed_surface_returns_nullptr)
+{
+    using namespace testing;
+
+    msh::DefaultPersistentSurfaceStore store;
+
+    auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+
+    auto id = store.id_for_surface(surface);
+
+    surface.reset();
+
+    auto looked_up_surface = store.surface_for_id(id);
+
+    EXPECT_THAT(looked_up_surface, Eq(nullptr));
+}
+
+TEST(DefaultPersistentSurfaceStore, looking_up_nonexistent_surface_throws)
+{
+    using namespace testing;
+
+    msh::DefaultPersistentSurfaceStore store;
+
+    msh::PersistentSurfaceStore::Id id;
+
+    EXPECT_THROW(store.surface_for_id(id), std::out_of_range);
+}

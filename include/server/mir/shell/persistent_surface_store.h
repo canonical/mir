@@ -52,16 +52,18 @@ public:
 
     /**
      * \brief Acquire ID for a Surface
-     * \param [in]    surface to query or generate an ID for
-     * \return        A reference to the ID of this surface. This reference is stable
-     *                for the lifetime of the PersistentSurfaceStore.
+     * \param [in] surface Surface to query or generate an ID for
+     * \return             The ID for this surface.
      * \note If \arg surface has not yet had an ID generated, this generates its ID.
+     * \note This does not extend the lifetime of \arg surface.
      */
     virtual Id id_for_surface(std::shared_ptr<scene::Surface> const& surface) = 0;
     /**
      * \brief Lookup Surface by ID.
      * \param [in] id    ID of surface to lookup
-     * \return           The surface with ID \arg id.
+     * \return           The surface with ID \arg id. If this surface has been destroyed,
+     *                   returns nullptr.
+     * \throws std::out_of_range if there is no surface with \arg id.
      */
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) const = 0;
 };
