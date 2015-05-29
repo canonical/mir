@@ -944,9 +944,9 @@ TEST_F(ClientLibrary, can_get_persistent_surface_id)
     ASSERT_THAT(surface, IsValid());
 
     auto surface_id = mir_surface_request_persistent_id_sync(surface);
-    EXPECT_TRUE(mir_surface_id_is_valid(surface_id));
+    EXPECT_TRUE(mir_persistent_id_is_valid(surface_id));
 
     mir_surface_release_sync(surface);
-    mir_surface_id_release(surface_id);
+    mir_persistent_id_release(surface_id);
     mir_connection_release(connection);
 }

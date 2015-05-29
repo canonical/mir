@@ -693,7 +693,7 @@ void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
  * \brief Request an ID for the surface that can be shared cross-process and
  *        across restarts.
  *
- * This call acquires a MirSurfaceId for this MirSurface. This MirSurfaceId
+ * This call acquires a MirPersistentId for this MirSurface. This MirPersistentId
  * can be serialized to a string, stored or sent to another process, and then
  * later deserialized to refer to the same surface.
  *
@@ -706,28 +706,28 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surfac
 
 /**
  * \brief Request a persistent ID for a surface and wait for the result
- * \param [in] surface  The surface to aquire a persistent ID for.
- * \return A MirSurfaceId. This MirSurfaceId is owned by the calling code, and must
- *         be freed with a call to mir_surface_id_release()
+ * \param [in] surface  The surface to acquire a persistent ID for.
+ * \return A MirPersistentId. This MirPersistentId is owned by the calling code, and must
+ *         be freed with a call to mir_persistent_id_release()
  */
-MirSurfaceId* mir_surface_request_persistent_id_sync(MirSurface* surface);
+MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface);
 
 /**
- * \brief Check the validity of a MirSurfaceId
- * \param [in] id  The MirSurfaceId
- * \return True iff the MirSurfaceId contains a valid ID value.
+ * \brief Check the validity of a MirPersistentId
+ * \param [in] id  The MirPersistentId
+ * \return True iff the MirPersistentId contains a valid ID value.
  *
- * \note This does not guarantee that the ID refers to a currently valid MirSurface.
+ * \note This does not guarantee that the ID refers to a currently valid object.
  */
-bool mir_surface_id_is_valid(MirSurfaceId* id);
+bool mir_persistent_id_is_valid(MirPersistentId* id);
 
 /**
- * \brief Free a MirSurfaceId
- * \param [in] id  The MirSurfaceId to free
+ * \brief Free a MirPersistentId
+ * \param [in] id  The MirPersistentId to free
  * \note This frees only the client-side representation; it has no effect on the
- *       surface referred to by \arg id.
+ *       object referred to by \arg id.
  */
-void mir_surface_id_release(MirSurfaceId* id);
+void mir_persistent_id_release(MirPersistentId* id);
 
 #ifdef __cplusplus
 }

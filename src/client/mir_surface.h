@@ -99,10 +99,10 @@ struct MirSurfaceSpec
     mir::optional_value<AspectRatio> max_aspect;
 };
 
-struct MirSurfaceId
+struct MirPersistentId
 {
 public:
-    MirSurfaceId(std::string const& string_id);
+    MirPersistentId(std::string const& string_id);
 
     std::string const& as_string();
 

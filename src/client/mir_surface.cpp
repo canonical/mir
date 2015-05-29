@@ -127,12 +127,12 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
     return message;
 }
 
-MirSurfaceId::MirSurfaceId(std::string const& string_id)
+MirPersistentId::MirPersistentId(std::string const& string_id)
     : string_id{string_id}
 {
 }
 
-std::string const& MirSurfaceId::as_string()
+std::string const&MirPersistentId::as_string()
 {
     return string_id;
 }
@@ -234,7 +234,7 @@ void MirSurface::acquired_persistent_id(mir_surface_id_callback callback, void* 
 {
     if (!persistent_id.has_error())
     {
-        callback(this, new MirSurfaceId{persistent_id.value()}, context);
+        callback(this, new MirPersistentId{persistent_id.value()}, context);
     }
     else
     {
@@ -249,7 +249,7 @@ MirWaitHandle* MirSurface::request_persistent_id(mir_surface_id_callback callbac
 
     if (persistent_id.has_value())
     {
-        callback(this, new MirSurfaceId{persistent_id.value()}, context);
+        callback(this, new MirPersistentId{persistent_id.value()}, context);
         return nullptr;
     }
 
