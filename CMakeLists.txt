@@ -146,16 +146,16 @@ add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 # Default to KMS backend, but build all of them
 set(
   MIR_PLATFORM
-  KMS;android
+  kms;android
   CACHE
   STRING
-  "a list of graphics backends to build (options are 'KMS' or 'android')"
+  "a list of graphics backends to build (options are 'kms' or 'android')"
 )
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
 foreach(platform IN LISTS MIR_PLATFORM)
-  if (platform STREQUAL "KMS")
+  if (platform STREQUAL "kms")
     set(MIR_BUILD_PLATFORM_KMS TRUE)
   endif()
   if (platform STREQUAL "android")

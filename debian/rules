@@ -23,16 +23,16 @@ ifeq ($(DEB_HOST_ARCH),armhf)
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DMIR_RUN_ACCEPTANCE_TESTS=OFF \
 	  -DMIR_RUN_INTEGRATION_TESTS=OFF \
-	  -DMIR_PLATFORM=android\;KMS
+	  -DMIR_PLATFORM=android\;kms
 else
 ifeq ($(DEB_HOST_ARCH),arm64)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
-	  -DMIR_PLATFORM=KMS
+	  -DMIR_PLATFORM=kms
 else
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
-	  -DMIR_PLATFORM=KMS\;android
+	  -DMIR_PLATFORM=kms\;android
 endif
 endif
 

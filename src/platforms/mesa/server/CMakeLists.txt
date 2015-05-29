@@ -3,5 +3,5 @@ if (MIR_BUILD_PLATFORM_KMS)
 endif()
 
 if (MIR_BUILD_PLATFORM_KMS)
-  add_subdirectory(KMS/)
+  add_subdirectory(kms/)
 endif()

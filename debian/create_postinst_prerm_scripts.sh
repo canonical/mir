@@ -9,10 +9,10 @@ deb_host_multiarch=$2
 mir_platform_types="${PLATFORM_DRIVER}"
 case $deb_host_arch in
     arm64)
-        mir_platforms="KMS"
+        mir_platforms="kms"
         ;;
     *)
-        mir_platforms="android KMS"
+        mir_platforms="android kms"
         ;;
 esac
 

@@ -52,7 +52,7 @@ if (MIR_TEST_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
 
-if(MIR_TEST_PLATFORM STREQUAL "KMS")
+if(MIR_TEST_PLATFORM STREQUAL "kms")
   include_directories(
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}

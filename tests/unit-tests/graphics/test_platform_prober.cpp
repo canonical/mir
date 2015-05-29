@@ -123,7 +123,7 @@ TEST(ServerPlatformProbe, LoadsMesaPlatformWhenDrmDevicePresent)
     auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
-    EXPECT_THAT(description->name, HasSubstr("KMS"));
+    EXPECT_THAT(description->name, HasSubstr("kms"));
 }
 #endif
 
