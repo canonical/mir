@@ -875,7 +875,7 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
         {
             list.emplace_back(std::make_shared<SurfaceSnapshot>(
                 info.stream, id,
-                geom::Rectangle{surface_rect.top_left + info.position, surface_rect.size},
+                geom::Rectangle{surface_rect.top_left + info.displacement, surface_rect.size},
                 transformation_matrix, surface_alpha, nonrectangular, info.stream.get()));
         }
     }
