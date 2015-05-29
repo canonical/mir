@@ -518,7 +518,7 @@ TEST_F(ApplicationSession, can_destroy_surface_bstream)
 MATCHER(StreamEq, "")
 {
     return (std::get<0>(arg).stream == std::get<1>(arg).stream) &&
-        (std::get<0>(arg).position == std::get<1>(arg).position);
+        (std::get<0>(arg).displacement == std::get<1>(arg).displacement);
 }
 
 TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
