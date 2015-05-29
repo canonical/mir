@@ -48,7 +48,17 @@ std::shared_ptr<mi::InputSender> mtf::FakeEventHubServerConfiguration::the_input
     return DefaultServerConfiguration::the_input_sender();
 }
 
+std::shared_ptr<mi::LegacyInputDispatchable> mtf::FakeEventHubServerConfiguration::the_legacy_input_dispatchable()
+{
+    return DefaultServerConfiguration::the_legacy_input_dispatchable();
+}
+
 std::shared_ptr<droidinput::EventHubInterface> mtf::FakeEventHubServerConfiguration::the_event_hub()
+{
+    return the_fake_event_hub();
+}
+
+std::shared_ptr<mia::FakeEventHub> mtf::FakeEventHubServerConfiguration::the_fake_event_hub()
 {
     if (!fake_event_hub)
     {

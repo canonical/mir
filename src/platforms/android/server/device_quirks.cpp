@@ -69,3 +69,10 @@ bool mga::DeviceQuirks::gralloc_reopenable_after_close() const
 {
     return gralloc_reopenable_after_close_;
 }
+
+int mga::DeviceQuirks::aligned_width(int width) const
+{
+    if (width == 720 && device_name == std::string{"vegetahd"})
+        return 736;
+    return width;
+}

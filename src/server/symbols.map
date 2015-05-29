@@ -581,6 +581,7 @@ MIR_SERVER_32 {
     mir::DefaultServerConfiguration::the_input_target_enumerator*;
     mir::DefaultServerConfiguration::the_input_targeter*;
     mir::DefaultServerConfiguration::the_input_translator*;
+    mir::DefaultServerConfiguration::the_legacy_input_dispatchable*;
     mir::DefaultServerConfiguration::the_logger*;
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;

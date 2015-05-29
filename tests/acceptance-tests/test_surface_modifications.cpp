@@ -93,7 +93,6 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
     void generate_alt_click_at(Point const& click_position)
     {
         auto const modifiers = mir_input_event_modifier_alt;
-        std::vector<MirPointerButton> depressed_buttons{mir_pointer_button_tertiary};
 
         auto const x_axis_value = click_position.x.as_float();
         auto const y_axis_value = click_position.y.as_float();
@@ -102,7 +101,7 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         auto const action = mir_pointer_action_button_down;
 
         auto const click_event = mev::make_event(device_id, timestamp, modifiers,
-            action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+            action, mir_pointer_button_tertiary, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
 
         server.the_shell()->handle(*click_event);
     }
@@ -110,7 +109,6 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
     void generate_alt_move_to(Point const& drag_position)
     {
         auto const modifiers = mir_input_event_modifier_alt;
-        std::vector<MirPointerButton> depressed_buttons{mir_pointer_button_tertiary};
 
         auto const x_axis_value = drag_position.x.as_float();
         auto const y_axis_value = drag_position.y.as_float();
@@ -119,7 +117,7 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         auto const action = mir_pointer_action_motion;
 
         auto const drag_event = mev::make_event(device_id, timestamp, modifiers,
-            action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+            action, mir_pointer_button_tertiary, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
 
         server.the_shell()->handle(*drag_event);
     }
