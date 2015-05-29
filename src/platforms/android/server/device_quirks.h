@@ -58,6 +58,8 @@ public:
 
     unsigned int num_framebuffers() const;
     bool gralloc_reopenable_after_close() const;
+    int aligned_width(int width) const;
+
 private:
     DeviceQuirks(DeviceQuirks const&) = delete;
     DeviceQuirks & operator=(DeviceQuirks const&) = delete;

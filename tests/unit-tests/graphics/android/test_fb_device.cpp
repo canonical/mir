@@ -67,7 +67,7 @@ struct FBDevice : public ::testing::Test
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer;
     mtd::HardwareAccessMock hw_access_mock;
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
-    mga::LayerList list{std::make_shared<mga::IntegerSourceCrop>(), {}};
+    mga::LayerList list{std::make_shared<mga::IntegerSourceCrop>(), {}, geom::Displacement{}};
     mtd::StubRenderableListCompositor stub_compositor;
     mga::DisplayName primary{mga::DisplayName::primary};
 };
@@ -93,7 +93,7 @@ TEST_F(FBDevice, commits_frame)
         .WillOnce(Return(0));
 
     mga::FBDevice fbdev(fb_hal_mock);
-    mga::DisplayContents content{primary, list, mock_context, stub_compositor};
+    mga::DisplayContents content{primary, list, geom::Displacement{}, mock_context, stub_compositor};
 
     EXPECT_THROW({
         fbdev.commit({content});

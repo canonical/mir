@@ -109,3 +109,22 @@ TEST(DeviceDetection, reports_gralloc_not_reopenable_after_close_on_krillin)
     mga::DeviceQuirks quirks(mock_ops);
     EXPECT_FALSE(quirks.gralloc_reopenable_after_close());
 }
+
+TEST(DeviceDetection, aligns_width_on_vegetahd)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const vegetahd_name_str[] = "vegetahd";
+
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&](char const*, char* value, char const*)
+        {
+            strncpy(value, vegetahd_name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_THAT(quirks.aligned_width(720), Eq(736));
+}

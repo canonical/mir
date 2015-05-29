@@ -113,6 +113,7 @@ public:
             .WillByDefault(SetArgPointee<1>(texid));
     }
 
+    geom::Displacement offset;
     GLint const display_transform_uniform_loc{1};
     GLint const position_attr_loc{2};
     GLint const texcoord_attr_loc{3};
@@ -238,7 +239,32 @@ TEST_F(HWCFallbackGLRenderer, computes_vertex_coordinates_correctly)
         .Times(1);
 
     mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
-    glprogram.render(renderlist, mock_swapping_context);
+    glprogram.render(renderlist, offset, mock_swapping_context);
+}
+
+TEST_F(HWCFallbackGLRenderer, computes_vertex_coordinates_correctly_with_offset)
+{
+    using namespace testing;
+    geom::Displacement offset{100, 50};
+    geom::Rectangle rect{{100,200},{50, 60}};
+    geom::Rectangle offset_rect{{0, 150}, rect.size};
+ 
+    mg::RenderableList renderlist{std::make_shared<mtd::StubRenderable>(rect)};
+    std::vector<Vertex> expected_vertices {
+        to_vertex(offset_rect.top_left),
+        to_vertex(offset_rect.bottom_left()),
+        to_vertex(offset_rect.top_right()),
+        to_vertex(offset_rect.bottom_right()),
+    };
+
+    InSequence seq;
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(
+        position_attr_loc, 3, GL_FLOAT, GL_FALSE, stride, MatchesVertices(expected_vertices, stride)));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(_,_,_,_,_,_))
+        .Times(1);
+
+    mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
+    glprogram.render(renderlist, offset, mock_swapping_context);
 }
 
 TEST_F(HWCFallbackGLRenderer, computes_texture_coordinates_correctly)
@@ -265,7 +291,7 @@ TEST_F(HWCFallbackGLRenderer, computes_texture_coordinates_correctly)
         .Times(2);
 
     mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
-    glprogram.render(renderlist, mock_swapping_context);
+    glprogram.render(renderlist, offset, mock_swapping_context);
 }
 
 TEST_F(HWCFallbackGLRenderer, executes_render_in_sequence)
@@ -310,7 +336,7 @@ TEST_F(HWCFallbackGLRenderer, executes_render_in_sequence)
     EXPECT_CALL(mock_swapping_context, swap_buffers());
     EXPECT_CALL(mock_gl, glUseProgram(0));
 
-    glprogram.render(renderlist, mock_swapping_context);
+    glprogram.render(renderlist, offset, mock_swapping_context);
 }
 
 TEST_F(HWCFallbackGLRenderer, activates_alpha_per_renderable)
@@ -329,5 +355,5 @@ TEST_F(HWCFallbackGLRenderer, activates_alpha_per_renderable)
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
     EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
 
-    glprogram.render(renderlist, mock_swapping_context);
+    glprogram.render(renderlist, offset, mock_swapping_context);
 }

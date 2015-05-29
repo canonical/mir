@@ -99,7 +99,8 @@ struct DisplayHotplug : ::testing::Test
 
         std::unique_ptr<mga::LayerList> create_layer_list() override
         {
-            return std::unique_ptr<mga::LayerList>(new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}));
+            return std::unique_ptr<mga::LayerList>(
+                new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, geom::Displacement{}));
         }
 
         StubHwcConfig stub_config;

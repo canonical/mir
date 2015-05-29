@@ -159,7 +159,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
         auto const top_right= aux_rect.top_right()  -Point{} + parent_top_left;
         auto const bot_left = aux_rect.bottom_left()-Point{} + parent_top_left;
 
-        if (edge_attachment && mir_edge_attachment_vertical)
+        if (edge_attachment & mir_edge_attachment_vertical)
         {
             if (active_display.contains(top_right + Displacement{width, height}))
             {
@@ -173,7 +173,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
             }
         }
 
-        if (edge_attachment && mir_edge_attachment_horizontal)
+        if (edge_attachment & mir_edge_attachment_horizontal)
         {
             if (active_display.contains(bot_left + Displacement{width, height}))
             {
@@ -913,6 +913,32 @@ bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> sur
     auto movement = to - from;
 
     // placeholder - constrain onscreen
+
+    switch (tools->info_for(surface).state)
+    {
+    case mir_surface_state_restored:
+        break;
+
+    // "A vertically maximised surface is anchored to the top and bottom of
+    // the available workspace and can have any width."
+    case mir_surface_state_vertmaximized:
+        movement.dy = DeltaY(0);
+        break;
+
+    // "A horizontally maximised surface is anchored to the left and right of
+    // the available workspace and can have any height"
+    case mir_surface_state_horizmaximized:
+        movement.dx = DeltaX(0);
+        break;
+
+    // "A maximised surface is anchored to the top, bottom, left and right of the
+    // available workspace. For example, if the launcher is always-visible then
+    // the left-edge of the surface is anchored to the right-edge of the launcher."
+    case mir_surface_state_maximized:
+    case mir_surface_state_fullscreen:
+    default:
+        return true;
+    }
 
     move_tree(surface, movement);
 
