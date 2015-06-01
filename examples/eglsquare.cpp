@@ -27,139 +27,16 @@
 #include <unistd.h>
 #include <signal.h>
 
+#include "client_helpers.h"
+
+namespace me = mir::examples;
+
 namespace
 {
-class Connection
-{
-public:
-    Connection(char const* socket_file) :
-        connection(mir_connect_sync(socket_file, __PRETTY_FUNCTION__))
-    {
-        if (!mir_connection_is_valid(connection))
-            throw std::runtime_error(std::string("could not connect to server: ") +
-                                     mir_connection_get_error_message(connection));
-    }
-    ~Connection()
-    {
-        mir_connection_release(connection);
-    }
-    operator MirConnection*() { return connection; }
-    Connection(Connection const&) = delete;
-    Connection& operator=(Connection const&) = delete;
-private:
-    MirConnection* connection;
-};
-
-class Context
-{
-public:
-    Context(Connection& connection, MirSurface* surface, int swap_interval) :
-        native_display(reinterpret_cast<EGLNativeDisplayType>(
-            mir_connection_get_egl_native_display(connection))),
-        native_window(reinterpret_cast<EGLNativeWindowType>(
-            mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface)))),
-        display(native_display),
-        config(chooseconfig(display.disp)),
-        surface(display.disp, config, native_window),
-        context(display.disp, config)
-    {
-        make_current();
-        eglSwapInterval(display.disp, swap_interval);
-    }
-    void make_current()
-    {
-        if (eglMakeCurrent(display.disp, surface.surface, surface.surface, context.context) == EGL_FALSE)
-            throw(std::runtime_error("could not makecurrent"));
-    }
-    void release_current()
-    {
-        if (eglMakeCurrent(display.disp, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) == EGL_FALSE)
-            throw(std::runtime_error("could not makecurrent"));
-    }
-    void swapbuffers()
-    {
-        if (eglSwapBuffers(display.disp, surface.surface) == EGL_FALSE)
-            throw(std::runtime_error("could not swapbuffers"));
-    }
-    Context(Context const&) = delete;
-    Context& operator=(Context const&) = delete;
-private:
-    EGLConfig chooseconfig(EGLDisplay disp)
-    {
-        int n{0};
-        EGLConfig egl_config;
-        EGLint attribs[] = {
-            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_RED_SIZE, 8,
-            EGL_GREEN_SIZE, 8,
-            EGL_BLUE_SIZE, 8,
-            EGL_ALPHA_SIZE, 8,
-            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-            EGL_NONE };
-        if (eglChooseConfig(disp, attribs, &egl_config, 1, &n) != EGL_TRUE || n != 1)
-            throw std::runtime_error("could not find egl config");
-        return egl_config;
-    }
-    EGLNativeDisplayType native_display;
-    EGLNativeWindowType native_window;
-    struct Display
-    {
-        Display(EGLNativeDisplayType native) :
-            disp(eglGetDisplay(native))
-        {
-            int major{0}, minor{0};
-            if (disp == EGL_NO_DISPLAY)
-                throw std::runtime_error("no egl display");
-            if (eglInitialize(disp, &major, &minor) != EGL_TRUE || major != 1 || minor != 4)
-                throw std::runtime_error("could not init egl");
-        }
-        ~Display()
-        {
-            eglTerminate(disp);
-        }
-        EGLDisplay disp;
-    } display;
-    EGLConfig config;
-    struct Surface
-    {
-        Surface(EGLDisplay display, EGLConfig config, EGLNativeWindowType native_window) :
-            disp(display),
-            surface(eglCreateWindowSurface(disp, config, native_window, NULL))
-        {
-            if (surface == EGL_NO_SURFACE)
-                throw std::runtime_error("could not create egl surface");
-        }
-        ~Surface() {
-            if (eglGetCurrentSurface(EGL_DRAW) == surface)
-                eglMakeCurrent(disp, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-            eglDestroySurface(disp, surface);
-         }
-        EGLDisplay disp;
-        EGLSurface surface;
-    } surface;
-    struct EglContext
-    {
-        EglContext(EGLDisplay disp, EGLConfig config) :
-            disp(disp),
-            context(eglCreateContext(disp, config, EGL_NO_CONTEXT, context_attribs))
-        {
-            if (context == EGL_NO_CONTEXT)
-                throw std::runtime_error("could not create egl context");
-        }
-        ~EglContext()
-        {
-            eglDestroyContext(disp, context);
-        }
-        EGLint context_attribs[3] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-        EGLDisplay disp;
-        EGLContext context;
-    } context;
-};
-
 class RenderProgram
 {
 public:
-    RenderProgram(Context& context, unsigned int width, unsigned int height) :
+    RenderProgram(me::Context& context, unsigned int width, unsigned int height) :
         vertex(&vtex_shader_src, GL_VERTEX_SHADER),
         fragment(&frag_shader_src, GL_FRAGMENT_SHADER),
         program(vertex, fragment)
@@ -209,35 +86,9 @@ private:
         "   gl_Position = vec4(vPosition.xy * scale + pos, 0.0, 1.0);"
         "}"
     };
-    struct Shader
-    {
-        Shader(GLchar const* const* src, GLuint type) :
-            shader(glCreateShader(type))
-        {
-            glShaderSource(shader, 1, src, 0);
-            glCompileShader(shader);
-        }
-        ~Shader()
-        {
-            glDeleteShader(shader);
-        }
-        GLuint shader;
-    } vertex, fragment;
-    struct Program
-    {
-        Program(Shader& vertex, Shader& fragment) :
-            program(glCreateProgram())
-        {
-            glAttachShader(program, vertex.shader);
-            glAttachShader(program, fragment.shader);
-            glLinkProgram(program);
-        }
-        ~Program()
-        {
-            glDeleteProgram(program);
-        }
-        GLuint program;
-    } program;
+    me::Shader vertex;
+    me::Shader fragment;
+    me::Program program;
     GLfloat vertex_data[16]
     {
         -1.0, -1.0f, 0.0f, 1.0f,
@@ -249,15 +100,16 @@ private:
     GLuint posUniform; 
 };
 
-class Surface
+class SquareRenderingSurface
 {
 public:
-    Surface(Connection& connection, int swap_interval) :
+    SquareRenderingSurface(me::Connection& connection, int swap_interval) :
         dimensions(active_output_dimensions(connection)),
-        surface{create_surface(connection, dimensions), surface_deleter},
-        context{connection, surface.get(), swap_interval},
+        surface{connection, dimensions.width, dimensions.height},
+        context{connection, surface, swap_interval},
         program{context, dimensions.width, dimensions.height}
     {
+        mir_surface_set_event_handler(surface, &on_event, this);
     }
 
     void on_event(MirEvent const* ev)
@@ -290,8 +142,8 @@ public:
         context.swapbuffers();
     }
 
-    Surface(Surface const&) = delete;
-    Surface& operator=(Surface const&) = delete;
+    SquareRenderingSurface(SquareRenderingSurface const&) = delete;
+    SquareRenderingSurface& operator=(SquareRenderingSurface const&) = delete;
 private:
     struct OutputDimensions
     {
@@ -299,15 +151,8 @@ private:
         unsigned int const height;
     } const dimensions;
 
-
-    std::function<void(MirSurface*)> const surface_deleter{
-        [](MirSurface* surface)
-        {
-            mir_surface_release_sync(surface);
-        }
-    };
-    std::unique_ptr<MirSurface, decltype(surface_deleter)> surface;
-    Context context;
+    me::NormalSurface surface;
+    me::Context context;
     RenderProgram program;
 
     OutputDimensions active_output_dimensions(MirConnection* connection)
@@ -334,45 +179,12 @@ private:
         return {width, height};
     }
 
-    MirSurface* create_surface(MirConnection* connection, OutputDimensions const& dim)
-    {
-        MirPixelFormat selected_format;
-        unsigned int valid_formats{0};
-        MirPixelFormat pixel_formats[mir_pixel_formats];
-        mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
-        if (valid_formats == 0)
-            throw std::runtime_error("no pixel formats for surface");
-        selected_format = pixel_formats[0]; 
-        //select an 8 bit opaque format if we can
-        for(auto i = 0u; i < valid_formats; i++)
-        {
-            if (pixel_formats[i] == mir_pixel_format_xbgr_8888 ||
-                pixel_formats[i] == mir_pixel_format_xrgb_8888)
-            {
-                selected_format = pixel_formats[i];
-                break;
-            }
-        }
-
-        auto deleter = [](MirSurfaceSpec *spec) { mir_surface_spec_release(spec); };
-        std::unique_ptr<MirSurfaceSpec, decltype(deleter)> spec{
-            mir_connection_create_spec_for_normal_surface(connection, dim.width, dim.height, selected_format),
-            deleter
-        };
-
-        mir_surface_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
-        mir_surface_spec_set_buffer_usage(spec.get(), mir_buffer_usage_hardware);
-        auto surface = mir_surface_create_sync(spec.get());
-        mir_surface_set_event_handler(surface, &on_event, this);
-        return surface;
-    }
     static void on_event(MirSurface*, const MirEvent *event, void *context)
     {
-        auto surface = reinterpret_cast<Surface*>(context);
+        auto surface = reinterpret_cast<SquareRenderingSurface*>(context);
         if (surface) surface->on_event(event);
     }
 };
-
 }
 
 int main(int argc, char *argv[])
@@ -398,8 +210,8 @@ try
         }
     }
 
-    Connection connection(socket_file);
-    Surface surface(connection, swap_interval);
+    me::Connection connection(socket_file);
+    SquareRenderingSurface surface(connection, swap_interval);
 
     sigset_t sigset;
     siginfo_t siginfo;
