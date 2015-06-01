@@ -111,7 +111,8 @@ std::string description_text(char const* program, std::string const& config_file
     if (!config_file.empty())
         result +=
         "Config file entries are long form (e.g. \"host-socket=/tmp/mir_socket\").\n"
-        "The config file (" + config_file + ") is located via the XDG Base Directory Specification.\n\n";
+        "The config file (" + config_file + ") is located via the XDG Base Directory Specification.\n"
+        "($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)\n\n";
 
     return result + "user options";
 }
