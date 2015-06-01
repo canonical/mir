@@ -876,5 +876,5 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
                 transformation_matrix, surface_alpha, nonrectangular, info.stream.get()));
         }
     }
-    return std::move(list);
+    return list;
 }
