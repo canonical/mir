@@ -95,3 +95,8 @@ void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
         (void) error;
     }
 }
+
+void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer)
+{
+    (void) id; (void) buffer;
+}

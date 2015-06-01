@@ -28,10 +28,12 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/scene/buffer_stream_factory.h"
+#include "mir/frontend/event_sink.h"
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/compositor/buffer_bundle.h"
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/debug/surface.h"
 #include "src/client/mir_connection.h"
 #include <chrono>
 #include <mutex>
@@ -49,6 +51,7 @@ namespace msc = mir::scene;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
+namespace mf = mir::frontend;
 
 namespace
 {
@@ -102,9 +105,11 @@ struct StubBundleFactory : public msc::BufferStreamFactory
         buffer_id_seq(ids)
     {}
 
-    std::shared_ptr<mc::BufferStream> create_buffer_stream(int, mg::BufferProperties const& p) override
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(
+        int, mg::BufferProperties const& p) override
     { return create_buffer_stream(p); }
-    std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&) override
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(
+        mg::BufferProperties const&) override
     { return std::make_shared<mc::BufferStreamSurfaces>(std::make_shared<StubBundle>(buffer_id_seq)); }
     std::vector<mg::BufferID> const buffer_id_seq;
 };
@@ -196,7 +201,7 @@ struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
         return stream_factory;
     }
 
-    std::shared_ptr<msc::BufferStreamFactory> const stream_factory;
+    std::shared_ptr<StubBundleFactory> const stream_factory;
     std::shared_ptr<mg::Platform> const platform;
 };
 
@@ -302,4 +307,19 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     lseek(file, 0, SEEK_SET);
     ASSERT_THAT(read(server_received_fd, file_buffer, sizeof(file_buffer)), NoErrorOnFileRead());
     EXPECT_THAT(strncmp(test_string.c_str(), file_buffer, test_string.size()), Eq(0)); 
+}
+
+TEST_F(ExchangeBufferTest, server_can_send_buffer)
+{
+    using namespace testing;
+    mtd::StubBuffer stub_buffer;
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto surface = mtf::make_any_surface(connection);
+    //auto sink = server_configuration->stream_factory->last_sink;
+
+    //sink->send_buffer(mf::BufferStreamId{2}, stub_buffer);
+
+    EXPECT_THAT(mir_debug_surface_current_buffer_id(surface), Eq(stub_buffer.id().as_value()));
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
 }
