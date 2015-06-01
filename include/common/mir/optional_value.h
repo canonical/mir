@@ -19,6 +19,8 @@
 #ifndef MIR_OPTIONAL_VALUE_H_
 #define MIR_OPTIONAL_VALUE_H_
 
+#include <boost/throw_exception.hpp>
+
 namespace mir
 {
 template<typename T>
@@ -36,7 +38,14 @@ public:
     }
 
     bool is_set() const { return is_set_; }
-    T value() const { return value_; }
+    T value() const
+    {
+        if (!is_set())
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("Accessing value of unset optional_value"));
+        }
+        return value_;
+    }
 
 private:
     T value_;
