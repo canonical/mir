@@ -204,7 +204,6 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
 {
     std::vector<mg::BufferID> const buffer_id_exchange_seq{
         mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}, mg::BufferID{3}, mg::BufferID{4}};
-    std::vector<mg::BufferID> const submission_seq;
 
     std::shared_ptr<StubBufferPacker> stub_packer{std::make_shared<StubBufferPacker>()};
     ExchangeServerConfiguration server_configuration{buffer_id_exchange_seq, stub_packer};
@@ -326,7 +325,6 @@ TEST_F(ExchangeBufferTest, submissions_happen)
     auto rpc_channel = connection->rpc_channel();
     mp::DisplayServer::Stub server(
         rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
-
 
     mp::BufferRequest request;
     for (auto const& id : buffer_id_exchange_seq)
