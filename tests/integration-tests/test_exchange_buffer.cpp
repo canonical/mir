@@ -204,6 +204,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
 {
     std::vector<mg::BufferID> const buffer_id_exchange_seq{
         mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}, mg::BufferID{3}, mg::BufferID{4}};
+    std::vector<mg::BufferID> const submission_seq;
 
     std::shared_ptr<StubBufferPacker> stub_packer{std::make_shared<StubBufferPacker>()};
     ExchangeServerConfiguration server_configuration{buffer_id_exchange_seq, stub_packer};
@@ -226,7 +227,6 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         server.exchange_buffer(0, &buffer_request, &next,
             google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
 
-
         arrived = false;
         auto completed = cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
         for (auto i = 0; i < next.fd().size(); i++)
@@ -237,12 +237,13 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         return completed;
     }
 
-    bool submit_buffer(mp::DisplayServer& server)
+    bool submit_buffer(mp::DisplayServer& server, mp::BufferRequest& request)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
-        server.submit_buffer(0, &buffer_request, &v,
+        server.submit_buffer(0, &request, &v,
             google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
+        
         arrived = false;
         return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
     }
@@ -325,13 +326,12 @@ TEST_F(ExchangeBufferTest, submissions_happen)
     mp::DisplayServer::Stub server(
         rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
 
-    buffer_request.mutable_id()->set_value(1);
-    buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
 
+    mp::BufferRequest request;
     for (auto const& id : buffer_id_exchange_seq)
     {
-        EXPECT_THAT(buffer_request.buffer().buffer_id(), testing::Eq(id.as_value()));
-        ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
+        buffer_request.mutable_buffer()->set_buffer_id(id.as_value());
+        ASSERT_THAT(submit_buffer(server, buffer_request), DidNotTimeOut());
     }
 
     mir_surface_release_sync(surface);
