@@ -17,7 +17,7 @@ string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 add_definitions(-D__GBM__)
 
 add_library(
-  mirplatformgraphicsmesaobjects OBJECT
+  mirplatformgraphicskmsobjects OBJECT
 
   bypass.cpp
   cursor.cpp
@@ -34,13 +34,13 @@ add_library(
 )
 
 add_library(
-  mirplatformgraphicsmesa MODULE
+  mirplatformgraphicskms MODULE
 
-  $<TARGET_OBJECTS:mirplatformgraphicsmesaobjects>
+  $<TARGET_OBJECTS:mirplatformgraphicskmsobjects>
 )
 
 target_link_libraries(
-  mirplatformgraphicsmesa
+  mirplatformgraphicskms
   PRIVATE
   mirplatform
   mirsharedmesaservercommon-static
@@ -54,7 +54,7 @@ target_link_libraries(
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(
-  mirplatformgraphicsmesa PROPERTIES
+  mirplatformgraphicskms PROPERTIES
   OUTPUT_NAME graphics-kms
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   PREFIX ""
@@ -62,4 +62,4 @@ set_target_properties(
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
-install(TARGETS mirplatformgraphicsmesa LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
+install(TARGETS mirplatformgraphicskms LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
