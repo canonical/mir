@@ -41,7 +41,7 @@ add_library(
 
 target_link_libraries(
   mirplatformgraphicsmesa
-
+  PRIVATE
   mirplatform
   mirsharedmesaservercommon-static
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
