@@ -42,6 +42,8 @@ public:
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
     virtual void send_display_config(graphics::DisplayConfiguration const&) = 0;
 
+    virtual void ping() = 0;
+
     virtual void hide() = 0;
     virtual void show() = 0;
 

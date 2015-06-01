@@ -292,3 +292,13 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, xkb_rule_names c
 
     return make_event_uptr(e);
 }
+
+mir::EventUPtr mev::make_ping_event()
+{
+    auto e = new MirEvent;
+    memset(e, 0, sizeof (MirEvent));
+
+    e->type = mir_event_type_ping;
+
+    return make_event_uptr(e);
+}

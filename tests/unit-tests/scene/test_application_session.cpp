@@ -543,6 +543,33 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
 
 namespace
 {
+MATCHER(IsPingEvent, "")
+{
+    return arg.type == mir_event_type_ping;
+}
+}
+
+TEST_F(ApplicationSession, ping_sends_client_event)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    auto client_sink = std::make_shared<mtd::MockEventSink>();
+
+    auto session = std::make_shared<ms::ApplicationSession>(
+        stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
+        pid, name,
+        null_snapshot_strategy,
+        stub_session_listener,
+        client_sink);
+
+    EXPECT_CALL(*client_sink, handle_event(IsPingEvent())).Times(AtLeast(1));
+
+    session->ping();
+}
+
+namespace
+{
 struct ApplicationSessionSender : public ApplicationSession
 {
     ApplicationSessionSender() :

@@ -65,6 +65,9 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
     MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value);
+
+// Ping event;
+EventUPtr make_ping_event();
 }
 }
 

@@ -75,6 +75,8 @@ public:
 
     void send_display_config(graphics::DisplayConfiguration const& info) override;
 
+    void ping() override;
+
     void set_lifecycle_state(MirLifecycleState state) override;
 
     void start_prompt_session() override;

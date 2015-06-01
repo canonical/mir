@@ -45,6 +45,7 @@ typedef enum
     mir_event_type_input,
     mir_event_type_keymap,
     mir_event_type_input_configuration,
+    mir_event_type_ping,
 } MirEventType;
 
 typedef struct MirSurfaceEvent MirSurfaceEvent;

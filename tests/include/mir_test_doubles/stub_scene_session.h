@@ -75,6 +75,10 @@ struct StubSceneSession : public scene::Session
     {
     }
 
+    void ping() override
+    {
+    }
+
     void take_snapshot(scene::SnapshotCallback const&) override
     {
     }

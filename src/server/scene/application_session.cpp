@@ -274,6 +274,11 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
     event_sink->handle_display_config_change(info);
 }
 
+void ms::ApplicationSession::ping()
+{
+    event_sink->handle_event(*mev::make_ping_event());
+}
+
 void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 {
     event_sink->handle_lifecycle_event(state);
