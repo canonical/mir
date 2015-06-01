@@ -721,6 +721,12 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
     mir::require(mir_persistent_id_is_valid(parent));
     mir::require(attachment_rect != nullptr);
 
+    if (!spec->type.is_set() ||
+        spec->type.value() != mir_surface_type_inputmethod)
+    {
+        return false;
+    }
+
     spec->parent_id = std::make_unique<MirPersistentId>(*parent);
     spec->aux_rect = *attachment_rect;
     spec->edge_attachment = edge;
