@@ -104,10 +104,10 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
     if (parent.is_set() && parent.value() != nullptr)
         message.set_parent_id(parent.value()->id());
 
-    if (parent_id.is_set())
+    if (parent_id)
     {
         auto id = message.mutable_parent_persistent_id();
-        id->set_value(parent_id.value()->as_string());
+        id->set_value(parent_id->as_string());
     }
 
     if (aux_rect.is_set())
@@ -646,10 +646,10 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     if (spec.parent.is_set() && spec.parent.value())
         surface_specification->set_parent_id(spec.parent.value()->id());
 
-    if (spec.parent_id.is_set())
+    if (spec.parent_id)
     {
         auto id = surface_specification->mutable_parent_persistent_id();
-        id->set_value(spec.parent_id.value()->as_string());
+        id->set_value(spec.parent_id->as_string());
     }
 
     if (spec.aux_rect.is_set())
