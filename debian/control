@@ -343,7 +343,7 @@ Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-KMS2,
+         mir-platform-graphics-kms2,
          mir-client-platform-mesa2,
 Description: Display server for Ubuntu - desktop driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
