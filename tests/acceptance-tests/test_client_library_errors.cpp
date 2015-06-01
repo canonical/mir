@@ -273,6 +273,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
     EXPECT_THAT(surface, Not(IsValid()));
     EXPECT_THAT(mir_surface_get_error_message(surface), HasSubstr("invalid ID"));
 
+    mir_persistent_id_release(invalid_id);
     mir_surface_spec_release(spec);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);

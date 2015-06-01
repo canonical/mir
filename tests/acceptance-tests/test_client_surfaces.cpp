@@ -392,6 +392,8 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 
     mir_surface_spec_attach_to_foreign_parent(spec, parent_id, &client_rect, edge_attachment);
 
+    mir_persistent_id_release(parent_id);
+
     auto im = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
