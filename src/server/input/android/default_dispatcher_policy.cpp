@@ -12,8 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
 #include "default_dispatcher_policy.h"
@@ -31,17 +30,20 @@ void mia::DefaultDispatcherPolicy::notifyConfigurationChanged(std::chrono::nanos
 {
 }
 
-std::chrono::nanoseconds mia::DefaultDispatcherPolicy::notifyANR(droidinput::sp<droidinput::InputApplicationHandle> const& /* inputApplicationHandle */,
-                                                    droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */)
+std::chrono::nanoseconds mia::DefaultDispatcherPolicy::notifyANR(
+    droidinput::sp<droidinput::InputApplicationHandle> const& /* inputApplicationHandle */,
+    droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */)
 {
     return std::chrono::nanoseconds(0);
 }
 
-void mia::DefaultDispatcherPolicy::notifyInputChannelBroken(droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */)
+void mia::DefaultDispatcherPolicy::notifyInputChannelBroken(
+    droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */)
 {
 }
 
-void mia::DefaultDispatcherPolicy::getDispatcherConfiguration(droidinput::InputDispatcherConfiguration* /* outConfig */)
+void mia::DefaultDispatcherPolicy::getDispatcherConfiguration(
+    droidinput::InputDispatcherConfiguration* /* outConfig */)
 {
 }
 
@@ -51,44 +53,52 @@ bool mia::DefaultDispatcherPolicy::isKeyRepeatEnabled()
     return false;
 }
 
-bool mia::DefaultDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* /* input_event */, uint32_t /*policy_flags*/)
+bool mia::DefaultDispatcherPolicy::filterInputEvent(
+    const droidinput::InputEvent* /* input_event */, uint32_t /*policy_flags*/)
 {
     return true;
 }
 
-void mia::DefaultDispatcherPolicy::interceptKeyBeforeQueueing(const droidinput::KeyEvent* /*key_event*/, uint32_t& policy_flags)
+void mia::DefaultDispatcherPolicy::interceptKeyBeforeQueueing(
+    const droidinput::KeyEvent* /*key_event*/, uint32_t& policy_flags)
 {
     policy_flags |= droidinput::POLICY_FLAG_PASS_TO_USER;
 }
 
-void mia::DefaultDispatcherPolicy::interceptMotionBeforeQueueing(std::chrono::nanoseconds /* when */, uint32_t& policy_flags)
+void mia::DefaultDispatcherPolicy::interceptMotionBeforeQueueing(
+    std::chrono::nanoseconds /* when */, uint32_t& policy_flags)
 {
     policy_flags |= droidinput::POLICY_FLAG_PASS_TO_USER;
 }
 
 std::chrono::nanoseconds mia::DefaultDispatcherPolicy::interceptKeyBeforeDispatching(
-    droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */, droidinput::KeyEvent const* /* keyEvent */, uint32_t /* policyFlags */)
+    droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */,
+    droidinput::KeyEvent const* /* keyEvent */, uint32_t /* policyFlags */)
 {
     return std::chrono::nanoseconds(0);
 }
 
-bool mia::DefaultDispatcherPolicy::dispatchUnhandledKey(droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */,
-                                                            droidinput::KeyEvent const* /* keyEvent */, uint32_t /* policyFlags */,
-                                                            droidinput::KeyEvent* /* outFallbackKeyEvent */)
+bool mia::DefaultDispatcherPolicy::dispatchUnhandledKey(
+    droidinput::sp<droidinput::InputWindowHandle> const& /* inputWindowHandle */,
+    droidinput::KeyEvent const* /* keyEvent */, uint32_t /* policyFlags */,
+    droidinput::KeyEvent* /* outFallbackKeyEvent */)
 {
     return false;
 }
 
-void mia::DefaultDispatcherPolicy::notifySwitch(std::chrono::nanoseconds /* when */, int32_t /* switchCode */,
-                                                    int32_t /* switchValue */, uint32_t /* policyFlags */)
+void mia::DefaultDispatcherPolicy::notifySwitch(
+    std::chrono::nanoseconds /* when */, int32_t /* switchCode */,
+    int32_t /* switchValue */, uint32_t /* policyFlags */)
 {
 }
 
-void mia::DefaultDispatcherPolicy::pokeUserActivity(std::chrono::nanoseconds /* eventTime */, int32_t /* eventType */)
+void mia::DefaultDispatcherPolicy::pokeUserActivity(
+    std::chrono::nanoseconds /* eventTime */, int32_t /* eventType */)
 {
 }
 
-bool mia::DefaultDispatcherPolicy::checkInjectEventsPermissionNonReentrant(int32_t /* injectorPid */, int32_t /* injectorUid */)
+bool mia::DefaultDispatcherPolicy::checkInjectEventsPermissionNonReentrant(
+    int32_t /* injectorPid */, int32_t /* injectorUid */)
 {
     return true;
 }
