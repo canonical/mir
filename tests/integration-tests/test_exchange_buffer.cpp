@@ -227,6 +227,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         server.exchange_buffer(0, &buffer_request, &next,
             google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
 
+
         arrived = false;
         auto completed = cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
         for (auto i = 0; i < next.fd().size(); i++)
