@@ -42,7 +42,7 @@ msh::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     scene::SurfaceCreationParameters const& params) :
-    state{mir_surface_state_restored},
+    state{surface->state()},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
     parent{params.parent},
