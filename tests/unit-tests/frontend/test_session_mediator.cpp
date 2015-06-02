@@ -960,7 +960,7 @@ MATCHER_P(StreamsAre, value, "configuration streams match")
     return !(::testing::Test::HasFailure());
 }
 
-TEST_F(SessionMediator, arrangement_of_bufferstreams)
+TEST_F(SessionMediator, arranges_bufferstreams_via_shell)
 {
     using namespace testing;
     mp::Void null;
