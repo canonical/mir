@@ -161,7 +161,8 @@ void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
     // with the lifetime of the mg::CursorImage instance which refers to them.
     auto saved_xcursor_library_resource = std::shared_ptr<_XcursorImages>(images, [](_XcursorImages *images)
         {
-            XcursorImagesDestroy(images);
+            if (images)
+                XcursorImagesDestroy(images);
         });
 
     _XcursorImage *image_of_correct_size = nullptr;
