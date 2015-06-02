@@ -403,3 +403,8 @@ void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
 {
     buffer_depository.set_max_buffers(cache_size);
 }
+
+void mcl::BufferStream::buffer_available(mir::protobuf::Buffer& buffer)
+{
+    process_buffer(buffer);
+}

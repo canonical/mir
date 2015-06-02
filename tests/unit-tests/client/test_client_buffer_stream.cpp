@@ -452,3 +452,26 @@ TEST_F(ClientBufferStreamTest, passes_name_to_perf_report)
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_client_buffer_factory)),
         protobuf_bs, mt::fake_shared(mock_perf_report), name);
 }
+
+TEST_F(ClientBufferStreamTest, receives_unsolicited_buffer)
+{
+    using namespace ::testing;
+    int id = 88;
+    MockClientBuffer mock_client_buffer;
+    MockClientBuffer second_mock_client_buffer;
+    MirBufferPackage buffer_package = a_buffer_package();
+    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
+        buffer_package);
+    EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+        .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
+    auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
+
+    mir::protobuf::Buffer another_buffer_package;
+    another_buffer_package.set_buffer_id(id);
+    EXPECT_CALL(mock_client_buffer_factory, create_buffer(_,_,_))
+        .WillOnce(Return(mt::fake_shared(second_mock_client_buffer)));
+    bs->buffer_available(another_buffer_package);
+
+    EXPECT_THAT(bs->get_current_buffer().get(), Eq(&second_mock_client_buffer));
+    EXPECT_THAT(bs->get_current_buffer_id(), Eq(id));
+}

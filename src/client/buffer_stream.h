@@ -101,6 +101,8 @@ public:
     frontend::BufferStreamId rpc_id() const override;
     bool valid() const override;
     
+    void buffer_available(mir::protobuf::Buffer& buffer);
+    
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;

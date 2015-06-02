@@ -63,7 +63,7 @@ public:
     virtual MirWaitHandle* release(mir_buffer_stream_callback callback, void* context) = 0;
 
     virtual bool valid() const = 0;
-    
+
 protected:
     ClientBufferStream() = default;
     ClientBufferStream(const ClientBufferStream&) = delete;
