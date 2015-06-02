@@ -85,19 +85,17 @@ class PersistentSurfaceStore::Id final
 {
 public:
     Id();
+    Id(std::string const& serialized_form);
 
     Id(Id const& rhs);
     Id& operator=(Id const& rhs);
 
     bool operator==(Id const& rhs) const;
 
-    std::vector<uint8_t> serialize_id() const;
-    static Id deserialize_id(std::vector<uint8_t> const& buffer);
+    std::string serialize_to_string() const;
 
 private:
     friend struct std::hash<Id>;
-
-    Id(std::array<char, 37> const& buffer);
 
     uuid_t uuid;
 };

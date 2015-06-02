@@ -63,7 +63,7 @@ public:
     virtual SurfaceId create_surface(std::shared_ptr<Session> const& session, scene::SurfaceCreationParameters const& params) = 0;
     virtual void modify_surface(std::shared_ptr<Session> const& session, SurfaceId surface, shell::SurfaceSpecification const& modifications) = 0;
     virtual void destroy_surface(std::shared_ptr<Session> const& session, SurfaceId surface) = 0;
-    virtual std::vector<uint8_t> persistent_id_for(std::shared_ptr<Session> const& session, SurfaceId surface) = 0;
+    virtual std::string persistent_id_for(std::shared_ptr<Session> const& session, SurfaceId surface) = 0;
 
     virtual int set_surface_attribute(
         std::shared_ptr<Session> const& session,

@@ -69,7 +69,7 @@ struct FrontendShell : mf::Shell
 
     void destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface) override;
 
-    std::vector<uint8_t> persistent_id_for(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface) override;
+    std::string persistent_id_for(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface) override;
 
     int set_surface_attribute(
         std::shared_ptr<mf::Session> const& session,
