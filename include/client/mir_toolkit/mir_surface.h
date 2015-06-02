@@ -383,42 +383,6 @@ bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrienta
 void mir_surface_spec_release(MirSurfaceSpec* spec);
 
 /**
- * Request a new Mir surface on the supplied connection with the supplied
- * parameters. The returned handle remains valid until the surface has been
- * released.
- *   \warning callback could be called from another thread. You must do any
- *            locking appropriate to protect your data accessed in the
- *            callback.
- *   \note    This will soon be deprecated. Use the *_spec_for_* / mir_surface_create()
- *            two-stage process instead.
- *   \param [in] connection          The connection
- *   \param [in] surface_parameters  Request surface parameters
- *   \param [in] callback            Callback function to be invoked when
- *                                   request completes
- *   \param [in,out] context         User data passed to the callback function
- *   \return                         A handle that can be passed to
- *                                   mir_wait_for
- */
-MirWaitHandle *mir_connection_create_surface(
-    MirConnection *connection,
-    MirSurfaceParameters const *surface_parameters,
-    mir_surface_callback callback,
-    void *context) __attribute__((__deprecated__("Use mir_surface_create()")));
-
-/**
- * Create a surface like in mir_connection_create_surface(), but also wait for
- * creation to complete and return the resulting surface.
- *   \note    This will soon be deprecated. Use the create_spec_for/mir_surface_create()
- *            two-stage process instead.
- *   \param [in] connection  The connection
- *   \param [in] params      Parameters describing the desired surface
- *   \return                 The resulting surface
- */
-MirSurface *mir_connection_create_surface_sync(
-    MirConnection *connection,
-    MirSurfaceParameters const *params) __attribute__((__deprecated__("Use mir_surface_create_sync()")));
-
-/**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do
  *            any locking appropriate to protect your data accessed in the
@@ -440,13 +404,6 @@ void mir_surface_set_event_handler(MirSurface *surface,
  *   \param[in] surface The surface
  */
 MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface);
-
-/**
- * Get a window type that can be used for OpenGL ES 2.0 acceleration.
- *   \param [in] surface  The surface
- *   \return              An EGLNativeWindowType that the client can use
- */
-MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
 
 /**
  * Test for a valid surface
@@ -476,58 +433,6 @@ char const *mir_surface_get_error_message(MirSurface *surface);
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
 
 /**
- * Get the underlying platform type so the buffer obtained in "raw" representation
- * in mir_surface_get_current_buffer() can be understood
- *   \pre                     The surface is valid
- *   \param [in] surface      The surface
- *   \return                  One of mir_platform_type_android or mir_platform_type_gbm
- */
-MirPlatformType mir_surface_get_platform_type(MirSurface *surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
-
-/**
- * Get a surface's buffer in "raw" representation.
- *   \pre                         The surface is valid
- *   \param [in] surface          The surface
- *   \param [out] buffer_package  Structure to be populated
- */
-void mir_surface_get_current_buffer(MirSurface *surface, MirNativeBuffer **buffer_package) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
-
-/**
- * Get a surface's graphics_region, i.e., map the graphics buffer to main
- * memory.
- *   \pre                          The surface is valid
- *   \param [in] surface           The surface
- *   \param [out] graphics_region  Structure to be populated
- */
-void mir_surface_get_graphics_region(
-    MirSurface *surface,
-    MirGraphicsRegion *graphics_region) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
-                                                                          /**
- * Advance a surface's buffer. The returned handle remains valid until the next
- * call to mir_surface_swap_buffers, until the surface has been released or the
- * connection to the server has been released.
- *   \warning callback could be called from another thread. You must do any
- *            locking appropriate to protect your data accessed in the
- *            callback.
- *   \param [in] surface      The surface
- *   \param [in] callback     Callback function to be invoked when the request
- *                            completes
- *   \param [in,out] context  User data passed to the callback function
- *   \return                  A handle that can be passed to mir_wait_for
- */
-MirWaitHandle *mir_surface_swap_buffers(
-    MirSurface *surface,
-    mir_surface_callback callback,
-    void *context) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
-
-/**
- * Advance a surface's buffer as in mir_surface_swap_buffers(), but also wait
- * for the operation to complete.
- *   \param [in] surface  The surface whose buffer to advance
- */
-void mir_surface_swap_buffers_sync(MirSurface *surface) __attribute__((__deprecated__("Use mir_surface_get_buffer_stream and the corresponding mir_buffer_stream* function")));
-
-/**
  * Release the supplied surface and any associated buffer. The returned wait
  * handle remains valid until the connection to the server is released.
  *   \warning callback could be called from another thread. You must do any
@@ -550,18 +455,6 @@ MirWaitHandle *mir_surface_release(
  *   \param [in] surface  The surface to be released
  */
 void mir_surface_release_sync(MirSurface *surface);
-
-/**
- * \deprecated Use mir_debug_surface_id()
- */
-__attribute__((__deprecated__("Use mir_debug_surface_id()")))
-int mir_surface_get_id(MirSurface *surface);
-
-/**
- * \deprecated Use the mir_connection_create_spec_for_xxx family of APIs
- */
-__attribute__((__deprecated__("Use mir_connection_create_spec_for_xxx()")))
-MirWaitHandle* mir_surface_set_type(MirSurface *surface, MirSurfaceType type);
 
 /**
  * Get the type (purpose) of a surface.

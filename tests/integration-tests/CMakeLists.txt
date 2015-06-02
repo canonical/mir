@@ -61,7 +61,6 @@ if(MIR_TEST_PLATFORM STREQUAL "mesa")
     ${CMAKE_SOURCE_DIR}
   )
   add_subdirectory(graphics/mesa)
-  list(APPEND INTEGRATION_TESTS_SRCS test_drm_auth_magic.cpp)
 endif()
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
