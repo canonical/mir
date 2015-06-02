@@ -33,17 +33,18 @@
 namespace
 {
 // Assumes all touch input comes from a single device.
-// Validtes:
+// Validates:
 //     1. All touches which were down stay down unless they were coming up
 //     2. All touches which were released do not appear
-//     2. No touches appear before a down
 //     3. Only one touch comes up or down at a time.
 
 bool validate_events(MirTouchEvent const* last_event, MirTouchEvent const* event)
 {
     std::set<MirTouchId> must_be_present;
     std::set<MirTouchId> may_not_be_present;
-    
+
+    // Here, from the last event, we build a list of points which must be
+    // and which must not be present in the next event.
     for (size_t i = 0; i < mir_touch_event_point_count(last_event); i++)
     {
         auto id = mir_touch_event_id(last_event, i);
@@ -66,6 +67,7 @@ bool validate_events(MirTouchEvent const* last_event, MirTouchEvent const* event
     {
         auto id = mir_touch_event_id(event, i);
         auto it = may_not_be_present.find(id);
+        // Here we validate condition 2, where released touches may not reappear
         if (it != may_not_be_present.end())
         {
             printf("We repeated a touch which was already lifted (%d)\n", static_cast<int>(id));
@@ -73,8 +75,11 @@ bool validate_events(MirTouchEvent const* last_event, MirTouchEvent const* event
         }
         it = must_be_present.find(id);
         if (it != must_be_present.end())
+        {
             must_be_present.erase(it);
-        else if (mir_touch_event_action(event, i) == mir_touch_action_down)
+        }
+        // Here we validate condition 4
+        else if (mir_touch_event_action(event, i) == mir_touch_action_down) 
         {
             if (found_a_up_down)
                 printf("Found too many downs in one event\n");
@@ -88,6 +93,7 @@ bool validate_events(MirTouchEvent const* last_event, MirTouchEvent const* event
         }
     }
 
+    // Here we validate condition 1
     if (must_be_present.size())
     {
         printf("We received a touch which did not contain all required IDs\n");
@@ -128,7 +134,7 @@ void on_input_event(TouchState *state, MirInputEvent const *event)
     state->record_event(tev);
 }
     
-    void on_event(MirSurface * /*surface*/, const MirEvent *event, void *context)
+void on_event(MirSurface * /*surface*/, const MirEvent *event, void *context)
 {
     TouchState *state = (TouchState*)context;
 
