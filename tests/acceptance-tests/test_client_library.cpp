@@ -192,51 +192,6 @@ TEST_F(ClientLibrary, creates_surface)
     mir_connection_release(connection);
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
-TEST_F(ClientLibrary, can_set_surface_types)
-{
-    mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
-
-    auto const spec =
-        mir_connection_create_spec_for_normal_surface(
-            connection, 640, 480, mir_pixel_format_abgr_8888);
-
-    mir_wait_for(mir_surface_create(spec, create_surface_callback, this));
-    mir_surface_spec_release(spec);
-
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_normal));
-
-    mir_wait_for(mir_surface_set_type(surface, mir_surface_type_freestyle));
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_freestyle));
-
-    mir_wait_for(mir_surface_set_type(surface, static_cast<MirSurfaceType>(999)));
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_freestyle));
-
-    mir_wait_for(mir_surface_set_type(surface, mir_surface_type_dialog));
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_dialog));
-
-    mir_wait_for(mir_surface_set_type(surface, static_cast<MirSurfaceType>(888)));
-    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_dialog));
-
-    // Stress-test synchronization logic with some flooding
-    for (int i = 0; i < 100; i++)
-    {
-        mir_surface_set_type(surface, mir_surface_type_normal);
-        mir_surface_set_type(surface, mir_surface_type_utility);
-        mir_surface_set_type(surface, mir_surface_type_dialog);
-        mir_surface_set_type(surface, mir_surface_type_gloss);
-        mir_surface_set_type(surface, mir_surface_type_freestyle);
-        mir_wait_for(mir_surface_set_type(surface, mir_surface_type_menu));
-        ASSERT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_menu));
-    }
-
-    mir_wait_for(mir_surface_release(surface, release_surface_callback, this));
-    mir_connection_release(connection);
-}
-#pragma GCC diagnostic pop
-
 TEST_F(ClientLibrary, can_set_surface_state)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
