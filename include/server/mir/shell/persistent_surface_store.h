@@ -92,6 +92,7 @@ public:
     /**
      * \brief Construct an Id from its serialized string form
      * \param serialized_form [in] The previously-serialized Id
+     * \throw std::invalid_argument if \arg serialized_form is not parseable as an Id.
      */
     Id(std::string const& serialized_form);
 
