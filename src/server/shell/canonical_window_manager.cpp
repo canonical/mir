@@ -178,10 +178,33 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
 
     if (!positioned)
     {
-        auto centred = active_display.top_left + 0.5*(
-            as_displacement(active_display.size) - as_displacement(parameters.size));
+        auto const centred = active_display.top_left
+            + 0.5*(as_displacement(active_display.size) - as_displacement(parameters.size))
+            - DeltaY{(active_display.size.height.as_int()-height)/6};
 
-        parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
+        switch (parameters.state.value())
+        {
+        case mir_surface_state_fullscreen:
+        case mir_surface_state_maximized:
+            parameters.top_left = active_display.top_left;
+            parameters.size = active_display.size;
+            break;
+
+        case mir_surface_state_vertmaximized:
+            parameters.top_left = centred;
+            parameters.top_left.y = active_display.top_left.y;
+            parameters.size.height = active_display.size.height;
+            break;
+
+        case mir_surface_state_horizmaximized:
+            parameters.top_left = centred;
+            parameters.top_left.x = active_display.top_left.x;
+            parameters.size.width = active_display.size.width;
+            break;
+
+        default:
+            parameters.top_left = centred;
+        }
 
         if (parameters.top_left.y < display_area.top_left.y)
             parameters.top_left.y = display_area.top_left.y;
