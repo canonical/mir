@@ -190,17 +190,29 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
     if (!positioned)
     {
-        auto centred = active_display.top_left + 0.5*(
-            as_displacement(active_display.size) - as_displacement(parameters.size));
+        if (parameters.state != mir_surface_state_fullscreen)
+        {
+            auto centred = active_display.top_left + 0.5*(
+                as_displacement(active_display.size) - as_displacement(parameters.size));
 
-        parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
+            parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
 
-        if (parameters.top_left.y < display_area.top_left.y)
-            parameters.top_left.y = display_area.top_left.y;
+            if (parameters.top_left.y < display_area.top_left.y)
+                parameters.top_left.y = display_area.top_left.y;
+        }
+        else
+        {
+            parameters.top_left = active_display.top_left;
+            parameters.size = active_display.size;
+        }
     }
 
-    parameters.top_left.y = parameters.top_left.y + DeltaY{title_bar_height};
-    parameters.size.height = parameters.size.height - DeltaY{title_bar_height};
+    if (parameters.state != mir_surface_state_fullscreen)
+    {
+        parameters.top_left.y = parameters.top_left.y + DeltaY{title_bar_height};
+        parameters.size.height = parameters.size.height - DeltaY{title_bar_height};
+    }
+
     return parameters;
 }
 
