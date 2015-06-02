@@ -1,5 +1,5 @@
 
-MIR_COMMON_4 {
+MIR_COMMON_5 {
  global: mir_*;
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
