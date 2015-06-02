@@ -24,6 +24,7 @@
 #include <umockdev.h>
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test/wait_condition.h"
+#include "mir_test/auto_unblock_thread.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -41,19 +42,18 @@ TEST(EventHub, does_not_block_on_get_events)
     auto hub = android::sp<android::EventHub>{new android::EventHub{mir::report::null_input_report()}};
     auto get_event_terminates = std::make_shared<mir::test::WaitCondition>();
 
-    std::thread reader{
+    mir::test::AutoJoinThread reader{
         [hub,get_event_terminates]
         {
             android::RawEvent buffer[10];
             memset(buffer, 0, sizeof(buffer));
 
-            for (int i = 0; i!=10;++i)
+            for (int i = 0; i != 10; ++i)
                 hub->getEvents(buffer, 10);
             get_event_terminates->wake_up_everyone();
         }};
 
-    reader.detach();
-    get_event_terminates->wait_for_at_most_seconds(4);
+    get_event_terminates->wait_for_at_most_seconds(10);
     EXPECT_TRUE(get_event_terminates->woken());
 }
 
@@ -61,21 +61,22 @@ TEST(EventHub, wakes_on_delay)
 {
     mir_test_framework::UdevEnvironment empty_env;
     auto hub = android::sp<android::EventHub>{new android::EventHub{mir::report::null_input_report()}};
+    auto hub_fd = hub->fd();
     hub->wakeIn(1);
     auto event_hub_triggered = std::make_shared<mir::test::WaitCondition>();
 
-    std::thread reader{
-        [hub,event_hub_triggered]
+    mir::test::AutoJoinThread reader{
+        [hub_fd,event_hub_triggered]
         {
             struct epoll_event pending_event;
             std::memset(&pending_event, 0, sizeof pending_event);
-            epoll_wait(hub->fd(), &pending_event, 1, -1);
+            
+            auto ret = epoll_wait(hub_fd, &pending_event, 1, 3000);
 
-            if (pending_event.data.u32 == android::EventHub::EPOLL_ID_TIMER)
+            if (ret > 0 && pending_event.data.u32 == android::EventHub::EPOLL_ID_TIMER)
                 event_hub_triggered->wake_up_everyone();
         }};
 
-    reader.detach();
     event_hub_triggered->wait_for_at_most_seconds(4);
     EXPECT_TRUE(event_hub_triggered->woken());
 }

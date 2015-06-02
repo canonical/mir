@@ -91,3 +91,4 @@ TEST(PersistentSurfaceStoreId, equal_ids_hash_equally)
     EXPECT_THAT(std::hash<Id>()(second_id),
         Eq(std::hash<Id>()(first_id)));
 }
+

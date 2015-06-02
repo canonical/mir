@@ -57,7 +57,7 @@ class ActionResultHolder<std::unique_ptr<T>>
   std::unique_ptr<T> GetValueAndDelete() const {
       std::unique_ptr<T> retval(std::move(value_));
     delete this;
-    return std::move(retval);
+    return retval;
   }
 
   // Prints the held value as an action's result to os.
