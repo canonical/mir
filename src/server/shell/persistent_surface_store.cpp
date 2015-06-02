@@ -34,9 +34,11 @@ Id::Id(Id const& rhs)
     std::copy(rhs.uuid, rhs.uuid + sizeof(rhs.uuid), uuid);
 }
 
-/*
-Id& operator=(Id const& rhs);
-*/
+Id& Id::operator=(Id const& rhs)
+{
+    std::copy(rhs.uuid, rhs.uuid + sizeof(rhs.uuid), uuid);
+    return *this;
+}
 
 bool Id::operator==(Id const& rhs) const
 {
