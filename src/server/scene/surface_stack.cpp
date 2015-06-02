@@ -137,7 +137,7 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
         {
             if (surface->visible())
             {
-                for(auto& renderable : surface->generate_renderables(id))
+                for (auto& renderable : surface->generate_renderables(id))
                 {
                     elements.emplace_back(
                         std::make_shared<SurfaceSceneElement>(
