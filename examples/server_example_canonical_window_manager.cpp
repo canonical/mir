@@ -288,8 +288,6 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     titlebar_info.is_titlebar = true;
     titlebar_info.parent = surface;
 
-    paint_titlebar(titlebar, titlebar_info, 0x3F);
-
     surface_map.emplace(titlebar, std::move(titlebar_info));
 }
 
