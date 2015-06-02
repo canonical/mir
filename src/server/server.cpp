@@ -224,36 +224,18 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 
 namespace
 {
-class ConfigurationOptions : public mo::DefaultConfiguration
-{
-public:
-    using mo::DefaultConfiguration::DefaultConfiguration;
-
-    std::string config_file;
-
-    void parse_config_file(
-        boost::program_options::options_description& options_description,
-        mo::ProgramOption& options) const override
-    {
-        if (!config_file.empty())
-            options.parse_file(options_description, config_file);
-    }
-};
-
 std::shared_ptr<mo::DefaultConfiguration> configuration_options(
     int argc,
     char const** argv,
     std::function<void(int argc, char const* const* argv)> const& command_line_hander,
     std::string const& config_file)
 {
-    std::shared_ptr<ConfigurationOptions> result;
+    std::shared_ptr<mo::DefaultConfiguration> result;
 
     if (command_line_hander)
-        result = std::make_shared<ConfigurationOptions>(argc, argv, command_line_hander);
+        result = std::make_shared<mo::DefaultConfiguration>(argc, argv, command_line_hander, config_file);
     else
-        result = std::make_shared<ConfigurationOptions>(argc, argv);
-
-    result->config_file = config_file;
+        result = std::make_shared<mo::DefaultConfiguration>(argc, argv, config_file);
 
     return result;
 }
