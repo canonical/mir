@@ -144,7 +144,7 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
         for (auto& renderable : surface->generate_renderables(this))
             ids.insert(renderable->id());
     }
-    for (auto it : ids)
+    for (auto& it : ids)
         EXPECT_THAT(ids.count(it), testing::Eq(1));
 }
 

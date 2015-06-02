@@ -346,7 +346,7 @@ bool ms::BasicSurface::visible() const
 bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
 {
     bool visible{false};
-    for (auto info : streams)
+    for (auto const& info : streams)
         visible |= info.stream->has_submitted_buffer();
     return !hidden && visible;
 }
@@ -818,7 +818,7 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 {
     std::unique_lock<std::mutex> lk(guard);
     auto max_buf = 0;
-    for (auto info : streams)
+    for (auto const& info : streams)
         max_buf = std::max(max_buf, info.stream->buffers_ready_for_compositor(id));
     return max_buf;
 }
