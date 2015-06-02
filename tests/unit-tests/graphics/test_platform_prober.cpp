@@ -23,7 +23,7 @@
 
 #include "mir/raii.h"
 
-#ifdef MIR_BUILD_PLATFORM_KMS
+#ifdef MIR_BUILD_PLATFORM_MESA_KMS
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #endif
@@ -46,7 +46,7 @@ std::vector<std::shared_ptr<mir::SharedLibrary>> available_platforms()
 {
     std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
 
-#ifdef MIR_BUILD_PLATFORM_KMS
+#ifdef MIR_BUILD_PLATFORM_MESA_KMS
     modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-mesa-kms")));
 #endif
 #ifdef MIR_BUILD_PLATFORM_ANDROID
@@ -108,7 +108,7 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
                  std::runtime_error);
 }
 
-#ifdef MIR_BUILD_PLATFORM_KMS
+#ifdef MIR_BUILD_PLATFORM_MESA_KMS
 TEST(ServerPlatformProbe, LoadsMesaPlatformWhenDrmDevicePresent)
 {
     using namespace testing;

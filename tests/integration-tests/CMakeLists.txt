@@ -117,7 +117,7 @@ target_link_libraries(
   ${MIR_SERVER_REFERENCES}
 )
 
-if (MIR_BUILD_PLATFORM_KMS)
+if (MIR_BUILD_PLATFORM_MESA_KMS)
 target_link_libraries(mir_integration_tests
   mirsharedmesaservercommon-static
 )
