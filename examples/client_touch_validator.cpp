@@ -68,7 +68,7 @@ bool validate_events(MirTouchEvent const* last_event, MirTouchEvent const* event
         auto it = may_not_be_present.find(id);
         if (it != may_not_be_present.end())
         {
-            printf("We repeated a touch which was already down (%d)\n", static_cast<int>(id));
+            printf("We repeated a touch which was already lifted (%d)\n", static_cast<int>(id));
             return false;
         }
         it = must_be_present.find(id);
