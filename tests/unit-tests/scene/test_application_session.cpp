@@ -67,7 +67,7 @@ public:
     ~MockSnapshotStrategy() noexcept {}
 
     MOCK_METHOD2(take_snapshot_of,
-                void(std::shared_ptr<ms::SurfaceBufferAccess> const&,
+                void(std::shared_ptr<mc::BufferStream> const&,
                      ms::SnapshotCallback const&));
 };
 
@@ -410,20 +410,20 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
 
     auto mock_surface = make_mock_surface();
     NiceMock<MockSurfaceFactory> surface_factory;
+    MockBufferStreamFactory mock_buffer_stream_factory;
+    std::shared_ptr<mc::BufferStream> const mock_stream = std::make_shared<mtd::MockBufferStream>();
+    ON_CALL(mock_buffer_stream_factory, create_buffer_stream(_)).WillByDefault(Return(mock_stream));
     ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
 
-    auto const default_surface_buffer_access =
-        std::static_pointer_cast<ms::SurfaceBufferAccess>(mock_surface);
     auto const snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
 
-    EXPECT_CALL(*snapshot_strategy,
-                take_snapshot_of(default_surface_buffer_access, _));
+    EXPECT_CALL(*snapshot_strategy, take_snapshot_of(mock_stream, _));
 
     ms::ApplicationSession app_session(
         mt::fake_shared(surface_coordinator),
         mt::fake_shared(surface_factory),
-        stub_buffer_stream_factory,
+        mt::fake_shared(mock_buffer_stream_factory),
         pid, name,
         snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
