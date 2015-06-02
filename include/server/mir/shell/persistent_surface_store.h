@@ -84,7 +84,15 @@ namespace shell
 class PersistentSurfaceStore::Id final
 {
 public:
+    /**
+     * \brief Generate a new, unique Id.
+     */
     Id();
+
+    /**
+     * \brief Construct an Id from its serialized string form
+     * \param serialized_form [in] The previously-serialized Id
+     */
     Id(std::string const& serialized_form);
 
     Id(Id const& rhs);
@@ -92,8 +100,11 @@ public:
 
     bool operator==(Id const& rhs) const;
 
+    /**
+     * \brief Serialize to a UTF-8 string
+     * \return A string representation of the Id; this is guaranteed to be valid UTF-8
+     */
     std::string serialize_to_string() const;
-
 private:
     friend struct std::hash<Id>;
 
