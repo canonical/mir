@@ -41,7 +41,6 @@ TEST(PersistentSurfaceStoreId, can_parse_id_from_valid_buffer)
     Id::deserialize_id(buffer);
 }
 
-
 TEST(PersistentSurfaceStoreId, deserialising_wildly_incorrect_buffer_raises_exception)
 {
     std::vector<uint8_t> buf(5, 'a');
@@ -88,7 +87,20 @@ TEST(PersistentSurfaceStoreId, equal_ids_hash_equally)
     auto const first_id = Id::deserialize_id(string_to_byte_buffer(uuid_string));
     auto const second_id = Id::deserialize_id(string_to_byte_buffer(uuid_string));
 
-    EXPECT_THAT(std::hash<Id>()(second_id),
-        Eq(std::hash<Id>()(first_id)));
+    EXPECT_THAT(std::hash<Id>()(second_id), Eq(std::hash<Id>()(first_id)));
 }
 
+TEST(PersistentSurfaceStoreId, can_assign_ids)
+{
+    using namespace testing;
+
+    Id first_id;
+    Id second_id;
+
+    // Technically, there's a roughly 1-in-2^128 chance of a false fail here.
+    EXPECT_THAT(second_id, Not(Eq(first_id)));
+
+    second_id = first_id;
+
+    EXPECT_THAT(second_id, Eq(first_id));
+}
