@@ -247,6 +247,11 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         lifecycle_control->call_lifecycle_event_handler(seq.lifecycle_event().new_state());
     }
 
+    if (seq.has_buffer_request())
+    {
+        printf("BUFFER REQUEST.\n");
+    }
+
     int const nevents = seq.event_size();
     for (int i = 0; i != nevents; ++i)
     {

@@ -24,6 +24,8 @@
 #include "message_sender.h"
 #include "protobuf_buffer_packer.h"
 
+#include "mir/graphics/buffer.h"
+
 #include "mir_protobuf_wire.pb.h"
 #include "mir_protobuf.pb.h"
 
@@ -98,5 +100,9 @@ void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
 
 void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer)
 {
-    (void) id; (void) buffer;
+    mp::EventSequence seq;
+    auto request = seq.mutable_buffer_request();
+    request->mutable_id()->set_value(id.as_value()); 
+    request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
+    send_event_sequence(seq);
 }

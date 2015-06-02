@@ -364,12 +364,14 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
 TEST_F(ExchangeBufferTest, server_can_send_buffer)
 {
     using namespace testing;
+    using namespace std::literals::chrono_literals;
     mtd::StubBuffer stub_buffer;
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(connection);
     auto sink = server_configuration.coordinator->last_sink;
     sink->send_buffer(mf::BufferStreamId{2}, stub_buffer);
     EXPECT_THAT(mir_debug_surface_current_buffer_id(surface), Eq(stub_buffer.id().as_value()));
+
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }

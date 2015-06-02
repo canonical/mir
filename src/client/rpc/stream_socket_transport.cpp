@@ -205,6 +205,7 @@ bool mclr::StreamSocketTransport::dispatch(md::FdEvents events)
     }
     else if (events & md::FdEvent::readable)
     {
+        printf("EVENTS!\n");
         observers.on_data_available();
     }
     return true;
