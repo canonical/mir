@@ -81,7 +81,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
         for(auto i = 0U; i != event.motion.pointer_count; ++i)
         {
             pointer_properties[i].id = event.motion.pointer_coordinates[i].id;
-            pointer_properties[i].toolType = event.motion.pointer_coordinates[i].tool_type;
+            pointer_properties[i].toolType = mia::android_tool_type_from_mir(event.motion.pointer_coordinates[i].tool_type);
 
             pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_X, event.motion.pointer_coordinates[i].x);
             pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_Y, event.motion.pointer_coordinates[i].y);
@@ -102,7 +102,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             event.motion.action,
             0, /* flags */
             mia::android_modifiers_from_mir(event.motion.modifiers),
-            event.motion.button_state,
+            mia::android_pointer_buttons_from_mir(event.motion.buttons),
             0, /* edge_flags */
             event.motion.pointer_count,
             pointer_properties.data(),

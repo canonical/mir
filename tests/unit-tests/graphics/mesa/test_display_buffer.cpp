@@ -154,6 +154,29 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
     EXPECT_EQ(original_count, mock_bypassable_buffer.use_count());
 }
 
+TEST_F(MesaDisplayBufferTest, bypass_buffer_only_referenced_once_by_db)
+{
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    auto original_count = mock_bypassable_buffer.use_count();
+
+    EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+    EXPECT_EQ(original_count+1, mock_bypassable_buffer.use_count());
+
+    db.post();
+
+    // Bypass buffer still held by DB only one ref above the original
+    EXPECT_EQ(original_count+1, mock_bypassable_buffer.use_count());
+}
+
 TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass)
 {
     graphics::mesa::DisplayBuffer db(
@@ -441,19 +464,3 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
     EXPECT_FALSE(db.post_renderables_if_optimizable(list));
 }
 
-TEST_F(MesaDisplayBufferTest, does_not_use_alpha)
-{
-    geometry::Rectangle const area{{12,34}, {56,78}};
-
-    graphics::mesa::DisplayBuffer db(
-        create_platform(),
-        null_display_report(),
-        {mock_kms_output},
-        nullptr,
-        area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
-
-    EXPECT_FALSE(db.uses_alpha());
-}

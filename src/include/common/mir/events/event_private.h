@@ -59,22 +59,6 @@ typedef enum {
     mir_motion_action_hover_exit   = 10
 } MirMotionAction;
 
-typedef enum {
-    mir_motion_button_primary   = 1 << 0,
-    mir_motion_button_secondary = 1 << 1,
-    mir_motion_button_tertiary  = 1 << 2,
-    mir_motion_button_back      = 1 << 3,
-    mir_motion_button_forward   = 1 << 4
-} MirMotionButton;
-
-typedef enum {
-   mir_motion_tool_type_unknown = 0,
-   mir_motion_tool_type_finger  = 1,
-   mir_motion_tool_type_stylus  = 2,
-   mir_motion_tool_type_mouse   = 3,
-   mir_motion_tool_type_eraser  = 4
-} MirMotionToolType;
-
 // PRIVATE
 // Direct access to MirKeyEvent is deprecated. Please use mir_event_get_input_event
 // and the mir_input_event* family of functions.
@@ -105,7 +89,7 @@ typedef struct
     float orientation;
     float vscroll;
     float hscroll;
-    MirMotionToolType tool_type;
+    MirTouchTooltype tool_type;
 } MirMotionPointer;
 
 // PRIVATE
@@ -125,7 +109,7 @@ typedef struct
     int action;
     MirInputEventModifiers modifiers;
 
-    MirMotionButton button_state;
+    MirPointerButtons buttons;
     std::chrono::nanoseconds event_time;
 
     size_t pointer_count;

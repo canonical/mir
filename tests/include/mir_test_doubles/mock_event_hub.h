@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace droidinput = android;
 namespace mir
 {
 namespace test

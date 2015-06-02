@@ -53,9 +53,8 @@ struct MockInputDispatcherPolicy : mia::EventFilterDispatcherPolicy
         const android::sp<android::InputWindowHandle>&,
             const android::KeyEvent* keyEvent, uint32_t)
     {
-        MirEvent mir_ev;
-        mia::Lexicon::translate(keyEvent, mir_ev);
-        handle(mir_ev);
+        auto mir_ev = mia::Lexicon::translate(keyEvent);
+        handle(*mir_ev);
         return 0ns;
     }
 };

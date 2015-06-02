@@ -90,14 +90,10 @@ public:
     geometry::Size size() const override;
     geometry::Size client_size() const override;
 
-    MirPixelFormat pixel_format() const override;
-
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
-    void force_requests_to_complete() override;
 
     bool supports_input() const override;
     int client_input_fd() const override;
-    void allow_framedropping(bool) override;
     std::shared_ptr<input::InputChannel> input_channel() const override;
     input::InputReceptionMode reception_mode() const override;
     void set_reception_mode(input::InputReceptionMode mode) override;
@@ -119,9 +115,6 @@ public:
     
     std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const override;
     int buffers_ready_for_compositor(void const* compositor_id) const override;
-
-    void with_most_recent_buffer_do(
-        std::function<void(graphics::Buffer&)> const& exec) override;
 
     MirSurfaceType type() const override;
     MirSurfaceState state() const override;

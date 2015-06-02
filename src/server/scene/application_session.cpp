@@ -190,10 +190,20 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
 
 void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
 {
-    if (auto surface = default_surface())
-        snapshot_strategy->take_snapshot_of(surface, snapshot_taken);
-    else
-        snapshot_taken(Snapshot());
+    //TODO: taking a snapshot of a session doesn't make much sense. Snapshots can be on surfaces
+    //or bufferstreams, as those represent some content. A multi-surface session doesn't have enough
+    //info to cobble together a snapshot buffer without WM info.
+    for(auto const& surface_it : surfaces)
+    {
+        if (default_surface() == surface_it.second)
+        {
+            auto id = mf::BufferStreamId(surface_it.first.as_value());
+            snapshot_strategy->take_snapshot_of(checked_find(id)->second, snapshot_taken);
+            return;
+        }
+    }
+
+    snapshot_taken(Snapshot());
 }
 
 std::shared_ptr<ms::Surface> ms::ApplicationSession::default_surface() const
@@ -235,9 +245,9 @@ pid_t ms::ApplicationSession::process_id() const
 void ms::ApplicationSession::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
-    for (auto& id_s : surfaces)
+    for (auto& stream : streams)
     {
-        id_s.second->force_requests_to_complete();
+        stream.second->force_requests_to_complete();
     }
 }
 

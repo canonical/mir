@@ -1,5 +1,36 @@
-mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.14.0-0ubuntu1) UNRELEASED; urgency=medium
 
+  * New upstream release 0.14.0 (https://launchpad.net/mir/+milestone/0.14.0)
+    - ABI summary: All clients and all servers need building;
+      . Mirclient ABI bumped to 9
+      . Mirserver ABI bumped to 31
+      . Mircommon ABI unchanged at 4
+      . Mirplatform ABI unchanged at 7
+    - Enhancements:
+      . TODO
+    - Bug fixes:
+      . TODO
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 02 Jun 2015 16:25:59 +0800
+
+mir (0.13.1+15.04.20150520-0ubuntu1) vivid; urgency=medium
+
+  [ Cemil Azizoglu ]
+  * New upstream release 0.13.1 (https://launchpad.net/mir/+milestone/0.13.1)
+    - ABI summary: No ABI break. Servers and clients do not need rebuilding.
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI unchanged at 4
+      . Mirplatform ABI unchanged at 7
+      . Mirserver ABI unchanged at 31
+    - Bug fixes:
+      . Can't load app purchase UI without a U1 account (LP: #1450377)
+      . Crash because uncaught exception in mir::events::add_touch (LP: #1437357)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 20 May 2015 21:20:15 +0000
+
+mir (0.13.0+15.04.20150512-0ubuntu1) vivid; urgency=medium
+
+  [ Alan Griffiths ]
   * New upstream release 0.13.0 (https://launchpad.net/mir/+milestone/0.13.0)
     - Very large release as the previous 0.12 series contained only minimal
       bug fixes...
@@ -159,7 +190,7 @@ mir (0.13.0-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1446304)
       . Support dynamic mouse cursor icons (LP: #1447839)
 
- -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 30 Apr 2015 12:35:00 +0001
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 12 May 2015 13:12:55 +0000
 
 mir (0.12.1+15.04.20150324-0ubuntu1) vivid; urgency=medium
 

@@ -186,11 +186,6 @@ void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rec
     area = a;
 }
 
-bool mgm::DisplayBuffer::uses_alpha() const
-{
-    return false;
-}
-
 bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderable_list)
 {
     if ((rotation == mir_orientation_normal) &&
@@ -312,6 +307,10 @@ void mgm::DisplayBuffer::post()
         if (outputs.size() == 1)
             wait_for_page_flip();
     }
+
+    // Buffer lifetimes are managed exclusively by scheduled*/visible* now
+    bypass_buf = nullptr;
+    bypass_bufobj = nullptr;
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()

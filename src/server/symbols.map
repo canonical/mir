@@ -106,9 +106,6 @@ MIR_SERVER_32 {
     mir::scene::SessionListener::operator*;
     mir::scene::SessionListener::?SessionListener*;
     mir::scene::SessionListener::SessionListener*;
-    mir::scene::SurfaceBufferAccess::operator*;
-    mir::scene::SurfaceBufferAccess::?SurfaceBufferAccess*;
-    mir::scene::SurfaceBufferAccess::SurfaceBufferAccess*;
     mir::scene::SurfaceConfigurator::operator*;
     mir::scene::SurfaceConfigurator::?SurfaceConfigurator*;
     mir::scene::SurfaceConfigurator::SurfaceConfigurator*;
@@ -253,6 +250,8 @@ MIR_SERVER_32 {
     mir::shell::ShellWrapper::start_prompt_session_for*;
     mir::shell::ShellWrapper::stop_prompt_session*;
     mir::shell::ShellWrapper::surface_at*;
+    mir::shell::SurfaceReadyObserver::SurfaceReadyObserver*;
+    mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
     mir::shell::WindowManager::operator*;
     mir::shell::WindowManager::?WindowManager*;
     mir::shell::WindowManager::WindowManager*;
@@ -300,7 +299,6 @@ MIR_SERVER_32 {
     non-virtual?thunk?to?mir::scene::PromptSessionManager::?PromptSessionManager*;
     non-virtual?thunk?to?mir::scene::SessionCoordinator::?SessionCoordinator*;
     non-virtual?thunk?to?mir::scene::SessionListener::?SessionListener*;
-    non-virtual?thunk?to?mir::scene::SurfaceBufferAccess::?SurfaceBufferAccess*;
     non-virtual?thunk?to?mir::scene::SurfaceConfigurator::?SurfaceConfigurator*;
     non-virtual?thunk?to?mir::scene::SurfaceCoordinator::?SurfaceCoordinator*;
     non-virtual?thunk?to?mir::scene::SurfaceObserver::?SurfaceObserver*;
@@ -346,6 +344,7 @@ MIR_SERVER_32 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::start_prompt_session_for*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::stop_prompt_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::surface_at*;
+    non-virtual?thunk?to?mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
     non-virtual?thunk?to?mir::shell::WindowManager::?WindowManager*;
     non-virtual?thunk?to?mir::time::Alarm::?Alarm*;
     non-virtual?thunk?to?mir::time::AlarmFactory::?AlarmFactory*;
@@ -388,7 +387,6 @@ MIR_SERVER_32 {
     typeinfo?for?mir::scene::SessionListener;
     typeinfo?for?mir::scene::Snapshot;
     typeinfo?for?mir::scene::Surface;
-    typeinfo?for?mir::scene::SurfaceBufferAccess;
     typeinfo?for?mir::scene::SurfaceConfigurator;
     typeinfo?for?mir::scene::SurfaceCoordinator;
     typeinfo?for?mir::scene::SurfaceCreationParameters;
@@ -403,6 +401,7 @@ MIR_SERVER_32 {
     typeinfo?for?mir::shell::InputTargeter;
     typeinfo?for?mir::shell::Shell;
     typeinfo?for?mir::shell::ShellWrapper;
+    typeinfo?for?mir::shell::SurfaceReadyObserver;
     typeinfo?for?mir::shell::WindowManager;
     typeinfo?for?mir::time::Alarm;
     typeinfo?for?mir::time::AlarmFactory;
@@ -445,7 +444,6 @@ MIR_SERVER_32 {
     vtable?for?mir::scene::SessionListener;
     vtable?for?mir::scene::Snapshot;
     vtable?for?mir::scene::Surface;
-    vtable?for?mir::scene::SurfaceBufferAccess;
     vtable?for?mir::scene::SurfaceConfigurator;
     vtable?for?mir::scene::SurfaceCoordinator;
     vtable?for?mir::scene::SurfaceCreationParameters;
@@ -460,6 +458,7 @@ MIR_SERVER_32 {
     vtable?for?mir::shell::InputTargeter;
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellWrapper;
+    vtable?for?mir::shell::SurfaceReadyObserver;
     vtable?for?mir::shell::WindowManager;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::AlarmFactory;
@@ -492,7 +491,6 @@ MIR_SERVER_32 {
     mir::compositor::GLRenderer::GLRenderer*;
     mir::compositor::GLRenderer::?GLRenderer*;
     mir::compositor::GLRenderer::Program::Program*;
-    mir::compositor::GLRenderer::destination_alpha*;
     mir::compositor::GLRenderer::draw*;
     mir::compositor::GLRenderer::render*;
     mir::compositor::GLRenderer::set_rotation*;
@@ -577,6 +575,7 @@ MIR_SERVER_32 {
     mir::DefaultServerConfiguration::the_input_target_enumerator*;
     mir::DefaultServerConfiguration::the_input_targeter*;
     mir::DefaultServerConfiguration::the_input_translator*;
+    mir::DefaultServerConfiguration::the_legacy_input_dispatchable*;
     mir::DefaultServerConfiguration::the_logger*;
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;

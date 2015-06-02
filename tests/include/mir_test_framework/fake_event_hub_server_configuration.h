@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_FAKE_EVENT_HUB_SERVER_CONFIGURATION_H_
 #define MIR_TEST_FAKE_EVENT_HUB_SERVER_CONFIGURATION_H_
 
-#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/testing_server_configuration.h"
 
 namespace mir
 {
@@ -36,16 +36,18 @@ class FakeEventHub;
 namespace mir_test_framework
 {
 
-class FakeEventHubServerConfiguration : public StubbedServerConfiguration
+class FakeEventHubServerConfiguration : public TestingServerConfiguration
 {
 public:
-    using StubbedServerConfiguration::StubbedServerConfiguration;
+    using TestingServerConfiguration::TestingServerConfiguration;
 
     std::shared_ptr<droidinput::EventHubInterface> the_event_hub() override;
     std::shared_ptr<mir::input::InputManager> the_input_manager() override;
     std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<mir::input::InputSender> the_input_sender() override;
+    std::shared_ptr<mir::input::LegacyInputDispatchable> the_legacy_input_dispatchable() override;
+    std::shared_ptr<mir::input::android::FakeEventHub> the_fake_event_hub();
 
     // TODO remove reliance on legacy window management
     auto the_window_manager_builder() -> shell::WindowManagerBuilder override;

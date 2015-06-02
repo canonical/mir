@@ -29,7 +29,6 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_drm.h"
 
 #include "mir/client_platform.h"
 #include "mir/client_context.h"
@@ -72,7 +71,7 @@ class Logger;
 
 namespace dispatch
 {
-class SimpleDispatchThread;
+class ThreadedDispatcher;
 }
 }
 
@@ -189,7 +188,7 @@ private:
 
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 
-    std::unique_ptr<mir::dispatch::SimpleDispatchThread> const eventloop;
+    std::unique_ptr<mir::dispatch::ThreadedDispatcher> const eventloop;
     
     std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
 
