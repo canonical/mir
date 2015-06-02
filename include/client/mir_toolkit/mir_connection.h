@@ -104,12 +104,6 @@ void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
     mir_lifecycle_event_callback callback, void* context);
 
 /**
- * \deprecated Use mir_connection_create_display_config
- */
-__attribute__((__deprecated__("Use mir_connection_create_display_config()")))
-void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
-
-/**
  * Query the display
  *   \warning return value must be destroyed via mir_display_config_destroy()
  *   \warning may return null if connection is invalid

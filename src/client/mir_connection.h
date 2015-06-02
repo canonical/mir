@@ -29,7 +29,6 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_drm.h"
 
 #include "mir/client_platform.h"
 #include "mir/client_context.h"

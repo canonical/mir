@@ -361,13 +361,6 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
     observers.reception_mode_set_to(mode);
 }
 
-void ms::BasicSurface::with_most_recent_buffer_do(
-    std::function<void(mg::Buffer&)> const& exec)
-{
-    surface_buffer_stream->with_most_recent_buffer_do(exec);
-}
-
-
 MirSurfaceType ms::BasicSurface::type() const
 {    
     std::unique_lock<std::mutex> lg(guard);

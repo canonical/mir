@@ -65,8 +65,15 @@ bool const enable_input_default        = true;
 }
 
 mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
-    DefaultConfiguration(
-        argc, argv,
+    DefaultConfiguration(argc, argv, std::string{})
+{
+}
+
+mo::DefaultConfiguration::DefaultConfiguration(
+    int argc,
+    char const* argv[],
+    std::string const& config_file) :
+    DefaultConfiguration(argc, argv,
         [](int argc, char const* const* argv)
         {
             if (argc)
@@ -77,7 +84,8 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
                     help_text << ' ' << *opt;
                 BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
             }
-        })
+        },
+        config_file)
 {
 }
 
@@ -85,12 +93,43 @@ mo::DefaultConfiguration::DefaultConfiguration(
     int argc,
     char const* argv[],
     std::function<void(int argc, char const* const* argv)> const& handler) :
+    DefaultConfiguration(argc, argv, handler, std::string{})
+{
+}
+
+namespace
+{
+std::string description_text(char const* program, std::string const& config_file)
+{
+    std::string result{
+        "Command-line options (e.g. \"--host-socket=/tmp/mir_socket\").\n\n"
+        "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\".\n"
+        "(E.g. \"MIR_SERVER_HOST_SOCKET=/tmp/mir_socket\")\n\n"};
+
+    if (program)
+        result = std::string{"usage: "} + program + " [options]\n\n" + result;
+
+    if (!config_file.empty())
+        result +=
+        "Config file entries are long form (e.g. \"host-socket=/tmp/mir_socket\").\n"
+        "The config file (" + config_file + ") is located via the XDG Base Directory Specification.\n"
+        "($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)\n\n";
+
+    return result + "user options";
+}
+}
+
+mo::DefaultConfiguration::DefaultConfiguration(
+    int argc,
+    char const* argv[],
+    std::function<void(int argc, char const* const* argv)> const& handler,
+    std::string const& config_file) :
+    config_file{config_file},
     argc(argc),
     argv(argv),
     unparsed_arguments_handler{handler},
     program_options(std::make_shared<boost::program_options::options_description>(
-    "Command-line options.\n"
-    "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\""))
+        description_text(argv[0], config_file)))
 {
     using namespace options;
     namespace po = boost::program_options;
@@ -268,7 +307,9 @@ void mo::DefaultConfiguration::parse_environment(
 }
 
 void mo::DefaultConfiguration::parse_config_file(
-    boost::program_options::options_description& /*desc*/,
-    mo::ProgramOption& /*options*/) const
+    boost::program_options::options_description& desc,
+    mo::ProgramOption& options) const
 {
+    if (!config_file.empty())
+        options.parse_file(desc, config_file);
 }
