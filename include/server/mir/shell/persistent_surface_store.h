@@ -58,6 +58,7 @@ public:
      * \note This does not extend the lifetime of \arg surface.
      */
     virtual Id id_for_surface(std::shared_ptr<scene::Surface> const& surface) = 0;
+
     /**
      * \brief Lookup Surface by ID.
      * \param [in] id    ID of surface to lookup
