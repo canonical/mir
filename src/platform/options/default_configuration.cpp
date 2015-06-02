@@ -73,7 +73,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
     int argc,
     char const* argv[],
     std::string const& config_file) :
-    DefaultConfiguration(argc, argv, [](int argc, char const* const* argv)
+    DefaultConfiguration(argc, argv,
+        [](int argc, char const* const* argv)
         {
             if (argc)
             {

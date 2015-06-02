@@ -34,12 +34,12 @@ public:
     DefaultConfiguration(int argc, char const* argv[]);
     DefaultConfiguration(int argc, char const* argv[], std::string const& config_file);
     DefaultConfiguration(
-        int argc, char const* argv[], std::function <void(
-        int argc, char const* const* argv)> const& handler);
+        int argc, char const* argv[],
+        std::function <void(int argc, char const* const* argv)> const& handler);
     DefaultConfiguration(
-            int argc, char const* argv[], std::function <void(
-            int argc, char const* const* argv)> const& handler,
-            std::string const& config_file);
+        int argc, char const* argv[],
+        std::function <void(int argc, char const* const* argv)> const& handler,
+        std::string const& config_file);
     virtual ~DefaultConfiguration() = default;
 
     // add_options() allows users to add their own options. This MUST be called
