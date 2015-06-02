@@ -8,10 +8,10 @@ DEB_HOST_MULTIARCH=$2
 mir_platform_types="${PLATFORM_DRIVER} ${CLIENT_DRIVER}"
 case $DEB_HOST_ARCH in
     arm64)
-        mir_platforms="kms"
+        mir_platforms="mesa-kms"
         ;;
     *)
-        mir_platforms="android kms"
+        mir_platforms="android mesa-kms"
         ;;
 esac
 
