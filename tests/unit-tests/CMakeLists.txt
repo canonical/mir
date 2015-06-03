@@ -23,6 +23,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
   ${GLIB_INCLUDE_DIRS}
 )
 
@@ -133,6 +134,12 @@ target_link_libraries(
   ${MIR_SERVER_REFERENCES}
   ${XKBCOMMON_LIBRARIES}
 )
+
+if (MIR_BUILD_PLATFORM_MESA)
+target_link_libraries(mir_unit_tests
+  mirsharedmesaservercommon-static
+)
+endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_unit_tests 
