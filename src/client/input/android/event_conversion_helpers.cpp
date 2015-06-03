@@ -227,6 +227,9 @@ int32_t mia::extract_masked_android_action_from(MirEvent const& ev)
             continue;
         index_with_action = i;
     }
+    if (index_with_action < 0)
+        return AMOTION_EVENT_ACTION_MOVE;
+    
     int masked_action = AMOTION_EVENT_ACTION_MASK;
     switch (mev.pointer_coordinates[index_with_action].action)
     {
@@ -245,7 +248,9 @@ int32_t mia::extract_masked_android_action_from(MirEvent const& ev)
     case mir_touch_action_change:
         masked_action &= AMOTION_EVENT_ACTION_MOVE;
     }
-    return masked_action | (index_with_action << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+    if (index_with_action > 0)
+        return masked_action | (index_with_action << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+    return masked_action;
 }
 
 namespace
