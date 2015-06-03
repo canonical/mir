@@ -22,6 +22,7 @@
 #include "src/platforms/android/server/graphic_buffer_allocator.h"
 #include "src/platforms/android/server/hwc_loggers.h"
 #include "src/platforms/android/server/hwc_configuration.h"
+#include "src/platforms/android/server/device_quirks.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test/fake_shared.h"
@@ -81,6 +82,7 @@ public:
     void SetUp()
     {
         using namespace testing;
+        quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
         mock_resource_factory = std::make_shared<testing::NiceMock<MockResourceFactory>>();
         mock_wrapper = std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>();
         ON_CALL(*mock_resource_factory, create_hwc_wrapper(_))
@@ -99,6 +101,7 @@ public:
     std::shared_ptr<mtd::MockHwcReport> mock_hwc_report{
         std::make_shared<testing::NiceMock<mtd::MockHwcReport>>()};
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_wrapper;
+    std::shared_ptr<mga::DeviceQuirks> quirks;
 };
 }
 
@@ -113,7 +116,8 @@ TEST_F(HalComponentFactory, builds_hwc_version_10)
     mga::HalComponentFactory factory(
         mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
-        mock_hwc_report);
+        mock_hwc_report,
+        quirks);
     factory.create_display_device();
 }
 
@@ -127,7 +131,8 @@ TEST_F(HalComponentFactory, builds_hwc_version_11_and_later)
     mga::HalComponentFactory factory(
         mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
-        mock_hwc_report);
+        mock_hwc_report,
+        quirks);
     factory.create_display_device();
 }
 
@@ -140,7 +145,8 @@ TEST_F(HalComponentFactory, allocates_correct_hwc_configuration)
     mga::HalComponentFactory factory(
         mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
-        mock_hwc_report);
+        mock_hwc_report,
+        quirks);
     auto hwc_config = factory.create_hwc_configuration();
     EXPECT_THAT(dynamic_cast<mga::HwcPowerModeControl*>(hwc_config.get()), Ne(nullptr));
 }
@@ -156,7 +162,8 @@ TEST_F(HalComponentFactory, hwc_failure_falls_back_to_fb)
     mga::HalComponentFactory factory(
         mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
-        mock_hwc_report);
+        mock_hwc_report,
+        quirks);
     factory.create_display_device();
 }
 
@@ -172,7 +179,8 @@ TEST_F(HalComponentFactory, hwc_and_fb_failure_fatal)
         mga::HalComponentFactory factory(
             mt::fake_shared(mock_buffer_allocator),
             mock_resource_factory,
-            mock_hwc_report);
+            mock_hwc_report,
+            quirks);
     }, std::runtime_error);
 }
 
@@ -191,6 +199,7 @@ TEST_F(HalComponentFactory, determine_fbnum_always_reports_2_minimum)
     mga::HalComponentFactory factory(
         mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
-        mock_hwc_report);
+        mock_hwc_report,
+        quirks);
     factory.create_framebuffers(mtd::StubDisplayConfig(1).outputs[0]);
 }
