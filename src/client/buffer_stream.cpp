@@ -149,7 +149,8 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
     process_buffer(protobuf_bs.buffer());
     egl_native_window_ = client_platform->create_egl_native_window(this);
 
-    connection->on_stream_created(protobuf_bs.id().value(), this);
+    if (connection)
+        connection->on_stream_created(protobuf_bs.id().value(), this);
 
     if (callback)
         callback(reinterpret_cast<MirBufferStream*>(this), context);

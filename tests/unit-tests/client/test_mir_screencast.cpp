@@ -42,7 +42,6 @@ class RpcController;
 }
 }
 
-#if 0
 namespace
 {
 
@@ -142,6 +141,7 @@ struct MockCallback
     MOCK_METHOD2(call, void(void*, void*));
 };
 
+#if 0
 void mock_callback_func(MirScreencast* screencast, void* context)
 {
     auto mock_cb = static_cast<MockCallback*>(context);
@@ -151,7 +151,7 @@ void mock_callback_func(MirScreencast* screencast, void* context)
 void null_callback_func(MirScreencast*, void*)
 {
 }
-
+#endif
 
 class MirScreencastTest : public testing::Test
 {
@@ -166,7 +166,7 @@ public:
         using namespace ::testing;
 
         ON_CALL(*mock_buffer_stream_factory,
-        make_consumer_stream(_,_,_)).WillByDefault(
+        make_consumer_stream(_,_,_,_)).WillByDefault(
             Return(mt::fake_shared(mock_bs)));
     }
 
@@ -182,6 +182,7 @@ public:
 
 }
 
+#if 0
 TEST_F(MirScreencastTest, creates_screencast_on_construction)
 {
     using namespace testing;
@@ -217,8 +218,9 @@ TEST_F(MirScreencastTest, releases_screencast_on_release)
     MirScreencast screencast{
         default_region,
         default_size,
-        default_pixel_format, mock_server,
-        stub_buffer_stream_factory,
+        default_pixel_format,
+        mock_server,
+        nullptr
         null_callback_func, nullptr};
 
     screencast.release(null_callback_func, nullptr);
