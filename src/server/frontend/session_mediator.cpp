@@ -442,6 +442,15 @@ void mf::SessionMediator::modify_surface(
     // max_aspect is a special case (below)
 
 #undef COPY_IF_SET
+    std::vector<msh::StreamSpecification> stream_spec;
+    for(auto& stream : surface_specification.stream())
+    {
+        stream_spec.emplace_back(
+            msh::StreamSpecification{
+                mf::BufferStreamId{stream.id().value()},
+                geom::Displacement{stream.displacement_x(), stream.displacement_y()}});
+    }
+    mods.streams = std::move(stream_spec);
 
     if (surface_specification.has_aux_rect())
     {
