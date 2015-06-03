@@ -43,7 +43,6 @@ public:
     virtual ~ClientBufferStream() = default;
 
     virtual MirWaitHandle* get_create_wait_handle() = 0;
-    virtual MirWaitHandle* release(mir_buffer_stream_callback callback, void* context) = 0;
     
     virtual MirSurfaceParameters get_parameters() const = 0;
     virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
@@ -61,8 +60,10 @@ public:
 
     virtual frontend::BufferStreamId rpc_id() const = 0;
     
-    virtual bool valid() const = 0;
+    virtual MirWaitHandle* release(mir_buffer_stream_callback callback, void* context) = 0;
 
+    virtual bool valid() const = 0;
+    
 protected:
     ClientBufferStream() = default;
     ClientBufferStream(const ClientBufferStream&) = delete;
