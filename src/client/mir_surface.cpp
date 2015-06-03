@@ -266,7 +266,7 @@ MirWaitHandle* MirSurface::request_persistent_id(mir_surface_id_callback callbac
     }
     catch (std::exception const& ex)
     {
-        surface.set_error(std::string{"Error invoking create surface: "} +
+        surface.set_error(std::string{"Failed to acquire a persistent ID from the server: "} +
                           boost::diagnostic_information(ex));
     }
     return &persistent_id_wait_handle;

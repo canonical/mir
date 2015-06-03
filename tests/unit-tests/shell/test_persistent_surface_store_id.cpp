@@ -27,34 +27,15 @@ namespace msh = mir::shell;
 
 using Id = msh::PersistentSurfaceStore::Id;
 
-namespace
-{
-std::vector<uint8_t> string_to_byte_buffer(std::string const& string)
-{
-    return std::vector<uint8_t>(string.begin(), string.end());
-}
-}
-
-TEST(PersistentSurfaceStoreId, can_parse_id_from_valid_buffer)
-{
-    auto const buffer = string_to_byte_buffer("f29a4c51-a9a6-4b13-8ce4-3ed5bee2388d");
-    Id::deserialize_id(buffer);
-}
-
-
 TEST(PersistentSurfaceStoreId, deserialising_wildly_incorrect_buffer_raises_exception)
 {
-    std::vector<uint8_t> buf(5, 'a');
-
-    EXPECT_THROW(Id::deserialize_id(buf), std::invalid_argument);
+    EXPECT_THROW(Id{"bob"}, std::invalid_argument);
 }
 
 TEST(PersistentSurfaceStoreId, deserialising_invalid_buffer_raises_exception)
 {
     // This is the right size, but isn't a UUID because it lacks the XX-XX-XX structure
-    std::vector<uint8_t> buf(36, 'a');
-
-    EXPECT_THROW(Id::deserialize_id(buf), std::invalid_argument);
+    EXPECT_THROW(Id{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, std::invalid_argument);
 }
 
 TEST(PersistentSurfaceStoreId, serialization_roundtrips_with_deserialization)
@@ -62,8 +43,8 @@ TEST(PersistentSurfaceStoreId, serialization_roundtrips_with_deserialization)
     using namespace testing;
     Id first_id;
 
-    auto const buf = first_id.serialize_id();
-    auto const second_id = Id::deserialize_id(buf);
+    auto const buf = first_id.serialize_to_string();
+    Id const second_id{buf};
 
     EXPECT_THAT(second_id, Eq(first_id));
 }
@@ -85,9 +66,23 @@ TEST(PersistentSurfaceStoreId, equal_ids_hash_equally)
 
     auto const uuid_string = "0744caf3-c8d9-4483-a005-3375c1954287";
 
-    auto const first_id = Id::deserialize_id(string_to_byte_buffer(uuid_string));
-    auto const second_id = Id::deserialize_id(string_to_byte_buffer(uuid_string));
+    Id const first_id{uuid_string};
+    Id const second_id{uuid_string};
 
-    EXPECT_THAT(std::hash<Id>()(second_id),
-        Eq(std::hash<Id>()(first_id)));
+    EXPECT_THAT(std::hash<Id>()(second_id), Eq(std::hash<Id>()(first_id)));
+}
+
+TEST(PersistentSurfaceStoreId, can_assign_ids)
+{
+    using namespace testing;
+
+    Id first_id;
+    Id second_id;
+
+    // Technically, there's a roughly 1-in-2^128 chance of a false fail here.
+    EXPECT_THAT(second_id, Not(Eq(first_id)));
+
+    second_id = first_id;
+
+    EXPECT_THAT(second_id, Eq(first_id));
 }

@@ -28,53 +28,45 @@ Id::Id()
     uuid_generate(uuid);
 }
 
+Id::Id(std::string const& serialized_form)
+{
+    using namespace std::literals::string_literals;
+    if (serialized_form.size() != 36)
+    {
+        BOOST_THROW_EXCEPTION((std::invalid_argument{"Failed to parse: "s + serialized_form +
+            " (has invalid length: "s + std::to_string(serialized_form.size()) +
+            " expected 36)"}));
+    }
+
+    if (uuid_parse(serialized_form.c_str(), uuid) != 0)
+    {
+        BOOST_THROW_EXCEPTION((std::invalid_argument{"Failed to parse: "s + serialized_form}));
+    }
+}
 
 Id::Id(Id const& rhs)
 {
     std::copy(rhs.uuid, rhs.uuid + sizeof(rhs.uuid), uuid);
 }
 
-/*
-Id& operator=(Id const& rhs);
-*/
+Id& Id::operator=(Id const& rhs)
+{
+    std::copy(rhs.uuid, rhs.uuid + sizeof(rhs.uuid), uuid);
+    return *this;
+}
 
 bool Id::operator==(Id const& rhs) const
 {
     return uuid_compare(uuid, rhs.uuid) == 0;
 }
 
-std::vector<uint8_t> Id::serialize_id() const
+std::string Id::serialize_to_string() const
 {
     // uuid_unparse adds a trailing null; allocate enough memory for it...
-    std::vector<uint8_t> buffer(37);
-    uuid_unparse(uuid, reinterpret_cast<char*>(buffer.data()));
-    // ...and then strip off the trailing null.
-    buffer.resize(36);
+    char buffer[37];
+    uuid_unparse(uuid, buffer);
+
     return buffer;
-}
-
-
-Id Id::deserialize_id(std::vector<uint8_t> const& buffer)
-{
-    if (buffer.size() != 36)
-    {
-        using namespace std::literals::string_literals;
-        std::string buffer_as_string{buffer.begin(), buffer.end()};
-        BOOST_THROW_EXCEPTION((std::invalid_argument{"Failed to parse: "s + buffer_as_string}));
-    }
-    std::array<char, 37> null_terminated_buffer;
-    std::copy(buffer.begin(), buffer.end(), null_terminated_buffer.data());
-    null_terminated_buffer[36] = '\0';
-    return Id{null_terminated_buffer};
-}
-
-Id::Id(std::array<char, 37> const& buffer)
-{
-    if (uuid_parse(buffer.data(), uuid) != 0)
-    {
-        using namespace std::literals::string_literals;
-        BOOST_THROW_EXCEPTION((std::invalid_argument{"Failed to parse: "s + buffer.data()}));
-    }
 }
 
 auto std::hash<Id>::operator()(argument_type const &uuid) const

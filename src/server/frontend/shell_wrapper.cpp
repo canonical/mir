@@ -69,12 +69,12 @@ void mf::ShellWrapper::destroy_surface(std::shared_ptr<Session> const& session, 
     wrapped->destroy_surface(session, surface);
 }
 
-std::vector<uint8_t> mf::ShellWrapper::persistent_id_for(std::shared_ptr<Session> const& session, mf::SurfaceId surface)
+std::string mf::ShellWrapper::persistent_id_for(std::shared_ptr<Session> const& session, mf::SurfaceId surface)
 {
     return wrapped->persistent_id_for(session, surface);
 }
 
-std::shared_ptr<ms::Surface> mf::ShellWrapper::surface_for_id(std::vector<uint8_t> const& serialised_id)
+std::shared_ptr<ms::Surface> mf::ShellWrapper::surface_for_id(std::string const& serialised_id)
 {
     return wrapped->surface_for_id(serialised_id);
 }

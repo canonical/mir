@@ -88,27 +88,25 @@ void msh::FrontendShell::modify_surface(std::shared_ptr<mf::Session> const& sess
     wrapped->modify_surface(scene_session, surface, modifications);
 }
 
-
 void msh::FrontendShell::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
     wrapped->destroy_surface(scene_session, surface);
 }
 
-std::vector<uint8_t> msh::FrontendShell::persistent_id_for(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface_id)
+std::string msh::FrontendShell::persistent_id_for(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface_id)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
     auto const surface = scene_session->surface(surface_id);
 
-    return surface_store->id_for_surface(surface).serialize_id();
+    return surface_store->id_for_surface(surface).serialize_to_string();
 }
 
-std::shared_ptr<ms::Surface> msh::FrontendShell::surface_for_id(const std::vector<uint8_t> &serialized_id)
+std::shared_ptr<ms::Surface> msh::FrontendShell::surface_for_id(std::string const& serialized_id)
 {
-    auto const id = PersistentSurfaceStore::Id::deserialize_id(serialized_id);
+    PersistentSurfaceStore::Id const id{serialized_id};
     return surface_store->surface_for_id(id);
 }
-
 
 int msh::FrontendShell::set_surface_attribute(
     std::shared_ptr<mf::Session> const& session,

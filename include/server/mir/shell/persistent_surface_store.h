@@ -58,12 +58,13 @@ public:
      * \note This does not extend the lifetime of \arg surface.
      */
     virtual Id id_for_surface(std::shared_ptr<scene::Surface> const& surface) = 0;
+
     /**
      * \brief Lookup Surface by ID.
      * \param [in] id    ID of surface to lookup
      * \return           The surface with ID \arg id. If this surface has been destroyed,
-     *                   returns nullptr.
-     * \throws std::out_of_range if there is no surface with \arg id.
+     *                   but the store retains a reference, returns nullptr.
+     * \throws std::out_of_range if the store has no reference for a surface with \arg id.
      */
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) const = 0;
 };
@@ -84,20 +85,30 @@ namespace shell
 class PersistentSurfaceStore::Id final
 {
 public:
+    /**
+     * \brief Generate a new, unique Id.
+     */
     Id();
+
+    /**
+     * \brief Construct an Id from its serialized string form
+     * \param serialized_form [in] The previously-serialized Id
+     * \throw std::invalid_argument if \arg serialized_form is not parseable as an Id.
+     */
+    Id(std::string const& serialized_form);
 
     Id(Id const& rhs);
     Id& operator=(Id const& rhs);
 
     bool operator==(Id const& rhs) const;
 
-    std::vector<uint8_t> serialize_id() const;
-    static Id deserialize_id(std::vector<uint8_t> const& buffer);
-
+    /**
+     * \brief Serialize to a UTF-8 string
+     * \return A string representation of the Id; this is guaranteed to be valid UTF-8
+     */
+    std::string serialize_to_string() const;
 private:
     friend struct std::hash<Id>;
-
-    Id(std::array<char, 37> const& buffer);
 
     uuid_t uuid;
 };
