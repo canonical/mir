@@ -45,13 +45,13 @@ public:
         protobuf::BufferStream const& protobuf_bs, std::string const& surface_name) override;
     std::shared_ptr<ClientBufferStream> make_producer_stream(
         MirConnection*, protobuf::DisplayServer& server,
-        protobuf::BufferStream const& protobuf_bs, std::string const& surface_name);
+        protobuf::BufferStream const& protobuf_bs, std::string const& surface_name) override;
 
     ClientBufferStream* make_producer_stream(
         MirConnection*,
         protobuf::DisplayServer& server,
         protobuf::BufferStreamParameters const& params,
-        mir_buffer_stream_callback callback, void* context);
+        mir_buffer_stream_callback callback, void* context) override;
 
 private:
     std::shared_ptr<ClientPlatform> const client_platform;
