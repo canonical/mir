@@ -284,7 +284,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_motion_event(uint32_
         seq,
         event.device_id,
         event.source_id,
-        event.action,
+        mia::extract_android_action_from(reinterpret_cast<MirEvent const&>(event)),
         0, /* flags */
         0, /* edge flags */
         mia::android_modifiers_from_mir(event.modifiers),
