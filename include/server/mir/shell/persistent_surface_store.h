@@ -63,8 +63,8 @@ public:
      * \brief Lookup Surface by ID.
      * \param [in] id    ID of surface to lookup
      * \return           The surface with ID \arg id. If this surface has been destroyed,
-     *                   returns nullptr.
-     * \throws std::out_of_range if there is no surface with \arg id.
+     *                   but the store retains a reference, returns nullptr.
+     * \throws std::out_of_range if the store has no reference for a surface with \arg id.
      */
     virtual std::shared_ptr<scene::Surface> surface_for_id(Id const& id) const = 0;
 };
