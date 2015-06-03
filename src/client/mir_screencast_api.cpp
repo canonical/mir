@@ -59,6 +59,7 @@ MirScreencast* mir_connection_create_screencast_sync(
                 region,
                 size,
                 parameters->pixel_format,
+                connection->display_server(),
                 connection,
                 null_callback, nullptr}};
 

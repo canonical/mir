@@ -141,7 +141,6 @@ struct MockCallback
     MOCK_METHOD2(call, void(void*, void*));
 };
 
-#if 0
 void mock_callback_func(MirScreencast* screencast, void* context)
 {
     auto mock_cb = static_cast<MockCallback*>(context);
@@ -151,7 +150,6 @@ void mock_callback_func(MirScreencast* screencast, void* context)
 void null_callback_func(MirScreencast*, void*)
 {
 }
-#endif
 
 class MirScreencastTest : public testing::Test
 {
@@ -182,7 +180,6 @@ public:
 
 }
 
-#if 0
 TEST_F(MirScreencastTest, creates_screencast_on_construction)
 {
     using namespace testing;
@@ -195,7 +192,7 @@ TEST_F(MirScreencastTest, creates_screencast_on_construction)
         default_region,
         default_size,
         default_pixel_format, mock_server,
-        stub_buffer_stream_factory,
+        nullptr,
         null_callback_func, nullptr};
 }
 
@@ -220,7 +217,7 @@ TEST_F(MirScreencastTest, releases_screencast_on_release)
         default_size,
         default_pixel_format,
         mock_server,
-        nullptr
+        nullptr,
         null_callback_func, nullptr};
 
     screencast.release(null_callback_func, nullptr);
@@ -237,7 +234,7 @@ TEST_F(MirScreencastTest, executes_callback_on_creation)
         default_region,
         default_size,
         default_pixel_format, stub_server,
-        stub_buffer_stream_factory,
+        nullptr,
         mock_callback_func, &mock_cb};
 
     screencast.creation_wait_handle()->wait_for_all();
@@ -251,7 +248,7 @@ TEST_F(MirScreencastTest, executes_callback_on_release)
         default_region,
         default_size,
         default_pixel_format, stub_server,
-        stub_buffer_stream_factory,
+        nullptr,
         null_callback_func, nullptr};
 
     screencast.creation_wait_handle()->wait_for_all();
@@ -273,7 +270,7 @@ TEST_F(MirScreencastTest, construction_throws_on_invalid_params)
             default_region,
             invalid_size,
             default_pixel_format, stub_server,
-            stub_buffer_stream_factory,
+            nullptr,
             null_callback_func, nullptr);
     }, std::runtime_error);
 
@@ -282,7 +279,7 @@ TEST_F(MirScreencastTest, construction_throws_on_invalid_params)
             invalid_region,
             default_size,
             default_pixel_format, stub_server,
-            stub_buffer_stream_factory,
+            nullptr,
             null_callback_func, nullptr);
     }, std::runtime_error);
 
@@ -291,7 +288,7 @@ TEST_F(MirScreencastTest, construction_throws_on_invalid_params)
             default_region,
             default_size,
             mir_pixel_format_invalid, stub_server,
-            stub_buffer_stream_factory,
+            nullptr,
             null_callback_func, nullptr);
     }, std::runtime_error);
 }
@@ -307,7 +304,7 @@ TEST_F(MirScreencastTest, is_invalid_if_server_create_screencast_fails)
         default_region,
         default_size,
         default_pixel_format, mock_server,
-        stub_buffer_stream_factory,
+        nullptr,
         null_callback_func, nullptr};
 
     screencast.creation_wait_handle()->wait_for_all();
@@ -328,11 +325,10 @@ TEST_F(MirScreencastTest, calls_callback_on_creation_failure)
         default_region,
         default_size,
         default_pixel_format, mock_server,
-        stub_buffer_stream_factory,
+        nullptr,
         mock_callback_func, &mock_cb};
 
     screencast.creation_wait_handle()->wait_for_all();
 
     EXPECT_FALSE(screencast.valid());
 }
-#endif

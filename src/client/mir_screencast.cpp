@@ -33,9 +33,11 @@ MirScreencast::MirScreencast(
     geom::Rectangle const& region,
     geom::Size const& size,
     MirPixelFormat pixel_format,
+    mir::protobuf::DisplayServer& server,
     MirConnection* connection,
     mir_screencast_callback callback, void* context)
-    : connection{connection},
+    : server(server),
+      connection{connection},
       output_size{size}
 {
     if (output_size.width.as_int()  == 0 ||
@@ -59,7 +61,7 @@ MirScreencast::MirScreencast(
     parameters.set_pixel_format(pixel_format);
 
     create_screencast_wait_handle.expect_result();
-    connection->display_server().create_screencast(
+    server.create_screencast(
         nullptr,
         &parameters,
         &protobuf_screencast,
@@ -85,7 +87,7 @@ MirWaitHandle* MirScreencast::release(
     screencast_id.set_value(protobuf_screencast.screencast_id().value());
     
     release_wait_handle.expect_result();
-    connection->display_server().release_screencast(
+    server.release_screencast(
         nullptr,
         &screencast_id,
         &protobuf_void,
@@ -102,7 +104,7 @@ void MirScreencast::request_and_wait_for_configure(MirSurfaceAttrib, int)
 void MirScreencast::screencast_created(
     mir_screencast_callback callback, void* context)
 {
-    if (!protobuf_screencast.has_error())
+    if (!protobuf_screencast.has_error() && connection)
     {
         buffer_stream = connection->make_consumer_stream(
             protobuf_screencast.buffer_stream(), "MirScreencast");
@@ -116,7 +118,8 @@ void MirScreencast::released(
     mir_screencast_callback callback, void* context)
 {
     callback(this, context);
-    connection->release_consumer_stream(buffer_stream.get());
+    if (connection)
+        connection->release_consumer_stream(buffer_stream.get());
     buffer_stream.reset();
 
     release_wait_handle.result_received();
