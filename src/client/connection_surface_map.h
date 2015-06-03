@@ -21,6 +21,7 @@
 
 #include "surface_map.h"
 
+#include <tuple>
 #include <unordered_map>
 #include <mutex>
 
@@ -46,6 +47,7 @@ public:
 private:
     std::mutex mutable guard;
     std::unordered_map<frontend::SurfaceId, MirSurface*> surfaces;
+    std::unordered_map<frontend::BufferStreamId, std::tuple<ClientBufferStream*, bool>> streams;
 };
 
 }

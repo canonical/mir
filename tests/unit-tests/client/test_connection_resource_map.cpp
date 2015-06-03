@@ -65,4 +65,5 @@ TEST_F(ConnectionResourceMap, maps_streams)
         stream_called = true;
     });
     EXPECT_TRUE(stream_called);
+    map.erase(stream_id);
 }
