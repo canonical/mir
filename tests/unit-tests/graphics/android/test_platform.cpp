@@ -77,6 +77,8 @@ protected:
             .WillByDefault(Return(native_buffer));
         ON_CALL(*mock_buffer, stride())
             .WillByDefault(Return(stride));
+
+        quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
     }
 
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_buffer;
@@ -84,6 +86,7 @@ protected:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;
+    std::shared_ptr<mga::DeviceQuirks> quirks;
     geom::Stride stride;
     unsigned int num_ints, num_fds;
 };
@@ -96,7 +99,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(fake_fence));
 
-    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled);
+    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled, quirks);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -127,7 +130,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(-1));
 
-    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled);
+    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled, quirks);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -166,7 +169,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(-1));
 
-    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled);
+    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled, quirks);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -201,7 +204,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
     using namespace ::testing;
 
     int fake_fence{33};
-    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled);
+    mga::Platform platform(stub_display_builder, stub_display_report, mga::OverlayOptimization::enabled, quirks);
     auto ipc_ops = platform.make_ipc_operations();
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
@@ -228,7 +231,8 @@ TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
     mga::Platform platform(
         std::make_shared<mtd::StubDisplayBuilder>(),
         mr::null_display_report(),
-        mga::OverlayOptimization::enabled);
+        mga::OverlayOptimization::enabled,
+        std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}));
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());
 }
 

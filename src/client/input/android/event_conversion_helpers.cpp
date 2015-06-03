@@ -271,7 +271,7 @@ int32_t mia::android_pointer_action_from_mir(MirPointerAction action, MirPointer
     case mir_pointer_action_button_up:
         return buttons_pressed == 0 ? AMOTION_EVENT_ACTION_UP : AMOTION_EVENT_ACTION_POINTER_UP;
     case mir_pointer_action_button_down:
-        return buttons_pressed == 1 ? AMOTION_EVENT_ACTION_POINTER_DOWN : AMOTION_EVENT_ACTION_DOWN;
+        return buttons_pressed == 1 ? AMOTION_EVENT_ACTION_DOWN : AMOTION_EVENT_ACTION_POINTER_DOWN;
     case mir_pointer_action_enter:
         return AMOTION_EVENT_ACTION_HOVER_ENTER;
     case mir_pointer_action_leave:
