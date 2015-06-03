@@ -1,4 +1,3 @@
-
 /*
  * Copyright © 2014 Canonical Ltd.
  *
