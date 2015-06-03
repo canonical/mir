@@ -38,11 +38,12 @@ namespace android
 {
 
 class GraphicAllocAdaptor;
+class DeviceQuirks;
 
 class AndroidGraphicBufferAllocator: public GraphicBufferAllocator, public graphics::GraphicBufferAllocator
 {
 public:
-    AndroidGraphicBufferAllocator();
+    AndroidGraphicBufferAllocator(std::shared_ptr<DeviceQuirks> const& quirks);
 
     std::shared_ptr<graphics::Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties) override;
