@@ -67,8 +67,6 @@ private:
 
     MirConnection* connection;
     mir::geometry::Size const output_size;
-    std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
-    
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
 
     mir::protobuf::Screencast protobuf_screencast;

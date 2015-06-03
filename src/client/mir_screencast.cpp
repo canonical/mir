@@ -18,7 +18,6 @@
 
 #include "mir_screencast.h"
 #include "mir_connection.h"
-#include "client_buffer_stream_factory.h"
 #include "client_buffer_stream.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
@@ -117,6 +116,9 @@ void MirScreencast::released(
     mir_screencast_callback callback, void* context)
 {
     callback(this, context);
+    connection->release_consumer_stream(buffer_stream.get());
+    buffer_stream.reset();
+
     release_wait_handle.result_received();
 }
 

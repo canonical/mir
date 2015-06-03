@@ -136,11 +136,14 @@ public:
         mir_buffer_stream_callback callback,
         void *context);
 
+    void release_consumer_stream(mir::client::ClientBufferStream*);
+
     static bool is_valid(MirConnection *connection);
 
     EGLNativeDisplayType egl_native_display();
 
     void on_surface_created(int id, MirSurface* surface);
+    void on_stream_created(int id, mir::client::ClientBufferStream* stream);
 
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();

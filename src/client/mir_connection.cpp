@@ -480,6 +480,7 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
     return platform;
 }
 
+
 mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
     int width, int height,
     MirPixelFormat format,
@@ -492,15 +493,14 @@ mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
     params.set_height(height);
     params.set_pixel_format(format);
     params.set_buffer_usage(buffer_usage);
+
     return buffer_stream_factory->make_producer_stream(this, server, params, callback, context);
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
    mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name)
 {
-    auto stream = buffer_stream_factory->make_consumer_stream(this, server, protobuf_bs, surface_name);
-//    surface_map->insert(stream->rpc_id(), stream.get());
-    return stream;
+    return buffer_stream_factory->make_consumer_stream(this, server, protobuf_bs, surface_name);
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()
@@ -508,6 +508,11 @@ EGLNativeDisplayType MirConnection::egl_native_display()
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     return *native_display;
+}
+
+void MirConnection::on_stream_created(int id, mcl::ClientBufferStream* stream)
+{
+    surface_map->insert(mf::BufferStreamId(id), stream);
 }
 
 void MirConnection::on_surface_created(int id, MirSurface* surface)
@@ -627,4 +632,9 @@ MirWaitHandle* MirConnection::release_buffer_stream(
         nullptr, &buffer_stream_id, &void_response,
         google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
     return new_wait_handle;
+}
+
+void MirConnection::release_consumer_stream(mir::client::ClientBufferStream* stream)
+{
+    surface_map->erase(stream->rpc_id());
 }
