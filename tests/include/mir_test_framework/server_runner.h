@@ -39,9 +39,11 @@ struct ServerRunner
     virtual ~ServerRunner();
 
     /// Starts the server
+    /// The method is synchronous, i.e., it returns only after the server has started
     void start_server();
 
     /// Stops the server
+    /// The method is synchronous, i.e., it returns only after the server has stopped
     void stop_server();
 
     /// \return a connection string for a new client to connect to the server
