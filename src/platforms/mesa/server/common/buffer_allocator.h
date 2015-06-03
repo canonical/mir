@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_MESA_BUFFER_ALLOCATOR_H_
 #define MIR_GRAPHICS_MESA_BUFFER_ALLOCATOR_H_
 
-#include "platform.h"
+#include "platform_common.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 
