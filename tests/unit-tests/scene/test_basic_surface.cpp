@@ -171,6 +171,7 @@ TEST_F(BasicSurfaceTest, update_top_left)
         .Times(1);
 
     surface.add_observer(observer);
+    post_a_frame(surface);
 
     EXPECT_EQ(rect.top_left, surface.top_left());
 
@@ -187,6 +188,7 @@ TEST_F(BasicSurfaceTest, update_size)
         .Times(1);
 
     surface.add_observer(observer);
+    post_a_frame(surface);
 
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_NE(new_size, surface.size());
@@ -223,6 +225,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
         .Times(1);
 
     surface.add_observer(observer);
+    post_a_frame(surface);
 
     auto original_transformation = surface.compositor_snapshot(compositor_id)->transformation();
     glm::mat4 trans{0.1f, 0.5f, 0.9f, 1.3f,
@@ -243,6 +246,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
         .Times(1);
 
     surface.add_observer(observer);
+    post_a_frame(surface);
 
     float alpha = 0.5f;
     surface.set_alpha(0.5f);
@@ -301,6 +305,7 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
         .Times(1);
 
     surface.add_observer(observer);
+    post_a_frame(surface);
 
     surface.set_hidden(true);
 }
