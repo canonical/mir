@@ -44,8 +44,7 @@ public:
         mir::geometry::Rectangle const& region,
         mir::geometry::Size const& size,
         MirPixelFormat pixel_format,
-        mir::protobuf::DisplayServer& server,
-        std::shared_ptr<mir::client::ClientBufferStreamFactory> const& buffer_stream_factory,
+        MirConnection* connection,
         mir_screencast_callback callback, void* context);
 
     MirWaitHandle* creation_wait_handle();
@@ -66,7 +65,7 @@ private:
     void released(
         mir_screencast_callback callback, void* context);
 
-    mir::protobuf::DisplayServer& server;
+    MirConnection* connection;
     mir::geometry::Size const output_size;
     std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
     

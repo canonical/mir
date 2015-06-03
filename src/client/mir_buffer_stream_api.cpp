@@ -58,8 +58,6 @@ void assign_result(void* result, void** context)
 
 }
 
-
-
 MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
@@ -68,14 +66,9 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     void *context)
 try
 {
-    mp::BufferStreamParameters params;
-    params.set_width(width);
-    params.set_height(height);
-    params.set_pixel_format(format);
-    params.set_buffer_usage(buffer_usage);
-
-    return connection->get_client_buffer_stream_factory()->make_producer_stream(connection->display_server(), params, callback, context)
-        ->get_create_wait_handle();
+    auto stream = connection->create_client_buffer_stream(
+        width, height, format, buffer_usage, callback, context);
+    return stream->get_create_wait_handle();
 }
 catch (std::exception const& ex)
 {

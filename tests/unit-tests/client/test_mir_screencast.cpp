@@ -42,6 +42,7 @@ class RpcController;
 }
 }
 
+#if 0
 namespace
 {
 
@@ -150,7 +151,6 @@ void mock_callback_func(MirScreencast* screencast, void* context)
 void null_callback_func(MirScreencast*, void*)
 {
 }
-
 
 
 class MirScreencastTest : public testing::Test
@@ -333,3 +333,4 @@ TEST_F(MirScreencastTest, calls_callback_on_creation_failure)
 
     EXPECT_FALSE(screencast.valid());
 }
+#endif

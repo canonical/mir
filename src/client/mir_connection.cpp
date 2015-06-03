@@ -144,7 +144,7 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, &debug, get_client_buffer_stream_factory(),
+    auto surface = new MirSurface(this, server, &debug, buffer_stream_factory,
         input_platform, spec, callback, context);
 
     return surface->get_create_wait_handle();
@@ -263,6 +263,8 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             };
 
         platform = client_platform_factory->create_client_platform(this);
+        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(
+            platform, the_logger());
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result.display_configuration());
         lifecycle_control->set_lifecycle_event_handler(default_lifecycle_event_handler);
@@ -461,11 +463,25 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
     return platform;
 }
 
-std::shared_ptr<mir::client::ClientBufferStreamFactory> MirConnection::get_client_buffer_stream_factory()
+mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage,
+    mir_buffer_stream_callback callback,
+    void *context)
 {
-    if (!buffer_stream_factory)
-        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(platform, the_logger());
-    return buffer_stream_factory;
+    mir::protobuf::BufferStreamParameters params;
+    params.set_width(width);
+    params.set_height(height);
+    params.set_pixel_format(format);
+    params.set_buffer_usage(buffer_usage);
+    return buffer_stream_factory->make_producer_stream(server, params, callback, context);
+}
+
+std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
+   mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name)
+{
+    return buffer_stream_factory->make_consumer_stream(server, protobuf_bs, surface_name);
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()

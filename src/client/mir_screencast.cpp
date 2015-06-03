@@ -17,6 +17,7 @@
  */
 
 #include "mir_screencast.h"
+#include "mir_connection.h"
 #include "client_buffer_stream_factory.h"
 #include "client_buffer_stream.h"
 #include "mir/frontend/client_constants.h"
@@ -33,12 +34,10 @@ MirScreencast::MirScreencast(
     geom::Rectangle const& region,
     geom::Size const& size,
     MirPixelFormat pixel_format,
-    mir::protobuf::DisplayServer& server,
-    std::shared_ptr<mcl::ClientBufferStreamFactory> const& buffer_stream_factory,
+    MirConnection* connection,
     mir_screencast_callback callback, void* context)
-    : server(server),
-      output_size{size},
-      buffer_stream_factory{buffer_stream_factory}
+    : connection{connection},
+      output_size{size}
 {
     if (output_size.width.as_int()  == 0 ||
         output_size.height.as_int() == 0 ||
@@ -61,7 +60,7 @@ MirScreencast::MirScreencast(
     parameters.set_pixel_format(pixel_format);
 
     create_screencast_wait_handle.expect_result();
-    server.create_screencast(
+    connection->display_server().create_screencast(
         nullptr,
         &parameters,
         &protobuf_screencast,
@@ -87,7 +86,7 @@ MirWaitHandle* MirScreencast::release(
     screencast_id.set_value(protobuf_screencast.screencast_id().value());
     
     release_wait_handle.expect_result();
-    server.release_screencast(
+    connection->display_server().release_screencast(
         nullptr,
         &screencast_id,
         &protobuf_void,
@@ -106,7 +105,7 @@ void MirScreencast::screencast_created(
 {
     if (!protobuf_screencast.has_error())
     {
-        buffer_stream = buffer_stream_factory->make_consumer_stream(server,
+        buffer_stream = connection->make_consumer_stream(
             protobuf_screencast.buffer_stream(), "MirScreencast");
     }
 

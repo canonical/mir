@@ -44,6 +44,7 @@ namespace client
 {
 class ConnectionConfiguration;
 class ClientPlatformFactory;
+class ClientBufferStream;
 class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
@@ -120,7 +121,16 @@ public:
                                    unsigned int formats_size, unsigned int& valid_formats);
 
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
-    std::shared_ptr<mir::client::ClientBufferStreamFactory> get_client_buffer_stream_factory();
+
+    std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
+       mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name);
+
+    mir::client::ClientBufferStream* create_client_buffer_stream(
+        int width, int height,
+        MirPixelFormat format,
+        MirBufferUsage buffer_usage,
+        mir_buffer_stream_callback callback,
+        void *context);
 
     static bool is_valid(MirConnection *connection);
 
