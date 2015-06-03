@@ -18,11 +18,11 @@
 
 #include "src/server/scene/threaded_snapshot_strategy.h"
 #include "src/server/scene/pixel_buffer.h"
-#include "mir/scene/surface_buffer_access.h"
 #include "mir/graphics/buffer.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_pixel_buffer.h"
+#include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/current_thread_name.h"
@@ -43,22 +43,6 @@ namespace geom = mir::geometry;
 namespace
 {
 
-class StubSurfaceBufferAccess : public ms::SurfaceBufferAccess
-{
-public:
-    ~StubSurfaceBufferAccess() noexcept {}
-
-    void with_most_recent_buffer_do(
-        std::function<void(mg::Buffer&)> const& exec)
-    {
-        thread_name = mt::current_thread_name();
-        exec(buffer);
-    }
-
-    mtd::StubBuffer buffer;
-    std::string thread_name;
-};
-
 class MockPixelBuffer : public ms::PixelBuffer
 {
 public:
@@ -72,7 +56,7 @@ public:
 
 struct ThreadedSnapshotStrategyTest : testing::Test
 {
-    StubSurfaceBufferAccess buffer_access;
+    mtd::StubBufferStream buffer_access;
 };
 
 }
@@ -87,7 +71,7 @@ TEST_F(ThreadedSnapshotStrategyTest, takes_snapshot)
 
     MockPixelBuffer pixel_buffer;
 
-    EXPECT_CALL(pixel_buffer, fill_from(Ref(buffer_access.buffer)));
+    EXPECT_CALL(pixel_buffer, fill_from(Ref(*buffer_access.stub_compositor_buffer)));
     EXPECT_CALL(pixel_buffer, as_argb_8888())
         .WillOnce(Return(pixels));
     EXPECT_CALL(pixel_buffer, size())

@@ -38,11 +38,17 @@ mclrd::PendingCallCache::PendingCallCache(
 void mclrd::PendingCallCache::save_completion_details(
     mir::protobuf::wire::Invocation const& invoke,
     google::protobuf::Message* response,
-    std::shared_ptr<google::protobuf::Closure> const& complete)
+    google::protobuf::Closure* complete)
 {
     std::unique_lock<std::mutex> lock(mutex);
 
     pending_calls[invoke.id()] = PendingCall(response, complete);
+}
+
+google::protobuf::Message* mclrd::PendingCallCache::message_for_result(mir::protobuf::wire::Result& result)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    return pending_calls.at(result.id()).response;
 }
 
 void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
@@ -66,7 +72,6 @@ void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& res
     else
     {
         rpc_report->complete_response(result);
-        completion.response->ParseFromString(result.response());
         completion.complete->Run();
     }
 }
