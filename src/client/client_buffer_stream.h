@@ -30,6 +30,8 @@
 #include <memory>
 #include <functional>
 
+class MirConnection;
+
 namespace mir
 {
 namespace client
@@ -60,10 +62,9 @@ public:
 
     virtual frontend::BufferStreamId rpc_id() const = 0;
     
-    virtual MirWaitHandle* release(mir_buffer_stream_callback callback, void* context) = 0;
-
     virtual bool valid() const = 0;
-    
+
+    virtual MirConnection* allocating_connection() const = 0;
 protected:
     ClientBufferStream() = default;
     ClientBufferStream(const ClientBufferStream&) = delete;

@@ -57,21 +57,24 @@ mcl::DefaultClientBufferStreamFactory::DefaultClientBufferStreamFactory(
 {
 }
 
-std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_consumer_stream(mp::DisplayServer& server,
+std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_consumer_stream(
+    MirConnection* connection, mp::DisplayServer& server,
     mp::BufferStream const& protobuf_bs, std::string const& surface_name)
 {
-    return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Consumer, client_platform, protobuf_bs, make_perf_report(logger), surface_name);
+    return std::make_shared<mcl::BufferStream>(connection, server, mcl::BufferStreamMode::Consumer, client_platform, protobuf_bs, make_perf_report(logger), surface_name);
 }
 
-std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_producer_stream(mp::DisplayServer& server,
+std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_producer_stream(
+    MirConnection* connection, mp::DisplayServer& server,
     mp::BufferStream const& protobuf_bs, std::string const& surface_name)
 {
-    return std::make_shared<mcl::BufferStream>(server, mcl::BufferStreamMode::Producer, client_platform, protobuf_bs, make_perf_report(logger), surface_name);
+    return std::make_shared<mcl::BufferStream>(connection, server, mcl::BufferStreamMode::Producer, client_platform, protobuf_bs, make_perf_report(logger), surface_name);
 }
 
 
-mcl::ClientBufferStream* mcl::DefaultClientBufferStreamFactory::make_producer_stream(mp::DisplayServer& server,
+mcl::ClientBufferStream* mcl::DefaultClientBufferStreamFactory::make_producer_stream(
+    MirConnection* connection, mp::DisplayServer& server,
     mp::BufferStreamParameters const& params, mir_buffer_stream_callback callback, void* context)
 {
-    return new mcl::BufferStream(server, client_platform, params, make_perf_report(logger), callback, context);
+    return new mcl::BufferStream(connection, server, client_platform, params, make_perf_report(logger), callback, context);
 }

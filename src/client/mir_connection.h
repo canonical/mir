@@ -131,6 +131,10 @@ public:
         MirBufferUsage buffer_usage,
         mir_buffer_stream_callback callback,
         void *context);
+    MirWaitHandle* release_buffer_stream(
+        mir::client::ClientBufferStream*,
+        mir_buffer_stream_callback callback,
+        void *context);
 
     static bool is_valid(MirConnection *connection);
 
@@ -203,13 +207,15 @@ private:
     std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
 
     struct SurfaceRelease;
+    struct StreamRelease;
 
     MirConnection* next_valid{nullptr};
 
     void set_error_message(std::string const& error);
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
-    void released(SurfaceRelease );
+    void released(SurfaceRelease);
+    void released(StreamRelease);
     void done_platform_operation(mir_platform_operation_callback, void* context);
     bool validate_user_display_config(MirDisplayConfiguration* config);
 };

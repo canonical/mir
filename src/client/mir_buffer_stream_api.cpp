@@ -36,19 +36,6 @@ namespace mp = mir::protobuf;
 
 namespace
 {
-struct ReleaseData
-{
-    mir_buffer_stream_callback callback;
-    void *context;
-};
-void finish_release(MirBufferStream *stream, void *context)
-{
-    auto data = reinterpret_cast<ReleaseData*>(context);
-    data->callback(stream, data->context);
-    delete data;
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
-    delete bs;
-}
 // assign_result is compatible with all 2-parameter callbacks
 void assign_result(void* result, void** context)
 {
@@ -57,7 +44,6 @@ void assign_result(void* result, void** context)
 }
 
 }
-
 MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
@@ -76,6 +62,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
+
 MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
@@ -93,21 +80,24 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
+//FIXME: The connection responsible for creation, but isn't involved in deletion,
+//hence the need to jump around and access the connection this way.
+//To complement the creation function, the signature should be:
+//MirWaitHandle* mir_connection_buffer_stream_release(
+//  MirConnection*, MirBufferStream*,  mir_buffer_stream_callback, void*)
 MirWaitHandle *mir_buffer_stream_release(
-    MirBufferStream * buffer_stream,
+    MirBufferStream* buffer_stream,
     mir_buffer_stream_callback callback,
     void *context)
 {
     mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    auto data = new ReleaseData{callback, context};
-    return bs->release(finish_release, data);
+    auto connection = bs->allocating_connection();
+    return connection->release_buffer_stream(bs, callback, context);
 }
 
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
 {
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    bs->release(nullptr, nullptr)->wait_for_all();
-    delete bs;
+    mir_buffer_stream_release(buffer_stream, nullptr, nullptr)->wait_for_all();
 }
 
 void mir_buffer_stream_get_current_buffer(MirBufferStream* buffer_stream, MirNativeBuffer** buffer_package_out)

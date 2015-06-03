@@ -168,15 +168,31 @@ void MirConnection::set_error_message(std::string const& error)
 }
 
 
-/* struct exists to work around google protobuf being able to bind
+/* these structs exists to work around google protobuf being able to bind
  "only 0, 1, or 2 arguments in the NewCallback function */
 struct MirConnection::SurfaceRelease
 {
-    MirSurface * surface;
-    MirWaitHandle * handle;
+    MirSurface* surface;
+    MirWaitHandle* handle;
     mir_surface_callback callback;
-    void * context;
+    void* context;
 };
+
+struct MirConnection::StreamRelease
+{
+    mcl::ClientBufferStream* stream;
+    MirWaitHandle* handle;
+    mir_buffer_stream_callback callback;
+    void* context;
+};
+
+void MirConnection::released(StreamRelease data)
+{
+    surface_map->erase(mf::BufferStreamId(data.stream->rpc_id()));
+    data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
+    data.handle->result_received();
+    delete data.stream;
+}
 
 void MirConnection::released(SurfaceRelease data)
 {
@@ -475,13 +491,15 @@ mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
     params.set_height(height);
     params.set_pixel_format(format);
     params.set_buffer_usage(buffer_usage);
-    return buffer_stream_factory->make_producer_stream(server, params, callback, context);
+    return buffer_stream_factory->make_producer_stream(this, server, params, callback, context);
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
    mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name)
 {
-    return buffer_stream_factory->make_consumer_stream(server, protobuf_bs, surface_name);
+    auto stream = buffer_stream_factory->make_consumer_stream(this, server, protobuf_bs, surface_name);
+    surface_map->insert(stream->rpc_id(), stream.get());
+    return stream;
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()
@@ -584,4 +602,28 @@ mir::protobuf::DisplayServer& MirConnection::display_server()
 std::shared_ptr<mir::logging::Logger> const& MirConnection::the_logger() const
 {
     return logger;
+}
+
+MirWaitHandle* MirConnection::release_buffer_stream(
+    mir::client::ClientBufferStream* stream,
+    mir_buffer_stream_callback callback,
+    void *context)
+{
+    auto new_wait_handle = new MirWaitHandle;
+
+    StreamRelease stream_release{stream, new_wait_handle, callback, context};
+
+    mir::protobuf::BufferStreamId buffer_stream_id;
+    buffer_stream_id.set_value(stream->rpc_id().as_value());
+
+    {
+        std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
+        release_wait_handles.push_back(new_wait_handle);
+    }
+
+    new_wait_handle->expect_result();
+    server.release_buffer_stream(
+        nullptr, &buffer_stream_id, &void_response,
+        google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
+    return new_wait_handle;
 }
