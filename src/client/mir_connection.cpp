@@ -189,7 +189,8 @@ struct MirConnection::StreamRelease
 void MirConnection::released(StreamRelease data)
 {
     surface_map->erase(mf::BufferStreamId(data.stream->rpc_id()));
-    data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
+    if (data.callback)
+        data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
     data.handle->result_received();
     delete data.stream;
 }
@@ -498,7 +499,7 @@ std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_st
    mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name)
 {
     auto stream = buffer_stream_factory->make_consumer_stream(this, server, protobuf_bs, surface_name);
-    surface_map->insert(stream->rpc_id(), stream.get());
+//    surface_map->insert(stream->rpc_id(), stream.get());
     return stream;
 }
 

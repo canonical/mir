@@ -63,7 +63,6 @@ public:
     virtual frontend::BufferStreamId rpc_id() const = 0;
     
     virtual bool valid() const = 0;
-
     virtual MirConnection* allocating_connection() const = 0;
 protected:
     ClientBufferStream() = default;

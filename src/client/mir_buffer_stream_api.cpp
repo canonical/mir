@@ -90,7 +90,7 @@ MirWaitHandle *mir_buffer_stream_release(
     mir_buffer_stream_callback callback,
     void *context)
 {
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    auto *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
     auto connection = bs->allocating_connection();
     return connection->release_buffer_stream(bs, callback, context);
 }
