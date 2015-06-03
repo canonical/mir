@@ -368,12 +368,13 @@ MirWaitHandle* mcl::BufferStream::get_create_wait_handle()
     return &create_wait_handle;
 }
 
-void mcl::BufferStream::released(
-    mir_buffer_stream_callback callback, void* context)
+MirWaitHandle* mcl::BufferStream::release(
+        mir_buffer_stream_callback callback, void* context)
 {
-    if (callback)
-        callback(reinterpret_cast<MirBufferStream*>(this), context);
-    release_wait_handle.result_received();
+    if (connection)
+        return connection->release_buffer_stream(this, callback, context);
+    else 
+        return nullptr;
 }
 
 mf::BufferStreamId mcl::BufferStream::rpc_id() const

@@ -78,6 +78,7 @@ public:
     virtual ~BufferStream();
 
     MirWaitHandle *get_create_wait_handle() override;
+    MirWaitHandle *release(mir_buffer_stream_callback callback, void* context) override;
     
     MirWaitHandle* next_buffer(std::function<void()> const& done) override;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override;
@@ -110,7 +111,6 @@ protected:
 
 private:
     void created(mir_buffer_stream_callback callback, void* context);
-    void released(mir_buffer_stream_callback callback, void* context);
     void process_buffer(protobuf::Buffer const& buffer);
     void next_buffer_received(
         std::function<void()> done);

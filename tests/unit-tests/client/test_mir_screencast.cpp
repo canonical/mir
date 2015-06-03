@@ -151,6 +151,8 @@ void null_callback_func(MirScreencast*, void*)
 {
 }
 
+
+
 class MirScreencastTest : public testing::Test
 {
 public:

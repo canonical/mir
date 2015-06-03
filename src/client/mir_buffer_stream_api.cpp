@@ -44,6 +44,9 @@ void assign_result(void* result, void** context)
 }
 
 }
+
+
+
 MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
@@ -62,7 +65,6 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-
 MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
@@ -80,19 +82,13 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-//FIXME: The connection responsible for creation, but isn't involved in deletion,
-//hence the need to jump around and access the connection this way.
-//To complement the creation function, the signature should be:
-//MirWaitHandle* mir_connection_buffer_stream_release(
-//  MirConnection*, MirBufferStream*,  mir_buffer_stream_callback, void*)
 MirWaitHandle *mir_buffer_stream_release(
-    MirBufferStream* buffer_stream,
+    MirBufferStream * buffer_stream,
     mir_buffer_stream_callback callback,
     void *context)
 {
     auto *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    auto connection = bs->allocating_connection();
-    return connection->release_buffer_stream(bs, callback, context);
+    return bs->release(callback, context);
 }
 
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
