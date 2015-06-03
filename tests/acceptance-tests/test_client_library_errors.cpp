@@ -271,7 +271,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
 
     auto surface = mir_surface_create_sync(spec);
     EXPECT_THAT(surface, Not(IsValid()));
-    EXPECT_THAT(mir_surface_get_error_message(surface), HasSubstr("invalid ID"));
+    EXPECT_THAT(mir_surface_get_error_message(surface), MatchesRegex(".*Lookup.*failed.*"));
 
     mir_persistent_id_release(invalid_id);
     mir_surface_spec_release(spec);
