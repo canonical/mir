@@ -49,6 +49,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
+#include "mir_protobuf.pb.h"
 
 #include "gmock_set_arg.h"
 #include <boost/exception/errinfo_errno.hpp>
@@ -943,4 +944,51 @@ TEST_F(SessionMediator, completes_exchange_buffer_when_completion_is_invoked_asy
     // Execute completion function asynchronously (i.e. not as part of the exchange_buffer
     // call), but from the same thread that initiated the exchange_buffer operation
     completion_func(&stub_buffer2);
+}
+
+MATCHER(ConfigEq, "stream configurations are equivalent")
+{
+    return (std::get<0>(arg).stream_id == std::get<1>(arg).stream_id) &&
+           (std::get<0>(arg).displacement == std::get<1>(arg).displacement);
+}
+
+MATCHER_P(StreamsAre, value, "configuration streams match")
+{
+    if(!arg.streams.is_set())
+        return false;
+    EXPECT_THAT(arg.streams.value(), testing::Pointwise(ConfigEq(), value));
+    return !(::testing::Test::HasFailure());
+}
+
+TEST_F(SessionMediator, arranges_bufferstreams_via_shell)
+{
+    using namespace testing;
+    mp::Void null;
+    mp::SurfaceModifications mods;
+    mp::BufferStreamParameters stream_request;
+    std::array<mp::BufferStream,2> streams;
+    std::array<geom::Displacement,2> displacement = { {
+        geom::Displacement{-12,11}, geom::Displacement{4,-3} } };
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+    for (auto &stream : streams)
+        mediator.create_buffer_stream(nullptr, &stream_request, &stream, null_callback.get());
+    mods.mutable_surface_id()->set_value(surface_response.id().value());
+    for (auto i = 0u; i < streams.size(); i++)
+    {
+        auto stream = mods.mutable_surface_specification()->add_stream();
+        stream->mutable_id()->set_value(streams[i].id().value());
+        stream->set_displacement_x(displacement[i].dx.as_int());
+        stream->set_displacement_y(displacement[i].dy.as_int());
+    }
+
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()},
+        StreamsAre(std::vector<msh::StreamSpecification>{
+            {mf::BufferStreamId(streams[0].id().value()), displacement[0]},
+            {mf::BufferStreamId(streams[1].id().value()), displacement[1]}
+        })));
+
+    mediator.modify_surface(nullptr, &mods, &null, null_callback.get());
 }
