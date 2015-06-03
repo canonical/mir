@@ -110,8 +110,6 @@ TEST_F(KeyRepeatDispatcher, schedules_alarm_to_repeat_key_down)
     EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyDownEvent())).Times(1);
     EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyRepeatEvent())).Times(1);
     EXPECT_CALL(*mock_alarm, reschedule_in(_)).Times(1).WillOnce(Return(true));
-    // And cancelled on key up
-    EXPECT_CALL(*mock_alarm, cancel()).Times(1).WillOnce(Return(true));
     EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyUpEvent())).Times(1);
 
     // Schedule the repeat
