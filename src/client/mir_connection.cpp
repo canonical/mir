@@ -46,6 +46,7 @@ namespace md = mir::dispatch;
 namespace mircv = mir::input::receiver;
 namespace mev = mir::events;
 namespace gp = google::protobuf;
+namespace mf = mir::frontend;
 
 namespace
 {
@@ -179,7 +180,7 @@ struct MirConnection::SurfaceRelease
 
 void MirConnection::released(SurfaceRelease data)
 {
-    surface_map->erase(data.surface->id());
+    surface_map->erase(mf::SurfaceId(data.surface->id()));
 
     // Erasing this surface from surface_map means that it will no longer receive events
     // If it's still focused, send an unfocused event before we kill it entirely
@@ -476,7 +477,7 @@ EGLNativeDisplayType MirConnection::egl_native_display()
 
 void MirConnection::on_surface_created(int id, MirSurface* surface)
 {
-    surface_map->insert(id, surface);
+    surface_map->insert(mf::SurfaceId(id), surface);
 }
 
 void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context)

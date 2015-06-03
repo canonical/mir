@@ -23,6 +23,7 @@
 #include <sstream>
 
 namespace mcl=mir::client;
+namespace mf=mir::frontend;
 
 mcl::ConnectionSurfaceMap::ConnectionSurfaceMap()
 {
@@ -42,7 +43,7 @@ mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
 }
 
 void mcl::ConnectionSurfaceMap::with_surface_do(
-    int surface_id, std::function<void(MirSurface*)> exec) const
+    mf::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const
 {
     std::lock_guard<std::mutex> lk(guard);
     auto const it = surfaces.find(surface_id);
@@ -62,14 +63,25 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
     }
 }
 
-void mcl::ConnectionSurfaceMap::insert(int surface_id, MirSurface* surface)
+void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, MirSurface* surface)
 {
     std::lock_guard<std::mutex> lk(guard);
     surfaces[surface_id] = surface;
 }
 
-void mcl::ConnectionSurfaceMap::erase(int surface_id)
+void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 {
     std::lock_guard<std::mutex> lk(guard);
     surfaces.erase(surface_id);
+}
+
+void mcl::ConnectionSurfaceMap::with_stream_do(
+    mf::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const
+{
+    (void) stream_id; (void) exec;
+}
+
+void mcl::ConnectionSurfaceMap::insert(mf::BufferStreamId stream_id, ClientBufferStream* stream)
+{
+    (void) stream_id; (void) stream;
 }
