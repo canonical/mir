@@ -394,8 +394,3 @@ void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
 {
     buffer_depository.set_max_buffers(cache_size);
 }
-
-MirConnection* mcl::BufferStream::allocating_connection() const
-{
-    return connection;
-}

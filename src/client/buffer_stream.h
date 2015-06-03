@@ -104,7 +104,6 @@ public:
 
     frontend::BufferStreamId rpc_id() const override;
     bool valid() const override;
-    MirConnection* allocating_connection() const;
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
