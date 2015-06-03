@@ -96,6 +96,9 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
 {
     auto parameters = request_parameters;
 
+    if (!parameters.state.is_set())
+        parameters.state = mir_surface_state_restored;
+
     auto const active_display = tools->active_display();
 
     auto const width = parameters.size.width.as_int();
