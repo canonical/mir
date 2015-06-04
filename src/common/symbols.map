@@ -1,3 +1,13 @@
+# Symbols moved from libmirplatform; can be folded into a MIR_COMMON stanza
+# at next mirplatform ABI break.
+MIRPLATFORM_7 {
+ global:
+  extern "C++" {
+    mir::fatal_error*;
+    mir::fatal_error_abort*;
+    mir::fatal_error_except*;
+  };
+};
 
 MIR_COMMON_4 {
  global: mir_*;
