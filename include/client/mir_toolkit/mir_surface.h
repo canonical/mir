@@ -591,16 +591,17 @@ void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
  *  Streams set a displacement from the top-left corner of the surface.
  *
  *  \warning disassociating streams from the surface will not release() them.
- *  \warning It is wiser to arrange the streams within the bounds of the surface.
- *           shells can define their own behavior as to what happens to an 
- *           out-of-bound stream.
+ *  \warning It is wiser to arrange the streams within the bounds of the
+ *           surface the spec is applied to. Shells can define their own
+ *           behavior as to what happens to an out-of-bound stream.
  *
  *  \param [in] spec      The spec to accumulate the request in.
  *  \param [in] streams   The an array of non-null streams info.
  *  \param [in] size      The size of streams.
  */
-void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size);
-
+void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
+                                  MirBufferStreamInfo* streams,
+                                  unsigned int size);
 #ifdef __cplusplus
 }
 /**@}*/
