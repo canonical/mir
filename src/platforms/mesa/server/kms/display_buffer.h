@@ -21,7 +21,6 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display.h"
-#include "mir/time/clock.h"
 #include "display_helpers.h"
 
 #include <vector>
@@ -85,15 +84,6 @@ private:
     BufferObject* bypass_bufobj{nullptr};
     std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
-    std::unique_ptr<mir::time::Clock> const clock;
-
-    mir::time::Timestamp render_start;
-    int render_times = 0;
-    int next_render_time_slot = 0;
-    enum {MAX_RENDER_TIMES = 100};
-    std::chrono::milliseconds render_time[MAX_RENDER_TIMES];
-    std::chrono::milliseconds worst_render_time() const;
-
     /* DRM helper from mgm::Platform */
     helpers::DRMHelper& drm;
     std::vector<std::shared_ptr<KMSOutput>> outputs;
