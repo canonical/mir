@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_input_platform.h"
 #include "mir_test_doubles/mock_event_hub.h"
 #include "mir_test_doubles/mock_input_reader.h"
+#include "mir_test_doubles/mock_legacy_input_dispatchable.h"
 
 #include "mir/input/platform.h"
 #include "src/server/input/android/input_reader_dispatchable.h"
@@ -53,7 +54,7 @@ struct DefaultInputManagerTest : ::testing::Test
     NiceMock<mtd::MockEventHub> event_hub;
     NiceMock<mtd::MockInputReader> reader;
     mia::InputReaderDispatchable dispatchable{mt::fake_shared(event_hub), mt::fake_shared(reader)};
-    mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer), mt::fake_shared(dispatchable)};
+    mir::input::DefaultInputManager input_manager{mir::input::LegacyInputDispatchableMode::normal, mt::fake_shared(multiplexer), mt::fake_shared(dispatchable)};
 
     DefaultInputManagerTest()
     {
@@ -152,4 +153,16 @@ TEST_F(DefaultInputManagerTest, ignores_spurious_starts)
     input_manager.start();
 
     EXPECT_TRUE(wait_for_multiplexer_dispatch());
+}
+
+TEST_F(DefaultInputManagerTest, legacy_input_dispatchable_mode_bypasses)
+{
+    StrictMock<mtd::MockLegacyInputDispatchable> mock_legacy_input_dispatchable;
+    mir::input::DefaultInputManager bypassing_input_manager{mir::input::LegacyInputDispatchableMode::bypass, mt::fake_shared(multiplexer), mt::fake_shared(mock_legacy_input_dispatchable)};
+
+    bypassing_input_manager.add_platform(mt::fake_shared(platform));
+    bypassing_input_manager.start();
+
+    // start() is synchronous, all start-up operations should be finished at this point
+    Mock::VerifyAndClearExpectations(&platform);
 }
