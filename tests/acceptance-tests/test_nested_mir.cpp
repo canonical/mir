@@ -246,3 +246,29 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
     mir_surface_release_sync(surface);
     mir_connection_release(c);
 }
+
+
+TEST_F(NestedServer, posts_when_scene_has_visible_changes)
+{
+    // No post on surface creation
+    EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(0);
+    NestedMirRunner nested_mir{new_connection()};
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto const surface = mtf::make_any_surface(connection);
+    Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
+
+    // One post when surface drawn
+    EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(1);
+    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+    Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
+
+    // One post when surface released
+    EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(1);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+    Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
+
+    // Ignore shutdown
+    EXPECT_CALL(*mock_session_mediator_report, session_release_surface_called(_)).Times(AnyNumber());
+    EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(AnyNumber());
+}
