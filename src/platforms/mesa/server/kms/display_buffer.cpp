@@ -315,6 +315,14 @@ void mgm::DisplayBuffer::post()
         scheduled_composite_frame = bufobj;
         if (outputs.size() == 1)
             wait_for_page_flip();
+
+        /*
+         * TODO: If you're optimistic about your GPU performance and/or
+         *       measure it carefully you may wish to set predicted_render_time
+         *       to a lower value here for lower latency.
+         *
+         *predicted_render_time = 9ms; // e.g. about the same as Weston
+         */
     }
 
     // Buffer lifetimes are managed exclusively by scheduled*/visible* now
