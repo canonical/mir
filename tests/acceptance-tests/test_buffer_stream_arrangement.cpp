@@ -225,28 +225,28 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
 {
     using namespace testing;
     auto num_streams = streams.size() + 1;
-    std::vector<MirBufferStreamInfo> info(num_streams);
+    std::vector<MirBufferStreamInfo> infos(num_streams);
     auto i = 0u;
-    info[i++] = MirBufferStreamInfo{
+    infos[i++] = MirBufferStreamInfo{
         primary_stream->handle(),
         primary_stream->position().x.as_int(),
         primary_stream->position().y.as_int()};
     for(auto &stream : streams)
     {
-        info[i++] = MirBufferStreamInfo{
+        infos[i++] = MirBufferStreamInfo{
             stream->handle(),
             stream->position().x.as_int(),
             stream->position().y.as_int()};
     }
 
     auto change_spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_set_streams(change_spec, info.data(), info.size());
+    mir_surface_spec_set_streams(change_spec, infos.data(), infos.size());
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
 
     std::vector<geom::Displacement> displacements;
-    for(auto& o : info)
-        displacements.emplace_back(geom::Displacement{o.x, o.y});
+    for(auto& info : infos)
+        displacements.emplace_back(geom::Displacement{info.displacement_x, info.displacement_y});
 
     //check that the compositor rendered correctly
     using namespace std::literals::chrono_literals;

@@ -130,8 +130,8 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
         for(auto const& stream : streams.value())
         {
             auto const new_stream = message.add_stream();
-            new_stream->set_displacement_x(stream.x);
-            new_stream->set_displacement_y(stream.y);
+            new_stream->set_displacement_x(stream.displacement_x);
+            new_stream->set_displacement_y(stream.displacement_y);
             new_stream->mutable_id()->set_value(
                 reinterpret_cast<mcl::ClientBufferStream*>(stream.stream)->rpc_id().as_value());
         }
@@ -636,8 +636,8 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
         for(auto const& stream : spec.streams.value())
         {
             auto const new_stream = surface_specification->add_stream();
-            new_stream->set_displacement_x(stream.x);
-            new_stream->set_displacement_y(stream.y);
+            new_stream->set_displacement_x(stream.displacement_x);
+            new_stream->set_displacement_y(stream.displacement_y);
             new_stream->mutable_id()->set_value(
                 reinterpret_cast<mcl::ClientBufferStream*>(stream.stream)->rpc_id().as_value());
         }

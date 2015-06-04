@@ -588,12 +588,15 @@ void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
  *  but is not in the list will be disassociated from the surface.
  *  On application of the spec, A stream that is not present in the surface,
  *  but is in the list will be associated with the surface.
+ *  Streams set a displacement from the top-left corner of the surface.
  *
- *  \warning no entry of streams may be null
  *  \warning disassociating streams from the surface will not release() them.
+ *  \warning It is wiser to arrange the streams within the bounds of the surface.
+ *           shells can define their own behavior as to what happens to an 
+ *           out-of-bound stream.
  *
  *  \param [in] spec      The spec to accumulate the request in.
- *  \param [in] streams   The an array of streams info.
+ *  \param [in] streams   The an array of non-null streams info.
  *  \param [in] size      The size of streams.
  */
 void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size);

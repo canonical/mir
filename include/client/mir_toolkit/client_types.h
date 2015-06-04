@@ -281,8 +281,8 @@ typedef struct MirDisplayConfiguration
 typedef struct MirBufferStreamInfo
 {
     MirBufferStream * stream;
-    int x;
-    int y;
+    int displacement_x;
+    int displacement_y;
 } MirBufferStreamInfo;
 
 typedef struct MirRectangle
