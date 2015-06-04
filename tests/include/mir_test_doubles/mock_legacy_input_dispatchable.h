@@ -30,7 +30,7 @@ namespace doubles
 {
 struct MockLegacyInputDispatchable : input::LegacyInputDispatchable
 {
-	MOCK_METHOD0(start, void());
+    MOCK_METHOD0(start, void());
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
     MOCK_METHOD1(dispatch, bool(dispatch::FdEvents));
     MOCK_CONST_METHOD0(relevant_events, dispatch::FdEvents());

@@ -38,6 +38,7 @@
 
 namespace mt = mir::test;
 namespace md = mir::dispatch;
+namespace mi = mir::input;
 namespace mtd = mir::test::doubles;
 namespace mia = mir::input::android;
 
@@ -155,10 +156,12 @@ TEST_F(DefaultInputManagerTest, ignores_spurious_starts)
     EXPECT_TRUE(wait_for_multiplexer_dispatch());
 }
 
-TEST_F(DefaultInputManagerTest, legacy_input_dispatchable_mode_bypasses)
+TEST_F(DefaultInputManagerTest, legacy_input_dispatchable_bypass_mode_bypasses)
 {
     StrictMock<mtd::MockLegacyInputDispatchable> mock_legacy_input_dispatchable;
-    mir::input::DefaultInputManager bypassing_input_manager{mir::input::LegacyInputDispatchableMode::bypass, mt::fake_shared(multiplexer), mt::fake_shared(mock_legacy_input_dispatchable)};
+    mir::input::DefaultInputManager bypassing_input_manager{mi::LegacyInputDispatchableMode::bypass,
+                                                            mt::fake_shared(multiplexer),
+                                                            mt::fake_shared(mock_legacy_input_dispatchable)};
 
     bypassing_input_manager.add_platform(mt::fake_shared(platform));
     bypassing_input_manager.start();
