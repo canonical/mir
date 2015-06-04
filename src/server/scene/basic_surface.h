@@ -173,7 +173,7 @@ private:
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
 
-    std::list<StreamInfo> streams;
+    std::list<StreamInfo> layers;
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;
     MirSurfaceState state_ = mir_surface_state_restored;
