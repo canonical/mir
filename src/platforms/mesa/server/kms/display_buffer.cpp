@@ -302,8 +302,9 @@ void mgm::DisplayBuffer::post()
         scheduled_bypass_frame = bypass_buf;
         wait_for_page_flip();
 
-        // It's very likely the next frame will be bypassed like this one...
-        predicted_render_time = 0ms;
+        // It's very likely the next frame will be bypassed like this one so
+        // we only need time for kernel page flip scheduling...
+        predicted_render_time = 5ms;
     }
     else
     {
@@ -344,8 +345,7 @@ void mgm::DisplayBuffer::post()
     {
         auto const& output = outputs.front();
         auto const min_frame_interval = 1000ms / output->max_refresh_rate();
-        auto const error = 5ms;
-        auto const delay = min_frame_interval - predicted_render_time - error;
+        auto const delay = min_frame_interval - predicted_render_time;
 
         if (delay > 0ms)
             std::this_thread::sleep_for(delay);
