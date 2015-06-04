@@ -195,7 +195,7 @@ TEST_F(SharedLibraryProber, logs_failure_for_load_failure)
     EXPECT_FALSE(probing_map.at("libinvalid.so.3"));
 
     // As we add extra test DSOs you can add them to this list, but it's not mandatory.
-    // At least one of these should fail on any concievable architecture.
+    // At least one of these should fail on any conceivable architecture.
     EXPECT_THAT(probing_map, Contains(AnyOf(
         std::make_pair("lib386.so", false),
         std::make_pair("libamd64.so", false),
