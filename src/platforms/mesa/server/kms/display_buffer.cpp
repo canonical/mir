@@ -28,6 +28,8 @@
 #include <GLES2/gl2.h>
 
 #include <stdexcept>
+#include <chrono>
+#include <thread>
 
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
@@ -295,6 +297,26 @@ void mgm::DisplayBuffer::post()
          */
         scheduled_bypass_frame = bypass_buf;
         wait_for_page_flip();
+
+        /*
+         * Introducing "predictive bypass":
+         * If the current frame is bypassed then there is an extremely high
+         * likelihood the next one will be too. If it is then we can reduce
+         * the latency of that next frame (make the compositor sample the
+         * scene later) by almost a whole frame. Because we don't need to
+         * spare any time for rendering. Just a millisecond at most for the
+         * kernel to get around to scheduling a pageflip...
+         */
+        std::chrono::milliseconds min_min_frame_interval(1000);
+        for (auto const& output : outputs)
+        {
+            std::chrono::milliseconds
+                min_frame_interval(1000 / output->max_refresh_rate());
+            if (min_frame_interval < min_min_frame_interval)
+                min_min_frame_interval = min_frame_interval;
+        }
+        std::chrono::milliseconds const grace(1);
+        std::this_thread::sleep_for(min_min_frame_interval - grace);
     }
     else
     {
