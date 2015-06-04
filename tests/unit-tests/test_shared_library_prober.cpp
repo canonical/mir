@@ -203,3 +203,33 @@ TEST_F(SharedLibraryProber, LogsFailureForLoadFailure)
         std::make_pair("libarm64.so", false))));
 }
 
+namespace
+{
+MATCHER(ValueIsTrue, "")
+{
+    return arg.second;
+}
+}
+
+TEST_F(SharedLibraryProber, does_not_log_failure_on_success)
+{
+    using namespace testing;
+    NiceMock<MockSharedLibraryProberReport> report;
+
+    std::unordered_map<std::string, bool> probing_map;
+
+    ON_CALL(report, loading_library(_))
+        .WillByDefault(Invoke([&probing_map](auto const& filename)
+    {
+        probing_map[filename.filename().native()] = true;
+    }));
+    ON_CALL(report, loading_failed(_,_))
+        .WillByDefault(Invoke([&probing_map](auto const& filename, auto const&)
+    {
+        probing_map[filename.filename().native()] = false;
+    }));
+
+    mir::libraries_for_path(library_path, report);
+
+    EXPECT_THAT(probing_map, Contains(ValueIsTrue()));
+}
