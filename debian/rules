@@ -2,6 +2,7 @@
 
 DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+DEB_HOST_ARCH_ENDIAN ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_ENDIAN)
 EXACT_PACKAGE_VERSION = $(shell dpkg-parsechangelog | grep Version | cut -d' ' -f 2)
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
@@ -12,10 +13,10 @@ export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 # Enable verbose debugging output from the testsuite
 export MIR_SERVER_LOGGING = on
 override_dh_auto_test:
-ifneq ($(DEB_HOST_ARCH),powerpc)
+ifeq ($(DEB_HOST_ARCH_ENDIAN),little)
 	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1 -- ARGS="-V"
 else
-	echo "Testsuite disabled on powerpc due to lack of big-endian support."
+	echo "Testsuite disabled on $(DEB_HOST_ARCH) due to lack of big-endian support."
 endif
 
 COMMON_CONFIGURE_OPTIONS = \
@@ -29,14 +30,14 @@ ifeq ($(DEB_HOST_ARCH),armhf)
 	  -DMIR_RUN_INTEGRATION_TESTS=OFF \
 	  -DMIR_PLATFORM=android\;mesa
 else
-ifneq ($(filter arm64 powerpc ppc64el,$(DEB_HOST_ARCH)),)
-	dh_auto_configure -- \
-	  $(COMMON_CONFIGURE_OPTIONS) \
-	  -DMIR_PLATFORM=mesa
-else
+ifneq ($(filter amd64 i386,$(DEB_HOST_ARCH)),)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DMIR_PLATFORM=mesa\;android
+else
+	dh_auto_configure -- \
+	  $(COMMON_CONFIGURE_OPTIONS) \
+	  -DMIR_PLATFORM=mesa
 endif
 endif
 
