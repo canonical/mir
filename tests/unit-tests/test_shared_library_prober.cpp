@@ -162,12 +162,12 @@ TEST_F(SharedLibraryProber, logs_each_library_probed)
 
     auto const dso_filename_regex = ".*\\.so(\\..*)?";
 
-    // We have at least 5 DSOs to probe
+    // We have at least 5 DSOs to probe - i386, amd64, armhf, arm64, libinvalid.so.3
     EXPECT_CALL(report,
-        loading_library(FilenameMatches(ContainsRegex(dso_filename_regex)))).Times(AtLeast(5));
+        loading_library(FilenameMatches(MatchesRegex(dso_filename_regex)))).Times(AtLeast(5));
     // We shouldn't probe anything that doesn't look like a DSO.
     EXPECT_CALL(report,
-        loading_library(FilenameMatches(Not(ContainsRegex(dso_filename_regex))))).Times(0);
+        loading_library(FilenameMatches(Not(MatchesRegex(dso_filename_regex))))).Times(0);
 
     mir::libraries_for_path(library_path, report);
 }
