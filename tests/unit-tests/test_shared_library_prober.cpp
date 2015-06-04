@@ -181,14 +181,14 @@ TEST_F(SharedLibraryProber, logs_failure_for_load_failure)
 
     ON_CALL(report, loading_library(_))
         .WillByDefault(Invoke([&probing_map](auto const& filename)
-    {
-        probing_map[filename.filename().native()] = true;
-    }));
+        {
+            probing_map[filename.filename().native()] = true;
+        }));
     ON_CALL(report, loading_failed(_,_))
         .WillByDefault(Invoke([&probing_map](auto const& filename, auto const&)
-    {
-        probing_map[filename.filename().native()] = false;
-    }));
+        {
+            probing_map[filename.filename().native()] = false;
+        }));
 
     mir::libraries_for_path(library_path, report);
 
@@ -212,14 +212,14 @@ TEST_F(SharedLibraryProber, does_not_log_failure_on_success)
 
     ON_CALL(report, loading_library(_))
         .WillByDefault(Invoke([&probing_map](auto const& filename)
-    {
-        probing_map[filename.filename().native()] = true;
-    }));
+        {
+            probing_map[filename.filename().native()] = true;
+        }));
     ON_CALL(report, loading_failed(_,_))
         .WillByDefault(Invoke([&probing_map](auto const& filename, auto const&)
-    {
-        probing_map[filename.filename().native()] = false;
-    }));
+        {
+            probing_map[filename.filename().native()] = false;
+        }));
 
     mir::libraries_for_path(library_path, report);
 
