@@ -21,7 +21,6 @@
 
 #include "display_component_factory.h"
 #include "display_resource_factory.h"
-#include "device_quirks.h"
 
 namespace mir
 {
@@ -36,6 +35,7 @@ class GraphicBufferAllocator;
 class DisplayDevice;
 class HwcWrapper;
 class HwcReport;
+class DeviceQuirks;
 
 //NOTE: this should be the only class that inspects the HWC version and assembles
 //the components accordingly
@@ -45,7 +45,8 @@ public:
     HalComponentFactory(
         std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayResourceFactory> const& res_factory,
-        std::shared_ptr<HwcReport> const& hwc_report);
+        std::shared_ptr<HwcReport> const& hwc_report,
+        std::shared_ptr<DeviceQuirks> const& quirks);
 
     std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayConfigurationOutput const&) override;
     std::unique_ptr<DisplayDevice> create_display_device() override;
@@ -53,7 +54,6 @@ public:
     std::unique_ptr<LayerList> create_layer_list() override;
 
 private:
-    DeviceQuirks quirks{PropertiesOps{}};
     std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<DisplayResourceFactory> const res_factory;
     std::shared_ptr<HwcReport> const hwc_report;

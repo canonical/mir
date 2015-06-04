@@ -17,7 +17,7 @@
  */
 
 #include "mir_screencast.h"
-#include "client_buffer_stream_factory.h"
+#include "mir_connection.h"
 #include "client_buffer_stream.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
@@ -34,11 +34,11 @@ MirScreencast::MirScreencast(
     geom::Size const& size,
     MirPixelFormat pixel_format,
     mir::protobuf::DisplayServer& server,
-    std::shared_ptr<mcl::ClientBufferStreamFactory> const& buffer_stream_factory,
+    MirConnection* connection,
     mir_screencast_callback callback, void* context)
     : server(server),
-      output_size{size},
-      buffer_stream_factory{buffer_stream_factory}
+      connection{connection},
+      output_size{size}
 {
     if (output_size.width.as_int()  == 0 ||
         output_size.height.as_int() == 0 ||
@@ -104,9 +104,9 @@ void MirScreencast::request_and_wait_for_configure(MirSurfaceAttrib, int)
 void MirScreencast::screencast_created(
     mir_screencast_callback callback, void* context)
 {
-    if (!protobuf_screencast.has_error())
+    if (!protobuf_screencast.has_error() && connection)
     {
-        buffer_stream = buffer_stream_factory->make_consumer_stream(server,
+        buffer_stream = connection->make_consumer_stream(
             protobuf_screencast.buffer_stream(), "MirScreencast");
     }
 
@@ -118,6 +118,10 @@ void MirScreencast::released(
     mir_screencast_callback callback, void* context)
 {
     callback(this, context);
+    if (connection)
+        connection->release_consumer_stream(buffer_stream.get());
+    buffer_stream.reset();
+
     release_wait_handle.result_received();
 }
 

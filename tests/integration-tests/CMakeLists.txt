@@ -116,6 +116,12 @@ target_link_libraries(
   ${MIR_SERVER_REFERENCES}
 )
 
+if (MIR_BUILD_PLATFORM_MESA)
+target_link_libraries(mir_integration_tests
+  mirsharedmesaservercommon-static
+)
+endif()
+
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_integration_tests
   mirsharedandroid-static

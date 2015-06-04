@@ -21,6 +21,7 @@
 
 #include "surface_map.h"
 
+#include <tuple>
 #include <unordered_map>
 #include <mutex>
 
@@ -35,13 +36,18 @@ public:
     ConnectionSurfaceMap();
     ~ConnectionSurfaceMap() noexcept;
 
-    void with_surface_do(int surface_id, std::function<void(MirSurface*)> exec) const override;
-    void insert(int surface_id, MirSurface* surface);
-    void erase(int surface_id);
+    void with_surface_do(frontend::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const override;
+    void insert(frontend::SurfaceId surface_id, MirSurface* surface);
+    void erase(frontend::SurfaceId surface_id);
+
+    void with_stream_do(frontend::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const override;
+    void insert(frontend::BufferStreamId stream_id, ClientBufferStream* stream);
+    void erase(frontend::BufferStreamId surface_id);
 
 private:
     std::mutex mutable guard;
-    std::unordered_map<int, MirSurface*> surfaces;
+    std::unordered_map<frontend::SurfaceId, MirSurface*> surfaces;
+    std::unordered_map<frontend::BufferStreamId, std::tuple<ClientBufferStream*, bool>> streams;
 };
 
 }

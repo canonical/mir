@@ -132,7 +132,7 @@ struct ClientBufferStreamTest : public testing::Test
         mcl::ClientBufferFactory& buffer_factory,
         mcl::BufferStreamMode mode=mcl::BufferStreamMode::Producer)
     {
-        return std::make_shared<mcl::BufferStream>(mock_protobuf_server, mode,
+        return std::make_shared<mcl::BufferStream>(nullptr, mock_protobuf_server, mode,
             std::make_shared<StubClientPlatform>(mt::fake_shared(buffer_factory)), protobuf_bs, perf_report, "");
     }
 };
@@ -448,7 +448,8 @@ TEST_F(ClientBufferStreamTest, passes_name_to_perf_report)
 
     EXPECT_CALL(mock_perf_report, name_surface(StrEq(name))).Times(1);
 
-    auto bs = std::make_shared<mcl::BufferStream>(mock_protobuf_server, mcl::BufferStreamMode::Producer,
+    auto bs = std::make_shared<mcl::BufferStream>(
+        nullptr, mock_protobuf_server, mcl::BufferStreamMode::Producer,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_client_buffer_factory)),
         protobuf_bs, mt::fake_shared(mock_perf_report), name);
 }
