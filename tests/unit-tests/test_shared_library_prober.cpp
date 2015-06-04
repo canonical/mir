@@ -162,9 +162,10 @@ TEST_F(SharedLibraryProber, logs_each_library_probed)
 
     auto const dso_filename_regex = ".*\\.so(\\..*)?";
 
-    // We have at least 5 DSOs to probe - i386, amd64, armhf, arm64, libinvalid.so.3
+    // We have at least 8 DSOs to probe:
+    // i386, amd64, armhf, arm64, powerpc, ppc64el, this-arch, libinvalid.so.3
     EXPECT_CALL(report,
-        loading_library(FilenameMatches(MatchesRegex(dso_filename_regex)))).Times(AtLeast(5));
+        loading_library(FilenameMatches(MatchesRegex(dso_filename_regex)))).Times(AtLeast(8));
     // We shouldn't probe anything that doesn't look like a DSO.
     EXPECT_CALL(report,
         loading_library(FilenameMatches(Not(MatchesRegex(dso_filename_regex))))).Times(0);
@@ -200,7 +201,9 @@ TEST_F(SharedLibraryProber, logs_failure_for_load_failure)
         std::make_pair("lib386.so", false),
         std::make_pair("libamd64.so", false),
         std::make_pair("libarmhf.so", false),
-        std::make_pair("libarm64.so", false))));
+        std::make_pair("libarm64.so", false),
+        std::make_pair("libpowerpc.so", false),
+        std::make_pair("libppc64el.so", false))));
 }
 
 TEST_F(SharedLibraryProber, does_not_log_failure_on_success)
