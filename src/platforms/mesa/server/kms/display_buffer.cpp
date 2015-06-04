@@ -346,7 +346,7 @@ void mgm::DisplayBuffer::post()
         auto const min_frame_interval = 1000ms / output->max_refresh_rate();
         auto const delay = min_frame_interval - predicted_render_time - 1ms;
 
-        if (delay > std::chrono::milliseconds::zero())
+        if (delay > 0ms)
             std::this_thread::sleep_for(delay);
     }
 }
