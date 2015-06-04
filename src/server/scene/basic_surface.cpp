@@ -853,11 +853,9 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
             BOOST_THROW_EXCEPTION(std::logic_error("cannot remove the created-with buffer stream yet"));
         }
 
-        streams = s;
+        layers = s;
     }
     observers.moved_to(surface_rect.top_left);
-
-    layers = s;
 }
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const

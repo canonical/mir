@@ -150,10 +150,10 @@ MIR_CLIENT_9 {
     mir_wait_for_one;
 };
 
-MIR_CLIENT_8.5 {   # New in Mir 0.14
+MIR_CLIENT_9.1 {   # New in Mir 0.14
  global:
     mir_surface_spec_set_streams;
-} MIR_CLIENT_8.4;
+} MIR_CLIENT_9;
 
 MIR_CLIENT_DETAIL_9 {
   global:
