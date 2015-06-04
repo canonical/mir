@@ -22,7 +22,7 @@
 #include "client_buffer_stream.h"
 
 uint32_t mir_debug_surface_current_buffer_id(MirSurface* surface)
-{
+{   
     return surface->get_buffer_stream()->get_current_buffer_id();
 }
 

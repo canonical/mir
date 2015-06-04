@@ -253,10 +253,9 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
     if (seq.has_buffer_request())
     {
         surface_map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
-        [] (mcl::ClientBufferStream* stream) {
-            stream->update_
+        [&] (mcl::ClientBufferStream* stream) {
+            stream->buffer_available(seq.buffer_request().buffer());
         });
-        //printf("BUFFER REQUEST. stream id %i\n", );
     }
 
     int const nevents = seq.event_size();

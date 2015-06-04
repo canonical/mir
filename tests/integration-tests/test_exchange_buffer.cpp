@@ -369,7 +369,21 @@ TEST_F(ExchangeBufferTest, server_can_send_buffer)
     auto surface = mtf::make_any_surface(connection);
     auto sink = server_configuration.coordinator->last_sink.lock();
     sink->send_buffer(mf::BufferStreamId{0}, stub_buffer);
-    EXPECT_THAT(mir_debug_surface_current_buffer_id(surface), Eq(stub_buffer.id().as_value()));
+
+    //spin-wait for the id to become the current one.
+    //The notification doesn't generate a client-facing callback on the stream yet
+    //(although probably should, seems something a media decoder would need
+    bool satisfied = false;
+    auto timeout = std::chrono::steady_clock::now() + 5s;
+    while(!satisfied && std::chrono::steady_clock::now() < timeout)
+    {
+        if (mir_debug_surface_current_buffer_id(surface) == stub_buffer.id().as_value())
+        {
+            satisfied = true;
+            break;
+        }
+    }
+    EXPECT_THAT(satisfied, Eq(true)) << "failed to see the sent buffer become the current one";
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
