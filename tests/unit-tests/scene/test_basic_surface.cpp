@@ -120,7 +120,7 @@ TEST_F(BasicSurfaceTest, basics)
     EXPECT_EQ(name, surface.name());
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_EQ(rect.top_left, surface.top_left());
-    for(auto& renderable : surface.generate_renderables(this))
+    for (auto& renderable : surface.generate_renderables(this))
         EXPECT_FALSE(renderable->shaped());
 }
 
@@ -135,16 +135,16 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
     std::array<std::unique_ptr<ms::BasicSurface>, n> surfaces;
 
     std::multiset<mg::Renderable::ID> ids;
-    for(auto& surface : surfaces)
+    for (auto& surface : surfaces)
     {
         surface = std::make_unique<ms::BasicSurface>(
                 name, rect, false, std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(),
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
                 std::shared_ptr<mg::CursorImage>(), report);
-        for(auto& renderable : surface->generate_renderables(this))
+        for (auto& renderable : surface->generate_renderables(this))
             ids.insert(renderable->id());
     }
-    for(auto it : ids)
+    for (auto& it : ids)
         EXPECT_THAT(ids.count(it), testing::Eq(1));
 }
 
@@ -154,14 +154,14 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
     std::array<std::unique_ptr<ms::BasicSurface>, n> surfaces;
 
     std::multiset<mg::Renderable::ID> ids;
-    for(auto& surface : surfaces)
+    for (auto& surface : surfaces)
     {
         surface = std::make_unique<ms::BasicSurface>(
                 name, rect, false, mock_buffer_stream,
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
                 std::shared_ptr<mg::CursorImage>(), report);
 
-        for(auto& renderable : surface->generate_renderables(this))
+        for (auto& renderable : surface->generate_renderables(this))
             EXPECT_THAT(renderable->id(), testing::Ne(nullptr));
     }
 }
@@ -172,6 +172,7 @@ TEST_F(BasicSurfaceTest, update_top_left)
         .Times(1);
 
     surface.add_observer(observer);
+    post_a_frame(surface);
 
     EXPECT_EQ(rect.top_left, surface.top_left());
 
@@ -188,6 +189,7 @@ TEST_F(BasicSurfaceTest, update_size)
         .Times(1);
 
     surface.add_observer(observer);
+    post_a_frame(surface);
 
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_NE(new_size, surface.size());
@@ -228,6 +230,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
         .Times(1);
 
     surface.add_observer(observer);
+    post_a_frame(surface);
 
     auto renderables = surface.generate_renderables(compositor_id);
     ASSERT_THAT(renderables.size(), testing::Eq(1));
@@ -252,6 +255,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
         .Times(1);
 
     surface.add_observer(observer);
+    post_a_frame(surface);
 
     float alpha = 0.5f;
     surface.set_alpha(0.5f);
@@ -311,6 +315,7 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
         .Times(1);
 
     surface.add_observer(observer);
+    post_a_frame(surface);
 
     surface.set_hidden(true);
 }

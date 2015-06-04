@@ -162,6 +162,8 @@ TEST_F(SharedLibraryProber, LogsEachLibraryProbed)
     EXPECT_CALL(report, loading_library(FilenameMatches("libarmhf.so")));
     EXPECT_CALL(report, loading_library(FilenameMatches("libi386.so")));
     EXPECT_CALL(report, loading_library(FilenameMatches("libarm64.so")));
+    EXPECT_CALL(report, loading_library(FilenameMatches("libpowerpc.so")));
+    EXPECT_CALL(report, loading_library(FilenameMatches("libppc64el.so")));
     EXPECT_CALL(report, loading_library(FilenameMatches("libinvalid.so.3")));
 
     mir::libraries_for_path(library_path, report);
@@ -176,6 +178,8 @@ TEST_F(SharedLibraryProber, LogsFailureForLoadFailure)
     bool amd64_failed{false};
     bool i386_failed{false};
     bool arm64_failed{false};
+    bool powerpc_failed{false};
+    bool ppc64el_failed{false};
     bool invalid_failed{false};
 
     ON_CALL(report, loading_failed(FilenameMatches("libamd64.so"), _))
@@ -186,11 +190,15 @@ TEST_F(SharedLibraryProber, LogsFailureForLoadFailure)
             .WillByDefault(InvokeWithoutArgs([&i386_failed]() { i386_failed = true; }));
     ON_CALL(report, loading_failed(FilenameMatches("libarm64.so"), _))
             .WillByDefault(InvokeWithoutArgs([&arm64_failed]() { arm64_failed = true; }));
+    ON_CALL(report, loading_failed(FilenameMatches("libpowerpc.so"), _))
+            .WillByDefault(InvokeWithoutArgs([&powerpc_failed]() { powerpc_failed = true; }));
+    ON_CALL(report, loading_failed(FilenameMatches("libppc64el.so"), _))
+            .WillByDefault(InvokeWithoutArgs([&ppc64el_failed]() { ppc64el_failed = true; }));
     ON_CALL(report, loading_failed(FilenameMatches("libinvalid.so.3"), _))
             .WillByDefault(InvokeWithoutArgs([&invalid_failed]() { invalid_failed = true; }));
 
     mir::libraries_for_path(library_path, report);
 
     EXPECT_TRUE(invalid_failed);
-    EXPECT_TRUE(i386_failed || amd64_failed || armhf_failed || arm64_failed);
+    EXPECT_TRUE(i386_failed || amd64_failed || armhf_failed || arm64_failed || powerpc_failed || ppc64el_failed);
 }

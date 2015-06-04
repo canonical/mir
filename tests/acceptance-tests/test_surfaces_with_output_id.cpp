@@ -82,7 +82,7 @@ public:
         {
             if (auto const ss = surface.lock())
             {
-                for(auto& renderable: ss->generate_renderables(this))
+                for (auto& renderable: ss->generate_renderables(this))
                     rects.push_back(renderable->screen_position());
             }
         }

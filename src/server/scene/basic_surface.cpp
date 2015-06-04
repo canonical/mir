@@ -148,7 +148,7 @@ ms::BasicSurface::BasicSurface(
     cursor_image_(cursor_image),
     report(report),
     parent_(parent),
-    streams({StreamInfo{buffer_stream, {0,0}}})
+    layers({StreamInfo{buffer_stream, {0,0}}})
 {
     report->surface_created(this, surface_name);
 }
@@ -346,7 +346,7 @@ bool ms::BasicSurface::visible() const
 bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
 {
     bool visible{false};
-    for(auto info : streams)
+    for (auto const& info : layers)
         visible |= info.stream->has_submitted_buffer();
     return !hidden && visible;
 }
@@ -364,13 +364,6 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
     }
     observers.reception_mode_set_to(mode);
 }
-
-void ms::BasicSurface::with_most_recent_buffer_do(
-    std::function<void(mg::Buffer&)> const& exec)
-{
-    surface_buffer_stream->with_most_recent_buffer_do(exec);
-}
-
 
 MirSurfaceType ms::BasicSurface::type() const
 {    
@@ -435,7 +428,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
     {
         swapinterval_ = interval;
         bool allow_dropping = (interval == 0);
-        for(auto& info : streams) 
+        for (auto& info : layers) 
             info.stream->allow_framedropping(allow_dropping);
 
         lg.unlock();
@@ -727,7 +720,7 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
         lg.unlock();
         if (new_visibility == mir_surface_visibility_exposed)
         {
-            for(auto& info : streams)
+            for (auto& info : layers)
                 info.stream->drop_old_buffers();
         }
         observers.attrib_changed(mir_surface_attrib_visibility, visibility_);
@@ -739,7 +732,7 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
 void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
     observers.add(observer);
-    for(auto& info : streams) 
+    for (auto& info : layers) 
         info.stream->add_observer(observer);
 }
 
@@ -749,7 +742,7 @@ void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& obs
     if (!o)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
     observers.remove(o);
-    for(auto& info : streams) 
+    for (auto& info : layers) 
         info.stream->remove_observer(observer);
 }
 
@@ -825,7 +818,7 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 {
     std::unique_lock<std::mutex> lk(guard);
     auto max_buf = 0;
-    for(auto info : streams)
+    for (auto const& info : layers)
         max_buf = std::max(max_buf, info.stream->buffers_ready_for_compositor(id));
     return max_buf;
 }
@@ -854,7 +847,7 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
     {
         std::unique_lock<std::mutex> lk(guard);
 
-        if(s.end() == std::find_if(s.begin(), s.end(),
+        if (s.end() == std::find_if(s.begin(), s.end(),
             [this] (ms::StreamInfo const& info) { return info.stream == surface_buffer_stream; }))
         {
             BOOST_THROW_EXCEPTION(std::logic_error("cannot remove the created-with buffer stream yet"));
@@ -863,13 +856,15 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
         streams = s;
     }
     observers.moved_to(surface_rect.top_left);
+
+    layers = s;
 }
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
 {
     std::unique_lock<std::mutex> lk(guard);
     mg::RenderableList list;
-    for(auto const& info : streams)
+    for (auto const& info : layers)
     {
         if (info.stream->has_submitted_buffer())
         {
@@ -879,5 +874,5 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
                 transformation_matrix, surface_alpha, nonrectangular, info.stream.get()));
         }
     }
-    return std::move(list);
+    return list;
 }

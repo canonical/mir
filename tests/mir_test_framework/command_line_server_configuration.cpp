@@ -28,8 +28,9 @@ namespace mo=mir::options;
 
 namespace
 {
+char const* args[] = {nullptr};
 int argc;
-char const** argv;
+char const** argv = args;
 }
 
 auto mir_test_framework::configuration_from_commandline()
