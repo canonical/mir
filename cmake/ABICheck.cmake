@@ -71,7 +71,7 @@ function(make_lib_descriptor name)
 endfunction()
 
 #These headers are not part of the libmircommon ABI
-set(mircommon-exclude-headers "${CMAKE_SOURCE_DIR}/src/include/common/mir/graphics/android\n    ${CMAKE_SOURCE_DIR}/src/include/common/mir/input")
+set(mircommon-exclude-headers "${CMAKE_SOURCE_DIR}/src/include/common/mir/graphics/android\n    ${CMAKE_SOURCE_DIR}/src/include/common/mir/input\n    ${CMAKE_SOURCE_DIR}/src/include/common/mir/events")
 
 #These headers are not part of the libmirplatform ABI
 set(mirplatform-exclude-headers "${CMAKE_SOURCE_DIR}/include/platform/mir/input")

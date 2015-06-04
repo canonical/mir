@@ -106,9 +106,6 @@ MIR_SERVER_32 {
     mir::scene::SessionListener::operator*;
     mir::scene::SessionListener::?SessionListener*;
     mir::scene::SessionListener::SessionListener*;
-    mir::scene::SurfaceBufferAccess::operator*;
-    mir::scene::SurfaceBufferAccess::?SurfaceBufferAccess*;
-    mir::scene::SurfaceBufferAccess::SurfaceBufferAccess*;
     mir::scene::SurfaceConfigurator::operator*;
     mir::scene::SurfaceConfigurator::?SurfaceConfigurator*;
     mir::scene::SurfaceConfigurator::SurfaceConfigurator*;
@@ -302,7 +299,6 @@ MIR_SERVER_32 {
     non-virtual?thunk?to?mir::scene::PromptSessionManager::?PromptSessionManager*;
     non-virtual?thunk?to?mir::scene::SessionCoordinator::?SessionCoordinator*;
     non-virtual?thunk?to?mir::scene::SessionListener::?SessionListener*;
-    non-virtual?thunk?to?mir::scene::SurfaceBufferAccess::?SurfaceBufferAccess*;
     non-virtual?thunk?to?mir::scene::SurfaceConfigurator::?SurfaceConfigurator*;
     non-virtual?thunk?to?mir::scene::SurfaceCoordinator::?SurfaceCoordinator*;
     non-virtual?thunk?to?mir::scene::SurfaceObserver::?SurfaceObserver*;
@@ -391,7 +387,6 @@ MIR_SERVER_32 {
     typeinfo?for?mir::scene::SessionListener;
     typeinfo?for?mir::scene::Snapshot;
     typeinfo?for?mir::scene::Surface;
-    typeinfo?for?mir::scene::SurfaceBufferAccess;
     typeinfo?for?mir::scene::SurfaceConfigurator;
     typeinfo?for?mir::scene::SurfaceCoordinator;
     typeinfo?for?mir::scene::SurfaceCreationParameters;
@@ -449,7 +444,6 @@ MIR_SERVER_32 {
     vtable?for?mir::scene::SessionListener;
     vtable?for?mir::scene::Snapshot;
     vtable?for?mir::scene::Surface;
-    vtable?for?mir::scene::SurfaceBufferAccess;
     vtable?for?mir::scene::SurfaceConfigurator;
     vtable?for?mir::scene::SurfaceCoordinator;
     vtable?for?mir::scene::SurfaceCreationParameters;
