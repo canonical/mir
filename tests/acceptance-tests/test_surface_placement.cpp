@@ -349,6 +349,26 @@ TEST_F(SurfacePlacement, medium_second_window_is_cascaded_wrt_first)
     mir_surface_release_sync(surface2);
 }
 
+TEST_F(SurfacePlacement, maximized_surface_is_sized_to_display)
+{
+    auto const expected_size = first_display.size;
+
+    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_state(spec, mir_surface_state_maximized);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+
+//    EXPECT_THAT(shell_surface->top_left(), Eq(Point{0, 0}));
+    EXPECT_THAT(shell_surface->top_left().x, Eq(X{0}));
+    EXPECT_THAT(shell_surface->top_left().y, Lt(Y{20}));
+    EXPECT_THAT(shell_surface->size(), Eq(expected_size));
+
+    mir_surface_release_sync(surface);
+}
+
+
 // Parented dialog or parented freestyle window
 //
 // For convenience, these types are referred to here as “parented dialogs”.
