@@ -220,7 +220,7 @@ public:
     }
 
     std::shared_ptr<msc::SessionCoordinator> const wrapped;
-    std::shared_ptr<mf::EventSink> last_sink;
+    std::weak_ptr<mf::EventSink> last_sink;
 };
 
 struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
@@ -241,7 +241,6 @@ struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
             return coordinator;
         });
     }
-
     std::shared_ptr<mg::Platform> the_graphics_platform() override
     {
         return platform;
@@ -368,8 +367,8 @@ TEST_F(ExchangeBufferTest, server_can_send_buffer)
     mtd::StubBuffer stub_buffer;
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(connection);
-    auto sink = server_configuration.coordinator->last_sink;
-    sink->send_buffer(mf::BufferStreamId{2}, stub_buffer);
+    auto sink = server_configuration.coordinator->last_sink.lock();
+    sink->send_buffer(mf::BufferStreamId{0}, stub_buffer);
     EXPECT_THAT(mir_debug_surface_current_buffer_id(surface), Eq(stub_buffer.id().as_value()));
 
     mir_surface_release_sync(surface);
