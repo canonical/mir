@@ -73,6 +73,7 @@ void mtf::ServerRunner::stop_server()
         BOOST_THROW_EXCEPTION(std::logic_error{"stop_server() called without calling start_server()?"});
     }
     display_server->stop();
+    if (server_thread.joinable()) server_thread.join();
 }
 
 mtf::ServerRunner::~ServerRunner()
