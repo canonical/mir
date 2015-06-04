@@ -23,7 +23,6 @@
 #include "bypass.h"
 #include "gbm_buffer.h"
 #include "mir/fatal.h"
-#include "mir/time/steady_clock.h"
 
 #include <boost/throw_exception.hpp>
 #include <GLES2/gl2.h>
@@ -104,7 +103,6 @@ mgm::DisplayBuffer::DisplayBuffer(
       scheduled_composite_frame{nullptr},
       platform(platform),
       listener(listener),
-      clock(std::make_unique<mir::time::SteadyClock>()), // TODO mock?
       drm(*platform->drm),
       outputs(outputs),
       surface_gbm{std::move(surface_gbm_param)},
@@ -193,9 +191,6 @@ void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rec
 
 bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderable_list)
 {
-    fprintf(stderr, "Render start\n");
-    render_start = clock->now();
-
     if ((rotation == mir_orientation_normal) &&
        (platform->bypass_option() == mgm::BypassOption::allowed))
     {
@@ -290,13 +285,9 @@ void mgm::DisplayBuffer::post()
         needs_set_crtc = false;
     }
 
-    auto render_end = clock->now();
-    render_time[next_render_time_slot] =
-        duration_cast<milliseconds>(render_end - render_start);
-    next_render_time_slot = (next_render_time_slot + 1) % MAX_RENDER_TIMES;
-    if (render_times < MAX_RENDER_TIMES)
-        ++render_times;
-    
+    // Predicted worst case render time for the next frame...
+    auto predicted_render_time = 50ms;
+
     if (bypass_buf)
     {
         /*
@@ -310,6 +301,9 @@ void mgm::DisplayBuffer::post()
          */
         scheduled_bypass_frame = bypass_buf;
         wait_for_page_flip();
+
+        // It's very likely the next frame will be bypassed like this one...
+        predicted_render_time = 0ms;
     }
     else
     {
@@ -342,26 +336,11 @@ void mgm::DisplayBuffer::post()
     {
         auto const& output = outputs.front();
         auto const min_frame_interval = 1000ms / output->max_refresh_rate();
-        auto const predicted_render_time = worst_render_time() + 1ms;
-        auto const delay = min_frame_interval - predicted_render_time;
+        auto const delay = min_frame_interval - predicted_render_time - 1ms;
 
-        fprintf(stderr, "predict render %dms\n",
-            (int)predicted_render_time.count());
-
-        if (delay > 0ms)
+        if (delay > std::chrono::milliseconds::zero())
             std::this_thread::sleep_for(delay);
     }
-}
-
-milliseconds mgm::DisplayBuffer::worst_render_time() const
-{
-    auto worst = 0ms;
-    for (int i = 0; i < render_times; ++i)
-    {
-        if (render_time[i] > worst)
-            worst = render_time[i];
-    }
-    return worst;
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
@@ -460,9 +439,6 @@ void mgm::DisplayBuffer::wait_for_page_flip()
 
 void mgm::DisplayBuffer::make_current()
 {
-    fprintf(stderr, "Render start\n");
-    render_start = clock->now();
-
     if (!egl.make_current())
     {
         fatal_error("Failed to make EGL surface current");
