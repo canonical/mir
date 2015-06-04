@@ -19,7 +19,7 @@
 #ifndef MIR_OPTIONAL_VALUE_H_
 #define MIR_OPTIONAL_VALUE_H_
 
-#include <boost/throw_exception.hpp>
+#include "mir/fatal.h"
 
 namespace mir
 {
@@ -42,7 +42,7 @@ public:
     {
         if (!is_set())
         {
-            BOOST_THROW_EXCEPTION(std::logic_error("Accessing value of unset optional_value"));
+            (*fatal_error)("Accessing value of unset optional");
         }
         return value_;
     }
