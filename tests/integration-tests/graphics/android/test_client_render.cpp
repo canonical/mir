@@ -22,6 +22,7 @@
 #include "src/platforms/android/server/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "src/platforms/android/server/android_graphic_buffer_allocator.h"
+#include "src/platforms/android/server/device_quirks.h"
 
 #include "mir_test/cross_process_sync.h"
 #include "mir_test/stub_server_tool.h"
@@ -187,7 +188,8 @@ struct StubServerGenerator : public mt::StubServerTool
 {
     StubServerGenerator()
     {
-        allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
+        auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
+        allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
         auto size = geom::Size{test_width, test_height};
         surface_pf = mir_pixel_format_abgr_8888;
         last_posted = allocator->alloc_buffer_platform(size, surface_pf, mga::BufferUsage::use_hardware);

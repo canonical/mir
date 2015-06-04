@@ -42,6 +42,10 @@ struct MockBufferCallback
 
 struct LegacySceneChangeNotificationTest : public testing::Test
 {
+    void SetUp() override
+    {
+        ON_CALL(surface,visible()).WillByDefault(testing::Return(true));
+    }
     testing::NiceMock<MockSceneCallback> scene_callback;
     testing::NiceMock<MockBufferCallback> buffer_callback;
     std::function<void(int)> buffer_change_callback{[this](int arg){buffer_callback.invoke(arg);}};
@@ -52,8 +56,7 @@ struct LegacySceneChangeNotificationTest : public testing::Test
 
 TEST_F(LegacySceneChangeNotificationTest, fowards_all_observations_to_callback)
 {
-    EXPECT_CALL(scene_callback, invoke())
-        .Times(3);
+    EXPECT_CALL(scene_callback, invoke()).Times(2);
 
     ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(&surface);
@@ -87,10 +90,8 @@ TEST_F(LegacySceneChangeNotificationTest, observes_surface_changes)
         .WillOnce(SaveArg<0>(&surface_observer));
    
     int buffer_num{3}; 
-    EXPECT_CALL(scene_callback, invoke())
-        .Times(1);
-    EXPECT_CALL(buffer_callback, invoke(buffer_num))
-        .Times(1);
+    EXPECT_CALL(scene_callback, invoke()).Times(0);
+    EXPECT_CALL(buffer_callback, invoke(buffer_num)).Times(1);
 
     ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(&surface);
@@ -105,8 +106,7 @@ TEST_F(LegacySceneChangeNotificationTest, redraws_on_rename)
 
     EXPECT_CALL(surface, add_observer(_)).Times(1)
         .WillOnce(SaveArg<0>(&surface_observer));
-    EXPECT_CALL(scene_callback, invoke())
-        .Times(2);
+    EXPECT_CALL(scene_callback, invoke()).Times(1);
 
     ms::LegacySceneChangeNotification observer(scene_change_callback,
                                                buffer_change_callback);
