@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <cstring>
+#include <unordered_map>
 
 #include <system_error>
 #include <gtest/gtest.h>
@@ -146,10 +147,11 @@ TEST_F(SharedLibraryProber, LogsNoLibrariesForPathWithoutLibraries)
 
 namespace
 {
-MATCHER_P(FilenameMatches, path, "")
+MATCHER_P(FilenameMatches, matcher, "")
 {
+    using namespace testing;
     *result_listener << "where the path is " << arg;
-    return boost::filesystem::path(path).filename() == arg.filename();
+    return Matches(matcher)(arg.filename().native());
 }
 }
 
@@ -158,11 +160,14 @@ TEST_F(SharedLibraryProber, LogsEachLibraryProbed)
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
 
-    EXPECT_CALL(report, loading_library(FilenameMatches("libamd64.so")));
-    EXPECT_CALL(report, loading_library(FilenameMatches("libarmhf.so")));
-    EXPECT_CALL(report, loading_library(FilenameMatches("libi386.so")));
-    EXPECT_CALL(report, loading_library(FilenameMatches("libarm64.so")));
-    EXPECT_CALL(report, loading_library(FilenameMatches("libinvalid.so.3")));
+    auto const dso_filename_regex = ".*\\.so(\\..*)?";
+
+    // We have at least 5 DSOs to probe
+    EXPECT_CALL(report,
+        loading_library(FilenameMatches(ContainsRegex(dso_filename_regex)))).Times(AtLeast(5));
+    // We shouldn't probe anything that doesn't look like a DSO.
+    EXPECT_CALL(report,
+        loading_library(FilenameMatches(Not(ContainsRegex(dso_filename_regex))))).Times(0);
 
     mir::libraries_for_path(library_path, report);
 }
@@ -172,25 +177,29 @@ TEST_F(SharedLibraryProber, LogsFailureForLoadFailure)
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
 
-    bool armhf_failed{false};
-    bool amd64_failed{false};
-    bool i386_failed{false};
-    bool arm64_failed{false};
-    bool invalid_failed{false};
+    std::unordered_map<std::string, bool> probing_map;
 
-    ON_CALL(report, loading_failed(FilenameMatches("libamd64.so"), _))
-            .WillByDefault(InvokeWithoutArgs([&amd64_failed]() { amd64_failed = true; }));
-    ON_CALL(report, loading_failed(FilenameMatches("libarmhf.so"), _))
-            .WillByDefault(InvokeWithoutArgs([&armhf_failed]() { armhf_failed = true; }));
-    ON_CALL(report, loading_failed(FilenameMatches("libi386.so"), _))
-            .WillByDefault(InvokeWithoutArgs([&i386_failed]() { i386_failed = true; }));
-    ON_CALL(report, loading_failed(FilenameMatches("libarm64.so"), _))
-            .WillByDefault(InvokeWithoutArgs([&arm64_failed]() { arm64_failed = true; }));
-    ON_CALL(report, loading_failed(FilenameMatches("libinvalid.so.3"), _))
-            .WillByDefault(InvokeWithoutArgs([&invalid_failed]() { invalid_failed = true; }));
+    ON_CALL(report, loading_library(_))
+        .WillByDefault(Invoke([&probing_map](auto const& filename)
+    {
+        probing_map[filename.filename().native()] = true;
+    }));
+    ON_CALL(report, loading_failed(_,_))
+        .WillByDefault(Invoke([&probing_map](auto const& filename, auto const&)
+    {
+        probing_map[filename.filename().native()] = false;
+    }));
 
     mir::libraries_for_path(library_path, report);
 
-    EXPECT_TRUE(invalid_failed);
-    EXPECT_TRUE(i386_failed || amd64_failed || armhf_failed || arm64_failed);
+    EXPECT_FALSE(probing_map.at("libinvalid.so.3"));
+
+    // As we add extra test DSOs you can add them to this list, but it's not mandatory.
+    // At least one of these should fail on any concievable architecture.
+    EXPECT_THAT(probing_map, Contains(AnyOf(
+        std::make_pair("lib386.so", false),
+        std::make_pair("libamd64.so", false),
+        std::make_pair("libarmhf.so", false),
+        std::make_pair("libarm64.so", false))));
 }
+
