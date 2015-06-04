@@ -203,14 +203,6 @@ TEST_F(SharedLibraryProber, logs_failure_for_load_failure)
         std::make_pair("libarm64.so", false))));
 }
 
-namespace
-{
-MATCHER(ValueIsTrue, "")
-{
-    return arg.second;
-}
-}
-
 TEST_F(SharedLibraryProber, does_not_log_failure_on_success)
 {
     using namespace testing;
@@ -231,5 +223,6 @@ TEST_F(SharedLibraryProber, does_not_log_failure_on_success)
 
     mir::libraries_for_path(library_path, report);
 
-    EXPECT_THAT(probing_map, Contains(ValueIsTrue()));
+    // libthis-arch should always be loadable...
+    EXPECT_TRUE(probing_map.at("libthis-arch.so"));
 }
