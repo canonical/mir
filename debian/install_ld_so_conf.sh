@@ -7,7 +7,7 @@ DEB_HOST_MULTIARCH=$2
 
 mir_platform_types="${PLATFORM_DRIVER} ${CLIENT_DRIVER}"
 case $DEB_HOST_ARCH in
-    arm64)
+    arm64|powerpc|ppc64el)
         mir_platforms="mesa"
         ;;
     *)

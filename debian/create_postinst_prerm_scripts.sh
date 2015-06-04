@@ -8,7 +8,7 @@ deb_host_multiarch=$2
 
 mir_platform_types="${PLATFORM_DRIVER}"
 case $deb_host_arch in
-    arm64)
+    arm64|powerpc|ppc64el)
         mir_platforms="mesa"
         ;;
     *)
