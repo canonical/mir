@@ -27,11 +27,15 @@
 #include "mir_protobuf_wire.pb.h"
 
 #include "mir_test_doubles/null_client_event_sink.h"
+#include "mir_test/fd_utils.h"
 
 #include <list>
 #include <endian.h>
 
+#include <sys/eventfd.h>
 #include <fcntl.h>
+
+#include <boost/throw_exception.hpp>
 
 #include <google/protobuf/descriptor.h>
 
@@ -42,6 +46,7 @@ namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 namespace mtd = mir::test::doubles;
 namespace md = mir::dispatch;
+namespace mt = mir::test;
 
 namespace
 {
@@ -58,7 +63,15 @@ class MockStreamTransport : public mclr::StreamTransport
 {
 public:
     MockStreamTransport()
+        : event_fd{eventfd(0, EFD_CLOEXEC)}
     {
+        if (event_fd == mir::Fd::invalid)
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                     std::system_category(),
+                                                     "Failed to create event fd"}));
+        }
+
         using namespace testing;
         ON_CALL(*this, register_observer(_))
             .WillByDefault(Invoke(std::bind(&MockStreamTransport::register_observer_default,
@@ -82,6 +95,8 @@ public:
 
     void add_server_message(std::vector<uint8_t> const& message)
     {
+        eventfd_t data_added{message.size()};
+        eventfd_write(event_fd, data_added);
         received_data.insert(received_data.end(), message.begin(), message.end());
     }
     void add_server_message(std::vector<uint8_t> const& message, std::initializer_list<mir::Fd> fds)
@@ -95,24 +110,30 @@ public:
         return received_data.empty() && received_fds.empty();
     }
 
-    void notify_data_received()
-    {
-        do
-        {
-            for(auto& observer : observers)
-                observer->on_data_available();
-        }
-        while (!all_data_consumed());
-    }
-
     MOCK_METHOD1(register_observer, void(std::shared_ptr<Observer> const&));
     MOCK_METHOD1(unregister_observer, void(std::shared_ptr<Observer> const&));
     MOCK_METHOD2(receive_data, void(void*, size_t));
     MOCK_METHOD3(receive_data, void(void*, size_t, std::vector<mir::Fd>&));
     MOCK_METHOD2(send_message, void(std::vector<uint8_t> const&, std::vector<mir::Fd> const&));
-    MOCK_CONST_METHOD0(watch_fd, mir::Fd());
-    MOCK_METHOD1(dispatch, bool(md::FdEvents));
-    MOCK_CONST_METHOD0(relevant_events, md::FdEvents());
+
+    mir::Fd watch_fd() const override
+    {
+        return event_fd;
+    }
+
+    bool dispatch(md::FdEvents /*events*/) override
+    {
+        for (auto& observer : observers)
+        {
+            observer->on_data_available();
+        }
+        return true;
+    }
+
+    md::FdEvents relevant_events() const override
+    {
+        return md::FdEvent::readable;
+    }
 
     // Transport interface
     void register_observer_default(std::shared_ptr<Observer> const& observer)
@@ -128,6 +149,9 @@ public:
 
     void receive_data_default(void* buffer, size_t read_bytes, std::vector<mir::Fd>& fds)
     {
+        if (read_bytes == 0)
+            return;
+
         auto num_fds = fds.size();
         if (read_bytes > received_data.size())
         {
@@ -143,6 +167,11 @@ public:
 
         received_data.erase(received_data.begin(), received_data.begin() + read_bytes);
         received_fds.erase(received_fds.begin(), received_fds.begin() + num_fds);
+
+        eventfd_t remaining_bytes;
+        eventfd_read(event_fd, &remaining_bytes);
+        remaining_bytes -= read_bytes;
+        eventfd_write(event_fd, remaining_bytes);
     }
 
     void send_message_default(std::vector<uint8_t> const& buffer)
@@ -156,6 +185,9 @@ public:
     std::vector<uint8_t> received_data;
     std::vector<mir::Fd> received_fds;
     std::list<std::vector<uint8_t>> sent_messages;
+
+private:
+    mir::Fd event_fd;
 };
 
 class MirProtobufRpcChannelTest : public testing::Test
@@ -176,12 +208,12 @@ public:
 
     MockStreamTransport* transport;
     std::shared_ptr<mcl::LifecycleControl> lifecycle;
-    std::shared_ptr<::google::protobuf::RpcChannel> channel;
+    std::shared_ptr<mclr::MirProtobufRpcChannel> channel;
 };
 
 }
 
-TEST_F(MirProtobufRpcChannelTest, ReadsFullMessages)
+TEST_F(MirProtobufRpcChannelTest, reads_full_messages)
 {
     std::vector<uint8_t> empty_message(sizeof(uint16_t));
     std::vector<uint8_t> small_message(sizeof(uint16_t) + 8);
@@ -192,19 +224,19 @@ TEST_F(MirProtobufRpcChannelTest, ReadsFullMessages)
     *reinterpret_cast<uint16_t*>(large_message.data()) = htobe16(4096);
 
     transport->add_server_message(empty_message);
-    transport->notify_data_received();
+    transport->dispatch(md::FdEvent::readable);
     EXPECT_TRUE(transport->all_data_consumed());
 
     transport->add_server_message(small_message);
-    transport->notify_data_received();
+    transport->dispatch(md::FdEvent::readable);
     EXPECT_TRUE(transport->all_data_consumed());
 
     transport->add_server_message(large_message);
-    transport->notify_data_received();
+    transport->dispatch(md::FdEvent::readable);
     EXPECT_TRUE(transport->all_data_consumed());
 }
 
-TEST_F(MirProtobufRpcChannelTest, ReadsAllQueuedMessages)
+TEST_F(MirProtobufRpcChannelTest, reads_all_queued_messages)
 {
     std::vector<uint8_t> empty_message(sizeof(uint16_t));
     std::vector<uint8_t> small_message(sizeof(uint16_t) + 8);
@@ -218,11 +250,14 @@ TEST_F(MirProtobufRpcChannelTest, ReadsAllQueuedMessages)
     transport->add_server_message(small_message);
     transport->add_server_message(large_message);
 
-    transport->notify_data_received();
+    while(mt::fd_is_readable(channel->watch_fd()))
+    {
+        channel->dispatch(md::FdEvent::readable);
+    }
     EXPECT_TRUE(transport->all_data_consumed());
 }
 
-TEST_F(MirProtobufRpcChannelTest, SendsMessagesAtomically)
+TEST_F(MirProtobufRpcChannelTest, sends_messages_atomically)
 {
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
     mir::protobuf::ConnectParameters message;
@@ -233,7 +268,7 @@ TEST_F(MirProtobufRpcChannelTest, SendsMessagesAtomically)
     EXPECT_EQ(transport->sent_messages.size(), 1);
 }
 
-TEST_F(MirProtobufRpcChannelTest, SetsCorrectSizeWhenSendingMessage)
+TEST_F(MirProtobufRpcChannelTest, sets_correct_size_when_sending_message)
 {
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
     mir::protobuf::ConnectParameters message;
@@ -246,7 +281,7 @@ TEST_F(MirProtobufRpcChannelTest, SetsCorrectSizeWhenSendingMessage)
     EXPECT_EQ(transport->sent_messages.front().size() - sizeof(uint16_t), message_header);
 }
 
-TEST_F(MirProtobufRpcChannelTest, ReadsFds)
+TEST_F(MirProtobufRpcChannelTest, reads_fds)
 {
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
     mir::protobuf::Buffer reply;
@@ -288,7 +323,10 @@ TEST_F(MirProtobufRpcChannelTest, ReadsFds)
         std::vector<uint8_t> dummy = {1};
         transport->add_server_message(dummy, fds);
 
-        transport->notify_data_received();
+        while(mt::fd_is_readable(channel->watch_fd()))
+        {
+            channel->dispatch(md::FdEvent::readable);
+        }
     }
 
     ASSERT_EQ(reply.fd_size(), fds.size());
@@ -300,7 +338,7 @@ TEST_F(MirProtobufRpcChannelTest, ReadsFds)
     }
 }
 
-TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnWriteError)
+TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_on_write_error)
 {
     using namespace ::testing;
 
@@ -328,7 +366,7 @@ TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnWriteError)
     EXPECT_TRUE(disconnected);
 }
 
-TEST_F(MirProtobufRpcChannelTest, ForwardsDisconnectNotification)
+TEST_F(MirProtobufRpcChannelTest, forwards_disconnect_notification)
 {
     using namespace ::testing;
 
@@ -350,7 +388,7 @@ TEST_F(MirProtobufRpcChannelTest, ForwardsDisconnectNotification)
     EXPECT_TRUE(disconnected);
 }
 
-TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnlyOnce)
+TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_only_once)
 {
     using namespace ::testing;
 
@@ -388,3 +426,196 @@ TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnlyOnce)
 
     EXPECT_TRUE(disconnected);
 }
+
+namespace
+{
+void set_flag(bool* flag)
+{
+    *flag = true;
+}
+}
+
+TEST_F(MirProtobufRpcChannelTest, delays_messages_not_requested)
+{
+    using namespace ::testing;
+
+    auto typed_channel = std::dynamic_pointer_cast<mclr::MirProtobufRpcChannel>(channel);
+
+    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mir::protobuf::DRMMagic request;
+    mir::protobuf::DRMAuthMagicStatus reply;
+
+    bool first_response_called{false};
+    bool second_response_called{false};
+    channel_user.drm_auth_magic(nullptr,
+                                &request,
+                                &reply,
+                                google::protobuf::NewCallback(&set_flag, &first_response_called));
+
+    typed_channel->process_next_request_first();
+    channel_user.drm_auth_magic(nullptr,
+                                &request,
+                                &reply,
+                                google::protobuf::NewCallback(&set_flag, &second_response_called));
+
+    mir::protobuf::wire::Invocation wire_request;
+    mir::protobuf::wire::Result wire_reply;
+
+    wire_request.ParseFromArray(transport->sent_messages.front().data() + sizeof(uint16_t),
+                                transport->sent_messages.front().size() - sizeof(uint16_t));
+
+    transport->sent_messages.pop_front();
+
+    wire_reply.set_id(wire_request.id());
+    wire_reply.set_response(reply.SerializeAsString());
+
+    std::vector<uint8_t> buffer(wire_reply.ByteSize() + sizeof(uint16_t));
+    *reinterpret_cast<uint16_t*>(buffer.data()) = htobe16(wire_reply.ByteSize());
+    ASSERT_TRUE(wire_reply.SerializeToArray(buffer.data() + sizeof(uint16_t), buffer.size() - sizeof(uint16_t)));
+
+    transport->add_server_message(buffer);
+
+    wire_request.ParseFromArray(transport->sent_messages.front().data() + sizeof(uint16_t),
+                                transport->sent_messages.front().size() - sizeof(uint16_t));
+
+    transport->sent_messages.pop_front();
+
+    wire_reply.set_id(wire_request.id());
+    wire_reply.set_response(reply.SerializeAsString());
+
+    buffer.resize(wire_reply.ByteSize() + sizeof(uint16_t));
+    *reinterpret_cast<uint16_t*>(buffer.data()) = htobe16(wire_reply.ByteSize());
+    ASSERT_TRUE(wire_reply.SerializeToArray(buffer.data() + sizeof(uint16_t), buffer.size() - sizeof(uint16_t)));
+
+    transport->add_server_message(buffer);
+
+    // Read the first message; this should be queued for later processing...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_FALSE(first_response_called);
+    EXPECT_FALSE(second_response_called);
+
+    // Read the second message; this should be processed immediately...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_FALSE(first_response_called);
+    EXPECT_TRUE(second_response_called);
+
+    // Now, the first message should be ready to be processed...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_TRUE(first_response_called);
+    EXPECT_TRUE(second_response_called);
+}
+
+TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
+{
+    using namespace ::testing;
+
+    auto typed_channel = std::dynamic_pointer_cast<mclr::MirProtobufRpcChannel>(channel);
+
+    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mir::protobuf::DRMMagic drm_request;
+    mir::protobuf::DRMAuthMagicStatus drm_reply;
+
+    mir::protobuf::Buffer buffer_reply;
+    mir::protobuf::BufferRequest buffer_request;
+
+    bool first_response_called{false};
+    bool second_response_called{false};
+
+
+    channel_user.exchange_buffer(nullptr,
+                                 &buffer_request,
+                                 &buffer_reply,
+                                 google::protobuf::NewCallback(&set_flag, &first_response_called));
+
+    typed_channel->process_next_request_first();
+    channel_user.drm_auth_magic(nullptr,
+                                &drm_request,
+                                &drm_reply,
+                                google::protobuf::NewCallback(&set_flag, &second_response_called));
+
+
+    std::initializer_list<mir::Fd> fds = {mir::Fd{open("/dev/null", O_RDONLY)},
+                                          mir::Fd{open("/dev/null", O_RDONLY)},
+                                          mir::Fd{open("/dev/null", O_RDONLY)}};
+
+    {
+        mir::protobuf::Buffer reply_message;
+
+        for (auto fd : fds)
+            reply_message.add_fd(fd);
+        reply_message.set_fds_on_side_channel(fds.size());
+
+        mir::protobuf::wire::Invocation request;
+        mir::protobuf::wire::Result reply;
+
+        request.ParseFromArray(transport->sent_messages.front().data() + sizeof(uint16_t),
+                               transport->sent_messages.front().size() - sizeof(uint16_t));
+
+        transport->sent_messages.pop_front();
+
+        reply.set_id(request.id());
+        reply.set_response(reply_message.SerializeAsString());
+
+        ASSERT_TRUE(reply.has_id());
+        ASSERT_TRUE(reply.has_response());
+
+        std::vector<uint8_t> buffer(reply.ByteSize() + sizeof(uint16_t));
+        *reinterpret_cast<uint16_t*>(buffer.data()) = htobe16(reply.ByteSize());
+        ASSERT_TRUE(reply.SerializeToArray(buffer.data() + sizeof(uint16_t), buffer.size() - sizeof(uint16_t)));
+
+        transport->add_server_message(buffer);
+
+        // Because our protocol is a bit silly...
+        std::vector<uint8_t> dummy = {1};
+        transport->add_server_message(dummy, fds);
+    }
+
+    {
+        mir::protobuf::DRMAuthMagicStatus reply;
+
+        mir::protobuf::wire::Invocation wire_request;
+        mir::protobuf::wire::Result wire_reply;
+
+        wire_request.ParseFromArray(transport->sent_messages.front().data() + sizeof(uint16_t),
+                                    transport->sent_messages.front().size() - sizeof(uint16_t));
+
+        transport->sent_messages.pop_front();
+
+        wire_reply.set_id(wire_request.id());
+        wire_reply.set_response(reply.SerializeAsString());
+
+        std::vector<uint8_t> buffer(wire_reply.ByteSize() + sizeof(uint16_t));
+        *reinterpret_cast<uint16_t*>(buffer.data()) = htobe16(wire_reply.ByteSize());
+        ASSERT_TRUE(wire_reply.SerializeToArray(buffer.data() + sizeof(uint16_t), buffer.size() - sizeof(uint16_t)));
+
+        transport->add_server_message(buffer);
+    }
+
+    // Read the first message; this should be queued for later processing...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_FALSE(first_response_called);
+    EXPECT_FALSE(second_response_called);
+
+    // Read the second message; this should be processed immediately...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_FALSE(first_response_called);
+    EXPECT_TRUE(second_response_called);
+
+    // Now, the first message should be ready to be processed...
+    EXPECT_TRUE(mt::fd_is_readable(typed_channel->watch_fd()));
+    typed_channel->dispatch(md::FdEvent::readable);
+
+    EXPECT_TRUE(first_response_called);
+    EXPECT_TRUE(second_response_called);
+}
+

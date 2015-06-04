@@ -46,7 +46,7 @@ struct AllocDevDeleter
 };
 }
 
-mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator()
+mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(std::shared_ptr<DeviceQuirks> const& quirks)
     : egl_extensions(std::make_shared<mg::EGLExtensions>())
 {
     int err;
@@ -65,7 +65,7 @@ mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator()
 
     AllocDevDeleter del;
     std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(alloc_dev, del);
-    alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr));
+    alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr, quirks));
 }
 
 std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(

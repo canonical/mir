@@ -34,7 +34,8 @@ Build-Depends: cmake,
                libudev-dev,
                libgtest-dev,
                google-mock (>= 1.6.0+svn437),
-               valgrind [!arm64],
+# only enable valgrind once it's been tested to work on each architecture:
+               valgrind [amd64 i386 armhf],
                libglib2.0-dev,
                libfreetype6-dev,
                abi-compliance-checker,
@@ -47,7 +48,7 @@ Vcs-Bzr: https://code.launchpad.net/~mir-team/mir/trunk
 
 Package: libmirprotobuf0
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -63,7 +64,7 @@ Description: Display server for Ubuntu - RPC definitions
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
 Package: libmirserver32
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -76,7 +77,7 @@ Description: Display server for Ubuntu - server library
 
 Package: libmirplatform7
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -90,10 +91,10 @@ Description: Display server for Ubuntu - platform library
 
 Package: libmircommon-dev
 Section: libdevel
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon4 (= ${binary:Version}), 
+Depends: libmircommon5 (= ${binary:Version}), 
          libprotobuf-dev (>= 2.4.1),
          libxkbcommon-dev,
          ${misc:Depends},
@@ -107,7 +108,7 @@ Description: Display server for Ubuntu - development headers
 
 Package: libmirplatform-dev
 Section: libdevel
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirplatform7 (= ${binary:Version}),
@@ -124,7 +125,7 @@ Description: Display server for Ubuntu - development headers
 
 Package: libmirserver-dev
 Section: libdevel
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirserver32 (= ${binary:Version}),
@@ -140,7 +141,7 @@ Description: Display server for Ubuntu - development headers
 
 Package: libmirclient9
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -153,7 +154,7 @@ Description: Display server for Ubuntu - client library
 
 Package: libmirclient-dev
 Section: libdevel
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirclient9 (= ${binary:Version}),
@@ -168,7 +169,7 @@ Description: Display server for Ubuntu - development headers
 
 Package: libmirclient-debug-extension1
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -189,7 +190,7 @@ Description: Display server for Ubuntu - optional client debug interfaces
 
 Package: libmirclient-debug-extension-dev
 Section: libdevel
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirclient-debug-extension1 (= ${binary:Version}),
@@ -213,7 +214,7 @@ Description: Display server for Ubuntu - client debug interface headers
  the debug extensions.
 
 Package: mir-demos
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Recommends: fonts-liberation
@@ -224,7 +225,7 @@ Description: Display server for Ubuntu - demonstration programs
  Contains demo applications (with source) that use the Mir display server
 
 Package: mir-utils
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - utility programs
@@ -241,7 +242,7 @@ Description: API documentation for mir
  This package installs the mir API documentation.
 
 Package: mir-test-tools
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -253,9 +254,9 @@ Description: Display Server for Ubuntu - stress tests and other test tools
  .
  Contains a tool for stress testing the Mir display server
 
-Package: libmircommon4
+Package: libmircommon5
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -269,7 +270,7 @@ Description: Display server for Ubuntu - shared library
 # Longer-term these drivers should move out-of-tree
 Package: mir-platform-graphics-mesa2
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -297,7 +298,7 @@ Description: Display server for Ubuntu - platform library for Android
 
 Package: mir-client-platform-mesa2
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -311,7 +312,7 @@ Description: Display server for Ubuntu - client platform library for Mesa
 
 Package: mir-client-platform-mesa-dev
 Section: libdevel
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmircommon-dev,
@@ -339,7 +340,7 @@ Description: Display server for Ubuntu - client platform library for Android
 
 Package: mir-graphics-drivers-desktop
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},

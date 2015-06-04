@@ -21,6 +21,7 @@
 #include "mir/graphics/android/sync_fence.h"
 #include "android_alloc_adaptor.h"
 #include "android_format_conversion-inl.h"
+#include "device_quirks.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -46,8 +47,10 @@ private:
 };
 }
 
-mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc_device_t>& alloc_device)
-    : alloc_dev(alloc_device)
+mga::AndroidAllocAdaptor::AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> const& alloc_device,
+    std::shared_ptr<DeviceQuirks> const& quirks)
+    : alloc_dev(alloc_device),
+      quirks(quirks)
 {
 }
 
@@ -60,7 +63,7 @@ std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     auto width = static_cast<int>(size.width.as_uint32_t());
     auto height = static_cast<int>(size.height.as_uint32_t());
     auto usage_flag = convert_to_android_usage(usage);
-    auto ret = alloc_dev->alloc(alloc_dev.get(), quirks.aligned_width(width), height,
+    auto ret = alloc_dev->alloc(alloc_dev.get(), quirks->aligned_width(width), height,
                            format, usage_flag, &buf_handle, &stride);
 
     if (( ret ) || (buf_handle == NULL) || (stride == 0))
