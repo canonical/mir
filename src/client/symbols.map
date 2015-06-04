@@ -153,8 +153,6 @@ MIR_CLIENT_9 {
 MIR_CLIENT_8.5 {   # New in Mir 0.14
  global:
     mir_surface_spec_set_streams;
-    mir_surface_num_streams;
-    mir_surface_buffer_stream_info_at;
 } MIR_CLIENT_8.4;
 
 MIR_CLIENT_DETAIL_9 {
