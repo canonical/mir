@@ -33,6 +33,7 @@
 
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
+using namespace std::chrono;
 
 class mgm::BufferObject
 {
@@ -284,6 +285,9 @@ void mgm::DisplayBuffer::post()
         needs_set_crtc = false;
     }
 
+    // Predicted worst case render time for the next frame...
+    auto predicted_render_time = 50ms;
+
     if (bypass_buf)
     {
         /*
@@ -298,25 +302,8 @@ void mgm::DisplayBuffer::post()
         scheduled_bypass_frame = bypass_buf;
         wait_for_page_flip();
 
-        /*
-         * Introducing "predictive bypass":
-         * If the current frame is bypassed then there is an extremely high
-         * likelihood the next one will be too. If it is then we can reduce
-         * the latency of that next frame (make the compositor sample the
-         * scene later) by almost a whole frame. Because we don't need to
-         * spare any time for rendering. Just a millisecond at most for the
-         * kernel to get around to scheduling a pageflip...
-         */
-        std::chrono::milliseconds min_min_frame_interval(1000);
-        for (auto const& output : outputs)
-        {
-            std::chrono::milliseconds
-                min_frame_interval(1000 / output->max_refresh_rate());
-            if (min_frame_interval < min_min_frame_interval)
-                min_min_frame_interval = min_frame_interval;
-        }
-        std::chrono::milliseconds const grace(1);
-        std::this_thread::sleep_for(min_min_frame_interval - grace);
+        // It's very likely the next frame will be bypassed like this one...
+        predicted_render_time = 0ms;
     }
     else
     {
@@ -333,6 +320,27 @@ void mgm::DisplayBuffer::post()
     // Buffer lifetimes are managed exclusively by scheduled*/visible* now
     bypass_buf = nullptr;
     bypass_bufobj = nullptr;
+
+    /*
+     * Introducing "predictive bypass":
+     * If the current frame is bypassed then there is an extremely high
+     * likelihood the next one will be too. If it is then we can reduce
+     * the latency of that next frame (make the compositor sample the
+     * scene later) by almost a whole frame. Because we don't need to
+     * spare any time for rendering. Just a millisecond at most for the
+     * kernel to get around to scheduling a pageflip. Note: this prediction
+     * only works for non-clone modes as the full set of outputs must be
+     * perfectly in phase and we only know how to guarantee that with one.
+     */
+    if (outputs.size() == 1)
+    {
+        auto const& output = outputs.front();
+        auto const min_frame_interval = 1000ms / output->max_refresh_rate();
+        auto const delay = min_frame_interval - predicted_render_time - 1ms;
+
+        if (delay > std::chrono::milliseconds::zero())
+            std::this_thread::sleep_for(delay);
+    }
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
