@@ -72,19 +72,19 @@ public:
 
 }
 
-TEST_F(SharedLibraryProber, ReturnsNonEmptyListForPathContainingLibraries)
+TEST_F(SharedLibraryProber, returns_non_empty_list_for_path_containing_libraries)
 {
     auto libraries = mir::libraries_for_path(library_path, null_report);
     EXPECT_GE(libraries.size(), 1);
 }
 
-TEST_F(SharedLibraryProber, RaisesExceptionForNonexistentPath)
+TEST_F(SharedLibraryProber, raises_exception_for_nonexistent_path)
 {
     EXPECT_THROW(mir::libraries_for_path("/a/path/that/certainly/doesnt/exist", null_report),
                  std::system_error);
 }
 
-TEST_F(SharedLibraryProber, NonExistentPathRaisesENOENTError)
+TEST_F(SharedLibraryProber, non_existent_path_raises_ENOENT_error)
 {
     try
     {
@@ -96,13 +96,13 @@ TEST_F(SharedLibraryProber, NonExistentPathRaisesENOENTError)
     }
 }
 
-TEST_F(SharedLibraryProber, PathWithNoSharedLibrariesReturnsEmptyList)
+TEST_F(SharedLibraryProber, path_with_no_shared_libraries_returns_empty_list)
 {
     auto libraries = mir::libraries_for_path(temporary_directory.c_str(), null_report);
     EXPECT_EQ(0, libraries.size());
 }
 
-TEST_F(SharedLibraryProber, LogsStartOfProbe)
+TEST_F(SharedLibraryProber, logs_start_of_probe)
 {
     using namespace testing;
     testing::NiceMock<MockSharedLibraryProberReport> report;
@@ -112,7 +112,7 @@ TEST_F(SharedLibraryProber, LogsStartOfProbe)
     mir::libraries_for_path(library_path, report);
 }
 
-TEST_F(SharedLibraryProber, LogsForNonexistentPath)
+TEST_F(SharedLibraryProber, logs_for_nonexistent_path)
 {
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
@@ -123,7 +123,7 @@ TEST_F(SharedLibraryProber, LogsForNonexistentPath)
                  std::runtime_error);
 }
 
-TEST_F(SharedLibraryProber, LogsFailureForNonexistentPath)
+TEST_F(SharedLibraryProber, logs_failure_for_nonexistent_path)
 {
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
@@ -135,7 +135,7 @@ TEST_F(SharedLibraryProber, LogsFailureForNonexistentPath)
 
 }
 
-TEST_F(SharedLibraryProber, LogsNoLibrariesForPathWithoutLibraries)
+TEST_F(SharedLibraryProber, logs_no_libraries_for_path_without_libraries)
 {
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
@@ -155,7 +155,7 @@ MATCHER_P(FilenameMatches, matcher, "")
 }
 }
 
-TEST_F(SharedLibraryProber, LogsEachLibraryProbed)
+TEST_F(SharedLibraryProber, logs_each_library_probed)
 {
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
@@ -172,7 +172,7 @@ TEST_F(SharedLibraryProber, LogsEachLibraryProbed)
     mir::libraries_for_path(library_path, report);
 }
 
-TEST_F(SharedLibraryProber, LogsFailureForLoadFailure)
+TEST_F(SharedLibraryProber, logs_failure_for_load_failure)
 {
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
