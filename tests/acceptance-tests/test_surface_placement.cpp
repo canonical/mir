@@ -427,6 +427,36 @@ TEST_F(SurfacePlacement, vertmaximized_surface_is_sized_to_display)
     mir_surface_release_sync(surface);
 }
 
+TEST_F(SurfacePlacement, fullscreen_on_output_1_surface_is_sized_to_first_display)
+{
+    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_fullscreen_on_output(spec, 1);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+
+    EXPECT_THAT(shell_surface->top_left(), Eq(first_display.top_left));
+    EXPECT_THAT(shell_surface->size(), Eq(first_display.size));
+
+    mir_surface_release_sync(surface);
+}
+
+TEST_F(SurfacePlacement, fullscreen_on_output_2_surface_is_sized_to_second_display)
+{
+    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_fullscreen_on_output(spec, 2);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+
+    EXPECT_THAT(shell_surface->top_left(), Eq(second_display.top_left));
+    EXPECT_THAT(shell_surface->size(), Eq(second_display.size));
+
+    mir_surface_release_sync(surface);
+}
+
 // Parented dialog or parented freestyle window
 //
 // For convenience, these types are referred to here as “parented dialogs”.

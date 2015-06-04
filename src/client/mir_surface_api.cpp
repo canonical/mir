@@ -213,6 +213,11 @@ bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
 
 bool mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)
 {
+    // TODO there are probably some surface types for which this should be disallowed
+
+    if (spec->output_id.is_set())
+        return false;
+
     spec->state = state;
     return true;
 }
