@@ -22,8 +22,10 @@
 #include "mir/graphics/renderable.h"
 #include "mir/input/surface.h"
 #include "mir/frontend/surface.h"
+#include "mir/compositor/compositor_id.h"
 
 #include <vector>
+#include <list>
 
 namespace mir
 {
@@ -31,9 +33,15 @@ namespace input { class InputChannel; }
 namespace shell { class InputTargeter; }
 namespace geometry { struct Rectangle; }
 namespace graphics { class CursorImage; }
-
+namespace compositor { class BufferStream; }
 namespace scene
 {
+struct StreamInfo
+{
+    std::shared_ptr<compositor::BufferStream> stream;
+    geometry::Displacement displacement;
+};
+
 class SurfaceObserver;
 
 class Surface :
@@ -54,7 +62,7 @@ public:
     /// Size of the surface including window frame (if any)
     virtual geometry::Size size() const = 0;
 
-    virtual std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const = 0;
+    virtual graphics::RenderableList generate_renderables(compositor::CompositorID id) const = 0; 
     virtual int buffers_ready_for_compositor(void const* compositor_id) const = 0;
 
     virtual float alpha() const = 0; //only used in examples/
@@ -103,6 +111,7 @@ public:
 
     virtual void set_keymap(xkb_rule_names const& rules) = 0;
     virtual void rename(std::string const& title) = 0;
+    virtual void set_streams(std::list<StreamInfo> const& streams) = 0;
 };
 }
 }

@@ -47,13 +47,14 @@ class SurfaceSceneElement : public mc::SceneElement
 {
 public:
     SurfaceSceneElement(
-        std::shared_ptr<ms::Surface> surface,
+        std::string name,
+        std::shared_ptr<mg::Renderable> const& renderable,
         std::shared_ptr<ms::RenderingTracker> const& tracker,
         mc::CompositorID id)
-        : renderable_{surface->compositor_snapshot(id)},
+        : renderable_{renderable},
           tracker{tracker},
           cid{id},
-          surface_name(surface->name())
+          surface_name(name)
     {
     }
 
@@ -136,11 +137,15 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
         {
             if (surface->visible())
             {
-                auto element = std::make_shared<SurfaceSceneElement>(
-                    surface,
-                    rendering_trackers[surface.get()],
-                    id);
-                elements.emplace_back(element);
+                for (auto& renderable : surface->generate_renderables(id))
+                {
+                    elements.emplace_back(
+                        std::make_shared<SurfaceSceneElement>(
+                            surface->name(),
+                            renderable,
+                            rendering_trackers[surface.get()],
+                            id));
+                }
             }
         }
     }

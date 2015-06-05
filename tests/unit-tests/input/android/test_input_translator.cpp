@@ -67,7 +67,7 @@ public:
     const int32_t meta_state = 0;
     const int32_t edge_flags = 0;
     const int32_t button_state = 0;
-    const int32_t motion_action = mir_motion_action_move;
+    const int32_t motion_action = AMOTION_EVENT_ACTION_MOVE;
     droidinput::PointerCoords coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
     droidinput::PointerProperties properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
 };
@@ -111,7 +111,7 @@ TEST_F(InputTranslator, accepts_motion_action_with_existing_index)
 
     EXPECT_CALL(dispatcher, dispatch(_)).Times(1);
 
-    const int32_t valid_motion_action = mir_motion_action_pointer_up | (2 << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+    const int32_t valid_motion_action = AMOTION_EVENT_ACTION_POINTER_UP | (2 << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
     const uint32_t three_pointers = 3;
 
     properties[0].id = 1;
