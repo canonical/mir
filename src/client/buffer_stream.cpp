@@ -161,14 +161,14 @@ mcl::BufferStream::~BufferStream()
 {
 }
 
+
 void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    process_buffer(buffer, lock); 
+    process_buffer(buffer, lock);
 }
 
-void mcl::BufferStream::process_buffer(
-    mp::Buffer const& buffer, std::unique_lock<std::mutex> const&)
+void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&)
 {
     auto buffer_package = std::make_shared<MirBufferPackage>();
     populate_buffer_package(*buffer_package, buffer);
@@ -216,7 +216,7 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 
 void mcl::BufferStream::submit_done()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
+    std::unique_lock<decltype(mutex)> lk(mutex);
     submitting = false;
     submit_cv.notify_all();
 }
@@ -227,14 +227,11 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
     mp::BufferRequest request;
     request.mutable_id()->set_value(protobuf_bs.id().value());
     request.mutable_buffer()->set_buffer_id(protobuf_bs.buffer().buffer_id());
-
-    submitting = false;
+    submitting = true;
     display_server.submit_buffer(nullptr, &request, &protobuf_void,
         google::protobuf::NewCallback(this, &mcl::BufferStream::submit_done));
     submit_cv.wait(lock, [&]{ return !submitting; });
 
-
-    lock.lock();
     if (incoming_buffers.empty())
     {
         next_buffer_wait_handle.expect_result();

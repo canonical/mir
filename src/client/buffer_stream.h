@@ -114,8 +114,8 @@ protected:
 
 private:
     void created(mir_buffer_stream_callback callback, void* context);
-    void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&);
     void process_buffer(protobuf::Buffer const& buffer);
+    void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&);
     void next_buffer_received(
         std::function<void()> done);
     void on_configured();
