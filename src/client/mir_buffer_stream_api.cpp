@@ -127,11 +127,9 @@ catch (std::exception const& ex)
 
 void mir_buffer_stream_swap_buffers_sync(MirBufferStream* buffer_stream)
 {
-    auto o = mir_buffer_stream_swap_buffers(buffer_stream,
+    mir_wait_for(mir_buffer_stream_swap_buffers(buffer_stream,
         reinterpret_cast<mir_buffer_stream_callback>(assign_result),
-        nullptr);
-    printf("andddddd\n");
-    mir_wait_for(o);
+        nullptr));
 }
 
 void mir_buffer_stream_get_graphics_region(

@@ -77,7 +77,6 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     session_event_handler_register->register_focus_change_handler(
         [this](std::shared_ptr<ms::Session> const& session)
         {
-        printf("hm.\n");
             auto const weak_session = std::weak_ptr<ms::Session>(session);
             this->server_action_queue->enqueue(
                 this,

@@ -406,12 +406,9 @@ TEST_F(ExchangeBufferTest, server_can_send_buffer)
     //(although probably should, seems something a media decoder would need
     bool satisfied = false;
     auto timeout = std::chrono::steady_clock::now() + 5s;
-    printf("THE STUB. %i\n", stub_buffer.id().as_value());
     while(!satisfied && std::chrono::steady_clock::now() < timeout)
     {
-    printf("SBUF.\n");
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
-        printf("CURRENT %i\n", mir_debug_surface_current_buffer_id(surface));
         if (mir_debug_surface_current_buffer_id(surface) == stub_buffer.id().as_value())
         {
             satisfied = true;

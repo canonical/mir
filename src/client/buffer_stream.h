@@ -114,6 +114,7 @@ protected:
 
 private:
     void created(mir_buffer_stream_callback callback, void* context);
+    void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&);
     void process_buffer(protobuf::Buffer const& buffer);
     void next_buffer_received(
         std::function<void()> done);
@@ -125,7 +126,6 @@ private:
 
     mutable std::mutex mutex; // Protects all members of *this
 
-    std::mutex submission_mutex;
     std::condition_variable submit_cv;
     bool submitting = true;
     bool using_exchange_buffer{true};
