@@ -106,11 +106,9 @@ struct StubBundleFactory : public msc::BufferStreamFactory
         buffer_id_seq(ids)
     {}
 
-    std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        int, mg::BufferProperties const& p) override
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(int, mg::BufferProperties const& p) override
     { return create_buffer_stream(p); }
-    std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mg::BufferProperties const&) override
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&) override
     { return std::make_shared<mc::BufferStreamSurfaces>(std::make_shared<StubBundle>(buffer_id_seq)); }
     std::vector<mg::BufferID> const buffer_id_seq;
 };
@@ -414,7 +412,7 @@ TEST_F(ExchangeBufferTest, server_can_send_buffer)
             satisfied = true;
             break;
         }
-        std::this_thread::sleep_for(100ms);
+        std::this_thread::yield();
     }
     EXPECT_THAT(satisfied, Eq(true)) << "failed to see the sent buffer become the current one";
 

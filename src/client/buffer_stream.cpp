@@ -161,7 +161,6 @@ mcl::BufferStream::~BufferStream()
 {
 }
 
-
 void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -205,13 +204,8 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     secured_region.reset();
 
     if (using_exchange_buffer)
-    {
         return exchange(done, std::move(lock));
-    }
-    else
-    {
-        return submit(done, std::move(lock));
-    }
+    return submit(done, std::move(lock));
 }
 
 void mcl::BufferStream::submit_done()
@@ -455,6 +449,7 @@ void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
         process_buffer(buffer, lock);
         next_buffer_wait_handle.result_received();
         on_incoming_buffer();
+        on_incoming_buffer = std::function<void()>{};
     }
     else
     {
