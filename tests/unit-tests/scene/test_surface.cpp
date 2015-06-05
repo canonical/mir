@@ -355,13 +355,17 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
 
     surface.set_alpha(alpha);
     EXPECT_FLOAT_EQ(alpha, surface.alpha());
-    EXPECT_FLOAT_EQ(alpha, surface.compositor_snapshot(nullptr)->alpha());
+    auto renderables = surface.generate_renderables(nullptr);
+    ASSERT_THAT(renderables.size(), Ge(1));
+    EXPECT_FLOAT_EQ(alpha, renderables[0]->alpha());
     
     alpha = 0.1;
 
     surface.set_alpha(alpha);
     EXPECT_FLOAT_EQ(alpha, surface.alpha());
-    EXPECT_FLOAT_EQ(alpha, surface.compositor_snapshot(nullptr)->alpha());
+    renderables = surface.generate_renderables(nullptr);
+    ASSERT_THAT(renderables.size(), Ge(1));
+    EXPECT_FLOAT_EQ(alpha, renderables[0]->alpha());
 }
 
 TEST_F(SurfaceCreation, input_fds)

@@ -231,7 +231,7 @@ extern "C" mg::PlatformPriority probe_graphics_platform()
 }
 
 mir::ModuleProperties const description = {
-    "mesa",
+    "mesa-kms",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO
