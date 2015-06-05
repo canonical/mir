@@ -40,16 +40,24 @@ class Platform;
 class InputEventHandlerRegister;
 class InputDeviceRegistry;
 
+enum class LegacyInputDispatchableMode
+{
+    normal,
+    bypass
+};
+
 class DefaultInputManager : public InputManager
 {
 public:
-    DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+    DefaultInputManager(LegacyInputDispatchableMode const legacy_input_dispatchable_mode,
+                        std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
                         std::shared_ptr<LegacyInputDispatchable> const& legacy_dispatchable);
     ~DefaultInputManager();
     void add_platform(std::shared_ptr<Platform> const& platform) override;
     void start() override;
     void stop() override;
 private:
+    LegacyInputDispatchableMode const mode;
     std::vector<std::shared_ptr<Platform>> platforms;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     std::shared_ptr<input::LegacyInputDispatchable> const legacy_dispatchable;
