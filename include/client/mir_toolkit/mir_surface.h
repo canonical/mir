@@ -379,8 +379,7 @@ bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrienta
  * Set the requested state.
  * \param [in] spec    Specification to mutate
  * \param [in] mode    Requested state
- * \return             False if the state is not valid for this surface type or
- *                     if "fullscreen on a specific output" is already specified.
+ * \return             False if the state is not valid for this surface type.
  * \note    If the server is unable to create a surface with the requested state at
  *          the point mir_surface_create() is called it will instead return an invalid surface.
  */
