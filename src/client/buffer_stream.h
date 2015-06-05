@@ -118,6 +118,7 @@ private:
         std::function<void()> done);
     void on_configured();
     void release_cpu_region();
+    MirWaitHandle* exchange(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
 
     mutable std::mutex mutex; // Protects all members of *this
 

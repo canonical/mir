@@ -199,6 +199,19 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 
     secured_region.reset();
 
+    if (uses_exchange_buffer)
+    {
+        return exchange(done, std::move(lock));
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+MirWaitHandle* mcl::BufferStream::exchange(
+    std::function<void()> const& done, std::unique_lock<std::mutex> lock)
+{
     mir::protobuf::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(protobuf_bs.id().value());
 
@@ -398,4 +411,7 @@ void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
 {
     process_buffer(buffer);
+
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    uses_exchange_buffer = false;
 }

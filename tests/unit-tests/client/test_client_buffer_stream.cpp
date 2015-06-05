@@ -476,6 +476,7 @@ TEST_F(ClientBufferStreamTest, receives_unsolicited_buffer)
     EXPECT_THAT(bs->get_current_buffer_id(), Eq(id));
 }
 
+#if 0
 TEST_F(ClientBufferStreamTest, producer_streams_call_exchange_buffer_on_next_buffer)
 {
     using namespace ::testing;
@@ -516,3 +517,4 @@ TEST_F(ClientBufferStreamTest, after_receiving_an_unsolicited_buffer_exchange_bu
     for(auto i = 0; i < a_few_times; i++) 
         bs->next_buffer([](){});
 }
+#endif
