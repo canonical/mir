@@ -29,6 +29,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -91,6 +92,7 @@ public:
     geometry::Size client_size() const override;
 
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
+    void set_streams(std::list<scene::StreamInfo> const& streams) override;
 
     bool supports_input() const override;
     int client_input_fd() const override;
@@ -113,7 +115,7 @@ public:
 
     bool visible() const override;
     
-    std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const override;
+    graphics::RenderableList generate_renderables(compositor::CompositorID id) const override;
     int buffers_ready_for_compositor(void const* compositor_id) const override;
 
     MirSurfaceType type() const override;
@@ -171,6 +173,7 @@ private:
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
 
+    std::list<StreamInfo> layers;
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;
     MirSurfaceState state_ = mir_surface_state_restored;
