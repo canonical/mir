@@ -119,6 +119,12 @@ public:
         mir::protobuf::Buffer* response,
         google::protobuf::Closure* done) override;
 
+    void submit_buffer(
+        google::protobuf::RpcController* controller,
+        mir::protobuf::BufferRequest const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+
     void release_surface(google::protobuf::RpcController* controller,
                          const mir::protobuf::SurfaceId*,
                          mir::protobuf::Void*,
