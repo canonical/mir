@@ -99,7 +99,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             event.motion.device_id,
             event.motion.source_id,
             policy_flags,
-            event.motion.action,
+            mia::extract_android_action_from(event),
             0, /* flags */
             mia::android_modifiers_from_mir(event.motion.modifiers),
             mia::android_pointer_buttons_from_mir(event.motion.buttons),

@@ -27,11 +27,6 @@
 #include <assert.h>
 #include <stdlib.h>
 
-// See: https://bugs.launchpad.net/mir/+bug/1311699
-#define MIR_EVENT_ACTION_MASK 0xff
-#define MIR_EVENT_ACTION_POINTER_INDEX_MASK 0xff00
-#define MIR_EVENT_ACTION_POINTER_INDEX_SHIFT 8;
-
 namespace ml = mir::logging;
 
 namespace
@@ -279,42 +274,7 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_i
         abort();
     }
     
-    auto masked_action = old_mev.action & MIR_EVENT_ACTION_MASK;
-    size_t masked_index = (old_mev.action & MIR_EVENT_ACTION_POINTER_INDEX_MASK) >> MIR_EVENT_ACTION_POINTER_INDEX_SHIFT;
-
-    switch (masked_action)
-    {
-    // For the next two cases we could assert pc=1...because a gesture must
-    // be starting or ending.
-    case mir_motion_action_down:
-        return mir_touch_action_down;
-    case mir_motion_action_up:
-        return mir_touch_action_up;
-    // We can't tell which touches have actually moved without tracking state
-    // so we report all touchpoints as changed.
-    case mir_motion_action_move:
-    case mir_motion_action_hover_move:
-        return mir_touch_action_change;
-    // All touch points are handled at once so we don't know the index
-    case mir_motion_action_pointer_down:
-        if (touch_index == masked_index)
-            return mir_touch_action_down;
-        else
-            return mir_touch_action_change;
-    case mir_motion_action_pointer_up:
-        if (touch_index == masked_index)
-            return mir_touch_action_up;
-        else
-            return mir_touch_action_change;
-    // TODO: How to deal with these?
-    case mir_motion_action_cancel:
-    case mir_motion_action_outside:
-    case mir_motion_action_scroll:
-    case mir_motion_action_hover_enter:
-    case mir_motion_action_hover_exit:
-    default:
-        return mir_touch_action_change;
-    }
+    return static_cast<MirTouchAction>(old_mev.pointer_coordinates[touch_index].action);
 }
 
 MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
@@ -385,25 +345,7 @@ MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev)
 MirPointerAction mir_pointer_event_action(MirPointerEvent const* pev)
 {    
     auto const& old_mev = old_mev_from_new(pev);
-    auto masked_action = old_mev.action & MIR_EVENT_ACTION_MASK;
-    switch (masked_action)
-    {
-    case mir_motion_action_up:
-    case mir_motion_action_pointer_up:
-        return mir_pointer_action_button_up;
-    case mir_motion_action_down:
-    case mir_motion_action_pointer_down:
-        return mir_pointer_action_button_down;
-    case mir_motion_action_hover_enter:
-        return mir_pointer_action_enter;
-    case mir_motion_action_hover_exit:
-        return mir_pointer_action_leave;
-    case mir_motion_action_move:
-    case mir_motion_action_hover_move:
-    case mir_motion_action_outside:
-    default:
-        return mir_pointer_action_motion;
-    }
+    return static_cast<MirPointerAction>(old_mev.pointer_coordinates[0].action);
 }
 
 bool mir_pointer_event_button_state(MirPointerEvent const* pev,

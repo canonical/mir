@@ -237,6 +237,17 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         return completed;
     }
 
+    bool submit_buffer(mp::DisplayServer& server, mp::BufferRequest& request)
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        mp::Void v;
+        server.submit_buffer(0, &request, &v,
+            google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
+        
+        arrived = false;
+        return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
+    }
+
     std::mutex mutex;
     std::condition_variable cv;
     bool arrived{false};
@@ -244,6 +255,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
 };
 }
 
+//tests for the exchange_buffer rpc call
 TEST_F(ExchangeBufferTest, exchanges_happen)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -302,4 +314,25 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     lseek(file, 0, SEEK_SET);
     ASSERT_THAT(read(server_received_fd, file_buffer, sizeof(file_buffer)), NoErrorOnFileRead());
     EXPECT_THAT(strncmp(test_string.c_str(), file_buffer, test_string.size()), Eq(0)); 
+}
+
+//tests for the submit buffer protocol.
+TEST_F(ExchangeBufferTest, submissions_happen)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto surface = mtf::make_any_surface(connection);
+
+    auto rpc_channel = connection->rpc_channel();
+    mp::DisplayServer::Stub server(
+        rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+
+    mp::BufferRequest request;
+    for (auto const& id : buffer_id_exchange_seq)
+    {
+        buffer_request.mutable_buffer()->set_buffer_id(id.as_value());
+        ASSERT_THAT(submit_buffer(server, buffer_request), DidNotTimeOut());
+    }
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
 }
