@@ -121,6 +121,8 @@ private:
 
     mutable std::mutex mutex; // Protects all members of *this
 
+    bool uses_exchange_buffer{true};
+
     MirConnection* connection;
     mir::protobuf::DisplayServer& display_server;
 
