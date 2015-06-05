@@ -31,6 +31,7 @@
 
 #include <EGL/eglplatform.h>
 
+#include <queue>
 #include <memory>
 #include <mutex>
 
@@ -119,10 +120,17 @@ private:
     void on_configured();
     void release_cpu_region();
     MirWaitHandle* exchange(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
+    MirWaitHandle* submit(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
+    void submit_done();
 
     mutable std::mutex mutex; // Protects all members of *this
 
-    bool uses_exchange_buffer{true};
+    std::mutex submission_mutex;
+    std::condition_variable submit_cv;
+    bool submitting = true;
+    bool using_exchange_buffer{true};
+    std::function<void()> on_incoming_buffer;
+    std::queue<mir::protobuf::Buffer> incoming_buffers;
 
     MirConnection* connection;
     mir::protobuf::DisplayServer& display_server;

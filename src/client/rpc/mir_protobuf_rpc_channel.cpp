@@ -358,9 +358,12 @@ void mclr::MirProtobufRpcChannel::on_data_available()
         if (result->has_id())
         {
             auto result_message = pending_calls.message_for_result(*result);
+            printf("RESULTMESS %X\n", (int)(long) result->response().size());
             result_message->ParseFromString(result->response());
+    printf("gogoog\n");
             receive_file_descriptors(result_message);
 
+    printf("gogoog\n");
             if (id_to_wait_for)
             {
                 if (result->id() == id_to_wait_for.value())
@@ -387,6 +390,7 @@ void mclr::MirProtobufRpcChannel::on_data_available()
     }
     catch (std::exception const& x)
     {
+        printf("PROCESSING FAILURE\n");
         // TODO: This is dangerous as an error in result processing could cause a wait handle
         // to never fire. Could perhaps fix by catching and setting error on the response before invoking
         // callback ~racarr
