@@ -33,7 +33,7 @@
  *
  * See also: http://semver.org/
  */
-#define MIR_CLIENT_MAJOR_VERSION (1)
+#define MIR_CLIENT_MAJOR_VERSION (2)
 
 /**
  * MIR_CLIENT_MINOR_VERSION

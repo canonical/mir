@@ -17,6 +17,7 @@
  */
 
 #include "src/platforms/android/server/android_alloc_adaptor.h"
+#include "src/platforms/android/server/device_quirks.h"
 #include "mir/graphics/android/native_buffer.h"
 
 #include "mir_test_doubles/mock_android_alloc_device.h"
@@ -46,7 +47,8 @@ public:
         using namespace testing;
         mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocDevice>>();
 
-        alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device);
+        auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
+        alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device, quirks);
 
         pf = mir_pixel_format_abgr_8888;
         size = geom::Size{300, 200};
