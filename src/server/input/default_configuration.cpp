@@ -404,7 +404,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                     mr::legacy_input::initialize(the_logger());
 
                 auto ret = std::make_shared<mi::DefaultInputManager>(
-                    mi::LegacyInputDispatchableMode::normal, the_input_reading_multiplexer(), the_legacy_input_dispatchable());
+                    the_input_reading_multiplexer(), the_legacy_input_dispatchable());
 
                 auto platform = the_input_platform();
                 if (platform)
