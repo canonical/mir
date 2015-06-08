@@ -582,22 +582,23 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
  */
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
-/** Set the streams associated with the spec.
- *  streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
- *  On application of the spec, A stream that is present in the surface,
- *  but is not in the list will be disassociated from the surface.
- *  On application of the spec, A stream that is not present in the surface,
- *  but is in the list will be associated with the surface.
- *  Streams set a displacement from the top-left corner of the surface.
- *
- *  \warning disassociating streams from the surface will not release() them.
- *  \warning It is wiser to arrange the streams within the bounds of the
- *           surface the spec is applied to. Shells can define their own
- *           behavior as to what happens to an out-of-bound stream.
- *
- *  \param [in] spec      The spec to accumulate the request in.
- *  \param [in] streams   The an array of non-null streams info.
- *  \param [in] size      The size of streams.
+/**
+ * Set the streams associated with the spec.
+ * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
+ * On application of the spec, a stream that is present in the surface,
+ * but is not in the list will be disassociated from the surface.
+ * On application of the spec, A stream that is not present in the surface,
+ * but is in the list will be associated with the surface.
+ * Streams set a displacement from the top-left corner of the surface.
+ * 
+ * \warning disassociating streams from the surface will not release() them.
+ * \warning It is wiser to arrange the streams within the bounds of the
+ *          surface the spec is applied to. Shells can define their own
+ *          behavior as to what happens to an out-of-bound stream.
+ * 
+ * \param [in] spec      The spec to accumulate the request in.
+ * \param [in] streams   The an array of non-null streams info.
+ * \param [in] size      The size of streams.
  */
 void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
                                   MirBufferStreamInfo* streams,
