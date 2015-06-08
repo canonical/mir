@@ -67,8 +67,14 @@ message SurfaceSpecification {
   optional int32 height_inc = 18;
   optional SurfaceAspectRatio min_aspect = 19;
   optional SurfaceAspectRatio max_aspect = 20;
+  repeated StreamConfiguration stream = 21; 
 }
 
+message StreamConfiguration {
+  optional BufferStreamId id = 1;
+  optional int32 displacement_x = 2;
+  optional int32 displacement_y = 3;
+};
 
 message SurfaceModifications {
   required SurfaceId surface_id = 1;
@@ -315,6 +321,7 @@ service DisplayServer {
   rpc start_prompt_session(PromptSessionParameters) returns (Void);
   rpc stop_prompt_session(Void) returns (Void);
   rpc exchange_buffer(BufferRequest) returns (Buffer);
+  rpc submit_buffer(BufferRequest) returns (Void);
 }
 
 message CoordinateTranslationRequest {

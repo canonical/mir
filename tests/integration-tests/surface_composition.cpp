@@ -120,7 +120,7 @@ TEST_F(SurfaceComposition, does_not_send_client_buffers_to_dead_surfaces)
         surface->primary_buffer_stream()->swap_buffers(old_buffer, callback);
     }
 
-    auto const renderable = surface->compositor_snapshot(this);
+    auto const renderables = surface->generate_renderables(this);
 
     surface.reset();
 }

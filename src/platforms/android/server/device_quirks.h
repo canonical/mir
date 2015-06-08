@@ -22,8 +22,11 @@
 #include <hybris/properties/properties.h>
 #include <string>
 
+namespace boost{ namespace program_options {class options_description;}}
+
 namespace mir
 {
+namespace options{ class Option; }
 namespace graphics
 {
 namespace android
@@ -55,15 +58,21 @@ class DeviceQuirks
 {
 public:
     DeviceQuirks(PropertiesWrapper const& properties);
+    DeviceQuirks(PropertiesWrapper const& properties, mir::options::Option const& options);
 
     unsigned int num_framebuffers() const;
     bool gralloc_reopenable_after_close() const;
+    int aligned_width(int width) const;
+
+    static void add_options(boost::program_options::options_description& config);
+
 private:
     DeviceQuirks(DeviceQuirks const&) = delete;
     DeviceQuirks & operator=(DeviceQuirks const&) = delete;
     std::string const device_name;
     unsigned int const num_framebuffers_;
     bool const gralloc_reopenable_after_close_;
+    bool const enable_width_alignment_quirk;
 };
 }
 }

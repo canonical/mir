@@ -35,6 +35,10 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   add_definitions(-DMIR_BUILD_PLATFORM_ANDROID)
 endif()
 
+if (MIR_BUILD_PLATFORM_MESA_KMS)
+  add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)
+endif()
+
 include_directories(
   include
   ${PROJECT_SOURCE_DIR}/include/platform

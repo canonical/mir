@@ -57,8 +57,10 @@ public:
     void save_completion_details(
         mir::protobuf::wire::Invocation const& invoke,
         google::protobuf::Message* response,
-        std::shared_ptr<google::protobuf::Closure> const& complete);
+        google::protobuf::Closure* complete);
 
+
+    google::protobuf::Message* message_for_result(mir::protobuf::wire::Result& result);
 
     void complete_response(mir::protobuf::wire::Result& result);
 
@@ -72,14 +74,14 @@ private:
     {
         PendingCall(
             google::protobuf::Message* response,
-            std::shared_ptr<google::protobuf::Closure> const& target)
+            google::protobuf::Closure* target)
         : response(response), complete(target) {}
 
         PendingCall()
         : response(0), complete() {}
 
         google::protobuf::Message* response;
-        std::shared_ptr<google::protobuf::Closure> complete;
+        google::protobuf::Closure* complete;
     };
 
     std::mutex mutable mutex;

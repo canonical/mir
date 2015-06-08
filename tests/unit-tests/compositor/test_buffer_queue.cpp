@@ -197,9 +197,9 @@ void switching_client_thread(mc::BufferQueue &bundle, int nframes)
 TEST_F(BufferQueueTest, buffer_queue_of_one_is_supported)
 {
     std::unique_ptr<mc::BufferQueue> q;
-    ASSERT_NO_THROW(q = std::move(
+    ASSERT_NO_THROW(q = 
         std::unique_ptr<mc::BufferQueue>(
-            new mc::BufferQueue(1, allocator, basic_properties, policy_factory))));
+            new mc::BufferQueue(1, allocator, basic_properties, policy_factory)));
     ASSERT_THAT(q, Ne(nullptr));
 
     auto handle = client_acquire_async(*q);

@@ -20,7 +20,7 @@
 #include "mir/graphics/event_handler_register.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
-#include "src/platforms/mesa/server/KMS/platform.h"
+#include "src/platforms/mesa/server/kms/platform.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/shared_library.h"
@@ -304,7 +304,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)
 {
     mtf::UdevEnvironment udev_environment;
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe());
 }
@@ -315,7 +315,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_best_when_drm_devices_exist)
 
     udev_environment.add_standard_device("standard-drm-devices");
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::best, probe());
 }

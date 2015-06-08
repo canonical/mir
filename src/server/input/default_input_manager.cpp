@@ -36,10 +36,9 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mi::DefaultInputManager::DefaultInputManager(bool read_input,
-                                             std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
                                              std::shared_ptr<LegacyInputDispatchable>  const& legacy_dispatchable)
-    : read_input{read_input}, multiplexer{multiplexer}, legacy_dispatchable{legacy_dispatchable}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
+    : multiplexer{multiplexer}, legacy_dispatchable{legacy_dispatchable}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
 {
 }
 
@@ -77,12 +76,8 @@ void mi::DefaultInputManager::start()
     state = State::running;
 
     multiplexer->add_watch(queue);
-    if (read_input)
-    {
-        multiplexer->add_watch(legacy_dispatchable);
-
-        legacy_dispatchable->start();
-    }
+    multiplexer->add_watch(legacy_dispatchable);
+    legacy_dispatchable->start();
 
     auto const started_promise = std::make_shared<std::promise<void>>();
     auto const weak_started_promise = std::weak_ptr<std::promise<void>>(started_promise);
@@ -97,8 +92,7 @@ void mi::DefaultInputManager::start()
                         }
                         // TODO: Udev monitoring is still not separated yet - an initial scan is necessary to open
                         // devices, this will be triggered through the first call to dispatch->InputReader->loopOnce.
-                        if (read_input)
-                            legacy_dispatchable->dispatch(dispatch::FdEvent::readable);
+                        legacy_dispatchable->dispatch(dispatch::FdEvent::readable);
                         auto const started_promise =
                             std::shared_ptr<std::promise<void>>(weak_started_promise);
                         started_promise->set_value();
@@ -144,7 +138,6 @@ void mi::DefaultInputManager::stop()
 
     input_thread.reset();
 
-    if (read_input)
-        multiplexer->remove_watch(legacy_dispatchable);
+    multiplexer->remove_watch(legacy_dispatchable);
     multiplexer->remove_watch(queue);
 }

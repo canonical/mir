@@ -143,20 +143,20 @@ endif(MIR_DISABLE_EPOLL_REACTOR)
 
 add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 
-# Default to mesa backend, but build all of them
+# Default to KMS backend, but build all of them
 set(
   MIR_PLATFORM
-  KMS;android;X
+  mesa-kms;android;X
   CACHE
   STRING
-  "a list of graphics backends to build (options are 'KMS', 'android' or 'X')"
+  "a list of graphics backends to build (options are 'mesa-kms', 'android' or 'X')"
 )
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
 foreach(platform IN LISTS MIR_PLATFORM)
-  if (platform STREQUAL "KMS")
-    set(MIR_BUILD_PLATFORM_KMS TRUE)
+  if (platform STREQUAL "mesa-kms")
+    set(MIR_BUILD_PLATFORM_MESA_KMS TRUE)
   endif()
   if (platform STREQUAL "android")
      set(MIR_BUILD_PLATFORM_ANDROID TRUE)
@@ -186,7 +186,7 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(LibHardware REQUIRED)
 endif()
 
-if (MIR_BUILD_PLATFORM_KMS)
+if (MIR_BUILD_PLATFORM_MESA_KMS)
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )

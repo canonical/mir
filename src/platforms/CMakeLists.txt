@@ -52,7 +52,7 @@ set(client_common_include_dirs
 
 add_subdirectory(common/)
 
-if (MIR_BUILD_PLATFORM_KMS OR MIR_BUILD_PLATFORM_X)
+if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_X)
     add_subdirectory(mesa/)
 endif()
 

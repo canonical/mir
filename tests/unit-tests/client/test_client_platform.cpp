@@ -93,7 +93,7 @@ INSTANTIATE_TEST_CASE_P(Android,
 
 #endif
 
-#ifdef MIR_BUILD_PLATFORM_KMS
+#ifdef MIR_BUILD_PLATFORM_MESA_KMS
 ClientPlatformTraits const mesa_platform{"mesa",
                                          [](MirPlatformPackage& pkg)
                                          {

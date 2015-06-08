@@ -32,9 +32,12 @@ set(
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gl.cpp
 )
 
-if (MIR_BUILD_PLATFORM_KMS)
-  include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+if (MIR_BUILD_PLATFORM_MESA_KMS)
+  include_directories(
+    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+    ${DRM_INCLUDE_DIRS}
+    ${GBM_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}
   )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp

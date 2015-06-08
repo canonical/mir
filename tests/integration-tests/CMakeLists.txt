@@ -52,7 +52,7 @@ if (MIR_TEST_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
 
-if(MIR_TEST_PLATFORM STREQUAL "KMS")
+if(MIR_TEST_PLATFORM STREQUAL "mesa-kms")
   include_directories(
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
@@ -61,7 +61,6 @@ if(MIR_TEST_PLATFORM STREQUAL "KMS")
     ${CMAKE_SOURCE_DIR}
   )
   add_subdirectory(graphics/mesa)
-  list(APPEND INTEGRATION_TESTS_SRCS test_drm_auth_magic.cpp)
 endif()
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
@@ -117,7 +116,7 @@ target_link_libraries(
   ${MIR_SERVER_REFERENCES}
 )
 
-if (MIR_BUILD_PLATFORM_KMS)
+if (MIR_BUILD_PLATFORM_MESA_KMS)
 target_link_libraries(mir_integration_tests
   mirsharedmesaservercommon-static
 )

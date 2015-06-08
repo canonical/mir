@@ -115,7 +115,7 @@ public:
     void lock() override
     {
         // This lock is aquired before the framedrop policy acquires any locks of its own.
-        guard_lock = std::move(std::unique_lock<std::mutex>{q->guard});
+        guard_lock = std::unique_lock<std::mutex>{q->guard};
     }
 
     void unlock() override

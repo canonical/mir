@@ -61,7 +61,7 @@ me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     scene::SurfaceCreationParameters const& params) :
-    state{mir_surface_state_restored},
+    state{surface->state()},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
     parent{params.parent},
@@ -115,6 +115,9 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 {
     auto parameters = request_parameters;
     parameters.size.height = parameters.size.height + DeltaY{title_bar_height};
+
+    if (!parameters.state.is_set())
+        parameters.state = mir_surface_state_restored;
 
     auto const active_display = tools->active_display();
 
@@ -190,17 +193,44 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
     if (!positioned)
     {
-        auto centred = active_display.top_left + 0.5*(
-            as_displacement(active_display.size) - as_displacement(parameters.size));
+        auto const centred = active_display.top_left
+            + 0.5*(as_displacement(active_display.size) - as_displacement(parameters.size))
+            - DeltaY{(active_display.size.height.as_int()-height)/6};
 
-        parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
+        switch (parameters.state.value())
+        {
+        case mir_surface_state_fullscreen:
+        case mir_surface_state_maximized:
+            parameters.top_left = active_display.top_left;
+            parameters.size = active_display.size;
+            break;
+
+        case mir_surface_state_vertmaximized:
+            parameters.top_left = centred;
+            parameters.top_left.y = active_display.top_left.y;
+            parameters.size.height = active_display.size.height;
+            break;
+
+        case mir_surface_state_horizmaximized:
+            parameters.top_left = centred;
+            parameters.top_left.x = active_display.top_left.x;
+            parameters.size.width = active_display.size.width;
+            break;
+
+        default:
+            parameters.top_left = centred;
+        }
 
         if (parameters.top_left.y < display_area.top_left.y)
             parameters.top_left.y = display_area.top_left.y;
     }
 
-    parameters.top_left.y = parameters.top_left.y + DeltaY{title_bar_height};
-    parameters.size.height = parameters.size.height - DeltaY{title_bar_height};
+    if (parameters.state != mir_surface_state_fullscreen)
+    {
+        parameters.top_left.y = parameters.top_left.y + DeltaY{title_bar_height};
+        parameters.size.height = parameters.size.height - DeltaY{title_bar_height};
+    }
+
     return parameters;
 }
 
@@ -275,8 +305,6 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     CanonicalSurfaceInfoCopy titlebar_info{session, titlebar, ms::SurfaceCreationParameters{}};
     titlebar_info.is_titlebar = true;
     titlebar_info.parent = surface;
-
-    paint_titlebar(titlebar, titlebar_info, 0x3F);
 
     surface_map.emplace(titlebar, std::move(titlebar_info));
 }

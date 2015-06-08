@@ -1,11 +1,5 @@
-if (MIR_BUILD_PLATFORM_KMS OR MIR_BUILD_PLATFORM_X)
-  add_subdirectory(common/)
-endif()
+add_subdirectory(common/)
 
-if (MIR_BUILD_PLATFORM_KMS)
-  add_subdirectory(KMS/)
-endif()
-
-if (MIR_BUILD_PLATFORM_X)
-  add_subdirectory(X/)
+if (MIR_BUILD_PLATFORM_MESA_KMS)
+  add_subdirectory(kms/)
 endif()

@@ -15,8 +15,8 @@
  *
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
-#include "src/platforms/mesa/server/KMS/platform.h"
-#include "src/platforms/mesa/server/KMS/display_buffer.h"
+#include "src/platforms/mesa/server/kms/platform.h"
+#include "src/platforms/mesa/server/kms/display_buffer.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -152,6 +152,29 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
 
     // Bypass buffer should no longer be held by db
     EXPECT_EQ(original_count, mock_bypassable_buffer.use_count());
+}
+
+TEST_F(MesaDisplayBufferTest, bypass_buffer_only_referenced_once_by_db)
+{
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    auto original_count = mock_bypassable_buffer.use_count();
+
+    EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+    EXPECT_EQ(original_count+1, mock_bypassable_buffer.use_count());
+
+    db.post();
+
+    // Bypass buffer still held by DB only one ref above the original
+    EXPECT_EQ(original_count+1, mock_bypassable_buffer.use_count());
 }
 
 TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass)

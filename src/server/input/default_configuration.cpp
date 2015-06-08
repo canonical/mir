@@ -401,7 +401,7 @@ mir::DefaultServerConfiguration::the_input_manager()
             if (host_platform)
             {
                 if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
-                        mr::legacy_input::initialize(the_logger());
+                    mr::legacy_input::initialize(the_logger());
 
                 auto lib = std::make_shared<mir::SharedLibrary>(
                     options->get<std::string>(options::platform_input_lib));
