@@ -120,18 +120,9 @@ struct Ordering
         return cv.wait_for(lk, duration, [this, count]{return (post_count >= count);});
     }
 
-    bool ensure_last_ordering_is_consistent_with(
-        std::vector<geom::Displacement> const& arrangement)
+    std::vector<geom::Displacement> last_ordering()
     {
-        if (displacements.size() != arrangement.size())
-            return false;
-
-        for (auto i = 0u; i < displacements.size(); i++)
-        {
-            if (displacements[i] != arrangement[i])
-                return false;
-        }
-        return true;
+        return displacements;
     }
 private:
     std::mutex mutex;
@@ -223,7 +214,7 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     using namespace testing;
     std::vector<MirBufferStreamInfo> infos(streams.size());
     auto i = 0u;
-    for (auto &stream : streams)
+    for (auto const& stream : streams)
     {
         infos[i++] = MirBufferStreamInfo{
             stream->handle(),
@@ -244,6 +235,5 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     using namespace std::literals::chrono_literals;
     EXPECT_TRUE(ordering->wait_for_another_post_within(1s))
          << "timed out waiting for another post";
-    EXPECT_TRUE(ordering->ensure_last_ordering_is_consistent_with(displacements))
-         << "surface ordering was not consistent with the client request";
+    EXPECT_THAT(ordering->last_ordering(), ContainerEq(displacements));
 }
