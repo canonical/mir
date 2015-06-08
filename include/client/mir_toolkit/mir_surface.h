@@ -171,14 +171,15 @@ mir_connection_create_spec_for_dialog(MirConnection* connection,
  * Create a surface specification.
  * This can be used with mir_surface_create() to create a surface or with
  * mir_surface_apply_spec() to change an existing surface.
- * \remark For use with mir_surface_create() at least the type, width, height
- * and format must be set. (And for types requiring a parent that too must be
- * set.)
+ * \remark For use with mir_surface_create() at least the type, width, height,
+ * format and buffer_usage must be set. (And for types requiring a parent that
+ * too must be set.)
  *
+ * \param [in] connection   a valid mir connection
  * \return                  A handle that can ultimately be passed to
  *                          mir_surface_create() or mir_surface_apply_spec()
  */
-MirSurfaceSpec* mir_create_surface_spec(void);
+MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection);
 
 /**
  * Create a surface specification for updating a surface.

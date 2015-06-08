@@ -489,10 +489,13 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-MirSurfaceSpec* mir_create_surface_spec(void)
+MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
 try
 {
-    return new MirSurfaceSpec{};
+    mir::require(mir_connection_is_valid(connection));
+    auto const spec = new MirSurfaceSpec{};
+    spec->connection = connection;
+    return spec;
 }
 catch (std::exception const& ex)
 {
@@ -501,15 +504,8 @@ catch (std::exception const& ex)
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
-try
 {
-    mir::require(mir_connection_is_valid(connection));
-    return mir_create_surface_spec();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
+    return mir_create_surface_spec(connection);
 }
 
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)

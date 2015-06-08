@@ -109,6 +109,19 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         return surface;
     }
 
+    template<typename Specifier>
+    MirSurface* create_surface(Specifier const& specifier) const
+    {
+        auto const spec = mir_create_surface_spec(connection);
+
+        specifier(spec);
+
+        auto const surface = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+
+        return surface;
+    }
+
     MirSurface* create_normal_surface(int width, int height) const
     {
         return create_normal_surface(width, height, [](MirSurfaceSpec*){});
@@ -135,9 +148,10 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         server.the_shell()->handle(*click_event);
     }
 
+    MirPixelFormat pixel_format{mir_pixel_format_invalid};
+
 private:
     std::shared_ptr<StubShell> shell;
-    MirPixelFormat pixel_format{mir_pixel_format_invalid};
 
     void init_pixel_format()
     {
@@ -348,6 +362,44 @@ TEST_F(SurfacePlacement, medium_second_window_is_cascaded_wrt_first)
     mir_surface_release_sync(surface1);
     mir_surface_release_sync(surface2);
 }
+
+struct BySurfaceType : SurfacePlacement, ::testing::WithParamInterface<MirSurfaceType> {};
+
+TEST_P(BySurfaceType, small_unparented_window_is_optically_centered_on_first_display)
+{
+    auto const width = 59;
+    auto const height= 61;
+
+    auto const geometric_centre = first_display.top_left +
+                                  0.5*(as_displacement(first_display.size) - Displacement{width, height});
+
+    auto const optically_centred = geometric_centre -
+                                   DeltaY{(first_display.size.height.as_int()-height)/6};
+
+    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, GetParam());
+            mir_surface_spec_set_width(spec, width);
+            mir_surface_spec_set_height(spec, height);
+            mir_surface_spec_set_pixel_format(spec, pixel_format);
+            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+    ASSERT_THAT(shell_surface, NotNull());  // Compiles here
+
+    EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
+    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
+
+    mir_surface_release_sync(surface);
+}
+
+INSTANTIATE_TEST_CASE_P(SurfacePlacement, BySurfaceType,
+    ::testing::Values(
+        mir_surface_type_normal,
+        mir_surface_type_utility,
+        mir_surface_type_dialog,
+        mir_surface_type_freestyle));
 
 // Parented dialog or parented freestyle window
 //
