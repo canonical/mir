@@ -93,7 +93,8 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
         [this]() -> std::shared_ptr<mi::EventFilterChainDispatcher>
         {
             std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
-            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_surface_input_dispatcher());
+            return std::make_shared<mi::EventFilterChainDispatcher>(
+                filter_list, the_surface_input_dispatcher());
         });
 }
 
@@ -122,7 +123,6 @@ mir::DefaultServerConfiguration::the_android_input_dispatcher()
             return dispatcher;
         });
 }
-
 std::shared_ptr<mia::InputRegistrar>
 mir::DefaultServerConfiguration::the_input_registrar()
 {
@@ -198,7 +198,8 @@ mir::DefaultServerConfiguration::the_dispatcher_policy()
     return android_dispatcher_policy(
         [this]()
         {
-            return std::make_shared<mia::DefaultDispatcherPolicy>(is_key_repeat_enabled());
+            return std::make_shared<mia::DefaultDispatcherPolicy>(
+                is_key_repeat_enabled());
         });
 }
 
