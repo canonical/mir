@@ -489,11 +489,22 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
+MirSurfaceSpec* mir_create_surface_spec(void)
+try
+{
+    return new MirSurfaceSpec{};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
+}
+
 MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
 try
 {
     mir::require(mir_connection_is_valid(connection));
-    return new MirSurfaceSpec{};
+    return mir_create_surface_spec();
 }
 catch (std::exception const& ex)
 {
@@ -513,6 +524,30 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     // Keep calm and carry on
+}
+
+bool mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
+try
+{
+    spec->parent = parent;
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+bool mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
+try
+{
+    spec->type = type;
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
 }
 
 bool mir_surface_spec_set_width_increment(MirSurfaceSpec *spec, unsigned width_inc)
