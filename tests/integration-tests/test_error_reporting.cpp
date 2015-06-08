@@ -67,7 +67,7 @@ struct ConnectionErrorServer : mf::detail::DisplayServer
     }
 };
 
-struct ErrorReportingNew : mtf::DeferredInProcessServer
+struct ErrorReporting : mtf::DeferredInProcessServer
 {
     std::unique_ptr<mir::DefaultServerConfiguration> server_configuration;
     mtf::UsingStubClientPlatform using_stub_client_platform;
@@ -86,7 +86,7 @@ struct ErrorReportingNew : mtf::DeferredInProcessServer
 
 }
 
-TEST_F(ErrorReportingNew, c_api_returns_connection_error)
+TEST_F(ErrorReporting, c_api_returns_connection_error)
 {
     struct ServerConfig : mtf::TestingServerConfiguration
     {
@@ -109,7 +109,7 @@ TEST_F(ErrorReportingNew, c_api_returns_connection_error)
     mir_connection_release(connection);
 }
 
-TEST_F(ErrorReportingNew, c_api_returns_surface_creation_error)
+TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
 {
     struct ServerConfig : mtf::TestingServerConfiguration
     {
