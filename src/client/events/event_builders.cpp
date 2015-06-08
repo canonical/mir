@@ -157,48 +157,9 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     mev.device_id = device_id;
     mev.event_time = timestamp;
     mev.modifiers = modifiers;
-    mev.action = mir_motion_action_move;
     mev.source_id = AINPUT_SOURCE_TOUCHSCREEN;
     
     return make_event_uptr(e);
-}
-
-namespace
-{
-int const MIR_EVENT_ACTION_POINTER_INDEX_MASK = 0xff00;
-int const MIR_EVENT_ACTION_POINTER_INDEX_SHIFT = 8;
-
-void update_action_mask(MirMotionEvent &mev, MirTouchAction action)
-{
-    int new_mask = (mev.pointer_count - 1) << MIR_EVENT_ACTION_POINTER_INDEX_SHIFT;
-
-    if (action == mir_touch_action_up)
-        new_mask = mev.pointer_count == 1 ? mir_motion_action_up : (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) |
-                                                                       mir_motion_action_pointer_up;
-    else if (action == mir_touch_action_down)
-        new_mask = mev.pointer_count == 1 ? mir_motion_action_down : (new_mask & MIR_EVENT_ACTION_POINTER_INDEX_MASK) |
-                                                                         mir_motion_action_pointer_down;
-    else
-    {
-        // in case this is the second added touch and the primary touch point was an up or down action
-        // we have to reset to pointer_up/pointer_down with index information (zero in this case)
-        if (mev.action == mir_motion_action_up)
-            mev.action = mir_motion_action_pointer_up;
-        if (mev.action == mir_motion_action_down)
-            mev.action = mir_motion_action_pointer_down;
-
-        new_mask = mir_motion_action_move;
-    }
-
-    if (mev.action != mir_motion_action_move && new_mask != mir_motion_action_move)
-    {
-        mir::log_error("Only one touch up/down should be reported per event");
-    }
-    if (new_mask == mir_motion_action_move)
-        return;
-    mev.action = new_mask;
-}
-
 }
 
 void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
@@ -215,41 +176,7 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     pc.touch_major = touch_major_value;
     pc.touch_minor = touch_minor_value;
     pc.size = size_value;
-
-    update_action_mask(mev, action);
-}
-
-namespace
-{
-MirMotionAction old_action_from_pointer_action(MirPointerAction action, int buttons_pressed)
-{
-    switch (action)
-    {
-    case mir_pointer_action_button_up:
-        return buttons_pressed == 0 ? mir_motion_action_up : mir_motion_action_pointer_up;
-    case mir_pointer_action_button_down:
-        return buttons_pressed == 1 ? mir_motion_action_down : mir_motion_action_pointer_down;
-    case mir_pointer_action_enter:
-        return mir_motion_action_hover_enter;
-    case mir_pointer_action_leave:
-        return mir_motion_action_hover_exit;
-    case mir_pointer_action_motion:
-        return buttons_pressed ? mir_motion_action_move : mir_motion_action_hover_move;
-    default:
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid pointer action"));
-    }
-}
-int count_buttons(MirPointerButtons buttons)
-{
-    int ret = 0;
-    if (buttons & mir_pointer_button_primary) ret++;
-    if (buttons & mir_pointer_button_secondary) ret++;
-    if (buttons & mir_pointer_button_tertiary) ret++;
-    if (buttons & mir_pointer_button_forward) ret++;
-    if (buttons & mir_pointer_button_back) ret++;
-
-    return ret;
-}
+    pc.action = action;
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -269,10 +196,9 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     mev.source_id = AINPUT_SOURCE_MOUSE;
     mev.buttons = buttons_pressed;
 
-    mev.action = old_action_from_pointer_action(action, count_buttons(buttons_pressed));
-
     mev.pointer_count = 1;
     auto& pc = mev.pointer_coordinates[0];
+    mev.pointer_coordinates[0].action = action;
     pc.x = x_axis_value;
     pc.y = y_axis_value;
     pc.hscroll = hscroll_value;
