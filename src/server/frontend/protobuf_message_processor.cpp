@@ -217,6 +217,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
                 request.mutable_buffer()->add_fd(fd);
             invoke(shared_from_this(), display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), &request);
         }
+        else if ("submit_buffer" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::submit_buffer, invocation);
+        }
         else if ("release_surface" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::release_surface, invocation);
