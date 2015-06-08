@@ -50,10 +50,11 @@ bool mi::KeyRepeatDispatcher::dispatch(MirEvent const& event)
     if (mir_event_get_type(&event) == mir_event_type_input)
     {
         auto iev = mir_event_get_input_event(&event);
-        if (mir_input_event_get_type(iev) == mir_input_event_type_key)
-            handle_key_input(mir_input_event_get_device_id(iev), mir_input_event_get_keyboard_event(iev));
+        if (mir_input_event_get_type(iev) != mir_input_event_type_key)
+            return;
+        if (!handle_key_input(mir_input_event_get_device_id(iev), mir_input_event_get_keyboard_event(iev)))
+            return next_dispatcher->dispatch(event);
     }
-    return next_dispatcher->dispatch(event);
 }
 
 namespace
@@ -66,7 +67,8 @@ MirEvent copy_to_repeat_ev(MirKeyboardEvent const* kev)
 }
 }
 
-void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* kev)
+// Returns true if the original event has been handled, that is ::dispatch should not pass it on.
+bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
     std::lock_guard<std::mutex> lg(repeat_state_mutex);
     auto& device_state = ensure_state_for_device_locked(lg, id);
@@ -80,7 +82,7 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
         auto it = device_state.repeat_alarms_by_scancode.find(scan_code);
         if (it == device_state.repeat_alarms_by_scancode.end())
         {
-            return;
+            return false;
         }
         device_state.repeat_alarms_by_scancode.erase(it);
         break;
@@ -93,7 +95,8 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
         if (it != device_state.repeat_alarms_by_scancode.end())
         {
             // When we receive a duplicated down we just replace the action
-            next_dispatcher->dispatch(ev);            
+            next_dispatcher->dispatch(ev);
+            return true;
         }
         auto& capture_alarm = device_state.repeat_alarms_by_scancode[scan_code];
         std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm([this, &capture_alarm, ev]() mutable
@@ -114,6 +117,7 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Unexpected key event action"));
     }
+    return false;
 }
 
 void mi::KeyRepeatDispatcher::start()

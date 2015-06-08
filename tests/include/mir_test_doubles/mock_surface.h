@@ -24,7 +24,7 @@
 #include "mock_buffer_stream.h"
 #include "stub_input_channel.h"
 
-// GMock wants to be able to construct MirEvent as its passed by reference to consume
+// GMock wants to be able to construct MirEvent as it is passed by reference to consume
 #include "mir/events/event_private.h"
 
 #include <gmock/gmock.h>

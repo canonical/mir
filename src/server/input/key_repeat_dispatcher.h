@@ -62,7 +62,7 @@ private:
     std::unordered_map<MirInputDeviceId, KeyboardState> repeat_state_by_device;
     KeyboardState& ensure_state_for_device_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id);
 
-    void handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* ev);
+    bool handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* ev);
 };
 
 }

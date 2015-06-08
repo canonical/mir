@@ -339,7 +339,7 @@ TEST_F(SurfaceInputDispatcher, device_reset_resets_key_state_consistency)
     EXPECT_FALSE(dispatcher.dispatch(*release_event));
 }
 
-TEST_F(SurfaceInputDispatcher, key_input_target_may_dissapear_and_things_remain_quote_a_unquote_ok)
+TEST_F(SurfaceInputDispatcher, key_input_target_may_disappear_and_things_remain_quote_a_unquote_ok)
 {
     using namespace ::testing;
     
