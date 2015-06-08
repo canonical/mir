@@ -70,6 +70,7 @@ namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
+namespace md = mir::dispatch;
 
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {
@@ -372,6 +373,17 @@ mir::DefaultServerConfiguration::the_input_platform()
         });
 }
 
+namespace
+{
+class NullLegacyInputDispatchable : public mi::LegacyInputDispatchable
+{
+    void start() override { }
+    mir::Fd watch_fd() const override { return mir::Fd(mir::Fd::invalid); }
+    bool dispatch(md::FdEvents) override { return true; }
+    md::FdEvents relevant_events() const override { return 0; }
+};
+}
+
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
@@ -409,9 +421,10 @@ mir::DefaultServerConfiguration::the_input_manager()
                     "describe_input_module",
                     MIR_SERVER_INPUT_PLATFORM_VERSION);
                 auto props = describe();
-                auto ret = std::make_shared<mi::DefaultInputManager>(
-                	strncmp(props->name, "X-input", strlen(props->name)),
-                	the_input_reading_multiplexer(), the_legacy_input_dispatchable());
+                auto dispatchable = strncmp(props->name, "X-input", strlen(props->name))
+                                        ? the_legacy_input_dispatchable()
+                                        : std::make_shared<NullLegacyInputDispatchable>();
+                auto ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), dispatchable);
 
                 auto platform = the_input_platform();
                 if (platform)

@@ -233,7 +233,10 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
 void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> const& dispatchee,
                                              DispatchReentrancy reentrancy)
 {
-    decltype(dispatchee_holder)::iterator new_holder;
+    if (dispatchee->watch_fd() == mir::Fd(mir::Fd::invalid))
+        return;
+
+	decltype(dispatchee_holder)::iterator new_holder;
     {
         WriteLock lock{lifetime_mutex};
         new_holder = dispatchee_holder.emplace(dispatchee_holder.begin(),
@@ -276,6 +279,9 @@ void md::MultiplexingDispatchable::remove_watch(std::shared_ptr<Dispatchable> co
 
 void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
 {
+    if (fd == mir::Fd(mir::Fd::invalid))
+        return;
+
     if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr))
     {
         if (errno == ENOENT)
