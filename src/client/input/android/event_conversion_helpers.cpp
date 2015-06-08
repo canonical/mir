@@ -17,8 +17,13 @@
  */
 
 #include "mir/input/android/event_conversion_helpers.h"
+#include "mir/events/event_private.h"
 
 #include <androidfw/Input.h>
+
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
 
 namespace mia = mir::input::android;
 
@@ -209,4 +214,89 @@ bool mia::android_source_id_is_pointer_device(int32_t source_id)
     return source_id == AINPUT_SOURCE_MOUSE ||
         source_id == AINPUT_SOURCE_TRACKBALL ||
         source_id == AINPUT_SOURCE_TOUCHPAD;
+}
+
+int32_t mia::extract_masked_android_action_from(MirEvent const& ev)
+{
+    int index_with_action = -1;
+    auto const& mev = ev.motion;
+
+    for (unsigned i = 0; i < mev.pointer_count; i++)
+    {
+        if (mev.pointer_coordinates[i].action == mir_touch_action_change)
+            continue;
+        index_with_action = i;
+    }
+    if (index_with_action < 0)
+        return AMOTION_EVENT_ACTION_MOVE;
+    
+    int masked_action = AMOTION_EVENT_ACTION_MASK;
+    switch (mev.pointer_coordinates[index_with_action].action)
+    {
+    case mir_touch_action_up:
+        if (mev.pointer_count != 1)
+            masked_action &= AMOTION_EVENT_ACTION_POINTER_UP;
+        else
+            masked_action &= AMOTION_EVENT_ACTION_UP;
+        break;
+    case mir_touch_action_down:
+        if (mev.pointer_count != 1)
+            masked_action &= AMOTION_EVENT_ACTION_POINTER_DOWN;
+        else
+            masked_action &= AMOTION_EVENT_ACTION_DOWN;
+        break;
+    case mir_touch_action_change:
+        masked_action &= AMOTION_EVENT_ACTION_MOVE;
+    }
+    if (index_with_action > 0)
+        return masked_action | (index_with_action << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+    return masked_action;
+}
+
+namespace
+{
+int count_buttons(MirPointerButtons buttons)
+{
+    int ret = 0;
+    if (buttons & mir_pointer_button_primary) ret++;
+    if (buttons & mir_pointer_button_secondary) ret++;
+    if (buttons & mir_pointer_button_tertiary) ret++;
+    if (buttons & mir_pointer_button_forward) ret++;
+    if (buttons & mir_pointer_button_back) ret++;
+
+    return ret;
+}
+}
+
+int32_t mia::android_pointer_action_from_mir(MirPointerAction action, MirPointerButtons buttons)
+{
+    auto buttons_pressed = count_buttons(buttons);
+    switch (action)
+    {
+    case mir_pointer_action_button_up:
+        return buttons_pressed == 0 ? AMOTION_EVENT_ACTION_UP : AMOTION_EVENT_ACTION_POINTER_UP;
+    case mir_pointer_action_button_down:
+        return buttons_pressed == 1 ? AMOTION_EVENT_ACTION_DOWN : AMOTION_EVENT_ACTION_POINTER_DOWN;
+    case mir_pointer_action_enter:
+        return AMOTION_EVENT_ACTION_HOVER_ENTER;
+    case mir_pointer_action_leave:
+        return AMOTION_EVENT_ACTION_HOVER_EXIT;
+    case mir_pointer_action_motion:
+        return buttons_pressed ? AMOTION_EVENT_ACTION_MOVE : AMOTION_EVENT_ACTION_HOVER_MOVE;
+    default:
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid pointer action"));
+    }
+}
+
+int32_t mia::extract_android_action_from(MirEvent const& event)
+{
+    if (mia::android_source_id_is_pointer_device(event.motion.source_id))
+    {
+        return mia::android_pointer_action_from_mir(
+            static_cast<MirPointerAction>(event.motion.pointer_coordinates[0].action), event.motion.buttons);
+    }
+    else
+    {
+        return mia::extract_masked_android_action_from(event);
+    }
 }
