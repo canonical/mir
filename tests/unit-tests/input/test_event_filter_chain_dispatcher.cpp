@@ -42,15 +42,17 @@ std::shared_ptr<mtd::MockEventFilter> mock_filter()
 
 struct EventFilterChainDispatcher : public ::testing::Test
 {
-    mir::EventUPtr const event = mir::events::make_event(MirInputDeviceId(), std::chrono::nanoseconds(0),
-        MirKeyboardAction(), xkb_keysym_t(), 0, MirInputEventModifiers());
+    mir::EventUPtr const event = mir::events::make_event(MirInputDeviceId(),
+        std::chrono::nanoseconds(0), MirKeyboardAction(),
+        xkb_keysym_t(), 0, MirInputEventModifiers());
 };
 }
 
 TEST_F(EventFilterChainDispatcher, offers_events_to_filters)
 {
     auto filter = mock_filter();
-    mi::EventFilterChainDispatcher filter_chain({filter, filter}, std::make_shared<mi::NullInputDispatcher>());
+    mi::EventFilterChainDispatcher filter_chain({filter, filter},
+        std::make_shared<mi::NullInputDispatcher>());
     
     // Filter will pass the event on twice
     EXPECT_CALL(*filter, handle(_)).Times(2).WillRepeatedly(Return(false));
@@ -64,7 +66,9 @@ TEST_F(EventFilterChainDispatcher, prepends_appends_filters)
     auto filter2 = mock_filter();
     auto filter3 = mock_filter();
 
-    mi::EventFilterChainDispatcher filter_chain({filter2}, std::make_shared<mi::NullInputDispatcher>());
+    mi::EventFilterChainDispatcher filter_chain({filter2},
+        std::make_shared<mi::NullInputDispatcher>());
+    
     filter_chain.append(filter3);
     filter_chain.prepend(filter1);
 

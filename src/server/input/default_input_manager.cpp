@@ -77,7 +77,6 @@ void mi::DefaultInputManager::start()
 
     multiplexer->add_watch(queue);
     multiplexer->add_watch(legacy_dispatchable);
-
     legacy_dispatchable->start();
 
     auto const started_promise = std::make_shared<std::promise<void>>();

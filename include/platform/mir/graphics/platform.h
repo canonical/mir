@@ -146,7 +146,7 @@ extern "C" typedef std::shared_ptr<Platform>(*CreateGuestPlatform)(
     std::shared_ptr<NestedContext> const& nested_context);
 
 /**
- * Function prototype used to add platform specific options to the platform-independant server options.
+ * Function prototype used to add platform specific options to the platform-independent server options.
  *
  * \param [in] config a boost::program_options that can be appended with new options
  *
@@ -177,7 +177,7 @@ extern "C" std::shared_ptr<mir::graphics::Platform> create_guest_platform(
 extern "C" void add_graphics_platform_options(
     boost::program_options::options_description& config);
 
-extern "C" mir::graphics::PlatformPriority probe_graphcis_platform();
+extern "C" mir::graphics::PlatformPriority probe_graphics_platform();
 extern "C" mir::ModuleProperties const* describe_graphics_module();
 
 #endif // MIR_GRAPHICS_PLATFORM_H_

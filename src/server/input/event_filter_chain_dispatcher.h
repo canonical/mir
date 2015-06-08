@@ -33,8 +33,9 @@ namespace input
 class EventFilterChainDispatcher : public CompositeEventFilter, public mir::input::InputDispatcher
 {
 public:
-    EventFilterChainDispatcher(std::initializer_list<std::shared_ptr<EventFilter> const> const& values,
-                               std::shared_ptr<InputDispatcher> const& next_dispatcher);
+    EventFilterChainDispatcher(
+        std::initializer_list<std::shared_ptr<EventFilter> const> const& values,
+        std::shared_ptr<InputDispatcher> const& next_dispatcher);
 
     // CompositeEventFilter
     bool handle(MirEvent const& event) override;

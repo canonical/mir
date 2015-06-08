@@ -46,7 +46,7 @@ set(
   test_surface_placement.cpp
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "mesa")
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
   list(APPEND SOURCES test_symbols_required_by_mesa.cpp)
 endif()
 
