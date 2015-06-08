@@ -531,11 +531,11 @@ TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
     EXPECT_CALL(mock_surface_factory, create_surface(_,_))
         .WillOnce(Return(mock_surface));
     
-    std::array<std::shared_ptr<mc::BufferStream>,3> streams{
+    std::array<std::shared_ptr<mc::BufferStream>,3> streams {{
         std::make_shared<mtd::StubBufferStream>(),
         std::make_shared<mtd::StubBufferStream>(),
         std::make_shared<mtd::StubBufferStream>()
-    };
+    }};
     EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_))
         .WillOnce(Return(streams[0]))
         .WillOnce(Return(streams[1]))
