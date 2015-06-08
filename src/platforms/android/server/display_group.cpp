@@ -84,6 +84,7 @@ void mga::DisplayGroup::post()
             contents.emplace_back(db.second->contents());
         device->commit(contents); 
     }
-    // Works on arale:
+    // tested and verified beneficial on arale and mako:
+    // TODO: Move this to an overlay-only code path
     std::this_thread::sleep_for(std::chrono::milliseconds(8));
 }
