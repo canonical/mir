@@ -519,7 +519,7 @@ void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* str
 try
 {
     std::vector<MirBufferStreamInfo> copy;
-    for(auto i = 0u; i < size; i++)
+    for (auto i = 0u; i < size; i++)
         copy.emplace_back(streams[i]);
     spec->streams = copy;
 }

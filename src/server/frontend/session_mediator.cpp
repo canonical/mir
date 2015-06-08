@@ -454,7 +454,7 @@ void mf::SessionMediator::modify_surface(
     if (surface_specification.stream_size() > 0)
     {
         std::vector<msh::StreamSpecification> stream_spec;
-        for(auto& stream : surface_specification.stream())
+        for (auto& stream : surface_specification.stream())
         {
             stream_spec.emplace_back(
                 msh::StreamSpecification{

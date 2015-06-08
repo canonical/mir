@@ -105,7 +105,7 @@ struct Ordering
         displacements.clear();
 
         auto first_position = (*sequence.begin())->renderable()->screen_position().top_left;
-        for(auto const& element : sequence)
+        for (auto const& element : sequence)
             displacements.emplace_back(element->renderable()->screen_position().top_left - first_position);
         post_count++;
 
@@ -126,7 +126,7 @@ struct Ordering
         if (displacements.size() != arrangement.size())
             return false;
 
-        for(auto i = 0u; i < displacements.size(); i++)
+        for (auto i = 0u; i < displacements.size(); i++)
         {
             if (displacements[i] != arrangement[i])
                 return false;
@@ -199,7 +199,7 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
             new Stream(mir_surface_get_buffer_stream(surface), geom::Point{0,0}));
 
         int const additional_streams{3};
-        for(auto i = 0; i < additional_streams; i++)
+        for (auto i = 0; i < additional_streams; i++)
         {
             geom::Size size{30 * i + 1, 40* i + 1};
             geom::Point position{i * 2, i * 3};
@@ -231,7 +231,7 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
         primary_stream->handle(),
         primary_stream->position().x.as_int(),
         primary_stream->position().y.as_int()};
-    for(auto &stream : streams)
+    for (auto &stream : streams)
     {
         infos[i++] = MirBufferStreamInfo{
             stream->handle(),
@@ -245,7 +245,7 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     mir_surface_spec_release(change_spec);
 
     std::vector<geom::Displacement> displacements;
-    for(auto& info : infos)
+    for (auto& info : infos)
         displacements.emplace_back(geom::Displacement{info.displacement_x, info.displacement_y});
 
     //check that the compositor rendered correctly

@@ -127,7 +127,7 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
 
     if (streams.is_set())
     {
-        for(auto const& stream : streams.value())
+        for (auto const& stream : streams.value())
         {
             auto const new_stream = message.add_stream();
             new_stream->set_displacement_x(stream.displacement_x);

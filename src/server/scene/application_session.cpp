@@ -327,7 +327,7 @@ void ms::ApplicationSession::configure_streams(
     ms::Surface& surface, std::list<shell::StreamSpecification> const& streams)
 {
     std::list<ms::StreamInfo> list;
-    for(auto& stream : streams)
+    for (auto& stream : streams)
         list.emplace_back(ms::StreamInfo{checked_find(stream.stream_id)->second, stream.displacement});
     surface.set_streams(list); 
 }
