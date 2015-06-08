@@ -252,6 +252,10 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
     NestedMirRunner nested_mir{new_connection()};
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
     auto const surface = mtf::make_any_surface(connection);
+
+    // NB there is no synchronization to guarantee that a spurious post on surface creation will have 
+    // been seen by this point (although in testing it was invariably the case). However, any missed post
+    // would be included in one of the later counts and cause a test failure.
     Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
 
     // One post when surface drawn
