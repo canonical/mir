@@ -475,6 +475,8 @@ TEST_F(ClientBufferStreamTest, receives_unsolicited_buffer)
     another_buffer_package.set_buffer_id(id);
     EXPECT_CALL(mock_client_buffer_factory, create_buffer(_,_,_))
         .WillOnce(Return(mt::fake_shared(second_mock_client_buffer)));
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+        .WillOnce(RunProtobufClosure());
     bs->buffer_available(another_buffer_package);
     bs->next_buffer([](){});
 
@@ -499,10 +501,10 @@ TEST_F(ClientBufferStreamTest, after_receiving_an_unsolicited_buffer_exchange_bu
 
     EXPECT_CALL(mock_protobuf_server, exchange_buffer(_,_,_,_))
         .Times(11)
-        .WillOnce(RunProtobufClosure());
+        .WillRepeatedly(RunProtobufClosure());
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
         .Times(11)
-        .WillOnce(RunProtobufClosure());
+        .WillRepeatedly(RunProtobufClosure());
 
     int a_few_times = 11;
     for(auto i = 0; i < a_few_times; i++) 
