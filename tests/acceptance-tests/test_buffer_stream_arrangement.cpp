@@ -195,16 +195,14 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
         ConnectedClientWithASurface::SetUp();
         server.the_cursor()->hide();
 
-        primary_stream = std::unique_ptr<Stream>(
-            new Stream(mir_surface_get_buffer_stream(surface), geom::Point{0,0}));
-
+        streams.emplace_back(
+            std::make_unique<Stream>(mir_surface_get_buffer_stream(surface), geom::Point{0,0}));
         int const additional_streams{3};
         for (auto i = 0; i < additional_streams; i++)
         {
             geom::Size size{30 * i + 1, 40* i + 1};
             geom::Point position{i * 2, i * 3};
-            streams.emplace_back(std::unique_ptr<Stream>(
-                new Stream(connection, geom::Rectangle{position, size})));
+            streams.emplace_back(std::make_unique<Stream>(connection, geom::Rectangle{position, size}));
         }
     }
 
@@ -216,7 +214,6 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
 
     std::shared_ptr<Ordering> ordering;
     std::shared_ptr<OrderTrackingDBCFactory> order_tracker{nullptr};
-    std::unique_ptr<Stream> primary_stream;
     std::vector<std::unique_ptr<Stream>> streams;
 };
 }
@@ -224,13 +221,8 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
 TEST_F(BufferStreamArrangement, arrangements_are_applied)
 {
     using namespace testing;
-    auto num_streams = streams.size() + 1;
-    std::vector<MirBufferStreamInfo> infos(num_streams);
+    std::vector<MirBufferStreamInfo> infos(streams.size());
     auto i = 0u;
-    infos[i++] = MirBufferStreamInfo{
-        primary_stream->handle(),
-        primary_stream->position().x.as_int(),
-        primary_stream->position().y.as_int()};
     for (auto &stream : streams)
     {
         infos[i++] = MirBufferStreamInfo{
