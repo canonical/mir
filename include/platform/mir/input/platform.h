@@ -26,9 +26,8 @@
 #include <mir/module_deleter.h>
 
 #include <boost/program_options/options_description.hpp>
-#include <memory>
 
-#include "mir/module_properties.h"
+#include <memory>
 
 namespace mir
 {
