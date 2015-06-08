@@ -324,7 +324,7 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
 }
 
 void ms::ApplicationSession::configure_streams(
-    ms::Surface& surface, std::list<shell::StreamSpecification> const& streams)
+    ms::Surface& surface, std::vector<shell::StreamSpecification> const& streams)
 {
     std::list<ms::StreamInfo> list;
     for (auto& stream : streams)

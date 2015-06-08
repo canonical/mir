@@ -284,7 +284,7 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     if (modifications.streams.is_set())
     {
         auto v = modifications.streams.value();
-        std::list<shell::StreamSpecification> l (v.begin(), v.end());
+        std::vector<shell::StreamSpecification> l (v.begin(), v.end());
         session->configure_streams(*surface, l);
     }
 

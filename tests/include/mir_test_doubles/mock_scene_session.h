@@ -65,7 +65,7 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
     MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
     
-    MOCK_METHOD2(configure_streams, void(scene::Surface&, std::list<shell::StreamSpecification> const&));
+    MOCK_METHOD2(configure_streams, void(scene::Surface&, std::vector<shell::StreamSpecification> const&));
 };
 
 }
