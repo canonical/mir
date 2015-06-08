@@ -43,15 +43,13 @@ class InputDeviceRegistry;
 class DefaultInputManager : public InputManager
 {
 public:
-    DefaultInputManager(bool read_input,
-                        std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+    DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
                         std::shared_ptr<LegacyInputDispatchable> const& legacy_dispatchable);
     ~DefaultInputManager();
     void add_platform(std::shared_ptr<Platform> const& platform) override;
     void start() override;
     void stop() override;
 private:
-    bool const read_input;
     std::vector<std::shared_ptr<Platform>> platforms;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     std::shared_ptr<input::LegacyInputDispatchable> const legacy_dispatchable;
