@@ -62,7 +62,8 @@ public:
     geometry::Rectangle input_bounds() const override { return {{},{}}; }
     bool input_area_contains(mir::geometry::Point const&) const override { return false; }
 
-    virtual std::unique_ptr<graphics::Renderable> compositor_snapshot(void const*) const override { return nullptr; }
+    void set_streams(std::list<scene::StreamInfo> const&) override {}
+    graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }
     int buffers_ready_for_compositor(void const*) const override { return 0; }
 
     float alpha() const override { return 0.0f;}

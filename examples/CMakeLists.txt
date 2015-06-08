@@ -89,6 +89,13 @@ mir_add_wrapped_executable(mir_demo_client_tooltip
 )
 target_link_libraries(mir_demo_client_tooltip
   eglapp
+  )
+
+mir_add_wrapped_executable(mir_demo_client_touch_validator
+  client_touch_validator.cpp
+)
+target_link_libraries(mir_demo_client_touch_validator
+  eglapp
 )
 
 mir_add_wrapped_executable(mir_demo_client_basic

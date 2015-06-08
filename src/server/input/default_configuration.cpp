@@ -407,13 +407,13 @@ mir::DefaultServerConfiguration::the_input_manager()
         {
             auto const options = the_options();
             bool input_opt = options->get<bool>(options::enable_input_opt);
-            bool input_reading_required = input_opt && !options->is_set(options::host_socket_opt);
-                // TODO nested input handling (== host_socket) should fold into a platform
+            bool host_platform = input_opt && !options->is_set(options::host_socket_opt);
+            // TODO nested input handling (== host_socket) should fold into a platform
 
-            if (input_reading_required)
+            if (host_platform)
             {
                 if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
-                        mr::legacy_input::initialize(the_logger());
+                    mr::legacy_input::initialize(the_logger());
 
                 auto ret = std::make_shared<mi::DefaultInputManager>(
                     the_input_reading_multiplexer(), the_legacy_input_dispatchable());

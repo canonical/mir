@@ -333,6 +333,15 @@ void mf::SessionMediator::exchange_buffer(
         });
 }
 
+void mf::SessionMediator::submit_buffer(
+    google::protobuf::RpcController*,
+    mir::protobuf::BufferRequest const*,
+    mir::protobuf::Void*,
+    google::protobuf::Closure*)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
+}
+
 void mf::SessionMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
