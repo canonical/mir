@@ -168,6 +168,19 @@ mir_connection_create_spec_for_dialog(MirConnection* connection,
                                       MirPixelFormat format);
 
 /**
+ * Create a surface specification.
+ * This can be used with mir_surface_create() to create a surface or with
+ * mir_surface_apply_spec() to change an existing surface.
+ * \remark For use with mir_surface_create() at least the type, width, height
+ * and format must be set. (And for types requiring a parent that too must be
+ * set.)
+ *
+ * \return                  A handle that can ultimately be passed to
+ *                          mir_surface_create() or mir_surface_apply_spec()
+ */
+MirSurfaceSpec* mir_create_surface_spec(void);
+
+/**
  * Create a surface specification for updating a surface.
  *
  * This can be applied to one or more target surfaces using
@@ -201,6 +214,37 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
  *                                      in the case of error.
  */
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
+
+/**
+ * Set the requested parent.
+ *
+ * \param [in] spec    Specification to mutate
+ * \param [in] parent  A valid parent surface.
+ *
+ * \return              true unless "parent" is invalid for this surface type.
+ */
+bool mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent);
+
+/**
+ * Update a surface specification with a surface type.
+ * This can be used with mir_surface_create() to create a surface or with
+ * mir_surface_apply_spec() to change an existing surface.
+ * \remark For use with mir_surface_apply_spec() the shell need not support
+ * arbitrary changes of type and some target types may require the setting of
+ * properties such as "parent" that are not already present on the surface.
+ * The type transformations the server is required to support are:\n
+ * regular => utility, dialog or satellite\n
+ * utility => regular, dialog or satellite\n
+ * dialog => regular, utility or satellite\n
+ * satellite => regular, utility or dialog\n
+ * popup => satellite
+ *
+ * \param [in] spec         Specification to mutate
+ * \param [in] type         the target type of the surface
+ *
+ * \return                  true (pointless consistency)
+ */
+bool mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type);
 
 /**
  * Set the requested name.
