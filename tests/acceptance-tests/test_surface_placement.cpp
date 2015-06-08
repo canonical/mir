@@ -367,8 +367,8 @@ struct UnparentedSurface : SurfacePlacement, ::testing::WithParamInterface<MirSu
 
 TEST_P(UnparentedSurface, small_window_is_optically_centered_on_first_display)
 {
-    auto const width = 59;
-    auto const height= 61;
+    auto const width = 83;
+    auto const height= 89;
 
     auto const geometric_centre = first_display.top_left +
                                   0.5*(as_displacement(first_display.size) - Displacement{width, height});
@@ -425,22 +425,17 @@ struct ParentedSurface : SurfacePlacement, ::testing::WithParamInterface<MirSurf
 
 TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
 {
-    auto const parent = create_normal_surface(
-        first_display.size.width.as_int(),
-        first_display.size.height.as_int(),
-        [&](MirSurfaceSpec* spec)
-            {
-                mir_surface_spec_set_fullscreen_on_output(spec, 1);
-            });
+    auto const parent = create_normal_surface(256, 256);
+    auto const shell_parent = latest_shell_surface();
 
-    auto const width = 59;
-    auto const height= 61;
+    auto const width = 97;
+    auto const height= 101;
 
-    auto const geometric_centre = first_display.top_left +
-                                  0.5*(as_displacement(first_display.size) - Displacement{width, height});
+    auto const geometric_centre = shell_parent->top_left() +
+                                  0.5*(as_displacement(shell_parent->size()) - Displacement{width, height});
 
     auto const optically_centred = geometric_centre -
-                                   DeltaY{(first_display.size.height.as_int()-height)/6};
+                                   DeltaY{(shell_parent->size().height.as_int()-height)/6};
 
     auto const surface = create_surface([&](MirSurfaceSpec* spec)
         {
