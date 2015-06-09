@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
     glViewport(0, 0, width, height);
 
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Behave like an accumulation buffer
 
     State state =
     {
