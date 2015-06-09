@@ -376,6 +376,16 @@ bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t ou
 bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode);
 
 /**
+ * Set the requested state.
+ * \param [in] spec    Specification to mutate
+ * \param [in] mode    Requested state
+ * \return             False if the state is not valid for this surface type.
+ * \note    If the server is unable to create a surface with the requested state at
+ *          the point mir_surface_create() is called it will instead return an invalid surface.
+ */
+bool mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state);
+
+/**
  * Release the resources held by a MirSurfaceSpec.
  *
  * \param [in] spec     Specification to release
