@@ -20,8 +20,6 @@
 #include "configurable_display_buffer.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <chrono>
-#include <thread>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
@@ -77,14 +75,9 @@ void mga::DisplayGroup::configure(
 
 void mga::DisplayGroup::post()
 {
-    {
-        std::list<DisplayContents> contents;
-        std::unique_lock<decltype(guard)> lk(guard);
-        for(auto const& db : dbs)
-            contents.emplace_back(db.second->contents());
-        device->commit(contents); 
-    }
-    // tested and verified beneficial on arale and mako:
-    // TODO: Move this to an overlay-only code path
-    std::this_thread::sleep_for(std::chrono::milliseconds(8));
+    std::list<DisplayContents> contents;
+    std::unique_lock<decltype(guard)> lk(guard);
+    for(auto const& db : dbs)
+        contents.emplace_back(db.second->contents());
+    device->commit(contents); 
 }
