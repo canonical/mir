@@ -298,7 +298,6 @@ service DisplayServer {
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
   rpc modify_surface(SurfaceModifications) returns (Void);
-  rpc request_persistent_surface_id(SurfaceId) returns (PersistentSurfaceId);
   rpc next_buffer(SurfaceId) returns (Buffer);
   rpc release_surface(SurfaceId) returns (Void);
 
@@ -322,6 +321,8 @@ service DisplayServer {
   rpc start_prompt_session(PromptSessionParameters) returns (Void);
   rpc stop_prompt_session(Void) returns (Void);
   rpc exchange_buffer(BufferRequest) returns (Buffer);
+
+  rpc request_persistent_surface_id(SurfaceId) returns (PersistentSurfaceId);
 }
 
 message CoordinateTranslationRequest {
