@@ -157,16 +157,19 @@ static void get_all_touch_points(const MirInputEvent *ievent, TouchState *touch)
             n = max_fingers;
         for (int f = 0; f < n; ++f)
         {
-            if (mir_touch_event_action(tevent, f) == mir_touch_action_up)
-                continue;
             Finger *finger = touch->finger + f;
             if (f >= touch->fingers)
             {
                 finger->samples = 0;
                 touch->fingers = f + 1;
             }
+            if (mir_touch_event_action(tevent, f) == mir_touch_action_up)
+            {
+                finger->samples = 0;
+                continue;
+            }
             if (finger->samples >= max_samples_per_frame)
-                break;
+                continue;
             finger->sample[finger->samples++] = (Vec2)
             {
                 mir_touch_event_axis_value(tevent, f, mir_touch_axis_x),
