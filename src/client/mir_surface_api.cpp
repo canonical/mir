@@ -211,6 +211,12 @@ bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
     return true;
 }
 
+bool mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)
+{
+    spec->state = state;
+    return true;
+}
+
 bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
 {
     spec->output_id = output_id;
