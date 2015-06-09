@@ -138,6 +138,7 @@ target_link_libraries(
 if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
 target_link_libraries(mir_unit_tests
   mirsharedmesaservercommon-static
+  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
 endif()
 

@@ -1,9 +1,7 @@
 list(APPEND UNIT_TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_display_configuration.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_egl_extensions.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_egl_error.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_default_display_configuration_policy.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_id.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_properties.cpp
@@ -14,6 +12,13 @@ list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_platform_prober.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_software_cursor.cpp
 )
+
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "android")
+  list(APPEND UNIT_TEST_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
+  )
+endif()
 
 add_subdirectory(nested/)
 add_subdirectory(offscreen/)
