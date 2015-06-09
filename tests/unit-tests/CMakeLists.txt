@@ -135,7 +135,7 @@ target_link_libraries(
   ${XKBCOMMON_LIBRARIES}
 )
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
 target_link_libraries(mir_unit_tests
   mirsharedmesaservercommon-static
 )

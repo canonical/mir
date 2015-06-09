@@ -16,7 +16,7 @@ include_directories(
 add_definitions(-DDEBUG_SERVER=0)
 
 add_library(
-  mirplatformserverx11objects OBJECT
+  mirplatformservermesax11objects OBJECT
 
   platform.cpp
   display.cpp
@@ -31,13 +31,13 @@ add_library(
 )
 
 add_library(
-  mirplatformserverx11 MODULE
+  mirplatformservermesax11 MODULE
 
-  $<TARGET_OBJECTS:mirplatformserverx11objects>
+  $<TARGET_OBJECTS:mirplatformservermesax11objects>
 )
 
 target_link_libraries(
-  mirplatformserverx11
+  mirplatformservermesax11
 
   mirplatform
   EGL
@@ -52,7 +52,7 @@ target_link_libraries(
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(
-  mirplatformserverx11 PROPERTIES
+  mirplatformservermesax11 PROPERTIES
   OUTPUT_NAME server-mesa-x11
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   PREFIX ""
@@ -60,4 +60,4 @@ set_target_properties(
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
-install(TARGETS mirplatformserverx11 LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
+install(TARGETS mirplatformservermesax11 LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

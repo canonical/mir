@@ -20,11 +20,11 @@ add_subdirectory(offscreen/)
 
 add_subdirectory(egl_mock/)
 if (MIR_TEST_PLATFORM STREQUAL "android")
-add_subdirectory(android/)
+  add_subdirectory(android/)
 endif()
 
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
-add_subdirectory(mesa/)
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
+  add_subdirectory(mesa/)
 endif()
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
