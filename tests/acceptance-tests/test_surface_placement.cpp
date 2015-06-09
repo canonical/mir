@@ -349,6 +349,114 @@ TEST_F(SurfacePlacement, medium_second_window_is_cascaded_wrt_first)
     mir_surface_release_sync(surface2);
 }
 
+TEST_F(SurfacePlacement, fullscreen_surface_is_sized_to_display)
+{
+    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_state(spec, mir_surface_state_fullscreen);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+
+    EXPECT_THAT(shell_surface->top_left(), Eq(first_display.top_left));
+    EXPECT_THAT(shell_surface->size(), Eq(first_display.size));
+
+    mir_surface_release_sync(surface);
+}
+
+TEST_F(SurfacePlacement, maximized_surface_is_sized_to_display)
+{
+    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_state(spec, mir_surface_state_maximized);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+
+    EXPECT_THAT(shell_surface->top_left().x, Eq(first_display.top_left.x));
+
+    // Allow for a titlebar...
+    EXPECT_THAT(shell_surface->top_left().y, Lt((first_display.top_left+max_cascade).y));
+
+    auto const expected_size = as_size(as_displacement(first_display.size)
+        + (first_display.top_left - shell_surface->top_left()));
+
+    EXPECT_THAT(shell_surface->size(), Eq(expected_size));
+
+    mir_surface_release_sync(surface);
+}
+
+TEST_F(SurfacePlacement, horizmaximized_surface_is_sized_to_display)
+{
+    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_state(spec, mir_surface_state_horizmaximized);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+
+    EXPECT_THAT(shell_surface->top_left().x, Eq(first_display.top_left.x));
+
+    // Allow for a titlebar...
+    EXPECT_THAT(shell_surface->top_left().y, Gt((first_display.top_left+max_cascade).y));
+    EXPECT_THAT(shell_surface->size().height, Eq(Height{10}));
+    EXPECT_THAT(shell_surface->size().width, Eq(first_display.size.width));
+
+    mir_surface_release_sync(surface);
+}
+
+TEST_F(SurfacePlacement, vertmaximized_surface_is_sized_to_display)
+{
+    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_state(spec, mir_surface_state_vertmaximized);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+
+    EXPECT_THAT(shell_surface->top_left().x, Gt(first_display.top_left.x));
+
+    // Allow for a titlebar...
+    EXPECT_THAT(shell_surface->top_left().y, Lt((first_display.top_left+max_cascade).y));
+
+    Size const expected_size{10,
+        first_display.size.height + (first_display.top_left.y-shell_surface->top_left().y)};
+
+    EXPECT_THAT(shell_surface->size(), Eq(expected_size));
+
+    mir_surface_release_sync(surface);
+}
+
+TEST_F(SurfacePlacement, fullscreen_on_output_1_surface_is_sized_to_first_display)
+{
+    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_fullscreen_on_output(spec, 1);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+
+    EXPECT_THAT(shell_surface->top_left(), Eq(first_display.top_left));
+    EXPECT_THAT(shell_surface->size(), Eq(first_display.size));
+
+    mir_surface_release_sync(surface);
+}
+
+TEST_F(SurfacePlacement, fullscreen_on_output_2_surface_is_sized_to_second_display)
+{
+    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_fullscreen_on_output(spec, 2);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+
+    EXPECT_THAT(shell_surface->top_left(), Eq(second_display.top_left));
+    EXPECT_THAT(shell_surface->size(), Eq(second_display.size));
+
+    mir_surface_release_sync(surface);
+}
+
 // Parented dialog or parented freestyle window
 //
 // For convenience, these types are referred to here as “parented dialogs”.
