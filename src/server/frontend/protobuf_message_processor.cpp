@@ -71,7 +71,8 @@ template<class ParameterMessage>
 ParameterMessage parse_parameter(Invocation const& invocation)
 {
     ParameterMessage request;
-    request.ParseFromString(invocation.parameters());
+    if (!request.ParseFromString(invocation.parameters()))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to parse message parameters!"));
     return request;
 }
 
