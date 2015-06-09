@@ -118,7 +118,7 @@ EGLNativeWindowType StubClientPlatform::egl_native_window{
 
 struct ClientBufferStreamTest : public testing::Test
 {
-    mtd::MockClientBufferFactory mock_client_buffer_factory;
+    testing::NiceMock<mtd::MockClientBufferFactory> mock_client_buffer_factory;
     mtd::StubClientBufferFactory stub_client_buffer_factory;
 
     MockProtobufServer mock_protobuf_server;
@@ -495,8 +495,8 @@ TEST_F(ClientBufferStreamTest, after_receiving_an_unsolicited_buffer_exchange_bu
     mir::protobuf::Buffer another_buffer_package;
     another_buffer_package.set_buffer_id(id);
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
-    EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
-        .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
+    ON_CALL(mock_client_buffer_factory, create_buffer(_,_,_))
+        .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
 
     int a_few_times = 11;

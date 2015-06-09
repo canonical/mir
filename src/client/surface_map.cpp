@@ -41,11 +41,10 @@ mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
             delete surface.second;
     }
 
-    for (auto const& stream : streams)
+    for (auto const& info : streams)
     {
-        //don't delete streams that were managed by the surface
-        if (std::get<1>(stream.second))
-            delete std::get<0>(stream.second);
+        if (info.second.owned)
+            delete info.second.stream;
     }
 }
 
@@ -70,7 +69,7 @@ void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, MirSurface* sur
 {
     std::lock_guard<std::mutex> lk(guard);
     surfaces[surface_id] = surface;
-    streams[mf::BufferStreamId(surface_id.as_value())] = std::make_tuple(surface->get_buffer_stream(), false);
+    streams[mf::BufferStreamId(surface_id.as_value())] = {surface->get_buffer_stream(), false};
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
@@ -86,7 +85,7 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
     auto const it = streams.find(stream_id);
     if (it != streams.end())
     {
-        exec(std::get<0>(it->second));
+        exec(it->second.stream);
     }
     else
     {
@@ -99,7 +98,7 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
 void mcl::ConnectionSurfaceMap::insert(mf::BufferStreamId stream_id, ClientBufferStream* stream)
 {
     std::lock_guard<std::mutex> lk(guard);
-    streams[stream_id] = std::make_tuple(stream, true);
+    streams[stream_id] = {stream, true};
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::BufferStreamId stream_id)
