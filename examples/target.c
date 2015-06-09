@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
         PTHREAD_COND_INITIALIZER,
         true,
         true,
-        {0}
+        {0, {{0, {{0.0f, 0.0f}}}}}
     };
     MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
@@ -365,9 +365,17 @@ int main(int argc, char *argv[])
             }
         }
 
+        // Just keep the latest sample for the zeroth finger (mouse pointer)
+        if (state.touch.fingers)
+        {
+            state.touch.finger[0].sample[0] =
+                state.touch.finger[0].sample[state.touch.finger[0].samples-1];
+            state.touch.finger[0].samples = 1;
+            state.touch.fingers = 1;
+        }
+
         // Put the event loop back to sleep:
         state.changed = false;
-        state.touch.fingers = 0;
         pthread_mutex_unlock(&state.mutex);
 
         mir_eglapp_swap_buffers();
