@@ -29,7 +29,7 @@
 
 enum
 {
-    max_touches = 10
+    max_touches_per_frame = 1000
 };
 
 typedef struct
@@ -40,7 +40,7 @@ typedef struct
 typedef struct
 {
     int points;
-    Vec2 point[max_touches];
+    Vec2 point[max_touches_per_frame];
 } TouchState;
 
 typedef struct
@@ -124,13 +124,15 @@ static void get_all_touch_points(const MirInputEvent *ievent, TouchState *touch)
 {
     if (mir_input_event_get_type(ievent) == mir_input_event_type_pointer)
     {
-        touch->points = 0;
         const MirPointerEvent *pevent =
             mir_input_event_get_pointer_event(ievent);
-        if (mir_pointer_event_action(pevent) != mir_pointer_action_leave)
+        if (mir_pointer_event_action(pevent) == mir_pointer_action_leave)
         {
-            touch->points = 1;
-            touch->point[0] = (Vec2)
+            touch->points = 0;
+        }
+        else if (touch->points < max_touches_per_frame)
+        {
+            touch->point[touch->points++] = (Vec2)
             {
                 mir_pointer_event_axis_value(pevent, mir_pointer_axis_x),
                 mir_pointer_event_axis_value(pevent, mir_pointer_axis_y)
@@ -141,20 +143,18 @@ static void get_all_touch_points(const MirInputEvent *ievent, TouchState *touch)
     {
         const MirTouchEvent *tevent = mir_input_event_get_touch_event(ievent);
         int n = mir_touch_event_point_count(tevent);
-        if (n > max_touches)
-            n = max_touches;
-        bool all_up = true;
         for (int p = 0; p < n; ++p)
         {
-            if (mir_touch_event_action(tevent, p) != mir_touch_action_up)
-                all_up = false;
-            touch->point[p] = (Vec2)
+            if (mir_touch_event_action(tevent, p) == mir_touch_action_up)
+                continue;
+            if (touch->points >= max_touches_per_frame)
+                break;
+            touch->point[touch->points++] = (Vec2)
             {
                 mir_touch_event_axis_value(tevent, p, mir_touch_axis_x),
                 mir_touch_event_axis_value(tevent, p, mir_touch_axis_y)
             };
         }
-        touch->points = all_up ? 0 : n;
     }
 }
 
@@ -330,6 +330,7 @@ int main(int argc, char *argv[])
 
         // Put the event loop back to sleep:
         state.changed = false;
+        state.touch.points = 0;
         pthread_mutex_unlock(&state.mutex);
 
         mir_eglapp_swap_buffers();
