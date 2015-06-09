@@ -22,23 +22,20 @@
 #include "mir_basic_rpc_channel.h"
 #include "stream_transport.h"
 #include "mir/dispatch/dispatchable.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
+#include "mir/dispatch/action_queue.h"
+
+#include "mir_protobuf_wire.pb.h"
 
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
 
 #include <thread>
 #include <atomic>
+#include <experimental/optional>
 
 namespace mir
 {
-namespace protobuf
-{
-namespace wire
-{
-class Invocation;
-class Result;
-}
-}
 
 namespace client
 {
@@ -74,6 +71,20 @@ public:
     Fd watch_fd() const override;
     bool dispatch(mir::dispatch::FdEvents events) override;
     mir::dispatch::FdEvents relevant_events() const override;
+
+    /**
+     * \brief Switch the RpcChannel into out-of-order mode
+     *
+     * The first CallMethod after this method is called will be processed
+     * out of order - no server responses will be processed until the response
+     * for the next CallMethod is processed.
+     *
+     * After the response for the next CallMethod is processed, normal processing
+     * is resumed.
+     *
+     * No messages are discarded, only delayed.
+     */
+    void process_next_request_first();
 private:
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
         const google::protobuf::Message* parameters, google::protobuf::Message* response,
@@ -86,7 +97,7 @@ private:
     detail::SendBuffer header_bytes;
     detail::SendBuffer body_bytes;
 
-    void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
+    void receive_file_descriptors(google::protobuf::Message* response);
     template<class MessageType>
     void receive_any_file_descriptors_for(MessageType* response);
     void send_message(mir::protobuf::wire::Invocation const& body,
@@ -106,14 +117,22 @@ private:
     std::mutex read_mutex;
     std::mutex write_mutex;
 
+    bool prioritise_next_request{false};
+    std::experimental::optional<uint32_t> id_to_wait_for;
+
     /* We use the guarantee that the transport's destructor blocks until
      * pending processing has finished to ensure that on_data_available()
      * isn't called after the members it relies on are destroyed.
      *
-     * This means the transport field must appear after any field used
-     * by on_data_available. For simplicity, put it last.
+     * This means that anything that owns a reference to the transport
+     * needs to be after anything that can be accessed from on_data_available().
+     *
+     * For simplicity's sake keep all of the dispatch infrastructure at the
+     * end to guarantee this.
      */
-    std::unique_ptr<StreamTransport> transport;
+    std::shared_ptr<StreamTransport> const transport;
+    std::shared_ptr<mir::dispatch::ActionQueue> const delayed_processor;
+    mir::dispatch::MultiplexingDispatchable multiplexer;
 };
 
 }

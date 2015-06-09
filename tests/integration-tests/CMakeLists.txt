@@ -61,7 +61,6 @@ if(MIR_TEST_PLATFORM STREQUAL "mesa")
     ${CMAKE_SOURCE_DIR}
   )
   add_subdirectory(graphics/mesa)
-  list(APPEND INTEGRATION_TESTS_SRCS test_drm_auth_magic.cpp)
 endif()
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
@@ -116,6 +115,12 @@ target_link_libraries(
   ${MIR_COMMON_REFERENCES}
   ${MIR_SERVER_REFERENCES}
 )
+
+if (MIR_BUILD_PLATFORM_MESA)
+target_link_libraries(mir_integration_tests
+  mirsharedmesaservercommon-static
+)
+endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_integration_tests

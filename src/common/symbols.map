@@ -1,15 +1,4 @@
-# Symbols moved from libmirplatform; can be folded into a MIR_COMMON stanza
-# at next mirplatform ABI break.
-MIRPLATFORM_7 {
- global:
-  extern "C++" {
-    mir::fatal_error*;
-    mir::fatal_error_abort*;
-    mir::fatal_error_except*;
-  };
-};
-
-MIR_COMMON_4 {
+MIR_COMMON_5 {
  global: mir_*;
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -38,6 +27,9 @@ MIR_COMMON_4 {
     mir::dispatch::ThreadedDispatcher::?ThreadedDispatcher*;
     mir::dispatch::ThreadedDispatcher::add_thread*;
     mir::dispatch::ThreadedDispatcher::remove_thread*;
+    mir::fatal_error*;
+    mir::fatal_error_abort*;
+    mir::fatal_error_except*;
     mir::Fd::Fd*;
     mir::Fd::invalid*;
     mir::Fd::operator*;
