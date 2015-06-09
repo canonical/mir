@@ -598,11 +598,11 @@ void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
  * 
  * \param [in] spec      The spec to accumulate the request in.
  * \param [in] streams   The an array of non-null streams info.
- * \param [in] size      The size of streams.
+ * \param [in] size      The number of elements in the streams array.
  */
 void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
                                   MirBufferStreamInfo* streams,
-                                  unsigned int size);
+                                  unsigned int num_streams);
 #ifdef __cplusplus
 }
 /**@}*/
