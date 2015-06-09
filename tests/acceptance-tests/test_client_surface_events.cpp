@@ -18,12 +18,11 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir/shell/shell_wrapper.h"
-#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 
 #include "mir_test/event_matchers.h"
+#include "mir_test_doubles/wrap_shell_to_track_latest_surface.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test_framework/any_surface.h"
 
@@ -38,28 +37,13 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
 using namespace testing;
 
 namespace
 {
-struct MockShell : msh::ShellWrapper
-{
-    using msh::ShellWrapper::ShellWrapper;
-
-    mf::SurfaceId create_surface(
-        std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& params) override
-    {
-        auto const surface = msh::ShellWrapper::create_surface(session, params);
-        latest_surface = session->surface(surface);
-        return surface;
-    }
-
-    std::weak_ptr<ms::Surface> latest_surface;
-};
-
 struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 {
     MirSurface* other_surface;
@@ -115,7 +99,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
         last_event_surface = nullptr;
     }
 
-    std::shared_ptr<MockShell> the_mock_shell() const
+    std::shared_ptr<mtd::WrapShellToTrackLatestSurface> the_mock_shell() const
     {
         return mock_shell.lock();
     }
@@ -130,7 +114,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
         server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
             -> std::shared_ptr<msh::Shell>
         {
-            auto const msc = std::make_shared<MockShell>(wrapped);
+            auto const msc = std::make_shared<mtd::WrapShellToTrackLatestSurface>(wrapped);
             mock_shell = msc;
             return msc;
         });
@@ -155,7 +139,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
         mtf::ConnectedClientWithASurface::TearDown();
     }
 
-    std::weak_ptr<MockShell> mock_shell;
+    std::weak_ptr<mtd::WrapShellToTrackLatestSurface> mock_shell;
 };
 }
 
