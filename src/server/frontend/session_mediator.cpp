@@ -333,6 +333,15 @@ void mf::SessionMediator::exchange_buffer(
         });
 }
 
+void mf::SessionMediator::submit_buffer(
+    google::protobuf::RpcController*,
+    mir::protobuf::BufferRequest const*,
+    mir::protobuf::Void*,
+    google::protobuf::Closure*)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
+}
+
 void mf::SessionMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
@@ -442,6 +451,15 @@ void mf::SessionMediator::modify_surface(
     // max_aspect is a special case (below)
 
 #undef COPY_IF_SET
+    std::vector<msh::StreamSpecification> stream_spec;
+    for(auto& stream : surface_specification.stream())
+    {
+        stream_spec.emplace_back(
+            msh::StreamSpecification{
+                mf::BufferStreamId{stream.id().value()},
+                geom::Displacement{stream.displacement_x(), stream.displacement_y()}});
+    }
+    mods.streams = std::move(stream_spec);
 
     if (surface_specification.has_aux_rect())
     {

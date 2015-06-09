@@ -183,7 +183,7 @@ TEST_F(SurfaceStackCompositor, does_not_composes_on_start_if_told_not_to_in_cons
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(0, timeout));
 }
 
-TEST_F(SurfaceStackCompositor, adding_a_surface_that_has_been_swapped_triggers_a_composition)
+TEST_F(SurfaceStackCompositor, swapping_a_surface_that_has_been_added_triggers_a_composition)
 {
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
@@ -193,8 +193,8 @@ TEST_F(SurfaceStackCompositor, adding_a_surface_that_has_been_swapped_triggers_a
         null_comp_report, false);
     mt_compositor.start();
 
-    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));

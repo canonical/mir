@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/nested_context.h"
-#include "src/platforms/mesa/server/guest_platform.h"
+#include "src/platforms/mesa/server/kms/guest_platform.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir_toolkit/mesa/platform_operation.h"
