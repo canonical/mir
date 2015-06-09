@@ -29,7 +29,8 @@
 
 enum
 {
-    max_touches_per_frame = 1000
+    max_fingers = 10,
+    max_samples_per_frame = 1000
 };
 
 typedef struct
@@ -39,8 +40,14 @@ typedef struct
 
 typedef struct
 {
-    int points;
-    Vec2 point[max_touches_per_frame];
+    int samples;
+    Vec2 sample[max_samples_per_frame];
+} Finger;
+
+typedef struct
+{
+    int fingers;
+    Finger finger[max_fingers];
 } TouchState;
 
 typedef struct
@@ -128,11 +135,14 @@ static void get_all_touch_points(const MirInputEvent *ievent, TouchState *touch)
             mir_input_event_get_pointer_event(ievent);
         if (mir_pointer_event_action(pevent) == mir_pointer_action_leave)
         {
-            touch->points = 0;
+            touch->fingers = 0;
         }
-        else if (touch->points < max_touches_per_frame)
+        else if (touch->finger[0].samples < max_samples_per_frame)
         {
-            touch->point[touch->points++] = (Vec2)
+            if (!touch->fingers)
+                touch->finger[0].samples = 0;
+            touch->fingers = 1;
+            touch->finger[0].sample[touch->finger[0].samples++] = (Vec2)
             {
                 mir_pointer_event_axis_value(pevent, mir_pointer_axis_x),
                 mir_pointer_event_axis_value(pevent, mir_pointer_axis_y)
@@ -143,16 +153,24 @@ static void get_all_touch_points(const MirInputEvent *ievent, TouchState *touch)
     {
         const MirTouchEvent *tevent = mir_input_event_get_touch_event(ievent);
         int n = mir_touch_event_point_count(tevent);
-        for (int p = 0; p < n; ++p)
+        if (n > max_fingers)
+            n = max_fingers;
+        for (int f = 0; f < n; ++f)
         {
-            if (mir_touch_event_action(tevent, p) == mir_touch_action_up)
+            if (mir_touch_event_action(tevent, f) == mir_touch_action_up)
                 continue;
-            if (touch->points >= max_touches_per_frame)
-                break;
-            touch->point[touch->points++] = (Vec2)
+            Finger *finger = touch->finger + f;
+            if (f >= touch->fingers)
             {
-                mir_touch_event_axis_value(tevent, p, mir_touch_axis_x),
-                mir_touch_event_axis_value(tevent, p, mir_touch_axis_y)
+                finger->samples = 0;
+                touch->fingers = f + 1;
+            }
+            if (finger->samples >= max_samples_per_frame)
+                break;
+            finger->sample[finger->samples++] = (Vec2)
+            {
+                mir_touch_event_axis_value(tevent, f, mir_touch_axis_x),
+                mir_touch_event_axis_value(tevent, f, mir_touch_axis_y)
             };
         }
     }
@@ -294,7 +312,7 @@ int main(int argc, char *argv[])
         PTHREAD_COND_INITIALIZER,
         true,
         true,
-        {0, {{0,0}}}
+        {0}
     };
     MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
@@ -326,20 +344,27 @@ int main(int argc, char *argv[])
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (state.touch.points)
-            glUniform1f(opacity, 1.0f / state.touch.points);
-
-        for (int p = 0; p < state.touch.points; ++p)
+        for (int f = 0; f < state.touch.fingers; ++f)
         {
-            // Note the 0.5f to convert from pixel middle to corner (GL)
-            glUniform2f(translate, state.touch.point[p].x + 0.5f,
-                                   state.touch.point[p].y + 0.5f);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            const Finger *finger = state.touch.finger + f;
+
+            if (!finger->samples)
+                continue;
+
+            glUniform1f(opacity, 1.0f / finger->samples);
+
+            for (int s = 0; s < finger->samples; ++s)
+            {
+                // Note the 0.5f to convert from pixel middle to corner (GL)
+                glUniform2f(translate, finger->sample[s].x + 0.5f,
+                                       finger->sample[s].y + 0.5f);
+                glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            }
         }
 
         // Put the event loop back to sleep:
         state.changed = false;
-        state.touch.points = 0;
+        state.touch.fingers = 0;
         pthread_mutex_unlock(&state.mutex);
 
         mir_eglapp_swap_buffers();
