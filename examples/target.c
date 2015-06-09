@@ -211,10 +211,13 @@ int main(int argc, char *argv[])
         "precision mediump float;\n"
         "varying vec2 v_texcoord;\n"
         "uniform sampler2D texture;\n"
+        "uniform float opacity;\n"
         "\n"
         "void main()\n"
         "{\n"
-        "    gl_FragColor = texture2D(texture, v_texcoord);\n"
+        "    vec4 f = texture2D(texture, v_texcoord);\n"
+        "    f.a *= opacity;\n"
+        "    gl_FragColor = f;\n"
         "}\n";
 
     // Disable Mir's input resampling. We do our own here, in a way that
@@ -268,6 +271,9 @@ int main(int argc, char *argv[])
     GLint scale = glGetUniformLocation(prog, "scale");
     glUniform1f(scale, 128.0f);
 
+    GLint opacity = glGetUniformLocation(prog, "opacity");
+    glUniform1f(opacity, 1.0f);
+
     GLint translate = glGetUniformLocation(prog, "translate");
     glUniform2f(translate, 0.0f, 0.0f);
 
@@ -319,6 +325,9 @@ int main(int argc, char *argv[])
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
+
+        if (state.touch.points)
+            glUniform1f(opacity, 1.0f / state.touch.points);
 
         for (int p = 0; p < state.touch.points; ++p)
         {
