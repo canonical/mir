@@ -29,7 +29,11 @@ namespace mir
 {
 namespace client
 {
-
+struct StreamInfo
+{
+    ClientBufferStream* stream;
+    bool owned;
+};
 class ConnectionSurfaceMap : public SurfaceMap
 {
 public:
@@ -47,7 +51,7 @@ public:
 private:
     std::mutex mutable guard;
     std::unordered_map<frontend::SurfaceId, MirSurface*> surfaces;
-    std::unordered_map<frontend::BufferStreamId, std::tuple<ClientBufferStream*, bool>> streams;
+    std::unordered_map<frontend::BufferStreamId, StreamInfo> streams;
 };
 
 }
