@@ -13,6 +13,27 @@ mir (0.14.0-0ubuntu1) UNRELEASED; urgency=medium
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 02 Jun 2015 16:25:59 +0800
 
+mir (0.13.2+15.10.20150605-0ubuntu1) wily; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.13.2 (https://launchpad.net/mir/+milestone/0.13.2)
+    - Bug fixes:
+      . Wrong client API version (LP: #1461312)
+      . Add quirk to force buffer width alignment on some devices (LP: #1461314)
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 05 Jun 2015 17:51:40 +0000
+
+mir (0.13.1+15.10.20150520.1-0ubuntu1) wily; urgency=medium
+
+  * Bump upstream version number to add test binaries to orig tarball.
+  * Do minimal porting required to prepare for building on ppc/ppc64el.
+  * Disable testsuite on powerpc until big-endian porting is complete.
+
+ -- Adam Conrad <adconrad@ubuntu.com>  Wed, 03 Jun 2015 16:27:46 -0600
+
 mir (0.13.1+15.04.20150520-0ubuntu1) vivid; urgency=medium
 
   [ Cemil Azizoglu ]

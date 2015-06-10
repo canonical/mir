@@ -13,7 +13,6 @@ add_definitions(-DMIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PL
 set(MIR_PLATFORM_OBJECTS
   $<TARGET_OBJECTS:mirplatformgraphicscommon>
   $<TARGET_OBJECTS:miroptions>
-  $<TARGET_OBJECTS:mirfatal>
   $<TARGET_OBJECTS:mirudev>
 )
 
@@ -24,7 +23,6 @@ set(MIR_PLATFORM_REFERENCES
 
 add_subdirectory(graphics/)
 add_subdirectory(options)
-add_subdirectory(fatal)
 add_subdirectory(udev)
 
 set(MIR_PLATFORM_OBJECTS ${MIR_PLATFORM_OBJECTS} PARENT_SCOPE)

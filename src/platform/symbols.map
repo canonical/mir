@@ -3,9 +3,6 @@ MIRPLATFORM_7 {
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirplatform public" | sed "s/mirplatform public: /    /" | sort  
-    mir::fatal_error*;
-    mir::fatal_error_abort*;
-    mir::fatal_error_except*;
     mir::graphics::BufferBasic::BufferBasic*;
     mir::graphics::Buffer::Buffer*;
     mir::graphics::Buffer::gl_bind_to_texture*;
