@@ -1,11 +1,15 @@
-mir (0.13.2) UNRELEASED; urgency=medium
+mir (0.13.2+15.10.20150605-0ubuntu1) wily; urgency=medium
 
+  [ Alberto Aguirre ]
   * New upstream release 0.13.2 (https://launchpad.net/mir/+milestone/0.13.2)
     - Bug fixes:
       . Wrong client API version (LP: #1461312)
       . Add quirk to force buffer width alignment on some devices (LP: #1461314)
 
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Tue, 02 Jun 2015 18:13:21 -0500
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 05 Jun 2015 17:51:40 +0000
 
 mir (0.13.1+15.10.20150520.1-0ubuntu1) wily; urgency=medium
 
