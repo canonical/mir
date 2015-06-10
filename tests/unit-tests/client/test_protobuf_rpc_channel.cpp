@@ -54,7 +54,12 @@ namespace
 class StubSurfaceMap : public mcl::SurfaceMap
 {
 public:
-    void with_surface_do(int /*surface_id*/, std::function<void(MirSurface*)> /*exec*/) const
+    void with_surface_do(
+        mir::frontend::SurfaceId, std::function<void(MirSurface*)> const&) const override
+    {
+    }
+    void with_stream_do(
+        mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&) const override
     {
     }
 };

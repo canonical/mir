@@ -19,6 +19,8 @@
 #ifndef MIR_CLIENT_SURFACE_MAP_H_
 #define MIR_CLIENT_SURFACE_MAP_H_
 
+#include "mir/frontend/surface_id.h"
+#include "mir/frontend/buffer_stream_id.h"
 #include <functional>
 
 struct MirSurface;
@@ -27,12 +29,15 @@ namespace mir
 {
 namespace client
 {
+class ClientBufferStream;
 
 class SurfaceMap
 {
 public:
     virtual void with_surface_do(
-        int surface_id, std::function<void(MirSurface*)> exec) const = 0;
+        frontend::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const = 0;
+    virtual void with_stream_do(
+        frontend::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const = 0;
 
 protected:
     virtual ~SurfaceMap() = default;

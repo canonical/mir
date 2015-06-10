@@ -44,6 +44,7 @@ namespace client
 {
 class ConnectionConfiguration;
 class ClientPlatformFactory;
+class ClientBufferStream;
 class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
@@ -120,13 +121,29 @@ public:
                                    unsigned int formats_size, unsigned int& valid_formats);
 
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
-    std::shared_ptr<mir::client::ClientBufferStreamFactory> get_client_buffer_stream_factory();
+
+    std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
+       mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name);
+
+    mir::client::ClientBufferStream* create_client_buffer_stream(
+        int width, int height,
+        MirPixelFormat format,
+        MirBufferUsage buffer_usage,
+        mir_buffer_stream_callback callback,
+        void *context);
+    MirWaitHandle* release_buffer_stream(
+        mir::client::ClientBufferStream*,
+        mir_buffer_stream_callback callback,
+        void *context);
+
+    void release_consumer_stream(mir::client::ClientBufferStream*);
 
     static bool is_valid(MirConnection *connection);
 
     EGLNativeDisplayType egl_native_display();
 
     void on_surface_created(int id, MirSurface* surface);
+    void on_stream_created(int id, mir::client::ClientBufferStream* stream);
 
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
@@ -193,13 +210,15 @@ private:
     std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
 
     struct SurfaceRelease;
+    struct StreamRelease;
 
     MirConnection* next_valid{nullptr};
 
     void set_error_message(std::string const& error);
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
-    void released(SurfaceRelease );
+    void released(SurfaceRelease);
+    void released(StreamRelease);
     void done_platform_operation(mir_platform_operation_callback, void* context);
     bool validate_user_display_config(MirDisplayConfiguration* config);
 };
