@@ -21,7 +21,6 @@
 
 #include "surface_map.h"
 
-#include <tuple>
 #include <unordered_map>
 #include <mutex>
 
