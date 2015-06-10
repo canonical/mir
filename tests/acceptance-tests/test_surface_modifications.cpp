@@ -16,14 +16,12 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
-
 #include "mir/events/event_builders.h"
-#include "mir/shell/shell_wrapper.h"
-#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
 
+#include "mir_test_doubles/wrap_shell_to_track_latest_surface.h"
+#include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/signal.h"
 
@@ -36,6 +34,7 @@ namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 using namespace mir::geometry;
 using namespace testing;
@@ -49,33 +48,17 @@ public:
     MOCK_METHOD1(resized_to, void(Size const& size));
 };
 
-struct StubShell : msh::ShellWrapper
-{
-    using msh::ShellWrapper::ShellWrapper;
-
-    mf::SurfaceId create_surface(
-        std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& params) override
-    {
-        auto const surface = msh::ShellWrapper::create_surface(session, params);
-        latest_surface = session->surface(surface);
-        return surface;
-    }
-
-    std::weak_ptr<ms::Surface> latest_surface;
-};
-
 struct SurfaceModifications : mtf::ConnectedClientWithASurface
 {
     SurfaceModifications() { add_to_environment("MIR_SERVER_ENABLE_INPUT", "OFF"); }
 
     void SetUp() override
     {
-        std::shared_ptr<StubShell> shell;
+        std::shared_ptr<mtd::WrapShellToTrackLatestSurface> shell;
 
         server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
         {
-            auto const msc = std::make_shared<StubShell>(wrapped);
+            auto const msc = std::make_shared<mtd::WrapShellToTrackLatestSurface>(wrapped);
             shell = msc;
             return msc;
         });

@@ -19,6 +19,8 @@
 #ifndef MIR_OPTIONAL_VALUE_H_
 #define MIR_OPTIONAL_VALUE_H_
 
+#include "mir/fatal.h"
+
 namespace mir
 {
 template<typename T>
@@ -36,7 +38,14 @@ public:
     }
 
     bool is_set() const { return is_set_; }
-    T value() const { return value_; }
+    T value() const
+    {
+        if (!is_set())
+        {
+            (*fatal_error)("Accessing value of unset optional");
+        }
+        return value_;
+    }
 
 private:
     T value_;

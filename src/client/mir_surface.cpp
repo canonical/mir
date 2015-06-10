@@ -127,6 +127,16 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
     return message;
 }
 
+MirPersistentId::MirPersistentId(std::string const& string_id)
+    : string_id{string_id}
+{
+}
+
+std::string const&MirPersistentId::as_string()
+{
+    return string_id;
+}
+
 MirSurface::MirSurface(std::string const& error)
 {
     surface.set_error(error);
@@ -145,7 +155,7 @@ MirSurface::MirSurface(
     mir_surface_callback callback, void * context)
     : server{&the_server},
       debug{debug},
-      name{spec.surface_name.value()},
+      name{spec.surface_name.is_set() ? spec.surface_name.value() : ""},
       connection(allocating_connection),
       buffer_stream_factory(buffer_stream_factory),
       input_platform(input_platform),
@@ -218,6 +228,42 @@ bool MirSurface::is_valid(MirSurface* query)
         return !query->surface.has_error();
 
     return false;
+}
+
+void MirSurface::acquired_persistent_id(mir_surface_id_callback callback, void* context)
+{
+    if (!persistent_id.has_error())
+    {
+        callback(this, new MirPersistentId{persistent_id.value()}, context);
+    }
+    else
+    {
+        callback(this, nullptr, context);
+    }
+    persistent_id_wait_handle.result_received();
+}
+
+MirWaitHandle* MirSurface::request_persistent_id(mir_surface_id_callback callback, void* context)
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+
+    if (persistent_id.has_value())
+    {
+        callback(this, new MirPersistentId{persistent_id.value()}, context);
+        return nullptr;
+    }
+
+    persistent_id_wait_handle.expect_result();
+    try
+    {
+        server->request_persistent_surface_id(0, &surface.id(), &persistent_id, gp::NewCallback(this, &MirSurface::acquired_persistent_id, callback, context));
+    }
+    catch (std::exception const& ex)
+    {
+        surface.set_error(std::string{"Failed to acquire a persistent ID from the server: "} +
+                          boost::diagnostic_information(ex));
+    }
+    return &persistent_id_wait_handle;
 }
 
 MirWaitHandle* MirSurface::get_create_wait_handle()
