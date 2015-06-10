@@ -38,7 +38,7 @@ add_library(
 
 target_link_libraries(
   mirplatformservermesax11
-
+  PRIVATE
   mirplatform
   EGL
   GLESv2

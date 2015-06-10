@@ -16,43 +16,12 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/event_handler_register.h"
-#include "mir/graphics/platform_ipc_operations.h"
-#include "mir/graphics/platform_operation_message.h"
-#include "src/platforms/mesa/server/kms/platform.h"
-#include "src/server/report/null_report_factory.h"
-#include "mir/emergency_cleanup_registry.h"
-#include "mir/shared_library.h"
-
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_buffer_ipc_message.h"
-#include "mir_test_doubles/platform_factory.h"
-#include "mir_test_doubles/mock_virtual_terminal.h"
-#include "mir_test_doubles/null_virtual_terminal.h"
-
-#include <gtest/gtest.h>
-
-#include "mir_test_framework/udev_environment.h"
-#include "mir_test_framework/executable_path.h"
-#include "mir_test/pipe.h"
-
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_gbm.h"
-#include "mir_test_doubles/fd_matcher.h"
+#include "src/platforms/mesa/server/x11/platform.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <stdexcept>
-#include <atomic>
-#include <thread>
-#include <chrono>
-
 namespace mg = mir::graphics;
-//namespace mgx = mir::graphics::X;
-namespace mtd = mir::test::doubles;
-namespace mtf = mir_test_framework;
 
 namespace
 {

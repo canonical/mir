@@ -32,6 +32,13 @@ set(
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gl.cpp
 )
 
+if (MIR_BUILD_PLATFORM_MESA_X11)
+  MESSAGE(STATUS "............... Adding mock_x11")
+  list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/mock_x11.cpp
+  )
+endif()
+
 if (MIR_BUILD_PLATFORM_MESA_KMS)
   include_directories(
     ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
