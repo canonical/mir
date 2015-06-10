@@ -161,7 +161,7 @@ MirSurface::MirSurface(
     mir_surface_callback callback, void * context)
     : server{&the_server},
       debug{debug},
-      name{spec.surface_name.value()},
+      name{spec.surface_name.is_set() ? spec.surface_name.value() : ""},
       connection(allocating_connection),
       buffer_stream_factory(buffer_stream_factory),
       input_platform(input_platform),

@@ -211,6 +211,12 @@ bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
     return true;
 }
 
+bool mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)
+{
+    spec->state = state;
+    return true;
+}
+
 bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
 {
     spec->output_id = output_id;
@@ -489,16 +495,23 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
+MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
 try
 {
     mir::require(mir_connection_is_valid(connection));
-    return new MirSurfaceSpec{};
+    auto const spec = new MirSurfaceSpec{};
+    spec->connection = connection;
+    return spec;
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
+{
+    return mir_create_surface_spec(connection);
 }
 
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
@@ -513,6 +526,30 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     // Keep calm and carry on
+}
+
+bool mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
+try
+{
+    spec->parent = parent;
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+bool mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
+try
+{
+    spec->type = type;
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
 }
 
 bool mir_surface_spec_set_width_increment(MirSurfaceSpec *spec, unsigned width_inc)
