@@ -42,6 +42,7 @@ msh::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     scene::SurfaceCreationParameters const& params) :
+    type{surface->type()},
     state{surface->state()},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
@@ -279,9 +280,19 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 {
     auto& surface_info = tools->info_for(surface);
 
+    if (modifications.parent.is_set())
+        surface_info.parent = modifications.parent.value();
+
+    if (modifications.type.is_set() &&
+        surface_info.type != modifications.type.value())
+    {
+        surface_info.type = modifications.type.value();
+        surface->configure(mir_surface_attrib_type, modifications.type.value());
+    }
+
     #define COPY_IF_SET(field)\
         if (modifications.field.is_set())\
-        surface_info.field = modifications.field
+            surface_info.field = modifications.field
 
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
@@ -316,9 +327,6 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
             false,
             display_area);
     }
-
-    if (modifications.type.is_set())
-        surface->configure(mir_surface_attrib_type, modifications.type.value());
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)

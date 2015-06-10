@@ -23,6 +23,7 @@
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/signal.h"
+#include "mir_toolkit/common.h"
 
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
@@ -53,6 +54,7 @@ private:
 class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
+    MOCK_METHOD1(renamed, void(char const*));
     MOCK_METHOD2(attrib_changed, void(MirSurfaceAttrib attrib, int value));
 };
 
@@ -112,6 +114,8 @@ struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
     template<typename Specifier>
     void change_surface(MirSurface* surface, Specifier const& specifier)
     {
+        signal_change.reset();
+
         auto const spec = mir_create_surface_spec(connection);
 
         specifier(spec);
@@ -121,10 +125,26 @@ struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
         signal_change.wait_for(1s);
     }
 
+    void wait_for_arbitrary_change(MirSurface* surface)
+    {
+        auto const new_title = __PRETTY_FUNCTION__;
+
+        EXPECT_CALL(surface_observer, renamed(StrEq(new_title))).
+            WillOnce(InvokeWithoutArgs([&]{ change_observed(); }));
+
+        change_surface(surface, [&](MirSurfaceSpec* spec)
+            {
+                mir_surface_spec_set_name(spec, new_title);
+            });
+    }
+
+
     NiceMock<MockSurfaceObserver> surface_observer;
 
     void change_observed() { signal_change.raise(); }
     MirPixelFormat pixel_format{mir_pixel_format_invalid};
+    static auto const width = 97;
+    static auto const height= 101;
 
 private:
     std::shared_ptr<mtd::WrapShellToTrackLatestSurface> shell;
@@ -157,15 +177,16 @@ struct TypePair
         { return out << "from:" << types.from << ", to:" << types.to; }
 };
 
-struct WithoutParent : SurfaceMorphing, ::testing::WithParamInterface<TypePair> {};
+struct SurfaceMorphingCase : SurfaceMorphing, ::testing::WithParamInterface<TypePair> {};
+using WithoutParent = SurfaceMorphingCase;
+using AddingParent  = SurfaceMorphingCase;
+using AddingParent  = SurfaceMorphingCase;
 }
 
 TEST_P(WithoutParent, can_change)
 {
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
-    auto const width = 97;
-    auto const height= 101;
 
     auto const surface = create_surface([&](MirSurfaceSpec* spec)
         {
@@ -188,7 +209,7 @@ TEST_P(WithoutParent, can_change)
 }
 
 INSTANTIATE_TEST_CASE_P(SurfaceMorphing, WithoutParent,
-    ::testing::Values(
+    Values(
         TypePair{mir_surface_type_normal, mir_surface_type_utility},
         TypePair{mir_surface_type_normal, mir_surface_type_dialog},
         TypePair{mir_surface_type_utility, mir_surface_type_normal},
@@ -196,3 +217,88 @@ INSTANTIATE_TEST_CASE_P(SurfaceMorphing, WithoutParent,
         TypePair{mir_surface_type_dialog, mir_surface_type_utility},
         TypePair{mir_surface_type_dialog, mir_surface_type_normal}
     ));
+
+TEST_P(AddingParent, can_change)
+{
+    auto const old_type = GetParam().from;
+    auto const new_type = GetParam().to;
+
+    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, mir_surface_type_normal);
+            mir_surface_spec_set_width(spec, width);
+            mir_surface_spec_set_height(spec, height);
+            mir_surface_spec_set_pixel_format(spec, pixel_format);
+            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        });
+
+    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, old_type);
+            mir_surface_spec_set_width(spec, width);
+            mir_surface_spec_set_height(spec, height);
+            mir_surface_spec_set_pixel_format(spec, pixel_format);
+            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        });
+
+    latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
+
+    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+        WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
+
+    change_surface(surface, [&](MirSurfaceSpec* spec)
+    {
+        mir_surface_spec_set_type(spec, new_type);
+        mir_surface_spec_set_parent(spec, parent);
+    });
+}
+
+TEST_P(AddingParent, required)
+{
+    auto const old_type = GetParam().from;
+    auto const new_type = GetParam().to;
+
+    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+       {
+           mir_surface_spec_set_type(spec, mir_surface_type_normal);
+           mir_surface_spec_set_width(spec, width);
+           mir_surface_spec_set_height(spec, height);
+           mir_surface_spec_set_pixel_format(spec, pixel_format);
+           mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+       });
+
+    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, old_type);
+            mir_surface_spec_set_width(spec, width);
+            mir_surface_spec_set_height(spec, height);
+            mir_surface_spec_set_pixel_format(spec, pixel_format);
+            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        });
+
+    latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
+
+    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, mir_surface_type_normal)).
+        Times(0);
+
+    change_surface(surface, [&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, new_type);
+
+            // Don't wait for a notification we don't expect
+            // We'll wait for another for another change
+            change_observed();
+        });
+
+    wait_for_arbitrary_change(surface);
+}
+
+INSTANTIATE_TEST_CASE_P(SurfaceMorphing, AddingParent,
+    Values(
+        TypePair{mir_surface_type_normal, mir_surface_type_satellite},
+        TypePair{mir_surface_type_normal, mir_surface_type_dialog},
+        TypePair{mir_surface_type_utility, mir_surface_type_satellite},
+        TypePair{mir_surface_type_utility, mir_surface_type_dialog},
+        TypePair{mir_surface_type_dialog, mir_surface_type_satellite}
+    ));
+
