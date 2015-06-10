@@ -632,6 +632,46 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
  */
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
+/**
+ * \brief Request an ID for the surface that can be shared cross-process and
+ *        across restarts.
+ *
+ * This call acquires a MirPersistentId for this MirSurface. This MirPersistentId
+ * can be serialized to a string, stored or sent to another process, and then
+ * later deserialized to refer to the same surface.
+ *
+ * \param [in]     surface   The surface to acquire a persistent reference to.
+ * \param [in]     callback  Callback to invoke when the request completes.
+ * \param [in,out] context   User data passed to completion callback.
+ * \return A MirWaitHandle that can be used in mir_wait_for to await completion.
+ */
+MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context);
+
+/**
+ * \brief Request a persistent ID for a surface and wait for the result
+ * \param [in] surface  The surface to acquire a persistent ID for.
+ * \return A MirPersistentId. This MirPersistentId is owned by the calling code, and must
+ *         be freed with a call to mir_persistent_id_release()
+ */
+MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface);
+
+/**
+ * \brief Check the validity of a MirPersistentId
+ * \param [in] id  The MirPersistentId
+ * \return True iff the MirPersistentId contains a valid ID value.
+ *
+ * \note This does not guarantee that the ID refers to a currently valid object.
+ */
+bool mir_persistent_id_is_valid(MirPersistentId* id);
+
+/**
+ * \brief Free a MirPersistentId
+ * \param [in] id  The MirPersistentId to free
+ * \note This frees only the client-side representation; it has no effect on the
+ *       object referred to by \arg id.
+ */
+void mir_persistent_id_release(MirPersistentId* id);
+
 #ifdef __cplusplus
 }
 /**@}*/
