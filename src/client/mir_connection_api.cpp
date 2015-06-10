@@ -139,7 +139,6 @@ MirWaitHandle* mir_connect(
 {
     try
     {
-    printf("GOGOGO\n");
         return mir_connection_api_impl->connect(mir_connection_api_impl->configuration_factory(),
                                                 socket_file,
                                                 name,
