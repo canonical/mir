@@ -442,7 +442,7 @@ void mir_surface_spec_release(MirSurfaceSpec* spec);
  * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
  * On application of the spec, a stream that is present in the surface,
  * but is not in the list will be disassociated from the surface.
- * On application of the spec, A stream that is not present in the surface,
+ * On application of the spec, a stream that is not present in the surface,
  * but is in the list will be associated with the surface.
  * Streams set a displacement from the top-left corner of the surface.
  * 
