@@ -83,6 +83,7 @@ class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
 class Shell;
+class PersistentSurfaceStore;
 namespace detail { class FrontendShell; }
 }
 namespace time
@@ -268,6 +269,7 @@ public:
     virtual std::shared_ptr<scene::PromptSessionListener> the_prompt_session_listener();
     virtual std::shared_ptr<scene::PromptSessionManager>  the_prompt_session_manager();
     virtual std::shared_ptr<shell::HostLifecycleEventListener> the_host_lifecycle_event_listener();
+    virtual std::shared_ptr<shell::PersistentSurfaceStore> the_persistent_surface_store();
 
     /** @} */
 
@@ -440,6 +442,7 @@ protected:
     CachedPtr<scene::CoordinateTranslator> coordinate_translator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
+    CachedPtr<shell::PersistentSurfaceStore> surface_store;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
 

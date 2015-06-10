@@ -312,6 +312,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
                 report->exception_handled(display_server.get(), invocation.id(), err);
             }
         }
+        else if ("request_persistent_surface_id" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::request_persistent_surface_id, invocation);
+        }
         else
         {
             report->unknown_method(display_server.get(), invocation.id(), invocation.method_name());
