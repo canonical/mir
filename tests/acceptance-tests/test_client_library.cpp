@@ -885,3 +885,23 @@ TEST_F(ClientLibrary, can_change_event_delegate)
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
+
+TEST_F(ClientLibrary, can_get_persistent_surface_id)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection,
+                                                                      800, 600,
+                                                                      mir_pixel_format_argb_8888);
+    auto surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    ASSERT_THAT(surface, IsValid());
+
+    auto surface_id = mir_surface_request_persistent_id_sync(surface);
+    EXPECT_TRUE(mir_persistent_id_is_valid(surface_id));
+
+    mir_surface_release_sync(surface);
+    mir_persistent_id_release(surface_id);
+    mir_connection_release(connection);
+}

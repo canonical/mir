@@ -43,6 +43,7 @@ typedef struct MirSurfaceSpec MirSurfaceSpec;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirPromptSession MirPromptSession;
 typedef struct MirBufferStream MirBufferStream;
+typedef struct MirPersistentId MirPersistentId;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by
@@ -122,6 +123,10 @@ typedef void (*mir_display_config_callback)(
 
 typedef void (*mir_client_fd_callback)(
     MirPromptSession *prompt_session, size_t count, int const* fds, void* context);
+
+
+typedef void (*mir_surface_id_callback)(
+    MirSurface* surface, MirPersistentId* id, void* context);
 
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"

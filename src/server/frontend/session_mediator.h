@@ -214,6 +214,12 @@ public:
         ::mir::protobuf::CoordinateTranslationResponse* response,
         ::google::protobuf::Closure *done) override;
 
+    void request_persistent_surface_id(
+        ::google::protobuf::RpcController* controller,
+        ::mir::protobuf::SurfaceId const* request,
+        ::mir::protobuf::PersistentSurfaceId* response,
+        ::google::protobuf::Closure* done) override;
+
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
                               graphics::Buffer* graphics_buffer,

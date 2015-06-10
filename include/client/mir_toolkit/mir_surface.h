@@ -168,6 +168,20 @@ mir_connection_create_spec_for_dialog(MirConnection* connection,
                                       MirPixelFormat format);
 
 /**
+ * Create a surface specification.
+ * This can be used with mir_surface_create() to create a surface or with
+ * mir_surface_apply_spec() to change an existing surface.
+ * \remark For use with mir_surface_create() at least the type, width, height,
+ * format and buffer_usage must be set. (And for types requiring a parent that
+ * too must be set.)
+ *
+ * \param [in] connection   a valid mir connection
+ * \return                  A handle that can ultimately be passed to
+ *                          mir_surface_create() or mir_surface_apply_spec()
+ */
+MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection);
+
+/**
  * Create a surface specification for updating a surface.
  *
  * This can be applied to one or more target surfaces using
@@ -201,6 +215,37 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
  *                                      in the case of error.
  */
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
+
+/**
+ * Set the requested parent.
+ *
+ * \param [in] spec    Specification to mutate
+ * \param [in] parent  A valid parent surface.
+ *
+ * \return              true unless "parent" is invalid for this surface type.
+ */
+bool mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent);
+
+/**
+ * Update a surface specification with a surface type.
+ * This can be used with mir_surface_create() to create a surface or with
+ * mir_surface_apply_spec() to change an existing surface.
+ * \remark For use with mir_surface_apply_spec() the shell need not support
+ * arbitrary changes of type and some target types may require the setting of
+ * properties such as "parent" that are not already present on the surface.
+ * The type transformations the server is required to support are:\n
+ * regular => utility, dialog or satellite\n
+ * utility => regular, dialog or satellite\n
+ * dialog => regular, utility or satellite\n
+ * satellite => regular, utility or dialog\n
+ * popup => satellite
+ *
+ * \param [in] spec         Specification to mutate
+ * \param [in] type         the target type of the surface
+ *
+ * \return                  true (pointless consistency)
+ */
+bool mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type);
 
 /**
  * Set the requested name.
@@ -391,6 +436,28 @@ bool mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state);
  * \param [in] spec     Specification to release
  */
 void mir_surface_spec_release(MirSurfaceSpec* spec);
+
+/**
+ * Set the streams associated with the spec.
+ * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
+ * On application of the spec, a stream that is present in the surface,
+ * but is not in the list will be disassociated from the surface.
+ * On application of the spec, A stream that is not present in the surface,
+ * but is in the list will be associated with the surface.
+ * Streams set a displacement from the top-left corner of the surface.
+ * 
+ * \warning disassociating streams from the surface will not release() them.
+ * \warning It is wiser to arrange the streams within the bounds of the
+ *          surface the spec is applied to. Shells can define their own
+ *          behavior as to what happens to an out-of-bound stream.
+ * 
+ * \param [in] spec        The spec to accumulate the request in.
+ * \param [in] streams     The an array of non-null streams info.
+ * \param [in] num_streams The number of elements in the streams array.
+ */
+void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
+                                  MirBufferStreamInfo* streams,
+                                  unsigned int num_streams);
 
 /**
  * Set the event handler to be called when events arrive for a surface.
@@ -593,26 +660,45 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
 /**
- * Set the streams associated with the spec.
- * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
- * On application of the spec, a stream that is present in the surface,
- * but is not in the list will be disassociated from the surface.
- * On application of the spec, A stream that is not present in the surface,
- * but is in the list will be associated with the surface.
- * Streams set a displacement from the top-left corner of the surface.
- * 
- * \warning disassociating streams from the surface will not release() them.
- * \warning It is wiser to arrange the streams within the bounds of the
- *          surface the spec is applied to. Shells can define their own
- *          behavior as to what happens to an out-of-bound stream.
- * 
- * \param [in] spec      The spec to accumulate the request in.
- * \param [in] streams   The an array of non-null streams info.
- * \param [in] size      The number of elements in the streams array.
+ * \brief Request an ID for the surface that can be shared cross-process and
+ *        across restarts.
+ *
+ * This call acquires a MirPersistentId for this MirSurface. This MirPersistentId
+ * can be serialized to a string, stored or sent to another process, and then
+ * later deserialized to refer to the same surface.
+ *
+ * \param [in]     surface   The surface to acquire a persistent reference to.
+ * \param [in]     callback  Callback to invoke when the request completes.
+ * \param [in,out] context   User data passed to completion callback.
+ * \return A MirWaitHandle that can be used in mir_wait_for to await completion.
  */
-void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
-                                  MirBufferStreamInfo* streams,
-                                  unsigned int num_streams);
+MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context);
+
+/**
+ * \brief Request a persistent ID for a surface and wait for the result
+ * \param [in] surface  The surface to acquire a persistent ID for.
+ * \return A MirPersistentId. This MirPersistentId is owned by the calling code, and must
+ *         be freed with a call to mir_persistent_id_release()
+ */
+MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface);
+
+/**
+ * \brief Check the validity of a MirPersistentId
+ * \param [in] id  The MirPersistentId
+ * \return True iff the MirPersistentId contains a valid ID value.
+ *
+ * \note This does not guarantee that the ID refers to a currently valid object.
+ */
+bool mir_persistent_id_is_valid(MirPersistentId* id);
+
+/**
+ * \brief Free a MirPersistentId
+ * \param [in] id  The MirPersistentId to free
+ * \note This frees only the client-side representation; it has no effect on the
+ *       object referred to by \arg id.
+ */
+void mir_persistent_id_release(MirPersistentId* id);
+
 #ifdef __cplusplus
 }
 /**@}*/
