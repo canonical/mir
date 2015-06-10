@@ -85,6 +85,12 @@ message SurfaceId {
   required int32 value = 1;
 };
 
+message PersistentSurfaceId {
+  optional string value = 1;
+
+  optional string error = 127;
+};
+
 message BufferStreamId {
   required int32 value = 1;
 };
@@ -321,7 +327,10 @@ service DisplayServer {
   rpc start_prompt_session(PromptSessionParameters) returns (Void);
   rpc stop_prompt_session(Void) returns (Void);
   rpc exchange_buffer(BufferRequest) returns (Buffer);
+
   rpc submit_buffer(BufferRequest) returns (Void);
+
+  rpc request_persistent_surface_id(SurfaceId) returns (PersistentSurfaceId);
 }
 
 message CoordinateTranslationRequest {

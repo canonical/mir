@@ -878,6 +878,24 @@ void mf::SessionMediator::stop_prompt_session(
     done->Run();
 }
 
+void mf::SessionMediator::request_persistent_surface_id(
+    ::google::protobuf::RpcController*,
+    mir::protobuf::SurfaceId const* request,
+    mir::protobuf::PersistentSurfaceId* response,
+    google::protobuf::Closure* done)
+{
+    auto const session = weak_session.lock();
+
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto buffer = shell->persistent_id_for(session, mf::SurfaceId{request->value()});
+
+    *response->mutable_value() = std::string{buffer.begin(), buffer.end()};
+
+    done->Run();
+}
+
 void mf::SessionMediator::pack_protobuf_buffer(
     protobuf::Buffer& protobuf_buffer,
     graphics::Buffer* graphics_buffer,
