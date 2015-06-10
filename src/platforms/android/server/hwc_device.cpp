@@ -157,10 +157,10 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
          * above it.
          */
         // TODO: More device testing
-        // TODO: Refresh rate detection?
 
-        // Max safe sleep time in testing:
-        //   arale: 10ms  (why? what else is it doing that's so slow?!)
+        // Test results (how long can we sleep for without missing a frame?):
+        //   arale: 10ms  (why is arale so slow?!)
+        //   mako:  15ms
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
