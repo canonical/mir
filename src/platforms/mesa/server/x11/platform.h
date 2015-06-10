@@ -32,7 +32,7 @@ namespace X
 class Platform : public graphics::Platform
 {
 public:
-    explicit Platform(std::shared_ptr<DisplayReport> const& reporter);
+    explicit Platform();
 
     /* From Platform */
     std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;

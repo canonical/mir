@@ -18,10 +18,14 @@
 
 #include "src/platforms/mesa/server/x11/platform.h"
 
+#include "mir_test_doubles/platform_factory.h"
+#include "mir_test_doubles/mock_drm.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -37,8 +41,7 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-//        return mtd::create_platform_with_null_dependencies();
-    	return nullptr;
+        return mtd::create_platform_with_null_dependencies();
     }
 
 //    ::testing::NiceMock<mtd::MockDRM> mock_drm;
@@ -52,7 +55,7 @@ TEST_F(X11GraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_er
     using namespace ::testing;
 
 //    EXPECT_CALL(mock_drm, open(_,_,_))
-//            .WillRepeatedly(Return(-1));
+//        .WillRepeatedly(Return(-1));
 
     try
     {
@@ -62,6 +65,6 @@ TEST_F(X11GraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_er
         return;
     }
 
-//    FAIL() << "Expected an exception to be thrown.";
+    FAIL() << "Expected an exception to be thrown.";
 }
 

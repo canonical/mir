@@ -43,7 +43,7 @@ __attribute__((destructor)) static void close_X_display()
         XCloseDisplay(x_dpy);
 }
 
-mgx::Platform::Platform(std::shared_ptr<DisplayReport> const& /*listener*/)
+mgx::Platform::Platform()
     : udev{std::make_shared<mir::udev::Context>()},
        drm{std::make_shared<mesa::helpers::DRMHelper>(true)}
 {
@@ -91,11 +91,11 @@ EGLNativeDisplayType mgx::Platform::egl_native_display() const
 extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-    std::shared_ptr<DisplayReport> const& report)
+    std::shared_ptr<DisplayReport> const& /*report*/)
 {
     CALLED
 
-    return std::make_shared<mgx::Platform>(report);
+    return std::make_shared<mgx::Platform>();
 }
 
 extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
