@@ -233,7 +233,7 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
 
     //check that the compositor rendered correctly
     using namespace std::literals::chrono_literals;
-    EXPECT_TRUE(ordering->wait_for_another_post_within(1s))
+    EXPECT_TRUE(ordering->wait_for_another_post_within(5s))
          << "timed out waiting for another post";
     EXPECT_THAT(ordering->last_ordering(), ContainerEq(displacements));
 }
