@@ -9,7 +9,7 @@ abi_var_for=( ["mirclient"]="MIRCLIENT_ABI" \
     ["mirclientplatformandroid"]="MIR_CLIENT_PLATFORM_ABI" \
     ["mirclientplatformmesa"]="MIR_CLIENT_PLATFORM_ABI" \
     ["mirplatformgraphicsandroid"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" \
-    ["mirplatformgraphicsmesa"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" )
+    ["mirplatformgraphicsmesakms"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" )
 
 print_help_and_exit()
 {
@@ -82,13 +82,8 @@ if need_abi_check ${LIB_NAME} ${OLD_RELEASE_DIR} ${NEXT_RELEASE_DIR};
 then
     if [ ! -f "${OLD_ABI_DUMP}" ];
     then
-        # This does not return an error code on purpose
-        # The previous release source may not have the required changes
-        # to generate an ABI dump of the requested library
-        # TODO: Exit with error code once the archive mir release
-        # can dump ABI for all libraries of interest
-        echo "Warning: No base abi dump exists for ${LIB_NAME}"
-        echo "skipping abi-compliance-checker for ${LIB_NAME}"
+        echo "Error: No base abi dump exists for ${LIB_NAME}"
+        exit 1;
     else
         echo "Running abi-compliance-checker for ${LIB_NAME}"
         abi-compliance-checker -l ${LIB_NAME} -old "${OLD_ABI_DUMP}" -new "${NEW_ABI_DUMP}" -check-implementation ${SKIP_SYMBOLS_OPT}

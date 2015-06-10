@@ -6,8 +6,8 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   add_definitions(-DMIR_BUILD_PLATFORM_ANDROID)
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA)
-  add_definitions(-DMIR_BUILD_PLATFORM_MESA)
+if (MIR_BUILD_PLATFORM_MESA_KMS)
+  add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)
 endif()
 
 include_directories(
@@ -23,6 +23,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
   ${GLIB_INCLUDE_DIRS}
 )
 
@@ -134,6 +135,12 @@ target_link_libraries(
   ${XKBCOMMON_LIBRARIES}
 )
 
+if (MIR_BUILD_PLATFORM_MESA_KMS)
+target_link_libraries(mir_unit_tests
+  mirsharedmesaservercommon-static
+)
+endif()
+
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_unit_tests 
   mirsharedandroid-static
@@ -157,3 +164,13 @@ add_custom_command(TARGET mir_unit_tests POST_BUILD
   ${CMAKE_CURRENT_SOURCE_DIR}/test_data ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_data
   COMMENT "Copying test data to build dir..."
 )
+
+add_library(loadable_test_dso SHARED ${CMAKE_CURRENT_SOURCE_DIR}/test_data/empty_input.c)
+
+set_target_properties(loadable_test_dso PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_data
+  COMPILE_FLAGS "-Wno-pedantic"
+  OUTPUT_NAME this-arch
+)
+
+add_dependencies(mir_unit_tests loadable_test_dso)

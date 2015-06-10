@@ -1,7 +1,7 @@
 Linux Kernel Requirements for Mir
 =================================
 
-To run Mir with the default `mesa` platform you need a linux kernel with at
+To run Mir with the default `mesa-kms` platform you need a linux kernel with at
 least:
 
 Modules: i915, radeon and nouveau, to support the broadest range of common

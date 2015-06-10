@@ -27,6 +27,7 @@
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <memory>
+#include <string>
 
 namespace mir
 {
@@ -55,7 +56,8 @@ void invoke(
         Invocation const& invocation)
 {
     ParameterMessage parameter_message;
-    parameter_message.ParseFromString(invocation.parameters());
+    if (!parameter_message.ParseFromString(invocation.parameters()))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to parse message parameters!"));
     ResultMessage result_message;
 
     try
@@ -78,7 +80,7 @@ void invoke(
     }
     catch (std::exception const& x)
     {
-        using namespace std::literals;
+        using namespace std::literals::string_literals;
         result_message.set_error("Error processing request: "s +
             x.what() + "\nInternal error details: " + boost::diagnostic_information(x));
         self->send_response(invocation.id(), &result_message);
