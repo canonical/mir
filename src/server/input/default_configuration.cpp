@@ -30,6 +30,7 @@
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
 #include "android/input_translator.h"
+#include "key_repeat_dispatcher.h"
 #include "android/input_reader_dispatchable.h"
 #include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
@@ -44,6 +45,7 @@
 #include "null_input_channel_factory.h"
 #include "default_input_device_hub.h"
 #include "default_input_manager.h"
+#include "surface_input_dispatcher.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/platform.h"
@@ -83,7 +85,11 @@ std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_regi
 std::shared_ptr<mi::CompositeEventFilter>
 mir::DefaultServerConfiguration::the_composite_event_filter()
 {
-    return the_event_filter_chain_dispatcher();
+    return composite_event_filter(
+        [this]()
+        {
+            return the_event_filter_chain_dispatcher();
+        });
 }
 
 std::shared_ptr<mi::EventFilterChainDispatcher>
@@ -93,8 +99,7 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
         [this]() -> std::shared_ptr<mi::EventFilterChainDispatcher>
         {
             std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
-            return std::make_shared<mi::EventFilterChainDispatcher>(
-                filter_list, the_surface_input_dispatcher());
+            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_new_input_dispatcher());
         });
 }
 
@@ -177,7 +182,17 @@ mir::DefaultServerConfiguration::the_input_targeter()
             if (!options->get<bool>(options::enable_input_opt))
                 return std::make_shared<mi::NullInputTargeter>();
             else
-                return std::make_shared<mia::InputTargeter>(the_android_input_dispatcher(), the_input_registrar());
+                return the_new_input_dispatcher();
+        });
+}
+
+std::shared_ptr<mi::SurfaceInputDispatcher>
+mir::DefaultServerConfiguration::the_new_input_dispatcher()
+{
+    return new_input_dispatcher(
+        [this]()
+        {
+            return std::make_shared<mi::SurfaceInputDispatcher>(the_input_scene());
         });
 }
 
@@ -198,36 +213,20 @@ mir::DefaultServerConfiguration::the_dispatcher_policy()
     return android_dispatcher_policy(
         [this]()
         {
-            return std::make_shared<mia::DefaultDispatcherPolicy>(
-                is_key_repeat_enabled());
+            return std::make_shared<mia::DefaultDispatcherPolicy>();
         });
-}
-
-bool mir::DefaultServerConfiguration::is_key_repeat_enabled() const
-{
-    return true;
 }
 
 std::shared_ptr<mi::InputDispatcher>
 mir::DefaultServerConfiguration::the_input_dispatcher()
 {
-    return the_event_filter_chain_dispatcher();
-}
+    std::chrono::milliseconds const key_repeat_timeout{20};
 
-std::shared_ptr<mi::InputDispatcher>
-mir::DefaultServerConfiguration::the_surface_input_dispatcher()
-{
-    return surface_input_dispatcher(
-        [this]() -> std::shared_ptr<mi::InputDispatcher>
-        {
-            auto const options = the_options();
-            if (!options->get<bool>(options::enable_input_opt))
-                return std::make_shared<mi::NullInputDispatcher>();
-            else
-            {
-                return std::make_shared<mia::AndroidInputDispatcher>(the_android_input_dispatcher(), the_dispatcher_thread());
-            }
-        });
+    auto const options = the_options();
+    if (!options->get<bool>(options::enable_key_repeat_opt))
+        return the_event_filter_chain_dispatcher();
+    else
+        return std::make_shared<mi::KeyRepeatDispatcher>(the_event_filter_chain_dispatcher(), the_main_loop(), key_repeat_timeout);
 }
 
 std::shared_ptr<droidinput::EventHubInterface>

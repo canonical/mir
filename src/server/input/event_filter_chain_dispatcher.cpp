@@ -1,7 +1,7 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify it
+* This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
@@ -62,10 +62,11 @@ void mi::EventFilterChainDispatcher::prepend(std::shared_ptr<EventFilter> const&
     filters.insert(filters.begin(), filter);
 }
 
-void mi::EventFilterChainDispatcher::dispatch(MirEvent const& event)
+bool mi::EventFilterChainDispatcher::dispatch(MirEvent const& event)
 {
     if (!handle(event))
-        next_dispatcher->dispatch(event);
+        return next_dispatcher->dispatch(event);
+    return true;
 }
 
 // Should we start/stop dispatch of filter chain here?

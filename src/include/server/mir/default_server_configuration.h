@@ -129,6 +129,7 @@ namespace input
 class InputReport;
 class Scene;
 class InputManager;
+class SurfaceInputDispatcher;
 class Platform;
 class InputDeviceRegistry;
 class InputDeviceHub;
@@ -307,8 +308,9 @@ public:
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
-    virtual std::shared_ptr<input::InputDispatcher> the_surface_input_dispatcher();
+
     virtual std::shared_ptr<input::EventFilterChainDispatcher> the_event_filter_chain_dispatcher();
+
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<input::Scene>  the_input_scene();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
@@ -327,6 +329,7 @@ public:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
     virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
     virtual std::shared_ptr<input::InputDeviceHub> the_input_device_hub();
+    virtual std::shared_ptr<input::SurfaceInputDispatcher> the_new_input_dispatcher();
     /** @} */
 
     /** @name logging configuration - customization
@@ -355,7 +358,7 @@ protected:
     virtual std::shared_ptr<droidinput::InputEnumerator> the_input_target_enumerator();
     virtual std::shared_ptr<input::android::InputThread> the_dispatcher_thread();
     virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
-    virtual bool is_key_repeat_enabled() const;
+
     /** @} */
 
     /** @Convenience wrapper functions
@@ -388,6 +391,7 @@ protected:
     CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<input::SurfaceInputDispatcher>    new_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
     CachedPtr<input::Platform>    input_platform; // currently not used by default
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
