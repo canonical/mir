@@ -27,6 +27,8 @@
 #include "mir/raii.h"
 #include <limits>
 #include <algorithm>
+#include <chrono>
+#include <thread>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
@@ -97,6 +99,8 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
 
     hwc_wrapper->prepare(lists);
 
+    bool purely_overlays = true;
+
     for (auto& content : contents)
     {
         if (content.list.needs_swapbuffers())
@@ -111,6 +115,7 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
                 content.compositor.render(std::move(rejected_renderables), content.list_offset, content.context);
             content.list.setup_fb(content.context.last_rendered_buffer());
             content.list.swap_occurred();
+            purely_overlays = false;
         }
     
         //setup overlays
@@ -135,6 +140,28 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
             it.layer.release_buffer();
 
         mir::Fd retire_fd(content.list.retirement_fence());
+    }
+
+    if (purely_overlays)
+    {
+        /*
+         * "Predictive bypass": If we're just displaying pure overlays on this
+         * frame then it's very likely the same will be true on the next frame.
+         * In that case we don't need to spare any time for GL rendering.
+         * Instead just sleep for a significant portion of the frame. This will
+         * ensure the scene snapshot that goes into the next frame is
+         * younger when it hits the screen, and so has visibly lower latency.
+         *   This has extra benefit for the overlays of software cursors and
+         * touchpoints as the client surface underneath is then given enough
+         * time to update itself and better match (ie. "stick to") the cursor
+         * above it.
+         */
+        // TODO: More device testing
+        // TODO: Refresh rate detection?
+
+        // Max safe sleep time in testing:
+        //   arale: 10ms  (why? what else is it doing that's so slow?!)
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
