@@ -178,12 +178,12 @@ struct TypePair
 };
 
 struct SurfaceMorphingCase : SurfaceMorphing, ::testing::WithParamInterface<TypePair> {};
-using WithoutParent = SurfaceMorphingCase;
-using AddingParent  = SurfaceMorphingCase;
-using AddingParent  = SurfaceMorphingCase;
+using TargetWithoutParent = SurfaceMorphingCase;
+using TargetNeedingParent = SurfaceMorphingCase;
+using TargetMayHaveParent = SurfaceMorphingCase;
 }
 
-TEST_P(WithoutParent, can_change)
+TEST_P(TargetWithoutParent, not_setting_parent_succeeds)
 {
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
@@ -208,17 +208,48 @@ TEST_P(WithoutParent, can_change)
         });
 }
 
-INSTANTIATE_TEST_CASE_P(SurfaceMorphing, WithoutParent,
-    Values(
-        TypePair{mir_surface_type_normal, mir_surface_type_utility},
-        TypePair{mir_surface_type_normal, mir_surface_type_dialog},
-        TypePair{mir_surface_type_utility, mir_surface_type_normal},
-        TypePair{mir_surface_type_utility, mir_surface_type_dialog},
-        TypePair{mir_surface_type_dialog, mir_surface_type_utility},
-        TypePair{mir_surface_type_dialog, mir_surface_type_normal}
-    ));
+TEST_P(TargetWithoutParent, setting_parent_fails)
+{
+    auto const old_type = GetParam().from;
+    auto const new_type = GetParam().to;
 
-TEST_P(AddingParent, can_change)
+    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, mir_surface_type_normal);
+            mir_surface_spec_set_width(spec, width);
+            mir_surface_spec_set_height(spec, height);
+            mir_surface_spec_set_pixel_format(spec, pixel_format);
+            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        });
+
+    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    {
+        mir_surface_spec_set_type(spec, old_type);
+        mir_surface_spec_set_width(spec, width);
+        mir_surface_spec_set_height(spec, height);
+        mir_surface_spec_set_pixel_format(spec, pixel_format);
+        mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+    });
+
+    latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
+
+    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+        Times(0);
+
+    change_surface(surface, [&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, new_type);
+            mir_surface_spec_set_parent(spec, parent);
+
+            // Don't wait for a notification we don't expect
+            // We'll wait for another for another change
+            change_observed();
+        });
+
+    wait_for_arbitrary_change(surface);
+}
+
+TEST_P(TargetNeedingParent, setting_parent_succeeds)
 {
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
@@ -253,7 +284,73 @@ TEST_P(AddingParent, can_change)
     });
 }
 
-TEST_P(AddingParent, required)
+TEST_P(TargetNeedingParent, not_setting_parent_fails)
+{
+    auto const old_type = GetParam().from;
+    auto const new_type = GetParam().to;
+
+    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, old_type);
+            mir_surface_spec_set_width(spec, width);
+            mir_surface_spec_set_height(spec, height);
+            mir_surface_spec_set_pixel_format(spec, pixel_format);
+            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        });
+
+    latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
+
+    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+        Times(0);
+
+    change_surface(surface, [&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, new_type);
+
+            // Don't wait for a notification we don't expect
+            // We'll wait for another for another change
+            change_observed();
+        });
+
+    wait_for_arbitrary_change(surface);
+}
+
+TEST_P(TargetMayHaveParent, setting_parent_succeeds)
+{
+    auto const old_type = GetParam().from;
+    auto const new_type = GetParam().to;
+
+    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, mir_surface_type_normal);
+            mir_surface_spec_set_width(spec, width);
+            mir_surface_spec_set_height(spec, height);
+            mir_surface_spec_set_pixel_format(spec, pixel_format);
+            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        });
+
+    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, old_type);
+            mir_surface_spec_set_width(spec, width);
+            mir_surface_spec_set_height(spec, height);
+            mir_surface_spec_set_pixel_format(spec, pixel_format);
+            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        });
+
+    latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
+
+    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+        WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
+
+    change_surface(surface, [&](MirSurfaceSpec* spec)
+    {
+        mir_surface_spec_set_type(spec, new_type);
+        mir_surface_spec_set_parent(spec, parent);
+    });
+}
+
+TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
 {
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
@@ -278,27 +375,33 @@ TEST_P(AddingParent, required)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, mir_surface_type_normal)).
-        Times(0);
+    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
+
 
     change_surface(surface, [&](MirSurfaceSpec* spec)
         {
             mir_surface_spec_set_type(spec, new_type);
-
-            // Don't wait for a notification we don't expect
-            // We'll wait for another for another change
-            change_observed();
         });
-
-    wait_for_arbitrary_change(surface);
 }
 
-INSTANTIATE_TEST_CASE_P(SurfaceMorphing, AddingParent,
+INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetWithoutParent,
+    Values(
+        TypePair{mir_surface_type_normal, mir_surface_type_utility},
+        TypePair{mir_surface_type_utility, mir_surface_type_normal},
+        TypePair{mir_surface_type_dialog, mir_surface_type_utility},
+        TypePair{mir_surface_type_dialog, mir_surface_type_normal}
+    ));
+
+INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetNeedingParent,
     Values(
         TypePair{mir_surface_type_normal, mir_surface_type_satellite},
-        TypePair{mir_surface_type_normal, mir_surface_type_dialog},
         TypePair{mir_surface_type_utility, mir_surface_type_satellite},
-        TypePair{mir_surface_type_utility, mir_surface_type_dialog},
         TypePair{mir_surface_type_dialog, mir_surface_type_satellite}
     ));
 
+INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetMayHaveParent,
+    Values(
+        TypePair{mir_surface_type_normal, mir_surface_type_dialog},
+        TypePair{mir_surface_type_utility, mir_surface_type_dialog}
+    ));
