@@ -40,6 +40,7 @@ Build-Depends: cmake,
                libfreetype6-dev,
                abi-compliance-checker,
                libevdev-dev,
+               uuid-dev,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
