@@ -316,6 +316,9 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
             false,
             display_area);
     }
+
+    if (modifications.type.is_set())
+        surface->configure(mir_surface_attrib_type, modifications.type.value());
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
