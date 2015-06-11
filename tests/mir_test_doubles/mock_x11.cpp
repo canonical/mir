@@ -24,7 +24,7 @@ namespace mtd=mir::test::doubles;
 
 namespace
 {
-mtd::MockX11* global_mock = NULL;
+mtd::MockX11* global_mock = nullptr;
 }
 
 mtd::FakeX11Resources::FakeX11Resources()
@@ -37,7 +37,7 @@ mtd::FakeX11Resources::FakeX11Resources()
 mtd::MockX11::MockX11()
 {
     using namespace testing;
-    assert(global_mock == NULL && "Only one mock object per process is allowed");
+    assert(global_mock == nullptr && "Only one mock object per process is allowed");
 
     global_mock = this;
 
@@ -53,7 +53,7 @@ mtd::MockX11::MockX11()
 
 mtd::MockX11::~MockX11()
 {
-    global_mock = NULL;
+    global_mock = nullptr;
 }
 
 Display *XOpenDisplay(const char *display_name)
