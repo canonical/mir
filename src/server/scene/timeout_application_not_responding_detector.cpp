@@ -54,16 +54,28 @@ ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDete
     std::chrono::milliseconds period)
     : alarm{alarms.create_alarm([this, period]()
           {
-              for (auto const& session_pair : sessions)
               {
-                  if (!session_pair.second->replied_since_last_ping)
+                  std::lock_guard<std::mutex> lock{session_mutex};
+                  for (auto const& session_pair : sessions)
                   {
-                      session_pair.second->flagged_as_unresponsive = true;
-                      observers.session_unresponsive(session_pair.first);
+                      if (!session_pair.second->replied_since_last_ping)
+                      {
+                          session_pair.second->flagged_as_unresponsive = true;
+                          unresponsive_sessions_temporary.push_back(session_pair.first);
+                      }
+                      session_pair.second->pinger();
+                      session_pair.second->replied_since_last_ping = false;
                   }
-                  session_pair.second->pinger();
-                  session_pair.second->replied_since_last_ping = false;
               }
+
+              // Dispatch notifications outside the lock.
+              for (auto const& unresponsive_session : unresponsive_sessions_temporary)
+              {
+                  observers.session_unresponsive(unresponsive_session);
+              }
+
+              unresponsive_sessions_temporary.clear();
+
               this->alarm->reschedule_in(period);
           })}
 {
@@ -77,18 +89,22 @@ ms::TimeoutApplicationNotRespondingDetector::~TimeoutApplicationNotRespondingDet
 void ms::TimeoutApplicationNotRespondingDetector::register_session(
     Session const& session, std::function<void()> const& pinger)
 {
+    std::lock_guard<std::mutex> lock{session_mutex};
     sessions[&session] = std::make_unique<ANRContext>(pinger);
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
     Session const& session)
 {
+    std::lock_guard<std::mutex> lock{session_mutex};
     sessions.erase(&session);
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::pong_received(
    Session const& received_for)
 {
+    std::lock_guard<std::mutex> lock{session_mutex};
+
     auto& session_ctx = sessions.at(&received_for);
     if (session_ctx->flagged_as_unresponsive)
     {

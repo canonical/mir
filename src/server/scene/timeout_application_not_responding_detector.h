@@ -75,7 +75,10 @@ private:
         void session_now_responsive(Session const* session) override;
     } observers;
 
+    std::mutex session_mutex;
     std::unordered_map<Session const*, std::unique_ptr<ANRContext>> sessions;
+    std::vector<Session const*> unresponsive_sessions_temporary;
+
     std::unique_ptr<time::Alarm> const alarm;
 };
 }
