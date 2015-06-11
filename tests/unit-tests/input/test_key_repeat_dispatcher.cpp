@@ -61,7 +61,7 @@ struct MockAlarmFactory : public mir::time::AlarmFactory
 struct KeyRepeatDispatcher : public testing::Test
 {
     KeyRepeatDispatcher()
-        : dispatcher(mock_next_dispatcher, mock_alarm_factory, repeat_time)
+        : dispatcher(mock_next_dispatcher, mock_alarm_factory, true, repeat_time)
     {
     }
     std::shared_ptr<mtd::MockInputDispatcher> mock_next_dispatcher = std::make_shared<mtd::MockInputDispatcher>();
