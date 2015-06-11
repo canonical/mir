@@ -256,6 +256,8 @@ MIR_SERVER_32 {
     mir::shell::SystemCompositorWindowManager::SystemCompositorWindowManager*;
     mir::shell::SystemCompositorWindowManager::add_display*;
     mir::shell::SystemCompositorWindowManager::add_prompt_provider_for*;
+    mir::shell::SystemCompositorWindowManager::add_session*;
+    mir::shell::SystemCompositorWindowManager::add_surface*;
     mir::shell::SystemCompositorWindowManager::close_session*;
     mir::shell::SystemCompositorWindowManager::create_surface*;
     mir::shell::SystemCompositorWindowManager::destroy_surface*;
@@ -271,6 +273,8 @@ MIR_SERVER_32 {
     mir::shell::SystemCompositorWindowManager::open_session*;
     mir::shell::SystemCompositorWindowManager::raise*;
     mir::shell::SystemCompositorWindowManager::remove_display*;
+    mir::shell::SystemCompositorWindowManager::remove_session*;
+    mir::shell::SystemCompositorWindowManager::remove_surface*;
     mir::shell::SystemCompositorWindowManager::set_focus_to*;
     mir::shell::SystemCompositorWindowManager::set_surface_attribute*;
     mir::shell::SystemCompositorWindowManager::ShellWrapper*;
