@@ -86,9 +86,9 @@ TEST_F(TestCustomInputDispatcher, receives_input)
     // separate devices - if the sequence of events is required in a test, better use
     // just one device with the superset of the capabilities instead.
     EXPECT_CALL(input_dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1)
-        .WillOnce(mt::WakeUp(&all_pointer_events_received));
+        .WillOnce(mt::ReturnFalseAndWakeUp(&all_pointer_events_received));
     EXPECT_CALL(input_dispatcher, dispatch(mt::KeyDownEvent())).Times(1)
-        .WillOnce(mt::WakeUp(&all_keys_received));
+        .WillOnce(mt::ReturnFalseAndWakeUp(&all_keys_received));
 
     fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
