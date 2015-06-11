@@ -44,6 +44,7 @@ set(
   test_render_override.cpp
   test_surface_modifications.cpp
   test_surface_placement.cpp
+  test_session_mediator_report.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
