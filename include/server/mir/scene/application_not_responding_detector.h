@@ -41,6 +41,7 @@ public:
         virtual ~Observer() = default;
 
         virtual void session_unresponsive(Session const* session) = 0;
+        virtual void session_now_responsive(Session const* session) = 0;
     };
 
     virtual void register_session(Session const& session, std::function<void()> const& pinger) = 0;

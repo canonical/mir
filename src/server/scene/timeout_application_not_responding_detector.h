@@ -72,6 +72,7 @@ private:
         using BasicObservers<Observer>::remove;
 
         void session_unresponsive(Session const* session) override;
+        void session_now_responsive(Session const* session) override;
     } observers;
 
     std::unordered_map<Session const*, std::unique_ptr<ANRContext>> sessions;

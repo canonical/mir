@@ -27,18 +27,26 @@ struct ms::TimeoutApplicationNotRespondingDetector::ANRContext
 {
     ANRContext(std::function<void()> const& pinger)
         : pinger{pinger},
-          replied_since_last_ping{true}
+          replied_since_last_ping{true},
+          flagged_as_unresponsive{false}
     {
     }
 
     std::function<void()> const pinger;
     bool replied_since_last_ping;
+    bool flagged_as_unresponsive;
 };
 
 void ms::TimeoutApplicationNotRespondingDetector::ANRObservers::session_unresponsive(
     Session const* session)
 {
     for_each([session](auto const& observer) { observer->session_unresponsive(session); });
+}
+
+void ms::TimeoutApplicationNotRespondingDetector::ANRObservers::session_now_responsive(
+    Session const* session)
+{
+    for_each([session](auto const& observer) { observer->session_now_responsive(session); });
 }
 
 ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDetector(
@@ -50,6 +58,7 @@ ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDete
               {
                   if (!session_pair.second->replied_since_last_ping)
                   {
+                      session_pair.second->flagged_as_unresponsive = true;
                       observers.session_unresponsive(session_pair.first);
                   }
                   session_pair.second->pinger();
@@ -80,7 +89,13 @@ void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
 void ms::TimeoutApplicationNotRespondingDetector::pong_received(
    Session const& received_for)
 {
-    sessions.at(&received_for)->replied_since_last_ping = true;
+    auto& session_ctx = sessions.at(&received_for);
+    if (session_ctx->flagged_as_unresponsive)
+    {
+        session_ctx->flagged_as_unresponsive = false;
+        observers.session_now_responsive(&received_for);
+    }
+    session_ctx->replied_since_last_ping = true;
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::register_observer(

@@ -140,6 +140,7 @@ class MockObserver : public ms::ApplicationNotRespondingDetector::Observer
 {
 public:
     MOCK_METHOD1(session_unresponsive, void(ms::Session const*));
+    MOCK_METHOD1(session_now_responsive, void(ms::Session const*));
 };
 }
 
@@ -258,5 +259,45 @@ TEST(TimeoutApplicationNotRespondingDetector, does_not_trigger_anr_when_session_
 
     // Now a full ping cycle has elapsed, but the session has pung and so isn't unresponsive
     fake_alarms.advance_by(1001ms);
+    EXPECT_FALSE(session_not_responding);
+}
+
+TEST(TimeoutApplicationNotRespondingDetector, triggers_now_responsive_signal_when_ponged)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    FakeClockAlarmProvider fake_alarms;
+
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
+
+    bool session_not_responding{false};
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    ON_CALL(*observer, session_unresponsive(_))
+        .WillByDefault(Invoke([&session_not_responding](auto /*session*/)
+    {
+        session_not_responding = true;
+    }));
+    ON_CALL(*observer, session_now_responsive(_))
+        .WillByDefault(Invoke([&session_not_responding](auto /*session*/)
+    {
+        session_not_responding = false;
+    }));
+    detector.register_observer(observer);
+
+    NiceMock<mtd::MockSceneSession> session_one;
+
+    detector.register_session(session_one, [](){});
+
+    fake_alarms.advance_by(1001ms);
+    // Should now have pung, but not marked as unresponsive
+    EXPECT_FALSE(session_not_responding);
+
+    // Now a full ping cycle has elapsed, should have marked as unresponsive
+    fake_alarms.advance_by(1001ms);
+    EXPECT_TRUE(session_not_responding);
+
+    detector.pong_received(session_one);
+
     EXPECT_FALSE(session_not_responding);
 }
