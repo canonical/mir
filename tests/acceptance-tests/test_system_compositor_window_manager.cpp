@@ -110,9 +110,7 @@ struct SystemCompositorWindowManager : mtf::HeadlessTest
     {
         add_to_environment("MIR_SERVER_NO_FILE", "");
 
-        initial_display_layout({
-            {{  0, 0}, { 640,  480}},
-            {{480, 0}, {1920, 1080}}});
+        initial_display_layout({{{0, 0}, { 640,  480}}, {{480, 0}, {1920, 1080}}});
 
         server.override_the_window_manager_builder(
             [this](msh::FocusController* focus_controller)
