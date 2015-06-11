@@ -57,14 +57,18 @@ Consumer // As in screencasts
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:
-    BufferStream(mir::protobuf::DisplayServer& server,
+    BufferStream(
+        MirConnection* connection,
+        mir::protobuf::DisplayServer& server,
         BufferStreamMode mode,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
         protobuf::BufferStream const& protobuf_bs,
         std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name);
     // For surfaceless buffer streams
-    BufferStream(mir::protobuf::DisplayServer& server,
+    BufferStream(
+        MirConnection* connection,
+        mir::protobuf::DisplayServer& server,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
         mir::protobuf::BufferStreamParameters const& parameters,
         std::shared_ptr<PerfReport> const& perf_report,
@@ -100,14 +104,12 @@ public:
 
     frontend::BufferStreamId rpc_id() const override;
     bool valid() const override;
-    
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
 
 private:
     void created(mir_buffer_stream_callback callback, void* context);
-    void released(mir_buffer_stream_callback callback, void* context);
     void process_buffer(protobuf::Buffer const& buffer);
     void next_buffer_received(
         std::function<void()> done);
@@ -116,6 +118,7 @@ private:
 
     mutable std::mutex mutex; // Protects all members of *this
 
+    MirConnection* connection;
     mir::protobuf::DisplayServer& display_server;
 
     BufferStreamMode const mode;

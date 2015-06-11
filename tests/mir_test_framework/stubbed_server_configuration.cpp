@@ -127,16 +127,6 @@ std::shared_ptr<msh::InputTargeter> mtf::StubbedServerConfiguration::the_input_t
         return std::make_shared<mi::NullInputTargeter>();
 }
 
-std::shared_ptr<mi::InputDispatcher> mtf::StubbedServerConfiguration::the_input_dispatcher()
-{
-    auto options = the_options();
-
-    if (options->get<bool>("tests-use-real-input"))
-        return DefaultServerConfiguration::the_input_dispatcher();
-    else
-        return std::make_shared<mi::NullInputDispatcher>();
-}
-
 std::shared_ptr<mi::InputSender> mtf::StubbedServerConfiguration::the_input_sender()
 {
     auto options = the_options();
