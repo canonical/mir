@@ -65,9 +65,6 @@ struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
     Rectangle const first_display {{  0, 0}, {640,  480}};
     Rectangle const second_display{{640, 0}, {640,  480}};
 
-    // limit to cascade step (don't hard code title bar height)
-    Displacement const max_cascade{20, 20};
-
     void SetUp() override
     {
         initial_display_layout({first_display, second_display});
@@ -152,19 +149,11 @@ private:
 
     void init_pixel_format()
     {
-        unsigned int valid_formats
-            { 0 };
+        unsigned int valid_formats{0};
         MirPixelFormat pixel_formats[mir_pixel_formats];
         mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
-        //select an 8 bit opaque format if we can
-        for (auto i = 0u; i < valid_formats; i++)
-        {
-            if (pixel_formats[i] == mir_pixel_format_xbgr_8888 || pixel_formats[i] == mir_pixel_format_xrgb_8888)
-            {
-                pixel_format = pixel_formats[i];
-                break;
-            }
-        }
+
+        pixel_format = pixel_formats[0];
     }
 };
 
@@ -242,7 +231,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
             mir_surface_spec_set_parent(spec, parent);
 
             // Don't wait for a notification we don't expect
-            // We'll wait for another for another change
+            // We'll wait for another change
             change_observed();
         });
 
@@ -308,7 +297,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
             mir_surface_spec_set_type(spec, new_type);
 
             // Don't wait for a notification we don't expect
-            // We'll wait for another for another change
+            // We'll wait for another change
             change_observed();
         });
 
