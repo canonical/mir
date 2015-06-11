@@ -5,7 +5,8 @@ MIR_SERVER_32 {
     vtable?for?mir::input::NullInputDispatcher;
     VTT?for?mir::DefaultServerConfiguration;
     VTT?for?mir::shell::ShellWrapper;
-    
+    VTT?for?mir::shell::SystemCompositorWindowManager;
+
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort  
     mir::compositor::Compositor::Compositor*;
@@ -252,6 +253,30 @@ MIR_SERVER_32 {
     mir::shell::ShellWrapper::surface_at*;
     mir::shell::SurfaceReadyObserver::SurfaceReadyObserver*;
     mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
+    mir::shell::SystemCompositorWindowManager::SystemCompositorWindowManager*;
+    mir::shell::SystemCompositorWindowManager::add_display*;
+    mir::shell::SystemCompositorWindowManager::add_prompt_provider_for*;
+    mir::shell::SystemCompositorWindowManager::close_session*;
+    mir::shell::SystemCompositorWindowManager::create_surface*;
+    mir::shell::SystemCompositorWindowManager::destroy_surface*;
+    mir::shell::SystemCompositorWindowManager::focused_session*;
+    mir::shell::SystemCompositorWindowManager::focused_surface*;
+    mir::shell::SystemCompositorWindowManager::focus_next_session*;
+    mir::shell::SystemCompositorWindowManager::get_surface_attribute*;
+    mir::shell::SystemCompositorWindowManager::handle*;
+    mir::shell::SystemCompositorWindowManager::modify_surface*;
+    mir::shell::SystemCompositorWindowManager::on_session_added*;
+    mir::shell::SystemCompositorWindowManager::on_session_removed*;
+    mir::shell::SystemCompositorWindowManager::on_session_ready*;
+    mir::shell::SystemCompositorWindowManager::open_session*;
+    mir::shell::SystemCompositorWindowManager::raise*;
+    mir::shell::SystemCompositorWindowManager::remove_display*;
+    mir::shell::SystemCompositorWindowManager::set_focus_to*;
+    mir::shell::SystemCompositorWindowManager::set_surface_attribute*;
+    mir::shell::SystemCompositorWindowManager::ShellWrapper*;
+    mir::shell::SystemCompositorWindowManager::start_prompt_session_for*;
+    mir::shell::SystemCompositorWindowManager::stop_prompt_session*;
+    mir::shell::SystemCompositorWindowManager::surface_at*;
     mir::shell::WindowManager::operator*;
     mir::shell::WindowManager::?WindowManager*;
     mir::shell::WindowManager::WindowManager*;
@@ -345,6 +370,29 @@ MIR_SERVER_32 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::stop_prompt_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::surface_at*;
     non-virtual?thunk?to?mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::add_display*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::add_prompt_provider_for*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::close_session*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::create_surface*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::destroy_surface*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::focused_session*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::focused_surface*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::focus_next_session*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::get_surface_attribute*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::modify_surface*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::on_session_added*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::on_session_removed*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::on_session_ready*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::open_session*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::raise*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::remove_display*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::set_focus_to*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::set_surface_attribute*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::ShellWrapper*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::start_prompt_session_for*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::stop_prompt_session*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::surface_at*;
     non-virtual?thunk?to?mir::shell::WindowManager::?WindowManager*;
     non-virtual?thunk?to?mir::time::Alarm::?Alarm*;
     non-virtual?thunk?to?mir::time::AlarmFactory::?AlarmFactory*;
@@ -402,6 +450,7 @@ MIR_SERVER_32 {
     typeinfo?for?mir::shell::Shell;
     typeinfo?for?mir::shell::ShellWrapper;
     typeinfo?for?mir::shell::SurfaceReadyObserver;
+    typeinfo?for?mir::shell::SystemCompositorWindowManager;
     typeinfo?for?mir::shell::WindowManager;
     typeinfo?for?mir::time::Alarm;
     typeinfo?for?mir::time::AlarmFactory;
@@ -459,6 +508,7 @@ MIR_SERVER_32 {
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellWrapper;
     vtable?for?mir::shell::SurfaceReadyObserver;
+    vtable?for?mir::shell::SystemCompositorWindowManager;
     vtable?for?mir::shell::WindowManager;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::AlarmFactory;
