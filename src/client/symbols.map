@@ -38,6 +38,7 @@ MIR_CLIENT_9 {
     mir_connection_set_display_config_change_callback;
     mir_connection_set_lifecycle_event_callback;
     mir_connect_sync;
+    mir_create_surface_spec;
     mir_cursor_configuration_destroy;
     mir_cursor_configuration_from_buffer_stream;
     mir_cursor_configuration_from_name;
@@ -76,6 +77,8 @@ MIR_CLIENT_9 {
     mir_omnidirectional_resize_cursor_name;
     mir_open_hand_cursor_name;
     mir_orientation_event_get_direction;
+    mir_persistent_id_is_valid;
+    mir_persistent_id_release;
     mir_platform_message_create;
     mir_platform_message_get_data;
     mir_platform_message_get_fds;
@@ -118,6 +121,8 @@ MIR_CLIENT_9 {
     mir_surface_is_valid;
     mir_surface_release;
     mir_surface_release_sync;
+    mir_surface_request_persistent_id;
+    mir_surface_request_persistent_id_sync;
     mir_surface_set_event_handler;
     mir_surface_set_preferred_orientation;
     mir_surface_set_state;
@@ -134,8 +139,10 @@ MIR_CLIENT_9 {
     mir_surface_spec_set_min_height;
     mir_surface_spec_set_min_width;
     mir_surface_spec_set_name;
+    mir_surface_spec_set_parent;
     mir_surface_spec_set_pixel_format;
     mir_surface_spec_set_preferred_orientation;
+    mir_surface_spec_set_type;
     mir_surface_spec_set_width;
     mir_surface_spec_set_width_increment;
     mir_touch_event_action;

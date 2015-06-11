@@ -7,7 +7,9 @@ set(
 
   default_input_manager.cpp
   default_input_device_hub.cpp
-  event_filter_chain.cpp
+
+  surface_input_dispatcher.cpp
+  event_filter_chain_dispatcher.cpp
 
   null_input_channel_factory.cpp
   null_input_dispatcher.cpp
@@ -18,6 +20,7 @@ set(
   xcursor_loader.cpp
   builtin_cursor_images.cpp
   touchspot_controller.cpp
+  key_repeat_dispatcher.cpp
 )
 
 add_subdirectory(android)

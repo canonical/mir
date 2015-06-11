@@ -24,6 +24,7 @@
 #include "device_quirks.h"
 
 #include <boost/throw_exception.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 #include <stdexcept>
 
 namespace mg=mir::graphics;
@@ -68,7 +69,9 @@ std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
 
     if (( ret ) || (buf_handle == NULL) || (stride == 0))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("buffer allocation failed\n"));
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(std::runtime_error("buffer allocation failed\n"))
+            << boost::errinfo_errno(-ret));
     }
 
     AndroidBufferHandleDeleter del1(alloc_dev);

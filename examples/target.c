@@ -29,7 +29,8 @@
 
 enum
 {
-    max_touches = 10
+    max_fingers = 10,
+    max_samples_per_frame = 1000
 };
 
 typedef struct
@@ -39,8 +40,14 @@ typedef struct
 
 typedef struct
 {
-    int points;
-    Vec2 point[max_touches];
+    int samples;
+    Vec2 sample[max_samples_per_frame];
+} Finger;
+
+typedef struct
+{
+    int fingers;
+    Finger finger[max_fingers];
 } TouchState;
 
 typedef struct
@@ -124,13 +131,18 @@ static void get_all_touch_points(const MirInputEvent *ievent, TouchState *touch)
 {
     if (mir_input_event_get_type(ievent) == mir_input_event_type_pointer)
     {
-        touch->points = 0;
         const MirPointerEvent *pevent =
             mir_input_event_get_pointer_event(ievent);
-        if (mir_pointer_event_action(pevent) != mir_pointer_action_leave)
+        if (mir_pointer_event_action(pevent) == mir_pointer_action_leave)
         {
-            touch->points = 1;
-            touch->point[0] = (Vec2)
+            touch->fingers = 0;
+        }
+        else if (touch->finger[0].samples < max_samples_per_frame)
+        {
+            if (!touch->fingers)
+                touch->finger[0].samples = 0;
+            touch->fingers = 1;
+            touch->finger[0].sample[touch->finger[0].samples++] = (Vec2)
             {
                 mir_pointer_event_axis_value(pevent, mir_pointer_axis_x),
                 mir_pointer_event_axis_value(pevent, mir_pointer_axis_y)
@@ -141,20 +153,29 @@ static void get_all_touch_points(const MirInputEvent *ievent, TouchState *touch)
     {
         const MirTouchEvent *tevent = mir_input_event_get_touch_event(ievent);
         int n = mir_touch_event_point_count(tevent);
-        if (n > max_touches)
-            n = max_touches;
-        bool all_up = true;
-        for (int p = 0; p < n; ++p)
+        if (n > max_fingers)
+            n = max_fingers;
+        for (int f = 0; f < n; ++f)
         {
-            if (mir_touch_event_action(tevent, p) != mir_touch_action_up)
-                all_up = false;
-            touch->point[p] = (Vec2)
+            Finger *finger = touch->finger + f;
+            if (f >= touch->fingers)
             {
-                mir_touch_event_axis_value(tevent, p, mir_touch_axis_x),
-                mir_touch_event_axis_value(tevent, p, mir_touch_axis_y)
+                finger->samples = 0;
+                touch->fingers = f + 1;
+            }
+            if (mir_touch_event_action(tevent, f) == mir_touch_action_up)
+            {
+                finger->samples = 0;
+                continue;
+            }
+            if (finger->samples >= max_samples_per_frame)
+                continue;
+            finger->sample[finger->samples++] = (Vec2)
+            {
+                mir_touch_event_axis_value(tevent, f, mir_touch_axis_x),
+                mir_touch_event_axis_value(tevent, f, mir_touch_axis_y)
             };
         }
-        touch->points = all_up ? 0 : n;
     }
 }
 
@@ -211,10 +232,13 @@ int main(int argc, char *argv[])
         "precision mediump float;\n"
         "varying vec2 v_texcoord;\n"
         "uniform sampler2D texture;\n"
+        "uniform float opacity;\n"
         "\n"
         "void main()\n"
         "{\n"
-        "    gl_FragColor = texture2D(texture, v_texcoord);\n"
+        "    vec4 f = texture2D(texture, v_texcoord);\n"
+        "    f.a *= opacity;\n"
+        "    gl_FragColor = f;\n"
         "}\n";
 
     // Disable Mir's input resampling. We do our own here, in a way that
@@ -268,6 +292,9 @@ int main(int argc, char *argv[])
     GLint scale = glGetUniformLocation(prog, "scale");
     glUniform1f(scale, 128.0f);
 
+    GLint opacity = glGetUniformLocation(prog, "opacity");
+    glUniform1f(opacity, 1.0f);
+
     GLint translate = glGetUniformLocation(prog, "translate");
     glUniform2f(translate, 0.0f, 0.0f);
 
@@ -280,7 +307,7 @@ int main(int argc, char *argv[])
     glViewport(0, 0, width, height);
 
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Behave like an accumulation buffer
 
     State state =
     {
@@ -288,7 +315,7 @@ int main(int argc, char *argv[])
         PTHREAD_COND_INITIALIZER,
         true,
         true,
-        {0, {{0,0}}}
+        {0, {{0, {{0.0f, 0.0f}}}}}
     };
     MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
@@ -320,12 +347,31 @@ int main(int argc, char *argv[])
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        for (int p = 0; p < state.touch.points; ++p)
+        for (int f = 0; f < state.touch.fingers; ++f)
         {
-            // Note the 0.5f to convert from pixel middle to corner (GL)
-            glUniform2f(translate, state.touch.point[p].x + 0.5f,
-                                   state.touch.point[p].y + 0.5f);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            const Finger *finger = state.touch.finger + f;
+
+            if (!finger->samples)
+                continue;
+
+            glUniform1f(opacity, 1.0f / finger->samples);
+
+            for (int s = 0; s < finger->samples; ++s)
+            {
+                // Note the 0.5f to convert from pixel middle to corner (GL)
+                glUniform2f(translate, finger->sample[s].x + 0.5f,
+                                       finger->sample[s].y + 0.5f);
+                glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            }
+        }
+
+        // Just keep the latest sample for the zeroth finger (mouse pointer)
+        if (state.touch.fingers)
+        {
+            state.touch.finger[0].sample[0] =
+                state.touch.finger[0].sample[state.touch.finger[0].samples-1];
+            state.touch.finger[0].samples = 1;
+            state.touch.fingers = 1;
         }
 
         // Put the event loop back to sleep:
