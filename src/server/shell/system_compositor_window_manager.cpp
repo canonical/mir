@@ -18,15 +18,15 @@
 
 #include "mir/shell/system_compositor_window_manager.h"
 
-#include "mir/geometry/rectangle.h"
+#include "mir/shell/display_layout.h"
+#include "mir/shell/focus_controller.h"
 #include "mir/shell/surface_ready_observer.h"
+#include "mir/shell/surface_specification.h"
+
 #include "mir/scene/session.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
-#include "mir/shell/display_layout.h"
-#include "mir/shell/focus_controller.h"
-#include "mir/shell/surface_specification.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
