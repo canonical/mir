@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "validator.h"
+#include "mir/input/validator.h"
 
 #include "mir_toolkit/event.h"
 
