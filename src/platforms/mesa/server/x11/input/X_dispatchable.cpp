@@ -30,7 +30,7 @@ namespace mi = mir::input;
 namespace mix = mi::X;
 namespace md = mir::dispatch;
 
-extern ::Display *x_dpy;
+extern ::Display *x_display;
 
 mix::XDispatchable::XDispatchable(int raw_fd)
     : fd(raw_fd), sink(nullptr)
@@ -51,7 +51,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
 
     CALLED
 
-    XNextEvent(x_dpy, &xev);
+    XNextEvent(x_display, &xev);
 
     if (sink)
     {

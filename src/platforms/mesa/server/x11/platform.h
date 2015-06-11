@@ -22,6 +22,9 @@
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
 
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
 namespace mir
 {
 namespace graphics
@@ -33,6 +36,7 @@ class Platform : public graphics::Platform
 {
 public:
     explicit Platform();
+    virtual ~Platform();
 
     /* From Platform */
     std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
@@ -49,6 +53,7 @@ private:
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<mesa::helpers::DRMHelper> const drm;
     mesa::helpers::GBMHelper gbm;
+    ::Display *x_dpy;
 };
 
 }

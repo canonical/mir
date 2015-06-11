@@ -34,7 +34,7 @@ namespace doubles
 class FakeX11Resources
 {
 public:
-	FakeX11Resources();
+    FakeX11Resources();
     ~FakeX11Resources() = default;
 
     Display *display;
@@ -45,7 +45,7 @@ public:
 class MockX11
 {
 public:
-	MockX11();
+    MockX11();
     ~MockX11();
 
     MOCK_METHOD1(XOpenDisplay, Display*(const char*));

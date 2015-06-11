@@ -30,18 +30,7 @@ namespace mgm = mg::mesa;
 namespace mgx = mg::X;
 namespace mo = mir::options;
 
-::Display *x_dpy = nullptr;
-
-__attribute__((constructor)) static void open_X_display()
-{
-    x_dpy = XOpenDisplay(NULL);
-}
-
-__attribute__((destructor)) static void close_X_display()
-{
-    if (x_dpy)
-        XCloseDisplay(x_dpy);
-}
+::Display *x_display = nullptr;
 
 mgx::Platform::Platform()
     : udev{std::make_shared<mir::udev::Context>()},
@@ -49,8 +38,19 @@ mgx::Platform::Platform()
 {
    CALLED
 
+   x_dpy = XOpenDisplay(NULL);
+   if (!x_dpy)
+       BOOST_THROW_EXCEPTION(std::runtime_error("Cannot open X display"));
+   x_display = x_dpy;
+
    drm->setup(udev);
    gbm.setup(*drm);
+}
+
+mgx::Platform::~Platform()
+{
+    XCloseDisplay(x_dpy);
+    x_display = nullptr;
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator()
@@ -117,8 +117,10 @@ extern "C" mg::PlatformPriority probe_graphics_platform()
 {
     CALLED
 
-    if (x_dpy)
+    auto dpy = XOpenDisplay(NULL);
+    if (dpy)
     {
+        XCloseDisplay(dpy);
         auto udev = std::make_shared<mir::udev::Context>();
 
         mir::udev::Enumerator drm_devices{udev};

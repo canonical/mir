@@ -24,10 +24,10 @@ namespace mi = mir::input;
 namespace mix = mi::X;
 namespace md = mir::dispatch;
 
-extern ::Display *x_dpy;
+extern ::Display *x_display;
 
 mix::XInputDevice::XInputDevice()
-    : fd(XConnectionNumber(x_dpy)), x_dispatchable(std::make_shared<mix::XDispatchable>(fd))
+    : fd(XConnectionNumber(x_display)), x_dispatchable(std::make_shared<mix::XDispatchable>(fd))
 {
     CALLED
 }
