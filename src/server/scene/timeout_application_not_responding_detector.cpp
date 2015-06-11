@@ -78,8 +78,9 @@ void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::pong_received(
-   Session const& /*received_for*/)
+   Session const& received_for)
 {
+    sessions.at(&received_for)->replied_since_last_ping = true;
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::register_observer(
