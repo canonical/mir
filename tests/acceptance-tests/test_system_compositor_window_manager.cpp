@@ -172,9 +172,11 @@ TEST_F(SystemCompositorWindowManager, when_output_ID_not_specified_surfaces_crea
     EXPECT_THAT(mir_surface_get_error_message(surface), HasSubstr("Failed to place surface"));
 }
 
-TEST_F(SystemCompositorWindowManager, surface_gets_focus_after_it_posts)
+TEST_F(SystemCompositorWindowManager, if_a_surface_posts_client_gets_focus)
 {
     auto client = connect_client();
+
+    // Throw away all uninteresting surface events
     EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_surface_focused)))).Times(AnyNumber());
 
     auto surface = client.create_surface(1);
@@ -187,4 +189,19 @@ TEST_F(SystemCompositorWindowManager, surface_gets_focus_after_it_posts)
     surface.post_buffer();
 
     signal.wait_for(1s);
+}
+
+TEST_F(SystemCompositorWindowManager, if_no_surface_posts_client_never_gets_focus)
+{
+    auto client = connect_client();
+    auto surface = client.create_surface(1);
+
+    mt::Signal signal;
+
+    ON_CALL(client, surface_event(_, MirFocusEvent(mir_surface_focused)))
+            .WillByDefault(InvokeWithoutArgs([&] { signal.raise(); }));
+
+    EXPECT_CALL(client, surface_event(_, MirFocusEvent(mir_surface_focused))).Times(0);
+
+    signal.wait_for(100ms);
 }
