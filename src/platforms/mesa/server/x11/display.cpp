@@ -44,7 +44,6 @@ mgx::Display::Display(::Display *dpy)
     XVisualInfo *visInfo, visTemplate;
     XSetWindowAttributes attr;
     int num_visuals;
-    int scrno;
     unsigned long mask;
     char const * const title = "Mir On X";
 
@@ -76,8 +75,7 @@ mgx::Display::Display(::Display *dpy)
        EGL_NONE
     };
 
-    scrno = DefaultScreen(x_dpy);
-    root = RootWindow(x_dpy, scrno);
+    root = XDefaultRootWindow(x_dpy);
 
     if (!eglChooseConfig(egl_dpy, att, &config, 1, &num_configs))
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot get an EGL config"));

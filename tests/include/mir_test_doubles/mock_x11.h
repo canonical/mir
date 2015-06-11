@@ -53,9 +53,9 @@ public:
     MOCK_METHOD4(XGetVisualInfo, XVisualInfo*(Display*, long, XVisualInfo*, int*));
     MOCK_METHOD4(XCreateColormap, Colormap(Display*, Window, Visual*, int));
     /* Too long to mock, use wrapper instead.
-    MOCK_METHOD12(XCreateWindow, Colormap(Display*, Window, int, int, unsigned int, unsigned int, unsigned int, int, unsigned int, Visual*, unsigned long, XSetWindowAttributes*));
+    MOCK_METHOD12(XCreateWindow, Window(Display*, Window, int, int, unsigned int, unsigned int, unsigned int, int, unsigned int, Visual*, unsigned long, XSetWindowAttributes*));
     */
-    MOCK_METHOD10(XCreateWindow_wrapper, Colormap(Display*, Window, unsigned int, unsigned int, unsigned int, int, unsigned int, Visual*, unsigned long, XSetWindowAttributes*));
+    MOCK_METHOD10(XCreateWindow_wrapper, Window(Display*, Window, unsigned int, unsigned int, unsigned int, int, unsigned int, Visual*, unsigned long, XSetWindowAttributes*));
     MOCK_METHOD3(XSetNormalHints, int(Display*, Window, XSizeHints*));
     MOCK_METHOD8(XSetStandardProperties, int(Display*, Window, const char*, const char*, Pixmap, char **, int, XSizeHints*));
     MOCK_METHOD1(XFree, int(void*));
@@ -65,6 +65,7 @@ public:
     MOCK_METHOD2(XNextEvent, int(Display*, XEvent*));
     MOCK_METHOD5(XLookupString, int(XKeyEvent*, char*, int, KeySym*, XComposeStatus*));
     MOCK_METHOD1(XRefreshKeyboardMapping, int(XMappingEvent*));
+    MOCK_METHOD1(XDefaultRootWindow, Window(Display *));
 
     FakeX11Resources fake_x11;
 };

@@ -126,3 +126,8 @@ int XRefreshKeyboardMapping(XMappingEvent *event_map)
 {
     return global_mock->XRefreshKeyboardMapping(event_map);
 }
+
+Window XDefaultRootWindow(Display *display)
+{
+    return global_mock->XDefaultRootWindow(display);
+}
