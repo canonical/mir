@@ -21,6 +21,7 @@
 
 #include "mir/compositor/renderer.h"
 #include "mir/graphics/renderable.h"
+#include <thread>
 
 namespace mir
 {
@@ -44,6 +45,8 @@ public:
     {
         for (auto const& r : renderables)
             r->buffer(); // We need to consume a buffer to unblock client tests
+        // Yield to reduce runtime under valgrind
+        std::this_thread::yield();
     }
 
     void suspend() override
