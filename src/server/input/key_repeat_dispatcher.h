@@ -41,6 +41,7 @@ class KeyRepeatDispatcher : public mir::input::InputDispatcher
 public:
     KeyRepeatDispatcher(std::shared_ptr<InputDispatcher> const& next_dispatcher,
                         std::shared_ptr<time::AlarmFactory> const& factory,
+			bool repeat_enabled,
                         std::chrono::milliseconds repeat_timeout);
 
     // InputDispatcher
@@ -53,6 +54,7 @@ private:
 
     std::shared_ptr<InputDispatcher> const next_dispatcher;
     std::shared_ptr<time::AlarmFactory> const alarm_factory;
+    bool const repeat_enabled;
     std::chrono::milliseconds repeat_timeout;
 
     struct KeyboardState
