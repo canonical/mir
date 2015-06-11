@@ -274,7 +274,7 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
-    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Session> const& /*session*/,
     std::shared_ptr<scene::Surface> const& surface,
     SurfaceSpecification const& modifications)
 {
@@ -282,12 +282,8 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
     auto surface_info = surface_info_old;
 
-    // TODO (modifications.parent ought to be set, but isn't)
-    if (modifications.parent_id.is_set())
-        surface_info.parent = session->surface(modifications.parent_id.value());
-//
-//    if (modifications.parent.is_set())
-//        surface_info.parent = modifications.parent.value();
+    if (modifications.parent.is_set())
+        surface_info.parent = modifications.parent.value();
 
     if (modifications.type.is_set() &&
         surface_info.type != modifications.type.value())
@@ -304,7 +300,7 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
             case mir_surface_type_utility:
             case mir_surface_type_dialog:
             case mir_surface_type_satellite:
-                if (modifications.parent_id.is_set())
+                if (modifications.parent.is_set())
                     throw std::runtime_error("Target surface type does not support parent");
                 break;
 
