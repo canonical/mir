@@ -20,9 +20,11 @@
 #define MIR_SCENE_TIMOUT_APPLICATION_NOT_RESPONDING_DETECTOR_
 
 #include "mir/scene/application_not_responding_detector.h"
+#include "mir/basic_observers.h"
 
 #include <chrono>
 #include <unordered_map>
+#include <functional>
 
 namespace mir
 {
@@ -59,8 +61,20 @@ public:
 
     void pong_received(Session const& received_for) override;
 
+    void register_observer(std::shared_ptr<Observer> const& observer) override;
 private:
-    std::unordered_map<Session const*, std::function<void()>> sessions;
+    struct ANRContext;
+
+    class ANRObservers : public Observer, private BasicObservers<Observer>
+    {
+    public:
+        using BasicObservers<Observer>::add;
+        using BasicObservers<Observer>::remove;
+
+        void session_unresponsive(Session const* session) override;
+    } observers;
+
+    std::unordered_map<Session const*, std::unique_ptr<ANRContext>> sessions;
     std::unique_ptr<time::Alarm> const alarm;
 };
 }

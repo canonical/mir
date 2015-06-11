@@ -34,9 +34,20 @@ public:
     ApplicationNotRespondingDetector() = default;
     virtual ~ApplicationNotRespondingDetector() = default;
 
+    class Observer
+    {
+    public:
+        Observer() = default;
+        virtual ~Observer() = default;
+
+        virtual void session_unresponsive(Session const* session) = 0;
+    };
+
     virtual void register_session(Session const& session, std::function<void()> const& pinger) = 0;
     virtual void unregister_session(Session const& session) = 0;
     virtual void pong_received(Session const& received_for) = 0;
+
+    virtual void register_observer(std::shared_ptr<Observer> const& observer) = 0;
 };
 }
 }

@@ -20,10 +20,26 @@
 
 #include "mir/time/alarm_factory.h"
 
-#include <iostream>
-
 namespace ms = mir::scene;
 namespace mt = mir::time;
+
+struct ms::TimeoutApplicationNotRespondingDetector::ANRContext
+{
+    ANRContext(std::function<void()> const& pinger)
+        : pinger{pinger},
+          replied_since_last_ping{true}
+    {
+    }
+
+    std::function<void()> const pinger;
+    bool replied_since_last_ping;
+};
+
+void ms::TimeoutApplicationNotRespondingDetector::ANRObservers::session_unresponsive(
+    Session const* session)
+{
+    for_each([session](auto const& observer) { observer->session_unresponsive(session); });
+}
 
 ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDetector(
     mt::AlarmFactory& alarms,
@@ -32,7 +48,12 @@ ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDete
           {
               for (auto const& session_pair : sessions)
               {
-                  session_pair.second();
+                  if (!session_pair.second->replied_since_last_ping)
+                  {
+                      observers.session_unresponsive(session_pair.first);
+                  }
+                  session_pair.second->pinger();
+                  session_pair.second->replied_since_last_ping = false;
               }
               this->alarm->reschedule_in(period);
           })}
@@ -47,7 +68,7 @@ ms::TimeoutApplicationNotRespondingDetector::~TimeoutApplicationNotRespondingDet
 void ms::TimeoutApplicationNotRespondingDetector::register_session(
     Session const& session, std::function<void()> const& pinger)
 {
-    sessions[&session] = pinger;
+    sessions[&session] = std::make_unique<ANRContext>(pinger);
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
@@ -59,4 +80,10 @@ void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
 void ms::TimeoutApplicationNotRespondingDetector::pong_received(
    Session const& /*received_for*/)
 {
+}
+
+void ms::TimeoutApplicationNotRespondingDetector::register_observer(
+    std::shared_ptr<Observer> const& observer)
+{
+    observers.add(observer);
 }
