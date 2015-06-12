@@ -30,6 +30,7 @@
 #include <stdexcept>
 #include <chrono>
 #include <thread>
+#include <mutex>
 
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
@@ -88,6 +89,19 @@ void ensure_egl_image_extensions()
         BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support GL_OES_EGL_image extension"));
 }
 
+std::once_flag checked_environment;
+std::chrono::milliseconds force_bypass_sleep(-1);
+
+void check_environment()
+{
+    std::call_once(checked_environment, []()
+    {
+        char const* env = getenv("MIR_DRIVER_FORCE_BYPASS_SLEEP");
+        if (env != NULL)
+            force_bypass_sleep = std::chrono::milliseconds(atoi(env));
+    });
+}
+
 }
 
 mgm::DisplayBuffer::DisplayBuffer(
@@ -112,6 +126,8 @@ mgm::DisplayBuffer::DisplayBuffer(
       needs_set_crtc{false},
       page_flips_pending{false}
 {
+    check_environment();
+
     uint32_t area_width = area.size.width.as_uint32_t();
     uint32_t area_height = area.size.height.as_uint32_t();
     if (rotation == mir_orientation_left || rotation == mir_orientation_right)
@@ -343,12 +359,18 @@ void mgm::DisplayBuffer::post()
      */
     if (outputs.size() == 1)
     {
-        auto const& output = outputs.front();
-        auto const min_frame_interval = 1000ms / output->max_refresh_rate();
-        auto const delay = min_frame_interval - predicted_render_time;
-
-        if (delay > 0ms)
-            std::this_thread::sleep_for(delay);
+        if (force_bypass_sleep >= 0ms)
+        {
+            std::this_thread::sleep_for(force_bypass_sleep);
+        }
+        else
+        {
+            auto const& output = outputs.front();
+            auto const min_frame_interval = 1000ms / output->max_refresh_rate();
+            auto const delay = min_frame_interval - predicted_render_time;
+            if (delay > 0ms)
+                std::this_thread::sleep_for(delay);
+        }
     }
 }
 
