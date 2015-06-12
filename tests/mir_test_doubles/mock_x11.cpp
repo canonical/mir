@@ -29,9 +29,10 @@ mtd::MockX11* global_mock = nullptr;
 
 mtd::FakeX11Resources::FakeX11Resources()
     : display{reinterpret_cast<Display*>(0x12345678)},
-      visual_info{reinterpret_cast<XVisualInfo*>(0xabcd1234)},
-      event_return{reinterpret_cast<XEvent*>(0x87654321)}
+      event_return{reinterpret_cast<XEvent*>(0x87654321)},
+      window{reinterpret_cast<Window>((long unsigned int)9876543210)}
 {
+    visual_info.depth=24;
 }
 
 mtd::MockX11::MockX11()
@@ -44,8 +45,11 @@ mtd::MockX11::MockX11()
     ON_CALL(*this, XOpenDisplay(_))
     .WillByDefault(Return(fake_x11.display));
 
-//    ON_CALL(*this, XGetVisualInfo(fake_x11.display,_,_,_))
-//    .WillByDefault(Return(fake_x11.visual_info));
+    ON_CALL(*this, XGetVisualInfo(fake_x11.display,_,_,_))
+    .WillByDefault(Return(&fake_x11.visual_info));
+
+    ON_CALL(*this, XCreateWindow_wrapper(fake_x11.display,_,_,_,_,_,_,_,_,_))
+    .WillByDefault(Return(fake_x11.window));
 
 //    ON_CALL(*this, XNextEvent(fake_x11.display,_))
 //    .WillByDefault(SetArgPointee<1>(fake_x11.event_return));
