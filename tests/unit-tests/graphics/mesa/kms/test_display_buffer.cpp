@@ -78,6 +78,8 @@ public:
             .WillByDefault(Return(true));
         ON_CALL(*mock_kms_output, schedule_page_flip(_))
             .WillByDefault(Return(true));
+        ON_CALL(*mock_kms_output, max_refresh_rate())
+            .WillByDefault(Return(60));
 
         ON_CALL(*mock_bypassable_buffer, size())
             .WillByDefault(Return(display_area.size));
