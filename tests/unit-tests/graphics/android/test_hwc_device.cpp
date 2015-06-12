@@ -439,6 +439,30 @@ TEST_F(HwcDevice, owns_overlay_buffers_until_next_set)
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
 
+TEST_F(HwcDevice, overlays_are_throttled_per_predictive_bypass)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, prepare(_))
+        .WillOnce(Invoke(set_all_layers_to_overlay))
+        .WillOnce(Return());
+
+    mga::HwcDevice device(mock_device);
+
+    mga::LayerList list(layer_adapter, {stub_renderable1}, {0,0});
+    mga::DisplayContents content{primary, list, offset, stub_context,
+                                 stub_compositor};
+
+    for (int frame = 0; frame < 5; ++frame)
+    {
+        using namespace std::chrono;
+        auto start = system_clock::now();
+        device.commit({content});
+        auto duration = system_clock::now() - start;
+        // Duration cast to a simple type so that test failures are readable
+        ASSERT_THAT(duration_cast<milliseconds>(duration).count(), Ge(8));
+    }
+}
+
 TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_without_update)
 {
     using namespace testing;
