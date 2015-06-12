@@ -156,11 +156,10 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
          * time to update itself and better match (ie. "stick to") the cursor
          * above it.
          */
-        // TODO: More device testing
-
         // Test results (how long can we sleep for without missing a frame?):
-        //   arale: 10ms  (why is arale so slow?!)
-        //   mako:  15ms
+        //   arale:   10ms  (TODO: Find out why arale is so slow)
+        //   mako:    15ms
+        //   krillin: 11ms (to be fair, the display is 67Hz)
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
