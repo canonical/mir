@@ -336,7 +336,7 @@ void mgm::DisplayBuffer::post()
      * likelihood the next one will be too. If it is then we can reduce
      * the latency of that next frame (make the compositor sample the
      * scene later) by almost a whole frame. Because we don't need to
-     * spare any time for rendering. Just a millisecond at most for the
+     * spare any time for rendering. Just milliseconds at most for the
      * kernel to get around to scheduling a pageflip. Note: this prediction
      * only works for non-clone modes as the full set of outputs must be
      * perfectly in phase and we only know how to guarantee that with one.
