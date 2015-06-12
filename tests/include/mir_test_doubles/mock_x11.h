@@ -65,7 +65,7 @@ public:
     MOCK_METHOD2(XNextEvent, int(Display*, XEvent*));
     MOCK_METHOD5(XLookupString, int(XKeyEvent*, char*, int, KeySym*, XComposeStatus*));
     MOCK_METHOD1(XRefreshKeyboardMapping, int(XMappingEvent*));
-    MOCK_METHOD1(XDefaultRootWindow, Window(Display *));
+    MOCK_METHOD1(XDefaultRootWindow, Window(Display*));
 
     FakeX11Resources fake_x11;
 };
