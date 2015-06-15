@@ -248,22 +248,22 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
     }
 
-    bool generate_buffer(mp::DisplayServer& server, mp::BufferStreamParameters& request)
+    bool allocate_buffers(mp::DisplayServer& server, mp::BufferAllocationRequest& request)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
-        server.generate_buffer(0, &request, &v,
+        server.allocate_buffers(0, &request, &v,
             google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
         
         arrived = false;
         return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
     }
 
-    bool release_buffer(mp::DisplayServer& server, mp::Buffer& request)
+    bool release_buffers(mp::DisplayServer& server, mp::BufferReleaseRequest& request)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
-        server.release_buffer(0, &request, &v,
+        server.release_buffers(0, &request, &v,
             google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
         
         arrived = false;
@@ -360,7 +360,7 @@ TEST_F(ExchangeBufferTest, submissions_happen)
 }
 
 //TODO: check that a buffer arrives asynchronously.
-TEST_F(ExchangeBufferTest, generate_buffer_doesnt_time_out)
+TEST_F(ExchangeBufferTest, allocate_buffers_doesnt_time_out)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(connection);
@@ -369,14 +369,14 @@ TEST_F(ExchangeBufferTest, generate_buffer_doesnt_time_out)
     mp::DisplayServer::Stub server(
         rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
 
-    mp::BufferStreamParameters request;
-    EXPECT_THAT(generate_buffer(server, request), DidNotTimeOut());
+    mp::BufferAllocationRequest request;
+    EXPECT_THAT(allocate_buffers(server, request), DidNotTimeOut());
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
 
-TEST_F(ExchangeBufferTest, release_buffer_doesnt_time_out)
+TEST_F(ExchangeBufferTest, release_buffers_doesnt_time_out)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(connection);
@@ -385,8 +385,8 @@ TEST_F(ExchangeBufferTest, release_buffer_doesnt_time_out)
     mp::DisplayServer::Stub server(
         rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
 
-    mp::Buffer request;
-    EXPECT_THAT(release_buffer(server, request), DidNotTimeOut());
+    mp::BufferReleaseRequest request;
+    EXPECT_THAT(release_buffers(server, request), DidNotTimeOut());
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
