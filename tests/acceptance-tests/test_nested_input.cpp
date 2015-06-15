@@ -142,7 +142,7 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
 
     InSequence seq;
     EXPECT_CALL(*nested_mir.mock_event_filter, handle(mt::KeyOfScanCode(KEY_A))).
-        Times(AtLeast(0)).
+        Times(AtLeast(1)).
         WillRepeatedly(DoAll(InvokeWithoutArgs(increase_key_a_events), Return(true)));
 
     EXPECT_CALL(*nested_mir.mock_event_filter, handle(mt::KeyOfScanCode(KEY_RIGHTSHIFT))).
