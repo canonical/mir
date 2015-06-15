@@ -151,6 +151,26 @@ mir::EventUPtr remove_id_from(MirTouchEvent const* ev, MirTouchId id_to_remove)
     }
     return ret;
 }
+mir::EventUPtr remove_old_releases_from(MirTouchEvent const* ev)
+{
+    auto ret = copy_event(ev);
+    ret->motion.pointer_count = 0;
+    for (size_t i = 0; i < mir_touch_event_point_count(ev); i++)
+    {
+        auto action = mir_touch_event_action(ev, i);
+        if (action == mir_touch_action_up)
+            continue;
+        mev::add_touch(*ret, mir_touch_event_id(ev, i), mir_touch_event_action(ev, i),
+            mir_touch_event_tooltype(ev, i),
+            mir_touch_event_axis_value(ev, i, mir_touch_axis_x),
+            mir_touch_event_axis_value(ev, i, mir_touch_axis_y),
+            mir_touch_event_axis_value(ev, i, mir_touch_axis_pressure),
+            mir_touch_event_axis_value(ev, i, mir_touch_axis_touch_major),
+            mir_touch_event_axis_value(ev, i, mir_touch_axis_touch_minor),
+            mir_touch_event_axis_value(ev, i, mir_touch_axis_size));
+    }
+    return ret;
+}
 }
 
 typedef std::unordered_set<MirTouchId> TouchSet;
@@ -175,7 +195,7 @@ void mi::Validator::ensure_stream_validity_locked(std::lock_guard<std::mutex> co
 
     // Insert missing touch releases
     TouchSet missing;
-    auto last_ev_copy = convert_touch_actions_to_change(last_ev);
+    auto last_ev_copy = remove_old_releases_from(last_ev);
     for (auto const& expected_id : expected)
     {
         if (found.find(expected_id) == found.end())
