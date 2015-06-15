@@ -29,10 +29,10 @@ mtd::MockX11* global_mock = nullptr;
 
 mtd::FakeX11Resources::FakeX11Resources()
     : display{reinterpret_cast<Display*>(0x12345678)},
-      event_return{reinterpret_cast<XEvent*>(0x87654321)},
       window{reinterpret_cast<Window>((long unsigned int)9876543210)}
 {
     visual_info.depth=24;
+    event_return.type = KeyPress;
 }
 
 mtd::MockX11::MockX11()
@@ -50,9 +50,6 @@ mtd::MockX11::MockX11()
 
     ON_CALL(*this, XCreateWindow_wrapper(fake_x11.display,_,_,_,_,_,_,_,_,_))
     .WillByDefault(Return(fake_x11.window));
-
-//    ON_CALL(*this, XNextEvent(fake_x11.display,_))
-//    .WillByDefault(SetArgPointee<1>(fake_x11.event_return));
 }
 
 mtd::MockX11::~MockX11()

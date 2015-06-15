@@ -38,9 +38,9 @@ public:
     ~FakeX11Resources() = default;
 
     Display *display;
-    XEvent *event_return;
     Window window;
     XVisualInfo visual_info;
+    XEvent event_return;
 };
 
 class MockX11
