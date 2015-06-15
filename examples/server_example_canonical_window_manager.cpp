@@ -256,8 +256,6 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 //TODO: this is painful to use mg::Buffer::write()
 void mir::examples::CanonicalSurfaceInfoCopy::paint_titlebar(int intensity)
 {
-    std::function<void(mir::graphics::Buffer* new_buffer)> callback;
-
     if (auto const buf = this->buffer.load())
     {
         auto const format = buffer_stream->pixel_format();
@@ -266,20 +264,15 @@ void mir::examples::CanonicalSurfaceInfoCopy::paint_titlebar(int intensity)
 
         std::vector<unsigned char> pixels(sz, intensity);
         buf->write(pixels.data(), sz);
+    }
 
-        callback = [this](mir::graphics::Buffer* new_buffer)
-            {
-                buffer.store(new_buffer);
-            };
-    }
-    else
-    {
-        callback = [this, intensity](mir::graphics::Buffer* new_buffer)
-            {
-                buffer.store(new_buffer);
+    auto const callback = [this, intensity](mir::graphics::Buffer* new_buffer)
+        {
+            bool const first_time = !buffer;
+            buffer.store(new_buffer);
+            if (first_time)
                 paint_titlebar(intensity);
-            };
-    }
+        };
 
     buffer_stream->swap_buffers(buffer, callback);
 }
