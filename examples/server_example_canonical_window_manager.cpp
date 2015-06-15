@@ -303,6 +303,19 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Surface> const& surface,
     CanonicalSurfaceInfoMap& surface_map)
 {
+    switch (surface->type())
+    {
+    case mir_surface_type_freestyle:
+    case mir_surface_type_menu:
+    case mir_surface_type_inputmethod:
+    case mir_surface_type_gloss:
+    case mir_surface_type_tip:
+        // No decorations for these surface types
+        return;
+    default:
+        break;
+    }
+
     auto format = mir_pixel_format_xrgb_8888;
     ms::SurfaceCreationParameters params;
     params.of_size(titlebar_size_for_window(surface->size()))
@@ -317,6 +330,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
 
     auto& surface_info = tools->info_for(surface);
     surface_info.titlebar = titlebar;
+    surface_info.titlebar_id = id;
     surface_info.children.push_back(titlebar);
 
     CanonicalSurfaceInfoCopy titlebar_info{session, titlebar, ms::SurfaceCreationParameters{}};
@@ -413,7 +427,9 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
 void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
-    if (auto const parent = tools->info_for(surface).parent.lock())
+    auto& info = tools->info_for(surface);
+
+    if (auto const parent = info.parent.lock())
     {
         auto& siblings = tools->info_for(parent).children;
 
@@ -426,6 +442,9 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
             }
         }
     }
+
+    if (info.titlebar)
+        session->destroy_surface(info.titlebar_id);
 
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
@@ -446,6 +465,8 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
     case mir_surface_state_vertmaximized:
     case mir_surface_state_horizmaximized:
     case mir_surface_state_fullscreen:
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
         break;
 
     default:
@@ -470,27 +491,35 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
     case mir_surface_state_restored:
         movement = info.restore_rect.top_left - old_pos;
         surface->resize(info.restore_rect.size);
-        info.titlebar->resize(titlebar_size_for_window(info.restore_rect.size));
-        info.titlebar->show();
+        if (info.titlebar)
+        {
+            info.titlebar->resize(titlebar_size_for_window(info.restore_rect.size));
+            info.titlebar->show();
+        }
         break;
 
     case mir_surface_state_maximized:
         movement = display_area.top_left - old_pos;
         surface->resize(display_area.size);
-        info.titlebar->hide();
+        if (info.titlebar)
+            info.titlebar->hide();
         break;
 
     case mir_surface_state_horizmaximized:
         movement = Point{display_area.top_left.x, info.restore_rect.top_left.y} - old_pos;
         surface->resize({display_area.size.width, info.restore_rect.size.height});
-        info.titlebar->resize(titlebar_size_for_window({display_area.size.width, info.restore_rect.size.height}));
-        info.titlebar->show();
+        if (info.titlebar)
+        {
+            info.titlebar->resize(titlebar_size_for_window({display_area.size.width, info.restore_rect.size.height}));
+            info.titlebar->show();
+        }
         break;
 
     case mir_surface_state_vertmaximized:
         movement = Point{info.restore_rect.top_left.x, display_area.top_left.y} - old_pos;
         surface->resize({info.restore_rect.size.width, display_area.size.height});
-        info.titlebar->hide();
+        if (info.titlebar)
+            info.titlebar->hide();
         break;
 
     case mir_surface_state_fullscreen:
@@ -499,7 +528,16 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
         display_layout->size_to_output(rect);
         movement = rect.top_left - old_pos;
         surface->resize(rect.size);
+        break;
     }
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
+        if (info.titlebar)
+            info.titlebar->hide();
+        surface->hide();
+        info.state = value;
+        // Map minimized to hidden, otherwise surface goes visible again.
+        return mir_surface_state_hidden;
 
     default:
         break;
@@ -936,7 +974,8 @@ bool me::CanonicalWindowManagerPolicyCopy::constrained_resize(
         return true;
     }
 
-    surface_info.titlebar->resize({new_size.width, Height{title_bar_height}});
+    if (surface_info.titlebar)
+        surface_info.titlebar->resize({new_size.width, Height{title_bar_height}});
     surface->resize(new_size);
 
     // TODO It is rather simplistic to move a tree WRT the top_left of the root
