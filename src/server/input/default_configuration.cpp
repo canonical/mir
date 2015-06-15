@@ -224,10 +224,11 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
     std::chrono::milliseconds const key_repeat_timeout{20};
 
     auto const options = the_options();
-    if (!options->get<bool>(options::enable_key_repeat_opt))
-        return the_event_filter_chain_dispatcher();
-    else
-        return std::make_shared<mi::KeyRepeatDispatcher>(the_event_filter_chain_dispatcher(), the_main_loop(), key_repeat_timeout);
+    auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
+
+    return std::make_shared<mi::KeyRepeatDispatcher>(
+        the_event_filter_chain_dispatcher(), the_main_loop(), enable_repeat,
+	key_repeat_timeout);
 }
 
 std::shared_ptr<droidinput::EventHubInterface>

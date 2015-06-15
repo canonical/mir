@@ -16,14 +16,14 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "clients.h"
-
-#include "mir/shell/shell_wrapper.h"
-#include "mir/graphics/display.h"
 #include "mir/shell/input_targeter.h"
+#include "mir/shell/shell_wrapper.h"
 
-#include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_input_targeter.h"
+
+#include "mir_test_framework/any_surface.h"
+#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/testing_server_configuration.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -31,10 +31,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mi = mir::input;
-namespace mt = mir::test;
-namespace mtd = mt::doubles;
-namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
 using namespace testing;
@@ -74,74 +71,70 @@ private:
     void unmocked_close_session(std::shared_ptr<ms::Session> const& session)
     { msh::ShellWrapper::close_session(session); }
 };
+
+struct ServerConfig : mtf::TestingServerConfiguration
+{
+    std::shared_ptr<msh::Shell>
+    wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) override
+    {
+        mock_shell = std::make_shared<NiceMock<MockShell>>(wrapped);
+
+        return mock_shell;
+    }
+
+    std::shared_ptr<msh::InputTargeter> the_input_targeter() override
+    {
+        return mock_input_targeter;
+    }
+
+    std::shared_ptr<NiceMock<MockShell>> mock_shell;
+    std::shared_ptr<NiceMock<mtd::MockInputTargeter>> const mock_input_targeter =
+        std::make_shared<NiceMock<mtd::MockInputTargeter>>();
+};
+
+struct FocusSelection : mtf::InProcessServer
+{
+    mir::DefaultServerConfiguration& server_config() override
+    {
+        return server_configuration;
+    }
+
+    MockShell& the_mock_shell()
+    {
+        return *server_configuration.mock_shell;
+    }
+
+    mtd::MockInputTargeter& the_mock_input_targeter()
+    {
+        return *server_configuration.mock_input_targeter;
+    }
+
+    ServerConfig server_configuration;
+};
 }
 
-using FocusSelection = BespokeDisplayServerTestFixture;
-
-TEST_F(FocusSelection, when_surface_created_shell_is_notified_of_session)
+TEST_F(FocusSelection, when_client_connects_shell_is_notified_of_session)
 {
-    struct ServerConfig : TestingServerConfiguration
-    {
-        std::shared_ptr<msh::Shell>
-        wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) override
-        {
-            sm = std::make_shared<MockShell>(wrapped);
+    InSequence seq;
+    EXPECT_CALL(the_mock_shell(), open_session(_, _, _));
+    EXPECT_CALL(the_mock_shell(), close_session(NonNullSession()));
 
-            InSequence seq;
-            EXPECT_CALL(*sm, open_session(_, _, _));
-            EXPECT_CALL(*sm, close_session(NonNullSession()));
-
-            return sm;
-        }
-
-        std::shared_ptr<MockShell> sm;
-    } server_config;
-
-    launch_server_process(server_config);
-
-    mtf::SurfaceCreatingClient client;
-
-    launch_client_process(client);
+    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    ASSERT_TRUE(mir_connection_is_valid(connection));
+    mir_connection_release(connection);
 }
 
-TEST_F(FocusSelection, when_surface_created_input_focus_is_set)
+TEST_F(FocusSelection, when_surface_gets_valid_contents_input_focus_is_set)
 {
-    struct ServerConfig : TestingServerConfiguration
-    {
-        std::shared_ptr<mtd::MockInputTargeter> targeter;
-        bool expected;
+    EXPECT_CALL(the_mock_input_targeter(), clear_focus()).Times(AtLeast(0));
+    EXPECT_CALL(the_mock_input_targeter(), set_focus(_)).Times(1);
 
-        ServerConfig()
-          : targeter(std::make_shared<mtd::MockInputTargeter>()),
-            expected(false)
-        {
-        }
+    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    ASSERT_TRUE(mir_connection_is_valid(connection));
 
-        std::shared_ptr<msh::InputTargeter>
-        the_input_targeter() override
-        {
-            using namespace ::testing;
+    auto const surface = mtf::make_any_surface(connection);
+    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+    mir_surface_release_sync(surface);
 
-            if (!expected)
-            {
-
-                EXPECT_CALL(*targeter, clear_focus()).Times(AtLeast(0));
-
-                {
-                    InSequence seq;
-                    EXPECT_CALL(*targeter, set_focus(_)).Times(1);
-                    expected = true;
-                }
-            }
-
-            return targeter;
-        }
-    } server_config;
-
-
-    launch_server_process(server_config);
-
-    mtf::SurfaceCreatingClient client;
-
-    launch_client_process(client);
+    mir_connection_release(connection);
 }
