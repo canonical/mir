@@ -329,6 +329,8 @@ service DisplayServer {
   rpc exchange_buffer(BufferRequest) returns (Buffer);
 
   rpc submit_buffer(BufferRequest) returns (Void);
+  rpc generate_buffer(BufferStreamParameters) returns (Void);
+  rpc release_buffer(Buffer) returns (Void);
 
   rpc request_persistent_surface_id(SurfaceId) returns (PersistentSurfaceId);
 }
