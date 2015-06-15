@@ -326,7 +326,7 @@ public:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
     virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
     virtual std::shared_ptr<input::InputDeviceHub> the_input_device_hub();
-    virtual std::shared_ptr<input::SurfaceInputDispatcher> the_new_input_dispatcher();
+    virtual std::shared_ptr<input::SurfaceInputDispatcher> the_surface_input_dispatcher();
     /** @} */
 
     /** @name logging configuration - customization
@@ -375,7 +375,7 @@ protected:
     CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
-    CachedPtr<input::SurfaceInputDispatcher>    new_input_dispatcher;
+    CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
     CachedPtr<input::Platform>    input_platform; // currently not used by default
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;

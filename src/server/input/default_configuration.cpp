@@ -93,7 +93,7 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
         [this]() -> std::shared_ptr<mi::EventFilterChainDispatcher>
         {
             std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
-            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_new_input_dispatcher());
+            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_surface_input_dispatcher());
         });
 }
 
@@ -141,14 +141,14 @@ mir::DefaultServerConfiguration::the_input_targeter()
             if (!options->get<bool>(options::enable_input_opt))
                 return std::make_shared<mi::NullInputTargeter>();
             else
-                return the_new_input_dispatcher();
+                return the_surface_input_dispatcher();
         });
 }
 
 std::shared_ptr<mi::SurfaceInputDispatcher>
-mir::DefaultServerConfiguration::the_new_input_dispatcher()
+mir::DefaultServerConfiguration::the_surface_input_dispatcher()
 {
-    return new_input_dispatcher(
+    return surface_input_dispatcher(
         [this]()
         {
             return std::make_shared<mi::SurfaceInputDispatcher>(the_input_scene());
