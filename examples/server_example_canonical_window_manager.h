@@ -66,6 +66,7 @@ struct CanonicalSurfaceInfoCopy
 private:
     std::shared_ptr<frontend::BufferStream> const buffer_stream;
 
+    // Add copy-ctor to std::atomic
     struct AtomicBufferPtr : std::atomic<graphics::Buffer*>
     {
         using std::atomic<graphics::Buffer*>::atomic;
