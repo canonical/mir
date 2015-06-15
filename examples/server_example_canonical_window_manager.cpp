@@ -72,7 +72,8 @@ me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
     width_inc{params.width_inc},
     height_inc{params.height_inc},
     min_aspect{params.min_aspect},
-    max_aspect{params.max_aspect}
+    max_aspect{params.max_aspect},
+    buffer_stream(surface->primary_buffer_stream())
 {
 }
 
@@ -253,49 +254,34 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
 //TODO: provide an easier way for the server to write to a surface!
 //TODO: this is painful to use mg::Buffer::write()
-namespace
+void mir::examples::CanonicalSurfaceInfoCopy::paint_titlebar(int intensity)
 {
-void swap_buffers(
-    std::shared_ptr<ms::Surface> const& surface,
-    mir::graphics::Buffer*& surface_buffer)
-{
-    std::mutex mut;
-    std::condition_variable cv;
+    std::function<void(mir::graphics::Buffer* new_buffer)> callback;
 
-    auto const callback = [&](mir::graphics::Buffer* buffer)
-        {
-            std::unique_lock<decltype(mut)> lk(mut);
-            surface_buffer = buffer;
-            cv.notify_one();
-        };
+    if (auto const buf = this->buffer.load())
+    {
+        auto const format = buffer_stream->pixel_format();
+        auto const sz = buf->size().height.as_int() *
+            buf->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
 
-    auto const old_buffer = surface_buffer;
+        std::vector<unsigned char> pixels(sz, intensity);
+        buf->write(pixels.data(), sz);
 
-    surface->primary_buffer_stream()->swap_buffers(surface_buffer, callback);
+        callback = [this](mir::graphics::Buffer* new_buffer)
+            {
+                buffer.store(new_buffer);
+            };
+    }
+    else
+    {
+        callback = [this, intensity](mir::graphics::Buffer* new_buffer)
+            {
+                buffer.store(new_buffer);
+                paint_titlebar(intensity);
+            };
+    }
 
-    std::unique_lock<decltype(mut)> lk(mut);
-    cv.wait(lk, [&]{return old_buffer != surface_buffer;});
-}
-
-void paint_titlebar(
-    std::shared_ptr<ms::Surface> const& titlebar,
-    mir::examples::CanonicalSurfaceInfoCopy& titlebar_info,
-    int intensity)
-{
-    auto stream = titlebar->primary_buffer_stream();
-    auto const format = stream->pixel_format();
-
-    if (!titlebar_info.buffer)
-        swap_buffers(titlebar, titlebar_info.buffer);
-
-    auto const sz = titlebar_info.buffer->size().height.as_int() *
-                    titlebar_info.buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
-
-    std::vector<unsigned char> pixels(sz, intensity);
-    titlebar_info.buffer->write(pixels.data(), sz);
-
-    swap_buffers(titlebar, titlebar_info.buffer);
-}
+    buffer_stream->swap_buffers(buffer, callback);
 }
 
 void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
@@ -708,7 +694,7 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
         {
             if (auto const titlebar = tools->info_for(active_surface).titlebar)
             {
-                paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
+                tools->info_for(titlebar).paint_titlebar(0x3F);
             }
         }
 
@@ -734,12 +720,12 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
         {
             if (auto const titlebar = tools->info_for(active_surface).titlebar)
             {
-                paint_titlebar(titlebar, tools->info_for(titlebar), 0x3F);
+                tools->info_for(titlebar).paint_titlebar(0x3F);
             }
         }
         if (auto const titlebar = tools->info_for(surface).titlebar)
         {
-            paint_titlebar(titlebar, tools->info_for(titlebar), 0xFF);
+            tools->info_for(titlebar).paint_titlebar(0xFF);
         }
         tools->set_focus_to(info_for.session.lock(), surface);
         raise_tree(surface);
