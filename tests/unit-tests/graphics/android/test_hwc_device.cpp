@@ -443,8 +443,7 @@ TEST_F(HwcDevice, overlays_are_throttled_per_predictive_bypass)
 {
     using namespace testing;
     EXPECT_CALL(*mock_device, prepare(_))
-        .WillOnce(Invoke(set_all_layers_to_overlay))
-        .WillOnce(Return());
+        .WillRepeatedly(Invoke(set_all_layers_to_overlay));
 
     mga::HwcDevice device(mock_device);
 
