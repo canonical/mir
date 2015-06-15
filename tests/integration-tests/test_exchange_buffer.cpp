@@ -402,19 +402,19 @@ TEST_F(ExchangeBufferTest, server_can_send_buffer)
     //spin-wait for the id to become the current one.
     //The notification doesn't generate a client-facing callback on the stream yet
     //(although probably should, seems something a media decoder would need
-    bool satisfied = false;
+    bool buffer_arrived = false;
     auto timeout = std::chrono::steady_clock::now() + 5s;
-    while(!satisfied && std::chrono::steady_clock::now() < timeout)
+    while(!buffer_arrived && std::chrono::steady_clock::now() < timeout)
     {
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
         if (mir_debug_surface_current_buffer_id(surface) == stub_buffer.id().as_value())
         {
-            satisfied = true;
+            buffer_arrived = true;
             break;
         }
         std::this_thread::yield();
     }
-    EXPECT_THAT(satisfied, Eq(true)) << "failed to see the sent buffer become the current one";
+    EXPECT_THAT(buffer_arrived, Eq(true)) << "failed to see the sent buffer become the current one";
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);

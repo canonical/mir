@@ -288,7 +288,7 @@ TEST_F(ClientBufferStreamTest, producer_streams_call_exchange_buffer_on_next_buf
 
     auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Producer);
     
-    bs->next_buffer([](){});
+    bs->next_buffer([]{});
 }
 
 TEST_F(ClientBufferStreamTest, consumer_streams_call_screencast_buffer_on_next_buffer)
@@ -303,7 +303,7 @@ TEST_F(ClientBufferStreamTest, consumer_streams_call_screencast_buffer_on_next_b
 
     auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Consumer);
     
-    bs->next_buffer([](){});
+    bs->next_buffer([]{});
 }
 
 TEST_F(ClientBufferStreamTest, invokes_callback_on_next_buffer)
@@ -368,7 +368,7 @@ TEST_F(ClientBufferStreamTest, returns_current_client_buffer)
     auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
 
     EXPECT_EQ(client_buffer_1, bs->get_current_buffer());
-    bs->next_buffer([](){});
+    bs->next_buffer([]{});
     EXPECT_EQ(client_buffer_2, bs->get_current_buffer());
 }
 
@@ -402,7 +402,7 @@ TEST_F(ClientBufferStreamTest, caches_width_and_height_in_case_of_partial_update
     auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
 
     EXPECT_EQ(client_buffer_1, bs->get_current_buffer());
-    bs->next_buffer([](){});
+    bs->next_buffer([]{});
     EXPECT_EQ(client_buffer_2, bs->get_current_buffer());
 }
 
@@ -478,7 +478,7 @@ TEST_F(ClientBufferStreamTest, receives_unsolicited_buffer)
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
         .WillOnce(RunProtobufClosure());
     bs->buffer_available(another_buffer_package);
-    bs->next_buffer([](){});
+    bs->next_buffer([]{});
 
     EXPECT_THAT(bs->get_current_buffer().get(), Eq(&second_mock_client_buffer));
     EXPECT_THAT(bs->get_current_buffer_id(), Eq(id));
@@ -508,10 +508,10 @@ TEST_F(ClientBufferStreamTest, after_receiving_an_unsolicited_buffer_exchange_bu
         .WillRepeatedly(RunProtobufClosure());
 
     for(auto i = 0; i < a_few_times; i++) 
-        bs->next_buffer([](){});
+        bs->next_buffer([]{});
 
     bs->buffer_available(another_buffer_package);
 
     for(auto i = 0; i < a_few_times; i++) 
-        bs->next_buffer([](){});
+        bs->next_buffer([]{});
 }
