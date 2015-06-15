@@ -41,6 +41,7 @@ struct CanonicalSurfaceInfo
         std::shared_ptr<scene::Surface> const& surface,
         scene::SurfaceCreationParameters const& params);
 
+    MirSurfaceType type;
     MirSurfaceState state;
     geometry::Rectangle restore_rect;
     std::weak_ptr<scene::Session> session;

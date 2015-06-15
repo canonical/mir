@@ -29,6 +29,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/stub_input_handles.h"
+#include "mir_test_doubles/stub_input_surface.h"
 #include "mir_test_doubles/mock_window_handle_repository.h"
 
 #include <InputWindow.h>
@@ -85,7 +86,7 @@ TEST_F(AndroidInputTargeterSetup, on_set_focus)
     targeter.set_focus(std::make_shared<mtd::StubInputSurface>(stub_channel));
 }
 
-TEST_F(AndroidInputTargeterSetup, on_focus_changed_throw_behavior)
+TEST_F(AndroidInputTargeterSetup, on_set_focus_throw_behavior)
 {
     using namespace ::testing;
 

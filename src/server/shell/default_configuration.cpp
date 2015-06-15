@@ -24,6 +24,7 @@
 #include "mir/shell/canonical_window_manager.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
+#include "default_persistent_surface_store.h"
 #include "frontend_shell.h"
 #include "graphics_display_layout.h"
 
@@ -62,12 +63,22 @@ auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> con
     return wrapped;
 }
 
+std::shared_ptr<msh::PersistentSurfaceStore>
+mir::DefaultServerConfiguration::the_persistent_surface_store()
+{
+    return surface_store([]()
+    {
+        return std::make_shared<msh::DefaultPersistentSurfaceStore>();
+    });
+}
+
 std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()
 {
     return frontend_shell([this]
         {
-            return std::make_shared<msh::detail::FrontendShell>(the_shell());
+            return std::make_shared<msh::detail::FrontendShell>(the_shell(),
+                                                                the_persistent_surface_store());
         });
 }
 

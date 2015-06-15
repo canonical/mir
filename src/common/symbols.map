@@ -1,4 +1,3 @@
-
 MIR_COMMON_5 {
  global: mir_*;
   extern "C++" {
@@ -28,6 +27,9 @@ MIR_COMMON_5 {
     mir::dispatch::ThreadedDispatcher::?ThreadedDispatcher*;
     mir::dispatch::ThreadedDispatcher::add_thread*;
     mir::dispatch::ThreadedDispatcher::remove_thread*;
+    mir::fatal_error*;
+    mir::fatal_error_abort*;
+    mir::fatal_error_except*;
     mir::Fd::Fd*;
     mir::Fd::invalid*;
     mir::Fd::operator*;

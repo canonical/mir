@@ -218,3 +218,16 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, xkb_rule_names c
 
     return make_event_uptr(e);
 }
+
+mir::EventUPtr mev::make_event(MirInputConfigurationAction action, MirInputDeviceId id, std::chrono::nanoseconds time)
+{
+    MirEvent *e = new MirEvent;
+    memset(e, 0, sizeof (MirEvent));
+
+    e->type = mir_event_type_input_configuration;
+    e->input_configuration.action = action;
+    e->input_configuration.when = time;
+    e->input_configuration.id = id;
+
+    return make_event_uptr(e);
+}

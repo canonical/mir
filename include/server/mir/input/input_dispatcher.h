@@ -38,7 +38,8 @@ namespace input
 class InputDispatcher
 {
 public:
-    virtual void dispatch(MirEvent const& event) = 0;
+    virtual bool dispatch(MirEvent const& event) = 0;
+
     virtual void start() = 0;
     virtual void stop() = 0;
 

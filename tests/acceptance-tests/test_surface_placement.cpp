@@ -16,13 +16,11 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_framework/connected_client_headless_server.h"
-
 #include "mir/events/event_builders.h"
-#include "mir/shell/shell_wrapper.h"
-#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 
+#include "mir_test_doubles/wrap_shell_to_track_latest_surface.h"
+#include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/signal.h"
 
@@ -32,28 +30,13 @@ namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 using namespace mir::geometry;
 using namespace testing;
 
 namespace
 {
-struct StubShell : msh::ShellWrapper
-{
-    using msh::ShellWrapper::ShellWrapper;
-
-    mf::SurfaceId create_surface(
-        std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& params) override
-    {
-        auto const surface = msh::ShellWrapper::create_surface(session, params);
-        latest_surface = session->surface(surface);
-        return surface;
-    }
-
-    std::weak_ptr<ms::Surface> latest_surface;
-};
-
 struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
 {
     SurfacePlacement() { add_to_environment("MIR_SERVER_ENABLE_INPUT", "OFF"); }
@@ -70,7 +53,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
 
         server.wrap_shell([this](std::shared_ptr<msh::Shell> const& wrapped)
         {
-            auto const msc = std::make_shared<StubShell>(wrapped);
+            auto const msc = std::make_shared<mtd::WrapShellToTrackLatestSurface>(wrapped);
             shell = msc;
             return msc;
         });
@@ -109,6 +92,19 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         return surface;
     }
 
+    template<typename Specifier>
+    MirSurface* create_surface(Specifier const& specifier) const
+    {
+        auto const spec = mir_create_surface_spec(connection);
+
+        specifier(spec);
+
+        auto const surface = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+
+        return surface;
+    }
+
     MirSurface* create_normal_surface(int width, int height) const
     {
         return create_normal_surface(width, height, [](MirSurfaceSpec*){});
@@ -135,9 +131,10 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         server.the_shell()->handle(*click_event);
     }
 
-private:
-    std::shared_ptr<StubShell> shell;
     MirPixelFormat pixel_format{mir_pixel_format_invalid};
+
+private:
+    std::shared_ptr<mtd::WrapShellToTrackLatestSurface> shell;
 
     void init_pixel_format()
     {
@@ -457,6 +454,44 @@ TEST_F(SurfacePlacement, fullscreen_on_output_2_surface_is_sized_to_second_displ
     mir_surface_release_sync(surface);
 }
 
+struct UnparentedSurface : SurfacePlacement, ::testing::WithParamInterface<MirSurfaceType> {};
+
+TEST_P(UnparentedSurface, small_window_is_optically_centered_on_first_display)
+{
+    auto const width = 83;
+    auto const height= 89;
+
+    auto const geometric_centre = first_display.top_left +
+                                  0.5*(as_displacement(first_display.size) - Displacement{width, height});
+
+    auto const optically_centred = geometric_centre -
+                                   DeltaY{(first_display.size.height.as_int()-height)/6};
+
+    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, GetParam());
+            mir_surface_spec_set_width(spec, width);
+            mir_surface_spec_set_height(spec, height);
+            mir_surface_spec_set_pixel_format(spec, pixel_format);
+            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+    ASSERT_THAT(shell_surface, NotNull());  // Compiles here
+
+    EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
+    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
+
+    mir_surface_release_sync(surface);
+}
+
+INSTANTIATE_TEST_CASE_P(SurfacePlacement, UnparentedSurface,
+    ::testing::Values(
+        mir_surface_type_normal,
+        mir_surface_type_utility,
+        mir_surface_type_dialog,
+        mir_surface_type_freestyle));
+
 // Parented dialog or parented freestyle window
 //
 // For convenience, these types are referred to here as “parented dialogs”.
@@ -476,3 +511,48 @@ TEST_F(SurfacePlacement, fullscreen_on_output_2_surface_is_sized_to_second_displ
 // o Otherwise (resorting to the original plan) it should be optically centered
 //    relative to its parent
 // TODO tests for this
+
+struct ParentedSurface : SurfacePlacement, ::testing::WithParamInterface<MirSurfaceType> {};
+
+TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
+{
+    auto const parent = create_normal_surface(256, 256);
+    auto const shell_parent = latest_shell_surface();
+
+    auto const width = 97;
+    auto const height= 101;
+
+    auto const geometric_centre = shell_parent->top_left() +
+                                  0.5*(as_displacement(shell_parent->size()) - Displacement{width, height});
+
+    auto const optically_centred = geometric_centre -
+                                   DeltaY{(shell_parent->size().height.as_int()-height)/6};
+
+    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, GetParam());
+            mir_surface_spec_set_width(spec, width);
+            mir_surface_spec_set_height(spec, height);
+            mir_surface_spec_set_pixel_format(spec, pixel_format);
+            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_surface_spec_set_parent(spec, parent);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+    ASSERT_THAT(shell_surface, NotNull());  // Compiles here
+
+    EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
+    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
+
+    mir_surface_release_sync(surface);
+    mir_surface_release_sync(parent);
+}
+
+INSTANTIATE_TEST_CASE_P(SurfacePlacement, ParentedSurface,
+    ::testing::Values(
+        mir_surface_type_dialog,
+        mir_surface_type_satellite,
+        mir_surface_type_popover,
+        mir_surface_type_gloss,
+        mir_surface_type_tip,
+        mir_surface_type_freestyle));
