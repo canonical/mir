@@ -103,15 +103,22 @@ void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
 void ms::TimeoutApplicationNotRespondingDetector::pong_received(
    Session const& received_for)
 {
-    std::lock_guard<std::mutex> lock{session_mutex};
-
-    auto& session_ctx = sessions.at(&received_for);
-    if (session_ctx->flagged_as_unresponsive)
+    bool needs_now_responsive_notification{false};
     {
-        session_ctx->flagged_as_unresponsive = false;
+        std::lock_guard<std::mutex> lock{session_mutex};
+
+        auto& session_ctx = sessions.at(&received_for);
+        if (session_ctx->flagged_as_unresponsive)
+        {
+            session_ctx->flagged_as_unresponsive = false;
+            needs_now_responsive_notification = true;
+        }
+        session_ctx->replied_since_last_ping = true;
+    }
+    if (needs_now_responsive_notification)
+    {
         observers.session_now_responsive(&received_for);
     }
-    session_ctx->replied_since_last_ping = true;
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::register_observer(

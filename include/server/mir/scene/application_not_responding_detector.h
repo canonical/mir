@@ -34,6 +34,13 @@ public:
     ApplicationNotRespondingDetector() = default;
     virtual ~ApplicationNotRespondingDetector() = default;
 
+    /**
+     * Notification object for application-not-responsive signals
+     *
+     * \note These signals will be called without any locks held; it's safe
+     *       to call methods on the ApplicationNotRespondingDetector from these
+     *       delegates.
+     */
     class Observer
     {
     public:

@@ -301,3 +301,40 @@ TEST(TimeoutApplicationNotRespondingDetector, triggers_now_responsive_signal_whe
 
     EXPECT_FALSE(session_not_responding);
 }
+
+TEST(TimeoutApplicationNotRespondingDetector, fiddling_with_sessions_from_callbacks_doesnt_deadlock)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    FakeClockAlarmProvider fake_alarms;
+
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
+
+    NiceMock<mtd::MockSceneSession> session_one, session_two, session_three;
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    ON_CALL(*observer, session_unresponsive(_))
+        .WillByDefault(Invoke([&detector, &session_two](auto /*session*/)
+    {
+        detector.register_session(session_two, [](){});
+    }));
+    ON_CALL(*observer, session_now_responsive(_))
+        .WillByDefault(Invoke([&detector, &session_three](auto /*session*/)
+    {
+        detector.unregister_session(session_three);
+    }));
+    detector.register_observer(observer);
+
+    detector.register_session(session_one, [](){});
+    detector.register_session(session_three, [](){});
+
+    fake_alarms.advance_by(1001ms);
+    // Should now have pung
+
+    fake_alarms.advance_by(1001ms);
+    // Should now have marked session three unresponsive, registering session two
+
+    detector.pong_received(session_three);
+    // And now session three sholud be morked as responsive, unregistering itself
+}
