@@ -342,6 +342,24 @@ void mf::SessionMediator::submit_buffer(
     BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
 }
 
+void mf::SessionMediator::allocate_buffers( 
+    google::protobuf::RpcController*,
+    mir::protobuf::BufferAllocationRequest const*,
+    mir::protobuf::Void*,
+    google::protobuf::Closure*)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
+}
+
+void mf::SessionMediator::release_buffers(
+    google::protobuf::RpcController*,
+    mir::protobuf::BufferReleaseRequest const*,
+    mir::protobuf::Void*,
+    google::protobuf::Closure*)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
+}
+
 void mf::SessionMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
