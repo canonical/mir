@@ -217,7 +217,7 @@ void mcl::BufferStream::submit_done()
 
 MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std::unique_lock<std::mutex> lock)
 {
-    //in both cases, submit what we have
+    //always submit what we have, whether we have a buffer, or will have to wait for an async reply
     mp::BufferRequest request;
     request.mutable_id()->set_value(protobuf_bs.id().value());
     request.mutable_buffer()->set_buffer_id(protobuf_bs.buffer().buffer_id());
