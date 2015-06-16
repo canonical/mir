@@ -125,18 +125,6 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
         message.mutable_max_aspect()->set_height(max_aspect.value().height);
     }
 
-    if (streams.is_set())
-    {
-        for (auto const& stream : streams.value())
-        {
-            auto const new_stream = message.add_stream();
-            new_stream->set_displacement_x(stream.displacement_x);
-            new_stream->set_displacement_y(stream.displacement_y);
-            new_stream->mutable_id()->set_value(
-                reinterpret_cast<mcl::ClientBufferStream*>(stream.stream)->rpc_id().as_value());
-        }
-    }
-
     return message;
 }
 
