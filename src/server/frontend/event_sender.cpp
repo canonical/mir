@@ -52,7 +52,7 @@ void mfd::EventSender::handle_event(MirEvent const& e)
         mp::Event *ev = seq.add_event();
         ev->set_raw(&e, sizeof(MirEvent));
 
-        send_event_sequence(seq);
+        send_event_sequence(seq, {});
     }
 }
 
@@ -64,7 +64,7 @@ void mfd::EventSender::handle_display_config_change(
     auto protobuf_config = seq.mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, display_config);
 
-    send_event_sequence(seq);
+    send_event_sequence(seq, {});
 }
 
 void mfd::EventSender::handle_lifecycle_event(
@@ -75,10 +75,10 @@ void mfd::EventSender::handle_lifecycle_event(
     auto protobuf_life_event = seq.mutable_lifecycle_event();
     protobuf_life_event->set_new_state(state);
 
-    send_event_sequence(seq);
+    send_event_sequence(seq, {});
 }
 
-void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
+void mfd::EventSender::send_event_sequence(mp::EventSequence& seq, FdSets const& fds)
 {
     mir::VariableLengthArray<frontend::serialization_buffer_size>
         send_buffer{static_cast<size_t>(seq.ByteSize())};
@@ -92,7 +92,7 @@ void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
 
     try
     {
-        sender->send(reinterpret_cast<char*>(send_buffer.data()), send_buffer.size(), {});
+        sender->send(reinterpret_cast<char*>(send_buffer.data()), send_buffer.size(), fds);
     }
     catch (std::exception const& error)
     {
@@ -109,5 +109,9 @@ void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer
     request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(request->mutable_buffer())};
     buffer_packer->pack_buffer(request_msg, buffer, type);
-    send_event_sequence(seq);
+
+    std::vector<mir::Fd> set;
+    if (request->buffer().fds_on_side_channel())
+        set = std::vector<mir::Fd>(request->buffer().fd().begin(), request->buffer().fd().end());
+    send_event_sequence(seq, {set});
 }

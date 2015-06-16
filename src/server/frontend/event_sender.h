@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_EVENT_SENDER_H_
 
 #include "mir/frontend/event_sink.h"
+#include "mir/frontend/fd_sets.h"
 #include <memory>
 
 namespace mir
@@ -47,7 +48,7 @@ public:
     void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType);
 
 private:
-    void send_event_sequence(protobuf::EventSequence&);
+    void send_event_sequence(protobuf::EventSequence&, FdSets const&);
 
     std::shared_ptr<MessageSender> const sender;
     std::shared_ptr<graphics::PlatformIpcOperations> const buffer_packer;
