@@ -29,8 +29,6 @@
 
 #include <linux/input.h>
 #include <csignal>
-#include <mutex>
-#include <condition_variable>
 #include <algorithm>
 
 namespace me = mir::examples;
