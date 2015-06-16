@@ -34,7 +34,6 @@
 
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
-using namespace std::chrono;
 
 class mgm::BufferObject
 {
@@ -300,6 +299,8 @@ void mgm::DisplayBuffer::post()
         set_crtc(bufobj);
         needs_set_crtc = false;
     }
+
+    using namespace std;  // For operator""ms()
 
     // Predicted worst case render time for the next frame...
     auto predicted_render_time = 50ms;

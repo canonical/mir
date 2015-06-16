@@ -177,7 +177,7 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
         //   arale:   10ms  (TODO: Find out why arale is so slow)
         //   mako:    15ms
         //   krillin: 11ms (to be fair, the display is 67Hz)
-        using namespace std::chrono;
+        using namespace std;
         auto delay = force_bypass_sleep >= 0ms ? force_bypass_sleep : 10ms;
         std::this_thread::sleep_for(delay);
     }
