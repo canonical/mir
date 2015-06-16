@@ -23,6 +23,8 @@
 
 #include "mir/geometry/displacement.h"
 
+#include <atomic>
+
 ///\example server_example_canonical_window_manager.h
 // Based on "Mir and Unity: Surfaces, input, and displays (v0.3)"
 
@@ -49,6 +51,7 @@ struct CanonicalSurfaceInfoCopy
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
     std::shared_ptr<scene::Surface> titlebar;
+    frontend::SurfaceId titlebar_id;
     bool is_titlebar = false;
     optional_value<geometry::Width> min_width;
     optional_value<geometry::Height> min_height;
@@ -59,7 +62,20 @@ struct CanonicalSurfaceInfoCopy
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
 
-    graphics::Buffer* buffer{nullptr};
+    void paint_titlebar(int intensity);
+
+private:
+    std::shared_ptr<frontend::BufferStream> const buffer_stream;
+
+    // Add copy-ctor to std::atomic
+    struct AtomicBufferPtr : std::atomic<graphics::Buffer*>
+    {
+        using std::atomic<graphics::Buffer*>::atomic;
+
+        AtomicBufferPtr(AtomicBufferPtr const& that) :
+            std::atomic<graphics::Buffer*>{that.load()} {}
+    };
+    AtomicBufferPtr buffer{nullptr};
 };
 
 // standard window management algorithm:

@@ -380,7 +380,6 @@ protected:
     CachedPtr<input::Platform>    input_platform; // currently not used by default
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
     CachedPtr<input::InputDispatcher> input_dispatcher;
-    CachedPtr<input::InputDispatcher> surface_input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
     CachedPtr<input::InputSendObserver> input_send_observer;
     CachedPtr<input::InputRegion>     input_region;
