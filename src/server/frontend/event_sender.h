@@ -24,6 +24,7 @@
 
 namespace mir
 {
+namespace graphics { class PlatformIpcOperations; }
 namespace protobuf
 {
 class EventSequence;
@@ -37,7 +38,9 @@ class MessageSender;
 class EventSender : public  mir::frontend::EventSink
 {
 public:
-    explicit EventSender(std::shared_ptr<MessageSender> const& socket_sender);
+    explicit EventSender(
+        std::shared_ptr<MessageSender> const& socket_sender,
+        std::shared_ptr<graphics::PlatformIpcOperations> const& buffer_packer);
     void handle_event(MirEvent const& e);
     void handle_lifecycle_event(MirLifecycleState state);
     void handle_display_config_change(graphics::DisplayConfiguration const& config);
@@ -47,6 +50,7 @@ private:
     void send_event_sequence(protobuf::EventSequence&);
 
     std::shared_ptr<MessageSender> const sender;
+    std::shared_ptr<graphics::PlatformIpcOperations> const buffer_packer;
 };
 
 }

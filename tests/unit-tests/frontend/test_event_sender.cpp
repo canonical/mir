@@ -49,7 +49,7 @@ struct MockMsgSender : public mfd::MessageSender
 struct EventSender : public testing::Test
 {
     EventSender()
-        : event_sender(mt::fake_shared(mock_msg_sender))
+        : event_sender(mt::fake_shared(mock_msg_sender), mt::fake_shared(mock_buffer_packer))
     {
     }
     MockMsgSender mock_msg_sender;

@@ -27,6 +27,7 @@
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_doubles/null_platform_ipc_operations.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -147,6 +148,7 @@ struct DemoServerConfiguration : mtf::StubbedServerConfiguration
                 return std::make_shared<DemoConnectionCreator>(
                     new_ipc_factory(the_session_authorizer()),
                     the_session_authorizer(),
+                    std::make_shared<mir::test::doubles::NullPlatformIpcOperations>(),
                     the_message_processor_report());
             });
     }

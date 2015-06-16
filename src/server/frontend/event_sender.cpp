@@ -33,8 +33,11 @@ namespace mg = mir::graphics;
 namespace mfd = mir::frontend::detail;
 namespace mp = mir::protobuf;
 
-mfd::EventSender::EventSender(std::shared_ptr<MessageSender> const& socket_sender)
- : sender(socket_sender)
+mfd::EventSender::EventSender(
+    std::shared_ptr<MessageSender> const& socket_sender,
+    std::shared_ptr<mg::PlatformIpcOperations> const& buffer_packer) :
+    sender(socket_sender),
+    buffer_packer(buffer_packer)
 {
 }
 
@@ -100,12 +103,11 @@ void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
 
 void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, mg::BufferIpcMsgType type)
 {
-    (void)type;
     mp::EventSequence seq;
     auto request = seq.mutable_buffer_request();
-
-//    ipc_ops->pack(
     request->mutable_id()->set_value(id.as_value()); 
     request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
+    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(request->mutable_buffer())};
+    buffer_packer->pack_buffer(request_msg, buffer, type);
     send_event_sequence(seq);
 }
