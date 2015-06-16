@@ -37,6 +37,7 @@
 #include "mir_test_doubles/null_session_event_sink.h"
 #include "mir_test_doubles/null_prompt_session_manager.h"
 #include "mir_test_doubles/mock_input_targeter.h"
+#include "mir_test_doubles/null_application_not_responding_detector.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -81,7 +82,8 @@ struct TestDefaultWindowManager : public testing::Test
             mt::fake_shared(container),
             std::make_shared<mtd::NullSnapshotStrategy>(),
             std::make_shared<mtd::NullSessionEventSink>(),
-            mt::fake_shared(session_listener)
+            mt::fake_shared(session_listener),
+            std::make_shared<mtd::NullANRDetector>()
         };
 
     msh::AbstractShell shell{

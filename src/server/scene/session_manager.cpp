@@ -24,6 +24,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/prompt_session.h"
+#include "mir/scene/application_not_responding_detector.h"
 #include "session_event_sink.h"
 
 #include <boost/throw_exception.hpp>
@@ -44,14 +45,16 @@ ms::SessionManager::SessionManager(
     std::shared_ptr<SessionContainer> const& container,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionEventSink> const& session_event_sink,
-    std::shared_ptr<SessionListener> const& session_listener) :
+    std::shared_ptr<SessionListener> const& session_listener,
+    std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector) :
     surface_coordinator(surface_coordinator),
     surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
     app_container(container),
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
-    session_listener(session_listener)
+    session_listener(session_listener),
+    anr_detector{anr_detector}
 {
 }
 
@@ -90,6 +93,8 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
 
     session_listener->starting(new_session);
 
+    anr_detector->register_session(*new_session, [](){});
+
     return new_session;
 }
 
@@ -110,6 +115,8 @@ void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
 
     scene_session->force_requests_to_complete();
+
+    anr_detector->unregister_session(*session);
 
     session_event_sink->handle_session_stopping(scene_session);
 

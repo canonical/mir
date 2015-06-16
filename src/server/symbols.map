@@ -169,6 +169,7 @@ MIR_SERVER_32 {
     mir::ServerStatusListener::ServerStatusListener*;
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
+    mir::Server::the_application_not_responding_detector*;
     mir::Server::the_buffer_stream_factory*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
@@ -523,6 +524,7 @@ MIR_SERVER_32 {
     mir::DefaultServerConfiguration::is_key_repeat_enabled*;
     mir::DefaultServerConfiguration::new_ipc_factory*;
     mir::DefaultServerConfiguration::the_android_input_dispatcher*;
+    mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     mir::DefaultServerConfiguration::the_clock*;

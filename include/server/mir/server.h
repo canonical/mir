@@ -44,6 +44,7 @@ class Shell;
 }
 namespace scene
 {
+class ApplicationNotRespondingDetector;
 class BufferStreamFactory; 
 class PromptSessionListener;
 class PromptSessionManager;
@@ -343,6 +344,10 @@ public:
 
     /// \return the input device hub
     auto the_input_device_hub() const -> std::shared_ptr<input::InputDeviceHub>;
+
+    /// \return the application not responding detector
+    auto the_application_not_responding_detector() const ->
+        std::shared_ptr<scene::ApplicationNotRespondingDetector>;
 /** @} */
 
 /** @name Client side support

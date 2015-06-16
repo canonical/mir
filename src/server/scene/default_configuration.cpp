@@ -18,6 +18,7 @@
 
 #include "mir/default_server_configuration.h"
 
+#include "mir/main_loop.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/input/scene.h"
@@ -37,6 +38,7 @@
 #include "threaded_snapshot_strategy.h"
 #include "prompt_session_manager_impl.h"
 #include "default_coordinate_translator.h"
+#include "timeout_application_not_responding_detector.h"
 #include "mir/options/program_option.h"
 #include "mir/options/default_configuration.h"
 
@@ -173,7 +175,8 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                     the_session_container(),
                     the_snapshot_strategy(),
                     the_session_event_sink(),
-                    the_session_listener());
+                    the_session_listener(),
+                    the_application_not_responding_detector());
         });
 }
 
@@ -218,5 +221,17 @@ mir::DefaultServerConfiguration::the_coordinate_translator()
         [this]()
         {
             return std::make_shared<ms::DefaultCoordinateTranslator>();
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_application_not_responding_detector()
+-> std::shared_ptr<scene::ApplicationNotRespondingDetector>
+{
+    return anr_detector(
+        [this]() -> std::shared_ptr<scene::ApplicationNotRespondingDetector>
+        {
+            using namespace std::literals::chrono_literals;
+            return std::make_shared<ms::TimeoutApplicationNotRespondingDetector>(
+                *the_main_loop(), 1s);
         });
 }

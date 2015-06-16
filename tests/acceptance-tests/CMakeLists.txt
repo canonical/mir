@@ -10,6 +10,7 @@ set(
   server_configuration_wrapping.cpp
   server_configuration_options.cpp
   server_signal_handling.cpp
+  test_application_not_responding_detection.cpp
   test_client_header_version.cpp
   test_client_input.cpp
   test_client_library.cpp
