@@ -434,7 +434,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                     "describe_input_module",
                     MIR_SERVER_INPUT_PLATFORM_VERSION);
                 auto props = describe();
-                auto dispatchable = strncmp(props->name, "X-input", strlen(props->name))
+                auto dispatchable = strncmp(props->name, "x11-input", strlen(props->name))
                                         ? the_legacy_input_dispatchable()
                                         : std::make_shared<NullLegacyInputDispatchable>();
                 auto ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), dispatchable);
