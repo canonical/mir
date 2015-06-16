@@ -66,6 +66,10 @@ struct MockEventFilter : public mi::EventFilter
 const int surface_width = 100;
 const int surface_height = 100;
 
+void null_event_handler(MirSurface*, MirEvent const*, void*)
+{
+}
+
 struct Client
 {
     MirSurface* surface{nullptr};
@@ -120,6 +124,10 @@ struct Client
     }
     ~Client()
     {
+        // Remove the event handler to avoid handling spurious events unrelated
+        // to the tests (e.g. pointer leave events when the surface is destroyed),
+        // which can cause test expectations to fail.
+        mir_surface_set_event_handler(surface, null_event_handler, nullptr);
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
     }

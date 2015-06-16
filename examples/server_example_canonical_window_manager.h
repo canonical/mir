@@ -51,6 +51,7 @@ struct CanonicalSurfaceInfoCopy
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
     std::shared_ptr<scene::Surface> titlebar;
+    frontend::SurfaceId titlebar_id;
     bool is_titlebar = false;
     optional_value<geometry::Width> min_width;
     optional_value<geometry::Height> min_height;
