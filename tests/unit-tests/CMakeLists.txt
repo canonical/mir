@@ -62,6 +62,11 @@ set(
   test_module_deleter.cpp
 )
 
+if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
+list(APPEND UNIT_TEST_SOURCES
+  $<TARGET_OBJECTS:mirplatformservermesax11objects>
+)
+
 add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
@@ -135,7 +140,6 @@ target_link_libraries(
   ${XKBCOMMON_LIBRARIES}
 )
 
-if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
 target_link_libraries(mir_unit_tests
   mirsharedmesaservercommon-static
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
