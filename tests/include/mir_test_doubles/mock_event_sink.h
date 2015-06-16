@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_EVENT_SINK_H_
 
 #include "mir/frontend/event_sink.h"
+#include "mir/events/event_private.h"
 
 #include <gmock/gmock.h>
 
