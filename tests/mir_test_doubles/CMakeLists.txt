@@ -23,6 +23,7 @@ set(
   triggered_main_loop.cpp
   stub_buffer.cpp
   nested_mock_egl.cpp
+  fake_alarm_factory.cpp
 )
 
 set(

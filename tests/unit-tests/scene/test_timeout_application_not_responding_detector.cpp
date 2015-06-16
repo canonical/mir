@@ -18,10 +18,8 @@
 
 #include "src/server/scene/timeout_application_not_responding_detector.h"
 
-#include "mir/time/alarm_factory.h"
-#include "mir/time/clock.h"
-#include "mir_test_doubles/advanceable_clock.h"
 #include "mir_test_doubles/mock_scene_session.h"
+#include "mir_test_doubles/fake_alarm_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,110 +30,6 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-class FakeAlarm : public mt::Alarm
-{
-public:
-    FakeAlarm(std::function<void()> const& callback,
-        std::shared_ptr<mir::time::Clock> const& clock)
-        : callback{callback},
-          alarm_state{State::cancelled},
-          triggers_at{mir::time::Timestamp::max()},
-          clock{clock}
-    {
-    }
-    
-    void time_updated()
-    {
-        if (clock->now() > triggers_at)
-        {
-            triggers_at = mir::time::Timestamp::max();
-            alarm_state = State::triggered;
-            callback();
-        }
-    }
-    
-    bool cancel() override
-    {
-        if (alarm_state == State::pending)
-        {
-            triggers_at = mir::time::Timestamp::max();
-            alarm_state = State::cancelled;
-            return true;
-        }
-        return false;
-    }
-    
-    State state() const override
-    {
-        return alarm_state;
-    }
-    
-    bool reschedule_in(std::chrono::milliseconds delay) override
-    {
-        bool rescheduled = alarm_state == State::pending;
-        alarm_state = State::pending;
-        triggers_at = clock->now() + std::chrono::duration_cast<mt::Duration >(delay);
-        return rescheduled;
-    }
-    
-    bool reschedule_for(mir::time::Timestamp timeout) override
-    {
-        bool rescheduled = alarm_state == State::pending;
-        if (timeout > clock->now())
-        {
-            alarm_state = State::pending;
-            triggers_at = timeout;            
-        }
-        else
-        {
-            callback();
-            triggers_at = mir::time::Timestamp::max();
-            alarm_state = State::triggered;
-        }
-        return rescheduled;
-    }
-    
-private:
-    std::function<void()> const callback;
-    State alarm_state;
-    mir::time::Timestamp triggers_at;
-    std::shared_ptr<mt::Clock> clock;
-};
-
-class FakeClockAlarmProvider : public mt::AlarmFactory
-{
-public:
-    FakeClockAlarmProvider()
-        : clock{std::make_shared<mtd::AdvanceableClock>()}
-    {
-    }
-    
-    std::unique_ptr<mt::Alarm> create_alarm(std::function<void()> const& callback) override
-    {
-        std::unique_ptr<mt::Alarm> alarm = std::make_unique<FakeAlarm>(callback, clock);
-        alarms.push_back(static_cast<FakeAlarm*>(alarm.get()));
-        return alarm;
-    }
-    
-    std::unique_ptr<mt::Alarm> create_alarm(std::shared_ptr<mir::LockableCallback> const& /*callback*/) override
-    {
-        throw std::logic_error{"Lockable alarm creation not implemented for fake alarms"};
-    }
-
-    void advance_by(mt::Duration step)
-    {
-        clock->advance_by(step);
-        for (auto& alarm : alarms)
-        {
-            alarm->time_updated();
-        }
-    }
-    
-private:
-    std::vector<FakeAlarm*> alarms;
-    std::shared_ptr<mtd::AdvanceableClock> const clock;
-};
-
 class MockObserver : public ms::ApplicationNotRespondingDetector::Observer
 {
 public:
@@ -149,7 +43,7 @@ TEST(TimeoutApplicationNotRespondingDetector, pings_registered_sessions_on_sched
     using namespace testing;
     using namespace std::literals::chrono_literals;
     
-    FakeClockAlarmProvider fake_alarms;
+    mtd::FakeAlarmFactory fake_alarms;
     
     ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
     
@@ -176,7 +70,7 @@ TEST(TimeoutApplicationNotRespondingDetector, pings_repeatedly)
     using namespace testing;
     using namespace std::literals::chrono_literals;
 
-    FakeClockAlarmProvider fake_alarms;
+    mtd::FakeAlarmFactory fake_alarms;
 
     ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
 
@@ -203,7 +97,7 @@ TEST(TimeoutApplicationNotRespondingDetector, triggers_anr_signal_when_session_f
     using namespace testing;
     using namespace std::literals::chrono_literals;
 
-    FakeClockAlarmProvider fake_alarms;
+    mtd::FakeAlarmFactory fake_alarms;
 
     ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
 
@@ -234,7 +128,7 @@ TEST(TimeoutApplicationNotRespondingDetector, does_not_trigger_anr_when_session_
     using namespace testing;
     using namespace std::literals::chrono_literals;
 
-    FakeClockAlarmProvider fake_alarms;
+    mtd::FakeAlarmFactory fake_alarms;
 
     ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
 
@@ -267,7 +161,7 @@ TEST(TimeoutApplicationNotRespondingDetector, triggers_now_responsive_signal_whe
     using namespace testing;
     using namespace std::literals::chrono_literals;
 
-    FakeClockAlarmProvider fake_alarms;
+    mtd::FakeAlarmFactory fake_alarms;
 
     ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
 
@@ -307,7 +201,7 @@ TEST(TimeoutApplicationNotRespondingDetector, fiddling_with_sessions_from_callba
     using namespace testing;
     using namespace std::literals::chrono_literals;
 
-    FakeClockAlarmProvider fake_alarms;
+    mtd::FakeAlarmFactory fake_alarms;
 
     ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
 
