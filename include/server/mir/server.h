@@ -253,6 +253,10 @@ public:
     /// Sets an override functor for creating the window manager.
     void override_the_window_manager_builder(shell::WindowManagerBuilder const wmb);
 
+    /// Sets an override functor for creating the application not responding detector.
+    void override_the_application_not_responding_detector(
+        Builder<scene::ApplicationNotRespondingDetector> const& anr_detector_builder);
+
     /// Each of the wrap functions takes a wrapper functor of the same form
     template<typename T> using Wrapper = std::function<std::shared_ptr<T>(std::shared_ptr<T> const&)>;
 

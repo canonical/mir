@@ -443,7 +443,7 @@ protected:
     CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
-    CachedPtr<scene::ApplicationNotRespondingDetector> anr_detector;
+    CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

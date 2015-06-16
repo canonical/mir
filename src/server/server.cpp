@@ -58,7 +58,8 @@ namespace mo = mir::options;
     MACRO(session_authorizer)\
     MACRO(session_listener)\
     MACRO(session_mediator_report)\
-    MACRO(shell)
+    MACRO(shell)\
+    MACRO(application_not_responding_detector)
 
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_buffer_stream_factory)\

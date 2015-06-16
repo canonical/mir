@@ -20,9 +20,11 @@
 #include "mir_test_framework/connected_client_headless_server.h"
 
 #include "mir/scene/application_not_responding_detector.h"
+#include "mir/scene/session.h"
 
 #include <thread>
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
@@ -31,6 +33,17 @@ namespace
 {
 class ApplicationNotRespondingDetection : public mtf::ConnectedClientHeadlessServer
 {
+public:
+    void SetUp() override
+    {
+        // Deliberately fail to start up the server so we can override server config
+        // in each test.
+    }
+
+    void complete_setup()
+    {
+        mtf::ConnectedClientHeadlessServer::SetUp();
+    }
 };
 
 class DelegateObserver : public ms::ApplicationNotRespondingDetector::Observer
@@ -58,11 +71,23 @@ private:
     std::function<void(ms::Session const*)> unresponsive_delegate;
     std::function<void(ms::Session const*)> now_responsive_delegate;
 };
+
+class MockANRDetector : public ms::ApplicationNotRespondingDetector
+{
+public:
+    MOCK_METHOD2(register_session, void(mir::scene::Session const&, std::function<void ()> const&));
+    MOCK_METHOD1(unregister_session, void(mir::scene::Session const&));
+    MOCK_METHOD1(pong_received, void(mir::scene::Session const&));
+
+    MOCK_METHOD1(register_observer, void(std::shared_ptr<Observer> const&));
+};
 }
 
 TEST_F(ApplicationNotRespondingDetection, failure_to_pong_is_noticed)
 {
     using namespace std::literals::chrono_literals;
+
+    complete_setup();
 
     bool unresponsive_called{false};
     auto anr_observer = std::make_shared<DelegateObserver>(
@@ -75,4 +100,17 @@ TEST_F(ApplicationNotRespondingDetection, failure_to_pong_is_noticed)
     std::this_thread::sleep_for(3s);
 
     EXPECT_TRUE(unresponsive_called);
+}
+
+TEST_F(ApplicationNotRespondingDetection, can_override_anr_detector)
+{
+    using namespace std::literals::chrono_literals;
+    using namespace testing;
+
+    auto anr_detector = std::make_shared<NiceMock<MockANRDetector>>();
+    server.override_the_application_not_responding_detector([anr_detector]() { return anr_detector; });
+
+    EXPECT_CALL(*anr_detector, register_session(_,_)).Times(AtLeast(1));
+
+    complete_setup();
 }

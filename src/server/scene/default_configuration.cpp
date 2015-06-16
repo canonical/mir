@@ -227,7 +227,7 @@ mir::DefaultServerConfiguration::the_coordinate_translator()
 auto mir::DefaultServerConfiguration::the_application_not_responding_detector()
 -> std::shared_ptr<scene::ApplicationNotRespondingDetector>
 {
-    return anr_detector(
+    return application_not_responding_detector(
         [this]() -> std::shared_ptr<scene::ApplicationNotRespondingDetector>
         {
             using namespace std::literals::chrono_literals;
