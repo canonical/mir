@@ -62,6 +62,7 @@ struct CanonicalSurfaceInfoCopy
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
 
+    void init_titlebar();
     void paint_titlebar(int intensity);
 
 private:

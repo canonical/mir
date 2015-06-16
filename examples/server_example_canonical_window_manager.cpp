@@ -254,6 +254,16 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
 //TODO: provide an easier way for the server to write to a surface!
 //TODO: this is painful to use mg::Buffer::write()
+void mir::examples::CanonicalSurfaceInfoCopy::init_titlebar()
+{
+    auto const callback = [this](mir::graphics::Buffer* new_buffer)
+        {
+            buffer.store(new_buffer);
+        };
+
+    buffer_stream->swap_buffers(buffer, callback);
+}
+
 void mir::examples::CanonicalSurfaceInfoCopy::paint_titlebar(int intensity)
 {
     if (auto const buf = this->buffer.load())
@@ -266,12 +276,9 @@ void mir::examples::CanonicalSurfaceInfoCopy::paint_titlebar(int intensity)
         buf->write(pixels.data(), sz);
     }
 
-    auto const callback = [this, intensity](mir::graphics::Buffer* new_buffer)
+    auto const callback = [this](mir::graphics::Buffer* new_buffer)
         {
-            bool const first_time = !buffer;
             buffer.store(new_buffer);
-            if (first_time)
-                paint_titlebar(intensity);
         };
 
     buffer_stream->swap_buffers(buffer, callback);
@@ -316,7 +323,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     titlebar_info.is_titlebar = true;
     titlebar_info.parent = surface;
 
-    surface_map.emplace(titlebar, std::move(titlebar_info));
+    surface_map.emplace(titlebar, std::move(titlebar_info)).first->second.init_titlebar();
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
@@ -423,7 +430,10 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
     }
 
     if (info.titlebar)
+    {
+        tools->forget(info.titlebar);
         session->destroy_surface(info.titlebar_id);
+    }
 
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {

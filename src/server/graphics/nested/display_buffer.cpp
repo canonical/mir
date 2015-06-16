@@ -104,6 +104,8 @@ catch (std::exception const&)
     // Just in case: do not allow exceptions to propagate.
 }
 
+#include <iostream> // DEBUG
+
 void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
 {
     if (mir_event_get_type(&event) != mir_event_type_input)
@@ -116,6 +118,9 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
         auto x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x) + area.top_left.x.as_float();
         auto y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y) + area.top_left.y.as_float();
         cursor_listener->cursor_moved_to(x, y);
+
+        std::cerr << "DEBUG: pointer area : " << area << std::endl;
+        std::cerr << "DEBUG: pointer event: " << x << ", " << y << std::endl;
     }
     if (event.type == mir_event_type_motion)
     {
