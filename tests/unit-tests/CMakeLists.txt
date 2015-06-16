@@ -62,10 +62,11 @@ set(
   test_module_deleter.cpp
 )
 
-if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
+if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 list(APPEND UNIT_TEST_SOURCES
   $<TARGET_OBJECTS:mirplatformservermesax11objects>
 )
+endif()
 
 add_subdirectory(options/)
 add_subdirectory(client/)
@@ -144,7 +145,6 @@ target_link_libraries(mir_unit_tests
   mirsharedmesaservercommon-static
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
-endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_unit_tests 
