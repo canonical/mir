@@ -98,10 +98,13 @@ void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
     }
 }
 
-void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer)
+void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, mg::BufferIpcMsgType type)
 {
+    (void)type;
     mp::EventSequence seq;
     auto request = seq.mutable_buffer_request();
+
+//    ipc_ops->pack(
     request->mutable_id()->set_value(id.as_value()); 
     request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
     send_event_sequence(seq);

@@ -350,16 +350,13 @@ void mf::SessionMediator::submit_buffer(
     if (!session) BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     auto stream = session->get_buffer_stream(stream_id);
-    auto sink = event_sink;
     stream->swap_buffers(old_buffer,
-        [sink, stream_id](mg::Buffer* new_buffer)
+        [this, stream_id](mg::Buffer* new_buffer)
         {
-            //if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-            //    pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::update_msg);
-            //else
-            //    pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::full_msg);
-            printf("invoke.\n");
-            sink->send_buffer(stream_id, *new_buffer/*, full_or_partial */);
+            if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
+                event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::update_msg);
+            else
+                event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::full_msg);
         });
 
     done->Run();

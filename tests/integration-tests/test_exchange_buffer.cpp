@@ -397,7 +397,7 @@ TEST_F(ExchangeBufferTest, server_can_send_buffer)
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(connection);
     auto sink = server_configuration.coordinator->last_sink.lock();
-    sink->send_buffer(mf::BufferStreamId{0}, stub_buffer);
+    sink->send_buffer(mf::BufferStreamId{0}, stub_buffer, mg::BufferIpcMsgType::full_msg);
 
     //spin-wait for the id to become the current one.
     //The notification doesn't generate a client-facing callback on the stream yet
