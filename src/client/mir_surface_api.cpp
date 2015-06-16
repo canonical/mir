@@ -516,9 +516,29 @@ catch (std::exception const& ex)
     // Keep calm and carry on
 }
 
+void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size)
+try
+{
+    mir::require(spec);
+
+    std::vector<MirBufferStreamInfo> copy;
+    for (auto i = 0u; i < size; i++)
+    {
+        mir::require(mir_buffer_stream_is_valid(streams[i].stream));
+        copy.emplace_back(streams[i]);
+    }
+    spec->streams = copy;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+
 void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
 try
 {
+    mir::require(spec);
     spec->parent = parent;
 }
 catch (std::exception const& ex)

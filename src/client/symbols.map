@@ -142,6 +142,7 @@ MIR_CLIENT_9 {
     mir_surface_spec_set_parent;
     mir_surface_spec_set_pixel_format;
     mir_surface_spec_set_preferred_orientation;
+    mir_surface_spec_set_streams;
     mir_surface_spec_set_type;
     mir_surface_spec_set_width;
     mir_surface_spec_set_width_increment;

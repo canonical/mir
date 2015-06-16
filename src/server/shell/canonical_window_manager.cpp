@@ -274,7 +274,7 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
-    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     SurfaceSpecification const& modifications)
 {
@@ -368,6 +368,13 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
+
+    if (modifications.streams.is_set())
+    {
+        auto v = modifications.streams.value();
+        std::vector<shell::StreamSpecification> l (v.begin(), v.end());
+        session->configure_streams(*surface, l);
+    }
 
     if (modifications.width.is_set() || modifications.height.is_set())
     {
