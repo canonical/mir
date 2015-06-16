@@ -108,7 +108,7 @@ message BufferAllocationRequest {
 };
 
 message BufferReleaseRequest {
-  repeated Buffer buffers = 2;  
+  repeated Buffer buffers = 1;  
 };
 
 message BufferRequest {
