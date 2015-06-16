@@ -101,3 +101,16 @@ TEST_F(EventSender, never_sends_input_events)
         .Times(0);
     event_sender.handle_event(*ev);
 }
+
+TEST_F(EventSender, packs_buffer_with_platform_packer)
+{
+    using namespace testing;
+    mf::BufferStreamId id{8};
+    auto msg_type = mir::graphics::BufferIpcMsgType::update_msg;
+    mtd::StubBuffer buffer;
+
+    InSequence seq;
+    EXPECT_CALL(mock_ipc_packer, pack_buffer(id, Ref(buffer), msg_type));
+    EXPECT_CALL(mock_msg_sender, send(_,_,_));
+    event_sender.send_buffer(id, buffer, msg_type);
+}
