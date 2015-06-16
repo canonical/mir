@@ -31,7 +31,7 @@ namespace doubles
 
 struct MockInputDispatcher : public mir::input::InputDispatcher
 {
-    MOCK_METHOD1(dispatch, void(MirEvent const&));
+    MOCK_METHOD1(dispatch, bool(MirEvent const&));
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());
 };
