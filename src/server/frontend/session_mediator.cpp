@@ -335,11 +335,34 @@ void mf::SessionMediator::exchange_buffer(
 
 void mf::SessionMediator::submit_buffer(
     google::protobuf::RpcController*,
-    mir::protobuf::BufferRequest const*,
+    mir::protobuf::BufferRequest const* request,
     mir::protobuf::Void*,
-    google::protobuf::Closure*)
+    google::protobuf::Closure* done)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
+    mf::BufferStreamId const stream_id{request->id().value()};
+    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
+    ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
+
+    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
+    auto old_buffer = buffer_stream_tracker.buffer_from(buffer_id);
+
+    auto const session = weak_session.lock();
+    if (!session) BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto stream = session->get_buffer_stream(stream_id);
+    auto sink = event_sink;
+    stream->swap_buffers(old_buffer,
+        [sink, stream_id](mg::Buffer* new_buffer)
+        {
+            //if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
+            //    pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::update_msg);
+            //else
+            //    pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::full_msg);
+            printf("invoke.\n");
+            sink->send_buffer(stream_id, *new_buffer/*, full_or_partial */);
+        });
+
+    done->Run();
 }
 
 void mf::SessionMediator::release_surface(

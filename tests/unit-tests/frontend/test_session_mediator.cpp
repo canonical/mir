@@ -994,12 +994,11 @@ TEST_F(SessionMediator, arranges_bufferstreams_via_shell)
     mediator.modify_surface(nullptr, &mods, &null, null_callback.get());
 }
 
-
-
 TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
 {
     using namespace testing;
     auto mock_sink = std::make_shared<mtd::MockEventSink>();
+    auto buffer1 = std::make_shared<mtd::StubBuffer>();
     mf::SessionMediator mediator{
         shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
         surface_pixel_formats, report, mock_sink,
@@ -1011,13 +1010,15 @@ TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
 
+    request.mutable_id()->set_value(surface_response.id().value());
+    request.mutable_buffer()->set_buffer_id(surface_response.buffer_stream().buffer().buffer_id());
     auto mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+
     InSequence seq;
     EXPECT_CALL(mock_ipc_operations, unpack_buffer(_,_));
     EXPECT_CALL(*mock_stream, swap_buffers(_,_))
-        .WillOnce(InvokeArgument<1>(nullptr));
-    EXPECT_CALL(mock_ipc_operations, pack_buffer(_,_,_));
-    EXPECT_CALL(*mock_sink, send_buffer(_,_));
+        .WillOnce(InvokeArgument<1>(buffer1.get()));
+    EXPECT_CALL(*mock_sink, send_buffer(_, buffer1.get(), mg::BufferIpcMsgType::full_msg));
 
     mediator.submit_buffer(nullptr, &request, &null, null_callback.get());
 }
