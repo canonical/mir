@@ -27,6 +27,8 @@
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_display_configuration.h"
+#include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_platform_ipc_operations.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -51,6 +53,7 @@ struct EventSender : public testing::Test
     {
     }
     MockMsgSender mock_msg_sender;
+    mtd::MockPlatformIpcOperations mock_buffer_packer;
     mfd::EventSender event_sender;
 };
 }
@@ -110,7 +113,7 @@ TEST_F(EventSender, packs_buffer_with_platform_packer)
     mtd::StubBuffer buffer;
 
     InSequence seq;
-    EXPECT_CALL(mock_ipc_packer, pack_buffer(id, Ref(buffer), msg_type));
+    EXPECT_CALL(mock_buffer_packer, pack_buffer(_, Ref(buffer), msg_type));
     EXPECT_CALL(mock_msg_sender, send(_,_,_));
-    event_sender.send_buffer(id, buffer, msg_type);
+    event_sender.send_buffer(mf::BufferStreamId{}, buffer, msg_type);
 }
