@@ -1018,7 +1018,7 @@ TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
     EXPECT_CALL(mock_ipc_operations, unpack_buffer(_,_));
     EXPECT_CALL(*mock_stream, swap_buffers(_,_))
         .WillOnce(InvokeArgument<1>(buffer1.get()));
-    EXPECT_CALL(*mock_sink, send_buffer(_, Ref(*buffer1)));
+    EXPECT_CALL(*mock_sink, send_buffer(_, Ref(*buffer1), mg::BufferIpcMsgType::full_msg));
 
     mediator.submit_buffer(nullptr, &request, &null, null_callback.get());
 }
