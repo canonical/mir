@@ -236,7 +236,7 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
     if (dispatchee->watch_fd() == mir::Fd(mir::Fd::invalid))
         return;
 
-	decltype(dispatchee_holder)::iterator new_holder;
+    decltype(dispatchee_holder)::iterator new_holder;
     {
         WriteLock lock{lifetime_mutex};
         new_holder = dispatchee_holder.emplace(dispatchee_holder.begin(),
