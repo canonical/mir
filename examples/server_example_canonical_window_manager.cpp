@@ -55,6 +55,22 @@ Point titlebar_position_for_window(Point window_position)
         window_position.y - DeltaY(title_bar_height)
     };
 }
+
+bool needs_titlebar(MirSurfaceType type)
+{
+    switch (type)
+    {
+    case mir_surface_type_freestyle:
+    case mir_surface_type_menu:
+    case mir_surface_type_inputmethod:
+    case mir_surface_type_gloss:
+    case mir_surface_type_tip:
+        // No decorations for these surface types
+        return false;
+    default:
+        return true;
+    }
+}
 }
 
 me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
@@ -115,7 +131,11 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 -> ms::SurfaceCreationParameters
 {
     auto parameters = request_parameters;
-    parameters.size.height = parameters.size.height + DeltaY{title_bar_height};
+    auto surf_type = parameters.type.is_set() ? parameters.type.value() : mir_surface_type_normal;
+    bool const needs_titlebar = ::needs_titlebar(surf_type);
+
+    if (needs_titlebar)
+        parameters.size.height = parameters.size.height + DeltaY{title_bar_height};
 
     if (!parameters.state.is_set())
         parameters.state = mir_surface_state_restored;
@@ -243,7 +263,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
             parameters.top_left.y = display_area.top_left.y;
     }
 
-    if (parameters.state != mir_surface_state_fullscreen)
+    if (parameters.state != mir_surface_state_fullscreen && needs_titlebar)
     {
         parameters.top_left.y = parameters.top_left.y + DeltaY{title_bar_height};
         parameters.size.height = parameters.size.height - DeltaY{title_bar_height};
@@ -282,18 +302,8 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Surface> const& surface,
     CanonicalSurfaceInfoMap& surface_map)
 {
-    switch (surface->type())
-    {
-    case mir_surface_type_freestyle:
-    case mir_surface_type_menu:
-    case mir_surface_type_inputmethod:
-    case mir_surface_type_gloss:
-    case mir_surface_type_tip:
-        // No decorations for these surface types
+    if (!needs_titlebar(surface->type()))
         return;
-    default:
-        break;
-    }
 
     auto format = mir_pixel_format_xrgb_8888;
     ms::SurfaceCreationParameters params;

@@ -23,6 +23,7 @@
 #include "cursor_configuration.h"
 #include "client_buffer_stream_factory.h"
 #include "mir_connection.h"
+#include "client_buffer_stream.h"
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/xkb_mapper.h"
@@ -662,6 +663,18 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
         auto const aspect = surface_specification->mutable_max_aspect();
         aspect->set_width(spec.max_aspect.value().width);
         aspect->set_height(spec.max_aspect.value().height);
+    }
+
+    if (spec.streams.is_set())
+    {
+        for(auto const& stream : spec.streams.value())
+        {
+            auto const new_stream = surface_specification->add_stream();
+            new_stream->set_displacement_x(stream.displacement_x);
+            new_stream->set_displacement_y(stream.displacement_y);
+            new_stream->mutable_id()->set_value(
+                reinterpret_cast<mcl::ClientBufferStream*>(stream.stream)->rpc_id().as_value());
+        }
     }
 
     modify_wait_handle.expect_result();

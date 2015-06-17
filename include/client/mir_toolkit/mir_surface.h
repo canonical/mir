@@ -433,6 +433,28 @@ void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state);
 void mir_surface_spec_release(MirSurfaceSpec* spec);
 
 /**
+ * Set the streams associated with the spec.
+ * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
+ * On application of the spec, a stream that is present in the surface,
+ * but is not in the list will be disassociated from the surface.
+ * On application of the spec, a stream that is not present in the surface,
+ * but is in the list will be associated with the surface.
+ * Streams set a displacement from the top-left corner of the surface.
+ * 
+ * \warning disassociating streams from the surface will not release() them.
+ * \warning It is wiser to arrange the streams within the bounds of the
+ *          surface the spec is applied to. Shells can define their own
+ *          behavior as to what happens to an out-of-bound stream.
+ * 
+ * \param [in] spec        The spec to accumulate the request in.
+ * \param [in] streams     The an array of non-null streams info.
+ * \param [in] num_streams The number of elements in the streams array.
+ */
+void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
+                                  MirBufferStreamInfo* streams,
+                                  unsigned int num_streams);
+
+/**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do
  *            any locking appropriate to protect your data accessed in the

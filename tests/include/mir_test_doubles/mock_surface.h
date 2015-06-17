@@ -74,6 +74,7 @@ struct MockSurface : public scene::BasicSurface
     MOCK_METHOD1(consume, void(MirEvent const&));
 
     MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());
+    MOCK_METHOD1(set_streams, void(std::list<scene::StreamInfo> const&));
 
 };
 
