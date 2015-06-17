@@ -21,11 +21,13 @@
 
 #include "mir_test/fake_event_hub.h"
 
-#include "mir/shell/default_window_manager.h"
+#include "mir/shell/canonical_window_manager.h"
+#include "mir/scene/placement_strategy.h"
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;
-namespace ms = mir::shell;
+namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mia = mir::input::android;
 
 std::shared_ptr<mi::InputManager> mtf::FakeEventHubServerConfiguration::the_input_manager()
@@ -33,7 +35,7 @@ std::shared_ptr<mi::InputManager> mtf::FakeEventHubServerConfiguration::the_inpu
     return DefaultServerConfiguration::the_input_manager();
 }
 
-std::shared_ptr<ms::InputTargeter> mtf::FakeEventHubServerConfiguration::the_input_targeter()
+std::shared_ptr<msh::InputTargeter> mtf::FakeEventHubServerConfiguration::the_input_targeter()
 {
     return DefaultServerConfiguration::the_input_targeter();
 }
@@ -73,12 +75,42 @@ std::shared_ptr<mia::FakeEventHub> mtf::FakeEventHubServerConfiguration::the_fak
     return fake_event_hub;
 }
 
+namespace
+{
+class PlacementWindowManagerPolicy : public msh::CanonicalWindowManagerPolicy
+{
+public:
+    PlacementWindowManagerPolicy(
+        Tools* const tools,
+        std::shared_ptr<ms::PlacementStrategy> const& placement_strategy,
+        std::shared_ptr<msh::DisplayLayout> const& display_layout) :
+        msh::CanonicalWindowManagerPolicy{tools, display_layout},
+        placement_strategy{placement_strategy}
+    {}
+
+    auto handle_place_new_surface(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& request_parameters)
+        -> ms::SurfaceCreationParameters
+    {
+        return placement_strategy->place(*session, request_parameters);
+    }
+
+
+private:
+    std::shared_ptr<ms::PlacementStrategy> const placement_strategy;
+};
+
+using PlacementWindowManager = msh::BasicWindowManager<PlacementWindowManagerPolicy, msh::CanonicalSessionInfo, msh::CanonicalSurfaceInfo>;
+
+}
+
 auto mtf::FakeEventHubServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
 {
-    return [&](ms::FocusController* focus_controller)
-        { return std::make_shared<ms::DefaultWindowManager>(
+    return [&](msh::FocusController* focus_controller)
+        { return std::make_shared<PlacementWindowManager>(
             focus_controller,
             the_placement_strategy(),
-            the_session_coordinator()); };
+            the_shell_display_layout()); };
 }
 
