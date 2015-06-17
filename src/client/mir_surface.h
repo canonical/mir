@@ -97,6 +97,7 @@ struct MirSurfaceSpec
     mir::optional_value<int> height_inc;
     mir::optional_value<AspectRatio> min_aspect;
     mir::optional_value<AspectRatio> max_aspect;
+    mir::optional_value<std::vector<MirBufferStreamInfo>> streams;
 };
 
 struct MirPersistentId
