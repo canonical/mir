@@ -142,6 +142,7 @@ MIR_CLIENT_9 {
     mir_surface_spec_set_parent;
     mir_surface_spec_set_pixel_format;
     mir_surface_spec_set_preferred_orientation;
+    mir_surface_spec_set_state;
     mir_surface_spec_set_streams;
     mir_surface_spec_set_type;
     mir_surface_spec_set_width;
@@ -156,6 +157,7 @@ MIR_CLIENT_9 {
     mir_vsplit_resize_cursor_name;
     mir_wait_for;
     mir_wait_for_one;
+ local: *;
 };
 
 MIR_CLIENT_DETAIL_9 {
@@ -175,6 +177,7 @@ MIR_CLIENT_DETAIL_9 {
       mir::input::android::mir_pointer_action_from_masked_android*;
       mir::input::android::mir_touch_action_from_masked_android*;
       mir::input::android::android_source_id_is_pointer_device*;
+      mir::input::android::extract_android_action_from*;
       mir::client::DefaultConnectionConfiguration::DefaultConnectionConfiguration*;
       mir::client::DefaultConnectionConfiguration::the_surface_map*;
       mir::client::DefaultConnectionConfiguration::the_rpc_channel*;
