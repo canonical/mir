@@ -32,6 +32,7 @@ set(
   test_prompt_session_client_api.cpp
   test_client_screencast.cpp
   test_client_surface_visibility.cpp
+  test_buffer_stream_arrangement.cpp
   test_client_with_custom_display_config_deadlock.cpp
   test_server_without_active_outputs.cpp
   test_server_startup.cpp
@@ -45,6 +46,7 @@ set(
   test_surface_modifications.cpp
   test_surface_placement.cpp
   test_surface_morphing.cpp
+  test_system_compositor_window_manager.cpp
   test_session_mediator_report.cpp
 )
 
