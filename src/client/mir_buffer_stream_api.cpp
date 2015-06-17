@@ -23,6 +23,7 @@
 #include "mir_connection.h"
 #include "buffer_stream.h"
 #include "client_buffer_stream_factory.h"
+#include "make_protobuf_object.h"
 
 #include "mir/client_buffer.h"
 
@@ -68,13 +69,13 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     void *context)
 try
 {
-    mp::BufferStreamParameters params;
-    params.set_width(width);
-    params.set_height(height);
-    params.set_pixel_format(format);
-    params.set_buffer_usage(buffer_usage);
+    auto params = mcl::make_protobuf_object<mp::BufferStreamParameters>();
+    params->set_width(width);
+    params->set_height(height);
+    params->set_pixel_format(format);
+    params->set_buffer_usage(buffer_usage);
 
-    return connection->get_client_buffer_stream_factory()->make_producer_stream(connection->display_server(), params, callback, context)
+    return connection->get_client_buffer_stream_factory()->make_producer_stream(connection->display_server(), *params, callback, context)
         ->get_create_wait_handle();
 }
 catch (std::exception const& ex)
