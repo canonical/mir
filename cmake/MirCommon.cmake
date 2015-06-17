@@ -99,11 +99,11 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
 endfunction ()
 
 function (mir_discover_tests EXECUTABLE)
-  mir_discover_tests_internal(${EXECUTABLE} FALSE)
+  mir_discover_tests_internal(${EXECUTABLE} FALSE ${ARGN})
 endfunction()
 
 function (mir_discover_tests_with_fd_leak_detection EXECUTABLE)
-  mir_discover_tests_internal(${EXECUTABLE} TRUE)
+  mir_discover_tests_internal(${EXECUTABLE} TRUE ${ARGN})
 endfunction()
 
 function (mir_add_memcheck_test)
