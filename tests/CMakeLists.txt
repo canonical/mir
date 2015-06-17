@@ -81,3 +81,4 @@ add_subdirectory(client-language/)
 add_subdirectory(mir-stress/)
 
 mir_add_memcheck_test()
+mir_add_detect_fd_leaks_test()

@@ -23,7 +23,9 @@ if(ENABLE_MEMCHECK_OPTION)
     valgrind)
 
   if(VALGRIND_EXECUTABLE)
-    set(VALGRIND_CMD "${VALGRIND_EXECUTABLE}" "--error-exitcode=1" "--trace-children=yes" "--leak-check=full" "--show-leak-kinds=definite" "--errors-for-leak-kinds=definite")
+    set(VALGRIND_CMD "${VALGRIND_EXECUTABLE}" "--error-exitcode=1" "--trace-children=yes")
+    set(VALGRIND_CMD ${VALGRIND_CMD} "--leak-check=full" "--show-leak-kinds=definite" "--errors-for-leak-kinds=definite")
+    set(VALGRIND_CMD ${VALGRIND_CMD} "--track-fds=yes")
     set(VALGRIND_CMD ${VALGRIND_CMD} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_generic")
     set(VALGRIND_CMD ${VALGRIND_CMD} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_glibc_2.21")
     if (TARGET_ARCH STREQUAL "arm-linux-gnueabihf")
@@ -101,6 +103,21 @@ function (mir_add_memcheck_test)
     add_dependencies(memcheck_test mir_test_memory_error)
   endif()
 endfunction()
+
+function (mir_add_detect_fd_leaks_test)
+  if (ENABLE_MEMCHECK_OPTION)
+    add_custom_target(detect_fd_leaks_catches_fd_leak_test ALL)
+    mir_add_test(NAME "detect-fd-leaks-catches-fd-leak"
+      COMMAND ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${CMAKE_SOURCE_DIR}/tools/detect_fd_leaks.sh ${VALGRIND_CMD} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_fd_leak)
+    add_dependencies(detect_fd_leaks_catches_fd_leak_test mir_test_fd_leak)
+
+    add_custom_target(detect_fd_leaks_propagates_test_failure_test ALL)
+    mir_add_test(NAME "detect-fd-leaks-propagates-test-failure"
+      COMMAND ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${CMAKE_SOURCE_DIR}/tools/detect_fd_leaks.sh ${VALGRIND_CMD} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error)
+    add_dependencies(detect_fd_leaks_propagates_test_failure_test mir_test_memory_error)
+  endif()
+endfunction()
+
 
 function (mir_precompiled_header TARGET HEADER)
   if (MIR_USE_PRECOMPILED_HEADERS)
