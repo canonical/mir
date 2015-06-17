@@ -1,11 +1,12 @@
-mir (0.13.3) UNRELEASED; urgency=medium
+mir (0.13.3+15.10.20150617-0ubuntu1) wily; urgency=medium
 
+  [ Alberto Aguirre ]
   * New upstream release 0.13.3 (https://launchpad.net/mir/+milestone/0.13.3)
     - Bug fixes:
       . mir-client-platform-mesa-dev package dep is incorrect (LP: #1465642)
       . Avoid allocating mir protobuf message objects on stack (LP: #1465883)
 
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Wed, 17 Jun 2015 14:11:53 -0500
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 17 Jun 2015 20:02:15 +0000
 
 mir (0.13.2+15.10.20150605-0ubuntu1) wily; urgency=medium
 
