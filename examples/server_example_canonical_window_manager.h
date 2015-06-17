@@ -63,23 +63,14 @@ struct CanonicalSurfaceInfoCopy
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
 
-    void init_titlebar();
+    void init_titlebar(std::shared_ptr<scene::Surface> const& surface);
     void paint_titlebar(int intensity);
 
 private:
-    std::shared_ptr<frontend::BufferStream> buffer_stream;
 
-    // Add CopyAssign to std::atomic
-    struct AtomicBufferPtr : std::atomic<graphics::Buffer*>
-    {
-        using std::atomic<graphics::Buffer*>::atomic;
+    struct PaintingImpl;
 
-        AtomicBufferPtr(AtomicBufferPtr const& that) :
-            std::atomic<graphics::Buffer*>{that.load()} {}
-        AtomicBufferPtr& operator=(AtomicBufferPtr const& that)
-            { store(that.load()); return *this; }
-    };
-    AtomicBufferPtr buffer{nullptr};
+    std::shared_ptr<PaintingImpl> painting_impl;
 };
 
 // standard window management algorithm:
