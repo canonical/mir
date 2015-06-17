@@ -27,6 +27,8 @@
 
 #include <EGL/eglplatform.h>
 
+#include <memory>
+
 namespace mir
 {
 namespace protobuf { class DisplayServer; }
@@ -71,8 +73,8 @@ private:
     mir::geometry::Size const output_size;
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
 
-    mir::protobuf::Screencast protobuf_screencast;
-    mir::protobuf::Void protobuf_void;
+    std::unique_ptr<mir::protobuf::Screencast> protobuf_screencast;
+    std::unique_ptr<mir::protobuf::Void> protobuf_void;
 
     MirWaitHandle create_screencast_wait_handle;
     MirWaitHandle release_wait_handle;

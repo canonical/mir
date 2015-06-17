@@ -65,7 +65,7 @@ struct MirSurfaceSpec
     MirSurfaceSpec(MirConnection* connection, int width, int height, MirPixelFormat format);
     MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params);
 
-    mir::protobuf::SurfaceParameters serialize() const;
+    std::unique_ptr<mir::protobuf::SurfaceParameters> serialize() const;
 
     struct AspectRatio { unsigned width; unsigned height; };
 
@@ -178,16 +178,15 @@ private:
 
     mir::protobuf::DisplayServer::Stub* server{nullptr};
     mir::protobuf::Debug::Stub* debug{nullptr};
-    mir::protobuf::Surface surface;
-    mir::protobuf::BufferRequest buffer_request;
-    mir::protobuf::PersistentSurfaceId persistent_id;
+    std::unique_ptr<mir::protobuf::Surface> surface;
+    std::unique_ptr<mir::protobuf::PersistentSurfaceId> persistent_id;
     std::string error_message;
     std::string name;
-    mir::protobuf::Void void_response;
+    std::unique_ptr<mir::protobuf::Void> void_response;
 
     void on_modified();
     MirWaitHandle modify_wait_handle;
-    mir::protobuf::Void modify_result;
+    std::unique_ptr<mir::protobuf::Void> modify_result;
 
     MirConnection* const connection{nullptr};
 
@@ -201,7 +200,7 @@ private:
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 
-    mir::protobuf::SurfaceSetting configure_result;
+    std::unique_ptr<mir::protobuf::SurfaceSetting> configure_result;
 
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_surface_attribs];

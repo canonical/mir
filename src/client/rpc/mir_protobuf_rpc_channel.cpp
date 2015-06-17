@@ -25,6 +25,7 @@
 #include "../display_configuration.h"
 #include "../lifecycle_control.h"
 #include "../event_sink.h"
+#include "../make_protobuf_object.h"
 #include "mir/variable_length_array.h"
 #include "mir/events/event_private.h"
 
@@ -236,24 +237,24 @@ void mclr::MirProtobufRpcChannel::send_message(
 
 void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& event)
 {
-    mir::protobuf::EventSequence seq;
+    auto seq = mcl::make_protobuf_object<mir::protobuf::EventSequence>();
 
-    seq.ParseFromString(event);
+    seq->ParseFromString(event);
 
-    if (seq.has_display_configuration())
+    if (seq->has_display_configuration())
     {
-        display_configuration->update_configuration(seq.display_configuration());
+        display_configuration->update_configuration(seq->display_configuration());
     }
 
-    if (seq.has_lifecycle_event())
+    if (seq->has_lifecycle_event())
     {
-        lifecycle_control->call_lifecycle_event_handler(seq.lifecycle_event().new_state());
+        lifecycle_control->call_lifecycle_event_handler(seq->lifecycle_event().new_state());
     }
 
-    int const nevents = seq.event_size();
+    int const nevents = seq->event_size();
     for (int i = 0; i != nevents; ++i)
     {
-        mir::protobuf::Event const& event = seq.event(i);
+        mir::protobuf::Event const& event = seq->event(i);
         if (event.has_raw())
         {
             std::string const& raw_event = event.raw();
@@ -320,7 +321,7 @@ void mclr::MirProtobufRpcChannel::on_data_available()
      */
     std::lock_guard<decltype(read_mutex)> lock(read_mutex);
 
-    auto result = std::make_unique<mir::protobuf::wire::Result>();
+    auto result = mcl::make_protobuf_object<mir::protobuf::wire::Result>();
     try
     {
         uint16_t message_size;

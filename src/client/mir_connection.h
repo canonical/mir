@@ -35,6 +35,8 @@
 
 #include "mir_wait_handle.h"
 
+#include <memory>
+
 namespace mir
 {
 class SharedLibrary;
@@ -172,13 +174,13 @@ private:
     mir::protobuf::DisplayServer::Stub server;
     mir::protobuf::Debug::Stub debug;
     std::shared_ptr<mir::logging::Logger> const logger;
-    mir::protobuf::Void void_response;
-    mir::protobuf::Connection connect_result;
+    std::unique_ptr<mir::protobuf::Void> void_response;
+    std::unique_ptr<mir::protobuf::Connection> connect_result;
     std::atomic<bool> connect_done;
-    mir::protobuf::Void ignored;
-    mir::protobuf::ConnectParameters connect_parameters;
-    mir::protobuf::PlatformOperationMessage platform_operation_reply;
-    mir::protobuf::DisplayConfiguration display_configuration_response;
+    std::unique_ptr<mir::protobuf::Void> ignored;
+    std::unique_ptr<mir::protobuf::ConnectParameters> connect_parameters;
+    std::unique_ptr<mir::protobuf::PlatformOperationMessage> platform_operation_reply;
+    std::unique_ptr<mir::protobuf::DisplayConfiguration> display_configuration_response;
     std::atomic<bool> disconnecting{false};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
