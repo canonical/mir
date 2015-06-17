@@ -20,6 +20,7 @@
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
 #include "default_client_buffer_stream_factory.h"
+#include "make_protobuf_object.h"
 #include "mir_toolkit/mir_platform_message.h"
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
@@ -107,7 +108,13 @@ MirConnection::MirConnection(
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         debug(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         logger(conf.the_logger()),
+        void_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
+        connect_result{mcl::make_protobuf_object<mir::protobuf::Connection>()},
         connect_done{false},
+        ignored{mcl::make_protobuf_object<mir::protobuf::Void>()},
+        connect_parameters{mcl::make_protobuf_object<mir::protobuf::ConnectParameters>()},
+        platform_operation_reply{mcl::make_protobuf_object<mir::protobuf::PlatformOperationMessage>()},
+        display_configuration_response{mcl::make_protobuf_object<mir::protobuf::DisplayConfiguration>()},
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
@@ -116,7 +123,7 @@ MirConnection::MirConnection(
         event_handler_register(conf.the_event_handler_register()),
         eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}}
 {
-    connect_result.set_error("connect not called");
+    connect_result->set_error("connect not called");
     {
         std::lock_guard<std::mutex> lock(connection_guard);
         next_valid = valid_connections;
@@ -131,9 +138,9 @@ MirConnection::~MirConnection() noexcept
     connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
 
     std::lock_guard<decltype(mutex)> lock(mutex);
-    if (connect_result.has_platform())
+    if (connect_result && connect_result->has_platform())
     {
-        auto const& platform = connect_result.platform();
+        auto const& platform = connect_result->platform();
         for (int i = 0, end = platform.fd_size(); i != end; ++i)
             close(platform.fd(i));
     }
@@ -154,9 +161,9 @@ char const * MirConnection::get_error_message()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (connect_result.has_error())
+    if (connect_result && connect_result->has_error())
     {
-        return connect_result.error().c_str();
+        return connect_result->error().c_str();
     }
 
     return error_message.c_str();
@@ -220,8 +227,8 @@ MirWaitHandle* MirConnection::release_surface(
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
 
-    mir::protobuf::SurfaceId message;
-    message.set_value(surface->id());
+    auto message = mcl::make_protobuf_object<mir::protobuf::SurfaceId>();
+    message->set_value(surface->id());
 
     {
         std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
@@ -229,7 +236,7 @@ MirWaitHandle* MirConnection::release_surface(
     }
 
     new_wait_handle->expect_result();
-    server.release_surface(0, &message, &void_response,
+    server.release_surface(0, message.get(), void_response.get(),
                            gp::NewCallback(this, &MirConnection::released, surf_release));
 
 
@@ -248,9 +255,9 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
-        if (!connect_result.has_platform() || !connect_result.has_display_configuration())
+        if (!connect_result->has_platform() || !connect_result->has_display_configuration())
         {
-            if (!connect_result.has_error())
+            if (!connect_result->has_error())
             {
                 // We're handling an error scenario that means we're not sync'd
                 // with the client code - a callback isn't safe (or needed)
@@ -283,12 +290,12 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(
             platform, the_logger());
         native_display = platform->create_egl_native_display();
-        display_configuration->set_configuration(connect_result.display_configuration());
+        display_configuration->set_configuration(connect_result->display_configuration());
         lifecycle_control->set_lifecycle_event_handler(default_lifecycle_event_handler);
     }
     catch (std::exception const& e)
     {
-        connect_result.set_error(std::string{"Failed to process connect response: "} +
+        connect_result->set_error(std::string{"Failed to process connect response: "} +
                                  boost::diagnostic_information(e));
     }
 
@@ -304,14 +311,14 @@ MirWaitHandle* MirConnection::connect(
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
-        connect_parameters.set_application_name(app_name);
+        connect_parameters->set_application_name(app_name);
         connect_wait_handle.expect_result();
     }
 
     server.connect(
         0,
-        &connect_parameters,
-        &connect_result,
+        connect_parameters.get(),
+        connect_result.get(),
         google::protobuf::NewCallback(
             this, &MirConnection::connected, callback, context));
     return &connect_wait_handle;
@@ -339,7 +346,7 @@ MirWaitHandle* MirConnection::disconnect()
         disconnecting = true;
     }
     disconnect_wait_handle.expect_result();
-    server.disconnect(0, &ignored, &ignored,
+    server.disconnect(0, ignored.get(), ignored.get(),
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
     return &disconnect_wait_handle;
@@ -348,19 +355,19 @@ MirWaitHandle* MirConnection::disconnect()
 void MirConnection::done_platform_operation(
     mir_platform_operation_callback callback, void* context)
 {
-    auto reply = mir_platform_message_create(platform_operation_reply.opcode());
+    auto reply = mir_platform_message_create(platform_operation_reply->opcode());
 
-    set_error_message(platform_operation_reply.error());
+    set_error_message(platform_operation_reply->error());
 
     mir_platform_message_set_data(
         reply,
-        platform_operation_reply.data().data(),
-        platform_operation_reply.data().size());
+        platform_operation_reply->data().data(),
+        platform_operation_reply->data().size());
 
     mir_platform_message_set_fds(
         reply,
-        platform_operation_reply.fd().data(),
-        platform_operation_reply.fd().size());
+        platform_operation_reply->fd().data(),
+        platform_operation_reply->fd().size());
 
     callback(this, reply, context);
 
@@ -379,21 +386,21 @@ MirWaitHandle* MirConnection::platform_operation(
         return nullptr;
     }
 
-    mir::protobuf::PlatformOperationMessage protobuf_request;
+    auto protobuf_request = mcl::make_protobuf_object<mir::protobuf::PlatformOperationMessage>();
 
-    protobuf_request.set_opcode(mir_platform_message_get_opcode(request));
+    protobuf_request->set_opcode(mir_platform_message_get_opcode(request));
     auto const request_data = mir_platform_message_get_data(request);
     auto const request_fds = mir_platform_message_get_fds(request);
 
-    protobuf_request.set_data(request_data.data, request_data.size);
+    protobuf_request->set_data(request_data.data, request_data.size);
     for (size_t i = 0; i != request_fds.num_fds; ++i)
-        protobuf_request.add_fd(request_fds.fds[i]);
+        protobuf_request->add_fd(request_fds.fds[i]);
 
     platform_operation_wait_handle.expect_result();
     server.platform_operation(
         0,
-        &protobuf_request,
-        &platform_operation_reply,
+        protobuf_request.get(),
+        platform_operation_reply.get(),
         google::protobuf::NewCallback(this, &MirConnection::done_platform_operation,
                                       callback, context));
 
@@ -411,7 +418,7 @@ bool MirConnection::is_valid(MirConnection *connection)
             {
                 lock.unlock();
                 std::lock_guard<decltype(connection->mutex)> lock(connection->mutex);
-                return !connection->connect_result.has_error();
+                return !connection->connect_result->has_error();
             }
         }
     }
@@ -427,9 +434,9 @@ void MirConnection::populate_server_package(MirPlatformPackage& platform_package
 {
     // connect_result is write-once: once it's valid, we don't need to lock
     // to use it.
-    if (connect_done && !connect_result.has_error() && connect_result.has_platform())
+    if (connect_done && !connect_result->has_error() && connect_result->has_platform())
     {
-        auto const& platform = connect_result.platform();
+        auto const& platform = connect_result->platform();
 
         platform_package.data_items = platform.data_size();
         for (int i = 0; i != platform.data_size(); ++i)
@@ -460,15 +467,15 @@ void MirConnection::available_surface_formats(
     valid_formats = 0;
 
     std::lock_guard<decltype(mutex)> lock(mutex);
-    if (!connect_result.has_error())
+    if (!connect_result->has_error())
     {
         valid_formats = std::min(
-            static_cast<unsigned int>(connect_result.surface_pixel_format_size()),
+            static_cast<unsigned int>(connect_result->surface_pixel_format_size()),
             formats_size);
 
         for (auto i = 0u; i < valid_formats; i++)
         {
-            formats[i] = static_cast<MirPixelFormat>(connect_result.surface_pixel_format(i));
+            formats[i] = static_cast<MirPixelFormat>(connect_result->surface_pixel_format(i));
         }
     }
 }
@@ -488,13 +495,13 @@ mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
     mir_buffer_stream_callback callback,
     void *context)
 {
-    mir::protobuf::BufferStreamParameters params;
-    params.set_width(width);
-    params.set_height(height);
-    params.set_pixel_format(format);
-    params.set_buffer_usage(buffer_usage);
+    auto params = mcl::make_protobuf_object<mir::protobuf::BufferStreamParameters>();
+    params->set_width(width);
+    params->set_height(height);
+    params->set_pixel_format(format);
+    params->set_buffer_usage(buffer_usage);
 
-    return buffer_stream_factory->make_producer_stream(this, server, params, callback, context);
+    return buffer_stream_factory->make_producer_stream(this, server, *params, callback, context);
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
@@ -559,10 +566,10 @@ void MirConnection::done_display_configure()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    set_error_message(display_configuration_response.error());
+    set_error_message(display_configuration_response->error());
 
-    if (!display_configuration_response.has_error())
-        display_configuration->set_configuration(display_configuration_response);
+    if (!display_configuration_response->has_error())
+        display_configuration->set_configuration(*display_configuration_response);
 
     return configure_display_wait_handle.result_received();
 }
@@ -574,14 +581,14 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         return NULL;
     }
 
-    mir::protobuf::DisplayConfiguration request;
+    auto request = mcl::make_protobuf_object<mir::protobuf::DisplayConfiguration>();
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
         for (auto i=0u; i < config->num_outputs; i++)
         {
             auto output = config->outputs[i];
-            auto display_request = request.add_display_output();
+            auto display_request = request->add_display_output();
             display_request->set_output_id(output.output_id);
             display_request->set_used(output.used);
             display_request->set_current_mode(output.current_mode);
@@ -594,7 +601,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
     }
 
     configure_display_wait_handle.expect_result();
-    server.configure_display(0, &request, &display_configuration_response,
+    server.configure_display(0, request.get(), display_configuration_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 
     return &configure_display_wait_handle;
@@ -619,8 +626,8 @@ MirWaitHandle* MirConnection::release_buffer_stream(
 
     StreamRelease stream_release{stream, new_wait_handle, callback, context};
 
-    mir::protobuf::BufferStreamId buffer_stream_id;
-    buffer_stream_id.set_value(stream->rpc_id().as_value());
+    auto buffer_stream_id = mcl::make_protobuf_object<mir::protobuf::BufferStreamId>();
+    buffer_stream_id->set_value(stream->rpc_id().as_value());
 
     {
         std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
@@ -629,7 +636,7 @@ MirWaitHandle* MirConnection::release_buffer_stream(
 
     new_wait_handle->expect_result();
     server.release_buffer_stream(
-        nullptr, &buffer_stream_id, &void_response,
+        nullptr, buffer_stream_id.get(), void_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
     return new_wait_handle;
 }
