@@ -125,7 +125,7 @@ public:
                         the_shell_display_layout());
                 }
 
-                return std::make_shared<shell::DefaultWindowManager>(
+                return std::make_shared<DefaultWindowManager>(
                     focus_controller,
                     the_placement_strategy(),
                     the_session_coordinator());
