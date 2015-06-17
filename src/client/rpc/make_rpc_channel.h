@@ -20,6 +20,8 @@
 
 #include <memory>
 
+#include "../lifecycle_control.h"
+
 namespace google { namespace protobuf { class RpcChannel; } }
 
 namespace mir
@@ -28,7 +30,6 @@ namespace client
 {
 class SurfaceMap;
 class DisplayConfiguration;
-class LifecycleControl;
 class EventSink;
 
 namespace rpc

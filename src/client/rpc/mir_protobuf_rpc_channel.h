@@ -25,6 +25,8 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 
+#include "../lifecycle_control.h"
+
 #include "mir_protobuf_wire.pb.h"
 
 #include <google/protobuf/service.h>
@@ -41,7 +43,6 @@ namespace client
 {
 class DisplayConfiguration;
 class SurfaceMap;
-class LifecycleControl;
 class EventSink;
 namespace rpc
 {

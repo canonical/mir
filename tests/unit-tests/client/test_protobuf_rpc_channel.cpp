@@ -344,7 +344,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_on_write_error)
 
     bool disconnected{false};
 
-    lifecycle->set_lifecycle_event_handler([&disconnected](MirLifecycleState state)
+    lifecycle->set_callback([&disconnected](MirLifecycleState state)
     {
         if (state == mir_lifecycle_connection_lost)
         {
@@ -372,7 +372,7 @@ TEST_F(MirProtobufRpcChannelTest, forwards_disconnect_notification)
 
     bool disconnected{false};
 
-    lifecycle->set_lifecycle_event_handler([&disconnected](MirLifecycleState state)
+    lifecycle->set_callback([&disconnected](MirLifecycleState state)
     {
         if (state == mir_lifecycle_connection_lost)
         {
@@ -394,7 +394,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_only_once)
 
     bool disconnected{false};
 
-    lifecycle->set_lifecycle_event_handler([&disconnected](MirLifecycleState state)
+    lifecycle->set_callback([&disconnected](MirLifecycleState state)
     {
         if (state == mir_lifecycle_connection_lost)
         {

@@ -20,6 +20,7 @@
 #define MIR_CLIENT_CONNECTION_CONFIGURATION_H_
 
 #include <memory>
+#include "lifecycle_control.h"
 
 namespace google { namespace protobuf { class RpcChannel; } }
 
@@ -45,7 +46,6 @@ class ConnectionSurfaceMap;
 class Logger;
 class ClientPlatformFactory;
 class DisplayConfiguration;
-class LifecycleControl;
 class EventSink;
 class EventHandlerRegister;
 

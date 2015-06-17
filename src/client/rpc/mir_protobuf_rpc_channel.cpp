@@ -81,7 +81,7 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
 {
     if (!disconnected.exchange(true))
     {
-        lifecycle_control->call_lifecycle_event_handler(mir_lifecycle_connection_lost);
+        (*lifecycle_control)(mir_lifecycle_connection_lost);
     }
     pending_calls.force_completion();
 }
@@ -247,7 +247,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
     if (seq.has_lifecycle_event())
     {
-        lifecycle_control->call_lifecycle_event_handler(seq.lifecycle_event().new_state());
+        (*lifecycle_control)(static_cast<MirLifecycleState>(seq.lifecycle_event().new_state()));
     }
 
     int const nevents = seq.event_size();

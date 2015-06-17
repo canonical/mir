@@ -33,6 +33,8 @@
 #include "mir/client_platform.h"
 #include "mir/client_context.h"
 
+#include "lifecycle_control.h"
+
 #include "mir_wait_handle.h"
 
 namespace mir
@@ -47,7 +49,6 @@ class ClientPlatformFactory;
 class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
-class LifecycleControl;
 class EventHandlerRegister;
 
 namespace rpc

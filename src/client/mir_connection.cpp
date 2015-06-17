@@ -264,7 +264,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result.display_configuration());
-        lifecycle_control->set_lifecycle_event_handler(default_lifecycle_event_handler);
+        lifecycle_control->set_callback(default_lifecycle_event_handler);
     }
     catch (std::exception const& e)
     {
@@ -308,7 +308,7 @@ void MirConnection::done_disconnect()
     }
 
     // Ensure no racy lifecycle notifications can happen after disconnect completes
-    lifecycle_control->set_lifecycle_event_handler([](MirLifecycleState){});
+    lifecycle_control->set_callback([](MirLifecycleState){});
     disconnect_wait_handle.result_received();
 }
 
@@ -481,7 +481,7 @@ void MirConnection::on_surface_created(int id, MirSurface* surface)
 
 void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context)
 {
-    lifecycle_control->set_lifecycle_event_handler(std::bind(callback, this, std::placeholders::_1, context));
+    lifecycle_control->set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
 
 void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)
