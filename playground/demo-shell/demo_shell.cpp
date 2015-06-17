@@ -30,6 +30,7 @@
 #include "mir/compositor/renderer_factory.h"
 #include "mir/options/option.h"
 #include "default_window_manager.h"
+#include "default_placement_strategy.h"
 #include "server_example_tiling_window_manager.h"
 #include "mir/shell/canonical_window_manager.h"
 #include "server_example_host_lifecycle_event_listener.h"
@@ -139,6 +140,16 @@ public:
            {
                return std::make_shared<HostLifecycleEventListener>(the_logger());
            });
+    }
+
+    std::shared_ptr<ms::PlacementStrategy> the_placement_strategy()
+    {
+        return placement_strategy(
+            [this]
+                {
+                return std::make_shared<msh::DefaultPlacementStrategy>(
+                    the_shell_display_layout());
+                });
     }
 
 private:

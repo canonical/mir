@@ -25,18 +25,16 @@ namespace ms = mir::scene;
 namespace mtf = mir_test_framework;
 
 mtf::DeclarativePlacementStrategy::DeclarativePlacementStrategy(
-    std::shared_ptr<ms::PlacementStrategy> const& default_strategy,
-    SurfaceGeometries const& positions, 
-    SurfaceDepths const& depths)
-    : default_strategy(default_strategy),
+    SurfaceGeometries const& positions,
+    SurfaceDepths const& depths) :
     surface_geometries_by_name(positions),
     surface_depths_by_name(depths)
 {
 }
 
-ms::SurfaceCreationParameters mtf::DeclarativePlacementStrategy::place(ms::Session const& session, ms::SurfaceCreationParameters const& request_parameters)
+ms::SurfaceCreationParameters mtf::DeclarativePlacementStrategy::place(ms::Session const& /*session*/, ms::SurfaceCreationParameters const& request_parameters)
 {
-    auto placed = default_strategy->place(session, request_parameters);
+    auto placed = request_parameters;
 
     auto const& name = request_parameters.name;
     

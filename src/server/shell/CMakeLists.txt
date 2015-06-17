@@ -3,7 +3,6 @@ set(
 
   abstract_shell.cpp
   canonical_window_manager.cpp
-  default_placement_strategy.cpp
   frontend_shell.cpp
   graphics_display_layout.cpp
   default_configuration.cpp

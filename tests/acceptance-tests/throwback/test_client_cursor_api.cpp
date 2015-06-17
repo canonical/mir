@@ -20,6 +20,9 @@
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/input/cursor_images.h"
+#include "mir/shell/canonical_window_manager.h"
+#include "mir/scene/placement_strategy.h"
+
 
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/fake_event_hub_server_configuration.h"
@@ -41,6 +44,8 @@
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mis = mir::input::synthesis;
+namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
 namespace mt = mir::test;
@@ -210,13 +215,49 @@ struct NamedCursorClient : CursorClient
     std::string const cursor_name;
 };
 
+class PlacementWindowManagerPolicy : public msh::CanonicalWindowManagerPolicy
+{
+public:
+    PlacementWindowManagerPolicy(
+        Tools* const tools,
+        std::shared_ptr<ms::PlacementStrategy> const& placement_strategy,
+        std::shared_ptr<msh::DisplayLayout> const& display_layout) :
+        msh::CanonicalWindowManagerPolicy{tools, display_layout},
+        placement_strategy{placement_strategy}
+    {}
+
+    auto handle_place_new_surface(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& request_parameters)
+        -> ms::SurfaceCreationParameters
+    {
+        return placement_strategy->place(*session, request_parameters);
+    }
+
+
+private:
+    std::shared_ptr<ms::PlacementStrategy> const placement_strategy;
+};
+
 struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
 {
-    std::shared_ptr<mir::scene::PlacementStrategy> the_placement_strategy() override
+    std::shared_ptr<mir::scene::PlacementStrategy> the_placement_strategy()
     {
         return std::make_shared<mtf::DeclarativePlacementStrategy>(
-            FakeEventHubServerConfiguration::the_placement_strategy(),
             client_geometries, client_depths);
+    }
+
+    auto the_window_manager_builder() -> msh::WindowManagerBuilder override
+    {
+        using PlacementWindowManager = msh::BasicWindowManager<PlacementWindowManagerPolicy, msh::CanonicalSessionInfo, msh::CanonicalSurfaceInfo>;
+
+        return [&](msh::FocusController* focus_controller)
+            {
+                return std::make_shared<PlacementWindowManager>(
+                    focus_controller,
+                    the_placement_strategy(),
+                    the_shell_display_layout());
+            };
     }
 
     std::shared_ptr<mg::Cursor> the_cursor() override
