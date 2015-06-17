@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_DEFAULT_PLACEMENT_STRATEGY_H_
-#define MIR_SHELL_DEFAULT_PLACEMENT_STRATEGY_H_
+#ifndef MIR_EXAMPLES_DEFAULT_PLACEMENT_STRATEGY_H_
+#define MIR_EXAMPLES_DEFAULT_PLACEMENT_STRATEGY_H_
 
 #include "mir/scene/placement_strategy.h"
 
@@ -28,12 +28,15 @@ namespace mir
 namespace shell
 {
 class DisplayLayout;
+}
 
+namespace examples
+{
 class DefaultPlacementStrategy : public scene::PlacementStrategy
 {
 public:
     explicit DefaultPlacementStrategy(
-            std::shared_ptr<DisplayLayout> const& display_layout);
+            std::shared_ptr<shell::DisplayLayout> const& display_layout);
     virtual ~DefaultPlacementStrategy() {}
 
     virtual scene::SurfaceCreationParameters place(scene::Session const& session, scene::SurfaceCreationParameters const& request_parameters);
@@ -43,7 +46,7 @@ protected:
     DefaultPlacementStrategy& operator=(DefaultPlacementStrategy const&) = delete;
 
 private:
-    std::shared_ptr<DisplayLayout> const display_layout;
+    std::shared_ptr<shell::DisplayLayout> const display_layout;
 };
 
 }

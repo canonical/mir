@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -144,12 +144,11 @@ public:
 
     std::shared_ptr<ms::PlacementStrategy> the_placement_strategy()
     {
-        return placement_strategy(
-            [this]
-                {
-                return std::make_shared<msh::DefaultPlacementStrategy>(
+        return placement_strategy([this]
+            {
+                return std::make_shared<DefaultPlacementStrategy>(
                     the_shell_display_layout());
-                });
+            });
     }
 
 private:
