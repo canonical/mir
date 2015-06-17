@@ -45,6 +45,7 @@ struct CanonicalSurfaceInfoCopy
         std::shared_ptr<scene::Surface> const& surface,
         scene::SurfaceCreationParameters const& params);
 
+    MirSurfaceType type;
     MirSurfaceState state;
     geometry::Rectangle restore_rect;
     std::weak_ptr<scene::Session> session;
@@ -66,15 +67,17 @@ struct CanonicalSurfaceInfoCopy
     void paint_titlebar(int intensity);
 
 private:
-    std::shared_ptr<frontend::BufferStream> const buffer_stream;
+    std::shared_ptr<frontend::BufferStream> buffer_stream;
 
-    // Add copy-ctor to std::atomic
+    // Add CopyAssign to std::atomic
     struct AtomicBufferPtr : std::atomic<graphics::Buffer*>
     {
         using std::atomic<graphics::Buffer*>::atomic;
 
         AtomicBufferPtr(AtomicBufferPtr const& that) :
             std::atomic<graphics::Buffer*>{that.load()} {}
+        AtomicBufferPtr& operator=(AtomicBufferPtr const& that)
+            { store(that.load()); return *this; }
     };
     AtomicBufferPtr buffer{nullptr};
 };

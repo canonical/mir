@@ -75,6 +75,7 @@ me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     scene::SurfaceCreationParameters const& params) :
+    type{surface->type()},
     state{surface->state()},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
@@ -374,15 +375,83 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
-    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     shell::SurfaceSpecification const& modifications)
 {
-    auto& surface_info = tools->info_for(surface);
+    auto& surface_info_old = tools->info_for(surface);
+
+    auto surface_info = surface_info_old;
+
+    if (modifications.parent.is_set())
+        surface_info.parent = modifications.parent.value();
+
+    if (modifications.type.is_set() &&
+        surface_info.type != modifications.type.value())
+    {
+        auto const new_type = modifications.type.value();
+
+        switch(new_type)
+        {
+        case mir_surface_type_normal:
+        case mir_surface_type_utility:
+            switch (surface_info.type)
+            {
+            case mir_surface_type_normal:
+            case mir_surface_type_utility:
+            case mir_surface_type_dialog:
+            case mir_surface_type_satellite:
+                if (modifications.parent.is_set())
+                    throw std::runtime_error("Target surface type does not support parent");
+                break;
+
+            default:
+                throw std::runtime_error("Unsupported surface type change");
+            }
+            surface_info.parent.reset();
+            break;
+
+        case mir_surface_type_satellite:
+            switch (surface_info.type)
+            {
+            case mir_surface_type_normal:
+            case mir_surface_type_utility:
+            case mir_surface_type_dialog:
+            case mir_surface_type_satellite:
+                if (!surface_info.parent.lock())
+                    throw std::runtime_error("Target surface type requires parent");
+                break;
+
+            default:
+                throw std::runtime_error("Unsupported surface type change");
+            }
+            break;
+
+        case mir_surface_type_dialog:
+            switch (surface_info.type)
+            {
+            case mir_surface_type_normal:
+            case mir_surface_type_utility:
+            case mir_surface_type_dialog:
+            case mir_surface_type_popover:
+            case mir_surface_type_satellite:
+                break;
+
+            default:
+                throw std::runtime_error("Unsupported surface type change");
+            }
+            break;
+
+        default:
+            throw std::runtime_error("Unsupported surface type change");
+        }
+        surface_info.type = new_type;
+        surface->configure(mir_surface_attrib_type, new_type);
+    }
 
     #define COPY_IF_SET(field)\
         if (modifications.field.is_set())\
-        surface_info.field = modifications.field
+            surface_info.field = modifications.field
 
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
@@ -396,8 +465,17 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
     #undef COPY_IF_SET
 
+    std::swap(surface_info, surface_info_old);
+
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
+
+    if (modifications.streams.is_set())
+    {
+        auto v = modifications.streams.value();
+        std::vector<shell::StreamSpecification> l (v.begin(), v.end());
+        session->configure_streams(*surface, l);
+    }
 
     if (modifications.width.is_set() || modifications.height.is_set())
     {
@@ -527,6 +605,7 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
         surface->resize(rect.size);
         break;
     }
+
     case mir_surface_state_hidden:
     case mir_surface_state_minimized:
         if (info.titlebar)
@@ -808,7 +887,7 @@ auto me::CanonicalWindowManagerPolicyCopy::active_surface() const
 
 bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
-    if (!surface || !surface->input_area_contains(cursor))
+    if (!surface || !surface->input_area_contains(old_cursor))
         return false;
 
     auto const top_left = surface->top_left();
