@@ -127,13 +127,13 @@ public:
 
     void allocate_buffers( 
         google::protobuf::RpcController* controller,
-        mir::protobuf::BufferAllocationRequest const* request,
+        mir::protobuf::BufferAllocation const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
 
     void release_buffers(
         google::protobuf::RpcController* controller,
-        mir::protobuf::BufferReleaseRequest const* request,
+        mir::protobuf::BufferRelease const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
 

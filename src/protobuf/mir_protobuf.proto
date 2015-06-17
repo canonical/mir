@@ -102,12 +102,12 @@ message BufferStreamParameters {
     required int32 buffer_usage = 4;
 };
 
-message BufferAllocationRequest {
+message BufferAllocation {
   optional BufferStreamId id = 1;
   repeated BufferStreamParameters buffer_requests = 2;  
 };
 
-message BufferReleaseRequest {
+message BufferRelease {
   repeated Buffer buffers = 1;  
 };
 
@@ -338,8 +338,8 @@ service DisplayServer {
   rpc exchange_buffer(BufferRequest) returns (Buffer);
 
   rpc submit_buffer(BufferRequest) returns (Void);
-  rpc allocate_buffers(BufferAllocationRequest) returns (Void);
-  rpc release_buffers(BufferReleaseRequest) returns (Void);
+  rpc allocate_buffers(BufferAllocation) returns (Void);
+  rpc release_buffers(BufferRelease) returns (Void);
 
   rpc request_persistent_surface_id(SurfaceId) returns (PersistentSurfaceId);
 }

@@ -248,7 +248,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
     }
 
-    bool allocate_buffers(mp::DisplayServer& server, mp::BufferAllocationRequest& request)
+    bool allocate_buffers(mp::DisplayServer& server, mp::BufferAllocation& request)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
@@ -259,7 +259,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
     }
 
-    bool release_buffers(mp::DisplayServer& server, mp::BufferReleaseRequest& request)
+    bool release_buffers(mp::DisplayServer& server, mp::BufferRelease& request)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
@@ -369,7 +369,7 @@ TEST_F(ExchangeBufferTest, allocate_buffers_doesnt_time_out)
     mp::DisplayServer::Stub server(
         rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
 
-    mp::BufferAllocationRequest request;
+    mp::BufferAllocation request;
     EXPECT_THAT(allocate_buffers(server, request), DidNotTimeOut());
 
     mir_surface_release_sync(surface);
@@ -385,7 +385,7 @@ TEST_F(ExchangeBufferTest, release_buffers_doesnt_time_out)
     mp::DisplayServer::Stub server(
         rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
 
-    mp::BufferReleaseRequest request;
+    mp::BufferRelease request;
     EXPECT_THAT(release_buffers(server, request), DidNotTimeOut());
 
     mir_surface_release_sync(surface);

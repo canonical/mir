@@ -344,7 +344,7 @@ void mf::SessionMediator::submit_buffer(
 
 void mf::SessionMediator::allocate_buffers( 
     google::protobuf::RpcController*,
-    mir::protobuf::BufferAllocationRequest const*,
+    mir::protobuf::BufferAllocation const*,
     mir::protobuf::Void*,
     google::protobuf::Closure*)
 {
@@ -353,7 +353,7 @@ void mf::SessionMediator::allocate_buffers(
 
 void mf::SessionMediator::release_buffers(
     google::protobuf::RpcController*,
-    mir::protobuf::BufferReleaseRequest const*,
+    mir::protobuf::BufferRelease const*,
     mir::protobuf::Void*,
     google::protobuf::Closure*)
 {
