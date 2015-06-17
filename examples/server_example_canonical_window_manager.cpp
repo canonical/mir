@@ -19,10 +19,9 @@
 #include "server_example_canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
-#include "mir/scene/null_surface_observer.h"
+#include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/display_layout.h"
 #include "mir/shell/surface_specification.h"
-#include "mir/shell/surface_ready_observer.h"
 #include "mir/geometry/displacement.h"
 
 #include "mir/graphics/buffer.h"

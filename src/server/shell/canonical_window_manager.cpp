@@ -398,7 +398,9 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
-    if (auto const parent = tools->info_for(surface).parent.lock())
+    auto& info = tools->info_for(surface);
+
+    if (auto const parent = info.parent.lock())
     {
         auto& siblings = tools->info_for(parent).children;
 
@@ -431,6 +433,8 @@ int msh::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surf
     case mir_surface_state_vertmaximized:
     case mir_surface_state_horizmaximized:
     case mir_surface_state_fullscreen:
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
         break;
 
     default:
@@ -479,6 +483,13 @@ int msh::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surf
         movement = rect.top_left - old_pos;
         surface->resize(rect.size);
     }
+
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
+        surface->hide();
+        info.state = value;
+        // Map minimized to hidden, otherwise surface goes visible again.
+        return mir_surface_state_hidden;
 
     default:
         break;
