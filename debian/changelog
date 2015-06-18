@@ -3,7 +3,7 @@ mir (0.14.0-0ubuntu1) UNRELEASED; urgency=medium
   * New upstream release 0.14.0 (https://launchpad.net/mir/+milestone/0.14.0)
     - ABI summary: All clients and all servers need building;
       . Mirclient ABI bumped to 9
-      . Mirserver ABI bumped to 31
+      . Mirserver ABI bumped to 32
       . Mircommon ABI bumped to 5
       . Mirplatform ABI bumped to 8
     - Enhancements:
