@@ -23,8 +23,8 @@
 #include "src/platforms/android/server/display_component_factory.h"
 #include "src/platforms/android/server/configurable_display_buffer.h"
 #include "src/platforms/android/server/hwc_configuration.h"
-#include "stub_display_configuration.h"
-#include "mock_display_device.h"
+#include "mir_test_doubles/stub_display_configuration.h"
+#include "mir_test_doubles/mock_display_device.h"
 #include <gmock/gmock.h>
 
 namespace mir
