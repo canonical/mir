@@ -21,8 +21,8 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "null_display.h"
-#include "null_platform_ipc_operations.h"
+#include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_platform_ipc_operations.h"
 
 namespace mir
 {
