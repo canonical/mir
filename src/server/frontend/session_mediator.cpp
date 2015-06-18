@@ -160,7 +160,6 @@ void mf::SessionMediator::advance_buffer(
         old_buffer,
         [this, stream_id, complete](mg::Buffer* new_buffer)
         {
-            printf("SENDING THE OLD WAY: %i\n", new_buffer->id().as_value());
             if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
@@ -351,23 +350,13 @@ void mf::SessionMediator::submit_buffer(
     if (!session) BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     auto stream = session->get_buffer_stream(stream_id);
-    printf("SUBMITTED ID: %i\n", old_buffer->id().as_value());
     stream->swap_buffers(old_buffer,
         [this, stream_id, done](mg::Buffer* new_buffer)
         {
-            printf("CALLInnn\n");
             if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-            {
-                printf("PARTIAL\n");
                 event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::update_msg);
-            }
             else
-            {
-                printf("UNPARTIAL.\n");
                 event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::full_msg);
-            }
-
-            printf("CAlled\n");
         });
 
     done->Run();

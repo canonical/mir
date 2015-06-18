@@ -32,13 +32,13 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
 {
     auto native_buffer = buffer.native_buffer_handle();
 
-//    mir::Fd fence_fd(native_buffer->copy_fence());
-//    if (fence_fd != mir::Fd::invalid)
-//    {
-//        msg.pack_data(static_cast<int>(mga::BufferFlag::fenced));
-//        msg.pack_fd(fence_fd);
-//    }
-//    else
+    mir::Fd fence_fd(native_buffer->copy_fence());
+    if (fence_fd != mir::Fd::invalid)
+    {
+        msg.pack_data(static_cast<int>(mga::BufferFlag::fenced));
+        msg.pack_fd(fence_fd);
+    }
+    else
     {
         msg.pack_data(static_cast<int>(mga::BufferFlag::unfenced));
     }

@@ -151,7 +151,6 @@ private:
     MirWaitHandle release_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;
-    mir::protobuf::BufferRequest request;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
     
     std::shared_ptr<MemoryRegion> secured_region;

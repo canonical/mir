@@ -64,10 +64,9 @@ void mclr::StreamSocketTransport::unregister_observer(std::shared_ptr<Observer> 
 {
     observers.remove(observer);
 }
-#if 0
+
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested)
 {
-    printf("in here.\n");
     /*
      * Explicitly implement this, rather than delegating to receive_data(buffer, size, fds)
      * so that we can catch when we discard file descriptors.
@@ -131,7 +130,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
         bytes_read += result;
     }
 }
-#endif
+
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested, std::vector<mir::Fd>& fds)
 try
 {

@@ -25,7 +25,7 @@ namespace mir
 {
 inline void require(bool const expr)
 {
-    if (!expr) { printf("DUMB.\n"); std::abort(); }
+    if (!expr) std::abort();
 }
 }
 

@@ -221,12 +221,12 @@ void mcl::BufferStream::submit_done()
 MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std::unique_lock<std::mutex> lock)
 {
     //always submit what we have, whether we have a buffer, or will have to wait for an async reply
-    request.mutable_id()->set_value(protobuf_bs->id().value());
-    request.mutable_buffer()->set_buffer_id(buffer_depository.current_buffer_id());
-
+    auto request = mcl::make_protobuf_object<mp::BufferRequest>();
+    request->mutable_id()->set_value(protobuf_bs->id().value());
+    request->mutable_buffer()->set_buffer_id(buffer_depository.current_buffer_id());
     submitting = true;
     lock.unlock();
-    display_server.submit_buffer(nullptr, &request, protobuf_void.get(),
+    display_server.submit_buffer(nullptr, request.get(), protobuf_void.get(),
         google::protobuf::NewCallback(this, &mcl::BufferStream::submit_done));
     lock.lock();
     submit_cv.wait(lock, [&]{ return !submitting; });
@@ -241,8 +241,6 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
         process_buffer(incoming_buffers.front(), lock);
         incoming_buffers.pop();
         done();
-        next_buffer_wait_handle.expect_result();
-        next_buffer_wait_handle.result_received();
     }
     return &next_buffer_wait_handle;
 }
@@ -250,9 +248,6 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
 MirWaitHandle* mcl::BufferStream::exchange(
     std::function<void()> const& done, std::unique_lock<std::mutex> lock)
 {
-    mir::protobuf::BufferStreamId buffer_stream_id;
-    buffer_stream_id.set_value(protobuf_bs->id().value());
-
     // TODO: We can fix the strange "ID casting" used below in the second phase
     // of buffer stream which generalizes and clarifies the server side logic.
     if (mode == mcl::BufferStreamMode::Producer)
@@ -278,6 +273,7 @@ MirWaitHandle* mcl::BufferStream::exchange(
         screencast_id->set_value(protobuf_bs->id().value());
 
         lock.unlock();
+        next_buffer_wait_handle.expect_result();
 
         display_server.screencast_buffer(
             nullptr,

@@ -100,6 +100,7 @@ void mga::Buffer::gl_bind_to_texture()
         image = egl_extensions->eglCreateImageKHR(
                     current.first, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
                     native_buffer->anwb(), image_attrs);
+
         if (image == EGL_NO_IMAGE_KHR)
         {
             BOOST_THROW_EXCEPTION(mg::egl_error("error binding buffer to texture"));

@@ -40,7 +40,6 @@ struct NativeHandleDeleter
 
     void operator()(const native_handle_t* t)
     {
-        (void)t;
         module->unregisterBuffer(module.get(), t);
         for (auto i = 0; i < t->numFds; i++)
         {

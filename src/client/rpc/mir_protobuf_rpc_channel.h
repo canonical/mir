@@ -105,7 +105,7 @@ private:
                       std::vector<mir::Fd>& fds);
 
     void read_message();
-    void process_event_sequence(std::string const& event, std::vector<mir::Fd>& fds);
+    void process_event_sequence(std::string const& event);
 
     void notify_disconnected();
 
