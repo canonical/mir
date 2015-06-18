@@ -213,6 +213,8 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
 {
     std::lock_guard<decltype(guard)> lock(guard);
 
+    //printf("RELEASE %X\n", (int)(long) released_buffer);
+
     if (buffers_owned_by_client.empty())
     {
         BOOST_THROW_EXCEPTION(
@@ -435,12 +437,18 @@ void mc::BufferQueue::give_buffer_to_client(
     lock.unlock();
     try
     {
+
+        //printf("GIVETOCLIENT %X\n", (int)(long) buffer);
         give_to_client_cb(buffer);
     }
     catch (...)
     {
+        printf("SERIOUSLY?\n");
         /* comms errors should not propagate to compositing threads */
     }
+    static int cc = 0;
+    cc++;
+        printf("don %i\n", cc);
 }
 
 bool mc::BufferQueue::is_a_current_buffer_user(void const* user_id) const

@@ -36,6 +36,7 @@ mcla::EGLNativeSurfaceInterpreter::EGLNativeSurfaceInterpreter(EGLNativeSurface&
 
 mir::graphics::NativeBuffer* mcla::EGLNativeSurfaceInterpreter::driver_requests_buffer()
 {
+    printf("GETS BUF.\n");
     auto buffer = surface.get_current_buffer();
     auto buffer_to_driver = buffer->native_buffer_handle();
 
@@ -46,6 +47,7 @@ mir::graphics::NativeBuffer* mcla::EGLNativeSurfaceInterpreter::driver_requests_
 
 void mcla::EGLNativeSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int fence_fd)
 {
+    printf("RETURNS...\n");
     //TODO: pass fence to server instead of waiting here
     mga::SyncFence sync_fence(sync_ops, mir::Fd(fence_fd));
     sync_fence.wait();

@@ -72,17 +72,20 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
      */
     scene_elements.clear();  // Those in use are still in renderable_list
 
+#if 0
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
     }
     else
+#endif
     {
         display_buffer.make_current();
 
         renderer->set_rotation(display_buffer.orientation());
 
+    printf("RENDER?\n");
         renderer->render(renderable_list);
 
         display_buffer.gl_swap_buffers();
@@ -94,6 +97,5 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         // FIXME: This clear() call is blocking a little because we drive IPC here (LP: #1395421)
         renderable_list.clear();
     }
-
     report->finished_frame(this);
 }

@@ -40,11 +40,13 @@ void mir::fatal_error_abort(char const* reason, ...)
     fprintf(stderr, "\n");
     va_end(args);
 
+    printf("FATAL!\n");
     std::abort();
 }
 
 void mir::fatal_error_except(char const* reason, ...)
 {
+    printf("FATAL!\n");
     char buffer[1024];
     va_list args;
 

@@ -126,7 +126,7 @@ public:
      *
      * \note This provides stream semantics - message boundaries are not preserved.
      */
-    virtual void receive_data(void* buffer, size_t bytes_requested) = 0;
+//    virtual void receive_data(void* buffer, size_t bytes_requested) = 0;
 
     /**
      * \brief Read data and file descriptors from the server

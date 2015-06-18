@@ -41,10 +41,17 @@ mga::Buffer::Buffer(gralloc_module_t const* hw_module,
       native_buffer(buffer_handle),
       egl_extensions(extensions)
 {
+    printf("ALLOCATED %i\n", (int) id().as_value());
+    printf("fds --- %i\n", native_buffer->handle()->numFds);
+    for(auto i = 0; i < native_buffer->handle()->numInts + native_buffer->handle()->numFds; i++)
+    {
+        printf("%i : {%i}\n", i, native_buffer->handle()->data[i]);
+    }
 }
 
 mga::Buffer::~Buffer()
 {
+    printf("DESTROY! %i\n", (int) id().as_value());
     for(auto& it : egl_image_map)
     {
         EGLDisplay disp = it.first.first;
@@ -73,6 +80,7 @@ MirPixelFormat mga::Buffer::pixel_format() const
 
 void mga::Buffer::gl_bind_to_texture()
 {
+    printf("BIND TO TEXTUER.\n");
     std::unique_lock<std::mutex> lk(content_lock);
     native_buffer->ensure_available_for(mga::BufferAccess::read);
 
@@ -97,12 +105,19 @@ void mga::Buffer::gl_bind_to_texture()
     auto it = egl_image_map.find(current);
     if (it == egl_image_map.end())
     {
+        printf("AP MAP MAP BUF ID %i\n", id().as_value()); 
+        printf("fds --- %i\n", native_buffer->handle()->numFds);
+        for(auto i = 0; i < native_buffer->handle()->numInts + native_buffer->handle()->numFds; i++)
+        {
+            printf("%i : {%i}\n", i, native_buffer->handle()->data[i]);
+        }
         image = egl_extensions->eglCreateImageKHR(
                     current.first, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
                     native_buffer->anwb(), image_attrs);
-
+        printf("THIS SHOULD NOT HAPPEN\n");
         if (image == EGL_NO_IMAGE_KHR)
         {
+            printf("THISHOULD NOT HAPPEN\n");
             BOOST_THROW_EXCEPTION(mg::egl_error("error binding buffer to texture"));
         }
         egl_image_map[current] = image;

@@ -159,6 +159,7 @@ public:
             /* Wait until compositing has been scheduled or we are stopped */
             run_cv.wait(lock, [&]{ return (frames_scheduled > 0) || !running; });
 
+            printf("FRAME SCHEDULED.\n");
             /*
              * Check if we are running before compositing, since we may have
              * been stopped while waiting for the run_cv above.
@@ -198,6 +199,7 @@ public:
     }
     catch(...)
     {
+        printf("death of compositor therad.\n");
         mir::terminate_with_current_exception();
     }
 

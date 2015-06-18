@@ -90,9 +90,14 @@ void mc::BufferStreamSurfaces::drop_old_buffers()
 void mc::BufferStreamSurfaces::swap_buffers(
     mg::Buffer* old_buffer, std::function<void(mg::Buffer* new_buffer)> complete)
 {
+
     if (old_buffer)
     {
+        printf("SWAPPPP %X\n", (int)(long)old_buffer);
+        try{
         release_client_buffer(old_buffer);
+        } catch (std::exception& e) { printf("EXCEPT! %s\n", e.what()); throw e;}
+        printf("RELEASE\n");
         {
             std::unique_lock<std::mutex> lk(mutex);
             first_frame_posted = true;
@@ -103,10 +108,15 @@ void mc::BufferStreamSurfaces::swap_buffers(
          *       The new method of catching up on buffer backlogs is to
          *       query buffers_ready_for_compositor() or Scene::frames_pending
          */
+        printf("NOTIFYYYY\n");
         observers.frame_posted(1);
+        printf("done NOTIFYYYY\n");
+    } else {
+        printf("STRANGE.\n");
     }
 
     acquire_client_buffer(complete);
+    printf("DONE WITH SWAPBU\n");
 }
 
 bool mc::BufferStreamSurfaces::has_submitted_buffer() const

@@ -107,11 +107,26 @@ void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer
     auto request = seq.mutable_buffer_request();
     request->mutable_id()->set_value(id.as_value()); 
     request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
+    if (type == mg::BufferIpcMsgType::full_msg)
+        printf("FULL MESSAGE.\n");
+    else
+        printf("PARTIAL MESSAGE.\n");
+
+
+    printf("SENDBUFFER ID: %i\n", buffer.id().as_value());
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(request->mutable_buffer())};
     buffer_packer->pack_buffer(request_msg, buffer, type);
 
     std::vector<mir::Fd> set;
-    if (request->buffer().fds_on_side_channel())
-        set = std::vector<mir::Fd>(request->buffer().fd().begin(), request->buffer().fd().end());
+//    if (request->buffer().fds_on_side_channel())
+    for(auto& fd : request->buffer().fd())
+        set.emplace_back(mir::Fd(IntOwnedFd{fd}));
+//    set = std::vector<mir::Fd>(request->buffer().fd().begin(), request->buffer().fd().end());
+
+    request->mutable_buffer()->set_fds_on_side_channel(set.size());
+
+    printf("fd size. %i\n", set.size());
+
     send_event_sequence(seq, {set});
+    printf("SENDBUFFER DONE.\n");
 }

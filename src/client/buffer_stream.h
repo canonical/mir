@@ -128,7 +128,7 @@ private:
 
     std::condition_variable submit_cv;
     bool submitting = true;
-    bool using_exchange_buffer = true;
+    bool using_exchange_buffer = false;
     std::function<void()> on_incoming_buffer;
     std::queue<mir::protobuf::Buffer> incoming_buffers;
 
@@ -152,6 +152,7 @@ private:
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;
     mir::protobuf::Void protobuf_void;
+    mir::protobuf::BufferRequest request;
     
     std::shared_ptr<MemoryRegion> secured_region;
     

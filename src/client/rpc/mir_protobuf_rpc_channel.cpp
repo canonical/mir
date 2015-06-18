@@ -234,8 +234,9 @@ void mclr::MirProtobufRpcChannel::send_message(
     rpc_report->invocation_succeeded(invocation);
 }
 
-void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& event)
+void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& event, std::vector<mir::Fd>& fds)
 {
+    (void) fds;
     mir::protobuf::EventSequence seq;
 
     seq.ParseFromString(event);
@@ -252,6 +253,23 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
     if (seq.has_buffer_request())
     {
+        printf("INCOMING BUFFER!\n"); 
+        std::array<char, 1> dummy;
+        //    seq.mutable_buffer_request()->mutable_buffer()->fds_on_side_channel());
+        //seq.mutable_buffer_request()->mutable_buffer()->set_fds_on_side_channel(fds.size());
+        std::vector<mir::Fd> ffs(
+            seq.mutable_buffer_request()->mutable_buffer()->fds_on_side_channel());
+        
+        if (ffs.size() > 0 )
+        {
+            printf("RECV DATA FD FENCE.\n"); 
+            transport->receive_data(dummy.data(), dummy.size(), ffs);
+            seq.mutable_buffer_request()->mutable_buffer()->clear_fd();
+            for(auto& fd : ffs)
+            {
+                seq.mutable_buffer_request()->mutable_buffer()->add_fd(fd);
+            }
+        }
         surface_map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
         [&] (mcl::ClientBufferStream* stream) {
             stream->buffer_available(seq.buffer_request().buffer());
@@ -328,15 +346,18 @@ void mclr::MirProtobufRpcChannel::on_data_available()
      */
     std::lock_guard<decltype(read_mutex)> lock(read_mutex);
 
+    std::vector<mir::Fd> fds;
     auto result = std::make_unique<mir::protobuf::wire::Result>();
     try
     {
         uint16_t message_size;
-        transport->receive_data(&message_size, sizeof(uint16_t));
+        //transport->receive_data(&message_size, sizeof(uint16_t));
+        std::vector<mir::Fd> dummy;
+        transport->receive_data(&message_size, sizeof(uint16_t), dummy);
         message_size = be16toh(message_size);
 
         body_bytes.resize(message_size);
-        transport->receive_data(body_bytes.data(), message_size);
+        transport->receive_data(body_bytes.data(), message_size, fds);
 
         result->ParseFromArray(body_bytes.data(), message_size);
 
@@ -352,7 +373,7 @@ void mclr::MirProtobufRpcChannel::on_data_available()
     {
         for (int i = 0; i != result->events_size(); ++i)
         {
-            process_event_sequence(result->events(i));
+            process_event_sequence(result->events(i), fds);
         }
 
         if (result->has_id())

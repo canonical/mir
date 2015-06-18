@@ -199,6 +199,7 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
 MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
+    printf("NEXT BUFFER.\n");
     perf_report->end_frame(buffer_depository.current_buffer_id());
 
     secured_region.reset();
@@ -217,10 +218,12 @@ void mcl::BufferStream::submit_done()
 
 MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std::unique_lock<std::mutex> lock)
 {
+    printf("SUBMISSION. of %i\n", buffer_depository.current_buffer_id());
     //always submit what we have, whether we have a buffer, or will have to wait for an async reply
-    mp::BufferRequest request;
     request.mutable_id()->set_value(protobuf_bs.id().value());
-    request.mutable_buffer()->set_buffer_id(protobuf_bs.buffer().buffer_id());
+//    request.mutable_buffer()->set_buffer_id(protobuf_bs.buffer().buffer_id());
+    request.mutable_buffer()->set_buffer_id(buffer_depository.current_buffer_id());
+
     submitting = true;
     lock.unlock();
     display_server.submit_buffer(nullptr, &request, &protobuf_void,
@@ -230,14 +233,18 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
 
     if (incoming_buffers.empty())
     {
+        printf("waitin for buffer\n");
         next_buffer_wait_handle.expect_result();
         on_incoming_buffer = done; 
     }
     else
     {
+        printf("Have A BUFFER\n");
         process_buffer(incoming_buffers.front(), lock);
         incoming_buffers.pop();
         done();
+        next_buffer_wait_handle.expect_result();
+        next_buffer_wait_handle.result_received();
     }
     return &next_buffer_wait_handle;
 }
@@ -273,7 +280,6 @@ MirWaitHandle* mcl::BufferStream::exchange(
         screencast_id.set_value(protobuf_bs.id().value());
 
         lock.unlock();
-        next_buffer_wait_handle.expect_result();
 
         display_server.screencast_buffer(
             nullptr,
@@ -444,10 +450,12 @@ void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
+    printf("BUFFER AVAILABLE. %i\n", buffer.buffer_id());
     using_exchange_buffer = false; //this stream uses async exchange from here on out
 
     if (on_incoming_buffer)
     {
+        printf("trigger waiter.\n");
         process_buffer(buffer, lock);
         next_buffer_wait_handle.result_received();
         on_incoming_buffer();
@@ -455,6 +463,7 @@ void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
     }
     else
     {
+        printf("store for later.\n");
         incoming_buffers.push(buffer);
     }
 }
