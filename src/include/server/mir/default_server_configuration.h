@@ -262,7 +262,6 @@ public:
      *  @{ */
     virtual auto the_shell() -> std::shared_ptr<shell::Shell>;
     virtual auto the_window_manager_builder() -> shell::WindowManagerBuilder;
-    virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<scene::PromptSessionListener> the_prompt_session_listener();
