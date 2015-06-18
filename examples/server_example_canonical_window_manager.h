@@ -47,6 +47,10 @@ struct CanonicalSurfaceInfoCopy
 
     bool can_be_active() const;
 
+    bool can_morph_to(MirSurfaceType new_type) const;
+    bool must_have_parent() const;
+    bool must_not_have_parent() const;
+
     MirSurfaceType type;
     MirSurfaceState state;
     geometry::Rectangle restore_rect;

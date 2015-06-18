@@ -111,6 +111,77 @@ bool me::CanonicalSurfaceInfoCopy::can_be_active() const
     }
 }
 
+bool me::CanonicalSurfaceInfoCopy::must_have_parent() const
+{
+    switch (type)
+    {
+    case mir_surface_type_overlay:;
+    case mir_surface_type_inputmethod:
+    case mir_surface_type_satellite:
+    case mir_surface_type_tip:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+bool me::CanonicalSurfaceInfoCopy::can_morph_to(MirSurfaceType new_type) const
+{
+    switch (new_type)
+    {
+    case mir_surface_type_normal:
+    case mir_surface_type_utility:
+    case mir_surface_type_satellite:
+        switch (type)
+        {
+        case mir_surface_type_normal:
+        case mir_surface_type_utility:
+        case mir_surface_type_dialog:
+        case mir_surface_type_satellite:
+            return true;
+
+        default:
+            break;
+        }
+        break;
+
+    case mir_surface_type_dialog:
+        switch (type)
+        {
+        case mir_surface_type_normal:
+        case mir_surface_type_utility:
+        case mir_surface_type_dialog:
+        case mir_surface_type_popover:
+        case mir_surface_type_satellite:
+            return true;
+
+        default:
+            break;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    return false;
+}
+
+bool me::CanonicalSurfaceInfoCopy::must_not_have_parent() const
+{
+    switch (type)
+    {
+    case mir_surface_type_normal:
+    case mir_surface_type_utility:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+
 me::CanonicalWindowManagerPolicyCopy::CanonicalWindowManagerPolicyCopy(
     Tools* const tools,
     std::shared_ptr<shell::DisplayLayout> const& display_layout) :
@@ -406,61 +477,26 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
     {
         auto const new_type = modifications.type.value();
 
-        switch(new_type)
+        if (!surface_info.can_morph_to(new_type))
         {
-        case mir_surface_type_normal:
-        case mir_surface_type_utility:
-            switch (surface_info.type)
-            {
-            case mir_surface_type_normal:
-            case mir_surface_type_utility:
-            case mir_surface_type_dialog:
-            case mir_surface_type_satellite:
-                if (modifications.parent.is_set())
-                    throw std::runtime_error("Target surface type does not support parent");
-                break;
-
-            default:
-                throw std::runtime_error("Unsupported surface type change");
-            }
-            surface_info.parent.reset();
-            break;
-
-        case mir_surface_type_satellite:
-            switch (surface_info.type)
-            {
-            case mir_surface_type_normal:
-            case mir_surface_type_utility:
-            case mir_surface_type_dialog:
-            case mir_surface_type_satellite:
-                if (!surface_info.parent.lock())
-                    throw std::runtime_error("Target surface type requires parent");
-                break;
-
-            default:
-                throw std::runtime_error("Unsupported surface type change");
-            }
-            break;
-
-        case mir_surface_type_dialog:
-            switch (surface_info.type)
-            {
-            case mir_surface_type_normal:
-            case mir_surface_type_utility:
-            case mir_surface_type_dialog:
-            case mir_surface_type_popover:
-            case mir_surface_type_satellite:
-                break;
-
-            default:
-                throw std::runtime_error("Unsupported surface type change");
-            }
-            break;
-
-        default:
             throw std::runtime_error("Unsupported surface type change");
         }
+
         surface_info.type = new_type;
+
+        if (surface_info.must_not_have_parent())
+        {
+            if (modifications.parent.is_set())
+                throw std::runtime_error("Target surface type does not support parent");
+
+            surface_info.parent.reset();
+        }
+        else if (surface_info.must_have_parent())
+        {
+            if (!surface_info.parent.lock())
+                throw std::runtime_error("Target surface type requires parent");
+        }
+
         surface->configure(mir_surface_attrib_type, new_type);
     }
 
