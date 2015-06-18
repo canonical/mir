@@ -83,6 +83,13 @@ public:
 };
 }
 
+namespace
+{
+void black_hole_pong(MirConnection*, int32_t, void*)
+{
+}
+}
+
 TEST_F(ApplicationNotRespondingDetection, failure_to_pong_is_noticed)
 {
     using namespace std::literals::chrono_literals;
@@ -96,6 +103,8 @@ TEST_F(ApplicationNotRespondingDetection, failure_to_pong_is_noticed)
     );
 
     server.the_application_not_responding_detector()->register_observer(anr_observer);
+
+    mir_connection_set_ping_event_callback(connection, &black_hole_pong, nullptr);
 
     std::this_thread::sleep_for(3s);
 

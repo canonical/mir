@@ -293,6 +293,10 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result->display_configuration());
         lifecycle_control->set_callback(default_lifecycle_event_handler);
+        ping_handler->set_callback([this](int32_t serial)
+        {
+            this->pong(serial);
+        });
     }
     catch (std::exception const& e)
     {
