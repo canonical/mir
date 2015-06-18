@@ -58,15 +58,6 @@ if (MIR_BUILD_ACCEPTANCE_TESTS)
   add_subdirectory(acceptance-tests/)
 endif (MIR_BUILD_ACCEPTANCE_TESTS)
 
-# Private test headers
-include_directories(
-  include
-)
-
-if (MIR_BUILD_INTEGRATION_TESTS)
-  add_subdirectory(integration-tests/)
-endif (MIR_BUILD_INTEGRATION_TESTS)
-
 if (MIR_BUILD_PERFORMANCE_TESTS)
     add_subdirectory(performance-tests/)
 endif(MIR_BUILD_PERFORMANCE_TESTS)
@@ -74,6 +65,15 @@ endif(MIR_BUILD_PERFORMANCE_TESTS)
 if (MIR_BUILD_PRIVILEGED_TESTS)
     add_subdirectory(privileged-tests/)
 endif(MIR_BUILD_PRIVILEGED_TESTS)
+
+# Private test headers used by integration and unit tests
+include_directories(
+  include
+)
+
+if (MIR_BUILD_INTEGRATION_TESTS)
+  add_subdirectory(integration-tests/)
+endif (MIR_BUILD_INTEGRATION_TESTS)
 
 if (MIR_BUILD_UNIT_TESTS)
   add_subdirectory(unit-tests/)
