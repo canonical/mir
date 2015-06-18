@@ -16,12 +16,13 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir_toolkit/mir_client_library.h"
-#include "mir/frontend/client_constants.h"
-#include "mir/client_buffer.h"
 #include "mir_surface.h"
 #include "cursor_configuration.h"
 #include "client_buffer_stream_factory.h"
+#include "make_protobuf_object.h"
+#include "mir_toolkit/mir_client_library.h"
+#include "mir/frontend/client_constants.h"
+#include "mir/client_buffer.h"
 #include "mir_connection.h"
 #include "client_buffer_stream.h"
 #include "mir/dispatch/threaded_dispatcher.h"
@@ -42,7 +43,7 @@ namespace md = mir::dispatch;
 
 #define SERIALIZE_OPTION_IF_SET(option, message) \
     if (option.is_set()) \
-        message.set_##option(option.value());
+        message->set_##option(option.value());
 
 namespace
 {
@@ -79,9 +80,10 @@ MirSurfaceSpec::MirSurfaceSpec()
 {
 }
 
-mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
+std::unique_ptr<mir::protobuf::SurfaceParameters> MirSurfaceSpec::serialize() const
 {
-    mir::protobuf::SurfaceParameters message;
+    //std::unique_ptr<mp::SurfaceParameters> message{mp::SurfaceParameters::default_instance().New()};
+    auto message = mcl::make_protobuf_object<mp::SurfaceParameters>();
 
     SERIALIZE_OPTION_IF_SET(width, message);
     SERIALIZE_OPTION_IF_SET(height, message);
@@ -103,26 +105,26 @@ mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
     // max_aspect is a special case (below)
 
     if (parent.is_set() && parent.value() != nullptr)
-        message.set_parent_id(parent.value()->id());
+        message->set_parent_id(parent.value()->id());
 
     if (aux_rect.is_set())
     {
-        message.mutable_aux_rect()->set_left(aux_rect.value().left);
-        message.mutable_aux_rect()->set_top(aux_rect.value().top);
-        message.mutable_aux_rect()->set_width(aux_rect.value().width);
-        message.mutable_aux_rect()->set_height(aux_rect.value().height);
+        message->mutable_aux_rect()->set_left(aux_rect.value().left);
+        message->mutable_aux_rect()->set_top(aux_rect.value().top);
+        message->mutable_aux_rect()->set_width(aux_rect.value().width);
+        message->mutable_aux_rect()->set_height(aux_rect.value().height);
     }
 
     if (min_aspect.is_set())
     {
-        message.mutable_min_aspect()->set_width(min_aspect.value().width);
-        message.mutable_min_aspect()->set_height(min_aspect.value().height);
+        message->mutable_min_aspect()->set_width(min_aspect.value().width);
+        message->mutable_min_aspect()->set_height(min_aspect.value().height);
     }
 
     if (max_aspect.is_set())
     {
-        message.mutable_max_aspect()->set_width(max_aspect.value().width);
-        message.mutable_max_aspect()->set_height(max_aspect.value().height);
+        message->mutable_max_aspect()->set_width(max_aspect.value().width);
+        message->mutable_max_aspect()->set_height(max_aspect.value().height);
     }
 
     return message;
@@ -139,8 +141,9 @@ std::string const&MirPersistentId::as_string()
 }
 
 MirSurface::MirSurface(std::string const& error)
+    : surface{mcl::make_protobuf_object<mir::protobuf::Surface>()}
 {
-    surface.set_error(error);
+    surface->set_error(error);
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
@@ -156,11 +159,16 @@ MirSurface::MirSurface(
     mir_surface_callback callback, void * context)
     : server{&the_server},
       debug{debug},
+      surface{mcl::make_protobuf_object<mir::protobuf::Surface>()},
+      persistent_id{mcl::make_protobuf_object<mir::protobuf::PersistentSurfaceId>()},
       name{spec.surface_name.is_set() ? spec.surface_name.value() : ""},
+      void_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
+      modify_result{mcl::make_protobuf_object<mir::protobuf::Void>()},
       connection(allocating_connection),
       buffer_stream_factory(buffer_stream_factory),
       input_platform(input_platform),
-      keymapper(std::make_shared<mircv::XKBMapper>())
+      keymapper(std::make_shared<mircv::XKBMapper>()),
+      configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()}
 {
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
@@ -169,11 +177,11 @@ MirSurface::MirSurface(
     create_wait_handle.expect_result();
     try 
     {
-        server->create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
+        server->create_surface(0, message.get(), surface.get(), gp::NewCallback(this, &MirSurface::created, callback, context));
     }
     catch (std::exception const& ex)
     {
-        surface.set_error(std::string{"Error invoking create surface: "} +
+        surface->set_error(std::string{"Error invoking create surface: "} +
                           boost::diagnostic_information(ex));
     }
 
@@ -192,8 +200,8 @@ MirSurface::~MirSurface()
 
     input_thread.reset();
 
-    for (auto i = 0, end = surface.fd_size(); i != end; ++i)
-        close(surface.fd(i));
+    for (auto i = 0, end = surface->fd_size(); i != end; ++i)
+        close(surface->fd(i));
 }
 
 MirSurfaceParameters MirSurface::get_parameters() const
@@ -207,9 +215,9 @@ char const * MirSurface::get_error_message()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (surface.has_error())
+    if (surface->has_error())
     {
-        return surface.error().c_str();
+        return surface->error().c_str();
     }
     return error_message.c_str();
 }
@@ -218,7 +226,7 @@ int MirSurface::id() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    return surface.id().value();
+    return surface->id().value();
 }
 
 bool MirSurface::is_valid(MirSurface* query)
@@ -226,16 +234,16 @@ bool MirSurface::is_valid(MirSurface* query)
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
 
     if (valid_surfaces.count(query))
-        return !query->surface.has_error();
+        return !query->surface->has_error();
 
     return false;
 }
 
 void MirSurface::acquired_persistent_id(mir_surface_id_callback callback, void* context)
 {
-    if (!persistent_id.has_error())
+    if (!persistent_id->has_error())
     {
-        callback(this, new MirPersistentId{persistent_id.value()}, context);
+        callback(this, new MirPersistentId{persistent_id->value()}, context);
     }
     else
     {
@@ -248,20 +256,20 @@ MirWaitHandle* MirSurface::request_persistent_id(mir_surface_id_callback callbac
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
 
-    if (persistent_id.has_value())
+    if (persistent_id->has_value())
     {
-        callback(this, new MirPersistentId{persistent_id.value()}, context);
+        callback(this, new MirPersistentId{persistent_id->value()}, context);
         return nullptr;
     }
 
     persistent_id_wait_handle.expect_result();
     try
     {
-        server->request_persistent_surface_id(0, &surface.id(), &persistent_id, gp::NewCallback(this, &MirSurface::acquired_persistent_id, callback, context));
+        server->request_persistent_surface_id(0, &surface->id(), persistent_id.get(), gp::NewCallback(this, &MirSurface::acquired_persistent_id, callback, context));
     }
     catch (std::exception const& ex)
     {
-        surface.set_error(std::string{"Failed to acquire a persistent ID from the server: "} +
+        surface->set_error(std::string{"Failed to acquire a persistent ID from the server: "} +
                           boost::diagnostic_information(ex));
     }
     return &persistent_id_wait_handle;
@@ -283,10 +291,10 @@ void MirSurface::created(mir_surface_callback callback, void * context)
 {
     {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    if (!surface.has_id())
+    if (!surface->has_id())
     {
-        if (!surface.has_error())
-            surface.set_error("Error processing surface create response, no ID (disconnected?)");
+        if (!surface->has_error())
+            surface->set_error("Error processing surface create response, no ID (disconnected?)");
 
         callback(this, context);
         create_wait_handle.result_received();
@@ -299,11 +307,11 @@ void MirSurface::created(mir_surface_callback callback, void * context)
             std::lock_guard<decltype(mutex)> lock(mutex);
 
             buffer_stream = buffer_stream_factory->
-                make_producer_stream(connection, *server, surface.buffer_stream(), name);
+                make_producer_stream(connection, *server, surface->buffer_stream(), name);
 
-            for(int i = 0; i < surface.attributes_size(); i++)
+            for(int i = 0; i < surface->attributes_size(); i++)
             {
-                auto const& attrib = surface.attributes(i);
+                auto const& attrib = surface->attributes(i);
                 attrib_cache[attrib.attrib()] = attrib.ivalue();
             }
         }
@@ -312,7 +320,7 @@ void MirSurface::created(mir_surface_callback callback, void * context)
     }
     catch (std::exception const& error)
     {
-        surface.set_error(std::string{"Error processing Surface creating response:"} +
+        surface->set_error(std::string{"Error processing Surface creating response:"} +
                           boost::diagnostic_information(error));
     }
 
@@ -331,7 +339,7 @@ MirWaitHandle* MirSurface::release_surface(
             was_valid = true;
         valid_surfaces.erase(this);
     }
-    if (this->surface.has_error())
+    if (this->surface->has_error())
         was_valid = false;
 
     MirWaitHandle* wait_handle{nullptr};
@@ -350,29 +358,28 @@ MirWaitHandle* MirSurface::release_surface(
 
 MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor)
 {
-    mp::CursorSetting setting;
+    auto setting = mcl::make_protobuf_object<mp::CursorSetting>();
 
     {
         std::unique_lock<decltype(mutex)> lock(mutex);
-        setting.mutable_surfaceid()->CopyFrom(surface.id());
+        setting->mutable_surfaceid()->CopyFrom(surface->id());
         if (cursor)
         {
             if (cursor->stream != nullptr)
             {
-                setting.mutable_buffer_stream()->set_value(cursor->stream->rpc_id().as_value());
-                setting.set_hotspot_x(cursor->hotspot_x);
-                setting.set_hotspot_y(cursor->hotspot_y);
+                setting->mutable_buffer_stream()->set_value(cursor->stream->rpc_id().as_value());
+                setting->set_hotspot_x(cursor->hotspot_x);
+                setting->set_hotspot_y(cursor->hotspot_y);
             }
             else if (cursor->name != mir_disabled_cursor_name)
             {
-                setting.set_name(cursor->name.c_str());
+                setting->set_name(cursor->name.c_str());
             }
-
         }
     }
     
     configure_cursor_wait_handle.expect_result();
-    server->configure_cursor(0, &setting, &void_response,
+    server->configure_cursor(0, setting.get(), void_response.get(),
         google::protobuf::NewCallback(this, &MirSurface::on_cursor_configured));
     
     return &configure_cursor_wait_handle;
@@ -392,14 +399,14 @@ MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
 
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    mp::SurfaceSetting setting;
-    setting.mutable_surfaceid()->CopyFrom(surface.id());
-    setting.set_attrib(at);
-    setting.set_ivalue(value);
+    auto setting = mcl::make_protobuf_object<mp::SurfaceSetting>();
+    setting->mutable_surfaceid()->CopyFrom(surface->id());
+    setting->set_attrib(at);
+    setting->set_ivalue(value);
     lock.unlock();
 
     configure_wait_handle.expect_result();
-    server->configure_surface(0, &setting, &configure_result,
+    server->configure_surface(0, setting.get(), configure_result.get(),
               google::protobuf::NewCallback(this, &MirSurface::on_configured));
 
     return &configure_wait_handle;
@@ -421,12 +428,12 @@ bool MirSurface::translate_to_screen_coordinates(int x, int y,
         return false;
     }
 
-    mp::CoordinateTranslationRequest request;
+    auto request = mcl::make_protobuf_object<mp::CoordinateTranslationRequest>();
 
-    request.set_x(x);
-    request.set_y(y);
-    *request.mutable_surfaceid() = surface.id();
-    mp::CoordinateTranslationResponse response;
+    request->set_x(x);
+    request->set_y(y);
+    *request->mutable_surfaceid() = surface->id();
+    auto response = mcl::make_protobuf_object<mp::CoordinateTranslationResponse>();
 
     MirWaitHandle signal;
     signal.expect_result();
@@ -436,27 +443,27 @@ bool MirSurface::translate_to_screen_coordinates(int x, int y,
 
         debug->translate_surface_to_screen(
             nullptr,
-            &request,
-            &response,
+            request.get(),
+            response.get(),
             google::protobuf::NewCallback(&signal_response_received, &signal));
     }
 
     signal.wait_for_one();
 
-    *screen_x = response.x();
-    *screen_y = response.y();
-    return !response.has_error();
+    *screen_x = response->x();
+    *screen_y = response->y();
+    return !response->has_error();
 }
 
 void MirSurface::on_configured()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (configure_result.has_surfaceid() &&
-        configure_result.surfaceid().value() == surface.id().value() &&
-        configure_result.has_attrib())
+    if (configure_result->has_surfaceid() &&
+        configure_result->surfaceid().value() == surface->id().value() &&
+        configure_result->has_attrib())
     {
-        int a = configure_result.attrib();
+        int a = configure_result->attrib();
 
         switch (a)
         {
@@ -465,10 +472,10 @@ void MirSurface::on_configured()
         case mir_surface_attrib_focus:
         case mir_surface_attrib_dpi:
         case mir_surface_attrib_preferred_orientation:
-            if (configure_result.has_ivalue())
-                attrib_cache[a] = configure_result.ivalue();
+            if (configure_result->has_ivalue())
+                attrib_cache[a] = configure_result->ivalue();
             else
-                assert(configure_result.has_error());
+                assert(configure_result->has_error());
             break;
         default:
             assert(false);
@@ -513,9 +520,9 @@ void MirSurface::set_event_handler(mir_surface_event_callback callback,
                                           std::placeholders::_1,
                                           context);
 
-        if (surface.fd_size() > 0 && handle_event_callback)
+        if (surface->fd_size() > 0 && handle_event_callback)
         {
-            auto input_dispatcher = input_platform->create_input_receiver(surface.fd(0),
+            auto input_dispatcher = input_platform->create_input_receiver(surface->fd(0),
                                                                           keymapper,
                                                                           handle_event_callback);
             input_thread = std::make_shared<md::ThreadedDispatcher>("Input dispatch", input_dispatcher);
@@ -587,7 +594,7 @@ void MirSurface::on_modified()
 {
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        if (modify_result.has_error())
+        if (modify_result->has_error())
         {
             // TODO return errors like lp:~vanvugt/mir/wait-result
         }
@@ -597,14 +604,14 @@ void MirSurface::on_modified()
 
 MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 {
-    mp::SurfaceModifications mods;
+    auto mods = mcl::make_protobuf_object<mp::SurfaceModifications>();
 
     {
         std::unique_lock<decltype(mutex)> lock(mutex);
-        mods.mutable_surface_id()->set_value(surface.id().value());
+        mods->mutable_surface_id()->set_value(surface->id().value());
     }
 
-    auto const surface_specification = mods.mutable_surface_specification();
+    auto const surface_specification = mods->mutable_surface_specification();
 
     #define COPY_IF_SET(field)\
         if (spec.field.is_set())\
@@ -678,7 +685,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     }
 
     modify_wait_handle.expect_result();
-    server->modify_surface(0, &mods, &modify_result,
+    server->modify_surface(0, mods.get(), modify_result.get(),
               google::protobuf::NewCallback(this, &MirSurface::on_modified));
 
     return &modify_wait_handle;

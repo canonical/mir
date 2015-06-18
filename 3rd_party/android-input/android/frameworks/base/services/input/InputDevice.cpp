@@ -86,11 +86,32 @@ String8 getInputDeviceConfigurationFilePathByDeviceIdentifier(
     return getInputDeviceConfigurationFilePathByName(deviceIdentifier.name, type);
 }
 
+String8 getConfigurationFilePathInDirectory(String8 const& directory, String8 const& name, InputDeviceConfigurationFileType type)
+{
+    String8 path = directory;
+    appendInputDeviceConfigurationFileRelativePath(path, name, type);
+#if DEBUG_PROBE
+    ALOGD("Probing for input device configuration file: path='%s'", path.c_str());
+#endif
+    if (!access(c_str(path), R_OK)) {
+#if DEBUG_PROBE
+        ALOGD("Found");
+#endif
+        return path;
+    }
+
+    return String8();
+}
+    
 String8 getInputDeviceConfigurationFilePathByName(
         const String8& name, InputDeviceConfigurationFileType type) {
     // Search system repository.
     String8 path;
-    // <mir modifications>
+    setTo(path, "/usr/share/");
+    auto result = getConfigurationFilePathInDirectory(path, name, type);
+    if (result.length())
+        return result;
+
     {
         const char *root_env = getenv("ANDROID_ROOT");
         if (root_env == NULL) root_env = "";
@@ -98,38 +119,22 @@ String8 getInputDeviceConfigurationFilePathByName(
     }
     // </mir modifications>
     path.append("/usr/");
-    appendInputDeviceConfigurationFileRelativePath(path, name, type);
-#if DEBUG_PROBE
-    ALOGD("Probing for system provided input device configuration file: path='%s'", path.c_str());
-#endif
-    if (!access(c_str(path), R_OK)) {
-#if DEBUG_PROBE
-        ALOGD("Found");
-#endif
-        return path;
-    }
+    result = getConfigurationFilePathInDirectory(path, name, type);
+    if (result.length())
+        return result;
 
     // Search user repository.
-    // TODO Should only look here if not in safe mode.
-    // <mir modifications>
+    // TODO Should only look here if not in safe mode. ( ?? ~ racarr)
     {
         const char *data_env = getenv("ANDROID_DATA");
         if (data_env == NULL) data_env = "";
         setTo(path, data_env);
     }
 
-    // </mir modifications>
     path.append("/system/devices/");
-    appendInputDeviceConfigurationFileRelativePath(path, name, type);
-#if DEBUG_PROBE
-    ALOGD("Probing for system user input device configuration file: path='%s'", path.c_str());
-#endif
-    if (!access(c_str(path), R_OK)) {
-#if DEBUG_PROBE
-        ALOGD("Found");
-#endif
-        return path;
-    }
+    result = getConfigurationFilePathInDirectory(path, name, type);
+    if (result.length())
+        return result;
 
     // Not found.
 #if DEBUG_PROBE
