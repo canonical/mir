@@ -20,8 +20,9 @@
 
 namespace mi = mir::input;
 
-void mi::NullInputDispatcher::dispatch(MirEvent const& /*event*/)
+bool mi::NullInputDispatcher::dispatch(MirEvent const& /*event*/)
 {
+    return true;
 }
 
 void mi::NullInputDispatcher::start()
@@ -31,4 +32,3 @@ void mi::NullInputDispatcher::start()
 void mi::NullInputDispatcher::stop()
 {
 }
-

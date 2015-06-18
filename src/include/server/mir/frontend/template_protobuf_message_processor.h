@@ -55,7 +55,8 @@ void invoke(
         Invocation const& invocation)
 {
     ParameterMessage parameter_message;
-    parameter_message.ParseFromString(invocation.parameters());
+    if (!parameter_message.ParseFromString(invocation.parameters()))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to parse message parameters!"));
     ResultMessage result_message;
 
     try

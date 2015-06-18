@@ -75,8 +75,6 @@ public:
 
     void send_display_config(graphics::DisplayConfiguration const& info) override;
 
-    void ping() override;
-
     void set_lifecycle_state(MirLifecycleState state) override;
 
     void start_prompt_session() override;
@@ -87,6 +85,7 @@ public:
     std::shared_ptr<frontend::BufferStream> get_buffer_stream(frontend::BufferStreamId stream) const override;
     frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const& params) override;
     void destroy_buffer_stream(frontend::BufferStreamId stream) override;
+    void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) override;
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;

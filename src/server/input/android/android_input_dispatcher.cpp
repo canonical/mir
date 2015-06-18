@@ -47,7 +47,7 @@ mia::AndroidInputDispatcher::~AndroidInputDispatcher()
     stop();
 }
 
-void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
+bool mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
 {
     static auto const policy_flags = 0;
 
@@ -99,7 +99,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             event.motion.device_id,
             event.motion.source_id,
             policy_flags,
-            event.motion.action,
+            mia::extract_android_action_from(event),
             0, /* flags */
             mia::android_modifiers_from_mir(event.motion.modifiers),
             mia::android_pointer_buttons_from_mir(event.motion.buttons),
@@ -143,6 +143,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Unhandled event type"));
     }
+    return true;
 }
 
 void mia::AndroidInputDispatcher::stop()

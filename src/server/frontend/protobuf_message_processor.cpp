@@ -71,7 +71,8 @@ template<class ParameterMessage>
 ParameterMessage parse_parameter(Invocation const& invocation)
 {
     ParameterMessage request;
-    request.ParseFromString(invocation.parameters());
+    if (!request.ParseFromString(invocation.parameters()))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to parse message parameters!"));
     return request;
 }
 
@@ -217,6 +218,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
                 request.mutable_buffer()->add_fd(fd);
             invoke(shared_from_this(), display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), &request);
         }
+        else if ("submit_buffer" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::submit_buffer, invocation);
+        }
         else if ("release_surface" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::release_surface, invocation);
@@ -310,6 +315,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
                 std::runtime_error err{"Client attempted to use unavailable debug interface"};
                 report->exception_handled(display_server.get(), invocation.id(), err);
             }
+        }
+        else if ("request_persistent_surface_id" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::request_persistent_surface_id, invocation);
         }
         else
         {

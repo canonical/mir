@@ -40,6 +40,7 @@ Build-Depends: cmake,
                libfreetype6-dev,
                abi-compliance-checker,
                libevdev-dev,
+               uuid-dev,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
@@ -75,7 +76,7 @@ Description: Display server for Ubuntu - server library
  .
  Contains the shared library needed by server applications for Mir.
 
-Package: libmirplatform7
+Package: libmirplatform8
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -111,7 +112,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirplatform7 (= ${binary:Version}),
+Depends: libmirplatform8 (= ${binary:Version}),
          libmircommon-dev,
          libboost-program-options-dev,
          ${misc:Depends},
@@ -327,7 +328,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon-dev,
+Depends: libmirclient-dev,
          ${misc:Depends},
 Description: Display server for Ubuntu - client platform library for Mesa development files
  Mir is a display server running on linux systems, with a focus on efficiency,

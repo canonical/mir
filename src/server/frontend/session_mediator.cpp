@@ -336,6 +336,15 @@ void mf::SessionMediator::exchange_buffer(
         });
 }
 
+void mf::SessionMediator::submit_buffer(
+    google::protobuf::RpcController*,
+    mir::protobuf::BufferRequest const*,
+    mir::protobuf::Void*,
+    google::protobuf::Closure*)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
+}
+
 void mf::SessionMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
@@ -445,15 +454,18 @@ void mf::SessionMediator::modify_surface(
     // max_aspect is a special case (below)
 
 #undef COPY_IF_SET
-    std::vector<msh::StreamSpecification> stream_spec;
-    for(auto& stream : surface_specification.stream())
+    if (surface_specification.stream_size() > 0)
     {
-        stream_spec.emplace_back(
-            msh::StreamSpecification{
-                mf::BufferStreamId{stream.id().value()},
-                geom::Displacement{stream.displacement_x(), stream.displacement_y()}});
+        std::vector<msh::StreamSpecification> stream_spec;
+        for (auto& stream : surface_specification.stream())
+        {
+            stream_spec.emplace_back(
+                msh::StreamSpecification{
+                    mf::BufferStreamId{stream.id().value()},
+                    geom::Displacement{stream.displacement_x(), stream.displacement_y()}});
+        }
+        mods.streams = std::move(stream_spec);
     }
-    mods.streams = std::move(stream_spec);
 
     if (surface_specification.has_aux_rect())
     {
@@ -883,6 +895,24 @@ void mf::SessionMediator::stop_prompt_session(
     report->session_stop_prompt_session_called(session->name());
 
     shell->stop_prompt_session(prompt_session);
+
+    done->Run();
+}
+
+void mf::SessionMediator::request_persistent_surface_id(
+    ::google::protobuf::RpcController*,
+    mir::protobuf::SurfaceId const* request,
+    mir::protobuf::PersistentSurfaceId* response,
+    google::protobuf::Closure* done)
+{
+    auto const session = weak_session.lock();
+
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto buffer = shell->persistent_id_for(session, mf::SurfaceId{request->value()});
+
+    *response->mutable_value() = std::string{buffer.begin(), buffer.end()};
 
     done->Run();
 }

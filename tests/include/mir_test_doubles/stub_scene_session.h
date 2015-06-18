@@ -75,10 +75,6 @@ struct StubSceneSession : public scene::Session
     {
     }
 
-    void ping() override
-    {
-    }
-
     void take_snapshot(scene::SnapshotCallback const&) override
     {
     }
@@ -119,6 +115,10 @@ struct StubSceneSession : public scene::Session
     frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const&) override
     {
         return frontend::BufferStreamId();
+    }
+
+    void configure_streams(scene::Surface&, std::vector<shell::StreamSpecification> const&)
+    {
     }
 
     pid_t const pid;

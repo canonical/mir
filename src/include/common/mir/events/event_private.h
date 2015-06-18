@@ -45,20 +45,6 @@ extern "C" {
 /* TODO: To the moon. */
 #define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
 
-typedef enum {
-    mir_motion_action_down         = 0,
-    mir_motion_action_up           = 1,
-    mir_motion_action_move         = 2,
-    mir_motion_action_cancel       = 3,
-    mir_motion_action_outside      = 4,
-    mir_motion_action_pointer_down = 5,
-    mir_motion_action_pointer_up   = 6,
-    mir_motion_action_hover_move   = 7,
-    mir_motion_action_scroll       = 8,
-    mir_motion_action_hover_enter  = 9,
-    mir_motion_action_hover_exit   = 10
-} MirMotionAction;
-
 // PRIVATE
 // Direct access to MirKeyEvent is deprecated. Please use mir_event_get_input_event
 // and the mir_input_event* family of functions.
@@ -90,6 +76,10 @@ typedef struct
     float vscroll;
     float hscroll;
     MirTouchTooltype tool_type;
+
+    // TODO: We would like to store this as a MirTouchAction but we still encode pointer actions
+    // here as well.
+    int action;
 } MirMotionPointer;
 
 // PRIVATE
@@ -101,12 +91,7 @@ typedef struct
 
     int32_t device_id;
     int32_t source_id;
-    /*
-     * TODO(racarr): We would like to store this as a MirMotionAction but the android input stack
-     * encodes some non enumerable values in it. It's convenient to keep things
-     * this way for now until we can drop SF/Hybris support in QtUbuntu.
-     */
-    int action;
+
     MirInputEventModifiers modifiers;
 
     MirPointerButtons buttons;

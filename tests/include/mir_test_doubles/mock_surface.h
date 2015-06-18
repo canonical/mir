@@ -24,6 +24,9 @@
 #include "mock_buffer_stream.h"
 #include "stub_input_channel.h"
 
+// GMock wants to be able to construct MirEvent as it is passed by reference to consume
+#include "mir/events/event_private.h"
+
 #include <gmock/gmock.h>
 
 namespace mir
@@ -68,7 +71,11 @@ struct MockSurface : public scene::BasicSurface
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));
+    MOCK_METHOD1(consume, void(MirEvent const&));
+
     MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());
+    MOCK_METHOD1(set_streams, void(std::list<scene::StreamInfo> const&));
+
 };
 
 }

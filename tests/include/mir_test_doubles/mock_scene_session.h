@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_SCENE_SESSION_H_
 
 #include "mir/scene/session.h"
+#include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/graphics/display_configuration.h"
 
@@ -51,7 +52,6 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD0(show, void());
 
     MOCK_METHOD1(send_display_config, void(graphics::DisplayConfiguration const&));
-    MOCK_METHOD0(ping, void());
     MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirSurfaceAttrib, int));
 
     MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState state));
@@ -65,6 +65,7 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
     MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
     
+    MOCK_METHOD2(configure_streams, void(scene::Surface&, std::vector<shell::StreamSpecification> const&));
 };
 
 }

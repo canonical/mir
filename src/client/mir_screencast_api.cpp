@@ -60,7 +60,7 @@ MirScreencast* mir_connection_create_screencast_sync(
                 size,
                 parameters->pixel_format,
                 connection->display_server(),
-                connection->get_client_buffer_stream_factory(),
+                connection,
                 null_callback, nullptr}};
 
         screencast_uptr->creation_wait_handle()->wait_for_all();

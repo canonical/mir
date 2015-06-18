@@ -29,7 +29,8 @@ namespace input
 class NullInputDispatcher : public mir::input::InputDispatcher
 {
 public:
-    void dispatch(MirEvent const& event) override;
+    bool dispatch(MirEvent const& event) override;
+
     void start() override;
     void stop() override;
 };

@@ -139,7 +139,6 @@ TEST_F(InputEventBuilder, maps_single_touch_down_to_motion_down)
     auto tev = mir_input_event_get_touch_event(ie);
 
     EXPECT_EQ(action, mir_touch_event_action(tev, 0));
-    EXPECT_EQ(mir_motion_action_down, ev->motion.action);
 }
 
 TEST_F(InputEventBuilder, maps_single_touch_up_to_motion_up)
@@ -156,7 +155,6 @@ TEST_F(InputEventBuilder, maps_single_touch_up_to_motion_up)
     auto tev = mir_input_event_get_touch_event(ie);
 
     EXPECT_EQ(action, mir_touch_event_action(tev, 0));
-    EXPECT_EQ(mir_motion_action_up, ev->motion.action);
 }
 
 TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
@@ -172,5 +170,4 @@ TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
     auto pev = mir_input_event_get_pointer_event(ie);
     EXPECT_EQ(modifiers, mir_pointer_event_modifiers(pev));
     EXPECT_EQ(action, mir_pointer_event_action(pev));
-    EXPECT_EQ(mir_motion_action_hover_move, ev->motion.action);
 }

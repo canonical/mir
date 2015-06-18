@@ -25,6 +25,7 @@
 #include "../display_configuration.h"
 #include "../lifecycle_control.h"
 #include "../event_sink.h"
+#include "../make_protobuf_object.h"
 #include "mir/variable_length_array.h"
 #include "mir/events/event_private.h"
 
@@ -36,7 +37,7 @@
 
 #include <stdexcept>
 
-
+namespace mf = mir::frontend;
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 namespace md = mir::dispatch;
@@ -238,29 +239,29 @@ void mclr::MirProtobufRpcChannel::send_message(
 
 void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& event)
 {
-    mir::protobuf::EventSequence seq;
+    auto seq = mcl::make_protobuf_object<mir::protobuf::EventSequence>();
 
-    seq.ParseFromString(event);
+    seq->ParseFromString(event);
 
-    if (seq.has_display_configuration())
+    if (seq->has_display_configuration())
     {
-        display_configuration->update_configuration(seq.display_configuration());
+        display_configuration->update_configuration(seq->display_configuration());
     }
 
-    if (seq.has_lifecycle_event())
+    if (seq->has_lifecycle_event())
     {
-        (*lifecycle_control)(static_cast<MirLifecycleState>(seq.lifecycle_event().new_state()));
+        (*lifecycle_control)(static_cast<MirLifecycleState>(seq->lifecycle_event().new_state()));
     }
 
-    if (seq.has_ping_event())
+    if (seq->has_ping_event())
     {
-        (*ping_handler)(seq.ping_event().serial());
+        (*ping_handler)(seq->ping_event().serial());
     }
 
-    int const nevents = seq.event_size();
+    int const nevents = seq->event_size();
     for (int i = 0; i != nevents; ++i)
     {
-        mir::protobuf::Event const& event = seq.event(i);
+        mir::protobuf::Event const& event = seq->event(i);
         if (event.has_raw())
         {
             std::string const& raw_event = event.raw();
@@ -284,22 +285,22 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 switch (e.type)
                 {
                 case mir_event_type_surface:
-                    surface_map->with_surface_do(e.surface.id, send_e);
+                    surface_map->with_surface_do(mf::SurfaceId(e.surface.id), send_e);
                     break;
 
                 case mir_event_type_resize:
-                    surface_map->with_surface_do(e.resize.surface_id, send_e);
+                    surface_map->with_surface_do(mf::SurfaceId(e.resize.surface_id), send_e);
                     break;
 
                 case mir_event_type_orientation:
-                    surface_map->with_surface_do(e.orientation.surface_id, send_e);
+                    surface_map->with_surface_do(mf::SurfaceId(e.orientation.surface_id), send_e);
                     break;
 
                 case mir_event_type_close_surface:
-                    surface_map->with_surface_do(e.close_surface.surface_id, send_e);
+                    surface_map->with_surface_do(mf::SurfaceId(e.close_surface.surface_id), send_e);
                     break;
                 case mir_event_type_keymap:
-                    surface_map->with_surface_do(e.keymap.surface_id, send_e);
+                    surface_map->with_surface_do(mf::SurfaceId(e.keymap.surface_id), send_e);
                     break;
                 default:
                     event_sink->handle_event(e);
@@ -327,7 +328,7 @@ void mclr::MirProtobufRpcChannel::on_data_available()
      */
     std::lock_guard<decltype(read_mutex)> lock(read_mutex);
 
-    auto result = std::make_unique<mir::protobuf::wire::Result>();
+    auto result = mcl::make_protobuf_object<mir::protobuf::wire::Result>();
     try
     {
         uint16_t message_size;

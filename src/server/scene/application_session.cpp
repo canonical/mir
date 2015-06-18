@@ -274,11 +274,6 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
     event_sink->handle_display_config_change(info);
 }
 
-void ms::ApplicationSession::ping()
-{
-    event_sink->handle_event(*mev::make_ping_event());
-}
-
 void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 {
     event_sink->handle_lifecycle_event(state);
@@ -326,4 +321,13 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     streams.erase(checked_find(id));
+}
+
+void ms::ApplicationSession::configure_streams(
+    ms::Surface& surface, std::vector<shell::StreamSpecification> const& streams)
+{
+    std::list<ms::StreamInfo> list;
+    for (auto& stream : streams)
+        list.emplace_back(ms::StreamInfo{checked_find(stream.stream_id)->second, stream.displacement});
+    surface.set_streams(list); 
 }
