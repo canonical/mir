@@ -52,12 +52,14 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<RpcReport> const& rpc_report,
     std::shared_ptr<LifecycleControl> const& lifecycle_control,
+    std::shared_ptr<PingHandler> const& ping_handler,
     std::shared_ptr<EventSink> const& event_sink) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
+    ping_handler{ping_handler},
     event_sink(event_sink),
     disconnected(false),
     transport{std::move(transport)},
@@ -248,6 +250,11 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
     if (seq.has_lifecycle_event())
     {
         (*lifecycle_control)(static_cast<MirLifecycleState>(seq.lifecycle_event().new_state()));
+    }
+
+    if (seq.has_ping_event())
+    {
+        (*ping_handler)(seq.ping_event().serial());
     }
 
     int const nevents = seq.event_size();

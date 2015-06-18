@@ -41,6 +41,7 @@ public:
     void handle_event(MirEvent const& e);
     void handle_lifecycle_event(MirLifecycleState state);
     void handle_display_config_change(graphics::DisplayConfiguration const& config);
+    void send_ping(int32_t serial);
 
 private:
     void send_event_sequence(protobuf::EventSequence&);

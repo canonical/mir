@@ -51,8 +51,8 @@ TEST(TimeoutApplicationNotRespondingDetector, pings_registered_sessions_on_sched
     
     NiceMock<mtd::MockSceneSession> session_one, session_two;
     
-    detector.register_session(session_one, [&first_session_pinged]() { first_session_pinged = true; });
-    detector.register_session(session_two, [&second_session_pinged]() { second_session_pinged = true; });
+    detector.register_session(&session_one, [&first_session_pinged]() { first_session_pinged = true; });
+    detector.register_session(&session_two, [&second_session_pinged]() { second_session_pinged = true; });
     
     fake_alarms.advance_by(999ms);
 
@@ -78,8 +78,8 @@ TEST(TimeoutApplicationNotRespondingDetector, pings_repeatedly)
 
     NiceMock<mtd::MockSceneSession> session_one, session_two;
 
-    detector.register_session(session_one, [&first_session_pinged]() { first_session_pinged++; });
-    detector.register_session(session_two, [&second_session_pinged]() { second_session_pinged++; });
+    detector.register_session(&session_one, [&first_session_pinged]() { first_session_pinged++; });
+    detector.register_session(&session_two, [&second_session_pinged]() { second_session_pinged++; });
 
     int const expected_count{900};
 
@@ -112,7 +112,7 @@ TEST(TimeoutApplicationNotRespondingDetector, triggers_anr_signal_when_session_f
 
     NiceMock<mtd::MockSceneSession> session_one;
 
-    detector.register_session(session_one, [](){});
+    detector.register_session(&session_one, [](){});
 
     fake_alarms.advance_by(1001ms);
     // Should now have pung, but not marked as unresponsive
@@ -143,13 +143,13 @@ TEST(TimeoutApplicationNotRespondingDetector, does_not_trigger_anr_when_session_
 
     NiceMock<mtd::MockSceneSession> session_one;
 
-    detector.register_session(session_one, [](){});
+    detector.register_session(&session_one, [](){});
 
     fake_alarms.advance_by(1001ms);
     // Should now have pung, but not marked as unresponsive
     EXPECT_FALSE(session_not_responding);
 
-    detector.pong_received(session_one);
+    detector.pong_received(&session_one);
 
     // Now a full ping cycle has elapsed, but the session has pung and so isn't unresponsive
     fake_alarms.advance_by(1001ms);
@@ -181,7 +181,7 @@ TEST(TimeoutApplicationNotRespondingDetector, triggers_now_responsive_signal_whe
 
     NiceMock<mtd::MockSceneSession> session_one;
 
-    detector.register_session(session_one, [](){});
+    detector.register_session(&session_one, [](){});
 
     fake_alarms.advance_by(1001ms);
     // Should now have pung, but not marked as unresponsive
@@ -191,7 +191,7 @@ TEST(TimeoutApplicationNotRespondingDetector, triggers_now_responsive_signal_whe
     fake_alarms.advance_by(1001ms);
     EXPECT_TRUE(session_not_responding);
 
-    detector.pong_received(session_one);
+    detector.pong_received(&session_one);
 
     EXPECT_FALSE(session_not_responding);
 }
@@ -211,17 +211,17 @@ TEST(TimeoutApplicationNotRespondingDetector, fiddling_with_sessions_from_callba
     ON_CALL(*observer, session_unresponsive(_))
         .WillByDefault(Invoke([&detector, &session_two](auto /*session*/)
     {
-        detector.register_session(session_two, [](){});
+        detector.register_session(&session_two, [](){});
     }));
     ON_CALL(*observer, session_now_responsive(_))
         .WillByDefault(Invoke([&detector, &session_three](auto /*session*/)
     {
-        detector.unregister_session(session_three);
+        detector.unregister_session(&session_three);
     }));
     detector.register_observer(observer);
 
-    detector.register_session(session_one, [](){});
-    detector.register_session(session_three, [](){});
+    detector.register_session(&session_one, [](){});
+    detector.register_session(&session_three, [](){});
 
     fake_alarms.advance_by(1001ms);
     // Should now have pung
@@ -229,6 +229,6 @@ TEST(TimeoutApplicationNotRespondingDetector, fiddling_with_sessions_from_callba
     fake_alarms.advance_by(1001ms);
     // Should now have marked session three unresponsive, registering session two
 
-    detector.pong_received(session_three);
+    detector.pong_received(&session_three);
     // And now session three sholud be morked as responsive, unregistering itself
 }

@@ -17,6 +17,8 @@
  */
 
 #include "timeout_application_not_responding_detector.h"
+#include "mir/frontend/session.h"
+#include "mir/scene/session.h"
 
 #include "mir/time/alarm_factory.h"
 
@@ -87,27 +89,27 @@ ms::TimeoutApplicationNotRespondingDetector::~TimeoutApplicationNotRespondingDet
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::register_session(
-    Session const& session, std::function<void()> const& pinger)
+    frontend::Session const* session, std::function<void()> const& pinger)
 {
     std::lock_guard<std::mutex> lock{session_mutex};
-    sessions[&session] = std::make_unique<ANRContext>(pinger);
+    sessions[dynamic_cast<Session const*>(session)] = std::make_unique<ANRContext>(pinger);
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
-    Session const& session)
+    frontend::Session const* session)
 {
     std::lock_guard<std::mutex> lock{session_mutex};
-    sessions.erase(&session);
+    sessions.erase(dynamic_cast<Session const*>(session));
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::pong_received(
-   Session const& received_for)
+   frontend::Session const* received_for)
 {
     bool needs_now_responsive_notification{false};
     {
         std::lock_guard<std::mutex> lock{session_mutex};
 
-        auto& session_ctx = sessions.at(&received_for);
+        auto& session_ctx = sessions.at(dynamic_cast<Session const*>(received_for));
         if (session_ctx->flagged_as_unresponsive)
         {
             session_ctx->flagged_as_unresponsive = false;
@@ -117,7 +119,7 @@ void ms::TimeoutApplicationNotRespondingDetector::pong_received(
     }
     if (needs_now_responsive_notification)
     {
-        observers.session_now_responsive(&received_for);
+        observers.session_now_responsive(dynamic_cast<Session const*>(received_for));
     }
 }
 

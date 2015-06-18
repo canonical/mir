@@ -111,6 +111,7 @@ MirConnection::MirConnection(
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
+        ping_handler{conf.the_ping_handler()},
         surface_map(conf.the_surface_map()),
         event_handler_register(conf.the_event_handler_register()),
         eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}}
@@ -482,6 +483,18 @@ void MirConnection::on_surface_created(int id, MirSurface* surface)
 void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context)
 {
     lifecycle_control->set_callback(std::bind(callback, this, std::placeholders::_1, context));
+}
+
+void MirConnection::register_ping_event_callback(mir_ping_event_callback callback, void* context)
+{
+    ping_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
+}
+
+void MirConnection::pong(int32_t serial)
+{
+    mir::protobuf::PingEvent pong;
+    pong.set_serial(serial);
+    server.pong(0, &pong, &ignored, google::protobuf::NewCallback(&google::protobuf::DoNothing));
 }
 
 void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)

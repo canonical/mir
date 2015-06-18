@@ -103,6 +103,28 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
 void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
     mir_lifecycle_event_callback callback, void* context);
 
+
+/**
+ * Register a callback for server ping events.
+ *
+ * The server may send ping requests to detect unresponsive applications. Clients should
+ * process this with their regular event handling, and call mir_connection_pong() in response.
+ *
+ * \param [in] connection       The connection
+ * \param [in] callback         The function to be called on ping events.
+ * \param [in] context          User data passed to the callback function
+ */
+void mir_connection_set_ping_event_callback(MirConnection* connection,
+    mir_ping_event_callback callback, void* context);
+
+
+/**
+ * Respond to a ping event
+ * \param [in] connection       The connection
+ * \param [in] serial           Serial from the ping event
+ */
+void mir_connection_pong(MirConnection* connection, int32_t serial);
+
 /**
  * Query the display
  *   \warning return value must be destroyed via mir_display_config_destroy()

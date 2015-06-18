@@ -74,7 +74,7 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
         [this]
         {
             return mcl::rpc::make_rpc_channel(
-                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report(), the_lifecycle_control(), the_event_sink());
+                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report(), the_lifecycle_control(), the_ping_handler(), the_event_sink());
         });
 }
 
@@ -180,6 +180,15 @@ std::shared_ptr<mcl::LifecycleControl> mcl::DefaultConnectionConfiguration::the_
         []
         {
             return std::make_shared<mcl::LifecycleControl>();
+        });
+}
+
+std::shared_ptr<mcl::PingHandler> mcl::DefaultConnectionConfiguration::the_ping_handler()
+{
+    return ping_handler(
+        []
+        {
+            return std::make_shared<mcl::PingHandler>();
         });
 }
 

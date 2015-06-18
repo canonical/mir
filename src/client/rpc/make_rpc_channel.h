@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "../lifecycle_control.h"
+#include "../ping_handler.h"
 
 namespace google { namespace protobuf { class RpcChannel; } }
 
@@ -42,6 +43,7 @@ make_rpc_channel(std::string const& name,
                  std::shared_ptr<DisplayConfiguration> const& disp_conf,
                  std::shared_ptr<RpcReport> const& rpc_report,
                  std::shared_ptr<LifecycleControl> const& lifecycle_control,
+                 std::shared_ptr<PingHandler> const& ping_handler,
                  std::shared_ptr<EventSink> const& event_distributor);
 }
 }

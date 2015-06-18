@@ -102,6 +102,16 @@ typedef void (*mir_lifecycle_event_callback)(
     MirConnection* connection, MirLifecycleState state, void* context);
 
 /**
+ * Callback called when the server pings for responsiveness testing.
+ * \param [in] connection       The connection associated with this ping
+ * \param [in] serial           Identifier of this ping, to be passed to
+ *                              mir_connection_pong()
+ * \param [in,out] context      The context provided by the client
+ */
+typedef void (*mir_ping_event_callback)(
+    MirConnection* connection, int32_t serial, void* context);
+
+/**
  * Callback called when a display config change has occurred
  *   \param [in] connection     The connection associated with the display change
  *   \param [in,out] context    The context provided by client

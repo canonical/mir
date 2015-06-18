@@ -289,6 +289,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
             invoke(this, display_server.get(), &DisplayServer::disconnect, invocation);
             result = false;
         }
+        else if ("pong" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::pong, invocation);
+        }
         else if ("translate_surface_to_screen" == invocation.method_name())
         {
             try

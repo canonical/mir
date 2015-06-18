@@ -54,12 +54,12 @@ public:
 
     ~TimeoutApplicationNotRespondingDetector() override;
 
-    void register_session(Session const& session,
+    void register_session(frontend::Session const* session,
         std::function<void()> const& pinger) override;
 
-    void unregister_session(Session const& session) override;
+    void unregister_session(frontend::Session const* session) override;
 
-    void pong_received(Session const& received_for) override;
+    void pong_received(frontend::Session const* received_for) override;
 
     void register_observer(std::shared_ptr<Observer> const& observer) override;
 private:

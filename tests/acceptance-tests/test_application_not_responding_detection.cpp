@@ -75,9 +75,9 @@ private:
 class MockANRDetector : public ms::ApplicationNotRespondingDetector
 {
 public:
-    MOCK_METHOD2(register_session, void(mir::scene::Session const&, std::function<void ()> const&));
-    MOCK_METHOD1(unregister_session, void(mir::scene::Session const&));
-    MOCK_METHOD1(pong_received, void(mir::scene::Session const&));
+    MOCK_METHOD2(register_session, void(mir::frontend::Session const*, std::function<void ()> const&));
+    MOCK_METHOD1(unregister_session, void(mir::frontend::Session const*));
+    MOCK_METHOD1(pong_received, void(mir::frontend::Session const*));
 
     MOCK_METHOD1(register_observer, void(std::shared_ptr<Observer> const&));
 };
@@ -114,3 +114,33 @@ TEST_F(ApplicationNotRespondingDetection, can_override_anr_detector)
 
     complete_setup();
 }
+
+namespace
+{
+void respond_to_ping(MirConnection* connection, int32_t, void*)
+{
+    mir_connection_pong(connection, 0);
+}
+}
+
+TEST_F(ApplicationNotRespondingDetection, responding_client_is_not_marked_as_unresponsive)
+{
+    using namespace std::literals::chrono_literals;
+
+    complete_setup();
+
+    bool unresponsive_called{false};
+    auto anr_observer = std::make_shared<DelegateObserver>(
+        [&unresponsive_called](auto) { unresponsive_called = true; },
+        [](auto){}
+    );
+
+    server.the_application_not_responding_detector()->register_observer(anr_observer);
+
+    mir_connection_set_ping_event_callback(connection, &respond_to_ping, nullptr);
+
+    std::this_thread::sleep_for(3s);
+
+    EXPECT_FALSE(unresponsive_called);
+}
+

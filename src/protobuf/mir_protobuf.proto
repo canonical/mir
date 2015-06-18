@@ -226,10 +226,15 @@ message LifecycleEvent {
   optional string error = 127;
 }
 
+message PingEvent {
+  optional int32 serial = 1;  // Identifier for this ping
+}
+
 message EventSequence {
   repeated Event event = 1;
   optional DisplayConfiguration display_configuration = 2;
   optional LifecycleEvent lifecycle_event = 3;
+  optional PingEvent ping_event = 4;
   optional string error = 127;
 }
 
@@ -321,6 +326,8 @@ service DisplayServer {
   rpc start_prompt_session(PromptSessionParameters) returns (Void);
   rpc stop_prompt_session(Void) returns (Void);
   rpc exchange_buffer(BufferRequest) returns (Buffer);
+
+  rpc pong(PingEvent) returns (Void);
 }
 
 message CoordinateTranslationRequest {
