@@ -41,7 +41,6 @@ struct AndroidBufferHandleDeleter
 
     void operator()(native_handle_t const* t)
     {
-        printf("TRASH IT.\n");
         alloc_device->free(alloc_device.get(), t);
     }
 private:
