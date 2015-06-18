@@ -128,7 +128,7 @@ private:
 
     std::condition_variable submit_cv;
     bool submitting = true;
-    bool using_exchange_buffer = false;
+    bool using_exchange_buffer = true;
     std::function<void()> on_incoming_buffer;
     std::queue<mir::protobuf::Buffer> incoming_buffers;
 
