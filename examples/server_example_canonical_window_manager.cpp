@@ -90,6 +90,27 @@ me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
 {
 }
 
+bool me::CanonicalSurfaceInfoCopy::can_be_active() const
+{
+    switch (type)
+    {
+    case mir_surface_type_normal:       /**< AKA "regular"                       */
+    case mir_surface_type_utility:      /**< AKA "floating"                      */
+    case mir_surface_type_dialog:
+    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+    case mir_surface_type_freestyle:
+    case mir_surface_type_menu:
+    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        return true;
+
+    case mir_surface_type_gloss:
+    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+    default:
+        // Cannot have input focus
+        return false;
+    }
+}
+
 me::CanonicalWindowManagerPolicyCopy::CanonicalWindowManagerPolicyCopy(
     Tools* const tools,
     std::shared_ptr<shell::DisplayLayout> const& display_layout) :
@@ -347,25 +368,16 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
 
 void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
-    if (auto const parent = surface->parent())
+    auto& surface_info = tools->info_for(surface);
+    if (auto const parent = surface_info.parent.lock())
     {
         tools->info_for(parent).children.push_back(surface);
     }
 
     tools->info_for(session).surfaces++;
 
-    switch (surface->type())
+    if (surface_info.can_be_active())
     {
-    case mir_surface_type_normal:       /**< AKA "regular"                       */
-    case mir_surface_type_utility:      /**< AKA "floating"                      */
-    case mir_surface_type_dialog:
-    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
-    case mir_surface_type_freestyle:
-    case mir_surface_type_menu:
-    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
-        // TODO There's currently no way to insert surfaces into an active (or inactive)
-        // TODO window tree while keeping the order stable or consistent with spec.
-        // TODO Nor is there a way to update the "default surface" when appropriate!!
         surface->add_observer(std::make_shared<shell::SurfaceReadyObserver>(
             [this](std::shared_ptr<scene::Session> const& /*session*/,
                    std::shared_ptr<scene::Surface> const& surface)
@@ -374,13 +386,6 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
                 },
             session,
             surface));
-        break;
-
-    case mir_surface_type_gloss:
-    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
-    default:
-        // Cannot have input focus
-        break;
     }
 }
 
@@ -845,15 +850,8 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
 
     auto const& info_for = tools->info_for(surface);
 
-    switch (surface->type())
+    if (info_for.can_be_active())
     {
-    case mir_surface_type_normal:       /**< AKA "regular"                       */
-    case mir_surface_type_utility:      /**< AKA "floating"                      */
-    case mir_surface_type_dialog:
-    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
-    case mir_surface_type_freestyle:
-    case mir_surface_type_menu:
-    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
         if (auto const active_surface = active_surface_.lock())
         {
             if (auto const titlebar = tools->info_for(active_surface).titlebar)
@@ -868,15 +866,12 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
         tools->set_focus_to(info_for.session.lock(), surface);
         raise_tree(surface);
         active_surface_ = surface;
-        break;
-
-    case mir_surface_type_gloss:
-    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
-    default:
+    }
+    else
+    {
         // Cannot have input focus - try the parent
         if (auto const parent = info_for.parent.lock())
             select_active_surface(parent);
-        break;
     }
 }
 

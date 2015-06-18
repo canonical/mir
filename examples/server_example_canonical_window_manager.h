@@ -45,6 +45,8 @@ struct CanonicalSurfaceInfoCopy
         std::shared_ptr<scene::Surface> const& surface,
         scene::SurfaceCreationParameters const& params);
 
+    bool can_be_active() const;
+
     MirSurfaceType type;
     MirSurfaceState state;
     geometry::Rectangle restore_rect;
