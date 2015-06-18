@@ -552,7 +552,7 @@ TEST_F(ClientLibrary, highly_threaded_client)
     b.join();
     c.join();
 
-    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_fullscreen));
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_hidden));
 
     mir_surface_release_sync(surface);
 

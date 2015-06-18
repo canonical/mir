@@ -10,6 +10,7 @@ set(
   default_window_manager.cpp
   shell_wrapper.cpp
   surface_ready_observer.cpp
+  system_compositor_window_manager.cpp
   default_persistent_surface_store.cpp
   persistent_surface_store.cpp
 )
