@@ -22,11 +22,14 @@
 #include "mir/scene/application_not_responding_detector.h"
 #include "mir/scene/session.h"
 
+#include "mir_test/signal.h"
+
 #include <thread>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mtf = mir_test_framework;
+namespace mt = mir::test;
 namespace ms = mir::scene;
 
 namespace
@@ -96,9 +99,9 @@ TEST_F(ApplicationNotRespondingDetection, failure_to_pong_is_noticed)
 
     complete_setup();
 
-    bool unresponsive_called{false};
+    mt::Signal marked_as_unresponsive;
     auto anr_observer = std::make_shared<DelegateObserver>(
-        [&unresponsive_called](auto) { unresponsive_called = true; },
+        [&marked_as_unresponsive](auto) { marked_as_unresponsive.raise(); },
         [](auto){}
     );
 
@@ -106,9 +109,7 @@ TEST_F(ApplicationNotRespondingDetection, failure_to_pong_is_noticed)
 
     mir_connection_set_ping_event_callback(connection, &black_hole_pong, nullptr);
 
-    std::this_thread::sleep_for(3s);
-
-    EXPECT_TRUE(unresponsive_called);
+    EXPECT_TRUE(marked_as_unresponsive.wait_for(10s));
 }
 
 TEST_F(ApplicationNotRespondingDetection, can_override_anr_detector)
@@ -126,9 +127,26 @@ TEST_F(ApplicationNotRespondingDetection, can_override_anr_detector)
 
 namespace
 {
-void respond_to_ping(MirConnection* connection, int32_t, void*)
+struct PingContext
 {
+    int ping_count;
+    mt::Signal pung_thrice;
+};
+
+void respond_to_ping(MirConnection* connection, int32_t, void* context)
+{
+    auto ping_context = reinterpret_cast<PingContext*>(context);
+    ping_context->ping_count++;
+
     mir_connection_pong(connection, 0);
+
+    if (ping_context->ping_count > 2)
+    {
+        // If a client does not respond to a ping for a whole ping cycle it is marked
+        // as unresponsive. Wait for 2 ping cycles to ensure that the test has
+        // had time to process the pongs.
+        ping_context->pung_thrice.raise();
+    }
 }
 }
 
@@ -146,10 +164,10 @@ TEST_F(ApplicationNotRespondingDetection, responding_client_is_not_marked_as_unr
 
     server.the_application_not_responding_detector()->register_observer(anr_observer);
 
-    mir_connection_set_ping_event_callback(connection, &respond_to_ping, nullptr);
+    auto ping_context = std::make_unique<PingContext>();
+    mir_connection_set_ping_event_callback(connection, &respond_to_ping, ping_context.get());
 
-    std::this_thread::sleep_for(3s);
-
+    EXPECT_TRUE(ping_context->pung_thrice.wait_for(10s));
     EXPECT_FALSE(unresponsive_called);
 }
 
