@@ -63,7 +63,7 @@ public:
         mir::protobuf::DisplayServer& server,
         BufferStreamMode mode,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
-        protobuf::BufferStream const& protobuf_bs,
+        mir::protobuf::BufferStream const& protobuf_bs,
         std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name);
     // For surfaceless buffer streams
@@ -138,7 +138,7 @@ private:
     BufferStreamMode const mode;
     std::shared_ptr<ClientPlatform> const client_platform;
 
-    mir::protobuf::BufferStream protobuf_bs;
+    std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
     mir::client::ClientBufferDepository buffer_depository;
     
     int swap_interval_;
@@ -151,8 +151,8 @@ private:
     MirWaitHandle release_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;
-    mir::protobuf::Void protobuf_void;
     mir::protobuf::BufferRequest request;
+    std::unique_ptr<mir::protobuf::Void> protobuf_void;
     
     std::shared_ptr<MemoryRegion> secured_region;
     

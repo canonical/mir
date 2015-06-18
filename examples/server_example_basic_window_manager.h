@@ -81,6 +81,8 @@ public:
 
     virtual auto active_display() -> geometry::Rectangle const = 0;
 
+    virtual void forget(std::weak_ptr<scene::Surface> const& surface) = 0;
+
     virtual ~BasicWindowManagerToolsCopy() = default;
     BasicWindowManagerToolsCopy() = default;
     BasicWindowManagerToolsCopy(BasicWindowManagerToolsCopy const&) = delete;
@@ -167,6 +169,11 @@ private:
         std::lock_guard<decltype(mutex)> lock(mutex);
         policy.handle_delete_surface(session, surface);
 
+        surface_info.erase(surface);
+    }
+
+    void forget(std::weak_ptr<scene::Surface> const& surface) override
+    {
         surface_info.erase(surface);
     }
 
