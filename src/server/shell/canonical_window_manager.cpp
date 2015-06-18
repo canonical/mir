@@ -58,6 +58,98 @@ msh::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
 {
 }
 
+bool msh::CanonicalSurfaceInfo::can_be_active() const
+{
+    switch (type)
+    {
+    case mir_surface_type_normal:       /**< AKA "regular"                       */
+    case mir_surface_type_utility:      /**< AKA "floating"                      */
+    case mir_surface_type_dialog:
+    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+    case mir_surface_type_freestyle:
+    case mir_surface_type_menu:
+    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        return true;
+
+    case mir_surface_type_gloss:
+    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+    default:
+        // Cannot have input focus
+        return false;
+    }
+}
+
+bool msh::CanonicalSurfaceInfo::must_have_parent() const
+{
+    switch (type)
+    {
+    case mir_surface_type_overlay:;
+    case mir_surface_type_inputmethod:
+    case mir_surface_type_satellite:
+    case mir_surface_type_tip:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+bool msh::CanonicalSurfaceInfo::can_morph_to(MirSurfaceType new_type) const
+{
+    switch (new_type)
+    {
+    case mir_surface_type_normal:
+    case mir_surface_type_utility:
+    case mir_surface_type_satellite:
+        switch (type)
+        {
+        case mir_surface_type_normal:
+        case mir_surface_type_utility:
+        case mir_surface_type_dialog:
+        case mir_surface_type_satellite:
+            return true;
+
+        default:
+            break;
+        }
+        break;
+
+    case mir_surface_type_dialog:
+        switch (type)
+        {
+        case mir_surface_type_normal:
+        case mir_surface_type_utility:
+        case mir_surface_type_dialog:
+        case mir_surface_type_popover:
+        case mir_surface_type_satellite:
+            return true;
+
+        default:
+            break;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    return false;
+}
+
+bool msh::CanonicalSurfaceInfo::must_not_have_parent() const
+{
+    switch (type)
+    {
+    case mir_surface_type_normal:
+    case mir_surface_type_utility:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+
 msh::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(
     Tools* const tools,
     std::shared_ptr<DisplayLayout> const& display_layout) :
@@ -236,6 +328,7 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
 
 void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
+    auto& surface_info = tools->info_for(surface);
     if (auto const parent = surface->parent())
     {
         tools->info_for(parent).children.push_back(surface);
@@ -243,19 +336,9 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
 
     tools->info_for(session).surfaces++;
 
-    switch (surface->type())
+    if (surface_info.can_be_active())
     {
-    case mir_surface_type_normal:       /**< AKA "regular"                       */
-    case mir_surface_type_utility:      /**< AKA "floating"                      */
-    case mir_surface_type_dialog:
-    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
-    case mir_surface_type_freestyle:
-    case mir_surface_type_menu:
-    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
-        // TODO There's currently no way to insert surfaces into an active (or inactive)
-        // TODO window tree while keeping the order stable or consistent with spec.
-        // TODO Nor is there a way to update the "default surface" when appropriate!!
-        surface->add_observer(std::make_shared<SurfaceReadyObserver>(
+        surface->add_observer(std::make_shared<shell::SurfaceReadyObserver>(
             [this](std::shared_ptr<scene::Session> const& /*session*/,
                    std::shared_ptr<scene::Surface> const& surface)
                 {
@@ -263,13 +346,6 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
                 },
             session,
             surface));
-        break;
-
-    case mir_surface_type_gloss:
-    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
-    default:
-        // Cannot have input focus
-        break;
     }
 }
 
@@ -290,61 +366,26 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     {
         auto const new_type = modifications.type.value();
 
-        switch(new_type)
+        if (!surface_info.can_morph_to(new_type))
         {
-        case mir_surface_type_normal:
-        case mir_surface_type_utility:
-            switch (surface_info.type)
-            {
-            case mir_surface_type_normal:
-            case mir_surface_type_utility:
-            case mir_surface_type_dialog:
-            case mir_surface_type_satellite:
-                if (modifications.parent.is_set())
-                    throw std::runtime_error("Target surface type does not support parent");
-                break;
-
-            default:
-                throw std::runtime_error("Unsupported surface type change");
-            }
-            surface_info.parent.reset();
-            break;
-
-        case mir_surface_type_satellite:
-            switch (surface_info.type)
-            {
-            case mir_surface_type_normal:
-            case mir_surface_type_utility:
-            case mir_surface_type_dialog:
-            case mir_surface_type_satellite:
-                if (!surface_info.parent.lock())
-                    throw std::runtime_error("Target surface type requires parent");
-                break;
-
-            default:
-                throw std::runtime_error("Unsupported surface type change");
-            }
-            break;
-
-        case mir_surface_type_dialog:
-            switch (surface_info.type)
-            {
-            case mir_surface_type_normal:
-            case mir_surface_type_utility:
-            case mir_surface_type_dialog:
-            case mir_surface_type_popover:
-            case mir_surface_type_satellite:
-                break;
-
-            default:
-                throw std::runtime_error("Unsupported surface type change");
-            }
-            break;
-
-        default:
             throw std::runtime_error("Unsupported surface type change");
         }
+
         surface_info.type = new_type;
+
+        if (surface_info.must_not_have_parent())
+        {
+            if (modifications.parent.is_set())
+                throw std::runtime_error("Target surface type does not support parent");
+
+            surface_info.parent.reset();
+        }
+        else if (surface_info.must_have_parent())
+        {
+            if (!surface_info.parent.lock())
+                throw std::runtime_error("Target surface type requires parent");
+        }
+
         surface->configure(mir_surface_attrib_type, new_type);
     }
 
@@ -519,7 +560,7 @@ bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent c
 
     if (action == mir_keyboard_action_down && scan_code == KEY_F11)
     {
-        switch (modifiers & modifier_mask)
+        switch (modifiers)
         {
         case mir_input_event_modifier_alt:
             toggle(mir_surface_state_maximized);
@@ -541,7 +582,7 @@ bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent c
     {
         if (auto const session = tools->focused_session())
         {
-            switch (modifiers & modifier_mask)
+            switch (modifiers)
             {
             case mir_input_event_modifier_alt:
                 kill(session->process_id(), SIGTERM);
@@ -687,27 +728,17 @@ void msh::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms
 
     auto const& info_for = tools->info_for(surface);
 
-    switch (surface->type())
+    if (info_for.can_be_active())
     {
-    case mir_surface_type_normal:       /**< AKA "regular"                       */
-    case mir_surface_type_utility:      /**< AKA "floating"                      */
-    case mir_surface_type_dialog:
-    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
-    case mir_surface_type_freestyle:
-    case mir_surface_type_menu:
-    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
         tools->set_focus_to(info_for.session.lock(), surface);
         raise_tree(surface);
         active_surface_ = surface;
-        break;
-
-    case mir_surface_type_gloss:
-    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
-    default:
+    }
+    else
+    {
         // Cannot have input focus - try the parent
         if (auto const parent = info_for.parent.lock())
             select_active_surface(parent);
-        break;
     }
 }
 

@@ -41,6 +41,12 @@ struct CanonicalSurfaceInfo
         std::shared_ptr<scene::Surface> const& surface,
         scene::SurfaceCreationParameters const& params);
 
+    bool can_be_active() const;
+
+    bool can_morph_to(MirSurfaceType new_type) const;
+    bool must_have_parent() const;
+    bool must_not_have_parent() const;
+
     MirSurfaceType type;
     MirSurfaceState state;
     geometry::Rectangle restore_rect;
