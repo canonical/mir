@@ -70,6 +70,7 @@ class CanonicalWindowManagerPolicy
 public:
     using Tools = BasicWindowManagerTools<CanonicalSessionInfo, CanonicalSurfaceInfo>;
     using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfo>::type;
+    using CanonicalSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfo>::type;
 
     explicit CanonicalWindowManagerPolicy(
         Tools* const tools,
