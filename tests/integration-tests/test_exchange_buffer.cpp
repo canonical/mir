@@ -210,7 +210,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
-    void buffer_arrival()
+    void request_completed()
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         arrived = true;
@@ -224,7 +224,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Buffer next;
         server.exchange_buffer(0, &buffer_request, &next,
-            google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
+            google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
 
 
         arrived = false;
@@ -242,7 +242,29 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
         server.submit_buffer(0, &request, &v,
-            google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
+            google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
+        
+        arrived = false;
+        return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
+    }
+
+    bool allocate_buffers(mp::DisplayServer& server, mp::BufferAllocation& request)
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        mp::Void v;
+        server.allocate_buffers(0, &request, &v,
+            google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
+        
+        arrived = false;
+        return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
+    }
+
+    bool release_buffers(mp::DisplayServer& server, mp::BufferRelease& request)
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        mp::Void v;
+        server.release_buffers(0, &request, &v,
+            google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
         
         arrived = false;
         return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
@@ -332,6 +354,39 @@ TEST_F(ExchangeBufferTest, submissions_happen)
         buffer_request.mutable_buffer()->set_buffer_id(id.as_value());
         ASSERT_THAT(submit_buffer(server, buffer_request), DidNotTimeOut());
     }
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+//TODO: check that a buffer arrives asynchronously.
+TEST_F(ExchangeBufferTest, allocate_buffers_doesnt_time_out)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto surface = mtf::make_any_surface(connection);
+
+    auto rpc_channel = connection->rpc_channel();
+    mp::DisplayServer::Stub server(
+        rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+
+    mp::BufferAllocation request;
+    EXPECT_THAT(allocate_buffers(server, request), DidNotTimeOut());
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ExchangeBufferTest, release_buffers_doesnt_time_out)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto surface = mtf::make_any_surface(connection);
+
+    auto rpc_channel = connection->rpc_channel();
+    mp::DisplayServer::Stub server(
+        rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+
+    mp::BufferRelease request;
+    EXPECT_THAT(release_buffers(server, request), DidNotTimeOut());
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
