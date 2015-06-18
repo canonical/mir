@@ -166,7 +166,6 @@ MIR_CLIENT_DETAIL_9 {
   global:
     extern "C++" { 
       mir::events::make_event*;
-      mir::events::make_ping_event*;
       mir::events::add_touch*;
       mir::input::android::Lexicon::translate*;
       mir::input::android::android_modifiers_from_mir*;
