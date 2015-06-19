@@ -211,25 +211,14 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     return submit(done, std::move(lock));
 }
 
-void mcl::BufferStream::submit_done()
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    submitting = false;
-    submit_cv.notify_all();
-}
-
 MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std::unique_lock<std::mutex> lock)
 {
     //always submit what we have, whether we have a buffer, or will have to wait for an async reply
     auto request = mcl::make_protobuf_object<mp::BufferRequest>();
     request->mutable_id()->set_value(protobuf_bs->id().value());
     request->mutable_buffer()->set_buffer_id(buffer_depository.current_buffer_id());
-    submitting = true;
-    lock.unlock();
     display_server.submit_buffer(nullptr, request.get(), protobuf_void.get(),
-        google::protobuf::NewCallback(this, &mcl::BufferStream::submit_done));
-    lock.lock();
-    submit_cv.wait(lock, [&]{ return !submitting; });
+        google::protobuf::NewPermanentCallback(google::protobuf::DoNothing));
 
     if (incoming_buffers.empty())
     {

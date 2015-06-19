@@ -15,11 +15,20 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-list(APPEND UNIT_TEST_SOURCES
+include_directories(
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/include
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+)
+
+add_library(unit_test_client_platform_mesa OBJECT
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mesa_native_display_container.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_native_surface.cpp
+)
+
+list(APPEND UNIT_TEST_SOURCES
+  $<TARGET_OBJECTS:unit_test_client_platform_mesa>
   $<TARGET_OBJECTS:mirclientplatformmesaobjects>
   $<TARGET_OBJECTS:client_platform_common>
 )
