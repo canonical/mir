@@ -276,14 +276,14 @@ TEST_F(ClientBufferStreamTest, uses_buffer_message_from_server)
     auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
 }
 
-TEST_F(ClientBufferStreamTest, producer_streams_call_exchange_buffer_on_next_buffer)
+TEST_F(ClientBufferStreamTest, producer_streams_call_submit_buffer_on_next_buffer)
 {
     using namespace ::testing;
 
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
         a_buffer_package());
 
-    EXPECT_CALL(mock_protobuf_server, exchange_buffer(_,_,_,_))
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
         .WillOnce(RunProtobufClosure());
 
     auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Producer);
