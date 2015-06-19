@@ -122,12 +122,9 @@ private:
     void release_cpu_region();
     MirWaitHandle* exchange(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
     MirWaitHandle* submit(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
-    void submit_done();
 
     mutable std::mutex mutex; // Protects all members of *this
 
-    std::condition_variable submit_cv;
-    bool submitting = true;
     bool using_exchange_buffer = true;
     std::function<void()> on_incoming_buffer;
     std::queue<mir::protobuf::Buffer> incoming_buffers;
