@@ -179,20 +179,6 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     ${Boost_LIBRARIES}
 )
 
-mir_add_wrapped_executable(mir_demo_server
-  server_example.cpp
-  glog_logger.cpp
-  server_example_test_client.cpp
-)
-
-target_link_libraries(mir_demo_server
-  mirserver
-  exampleserverconfig
-  ${GLog_LIBRARY}
-  ${GFlags_LIBRARY}
-  ${Boost_LIBRARIES}
-)
-
 add_library(mir_demo_server_loadable MODULE
   server_example.cpp
   glog_logger.cpp
@@ -211,11 +197,11 @@ install(TARGETS mir_demo_server_loadable
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-mir_add_wrapped_executable(mir_demo_server_loader
+mir_add_wrapped_executable(mir_demo_server
   mir_demo_server_loader.cpp
 )
 
-target_link_libraries(mir_demo_server_loader
+target_link_libraries(mir_demo_server
   dl
 )
 
