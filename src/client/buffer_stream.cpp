@@ -218,7 +218,7 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
     request->mutable_id()->set_value(protobuf_bs->id().value());
     request->mutable_buffer()->set_buffer_id(protobuf_bs->buffer().buffer_id());
     display_server.submit_buffer(nullptr, request.get(), protobuf_void.get(),
-        google::protobuf::NewPermanentCallback(google::protobuf::DoNothing));
+        google::protobuf::NewCallback(google::protobuf::DoNothing));
 
     if (incoming_buffers.empty())
     {
