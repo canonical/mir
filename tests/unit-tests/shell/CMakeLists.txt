@@ -1,6 +1,4 @@
 list(APPEND UNIT_TEST_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_default_placement_strategy.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_default_window_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_display_layout.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_persistent_surface_store_id.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_default_persistent_surface_store.cpp
