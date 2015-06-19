@@ -79,10 +79,10 @@ me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
     restore_rect{surface->top_left(), surface->size()},
     session{session},
     parent{params.parent},
-    min_width{params.min_width},
-    min_height{params.min_height},
-    max_width{params.max_width},
-    max_height{params.max_height},
+    min_width{params.min_width.is_set() ? params.min_width.value()  : Width{}},
+    min_height{params.min_height.is_set() ? params.min_height.value() : Height{}},
+    max_width{params.max_width.is_set() ? params.max_width.value() : Width{std::numeric_limits<int>::max()}},
+    max_height{params.max_height.is_set() ? params.max_height.value() : Height{std::numeric_limits<int>::max()}},
     width_inc{params.width_inc},
     height_inc{params.height_inc},
     min_aspect{params.min_aspect},
@@ -502,7 +502,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
     #define COPY_IF_SET(field)\
         if (modifications.field.is_set())\
-            surface_info.field = modifications.field
+            surface_info.field = modifications.field.value()
 
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
@@ -981,13 +981,6 @@ void me::CanonicalSurfaceInfoCopy::constrain_resize(
     bool const top_resize,
     Rectangle const& /*bounds*/) const
 {
-    auto const min_width  = this->min_width.is_set()  ? this->min_width.value()  : Width{};
-    auto const min_height = this->min_height.is_set() ? this->min_height.value() : Height{};
-    auto const max_width  = this->max_width.is_set()  ?
-                            this->max_width.value()  : Width{std::numeric_limits<int>::max()};
-    auto const max_height = this->max_height.is_set() ?
-                            this->max_height.value() : Height{std::numeric_limits<int>::max()};
-
     Point new_pos = requested_pos;
     Size new_size = requested_size;
 
