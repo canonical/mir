@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/shell/default_window_manager.h"
+#include "default_window_manager.h"
 
 #include "mir/scene/placement_strategy.h"
 #include "mir/scene/session.h"
@@ -30,9 +30,10 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+namespace me = mir::examples;
 
-msh::DefaultWindowManager::DefaultWindowManager(
-    FocusController* focus_controller,
+me::DefaultWindowManager::DefaultWindowManager(
+    msh::FocusController* focus_controller,
     std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator) :
     focus_controller{focus_controller},
@@ -41,12 +42,12 @@ msh::DefaultWindowManager::DefaultWindowManager(
 {
 }
 
-void msh::DefaultWindowManager::add_session(std::shared_ptr<scene::Session> const& session)
+void me::DefaultWindowManager::add_session(std::shared_ptr<scene::Session> const& session)
 {
     focus_controller->set_focus_to(session, {});
 }
 
-void msh::DefaultWindowManager::remove_session(std::shared_ptr<scene::Session> const& /*session*/)
+void me::DefaultWindowManager::remove_session(std::shared_ptr<scene::Session> const& /*session*/)
 {
     auto const next_session = session_coordinator->successor_of({});
     if (next_session)
@@ -55,7 +56,7 @@ void msh::DefaultWindowManager::remove_session(std::shared_ptr<scene::Session> c
         focus_controller->set_focus_to(next_session, {});
 }
 
-auto msh::DefaultWindowManager::add_surface(
+auto me::DefaultWindowManager::add_surface(
     std::shared_ptr<scene::Session> const& session,
     scene::SurfaceCreationParameters const& params,
     std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
@@ -64,7 +65,7 @@ auto msh::DefaultWindowManager::add_surface(
     auto const result = build(session, placement_strategy->place(*session, params));
     auto const surface = session->surface(result);
 
-    surface->add_observer(std::make_shared<SurfaceReadyObserver>(
+    surface->add_observer(std::make_shared<msh::SurfaceReadyObserver>(
         [this](std::shared_ptr<scene::Session> const& session,
                std::shared_ptr<scene::Surface> const& surface)
             {
@@ -76,46 +77,46 @@ auto msh::DefaultWindowManager::add_surface(
     return result;
 }
 
-void msh::DefaultWindowManager::modify_surface(
+void me::DefaultWindowManager::modify_surface(
     std::shared_ptr<scene::Session> const& /*session*/,
     std::shared_ptr<scene::Surface> const& surface,
-    SurfaceSpecification const& modifications)
+    msh::SurfaceSpecification const& modifications)
 {
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
 }
 
 
-void msh::DefaultWindowManager::remove_surface(
+void me::DefaultWindowManager::remove_surface(
     std::shared_ptr<scene::Session> const& /*session*/,
     std::weak_ptr<scene::Surface> const& /*surface*/)
 {
 }
 
-void msh::DefaultWindowManager::add_display(geometry::Rectangle const& /*area*/)
+void me::DefaultWindowManager::add_display(geometry::Rectangle const& /*area*/)
 {
 }
 
-void msh::DefaultWindowManager::remove_display(geometry::Rectangle const& /*area*/)
+void me::DefaultWindowManager::remove_display(geometry::Rectangle const& /*area*/)
 {
 }
 
-bool msh::DefaultWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
-{
-    return false;
-}
-
-bool msh::DefaultWindowManager::handle_touch_event(MirTouchEvent const* /*event*/)
+bool me::DefaultWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
 {
     return false;
 }
 
-bool msh::DefaultWindowManager::handle_pointer_event(MirPointerEvent const* /*event*/)
+bool me::DefaultWindowManager::handle_touch_event(MirTouchEvent const* /*event*/)
 {
     return false;
 }
 
-int msh::DefaultWindowManager::set_surface_attribute(
+bool me::DefaultWindowManager::handle_pointer_event(MirPointerEvent const* /*event*/)
+{
+    return false;
+}
+
+int me::DefaultWindowManager::set_surface_attribute(
     std::shared_ptr<scene::Session> const& /*session*/,
     std::shared_ptr<scene::Surface> const& surface,
     MirSurfaceAttrib attrib,

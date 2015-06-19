@@ -2,6 +2,8 @@ add_library(demo-shell STATIC
   demo_compositor.cpp
   demo_renderer.cpp
   window_manager.cpp
+  default_window_manager.cpp
+  default_placement_strategy.cpp
 )
 
 add_subdirectory(typo)
