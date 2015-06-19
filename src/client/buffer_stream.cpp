@@ -199,26 +199,16 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     }
 }
 
-MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    perf_report->end_frame(buffer_depository.current_buffer_id());
-
-    secured_region.reset();
-
-    if (using_exchange_buffer)
-        return exchange(done, std::move(lock));
-    return submit(done, std::move(lock));
-}
-
 MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std::unique_lock<std::mutex> lock)
 {
     //always submit what we have, whether we have a buffer, or will have to wait for an async reply
     auto request = mcl::make_protobuf_object<mp::BufferRequest>();
     request->mutable_id()->set_value(protobuf_bs->id().value());
     request->mutable_buffer()->set_buffer_id(buffer_depository.current_buffer_id());
+    lock.unlock();
     display_server.submit_buffer(nullptr, request.get(), protobuf_void.get(),
         google::protobuf::NewPermanentCallback(google::protobuf::DoNothing));
+    lock.lock();
 
     if (incoming_buffers.empty())
     {
@@ -234,27 +224,18 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
     return &next_buffer_wait_handle;
 }
 
-MirWaitHandle* mcl::BufferStream::exchange(
-    std::function<void()> const& done, std::unique_lock<std::mutex> lock)
+MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    perf_report->end_frame(buffer_depository.current_buffer_id());
+
+    secured_region.reset();
+
     // TODO: We can fix the strange "ID casting" used below in the second phase
     // of buffer stream which generalizes and clarifies the server side logic.
     if (mode == mcl::BufferStreamMode::Producer)
     {
-        auto request = mcl::make_protobuf_object<mp::BufferRequest>();
-        request->mutable_id()->set_value(protobuf_bs->id().value());
-        request->mutable_buffer()->set_buffer_id(protobuf_bs->buffer().buffer_id());
-
-        lock.unlock();
-        next_buffer_wait_handle.expect_result();
-
-        display_server.exchange_buffer(
-            nullptr,
-            request.get(),
-            protobuf_bs->mutable_buffer(),
-            google::protobuf::NewCallback(
-            this, &mcl::BufferStream::next_buffer_received,
-            done));
+        return submit(done, std::move(lock));
     }
     else
     {
@@ -434,7 +415,6 @@ void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    using_exchange_buffer = false; //this stream uses async exchange from here on out
 
     if (on_incoming_buffer)
     {
