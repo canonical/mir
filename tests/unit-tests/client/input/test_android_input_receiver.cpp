@@ -259,8 +259,10 @@ TEST_F(AndroidInputReceiverSetup, no_artificial_latency_in_resampling)
     auto const resample_latency_ms =
         duration_cast<std::chrono::milliseconds>(t);
 
+    // Check that we're not using the Android-default RESAMPLE_LATENCY of 5ms
+    // which is too high...
     // Use plain integers so any failures are readable:
-    EXPECT_THAT(resample_latency_ms.count(), Lt(2));
+    EXPECT_THAT(resample_latency_ms.count(), Lt(1));
 }
 
 TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
