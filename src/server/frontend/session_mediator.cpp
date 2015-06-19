@@ -348,6 +348,7 @@ void mf::SessionMediator::submit_buffer(
 
     auto const session = weak_session.lock();
     if (!session) BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    report->session_submit_buffer_called(session->name());
 
     auto stream = session->get_buffer_stream(stream_id);
     stream->swap_buffers(old_buffer,
