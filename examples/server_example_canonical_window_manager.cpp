@@ -19,18 +19,15 @@
 #include "server_example_canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
-#include "mir/scene/null_surface_observer.h"
+#include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/display_layout.h"
 #include "mir/shell/surface_specification.h"
-#include "mir/shell/surface_ready_observer.h"
 #include "mir/geometry/displacement.h"
 
 #include "mir/graphics/buffer.h"
 
 #include <linux/input.h>
 #include <csignal>
-#include <mutex>
-#include <condition_variable>
 #include <algorithm>
 
 namespace me = mir::examples;
@@ -77,6 +74,7 @@ me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     scene::SurfaceCreationParameters const& params) :
+    type{surface->type()},
     state{surface->state()},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
@@ -88,8 +86,7 @@ me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
     width_inc{params.width_inc},
     height_inc{params.height_inc},
     min_aspect{params.min_aspect},
-    max_aspect{params.max_aspect},
-    buffer_stream(surface->primary_buffer_stream())
+    max_aspect{params.max_aspect}
 {
 }
 
@@ -274,27 +271,46 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
 //TODO: provide an easier way for the server to write to a surface!
 //TODO: this is painful to use mg::Buffer::write()
+struct mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
+{
+    PaintingImpl(std::shared_ptr<frontend::BufferStream> const& buffer_stream) :
+        buffer_stream{buffer_stream}, buffer{nullptr}
+    {
+        swap_buffers();
+    }
+
+    void swap_buffers()
+    {
+        auto const callback = [this](mir::graphics::Buffer* new_buffer)
+            {
+                buffer.store(new_buffer);
+            };
+
+        buffer_stream->swap_buffers(buffer, callback);
+    }
+
+    std::shared_ptr<frontend::BufferStream> const buffer_stream;
+    std::atomic<graphics::Buffer*> buffer;
+};
+
+void mir::examples::CanonicalSurfaceInfoCopy::init_titlebar(std::shared_ptr<scene::Surface> const& surface)
+{
+    painting_impl = std::make_shared<PaintingImpl>(surface->primary_buffer_stream());
+}
+
 void mir::examples::CanonicalSurfaceInfoCopy::paint_titlebar(int intensity)
 {
-    if (auto const buf = this->buffer.load())
+    if (auto const buf = painting_impl->buffer.load())
     {
-        auto const format = buffer_stream->pixel_format();
+        auto const format = painting_impl->buffer_stream->pixel_format();
         auto const sz = buf->size().height.as_int() *
             buf->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
 
         std::vector<unsigned char> pixels(sz, intensity);
         buf->write(pixels.data(), sz);
+
+        painting_impl->swap_buffers();
     }
-
-    auto const callback = [this, intensity](mir::graphics::Buffer* new_buffer)
-        {
-            bool const first_time = !buffer;
-            buffer.store(new_buffer);
-            if (first_time)
-                paint_titlebar(intensity);
-        };
-
-    buffer_stream->swap_buffers(buffer, callback);
 }
 
 void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
@@ -322,11 +338,11 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     surface_info.titlebar_id = id;
     surface_info.children.push_back(titlebar);
 
-    CanonicalSurfaceInfoCopy titlebar_info{session, titlebar, ms::SurfaceCreationParameters{}};
+    CanonicalSurfaceInfoCopy& titlebar_info =
+            surface_map.emplace(titlebar, CanonicalSurfaceInfoCopy{session, titlebar, {}}).first->second;
     titlebar_info.is_titlebar = true;
     titlebar_info.parent = surface;
-
-    surface_map.emplace(titlebar, std::move(titlebar_info));
+    titlebar_info.init_titlebar(titlebar);
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
@@ -369,15 +385,83 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
-    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     shell::SurfaceSpecification const& modifications)
 {
-    auto& surface_info = tools->info_for(surface);
+    auto& surface_info_old = tools->info_for(surface);
+
+    auto surface_info = surface_info_old;
+
+    if (modifications.parent.is_set())
+        surface_info.parent = modifications.parent.value();
+
+    if (modifications.type.is_set() &&
+        surface_info.type != modifications.type.value())
+    {
+        auto const new_type = modifications.type.value();
+
+        switch(new_type)
+        {
+        case mir_surface_type_normal:
+        case mir_surface_type_utility:
+            switch (surface_info.type)
+            {
+            case mir_surface_type_normal:
+            case mir_surface_type_utility:
+            case mir_surface_type_dialog:
+            case mir_surface_type_satellite:
+                if (modifications.parent.is_set())
+                    throw std::runtime_error("Target surface type does not support parent");
+                break;
+
+            default:
+                throw std::runtime_error("Unsupported surface type change");
+            }
+            surface_info.parent.reset();
+            break;
+
+        case mir_surface_type_satellite:
+            switch (surface_info.type)
+            {
+            case mir_surface_type_normal:
+            case mir_surface_type_utility:
+            case mir_surface_type_dialog:
+            case mir_surface_type_satellite:
+                if (!surface_info.parent.lock())
+                    throw std::runtime_error("Target surface type requires parent");
+                break;
+
+            default:
+                throw std::runtime_error("Unsupported surface type change");
+            }
+            break;
+
+        case mir_surface_type_dialog:
+            switch (surface_info.type)
+            {
+            case mir_surface_type_normal:
+            case mir_surface_type_utility:
+            case mir_surface_type_dialog:
+            case mir_surface_type_popover:
+            case mir_surface_type_satellite:
+                break;
+
+            default:
+                throw std::runtime_error("Unsupported surface type change");
+            }
+            break;
+
+        default:
+            throw std::runtime_error("Unsupported surface type change");
+        }
+        surface_info.type = new_type;
+        surface->configure(mir_surface_attrib_type, new_type);
+    }
 
     #define COPY_IF_SET(field)\
         if (modifications.field.is_set())\
-        surface_info.field = modifications.field
+            surface_info.field = modifications.field
 
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
@@ -391,8 +475,17 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
     #undef COPY_IF_SET
 
+    std::swap(surface_info, surface_info_old);
+
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
+
+    if (modifications.streams.is_set())
+    {
+        auto v = modifications.streams.value();
+        std::vector<shell::StreamSpecification> l (v.begin(), v.end());
+        session->configure_streams(*surface, l);
+    }
 
     if (modifications.width.is_set() || modifications.height.is_set())
     {
@@ -522,6 +615,7 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
         surface->resize(rect.size);
         break;
     }
+
     case mir_surface_state_hidden:
     case mir_surface_state_minimized:
         if (info.titlebar)
@@ -803,7 +897,7 @@ auto me::CanonicalWindowManagerPolicyCopy::active_surface() const
 
 bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
-    if (!surface || !surface->input_area_contains(cursor))
+    if (!surface || !surface->input_area_contains(old_cursor))
         return false;
 
     auto const top_left = surface->top_left();
