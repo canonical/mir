@@ -61,10 +61,10 @@ struct CanonicalSurfaceInfo
     std::weak_ptr<scene::Session> session;
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
-    optional_value<geometry::Width> min_width;
-    optional_value<geometry::Height> min_height;
-    optional_value<geometry::Width> max_width;
-    optional_value<geometry::Height> max_height;
+    geometry::Width min_width;
+    geometry::Height min_height;
+    geometry::Width max_width;
+    geometry::Height max_height;
     mir::optional_value<geometry::DeltaX> width_inc;
     mir::optional_value<geometry::DeltaY> height_inc;
     mir::optional_value<SurfaceAspectRatio> min_aspect;
