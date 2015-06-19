@@ -25,17 +25,18 @@
 
 #include <algorithm>
 
+namespace me = mir::examples;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
-msh::DefaultPlacementStrategy::DefaultPlacementStrategy(
+me::DefaultPlacementStrategy::DefaultPlacementStrategy(
     std::shared_ptr<msh::DisplayLayout> const& display_layout)
     : display_layout(display_layout)
 {
 }
 
-ms::SurfaceCreationParameters msh::DefaultPlacementStrategy::place(
+ms::SurfaceCreationParameters me::DefaultPlacementStrategy::place(
     ms::Session const& /* session */,
     ms::SurfaceCreationParameters const& request_parameters)
 {

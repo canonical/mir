@@ -19,14 +19,9 @@
 #include "mir/default_server_configuration.h"
 
 #include "mir/events/event_private.h"
-#include "android/android_input_dispatcher.h"
-#include "android/android_input_targeter.h"
 #include "android/android_input_reader_policy.h"
 #include "android/common_input_thread.h"
 #include "android/android_input_reader_policy.h"
-#include "android/android_input_registrar.h"
-#include "android/android_input_target_enumerator.h"
-#include "android/default_dispatcher_policy.h"
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
 #include "android/input_translator.h"
@@ -61,7 +56,6 @@
 
 #include "mir_toolkit/cursors.h"
 
-#include <InputDispatcher.h>
 #include <EventHub.h>
 #include <InputReader.h>
 
@@ -99,42 +93,7 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
         [this]() -> std::shared_ptr<mi::EventFilterChainDispatcher>
         {
             std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
-            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_new_input_dispatcher());
-        });
-}
-
-std::shared_ptr<droidinput::InputEnumerator>
-mir::DefaultServerConfiguration::the_input_target_enumerator()
-{
-    return input_target_enumerator(
-        [this]()
-        {
-            return std::make_shared<mia::InputTargetEnumerator>(the_input_scene(), the_input_registrar());
-        });
-}
-
-
-std::shared_ptr<droidinput::InputDispatcherInterface>
-mir::DefaultServerConfiguration::the_android_input_dispatcher()
-{
-    return android_input_dispatcher(
-        [this]()
-        {
-            auto dispatcher = std::make_shared<droidinput::InputDispatcher>(
-                the_dispatcher_policy(),
-                the_input_report(),
-                the_input_target_enumerator());
-            the_input_registrar()->set_dispatcher(dispatcher);
-            return dispatcher;
-        });
-}
-std::shared_ptr<mia::InputRegistrar>
-mir::DefaultServerConfiguration::the_input_registrar()
-{
-    return input_registrar(
-        [this]()
-        {
-            return std::make_shared<mia::InputRegistrar>(the_scene());
+            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_surface_input_dispatcher());
         });
 }
 
@@ -182,38 +141,17 @@ mir::DefaultServerConfiguration::the_input_targeter()
             if (!options->get<bool>(options::enable_input_opt))
                 return std::make_shared<mi::NullInputTargeter>();
             else
-                return the_new_input_dispatcher();
+                return the_surface_input_dispatcher();
         });
 }
 
 std::shared_ptr<mi::SurfaceInputDispatcher>
-mir::DefaultServerConfiguration::the_new_input_dispatcher()
+mir::DefaultServerConfiguration::the_surface_input_dispatcher()
 {
-    return new_input_dispatcher(
+    return surface_input_dispatcher(
         [this]()
         {
             return std::make_shared<mi::SurfaceInputDispatcher>(the_input_scene());
-        });
-}
-
-std::shared_ptr<mia::InputThread>
-mir::DefaultServerConfiguration::the_dispatcher_thread()
-{
-    return dispatcher_thread(
-        [this]()
-        {
-            return std::make_shared<mia::CommonInputThread>("Mir/InputDisp",
-                                                       new droidinput::InputDispatcherThread(the_android_input_dispatcher()));
-        });
-}
-
-std::shared_ptr<droidinput::InputDispatcherPolicyInterface>
-mir::DefaultServerConfiguration::the_dispatcher_policy()
-{
-    return android_dispatcher_policy(
-        [this]()
-        {
-            return std::make_shared<mia::DefaultDispatcherPolicy>();
         });
 }
 

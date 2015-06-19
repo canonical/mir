@@ -19,8 +19,6 @@
 #include "mir/default_server_configuration.h"
 #include "null_host_lifecycle_event_listener.h"
 
-
-#include "default_placement_strategy.h"
 #include "mir/shell/canonical_window_manager.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
@@ -86,17 +84,6 @@ std::shared_ptr<msh::FocusController>
 mir::DefaultServerConfiguration::the_focus_controller()
 {
     return the_shell();
-}
-
-std::shared_ptr<ms::PlacementStrategy>
-mir::DefaultServerConfiguration::the_placement_strategy()
-{
-    return placement_strategy(
-        [this]
-        {
-            return std::make_shared<msh::DefaultPlacementStrategy>(
-                the_shell_display_layout());
-        });
 }
 
 std::shared_ptr<msh::DisplayLayout>
