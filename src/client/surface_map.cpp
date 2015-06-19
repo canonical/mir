@@ -31,38 +31,29 @@ mcl::ConnectionSurfaceMap::ConnectionSurfaceMap()
 
 mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
 {
+    std::unordered_map<frontend::SurfaceId, MirSurface*> surface_map;
+    std::unordered_map<frontend::BufferStreamId, StreamInfo> stream_map;
+    {
+        //Prevent TSAN from flagging lock ordering issues
+        //as the surface/buffer_stream destructors acquire internal locks
+        //The mutex lock is used mainly as a memory barrier here
+        std::lock_guard<std::mutex> lk(guard);
+        surface_map = std::move(surfaces);
+        stream_map = std::move(streams);
+    }
+
     // Unless the client has screwed up there should be no surfaces left
     // here. (OTOH *we* don't need to leak memory when clients screw up.)
-    std::vector<MirSurface*> surfaces_to_release;
-    std::vector<ClientBufferStream*> streams_to_release;
-
+    for (auto const& surface : surface_map)
     {
-        //Mutex lock used mainly as a memory barrier here
-        //Also prevent TSAN from flagging this as a lock ordering issue
-        //as the surface/buffer_stream destructors also acquire internal locks
-        std::lock_guard<std::mutex> lk(guard);
-
-        for (auto const& surface : surfaces)
-        {
-            surfaces_to_release.push_back(surface.second);
-        }
-
-        for (auto const& info : streams)
-        {
-            if (info.second.owned)
-                streams_to_release.push_back(info.second.stream);
-        }
+        if (MirSurface::is_valid(surface.second))
+            delete surface.second;
     }
 
-    for (auto const& surface : surfaces_to_release)
+    for (auto const& info : stream_map)
     {
-        if (MirSurface::is_valid(surface))
-            delete surface;
-    }
-
-    for (auto const& stream : streams_to_release)
-    {
-        delete stream;
+        if (info.second.owned)
+            delete info.second.stream;
     }
 }
 
