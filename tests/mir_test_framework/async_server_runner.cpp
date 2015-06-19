@@ -108,9 +108,9 @@ void mtf::AsyncServerRunner::start_server()
 
 void mtf::AsyncServerRunner::stop_server()
 {
-    connections.clear();
     server.stop();
     wait_for_server_exit();
+    connections.clear();
 }
 
 void mtf::AsyncServerRunner::wait_for_server_exit()
