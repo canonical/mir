@@ -968,7 +968,7 @@ bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> c
 
     surface_info.constrain_resize(surface, new_pos, new_size, left_resize, top_resize, bounds);
 
-    apply_resize(surface, surface_info.titlebar, top_left, new_size);
+    apply_resize(surface, surface_info.titlebar, new_pos, new_size);
 
     return true;
 }
@@ -1111,7 +1111,7 @@ void me::CanonicalSurfaceInfoCopy::constrain_resize(
 void me::CanonicalWindowManagerPolicyCopy::apply_resize(
     std::shared_ptr<ms::Surface> const& surface,
     std::shared_ptr<ms::Surface> const& titlebar,
-    Point const& top_left,
+    Point const& new_pos,
     Size const& new_size) const
 {
     if (titlebar)
@@ -1119,7 +1119,7 @@ void me::CanonicalWindowManagerPolicyCopy::apply_resize(
 
     surface->resize(new_size);
 
-    move_tree(surface, top_left-surface->top_left());
+    move_tree(surface, new_pos-surface->top_left());
 }
 
 bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle /*bounds*/)

@@ -427,13 +427,17 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
         if (modifications.height.is_set())
             new_size.height = modifications.height.value();
 
-        constrained_resize(
+        auto top_left = surface->top_left();
+
+        surface_info.constrain_resize(
             surface,
-            surface->top_left(),
+            top_left,
             new_size,
             false,
             false,
             display_area);
+
+        apply_resize(surface, top_left, new_size);
     }
 }
 
@@ -790,32 +794,37 @@ bool msh::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> cons
 
     Point new_pos = top_left + left_resize*delta.dx + top_resize*delta.dy;
 
-    return constrained_resize(surface, new_pos, new_size, left_resize, top_resize, bounds);
-}
 
-bool msh::CanonicalWindowManagerPolicy::constrained_resize(
-    std::shared_ptr<ms::Surface> const& surface,
-    Point const& requested_pos,
-    Size const& requested_size,
-    bool const left_resize,
-    bool const top_resize,
-    Rectangle const& /*bounds*/)
-{
     auto const& surface_info = tools->info_for(surface);
 
-    auto const min_width  = surface_info.min_width.is_set()  ? surface_info.min_width.value()  : Width{};
-    auto const min_height = surface_info.min_height.is_set() ? surface_info.min_height.value() : Height{};
-    auto const max_width  = surface_info.max_width.is_set()  ?
-        surface_info.max_width.value()  : Width{std::numeric_limits<int>::max()};
-    auto const max_height = surface_info.max_height.is_set() ?
-        surface_info.max_height.value() : Height{std::numeric_limits<int>::max()};
+    surface_info.constrain_resize(surface, new_pos, new_size, left_resize, top_resize, bounds);
+
+    apply_resize(surface, new_pos, new_size);
+
+    return true;
+}
+
+void msh::CanonicalSurfaceInfo::constrain_resize(
+    std::shared_ptr<ms::Surface> const& surface,
+    Point& requested_pos,
+    Size& requested_size,
+    bool const left_resize,
+    bool const top_resize,
+    Rectangle const& /*bounds*/) const
+{
+    auto const min_width  = this->min_width.is_set()  ? this->min_width.value()  : Width{};
+    auto const min_height = this->min_height.is_set() ? this->min_height.value() : Height{};
+    auto const max_width  = this->max_width.is_set()  ?
+                            this->max_width.value()  : Width{std::numeric_limits<int>::max()};
+    auto const max_height = this->max_height.is_set() ?
+                            this->max_height.value() : Height{std::numeric_limits<int>::max()};
 
     Point new_pos = requested_pos;
     Size new_size = requested_size;
 
-    if (surface_info.min_aspect.is_set())
+    if (min_aspect.is_set())
     {
-        auto const ar = surface_info.min_aspect.value();
+        auto const ar = min_aspect.value();
 
         auto const error = new_size.height.as_int()*long(ar.width) - new_size.width.as_int()*long(ar.height);
 
@@ -836,9 +845,9 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
         }
     }
 
-    if (surface_info.max_aspect.is_set())
+    if (max_aspect.is_set())
     {
-        auto const ar = surface_info.max_aspect.value();
+        auto const ar = max_aspect.value();
 
         auto const error = new_size.width.as_int()*long(ar.height) - new_size.height.as_int()*long(ar.width);
 
@@ -871,18 +880,18 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     if (max_height < new_size.height)
         new_size.height = max_height;
 
-    if (surface_info.width_inc.is_set())
+    if (width_inc.is_set())
     {
         auto const width = new_size.width.as_int() - min_width.as_int();
-        auto inc = surface_info.width_inc.value().as_int();
+        auto inc = width_inc.value().as_int();
         if (width % inc)
             new_size.width = min_width + DeltaX{inc*(((2L*width + inc)/2)/inc)};
     }
 
-    if (surface_info.height_inc.is_set())
+    if (height_inc.is_set())
     {
         auto const height = new_size.height.as_int() - min_height.as_int();
-        auto inc = surface_info.height_inc.value().as_int();
+        auto inc = height_inc.value().as_int();
         if (height % inc)
             new_size.height = min_height + DeltaY{inc*(((2L*height + inc)/2)/inc)};
     }
@@ -895,7 +904,7 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
 
     // placeholder - constrain onscreen
 
-    switch (surface_info.state)
+    switch (state)
     {
     case mir_surface_state_restored:
         break;
@@ -919,17 +928,28 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     // the left-edge of the surface is anchored to the right-edge of the launcher."
     case mir_surface_state_maximized:
     default:
-        return true;
+        new_pos.x = surface->top_left().x;
+        new_pos.y = surface->top_left().y;
+        new_size.width = surface->size().width;
+        new_size.height = surface->size().height;
+        break;
     }
 
+    requested_pos = new_pos;
+    requested_size = new_size;
+}
+
+void msh::CanonicalWindowManagerPolicy::apply_resize(
+    std::shared_ptr<ms::Surface> const& surface,
+    Point const& new_pos,
+    Size const& new_size) const
+{
     surface->resize(new_size);
 
     // TODO It is rather simplistic to move a tree WRT the top_left of the root
     // TODO when resizing. But for more sophistication we would need to encode
     // TODO some sensible layout rules.
     move_tree(surface, new_pos-surface->top_left());
-
-    return true;
 }
 
 bool msh::CanonicalWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle /*bounds*/)

@@ -164,7 +164,7 @@ private:
     void apply_resize(
         std::shared_ptr<mir::scene::Surface> const& surface,
         std::shared_ptr<mir::scene::Surface> const& titlebar,
-        geometry::Point const& top_left,
+        geometry::Point const& new_pos,
         geometry::Size const& new_size) const;
 
     Tools* const tools;
