@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
 
 #include "mir/frontend/display_changer.h"
-#include "null_display_configuration.h"
+#include "mir_test_doubles/null_display_configuration.h"
 
 namespace mir
 {
