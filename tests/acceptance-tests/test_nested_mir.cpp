@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -37,13 +37,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <mutex>
-#include <condition_variable>
-
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -245,4 +243,52 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
 
     mir_surface_release_sync(surface);
     mir_connection_release(c);
+}
+
+TEST_F(NestedServer, posts_when_scene_has_visible_changes)
+{
+    // No post on surface creation
+    EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(0);
+    NestedMirRunner nested_mir{new_connection()};
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto const surface = mtf::make_any_surface(connection);
+
+    // NB there is no synchronization to guarantee that a spurious post on surface creation will have 
+    // been seen by this point (although in testing it was invariably the case). However, any missed post
+    // would be included in one of the later counts and cause a test failure.
+    Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
+
+    // One post when surface drawn
+    {
+        mt::WaitCondition wait;
+
+        EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(1)
+                .WillOnce(InvokeWithoutArgs([&] { wait.wake_up_everyone(); }));
+
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+
+        wait.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
+    }
+
+    // One post when surface released
+    {
+        mt::WaitCondition wait;
+
+        EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(1)
+                .WillOnce(InvokeWithoutArgs([&] { wait.wake_up_everyone(); }));
+
+        mir_surface_release_sync(surface);
+        mir_connection_release(connection);
+
+        wait.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
+    }
+
+    // No post during shutdown
+    EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(0);
+
+    // Ignore other shutdown events
+    EXPECT_CALL(*mock_session_mediator_report, session_release_surface_called(_)).Times(AnyNumber());
+    EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(AnyNumber());
 }

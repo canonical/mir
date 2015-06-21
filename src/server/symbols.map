@@ -5,7 +5,8 @@ MIR_SERVER_32 {
     vtable?for?mir::input::NullInputDispatcher;
     VTT?for?mir::DefaultServerConfiguration;
     VTT?for?mir::shell::ShellWrapper;
-    
+    VTT?for?mir::shell::SystemCompositorWindowManager;
+
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort  
     mir::compositor::Compositor::Compositor*;
@@ -106,9 +107,6 @@ MIR_SERVER_32 {
     mir::scene::SessionListener::operator*;
     mir::scene::SessionListener::?SessionListener*;
     mir::scene::SessionListener::SessionListener*;
-    mir::scene::SurfaceBufferAccess::operator*;
-    mir::scene::SurfaceBufferAccess::?SurfaceBufferAccess*;
-    mir::scene::SurfaceBufferAccess::SurfaceBufferAccess*;
     mir::scene::SurfaceConfigurator::operator*;
     mir::scene::SurfaceConfigurator::?SurfaceConfigurator*;
     mir::scene::SurfaceConfigurator::SurfaceConfigurator*;
@@ -255,6 +253,34 @@ MIR_SERVER_32 {
     mir::shell::ShellWrapper::surface_at*;
     mir::shell::SurfaceReadyObserver::SurfaceReadyObserver*;
     mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
+    mir::shell::SystemCompositorWindowManager::SystemCompositorWindowManager*;
+    mir::shell::SystemCompositorWindowManager::add_display*;
+    mir::shell::SystemCompositorWindowManager::add_prompt_provider_for*;
+    mir::shell::SystemCompositorWindowManager::add_session*;
+    mir::shell::SystemCompositorWindowManager::add_surface*;
+    mir::shell::SystemCompositorWindowManager::close_session*;
+    mir::shell::SystemCompositorWindowManager::create_surface*;
+    mir::shell::SystemCompositorWindowManager::destroy_surface*;
+    mir::shell::SystemCompositorWindowManager::focused_session*;
+    mir::shell::SystemCompositorWindowManager::focused_surface*;
+    mir::shell::SystemCompositorWindowManager::focus_next_session*;
+    mir::shell::SystemCompositorWindowManager::get_surface_attribute*;
+    mir::shell::SystemCompositorWindowManager::handle*;
+    mir::shell::SystemCompositorWindowManager::modify_surface*;
+    mir::shell::SystemCompositorWindowManager::on_session_added*;
+    mir::shell::SystemCompositorWindowManager::on_session_removed*;
+    mir::shell::SystemCompositorWindowManager::on_session_ready*;
+    mir::shell::SystemCompositorWindowManager::open_session*;
+    mir::shell::SystemCompositorWindowManager::raise*;
+    mir::shell::SystemCompositorWindowManager::remove_display*;
+    mir::shell::SystemCompositorWindowManager::remove_session*;
+    mir::shell::SystemCompositorWindowManager::remove_surface*;
+    mir::shell::SystemCompositorWindowManager::set_focus_to*;
+    mir::shell::SystemCompositorWindowManager::set_surface_attribute*;
+    mir::shell::SystemCompositorWindowManager::ShellWrapper*;
+    mir::shell::SystemCompositorWindowManager::start_prompt_session_for*;
+    mir::shell::SystemCompositorWindowManager::stop_prompt_session*;
+    mir::shell::SystemCompositorWindowManager::surface_at*;
     mir::shell::WindowManager::operator*;
     mir::shell::WindowManager::?WindowManager*;
     mir::shell::WindowManager::WindowManager*;
@@ -302,7 +328,6 @@ MIR_SERVER_32 {
     non-virtual?thunk?to?mir::scene::PromptSessionManager::?PromptSessionManager*;
     non-virtual?thunk?to?mir::scene::SessionCoordinator::?SessionCoordinator*;
     non-virtual?thunk?to?mir::scene::SessionListener::?SessionListener*;
-    non-virtual?thunk?to?mir::scene::SurfaceBufferAccess::?SurfaceBufferAccess*;
     non-virtual?thunk?to?mir::scene::SurfaceConfigurator::?SurfaceConfigurator*;
     non-virtual?thunk?to?mir::scene::SurfaceCoordinator::?SurfaceCoordinator*;
     non-virtual?thunk?to?mir::scene::SurfaceObserver::?SurfaceObserver*;
@@ -349,6 +374,29 @@ MIR_SERVER_32 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::stop_prompt_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::surface_at*;
     non-virtual?thunk?to?mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::add_display*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::add_prompt_provider_for*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::close_session*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::create_surface*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::destroy_surface*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::focused_session*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::focused_surface*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::focus_next_session*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::get_surface_attribute*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::modify_surface*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::on_session_added*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::on_session_removed*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::on_session_ready*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::open_session*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::raise*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::remove_display*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::set_focus_to*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::set_surface_attribute*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::ShellWrapper*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::start_prompt_session_for*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::stop_prompt_session*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::surface_at*;
     non-virtual?thunk?to?mir::shell::WindowManager::?WindowManager*;
     non-virtual?thunk?to?mir::time::Alarm::?Alarm*;
     non-virtual?thunk?to?mir::time::AlarmFactory::?AlarmFactory*;
@@ -391,7 +439,6 @@ MIR_SERVER_32 {
     typeinfo?for?mir::scene::SessionListener;
     typeinfo?for?mir::scene::Snapshot;
     typeinfo?for?mir::scene::Surface;
-    typeinfo?for?mir::scene::SurfaceBufferAccess;
     typeinfo?for?mir::scene::SurfaceConfigurator;
     typeinfo?for?mir::scene::SurfaceCoordinator;
     typeinfo?for?mir::scene::SurfaceCreationParameters;
@@ -407,6 +454,7 @@ MIR_SERVER_32 {
     typeinfo?for?mir::shell::Shell;
     typeinfo?for?mir::shell::ShellWrapper;
     typeinfo?for?mir::shell::SurfaceReadyObserver;
+    typeinfo?for?mir::shell::SystemCompositorWindowManager;
     typeinfo?for?mir::shell::WindowManager;
     typeinfo?for?mir::time::Alarm;
     typeinfo?for?mir::time::AlarmFactory;
@@ -449,7 +497,6 @@ MIR_SERVER_32 {
     vtable?for?mir::scene::SessionListener;
     vtable?for?mir::scene::Snapshot;
     vtable?for?mir::scene::Surface;
-    vtable?for?mir::scene::SurfaceBufferAccess;
     vtable?for?mir::scene::SurfaceConfigurator;
     vtable?for?mir::scene::SurfaceCoordinator;
     vtable?for?mir::scene::SurfaceCreationParameters;
@@ -465,6 +512,7 @@ MIR_SERVER_32 {
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellWrapper;
     vtable?for?mir::shell::SurfaceReadyObserver;
+    vtable?for?mir::shell::SystemCompositorWindowManager;
     vtable?for?mir::shell::WindowManager;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::AlarmFactory;
@@ -526,13 +574,14 @@ MIR_SERVER_32 {
 
     mir::DefaultServerConfiguration::clock*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
-    mir::DefaultServerConfiguration::is_key_repeat_enabled*;
     mir::DefaultServerConfiguration::new_ipc_factory*;
     mir::DefaultServerConfiguration::the_android_input_dispatcher*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
+    mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
+    mir::DefaultServerConfiguration::the_surface_input_dispatcher;
     mir::DefaultServerConfiguration::the_compositor*;
     mir::DefaultServerConfiguration::the_compositor_report*;
     mir::DefaultServerConfiguration::the_connection_creator*;
@@ -552,6 +601,7 @@ MIR_SERVER_32 {
     mir::DefaultServerConfiguration::the_display_report*;
     mir::DefaultServerConfiguration::the_emergency_cleanup*;
     mir::DefaultServerConfiguration::the_event_hub*;
+    mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
     mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     mir::DefaultServerConfiguration::the_focus_controller*;
     mir::DefaultServerConfiguration::the_frame_dropping_policy_factory*;
@@ -567,6 +617,7 @@ MIR_SERVER_32 {
     mir::DefaultServerConfiguration::the_input_device_hub*;
     mir::DefaultServerConfiguration::the_input_device_registry*;
     mir::DefaultServerConfiguration::the_input_dispatcher*;
+    mir::DefaultServerConfiguration::the_new_input_dispatcher*;
     mir::DefaultServerConfiguration::the_input_manager*;
     mir::DefaultServerConfiguration::the_input_platform*;
     mir::DefaultServerConfiguration::the_input_reader*;
@@ -587,6 +638,7 @@ MIR_SERVER_32 {
     mir::DefaultServerConfiguration::the_mediating_display_changer*;
     mir::DefaultServerConfiguration::the_message_processor_report*;
     mir::DefaultServerConfiguration::the_options*;
+    mir::DefaultServerConfiguration::the_persistent_surface_store*;
     mir::DefaultServerConfiguration::the_pixel_buffer*;
     mir::DefaultServerConfiguration::the_placement_strategy*;
     mir::DefaultServerConfiguration::the_prompt_connection_creator*;
@@ -613,6 +665,7 @@ MIR_SERVER_32 {
     mir::DefaultServerConfiguration::the_socket_file*;
     mir::DefaultServerConfiguration::the_surface_configurator*;
     mir::DefaultServerConfiguration::the_surface_coordinator*;
+    mir::DefaultServerConfiguration::the_surface_input_dispatcher*;
     mir::DefaultServerConfiguration::the_surface_factory*;
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;

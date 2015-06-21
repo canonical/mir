@@ -162,7 +162,6 @@ TEST(TouchEventProperties, touch_count_taken_from_pointer_count)
     unsigned const pointer_count = 3;
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
 
-    old_ev.motion.action = mir_motion_action_down;
     old_ev.motion.pointer_count = pointer_count;
     
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
@@ -174,7 +173,6 @@ TEST(TouchEventProperties, touch_id_comes_from_pointer_coordinates)
     unsigned const touch_id = 31;
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
 
-    old_ev.motion.action = mir_motion_action_down;
     old_ev.motion.pointer_count = 1;
     old_ev.motion.pointer_coordinates[0].id = touch_id;
 
@@ -186,26 +184,11 @@ TEST(TouchEventProperties, touch_id_comes_from_pointer_coordinates)
 TEST(TouchEventProperties, down_and_up_actions_are_taken_from_old_event)
 {
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
-    old_ev.motion.action = mir_motion_action_down;
     old_ev.motion.pointer_count = 1;
-
-    auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
-    EXPECT_EQ(mir_touch_action_down, mir_touch_event_action(tev, 0));
-}
-
-TEST(TouchEventProperties, touch_up_down_applies_only_to_masked_action)
-{
-    int const masked_pointer_index = 1;
-
-    auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
-    old_ev.motion.action = masked_pointer_index << MIR_EVENT_ACTION_POINTER_INDEX_SHIFT;
-    old_ev.motion.action = (old_ev.motion.action & MIR_EVENT_ACTION_POINTER_INDEX_MASK) | mir_motion_action_pointer_up;
-    old_ev.motion.pointer_count = 3;
+    old_ev.motion.pointer_coordinates[0].action = mir_touch_action_change;
 
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(mir_touch_action_change, mir_touch_event_action(tev, 0));
-    EXPECT_EQ(mir_touch_action_up, mir_touch_event_action(tev, 1));
-    EXPECT_EQ(mir_touch_action_change, mir_touch_event_action(tev, 2));
 }
 
 TEST(TouchEventProperties, tool_type_copied_from_old_pc)
@@ -297,59 +280,6 @@ TEST(PointerInputEventProperties, modifiers_taken_from_old_style_ev)
         mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(modifiers, mir_pointer_event_modifiers(pointer_event));
 }
-
-namespace
-{
-struct ActionTestParameters
-{
-    MirMotionAction old_action;
-    MirPointerAction new_action;
-};
-
-struct MotionToPointerActionTest : public testing::Test, testing::WithParamInterface<ActionTestParameters>
-{
-};
-}
-
-TEST_P(MotionToPointerActionTest, old_style_action_translated_to_new_style)
-{
-    auto const& params = GetParam();
-
-    auto old_ev = a_motion_ev(AINPUT_SOURCE_MOUSE);
-
-    auto shift = 0 << MIR_EVENT_ACTION_POINTER_INDEX_SHIFT;
-    old_ev.motion.action = (shift & MIR_EVENT_ACTION_POINTER_INDEX_MASK) | params.old_action;
-    EXPECT_EQ(params.new_action,
-        mir_pointer_event_action(mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev))));
-}
-
-INSTANTIATE_TEST_CASE_P(MotionPointerUpTest,
-    MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_pointer_up, mir_pointer_action_button_up}));
-
-INSTANTIATE_TEST_CASE_P(MotionPointerDownTest,
-    MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_pointer_down, mir_pointer_action_button_down}));
-
-INSTANTIATE_TEST_CASE_P(MotionEnterTest,
-    MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_hover_enter, mir_pointer_action_enter}));
-
-INSTANTIATE_TEST_CASE_P(MotionLeaveTest,
-    MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_hover_exit, mir_pointer_action_leave}));
-
-INSTANTIATE_TEST_CASE_P(MotionPointerMoveTest,
-    MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_move, mir_pointer_action_motion}));
-
-INSTANTIATE_TEST_CASE_P(MotionPointerHoverMoveTest,
-    MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_hover_move, mir_pointer_action_motion}));
-
-INSTANTIATE_TEST_CASE_P(MotionPointerOutsideMoveTest,
-    MotionToPointerActionTest, ::testing::Values(
-        ActionTestParameters{mir_motion_action_outside, mir_pointer_action_motion}));
 
 TEST(PointerInputEventProperties, button_state_translated)
 {

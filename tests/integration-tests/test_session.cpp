@@ -92,10 +92,12 @@ void swap_buffers_blocking(mf::Surface& surf, mg::Buffer*& buffer)
 TEST(ApplicationSession, stress_test_take_snapshot)
 {
     TestServerConfiguration conf;
+    // Otherwise the input registrar won't function
+    auto dispatcher = conf.the_input_dispatcher();
 
     ms::ApplicationSession session{
         conf.the_surface_coordinator(),
-        std::make_shared<mtd::StubSurfaceFactory>(),
+        conf.the_surface_factory(),
         std::make_shared<mtd::StubBufferStreamFactory>(),
         __LINE__,
         "stress",

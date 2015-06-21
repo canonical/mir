@@ -60,10 +60,10 @@ public:
 private:
     std::mutex mutable mutex; // Protects parameters, wait_handles & results
     mir::protobuf::DisplayServer& server;
-    mir::protobuf::PromptSessionParameters parameters;
-    mir::protobuf::Void add_result;
-    mir::protobuf::Void protobuf_void;
-    mir::protobuf::SocketFD socket_fd_response;
+    std::unique_ptr<mir::protobuf::PromptSessionParameters> parameters;
+    std::unique_ptr<mir::protobuf::Void> add_result;
+    std::unique_ptr<mir::protobuf::Void> protobuf_void;
+    std::unique_ptr<mir::protobuf::SocketFD> socket_fd_response;
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
     int const event_handler_register_id;
 
@@ -73,7 +73,7 @@ private:
     std::atomic<MirPromptSessionState> state;
 
     std::mutex mutable session_mutex; // Protects session
-    mir::protobuf::Void session;
+    std::unique_ptr<mir::protobuf::Void> session;
 
     std::mutex mutable event_handler_mutex; // Need another mutex for callback access to members
     std::function<void(MirPromptSessionState)> handle_prompt_session_state_change;

@@ -42,7 +42,7 @@ class DeclarativePlacementStrategy : public mir::scene::PlacementStrategy
     // Placement requests will be passed through to default strategy, and then overriden if the surface appears
     // in the geometry or depth map. This allows for the convenience of leaving some surfaces geometries unspecified
     // and receiving the default behavior.
-    DeclarativePlacementStrategy(std::shared_ptr<mir::scene::PlacementStrategy> const& default_strategy,
+    DeclarativePlacementStrategy(
         SurfaceGeometries const& positions_by_name, SurfaceDepths const& depths_by_name);
 
     virtual ~DeclarativePlacementStrategy() = default;
@@ -54,8 +54,6 @@ protected:
     DeclarativePlacementStrategy& operator=(const DeclarativePlacementStrategy&) = delete;
 
 private:
-    std::shared_ptr<mir::scene::PlacementStrategy> const default_strategy;
-
     SurfaceGeometries const& surface_geometries_by_name;
     SurfaceDepths const& surface_depths_by_name;
 };

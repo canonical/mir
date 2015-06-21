@@ -18,13 +18,12 @@
  */
 
 #include "mir_test_framework/fake_input_server_configuration.h"
-#include "mir/shell/default_window_manager.h"
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;
-namespace ms = mir::shell;
+namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mia = mir::input::android;
-
 
 mtf::FakeInputServerConfiguration::FakeInputServerConfiguration()
 {
@@ -40,7 +39,7 @@ std::shared_ptr<mi::InputManager> mtf::FakeInputServerConfiguration::the_input_m
     return DefaultServerConfiguration::the_input_manager();
 }
 
-std::shared_ptr<ms::InputTargeter> mtf::FakeInputServerConfiguration::the_input_targeter()
+std::shared_ptr<msh::InputTargeter> mtf::FakeInputServerConfiguration::the_input_targeter()
 {
     return DefaultServerConfiguration::the_input_targeter();
 }
@@ -55,12 +54,8 @@ std::shared_ptr<mi::InputSender> mtf::FakeInputServerConfiguration::the_input_se
     return DefaultServerConfiguration::the_input_sender();
 }
 
-auto mtf::FakeInputServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
+std::shared_ptr<mi::LegacyInputDispatchable> mtf::FakeInputServerConfiguration::the_legacy_input_dispatchable()
 {
-    return [&](ms::FocusController* focus_controller)
-        { return std::make_shared<ms::DefaultWindowManager>(
-            focus_controller,
-            the_placement_strategy(),
-            the_session_coordinator()); };
+    return DefaultServerConfiguration::the_legacy_input_dispatchable();
 }
 

@@ -22,6 +22,7 @@
 #include "src/platforms/android/server/resource_factory.h"
 #include "src/platforms/android/server/android_graphic_buffer_allocator.h"
 #include "src/platforms/android/server/hal_component_factory.h"
+#include "src/platforms/android/server/device_quirks.h"
 #include "src/server/graphics/program_factory.h"
 #include "src/server/report/null_report_factory.h"
 
@@ -54,7 +55,8 @@ protected:
            the server can handle this, but we need the test to as well */
         original_sigterm_handler = signal(SIGTERM, [](int){});
 
-        buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
+        auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
+        buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
 
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
@@ -64,7 +66,7 @@ protected:
         auto null_display_report = mir::report::null_display_report();
         auto stub_gl_config = std::make_shared<mtd::StubGLConfig>();
         auto display_buffer_factory = std::make_shared<mga::HalComponentFactory>(
-            buffer_allocator, display_resource_factory, report);
+            buffer_allocator, display_resource_factory, report, quirks);
         auto program_factory = std::make_shared<mg::ProgramFactory>();
         display = std::make_shared<mga::Display>(
             display_buffer_factory, program_factory, stub_gl_config, null_display_report, mga::OverlayOptimization::enabled);

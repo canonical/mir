@@ -22,10 +22,12 @@
 #include "mir/frontend/session.h"
 #include "mir/scene/snapshot.h"
 
+#include <vector>
 #include <sys/types.h>
 
 namespace mir
 {
+namespace shell { struct StreamSpecification; }
 namespace scene
 {
 class Surface;
@@ -60,6 +62,7 @@ public:
 
     virtual frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const& props) = 0;
     virtual void destroy_buffer_stream(frontend::BufferStreamId stream) = 0;
+    virtual void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) = 0;
 };
 }
 }
