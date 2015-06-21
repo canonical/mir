@@ -19,7 +19,9 @@
 #define MIR_LOG_COMPONENT "MirBufferStream"
 
 #include "buffer_stream.h"
+#include "make_protobuf_object.h"
 
+#include "mir_connection.h"
 #include "mir/frontend/client_constants.h"
 
 #include "mir/log.h"
@@ -84,52 +86,57 @@ void populate_buffer_package(
 
 }
 
-// TODO: It seems like a bit of a wart that we have to pass the Logger specifically here...perhaps
-// due to the lack of an easily mockable client configuration interface (passing around
-// connection can complicate unit tests ala MirSurface and test_client_mir_surface.cpp)
-mcl::BufferStream::BufferStream(mp::DisplayServer& server,
+mcl::BufferStream::BufferStream(
+    MirConnection* connection,
+    mp::DisplayServer& server,
     mcl::BufferStreamMode mode,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     mp::BufferStream const& protobuf_bs,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
     std::string const& surface_name)
-    : display_server(server),
+    : connection(connection),
+      display_server(server),
       mode(mode),
       client_platform(client_platform),
-      protobuf_bs(protobuf_bs),
+      protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(protobuf_bs)},
       buffer_depository{client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size},
       swap_interval_(1),
-      perf_report(perf_report)
-      
+      perf_report(perf_report),
+      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
 {
     created(nullptr, nullptr);
     perf_report->name_surface(surface_name.c_str());
 }
 
-mcl::BufferStream::BufferStream(mp::DisplayServer& server,
+mcl::BufferStream::BufferStream(
+    MirConnection* connection,
+    mp::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     mp::BufferStreamParameters const& parameters,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
     mir_buffer_stream_callback callback,
     void *context)
-    : display_server(server),
+    : connection(connection),
+      display_server(server),
       mode(BufferStreamMode::Producer),
       client_platform(client_platform),
+      protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
       buffer_depository{client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size},
       swap_interval_(1),
-      perf_report(perf_report)
+      perf_report(perf_report),
+      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
 {
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
     create_wait_handle.expect_result();
     try
     {
-        server.create_buffer_stream(0, &parameters, &protobuf_bs, gp::NewCallback(this, &mcl::BufferStream::created, callback,
+        server.create_buffer_stream(0, &parameters, protobuf_bs.get(), gp::NewCallback(this, &mcl::BufferStream::created, callback,
             context));
     }
     catch (std::exception const& ex)
     {
-        protobuf_bs.set_error(std::string{"Error invoking create buffer stream: "} +
+        protobuf_bs->set_error(std::string{"Error invoking create buffer stream: "} +
                               boost::diagnostic_information(ex));
     }
         
@@ -137,13 +144,16 @@ mcl::BufferStream::BufferStream(mp::DisplayServer& server,
 
 void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *context)
 {
-    if (!protobuf_bs.has_id() || protobuf_bs.has_error())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs.error())));
-    if (!protobuf_bs.has_buffer())
+    if (!protobuf_bs->has_id() || protobuf_bs->has_error())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
+    if (!protobuf_bs->has_buffer())
         BOOST_THROW_EXCEPTION(std::runtime_error("Buffer stream did not come with a buffer"));
 
-    process_buffer(protobuf_bs.buffer());
+    process_buffer(protobuf_bs->buffer());
     egl_native_window_ = client_platform->create_egl_native_window(this);
+
+    if (connection)
+        connection->on_stream_created(protobuf_bs->id().value(), this);
 
     if (callback)
         callback(reinterpret_cast<MirBufferStream*>(this), context);
@@ -173,7 +183,7 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
 
     try
     {
-        auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs.pixel_format());
+        auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
         buffer_depository.deposit_package(buffer_package,
             buffer.buffer_id(),
             cached_buffer_size, pixel_format);
@@ -192,40 +202,37 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 
     secured_region.reset();
 
-    mir::protobuf::BufferStreamId buffer_stream_id;
-    buffer_stream_id.set_value(protobuf_bs.id().value());
-
-// TODO: We can fix the strange "ID casting" used below in the second phase
-// of buffer stream which generalizes and clarifies the server side logic.
+    // TODO: We can fix the strange "ID casting" used below in the second phase
+    // of buffer stream which generalizes and clarifies the server side logic.
     if (mode == mcl::BufferStreamMode::Producer)
     {
-        mp::BufferRequest request;
-        request.mutable_id()->set_value(protobuf_bs.id().value());
-        request.mutable_buffer()->set_buffer_id(protobuf_bs.buffer().buffer_id());
+        auto request = mcl::make_protobuf_object<mp::BufferRequest>();
+        request->mutable_id()->set_value(protobuf_bs->id().value());
+        request->mutable_buffer()->set_buffer_id(protobuf_bs->buffer().buffer_id());
 
         lock.unlock();
         next_buffer_wait_handle.expect_result();
 
         display_server.exchange_buffer(
             nullptr,
-            &request,
-            protobuf_bs.mutable_buffer(),
+            request.get(),
+            protobuf_bs->mutable_buffer(),
             google::protobuf::NewCallback(
             this, &mcl::BufferStream::next_buffer_received,
             done));
     }
     else
     {
-        mp::ScreencastId screencast_id;
-        screencast_id.set_value(protobuf_bs.id().value());
+        auto screencast_id = mcl::make_protobuf_object<mp::ScreencastId>();
+        screencast_id->set_value(protobuf_bs->id().value());
 
         lock.unlock();
         next_buffer_wait_handle.expect_result();
 
         display_server.screencast_buffer(
             nullptr,
-            &screencast_id,
-            protobuf_bs.mutable_buffer(),
+            screencast_id.get(),
+            protobuf_bs->mutable_buffer(),
             google::protobuf::NewCallback(
             this, &mcl::BufferStream::next_buffer_received,
             done));
@@ -263,7 +270,7 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 void mcl::BufferStream::next_buffer_received(
     std::function<void()> done)                                             
 {
-    process_buffer(protobuf_bs.buffer());
+    process_buffer(protobuf_bs->buffer());
 
     done();
 
@@ -278,8 +285,8 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
         "",
         cached_buffer_size.width.as_int(),
         cached_buffer_size.height.as_int(),
-        static_cast<MirPixelFormat>(protobuf_bs.pixel_format()),
-        static_cast<MirBufferUsage>(protobuf_bs.buffer_usage()),
+        static_cast<MirPixelFormat>(protobuf_bs->pixel_format()),
+        static_cast<MirBufferUsage>(protobuf_bs->buffer_usage()),
         mir_display_output_id_invalid};
 }
 
@@ -311,20 +318,21 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
     }
 
-    mp::SurfaceSetting setting, result;
-    setting.mutable_surfaceid()->set_value(protobuf_bs.id().value());
-    setting.set_attrib(attrib);
-    setting.set_ivalue(value);
+    auto setting = mcl::make_protobuf_object<mp::SurfaceSetting>();
+    auto result = mcl::make_protobuf_object<mp::SurfaceSetting>();
+    setting->mutable_surfaceid()->set_value(protobuf_bs->id().value());
+    setting->set_attrib(attrib);
+    setting->set_ivalue(value);
     lock.unlock();
 
     configure_wait_handle.expect_result();
-    display_server.configure_surface(0, &setting, &result,
+    display_server.configure_surface(0, setting.get(), result.get(),
         google::protobuf::NewCallback(this, &mcl::BufferStream::on_configured));
 
     configure_wait_handle.wait_for_all();
 
     lock.lock();
-    swap_interval_ = result.ivalue();
+    swap_interval_ = result->ivalue();
 }
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
@@ -364,39 +372,23 @@ MirWaitHandle* mcl::BufferStream::get_create_wait_handle()
 MirWaitHandle* mcl::BufferStream::release(
         mir_buffer_stream_callback callback, void* context)
 {
-    mir::protobuf::BufferStreamId buffer_stream_id;
-    buffer_stream_id.set_value(protobuf_bs.id().value());
-    
-    release_wait_handle.expect_result();
-    display_server.release_buffer_stream(
-        nullptr,
-        &buffer_stream_id,
-        &protobuf_void,
-        google::protobuf::NewCallback(
-            this, &mcl::BufferStream::released, callback, context));
-
-    return &release_wait_handle;
-}
-
-void mcl::BufferStream::released(
-    mir_buffer_stream_callback callback, void* context)
-{
-    if (callback)
-        callback(reinterpret_cast<MirBufferStream*>(this), context);
-    release_wait_handle.result_received();
+    if (connection)
+        return connection->release_buffer_stream(this, callback, context);
+    else 
+        return nullptr;
 }
 
 mf::BufferStreamId mcl::BufferStream::rpc_id() const
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     
-    return mf::BufferStreamId(protobuf_bs.id().value());
+    return mf::BufferStreamId(protobuf_bs->id().value());
 }
 
 bool mcl::BufferStream::valid() const
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    return protobuf_bs.has_id() && !protobuf_bs.has_error();
+    return protobuf_bs->has_id() && !protobuf_bs->has_error();
 }
 
 void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)

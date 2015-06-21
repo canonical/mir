@@ -81,19 +81,21 @@ namespace
 mga::Platform::Platform(
     std::shared_ptr<mga::DisplayComponentFactory> const& display_buffer_builder,
     std::shared_ptr<mg::DisplayReport> const& display_report,
-    mga::OverlayOptimization overlay_option) :
+    mga::OverlayOptimization overlay_option,
+    std::shared_ptr<mga::DeviceQuirks> const& quirks) :
     display_buffer_builder(display_buffer_builder),
     display_report(display_report),
     ipc_operations(std::make_shared<mga::IpcOperations>()),
+    quirks(quirks),
     overlay_option(overlay_option)
 {
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_allocator()
 {
-    if (quirks.gralloc_reopenable_after_close())
+    if (quirks->gralloc_reopenable_after_close())
     {
-        return std::make_shared<mga::AndroidGraphicBufferAllocator>();
+        return std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
     }
     else
     {
@@ -102,14 +104,14 @@ std::shared_ptr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_allocat
         std::unique_lock<std::mutex> lk(allocator_mutex);
         static std::shared_ptr<mg::GraphicBufferAllocator> preserved_allocator;
         if (!preserved_allocator)
-            preserved_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
+            preserved_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
         return preserved_allocator;
     }
 }
 
 std::shared_ptr<mga::GraphicBufferAllocator> mga::Platform::create_mga_buffer_allocator()
 {
-    return std::make_shared<mga::AndroidGraphicBufferAllocator>();
+    return std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
 }
 
 std::shared_ptr<mg::Display> mga::Platform::create_display(
@@ -136,23 +138,26 @@ extern "C" std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mir::graphics::DisplayReport> const& display_report)
 {
+    auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, *options);
     auto hwc_report = make_hwc_report(*options);
     auto overlay_option = should_use_overlay_optimization(*options);
     hwc_report->report_overlay_optimization(overlay_option);
     auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
-    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
+    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
     auto component_factory = std::make_shared<mga::HalComponentFactory>(
-        fb_allocator, display_resource_factory, hwc_report);
-    return std::make_shared<mga::Platform>(component_factory, display_report, overlay_option);
+        fb_allocator, display_resource_factory, hwc_report, quirks);
+    return std::make_shared<mga::Platform>(component_factory, display_report, overlay_option, quirks);
 }
 
 extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::NestedContext> const&)
 {
+    //TODO: actually allow disabling quirks for guest platform
+    auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
     //TODO: remove nullptr parameter once platform classes are sorted.
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
-    return std::make_shared<mga::Platform>(nullptr, display_report, mga::OverlayOptimization::disabled);
+    return std::make_shared<mga::Platform>(nullptr, display_report, mga::OverlayOptimization::disabled, quirks);
 }
 
 extern "C" void add_graphics_platform_options(
@@ -165,6 +170,7 @@ extern "C" void add_graphics_platform_options(
         (hwc_overlay_opt,
          boost::program_options::value<bool>()->default_value(false),
          "[platform-specific] Whether to disable overlay optimizations [{on,off}]");
+    mga::DeviceQuirks::add_options(config);
 }
 
 extern "C" mg::PlatformPriority probe_graphics_platform()

@@ -35,12 +35,9 @@ public:
 
     std::shared_ptr<mir::input::InputManager> the_input_manager() override;
     std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
+    std::shared_ptr<mir::input::LegacyInputDispatchable> the_legacy_input_dispatchable() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<mir::input::InputSender> the_input_sender() override;
-
-    // TODO remove reliance on legacy window management
-    auto the_window_manager_builder() -> shell::WindowManagerBuilder override;
-
 private:
     TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", server_platform("input-stub.so").c_str()};
 };

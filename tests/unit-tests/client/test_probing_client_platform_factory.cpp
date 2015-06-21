@@ -35,7 +35,7 @@ std::vector<std::shared_ptr<mir::SharedLibrary>>
 all_available_modules()
 {
     std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
-#ifdef MIR_BUILD_PLATFORM_MESA
+#ifdef MIR_BUILD_PLATFORM_MESA_KMS
     modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("mesa")));
 #endif
 #ifdef MIR_BUILD_PLATFORM_ANDROID
@@ -73,7 +73,7 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
                  std::runtime_error);
 }
 
-#ifdef MIR_BUILD_PLATFORM_MESA
+#ifdef MIR_BUILD_PLATFORM_MESA_KMS
 TEST(ProbingClientPlatformFactory, CreatesMesaPlatformWhenAppropriate)
 #else
 TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)

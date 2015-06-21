@@ -42,7 +42,8 @@ msh::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     scene::SurfaceCreationParameters const& params) :
-    state{mir_surface_state_restored},
+    type{surface->type()},
+    state{surface->state()},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
     parent{params.parent},
@@ -95,6 +96,9 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
 -> ms::SurfaceCreationParameters
 {
     auto parameters = request_parameters;
+
+    if (!parameters.state.is_set())
+        parameters.state = mir_surface_state_restored;
 
     auto const active_display = tools->active_display();
 
@@ -175,13 +179,53 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
             }
         }
     }
+    else if (parent)
+    {
+        //  o Otherwise, if the dialog is not the same as any previous dialog for the
+        //    same parent window, and/or it does not have user-customized position:
+        //      o It should be optically centered relative to its parent, unless this
+        //        would overlap or cover the title bar of the parent.
+        //      o Otherwise, it should be cascaded vertically (but not horizontally)
+        //        relative to its parent, unless, this would cause at least part of
+        //        it to extend into shell space.
+        auto const parent_top_left = parent->top_left();
+        auto const centred = parent_top_left
+             + 0.5*(as_displacement(parent->size()) - as_displacement(parameters.size))
+             - DeltaY{(parent->size().height.as_int()-height)/6};
+
+        parameters.top_left = centred;
+        positioned = true;
+    }
 
     if (!positioned)
     {
-        auto centred = active_display.top_left + 0.5*(
-            as_displacement(active_display.size) - as_displacement(parameters.size));
+        auto const centred = active_display.top_left
+            + 0.5*(as_displacement(active_display.size) - as_displacement(parameters.size))
+            - DeltaY{(active_display.size.height.as_int()-height)/6};
 
-        parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
+        switch (parameters.state.value())
+        {
+        case mir_surface_state_fullscreen:
+        case mir_surface_state_maximized:
+            parameters.top_left = active_display.top_left;
+            parameters.size = active_display.size;
+            break;
+
+        case mir_surface_state_vertmaximized:
+            parameters.top_left = centred;
+            parameters.top_left.y = active_display.top_left.y;
+            parameters.size.height = active_display.size.height;
+            break;
+
+        case mir_surface_state_horizmaximized:
+            parameters.top_left = centred;
+            parameters.top_left.x = active_display.top_left.x;
+            parameters.size.width = active_display.size.width;
+            break;
+
+        default:
+            parameters.top_left = centred;
+        }
 
         if (parameters.top_left.y < display_area.top_left.y)
             parameters.top_left.y = display_area.top_left.y;
@@ -230,15 +274,83 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
-    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     SurfaceSpecification const& modifications)
 {
-    auto& surface_info = tools->info_for(surface);
+    auto& surface_info_old = tools->info_for(surface);
+
+    auto surface_info = surface_info_old;
+
+    if (modifications.parent.is_set())
+        surface_info.parent = modifications.parent.value();
+
+    if (modifications.type.is_set() &&
+        surface_info.type != modifications.type.value())
+    {
+        auto const new_type = modifications.type.value();
+
+        switch(new_type)
+        {
+        case mir_surface_type_normal:
+        case mir_surface_type_utility:
+            switch (surface_info.type)
+            {
+            case mir_surface_type_normal:
+            case mir_surface_type_utility:
+            case mir_surface_type_dialog:
+            case mir_surface_type_satellite:
+                if (modifications.parent.is_set())
+                    throw std::runtime_error("Target surface type does not support parent");
+                break;
+
+            default:
+                throw std::runtime_error("Unsupported surface type change");
+            }
+            surface_info.parent.reset();
+            break;
+
+        case mir_surface_type_satellite:
+            switch (surface_info.type)
+            {
+            case mir_surface_type_normal:
+            case mir_surface_type_utility:
+            case mir_surface_type_dialog:
+            case mir_surface_type_satellite:
+                if (!surface_info.parent.lock())
+                    throw std::runtime_error("Target surface type requires parent");
+                break;
+
+            default:
+                throw std::runtime_error("Unsupported surface type change");
+            }
+            break;
+
+        case mir_surface_type_dialog:
+            switch (surface_info.type)
+            {
+            case mir_surface_type_normal:
+            case mir_surface_type_utility:
+            case mir_surface_type_dialog:
+            case mir_surface_type_popover:
+            case mir_surface_type_satellite:
+                break;
+
+            default:
+                throw std::runtime_error("Unsupported surface type change");
+            }
+            break;
+
+        default:
+            throw std::runtime_error("Unsupported surface type change");
+        }
+        surface_info.type = new_type;
+        surface->configure(mir_surface_attrib_type, new_type);
+    }
 
     #define COPY_IF_SET(field)\
         if (modifications.field.is_set())\
-        surface_info.field = modifications.field
+            surface_info.field = modifications.field
 
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
@@ -252,8 +364,17 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
     #undef COPY_IF_SET
 
+    std::swap(surface_info, surface_info_old);
+
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
+
+    if (modifications.streams.is_set())
+    {
+        auto v = modifications.streams.value();
+        std::vector<shell::StreamSpecification> l (v.begin(), v.end());
+        session->configure_streams(*surface, l);
+    }
 
     if (modifications.width.is_set() || modifications.height.is_set())
     {
@@ -277,7 +398,9 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
-    if (auto const parent = tools->info_for(surface).parent.lock())
+    auto& info = tools->info_for(surface);
+
+    if (auto const parent = info.parent.lock())
     {
         auto& siblings = tools->info_for(parent).children;
 
@@ -310,6 +433,8 @@ int msh::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surf
     case mir_surface_state_vertmaximized:
     case mir_surface_state_horizmaximized:
     case mir_surface_state_fullscreen:
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
         break;
 
     default:
@@ -357,7 +482,13 @@ int msh::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surf
         display_layout->size_to_output(rect);
         movement = rect.top_left - old_pos;
         surface->resize(rect.size);
+        break;
     }
+
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
+        surface->hide();
+        return info.state = value;
 
     default:
         break;
@@ -425,6 +556,28 @@ bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent c
                 break;
             }
         }
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_TAB)
+    {
+        tools->focus_next_session();
+        if (auto const surface = tools->focused_surface())
+            select_active_surface(surface);
+
+        return true;
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_GRAVE)
+    {
+        if (auto const prev = tools->focused_surface())
+        {
+            if (auto const app = tools->focused_session())
+                select_active_surface(app->surface_after(prev));
+        }
+
+        return true;
     }
 
     return false;

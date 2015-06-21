@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <cstring>
+#include <unordered_map>
 
 #include <system_error>
 #include <gtest/gtest.h>
@@ -71,19 +72,19 @@ public:
 
 }
 
-TEST_F(SharedLibraryProber, ReturnsNonEmptyListForPathContainingLibraries)
+TEST_F(SharedLibraryProber, returns_non_empty_list_for_path_containing_libraries)
 {
     auto libraries = mir::libraries_for_path(library_path, null_report);
     EXPECT_GE(libraries.size(), 1);
 }
 
-TEST_F(SharedLibraryProber, RaisesExceptionForNonexistentPath)
+TEST_F(SharedLibraryProber, raises_exception_for_nonexistent_path)
 {
     EXPECT_THROW(mir::libraries_for_path("/a/path/that/certainly/doesnt/exist", null_report),
                  std::system_error);
 }
 
-TEST_F(SharedLibraryProber, NonExistentPathRaisesENOENTError)
+TEST_F(SharedLibraryProber, non_existent_path_raises_ENOENT_error)
 {
     try
     {
@@ -95,13 +96,13 @@ TEST_F(SharedLibraryProber, NonExistentPathRaisesENOENTError)
     }
 }
 
-TEST_F(SharedLibraryProber, PathWithNoSharedLibrariesReturnsEmptyList)
+TEST_F(SharedLibraryProber, path_with_no_shared_libraries_returns_empty_list)
 {
     auto libraries = mir::libraries_for_path(temporary_directory.c_str(), null_report);
     EXPECT_EQ(0, libraries.size());
 }
 
-TEST_F(SharedLibraryProber, LogsStartOfProbe)
+TEST_F(SharedLibraryProber, logs_start_of_probe)
 {
     using namespace testing;
     testing::NiceMock<MockSharedLibraryProberReport> report;
@@ -111,7 +112,7 @@ TEST_F(SharedLibraryProber, LogsStartOfProbe)
     mir::libraries_for_path(library_path, report);
 }
 
-TEST_F(SharedLibraryProber, LogsForNonexistentPath)
+TEST_F(SharedLibraryProber, logs_for_nonexistent_path)
 {
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
@@ -122,7 +123,7 @@ TEST_F(SharedLibraryProber, LogsForNonexistentPath)
                  std::runtime_error);
 }
 
-TEST_F(SharedLibraryProber, LogsFailureForNonexistentPath)
+TEST_F(SharedLibraryProber, logs_failure_for_nonexistent_path)
 {
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
@@ -134,7 +135,7 @@ TEST_F(SharedLibraryProber, LogsFailureForNonexistentPath)
 
 }
 
-TEST_F(SharedLibraryProber, LogsNoLibrariesForPathWithoutLibraries)
+TEST_F(SharedLibraryProber, logs_no_libraries_for_path_without_libraries)
 {
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
@@ -146,51 +147,85 @@ TEST_F(SharedLibraryProber, LogsNoLibrariesForPathWithoutLibraries)
 
 namespace
 {
-MATCHER_P(FilenameMatches, path, "")
+MATCHER_P(FilenameMatches, matcher, "")
 {
+    using namespace testing;
     *result_listener << "where the path is " << arg;
-    return boost::filesystem::path(path).filename() == arg.filename();
+    return Matches(matcher)(arg.filename().native());
 }
 }
 
-TEST_F(SharedLibraryProber, LogsEachLibraryProbed)
+TEST_F(SharedLibraryProber, logs_each_library_probed)
 {
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
 
-    EXPECT_CALL(report, loading_library(FilenameMatches("libamd64.so")));
-    EXPECT_CALL(report, loading_library(FilenameMatches("libarmhf.so")));
-    EXPECT_CALL(report, loading_library(FilenameMatches("libi386.so")));
-    EXPECT_CALL(report, loading_library(FilenameMatches("libarm64.so")));
-    EXPECT_CALL(report, loading_library(FilenameMatches("libinvalid.so.3")));
+    auto const dso_filename_regex = ".*\\.so(\\..*)?";
+
+    // We have at least 8 DSOs to probe:
+    // i386, amd64, armhf, arm64, powerpc, ppc64el, this-arch, libinvalid.so.3
+    EXPECT_CALL(report,
+        loading_library(FilenameMatches(MatchesRegex(dso_filename_regex)))).Times(AtLeast(8));
+    // We shouldn't probe anything that doesn't look like a DSO.
+    EXPECT_CALL(report,
+        loading_library(FilenameMatches(Not(MatchesRegex(dso_filename_regex))))).Times(0);
 
     mir::libraries_for_path(library_path, report);
 }
 
-TEST_F(SharedLibraryProber, LogsFailureForLoadFailure)
+TEST_F(SharedLibraryProber, logs_failure_for_load_failure)
 {
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
 
-    bool armhf_failed{false};
-    bool amd64_failed{false};
-    bool i386_failed{false};
-    bool arm64_failed{false};
-    bool invalid_failed{false};
+    std::unordered_map<std::string, bool> probing_map;
 
-    ON_CALL(report, loading_failed(FilenameMatches("libamd64.so"), _))
-            .WillByDefault(InvokeWithoutArgs([&amd64_failed]() { amd64_failed = true; }));
-    ON_CALL(report, loading_failed(FilenameMatches("libarmhf.so"), _))
-            .WillByDefault(InvokeWithoutArgs([&armhf_failed]() { armhf_failed = true; }));
-    ON_CALL(report, loading_failed(FilenameMatches("libi386.so"), _))
-            .WillByDefault(InvokeWithoutArgs([&i386_failed]() { i386_failed = true; }));
-    ON_CALL(report, loading_failed(FilenameMatches("libarm64.so"), _))
-            .WillByDefault(InvokeWithoutArgs([&arm64_failed]() { arm64_failed = true; }));
-    ON_CALL(report, loading_failed(FilenameMatches("libinvalid.so.3"), _))
-            .WillByDefault(InvokeWithoutArgs([&invalid_failed]() { invalid_failed = true; }));
+    ON_CALL(report, loading_library(_))
+        .WillByDefault(Invoke([&probing_map](auto const& filename)
+        {
+            probing_map[filename.filename().native()] = true;
+        }));
+    ON_CALL(report, loading_failed(_,_))
+        .WillByDefault(Invoke([&probing_map](auto const& filename, auto const&)
+        {
+            probing_map[filename.filename().native()] = false;
+        }));
 
     mir::libraries_for_path(library_path, report);
 
-    EXPECT_TRUE(invalid_failed);
-    EXPECT_TRUE(i386_failed || amd64_failed || armhf_failed || arm64_failed);
+    EXPECT_FALSE(probing_map.at("libinvalid.so.3"));
+
+    // As we add extra test DSOs you can add them to this list, but it's not mandatory.
+    // At least one of these should fail on any conceivable architecture.
+    EXPECT_THAT(probing_map, Contains(AnyOf(
+        std::make_pair("lib386.so", false),
+        std::make_pair("libamd64.so", false),
+        std::make_pair("libarmhf.so", false),
+        std::make_pair("libarm64.so", false),
+        std::make_pair("libpowerpc.so", false),
+        std::make_pair("libppc64el.so", false))));
+}
+
+TEST_F(SharedLibraryProber, does_not_log_failure_on_success)
+{
+    using namespace testing;
+    NiceMock<MockSharedLibraryProberReport> report;
+
+    std::unordered_map<std::string, bool> probing_map;
+
+    ON_CALL(report, loading_library(_))
+        .WillByDefault(Invoke([&probing_map](auto const& filename)
+        {
+            probing_map[filename.filename().native()] = true;
+        }));
+    ON_CALL(report, loading_failed(_,_))
+        .WillByDefault(Invoke([&probing_map](auto const& filename, auto const&)
+        {
+            probing_map[filename.filename().native()] = false;
+        }));
+
+    mir::libraries_for_path(library_path, report);
+
+    // libthis-arch should always be loadable...
+    EXPECT_TRUE(probing_map.at("libthis-arch.so"));
 }

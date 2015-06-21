@@ -29,12 +29,13 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_drm.h"
 
 #include "mir/client_platform.h"
 #include "mir/client_context.h"
 
 #include "mir_wait_handle.h"
+
+#include <memory>
 
 namespace mir
 {
@@ -45,6 +46,7 @@ namespace client
 {
 class ConnectionConfiguration;
 class ClientPlatformFactory;
+class ClientBufferStream;
 class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
@@ -121,13 +123,29 @@ public:
                                    unsigned int formats_size, unsigned int& valid_formats);
 
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
-    std::shared_ptr<mir::client::ClientBufferStreamFactory> get_client_buffer_stream_factory();
+
+    std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
+       mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name);
+
+    mir::client::ClientBufferStream* create_client_buffer_stream(
+        int width, int height,
+        MirPixelFormat format,
+        MirBufferUsage buffer_usage,
+        mir_buffer_stream_callback callback,
+        void *context);
+    MirWaitHandle* release_buffer_stream(
+        mir::client::ClientBufferStream*,
+        mir_buffer_stream_callback callback,
+        void *context);
+
+    void release_consumer_stream(mir::client::ClientBufferStream*);
 
     static bool is_valid(MirConnection *connection);
 
     EGLNativeDisplayType egl_native_display();
 
     void on_surface_created(int id, MirSurface* surface);
+    void on_stream_created(int id, mir::client::ClientBufferStream* stream);
 
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
@@ -156,13 +174,13 @@ private:
     mir::protobuf::DisplayServer::Stub server;
     mir::protobuf::Debug::Stub debug;
     std::shared_ptr<mir::logging::Logger> const logger;
-    mir::protobuf::Void void_response;
-    mir::protobuf::Connection connect_result;
+    std::unique_ptr<mir::protobuf::Void> void_response;
+    std::unique_ptr<mir::protobuf::Connection> connect_result;
     std::atomic<bool> connect_done;
-    mir::protobuf::Void ignored;
-    mir::protobuf::ConnectParameters connect_parameters;
-    mir::protobuf::PlatformOperationMessage platform_operation_reply;
-    mir::protobuf::DisplayConfiguration display_configuration_response;
+    std::unique_ptr<mir::protobuf::Void> ignored;
+    std::unique_ptr<mir::protobuf::ConnectParameters> connect_parameters;
+    std::unique_ptr<mir::protobuf::PlatformOperationMessage> platform_operation_reply;
+    std::unique_ptr<mir::protobuf::DisplayConfiguration> display_configuration_response;
     std::atomic<bool> disconnecting{false};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
@@ -194,13 +212,15 @@ private:
     std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
 
     struct SurfaceRelease;
+    struct StreamRelease;
 
     MirConnection* next_valid{nullptr};
 
     void set_error_message(std::string const& error);
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
-    void released(SurfaceRelease );
+    void released(SurfaceRelease);
+    void released(StreamRelease);
     void done_platform_operation(mir_platform_operation_callback, void* context);
     bool validate_user_display_config(MirDisplayConfiguration* config);
 };

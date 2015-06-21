@@ -190,10 +190,20 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
 
 void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
 {
-    if (auto surface = default_surface())
-        snapshot_strategy->take_snapshot_of(surface, snapshot_taken);
-    else
-        snapshot_taken(Snapshot());
+    //TODO: taking a snapshot of a session doesn't make much sense. Snapshots can be on surfaces
+    //or bufferstreams, as those represent some content. A multi-surface session doesn't have enough
+    //info to cobble together a snapshot buffer without WM info.
+    for(auto const& surface_it : surfaces)
+    {
+        if (default_surface() == surface_it.second)
+        {
+            auto id = mf::BufferStreamId(surface_it.first.as_value());
+            snapshot_strategy->take_snapshot_of(checked_find(id)->second, snapshot_taken);
+            return;
+        }
+    }
+
+    snapshot_taken(Snapshot());
 }
 
 std::shared_ptr<ms::Surface> ms::ApplicationSession::default_surface() const
@@ -311,4 +321,13 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     streams.erase(checked_find(id));
+}
+
+void ms::ApplicationSession::configure_streams(
+    ms::Surface& surface, std::vector<shell::StreamSpecification> const& streams)
+{
+    std::list<ms::StreamInfo> list;
+    for (auto& stream : streams)
+        list.emplace_back(ms::StreamInfo{checked_find(stream.stream_id)->second, stream.displacement});
+    surface.set_streams(list); 
 }

@@ -22,18 +22,29 @@
 #include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/frontend/buffer_stream_id.h"
 #include "mir/geometry/point.h"
+#include "mir/geometry/displacement.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/scene/depth_id.h"
 
 #include <string>
+#include <memory>
 
 namespace mir
 {
+namespace scene { class Surface; }
+
 namespace shell
 {
 struct SurfaceAspectRatio { unsigned width; unsigned height; };
+
+struct StreamSpecification
+{
+    frontend::BufferStreamId stream_id;
+    geometry::Displacement displacement;
+};
 
 /// Specification of surface properties requested by client
 struct SurfaceSpecification
@@ -54,16 +65,17 @@ struct SurfaceSpecification
     optional_value<geometry::Height> min_height;
     optional_value<geometry::Width> max_width;
     optional_value<geometry::Height> max_height;
-    mir::optional_value<geometry::DeltaX> width_inc;
-    mir::optional_value<geometry::DeltaY> height_inc;
-    mir::optional_value<SurfaceAspectRatio> min_aspect;
-    mir::optional_value<SurfaceAspectRatio> max_aspect;
+    optional_value<geometry::DeltaX> width_inc;
+    optional_value<geometry::DeltaY> height_inc;
+    optional_value<SurfaceAspectRatio> min_aspect;
+    optional_value<SurfaceAspectRatio> max_aspect;
+    optional_value<std::vector<StreamSpecification>> streams;
+    optional_value<std::weak_ptr<scene::Surface>> parent;
 
     // TODO scene::SurfaceCreationParameters overlaps this content but has additional fields:
     //    geometry::Point top_left;
     //    scene::DepthId depth;
     //    input::InputReceptionMode input_mode;
-    //    std::weak_ptr<Surface> parent;
     //
     //    it also has size instead of width + height
     // Maybe SurfaceCreationParameters /HasA/ SurfaceSpecification?

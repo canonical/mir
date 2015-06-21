@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,226 +14,146 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_buffer.h"
-#include "mir/compositor/renderer.h"
-#include "mir/compositor/compositor.h"
-#include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/scene.h"
-#include "mir/compositor/buffer_stream.h"
 #include "mir/scene/buffer_stream_factory.h"
-#include "src/server/compositor/buffer_stream_surfaces.h"
-#include "src/server/compositor/buffer_bundle.h"
 
-#include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_framework/any_surface.h"
-#include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
+
+#include "mir_test_framework/any_surface.h"
+#include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/testing_server_configuration.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
 #include <gtest/gtest.h>
 
-#include <thread>
-#include <unistd.h>
-#include <fcntl.h>
+#include <atomic>
 
-namespace geom = mir::geometry;
+namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
+namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace mtf = mir_test_framework;
-namespace ms = mir::scene;
-namespace mtd = mir::test::doubles;
 
 namespace
 {
-char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class CountingBufferStream : public mc::BufferBundle
+class StubBufferStream : public mtd::StubBufferStream
 {
 public:
-    CountingBufferStream(int render_operations_fd) :
-    render_operations_fd(render_operations_fd)
+    StubBufferStream(std::atomic<bool>& framedropping_enabled)
+        : framedropping_enabled{framedropping_enabled}
     {
     }
 
-    void client_acquire(std::function<void(mg::Buffer* buffer)> complete)
-        { complete(client_buffer.get()); }
-    void client_release(mg::Buffer*) {}
-    std::shared_ptr<mg::Buffer> compositor_acquire(void const*)
-        { return std::make_shared<mtd::StubBuffer>(); }
-    void compositor_release(std::shared_ptr<mg::Buffer> const&) {}
-    std::shared_ptr<mg::Buffer> snapshot_acquire()
-        { return std::make_shared<mtd::StubBuffer>(); }
-    void snapshot_release(std::shared_ptr<mg::Buffer> const&) {}
-    mg::BufferProperties properties() const { return mg::BufferProperties{}; }
-    void force_requests_to_complete() {}
-    void resize(const geom::Size&) {}
-    int buffers_ready_for_compositor(void const*) const { return 1; }
-    int buffers_free_for_client() const { return 1; }
-    void drop_old_buffers() {}
-    void drop_client_requests() {}
-
-    void allow_framedropping(bool)
+    void allow_framedropping(bool allow) override
     {
-        while (write(render_operations_fd, "a", 1) != 1) continue;
+        framedropping_enabled = allow;
     }
 
 private:
-    std::shared_ptr<mg::Buffer> client_buffer{std::make_shared<mtd::StubBuffer>()};
-    int render_operations_fd;
+    std::atomic<bool>& framedropping_enabled;
 };
 
-class StubStreamFactory : public ms::BufferStreamFactory
+class StubBufferStreamFactory : public ms::BufferStreamFactory
 {
 public:
-    StubStreamFactory(int render_operations_fd)
-     : render_operations_fd(render_operations_fd)
+    StubBufferStreamFactory(std::atomic<bool>& framedropping_enabled)
+        : framedropping_enabled{framedropping_enabled}
     {
     }
 
-    std::shared_ptr<mc::BufferStream> create_buffer_stream(int, mg::BufferProperties const& p) override
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(
+        int, mg::BufferProperties const& p) override
     {
         return create_buffer_stream(p);
     }
-    std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&) override
+
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(
+        mg::BufferProperties const&) override
     {
-        return std::make_shared<mc::BufferStreamSurfaces>(
-            std::make_shared<CountingBufferStream>(render_operations_fd));
+        return std::make_shared<StubBufferStream>(framedropping_enabled);
     }
+
 private:
-    int render_operations_fd;
+    std::atomic<bool>& framedropping_enabled;
+};
+
+
+struct ServerConfig : mtf::TestingServerConfiguration
+{
+    std::shared_ptr<ms::BufferStreamFactory> the_buffer_stream_factory() override
+    {
+        if (!stub_buffer_stream_factory)
+        {
+            stub_buffer_stream_factory =
+                std::make_shared<StubBufferStreamFactory>(framedropping_enabled);
+        }
+        return stub_buffer_stream_factory;
+    }
+
+    std::atomic<bool> framedropping_enabled{false};
+    std::shared_ptr<StubBufferStreamFactory> stub_buffer_stream_factory;
+};
+
+
+struct SwapInterval : mtf::BasicClientServerFixture<ServerConfig>
+{
+    void SetUp()
+    {
+        mtf::BasicClientServerFixture<ServerConfig>::SetUp();
+        surface = mtf::make_any_surface(connection);
+    }
+
+    void TearDown()
+    {
+        mir_surface_release_sync(surface);
+        mtf::BasicClientServerFixture<ServerConfig>::TearDown();
+    }
+
+    bool framedropping_enabled()
+    {
+        return server_configuration.framedropping_enabled;
+    }
+
+    MirSurface* surface;
 };
 
 }
 
-using SwapIntervalSignalTest = BespokeDisplayServerTestFixture;
-TEST_F(SwapIntervalSignalTest, swapinterval_test)
+TEST_F(SwapInterval, defaults_to_one)
 {
-    static std::string const swapinterval_set{"swapinterval_set_952f3f10.tmp"};
-    static std::string const do_client_finish{"do_client_finish_952f3f10.tmp"};
+    EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
+    EXPECT_FALSE(framedropping_enabled());
+}
 
-    std::remove(swapinterval_set.c_str());
-    std::remove(do_client_finish.c_str());
+TEST_F(SwapInterval, change_to_zero_enables_framedropping)
+{
+    mir_wait_for(mir_surface_set_swapinterval(surface, 0));
 
-    struct ServerConfig : TestingServerConfiguration
-    {
-        ServerConfig()
-        {
-            if (pipe(rendering_ops_pipe) != 0)
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Failed to create pipe"));
-            }
+    EXPECT_EQ(0, mir_surface_get_swapinterval(surface));
+    EXPECT_TRUE(framedropping_enabled());
+}
 
-            if (fcntl(rendering_ops_pipe[0], F_SETFL, O_NONBLOCK) != 0)
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Failed to make the read end of the pipe non-blocking"));
-            }
-        }
+TEST_F(SwapInterval, change_to_one_disables_framedropping)
+{
+    mir_wait_for(mir_surface_set_swapinterval(surface, 0));
+    mir_wait_for(mir_surface_set_swapinterval(surface, 1));
 
-        ~ServerConfig()
-        {
-            if (rendering_ops_pipe[0] >= 0)
-                close(rendering_ops_pipe[0]);
-            if (rendering_ops_pipe[1] >= 0)
-                close(rendering_ops_pipe[1]);
-        }
+    EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
+    EXPECT_FALSE(framedropping_enabled());
+}
 
-        std::shared_ptr<ms::BufferStreamFactory> the_buffer_stream_factory() override
-        {
-            if (!stub_stream_factory)
-                stub_stream_factory = std::make_shared<StubStreamFactory>(rendering_ops_pipe[1]);
-            return stub_stream_factory;
-        }
+TEST_F(SwapInterval, is_not_changed_if_requested_value_is_unsupported)
+{
+    auto const original_swapinterval = mir_surface_get_swapinterval(surface);
+    auto const original_framedropping = framedropping_enabled();
 
-        int num_of_swapinterval_devices()
-        {
-            char c;
-            int ops{0};
+    int const unsupported_swap_interval_value{2};
+    EXPECT_EQ(NULL, mir_surface_set_swapinterval(surface, unsupported_swap_interval_value));
 
-            while (read(rendering_ops_pipe[0], &c, 1) == 1)
-                ops++;
-
-            return ops;
-        }
-
-        int rendering_ops_pipe[2];
-        std::shared_ptr<StubStreamFactory> stub_stream_factory;
-    } server_config;
-
-    launch_server_process(server_config);
-
-    struct ClientConfig : TestingClientConfiguration
-    {
-        ClientConfig(std::string const& swapinterval_set,
-                     std::string const& do_client_finish)
-            : swapinterval_set{swapinterval_set},
-              do_client_finish{do_client_finish}
-        {
-        }
-
-        static void surface_callback(MirSurface*, void*)
-        {
-        }
-
-        void exec()
-        {
-            MirConnection* connection = mir_connect_sync(mir_test_socket, "testapp");
-            MirSurface* surface = mtf::make_any_surface(connection);
-
-            //1 is the default swapinterval
-            EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
-
-            mir_wait_for(mir_surface_set_swapinterval(surface, 0));
-            EXPECT_EQ(0, mir_surface_get_swapinterval(surface));
-
-            mir_wait_for(mir_surface_set_swapinterval(surface, 1));
-            EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
-
-            //swapinterval 2 not supported
-            EXPECT_EQ(NULL, mir_surface_set_swapinterval(surface, 2));
-            EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
-
-            set_flag(swapinterval_set);
-            wait_for(do_client_finish);
-
-            mir_surface_release_sync(surface);
-            mir_connection_release(connection);
-        }
-
-        /* TODO: Extract this flag mechanism and make it reusable */
-        void set_flag(std::string const& flag_file)
-        {
-            close(open(flag_file.c_str(), O_CREAT, S_IWUSR | S_IRUSR));
-        }
-
-        void wait_for(std::string const& flag_file)
-        {
-            int fd = -1;
-            while ((fd = open(flag_file.c_str(), O_RDONLY, S_IWUSR | S_IRUSR)) == -1)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
-            close(fd);
-        }
-
-        std::string const swapinterval_set;
-        std::string const do_client_finish;
-    } client_config{swapinterval_set, do_client_finish};
-
-    launch_client_process(client_config);
-
-    run_in_test_process([&]
-    {
-        client_config.wait_for(swapinterval_set);
-
-        EXPECT_EQ(2, server_config.num_of_swapinterval_devices());
-
-        client_config.set_flag(do_client_finish);
-    });
+    EXPECT_EQ(original_swapinterval, mir_surface_get_swapinterval(surface));
+    EXPECT_EQ(original_framedropping, framedropping_enabled());
 }

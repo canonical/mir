@@ -17,6 +17,7 @@
  */
 
 #include "src/platforms/android/server/android_graphic_buffer_allocator.h"
+#include "src/platforms/android/server/device_quirks.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer.h"
@@ -42,6 +43,7 @@ struct AndroidGraphicBufferAllocatorTest : public ::testing::Test
 
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
     testing::NiceMock<mtd::MockEGL> mock_egl;
+    mga::AndroidGraphicBufferAllocator allocator{std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{})};
 };
 
 TEST_F(AndroidGraphicBufferAllocatorTest, allocator_accesses_gralloc_module)
@@ -51,12 +53,12 @@ TEST_F(AndroidGraphicBufferAllocatorTest, allocator_accesses_gralloc_module)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::AndroidGraphicBufferAllocator allocator{};
+    auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
+    mga::AndroidGraphicBufferAllocator allocator{quirks};
 }
 
 TEST_F(AndroidGraphicBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
 {
-    mga::AndroidGraphicBufferAllocator allocator{};
     auto supported_pixel_formats = allocator.supported_pixel_formats();
 
     auto abgr_8888_count = std::count(supported_pixel_formats.begin(),
@@ -78,7 +80,6 @@ TEST_F(AndroidGraphicBufferAllocatorTest, supported_pixel_formats_contain_common
 
 TEST_F(AndroidGraphicBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_first_position)
 {
-    mga::AndroidGraphicBufferAllocator allocator{};
     auto supported_pixel_formats = allocator.supported_pixel_formats();
 
     ASSERT_FALSE(supported_pixel_formats.empty());
@@ -111,7 +112,6 @@ TEST_F(AndroidGraphicBufferAllocatorTest, test_buffer_reconstruction_from_MirNat
     unsigned int width {4};
     unsigned int height {5};
     unsigned int stride {16};
-    mga::AndroidGraphicBufferAllocator allocator;
     auto anwb = std::make_unique<ANativeWindowBuffer>();
     anwb->common.incRef = inc_ref;
     anwb->common.decRef = dec_ref;
@@ -130,7 +130,6 @@ TEST_F(AndroidGraphicBufferAllocatorTest, test_buffer_reconstruction_from_MirNat
 
 TEST_F(AndroidGraphicBufferAllocatorTest, throws_if_cannot_share_anwb_ownership)
 {
-    mga::AndroidGraphicBufferAllocator allocator;
     auto anwb = std::make_unique<ANativeWindowBuffer>();
     anwb->common.incRef = nullptr;
     anwb->common.decRef = dec_ref;

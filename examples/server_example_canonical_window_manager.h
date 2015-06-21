@@ -23,6 +23,8 @@
 
 #include "mir/geometry/displacement.h"
 
+#include <atomic>
+
 ///\example server_example_canonical_window_manager.h
 // Based on "Mir and Unity: Surfaces, input, and displays (v0.3)"
 
@@ -43,12 +45,14 @@ struct CanonicalSurfaceInfoCopy
         std::shared_ptr<scene::Surface> const& surface,
         scene::SurfaceCreationParameters const& params);
 
+    MirSurfaceType type;
     MirSurfaceState state;
     geometry::Rectangle restore_rect;
     std::weak_ptr<scene::Session> session;
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
     std::shared_ptr<scene::Surface> titlebar;
+    frontend::SurfaceId titlebar_id;
     bool is_titlebar = false;
     optional_value<geometry::Width> min_width;
     optional_value<geometry::Height> min_height;
@@ -59,7 +63,14 @@ struct CanonicalSurfaceInfoCopy
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
 
-    graphics::Buffer* buffer{nullptr};
+    void init_titlebar(std::shared_ptr<scene::Surface> const& surface);
+    void paint_titlebar(int intensity);
+
+private:
+
+    struct PaintingImpl;
+
+    std::shared_ptr<PaintingImpl> painting_impl;
 };
 
 // standard window management algorithm:

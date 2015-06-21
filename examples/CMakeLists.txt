@@ -13,6 +13,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra"
 
 add_library(eglapp STATIC
   eglapp.c
+  client_helpers.cpp
 )
 
 add_library(exampleserverconfig STATIC
@@ -87,6 +88,13 @@ mir_add_wrapped_executable(mir_demo_client_tooltip
   tooltip.c
 )
 target_link_libraries(mir_demo_client_tooltip
+  eglapp
+  )
+
+mir_add_wrapped_executable(mir_demo_client_touch_validator
+  client_touch_validator.cpp
+)
+target_link_libraries(mir_demo_client_touch_validator
   eglapp
 )
 

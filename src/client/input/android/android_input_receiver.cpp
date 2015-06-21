@@ -181,15 +181,14 @@ void mircva::InputReceiver::process_and_maybe_send_event()
     if (result == droidinput::OK)
     {
         auto ev = mia::Lexicon::translate(android_event);
-
         map_key_event(xkb_mapper, *ev);
-
-        input_consumer->sendFinishedSignal(event_sequence_id, true);
-
         report->received_event(*ev);
-
-        // Send the event on its merry way.
         handler(ev.get());
+
+        // TODO: It would be handy in future if handler returned a bool
+        //       indicating whether the event was used so that if not it might
+        //       get passed on to someone else - passed into here:
+        input_consumer->sendFinishedSignal(event_sequence_id, true);
     }
     if (input_consumer->hasDeferredEvent())
     {
