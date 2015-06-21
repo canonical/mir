@@ -61,7 +61,7 @@ private:
     void synthesize_event_at(mir::geometry::Point const& point);
     void thread_function();
 
-    std::unique_ptr<mir_test_framework::FakeInputDevice> touch_screen;
+    std::unique_ptr<mir_test_framework::FakeInputDevice> const touch_screen;
 };
 
 #endif

@@ -97,7 +97,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     auto input_action =
         (key_params.action == synthesis::EventAction::Down) ? mir_keyboard_action_down : mir_keyboard_action_up;
 
-    auto event_modifiers = mie::expand_modifier(modifiers);
+    auto event_modifiers = mie::expand_modifiers(modifiers);
     auto key_event = mir::events::make_event(
         device_id_unknown, event_time, input_action, key_code, key_params.scancode, event_modifiers);
 
@@ -116,7 +116,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
     auto action = update_buttons(button.action, mie::to_pointer_button(button.button));
-    auto event_modifiers = mie::expand_modifier(modifiers);
+    auto event_modifiers = mie::expand_modifiers(modifiers);
     auto button_event = mir::events::make_event(device_id_unknown,
                                                 event_time,
                                                 event_modifiers,
@@ -153,7 +153,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
-    auto event_modifiers = mie::expand_modifier(modifiers);
+    auto event_modifiers = mie::expand_modifiers(modifiers);
     update_position(pointer.rel_x, pointer.rel_y);
     auto pointer_event = mir::events::make_event(device_id_unknown,
                                                  event_time,
@@ -181,7 +181,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
-    auto event_modifiers = mie::expand_modifier(modifiers);
+    auto event_modifiers = mie::expand_modifiers(modifiers);
 
     auto touch_event = mir::events::make_event(device_id_unknown, event_time, event_modifiers);
 
