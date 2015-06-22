@@ -16,23 +16,27 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#include "mir_test_framework/declarative_placement_window_manage_policy.h"
 #include "mir/scene/surface_creation_parameters.h"
-
-#include "mir_test_framework/declarative_placement_strategy.h"
 
 namespace ms = mir::scene;
 
 namespace mtf = mir_test_framework;
 
-mtf::DeclarativePlacementStrategy::DeclarativePlacementStrategy(
-    SurfaceGeometries const& positions,
-    SurfaceDepths const& depths) :
-    surface_geometries_by_name(positions),
-    surface_depths_by_name(depths)
+mtf::DeclarativePlacementWindowManagerPolicy::DeclarativePlacementWindowManagerPolicy(
+    Tools* const tools,
+    SurfaceGeometries const& positions_by_name,
+    SurfaceDepths const& depths_by_name,
+    std::shared_ptr<mir::shell::DisplayLayout> const& display_layout) :
+    mir::shell::CanonicalWindowManagerPolicy{tools, display_layout},
+    surface_geometries_by_name{positions_by_name},
+    surface_depths_by_name{depths_by_name}
 {
 }
 
-ms::SurfaceCreationParameters mtf::DeclarativePlacementStrategy::place(ms::Session const& /*session*/, ms::SurfaceCreationParameters const& request_parameters)
+ms::SurfaceCreationParameters mtf::DeclarativePlacementWindowManagerPolicy::handle_place_new_surface(
+    std::shared_ptr<mir::scene::Session> const& /*session*/,
+    ms::SurfaceCreationParameters const& request_parameters)
 {
     auto placed = request_parameters;
 
