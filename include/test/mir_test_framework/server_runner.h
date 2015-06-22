@@ -21,6 +21,7 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <string>
 #include <thread>
 
@@ -58,7 +59,7 @@ private:
 
     char const* const old_env;
     std::thread server_thread;
-    mir::DisplayServer* display_server = 0;
+    std::atomic<mir::DisplayServer*> display_server;
 };
 }
 

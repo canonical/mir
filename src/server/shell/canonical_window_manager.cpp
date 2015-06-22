@@ -488,9 +488,7 @@ int msh::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surf
     case mir_surface_state_hidden:
     case mir_surface_state_minimized:
         surface->hide();
-        info.state = value;
-        // Map minimized to hidden, otherwise surface goes visible again.
-        return mir_surface_state_hidden;
+        return info.state = value;
 
     default:
         break;
