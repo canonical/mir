@@ -21,7 +21,7 @@
 #define MIR_TEST_TEST_CLIENT_H_
 
 #include "mir_protobuf.pb.h"
-#include "wait_condition.h"
+#include "mir_test/wait_condition.h"
 
 #include <gmock/gmock.h>
 

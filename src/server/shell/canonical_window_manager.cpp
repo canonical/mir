@@ -274,7 +274,7 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
-    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     SurfaceSpecification const& modifications)
 {
@@ -369,6 +369,13 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
 
+    if (modifications.streams.is_set())
+    {
+        auto v = modifications.streams.value();
+        std::vector<shell::StreamSpecification> l (v.begin(), v.end());
+        session->configure_streams(*surface, l);
+    }
+
     if (modifications.width.is_set() || modifications.height.is_set())
     {
         auto new_size = surface->size();
@@ -391,7 +398,9 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
-    if (auto const parent = tools->info_for(surface).parent.lock())
+    auto& info = tools->info_for(surface);
+
+    if (auto const parent = info.parent.lock())
     {
         auto& siblings = tools->info_for(parent).children;
 
@@ -424,6 +433,8 @@ int msh::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surf
     case mir_surface_state_vertmaximized:
     case mir_surface_state_horizmaximized:
     case mir_surface_state_fullscreen:
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
         break;
 
     default:
@@ -471,7 +482,13 @@ int msh::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surf
         display_layout->size_to_output(rect);
         movement = rect.top_left - old_pos;
         surface->resize(rect.size);
+        break;
     }
+
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
+        surface->hide();
+        return info.state = value;
 
     default:
         break;
@@ -539,6 +556,28 @@ bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent c
                 break;
             }
         }
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_TAB)
+    {
+        tools->focus_next_session();
+        if (auto const surface = tools->focused_surface())
+            select_active_surface(surface);
+
+        return true;
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_GRAVE)
+    {
+        if (auto const prev = tools->focused_surface())
+        {
+            if (auto const app = tools->focused_session())
+                select_active_surface(app->surface_after(prev));
+        }
+
+        return true;
     }
 
     return false;

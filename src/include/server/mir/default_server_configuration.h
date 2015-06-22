@@ -31,9 +31,6 @@ class EventHubInterface;
 class InputReaderInterface;
 class InputReaderPolicyInterface;
 class InputListenerInterface;
-class InputDispatcherInterface;
-class InputEnumerator;
-class InputDispatcherPolicyInterface;
 }
 
 namespace droidinput = android;
@@ -265,7 +262,6 @@ public:
      *  @{ */
     virtual auto the_shell() -> std::shared_ptr<shell::Shell>;
     virtual auto the_window_manager_builder() -> shell::WindowManagerBuilder;
-    virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<scene::PromptSessionListener> the_prompt_session_listener();
@@ -329,7 +325,7 @@ public:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
     virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
     virtual std::shared_ptr<input::InputDeviceHub> the_input_device_hub();
-    virtual std::shared_ptr<input::SurfaceInputDispatcher> the_new_input_dispatcher();
+    virtual std::shared_ptr<input::SurfaceInputDispatcher> the_surface_input_dispatcher();
     /** @} */
 
     /** @name logging configuration - customization
@@ -351,14 +347,6 @@ protected:
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> new_ipc_factory(
         std::shared_ptr<frontend::SessionAuthorizer> const& session_authorizer);
 
-    /** @name input dispatcher related configuration
-     *  @{ */
-    virtual std::shared_ptr<input::android::InputRegistrar> the_input_registrar();
-    virtual std::shared_ptr<droidinput::InputDispatcherInterface> the_android_input_dispatcher();
-    virtual std::shared_ptr<droidinput::InputEnumerator> the_input_target_enumerator();
-    virtual std::shared_ptr<input::android::InputThread> the_dispatcher_thread();
-    virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
-
     /** @} */
 
     /** @Convenience wrapper functions
@@ -373,11 +361,6 @@ protected:
         std::shared_ptr<input::CursorListener> const& wrapped);
 /** @} */
 
-    CachedPtr<input::android::InputRegistrar> input_registrar;
-    CachedPtr<input::android::InputThread> dispatcher_thread;
-    CachedPtr<droidinput::InputDispatcherInterface> android_input_dispatcher;
-    CachedPtr<droidinput::InputEnumerator> input_target_enumerator;
-    CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
     CachedPtr<droidinput::EventHubInterface> event_hub;
     CachedPtr<droidinput::InputReaderPolicyInterface> input_reader_policy;
     CachedPtr<droidinput::InputReaderInterface> input_reader;
@@ -391,12 +374,11 @@ protected:
     CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
-    CachedPtr<input::SurfaceInputDispatcher>    new_input_dispatcher;
+    CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
     CachedPtr<input::Platform>    input_platform; // currently not used by default
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
     CachedPtr<input::InputDispatcher> input_dispatcher;
-    CachedPtr<input::InputDispatcher> surface_input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
     CachedPtr<input::InputSendObserver> input_send_observer;
     CachedPtr<input::InputRegion>     input_region;

@@ -45,6 +45,7 @@ struct CanonicalSurfaceInfoCopy
         std::shared_ptr<scene::Surface> const& surface,
         scene::SurfaceCreationParameters const& params);
 
+    MirSurfaceType type;
     MirSurfaceState state;
     geometry::Rectangle restore_rect;
     std::weak_ptr<scene::Session> session;
@@ -62,20 +63,14 @@ struct CanonicalSurfaceInfoCopy
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
 
+    void init_titlebar(std::shared_ptr<scene::Surface> const& surface);
     void paint_titlebar(int intensity);
 
 private:
-    std::shared_ptr<frontend::BufferStream> const buffer_stream;
 
-    // Add copy-ctor to std::atomic
-    struct AtomicBufferPtr : std::atomic<graphics::Buffer*>
-    {
-        using std::atomic<graphics::Buffer*>::atomic;
+    struct PaintingImpl;
 
-        AtomicBufferPtr(AtomicBufferPtr const& that) :
-            std::atomic<graphics::Buffer*>{that.load()} {}
-    };
-    AtomicBufferPtr buffer{nullptr};
+    std::shared_ptr<PaintingImpl> painting_impl;
 };
 
 // standard window management algorithm:

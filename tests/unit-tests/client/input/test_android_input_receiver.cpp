@@ -285,6 +285,29 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     EXPECT_EQ(mir_event_type_motion, ev.type);
 }
 
+TEST_F(AndroidInputReceiverSetup, finish_signalled_after_handler)
+{
+    bool handler_called = false;
+
+    TestingInputProducer producer(server_fd);
+    mircva::InputReceiver receiver{
+        client_fd,
+        std::make_shared<mircv::XKBMapper>(),
+        [&handler_called, &producer](MirEvent*)
+        {
+            EXPECT_FALSE(producer.must_receive_handled_signal());
+            handler_called = true;
+        },
+        std::make_shared<mircv::NullInputReceiverReport>()
+    };
+
+    producer.produce_a_key_event();
+    flush_channels();
+    receiver.dispatch(md::FdEvent::readable);
+    EXPECT_TRUE(handler_called);
+    EXPECT_TRUE(producer.must_receive_handled_signal());
+}
+
 TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
 {
     using namespace testing;

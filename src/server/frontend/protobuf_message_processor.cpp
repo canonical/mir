@@ -222,6 +222,14 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::submit_buffer, invocation);
         }
+        else if ("allocate_buffers" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::allocate_buffers, invocation);
+        }
+        else if ("release_buffers" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::release_buffers, invocation);
+        }
         else if ("release_surface" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::release_surface, invocation);
