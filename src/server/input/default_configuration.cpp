@@ -370,15 +370,22 @@ mir::DefaultServerConfiguration::the_input_manager()
                 if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
                     mr::legacy_input::initialize(the_logger());
 
-                auto lib = std::make_shared<mir::SharedLibrary>(
-                    options->get<std::string>(options::platform_input_lib));
-                auto describe = lib->load_function<mi::DescribeModule>(
-                    "describe_input_module",
-                    MIR_SERVER_INPUT_PLATFORM_VERSION);
-                auto props = describe();
-                auto dispatchable = strncmp(props->name, "x11-input", strlen(props->name))
-                                        ? the_legacy_input_dispatchable()
-                                        : std::make_shared<NullLegacyInputDispatchable>();
+                auto dispatchable = the_legacy_input_dispatchable();
+
+                if (options->is_set(options::platform_input_lib))
+                {
+                    auto lib = std::make_shared<mir::SharedLibrary>(
+                        options->get<std::string>(options::platform_input_lib));
+
+                    auto describe = lib->load_function<mi::DescribeModule>(
+                        "describe_input_module",
+                        MIR_SERVER_INPUT_PLATFORM_VERSION);
+                    auto props = describe();
+
+                    if (!strncmp(props->name, "x11-input", strlen(props->name)))
+                        dispatchable = std::make_shared<NullLegacyInputDispatchable>();
+                }
+
                 auto ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), dispatchable);
 
                 auto platform = the_input_platform();
