@@ -18,26 +18,29 @@
 
 #include "default_window_manager.h"
 
-#include "mir/scene/placement_strategy.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/shell/display_layout.h"
 #include "mir/shell/focus_controller.h"
 #include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/surface_specification.h"
+
+#include "mir_toolkit/client_types.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace me = mir::examples;
+namespace geom = mir::geometry;
 
 me::DefaultWindowManager::DefaultWindowManager(
     msh::FocusController* focus_controller,
-    std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
+    std::shared_ptr<shell::DisplayLayout> const& display_layout,
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator) :
     focus_controller{focus_controller},
-    placement_strategy{placement_strategy},
+    display_layout{display_layout},
     session_coordinator{session_coordinator}
 {
 }
@@ -58,11 +61,25 @@ void me::DefaultWindowManager::remove_session(std::shared_ptr<scene::Session> co
 
 auto me::DefaultWindowManager::add_surface(
     std::shared_ptr<scene::Session> const& session,
-    scene::SurfaceCreationParameters const& params,
+    scene::SurfaceCreationParameters const& request_parameters,
     std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
 -> frontend::SurfaceId
 {
-    auto const result = build(session, placement_strategy->place(*session, params));
+    mir::graphics::DisplayConfigurationOutputId const output_id_invalid{
+        mir_display_output_id_invalid};
+    auto placed_parameters = request_parameters;
+
+    geom::Rectangle rect{request_parameters.top_left, request_parameters.size};
+
+    if (request_parameters.output_id != output_id_invalid)
+    {
+        display_layout->place_in_output(request_parameters.output_id, rect);
+    }
+
+    placed_parameters.top_left = rect.top_left;
+    placed_parameters.size = rect.size;
+
+    auto const result = build(session, placed_parameters);
     auto const surface = session->surface(result);
 
     surface->add_observer(std::make_shared<msh::SurfaceReadyObserver>(
