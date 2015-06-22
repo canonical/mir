@@ -303,9 +303,6 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
     surface.set_hidden(false);
     submitted_buffer = true;
     EXPECT_TRUE(surface.visible());
-
-    surface.configure(mir_surface_attrib_state, mir_surface_state_hidden);
-    EXPECT_FALSE(surface.visible());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)

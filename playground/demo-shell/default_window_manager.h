@@ -16,8 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SHELL_DEFAULT_WINDOW_MANAGER_H_
-#define MIR_SHELL_DEFAULT_WINDOW_MANAGER_H_
+#ifndef MIR_EXAMPLES_DEFAULT_WINDOW_MANAGER_H_
+#define MIR_EXAMPLES_DEFAULT_WINDOW_MANAGER_H_
 
 #include "mir/shell/window_manager.h"
 
@@ -25,14 +25,14 @@ namespace mir
 {
 namespace scene { class PlacementStrategy; class SessionCoordinator; }
 
-namespace shell
-{
-class FocusController;
+namespace shell { class FocusController; }
 
-class DefaultWindowManager : public WindowManager
+namespace examples
+{
+class DefaultWindowManager : public shell::WindowManager
 {
 public:
-    explicit DefaultWindowManager(FocusController* focus_controller,
+    explicit DefaultWindowManager(shell::FocusController* focus_controller,
         std::shared_ptr<scene::PlacementStrategy> const& placement_strategy,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
 
@@ -48,7 +48,7 @@ public:
     void modify_surface(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        SurfaceSpecification const& modifications) override;
+        shell::SurfaceSpecification const& modifications) override;
 
     void remove_surface(
         std::shared_ptr<scene::Session> const& session,
@@ -71,7 +71,7 @@ public:
         int value) override;
 
 private:
-    FocusController* const focus_controller;
+    shell::FocusController* const focus_controller;
     std::shared_ptr<scene::PlacementStrategy> const placement_strategy;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
 };

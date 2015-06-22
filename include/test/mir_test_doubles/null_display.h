@@ -20,9 +20,9 @@
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "null_gl_context.h"
-#include "null_display_configuration.h"
-#include "null_display_sync_group.h"
+#include "mir_test_doubles/null_gl_context.h"
+#include "mir_test_doubles/null_display_configuration.h"
+#include "mir_test_doubles/null_display_sync_group.h"
 
 namespace mir
 {
