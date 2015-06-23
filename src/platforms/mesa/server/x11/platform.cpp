@@ -74,7 +74,7 @@ std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() 
 {
     CALLED
 
-    return std::make_shared<mg::mesa::IpcOperations>(true, drm);
+    return std::make_shared<mg::mesa::IpcOperations>(drm, false);
 }
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const

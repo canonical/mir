@@ -31,7 +31,7 @@ class DRMAuthentication;
 class IpcOperations : public PlatformIpcOperations
 {
 public:
-    IpcOperations(bool const X_platform, std::shared_ptr<DRMAuthentication> const& drm);
+    IpcOperations(std::shared_ptr<DRMAuthentication> const& drm, bool const authenticate);
 
     void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const override;
     void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const override;
@@ -41,7 +41,7 @@ public:
         PlatformOperationMessage const& message) override;
 private:
     std::shared_ptr<DRMAuthentication> const drm;
-    bool const X_platform;
+    bool const authenticate;
 };
 
 }

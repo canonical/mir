@@ -80,8 +80,8 @@ mgm::GuestPlatform::GuestPlatform(
     gbm.setup(fds.at(0));
     set_guest_gbm_device(*nested_context, gbm.device);
     ipc_ops = std::make_shared<mgm::IpcOperations>(
-        false,
-        std::make_shared<mgm::NestedAuthentication>(nested_context)); 
+        std::make_shared<mgm::NestedAuthentication>(nested_context),
+        true);
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::GuestPlatform::create_buffer_allocator()

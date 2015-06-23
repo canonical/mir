@@ -53,8 +53,8 @@ struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 };
 }
 
-mgm::IpcOperations::IpcOperations(bool const X_platform, std::shared_ptr<DRMAuthentication> const& drm) :
-    drm{drm}, X_platform{X_platform}
+mgm::IpcOperations::IpcOperations(std::shared_ptr<DRMAuthentication> const& drm, bool const authenticate) :
+    drm{drm}, authenticate{authenticate}
 {
 }
 
@@ -86,7 +86,7 @@ void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
     unsigned int const op, mg::PlatformOperationMessage const& request)
 {
-    if (X_platform)
+    if (!authenticate)
         BOOST_THROW_EXCEPTION(
             std::runtime_error("Invalid platform operation"));
 
@@ -144,7 +144,7 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
 {
-    if (X_platform)
+    if (!authenticate)
     {
         auto package = std::make_shared<mg::PlatformIPCPackage>();
         package->ipc_fds.push_back(dup(drm->authenticated_fd()));
