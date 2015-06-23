@@ -28,15 +28,11 @@
 int main(int argc, char** argv)
 {
     int i;
-    if (argc <= 1)
+    char const* libname = argc <= 1 ? DEFAULT_LIB_NAME : argv[1];
+    for (i = 0; i < 10; i++)
     {
-        fprintf(stderr, "Usage: %s <sharedlibary>\n", argv[0]);
-        return 1;
-    }
-    for (i = 0; i < 2; i++)
-    {
-       void* dl = dlopen(argv[1], RTLD_NOW);
-       printf("[%d] dlopen `%s' = ", i, argv[1]);
+       void* dl = dlopen(libname, RTLD_NOW);
+       printf("[%d] dlopen `%s' = ", i, libname);
        if (dl)
        {
            printf("%p\n", dl);
@@ -44,7 +40,7 @@ int main(int argc, char** argv)
        }
        else
        {
-           printf("NULL\n");
+           printf("NULL (%s)\n", dlerror());
            return 2;   /* Non-zero means polite test failure */
        }
     }
