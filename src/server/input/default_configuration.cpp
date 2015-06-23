@@ -58,6 +58,7 @@
 
 #include <EventHub.h>
 #include <InputReader.h>
+#include <fcntl.h>
 
 
 namespace mi = mir::input;
@@ -332,10 +333,16 @@ namespace
 {
 class NullLegacyInputDispatchable : public mi::LegacyInputDispatchable
 {
+public:
+    NullLegacyInputDispatchable() { raw_fd = ::open("/dev/null", O_RDONLY); }
+    ~NullLegacyInputDispatchable() { if (raw_fd != -1) ::close(raw_fd); }
     void start() override { }
-    mir::Fd watch_fd() const override { return mir::Fd(mir::Fd::invalid); }
+    mir::Fd watch_fd() const override { return mir::Fd{raw_fd}; }
     bool dispatch(md::FdEvents) override { return true; }
     md::FdEvents relevant_events() const override { return 0; }
+
+private:
+    int raw_fd;
 };
 }
 
@@ -370,7 +377,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                 if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
                     mr::legacy_input::initialize(the_logger());
 
-                auto dispatchable = the_legacy_input_dispatchable();
+                std::shared_ptr<mi::InputManager> ret;
 
                 if (options->is_set(options::platform_input_lib))
                 {
@@ -380,13 +387,16 @@ mir::DefaultServerConfiguration::the_input_manager()
                     auto describe = lib->load_function<mi::DescribeModule>(
                         "describe_input_module",
                         MIR_SERVER_INPUT_PLATFORM_VERSION);
+
                     auto props = describe();
-
-                    if (!strncmp(props->name, "x11-input", strlen(props->name)))
-                        dispatchable = std::make_shared<NullLegacyInputDispatchable>();
+                    ret = std::make_shared<mi::DefaultInputManager>(
+                        the_input_reading_multiplexer(),
+                        strcmp(props->name, "x11-input") ? the_legacy_input_dispatchable() :
+                                                           std::make_shared<NullLegacyInputDispatchable>());
                 }
-
-                auto ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), dispatchable);
+                else
+                    ret = std::make_shared<mi::DefaultInputManager>(
+                        the_input_reading_multiplexer(), the_legacy_input_dispatchable());
 
                 auto platform = the_input_platform();
                 if (platform)
