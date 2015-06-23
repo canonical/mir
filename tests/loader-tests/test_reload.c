@@ -31,18 +31,19 @@ int main(int argc, char** argv)
     char const* libname = argc <= 1 ? DEFAULT_LIB_NAME : argv[1];
     for (i = 0; i < 10; i++)
     {
-       void* dl = dlopen(libname, RTLD_NOW);
-       printf("[%d] dlopen `%s' = ", i, libname);
-       if (dl)
-       {
-           printf("%p\n", dl);
-           dlclose(dl);
-       }
-       else
-       {
-           printf("NULL (%s)\n", dlerror());
-           return 1;   /* Non-zero means polite test failure */
-       }
+        void* dl = NULL;
+        printf("[%d] dlopen `%s' = ", i, libname);
+        dl = dlopen(libname, RTLD_NOW);
+        if (dl)
+        {
+            printf("%p\n", dl);
+            dlclose(dl);
+        }
+        else
+        {
+            printf("NULL (%s)\n", dlerror());
+            return 1;   /* Non-zero means polite test failure */
+        }
     }
     return 0;
 }
