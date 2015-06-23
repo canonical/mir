@@ -42,7 +42,7 @@ namespace mesa
 class BufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator(gbm_device* device, BypassOption bypass_option, bool const X_platform);
+    BufferAllocator(gbm_device* device, BypassOption bypass_option, bool const use_dma_buf_extension);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
@@ -62,7 +62,7 @@ private:
     std::shared_ptr<EGLExtensions> const egl_extensions;
 
     BypassOption const bypass_option;
-    bool const X_platform;
+    bool const use_dma_buf_extension;
 };
 
 }
