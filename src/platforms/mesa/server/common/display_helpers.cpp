@@ -56,7 +56,7 @@ mir::Fd mgmh::DRMHelper::authenticated_fd()
             std::runtime_error(
                 "Tried to get authenticated DRM fd before setting up the DRM master"));
 
-    if (X_platform)
+    if (use_render_node)
         return mir::Fd{IntOwnedFd{fd}};
 
     char* busid = drmGetBusid(fd);
@@ -202,7 +202,7 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
 
     mir::udev::Enumerator devices(udev);
     devices.match_subsystem("drm");
-    if (X_platform)
+    if (use_render_node)
         devices.match_sysname("renderD[0-9]*");
     else
         devices.match_sysname("card[0-9]*");
@@ -211,7 +211,7 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
 
     for(auto& device : devices)
     {
-        if (!X_platform && (error = is_appropriate_device(udev, device)))
+        if (!use_render_node && (error = is_appropriate_device(udev, device)))
             continue;
 
         // If directly opening the DRM device is good enough for X it's good enough for us!
@@ -222,7 +222,7 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
             continue;
         }
 
-        if (!X_platform)
+        if (!use_render_node)
         {
             // Check that the drm device is usable by setting the interface version we use (1.4)
             drmSetVersion sv;

@@ -51,7 +51,7 @@ namespace helpers
 class DRMHelper : public DRMAuthentication
 {
 public:
-    DRMHelper(bool const X_platform) : fd{-1}, X_platform{X_platform} {}
+    DRMHelper(bool const use_render_node) : fd{-1}, use_render_node{use_render_node} {}
     ~DRMHelper();
 
     DRMHelper(const DRMHelper &) = delete;
@@ -65,7 +65,7 @@ public:
     void set_master() const;
 
     int fd;
-    bool const X_platform;
+    bool const use_render_node;
 
 private:
     // TODO: This herustic is temporary; should be replaced with
