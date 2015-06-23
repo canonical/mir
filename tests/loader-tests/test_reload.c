@@ -41,7 +41,7 @@ int main(int argc, char** argv)
        else
        {
            printf("NULL (%s)\n", dlerror());
-           return 2;   /* Non-zero means polite test failure */
+           return 1;   /* Non-zero means polite test failure */
        }
     }
     return 0;
