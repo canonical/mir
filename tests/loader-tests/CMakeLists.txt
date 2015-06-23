@@ -9,7 +9,7 @@ target_compile_definitions(mir_test_reload_protobuf PRIVATE
   -DDEFAULT_LIB_NAME="libmirprotobuf.so.${mirprotobuf_soname}"
 )
 
-# Only a build-time dependency. Don't linki to it!
+# Only a build-time dependency. Don't link to it!
 add_dependencies(mir_test_reload_protobuf mirprotobuf)
 
 target_link_libraries(mir_test_reload_protobuf dl)
