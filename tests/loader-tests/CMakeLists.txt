@@ -1,5 +1,5 @@
 
-add_executable(mir_test_reload_protobuf test_reload.c)
+mir_add_wrapped_executable(mir_test_reload_protobuf test_reload.c)
 target_link_libraries(mir_test_reload_protobuf dl)
 
 # Only a build-time dependency. Don't link!
