@@ -70,6 +70,7 @@ add_dependencies(mir_acceptance_tests GMock)
 # TODO Just here for migration purposes
 add_library(mir-test-public STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>
+  $<TARGET_OBJECTS:mir-public-test>
 )
 
 target_link_libraries(mir-test-public
@@ -97,7 +98,6 @@ target_link_libraries(mir-test-protected
 )
 
 target_link_libraries(mir_acceptance_tests
-  mir-test-static
   mir-test-public
   mir-test-protected # to support throwback
   mir-test-doubles-static
