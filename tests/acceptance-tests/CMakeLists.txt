@@ -60,7 +60,7 @@ mir_add_wrapped_executable(
   mir_acceptance_tests
 
   ${SOURCES}
-  $<TARGET_OBJECTS:acceptance-test-throwback>
+#  $<TARGET_OBJECTS:acceptance-test-throwback>
 )
 
 mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
@@ -72,13 +72,12 @@ add_library(mir-test-public STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>
   $<TARGET_OBJECTS:mir-public-test>
   $<TARGET_OBJECTS:mir-public-test-doubles-platform>
+  $<TARGET_OBJECTS:mir-public-test-doubles>
 )
 
 target_link_libraries(mir-test-public
   mirclient
-  mirclient-debug-extension
   mirserver
-  mir-test-doubles-static
 
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
@@ -104,7 +103,7 @@ target_link_libraries(mir-test-protected
 
 target_link_libraries(mir_acceptance_tests
   mir-test-public
-  mir-test-protected # to support throwback
+#  mir-test-protected # to support throwback
 
   mirclient
   mirclient-debug-extension

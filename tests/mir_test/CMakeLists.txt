@@ -3,6 +3,7 @@ add_library(mir-public-test OBJECT
   cross_process_sync.cpp
   current_thread_name.cpp
   display_config_matchers.cpp
+  event_factory.cpp
   event_matchers.cpp
   pipe.cpp
   popen.cpp
