@@ -53,6 +53,7 @@
 #include "mir/main_loop.h"
 #include "mir/shared_library.h"
 #include "mir/glib_main_loop.h"
+#include "mir/dispatch/action_queue.h"
 
 #include "mir_toolkit/cursors.h"
 
@@ -332,10 +333,14 @@ namespace
 {
 class NullLegacyInputDispatchable : public mi::LegacyInputDispatchable
 {
-    void start() override { }
-    mir::Fd watch_fd() const override { return mir::Fd{0}; }
-    bool dispatch(md::FdEvents) override { return true; }
-    md::FdEvents relevant_events() const override { return 0; }
+public:
+    void start() override {};
+    mir::Fd watch_fd() const override { return aq.watch_fd();};
+    bool dispatch(md::FdEvents events) override { return aq.dispatch(events); }
+    md::FdEvents relevant_events() const override{ return aq.relevant_events(); }
+
+private:
+    md::ActionQueue aq;
 };
 }
 
