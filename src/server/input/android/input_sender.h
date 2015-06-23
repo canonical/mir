@@ -100,7 +100,6 @@ private:
         void cancel_timer();
         droidinput::status_t send_key_event(uint32_t sequence_id, MirKeyEvent const& event);
         droidinput::status_t send_motion_event(uint32_t sequence_id, MirMotionEvent const& event);
-        void process_and_submit_result(std::shared_ptr<InputSendObserver> const& observer, std::shared_ptr<InputReport> const& report);
         InputSendEntry unqueue_entry(uint32_t sequence_id);
         void enqueue_entry(InputSendEntry && entry);
 
