@@ -5,6 +5,10 @@ mir_add_wrapped_executable(mir_test_reload_protobuf test_reload.c)
 #     too, but it seems only the "LOCATION" property works (and provides too
 #     much info including full directory path).
 get_target_property(mirprotobuf_soname mirprotobuf SOVERSION)
+
+# Being a wrapped executable means we already have the correct LD_LIBRARY_PATH
+# so can just load the library by file name (which also allows portability
+# of bin/lib directories).
 target_compile_definitions(mir_test_reload_protobuf PRIVATE
   -DDEFAULT_LIB_NAME="libmirprotobuf.so.${mirprotobuf_soname}"
 )
