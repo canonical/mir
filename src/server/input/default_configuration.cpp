@@ -58,7 +58,6 @@
 
 #include <EventHub.h>
 #include <InputReader.h>
-#include <fcntl.h>
 
 
 namespace mi = mir::input;
@@ -333,16 +332,10 @@ namespace
 {
 class NullLegacyInputDispatchable : public mi::LegacyInputDispatchable
 {
-public:
-    NullLegacyInputDispatchable() { raw_fd = ::open("/dev/null", O_RDONLY); }
-    ~NullLegacyInputDispatchable() { if (raw_fd != -1) ::close(raw_fd); }
     void start() override { }
-    mir::Fd watch_fd() const override { return mir::Fd{raw_fd}; }
+    mir::Fd watch_fd() const override { return mir::Fd{0}; }
     bool dispatch(md::FdEvents) override { return true; }
     md::FdEvents relevant_events() const override { return 0; }
-
-private:
-    int raw_fd;
 };
 }
 
