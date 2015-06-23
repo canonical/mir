@@ -5,7 +5,9 @@
 # program (like mir_*_tests) somehow provides sufficient preloaded C++ symbols
 # that the bug does not occur.
 #
-mir_add_wrapped_executable(mir_test_reload_protobuf test_reload.c)
+mir_add_wrapped_executable(mir_test_reload_protobuf NOINSTALL
+  test_reload.c
+)
 
 #
 # XXX I would like to detect the full file name from the mirprotobuf target
@@ -28,6 +30,7 @@ add_dependencies(mir_test_reload_protobuf mirprotobuf)
 
 target_link_libraries(mir_test_reload_protobuf dl)
 
-add_test(NAME Protobuf-can-be-reloaded   # LP: #1391976
-  COMMAND ${CMAKE_BINARY_DIR}/bin/mir_test_reload_protobuf
-)
+# FIXME: Enable this test after LP: #1391976 is fixed.
+#add_test(NAME Protobuf-can-be-reloaded   # LP: #1391976
+#  COMMAND ${CMAKE_BINARY_DIR}/bin/mir_test_reload_protobuf
+#)
