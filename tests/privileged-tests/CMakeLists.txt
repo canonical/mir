@@ -4,6 +4,7 @@ set(
   PRIVILEGED_TESTS_SOURCES
 
   test_input_events.cpp
+  ui_get_sysname_ioctl_override.cpp
 )
 
 mir_add_wrapped_executable(

@@ -245,6 +245,8 @@ message EventSequence {
   repeated Event event = 1;
   optional DisplayConfiguration display_configuration = 2;
   optional LifecycleEvent lifecycle_event = 3;
+  optional BufferRequest buffer_request = 4;
+
   optional string error = 127;
 }
 
