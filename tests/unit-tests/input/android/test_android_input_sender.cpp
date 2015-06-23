@@ -226,7 +226,7 @@ TEST_F(AndroidInputSender, reports_published_key_events)
     register_surface();
     auto expected_time = mir_input_event_get_event_time(mir_event_get_input_event(key_event.get()));
 
-    EXPECT_CALL(mock_input_report, published_key_event(channel->client_fd(),_,expected_time));
+    EXPECT_CALL(mock_input_report, published_key_event(channel->server_fd(),_,expected_time));
     sender.send_event(*key_event, channel);
 }
 
@@ -236,7 +236,7 @@ TEST_F(AndroidInputSender, reports_published_motion_events)
     register_surface();
     auto expected_time = mir_input_event_get_event_time(mir_event_get_input_event(motion_event.get()));
 
-    EXPECT_CALL(mock_input_report, published_motion_event(channel->client_fd(),_,expected_time));
+    EXPECT_CALL(mock_input_report, published_motion_event(channel->server_fd(),_,expected_time));
     sender.send_event(*motion_event, channel);
 }
 
@@ -300,6 +300,7 @@ TEST_F(AndroidInputSender, reports_receival_of_finish_signal)
 
     sender.send_event(*motion_event, channel);
 
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
     EXPECT_CALL(mock_input_report, received_event_finished_signal(channel->server_fd(), seq));
 
     consumer.sendFinishedSignal(seq, true);

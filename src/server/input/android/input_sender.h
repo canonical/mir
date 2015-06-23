@@ -87,7 +87,7 @@ private:
     public:
         ActiveTransfer(InputSenderState & state, int server_fd, input::Surface* surface);
         ~ActiveTransfer();
-        void send(InputSendEntry && item);
+        void send(InputSendEntry && item, std::shared_ptr<InputReport> const& report);
         bool used_for_surface(input::Surface const* surface) const;
         void on_surface_disappeared();
         void subscribe();
