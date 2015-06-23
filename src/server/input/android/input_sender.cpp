@@ -135,7 +135,7 @@ void mia::InputSender::InputSenderState::send_event(std::shared_ptr<InputChannel
     mia::InputSendEntry entry{next_seq(), event, channel};
     lock.unlock();
 
-    transfer->send(std::move(entry), report);
+    transfer->send(std::move(entry));
 }
 
 void mia::InputSender::InputSenderState::add_transfer(int fd, mi::Surface * surface)
@@ -178,7 +178,7 @@ mia::InputSender::ActiveTransfer::ActiveTransfer(InputSenderState & state, int s
 {
 }
 
-void mia::InputSender::ActiveTransfer::send(InputSendEntry && event, std::shared_ptr<InputReport> const& report)
+void mia::InputSender::ActiveTransfer::send(InputSendEntry && event)
 {
     if (event.event.type != mir_event_type_key &&
         event.event.type != mir_event_type_motion)
@@ -190,12 +190,12 @@ void mia::InputSender::ActiveTransfer::send(InputSendEntry && event, std::shared
     if (event.event.type == mir_event_type_key)
     {
         error_status = send_key_event(event.sequence_id, event.event.key);
-        report->published_key_event(event.channel->server_fd(), event.sequence_id, event_time);
+        state.report->published_key_event(event.channel->server_fd(), event.sequence_id, event_time);
     }
     else
     {
         error_status = send_motion_event(event.sequence_id, event.event.motion);
-        report->published_motion_event(event.channel->server_fd(), event.sequence_id, event_time);
+        state.report->published_motion_event(event.channel->server_fd(), event.sequence_id, event_time);
     }
 
     if (error_status == droidinput::OK)
