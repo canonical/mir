@@ -69,7 +69,9 @@ add_dependencies(mir_acceptance_tests GMock)
 
 target_link_libraries(mir_acceptance_tests
   mir-test-assist
-  mir-test-framework-static # to support throwback
+
+  # needed for 'throwback' tests that use private APIs
+  mir-test-framework-static
 
   mirclient
   mirclient-debug-extension

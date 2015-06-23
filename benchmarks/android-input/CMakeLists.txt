@@ -15,7 +15,7 @@ target_link_libraries(
   input-reader-perf
 
   android-input-static
-  mir-test-doubles-static
+  mir-test-assist
   mirserver
  )
 
