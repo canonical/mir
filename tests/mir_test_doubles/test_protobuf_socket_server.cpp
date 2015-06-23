@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/test_protobuf_server.h"
+#include "mir/test/test_protobuf_server.h"
 #include "mir_test_doubles/stub_ipc_factory.h"
 #include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir/frontend/connector_report.h"

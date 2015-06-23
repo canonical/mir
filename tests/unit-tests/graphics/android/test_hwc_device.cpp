@@ -27,7 +27,7 @@
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include "hwc_struct_helpers.h"
 #include "mir_test_doubles/mock_swapping_gl_context.h"
 #include "mir_test_doubles/stub_swapping_gl_context.h"

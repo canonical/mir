@@ -35,7 +35,7 @@
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
-#include "mir_test/pipe.h"
+#include "mir/test/pipe.h"
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"

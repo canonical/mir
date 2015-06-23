@@ -32,7 +32,7 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_test_framework/testing_server_configuration.h"
-#include "mir_test/spin_wait.h"
+#include "mir/test/spin_wait.h"
 
 #include "mir_toolkit/mir_client_library.h"
 

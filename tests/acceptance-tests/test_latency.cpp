@@ -24,7 +24,7 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/null_display_sync_group.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

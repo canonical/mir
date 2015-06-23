@@ -33,8 +33,8 @@
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/stub_input_sender.h"
 #include "mir_test_doubles/null_event_sink.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/event_matchers.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/event_matchers.h"
 
 #include "gmock_set_arg.h"
 #include <gmock/gmock.h>

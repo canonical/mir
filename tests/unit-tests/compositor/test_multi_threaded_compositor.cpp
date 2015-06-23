@@ -26,7 +26,7 @@
 #include "mir/scene/observer.h"
 #include "mir/raii.h"
 
-#include "mir_test/current_thread_name.h"
+#include "mir/test/current_thread_name.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_display_buffer.h"

@@ -20,7 +20,7 @@
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test_doubles/null_display_buffer_compositor_factory.h"
-#include "mir_test/signal.h"
+#include "mir/test/signal.h"
 
 #include <gtest/gtest.h>
 

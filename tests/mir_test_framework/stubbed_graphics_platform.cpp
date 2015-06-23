@@ -26,7 +26,7 @@
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display.h"
 #include "mir/fd.h"
-#include "mir_test/pipe.h"
+#include "mir/test/pipe.h"
 
 #ifdef ANDROID
 #include "mir_test_doubles/stub_android_native_buffer.h"

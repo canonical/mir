@@ -1,7 +1,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/stub_graphics_platform_operation.h"
-#include "mir_test/pipe.h"
+#include "mir/test/pipe.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

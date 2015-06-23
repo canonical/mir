@@ -29,8 +29,8 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/spin_wait.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/spin_wait.h"
 
 #include "mir_test_doubles/nested_mock_egl.h"
 

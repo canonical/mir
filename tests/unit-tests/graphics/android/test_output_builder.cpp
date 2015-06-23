@@ -25,7 +25,7 @@
 #include "src/platforms/android/server/device_quirks.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_display_report.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_egl.h"

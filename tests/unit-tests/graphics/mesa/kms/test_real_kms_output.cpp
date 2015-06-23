@@ -19,7 +19,7 @@
 #include "src/platforms/mesa/server/kms/real_kms_output.h"
 #include "src/platforms/mesa/server/kms/page_flipper.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include "mir_test_doubles/mock_drm.h"
 

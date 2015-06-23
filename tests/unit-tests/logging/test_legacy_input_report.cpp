@@ -21,7 +21,7 @@
 
 #include <std/Log.h>
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

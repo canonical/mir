@@ -25,7 +25,7 @@
 #include "mir_test_doubles/mock_client_buffer_factory.h"
 #include "mir_test_doubles/stub_client_buffer_factory.h"
 #include "mir_test_doubles/null_logger.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include "mir_toolkit/mir_client_library.h"
 

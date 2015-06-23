@@ -35,7 +35,7 @@
 #include "mir_test_doubles/null_session_event_sink.h"
 #include "mir_test_doubles/stub_surface_factory.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

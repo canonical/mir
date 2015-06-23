@@ -30,7 +30,7 @@
 #include "mir_test_doubles/stub_host_connection.h"
 #include "mir_test_doubles/stub_cursor_listener.h"
 #include "mir_test_doubles/null_platform.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

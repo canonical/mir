@@ -23,7 +23,7 @@
 #include "mir/time/alarm.h"
 #include "mir/time/alarm_factory.h"
 
-#include "mir_test/event_matchers.h"
+#include "mir/test/event_matchers.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
 
 #include <gtest/gtest.h>

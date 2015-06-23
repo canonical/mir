@@ -1,4 +1,4 @@
-#include "mir_test/validity_matchers.h"
+#include "mir/test/validity_matchers.h"
 #include "mir_toolkit/mir_client_library.h"
 
 template<>

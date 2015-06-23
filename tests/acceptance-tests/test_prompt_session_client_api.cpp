@@ -31,7 +31,7 @@
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
-#include "mir_test/popen.h"
+#include "mir/test/popen.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

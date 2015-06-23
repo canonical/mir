@@ -21,7 +21,7 @@
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
 #include "mir_test_doubles/stub_swapping_gl_context.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include <memory>
 
 namespace mg=mir::graphics;

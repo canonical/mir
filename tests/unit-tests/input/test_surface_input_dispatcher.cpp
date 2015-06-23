@@ -23,8 +23,8 @@
 #include "mir/scene/observer.h"
 #include "mir/thread_safe_list.h"
 
-#include "mir_test/event_matchers.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/event_matchers.h"
+#include "mir/test/fake_shared.h"
 #include "mir_test_doubles/stub_input_scene.h"
 #include "mir_test_doubles/mock_surface.h"
 

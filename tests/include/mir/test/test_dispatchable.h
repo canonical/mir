@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_TEST_DISPATCHABLE_H_
 #define MIR_TEST_TEST_DISPATCHABLE_H_
 
-#include "mir_test/pipe.h"
+#include "mir/test/pipe.h"
 #include "mir/dispatch/dispatchable.h"
 
 #include <functional>

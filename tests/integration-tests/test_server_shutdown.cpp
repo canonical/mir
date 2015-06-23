@@ -31,7 +31,7 @@
 #include "mir_test_doubles/null_display_buffer_compositor_factory.h"
 #include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
 
-#include "mir_test/fake_event_hub.h"
+#include "mir/test/fake_event_hub.h"
 
 #include "mir_toolkit/mir_client_library.h"
 

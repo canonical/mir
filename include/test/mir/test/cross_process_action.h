@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_CROSS_PROCESS_ACTION_H_
 #define MIR_TEST_CROSS_PROCESS_ACTION_H_
 
-#include "mir_test/cross_process_sync.h"
+#include "mir/test/cross_process_sync.h"
 
 #include <functional>
 #include <chrono>

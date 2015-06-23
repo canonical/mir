@@ -26,7 +26,7 @@
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_screencast.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

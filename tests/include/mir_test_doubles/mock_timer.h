@@ -21,7 +21,7 @@
 #define MIR_TEST_DOUBLES_MOCK_TIMER_H_
 
 #include "mir/time/alarm_factory.h"
-#include "mir_test/fake_clock.h"
+#include "mir/test/fake_clock.h"
 #include <memory>
 
 namespace mir

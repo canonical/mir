@@ -19,7 +19,7 @@
 #include "mir/scene/legacy_scene_change_notification.h"
 #include "mir/scene/surface_observer.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include "mir_test_doubles/mock_surface.h"
 
 #include <gtest/gtest.h>

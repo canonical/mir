@@ -20,13 +20,13 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/event_handler_register.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include "mir_test_doubles/mock_display_report.h"
-#include "mir_test/gmock_fixes.h"
+#include "mir/test/gmock_fixes.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "mir_test/gmock_fixes.h"
+#include "mir/test/gmock_fixes.h"
 
 #include <stdexcept>
 

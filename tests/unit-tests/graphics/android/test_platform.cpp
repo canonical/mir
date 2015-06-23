@@ -26,7 +26,7 @@
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/stub_display_builder.h"
 #include "mir_test_doubles/fd_matcher.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir/shared_library.h"

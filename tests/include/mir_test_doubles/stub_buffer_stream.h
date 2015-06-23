@@ -21,7 +21,7 @@
 
 #include <mir/compositor/buffer_stream.h>
 #include <mir_test_doubles/stub_buffer.h>
-#include "mir_test/current_thread_name.h"
+#include "mir/test/current_thread_name.h"
 
 namespace mir
 {

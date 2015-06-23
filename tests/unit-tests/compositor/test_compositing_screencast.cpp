@@ -34,7 +34,7 @@
 #include "mir_test_doubles/stub_scene_element.h"
 #include "mir_test_doubles/mock_scene.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <boost/throw_exception.hpp>
 

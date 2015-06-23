@@ -23,7 +23,7 @@
 #include "mir/frontend/client_constants.h"
 #include "src/platforms/android/client/egl_native_surface_interpreter.h"
 #include "mir_test_doubles/stub_android_native_buffer.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include <system/window.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

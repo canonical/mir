@@ -27,7 +27,7 @@
 #include "mir_test_doubles/mock_swapping_gl_context.h"
 #include "mir_test_doubles/stub_gl_program.h"
 #include <gtest/gtest.h>
-#include <mir_test/gmock_fixes.h>
+#include <mir/test/gmock_fixes.h>
 
 #define GLM_FORCE_RADIANS
 #define GLM_PRECISION_MEDIUMP_FLOAT

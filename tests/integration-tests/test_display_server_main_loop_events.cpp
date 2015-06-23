@@ -25,9 +25,9 @@
 #include "mir/server_status_listener.h"
 #include "mir/events/event_private.h"
 
-#include "mir_test/pipe.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/auto_unblock_thread.h"
+#include "mir/test/pipe.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/auto_unblock_thread.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_doubles/mock_input_manager.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"

@@ -29,8 +29,8 @@
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/stub_renderable.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/gmock_fixes.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/gmock_fixes.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

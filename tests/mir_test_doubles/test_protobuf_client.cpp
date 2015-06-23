@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/test_protobuf_client.h"
+#include "mir/test/test_protobuf_client.h"
 #include "mir_test_doubles/mock_rpc_report.h"
 #include "mir_test_doubles/null_client_event_sink.h"
 

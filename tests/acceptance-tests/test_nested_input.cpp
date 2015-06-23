@@ -27,11 +27,11 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_doubles/nested_mock_egl.h"
-#include "mir_test/event_factory.h"
-#include "mir_test/event_matchers.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/spin_wait.h"
+#include "mir/test/event_factory.h"
+#include "mir/test/event_matchers.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/spin_wait.h"
 
 #include "mir_toolkit/mir_client_library.h"
 

@@ -25,7 +25,7 @@
 #include "src/server/scene/basic_surface.h"
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "src/server/compositor/multi_threaded_compositor.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/null_display.h"

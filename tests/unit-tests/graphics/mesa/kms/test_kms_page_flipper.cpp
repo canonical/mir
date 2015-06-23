@@ -21,7 +21,7 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

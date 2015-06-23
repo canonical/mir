@@ -22,10 +22,10 @@
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/event_matchers.h"
-#include "mir_test/event_factory.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/event_matchers.h"
+#include "mir/test/event_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

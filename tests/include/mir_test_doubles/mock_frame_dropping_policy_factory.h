@@ -24,7 +24,7 @@
 #include "mir/compositor/frame_dropping_policy_factory.h"
 #include "mir/compositor/frame_dropping_policy.h"
 
-#include "mir_test/gmock_fixes.h"
+#include "mir/test/gmock_fixes.h"
 
 #include <unordered_set>
 #include <functional>

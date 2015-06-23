@@ -33,7 +33,7 @@
 #include <condition_variable>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "mir_test/gmock_fixes.h"
+#include "mir/test/gmock_fixes.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;

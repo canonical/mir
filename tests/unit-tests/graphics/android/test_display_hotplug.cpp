@@ -29,7 +29,7 @@
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "mir_test/auto_unblock_thread.h"
+#include "mir/test/auto_unblock_thread.h"
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;

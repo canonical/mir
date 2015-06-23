@@ -42,7 +42,7 @@
 #include "mir_test_doubles/mock_gbm.h"
 
 #include "mir_test_framework/udev_environment.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <memory>

@@ -37,7 +37,7 @@
 #include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test_doubles/stub_buffer_stream_factory.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

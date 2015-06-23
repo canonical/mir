@@ -21,8 +21,8 @@
 
 #include "mir_test_doubles/wrap_shell_to_track_latest_surface.h"
 #include "mir_test_framework/connected_client_headless_server.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/signal.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/signal.h"
 
 namespace mev = mir::events;
 namespace mf = mir::frontend;

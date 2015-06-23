@@ -20,7 +20,7 @@
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/renderable.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/mock_buffer.h"

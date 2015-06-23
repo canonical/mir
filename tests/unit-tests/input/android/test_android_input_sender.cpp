@@ -29,8 +29,8 @@
 #include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/mock_scene.h"
 #include "mir_test_doubles/triggered_main_loop.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/event_matchers.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/event_matchers.h"
 
 #include "androidfw/Input.h"
 #include "androidfw/InputTransport.h"

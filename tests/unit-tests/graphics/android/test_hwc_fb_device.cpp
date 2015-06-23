@@ -28,7 +28,7 @@
 #include "mir_test_doubles/stub_swapping_gl_context.h"
 #include "mir_test_doubles/mock_swapping_gl_context.h"
 #include "mir_test_doubles/mock_egl.h"
-#include "mir_test/auto_unblock_thread.h"
+#include "mir/test/auto_unblock_thread.h"
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
 #include "src/platforms/android/server/hwc_fallback_gl_renderer.h"

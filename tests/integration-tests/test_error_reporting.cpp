@@ -32,8 +32,8 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "mir_test/gmock_fixes.h"
-#include "mir_test/validity_matchers.h"
+#include "mir/test/gmock_fixes.h"
+#include "mir/test/validity_matchers.h"
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;

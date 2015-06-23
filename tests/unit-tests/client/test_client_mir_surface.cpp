@@ -36,14 +36,14 @@
 #include "mir/frontend/connector.h"
 #include "mir/input/input_platform.h"
 
-#include "mir_test/test_protobuf_server.h"
-#include "mir_test/stub_server_tool.h"
-#include "mir_test/gmock_fixes.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/pipe.h"
-#include "mir_test/signal.h"
+#include "mir/test/test_protobuf_server.h"
+#include "mir/test/stub_server_tool.h"
+#include "mir/test/gmock_fixes.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/pipe.h"
+#include "mir/test/signal.h"
 #include "mir_test_doubles/stub_client_buffer.h"
-#include "mir_test/test_dispatchable.h"
+#include "mir/test/test_dispatchable.h"
 
 #include <boost/throw_exception.hpp>
 #include "mir_test_doubles/stub_client_buffer_factory.h"

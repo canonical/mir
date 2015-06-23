@@ -26,12 +26,12 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_display_sync_group.h"
 #include "mir_test_doubles/null_platform.h"
-#include "mir_test/display_config_matchers.h"
+#include "mir/test/display_config_matchers.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_session_authorizer.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/pipe.h"
-#include "mir_test/wait_condition.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/pipe.h"
+#include "mir/test/wait_condition.h"
 
 #include "mir_toolkit/mir_client_library.h"
 

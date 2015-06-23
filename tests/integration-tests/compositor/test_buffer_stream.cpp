@@ -25,7 +25,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/mock_timer.h"
-#include "mir_test/signal.h"
+#include "mir/test/signal.h"
 
 #include <gmock/gmock.h>
 
