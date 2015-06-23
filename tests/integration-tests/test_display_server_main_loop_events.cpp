@@ -29,11 +29,11 @@
 #include "mir/test/wait_condition.h"
 #include "mir/test/auto_unblock_thread.h"
 #include "mir_test_framework/testing_server_configuration.h"
-#include "mir_test_doubles/mock_input_manager.h"
-#include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test_doubles/mock_compositor.h"
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/mock_server_status_listener.h"
+#include "mir/test/doubles/mock_input_manager.h"
+#include "mir/test/doubles/mock_input_dispatcher.h"
+#include "mir/test/doubles/mock_compositor.h"
+#include "mir/test/doubles/null_display.h"
+#include "mir/test/doubles/mock_server_status_listener.h"
 #include "mir/run_mir.h"
 
 #include <gtest/gtest.h>

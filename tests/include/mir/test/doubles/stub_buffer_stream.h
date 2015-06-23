@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_NULL_BUFFER_STREAM_H_
 
 #include <mir/compositor/buffer_stream.h>
-#include <mir_test_doubles/stub_buffer.h>
+#include <mir/test/doubles/stub_buffer.h>
 #include "mir/test/current_thread_name.h"
 
 namespace mir

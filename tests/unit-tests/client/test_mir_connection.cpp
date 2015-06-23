@@ -33,7 +33,7 @@
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir/test/test_protobuf_server.h"
 #include "mir/test/stub_server_tool.h"
-#include "mir_test_doubles/stub_client_buffer_factory.h"
+#include "mir/test/doubles/stub_client_buffer_factory.h"
 
 #include "mir_protobuf.pb.h"
 

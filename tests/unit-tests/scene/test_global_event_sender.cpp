@@ -18,8 +18,8 @@
 
 #include "src/server/scene/global_event_sender.h"
 #include "src/server/scene/session_container.h"
-#include "mir_test_doubles/mock_scene_session.h"
-#include "mir_test_doubles/stub_display_configuration.h"
+#include "mir/test/doubles/mock_scene_session.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>

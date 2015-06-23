@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
 #define MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
 
-#include "mir_test_doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_buffer.h"
 #include <mir/graphics/renderable.h>
 #include <memory>
 #define GLM_FORCE_RADIANS

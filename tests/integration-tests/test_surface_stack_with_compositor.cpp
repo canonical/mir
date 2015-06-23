@@ -26,14 +26,14 @@
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "src/server/compositor/multi_threaded_compositor.h"
 #include "mir/test/fake_shared.h"
-#include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/stub_renderer.h"
-#include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/stub_input_sender.h"
-#include "mir_test_doubles/null_display_sync_group.h"
+#include "mir/test/doubles/mock_buffer_stream.h"
+#include "mir/test/doubles/mock_buffer_bundle.h"
+#include "mir/test/doubles/null_display.h"
+#include "mir/test/doubles/stub_renderer.h"
+#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_input_sender.h"
+#include "mir/test/doubles/null_display_sync_group.h"
 
 #include <condition_variable>
 #include <mutex>

@@ -21,9 +21,9 @@
 #include "mir/test/fd_utils.h"
 #include "mir/test/signal.h"
 #include "mir/test/fake_shared.h"
-#include "mir_test_doubles/mock_input_platform.h"
-#include "mir_test_doubles/mock_event_hub.h"
-#include "mir_test_doubles/mock_input_reader.h"
+#include "mir/test/doubles/mock_input_platform.h"
+#include "mir/test/doubles/mock_event_hub.h"
+#include "mir/test/doubles/mock_input_reader.h"
 
 #include "mir/input/platform.h"
 #include "src/server/input/android/input_reader_dispatchable.h"

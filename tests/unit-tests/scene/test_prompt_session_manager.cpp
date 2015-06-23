@@ -23,8 +23,8 @@
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 
-#include "mir_test_doubles/mock_prompt_session_listener.h"
-#include "mir_test_doubles/stub_scene_session.h"
+#include "mir/test/doubles/mock_prompt_session_listener.h"
+#include "mir/test/doubles/stub_scene_session.h"
 #include "mir/test/fake_shared.h"
 
 #include <gmock/gmock.h>

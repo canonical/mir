@@ -21,7 +21,7 @@
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir_test_doubles/mock_input_dispatcher.h"
+#include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/wait_condition.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"

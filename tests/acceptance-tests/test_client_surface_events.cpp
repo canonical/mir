@@ -22,7 +22,7 @@
 #include "mir/scene/surface_creation_parameters.h"
 
 #include "mir/test/event_matchers.h"
-#include "mir_test_doubles/wrap_shell_to_track_latest_surface.h"
+#include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test_framework/any_surface.h"
 

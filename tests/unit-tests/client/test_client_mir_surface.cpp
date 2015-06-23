@@ -42,14 +42,14 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/pipe.h"
 #include "mir/test/signal.h"
-#include "mir_test_doubles/stub_client_buffer.h"
+#include "mir/test/doubles/stub_client_buffer.h"
 #include "mir/test/test_dispatchable.h"
 
 #include <boost/throw_exception.hpp>
-#include "mir_test_doubles/stub_client_buffer_factory.h"
-#include "mir_test_doubles/stub_client_buffer_stream_factory.h"
-#include "mir_test_doubles/mock_client_buffer_stream_factory.h"
-#include "mir_test_doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/stub_client_buffer_factory.h"
+#include "mir/test/doubles/stub_client_buffer_stream_factory.h"
+#include "mir/test/doubles/mock_client_buffer_stream_factory.h"
+#include "mir/test/doubles/mock_client_buffer_stream.h"
 
 #include <cstring>
 #include <map>

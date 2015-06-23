@@ -18,8 +18,8 @@
 
 #include "src/platforms/mesa/server/kms/kms_page_flipper.h"
 
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_display_report.h"
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_display_report.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/fake_shared.h"
 

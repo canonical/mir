@@ -18,8 +18,8 @@
 
 #include "src/server/frontend/unauthorized_display_changer.h"
 
-#include "mir_test_doubles/mock_display_changer.h"
-#include "mir_test_doubles/null_display_configuration.h"
+#include "mir/test/doubles/mock_display_changer.h"
+#include "mir/test/doubles/null_display_configuration.h"
 
 #include "mir/test/fake_shared.h"
 

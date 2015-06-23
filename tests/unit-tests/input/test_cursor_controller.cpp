@@ -30,8 +30,8 @@
 #include "mir_toolkit/cursors.h"
 
 #include "mir/test/fake_shared.h"
-#include "mir_test_doubles/stub_scene_surface.h"
-#include "mir_test_doubles/stub_input_scene.h"
+#include "mir/test/doubles/stub_scene_surface.h"
+#include "mir/test/doubles/stub_input_scene.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

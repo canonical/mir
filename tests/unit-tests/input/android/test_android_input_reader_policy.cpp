@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_test_doubles/mock_input_region.h"
-#include "mir_test_doubles/stub_touch_visualizer.h"
+#include "mir/test/doubles/mock_input_region.h"
+#include "mir/test/doubles/stub_touch_visualizer.h"
 #include "mir/test/fake_shared.h"
 
 #include "src/server/input/android/android_input_reader_policy.h"

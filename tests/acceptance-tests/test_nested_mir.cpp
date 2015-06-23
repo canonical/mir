@@ -32,7 +32,7 @@
 #include "mir/test/wait_condition.h"
 #include "mir/test/spin_wait.h"
 
-#include "mir_test_doubles/nested_mock_egl.h"
+#include "mir/test/doubles/nested_mock_egl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

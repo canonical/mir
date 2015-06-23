@@ -22,7 +22,7 @@
 #include "mir_toolkit/mir_screencast.h"
 
 #include "mir_test_framework/connected_client_headless_server.h"
-#include "mir_test_doubles/stub_session_authorizer.h"
+#include "mir/test/doubles/stub_session_authorizer.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>

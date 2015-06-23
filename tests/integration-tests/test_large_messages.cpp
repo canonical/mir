@@ -21,8 +21,8 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir/test/wait_object.h"
 #include "mir/test/fake_shared.h"
-#include "mir_test_doubles/stub_display_configuration.h"
-#include "mir_test_doubles/null_display_changer.h"
+#include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/null_display_changer.h"
 
 #include "mir_toolkit/mir_connection.h"
 

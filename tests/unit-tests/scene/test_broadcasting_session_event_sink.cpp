@@ -17,7 +17,7 @@
  */
 
 #include "src/server/scene/broadcasting_session_event_sink.h"
-#include "mir_test_doubles/stub_scene_session.h"
+#include "mir/test/doubles/stub_scene_session.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>

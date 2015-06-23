@@ -17,8 +17,8 @@
  */
 
 #include "mir/test/test_protobuf_client.h"
-#include "mir_test_doubles/mock_rpc_report.h"
-#include "mir_test_doubles/null_client_event_sink.h"
+#include "mir/test/doubles/mock_rpc_report.h"
+#include "mir/test/doubles/null_client_event_sink.h"
 
 #include "src/client/connection_surface_map.h"
 #include "src/client/display_configuration.h"

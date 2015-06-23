@@ -13,17 +13,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_BUFFER_ALLOCATOR_H_
-#define MIR_TEST_DOUBLES_STUB_BUFFER_ALLOCATOR_H_
+#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
+#define MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
 
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir_test_doubles/stub_buffer.h"
-
-#include <vector>
-#include <memory>
+#include "mir/frontend/display_changer.h"
+#include "mir/test/doubles/null_display_configuration.h"
 
 namespace mir
 {
@@ -32,22 +29,19 @@ namespace test
 namespace doubles
 {
 
-struct StubBufferAllocator : public graphics::GraphicBufferAllocator
+class NullDisplayChanger : public frontend::DisplayChanger
 {
-    std::shared_ptr<graphics::Buffer> alloc_buffer(
-        graphics::BufferProperties const& properties)
+public:
+    virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration()
     {
-        return std::make_shared<StubBuffer>(properties);
+        return std::make_shared<NullDisplayConfiguration>();
     }
-
-    std::vector<MirPixelFormat> supported_pixel_formats()
+    virtual void configure(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
     {
-        return {};
     }
 };
-
 }
 }
 }
 
-#endif // MIR_TEST_DOUBLES_STUB_BUFFER_ALLOCATOR_H_
+#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_ */

@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_SCENE_SURFACE_H_
 
 #include "mir/scene/surface.h"
-#include "mir_test_doubles/stub_input_channel.h"
+#include "mir/test/doubles/stub_input_channel.h"
 
 #include <memory>
 #include <gmock/gmock.h>

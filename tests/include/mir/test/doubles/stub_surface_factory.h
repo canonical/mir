@@ -13,13 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NESTED_MOCK_EGL_H_
-#define MIR_TEST_DOUBLES_NESTED_MOCK_EGL_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SURFACE_FACTORY_H_
+#define MIR_TEST_DOUBLES_STUB_SURFACE_FACTORY_H_
 
-#include "mir_test_doubles/mock_egl.h"
+#include <mir/scene/surface_factory.h>
+#include <mir/test/doubles/stub_buffer.h>
+#include <mir/test/doubles/mock_surface.h>
 
 namespace mir
 {
@@ -27,18 +29,20 @@ namespace test
 {
 namespace doubles
 {
-/// MockEGL with configuration for operating a nested server.    
-class NestedMockEGL : public ::testing::NiceMock<MockEGL>
+
+class StubSurfaceFactory : public scene::SurfaceFactory
 {
 public:
-    NestedMockEGL();
-
-private:
-    void egl_initialize(EGLint* major, EGLint* minor);
-    void egl_choose_config(EGLConfig* config, EGLint*  num_config);
+    std::shared_ptr<scene::Surface> create_surface(
+        std::shared_ptr<compositor::BufferStream> const&,
+        scene::SurfaceCreationParameters const&) override
+    {
+        return std::make_shared<testing::NiceMock<MockSurface>>();
+    }
 };
-}
-}
-}
 
-#endif /* MIR_TEST_DOUBLES_NESTED_MOCK_EGL_H_ */
+}
+}
+} // namespace mir
+
+#endif /* MIR_TEST_DOUBLES_STUB_SURFACE_FACTORY_H_ */

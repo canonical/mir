@@ -17,10 +17,10 @@
  */
 
 #include "src/platforms/android/server/hwc_layerlist.h"
-#include "mir_test_doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_buffer.h"
 #include "hwc_struct_helpers.h"
-#include "mir_test_doubles/mock_android_native_buffer.h"
-#include "mir_test_doubles/mock_renderable.h"
+#include "mir/test/doubles/mock_android_native_buffer.h"
+#include "mir/test/doubles/mock_renderable.h"
 #include "mir/test/fake_shared.h"
 #include <gtest/gtest.h>
 

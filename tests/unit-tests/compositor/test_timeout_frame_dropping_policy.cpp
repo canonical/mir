@@ -21,8 +21,8 @@
 #include "mir/compositor/frame_dropping_policy.h"
 #include "mir/basic_callback.h"
 
-#include "mir_test_doubles/mock_timer.h"
-#include "mir_test_doubles/mock_lockable_callback.h"
+#include "mir/test/doubles/mock_timer.h"
+#include "mir/test/doubles/mock_lockable_callback.h"
 #include "mir/test/auto_unblock_thread.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/gmock_fixes.h"

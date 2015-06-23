@@ -26,7 +26,7 @@
 
 #include "mir/test/display_config_matchers.h"
 #include "mir/test/fake_shared.h"
-#include "mir_test_doubles/stub_display_configuration.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

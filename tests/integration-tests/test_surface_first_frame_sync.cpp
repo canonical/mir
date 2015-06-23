@@ -28,7 +28,7 @@
 #include "mir/scene/legacy_scene_change_notification.h"
 #include "mir/shell/shell.h"
 
-#include "mir_test_doubles/stub_renderer.h"
+#include "mir/test/doubles/stub_renderer.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_test_framework/testing_server_configuration.h"

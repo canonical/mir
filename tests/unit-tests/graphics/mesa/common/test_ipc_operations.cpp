@@ -23,10 +23,10 @@
 #include "mir_toolkit/mesa/platform_operation.h"
 
 #include "mir/test/fake_shared.h"
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_buffer_ipc_message.h"
-#include "mir_test_doubles/fd_matcher.h"
-#include "mir_test_doubles/mock_drm.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_buffer_ipc_message.h"
+#include "mir/test/doubles/fd_matcher.h"
+#include "mir/test/doubles/mock_drm.h"
 #include <gtest/gtest.h>
 
 #include <cstring>

@@ -19,10 +19,10 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_H_
 
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_display_sync_group.h"
-#include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/stub_display_configuration.h"
+#include "mir/test/doubles/null_display.h"
+#include "mir/test/doubles/null_display_sync_group.h"
+#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 
 #include "mir/geometry/rectangle.h"
 

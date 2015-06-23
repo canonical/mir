@@ -24,8 +24,8 @@
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/temporary_environment_value.h"
-#include "mir_test_doubles/stub_input_enumerator.h"
-#include "mir_test_doubles/stub_touch_visualizer.h"
+#include "mir/test/doubles/stub_input_enumerator.h"
+#include "mir/test/doubles/stub_touch_visualizer.h"
 #include "mir/test/wait_condition.h"
 #include "mir/test/event_factory.h"
 

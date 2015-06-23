@@ -25,10 +25,10 @@
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test_doubles/stub_renderable.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/test/doubles/stub_buffer_stream.h"
+#include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/gmock_fixes.h"
 

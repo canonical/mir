@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_doubles/null_logger.h"
+#include "mir/test/doubles/null_logger.h"
 
 namespace mtd = mir::test::doubles;
 

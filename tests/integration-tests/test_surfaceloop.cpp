@@ -18,12 +18,12 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/null_platform.h"
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_display_sync_group.h"
-#include "mir_test_doubles/stub_display_buffer.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/null_platform.h"
+#include "mir/test/doubles/null_display.h"
+#include "mir/test/doubles/null_display_sync_group.h"
+#include "mir/test/doubles/stub_display_buffer.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"

@@ -21,7 +21,7 @@
 #include "mir/graphics/event_handler_register.h"
 
 #include "mir/test/fake_shared.h"
-#include "mir_test_doubles/mock_display_report.h"
+#include "mir/test/doubles/mock_display_report.h"
 #include "mir/test/gmock_fixes.h"
 
 #include <gtest/gtest.h>

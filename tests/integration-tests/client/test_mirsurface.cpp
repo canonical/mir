@@ -17,7 +17,7 @@
  */
 
 #include "mir_test_framework/connected_client_headless_server.h"
-#include "mir_test_doubles/stub_scene_surface.h"
+#include "mir/test/doubles/stub_scene_surface.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/validity_matchers.h"
 

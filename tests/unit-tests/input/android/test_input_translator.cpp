@@ -21,7 +21,7 @@
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
 
-#include "mir_test_doubles/mock_input_dispatcher.h"
+#include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
 

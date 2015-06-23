@@ -21,8 +21,8 @@
 
 #include "mir/graphics/display.h"
 #include "mir/geometry/size.h"
-#include "mir_test_doubles/null_display_buffer.h"
-#include "mir_test_doubles/stub_display_buffer.h"
+#include "mir/test/doubles/null_display_buffer.h"
+#include "mir/test/doubles/stub_display_buffer.h"
 #include <thread>
 
 namespace mir

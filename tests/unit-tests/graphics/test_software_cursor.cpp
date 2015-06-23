@@ -20,8 +20,8 @@
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/renderable.h"
 
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/stub_input_scene.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_input_scene.h"
 
 #include "mir/test/fake_shared.h"
 

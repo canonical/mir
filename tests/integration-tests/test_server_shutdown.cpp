@@ -28,8 +28,8 @@
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 
-#include "mir_test_doubles/null_display_buffer_compositor_factory.h"
-#include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
+#include "mir/test/doubles/null_display_buffer_compositor_factory.h"
+#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 
 #include "mir/test/fake_event_hub.h"
 

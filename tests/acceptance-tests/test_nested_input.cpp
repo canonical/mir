@@ -26,7 +26,7 @@
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test_doubles/nested_mock_egl.h"
+#include "mir/test/doubles/nested_mock_egl.h"
 #include "mir/test/event_factory.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"

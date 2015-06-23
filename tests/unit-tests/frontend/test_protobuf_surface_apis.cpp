@@ -22,7 +22,7 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_test_doubles/stub_ipc_factory.h"
+#include "mir/test/doubles/stub_ipc_factory.h"
 #include "mir/test/stub_server_tool.h"
 #include "mir/test/test_protobuf_client.h"
 #include "mir/test/test_protobuf_server.h"

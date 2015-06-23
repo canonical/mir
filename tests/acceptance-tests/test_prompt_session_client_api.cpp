@@ -26,8 +26,8 @@
 #include "mir/cached_ptr.h"
 #include "mir/fd.h"
 
-#include "mir_test_doubles/stub_session_authorizer.h"
-#include "mir_test_doubles/mock_prompt_session_listener.h"
+#include "mir/test/doubles/stub_session_authorizer.h"
+#include "mir/test/doubles/mock_prompt_session_listener.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"

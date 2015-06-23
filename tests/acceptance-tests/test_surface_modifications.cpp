@@ -20,7 +20,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
 
-#include "mir_test_doubles/wrap_shell_to_track_latest_surface.h"
+#include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/signal.h"

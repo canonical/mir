@@ -24,8 +24,8 @@
 #include "mir/test/pipe.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/auto_unblock_thread.h"
-#include "mir_test_doubles/advanceable_clock.h"
-#include "mir_test_doubles/mock_lockable_callback.h"
+#include "mir/test/doubles/advanceable_clock.h"
+#include "mir/test/doubles/mock_lockable_callback.h"
 #include "mir_test_framework/process.h"
 
 #include <gtest/gtest.h>

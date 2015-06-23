@@ -18,9 +18,9 @@
 
 #include "src/platforms/android/server/configurable_display_buffer.h"
 #include "src/platforms/android/server/display_group.h"
-#include "mir_test_doubles/mock_display_device.h"
-#include "mir_test_doubles/stub_renderable_list_compositor.h"
-#include "mir_test_doubles/stub_swapping_gl_context.h"
+#include "mir/test/doubles/mock_display_device.h"
+#include "mir/test/doubles/stub_renderable_list_compositor.h"
+#include "mir/test/doubles/stub_swapping_gl_context.h"
 #include "mir/test/fake_shared.h"
 #include <memory>
 

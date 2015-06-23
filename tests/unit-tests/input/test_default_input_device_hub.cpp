@@ -18,9 +18,9 @@
 
 #include "src/server/input/default_input_device_hub.h"
 
-#include "mir_test_doubles/triggered_main_loop.h"
-#include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test_doubles/mock_input_region.h"
+#include "mir/test/doubles/triggered_main_loop.h"
+#include "mir/test/doubles/mock_input_dispatcher.h"
+#include "mir/test/doubles/mock_input_region.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
 

@@ -23,12 +23,12 @@
 #include "src/server/input/android/input_sender.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir_test_doubles/stub_scene_surface.h"
-#include "mir_test_doubles/mock_input_surface.h"
-#include "mir_test_doubles/mock_input_send_observer.h"
-#include "mir_test_doubles/stub_scene.h"
-#include "mir_test_doubles/mock_scene.h"
-#include "mir_test_doubles/triggered_main_loop.h"
+#include "mir/test/doubles/stub_scene_surface.h"
+#include "mir/test/doubles/mock_input_surface.h"
+#include "mir/test/doubles/mock_input_send_observer.h"
+#include "mir/test/doubles/stub_scene.h"
+#include "mir/test/doubles/mock_scene.h"
+#include "mir/test/doubles/triggered_main_loop.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
 

@@ -23,12 +23,12 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/glib_main_loop.h"
 #include "mir/time/steady_clock.h"
-#include "mir_test_doubles/mock_display_device.h"
-#include "mir_test_doubles/mock_framebuffer_bundle.h"
-#include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/stub_display_configuration.h"
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_gl.h"
+#include "mir/test/doubles/mock_display_device.h"
+#include "mir/test/doubles/mock_framebuffer_bundle.h"
+#include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl.h"
 #include "mir/test/auto_unblock_thread.h"
 #include <gtest/gtest.h>
 

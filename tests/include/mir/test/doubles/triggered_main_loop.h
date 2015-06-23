@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_TRIGGERED_MAIN_LOOP_H_
 #define MIR_TEST_DOUBLES_TRIGGERED_MAIN_LOOP_H_
 
-#include "mir_test_doubles/mock_main_loop.h"
+#include "mir/test/doubles/mock_main_loop.h"
 
 #include <vector>
 

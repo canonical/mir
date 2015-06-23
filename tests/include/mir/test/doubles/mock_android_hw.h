@@ -18,8 +18,8 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_ANDROID_HW_H_
 #define MIR_TEST_DOUBLES_MOCK_ANDROID_HW_H_
 
-#include "mir_test_doubles/mock_android_alloc_device.h"
-#include "mir_test_doubles/mock_hwc_composer_device_1.h"
+#include "mir/test/doubles/mock_android_alloc_device.h"
+#include "mir/test/doubles/mock_hwc_composer_device_1.h"
 
 #include <hardware/hardware.h>
 #include <gmock/gmock.h>

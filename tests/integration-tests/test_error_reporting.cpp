@@ -23,7 +23,7 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/deferred_in_process_server.h"
 
-#include "mir_test_doubles/stub_ipc_factory.h"
+#include "mir/test/doubles/stub_ipc_factory.h"
 
 #include "src/server/frontend/display_server.h"
 #include "src/server/frontend/protobuf_ipc_factory.h"

@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_SHELL_H_
 
 #include "mir/frontend/shell.h"
-#include "mir_test_doubles/stub_session.h"
+#include "mir/test/doubles/stub_session.h"
 
 namespace mir
 {
