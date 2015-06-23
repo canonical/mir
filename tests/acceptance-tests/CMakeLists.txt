@@ -71,9 +71,14 @@ add_dependencies(mir_acceptance_tests GMock)
 add_library(mir-test-public STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>
   $<TARGET_OBJECTS:mir-public-test>
+  $<TARGET_OBJECTS:mir-public-test-doubles-platform>
 )
 
 target_link_libraries(mir-test-public
+  mirclient
+  mirclient-debug-extension
+  mirserver
+  mir-test-doubles-static
 
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
@@ -100,8 +105,6 @@ target_link_libraries(mir-test-protected
 target_link_libraries(mir_acceptance_tests
   mir-test-public
   mir-test-protected # to support throwback
-  mir-test-doubles-static
-  mir-test-doubles-platform-static
 
   mirclient
   mirclient-debug-extension

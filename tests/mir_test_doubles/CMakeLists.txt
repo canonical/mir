@@ -72,9 +72,14 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
+add_library(mir-public-test-doubles-platform OBJECT
+  ${MIR_TEST_DOUBLES_PLATFORM_SRCS}
+)
+
 add_library(
   mir-test-doubles-platform-static STATIC
-  ${MIR_TEST_DOUBLES_PLATFORM_SRCS})
+  $<TARGET_OBJECTS:mir-public-test-doubles-platform>
+)
 
 target_link_libraries(
   mir-test-doubles-platform-static
