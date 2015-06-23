@@ -67,9 +67,39 @@ mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompi
 
 add_dependencies(mir_acceptance_tests GMock)
 
+# TODO Just here for migration purposes
+add_library(mir-test-public STATIC
+  $<TARGET_OBJECTS:mir-public-test-framework>
+)
+
+target_link_libraries(mir-test-public
+
+  ${Boost_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${UMOCKDEV_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
+
+add_library(mir-test-protected STATIC
+  $<TARGET_OBJECTS:mir-protected-test-framework>
+)
+
+target_link_libraries(mir-test-protected
+
+  ${Boost_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${UMOCKDEV_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
+
 target_link_libraries(mir_acceptance_tests
   mir-test-static
-  mir-test-framework-static
+  mir-test-public
+  mir-test-protected # to support throwback
   mir-test-doubles-static
   mir-test-doubles-platform-static
 

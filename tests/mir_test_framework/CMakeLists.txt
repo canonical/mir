@@ -21,8 +21,10 @@ add_definitions(
 add_library(mir-public-test-framework OBJECT
   any_surface.cpp
   async_server_runner.cpp
+  command_line_server_configuration.cpp
   connected_client_headless_server.cpp
   connected_client_with_a_surface.cpp
+  declarative_placement_window_manage_policy.cpp
   executable_path.cpp
   headless_in_process_server.cpp
   headless_nested_server_runner.cpp
@@ -32,7 +34,12 @@ add_library(mir-public-test-framework OBJECT
   process.cpp
   server_runner.cpp
   socket_detect_server.cpp
+  stub_client_platform_factory.cpp
   stub_server_platform_factory.cpp
+  stubbed_server_configuration.cpp
+  testing_client_options.cpp
+  testing_server_options.cpp
+  temporary_environment_value.cpp
   using_stub_client_platform.cpp
 )
 
@@ -41,16 +48,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
 add_library(mir-protected-test-framework OBJECT
 
-  command_line_server_configuration.cpp
-  declarative_placement_window_manage_policy.cpp
   fake_event_hub_server_configuration.cpp
   input_testing_server_options.cpp
-  stubbed_server_configuration.cpp
-  stub_client_platform_factory.cpp
-  temporary_environment_value.cpp
-  testing_client_options.cpp
   testing_process_manager.cpp
-  testing_server_options.cpp
   udev_environment.cpp
 )
 
