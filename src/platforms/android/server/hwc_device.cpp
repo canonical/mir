@@ -29,7 +29,6 @@
 #include <algorithm>
 #include <chrono>
 #include <thread>
-#include <mutex>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
@@ -45,20 +44,6 @@ bool plane_alpha_is_translucent(mg::Renderable const& renderable)
     };
     return (renderable.alpha() < 1.0f - tolerance);
 }
-
-std::once_flag checked_environment;
-std::chrono::milliseconds force_bypass_sleep(-1);
-
-void check_environment()
-{
-    std::call_once(checked_environment, []()
-    {
-        char const* env = getenv("MIR_DRIVER_FORCE_BYPASS_SLEEP");
-        if (env != NULL)
-            force_bypass_sleep = std::chrono::milliseconds(atoi(env));
-    });
-}
-
 }
 
 bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
@@ -82,7 +67,6 @@ bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
 mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper) :
     hwc_wrapper(hwc_wrapper)
 {
-    check_environment();
 }
 
 bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
@@ -178,8 +162,7 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
         //   mako:    15ms
         //   krillin: 11ms (to be fair, the display is 67Hz)
         using namespace std;
-        auto delay = force_bypass_sleep >= 0ms ? force_bypass_sleep : 10ms;
-        std::this_thread::sleep_for(delay);
+        std::this_thread::sleep_for(10ms);
     }
 }
 
