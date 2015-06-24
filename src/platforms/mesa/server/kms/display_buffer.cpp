@@ -331,30 +331,19 @@ void mgm::DisplayBuffer::post()
     bypass_buf = nullptr;
     bypass_bufobj = nullptr;
 
-    /*
-     * Introducing "predictive bypass":
-     * If the current frame is bypassed then there is an extremely high
-     * likelihood the next one will be too. If it is then we can reduce
-     * the latency of that next frame (make the compositor sample the
-     * scene later) by almost a whole frame. Because we don't need to
-     * spare any time for rendering. Just milliseconds at most for the
-     * kernel to get around to scheduling a pageflip. Note: this prediction
-     * only works for non-clone modes as the full set of outputs must be
-     * perfectly in phase and we only know how to guarantee that with one.
-     */
-    if (outputs.size() == 1)
+    recommend_sleep = 0ms;
+    if (outputs.size() == 1)  // TODO check this is really required
     {
         auto const& output = outputs.front();
         auto const min_frame_interval = 1000ms / output->max_refresh_rate();
-        auto const delay = min_frame_interval - predicted_render_time;
-        if (delay > 0ms)
-            std::this_thread::sleep_for(delay);
+        if (predicted_render_time < min_frame_interval)
+            recommend_sleep = min_frame_interval - predicted_render_time;
     }
 }
 
 std::chrono::milliseconds mgm::DisplayBuffer::recommended_sleep() const
 {
-    return std::chrono::milliseconds::zero(); // TODO
+    return recommend_sleep;
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
