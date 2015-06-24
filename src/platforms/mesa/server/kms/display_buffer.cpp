@@ -352,6 +352,11 @@ void mgm::DisplayBuffer::post()
     }
 }
 
+std::chrono::milliseconds mgm::DisplayBuffer::recommended_sleep() const
+{
+    return std::chrono::milliseconds::zero(); // TODO
+}
+
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
 {
     auto front = gbm_surface_lock_front_buffer(surface_gbm.get());

@@ -83,6 +83,10 @@ private:
             f(buffer);            
         }
         void post() override {}
+        std::chrono::milliseconds recommended_sleep() const override
+        {
+            return std::chrono::milliseconds::zero();
+        }
         testing::NiceMock<mtd::MockDisplayBuffer> buffer; 
     };
 

@@ -55,6 +55,11 @@ public:
         std::this_thread::yield();
     }
 
+    std::chrono::milliseconds recommended_sleep() const override
+    {
+        return std::chrono::milliseconds::zero();
+    }
+
 private:
     std::vector<geometry::Rectangle> const output_rects;
     std::vector<StubDisplayBuffer> display_buffers;
@@ -71,6 +76,12 @@ struct NullDisplaySyncGroup : graphics::DisplaySyncGroup
         /* yield() is needed to ensure reasonable runtime under valgrind for some tests */
         std::this_thread::yield();
     }
+
+    std::chrono::milliseconds recommended_sleep() const override
+    {
+        return std::chrono::milliseconds::zero();
+    }
+
     NullDisplayBuffer db;
 };
 

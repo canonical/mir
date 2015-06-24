@@ -81,3 +81,8 @@ void mga::DisplayGroup::post()
         contents.emplace_back(db.second->contents());
     device->commit(contents); 
 }
+
+std::chrono::milliseconds mga::DisplayGroup::recommended_sleep() const
+{
+    return std::chrono::milliseconds::zero();  // TODO
+}
