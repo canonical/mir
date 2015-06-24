@@ -20,11 +20,11 @@
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/renderable.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/stub_scene.h"
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/stub_input_scene.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_scene.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/stub_input_scene.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -19,7 +19,7 @@
 
 #include "mir_test_framework/fake_event_hub_server_configuration.h"
 
-#include "mir_test/fake_event_hub.h"
+#include "mir/test/fake_event_hub.h"
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;

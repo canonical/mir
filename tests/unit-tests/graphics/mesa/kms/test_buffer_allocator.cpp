@@ -21,11 +21,11 @@
 #include "src/platforms/mesa/server/common/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_gbm.h"
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/platform_factory.h"
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/platform_factory.h"
 #include "mir_test_framework/udev_environment.h"
 
 #include <cstdlib>

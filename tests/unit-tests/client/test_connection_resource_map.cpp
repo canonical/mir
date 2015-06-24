@@ -18,7 +18,7 @@
 
 #include "src/client/connection_surface_map.h"
 #include "src/client/mir_surface.h"
-#include "mir_test_doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/mock_client_buffer_stream.h"
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;

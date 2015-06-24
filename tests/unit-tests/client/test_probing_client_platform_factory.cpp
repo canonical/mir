@@ -19,7 +19,7 @@
 #include "mir/client_platform.h"
 #include "src/client/probing_client_platform_factory.h"
 
-#include "mir_test_doubles/mock_client_context.h"
+#include "mir/test/doubles/mock_client_context.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/stub_platform_helpers.h"
 

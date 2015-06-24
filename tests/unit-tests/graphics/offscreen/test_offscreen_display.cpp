@@ -4,8 +4,8 @@
 #include "src/server/graphics/default_display_configuration_policy.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_gl.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

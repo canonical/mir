@@ -24,13 +24,13 @@
 #include "src/server/input/null_input_dispatcher.h"
 #include "mir_display_configuration_builder.h"
 
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_gl_config.h"
-#include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/stub_host_connection.h"
-#include "mir_test_doubles/stub_cursor_listener.h"
-#include "mir_test_doubles/null_platform.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl_config.h"
+#include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/stub_host_connection.h"
+#include "mir/test/doubles/stub_cursor_listener.h"
+#include "mir/test/doubles/null_platform.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

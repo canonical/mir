@@ -18,10 +18,10 @@
 
 #include "src/platforms/mesa/server/x11/platform.h"
 
-#include "mir_test_doubles/platform_factory.h"
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_gbm.h"
-#include "mir_test_doubles/mock_x11.h"
+#include "mir/test/doubles/platform_factory.h"
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
+#include "mir/test/doubles/mock_x11.h"
 #include "mir/shared_library.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/udev_environment.h"

@@ -16,14 +16,14 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/test_protobuf_server.h"
-#include "mir_test_doubles/stub_ipc_factory.h"
-#include "mir_test_doubles/stub_session_authorizer.h"
+#include "mir/test/test_protobuf_server.h"
+#include "mir/test/doubles/stub_ipc_factory.h"
+#include "mir/test/doubles/stub_session_authorizer.h"
 #include "mir/frontend/connector_report.h"
 #include "mir/frontend/protobuf_connection_creator.h"
 #include "src/server/frontend/published_socket_connector.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir_test_doubles/null_emergency_cleanup.h"
+#include "mir/test/doubles/null_emergency_cleanup.h"
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;

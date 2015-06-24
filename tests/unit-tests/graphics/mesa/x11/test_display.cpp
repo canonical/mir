@@ -16,8 +16,8 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 #include "src/platforms/mesa/server/x11/display.h"
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_x11.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_x11.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

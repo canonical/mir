@@ -23,7 +23,7 @@
 #include "mir_test_framework/stub_platform_helpers.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test/validity_matchers.h"
+#include "mir/test/validity_matchers.h"
 
 #include "src/include/client/mir/client_buffer.h"
 
