@@ -111,6 +111,9 @@ public:
         report{report},
         started_future{started.get_future()}
     {
+        char const* env = getenv("MIR_FORCE_FRAME_SLEEP");
+        if (env != NULL)
+            force_sleep = std::chrono::milliseconds(atoi(env));
     }
 
     void operator()() noexcept  // noexcept is important! (LP: #1237332)
@@ -156,6 +159,17 @@ public:
         std::unique_lock<std::mutex> lock{run_mutex};
         while (running)
         {
+            /*
+             * "Predictive bypass" optimization: If the last frame was
+             * bypassed/overlayed or you simply have a fast GPU, it is
+             * beneficial to sleep for most of a frame. This reduces the
+             * latency between snapshotting the scene and the physical
+             * display scan-out by up to one frame...
+             */
+            auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
+                         force_sleep : group.recommended_sleep();
+            std::this_thread::sleep_for(delay);
+
             /* Wait until compositing has been scheduled or we are stopped */
             run_cv.wait(lock, [&]{ return (frames_scheduled > 0) || !running; });
 
@@ -231,6 +245,7 @@ private:
     std::shared_ptr<mc::Scene> const scene;
     bool running;
     int frames_scheduled;
+    std::chrono::milliseconds force_sleep{-1};
     std::mutex run_mutex;
     std::condition_variable run_cv;
     std::shared_ptr<DisplayListener> const display_listener;
