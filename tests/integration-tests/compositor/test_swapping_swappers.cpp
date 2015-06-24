@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "multithread_harness.h"
 
 #include "src/server/compositor/buffer_queue.h"

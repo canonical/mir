@@ -21,15 +21,15 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/platform_ipc_operations.h"
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/platform_factory.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/platform_factory.h"
 #ifdef MESA_KMS
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_gbm.h"
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
 #else
-#include "mir_test_doubles/mock_android_hw.h"
+#include "mir/test/doubles/mock_android_hw.h"
 #endif
 #include "mir/logging/dumb_console_logger.h"
 

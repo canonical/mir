@@ -17,7 +17,7 @@
  */
 
 #include "mir_test_framework/stub_client_platform_factory.h"
-#include "mir_test_doubles/stub_client_buffer_factory.h"
+#include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/client_buffer.h"
 #include "mir/client_platform.h"

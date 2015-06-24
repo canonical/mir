@@ -19,8 +19,8 @@
 #include "touch_producing_server.h"
 #include "vsync_simulating_graphics_platform.h"
 
-#include "mir_test/event_factory.h"
-#include "mir_test/fake_event_hub.h"
+#include "mir/test/event_factory.h"
+#include "mir/test/fake_event_hub.h"
 #include "mir/geometry/displacement.h"
 
 #include <functional>

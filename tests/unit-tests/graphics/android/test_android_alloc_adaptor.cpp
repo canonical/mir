@@ -20,8 +20,8 @@
 #include "src/platforms/android/server/device_quirks.h"
 #include "mir/graphics/android/native_buffer.h"
 
-#include "mir_test_doubles/mock_android_alloc_device.h"
-#include "mir_test_doubles/mock_alloc_adaptor.h"
+#include "mir/test/doubles/mock_android_alloc_device.h"
+#include "mir/test/doubles/mock_alloc_adaptor.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

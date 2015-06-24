@@ -19,7 +19,7 @@
 
 #include "mir/scene/buffer_stream_factory.h"
 
-#include "mir_test_doubles/stub_buffer_stream.h"
+#include "mir/test/doubles/stub_buffer_stream.h"
 
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/basic_client_server_fixture.h"

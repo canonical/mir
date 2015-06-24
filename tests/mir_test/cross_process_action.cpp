@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir_test/cross_process_action.h"
+#include "mir/test/cross_process_action.h"
 
 namespace mt = mir::test;
 
