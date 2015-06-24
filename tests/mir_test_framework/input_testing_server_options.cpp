@@ -24,7 +24,7 @@
 #include "mir/frontend/session.h"
 #include "mir/input/composite_event_filter.h"
 
-#include "mir_test/wait_condition.h"
+#include "mir/test/wait_condition.h"
 
 #include <boost/throw_exception.hpp>
 

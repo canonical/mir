@@ -20,8 +20,8 @@
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test/signal.h"
-#include "mir_test/auto_unblock_thread.h"
+#include "mir/test/signal.h"
+#include "mir/test/auto_unblock_thread.h"
 
 #include "mir_toolkit/mir_client_library.h"
 

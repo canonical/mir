@@ -18,10 +18,10 @@
 
 #include "src/server/compositor/screencast_display_buffer.h"
 
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/stub_renderable.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/stub_renderable.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

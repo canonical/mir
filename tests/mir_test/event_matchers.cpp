@@ -16,7 +16,7 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir_test/event_matchers.h"
+#include "mir/test/event_matchers.h"
 
 #include "mir/event_printer.h"
 
