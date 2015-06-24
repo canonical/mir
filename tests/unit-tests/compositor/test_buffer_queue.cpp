@@ -868,7 +868,7 @@ TEST_P(WithTwoOrMoreBuffers, client_framerate_matches_compositor)
 }
 
 /* Regression test LP: #1241369 / LP: #1241371 */
-TEST_F(WithThreeOrMoreBuffers, slow_client_framerate_matches_compositor)
+TEST_P(WithThreeOrMoreBuffers, slow_client_framerate_matches_compositor)
 {
     /* BufferQueue can only satify this for nbuffers >= 3
      * since a client can only own up to nbuffers - 1 at any one time
@@ -1017,7 +1017,7 @@ TEST_P(WithAnyNumberOfBuffers, compositor_acquires_resized_frames)
     }
 }
 
-TEST_F(WithTwoOrMoreBuffers, framedropping_policy_never_drops_newest_frame)
+TEST_P(WithTwoOrMoreBuffers, framedropping_policy_never_drops_newest_frame)
 {  // Regression test for LP: #1396006
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue q(nbuffers,
@@ -1052,7 +1052,7 @@ TEST_F(WithTwoOrMoreBuffers, framedropping_policy_never_drops_newest_frame)
     q.compositor_release(d);
 }
 
-TEST_F(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
+TEST_P(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
 {  // Second regression test for LP: #1396006, LP: #1379685
     mc::BufferQueue q(nbuffers,
                       allocator,
@@ -1092,7 +1092,7 @@ TEST_F(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
                 end->buffer() != order.back());
 }
 
-TEST_F(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
+TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
 {
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue q(nbuffers,
@@ -1114,7 +1114,7 @@ TEST_F(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
     EXPECT_TRUE(handle->has_acquired_buffer());
 }
 
-TEST_F(WithTwoOrMoreBuffers, partially_composited_client_swaps_when_policy_triggered)
+TEST_P(WithTwoOrMoreBuffers, partially_composited_client_swaps_when_policy_triggered)
 {
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue q(nbuffers,
@@ -1236,7 +1236,7 @@ TEST_F(BufferQueueWithTwoBuffers, composite_on_demand_never_deadlocks_with_2_buf
     }
 }
 
-TEST_F(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
+TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
 {  // Regression test for LP: #1395581
     mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
 
@@ -1268,7 +1268,7 @@ TEST_F(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
     q.compositor_release(c);
 }
 
-TEST_F(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
+TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
 {
     mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
 
