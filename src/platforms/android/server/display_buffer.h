@@ -66,6 +66,7 @@ public:
     void configure(MirPowerMode power_mode, MirOrientation orientation, geometry::Displacement) override;
     DisplayContents contents() override;
     MirPowerMode power_mode() const override;
+    std::chrono::milliseconds recommended_sleep() const override;
 private:
     DisplayName display_name;
     std::unique_ptr<LayerList> layer_list;

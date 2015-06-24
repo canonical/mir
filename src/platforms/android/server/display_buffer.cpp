@@ -126,3 +126,9 @@ MirPowerMode mga::DisplayBuffer::power_mode() const
 {
     return power_mode_;
 }
+
+std::chrono::milliseconds mga::DisplayBuffer::recommended_sleep() const
+{
+    // TODO
+    return std::chrono::milliseconds::zero();
+}

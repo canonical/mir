@@ -64,6 +64,7 @@ public:
     void gl_swap_buffers() override;
 
     MirOrientation orientation() const override;
+    std::chrono::milliseconds recommended_sleep() const override;
 
 private:
     geometry::Rectangle const rect;

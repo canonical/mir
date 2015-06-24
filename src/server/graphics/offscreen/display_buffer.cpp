@@ -157,3 +157,8 @@ MirOrientation mgo::DisplayBuffer::orientation() const
      */
     return mir_orientation_normal;
 }
+
+std::chrono::milliseconds mgo::DisplayBuffer::recommended_sleep() const
+{
+    return std::chrono::milliseconds::zero();
+}
