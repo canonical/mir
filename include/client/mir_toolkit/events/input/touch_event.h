@@ -141,6 +141,14 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
 float mir_touch_event_axis_value(MirTouchEvent const* event, 
     size_t touch_index, MirTouchAxis axis);
 
+/*
+ * Retrieve the time at which a touch event occurred.
+ *
+ * \param [in] event The touch event
+ * \return           A timestamp in nanoseconds-since-epoch
+ */
+int64_t mir_touch_event_timestamp(MirTouchEvent const* event);
+
 #ifdef __cplusplus
 }
 /**@}*/

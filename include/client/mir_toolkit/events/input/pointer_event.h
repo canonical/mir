@@ -122,6 +122,14 @@ MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event);
 float mir_pointer_event_axis_value(MirPointerEvent const* event, 
     MirPointerAxis axis);
 
+/*
+ * Retrieve the time at which a pointer event occurred.
+ *
+ * \param [in] event The pointer event
+ * \return           A timestamp in nanoseconds-since-epoch
+ */
+int64_t mir_pointer_event_timestamp(MirPointerEvent const* event);
+
 #ifdef __cplusplus
 }
 /**@}*/

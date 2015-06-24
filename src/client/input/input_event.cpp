@@ -187,6 +187,24 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
     }
 }
 
+int64_t mir_pointer_event_timestamp(MirPointerEvent const* event)
+{
+    auto const& old_ev = old_mev_from_new(event);
+    return old_ev.event_time.count();
+}
+
+int64_t mir_keyboard_event_timestamp(MirKeyboardEvent const* event)
+{
+    auto const& old_ev = old_kev_from_new(event);
+    return old_ev.event_time.count();
+}
+
+int64_t mir_touch_event_timestamp(MirTouchEvent const* event)
+{
+    auto const& old_ev = old_mev_from_new(event);
+    return old_ev.event_time.count();
+}
+
 /* Key event accessors */
 
 MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* ev)
