@@ -37,8 +37,6 @@ public:
     void gl_swap_buffers() override {}
     bool post_renderables_if_optimizable(graphics::RenderableList const&) override { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
-    std::chrono::milliseconds recommended_sleep() const override
-        { return std::chrono::milliseconds::zero(); }
 };
 
 }

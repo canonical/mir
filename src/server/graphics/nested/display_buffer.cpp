@@ -137,9 +137,3 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
         dispatcher->dispatch(event);
     }
 }
-
-std::chrono::milliseconds mgn::detail::DisplayBuffer::recommended_sleep() const
-{
-    // TODO: Figure out if/when it would ever make sense for this in nested...
-    return std::chrono::milliseconds::zero();
-}

@@ -58,7 +58,6 @@ public:
     void release_current() override;
     void gl_swap_buffers() override;
     MirOrientation orientation() const override;
-    std::chrono::milliseconds recommended_sleep() const override;
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 

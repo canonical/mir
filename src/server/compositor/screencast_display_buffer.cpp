@@ -99,8 +99,3 @@ MirOrientation mc::ScreencastDisplayBuffer::orientation() const
 {
     return mir_orientation_normal;
 }
-
-std::chrono::milliseconds mc::ScreencastDisplayBuffer::recommended_sleep() const
-{
-    return std::chrono::milliseconds::zero();
-}

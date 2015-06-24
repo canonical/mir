@@ -71,8 +71,6 @@ public:
     void schedule_set_crtc();
     void wait_for_page_flip();
 
-    std::chrono::milliseconds recommended_sleep() const override;
-
 private:
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
