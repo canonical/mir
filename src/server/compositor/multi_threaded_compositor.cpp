@@ -168,7 +168,9 @@ public:
              */
             auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
                          force_sleep : group.recommended_sleep();
+            lock.unlock();
             std::this_thread::sleep_for(delay);
+            lock.lock();
 
             /* Wait until compositing has been scheduled or we are stopped */
             run_cv.wait(lock, [&]{ return (frames_scheduled > 0) || !running; });
