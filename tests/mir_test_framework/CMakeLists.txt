@@ -41,7 +41,7 @@ set(
   stub_client_platform_factory.cpp
   stub_server_platform_factory.cpp
   udev_environment.cpp
-  declarative_placement_strategy.cpp
+  declarative_placement_window_manage_policy.cpp
   fake_event_hub_server_configuration.cpp
   any_surface.cpp
   headless_nested_server_runner.cpp

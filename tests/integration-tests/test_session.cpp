@@ -21,7 +21,6 @@
 #include "mir/compositor/compositor.h"
 #include "src/server/scene/application_session.h"
 #include "src/server/scene/pixel_buffer.h"
-#include "mir/scene/placement_strategy.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/null_session_listener.h"
