@@ -305,6 +305,8 @@ void mgm::DisplayBuffer::post()
 
         // It's very likely the next frame will be bypassed like this one so
         // we only need time for kernel page flip scheduling...
+        // TODO: Retest on slow netbooks. Seems slightly too pessimistic in
+        //       the new design, slightly laggier.
         predicted_render_time = 5ms;
     }
     else
