@@ -20,7 +20,7 @@
 
 #include "mir/graphics/platform.h"
 
-#ifndef ANDROID
+#ifdef MESA_KMS
 #include "src/platforms/mesa/server/kms/platform.h"
 #endif
 
