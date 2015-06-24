@@ -13,8 +13,6 @@ include_directories(
     ${UDEV_INCLUDE_DIRS}
 )
 
-add_definitions(-DDEBUG_SERVER=0)
-
 add_library(
   mirplatformservermesax11objects OBJECT
 
@@ -24,10 +22,10 @@ add_library(
   gl_context.cpp
   display_group.cpp
   display_buffer.cpp
-  input/X_input.cpp
-  input/X_input_platform.cpp
-  input/X_input_device.cpp
-  input/X_dispatchable.cpp
+  input/input.cpp
+  input/input_platform.cpp
+  input/input_device.cpp
+  input/dispatchable.cpp
 )
 
 add_library(

@@ -16,15 +16,17 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "X_dispatchable.h"
+#include "dispatchable.h"
 #include "mir/events/event_private.h"
-#include "../debug.h"
 
 #include <chrono>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <linux/input.h>
 #include <inttypes.h>
+
+#define MIR_LOG_COMPONENT "x11-dispatchable"
+#include "mir/log.h"
 
 namespace mi = mir::input;
 namespace mix = mi::X;
@@ -35,21 +37,16 @@ extern ::Display *x_display;
 mix::XDispatchable::XDispatchable(int raw_fd)
     : fd(raw_fd), sink(nullptr)
 {
-    CALLED
 }
 
 mir::Fd mix::XDispatchable::watch_fd() const
 {
-    CALLED
-
     return fd;
 }
 
 bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
 {
     XEvent xev;
-
-    CALLED
 
     XNextEvent(x_display, &xev);
 
@@ -114,21 +111,15 @@ bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
 
 md::FdEvents mix::XDispatchable::relevant_events() const
 {
-    CALLED
-
     return md::FdEvent::readable;
 }
 
 void mix::XDispatchable::set_input_sink(mi::InputSink *input_sink)
 {
-    CALLED
-
     sink = input_sink;
 }
 
 void mix::XDispatchable::unset_input_sink()
 {
-    CALLED
-
     sink = nullptr;
 }

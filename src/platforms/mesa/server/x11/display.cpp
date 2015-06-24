@@ -23,11 +23,13 @@
 #include "display.h"
 #include "display_buffer.h"
 #include "gl_context.h"
-#include "debug.h"
 
 #include <boost/throw_exception.hpp>
 #include <fcntl.h>
 #include <mutex>
+
+#define MIR_LOG_COMPONENT "x11-display"
+#include "mir/log.h"
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
@@ -46,8 +48,6 @@ mgx::Display::Display(::Display *dpy)
     int num_visuals;
     unsigned long mask;
     char const * const title = "Mir On X";
-
-    CALLED
 
     egl_dpy = eglGetDisplay(x_dpy);
     if (!egl_dpy)
@@ -170,26 +170,22 @@ mgx::Display::~Display() noexcept
 
 void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
 {
-	CALLED
     f(*display_group);
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
-	CALLED
     return std::make_unique<mgx::DisplayConfiguration>(pf, display_width, display_height);
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& /*new_configuration*/)
 {
-	CALLED
 }
 
 void mgx::Display::register_configuration_change_handler(
     EventHandlerRegister& /* event_handler*/,
     DisplayConfigurationChangeHandler const& /*change_handler*/)
 {
-	CALLED
 }
 
 void mgx::Display::register_pause_resume_handlers(
@@ -197,27 +193,22 @@ void mgx::Display::register_pause_resume_handlers(
     DisplayPauseHandler const& /*pause_handler*/,
     DisplayResumeHandler const& /*resume_handler*/)
 {
-	CALLED
 }
 
 void mgx::Display::pause()
 {
-	CALLED
 }
 
 void mgx::Display::resume()
 {
-	CALLED
 }
 
 auto mgx::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial_image */) -> std::shared_ptr<Cursor>
 {
-	CALLED
     return nullptr;
 }
 
 std::unique_ptr<mg::GLContext> mgx::Display::create_gl_context()
 {
-	CALLED
     return std::make_unique<mgx::XGLContext>(egl_dpy, egl_surf, egl_ctx);
 }

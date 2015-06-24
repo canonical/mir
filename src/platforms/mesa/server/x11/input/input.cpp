@@ -16,10 +16,9 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "X_input_platform.h"
+#include "input_platform.h"
 #include "mir/module_properties.h"
 #include "mir/input/platform.h"
-#include "../debug.h"
 
 namespace mo = mir::options;
 namespace mi = mir::input;
@@ -31,22 +30,17 @@ extern "C" mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::InputReport> const& /*report*/)
 {
-    CALLED
-
     return mir::make_module_ptr<mix::XInputPlatform>(input_device_registry);
 }
 
 extern "C" void add_input_platform_options(
     boost::program_options::options_description& /*config*/)
 {
-    CALLED
 }
 
 extern "C" mi::PlatformPriority probe_input_platform(
     mo::Option const& /*options*/)
 {
-    CALLED
-
     return mi::PlatformPriority::best;
 }
 
@@ -62,7 +56,5 @@ mir::ModuleProperties const description = {
 
 extern "C" mir::ModuleProperties const* describe_input_module()
 {
-    CALLED
-
     return &description;
 }

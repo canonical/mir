@@ -21,7 +21,6 @@
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
 #include "mir/udev/wrapper.h"
-#include "debug.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -36,8 +35,6 @@ mgx::Platform::Platform()
     : udev{std::make_shared<mir::udev::Context>()},
        drm{std::make_shared<mesa::helpers::DRMHelper>(true)}
 {
-   CALLED
-
    x_dpy = XOpenDisplay(NULL);
    if (!x_dpy)
        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot open X display"));
@@ -55,8 +52,6 @@ mgx::Platform::~Platform()
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator()
 {
-    CALLED
-
     return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, true);
 }
 
@@ -65,22 +60,16 @@ std::shared_ptr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<GLProgramFactory> const&,
     std::shared_ptr<GLConfig> const& /*gl_config*/)
 {
-    CALLED
-
     return std::make_shared<mgx::Display>(x_dpy);
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
 {
-    CALLED
-
     return std::make_shared<mg::mesa::IpcOperations>(drm, false);
 }
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
-    CALLED
-
     return eglGetDisplay(x_dpy);
 }
 
@@ -93,8 +82,6 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<DisplayReport> const& /*report*/)
 {
-    CALLED
-
     return std::make_shared<mgx::Platform>();
 }
 
@@ -102,21 +89,16 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& /*report*/,
     std::shared_ptr<mg::NestedContext> const&)
 {
-    CALLED
-
     BOOST_THROW_EXCEPTION(std::runtime_error("Guest platform isn't supported under X"));
     return nullptr;
 }
 
 extern "C" void add_graphics_platform_options(boost::program_options::options_description& /*config*/)
 {
-    CALLED
 }
 
 extern "C" mg::PlatformPriority probe_graphics_platform()
 {
-    CALLED
-
     auto dpy = XOpenDisplay(NULL);
     if (dpy)
     {
@@ -147,7 +129,5 @@ mir::ModuleProperties const description = {
 
 extern "C" mir::ModuleProperties const* describe_graphics_module()
 {
-    CALLED
-
     return &description;
 }

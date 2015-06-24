@@ -187,14 +187,10 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(LibHardware REQUIRED)
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
-endif()
-
-if (MIR_BUILD_PLATFORM_MESA_X11)
-#TODO: Fill this in.
 endif()
 
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input

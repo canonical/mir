@@ -38,7 +38,6 @@ struct EGLExtensions;
 
 namespace mesa
 {
-
 class BufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:

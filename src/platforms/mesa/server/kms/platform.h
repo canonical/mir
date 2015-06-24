@@ -19,8 +19,8 @@
 #ifndef MIR_GRAPHICS_MESA_PLATFORM_H_
 #define MIR_GRAPHICS_MESA_PLATFORM_H_
 
-#include "platform_common.h"
 #include "mir/graphics/platform.h"
+#include "platform_common.h"
 #include "display_helpers.h"
 
 namespace mir

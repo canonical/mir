@@ -54,7 +54,11 @@ public:
     EGLImageBufferTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
                                 std::shared_ptr<mg::EGLExtensions> const& egl_extensions,
                                 bool const use_dma_buf_extension)
-        : bo{gbm_bo}, egl_extensions{egl_extensions}, egl_image{EGL_NO_IMAGE_KHR}, prime_fd{-1}, use_dma_buf_extension{use_dma_buf_extension}
+        : bo{gbm_bo},
+          egl_extensions{egl_extensions},
+          egl_image{EGL_NO_IMAGE_KHR},
+          prime_fd{-1},
+          use_dma_buf_extension{use_dma_buf_extension}
     {
     }
 
@@ -62,7 +66,7 @@ public:
     {
         if (egl_image != EGL_NO_IMAGE_KHR)
             egl_extensions->eglDestroyImageKHR(egl_display, egl_image);
-        if (prime_fd > 0)
+        if (prime_fd > -1)
             close(prime_fd);
     }
 

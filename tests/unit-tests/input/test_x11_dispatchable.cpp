@@ -18,7 +18,7 @@
 
 #include "mir/events/event_private.h"
 #include "mir_toolkit/event.h"
-#include "src/platforms/mesa/server/x11/input/X_dispatchable.h"
+#include "src/platforms/mesa/server/x11/input/dispatchable.h"
 #include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/doubles/mock_x11.h"
 
