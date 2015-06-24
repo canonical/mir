@@ -50,6 +50,7 @@ char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::nbuffers_opt                = "nbuffers";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
+char const* const mo::enable_legacy_input_stack   = "enable-legacy-input-stack";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
@@ -181,6 +182,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Display visualization of touchspots (e.g. for screencasting).")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
+        (enable_legacy_input_stack, po::value<bool>()->default_value(false),
+             "Enable legacy input stack")
         (fatal_abort_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
             "in unexpected ways] abort (to get a core dump)")
         (debug_opt, "Enable extra development debugging. "
