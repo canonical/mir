@@ -65,7 +65,7 @@ public:
 
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
     {
-#ifndef ANDROID
+#ifdef MESA_KMS
         auto native_buffer = std::make_shared<mg::NativeBuffer>();
         native_buffer->data_items = 1;
         native_buffer->data[0] = 0xDEADBEEF;
@@ -124,7 +124,7 @@ class StubIpcOps : public mg::PlatformIpcOperations
     {
         if (msg_type == mg::BufferIpcMsgType::full_msg)
         {
-#ifndef ANDROID
+#ifdef MESA_KMS
             auto native_handle = buffer.native_buffer_handle();
             for(auto i=0; i<native_handle->data_items; i++)
             {

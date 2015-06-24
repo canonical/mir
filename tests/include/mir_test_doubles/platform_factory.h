@@ -35,7 +35,7 @@ namespace doubles
 
 std::shared_ptr<graphics::Platform> create_platform_with_null_dependencies();
 
-#ifndef ANDROID
+#ifdef MESA_KMS
 std::shared_ptr<graphics::mesa::Platform> create_mesa_platform_with_null_dependencies();
 #endif
 

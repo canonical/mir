@@ -167,7 +167,11 @@ mcl::BufferStream::~BufferStream()
 void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    
+    process_buffer(buffer, lock);
+}
+
+void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&)
+{
     auto buffer_package = std::make_shared<MirBufferPackage>();
     populate_buffer_package(*buffer_package, buffer);
     
@@ -202,6 +206,37 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 
     secured_region.reset();
 
+    if (using_exchange_buffer)
+        return exchange(done, std::move(lock));
+    return submit(done, std::move(lock));
+}
+
+MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std::unique_lock<std::mutex> lock)
+{
+    //always submit what we have, whether we have a buffer, or will have to wait for an async reply
+    auto request = mcl::make_protobuf_object<mp::BufferRequest>();
+    request->mutable_id()->set_value(protobuf_bs->id().value());
+    request->mutable_buffer()->set_buffer_id(protobuf_bs->buffer().buffer_id());
+    display_server.submit_buffer(nullptr, request.get(), protobuf_void.get(),
+        google::protobuf::NewCallback(google::protobuf::DoNothing));
+
+    if (incoming_buffers.empty())
+    {
+        next_buffer_wait_handle.expect_result();
+        on_incoming_buffer = done; 
+    }
+    else
+    {
+        process_buffer(incoming_buffers.front(), lock);
+        incoming_buffers.pop();
+        done();
+    }
+    return &next_buffer_wait_handle;
+}
+
+MirWaitHandle* mcl::BufferStream::exchange(
+    std::function<void()> const& done, std::unique_lock<std::mutex> lock)
+{
     // TODO: We can fix the strange "ID casting" used below in the second phase
     // of buffer stream which generalizes and clarifies the server side logic.
     if (mode == mcl::BufferStreamMode::Producer)
@@ -394,4 +429,22 @@ bool mcl::BufferStream::valid() const
 void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
 {
     buffer_depository.set_max_buffers(cache_size);
+}
+
+void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    using_exchange_buffer = false; //this stream uses async exchange from here on out
+
+    if (on_incoming_buffer)
+    {
+        process_buffer(buffer, lock);
+        next_buffer_wait_handle.result_received();
+        on_incoming_buffer();
+        on_incoming_buffer = std::function<void()>{};
+    }
+    else
+    {
+        incoming_buffers.push(buffer);
+    }
 }
