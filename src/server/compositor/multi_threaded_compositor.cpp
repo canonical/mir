@@ -111,7 +111,7 @@ public:
         report{report},
         started_future{started.get_future()}
     {
-        char const* env = getenv("MIR_FORCE_FRAME_SLEEP");
+        char const* env = getenv("MIR_SERVER_COMPOSITE_DELAY");
         if (env != NULL)
             force_sleep = std::chrono::milliseconds(atoi(env));
     }
