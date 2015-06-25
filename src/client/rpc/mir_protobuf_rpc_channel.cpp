@@ -253,6 +253,17 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
     if (seq->has_buffer_request())
     {
+        std::array<char, 1> dummy;
+        auto const num_fds = seq->mutable_buffer_request()->mutable_buffer()->fds_on_side_channel();
+        std::vector<mir::Fd> fds(num_fds);
+        if (num_fds > 0)
+        {
+            transport->receive_data(dummy.data(), dummy.size(), fds);
+            seq->mutable_buffer_request()->mutable_buffer()->clear_fd();
+            for(auto& fd : fds)
+                seq->mutable_buffer_request()->mutable_buffer()->add_fd(fd);
+        }
+
         surface_map->with_stream_do(mf::BufferStreamId(seq->buffer_request().id().value()),
         [&] (mcl::ClientBufferStream* stream) {
             stream->buffer_available(seq->buffer_request().buffer());
