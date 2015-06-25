@@ -21,8 +21,8 @@
 #include "mir/input/device_capability.h"
 #include "mir/input/input_device_info.h"
 
-#include "mir_test/barrier.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/barrier.h"
+#include "mir/test/fake_shared.h"
 
 #include "mir_test_framework/deferred_in_process_server.h"
 #include "mir_test_framework/input_testing_server_configuration.h"

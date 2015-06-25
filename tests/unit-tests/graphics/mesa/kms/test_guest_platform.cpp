@@ -22,13 +22,13 @@
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 
-#include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_gbm.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_buffer_ipc_message.h"
-#include "mir_test_doubles/fd_matcher.h"
-#include "mir_test_doubles/mock_nested_context.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_buffer_ipc_message.h"
+#include "mir/test/doubles/fd_matcher.h"
+#include "mir/test/doubles/mock_nested_context.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

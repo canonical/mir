@@ -26,15 +26,15 @@
 #include "mir/scene/observer.h"
 #include "mir/raii.h"
 
-#include "mir_test/current_thread_name.h"
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_display_buffer.h"
-#include "mir_test_doubles/mock_display_buffer.h"
-#include "mir_test_doubles/mock_compositor_report.h"
-#include "mir_test_doubles/mock_scene.h"
-#include "mir_test_doubles/stub_scene.h"
-#include "mir_test_doubles/stub_display.h"
-#include "mir_test_doubles/null_display_buffer_compositor_factory.h"
+#include "mir/test/current_thread_name.h"
+#include "mir/test/doubles/null_display.h"
+#include "mir/test/doubles/null_display_buffer.h"
+#include "mir/test/doubles/mock_display_buffer.h"
+#include "mir/test/doubles/mock_compositor_report.h"
+#include "mir/test/doubles/mock_scene.h"
+#include "mir/test/doubles/stub_scene.h"
+#include "mir/test/doubles/stub_display.h"
+#include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 
 #include <boost/throw_exception.hpp>
 

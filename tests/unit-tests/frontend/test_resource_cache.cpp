@@ -17,7 +17,7 @@
  */
 
 #include "src/server/frontend/resource_cache.h"
-#include "mir_test_doubles/fd_matcher.h"
+#include "mir/test/doubles/fd_matcher.h"
 
 #include <thread>
 #include <atomic>

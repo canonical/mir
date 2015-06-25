@@ -21,9 +21,9 @@
 
 #include <mir_toolkit/mir_client_library.h>
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include "mir_test_framework/interprocess_client_server_test.h"
-#include "mir_test_doubles/stub_session_authorizer.h"
+#include "mir/test/doubles/stub_session_authorizer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

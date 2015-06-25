@@ -20,7 +20,7 @@
 #define MIR_TEST_FRAMEWORK_INTERPROCESS_CLIENT_SERVER_TEST_H_
 
 #include "mir_test_framework/headless_test.h"
-#include "mir_test/cross_process_sync.h"
+#include "mir/test/cross_process_sync.h"
 
 namespace mir_test_framework
 {

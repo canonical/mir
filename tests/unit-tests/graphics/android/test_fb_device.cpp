@@ -16,21 +16,21 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/mock_fb_hal_device.h"
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/stub_android_native_buffer.h"
+#include "mir/test/doubles/mock_fb_hal_device.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/stub_android_native_buffer.h"
 #include "src/platforms/android/server/fb_device.h"
 #include "src/platforms/android/server/hwc_fallback_gl_renderer.h"
 #include "src/platforms/android/server/hwc_layerlist.h"
-#include "mir_test_doubles/mock_framebuffer_bundle.h"
-#include "mir_test_doubles/mock_android_hw.h"
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/stub_renderable.h"
-#include "mir_test_doubles/mock_android_native_buffer.h"
-#include "mir_test_doubles/mock_swapping_gl_context.h"
-#include "mir_test_doubles/stub_renderable_list_compositor.h"
-#include "mir_test_doubles/mock_renderable_list_compositor.h"
+#include "mir/test/doubles/mock_framebuffer_bundle.h"
+#include "mir/test/doubles/mock_android_hw.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_renderable.h"
+#include "mir/test/doubles/mock_android_native_buffer.h"
+#include "mir/test/doubles/mock_swapping_gl_context.h"
+#include "mir/test/doubles/stub_renderable_list_compositor.h"
+#include "mir/test/doubles/mock_renderable_list_compositor.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>

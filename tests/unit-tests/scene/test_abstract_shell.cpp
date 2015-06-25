@@ -28,16 +28,16 @@
 #include "src/server/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
 
-#include "mir_test_doubles/mock_window_manager.h"
-#include "mir_test_doubles/mock_surface_coordinator.h"
-#include "mir_test_doubles/mock_session_listener.h"
-#include "mir_test_doubles/mock_surface.h"
-#include "mir_test_doubles/null_snapshot_strategy.h"
-#include "mir_test_doubles/null_prompt_session_manager.h"
-#include "mir_test_doubles/stub_input_targeter.h"
-#include "mir_test_doubles/stub_buffer_stream_factory.h"
+#include "mir/test/doubles/mock_window_manager.h"
+#include "mir/test/doubles/mock_surface_coordinator.h"
+#include "mir/test/doubles/mock_session_listener.h"
+#include "mir/test/doubles/mock_surface.h"
+#include "mir/test/doubles/null_snapshot_strategy.h"
+#include "mir/test/doubles/null_prompt_session_manager.h"
+#include "mir/test/doubles/stub_input_targeter.h"
+#include "mir/test/doubles/stub_buffer_stream_factory.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

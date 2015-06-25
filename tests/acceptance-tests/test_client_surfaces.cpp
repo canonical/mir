@@ -21,7 +21,7 @@
 
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test/validity_matchers.h"
+#include "mir/test/validity_matchers.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

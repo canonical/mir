@@ -17,9 +17,9 @@
  */
 
 #include "mir/graphics/renderable.h"
-#include "mir_test_doubles/fake_renderable.h"
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/mock_egl.h"
+#include "mir/test/doubles/fake_renderable.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/mock_egl.h"
 #include "playground/demo-shell/demo_renderer.h"
 #include <gtest/gtest.h>
 

@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir_test/fake_clock.h"
+#include "mir/test/fake_clock.h"
 
 namespace mt = mir::test;
 

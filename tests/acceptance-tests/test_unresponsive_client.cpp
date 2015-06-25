@@ -23,8 +23,8 @@
 #include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/any_surface.h"
 
-#include "mir_test/cross_process_action.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/cross_process_action.h"
+#include "mir/test/fake_shared.h"
 
 #include "mir_toolkit/mir_client_library.h"
 

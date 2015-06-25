@@ -15,7 +15,7 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-#include "mir_test/event_factory.h"
+#include "mir/test/event_factory.h"
 
 namespace mis = mir::input::synthesis;
 namespace geom = mir::geometry;
