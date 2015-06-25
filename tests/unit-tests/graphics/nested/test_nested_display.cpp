@@ -20,7 +20,7 @@
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/graphics/nested/host_surface.h"
 #include "src/server/report/null/display_report.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "src/server/input/null_input_dispatcher.h"
 #include "mir_display_configuration_builder.h"
 
@@ -79,7 +79,7 @@ struct NestedDisplay : testing::Test
     testing::NiceMock<mtd::MockEGL> mock_egl;
     mi::NullInputDispatcher null_input_dispatcher;
     mir::report::null::DisplayReport null_display_report;
-    mg::DefaultDisplayConfigurationPolicy default_conf_policy;
+    mg::CloneDisplayConfigurationPolicy default_conf_policy;
     mtd::StubGLConfig stub_gl_config;
     std::shared_ptr<mtd::NullPlatform> null_platform{
         std::make_shared<mtd::NullPlatform>()};

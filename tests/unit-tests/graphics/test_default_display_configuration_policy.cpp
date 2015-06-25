@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/server/graphics/default_display_configuration_policy.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
 
 #include <gtest/gtest.h>
@@ -165,7 +165,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
 {
     using namespace ::testing;
 
-    DefaultDisplayConfigurationPolicy policy;
+    CloneDisplayConfigurationPolicy policy;
     MockDisplayConfiguration conf{create_default_configuration()};
 
     policy.apply_to(conf);
@@ -189,7 +189,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
 {
     using namespace ::testing;
 
-    DefaultDisplayConfigurationPolicy policy;
+    CloneDisplayConfigurationPolicy policy;
     MockDisplayConfiguration conf{create_default_configuration()};
 
     policy.apply_to(conf);
@@ -204,7 +204,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_orientation_is_normal)
 {
     using namespace ::testing;
 
-    DefaultDisplayConfigurationPolicy policy;
+    CloneDisplayConfigurationPolicy policy;
     MockDisplayConfiguration conf{create_default_configuration()};
 
     conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
@@ -218,7 +218,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_su
     using namespace ::testing;
 
     size_t const max_simultaneous_outputs{1};
-    DefaultDisplayConfigurationPolicy policy;
+    CloneDisplayConfigurationPolicy policy;
     MockDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
 
     policy.apply_to(conf);
@@ -237,7 +237,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, prefer_opaque_over_alpha)
 {
     using namespace ::testing;
 
-    DefaultDisplayConfigurationPolicy policy;
+    CloneDisplayConfigurationPolicy policy;
     MockDisplayConfiguration pick_xrgb{ { connected_with_rgba_and_xrgb() } };
 
     policy.apply_to(pick_xrgb);
@@ -252,7 +252,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, preserve_opaque_selection)
 {
     using namespace ::testing;
 
-    DefaultDisplayConfigurationPolicy policy;
+    CloneDisplayConfigurationPolicy policy;
     MockDisplayConfiguration keep_bgr{ { connected_with_xrgb_bgr() } };
 
     policy.apply_to(keep_bgr);
@@ -267,7 +267,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, accept_transparency_when_only_option
 {
     using namespace ::testing;
 
-    DefaultDisplayConfigurationPolicy policy;
+    CloneDisplayConfigurationPolicy policy;
     MockDisplayConfiguration pick_rgba{ { default_output(DisplayConfigurationOutputId{15}) } };
 
     policy.apply_to(pick_rgba);
