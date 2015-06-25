@@ -71,7 +71,8 @@ struct BufferQueueProducer : ProducerSystem
     BufferQueueProducer(mc::BufferStream& stream) :
         stream(stream)
     {
-        stream.swap_buffers(nullptr, std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
+        stream.swap_buffers(buffer,
+            std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
     }
 
     void produce()
@@ -84,16 +85,17 @@ struct BufferQueueProducer : ProducerSystem
             entries.emplace_back(BufferEntry{b->id(), age});
             buffer->write(reinterpret_cast<unsigned char const*>(&age), sizeof(age));
         }
-        stream.swap_buffers(b, std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
+        stream.swap_buffers(b,
+            std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
     }
 
     std::vector<BufferEntry> production_log()
     {
+        std::unique_lock<decltype(mutex)> lk(mutex);
         return entries;
     }
 
 private:
-    unsigned int age {0};
     mc::BufferStream& stream;
     void buffer_ready(mg::Buffer* b)
     {
@@ -101,7 +103,7 @@ private:
         buffer = b;
     }
     std::mutex mutex;
-    std::condition_variable cv;
+    unsigned int age {0};
     std::vector<BufferEntry> entries;
     mg::Buffer* buffer {nullptr};
 };
@@ -130,7 +132,7 @@ struct BufferQueueConsumer : ConsumerSystem
 };
 
 //schedule helpers
-using tick = std::chrono::duration<int, std::ratio<1,1000>>;
+using tick = std::chrono::duration<int, std::ratio<27182818, 31415926>>;
 constexpr tick operator ""_t(unsigned long long t)
 {
     return tick(t);
@@ -160,16 +162,12 @@ void run_system(std::vector<ScheduleEntry>& schedule)
 }
 
 //test infrastructure
-struct BufferScheduling : public Test
+struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
 {
     mtd::MockClientBufferFactory client_buffer_factory;
     mtd::StubBufferAllocator server_buffer_factory;
     mtd::StubFrameDroppingPolicyFactory stub_policy;
     mg::BufferProperties properties{geom::Size{3,3}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-};
-
-struct WithAnyNumberOfBuffers : BufferScheduling, ::testing::WithParamInterface<int>
-{
     int nbuffers = GetParam();
     mcl::ClientBufferDepository depository{mt::fake_shared(client_buffer_factory), nbuffers};
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, stub_policy};
@@ -177,37 +175,20 @@ struct WithAnyNumberOfBuffers : BufferScheduling, ::testing::WithParamInterface<
     BufferQueueProducer producer{stream};
     BufferQueueConsumer consumer{stream};
 };
-
-struct WithThreeOrMoreBuffers : BufferScheduling, ::testing::WithParamInterface<int>
-{
-    int nbuffers = GetParam();
-    mcl::ClientBufferDepository depository{mt::fake_shared(client_buffer_factory), nbuffers};
-    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, stub_policy};
-    mc::BufferStreamSurfaces stream{mt::fake_shared(queue)};
-    BufferQueueProducer producer{stream};
-    BufferQueueConsumer consumer{stream};
-};
-
-struct WithTwoOrMoreBuffers : BufferScheduling, ::testing::WithParamInterface<int>
-{
-    int nbuffers = GetParam();
-    mcl::ClientBufferDepository depository{mt::fake_shared(client_buffer_factory), nbuffers};
-    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, stub_policy};
-    mc::BufferStreamSurfaces stream{mt::fake_shared(queue)};
-    BufferQueueProducer producer{stream};
-    BufferQueueConsumer consumer{stream};
-};
+struct WithAnyNumberOfBuffers : BufferScheduling {};
+struct WithTwoOrMoreBuffers   : BufferScheduling {};
+struct WithThreeOrMoreBuffers : BufferScheduling {};
 }
 
 TEST_P(WithAnyNumberOfBuffers, all_buffers_consumed_in_interleaving_pattern)
 {
     std::vector<ScheduleEntry> schedule = {
-        ScheduleEntry{1_t,   {&producer}, {}},
-        ScheduleEntry{60_t,           {}, {&consumer}},
-        ScheduleEntry{61_t,  {&producer}, {}},
-        ScheduleEntry{120_t,          {}, {&consumer}},
-        ScheduleEntry{121_t, {&producer}, {}},
-        ScheduleEntry{180_t,          {}, {&consumer}},
+        {1_t,   {&producer}, {}},
+        {60_t,           {}, {&consumer}},
+        {61_t,  {&producer}, {}},
+        {120_t,          {}, {&consumer}},
+        {121_t, {&producer}, {}},
+        {180_t,          {}, {&consumer}},
     };
     run_system(schedule);
 
@@ -218,40 +199,21 @@ TEST_P(WithAnyNumberOfBuffers, all_buffers_consumed_in_interleaving_pattern)
     EXPECT_THAT(consumption_log, ContainerEq(production_log));
 }
 
-TEST_P(WithThreeOrMoreBuffers, synchronous_overproducing_client_has_all_buffers_consumed)
-{
-    std::vector<ScheduleEntry> schedule = {
-        ScheduleEntry{1_t,   {&producer}, {}},
-        ScheduleEntry{60_t,           {}, {&consumer}},
-        ScheduleEntry{61_t,  {&producer}, {}},
-        ScheduleEntry{62_t,  {&producer}, {}},
-        ScheduleEntry{120_t,          {}, {&consumer}},
-        ScheduleEntry{180_t,          {}, {&consumer}},
-    };
-    run_system(schedule);
-
-    auto production_log = producer.production_log();
-    auto consumption_log = consumer.consumption_log();
-    EXPECT_THAT(production_log, Not(IsEmpty()));
-    EXPECT_THAT(consumption_log, Not(IsEmpty()));
-    EXPECT_THAT(consumption_log, ContainerEq(production_log));
-}
-
-TEST_P(WithTwoOrMoreBuffers, framedropping_clients_dont_block)
+TEST_P(WithTwoOrMoreBuffers, framedropping_producers_dont_block)
 {
     queue.allow_framedropping(true);
     std::vector<ScheduleEntry> schedule = {
-        ScheduleEntry{0_t,  {&producer}, {}},
-        ScheduleEntry{61_t, {&producer}, {}},
-        ScheduleEntry{62_t, {&producer}, {}},
-        ScheduleEntry{63_t, {&producer}, {}},
-        ScheduleEntry{64_t, {&producer}, {}},
-        ScheduleEntry{90_t,          {}, {&consumer}},
-        ScheduleEntry{91_t, {&producer}, {}},
-        ScheduleEntry{92_t, {&producer}, {}},
-        ScheduleEntry{93_t, {&producer}, {}},
-        ScheduleEntry{94_t, {&producer}, {}},
-        ScheduleEntry{120_t,         {}, {&consumer}},
+        {0_t,  {&producer}, {}},
+        {61_t, {&producer}, {}},
+        {62_t, {&producer}, {}},
+        {63_t, {&producer}, {}},
+        {64_t, {&producer}, {}},
+        {90_t,          {}, {&consumer}},
+        {91_t, {&producer}, {}},
+        {92_t, {&producer}, {}},
+        {93_t, {&producer}, {}},
+        {94_t, {&producer}, {}},
+        {120_t,         {}, {&consumer}},
     };
     run_system(schedule);
     auto production_log = producer.production_log();
@@ -260,15 +222,35 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_clients_dont_block)
     EXPECT_THAT(consumption_log, SizeIs(2));
 }
 
+TEST_P(WithThreeOrMoreBuffers, synchronous_overproducing_producers_has_all_buffers_consumed)
+{
+    std::vector<ScheduleEntry> schedule = {
+        {1_t,   {&producer}, {}},
+        {60_t,           {}, {&consumer}},
+        {61_t,  {&producer}, {}},
+        {62_t,  {&producer}, {}},
+        {120_t,          {}, {&consumer}},
+        {180_t,          {}, {&consumer}},
+    };
+    run_system(schedule);
+
+    auto production_log = producer.production_log();
+    auto consumption_log = consumer.consumption_log();
+    EXPECT_THAT(production_log, Not(IsEmpty()));
+    EXPECT_THAT(consumption_log, Not(IsEmpty()));
+    EXPECT_THAT(consumption_log, ContainerEq(production_log));
+}
+
+int const max_buffers_to_test{5};
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithAnyNumberOfBuffers,
-    Range(1, 5));
+    Range(1, max_buffers_to_test));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoOrMoreBuffers,
-    Range(2, 5));
+    Range(2, max_buffers_to_test));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeOrMoreBuffers,
-    Range(3, 5));
+    Range(3, max_buffers_to_test));
