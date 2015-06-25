@@ -101,19 +101,18 @@ public:
         mg::DisplaySyncGroup& group,
         std::shared_ptr<mc::Scene> const& scene,
         std::shared_ptr<DisplayListener> const& display_listener,
+        std::chrono::milliseconds fixed_composite_delay,
         std::shared_ptr<CompositorReport> const& report) :
         compositor_factory{db_compositor_factory},
         group(group),
         scene(scene),
         running{true},
         frames_scheduled{0},
+        force_sleep{fixed_composite_delay},
         display_listener{display_listener},
         report{report},
         started_future{started.get_future()}
     {
-        char const* env = getenv("MIR_SERVER_COMPOSITE_DELAY");
-        if (env != NULL)
-            force_sleep = std::chrono::milliseconds(atoi(env));
     }
 
     void operator()() noexcept  // noexcept is important! (LP: #1237332)
@@ -265,6 +264,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
     std::shared_ptr<DisplayListener> const& display_listener,
     std::shared_ptr<CompositorReport> const& compositor_report,
+    std::chrono::milliseconds fixed_composite_delay,
     bool compose_on_start)
     : display{display},
       scene{scene},
@@ -272,6 +272,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       display_listener{display_listener},
       report{compositor_report},
       state{CompositorState::stopped},
+      fixed_composite_delay{fixed_composite_delay},
       compose_on_start{compose_on_start},
       thread_pool{1}
 {
@@ -365,7 +366,8 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
     {
         auto thread_functor = std::make_unique<mc::CompositingFunctor>(
-            display_buffer_compositor_factory, group, scene, display_listener, report);
+            display_buffer_compositor_factory, group, scene, display_listener,
+            fixed_composite_delay, report);
 
         futures.push_back(thread_pool.run(std::ref(*thread_functor), &group));
         thread_functors.push_back(std::move(thread_functor));

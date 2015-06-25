@@ -49,6 +49,7 @@ char const* const mo::touchspots_opt              = "enable-touchspots";
 char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::nbuffers_opt                = "nbuffers";
+char const* const mo::composite_delay_opt         = "composite-delay";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
 
 char const* const mo::off_opt_value = "off";
@@ -173,6 +174,10 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "threads in frontend thread pool.")
         (nbuffers_opt, po::value<int>()->default_value(3),
             "Number of buffers per surface.")
+        (composite_delay_opt, po::value<int>()->default_value(-1),
+            "Compositor frame delay in milliseconds (how long to wait for new "
+            "frames from clients before compositing). Higher values result in "
+            "lower latency. Default: Automatically determined.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,
