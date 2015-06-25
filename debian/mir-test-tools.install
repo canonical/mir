@@ -4,6 +4,7 @@ usr/bin/mir_acceptance_tests
 usr/bin/mir_integration_tests
 usr/bin/mir_performance_tests
 usr/bin/mir_privileged_tests
+usr/bin/mir_test_reload_protobuf
 usr/lib/*/mir/tools/libmirclientlttng.so
 usr/lib/*/mir/tools/libmirserverlttng.so
 usr/lib/*/mir/server-platform/graphics-dummy.so
