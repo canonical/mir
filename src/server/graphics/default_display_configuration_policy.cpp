@@ -102,7 +102,6 @@ void mg::CloneDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
 
 void mg::SideBySideDisplayConfigurationPolicy::apply_to(graphics::DisplayConfiguration& conf)
 {
-    size_t const preferred_mode_index{0};
     int max_x = 0;
     std::unordered_map<mg::DisplayConfigurationCardId, size_t> available_outputs_for_card;
 
@@ -120,6 +119,7 @@ void mg::SideBySideDisplayConfigurationPolicy::apply_to(graphics::DisplayConfigu
             {
                 conf_output.used = true;
                 conf_output.top_left = geom::Point{max_x, 0};
+                size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
                 conf_output.current_mode_index = preferred_mode_index;
                 conf_output.power_mode = mir_power_mode_on;
                 conf_output.orientation = mir_orientation_normal;
@@ -137,7 +137,6 @@ void mg::SideBySideDisplayConfigurationPolicy::apply_to(graphics::DisplayConfigu
 
 void mg::SingleDisplayConfigurationPolicy::apply_to(graphics::DisplayConfiguration& conf)
 {
-    size_t const preferred_mode_index{0};
     bool done{false};
 
     conf.for_each_output(
@@ -147,6 +146,7 @@ void mg::SingleDisplayConfigurationPolicy::apply_to(graphics::DisplayConfigurati
             {
                 conf_output.used = true;
                 conf_output.top_left = geom::Point{0, 0};
+                size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
                 conf_output.current_mode_index = preferred_mode_index;
                 conf_output.power_mode = mir_power_mode_on;
                 done = true;

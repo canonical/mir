@@ -18,6 +18,7 @@
 
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/geometry/displacement.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -161,7 +162,7 @@ MockDisplayConfiguration create_default_configuration(size_t max_outputs = MockD
     };
 }
 
-TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
+TEST(CloneDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
 {
     using namespace ::testing;
 
@@ -185,7 +186,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
     });
 }
 
-TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
+TEST(CloneDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
 {
     using namespace ::testing;
 
@@ -200,7 +201,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
     });
 }
 
-TEST(DefaultDisplayConfigurationPolicyTest, default_orientation_is_normal)
+TEST(CloneDisplayConfigurationPolicyTest, default_orientation_is_normal)
 {
     using namespace ::testing;
 
@@ -213,7 +214,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_orientation_is_normal)
     });
 }
 
-TEST(DefaultDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_supported)
+TEST(CloneDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_supported)
 {
     using namespace ::testing;
 
@@ -233,7 +234,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_su
     EXPECT_GE(max_simultaneous_outputs, used_count);
 }
 
-TEST(DefaultDisplayConfigurationPolicyTest, prefer_opaque_over_alpha)
+TEST(CloneDisplayConfigurationPolicyTest, prefer_opaque_over_alpha)
 {
     using namespace ::testing;
 
@@ -248,7 +249,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, prefer_opaque_over_alpha)
     });
 }
 
-TEST(DefaultDisplayConfigurationPolicyTest, preserve_opaque_selection)
+TEST(CloneDisplayConfigurationPolicyTest, preserve_opaque_selection)
 {
     using namespace ::testing;
 
@@ -263,7 +264,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, preserve_opaque_selection)
     });
 }
 
-TEST(DefaultDisplayConfigurationPolicyTest, accept_transparency_when_only_option)
+TEST(CloneDisplayConfigurationPolicyTest, accept_transparency_when_only_option)
 {
     using namespace ::testing;
 
@@ -277,4 +278,165 @@ TEST(DefaultDisplayConfigurationPolicyTest, accept_transparency_when_only_option
         EXPECT_EQ(mir_pixel_format_abgr_8888, output.current_format);
     });
 }
+
+TEST(SingleDisplayConfigurationPolicyTest, uses_first_of_connected_valid_outputs)
+{
+    using namespace ::testing;
+
+    SingleDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf{create_default_configuration()};
+
+    policy.apply_to(conf);
+
+    bool is_first{true};
+
+    conf.for_each_output([&conf, &is_first](DisplayConfigurationOutput const& output)
+    {
+        if (output.connected && output.modes.size() > 0 && is_first)
+        {
+            EXPECT_TRUE(output.used);
+            EXPECT_EQ(Point(), output.top_left);
+            EXPECT_EQ(output.preferred_mode_index, output.current_mode_index);
+            is_first = false;
+        }
+        else
+        {
+            EXPECT_FALSE(output.used);
+        }
+    });
+}
+
+TEST(SingleDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
+{
+    using namespace ::testing;
+
+    SingleDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf{create_default_configuration()};
+
+    policy.apply_to(conf);
+
+    bool is_first{true};
+
+    conf.for_each_output([&is_first](DisplayConfigurationOutput const& output)
+    {
+         if (output.connected && output.modes.size() > 0 && is_first)
+         {
+             EXPECT_EQ(mir_power_mode_on, output.power_mode);
+             is_first = false;
+         }
+    });
+}
+
+TEST(SingleDisplayConfigurationPolicyTest, default_orientation_is_normal)
+{
+    using namespace ::testing;
+
+    SingleDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf{create_default_configuration()};
+
+    conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
+    {
+        EXPECT_EQ(mir_orientation_normal, output.orientation);
+    });
+}
+
+TEST(SingleDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_supported)
+{
+    using namespace ::testing;
+
+    size_t const max_simultaneous_outputs{1};
+    SingleDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
+
+    policy.apply_to(conf);
+
+    size_t used_count{0};
+    conf.for_each_output([&used_count](DisplayConfigurationOutput const& output)
+    {
+        if (output.used)
+            ++used_count;
+    });
+
+    EXPECT_GE(max_simultaneous_outputs, used_count);
+}
+
+TEST(SideBySideDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
+{
+    using namespace ::testing;
+
+    SideBySideDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf{create_default_configuration()};
+
+    policy.apply_to(conf);
+
+    Point expected_position;
+
+    conf.for_each_output([&](DisplayConfigurationOutput const& output)
+    {
+        if (output.connected && output.modes.size() > 0)
+        {
+            EXPECT_TRUE(output.used);
+            EXPECT_EQ(expected_position, output.top_left);
+            EXPECT_EQ(output.preferred_mode_index, output.current_mode_index);
+
+            expected_position += as_displacement(output.extents().size).dx;
+        }
+        else
+        {
+            EXPECT_FALSE(output.used);
+        }
+    });
+}
+
+TEST(SideBySideDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
+{
+    using namespace ::testing;
+
+    SideBySideDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf{create_default_configuration()};
+
+    policy.apply_to(conf);
+
+    conf.for_each_output([](DisplayConfigurationOutput const& output)
+    {
+        if (output.connected && output.modes.size() > 0)
+        {
+            EXPECT_EQ(mir_power_mode_on, output.power_mode);
+        }
+    });
+}
+
+TEST(SideBySideDisplayConfigurationPolicyTest, default_orientation_is_normal)
+{
+    using namespace ::testing;
+
+    SideBySideDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf{create_default_configuration()};
+
+    conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
+    {
+        EXPECT_EQ(mir_orientation_normal, output.orientation);
+    });
+}
+
+TEST(SideBySideDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_supported)
+{
+    using namespace ::testing;
+
+    size_t const max_simultaneous_outputs{1};
+    SideBySideDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
+
+    policy.apply_to(conf);
+
+    size_t used_count{0};
+    conf.for_each_output([&used_count](DisplayConfigurationOutput const& output)
+    {
+        if (output.used)
+            ++used_count;
+    });
+
+    EXPECT_GE(max_simultaneous_outputs, used_count);
+}
+
 
