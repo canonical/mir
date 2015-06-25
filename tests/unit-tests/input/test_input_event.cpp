@@ -21,6 +21,8 @@
 #include "mir/events/event_private.h"
 #include "mir_toolkit/events/input/input_event.h"
 
+using namespace testing;
+
 // See: https://bugs.launchpad.net/mir/+bug/1311699
 #define MIR_EVENT_ACTION_POINTER_INDEX_MASK 0xff00
 #define MIR_EVENT_ACTION_POINTER_INDEX_SHIFT 8;
@@ -127,6 +129,23 @@ TEST(CommonInputEventProperties, event_time_taken_from_old_style_event)
         mir_event_get_input_event(&old_ev)));
 }
 
+TEST(KeyInputEventProperties, timestamp_taken_from_old_style_event)
+{
+    std::chrono::nanoseconds event_time_1{79}, event_time_2{83};
+    auto old_ev = a_key_ev();
+    auto const keyboard_event = mir_input_event_get_keyboard_event(mir_event_get_input_event(&old_ev));
+
+    for (auto expected : {event_time_1, event_time_2})
+    {
+        old_ev.key.event_time = expected;
+
+        auto const input_event = mir_keyboard_event_input_event(keyboard_event);
+
+        EXPECT_THAT(mir_input_event_get_event_time(input_event), Eq(expected.count()));
+    }
+}
+
+
 TEST(KeyInputEventProperties, up_and_down_actions_copied_from_old_style_event)
 {
     auto old_ev = a_key_ev();
@@ -155,6 +174,22 @@ TEST(KeyInputEventProperties, keycode_scancode_and_modifiers_taken_from_old_styl
     EXPECT_EQ(key_code, mir_keyboard_event_key_code(new_kev));
     EXPECT_EQ(scan_code, mir_keyboard_event_scan_code(new_kev));
     EXPECT_EQ(modifiers, mir_keyboard_event_modifiers(new_kev));
+}
+
+TEST(TouchEventProperties, timestamp_taken_from_old_style_event)
+{
+    std::chrono::nanoseconds event_time_1{79}, event_time_2{83};
+    auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
+    auto const touch_event = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
+
+    for (auto expected : {event_time_1, event_time_2})
+    {
+        old_ev.motion.event_time = expected;
+
+        auto const input_event = mir_touch_event_input_event(touch_event);
+
+        EXPECT_THAT(mir_input_event_get_event_time(input_event), Eq(expected.count()));
+    }
 }
 
 TEST(TouchEventProperties, touch_count_taken_from_pointer_count)
@@ -269,6 +304,22 @@ INSTANTIATE_TEST_CASE_P(StylusDeviceClassTest,
     DeviceClassTest, ::testing::Values(DeviceClassTestParameters{mir_input_event_type_touch, AINPUT_SOURCE_STYLUS}));
 
 /* Pointer event property accessors */
+
+TEST(PointerInputEventProperties, timestamp_taken_from_old_style_event)
+{
+    std::chrono::nanoseconds event_time_1{79}, event_time_2{83};
+    auto old_ev = a_motion_ev(AINPUT_SOURCE_MOUSE);
+    auto const pointer_event = mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
+
+    for (auto expected : {event_time_1, event_time_2})
+    {
+        old_ev.motion.event_time = expected;
+
+        auto const input_event = mir_pointer_event_input_event(pointer_event);
+
+        EXPECT_THAT(mir_input_event_get_event_time(input_event), Eq(expected.count()));
+    }
+}
 
 TEST(PointerInputEventProperties, modifiers_taken_from_old_style_ev)
 {
