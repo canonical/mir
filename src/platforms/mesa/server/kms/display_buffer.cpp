@@ -305,8 +305,6 @@ void mgm::DisplayBuffer::post()
 
         // It's very likely the next frame will be bypassed like this one so
         // we only need time for kernel page flip scheduling...
-        // TODO: Retest on slow netbooks. Seems slightly too pessimistic in
-        //       the new design, slightly laggier.
         predicted_render_time = 5ms;
     }
     else
@@ -334,7 +332,7 @@ void mgm::DisplayBuffer::post()
     bypass_bufobj = nullptr;
 
     recommend_sleep = 0ms;
-    if (outputs.size() == 1)  // TODO check this is really required
+    if (outputs.size() == 1)
     {
         auto const& output = outputs.front();
         auto const min_frame_interval = 1000ms / output->max_refresh_rate();
