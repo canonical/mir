@@ -142,12 +142,12 @@ float mir_touch_event_axis_value(MirTouchEvent const* event,
     size_t touch_index, MirTouchAxis axis);
 
 /*
- * Retrieve the time at which a touch event occurred.
+ * Retrieve the corresponding input event.
  *
  * \param [in] event The touch event
- * \return           A timestamp in nanoseconds-since-epoch
+ * \return           The input event
  */
-int64_t mir_touch_event_timestamp(MirTouchEvent const* event);
+MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event);
 
 #ifdef __cplusplus
 }

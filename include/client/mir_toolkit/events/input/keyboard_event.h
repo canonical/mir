@@ -91,12 +91,12 @@ int mir_keyboard_event_scan_code(MirKeyboardEvent const* event);
 MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* event);
 
 /*
- * Retrieve the time at which a keyboard event occurred.
+ * Retrieve the corresponding input event.
  *
  * \param [in] event The keyboard event
- * \return           A timestamp in nanoseconds-since-epoch
+ * \return           The input event
  */
-int64_t mir_keyboard_event_timestamp(MirKeyboardEvent const* event);
+MirInputEvent const* mir_keyboard_event_input_event(MirKeyboardEvent const* event);
 
 #ifdef __cplusplus
 }

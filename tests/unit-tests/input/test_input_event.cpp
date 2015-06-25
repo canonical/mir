@@ -133,17 +133,18 @@ TEST(KeyInputEventProperties, timestamp_taken_from_old_style_event)
 {
     std::chrono::nanoseconds event_time_1{79}, event_time_2{83};
     auto old_ev = a_key_ev();
+    auto const keyboard_event = mir_input_event_get_keyboard_event(mir_event_get_input_event(&old_ev));
 
     for (auto expected : {event_time_1, event_time_2})
     {
         old_ev.key.event_time = expected;
 
-        auto const input_event = mir_event_get_input_event(&old_ev);
-        auto const keyboard_event = mir_input_event_get_keyboard_event(input_event);
+        auto const input_event = mir_keyboard_event_input_event(keyboard_event);
 
-        EXPECT_THAT(mir_keyboard_event_timestamp(keyboard_event), Eq(expected.count()));
+        EXPECT_THAT(mir_input_event_get_event_time(input_event), Eq(expected.count()));
     }
 }
+
 
 TEST(KeyInputEventProperties, up_and_down_actions_copied_from_old_style_event)
 {
@@ -179,15 +180,15 @@ TEST(TouchEventProperties, timestamp_taken_from_old_style_event)
 {
     std::chrono::nanoseconds event_time_1{79}, event_time_2{83};
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
+    auto const touch_event = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
 
     for (auto expected : {event_time_1, event_time_2})
     {
         old_ev.motion.event_time = expected;
 
-        auto const input_event = mir_event_get_input_event(&old_ev);
-        auto const touch_event = mir_input_event_get_touch_event(input_event);
+        auto const input_event = mir_touch_event_input_event(touch_event);
 
-        EXPECT_THAT(mir_touch_event_timestamp(touch_event), Eq(expected.count()));
+        EXPECT_THAT(mir_input_event_get_event_time(input_event), Eq(expected.count()));
     }
 }
 
@@ -308,15 +309,15 @@ TEST(PointerInputEventProperties, timestamp_taken_from_old_style_event)
 {
     std::chrono::nanoseconds event_time_1{79}, event_time_2{83};
     auto old_ev = a_motion_ev(AINPUT_SOURCE_MOUSE);
+    auto const pointer_event = mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
 
     for (auto expected : {event_time_1, event_time_2})
     {
         old_ev.motion.event_time = expected;
 
-        auto const input_event = mir_event_get_input_event(&old_ev);
-        auto const pointer_event = mir_input_event_get_pointer_event(input_event);
+        auto const input_event = mir_pointer_event_input_event(pointer_event);
 
-        EXPECT_THAT(mir_pointer_event_timestamp(pointer_event), Eq(expected.count()));
+        EXPECT_THAT(mir_input_event_get_event_time(input_event), Eq(expected.count()));
     }
 }
 

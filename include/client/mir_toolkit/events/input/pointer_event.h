@@ -123,12 +123,12 @@ float mir_pointer_event_axis_value(MirPointerEvent const* event,
     MirPointerAxis axis);
 
 /*
- * Retrieve the time at which a pointer event occurred.
+ * Retrieve the corresponding input event.
  *
  * \param [in] event The pointer event
- * \return           A timestamp in nanoseconds-since-epoch
+ * \return           The input event
  */
-int64_t mir_pointer_event_timestamp(MirPointerEvent const* event);
+MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event);
 
 #ifdef __cplusplus
 }
