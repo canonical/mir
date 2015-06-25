@@ -84,5 +84,5 @@ void mga::DisplayGroup::post()
 
 std::chrono::milliseconds mga::DisplayGroup::recommended_sleep() const
 {
-    return std::chrono::milliseconds::zero();  // TODO
+    return device->recommended_sleep();
 }

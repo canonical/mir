@@ -142,28 +142,19 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
         mir::Fd retire_fd(content.list.retirement_fence());
     }
 
-    if (purely_overlays)
-    {
-        /*
-         * "Predictive bypass": If we're just displaying pure overlays on this
-         * frame then it's very likely the same will be true on the next frame.
-         * In that case we don't need to spare any time for GL rendering.
-         * Instead just sleep for a significant portion of the frame. This will
-         * ensure the scene snapshot that goes into the next frame is
-         * younger when it hits the screen, and so has visibly lower latency.
-         *   This has extra benefit for the overlays of software cursors and
-         * touchpoints as the client surface underneath is then given enough
-         * time to update itself and better match (ie. "stick to") the cursor
-         * above it.
-         */
+    /*
+     * Test results (how long can we sleep for without missing a frame?):
+     *   arale:   10ms  (TODO: Find out why arale is so slow)
+     *   mako:    15ms
+     *   krillin: 11ms  (to be fair, the display is 67Hz)
+     */
+    using namespace std;
+    recommend_sleep = purely_overlays ? 10ms : 0ms;
+}
 
-        // Test results (how long can we sleep for without missing a frame?):
-        //   arale:   10ms  (TODO: Find out why arale is so slow)
-        //   mako:    15ms
-        //   krillin: 11ms (to be fair, the display is 67Hz)
-        using namespace std;
-        std::this_thread::sleep_for(10ms);
-    }
+std::chrono::milliseconds mga::HwcDevice::recommended_sleep() const
+{
+    return recommend_sleep;
 }
 
 void mga::HwcDevice::content_cleared()
