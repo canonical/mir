@@ -393,8 +393,10 @@ mir::DefaultServerConfiguration::the_input_manager()
                                                            std::make_shared<NullLegacyInputDispatchable>());
                 }
                 else
+                {
                     ret = std::make_shared<mi::DefaultInputManager>(
                         the_input_reading_multiplexer(), the_legacy_input_dispatchable());
+                }
 
                 auto platform = the_input_platform();
                 if (platform)
