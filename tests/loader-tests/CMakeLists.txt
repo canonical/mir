@@ -28,7 +28,6 @@ add_dependencies(mir_test_reload_protobuf mirprotobuf)
 
 target_link_libraries(mir_test_reload_protobuf dl)
 
-# FIXME: Enable this test after LP: #1391976 is fixed.
-#add_test(NAME Protobuf-can-be-reloaded   # LP: #1391976
-#  COMMAND ${CMAKE_BINARY_DIR}/bin/mir_test_reload_protobuf
-#)
+add_test(NAME Protobuf-can-be-reloaded   # LP: #1391976
+  COMMAND ${CMAKE_BINARY_DIR}/bin/mir_test_reload_protobuf
+)
