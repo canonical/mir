@@ -162,13 +162,13 @@ public:
             /*
              * "Predictive bypass" optimization: If the last frame was
              * bypassed/overlayed or you simply have a fast GPU, it is
-             * beneficial to sleep for most of a frame. This reduces the
-             * latency between snapshotting the scene and the physical
-             * display scan-out by up to one frame...
+             * beneficial to sleep for most of the frame. This significantly
+             * reduces the latency between snapshotting the scene and the
+             * physical display scan-out.
              */
+            lock.unlock();
             auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
                          force_sleep : group.recommended_sleep();
-            lock.unlock();
             std::this_thread::sleep_for(delay);
             lock.lock();
 
