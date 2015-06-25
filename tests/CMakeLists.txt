@@ -108,8 +108,8 @@ set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirtest")
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/mir-test.pc.in
-  ${CMAKE_CURRENT_BINARY_DIR}/mir-test.pc
+  ${CMAKE_CURRENT_SOURCE_DIR}/mirtest.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mirtest.pc
 )
 
 install(TARGETS mir-test-assist
@@ -121,7 +121,7 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/test/mir
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/test/mir_test_framework
   DESTINATION "include/mirtest"
 )
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mir-test.pc
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirtest.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
