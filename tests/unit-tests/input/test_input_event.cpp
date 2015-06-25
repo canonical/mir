@@ -314,9 +314,9 @@ TEST(PointerInputEventProperties, timestamp_taken_from_old_style_event)
         old_ev.motion.event_time = expected;
 
         auto const input_event = mir_event_get_input_event(&old_ev);
-        auto const touch_event = mir_input_event_get_touch_event(input_event);
+        auto const pointer_event = mir_input_event_get_pointer_event(input_event);
 
-        EXPECT_THAT(mir_touch_event_timestamp(touch_event), Eq(expected.count()));
+        EXPECT_THAT(mir_pointer_event_timestamp(pointer_event), Eq(expected.count()));
     }
 }
 
