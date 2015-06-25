@@ -23,7 +23,7 @@
 
 #include "mir_toolkit/event.h"
 
-#include "mir_test/fd_utils.h"
+#include "mir/test/fd_utils.h"
 
 #include <androidfw/InputTransport.h>
 

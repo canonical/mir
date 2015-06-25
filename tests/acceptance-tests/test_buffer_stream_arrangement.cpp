@@ -102,33 +102,32 @@ struct Ordering
             return;
 
         std::unique_lock<decltype(mutex)> lk(mutex);
-        displacements.clear();
-
+        std::vector<geom::Displacement> displacement;
         auto first_position = (*sequence.begin())->renderable()->screen_position().top_left;
         for (auto const& element : sequence)
-            displacements.emplace_back(element->renderable()->screen_position().top_left - first_position);
-        post_count++;
-
+            displacement.emplace_back(element->renderable()->screen_position().top_left - first_position);
+        displacements.push_back(displacement);
         cv.notify_all();
     }
 
     template<typename T, typename S>
-    bool wait_for_another_post_within(std::chrono::duration<T,S> duration)
+    bool wait_for_ordering_within(
+        std::vector<geom::Displacement> const& ordering,
+        std::chrono::duration<T,S> duration)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
-        auto count = post_count + 1;
-        return cv.wait_for(lk, duration, [this, count]{return (post_count >= count);});
+        return cv.wait_for(lk, duration, [this, ordering] {
+            for (auto& displacement : displacements)
+                if (displacement == ordering) return true;
+            displacements.clear();
+            return false;
+        });
     }
 
-    std::vector<geom::Displacement> last_ordering()
-    {
-        return displacements;
-    }
 private:
     std::mutex mutex;
     std::condition_variable cv;
-    unsigned int post_count{0};
-    std::vector<geom::Displacement> displacements;
+    std::vector<std::vector<geom::Displacement>> displacements;
 };
 
 struct OrderTrackingDBC : mc::DisplayBufferCompositor
@@ -233,7 +232,6 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
 
     //check that the compositor rendered correctly
     using namespace std::literals::chrono_literals;
-    EXPECT_TRUE(ordering->wait_for_another_post_within(5s))
-         << "timed out waiting for another post";
-    EXPECT_THAT(ordering->last_ordering(), ContainerEq(displacements));
+    EXPECT_TRUE(ordering->wait_for_ordering_within(displacements, 5s))
+         << "timed out waiting to see the compositor post the streams in the right arrangement";
 }

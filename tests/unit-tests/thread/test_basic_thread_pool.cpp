@@ -19,8 +19,8 @@
 #include "mir/thread/basic_thread_pool.h"
 
 #include "mir/thread_name.h"
-#include "mir_test/current_thread_name.h"
-#include "mir_test/signal.h"
+#include "mir/test/current_thread_name.h"
+#include "mir/test/signal.h"
 
 #include <memory>
 

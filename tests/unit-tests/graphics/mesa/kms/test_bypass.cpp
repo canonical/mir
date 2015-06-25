@@ -17,8 +17,8 @@
  */
 
 #include "src/platforms/mesa/server/kms/bypass.h"
-#include "mir_test_doubles/mock_display_buffer.h"
-#include "mir_test_doubles/fake_renderable.h"
+#include "mir/test/doubles/mock_display_buffer.h"
+#include "mir/test/doubles/fake_renderable.h"
 
 #include <gtest/gtest.h>
 #include <memory>

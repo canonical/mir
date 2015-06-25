@@ -21,9 +21,9 @@
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "src/server/compositor/buffer_queue.h"
 
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
-#include "mir_test_doubles/stub_input_sender.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
+#include "mir/test/doubles/stub_input_sender.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

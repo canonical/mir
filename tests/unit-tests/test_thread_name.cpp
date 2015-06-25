@@ -17,7 +17,7 @@
  */
 
 #include "mir/thread_name.h"
-#include "mir_test/wait_condition.h"
+#include "mir/test/wait_condition.h"
 
 #include <thread>
 #include <pthread.h>

@@ -39,12 +39,13 @@ if (MIR_BUILD_PLATFORM_MESA_KMS)
   add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)
 endif()
 
+# public headers (only public headers should be accessed by acceptance tests)
 include_directories(
-  include
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/common
+  ${PROJECT_SOURCE_DIR}/include/test
 )
 
 option(MIR_BUILD_ACCEPTANCE_TESTS "Build acceptance tests" ON)
@@ -57,10 +58,6 @@ if (MIR_BUILD_ACCEPTANCE_TESTS)
   add_subdirectory(acceptance-tests/)
 endif (MIR_BUILD_ACCEPTANCE_TESTS)
 
-if (MIR_BUILD_INTEGRATION_TESTS)
-  add_subdirectory(integration-tests/)
-endif (MIR_BUILD_INTEGRATION_TESTS)
-
 if (MIR_BUILD_PERFORMANCE_TESTS)
     add_subdirectory(performance-tests/)
 endif(MIR_BUILD_PERFORMANCE_TESTS)
@@ -68,6 +65,15 @@ endif(MIR_BUILD_PERFORMANCE_TESTS)
 if (MIR_BUILD_PRIVILEGED_TESTS)
     add_subdirectory(privileged-tests/)
 endif(MIR_BUILD_PRIVILEGED_TESTS)
+
+# Private test headers used by integration and unit tests
+include_directories(
+  include
+)
+
+if (MIR_BUILD_INTEGRATION_TESTS)
+  add_subdirectory(integration-tests/)
+endif (MIR_BUILD_INTEGRATION_TESTS)
 
 if (MIR_BUILD_UNIT_TESTS)
   add_subdirectory(unit-tests/)
@@ -78,6 +84,25 @@ add_subdirectory(mir_test_framework/)
 add_subdirectory(mir_test_doubles/)
 add_subdirectory(client-language/)
 add_subdirectory(mir-stress/)
+add_subdirectory(loader-tests/)
+
+add_library(mir-test-assist STATIC
+  $<TARGET_OBJECTS:mir-public-test>
+  $<TARGET_OBJECTS:mir-public-test-doubles>
+  $<TARGET_OBJECTS:mir-public-test-doubles-platform>
+  $<TARGET_OBJECTS:mir-public-test-framework>
+)
+
+target_link_libraries(mir-test-assist
+  mirclient
+  mirserver
+
+  ${Boost_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
 
 mir_add_memcheck_test()
 mir_add_detect_fd_leaks_test()

@@ -22,7 +22,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/geometry/rectangle.h"
 
-#include "mir_test_doubles/null_platform.h"
+#include "mir/test/doubles/null_platform.h"
 
 class VsyncSimulatingPlatform : public mir::test::doubles::NullPlatform
 {

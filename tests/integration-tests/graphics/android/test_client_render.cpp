@@ -24,10 +24,10 @@
 #include "src/platforms/android/server/android_graphic_buffer_allocator.h"
 #include "src/platforms/android/server/device_quirks.h"
 
-#include "mir_test/cross_process_sync.h"
-#include "mir_test/stub_server_tool.h"
-#include "mir_test/test_protobuf_server.h"
-#include "mir_test/validity_matchers.h"
+#include "mir/test/cross_process_sync.h"
+#include "mir/test/stub_server_tool.h"
+#include "mir/test/test_protobuf_server.h"
+#include "mir/test/validity_matchers.h"
 #include "patterns.h"
 #include "graphics_region_factory.h"
 

@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir_test/spin_wait.h"
+#include "mir/test/spin_wait.h"
 
 #include <thread>
 

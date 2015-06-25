@@ -19,15 +19,15 @@
 
 #include "mir/events/event_private.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/temporary_environment_value.h"
-#include "mir_test_doubles/stub_input_enumerator.h"
-#include "mir_test_doubles/stub_touch_visualizer.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/event_factory.h"
+#include "mir/test/doubles/stub_input_enumerator.h"
+#include "mir/test/doubles/stub_touch_visualizer.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/event_factory.h"
 
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_dispatcher.h"
