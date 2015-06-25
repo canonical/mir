@@ -28,7 +28,7 @@ namespace mir_test_framework
  * \attention If you override main() for your own purposes call this to execute
  * the tests.
  */
-int main(int argc, char** argv);
+int main(int argc, char* argv[]);
 }
 
 #endif //MIR_TEST_FRAMEWORK_MAIN_H
