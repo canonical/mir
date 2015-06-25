@@ -20,7 +20,7 @@
 #include "mir/frontend/message_processor_report.h"
 #include "src/server/frontend/display_server.h"
 #include "src/server/frontend/protobuf_message_processor.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include "mir_protobuf_wire.pb.h"
 
 #include <gtest/gtest.h>

@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <mir_test/wait_condition.h>
+#include <mir/test/wait_condition.h>
 
 #include <thread>
 

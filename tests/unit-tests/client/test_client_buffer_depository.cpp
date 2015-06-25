@@ -22,7 +22,7 @@
 #include "mir/aging_buffer.h"
 #include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -18,8 +18,8 @@
 
 #include "mir/geometry/rectangle.h"
 #include "src/server/compositor/occlusion.h"
-#include "mir_test_doubles/fake_renderable.h"
-#include "mir_test_doubles/stub_scene_element.h"
+#include "mir/test/doubles/fake_renderable.h"
+#include "mir/test/doubles/stub_scene_element.h"
 
 #include <gtest/gtest.h>
 #include <memory>

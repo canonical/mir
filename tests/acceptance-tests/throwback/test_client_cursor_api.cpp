@@ -26,12 +26,12 @@
 #include "mir_test_framework/declarative_placement_window_manage_policy.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
-#include "mir_test_doubles/mock_egl.h"
+#include "mir/test/doubles/mock_egl.h"
 
-#include "mir_test/fake_shared.h"
-#include "mir_test/spin_wait.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/fake_event_hub.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/spin_wait.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/fake_event_hub.h"
 
 #include "mir_toolkit/mir_client_library.h"
 

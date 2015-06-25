@@ -18,8 +18,8 @@
 
 #include "src/server/report/logging/display_report.h"
 #include "mir/logging/logger.h"
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/advanceable_clock.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/advanceable_clock.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -17,7 +17,7 @@
  * Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir_test_doubles/mock_egl.h"
+#include "mir/test/doubles/mock_egl.h"
 #include "gtest/gtest.h"
 
 namespace mtd = mir::test::doubles;

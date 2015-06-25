@@ -23,8 +23,8 @@
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -17,8 +17,8 @@
  */
 
 #include "mir/client_platform.h"
-#include "mir_test_doubles/mock_client_context.h"
-#include "mir_test_doubles/mock_egl_native_surface.h"
+#include "mir/test/doubles/mock_client_context.h"
+#include "mir/test/doubles/mock_egl_native_surface.h"
 #include "mir_test_framework/client_platform_factory.h"
 
 #include <EGL/egl.h>

@@ -21,10 +21,10 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_display_buffer.h"
-#include "mir_test_doubles/null_display_sync_group.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/doubles/null_display.h"
+#include "mir/test/doubles/null_display_buffer.h"
+#include "mir/test/doubles/null_display_sync_group.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
