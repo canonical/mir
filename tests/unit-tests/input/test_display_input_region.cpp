@@ -18,8 +18,8 @@
 
 #include "src/server/input/display_input_region.h"
 
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/stub_display.h"
+#include "mir/test/doubles/null_display.h"
+#include "mir/test/doubles/stub_display.h"
 
 #include <vector>
 #include <tuple>

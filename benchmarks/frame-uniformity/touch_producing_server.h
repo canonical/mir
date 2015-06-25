@@ -20,7 +20,7 @@
 #define TOUCH_PRODUCING_SERVER_H_
 
 #include "mir_test_framework/fake_event_hub_server_configuration.h"
-#include "mir_test/barrier.h"
+#include "mir/test/barrier.h"
 
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"

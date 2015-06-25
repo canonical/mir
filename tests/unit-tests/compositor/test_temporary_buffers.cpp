@@ -17,9 +17,9 @@
  */
 
 #include "src/server/compositor/temporary_buffers.h"
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_buffer_bundle.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
 

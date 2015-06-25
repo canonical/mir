@@ -19,7 +19,7 @@
 #include "src/platforms/mesa/server/common/shm_buffer.h"
 #include "src/platforms/mesa/server/common/shm_file.h"
 
-#include "mir_test_doubles/mock_gl.h"
+#include "mir/test/doubles/mock_gl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

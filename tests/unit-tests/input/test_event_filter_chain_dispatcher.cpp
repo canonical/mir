@@ -18,8 +18,8 @@
 
 #include "src/server/input/event_filter_chain_dispatcher.h"
 #include "src/server/input/null_input_dispatcher.h"
-#include "mir_test_doubles/mock_event_filter.h"
-#include "mir_test_doubles/mock_input_dispatcher.h"
+#include "mir/test/doubles/mock_event_filter.h"
+#include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
 

@@ -19,7 +19,7 @@
 #include "src/server/report/logging/message_processor_report.h"
 #include "mir/logging/logger.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

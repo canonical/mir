@@ -18,9 +18,9 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test/wait_condition.h"
-#include "mir_test/spin_wait.h"
-#include "mir_test/event_matchers.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/spin_wait.h"
+#include "mir/test/event_matchers.h"
 #include "mir_test_framework/process.h"
 #include "mir_test_framework/executable_path.h"
 

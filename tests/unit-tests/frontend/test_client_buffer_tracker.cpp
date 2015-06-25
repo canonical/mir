@@ -19,7 +19,7 @@
 #include "src/server/frontend/client_buffer_tracker.h"
 #include "src/server/frontend/buffer_stream_tracker.h"
 #include "mir/graphics/buffer_id.h"
-#include "mir_test_doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_buffer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

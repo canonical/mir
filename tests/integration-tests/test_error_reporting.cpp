@@ -23,7 +23,7 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/deferred_in_process_server.h"
 
-#include "mir_test_doubles/stub_ipc_factory.h"
+#include "mir/test/doubles/stub_ipc_factory.h"
 
 #include "src/server/frontend/display_server.h"
 #include "src/server/frontend/protobuf_ipc_factory.h"
@@ -32,8 +32,8 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "mir_test/gmock_fixes.h"
-#include "mir_test/validity_matchers.h"
+#include "mir/test/gmock_fixes.h"
+#include "mir/test/validity_matchers.h"
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;

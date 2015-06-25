@@ -18,7 +18,7 @@
 
 #include "mir/recursive_read_write_mutex.h"
 
-#include "mir_test/barrier.h"
+#include "mir/test/barrier.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

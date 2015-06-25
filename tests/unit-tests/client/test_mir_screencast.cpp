@@ -21,11 +21,11 @@
 #include "mir/client_buffer_factory.h"
 #include "mir/client_platform.h"
 
-#include "mir_test_doubles/stub_client_buffer_stream_factory.h"
-#include "mir_test_doubles/mock_client_buffer_stream_factory.h"
-#include "mir_test_doubles/mock_client_buffer_stream.h"
-#include "mir_test_doubles/null_client_buffer.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/doubles/stub_client_buffer_stream_factory.h"
+#include "mir/test/doubles/mock_client_buffer_stream_factory.h"
+#include "mir/test/doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/null_client_buffer.h"
+#include "mir/test/fake_shared.h"
 
 #include <thread>
 

@@ -19,7 +19,7 @@
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/shell_wrapper.h"
 
-#include "mir_test_doubles/mock_input_targeter.h"
+#include "mir/test/doubles/mock_input_targeter.h"
 
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/in_process_server.h"
