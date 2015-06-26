@@ -29,7 +29,7 @@ namespace mtd=mir::test::doubles;
 auto mtd::StubBuffer::create_native_buffer()
 -> std::shared_ptr<graphics::NativeBuffer>
 {
-#ifndef ANDROID
+#ifdef MESA_KMS
     return std::make_shared<StubGBMNativeBuffer>(geometry::Size{0,0});
 #else
     return std::make_shared<StubAndroidNativeBuffer>();

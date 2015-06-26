@@ -24,6 +24,9 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/signal.h"
 
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 namespace mev = mir::events;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;

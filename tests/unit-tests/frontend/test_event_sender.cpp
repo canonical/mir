@@ -27,6 +27,8 @@
 #include "mir/test/display_config_matchers.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_platform_ipc_operations.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -47,10 +49,11 @@ struct MockMsgSender : public mfd::MessageSender
 struct EventSender : public testing::Test
 {
     EventSender()
-        : event_sender(mt::fake_shared(mock_msg_sender))
+        : event_sender(mt::fake_shared(mock_msg_sender), mt::fake_shared(mock_buffer_packer))
     {
     }
     MockMsgSender mock_msg_sender;
+    mtd::MockPlatformIpcOperations mock_buffer_packer;
     mfd::EventSender event_sender;
 };
 }
@@ -100,4 +103,17 @@ TEST_F(EventSender, never_sends_input_events)
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(0);
     event_sender.handle_event(*ev);
+}
+
+TEST_F(EventSender, packs_buffer_with_platform_packer)
+{
+    using namespace testing;
+    mf::BufferStreamId id{8};
+    auto msg_type = mir::graphics::BufferIpcMsgType::update_msg;
+    mtd::StubBuffer buffer;
+
+    InSequence seq;
+    EXPECT_CALL(mock_buffer_packer, pack_buffer(_, Ref(buffer), msg_type));
+    EXPECT_CALL(mock_msg_sender, send(_,_,_));
+    event_sender.send_buffer(mf::BufferStreamId{}, buffer, msg_type);
 }
