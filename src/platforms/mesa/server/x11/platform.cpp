@@ -33,7 +33,7 @@ namespace mo = mir::options;
 
 mgx::Platform::Platform()
     : udev{std::make_shared<mir::udev::Context>()},
-       drm{std::make_shared<mesa::helpers::DRMHelper>(true)}
+       drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render_node)}
 {
    x_dpy = XOpenDisplay(NULL);
    if (!x_dpy)
