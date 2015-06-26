@@ -30,7 +30,7 @@ mir (0.14.0-0ubuntu1) UNRELEASED; urgency=medium
         more than double-buffered  (LP: #1253868)
       . "mesa" platform renamed to "mesa-kms" (LP: #1381330)
       . [enhancement] Mir servers should allow client connections only after
-         server start-up has finished  (LP: #1451844)
+        server start-up has finished  (LP: #1451844)
       . build-dependency on g++-4.9 dropped (LP: #1452320)
     - Bug fixes:
       . Crash because uncaught exception in mir::events::add_touch 
@@ -45,7 +45,8 @@ mir (0.14.0-0ubuntu1) UNRELEASED; urgency=medium
       . [testsfail] InputEvents.reach_nested_client in CI  (LP: #1463315)
       . [regression] titlebar in "canonical" example WM + KeyRepeatDispatcher
         causes deadlock  (LP: #1464690)
-      . CI failure in TestClientInput.clients_receive_many_button_events_inside_window
+      . CI failure in
+        TestClientInput.clients_receive_many_button_events_inside_window
         (LP: #1465231)
       . mir-client-platform-mesa-dev package dependency is incorrect
         (LP: #1465642)
@@ -53,7 +54,8 @@ mir (0.14.0-0ubuntu1) UNRELEASED; urgency=medium
         different VT  (LP: #1465669)
       . libmirprotobuf's ABI can be broken when modifying protobuf message
         definitions  (LP: #1465883)
-      . Spurious Failure in ClientLibrary.highly_threaded_client  (LP: #1466492)
+      . Spurious Failure in ClientLibrary.highly_threaded_client
+        (LP: #1466492)
       . failure in CI in BufferStreamArrangement.arrangements_are_applied
         (LP: #1466594)
       . [arale] software buffers have flickering line artefacts  (LP: #1418035)
