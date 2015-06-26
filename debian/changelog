@@ -26,8 +26,6 @@ mir (0.14.0-0ubuntu1) UNRELEASED; urgency=medium
       . A first end-to-end input test added in privileged-tests
       . [performance] Restore support for double-buffering by default  
         (LP: #1240909)
-      . [enhancement] Mir protocol design prevents clients from ever being
-        more than double-buffered  (LP: #1253868)
       . "mesa" platform renamed to "mesa-kms" (LP: #1381330)
       . [enhancement] Mir servers should allow client connections only after
         server start-up has finished  (LP: #1451844)
