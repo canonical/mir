@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir_test/current_thread_name.h"
+#include "mir/test/current_thread_name.h"
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE

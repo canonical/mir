@@ -23,13 +23,13 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/gl_texture.h>
 #include <mir/compositor/gl_renderer.h>
-#include <mir_test/fake_shared.h>
-#include <mir_test_doubles/mock_buffer.h>
-#include <mir_test_doubles/mock_renderable.h>
-#include <mir_test_doubles/mock_buffer_stream.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/mock_buffer.h>
+#include <mir/test/doubles/mock_renderable.h>
+#include <mir/test/doubles/mock_buffer_stream.h>
 #include <mir/compositor/buffer_stream.h>
-#include <mir_test_doubles/mock_gl.h>
-#include <mir_test_doubles/mock_egl.h>
+#include <mir/test/doubles/mock_gl.h>
+#include <mir/test/doubles/mock_egl.h>
 
 using testing::SetArgPointee;
 using testing::InSequence;

@@ -1,0 +1,7 @@
+A performance testing framework for Mir written in python3.
+
+To use it add the *parent* directory to the PYTHONPATH env. variable:
+
+  sudo PYTHONPATH=/path/to/mir/benchmarks python3 testscript.py
+
+For an example script see benchmarks/key_event_latency.py.

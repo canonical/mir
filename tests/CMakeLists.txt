@@ -29,6 +29,10 @@ if (MIR_TEST_PLATFORM STREQUAL "android")
   add_definitions(-DANDROID)
 endif()
 
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
+  add_definitions(-DMESA_KMS)
+endif()
+
 if (MIR_BUILD_PLATFORM_ANDROID)
   #avoid complaints about poor quality android headers
   include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
@@ -84,6 +88,25 @@ add_subdirectory(mir_test_framework/)
 add_subdirectory(mir_test_doubles/)
 add_subdirectory(client-language/)
 add_subdirectory(mir-stress/)
+add_subdirectory(loader-tests/)
+
+add_library(mir-test-assist STATIC
+  $<TARGET_OBJECTS:mir-public-test>
+  $<TARGET_OBJECTS:mir-public-test-doubles>
+  $<TARGET_OBJECTS:mir-public-test-doubles-platform>
+  $<TARGET_OBJECTS:mir-public-test-framework>
+)
+
+target_link_libraries(mir-test-assist
+  mirclient
+  mirserver
+
+  ${Boost_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
 
 mir_add_memcheck_test()
 mir_add_detect_fd_leaks_test()

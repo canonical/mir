@@ -21,7 +21,7 @@
 #include <gmock/gmock.h>
 #include <chrono>
 
-#include "mir_test_doubles/advanceable_clock.h"
+#include "mir/test/doubles/advanceable_clock.h"
 
 using namespace mir;
 

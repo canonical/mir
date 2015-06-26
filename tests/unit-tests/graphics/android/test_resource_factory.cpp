@@ -18,7 +18,7 @@
 
 #include "src/platforms/android/server/resource_factory.h"
 #include "src/platforms/android/server/hwc_loggers.h"
-#include "mir_test_doubles/mock_android_hw.h"
+#include "mir/test/doubles/mock_android_hw.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>

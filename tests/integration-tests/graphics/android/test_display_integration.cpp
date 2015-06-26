@@ -27,9 +27,9 @@
 #include "src/server/report/null_report_factory.h"
 
 #include "examples/graphics.h"
-#include "mir_test_doubles/mock_display_report.h"
-#include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/stub_renderable.h"
+#include "mir/test/doubles/mock_display_report.h"
+#include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/stub_renderable.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
