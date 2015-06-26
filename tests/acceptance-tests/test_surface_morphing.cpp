@@ -45,7 +45,7 @@ public:
     ~SurfaceHandle() { if (surface) mir_surface_release_sync(surface); }
 
     operator MirSurface*() const { return surface; }
-    SurfaceHandle(SurfaceHandle const&& that) : surface{that.surface} { surface = nullptr; }
+    SurfaceHandle(SurfaceHandle&& that) : surface{that.surface} { that.surface = nullptr; }
 private:
     SurfaceHandle(SurfaceHandle const&) = delete;
     MirSurface* surface;

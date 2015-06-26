@@ -68,10 +68,10 @@ mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompi
 add_dependencies(mir_acceptance_tests GMock)
 
 target_link_libraries(mir_acceptance_tests
-  mir-test-static
+  mir-test-assist
+
+  # needed for 'throwback' tests that use private APIs
   mir-test-framework-static
-  mir-test-doubles-static
-  mir-test-doubles-platform-static
 
   mirclient
   mirclient-debug-extension
