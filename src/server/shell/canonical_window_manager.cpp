@@ -354,6 +354,7 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     std::shared_ptr<scene::Surface> const& surface,
     SurfaceSpecification const& modifications)
 {
+    printf("Modifying surface cwmp\n");
     auto& surface_info_old = tools->info_for(surface);
 
     auto surface_info = surface_info_old;
@@ -440,8 +441,13 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
         apply_resize(surface, top_left, new_size);
     }
 
+    printf("Possibly setting input region \n");
     if (modifications.input_shape.is_set())
+        {
+            printf("Literally setting input region \n");
         surface->set_input_region(modifications.input_shape.value());
+
+        }
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)

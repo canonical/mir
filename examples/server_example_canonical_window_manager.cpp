@@ -528,6 +528,12 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
         session->configure_streams(*surface, l);
     }
 
+    if (modifications.input_shape.is_set())
+    {
+        printf("Literally setting input region \n");
+        surface->set_input_region(modifications.input_shape.value());
+    }
+
     if (modifications.width.is_set() || modifications.height.is_set())
     {
         auto new_size = surface->size();
