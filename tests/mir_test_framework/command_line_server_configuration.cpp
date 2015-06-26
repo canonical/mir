@@ -16,6 +16,8 @@
  */
 
 #include "mir_test_framework/command_line_server_configuration.h"
+#include "mir_test_framework/main.h"
+
 #include "mir/options/default_configuration.h"
 #include "mir/server.h"
 
@@ -44,14 +46,16 @@ void mir_test_framework::configure_from_commandline(mir::Server& server)
     server.set_command_line(::argc, ::argv);
 }
 
-int main(int argc, char** argv)
+void mir_test_framework::set_commandline(int argc, char* argv[])
 {
-    // Override this standard gtest message
-    std::cout << "Running main() from " << basename(__FILE__) << std::endl;
-    ::testing::InitGoogleTest(&argc, argv);
-
     ::argv = const_cast<char const**>(argv);
     ::argc = argc;
+}
 
+int mir_test_framework::main(int argc, char* argv[])
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    set_commandline(argc, argv);
     return RUN_ALL_TESTS();
 }
+
