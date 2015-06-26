@@ -612,8 +612,9 @@ TEST(MultiThreadedCompositor, recommended_sleep_throttles_compositor_loop)
         ASSERT_LT(retry, max_retries);
         auto duration = system_clock::now() - start;
 
-        ASSERT_THAT(duration_cast<milliseconds>(duration).count(),
-                    Ge(recommendation.count()));
+        if (frame > 1)
+            ASSERT_THAT(duration_cast<milliseconds>(duration).count(),
+                        Ge(recommendation.count()-1));  // -1 clock truncation 
     }
 
     compositor.stop();

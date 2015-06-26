@@ -168,9 +168,7 @@ public:
             lock.unlock();
             auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
                          force_sleep : group.recommended_sleep();
-            // TODO: revive tests and then re-introduce
-            //std::this_thread::sleep_for(delay);
-            //fprintf(stderr, "Sleep %d ms\n", (int)delay.count());
+            std::this_thread::sleep_for(delay);
             lock.lock();
 
             /* Wait until compositing has been scheduled or we are stopped */
