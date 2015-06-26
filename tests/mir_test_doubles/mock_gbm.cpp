@@ -17,7 +17,7 @@
  * Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir_test_doubles/mock_gbm.h"
+#include "mir/test/doubles/mock_gbm.h"
 #include <gtest/gtest.h>
 
 namespace mtd=mir::test::doubles;

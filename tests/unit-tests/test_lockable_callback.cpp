@@ -20,8 +20,8 @@
 #include "mir/lockable_callback_wrapper.h"
 #include "mir/basic_callback.h"
 
-#include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_lockable_callback.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/mock_lockable_callback.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

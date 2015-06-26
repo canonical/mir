@@ -16,17 +16,17 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir_test_doubles/platform_factory.h"
+#include "mir/test/doubles/platform_factory.h"
 
 #include "mir/graphics/platform.h"
 
-#ifndef ANDROID
+#ifdef MESA_KMS
 #include "src/platforms/mesa/server/kms/platform.h"
 #endif
 
 #include "src/server/report/null_report_factory.h"
-#include "mir_test_doubles/null_virtual_terminal.h"
-#include "mir_test_doubles/null_emergency_cleanup.h"
+#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/options/program_option.h"
 
 namespace mtd = mir::test::doubles;

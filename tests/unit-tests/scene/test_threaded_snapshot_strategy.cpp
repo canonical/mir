@@ -20,12 +20,12 @@
 #include "src/server/scene/pixel_buffer.h"
 #include "mir/graphics/buffer.h"
 
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/null_pixel_buffer.h"
-#include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/current_thread_name.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/null_pixel_buffer.h"
+#include "mir/test/doubles/stub_buffer_stream.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/current_thread_name.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

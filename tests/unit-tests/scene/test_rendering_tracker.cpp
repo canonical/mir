@@ -17,7 +17,7 @@
  */
 
 #include "src/server/scene/rendering_tracker.h"
-#include "mir_test_doubles/mock_surface.h"
+#include "mir/test/doubles/mock_surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

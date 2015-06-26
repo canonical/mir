@@ -22,10 +22,10 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/headless_test.h"
-#include "mir_test_doubles/mock_window_manager.h"
+#include "mir/test/doubles/mock_window_manager.h"
 
-#include "mir_test/fake_shared.h"
-#include "mir_test/signal.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/signal.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

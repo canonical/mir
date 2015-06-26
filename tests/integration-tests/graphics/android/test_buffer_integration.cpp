@@ -25,7 +25,7 @@
 #include "graphics_region_factory.h"
 #include "patterns.h"
 
-#include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
+#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include <gtest/gtest.h>
 
 namespace mc=mir::compositor;

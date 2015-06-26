@@ -18,8 +18,8 @@
 
 #include "src/server/input/android/input_reader_dispatchable.h"
 
-#include "mir_test_doubles/mock_event_hub.h"
-#include "mir_test_doubles/mock_input_reader.h"
+#include "mir/test/doubles/mock_event_hub.h"
+#include "mir/test/doubles/mock_input_reader.h"
 #include "InputReader.h"
 
 namespace mtd = mir::test::doubles;
