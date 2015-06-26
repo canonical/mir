@@ -19,10 +19,10 @@
 #include "src/client/client_buffer_depository.h"
 #include "src/server/compositor/buffer_queue.h"
 #include "src/server/compositor/buffer_stream_surfaces.h"
-#include "mir_test_doubles/mock_client_buffer_factory.h"
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/doubles/mock_client_buffer_factory.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
+#include "mir/test/fake_shared.h"
 #include <gtest/gtest.h>
 
 namespace mt  = mir::test;
