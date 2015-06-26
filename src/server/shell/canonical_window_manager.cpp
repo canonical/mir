@@ -37,6 +37,10 @@ namespace
 {
 int const title_bar_height = 10;
 
+// TODO this really should belong on CanonicalSurfaceInfo
+// but is currently used when placing the surface before construction.
+// Which implies we need some rework so that we can construct metadata
+// before the surface.
 bool must_not_have_parent(MirSurfaceType type)
 {
     switch (type)
@@ -50,6 +54,10 @@ bool must_not_have_parent(MirSurfaceType type)
     }
 }
 
+// TODO this really should belong on CanonicalSurfaceInfo
+// but is currently used when placing the surface before construction.
+// Which implies we need some rework so that we can construct metadata
+// before the surface.
 bool must_have_parent(MirSurfaceType type)
 {
     switch (type)

@@ -16,6 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/events/event_builders.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
 
@@ -25,8 +26,8 @@
 #include "mir/test/signal.h"
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/client_types.h"
-#include "../../include/common/mir_toolkit/common.h"
 
+namespace mev = mir::events;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
@@ -43,7 +44,13 @@ namespace
 class SurfaceHandle
 {
 public:
-    explicit SurfaceHandle(MirSurface* surface) : surface{surface} {}
+    explicit SurfaceHandle(MirSurface* surface) : surface{surface}
+    {
+        // Swap buffers to ensure surface is visible for event based tests
+        if (mir_surface_is_valid(surface))
+            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+    }
+
     ~SurfaceHandle() { if (surface) mir_surface_release_sync(surface); }
 
     operator MirSurface*() const { return surface; }
@@ -58,6 +65,7 @@ class MockSurfaceObserver : public ms::NullSurfaceObserver
 public:
     MOCK_METHOD1(renamed, void(char const*));
     MOCK_METHOD2(attrib_changed, void(MirSurfaceAttrib attrib, int value));
+    MOCK_METHOD1(resized_to, void(Size const& size));
 };
 
 struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
@@ -116,6 +124,58 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
     MirPixelFormat pixel_format{mir_pixel_format_invalid};
     static auto const width = 97;
     static auto const height= 101;
+    MirInputDeviceId const device_id = MirInputDeviceId(7);
+    std::chrono::nanoseconds const timestamp = std::chrono::nanoseconds(39);
+
+    void generate_alt_click_at(Point const& click_position)
+    {
+        auto const modifiers = mir_input_event_modifier_alt;
+
+        auto const x_axis_value = click_position.x.as_float();
+        auto const y_axis_value = click_position.y.as_float();
+        auto const hscroll_value = 0.0;
+        auto const vscroll_value = 0.0;
+        auto const action = mir_pointer_action_button_down;
+
+        auto const click_event = mev::make_event(device_id, timestamp, modifiers,
+                                                 action, mir_pointer_button_tertiary, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+
+        server.the_shell()->handle(*click_event);
+    }
+
+    void generate_alt_move_to(Point const& drag_position)
+    {
+        auto const modifiers = mir_input_event_modifier_alt;
+
+        auto const x_axis_value = drag_position.x.as_float();
+        auto const y_axis_value = drag_position.y.as_float();
+        auto const hscroll_value = 0.0;
+        auto const vscroll_value = 0.0;
+        auto const action = mir_pointer_action_motion;
+
+        auto const drag_event = mev::make_event(device_id, timestamp, modifiers,
+                                                action, mir_pointer_button_tertiary, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+
+        server.the_shell()->handle(*drag_event);
+    }
+
+    void wait_for_arbitrary_change(MirSurface* surface)
+    {
+        auto const new_title = __PRETTY_FUNCTION__;
+
+        EXPECT_CALL(surface_observer, renamed(StrEq(new_title))).
+            WillOnce(InvokeWithoutArgs([&]{ change_observed(); }));
+
+        signal_change.reset();
+
+        auto const spec = mir_create_surface_spec(connection);
+
+        mir_surface_spec_set_name(spec, new_title);
+
+        mir_surface_apply_spec(surface, spec);
+        mir_surface_spec_release(spec);
+        signal_change.wait_for(1s);
+    }
 
 private:
     std::shared_ptr<mtd::WrapShellToTrackLatestSurface> shell;
@@ -135,7 +195,6 @@ struct SurfaceSpecificationCase : SurfaceSpecification, ::testing::WithParamInte
 using SurfaceWithoutParent = SurfaceSpecificationCase;
 using SurfaceNeedingParent = SurfaceSpecificationCase;
 using SurfaceMayHaveParent = SurfaceSpecificationCase;
-}
 
 MATCHER(IsValidSurface, "")
 {
@@ -144,6 +203,44 @@ MATCHER(IsValidSurface, "")
     if (!mir_surface_is_valid(arg)) return false;
 
     return true;
+}
+
+MATCHER_P(WidthEq, value, "")
+{
+    return Width(value) == arg.width;
+}
+
+MATCHER_P(HeightEq, value, "")
+{
+    return Height(value) == arg.height;
+}
+}
+
+TEST_F(SurfaceSpecification, surface_spec_min_width_is_respected)
+{
+    auto const min_width = 17;
+
+    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_type(spec, mir_surface_type_normal);
+            mir_surface_spec_set_width(spec, width);
+            mir_surface_spec_set_height(spec, height);
+            mir_surface_spec_set_pixel_format(spec, pixel_format);
+            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_surface_spec_set_min_width(spec, min_width);
+        });
+
+    auto const shell_surface = latest_shell_surface();
+    shell_surface->add_observer(mt::fake_shared(surface_observer));
+
+    auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
+
+    EXPECT_CALL(surface_observer, resized_to(WidthEq(min_width)));
+
+    generate_alt_click_at(bottom_right);
+    generate_alt_move_to(shell_surface->top_left());
+
+    wait_for_arbitrary_change(surface);
 }
 
 TEST_P(SurfaceWithoutParent, not_setting_parent_succeeds)
