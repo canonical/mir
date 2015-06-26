@@ -454,6 +454,15 @@ void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
                                   MirBufferStreamInfo* streams,
                                   unsigned int num_streams);
 
+// TODO: Consider shape mode
+// TODO: Doc
+/**
+ * Set the input shape for this surface
+ */
+void mir_surface_spec_set_input_shape(MirSurfaceSpec* spec,
+                                      MirRectangle const *rectangles,
+                                      size_t n_rects);
+
 /**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do

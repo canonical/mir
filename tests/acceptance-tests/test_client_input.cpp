@@ -655,9 +655,36 @@ TEST_F(TestClientInputKeyRepeat, keys_are_repeated_to_clients)
     // Extra repeats before we shut down.
     EXPECT_CALL(first_client, handle_input(mt::KeyRepeatEvent())).Times(AnyNumber());
 
-    first_client.ready_to_accept_events.wait_for_at_most_seconds(5);
-
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
 
     first_client.all_events_received.wait_for_at_most_seconds(10);
 }
+
+TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client)
+{
+    using namespace testing;
+
+    positions[first] = {{0, 0}, {10, 10}};
+    
+    Client client(new_connection(), first);
+
+    MirRectangle input_rects[] = {1, 1, 10, 10};
+
+    auto spec = mir_connection_create_spec_for_changes(client.connection);
+    mir_surface_spec_set_input_shape(spec, input_rects, 1);
+    mir_surface_apply_spec(client.surface, spec);
+
+    EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
+    EXPECT_CALL(client, handle_input(mt::PointerLeaveEvent()));
+    EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
+    EXPECT_CALL(client, handle_input(mt::PointerEventWithPosition(1, 1)));
+    EXPECT_CALL(client, handle_input(mt::ButtonDownEvent(1, 1)));
+    
+
+    fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+    fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT).with_action(mis::EventAction::Up));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
+    fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
+}
+
+

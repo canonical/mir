@@ -132,6 +132,7 @@ MIR_CLIENT_9 {
     mir_surface_spec_set_fullscreen_on_output;
     mir_surface_spec_set_height;
     mir_surface_spec_set_height_increment;
+    mir_surface_spec_set_input_shape;
     mir_surface_spec_set_max_aspect_ratio;
     mir_surface_spec_set_max_height;
     mir_surface_spec_set_max_width;

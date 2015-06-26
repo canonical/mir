@@ -167,6 +167,27 @@ void mf::SessionMediator::advance_buffer(
         });
 }
 
+namespace
+{
+template<typename T>
+std::vector<geom::Rectangle>
+extract_input_shape_from(T const& params)
+{
+    std::vector<geom::Rectangle> shapes;
+    if (params->input_shape_size() > 0)
+    {
+        for (auto& rect : params->input_shape())
+        {
+            shapes.push_back(geom::Rectangle(
+                geom::Point{rect.left(), rect.top()},
+                geom::Size{rect.width(), rect.height()})
+            );
+        }
+    }
+    return shapes;
+}
+}
+
 void mf::SessionMediator::create_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceParameters* request,
@@ -232,6 +253,8 @@ void mf::SessionMediator::create_surface(
 
     if (request->has_max_aspect())
         params.max_aspect = { request->max_aspect().width(), request->max_aspect().height()};
+
+    params.input_shape = extract_input_shape_from(request);
 
     auto const surf_id = shell->create_surface(session, params);
     auto stream_id = mf::BufferStreamId(surf_id.as_value());
@@ -501,6 +524,8 @@ void mf::SessionMediator::modify_surface(
             surface_specification.max_aspect().width(),
             surface_specification.max_aspect().height()
         };
+
+    mods.input_shape = extract_input_shape_from(&surface_specification);
 
     auto const id = mf::SurfaceId(request->surface_id().value());
 
