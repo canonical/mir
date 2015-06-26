@@ -576,6 +576,49 @@ TEST(MultiThreadedCompositor, schedules_enough_frames)
     compositor.stop();
 }
 
+TEST(MultiThreadedCompositor, recommended_sleep_throttles_compositor_loop)
+{
+    using namespace testing;
+    using namespace std::chrono;
+
+    unsigned int const nbuffers = 3;
+    milliseconds const recommendation(10);
+
+    auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
+    auto scene = std::make_shared<StubScene>();
+    auto factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{display, scene, factory,
+                                           null_display_listener, null_report,
+                                           recommendation, false};
+
+    EXPECT_TRUE(factory->check_record_count_for_each_buffer(nbuffers, 0, 0));
+
+    compositor.start();
+
+    int const max_retries = 100;
+
+    for (int frame = 1; frame <= 10; ++frame)
+    {
+        scene->emit_change_event();
+
+        auto start = system_clock::now();
+        int retry = 0;
+        while (retry < max_retries &&
+               !factory->check_record_count_for_each_buffer(nbuffers, frame))
+        {
+            std::this_thread::sleep_for(milliseconds(1));
+            ++retry;
+        }
+        ASSERT_LT(retry, max_retries);
+        auto duration = system_clock::now() - start;
+
+        ASSERT_THAT(duration_cast<milliseconds>(duration).count(),
+                    Ge(recommendation.count()));
+    }
+
+    compositor.stop();
+}
+
 TEST(MultiThreadedCompositor, when_no_initial_composite_is_needed_there_is_none)
 {
     using namespace testing;
