@@ -361,7 +361,7 @@ TEST_F(ClientLibrary, receives_surface_dpi_value)
     mir_connection_release(connection);
 }
 
-#ifndef ANDROID
+#ifdef MESA_KMS
 TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);

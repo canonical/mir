@@ -13,29 +13,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_LEGACY_INPUT_DISPATCHABLE_H_
-#define MIR_TEST_DOUBLES_MOCK_LEGACY_INPUT_DISPATCHABLE_H_
+#include "mir_test_framework/main.h"
 
-#include "mir/input/legacy_input_dispatchable.h"
-#include <gmock/gmock.h>
+#include <cstring>
+#include <iostream>
 
-namespace mir
+int main(int argc, char* argv[])
 {
-namespace test
-{
-namespace doubles
-{
-struct MockLegacyInputDispatchable : input::LegacyInputDispatchable
-{
-    MOCK_METHOD0(start, void());
-    MOCK_CONST_METHOD0(watch_fd, mir::Fd());
-    MOCK_METHOD1(dispatch, bool(dispatch::FdEvents));
-    MOCK_CONST_METHOD0(relevant_events, dispatch::FdEvents());
-};
+    // Override this standard gtest message
+    std::cout << "Running main() from " << basename(__FILE__) << std::endl;
+
+    mir_test_framework::main(argc, argv);
 }
-}
-}
-#endif // MIR_TEST_DOUBLES_MOCK_LEGACY_INPUT_DISPATCHABLE_H_
