@@ -22,13 +22,22 @@
 namespace mir_test_framework
 {
 /**
- * Initialize and run the mir test framework.
- * This does some setup, then initializes and runs the GoogleTest framework.
+ * Initialize and run the mir test framework as follows:
  *
- * \attention If you override main() for your own purposes call this to execute
- * the tests.
+ *    ::testing::InitGoogleTest(&argc, argv);
+ *    set_commandline(argc, argv);
+ *    return RUN_ALL_TESTS();
+ *
+ * \attention If you override main() for your own purposes call this or do
+ * something equivalent to run the tests.
  */
 int main(int argc, char* argv[]);
+
+/**
+ * Note the commandline for use in the mir test framework. The parameter list
+ * referenced by argv must remain valid during the tests.
+ */
+void set_commandline(int argc, char* argv[]);
 }
 
 #endif //MIR_TEST_FRAMEWORK_MAIN_H
