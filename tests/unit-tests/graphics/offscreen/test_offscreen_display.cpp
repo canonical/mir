@@ -78,6 +78,22 @@ TEST_F(OffscreenDisplayTest, orientation_normal)
     EXPECT_TRUE(count);
 }
 
+TEST_F(OffscreenDisplayTest, never_enables_predictive_bypass)
+{
+    mgo::Display display{
+        native_display,
+        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        mr::null_display_report()};
+
+    int groups = 0;
+    display.for_each_display_sync_group([&](mg::DisplaySyncGroup& group){
+        ++groups;
+        EXPECT_EQ(0, group.recommended_sleep().count());
+    });
+
+    EXPECT_TRUE(groups);
+}
+
 TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
 {
     using namespace ::testing;
