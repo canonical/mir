@@ -458,6 +458,30 @@ TEST_F(HwcDevice, overlays_are_throttled_per_predictive_bypass)
     }
 }
 
+TEST_F(HwcDevice, compositing_disables_predictive_bypass)
+{
+    using namespace testing;
+
+    NiceMock<mtd::MockSwappingGLContext> mock_context;
+    ON_CALL(mock_context, last_rendered_buffer())
+        .WillByDefault(Return(stub_fb_buffer));
+    EXPECT_CALL(mock_context, swap_buffers())
+        .Times(AtLeast(5));
+
+    mga::LayerList list(layer_adapter, {}, geom::Displacement{});
+    mtd::MockRenderableListCompositor mock_compositor;
+    mga::DisplayContents content{primary, list, offset, mock_context,
+                                 mock_compositor};
+
+    mga::HwcDevice device(mock_device);
+    device.commit({content});
+    for (int frame = 0; frame < 5; ++frame)
+    {
+        device.commit({content});
+        ASSERT_EQ(0, device.recommended_sleep().count());
+    }
+}
+
 TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_without_update)
 {
     using namespace testing;
