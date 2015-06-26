@@ -52,7 +52,7 @@ mgx::Platform::~Platform()
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, true);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, mgm::DMABufExtension::use);
 }
 
 std::shared_ptr<mg::Display> mgx::Platform::create_display(

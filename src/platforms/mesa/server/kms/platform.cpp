@@ -150,7 +150,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, bypass_option_, false);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, bypass_option_, mgm::DMABufExtension::do_not_use);
 }
 
 std::shared_ptr<mg::Display> mgm::Platform::create_display(

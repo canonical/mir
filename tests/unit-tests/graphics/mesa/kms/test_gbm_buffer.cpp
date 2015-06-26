@@ -72,7 +72,7 @@ protected:
 
         platform = mtd::create_mesa_platform_with_null_dependencies();
 
-        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, mgm::BypassOption::allowed, false));
+        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, mgm::BypassOption::allowed, mgm::DMABufExtension::do_not_use));
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;

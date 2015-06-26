@@ -63,7 +63,7 @@ protected:
 
         platform = mtd::create_mesa_platform_with_null_dependencies();
         allocator.reset(new mgm::BufferAllocator(
-            platform->gbm.device, mgm::BypassOption::allowed, false));
+            platform->gbm.device, mgm::BypassOption::allowed, mgm::DMABufExtension::do_not_use));
     }
 
     // Defaults

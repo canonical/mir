@@ -53,12 +53,12 @@ class EGLImageBufferTextureBinder : public mgm::BufferTextureBinder
 public:
     EGLImageBufferTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
                                 std::shared_ptr<mg::EGLExtensions> const& egl_extensions,
-                                bool const use_dma_buf_extension)
+                                mgm::DMABufExtension const dma_buf_extension)
         : bo{gbm_bo},
           egl_extensions{egl_extensions},
           egl_image{EGL_NO_IMAGE_KHR},
           prime_fd{-1},
-          use_dma_buf_extension{use_dma_buf_extension}
+          dma_buf_extension{dma_buf_extension}
     {
     }
 
@@ -86,7 +86,7 @@ private:
             egl_display = eglGetCurrentDisplay();
             gbm_bo* bo_raw{bo.get()};
 
-            if (use_dma_buf_extension)
+            if (dma_buf_extension == mgm::DMABufExtension::use)
             {
                 auto device = gbm_bo_get_device(bo_raw);
                 auto gem_handle = gbm_bo_get_handle(bo_raw).u32;
@@ -145,7 +145,7 @@ private:
     EGLDisplay egl_display;
     EGLImageKHR egl_image;
     int prime_fd;
-    bool const use_dma_buf_extension;
+    mgm::DMABufExtension const dma_buf_extension;
 };
 
 struct GBMBODeleter
@@ -162,12 +162,13 @@ struct GBMBODeleter
 mgm::BufferAllocator::BufferAllocator(
     gbm_device* device,
     BypassOption bypass_option,
-    bool const use_dma_buf_extension)
+    mgm::DMABufExtension const dma_buf_extension)
     : device(device),
       egl_extensions(std::make_shared<mg::EGLExtensions>()),
-      bypass_option(use_dma_buf_extension ? mgm::BypassOption::prohibited
-                                          : bypass_option),
-      use_dma_buf_extension(use_dma_buf_extension)
+      bypass_option(dma_buf_extension == mgm::DMABufExtension::use ?
+                        mgm::BypassOption::prohibited :
+                        bypass_option),
+      dma_buf_extension(dma_buf_extension)
 {
 }
 
@@ -230,7 +231,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
     std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
 
     std::unique_ptr<EGLImageBufferTextureBinder> texture_binder{
-        new EGLImageBufferTextureBinder{bo, egl_extensions, use_dma_buf_extension}};
+        new EGLImageBufferTextureBinder{bo, egl_extensions, dma_buf_extension}};
 
     /* Create the GBMBuffer */
     auto const buffer =
@@ -310,5 +311,5 @@ std::unique_ptr<mg::Buffer> mgm::BufferAllocator::reconstruct_from(
     return std::make_unique<mgm::GBMBuffer>(
         bo,
         package->flags,
-        std::make_unique<EGLImageBufferTextureBinder>(bo, egl_extensions, use_dma_buf_extension));
+        std::make_unique<EGLImageBufferTextureBinder>(bo, egl_extensions, dma_buf_extension));
 }
