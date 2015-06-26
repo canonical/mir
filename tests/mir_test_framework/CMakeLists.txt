@@ -30,6 +30,7 @@ add_library(mir-public-test-framework OBJECT
   headless_nested_server_runner.cpp
   headless_test.cpp
   interprocess_client_server_test.cpp
+  main.cpp
   placement_applying_shell.cpp
   process.cpp
   server_runner.cpp
