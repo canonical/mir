@@ -453,12 +453,8 @@ TEST_F(HwcDevice, overlays_are_throttled_per_predictive_bypass)
 
     for (int frame = 0; frame < 5; ++frame)
     {
-        using namespace std::chrono;
-        auto start = system_clock::now();
         device.commit({content});
-        auto duration = system_clock::now() - start;
-        // Duration cast to a simple type so that test failures are readable
-        ASSERT_THAT(duration_cast<milliseconds>(duration).count(), Ge(8));
+        ASSERT_THAT(device.recommended_sleep().count(), Ge(8));
     }
 }
 
