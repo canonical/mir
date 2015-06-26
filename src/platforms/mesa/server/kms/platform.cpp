@@ -38,6 +38,7 @@
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
+namespace mgmh = mgm::helpers;
 namespace mo = mir::options;
 
 namespace
@@ -215,19 +216,19 @@ extern "C" void add_graphics_platform_options(boost::program_options::options_de
 extern "C" mg::PlatformPriority probe_graphics_platform()
 {
     auto udev = std::make_shared<mir::udev::Context>();
+    auto drm = std::make_shared<mgmh::DRMHelper>(mgmh::DRMNodeToUse::card_node);
 
-    mir::udev::Enumerator drm_devices{udev};
-    drm_devices.match_subsystem("drm");
-    drm_devices.match_sysname("card[0-9]*");
-    drm_devices.scan_devices();
-
-    for (auto& device : drm_devices)
+    try {
+        drm->setup(udev);
+        drm->set_master();
+    }
+    catch(...)
     {
-        static_cast<void>(device);
-        return mg::PlatformPriority::best;
+        return mg::PlatformPriority::unsupported;
     }
 
-    return mg::PlatformPriority::unsupported;
+    drm->drop_master();
+    return mg::PlatformPriority::best;
 }
 
 mir::ModuleProperties const description = {

@@ -26,6 +26,7 @@
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
+namespace mgmh = mgm::helpers;
 namespace mgx = mg::X;
 namespace mo = mir::options;
 
@@ -103,19 +104,20 @@ extern "C" mg::PlatformPriority probe_graphics_platform()
     if (dpy)
     {
         XCloseDisplay(dpy);
+
         auto udev = std::make_shared<mir::udev::Context>();
+        auto drm = std::make_shared<mgmh::DRMHelper>(mgmh::DRMNodeToUse::card_node);
 
-        mir::udev::Enumerator drm_devices{udev};
-        drm_devices.match_subsystem("drm");
-        drm_devices.match_sysname("renderD[0-9]*");
-        drm_devices.scan_devices();
-
-        for (auto& device : drm_devices)
+        try {
+            drm->setup(udev);
+            drm->set_master();
+        }
+        catch(...)
         {
-            static_cast<void>(device);
-
             return mg::PlatformPriority::best;
         }
+
+        drm->drop_master();
     }
     return mg::PlatformPriority::unsupported;
 }
