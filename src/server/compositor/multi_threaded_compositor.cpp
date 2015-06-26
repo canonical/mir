@@ -158,19 +158,6 @@ public:
         std::unique_lock<std::mutex> lock{run_mutex};
         while (running)
         {
-            /*
-             * "Predictive bypass" optimization: If the last frame was
-             * bypassed/overlayed or you simply have a fast GPU, it is
-             * beneficial to sleep for most of the frame. This significantly
-             * reduces the latency between snapshotting the scene and the
-             * physical display scan-out.
-             */
-            lock.unlock();
-            auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
-                         force_sleep : group.recommended_sleep();
-            std::this_thread::sleep_for(delay);
-            lock.lock();
-
             /* Wait until compositing has been scheduled or we are stopped */
             run_cv.wait(lock, [&]{ return (frames_scheduled > 0) || !running; });
 
@@ -196,6 +183,17 @@ public:
                     std::get<1>(compositor)->composite(scene->scene_elements_for(comp_id));
                 }
                 group.post();
+
+                /*
+                 * "Predictive bypass" optimization: If the last frame was
+                 * bypassed/overlayed or you simply have a fast GPU, it is
+                 * beneficial to sleep for most of the next frame. This reduces
+                 * the latency between snapshotting the scene and post()
+                 * completing by almost a whole frame.
+                 */
+                auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
+                             force_sleep : group.recommended_sleep();
+                std::this_thread::sleep_for(delay);
 
                 lock.lock();
 
