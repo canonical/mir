@@ -68,7 +68,7 @@ struct IpcOperations : public ::testing::Test
     }
 
     MockDRMOperations mock_drm_ops;
-    mgm::IpcOperations ipc_ops{mt::fake_shared(mock_drm_ops), true};
+    mgm::IpcOperations ipc_ops{mt::fake_shared(mock_drm_ops)};
     MirBufferPackage native_handle;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
     geom::Stride dummy_stride{4390};

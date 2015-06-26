@@ -57,7 +57,7 @@ mir::Fd mgmh::DRMHelper::authenticated_fd()
                 "Tried to get authenticated DRM fd before setting up the DRM master"));
 
     if (node_to_use == DRMNodeToUse::render_node)
-        return mir::Fd{IntOwnedFd{fd}};
+        return mir::Fd{IntOwnedFd{dup(fd)}};
 
     char* busid = drmGetBusid(fd);
     if (!busid)

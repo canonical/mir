@@ -38,14 +38,14 @@ namespace mgm = mir::graphics::mesa;
 
 namespace
 {
-struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
+struct DefaultPlatformIPCPackage : public mg::PlatformIPCPackage
 {
-    MesaPlatformIPCPackage(int drm_auth_fd)
+    DefaultPlatformIPCPackage(int drm_auth_fd)
     {
         ipc_fds.push_back(drm_auth_fd);
     }
 
-    ~MesaPlatformIPCPackage()
+    ~DefaultPlatformIPCPackage()
     {
         if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
             mgm::drm_close_threadsafe(ipc_fds[0]);
@@ -53,8 +53,7 @@ struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 };
 }
 
-mgm::IpcOperations::IpcOperations(std::shared_ptr<DRMAuthentication> const& drm, bool const authenticate) :
-    drm{drm}, authenticate{authenticate}
+mgm::IpcOperations::IpcOperations(std::shared_ptr<DRMAuthentication> const& drm) : drm{drm}
 {
 }
 
@@ -86,10 +85,6 @@ void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
     unsigned int const op, mg::PlatformOperationMessage const& request)
 {
-    if (!authenticate)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Invalid platform operation"));
-
     if (op == MirMesaPlatformOperation::auth_magic)
     {
         MirMesaAuthMagicRequest auth_magic_request;
@@ -144,11 +139,5 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
 {
-    if (!authenticate)
-    {
-        auto package = std::make_shared<mg::PlatformIPCPackage>();
-        package->ipc_fds.push_back(dup(drm->authenticated_fd()));
-        return package;
-    }
-    return std::make_shared<MesaPlatformIPCPackage>(drm->authenticated_fd());
+    return std::make_shared<DefaultPlatformIPCPackage>(drm->authenticated_fd());
 }
