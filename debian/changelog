@@ -71,6 +71,8 @@ mir (0.14.0-0ubuntu1) UNRELEASED; urgency=medium
       . Stopping input in a nested server stops VT switching  (LP: #1465585)
       . Pointer events are not mapped to correct output by nested Mir
         (LP: #1465692)
+      . Loading libmirclient.so twice leads to a segfault in libmirprotobuf.so
+        (LP: #1391976)
 
  -- Andreas Pokorny <andreas.pokorny@canonical.com>  Tue, 02 Jun 2015 16:25:59 +0800
 
