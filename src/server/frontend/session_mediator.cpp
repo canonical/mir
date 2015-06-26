@@ -178,8 +178,6 @@ extract_input_shape_from(T const& params)
     {
         for (auto& rect : params->input_shape())
         {
-                    printf("Got a shape \n");
-
             shapes.push_back(geom::Rectangle(
                 geom::Point{rect.left(), rect.top()},
                 geom::Size{rect.width(), rect.height()})
@@ -480,7 +478,6 @@ void mf::SessionMediator::modify_surface(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
-    printf("Handling modify surface \n");
     auto const& surface_specification = request->surface_specification();
 
     auto const session = weak_session.lock();

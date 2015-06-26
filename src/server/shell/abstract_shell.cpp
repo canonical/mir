@@ -80,7 +80,6 @@ mf::SurfaceId msh::AbstractShell::create_surface(
 
 void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
 {
-    printf("Modifying surface \n");
     window_manager->modify_surface(session, surface, modifications);
 }
 

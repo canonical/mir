@@ -530,7 +530,6 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
     if (modifications.input_shape.is_set())
     {
-        printf("Literally setting input region \n");
         surface->set_input_region(modifications.input_shape.value());
     }
 
