@@ -245,7 +245,8 @@ std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     std::unique_lock<std::mutex> lock(guard);
-    custom_input_rectangles = input_rectangles;
+    custom_input_rectangles  = input_rectangles;
+    size_when_input_rectangles_set = surface_rect.size;
 }
 
 void ms::BasicSurface::resize(geom::Size const& desired_size)
@@ -304,9 +305,13 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
     // TODO: Perhaps creates some issues with transformation.
     auto local_point = geom::Point{0, 0} + (point-surface_rect.top_left);
 
+    auto x_scale = surface_rect.size.width.as_int() / size_when_input_rectangles_set.width.as_int();
+    auto y_scale = surface_rect.size.height.as_int() / size_when_input_rectangles_set.height.as_int();
+
     for (auto const& rectangle : custom_input_rectangles)
     {
-        if (rectangle.contains(local_point))
+        auto scaled_point = geom::Point{local_point.x.as_int() / x_scale, local_point.y.as_int() / y_scale};
+        if (rectangle.contains(scaled_point))
         {
             return true;
         }

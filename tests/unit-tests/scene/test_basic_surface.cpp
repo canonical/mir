@@ -488,6 +488,25 @@ TEST_F(BasicSurfaceTest, disables_input_when_setting_input_region_with_empty_rec
     EXPECT_FALSE(surface.input_area_contains(rect.top_left));
 }
 
+// We create a 2x2 surface with a ((0, 0), (1, 1)) input rectangle.
+// as we stretch the surface we expect the input rectangle to still fill only the upper
+// left corner
+TEST_F(BasicSurfaceTest, input_regions_scale_with_size)
+{
+    surface.move_to({0, 0});
+    surface.resize({2, 2});
+
+    geom::Rectangle input_rect{{0, 0}, {1, 1}};
+    surface.set_input_region({input_rect});
+
+    EXPECT_TRUE(surface.input_area_contains(geom::Point{0, 0}));
+    EXPECT_FALSE(surface.input_area_contains(geom::Point{1, 1}));
+
+    surface.resize({10, 10});
+    EXPECT_TRUE(surface.input_area_contains(geom::Point{4, 4}));
+    EXPECT_FALSE(surface.input_area_contains(geom::Point{5, 5}));
+}
+
 TEST_F(BasicSurfaceTest, reception_mode_is_normal_by_default)
 {
     EXPECT_EQ(mi::InputReceptionMode::normal, surface.reception_mode());

@@ -166,6 +166,7 @@ private:
     input::InputReceptionMode input_mode;
     const bool nonrectangular;
     std::vector<geometry::Rectangle> custom_input_rectangles;
+    geometry::Size size_when_input_rectangles_set;
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<input::InputSender> const input_sender;
