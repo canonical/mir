@@ -178,8 +178,10 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
 struct WithAnyNumberOfBuffers : BufferScheduling {};
 struct WithTwoOrMoreBuffers   : BufferScheduling {};
 struct WithThreeOrMoreBuffers : BufferScheduling {};
+struct WithOneBuffer : BufferScheduling {};
 }
 
+//TEST_F(BufferQueueTest, compositor_acquires_frames_in_order_for_synchronous_client)
 TEST_P(WithAnyNumberOfBuffers, all_buffers_consumed_in_interleaving_pattern)
 {
     std::vector<ScheduleEntry> schedule = {
@@ -199,6 +201,7 @@ TEST_P(WithAnyNumberOfBuffers, all_buffers_consumed_in_interleaving_pattern)
     EXPECT_THAT(consumption_log, ContainerEq(production_log));
 }
 
+//TEST_F(BufferQueueTest, framedropping_clients_never_block)
 TEST_P(WithTwoOrMoreBuffers, framedropping_producers_dont_block)
 {
     queue.allow_framedropping(true);
@@ -241,6 +244,180 @@ TEST_P(WithThreeOrMoreBuffers, synchronous_overproducing_producers_has_all_buffe
     EXPECT_THAT(consumption_log, ContainerEq(production_log));
 }
 
+
+MATCHER_P(EachBufferIdIs, value, "")
+{
+    auto id_matcher = [](BufferEntry const& a, BufferEntry const& b){ return a.id == b.id; };
+    return std::search_n(arg.begin(), arg.end(), arg.size(), value, id_matcher) != std::end(arg);
+}
+
+MATCHER(HasIncreasingAge, "")
+{
+    return std::is_sorted(arg.begin(), arg.end(),
+        [](BufferEntry const& a, BufferEntry const& b) {
+            return a.age < b.age;
+        });
+}
+
+//TEST_F(BufferQueueTest, buffer_queue_of_one_is_supported)
+TEST_P(WithOneBuffer, client_and_server_get_concurrent_access)
+{
+    std::vector<ScheduleEntry> schedule = {
+        {1_t, {&producer}, {&consumer}},
+        {2_t, {&producer}, {&consumer}},
+        {3_t, {&producer}, {}},
+        {4_t,          {}, {&consumer}},
+    };
+    run_system(schedule);
+
+    auto production_log = producer.production_log();
+    auto consumption_log = consumer.consumption_log();
+    EXPECT_THAT(production_log, Not(IsEmpty()));
+    EXPECT_THAT(consumption_log, Not(IsEmpty()));
+    EXPECT_THAT(consumption_log, ContainerEq(production_log));
+
+    EXPECT_THAT(consumption_log, EachBufferIdIs(consumption_log[0]));
+    EXPECT_THAT(production_log, EachBufferIdIs(consumption_log[0]));
+    EXPECT_THAT(consumption_log, HasIncreasingAge());
+} 
+
+
+/* Regression test for LP: #1210042 */
+//TEST_F(BufferQueueTest, clients_dont_recycle_startup_buffer)
+TEST_P(WithThreeOrMoreBuffers, consumers_dont_recycle_startup_buffer )
+{
+    std::vector<ScheduleEntry> schedule = {
+        {1_t, {&producer}, {}},
+        {2_t, {&producer}, {}},
+        {3_t,          {}, {&consumer}},
+    };
+    run_system(schedule);
+
+    auto production_log = producer.production_log();
+    auto consumption_log = consumer.consumption_log();
+    ASSERT_THAT(production_log, SizeIs(2)); 
+    ASSERT_THAT(consumption_log, SizeIs(1));
+    EXPECT_THAT(consumption_log[0], Eq(production_log[0])); 
+}
+
+//TEST_F(BufferQueueTest, clients_can_have_multiple_pending_completions)
+TEST_P(WithAnyNumberOfBuffers, clients_can_acquire_multiple_buffers )
+{
+    
+}
+
+//TEST_F(BufferQueueTest, async_client_cycles_through_all_buffers)
+TEST_P(WithTwoOrMoreBuffers, consumer_cycles_through_all_available_buffers)
+{
+    auto acquirable_buffers = nbuffers - 1;
+    auto tick = 0_t;
+    std::vector<ScheduleEntry> schedule;
+    for(auto i = 0; i < acquirable_buffers; i++)
+        schedule.emplace_back(ScheduleEntry{tick++, {&producer}, {}});
+    run_system(schedule);
+
+    auto production_log = producer.production_log();
+    EXPECT_THAT(production_log, SizeIs(acquirable_buffers));
+}
+
+//TEST_F(BufferQueueTest, compositor_can_acquire_and_release)
+TEST_P(WithAnyNumberOfBuffers, compositor_can_always_get_a_buffer)
+{
+    std::vector<ScheduleEntry> schedule = {
+        {1_t, {},          {&consumer}},
+        {2_t, {},          {&consumer}},
+        {3_t, {},          {&consumer}},
+        {5_t, {},          {&consumer}},
+        {6_t, {},          {&consumer}},
+    };
+    run_system(schedule);
+
+    auto consumption_log = consumer.consumption_log();
+    ASSERT_THAT(consumption_log, SizeIs(5));
+}
+
+TEST_P(WithTwoOrMoreBuffers, compositor_doesnt_starve_from_slow_client)
+{
+    std::vector<ScheduleEntry> schedule = {
+        {1_t,   {},          {&consumer}},
+        {60_t,  {},          {&consumer}},
+        {120_t, {},          {&consumer}},
+        {150_t, {&producer}, {}},
+        {180_t, {},          {&consumer}},
+        {240_t, {},          {&consumer}},
+        {270_t, {&producer}, {}},
+        {300_t, {},          {&consumer}},
+        {360_t, {},          {&consumer}},
+    };
+    run_system(schedule);
+
+    auto consumption_log = consumer.consumption_log();
+    ASSERT_THAT(consumption_log, SizeIs(7));
+    EXPECT_THAT(std::count(consumption_log.begin(), consumption_log.end(), consumption_log[0]), Eq(3));
+    EXPECT_THAT(std::count(consumption_log.begin(), consumption_log.end(), consumption_log[3]), Eq(2));
+    EXPECT_THAT(std::count(consumption_log.begin(), consumption_log.end(), consumption_log[5]), Eq(2));
+}
+
+
+//TEST_F(BufferQueueTest, multiple_compositors_are_in_sync)
+TEST_P(WithTwoOrMoreBuffers, multiple_consumers_are_in_sync)
+{
+    BufferQueueConsumer consumer1(stream); //ticks at 59hz
+    BufferQueueConsumer consumer2(stream); //ticks at 60hz
+
+    std::vector<ScheduleEntry> schedule = {
+        {0_t,     {&producer}, {}},
+        {1_t,     {},          {&consumer1}},
+        {60_t,    {},          {&consumer1, &consumer2}},
+        {119_t,   {},          {&consumer1}},
+        {120_t,   {},          {&consumer2}},
+        {130_t,   {&producer}, {}},
+        {178_t,   {},          {&consumer1}},
+        {180_t,   {},          {&consumer2}},
+        {237_t,   {},          {&consumer1}},
+        {240_t,   {},          {&consumer2}},
+    };
+    run_system(schedule);
+
+    auto production_log = producer.production_log();
+    auto consumption_log_1 = consumer1.consumption_log();
+    auto consumption_log_2 = consumer2.consumption_log();
+    ASSERT_THAT(consumption_log_1, SizeIs(5));
+    ASSERT_THAT(consumption_log_2, SizeIs(4));
+    ASSERT_THAT(production_log, SizeIs(2));
+
+    std::for_each(consumption_log_1.begin(), consumption_log_1.begin() + 3,
+        [&](BufferEntry const& entry){ EXPECT_THAT(entry, Eq(production_log[0])); });
+    std::for_each(consumption_log_1.begin() + 3, consumption_log_1.end(),
+        [&](BufferEntry const& entry){ EXPECT_THAT(entry, Eq(production_log[1])); });
+    std::for_each(consumption_log_2.begin(), consumption_log_2.begin() + 2,
+        [&](BufferEntry const& entry){ EXPECT_THAT(entry, Eq(production_log[0])); });
+    std::for_each(consumption_log_2.begin() + 2, consumption_log_2.end(),
+        [&](BufferEntry const& entry){ EXPECT_THAT(entry, Eq(production_log[1])); });
+}
+
+//TEST_F(BufferQueueTest, multiple_fast_compositors_are_in_sync)
+TEST_P(WithThreeOrMoreBuffers, multiple_fast_compositors_are_in_sync)
+{ 
+    BufferQueueConsumer consumer1(stream); //ticks at 59hz
+    BufferQueueConsumer consumer2(stream); //ticks at 60hz
+
+    std::vector<ScheduleEntry> schedule = {
+        {0_t,     {&producer}, {}},
+        {1_t,     {&producer}, {}},
+        {60_t,    {},          {&consumer1, &consumer2}},
+        {61_t,    {},          {&consumer1, &consumer2}},
+    };
+    run_system(schedule);
+
+    auto production_log = producer.production_log();
+    auto consumption_log_1 = consumer1.consumption_log();
+    auto consumption_log_2 = consumer2.consumption_log();
+    EXPECT_THAT(consumption_log_1, Eq(production_log));
+    EXPECT_THAT(consumption_log_2, Eq(production_log));
+}
+
+
 int const max_buffers_to_test{5};
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
@@ -254,3 +431,7 @@ INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeOrMoreBuffers,
     Range(3, max_buffers_to_test));
+INSTANTIATE_TEST_CASE_P(
+    BufferScheduling,
+    WithOneBuffer,
+    Values(1));
