@@ -305,12 +305,12 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
     // TODO: Perhaps creates some issues with transformation.
     auto local_point = geom::Point{0, 0} + (point-surface_rect.top_left);
 
-    auto x_scale = surface_rect.size.width.as_int() / size_when_input_rectangles_set.width.as_int();
-    auto y_scale = surface_rect.size.height.as_int() / size_when_input_rectangles_set.height.as_int();
+    auto x_scale = surface_rect.size.width.as_float() / size_when_input_rectangles_set.width.as_float();
+    auto y_scale = surface_rect.size.height.as_float() / size_when_input_rectangles_set.height.as_float();
 
     for (auto const& rectangle : custom_input_rectangles)
     {
-        auto scaled_point = geom::Point{local_point.x.as_int() / x_scale, local_point.y.as_int() / y_scale};
+        auto scaled_point = geom::Point{local_point.x.as_float() / x_scale, local_point.y.as_float() / y_scale};
         if (rectangle.contains(scaled_point))
         {
             return true;
