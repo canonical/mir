@@ -170,23 +170,14 @@ TEST_F(MesaDisplayBufferTest, predictive_bypass_is_throttled)
         gl_config,
         mock_egl.fake_egl_context);
 
-    /*
-     * Test that predictive bypass does not return from post for at least half
-     * the frame time. This is a reliable test regardless of system load.
-     * We would also like the test the converse but that would be unreliable...
-     */
     for (int frame = 0; frame < 5; ++frame)
     {
         ASSERT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
-
-        using namespace std::chrono;
-        auto start = system_clock::now();
         db.post();
-        auto duration = system_clock::now() - start;
 
         // Duration cast to a simple type so that test failures are readable
         int milliseconds_per_frame = 1000 / mock_refresh_rate;
-        ASSERT_THAT(duration_cast<milliseconds>(duration).count(),
+        ASSERT_THAT(db.recommended_sleep().count(),
                     Ge(milliseconds_per_frame/2));
     }
 }
