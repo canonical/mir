@@ -488,6 +488,55 @@ TEST_F(BasicSurfaceTest, disables_input_when_setting_input_region_with_empty_rec
     EXPECT_FALSE(surface.input_area_contains(rect.top_left));
 }
 
+// We create a 2x2 surface with a ((0, 0), (1, 1)) input rectangle.
+// as we stretch the surface we expect the input rectangle to still fill only the upper
+// left corner
+TEST_F(BasicSurfaceTest, input_regions_scale_with_size)
+{
+    surface.move_to({0, 0});
+    surface.resize({2, 2});
+
+    geom::Rectangle input_rect{{0, 0}, {1, 1}};
+    surface.set_input_region({input_rect});
+
+    EXPECT_TRUE(surface.input_area_contains(geom::Point{0, 0}));
+    EXPECT_FALSE(surface.input_area_contains(geom::Point{1, 1}));
+
+    surface.resize({10, 10});
+    EXPECT_TRUE(surface.input_area_contains(geom::Point{4, 4}));
+    EXPECT_FALSE(surface.input_area_contains(geom::Point{5, 5}));
+}
+
+TEST_F(BasicSurfaceTest, multiple_input_rectangles_scale_with_size)
+{
+    surface.move_to({0, 0});
+    surface.resize({10, 10});
+
+    geom::Rectangle input_rect_1 = {{0, 0}, {10, 3}};
+    geom::Rectangle input_rect_2 = {{0, 0}, {3, 10}};
+    surface.set_input_region({input_rect_1, input_rect_2});
+
+    // Diagonal
+    EXPECT_TRUE(surface.input_area_contains({0, 0}));
+    EXPECT_TRUE(surface.input_area_contains({1, 1}));
+    EXPECT_TRUE(surface.input_area_contains({2, 2}));
+    EXPECT_FALSE(surface.input_area_contains({3, 3}));
+
+    // Along the sides
+    EXPECT_TRUE(surface.input_area_contains({4, 2}));
+    EXPECT_TRUE(surface.input_area_contains({2, 4}));
+
+    surface.resize({100, 100});
+    EXPECT_TRUE(surface.input_area_contains({0, 0}));
+    EXPECT_TRUE(surface.input_area_contains({11, 11}));
+    EXPECT_TRUE(surface.input_area_contains({14, 13}));
+    EXPECT_TRUE(surface.input_area_contains({29, 27}));
+    EXPECT_FALSE(surface.input_area_contains({30, 30}));
+
+    EXPECT_TRUE(surface.input_area_contains({43, 24}));
+    EXPECT_TRUE(surface.input_area_contains({23, 46}));
+}
+
 TEST_F(BasicSurfaceTest, reception_mode_is_normal_by_default)
 {
     EXPECT_EQ(mi::InputReceptionMode::normal, surface.reception_mode());
