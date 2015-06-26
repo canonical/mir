@@ -216,7 +216,7 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
     //always submit what we have, whether we have a buffer, or will have to wait for an async reply
     auto request = mcl::make_protobuf_object<mp::BufferRequest>();
     request->mutable_id()->set_value(protobuf_bs->id().value());
-    request->mutable_buffer()->set_buffer_id(protobuf_bs->buffer().buffer_id());
+    request->mutable_buffer()->set_buffer_id(buffer_depository.current_buffer_id());
     display_server.submit_buffer(nullptr, request.get(), protobuf_void.get(),
         google::protobuf::NewCallback(google::protobuf::DoNothing));
 
