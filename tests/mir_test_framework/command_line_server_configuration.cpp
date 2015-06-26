@@ -46,12 +46,16 @@ void mir_test_framework::configure_from_commandline(mir::Server& server)
     server.set_command_line(::argc, ::argv);
 }
 
+void mir_test_framework::set_commandline(int argc, char* argv[])
+{
+    ::argv = const_cast<char const**>(argv);
+    ::argc = argc;
+}
+
 int mir_test_framework::main(int argc, char* argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);
-
-    ::argv = const_cast<char const**>(argv);
-    ::argc = argc;
-
+    set_commandline(argc, argv);
     return RUN_ALL_TESTS();
 }
+
