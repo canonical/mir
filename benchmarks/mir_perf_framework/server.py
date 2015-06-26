@@ -6,6 +6,18 @@ from .common import env_variable_for_client_report, unique_server_socket_path
 
 class Server:
     def __init__(self, executable=shutil.which("mir_demo_server"), host=None, reports=[], options=[]):
+        """ Creates a Server object.
+
+        The server is not run until it is passed to a PerformanceTest and the
+        test is started.
+
+        Args:
+            executable (str): The server executable to run.
+            host (Server): The host server to connect to (or None if this is a host server)
+            reports (list of str): The lttng reports to enable. Use the 'client-' prefix to
+                                   enable a client report.
+            options (list of str): Command-line options to use when running the server.
+        """
         self.executable = executable
         self.host = host
         self.reports = reports
