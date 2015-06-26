@@ -93,5 +93,6 @@ for client_frame in client_frame_events:
     data.append((host_frame.timestamp() - client_frame.timestamp()) / 1000000.0)
 
 print("=== Results ===")
-print("Nested client to display buffer latency mean: %f ms stdev: %f ms" %
+print("Tracked %d buffers from nested client to display" % len(data))
+print("Latency mean: %f ms stdev: %f ms" %
       (statistics.mean(data), statistics.stdev(data)))
