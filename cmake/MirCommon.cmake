@@ -36,6 +36,10 @@ if(ENABLE_MEMCHECK_OPTION)
   endif(VALGRIND_EXECUTABLE)
 endif(ENABLE_MEMCHECK_OPTION)
 
+try_run(SYSYEM_SUPPORTS_O_TMPFILE SYSTEM_HEADERS_SUPPORT_O_TMPFILE
+  ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/cmake/src/mir/mir_test_tmpfile.cpp
+  )
+
 function (list_to_string LIST_VAR PREFIX STR_VAR)
   foreach (value ${LIST_VAR})
     set(tmp_str "${tmp_str} ${PREFIX} ${value}")
@@ -68,6 +72,10 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
     # TSan may open fds so "surface_creation_does_not_leak_fds" will not work as written
     # TSan deadlocks when running StreamTransportTest/0.SendsFullMessagesWhenInterrupted - disable it until understood
     set(test_exclusion_filter "UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds:StreamTransportTest/0.SendsFullMessagesWhenInterrupted")
+  endif()
+
+  if(SYSYEM_SUPPORTS_O_TMPFILE EQUAL 1)
+      set(test_exclusion_filter "${test_exclusion_filter}:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer")
   endif()
 
   # Final commands
