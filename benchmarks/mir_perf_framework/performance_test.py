@@ -5,6 +5,22 @@ import tempfile
 import atexit
 from .common import unique_lttng_session_name
 
+class LttngEvent:
+    def __init__(self, bt_event):
+        self.name = bt_event.name
+        self.timestamp = bt_event.timestamp
+        self.fields = {}
+        for (k,v) in bt_event.items():
+            self.fields[k] = v
+
+    def __getitem__(self, k):
+        return self.fields.get(k, None)
+
+    def __str__(self):
+        ts = str(self.timestamp)
+        ts = ts[:-9] + "." + ts[-9:]
+        return "[%s] %s %s" % (ts, self.name, self.fields)
+
 class Lttng:
     def __init__(self, keep_lttng_traces):
         self.session_name = unique_lttng_session_name()
@@ -47,9 +63,15 @@ class PerformanceTest:
 
     def babeltrace(self):
         col = babeltrace.TraceCollection()
-
-        for dirname, subdirs, files in os.walk(self.lttng.output_dir):
-            if 'metadata' in files:
-                col.add_trace(dirname, 'ctf')
+        col.add_traces_recursive(self.lttng.output_dir, 'ctf')
 
         return col
+
+    def events(self):
+        trace = self.babeltrace()
+
+        events = []
+        for e in trace.events:
+            events.append(LttngEvent(e))
+
+        return events
