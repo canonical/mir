@@ -39,16 +39,16 @@ struct EGLExtensions;
 namespace mesa
 {
 
-enum class DMABufExtension
+enum class BufferImportMethod
 {
-    use,
-    do_not_use
+    gbm_native_pixmap,
+    dma_buf
 };
 
 class BufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator(gbm_device* device, BypassOption bypass_option, DMABufExtension const dma_buf_extension);
+    BufferAllocator(gbm_device* device, BypassOption bypass_option, BufferImportMethod const buffer_import_method);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
@@ -68,7 +68,7 @@ private:
     std::shared_ptr<EGLExtensions> const egl_extensions;
 
     BypassOption const bypass_option;
-    DMABufExtension const dma_buf_extension;
+    BufferImportMethod const buffer_import_method;
 };
 
 }
