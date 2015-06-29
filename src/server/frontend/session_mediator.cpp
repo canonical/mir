@@ -545,7 +545,6 @@ void mf::SessionMediator::modify_surface(
             surface_specification.max_aspect().height()
         };
 
-    printf("Extracting input shape \n");
     mods.input_shape = extract_input_shape_from(&surface_specification);
 
     auto const id = mf::SurfaceId(request->surface_id().value());
