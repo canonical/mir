@@ -599,9 +599,9 @@ TEST(MultiThreadedCompositor, recommended_sleep_throttles_compositor_loop)
 
     for (int frame = 1; frame <= 10; ++frame)
     {
+        auto start = system_clock::now();
         scene->emit_change_event();
 
-        auto start = system_clock::now();
         int retry = 0;
         while (retry < max_retries &&
                !factory->check_record_count_for_each_buffer(nbuffers, frame))
