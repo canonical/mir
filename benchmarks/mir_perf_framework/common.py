@@ -18,4 +18,4 @@ def unique_server_socket_path():
 unique_server_socket_path.server_count = 0
 
 def unique_lttng_session_name():
-    return "mir_perf_lttng_" + str(os.getppid()) + "_" + random_str
+    return "mir_perf_lttng_" + str(os.getpid()) + "_" + random_str
