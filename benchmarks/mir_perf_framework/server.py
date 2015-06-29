@@ -5,11 +5,12 @@ import shutil
 from .common import env_variable_for_client_report, unique_server_socket_path
 
 class Server:
-    def __init__(self, executable=shutil.which("mir_demo_server"), host=None, reports=[]):
+    def __init__(self, executable=shutil.which("mir_demo_server"), host=None, reports=[], options=[]):
         self.executable = executable
         self.host = host
         self.reports = reports
         self.socket_path = unique_server_socket_path()
+        self.options = options
         self.process = None
 
     def start(self):
@@ -25,6 +26,8 @@ class Server:
                 env[env_variable_for_client_report(report)] = "lttng"
             else:
                 cmdline.append("--%s-report=lttng" % report)
+
+        cmdline.extend(self.options)
 
         self.process = subprocess.Popen(cmdline, env=env)
         self.wait_for_socket()

@@ -20,7 +20,7 @@
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 
-#include "default_display_configuration_policy.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "nested/mir_client_host_connection.h"
 #include "nested/cursor.h"
 #include "nested/display.h"
@@ -62,7 +62,7 @@ mir::DefaultServerConfiguration::the_display_configuration_policy()
         [this]
         {
             return wrap_display_configuration_policy(
-                std::make_shared<mg::DefaultDisplayConfigurationPolicy>());
+                std::make_shared<mg::CloneDisplayConfigurationPolicy>());
         });
 }
 
