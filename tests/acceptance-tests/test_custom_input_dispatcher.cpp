@@ -21,11 +21,11 @@
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/event_matchers.h"
-#include "mir_test/event_factory.h"
+#include "mir/test/doubles/mock_input_dispatcher.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/event_matchers.h"
+#include "mir/test/event_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -86,9 +86,9 @@ TEST_F(TestCustomInputDispatcher, receives_input)
     // separate devices - if the sequence of events is required in a test, better use
     // just one device with the superset of the capabilities instead.
     EXPECT_CALL(input_dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1)
-        .WillOnce(mt::WakeUp(&all_pointer_events_received));
+        .WillOnce(mt::ReturnFalseAndWakeUp(&all_pointer_events_received));
     EXPECT_CALL(input_dispatcher, dispatch(mt::KeyDownEvent())).Times(1)
-        .WillOnce(mt::WakeUp(&all_keys_received));
+        .WillOnce(mt::ReturnFalseAndWakeUp(&all_keys_received));
 
     fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));

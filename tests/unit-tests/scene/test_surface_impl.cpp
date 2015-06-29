@@ -25,14 +25,13 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
 
-#include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_input_targeter.h"
-#include "mir_test_doubles/stub_input_sender.h"
-#include "mir_test_doubles/null_event_sink.h"
-#include "mir_test_doubles/mock_event_sink.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/event_matchers.h"
+#include "mir/test/doubles/stub_buffer_stream.h"
+#include "mir/test/doubles/mock_buffer_stream.h"
+#include "mir/test/doubles/stub_input_sender.h"
+#include "mir/test/doubles/null_event_sink.h"
+#include "mir/test/doubles/mock_event_sink.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/event_matchers.h"
 
 #include <cstring>
 #include <stdexcept>
@@ -236,16 +235,6 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
 
     surface->configure(mir_surface_attrib_focus, mir_surface_focused);
     surface->configure(mir_surface_attrib_focus, mir_surface_unfocused);
-}
-
-TEST_F(Surface, take_input_focus)
-{
-    using namespace ::testing;
-
-    mtd::MockInputTargeter targeter;
-    EXPECT_CALL(targeter, set_focus(_)).Times(1);
-
-    targeter.set_focus(surface);
 }
 
 TEST_F(Surface, emits_client_close_events)

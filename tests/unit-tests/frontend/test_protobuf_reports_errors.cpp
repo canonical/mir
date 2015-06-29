@@ -20,10 +20,10 @@
 #include "mir/frontend/connector.h"
 #include "src/server/frontend/resource_cache.h"
 
-#include "mir_test/stub_server_tool.h"
-#include "mir_test/test_protobuf_server.h"
-#include "mir_test_doubles/stub_ipc_factory.h"
-#include "mir_test/test_protobuf_client.h"
+#include "mir/test/stub_server_tool.h"
+#include "mir/test/test_protobuf_server.h"
+#include "mir/test/doubles/stub_ipc_factory.h"
+#include "mir/test/test_protobuf_client.h"
 
 namespace mt = mir::test;
 

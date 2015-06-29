@@ -24,10 +24,11 @@
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/placement_applying_shell.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/spin_wait.h"
-#include "mir_test/event_matchers.h"
-#include "mir_test/event_factory.h"
+#include "mir_test_framework/temporary_environment_value.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/spin_wait.h"
+#include "mir/test/event_matchers.h"
+#include "mir/test/event_factory.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/events/event_builders.h"
@@ -64,6 +65,10 @@ struct MockEventFilter : public mi::EventFilter
 
 const int surface_width = 100;
 const int surface_height = 100;
+
+void null_event_handler(MirSurface*, MirEvent const*, void*)
+{
+}
 
 struct Client
 {
@@ -119,6 +124,10 @@ struct Client
     }
     ~Client()
     {
+        // Remove the event handler to avoid handling spurious events unrelated
+        // to the tests (e.g. pointer leave events when the surface is destroyed),
+        // which can cause test expectations to fail.
+        mir_surface_set_event_handler(surface, null_event_handler, nullptr);
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
     }
@@ -233,6 +242,8 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
 TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 {
     Client first_client(new_connection(), first);
+
+    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
     // The cursor starts at (0, 0).
     EXPECT_CALL(first_client, handle_input(mt::ButtonDownEvent(0, 0)))
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
@@ -253,6 +264,7 @@ TEST_F(TestClientInput, clients_receive_many_button_events_inside_window)
     };
 
     MirPointerButtons buttons = mir_pointer_button_primary;
+    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
     expect_buttons(buttons);
     expect_buttons(buttons |= mir_pointer_button_secondary);
     expect_buttons(buttons |= mir_pointer_button_tertiary);
@@ -263,7 +275,7 @@ TEST_F(TestClientInput, clients_receive_many_button_events_inside_window)
     expect_buttons(buttons &= ~mir_pointer_button_tertiary);
     expect_buttons(buttons &= ~mir_pointer_button_secondary);
     EXPECT_CALL(first_client, handle_input(mt::ButtonsDown(0, 0, 0))).WillOnce(
-        mt::WakeUp(&first_client.all_events_received));
+    mt::WakeUp(&first_client.all_events_received));
 
     auto press_button = [&](int button) {
         fake_mouse->emit_event(mis::a_button_down_event().of_button(button).with_action(mis::EventAction::Down));
@@ -602,16 +614,50 @@ TEST_F(TestClientInput, event_filter_may_consume_events)
 
     Client first_client(new_connection(), first);
 
+    EXPECT_CALL(*mock_event_filter, handle(mt::InputConfigurationEvent())).Times(AnyNumber()).WillRepeatedly(Return(false));
+
     InSequence seq;
     EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(Return(true));
     EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(
-            DoAll(mt::WakeUp(&first_client.all_events_received), Return(true)));
+        DoAll(mt::WakeUp(&first_client.all_events_received), Return(true)));
 
     // Since we handle the events in the filter the client should not receive them.
     EXPECT_CALL(first_client, handle_input(_)).Times(0);
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
+
+    first_client.all_events_received.wait_for_at_most_seconds(10);
+}
+
+namespace
+{
+struct TestClientInputKeyRepeat : public TestClientInput
+{
+    TestClientInputKeyRepeat()
+        : enable_key_repeat("MIR_SERVER_ENABLE_KEY_REPEAT", "true")
+    {
+    }
+    mtf::TemporaryEnvironmentValue enable_key_repeat;
+};
+}
+
+TEST_F(TestClientInputKeyRepeat, keys_are_repeated_to_clients)
+{
+    using namespace testing;
+
+    Client first_client(new_connection(), first);
+
+    InSequence seq;
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_R))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyRepeatEvent(),
+        mt::KeyOfSymbol(XKB_KEY_Shift_R)))).WillOnce(mt::WakeUp(&first_client.all_events_received));
+    // Extra repeats before we shut down.
+    EXPECT_CALL(first_client, handle_input(mt::KeyRepeatEvent())).Times(AnyNumber());
+
+    first_client.ready_to_accept_events.wait_for_at_most_seconds(5);
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
 
     first_client.all_events_received.wait_for_at_most_seconds(10);
 }

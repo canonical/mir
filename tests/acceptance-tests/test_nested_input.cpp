@@ -26,11 +26,12 @@
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test_doubles/nested_mock_egl.h"
-#include "mir_test/event_factory.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/spin_wait.h"
+#include "mir/test/doubles/nested_mock_egl.h"
+#include "mir/test/event_factory.h"
+#include "mir/test/event_matchers.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/spin_wait.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -38,6 +39,7 @@
 #include <gmock/gmock.h>
 
 #include <linux/input.h>
+#include <atomic>
 
 namespace mi = mir::input;
 namespace mis = mi::synthesis;
@@ -112,15 +114,6 @@ public:
         connection = mir_connect_sync(connect_string.c_str(), __PRETTY_FUNCTION__);
         surface = mtf::make_any_surface(connection);
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
-
-        bool became_exposed_and_focused = mir::test::spin_wait_for_condition_or_timeout(
-        [this]
-        {
-            return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed
-                && mir_surface_get_focus(surface) == mir_surface_focused;
-        },
-        std::chrono::seconds{10});
-        EXPECT_TRUE(became_exposed_and_focused);
     }
 
     ~ExposedSurface()
@@ -143,12 +136,36 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
 {
     NestedServerWithMockEventFilter nested_mir{new_connection()};
     ExposedSurface client(nested_mir.new_connection());
+    std::atomic<int> num_key_a_events{0};
+
+    auto const increase_key_a_events = [&num_key_a_events] { ++num_key_a_events; };
 
     InSequence seq;
-    EXPECT_CALL(*nested_mir.mock_event_filter, handle(_)).Times(AtLeast(1)).WillOnce(Return(true));
-    EXPECT_CALL(*nested_mir.mock_event_filter, handle(_)).Times(AtLeast(1)).WillOnce(
-            DoAll(mt::WakeUp(&all_events_received), Return(true)));
+    EXPECT_CALL(*nested_mir.mock_event_filter, handle(mt::KeyOfScanCode(KEY_A))).
+        Times(AtLeast(1)).
+        WillRepeatedly(DoAll(InvokeWithoutArgs(increase_key_a_events), Return(true)));
 
+    EXPECT_CALL(*nested_mir.mock_event_filter, handle(mt::KeyOfScanCode(KEY_RIGHTSHIFT))).
+        Times(2).
+        WillOnce(Return(true)).
+        WillOnce(DoAll(mt::WakeUp(&all_events_received), Return(true)));
+
+    // Because we are testing a nested setup, it's difficult to guarantee
+    // that the nested framebuffer surface (and consenquently the client surface
+    // contained in it) is going to be ready (i.e., exposed and focused) to receive
+    // events when we send them. We work around this issue by first sending some
+    // dummy events and waiting until we receive one of them.
+    auto const dummy_events_received = mt::spin_wait_for_condition_or_timeout(
+        [&]
+        {
+            if (num_key_a_events > 0) return true;
+            fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_A));
+            fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_A));
+            return false;
+        },
+        std::chrono::seconds{5});
+
+    EXPECT_TRUE(dummy_events_received);
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_RIGHTSHIFT));

@@ -19,15 +19,15 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 
-#include "mir_test_doubles/mock_window_manager.h"
+#include "mir/test/doubles/mock_window_manager.h"
 
 #include "mir/scene/session.h"
 #include "mir/geometry/rectangle.h"
 
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test/validity_matchers.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/validity_matchers.h"
+#include "mir/test/fake_shared.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

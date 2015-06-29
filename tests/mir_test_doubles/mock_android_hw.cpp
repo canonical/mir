@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/mock_android_hw.h"
-#include "mir_test_doubles/mock_hwc_composer_device_1.h"
+#include "mir/test/doubles/mock_android_hw.h"
+#include "mir/test/doubles/mock_hwc_composer_device_1.h"
 
 #include <atomic>
 #include <hardware/gralloc.h>

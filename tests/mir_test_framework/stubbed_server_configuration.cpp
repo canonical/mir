@@ -24,17 +24,17 @@
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/cursor.h"
 
-#include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/stub_renderer.h"
-#include "mir_test_doubles/stub_input_sender.h"
-#include "mir_test_doubles/stub_legacy_input_dispatchable.h"
+#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/test/doubles/stub_renderer.h"
+#include "mir/test/doubles/stub_input_sender.h"
+#include "mir/test/doubles/stub_legacy_input_dispatchable.h"
 
 #include "mir/compositor/renderer_factory.h"
 #include "src/server/input/null_input_manager.h"
 #include "src/server/input/null_input_dispatcher.h"
 #include "src/server/input/null_input_targeter.h"
-#include "mir_test_doubles/null_logger.h"
-#include "mir_test_doubles/stub_cursor.h"
+#include "mir/test/doubles/null_logger.h"
+#include "mir/test/doubles/stub_cursor.h"
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
@@ -125,16 +125,6 @@ std::shared_ptr<msh::InputTargeter> mtf::StubbedServerConfiguration::the_input_t
         return DefaultServerConfiguration::the_input_targeter();
     else
         return std::make_shared<mi::NullInputTargeter>();
-}
-
-std::shared_ptr<mi::InputDispatcher> mtf::StubbedServerConfiguration::the_input_dispatcher()
-{
-    auto options = the_options();
-
-    if (options->get<bool>("tests-use-real-input"))
-        return DefaultServerConfiguration::the_input_dispatcher();
-    else
-        return std::make_shared<mi::NullInputDispatcher>();
 }
 
 std::shared_ptr<mi::InputSender> mtf::StubbedServerConfiguration::the_input_sender()

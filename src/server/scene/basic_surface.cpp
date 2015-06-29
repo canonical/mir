@@ -408,8 +408,6 @@ MirSurfaceState ms::BasicSurface::set_state(MirSurfaceState s)
     {
         state_ = s;
         lg.unlock();
-        set_hidden(s == mir_surface_state_hidden);
-        
         observers.attrib_changed(mir_surface_attrib_state, s);
     }
 
@@ -844,15 +842,18 @@ void ms::BasicSurface::rename(std::string const& title)
 
 void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 {
-    std::unique_lock<std::mutex> lk(guard);
-
-    if (s.end() == std::find_if(s.begin(), s.end(),
-        [this] (ms::StreamInfo const& info) { return info.stream == surface_buffer_stream; }))
     {
-        BOOST_THROW_EXCEPTION(std::logic_error("cannot remove the created-with buffer stream yet"));
-    }
+        std::unique_lock<std::mutex> lk(guard);
 
-    layers = s;
+        if (s.end() == std::find_if(s.begin(), s.end(),
+            [this] (ms::StreamInfo const& info) { return info.stream == surface_buffer_stream; }))
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("cannot remove the created-with buffer stream yet"));
+        }
+
+        layers = s;
+    }
+    observers.moved_to(surface_rect.top_left);
 }
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const

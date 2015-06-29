@@ -18,7 +18,7 @@
 
 #include "src/client/display_configuration.h"
 
-#include "mir_test/display_config_matchers.h"
+#include "mir/test/display_config_matchers.h"
 #include "gtest/gtest.h"
 
 namespace mp = mir::protobuf;

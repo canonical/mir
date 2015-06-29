@@ -32,6 +32,7 @@ set(
   test_prompt_session_client_api.cpp
   test_client_screencast.cpp
   test_client_surface_visibility.cpp
+  test_buffer_stream_arrangement.cpp
   test_client_with_custom_display_config_deadlock.cpp
   test_server_without_active_outputs.cpp
   test_server_startup.cpp
@@ -44,6 +45,9 @@ set(
   test_render_override.cpp
   test_surface_modifications.cpp
   test_surface_placement.cpp
+  test_surface_morphing.cpp
+  test_system_compositor_window_manager.cpp
+  test_session_mediator_report.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
@@ -64,10 +68,10 @@ mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompi
 add_dependencies(mir_acceptance_tests GMock)
 
 target_link_libraries(mir_acceptance_tests
-  mir-test-static
+  mir-test-assist
+
+  # needed for 'throwback' tests that use private APIs
   mir-test-framework-static
-  mir-test-doubles-static
-  mir-test-doubles-platform-static
 
   mirclient
   mirclient-debug-extension

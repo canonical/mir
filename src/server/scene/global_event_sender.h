@@ -36,6 +36,7 @@ public:
     void handle_event(MirEvent const& e);
     void handle_lifecycle_event(MirLifecycleState state);
     void handle_display_config_change(graphics::DisplayConfiguration const& config);
+    void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType);
 
 private:
     std::shared_ptr<SessionContainer> const sessions;

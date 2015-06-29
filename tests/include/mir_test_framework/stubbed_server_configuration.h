@@ -44,7 +44,6 @@ public:
     // to avoid starting and stopping the full android input stack for tests
     // which do not leverage input.
     std::shared_ptr<input::InputManager> the_input_manager() override;
-    std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<input::InputSender> the_input_sender() override;
     std::shared_ptr<input::LegacyInputDispatchable> the_legacy_input_dispatchable() override;

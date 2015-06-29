@@ -24,12 +24,12 @@
 #include "mir/raii.h"
 
 #ifdef MIR_BUILD_PLATFORM_MESA_KMS
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_gbm.h"
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
 #endif
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
-#include "mir_test_doubles/mock_android_hw.h"
+#include "mir/test/doubles/mock_android_hw.h"
 #endif
 
 #include "mir_test_framework/udev_environment.h"

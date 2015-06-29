@@ -18,11 +18,11 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test/wait_condition.h"
-#include "mir_test/event_matchers.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/event_matchers.h"
 
 #include "mir_test_framework/interprocess_client_server_test.h"
-#include "mir_test/cross_process_sync.h"
+#include "mir/test/cross_process_sync.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

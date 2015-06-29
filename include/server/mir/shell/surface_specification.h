@@ -30,9 +30,12 @@
 #include "mir/scene/depth_id.h"
 
 #include <string>
+#include <memory>
 
 namespace mir
 {
+namespace scene { class Surface; }
+
 namespace shell
 {
 struct SurfaceAspectRatio { unsigned width; unsigned height; };
@@ -67,12 +70,12 @@ struct SurfaceSpecification
     optional_value<SurfaceAspectRatio> min_aspect;
     optional_value<SurfaceAspectRatio> max_aspect;
     optional_value<std::vector<StreamSpecification>> streams;
+    optional_value<std::weak_ptr<scene::Surface>> parent;
 
     // TODO scene::SurfaceCreationParameters overlaps this content but has additional fields:
     //    geometry::Point top_left;
     //    scene::DepthId depth;
     //    input::InputReceptionMode input_mode;
-    //    std::weak_ptr<Surface> parent;
     //
     //    it also has size instead of width + height
     // Maybe SurfaceCreationParameters /HasA/ SurfaceSpecification?

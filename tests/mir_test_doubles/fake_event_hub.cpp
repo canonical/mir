@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "mir_test/fake_event_hub.h"
+#include "mir/test/fake_event_hub.h"
 
 #include "mir/log.h"
 #include "mir/logging/logger.h"

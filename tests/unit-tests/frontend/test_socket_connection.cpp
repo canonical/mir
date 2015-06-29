@@ -23,7 +23,7 @@
 #include "mir/frontend/session_credentials.h"
 #include "mir/fd.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include "mir_protobuf_wire.pb.h"
 

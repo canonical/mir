@@ -184,10 +184,19 @@ void mia::InputSender::ActiveTransfer::send(InputSendEntry && event)
         event.event.type != mir_event_type_motion)
         return;
 
-    droidinput::status_t error_status =
-        (event.event.type == mir_event_type_key)
-        ? send_key_event(event.sequence_id, event.event.key)
-        : send_motion_event(event.sequence_id, event.event.motion);
+    droidinput::status_t error_status;
+
+    auto event_time = mir_input_event_get_event_time(mir_event_get_input_event(&event.event));
+    if (event.event.type == mir_event_type_key)
+    {
+        error_status = send_key_event(event.sequence_id, event.event.key);
+        state.report->published_key_event(event.channel->server_fd(), event.sequence_id, event_time);
+    }
+    else
+    {
+        error_status = send_motion_event(event.sequence_id, event.event.motion);
+        state.report->published_motion_event(event.channel->server_fd(), event.sequence_id, event_time);
+    }
 
     if (error_status == droidinput::OK)
     {

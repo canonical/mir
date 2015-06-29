@@ -283,6 +283,16 @@ typedef struct MirDisplayConfiguration
     MirDisplayCard *cards;
 } MirDisplayConfiguration;
 
+/**
+ * The displacement from the top-left corner of the surface.
+ */
+typedef struct MirBufferStreamInfo
+{
+    MirBufferStream* stream;
+    int displacement_x;
+    int displacement_y;
+} MirBufferStreamInfo;
+
 typedef struct MirRectangle
 {
     int left;

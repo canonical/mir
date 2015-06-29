@@ -19,20 +19,16 @@
 #include "mir/default_server_configuration.h"
 
 #include "mir/events/event_private.h"
-#include "android/android_input_dispatcher.h"
-#include "android/android_input_targeter.h"
 #include "android/android_input_reader_policy.h"
 #include "android/common_input_thread.h"
 #include "android/android_input_reader_policy.h"
-#include "android/android_input_registrar.h"
-#include "android/android_input_target_enumerator.h"
-#include "android/event_filter_dispatcher_policy.h"
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
 #include "android/input_translator.h"
+#include "key_repeat_dispatcher.h"
 #include "android/input_reader_dispatchable.h"
 #include "display_input_region.h"
-#include "event_filter_chain.h"
+#include "event_filter_chain_dispatcher.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
@@ -44,6 +40,7 @@
 #include "null_input_channel_factory.h"
 #include "default_input_device_hub.h"
 #include "default_input_manager.h"
+#include "surface_input_dispatcher.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/platform.h"
@@ -56,10 +53,10 @@
 #include "mir/main_loop.h"
 #include "mir/shared_library.h"
 #include "mir/glib_main_loop.h"
+#include "mir/dispatch/action_queue.h"
 
 #include "mir_toolkit/cursors.h"
 
-#include <InputDispatcher.h>
 #include <EventHub.h>
 #include <InputReader.h>
 
@@ -70,6 +67,7 @@ namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
+namespace md = mir::dispatch;
 
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {
@@ -84,46 +82,20 @@ std::shared_ptr<mi::CompositeEventFilter>
 mir::DefaultServerConfiguration::the_composite_event_filter()
 {
     return composite_event_filter(
-        [this]() -> std::shared_ptr<mi::CompositeEventFilter>
+        [this]()
+        {
+            return the_event_filter_chain_dispatcher();
+        });
+}
+
+std::shared_ptr<mi::EventFilterChainDispatcher>
+mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
+{
+    return event_filter_chain_dispatcher(
+        [this]() -> std::shared_ptr<mi::EventFilterChainDispatcher>
         {
             std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
-            return std::make_shared<mi::EventFilterChain>(filter_list);
-        });
-}
-
-std::shared_ptr<droidinput::InputEnumerator>
-mir::DefaultServerConfiguration::the_input_target_enumerator()
-{
-    return input_target_enumerator(
-        [this]()
-        {
-            return std::make_shared<mia::InputTargetEnumerator>(the_input_scene(), the_input_registrar());
-        });
-}
-
-
-std::shared_ptr<droidinput::InputDispatcherInterface>
-mir::DefaultServerConfiguration::the_android_input_dispatcher()
-{
-    return android_input_dispatcher(
-        [this]()
-        {
-            auto dispatcher = std::make_shared<droidinput::InputDispatcher>(
-                the_dispatcher_policy(),
-                the_input_report(),
-                the_input_target_enumerator());
-            the_input_registrar()->set_dispatcher(dispatcher);
-            return dispatcher;
-        });
-}
-
-std::shared_ptr<mia::InputRegistrar>
-mir::DefaultServerConfiguration::the_input_registrar()
-{
-    return input_registrar(
-        [this]()
-        {
-            return std::make_shared<mia::InputRegistrar>(the_scene());
+            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_surface_input_dispatcher());
         });
 }
 
@@ -171,49 +143,34 @@ mir::DefaultServerConfiguration::the_input_targeter()
             if (!options->get<bool>(options::enable_input_opt))
                 return std::make_shared<mi::NullInputTargeter>();
             else
-                return std::make_shared<mia::InputTargeter>(the_android_input_dispatcher(), the_input_registrar());
+                return the_surface_input_dispatcher();
         });
 }
 
-std::shared_ptr<mia::InputThread>
-mir::DefaultServerConfiguration::the_dispatcher_thread()
+std::shared_ptr<mi::SurfaceInputDispatcher>
+mir::DefaultServerConfiguration::the_surface_input_dispatcher()
 {
-    return dispatcher_thread(
+    return surface_input_dispatcher(
         [this]()
         {
-            return std::make_shared<mia::CommonInputThread>("Mir/InputDisp",
-                                                       new droidinput::InputDispatcherThread(the_android_input_dispatcher()));
+            return std::make_shared<mi::SurfaceInputDispatcher>(the_input_scene());
         });
-}
-
-std::shared_ptr<droidinput::InputDispatcherPolicyInterface>
-mir::DefaultServerConfiguration::the_dispatcher_policy()
-{
-    return android_dispatcher_policy(
-        [this]()
-        {
-            return std::make_shared<mia::EventFilterDispatcherPolicy>(the_composite_event_filter(), is_key_repeat_enabled());
-        });
-}
-
-bool mir::DefaultServerConfiguration::is_key_repeat_enabled() const
-{
-    return true;
 }
 
 std::shared_ptr<mi::InputDispatcher>
 mir::DefaultServerConfiguration::the_input_dispatcher()
 {
     return input_dispatcher(
-        [this]() -> std::shared_ptr<mi::InputDispatcher>
+        [this]()
         {
+            std::chrono::milliseconds const key_repeat_timeout{20};
+
             auto const options = the_options();
-            if (!options->get<bool>(options::enable_input_opt))
-                return std::make_shared<mi::NullInputDispatcher>();
-            else
-            {
-                return std::make_shared<mia::AndroidInputDispatcher>(the_android_input_dispatcher(), the_dispatcher_thread());
-            }
+            auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
+
+            return std::make_shared<mi::KeyRepeatDispatcher>(
+                the_event_filter_chain_dispatcher(), the_main_loop(), enable_repeat,
+                key_repeat_timeout);
         });
 }
 
@@ -372,6 +329,21 @@ mir::DefaultServerConfiguration::the_input_platform()
         });
 }
 
+namespace
+{
+class NullLegacyInputDispatchable : public mi::LegacyInputDispatchable
+{
+public:
+    void start() override {};
+    mir::Fd watch_fd() const override { return aq.watch_fd();};
+    bool dispatch(md::FdEvents events) override { return aq.dispatch(events); }
+    md::FdEvents relevant_events() const override{ return aq.relevant_events(); }
+
+private:
+    md::ActionQueue aq;
+};
+}
+
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
@@ -403,8 +375,28 @@ mir::DefaultServerConfiguration::the_input_manager()
                 if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
                     mr::legacy_input::initialize(the_logger());
 
-                auto ret = std::make_shared<mi::DefaultInputManager>(
-                    the_input_reading_multiplexer(), the_legacy_input_dispatchable());
+                std::shared_ptr<mi::InputManager> ret;
+
+                if (options->is_set(options::platform_input_lib))
+                {
+                    auto lib = std::make_shared<mir::SharedLibrary>(
+                        options->get<std::string>(options::platform_input_lib));
+
+                    auto describe = lib->load_function<mi::DescribeModule>(
+                        "describe_input_module",
+                        MIR_SERVER_INPUT_PLATFORM_VERSION);
+
+                    auto props = describe();
+                    ret = std::make_shared<mi::DefaultInputManager>(
+                        the_input_reading_multiplexer(),
+                        strcmp(props->name, "x11-input") ? the_legacy_input_dispatchable() :
+                                                           std::make_shared<NullLegacyInputDispatchable>());
+                }
+                else
+                {
+                    ret = std::make_shared<mi::DefaultInputManager>(
+                        the_input_reading_multiplexer(), the_legacy_input_dispatchable());
+                }
 
                 auto platform = the_input_platform();
                 if (platform)

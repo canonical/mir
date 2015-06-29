@@ -96,7 +96,12 @@ void msh::FrontendShell::modify_surface(std::shared_ptr<mf::Session> const& sess
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
     auto const surface = scene_session->surface(surface_id);
 
-    wrapped->modify_surface(scene_session, surface, modifications);
+    auto populated_modifications = modifications;
+
+    if (populated_modifications.parent_id.is_set())
+        populated_modifications.parent = scene_session->surface(populated_modifications.parent_id.value());
+
+    wrapped->modify_surface(scene_session, surface, populated_modifications);
 }
 
 void msh::FrontendShell::destroy_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface)

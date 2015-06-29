@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,37 +17,52 @@
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
+#include "mir_test_framework/deferred_in_process_server.h"
+#include "mir_test_framework/testing_server_configuration.h"
+#include "mir/test/doubles/mock_input_manager.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_doubles/mock_input_manager.h"
-
 namespace mi = mir::input;
 namespace mtd = mir::test::doubles;
+namespace mtf = mir_test_framework;
 
-#include <stdio.h>
-
-TEST_F(BespokeDisplayServerTestFixture, starting_display_server_starts_input_manager)
+namespace
 {
-    struct ServerConfig : TestingServerConfiguration
+
+struct ServerConfig : mtf::TestingServerConfiguration
+{
+    std::shared_ptr<mi::InputManager> the_input_manager() override
     {
-        std::shared_ptr<mi::InputManager> the_input_manager() override
-        {
+        return mock_input_manager;
+    }
 
-            if (!mock_input_manager.get())
-            {
-                mock_input_manager = std::make_shared<mtd::MockInputManager>();
+    std::shared_ptr<mtd::MockInputManager> const mock_input_manager =
+        std::make_shared<mtd::MockInputManager>();
+};
 
-                EXPECT_CALL(*mock_input_manager, start()).Times(1);
-                EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-            }
+struct InputManager : mtf::DeferredInProcessServer
+{
+    mtd::MockInputManager& the_mock_input_manager()
+    {
+        return *server_configuration.mock_input_manager;
+    }
 
-            return mock_input_manager;
-        }
+    mir::DefaultServerConfiguration& server_config() override
+    {
+        return server_configuration;
+    }
 
-        std::shared_ptr<mtd::MockInputManager> mock_input_manager;
-    } server_config;
+    ServerConfig server_configuration;
+};
 
-    launch_server_process(server_config);
+}
+
+TEST_F(InputManager, is_started_when_display_server_starts)
+{
+    EXPECT_CALL(the_mock_input_manager(), start()).Times(1);
+    EXPECT_CALL(the_mock_input_manager(), stop()).Times(1);
+
+    start_server();
 }

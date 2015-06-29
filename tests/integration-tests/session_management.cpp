@@ -26,7 +26,7 @@
 #include "mir/scene/surface.h"
 #include "src/server/scene/surface_stack.h"
 
-#include "mir_test_doubles/null_event_sink.h"
+#include "mir/test/doubles/null_event_sink.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 
 #include <gmock/gmock.h>

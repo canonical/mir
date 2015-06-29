@@ -27,6 +27,7 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
 #include "mir/shell/display_layout.h"
+#include "mir/shell/system_compositor_window_manager.h"
 
 namespace me = mir::examples;
 namespace mf = mir::frontend;
@@ -42,11 +43,12 @@ using namespace mir::geometry;
 namespace
 {
 char const* const wm_option = "window-manager";
-char const* const wm_description = "window management strategy [{tiling|fullscreen|canonical}]";
+char const* const wm_description = "window management strategy [{tiling|fullscreen|canonical|system-compositor}]";
 
 char const* const wm_tiling = "tiling";
 char const* const wm_fullscreen = "fullscreen";
 char const* const wm_canonical = "canonical";
+char const* const wm_system_compositor = "system-compositor";
 
 struct NullSessionInfo
 {
@@ -148,6 +150,13 @@ void me::add_window_manager_option_to(Server& server)
             else if (selection == wm_canonical)
             {
                 return std::make_shared<CanonicalWindowManager>(focus_controller, server.the_shell_display_layout());
+            }
+            else if (selection == wm_system_compositor)
+            {
+                return std::make_shared<msh::SystemCompositorWindowManager>(
+                    focus_controller,
+                    server.the_shell_display_layout(),
+                    server.the_session_coordinator());
             }
 
             throw mir::AbnormalExit("Unknown window manager: " + selection);

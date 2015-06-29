@@ -16,13 +16,12 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test/signal.h"
-#include "mir_test/auto_unblock_thread.h"
+#include "mir/test/signal.h"
+#include "mir/test/auto_unblock_thread.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -36,43 +35,6 @@
 
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
-
-// We need some tests to prove that errors are reported by the
-// display server test fixture.  But don't want them to fail in
-// normal builds.
-TEST_F(BespokeDisplayServerTestFixture, DISABLED_failing_server_side_test)
-{
-    struct Server : TestingServerConfiguration
-    {
-        void exec()
-        {
-            using namespace testing;
-            FAIL() << "Proving a test can fail";
-        }
-    } fail;
-
-    launch_server_process(fail);
-}
-
-TEST_F(BespokeDisplayServerTestFixture, DISABLED_failing_without_server)
-{
-}
-
-TEST_F(DefaultDisplayServerTestFixture, demonstrate_multiple_clients)
-{
-    struct Client : TestingClientConfiguration
-    {
-        void exec()
-        {
-            SCOPED_TRACE("Demo Client");
-        }
-    } demo;
-
-    for(int i = 0; i != 10; ++i)
-    {
-        launch_client_process(demo);
-    }
-}
 
 namespace
 {
