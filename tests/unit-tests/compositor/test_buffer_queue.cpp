@@ -630,6 +630,26 @@ TEST_P(WithAnyNumberOfBuffers, compositor_acquire_recycles_latest_ready_buffer)
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 TEST_P(WithAnyNumberOfBuffers, compositor_release_verifies_parameter)
 {
     auto handle = client_acquire_async(q);
