@@ -22,7 +22,7 @@
 #include "src/server/report/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/time/steady_clock.h"
 #include "mir/glib_main_loop.h"
 
@@ -122,7 +122,7 @@ public:
     {
         return std::make_shared<mgm::Display>(
             platform,
-            std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLConfig>(),
             null_report);
     }
@@ -516,7 +516,7 @@ TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_
 
     auto display = std::make_shared<mgm::Display>(
                         create_platform(),
-                        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+                        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
                         std::make_shared<mtd::StubGLConfig>(),
                         mock_report);
 }
@@ -695,7 +695,7 @@ TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
         mgm::BypassOption::allowed);
     auto display = std::make_shared<mgm::Display>(
                         platform,
-                        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+                        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
                         std::make_shared<mtd::StubGLConfig>(),
                         mock_report);
 
@@ -805,7 +805,7 @@ TEST_F(MesaDisplayTest, respects_gl_config)
 
     mgm::Display display{
         create_platform(),
-        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mir::test::fake_shared(mock_gl_config),
         null_report};
 }
@@ -831,7 +831,7 @@ TEST_F(MesaDisplayTest, supports_as_low_as_15bit_colour)
 
     mgm::Display display{
         create_platform(),
-        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mir::test::fake_shared(stub_gl_config),
         null_report};
 }

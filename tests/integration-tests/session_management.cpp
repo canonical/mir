@@ -97,7 +97,7 @@ struct SessionManagement : Test
     std::shared_ptr<mf::EventSink> const event_sink = std::make_shared<mtd::NullEventSink>();
     std::shared_ptr<mf::Shell> const session_manager = builder.the_frontend_shell();
     std::shared_ptr<TestSurfaceStack> const& test_surface_stack = builder.test_surface_stack;
-    ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters().of_size(100,100);
+    ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters().of_size(100,100).of_type(mir_surface_type_normal);
 
     void SetUp()
     {

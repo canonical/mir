@@ -27,7 +27,7 @@
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/stub_gl_program_factory.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "src/server/report/null_report_factory.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
@@ -109,7 +109,7 @@ protected:
             platform = std::make_shared<StubGraphicPlatform>();
         }
 
-        auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+        auto conf_policy = std::make_shared<mg::CloneDisplayConfigurationPolicy>();
         display = platform->create_display(
             conf_policy,
             std::make_shared<mtd::StubGLProgramFactory>(),
