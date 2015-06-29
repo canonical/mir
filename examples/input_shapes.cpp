@@ -112,8 +112,8 @@ public:
         program.draw(0.0, 0.0);
         context.swapbuffers();
 
-        MirRectangle input_rectangles[] = {{0, 0, 500, 200}, {0, 0, 200, 500},
-                                           {300, 0, 200, 500}, {0, 300, 500, 200}};
+        MirRectangle input_rectangles[] = {{0, 0, 500, 150}, {0, 0, 150, 500},
+                                           {350, 0, 150, 500}, {0, 350, 500, 150}};
         auto spec = mir_connection_create_spec_for_changes(connection);
         mir_surface_spec_set_input_shape(spec, input_rectangles, 4);
         mir_surface_apply_spec(surface, spec);
