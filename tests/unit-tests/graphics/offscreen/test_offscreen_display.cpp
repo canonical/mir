@@ -82,7 +82,7 @@ TEST_F(OffscreenDisplayTest, never_enables_predictive_bypass)
 {
     mgo::Display display{
         native_display,
-        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mr::null_display_report()};
 
     int groups = 0;
