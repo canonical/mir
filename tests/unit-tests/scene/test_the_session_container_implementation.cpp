@@ -18,7 +18,7 @@
 
 #include "src/server/scene/application_session.h"
 #include "src/server/scene/default_session_container.h"
-#include "mir_test_doubles/stub_scene_session.h"
+#include "mir/test/doubles/stub_scene_session.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

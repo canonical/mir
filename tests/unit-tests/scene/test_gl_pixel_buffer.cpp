@@ -19,8 +19,8 @@
 #include "src/server/scene/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
 
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_gl.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_gl.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

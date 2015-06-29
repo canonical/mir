@@ -24,11 +24,11 @@
 
 #include "mir/events/event_builders.h"
 
-#include "mir_test/display_config_matchers.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test_doubles/stub_display_configuration.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_platform_ipc_operations.h"
+#include "mir/test/display_config_matchers.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_platform_ipc_operations.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

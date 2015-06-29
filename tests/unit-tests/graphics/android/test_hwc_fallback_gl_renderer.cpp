@@ -21,13 +21,13 @@
 #include "mir/graphics/gl_program_factory.h"
 #include "mir/graphics/gl_primitive.h"
 #include "mir/graphics/gl_texture.h"
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/stub_renderable.h"
-#include "mir_test_doubles/mock_swapping_gl_context.h"
-#include "mir_test_doubles/stub_gl_program.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/stub_renderable.h"
+#include "mir/test/doubles/mock_swapping_gl_context.h"
+#include "mir/test/doubles/stub_gl_program.h"
 #include <gtest/gtest.h>
-#include <mir_test/gmock_fixes.h>
+#include <mir/test/gmock_fixes.h>
 
 #define GLM_FORCE_RADIANS
 #define GLM_PRECISION_MEDIUMP_FLOAT

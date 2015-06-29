@@ -17,7 +17,7 @@
  *              Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
-#include "mir_test_doubles/mock_frame_dropping_policy_factory.h"
+#include "mir/test/doubles/mock_frame_dropping_policy_factory.h"
 
 #include "mir/lockable_callback.h"
 

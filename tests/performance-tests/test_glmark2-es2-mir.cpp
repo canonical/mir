@@ -1,5 +1,5 @@
 #include "mir_test_framework/async_server_runner.h"
-#include "mir_test/popen.h"
+#include "mir/test/popen.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

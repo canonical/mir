@@ -17,7 +17,7 @@
  *              Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir_test/wait_object.h"
+#include "mir/test/wait_object.h"
 
 namespace mt = mir::test;
 

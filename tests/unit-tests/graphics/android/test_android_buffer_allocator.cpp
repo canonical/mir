@@ -18,12 +18,12 @@
 
 #include "src/platforms/android/server/android_graphic_buffer_allocator.h"
 #include "src/platforms/android/server/device_quirks.h"
-#include "mir_test_doubles/mock_android_hw.h"
+#include "mir/test/doubles/mock_android_hw.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 
-#include "mir_test_doubles/mock_egl.h"
+#include "mir/test/doubles/mock_egl.h"
 
 #include <hardware/gralloc.h>
 #include <gtest/gtest.h>

@@ -21,7 +21,7 @@
 
 #include "mir/frontend/session_mediator_report.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/headless_in_process_server.h"
 

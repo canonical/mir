@@ -106,15 +106,13 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
     # Linking everything with tsan is harmless and simple, so do that.
     link_libraries(tsan)
   endif()
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
 else()
   # AddressSanitizer builds fail if we disallow undefined symbols
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
-
-set(CMAKE_MODULE_LINKER_FLAGS_THREADSANITIZER "-fsanitize=thread")
-set(CMAKE_SHARED_LINKER_FLAGS_THREADSANITZIER "-fsanitize=thread")
-set(CMAKE_EXE_LINKER_FLAGS_THREADSANITIZER "-pie")
 
 # Define LOG_NDEBUG=1 to ensure Android ALOGV calls are not compiled in to
 # consume CPU time...

@@ -20,17 +20,17 @@
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/graphics/nested/host_surface.h"
 #include "src/server/report/null/display_report.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "src/server/input/null_input_dispatcher.h"
 #include "mir_display_configuration_builder.h"
 
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_gl_config.h"
-#include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/stub_host_connection.h"
-#include "mir_test_doubles/stub_cursor_listener.h"
-#include "mir_test_doubles/null_platform.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl_config.h"
+#include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/stub_host_connection.h"
+#include "mir/test/doubles/stub_cursor_listener.h"
+#include "mir/test/doubles/null_platform.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -79,7 +79,7 @@ struct NestedDisplay : testing::Test
     testing::NiceMock<mtd::MockEGL> mock_egl;
     mi::NullInputDispatcher null_input_dispatcher;
     mir::report::null::DisplayReport null_display_report;
-    mg::DefaultDisplayConfigurationPolicy default_conf_policy;
+    mg::CloneDisplayConfigurationPolicy default_conf_policy;
     mtd::StubGLConfig stub_gl_config;
     std::shared_ptr<mtd::NullPlatform> null_platform{
         std::make_shared<mtd::NullPlatform>()};

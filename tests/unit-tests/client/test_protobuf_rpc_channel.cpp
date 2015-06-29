@@ -26,8 +26,8 @@
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 
-#include "mir_test_doubles/null_client_event_sink.h"
-#include "mir_test/fd_utils.h"
+#include "mir/test/doubles/null_client_event_sink.h"
+#include "mir/test/fd_utils.h"
 
 #include <list>
 #include <endian.h>

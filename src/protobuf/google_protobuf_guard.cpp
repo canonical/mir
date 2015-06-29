@@ -20,6 +20,7 @@
 
 #include <google/protobuf/descriptor.h>
 #include <mutex>
+#include <dlfcn.h>
 
 namespace mir
 {
@@ -30,6 +31,14 @@ std::once_flag shutdown_flag;
 
 void init_google_protobuf()
 {
+    // Leak libmirprotobuf.so.X
+    // This will stop it getting unloaded/reloaded and work around LP: #1391976
+    Dl_info self;
+    if (dladdr(reinterpret_cast<void*>(&init_google_protobuf), &self))
+    {
+        dlopen(self.dli_fname, RTLD_LAZY | RTLD_NODELETE);
+    }
+
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 }
 

@@ -18,7 +18,7 @@
 
 #include "src/platforms/android/server/framebuffers.h"
 #include "src/platforms/android/server/graphic_buffer_allocator.h"
-#include "mir_test_doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_buffer.h"
 
 #include <future>
 #include <initializer_list>
