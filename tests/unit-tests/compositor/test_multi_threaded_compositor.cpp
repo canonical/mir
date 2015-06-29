@@ -596,10 +596,11 @@ TEST(MultiThreadedCompositor, recommended_sleep_throttles_compositor_loop)
     compositor.start();
 
     int const max_retries = 100;
+    int const nframes = 10;
+    auto start = system_clock::now();
 
-    for (int frame = 1; frame <= 10; ++frame)
+    for (int frame = 1; frame <= nframes; ++frame)
     {
-        auto start = system_clock::now();
         scene->emit_change_event();
 
         int retry = 0;
@@ -610,12 +611,19 @@ TEST(MultiThreadedCompositor, recommended_sleep_throttles_compositor_loop)
             ++retry;
         }
         ASSERT_LT(retry, max_retries);
-        auto duration = system_clock::now() - start;
-
-        if (frame > 1)
-            ASSERT_THAT(duration_cast<milliseconds>(duration).count(),
-                        Ge(recommendation.count()-1));  // -1 clock truncation 
     }
+
+    /*
+     * Detecting the throttling from outside the compositor thread is actually
+     * trickier than you think. Because the display buffer counter won't be
+     * delayed by the sleep; only the subsequent frame will be delayed. So
+     * that's why we measure overall duration here...
+     */
+    auto duration = system_clock::now() - start;
+    // Minus 2 because the first won't be throttled, and the last not detected.
+    int minimum = recommendation.count() * (nframes - 2);
+    ASSERT_THAT(duration_cast<milliseconds>(duration).count(),
+                Ge(minimum));
 
     compositor.stop();
 }
