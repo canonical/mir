@@ -177,7 +177,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (composite_delay_opt, po::value<int>()->default_value(-1),
             "Compositor frame delay in milliseconds (how long to wait for new "
             "frames from clients before compositing). Higher values result in "
-            "lower latency. Default: Automatically determined.")
+            "lower latency but risk causing frame skipping. "
+            "Default: A negative value means decide automatically.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,
