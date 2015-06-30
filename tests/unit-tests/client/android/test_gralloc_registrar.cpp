@@ -18,7 +18,7 @@
 
 #include "mir/graphics/android/native_buffer.h"
 #include "src/platforms/android/client/gralloc_registrar.h"
-#include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir/test/doubles/mock_android_native_buffer.h"
 #include <stdexcept>
 #include <fcntl.h>
 #include <gtest/gtest.h>

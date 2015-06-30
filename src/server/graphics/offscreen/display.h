@@ -64,6 +64,7 @@ public:
     DisplaySyncGroup(std::unique_ptr<DisplayBuffer> output);
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const&) override;
     void post() override;
+    std::chrono::milliseconds recommended_sleep() const override;
 private:
     std::unique_ptr<DisplayBuffer> const output;
 };

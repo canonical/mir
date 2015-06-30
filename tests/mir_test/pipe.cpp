@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include <mir_test/pipe.h>
+#include <mir/test/pipe.h>
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>

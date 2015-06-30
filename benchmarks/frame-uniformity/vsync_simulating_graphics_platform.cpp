@@ -21,9 +21,9 @@
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/stub_display.h"
-#include "mir_test_doubles/null_platform_ipc_operations.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_display.h"
+#include "mir/test/doubles/null_platform_ipc_operations.h"
 
 #include <chrono>
 #include <functional>
@@ -59,6 +59,11 @@ struct StubDisplaySyncGroup : mg::DisplaySyncGroup
             std::this_thread::sleep_for(next_sync - now);
         
         last_sync = now;
+    }
+
+    std::chrono::milliseconds recommended_sleep() const override
+    {
+        return std::chrono::milliseconds::zero();
     }
     
     double const vsync_rate_in_hz;

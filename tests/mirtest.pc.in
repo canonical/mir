@@ -1,0 +1,10 @@
+prefix=@PREFIX@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
+
+Name: mirtest
+Description: Mir test assist library
+Version: @MIR_VERSION@
+Requires: mirserver mirplatform mirclient
+Libs: -L@LIBDIR@ -lmir-test-assist
+Cflags: -I@INCLUDEDIR@

@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir_test/display_config_matchers.h"
+#include "mir/test/display_config_matchers.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir_protobuf.pb.h"
 #include "mir_toolkit/client_types.h"

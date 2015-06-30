@@ -26,7 +26,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 
-#include "mir_test/barrier.h"
+#include "mir/test/barrier.h"
 
 #include "mir_test_framework/server_runner.h"
 

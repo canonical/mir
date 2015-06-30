@@ -19,8 +19,8 @@
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/egl_native_surface.h"
-#include "mir_test_doubles/mock_android_native_buffer.h"
-#include "mir_test_doubles/stub_android_native_buffer.h"
+#include "mir/test/doubles/mock_android_native_buffer.h"
+#include "mir/test/doubles/stub_android_native_buffer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -22,10 +22,10 @@
 #include "mir/dispatch/dispatchable.h"
 
 #include "mir/frontend/connector.h"
-#include "mir_test/test_protobuf_server.h"
-#include "mir_test/stub_server_tool.h"
-#include "mir_test/pipe.h"
-#include "mir_test/wait_object.h"
+#include "mir/test/test_protobuf_server.h"
+#include "mir/test/stub_server_tool.h"
+#include "mir/test/pipe.h"
+#include "mir/test/wait_object.h"
 
 #include <gtest/gtest.h>
 

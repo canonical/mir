@@ -26,7 +26,7 @@
 #include "mir/scene/surface.h"
 #include "src/server/scene/surface_stack.h"
 
-#include "mir_test_doubles/null_event_sink.h"
+#include "mir/test/doubles/null_event_sink.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 
 #include <gmock/gmock.h>
@@ -97,7 +97,7 @@ struct SessionManagement : Test
     std::shared_ptr<mf::EventSink> const event_sink = std::make_shared<mtd::NullEventSink>();
     std::shared_ptr<mf::Shell> const session_manager = builder.the_frontend_shell();
     std::shared_ptr<TestSurfaceStack> const& test_surface_stack = builder.test_surface_stack;
-    ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters().of_size(100,100);
+    ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters().of_size(100,100).of_type(mir_surface_type_normal);
 
     void SetUp()
     {

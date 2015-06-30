@@ -25,21 +25,21 @@
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/shared_library.h"
 
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_buffer_ipc_message.h"
-#include "mir_test_doubles/platform_factory.h"
-#include "mir_test_doubles/mock_virtual_terminal.h"
-#include "mir_test_doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_buffer_ipc_message.h"
+#include "mir/test/doubles/platform_factory.h"
+#include "mir/test/doubles/mock_virtual_terminal.h"
+#include "mir/test/doubles/null_virtual_terminal.h"
 
 #include <gtest/gtest.h>
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
-#include "mir_test/pipe.h"
+#include "mir/test/pipe.h"
 
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_gbm.h"
-#include "mir_test_doubles/fd_matcher.h"
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
+#include "mir/test/doubles/fd_matcher.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

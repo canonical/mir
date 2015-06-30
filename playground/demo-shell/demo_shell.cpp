@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,7 +29,7 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/renderer_factory.h"
 #include "mir/options/option.h"
-#include "mir/shell/default_window_manager.h"
+#include "default_window_manager.h"
 #include "server_example_tiling_window_manager.h"
 #include "mir/shell/canonical_window_manager.h"
 #include "server_example_host_lifecycle_event_listener.h"
@@ -125,9 +125,9 @@ public:
                         the_shell_display_layout());
                 }
 
-                return std::make_shared<shell::DefaultWindowManager>(
+                return std::make_shared<DefaultWindowManager>(
                     focus_controller,
-                    the_placement_strategy(),
+                    the_shell_display_layout(),
                     the_session_coordinator());
             };
     }

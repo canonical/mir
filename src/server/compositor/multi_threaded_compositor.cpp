@@ -101,12 +101,14 @@ public:
         mg::DisplaySyncGroup& group,
         std::shared_ptr<mc::Scene> const& scene,
         std::shared_ptr<DisplayListener> const& display_listener,
+        std::chrono::milliseconds fixed_composite_delay,
         std::shared_ptr<CompositorReport> const& report) :
         compositor_factory{db_compositor_factory},
         group(group),
         scene(scene),
         running{true},
         frames_scheduled{0},
+        force_sleep{fixed_composite_delay},
         display_listener{display_listener},
         report{report},
         started_future{started.get_future()}
@@ -182,6 +184,17 @@ public:
                 }
                 group.post();
 
+                /*
+                 * "Predictive bypass" optimization: If the last frame was
+                 * bypassed/overlayed or you simply have a fast GPU, it is
+                 * beneficial to sleep for most of the next frame. This reduces
+                 * the latency between snapshotting the scene and post()
+                 * completing by almost a whole frame.
+                 */
+                auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
+                             force_sleep : group.recommended_sleep();
+                std::this_thread::sleep_for(delay);
+
                 lock.lock();
 
                 /*
@@ -231,6 +244,7 @@ private:
     std::shared_ptr<mc::Scene> const scene;
     bool running;
     int frames_scheduled;
+    std::chrono::milliseconds force_sleep{-1};
     std::mutex run_mutex;
     std::condition_variable run_cv;
     std::shared_ptr<DisplayListener> const display_listener;
@@ -248,6 +262,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
     std::shared_ptr<DisplayListener> const& display_listener,
     std::shared_ptr<CompositorReport> const& compositor_report,
+    std::chrono::milliseconds fixed_composite_delay,
     bool compose_on_start)
     : display{display},
       scene{scene},
@@ -255,6 +270,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       display_listener{display_listener},
       report{compositor_report},
       state{CompositorState::stopped},
+      fixed_composite_delay{fixed_composite_delay},
       compose_on_start{compose_on_start},
       thread_pool{1}
 {
@@ -348,7 +364,8 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
     {
         auto thread_functor = std::make_unique<mc::CompositingFunctor>(
-            display_buffer_compositor_factory, group, scene, display_listener, report);
+            display_buffer_compositor_factory, group, scene, display_listener,
+            fixed_composite_delay, report);
 
         futures.push_back(thread_pool.run(std::ref(*thread_functor), &group));
         thread_functors.push_back(std::move(thread_functor));

@@ -108,18 +108,28 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
 {
     if (mir_event_get_type(&event) != mir_event_type_input)
         return;
-    auto iev = mir_event_get_input_event(&event);
 
-    if (mir_input_event_get_type(iev) == mir_input_event_type_pointer)
-    {
-        auto pev = mir_input_event_get_pointer_event(iev);
-        auto x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x) + area.top_left.x.as_float();
-        auto y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y) + area.top_left.y.as_float();
-        cursor_listener->cursor_moved_to(x, y);
-    }
     if (event.type == mir_event_type_motion)
     {
         auto my_event = event;
+        auto iev = mir_event_get_input_event(&my_event);
+
+        if (mir_input_event_get_type(iev) == mir_input_event_type_pointer)
+        {
+            auto& motion = my_event.motion;
+
+            for (size_t i = 0; i != motion.pointer_count; ++i)
+            {
+                motion.pointer_coordinates[i].x += area.top_left.x.as_float();
+                motion.pointer_coordinates[i].y += area.top_left.y.as_float();
+            }
+
+            auto pev = mir_input_event_get_pointer_event(iev);
+            auto x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x);
+            auto y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y);
+            cursor_listener->cursor_moved_to(x, y);
+        }
+
         dispatcher->dispatch(my_event);
     }
     else

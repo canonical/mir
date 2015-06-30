@@ -17,6 +17,7 @@
  */
 
 #include "server_example_display_configuration_policy.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/server.h"
@@ -45,65 +46,6 @@ char const* const me::display_alpha_descr = "Select a display mode with alpha[{o
 
 char const* const me::display_alpha_off = "off";
 char const* const me::display_alpha_on = "on";
-
-void me::SideBySideDisplayConfigurationPolicy::apply_to(graphics::DisplayConfiguration& conf)
-{
-    size_t const preferred_mode_index{0};
-    int max_x = 0;
-    std::unordered_map<mg::DisplayConfigurationCardId, size_t> available_outputs_for_card;
-
-    conf.for_each_card(
-        [&](mg::DisplayConfigurationCard const& card)
-        {
-            available_outputs_for_card[card.id] = card.max_simultaneous_outputs;
-        });
-
-    conf.for_each_output(
-        [&](mg::UserDisplayConfigurationOutput& conf_output)
-        {
-            if (conf_output.connected && conf_output.modes.size() > 0 &&
-                available_outputs_for_card[conf_output.card_id] > 0)
-            {
-                conf_output.used = true;
-                conf_output.top_left = geom::Point{max_x, 0};
-                conf_output.current_mode_index = preferred_mode_index;
-                conf_output.power_mode = mir_power_mode_on;
-                conf_output.orientation = mir_orientation_normal;
-                max_x += conf_output.modes[preferred_mode_index].size.width.as_int();
-                --available_outputs_for_card[conf_output.card_id];
-            }
-            else
-            {
-                conf_output.used = false;
-                conf_output.power_mode = mir_power_mode_off;
-            }
-        });
-}
-
-
-void me::SingleDisplayConfigurationPolicy::apply_to(graphics::DisplayConfiguration& conf)
-{
-    size_t const preferred_mode_index{0};
-    bool done{false};
-
-    conf.for_each_output(
-        [&](mg::UserDisplayConfigurationOutput& conf_output)
-        {
-            if (!done && conf_output.connected && conf_output.modes.size() > 0)
-            {
-                conf_output.used = true;
-                conf_output.top_left = geom::Point{0, 0};
-                conf_output.current_mode_index = preferred_mode_index;
-                conf_output.power_mode = mir_power_mode_on;
-                done = true;
-            }
-            else
-            {
-                conf_output.used = false;
-                conf_output.power_mode = mir_power_mode_off;
-            }
-        });
-}
 
 namespace
 {
@@ -163,9 +105,9 @@ void me::add_display_configuration_options_to(mir::Server& server)
             auto layout_selector = wrapped;
 
             if (display_layout == me::sidebyside_opt_val)
-                layout_selector = std::make_shared<me::SideBySideDisplayConfigurationPolicy>();
+                layout_selector = std::make_shared<mg::SideBySideDisplayConfigurationPolicy>();
             else if (display_layout == me::single_opt_val)
-                layout_selector = std::make_shared<me::SingleDisplayConfigurationPolicy>();
+                layout_selector = std::make_shared<mg::SingleDisplayConfigurationPolicy>();
 
             // Whatever the layout select a pixel format with requested alpha
             return std::make_shared<me::PixelFormatSelector>(layout_selector, with_alpha);

@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir_test_doubles/null_platform.h"
-#include "mir_test_doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/null_platform.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 
 #include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_test_framework/testing_server_configuration.h"

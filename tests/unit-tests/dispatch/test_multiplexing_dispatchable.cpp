@@ -19,11 +19,11 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/fd.h"
-#include "mir_test/pipe.h"
-#include "mir_test/signal.h"
-#include "mir_test/fd_utils.h"
-#include "mir_test/test_dispatchable.h"
-#include "mir_test/auto_unblock_thread.h"
+#include "mir/test/pipe.h"
+#include "mir/test/signal.h"
+#include "mir/test/fd_utils.h"
+#include "mir/test/test_dispatchable.h"
+#include "mir/test/auto_unblock_thread.h"
 
 #include <fcntl.h>
 

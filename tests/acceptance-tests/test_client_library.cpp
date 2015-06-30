@@ -23,7 +23,7 @@
 #include "mir_test_framework/stub_platform_helpers.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test/validity_matchers.h"
+#include "mir/test/validity_matchers.h"
 
 #include "src/include/client/mir/client_buffer.h"
 
@@ -361,7 +361,7 @@ TEST_F(ClientLibrary, receives_surface_dpi_value)
     mir_connection_release(connection);
 }
 
-#ifndef ANDROID
+#ifdef MESA_KMS
 TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -552,7 +552,7 @@ TEST_F(ClientLibrary, highly_threaded_client)
     b.join();
     c.join();
 
-    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_fullscreen));
+    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_minimized));
 
     mir_surface_release_sync(surface);
 

@@ -25,15 +25,15 @@
 #include "src/server/scene/basic_surface.h"
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "src/server/compositor/multi_threaded_compositor.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/stub_renderer.h"
-#include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/stub_input_sender.h"
-#include "mir_test_doubles/null_display_sync_group.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/mock_buffer_stream.h"
+#include "mir/test/doubles/mock_buffer_bundle.h"
+#include "mir/test/doubles/null_display.h"
+#include "mir/test/doubles/stub_renderer.h"
+#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_input_sender.h"
+#include "mir/test/doubles/null_display_sync_group.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -153,6 +153,9 @@ struct SurfaceStackCompositor : public testing::Test
         mt::fake_shared(renderer_factory),
         null_comp_report};
 };
+
+std::chrono::milliseconds const default_delay{-1};
+
 }
 
 TEST_F(SurfaceStackCompositor, composes_on_start_if_told_to_in_constructor)
@@ -162,7 +165,7 @@ TEST_F(SurfaceStackCompositor, composes_on_start_if_told_to_in_constructor)
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, true);
+        null_comp_report, default_delay, true);
     mt_compositor.start();
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
@@ -176,7 +179,7 @@ TEST_F(SurfaceStackCompositor, does_not_composes_on_start_if_told_not_to_in_cons
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, false);
+        null_comp_report, default_delay, false);
     mt_compositor.start();
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(0, timeout));
@@ -190,7 +193,7 @@ TEST_F(SurfaceStackCompositor, swapping_a_surface_that_has_been_added_triggers_a
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, false);
+        null_comp_report, default_delay, false);
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
@@ -212,7 +215,7 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, false);
+        null_comp_report, default_delay, false);
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
@@ -235,7 +238,7 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, false);
+        null_comp_report, default_delay, false);
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
@@ -256,7 +259,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, false);
+        null_comp_report, default_delay, false);
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
@@ -281,7 +284,7 @@ TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, false);
+        null_comp_report, default_delay, false);
 
     mt_compositor.start();
     stub_surface->move_to(geom::Point{1,1});
@@ -300,7 +303,7 @@ TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, false);
+        null_comp_report, default_delay, false);
 
     mt_compositor.start();
     stack.remove_surface(stub_surface);
@@ -322,7 +325,7 @@ TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
         mt::fake_shared(stack),
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, false);
+        null_comp_report, default_delay, false);
 
     mt_compositor.start();
     stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});

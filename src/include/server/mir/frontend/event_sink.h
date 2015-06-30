@@ -20,12 +20,15 @@
 #define MIR_EVENTS_EVENT_SINK_H_
 
 #include "mir_toolkit/event.h"
+#include "mir/frontend/buffer_stream_id.h"
+#include "mir/graphics/platform_ipc_operations.h"
 
 namespace mir
 {
 namespace graphics
 {
 class DisplayConfiguration;
+class Buffer;
 }
 namespace frontend
 {
@@ -37,6 +40,7 @@ public:
     virtual void handle_event(MirEvent const& e) = 0;
     virtual void handle_lifecycle_event(MirLifecycleState state) = 0;
     virtual void handle_display_config_change(graphics::DisplayConfiguration const& config) = 0;
+    virtual void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType) = 0;
 
 protected:
     EventSink() = default;

@@ -21,7 +21,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir_test_framework/headless_test.h"
-#include "mir_test/signal.h"
+#include "mir/test/signal.h"
 
 #include "gmock/gmock.h"
 
