@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #ifndef MIR_CLIENT_PING_HANDLER_H_
