@@ -29,13 +29,13 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_test_doubles/stub_ipc_factory.h"
-#include "mir_test_doubles/stub_session_authorizer.h"
-#include "mir_test_doubles/mock_rpc_report.h"
-#include "mir_test/stub_server_tool.h"
-#include "mir_test/test_protobuf_client.h"
-#include "mir_test/test_protobuf_server.h"
-#include "mir_test_doubles/stub_ipc_factory.h"
+#include "mir/test/doubles/stub_ipc_factory.h"
+#include "mir/test/doubles/stub_session_authorizer.h"
+#include "mir/test/doubles/mock_rpc_report.h"
+#include "mir/test/stub_server_tool.h"
+#include "mir/test/test_protobuf_client.h"
+#include "mir/test/test_protobuf_server.h"
+#include "mir/test/doubles/stub_ipc_factory.h"
 #include "mir_test_framework/testing_server_configuration.h"
 
 #include <gtest/gtest.h>

@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir_test_doubles/fake_alarm_factory.h"
+#include "mir/test/doubles/fake_alarm_factory.h"
 
 namespace mtd = mir::test::doubles;
 

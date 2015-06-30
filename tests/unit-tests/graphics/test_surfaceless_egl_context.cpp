@@ -18,7 +18,7 @@
  */
 
 #include "mir/graphics/surfaceless_egl_context.h"
-#include "mir_test_doubles/mock_egl.h"
+#include "mir/test/doubles/mock_egl.h"
 #include <stdexcept>
 #include <list>
 

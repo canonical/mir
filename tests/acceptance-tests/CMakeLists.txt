@@ -47,6 +47,7 @@ set(
   test_surface_modifications.cpp
   test_surface_placement.cpp
   test_surface_morphing.cpp
+  test_surface_specification.cpp
   test_system_compositor_window_manager.cpp
   test_session_mediator_report.cpp
 )
@@ -69,10 +70,10 @@ mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompi
 add_dependencies(mir_acceptance_tests GMock)
 
 target_link_libraries(mir_acceptance_tests
-  mir-test-static
+  mir-test-assist
+
+  # needed for 'throwback' tests that use private APIs
   mir-test-framework-static
-  mir-test-doubles-static
-  mir-test-doubles-platform-static
 
   mirclient
   mirclient-debug-extension

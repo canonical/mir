@@ -20,18 +20,21 @@
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/stub_display.h"
-#include "mir_test_doubles/null_platform.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_display.h"
+#include "mir/test/doubles/null_platform.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/scene/buffer_stream_factory.h"
+#include "mir/scene/session_coordinator.h"
+#include "mir/frontend/event_sink.h"
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/compositor/buffer_bundle.h"
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/debug/surface.h"
 #include "src/client/mir_connection.h"
 #include <chrono>
 #include <mutex>
@@ -49,6 +52,7 @@ namespace msc = mir::scene;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
+namespace mf = mir::frontend;
 
 namespace
 {
@@ -176,6 +180,47 @@ struct StubPlatform : public mtd::NullPlatform
     std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
 };
 
+class SinkSkimmingCoordinator : public msc::SessionCoordinator
+{
+public:
+    SinkSkimmingCoordinator(std::shared_ptr<msc::SessionCoordinator> const& wrapped) :
+        wrapped(wrapped)
+    {
+    }
+
+    void set_focus_to(std::shared_ptr<msc::Session> const& focus) override
+    {
+        wrapped->set_focus_to(focus);
+    }
+
+    void unset_focus() override
+    {
+        wrapped->unset_focus();
+    }
+
+    std::shared_ptr<msc::Session> open_session(
+        pid_t client_pid,
+        std::string const& name,
+        std::shared_ptr<mf::EventSink> const& sink) override
+    {
+        last_sink = sink;
+        return wrapped->open_session(client_pid, name, sink);
+    }
+
+    void close_session(std::shared_ptr<msc::Session> const& session) override
+    {
+        wrapped->close_session(session);
+    }
+
+    std::shared_ptr<msc::Session> successor_of(std::shared_ptr<msc::Session> const& session) const override
+    {
+        return wrapped->successor_of(session);
+    }
+
+    std::shared_ptr<msc::SessionCoordinator> const wrapped;
+    std::weak_ptr<mf::EventSink> last_sink;
+};
+
 struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
 {
     ExchangeServerConfiguration(
@@ -186,6 +231,14 @@ struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
     {
     }
 
+    std::shared_ptr<msc::SessionCoordinator> the_session_coordinator() override
+    {
+        return session_coordinator([this]{
+            coordinator = std::make_shared<SinkSkimmingCoordinator>(
+                DefaultServerConfiguration::the_session_coordinator());
+            return coordinator;
+        });
+    }
     std::shared_ptr<mg::Platform> the_graphics_platform() override
     {
         return platform;
@@ -196,8 +249,9 @@ struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
         return stream_factory;
     }
 
-    std::shared_ptr<msc::BufferStreamFactory> const stream_factory;
+    std::shared_ptr<StubBundleFactory> const stream_factory;
     std::shared_ptr<mg::Platform> const platform;
+    std::shared_ptr<SinkSkimmingCoordinator> coordinator;
 };
 
 struct ExchangeBufferTest : mir_test_framework::InProcessServer
@@ -217,8 +271,6 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         cv.notify_all();
     }
 
-    //TODO: once the next_buffer rpc is deprecated, change this code out for the
-    //      mir_surface_next_buffer() api call
     bool exchange_buffer(mp::DisplayServer& server)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
@@ -354,6 +406,37 @@ TEST_F(ExchangeBufferTest, submissions_happen)
         buffer_request.mutable_buffer()->set_buffer_id(id.as_value());
         ASSERT_THAT(submit_buffer(server, buffer_request), DidNotTimeOut());
     }
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ExchangeBufferTest, server_can_send_buffer)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+    mtd::StubBuffer stub_buffer;
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto surface = mtf::make_any_surface(connection);
+    auto sink = server_configuration.coordinator->last_sink.lock();
+    sink->send_buffer(mf::BufferStreamId{0}, stub_buffer, mg::BufferIpcMsgType::full_msg);
+
+    //spin-wait for the id to become the current one.
+    //The notification doesn't generate a client-facing callback on the stream yet
+    //(although probably should, seems something a media decoder would need
+    bool buffer_arrived = false;
+    auto timeout = std::chrono::steady_clock::now() + 5s;
+    while(!buffer_arrived && std::chrono::steady_clock::now() < timeout)
+    {
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        if (mir_debug_surface_current_buffer_id(surface) == stub_buffer.id().as_value())
+        {
+            buffer_arrived = true;
+            break;
+        }
+        std::this_thread::yield();
+    }
+    EXPECT_THAT(buffer_arrived, Eq(true)) << "failed to see the sent buffer become the current one";
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);

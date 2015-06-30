@@ -27,16 +27,16 @@
 #include "src/server/scene/session_event_sink.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir_test_doubles/mock_surface_coordinator.h"
-#include "mir_test_doubles/mock_session_listener.h"
-#include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test_doubles/stub_buffer_stream_factory.h"
-#include "mir_test_doubles/null_snapshot_strategy.h"
-#include "mir_test_doubles/null_session_event_sink.h"
-#include "mir_test_doubles/stub_surface_factory.h"
-#include "mir_test_doubles/null_application_not_responding_detector.h"
+#include "mir/test/doubles/mock_surface_coordinator.h"
+#include "mir/test/doubles/mock_session_listener.h"
+#include "mir/test/doubles/stub_buffer_stream.h"
+#include "mir/test/doubles/stub_buffer_stream_factory.h"
+#include "mir/test/doubles/null_snapshot_strategy.h"
+#include "mir/test/doubles/null_session_event_sink.h"
+#include "mir/test/doubles/stub_surface_factory.h"
+#include "mir/test/doubles/null_application_not_responding_detector.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

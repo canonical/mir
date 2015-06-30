@@ -30,24 +30,26 @@
 #include "mir/input/cursor_images.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "src/server/scene/basic_surface.h"
-#include "mir_test_doubles/mock_display.h"
-#include "mir_test_doubles/mock_display_changer.h"
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_event_sink.h"
-#include "mir_test_doubles/null_display_changer.h"
-#include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_display.h"
-#include "mir_test_doubles/mock_shell.h"
-#include "mir_test_doubles/mock_frontend_surface.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/stub_session.h"
-#include "mir_test_doubles/stub_display_configuration.h"
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/null_screencast.h"
-#include "mir_test_doubles/null_application_not_responding_detector.h"
-#include "mir_test/display_config_matchers.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/doubles/mock_display.h"
+#include "mir/test/doubles/mock_display_changer.h"
+#include "mir/test/doubles/null_display.h"
+#include "mir/test/doubles/null_event_sink.h"
+#include "mir/test/doubles/null_display_changer.h"
+#include "mir/test/doubles/mock_buffer_stream.h"
+#include "mir/test/doubles/mock_display.h"
+#include "mir/test/doubles/mock_shell.h"
+#include "mir/test/doubles/mock_frontend_surface.h"
+#include "mir/test/doubles/mock_event_sink.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/stub_session.h"
+#include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/null_screencast.h"
+#include "mir/test/doubles/null_application_not_responding_detector.h"
+#include "mir/test/doubles/mock_platform_ipc_operations.h"
+#include "mir/test/display_config_matchers.h"
+#include "mir/test/fake_shared.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
 #include "mir_protobuf.pb.h"
@@ -114,22 +116,6 @@ public:
     int client_socket_fd() const override { return 0; }
 
     MOCK_CONST_METHOD1(client_socket_fd, int (std::function<void(std::shared_ptr<mf::Session> const&)> const&));
-};
-
-struct MockBufferPacker : public mg::PlatformIpcOperations
-{
-    MockBufferPacker()
-    {
-        using namespace testing;
-        ON_CALL(*this, connection_ipc_package())
-            .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
-    }
-    MOCK_CONST_METHOD3(pack_buffer,
-        void(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType));
-    MOCK_CONST_METHOD2(unpack_buffer,
-        void(mg::BufferIpcMessage&, mg::Buffer const&));
-    MOCK_METHOD0(connection_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
-    MOCK_METHOD2(platform_operation, mg::PlatformOperationMessage(unsigned int const, mg::PlatformOperationMessage const&));
 };
 
 class StubbedSession : public mtd::StubSession
@@ -267,7 +253,7 @@ struct SessionMediator : public ::testing::Test
     }
 
     MockConnector connector;
-    testing::NiceMock<MockBufferPacker> mock_ipc_operations;
+    testing::NiceMock<mtd::MockPlatformIpcOperations> mock_ipc_operations;
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
     std::vector<MirPixelFormat> const surface_pixel_formats;
@@ -997,4 +983,34 @@ TEST_F(SessionMediator, arranges_bufferstreams_via_shell)
         })));
 
     mediator.modify_surface(nullptr, &mods, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
+{
+    using namespace testing;
+    auto mock_sink = std::make_shared<mtd::MockEventSink>();
+    auto buffer1 = std::make_shared<mtd::StubBuffer>();
+    mf::SessionMediator mediator{
+        shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
+        surface_pixel_formats, report, mock_sink,
+        resource_cache, stub_screencast, nullptr, nullptr, nullptr,
+        std::make_shared<mtd::NullANRDetector>()};
+
+    mp::Void null;
+    mp::BufferRequest request;
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+
+    request.mutable_id()->set_value(surface_response.id().value());
+    request.mutable_buffer()->set_buffer_id(surface_response.buffer_stream().buffer().buffer_id());
+    auto mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+
+    InSequence seq;
+    EXPECT_CALL(mock_ipc_operations, unpack_buffer(_,_));
+    EXPECT_CALL(*mock_stream, swap_buffers(_,_))
+        .WillOnce(InvokeArgument<1>(buffer1.get()));
+    EXPECT_CALL(*mock_sink, send_buffer(_, Ref(*buffer1), mg::BufferIpcMsgType::full_msg));
+
+    mediator.submit_buffer(nullptr, &request, &null, null_callback.get());
 }

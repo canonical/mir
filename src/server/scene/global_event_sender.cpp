@@ -50,3 +50,7 @@ void ms::GlobalEventSender::send_ping(int32_t)
 {
     // Ping events are per-application session.
 }
+
+void ms::GlobalEventSender::send_buffer(mir::frontend::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType)
+{
+}

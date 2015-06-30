@@ -19,7 +19,7 @@
 #include "mir/server.h"
 
 #include "mir_test_framework/interprocess_client_server_test.h"
-#include "mir_test/cross_process_sync.h"
+#include "mir/test/cross_process_sync.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -17,7 +17,10 @@ protobuf_generate_cpp(
 
 set(
   INTEGRATION_TESTS_SRCS
+  test_focus_selection.cpp
+  test_touchspot_visualization.cpp
   test_surface_stack_with_compositor.cpp
+  test_buffer_scheduling.cpp
   test_client_screencast.cpp
   test_large_messages.cpp
   test_protobuf.cpp

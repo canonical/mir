@@ -22,8 +22,8 @@
 
 #include "mir/shared_library.h"
 #include "mir/client_platform_factory.h"
-#include "executable_path.h"
-#include "mir_test_doubles/mock_client_context.h"
+#include "mir_test_framework/executable_path.h"
+#include "mir/test/doubles/mock_client_context.h"
 
 namespace mtd = mir::test::doubles;
 

@@ -24,18 +24,11 @@
 #include "mir/raii.h"
 
 #include "mir_connection.h"
-//#include "egl_native_display_container.h"
 #include "default_connection_configuration.h"
 #include "display_configuration.h"
 #include "error_connections.h"
 #include "mir/uncaught.h"
 
-// Temporary include to ease client transition from mir_connection_drm* APIs.
-// to mir_connection_platform_operation().
-// TODO: Remove when transition is complete
-#include "../platforms/mesa/include/mir_toolkit/mesa/platform_operation.h"
-
-#include <unordered_set>
 #include <cstddef>
 #include <cstring>
 

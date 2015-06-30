@@ -187,6 +187,21 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
     }
 }
 
+MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event)
+{
+    return reinterpret_cast<MirInputEvent const*>(event);
+}
+
+MirInputEvent const* mir_keyboard_event_input_event(MirKeyboardEvent const* event)
+{
+    return reinterpret_cast<MirInputEvent const*>(event);
+}
+
+MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event)
+{
+    return reinterpret_cast<MirInputEvent const*>(event);
+}
+
 /* Key event accessors */
 
 MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* ev)

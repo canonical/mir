@@ -19,10 +19,10 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
 
-#include "mir_test_doubles/wrap_shell_to_track_latest_surface.h"
+#include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
 #include "mir_test_framework/connected_client_headless_server.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/signal.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/signal.h"
 #include "mir_toolkit/common.h"
 
 namespace mf = mir::frontend;
@@ -45,7 +45,7 @@ public:
     ~SurfaceHandle() { if (surface) mir_surface_release_sync(surface); }
 
     operator MirSurface*() const { return surface; }
-    SurfaceHandle(SurfaceHandle const&& that) : surface{that.surface} { surface = nullptr; }
+    SurfaceHandle(SurfaceHandle&& that) : surface{that.surface} { that.surface = nullptr; }
 private:
     SurfaceHandle(SurfaceHandle const&) = delete;
     MirSurface* surface;

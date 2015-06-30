@@ -23,13 +23,13 @@
 
 #include "mir_test_framework/stub_platform_helpers.h"
 
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/stub_display.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_display.h"
 #include "mir/fd.h"
-#include "mir_test/pipe.h"
+#include "mir/test/pipe.h"
 
 #ifdef ANDROID
-#include "mir_test_doubles/stub_android_native_buffer.h"
+#include "mir/test/doubles/stub_android_native_buffer.h"
 #endif
 
 #include <sys/types.h>
@@ -65,7 +65,7 @@ public:
 
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
     {
-#ifndef ANDROID
+#ifdef MESA_KMS
         auto native_buffer = std::make_shared<mg::NativeBuffer>();
         native_buffer->data_items = 1;
         native_buffer->data[0] = 0xDEADBEEF;
@@ -124,7 +124,7 @@ class StubIpcOps : public mg::PlatformIpcOperations
     {
         if (msg_type == mg::BufferIpcMsgType::full_msg)
         {
-#ifndef ANDROID
+#ifdef MESA_KMS
             auto native_handle = buffer.native_buffer_handle();
             for(auto i=0; i<native_handle->data_items; i++)
             {
@@ -324,7 +324,7 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     return std::make_shared<GuestPlatformAdapter>(context, graphics_platform);
 }
 
-extern "C" void add_graphis_platform_options(
+extern "C" void add_graphics_platform_options(
     boost::program_options::options_description& /*config*/)
 {
 }

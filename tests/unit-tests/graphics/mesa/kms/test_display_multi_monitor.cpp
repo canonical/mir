@@ -21,17 +21,17 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_gl.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl.h"
 #include "mir/graphics/display_configuration_policy.h"
-#include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/stub_gl_program_factory.h"
-#include "mir_test_doubles/platform_factory.h"
+#include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/stub_gl_program_factory.h"
+#include "mir/test/doubles/platform_factory.h"
 
 #include "mir_test_framework/udev_environment.h"
 
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_gbm.h"
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

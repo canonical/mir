@@ -19,6 +19,7 @@
 #include "server_configuration.h"
 #include "mir/options/default_configuration.h"
 #include "mir/input/composite_event_filter.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/main_loop.h"
 
 #include "server_example_display_configuration_policy.h"
@@ -59,9 +60,9 @@ me::ServerConfiguration::the_display_configuration_policy()
             auto display_config = the_options()->get<std::string>(me::display_config_opt);
 
             if (display_config == me::sidebyside_opt_val)
-                return std::make_shared<SideBySideDisplayConfigurationPolicy>();
+                return std::make_shared<mg::SideBySideDisplayConfigurationPolicy>();
             else if (display_config == me::single_opt_val)
-                return std::make_shared<SingleDisplayConfigurationPolicy>();
+                return std::make_shared<mg::SingleDisplayConfigurationPolicy>();
             else
                 return DefaultServerConfiguration::the_display_configuration_policy();
         });

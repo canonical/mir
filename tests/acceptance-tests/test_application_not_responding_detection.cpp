@@ -22,8 +22,8 @@
 #include "mir/scene/application_not_responding_detector.h"
 #include "mir/scene/session.h"
 
-#include "mir_test/signal.h"
-#include "mir_test/validity_matchers.h"
+#include "mir/test/signal.h"
+#include "mir/test/validity_matchers.h"
 
 #include <thread>
 #include <gtest/gtest.h>

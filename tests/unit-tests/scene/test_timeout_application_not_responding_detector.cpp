@@ -18,8 +18,8 @@
 
 #include "src/server/scene/timeout_application_not_responding_detector.h"
 
-#include "mir_test_doubles/mock_scene_session.h"
-#include "mir_test_doubles/fake_alarm_factory.h"
+#include "mir/test/doubles/mock_scene_session.h"
+#include "mir/test/doubles/fake_alarm_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

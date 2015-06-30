@@ -26,7 +26,7 @@
 
 #include "mir/logging/logger.h"
 #include "mir/report/legacy_input_report.h"
-#include "mir_test/fake_event_hub.h"
+#include "mir/test/fake_event_hub.h"
 
 namespace ml = mir::logging;
 
