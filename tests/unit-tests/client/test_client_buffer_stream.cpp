@@ -486,7 +486,7 @@ TEST_F(ClientBufferStreamTest, receives_unsolicited_buffer)
     EXPECT_THAT(bs->get_current_buffer_id(), Eq(id));
 }
 
-TEST_F(ClientBufferStreamTest, waiting_client_unblocks_on_shutdown)
+TEST_F(ClientBufferStreamTest, waiting_client_can_unblock_on_shutdown)
 {
     using namespace ::testing;
     using namespace std::literals::chrono_literals;
@@ -515,7 +515,7 @@ TEST_F(ClientBufferStreamTest, waiting_client_unblocks_on_shutdown)
     std::unique_lock<decltype(mutex)> lk(mutex);
     EXPECT_TRUE(cv.wait_for(lk, 4s, [&]{ return started; }));
 
-    bs.reset();
+    bs->buffer_unavailable();
 
     EXPECT_THAT(never_serviced_request.wait_for(4s), Ne(std::future_status::timeout));
 }

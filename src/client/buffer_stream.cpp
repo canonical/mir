@@ -162,7 +162,6 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
 
 mcl::BufferStream::~BufferStream()
 {
-    next_buffer_wait_handle.result_received();
 }
 
 void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
@@ -412,6 +411,10 @@ bool mcl::BufferStream::valid() const
 void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
 {
     buffer_depository.set_max_buffers(cache_size);
+}
+
+void mcl::BufferStream::buffer_unavailable()
+{
 }
 
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
