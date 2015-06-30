@@ -70,6 +70,7 @@ MIR_CLIENT_9 {
     mir_input_event_get_touch_event;
     mir_input_event_get_type;
     mir_keyboard_event_action;
+    mir_keyboard_event_input_event;
     mir_keyboard_event_key_code;
     mir_keyboard_event_modifiers;
     mir_keyboard_event_scan_code;
@@ -90,6 +91,7 @@ MIR_CLIENT_9 {
     mir_pointer_event_axis_value;
     mir_pointer_event_buttons;
     mir_pointer_event_button_state;
+    mir_pointer_event_input_event;
     mir_pointer_event_modifiers;
     mir_pointing_hand_cursor_name;
     mir_prompt_session_error_message;
@@ -150,6 +152,7 @@ MIR_CLIENT_9 {
     mir_touch_event_action;
     mir_touch_event_axis_value;
     mir_touch_event_id;
+    mir_touch_event_input_event;
     mir_touch_event_modifiers;
     mir_touch_event_point_count;
     mir_touch_event_tooltype;

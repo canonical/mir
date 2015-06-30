@@ -1,4 +1,4 @@
-from mir_perf_framework import PerformanceTest, Server, Client, Input
+from mir_perf_framework import PerformanceTest, Server, Client
 import time
 import evdev
 import statistics
@@ -9,15 +9,17 @@ host = Server()
 nested = Server(host=host, reports=["client-input-receiver"])
 client = Client(server=nested, reports=["client-input-receiver"])
 
-input = Input()
+ui = evdev.UInput()
 test = PerformanceTest([host, nested, client])
 
 test.start()
 
 for i in range(1000):
-    input.inject([(evdev.ecodes.EV_KEY, evdev.ecodes.KEY_A, 1)])
+    ui.write(evdev.ecodes.EV_KEY, evdev.ecodes.KEY_A, 1)
+    ui.syn()
     time.sleep(0.002)
-    input.inject([(evdev.ecodes.EV_KEY, evdev.ecodes.KEY_A, 0)])
+    ui.write(evdev.ecodes.EV_KEY, evdev.ecodes.KEY_A, 0)
+    ui.syn()
     time.sleep(0.002)
 
 test.stop()

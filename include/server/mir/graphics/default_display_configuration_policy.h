@@ -22,13 +22,32 @@ namespace mir
 {
 namespace graphics
 {
-
-class DefaultDisplayConfigurationPolicy : public DisplayConfigurationPolicy
+/** @name default DisplayConfigurationPolicy options.
+ * Some simple default implementations: Mir will default to CloneDisplayConfigurationPolicy,
+ * The others are plausible defaults for display servers that don't want to do anything
+ * more sophisticated.
+ * @{ */
+/// All screens placed at (0, 0)
+class CloneDisplayConfigurationPolicy : public DisplayConfigurationPolicy
 {
 public:
     void apply_to(DisplayConfiguration& conf);
 };
 
+/// Each screen placed to the right of the previous one
+class SideBySideDisplayConfigurationPolicy : public DisplayConfigurationPolicy
+{
+public:
+    void apply_to(graphics::DisplayConfiguration& conf);
+};
+
+/// Just use the first screen
+class SingleDisplayConfigurationPolicy : public DisplayConfigurationPolicy
+{
+public:
+    void apply_to(graphics::DisplayConfiguration& conf);
+};
+/** @} */
 }
 }
 

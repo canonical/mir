@@ -141,6 +141,14 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
 float mir_touch_event_axis_value(MirTouchEvent const* event, 
     size_t touch_index, MirTouchAxis axis);
 
+/*
+ * Retrieve the corresponding input event.
+ *
+ * \param [in] event The touch event
+ * \return           The input event
+ */
+MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event);
+
 #ifdef __cplusplus
 }
 /**@}*/

@@ -44,6 +44,7 @@ public:
     void reset();
     void configure(geometry::Displacement fb_offset, size_t kms_mode_index);
     geometry::Size size() const;
+    int max_refresh_rate() const;
 
     bool set_crtc(uint32_t fb_id);
     void clear_crtc();

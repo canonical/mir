@@ -27,7 +27,7 @@
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/stub_gl_program_factory.h"
 #include "mir/test/doubles/platform_factory.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #ifdef MESA_KMS
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
@@ -70,7 +70,7 @@ public:
     {
         auto const platform = mtd::create_platform_with_null_dependencies();
         return platform->create_display(
-            std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }

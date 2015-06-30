@@ -34,19 +34,6 @@ extern char const* const display_config_descr;
 extern char const* const clone_opt_val;
 extern char const* const sidebyside_opt_val;
 extern char const* const single_opt_val;
-
-class SideBySideDisplayConfigurationPolicy : public graphics::DisplayConfigurationPolicy
-{
-public:
-    void apply_to(graphics::DisplayConfiguration& conf);
-};
-
-class SingleDisplayConfigurationPolicy : public graphics::DisplayConfigurationPolicy
-{
-public:
-    void apply_to(graphics::DisplayConfiguration& conf);
-};
-
 extern char const* const display_alpha_opt;
 extern char const* const display_alpha_descr;
 extern char const* const display_alpha_off;

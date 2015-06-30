@@ -1,7 +1,7 @@
 #include "mir/graphics/display_buffer.h"
 
 #include "src/server/graphics/offscreen/display.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "src/server/report/null_report_factory.h"
 
 #include "mir/test/doubles/mock_egl.h"
@@ -55,7 +55,7 @@ TEST_F(OffscreenDisplayTest, uses_basic_platform_egl_native_display)
 
     mgo::Display display{
         native_display,
-        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mr::null_display_report()};
 }
 
@@ -64,7 +64,7 @@ TEST_F(OffscreenDisplayTest, orientation_normal)
     using namespace ::testing;
     mgo::Display display{
         native_display,
-        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mr::null_display_report()};
 
     int count = 0;
@@ -76,6 +76,22 @@ TEST_F(OffscreenDisplayTest, orientation_normal)
     });
 
     EXPECT_TRUE(count);
+}
+
+TEST_F(OffscreenDisplayTest, never_enables_predictive_bypass)
+{
+    mgo::Display display{
+        native_display,
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+        mr::null_display_report()};
+
+    int groups = 0;
+    display.for_each_display_sync_group([&](mg::DisplaySyncGroup& group){
+        ++groups;
+        EXPECT_EQ(0, group.recommended_sleep().count());
+    });
+
+    EXPECT_TRUE(groups);
 }
 
 TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
@@ -101,7 +117,7 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
 
     mgo::Display display{
         native_display,
-        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mr::null_display_report()};
 
     Mock::VerifyAndClearExpectations(&mock_gl);
@@ -149,7 +165,7 @@ TEST_F(OffscreenDisplayTest, restores_previous_state_on_fbo_setup_failure)
     EXPECT_THROW({
         mgo::Display display(
             native_display,
-            std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             mr::null_display_report());
     }, std::runtime_error);
 }

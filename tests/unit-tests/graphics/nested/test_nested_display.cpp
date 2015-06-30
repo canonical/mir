@@ -20,7 +20,7 @@
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/graphics/nested/host_surface.h"
 #include "src/server/report/null/display_report.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "src/server/input/null_input_dispatcher.h"
 #include "mir_display_configuration_builder.h"
 
@@ -79,7 +79,7 @@ struct NestedDisplay : testing::Test
     testing::NiceMock<mtd::MockEGL> mock_egl;
     mi::NullInputDispatcher null_input_dispatcher;
     mir::report::null::DisplayReport null_display_report;
-    mg::DefaultDisplayConfigurationPolicy default_conf_policy;
+    mg::CloneDisplayConfigurationPolicy default_conf_policy;
     mtd::StubGLConfig stub_gl_config;
     std::shared_ptr<mtd::NullPlatform> null_platform{
         std::make_shared<mtd::NullPlatform>()};
@@ -167,6 +167,23 @@ TEST_F(NestedDisplay, keeps_platform_alive)
     EXPECT_FALSE(weak_platform.expired());
 }
 
+TEST_F(NestedDisplay, never_enables_predictive_bypass)
+{   // This test can be removed after it's implemented (after nested bypass)
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(stub_gl_config));
+
+    int groups = 0;
+    nested_display->for_each_display_sync_group(
+        [&groups](mg::DisplaySyncGroup& g)
+        {
+            EXPECT_EQ(0, g.recommended_sleep().count());
+            ++groups;
+        }
+    );
+
+    ASSERT_NE(0, groups);
+}
 
 TEST_F(NestedDisplay, makes_context_current_on_creation_and_releases_on_destruction)
 {

@@ -43,6 +43,7 @@ public:
 
     bool compatible_renderlist(RenderableList const& renderlist) override;
     void commit(std::list<DisplayContents> const& contents) override;
+    std::chrono::milliseconds recommended_sleep() const override;
 
 private:
     void content_cleared() override;

@@ -87,6 +87,12 @@ void mgo::detail::DisplaySyncGroup::post()
 {
 }
 
+std::chrono::milliseconds
+mgo::detail::DisplaySyncGroup::recommended_sleep() const
+{
+    return std::chrono::milliseconds::zero();
+}
+
 mgo::Display::Display(
     EGLNativeDisplayType egl_native_display,
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
