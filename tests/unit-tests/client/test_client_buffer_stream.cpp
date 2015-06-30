@@ -29,6 +29,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include <future>
 #include <atomic>
 
 namespace mp = mir::protobuf;
@@ -483,4 +484,34 @@ TEST_F(ClientBufferStreamTest, receives_unsolicited_buffer)
 
     EXPECT_THAT(bs->get_current_buffer().get(), Eq(&second_mock_client_buffer));
     EXPECT_THAT(bs->get_current_buffer_id(), Eq(id));
+}
+
+TEST_F(ClientBufferStreamTest, waiting_client_unblocks_on_shutdown)
+{
+    using namespace ::testing;
+    using namespace std::literals::chrono_literals;
+    MockClientBuffer mock_client_buffer;
+    MirBufferPackage buffer_package = a_buffer_package();
+    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
+    ON_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+        .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
+    ON_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+        .WillByDefault(RunProtobufClosure());
+
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool started{false};
+
+    auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
+    auto never_serviced_request = std::async(std::launch::async,[&] {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        started = true;
+        bs->request_and_wait_for_next_buffer();
+    });
+
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    EXPECT_TRUE(cv.wait_for(lk, 4s, [&]{ return started; }));
+
+    bs.reset();
+    EXPECT_THAT(never_serviced_request.wait_for(4s), Ne(std::future_status::timeout));
 }
