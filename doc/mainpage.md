@@ -113,3 +113,4 @@ Working on Mir code
  - \ref component_reports
  - \ref dso_versioning_guide
  - \ref abi_compatibility_tools
+ - \ref mir_performance_framework
