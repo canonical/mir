@@ -110,6 +110,13 @@ void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
  * The server may send ping requests to detect unresponsive applications. Clients should
  * process this with their regular event handling, and call mir_connection_pong() in response.
  *
+ * The shell may treat a client which fails to pong in a timely fashion differently; a common
+ * response is to overlay the surface with an unresponsive application message.
+ *
+ * A default implementation that immediately calls pong is provided; toolkits SHOULD override
+ * this default implementation to more accurately reflect the state of their event processing
+ * loop.
+ *
  * \param [in] connection       The connection
  * \param [in] callback         The function to be called on ping events.
  * \param [in] context          User data passed to the callback function
