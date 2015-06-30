@@ -23,6 +23,7 @@
 #include "mir/scene/session.h"
 
 #include "mir_test/signal.h"
+#include "mir_test/validity_matchers.h"
 
 #include <thread>
 #include <gtest/gtest.h>
@@ -125,6 +126,30 @@ TEST_F(ApplicationNotRespondingDetection, can_override_anr_detector)
     complete_setup();
 }
 
+TEST_F(ApplicationNotRespondingDetection, each_new_client_is_registered)
+{
+    using namespace std::literals;
+    using namespace testing;
+
+    constexpr int const client_start_count = 10;
+    constexpr int const expected_count = client_start_count + 1;  // Test fixture also connects.
+
+    auto anr_detector = std::make_shared<NiceMock<MockANRDetector>>();
+    server.override_the_application_not_responding_detector([anr_detector]() { return anr_detector; });
+
+    EXPECT_CALL(*anr_detector, register_session(_,_)).Times(expected_count);
+    // ConnectiedClientHeadlessServer::TearDown guarantees that the initial client is
+    // disconnected before the server is torn down, so it should also be unregistered.
+    EXPECT_CALL(*anr_detector, unregister_session(_)).Times(expected_count);
+
+    complete_setup();
+
+    for (int i = 0; i < client_start_count; ++i)
+    {
+        mir_connection_release(mir_connect_sync(new_connection().c_str(), ("Test client "s + std::to_string(i)).c_str()));
+    }
+}
+
 namespace
 {
 struct PingContext
@@ -171,3 +196,34 @@ TEST_F(ApplicationNotRespondingDetection, responding_client_is_not_marked_as_unr
     EXPECT_FALSE(unresponsive_called);
 }
 
+namespace
+{
+void ping_counting_blackhole_pong(MirConnection*, int32_t, void* ctx)
+{
+    auto count = reinterpret_cast<int*>(ctx);
+    (*count)++;
+}
+}
+
+TEST_F(ApplicationNotRespondingDetection, unresponsive_client_stops_receiving_pings)
+{
+    using namespace std::literals::chrono_literals;
+    using namespace testing;
+
+    complete_setup();
+
+    int count{0};
+    mir_connection_set_ping_event_callback(connection, &ping_counting_blackhole_pong, &count);
+
+    auto responsive_connection = mir_connect_sync(new_connection().c_str(), "Aardvarks");
+    ASSERT_THAT(responsive_connection, IsValid());
+
+    auto ping_context = std::make_unique<PingContext>();
+    mir_connection_set_ping_event_callback(responsive_connection, &respond_to_ping, ping_context.get());
+
+    EXPECT_TRUE(ping_context->pung_thrice.wait_for(10s));
+
+    EXPECT_THAT(count, Eq(1));
+
+    mir_connection_release(responsive_connection);
+}
