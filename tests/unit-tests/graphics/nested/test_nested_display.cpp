@@ -167,6 +167,23 @@ TEST_F(NestedDisplay, keeps_platform_alive)
     EXPECT_FALSE(weak_platform.expired());
 }
 
+TEST_F(NestedDisplay, never_enables_predictive_bypass)
+{   // This test can be removed after it's implemented (after nested bypass)
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(stub_gl_config));
+
+    int groups = 0;
+    nested_display->for_each_display_sync_group(
+        [&groups](mg::DisplaySyncGroup& g)
+        {
+            EXPECT_EQ(0, g.recommended_sleep().count());
+            ++groups;
+        }
+    );
+
+    ASSERT_NE(0, groups);
+}
 
 TEST_F(NestedDisplay, makes_context_current_on_creation_and_releases_on_destruction)
 {

@@ -60,6 +60,11 @@ struct StubDisplaySyncGroup : mg::DisplaySyncGroup
         
         last_sync = now;
     }
+
+    std::chrono::milliseconds recommended_sleep() const override
+    {
+        return std::chrono::milliseconds::zero();
+    }
     
     double const vsync_rate_in_hz;
 

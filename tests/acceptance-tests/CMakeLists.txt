@@ -46,6 +46,7 @@ set(
   test_surface_modifications.cpp
   test_surface_placement.cpp
   test_surface_morphing.cpp
+  test_surface_specification.cpp
   test_system_compositor_window_manager.cpp
   test_session_mediator_report.cpp
 )
