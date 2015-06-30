@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <functional>
+#include <chrono>
 
 namespace mir
 {
@@ -63,6 +64,16 @@ public:
      *  in the near future. On some platforms, this may wait a potentially long time for vsync. 
     **/
     virtual void post() = 0;
+
+    /**
+     * Returns a recommendation to the compositor as to how long it should
+     * wait before sampling the scene for the next frame. Sampling the
+     * scene too early results in up to one whole frame of extra lag if
+     * rendering is fast or skipped altogether (bypass/overlays). But sampling
+     * too late and we might miss the deadline. If unsure just return zero.
+     */
+    virtual std::chrono::milliseconds recommended_sleep() const = 0;
+
     virtual ~DisplaySyncGroup() = default;
 protected:
     DisplaySyncGroup() = default;

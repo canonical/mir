@@ -28,6 +28,8 @@
 #include <GLES2/gl2.h>
 
 #include <stdexcept>
+#include <chrono>
+#include <thread>
 
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
@@ -282,6 +284,11 @@ void mgm::DisplayBuffer::post()
         needs_set_crtc = false;
     }
 
+    using namespace std;  // For operator""ms()
+
+    // Predicted worst case render time for the next frame...
+    auto predicted_render_time = 50ms;
+
     if (bypass_buf)
     {
         /*
@@ -295,6 +302,10 @@ void mgm::DisplayBuffer::post()
          */
         scheduled_bypass_frame = bypass_buf;
         wait_for_page_flip();
+
+        // It's very likely the next frame will be bypassed like this one so
+        // we only need time for kernel page flip scheduling...
+        predicted_render_time = 5ms;
     }
     else
     {
@@ -306,11 +317,33 @@ void mgm::DisplayBuffer::post()
         scheduled_composite_frame = bufobj;
         if (outputs.size() == 1)
             wait_for_page_flip();
+
+        /*
+         * TODO: If you're optimistic about your GPU performance and/or
+         *       measure it carefully you may wish to set predicted_render_time
+         *       to a lower value here for lower latency.
+         *
+         *predicted_render_time = 9ms; // e.g. about the same as Weston
+         */
     }
 
     // Buffer lifetimes are managed exclusively by scheduled*/visible* now
     bypass_buf = nullptr;
     bypass_bufobj = nullptr;
+
+    recommend_sleep = 0ms;
+    if (outputs.size() == 1)
+    {
+        auto const& output = outputs.front();
+        auto const min_frame_interval = 1000ms / output->max_refresh_rate();
+        if (predicted_render_time < min_frame_interval)
+            recommend_sleep = min_frame_interval - predicted_render_time;
+    }
+}
+
+std::chrono::milliseconds mgm::DisplayBuffer::recommended_sleep() const
+{
+    return recommend_sleep;
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()

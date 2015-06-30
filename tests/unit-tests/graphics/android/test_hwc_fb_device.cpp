@@ -174,4 +174,7 @@ TEST_F(HwcFbDevice, hwc10_post)
 
     mga::DisplayContents content{primary, list, geom::Displacement{}, mock_context, stub_compositor};
     device.commit({content});
+
+    // Predictive bypass not enabled in HwcFbDevice
+    EXPECT_EQ(0, device.recommended_sleep().count());
 }

@@ -113,3 +113,8 @@ bool mga::HwcFbDevice::compatible_renderlist(RenderableList const&)
 void mga::HwcFbDevice::content_cleared()
 {
 }
+
+std::chrono::milliseconds mga::HwcFbDevice::recommended_sleep() const
+{
+    return std::chrono::milliseconds::zero();
+}

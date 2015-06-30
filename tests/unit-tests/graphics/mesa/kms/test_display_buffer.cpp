@@ -46,6 +46,8 @@ using mir::report::null_display_report;
 class MesaDisplayBufferTest : public Test
 {
 public:
+    int const mock_refresh_rate = 60;
+
     MesaDisplayBufferTest()
         : mock_bypassable_buffer{std::make_shared<NiceMock<MockBuffer>>()}
         , fake_bypassable_renderable{
@@ -78,6 +80,8 @@ public:
             .WillByDefault(Return(true));
         ON_CALL(*mock_kms_output, schedule_page_flip(_))
             .WillByDefault(Return(true));
+        ON_CALL(*mock_kms_output, max_refresh_rate())
+            .WillByDefault(Return(mock_refresh_rate));
 
         ON_CALL(*mock_bypassable_buffer, size())
             .WillByDefault(Return(display_area.size));
@@ -152,6 +156,56 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
 
     // Bypass buffer should no longer be held by db
     EXPECT_EQ(original_count, mock_bypassable_buffer.use_count());
+}
+
+TEST_F(MesaDisplayBufferTest, predictive_bypass_is_throttled)
+{
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    for (int frame = 0; frame < 5; ++frame)
+    {
+        ASSERT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+        db.post();
+
+        // Cast to a simple int type so that test failures are readable
+        int milliseconds_per_frame = 1000 / mock_refresh_rate;
+        ASSERT_THAT(db.recommended_sleep().count(),
+                    Ge(milliseconds_per_frame/2));
+    }
+}
+
+TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
+{
+    graphics::RenderableList non_bypassable_list{
+        std::make_shared<FakeRenderable>(geometry::Rectangle{{12, 34}, {1, 1}})
+    };
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    for (int frame = 0; frame < 5; ++frame)
+    {
+        ASSERT_FALSE(db.post_renderables_if_optimizable(non_bypassable_list));
+        db.post();
+
+        // Cast to a simple int type so that test failures are readable
+        ASSERT_EQ(0, db.recommended_sleep().count());
+    }
 }
 
 TEST_F(MesaDisplayBufferTest, bypass_buffer_only_referenced_once_by_db)

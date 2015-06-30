@@ -65,6 +65,7 @@ public:
     void for_each_display_buffer(
         std::function<void(graphics::DisplayBuffer&)> const& f) override;
     void post() override;
+    std::chrono::milliseconds recommended_sleep() const override;
 
     MirOrientation orientation() const override;
     void set_orientation(MirOrientation const rot, geometry::Rectangle const& a);
@@ -93,6 +94,7 @@ private:
     uint32_t fb_width, fb_height;
     MirOrientation rotation;
     std::atomic<bool> needs_set_crtc;
+    std::chrono::milliseconds recommend_sleep{0};
     bool page_flips_pending;
 };
 
