@@ -127,6 +127,7 @@ private:
 
     std::function<void()> on_incoming_buffer;
     std::queue<mir::protobuf::Buffer> incoming_buffers;
+    bool server_connection_lost {false};
 
     MirConnection* connection;
     mir::protobuf::DisplayServer& display_server;

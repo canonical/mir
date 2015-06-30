@@ -236,6 +236,8 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     // of buffer stream which generalizes and clarifies the server side logic.
     if (mode == mcl::BufferStreamMode::Producer)
     {
+        if (server_connection_lost)
+            BOOST_THROW_EXCEPTION(std::runtime_error("new buffer unavailable"));
         return submit(done, std::move(lock));
     }
     else
@@ -310,6 +312,8 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
 void mcl::BufferStream::request_and_wait_for_next_buffer()
 {
     next_buffer([](){})->wait_for_all();
+    if (server_connection_lost)
+        BOOST_THROW_EXCEPTION(std::runtime_error("new buffer unavailable"));
 }
 
 void mcl::BufferStream::on_configured()
@@ -413,10 +417,6 @@ void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
     buffer_depository.set_max_buffers(cache_size);
 }
 
-void mcl::BufferStream::buffer_unavailable()
-{
-}
-
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -431,5 +431,17 @@ void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
     else
     {
         incoming_buffers.push(buffer);
+    }
+}
+
+void mcl::BufferStream::buffer_unavailable()
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    server_connection_lost = true;
+    next_buffer_wait_handle.result_received();
+    if (on_incoming_buffer)
+    {
+        on_incoming_buffer();
+        on_incoming_buffer = std::function<void()>{};
     }
 }

@@ -518,4 +518,8 @@ TEST_F(ClientBufferStreamTest, waiting_client_can_unblock_on_shutdown)
     bs->buffer_unavailable();
 
     EXPECT_THAT(never_serviced_request.wait_for(4s), Ne(std::future_status::timeout));
+
+    EXPECT_THROW({
+        bs->request_and_wait_for_next_buffer();
+    }, std::runtime_error);
 }

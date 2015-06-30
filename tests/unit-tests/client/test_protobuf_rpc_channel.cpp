@@ -73,6 +73,9 @@ public:
         mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&) const override
     {
     }
+    void with_all_streams_do(std::function<void(mcl::ClientBufferStream*)> const&) const override
+    {
+    }
 };
 
 class MockStreamTransport : public mclr::StreamTransport
@@ -361,11 +364,11 @@ TEST_F(MirProtobufRpcChannelTest, notifies_streams_of_disconnect)
     mtd::MockClientBufferStream stream;
     EXPECT_CALL(stream, buffer_unavailable());
     EXPECT_CALL(*stream_map, with_all_streams_do(_))
-       .WillOnce(InvokeArgument<0>(&stream)); 
-
+       .WillOnce(InvokeArgument<0>(&stream));
+ 
     mclr::MirProtobufRpcChannel channel{
-                  std::unique_ptr<MockStreamTransport>{transport},
-                  std::make_shared<MockSurfaceMap>(),
+                  std::make_unique<NiceMock<MockStreamTransport>>(),
+                  stream_map,
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
