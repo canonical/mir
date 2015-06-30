@@ -18,7 +18,15 @@
 
 #include "mir/graphics/platform.h"
 
-extern "C" mir::graphics::PlatformPriority probe_graphics_platform()
+namespace mir
+{
+namespace options
+{
+class ProgramOption;
+}
+}
+
+extern "C" mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& /*options*/)
 {
     return mir::graphics::supported;
 }

@@ -37,6 +37,7 @@ class Surface;
 namespace options
 {
 class Option;
+class ProgramOption;
 }
 
 /// Graphics subsystem. Mediates interaction between core system and
@@ -169,8 +170,8 @@ extern "C" void add_graphics_platform_options(
 // TODO: We actually need to be more granular here; on a device with more
 //       than one graphics system we may need a different platform per GPU,
 //       so we should be associating platforms with graphics devices in some way
-extern "C" typedef PlatformPriority(*PlatformProbe)();
-extern "C" PlatformPriority probe_graphics_platform();
+extern "C" typedef PlatformPriority(*PlatformProbe)(options::ProgramOption const& options);
+extern "C" PlatformPriority probe_graphics_platform(options::ProgramOption const& options);
 
 extern "C" typedef ModuleProperties const*(*DescribeModule)();
 extern "C" ModuleProperties const* describe_graphics_module();
