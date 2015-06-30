@@ -122,6 +122,14 @@ MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event);
 float mir_pointer_event_axis_value(MirPointerEvent const* event, 
     MirPointerAxis axis);
 
+/*
+ * Retrieve the corresponding input event.
+ *
+ * \param [in] event The pointer event
+ * \return           The input event
+ */
+MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event);
+
 #ifdef __cplusplus
 }
 /**@}*/

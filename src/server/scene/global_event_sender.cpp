@@ -46,6 +46,6 @@ void ms::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguratio
     });
 }
 
-void ms::GlobalEventSender::send_buffer(mir::frontend::BufferStreamId, mg::Buffer&)
+void ms::GlobalEventSender::send_buffer(mir::frontend::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType)
 {
 }

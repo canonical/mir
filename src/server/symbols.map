@@ -298,6 +298,9 @@ MIR_SERVER_32 {
     non-virtual?thunk?to?mir::frontend::SessionAuthorizer::?SessionAuthorizer*;
     non-virtual?thunk?to?mir::frontend::Session::?Session*;
     non-virtual?thunk?to?mir::frontend::Surface::?Surface*;
+    non-virtual?thunk?to?mir::graphics::CloneDisplayConfigurationPolicy::apply_to*;
+    non-virtual?thunk?to?mir::graphics::SideBySideDisplayConfigurationPolicy::apply_to*;
+    non-virtual?thunk?to?mir::graphics::SingleDisplayConfigurationPolicy::apply_to*;
     non-virtual?thunk?to?mir::input::CursorImages::?CursorImages*;
     non-virtual?thunk?to?mir::input::CursorListener::?CursorListener*;
     non-virtual?thunk?to?mir::input::EventFilter::?EventFilter*;
@@ -469,6 +472,9 @@ MIR_SERVER_32 {
     vtable?for?mir::frontend::SessionCredentials;
     vtable?for?mir::frontend::SessionMediatorReport;
     vtable?for?mir::frontend::Surface;
+    vtable?for?mir::graphics::CloneDisplayConfigurationPolicy;
+    vtable?for?mir::graphics::SideBySideDisplayConfigurationPolicy;
+    vtable?for?mir::graphics::SingleDisplayConfigurationPolicy;
     vtable?for?mir::input::CompositeEventFilter;
     vtable?for?mir::input::CursorImages;
     vtable?for?mir::input::CursorListener;

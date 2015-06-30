@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,32 +13,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/graphics/platform.h"
+#include "mir_test_framework/main.h"
 
-namespace mir
-{
-namespace options
-{
-class ProgramOption;
-}
-}
+#include <cstring>
+#include <iostream>
 
-extern "C" mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& /*options*/)
+int main(int argc, char* argv[])
 {
-    return mir::graphics::supported;
-}
+    // Override this standard gtest message
+    std::cout << "Running main() from " << basename(__FILE__) << std::endl;
 
-mir::ModuleProperties const description {
-    "dummy",
-    MIR_VERSION_MAJOR,
-    MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
-};
-
-extern "C" mir::ModuleProperties const* describe_graphics_module()
-{
-    return &description;
+    mir_test_framework::main(argc, argv);
 }

@@ -24,6 +24,7 @@
 #include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/options/option.h"
+#include "mir/options/program_option.h"
 #include "mir/graphics/native_buffer.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/udev/wrapper.h"
@@ -213,22 +214,36 @@ extern "C" void add_graphics_platform_options(boost::program_options::options_de
          "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
 }
 
-extern "C" mg::PlatformPriority probe_graphics_platform()
+extern "C" mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 {
-    auto udev = std::make_shared<mir::udev::Context>();
-    auto drm = std::make_shared<mgmh::DRMHelper>(mgmh::DRMNodeToUse::card_node);
-
-    try {
-        drm->setup(udev);
-        drm->set_master();
-    }
-    catch(...)
+    auto const unparsed_arguments = options.unparsed_command_line();
+    auto platform_option_used = false;
+    for (auto const& token : unparsed_arguments)
     {
-        return mg::PlatformPriority::unsupported;
+        if (token == (std::string("--") + vt_option_name))
+            platform_option_used = true;
     }
 
-    drm->drop_master();
-    return mg::PlatformPriority::best;
+    if (options.is_set(vt_option_name))
+        platform_option_used = true;
+
+    auto udev = std::make_shared<mir::udev::Context>();
+
+    mir::udev::Enumerator drm_devices{udev};
+    drm_devices.match_subsystem("drm");
+    drm_devices.match_sysname("card[0-9]*");
+    drm_devices.scan_devices();
+
+    for (auto& device : drm_devices)
+    {
+        static_cast<void>(device);
+        if (platform_option_used)
+            return mg::PlatformPriority::best;
+        else
+            return mg::PlatformPriority::supported;
+    }
+
+    return mg::PlatformPriority::unsupported;
 }
 
 mir::ModuleProperties const description = {

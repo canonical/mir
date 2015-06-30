@@ -36,6 +36,41 @@ using namespace mir::geometry;
 namespace
 {
 int const title_bar_height = 10;
+
+// TODO this really should belong on CanonicalSurfaceInfo
+// but is currently used when placing the surface before construction.
+// Which implies we need some rework so that we can construct metadata
+// before the surface.
+bool must_not_have_parent(MirSurfaceType type)
+{
+    switch (type)
+    {
+    case mir_surface_type_normal:
+    case mir_surface_type_utility:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+// TODO this really should belong on CanonicalSurfaceInfo
+// but is currently used when placing the surface before construction.
+// Which implies we need some rework so that we can construct metadata
+// before the surface.
+bool must_have_parent(MirSurfaceType type)
+{
+    switch (type)
+    {
+    case mir_surface_type_overlay:;
+    case mir_surface_type_satellite:
+    case mir_surface_type_tip:
+        return true;
+
+    default:
+        return false;
+    }
+}
 }
 
 msh::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
@@ -81,17 +116,7 @@ bool msh::CanonicalSurfaceInfo::can_be_active() const
 
 bool msh::CanonicalSurfaceInfo::must_have_parent() const
 {
-    switch (type)
-    {
-    case mir_surface_type_overlay:;
-    case mir_surface_type_inputmethod:
-    case mir_surface_type_satellite:
-    case mir_surface_type_tip:
-        return true;
-
-    default:
-        return false;
-    }
+    return :: must_have_parent(type);
 }
 
 bool msh::CanonicalSurfaceInfo::can_morph_to(MirSurfaceType new_type) const
@@ -138,15 +163,7 @@ bool msh::CanonicalSurfaceInfo::can_morph_to(MirSurfaceType new_type) const
 
 bool msh::CanonicalSurfaceInfo::must_not_have_parent() const
 {
-    switch (type)
-    {
-    case mir_surface_type_normal:
-    case mir_surface_type_utility:
-        return true;
-
-    default:
-        return false;
-    }
+    return ::must_not_have_parent(type);
 }
 
 
@@ -189,6 +206,9 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
 {
     auto parameters = request_parameters;
 
+    if (!parameters.type.is_set())
+        throw std::runtime_error("Surface type must be provided");
+
     if (!parameters.state.is_set())
         parameters.state = mir_surface_state_restored;
 
@@ -200,6 +220,12 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
     bool positioned = false;
 
     auto const parent = parameters.parent.lock();
+
+    if (must_not_have_parent(parameters.type.value()) && parent)
+        throw std::runtime_error("Surface type cannot have parent");
+
+    if (must_have_parent(parameters.type.value()) && !parent)
+        throw std::runtime_error("Surface type must have parent");
 
     if (parameters.output_id != mir::graphics::DisplayConfigurationOutputId{0})
     {
