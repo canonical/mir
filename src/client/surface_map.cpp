@@ -90,7 +90,7 @@ void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 {
     std::lock_guard<std::mutex> lk(guard);
     surfaces.erase(surface_id);
-//    streams.erase(mf::BufferStreamId(surface_id.as_value()));
+    streams.erase(mf::BufferStreamId(surface_id.as_value()));
 }
 
 void mcl::ConnectionSurfaceMap::with_stream_do(
@@ -122,13 +122,11 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
 void mcl::ConnectionSurfaceMap::insert(mf::BufferStreamId stream_id, ClientBufferStream* stream)
 {
     std::lock_guard<std::mutex> lk(guard);
-    printf("ADD STREAM %i %X\n", stream_id.as_value(), (int)(long) stream);
     streams[stream_id] = {stream, true};
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::BufferStreamId stream_id)
 {
     std::lock_guard<std::mutex> lk(guard);
-    printf("RM STREAM %i\n", stream_id.as_value());
     streams.erase(stream_id);
 }
