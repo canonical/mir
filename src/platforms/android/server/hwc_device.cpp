@@ -27,6 +27,8 @@
 #include "mir/raii.h"
 #include <limits>
 #include <algorithm>
+#include <chrono>
+#include <thread>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
@@ -97,6 +99,8 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
 
     hwc_wrapper->prepare(lists);
 
+    bool purely_overlays = true;
+
     for (auto& content : contents)
     {
         if (content.list.needs_swapbuffers())
@@ -111,6 +115,7 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
                 content.compositor.render(std::move(rejected_renderables), content.list_offset, content.context);
             content.list.setup_fb(content.context.last_rendered_buffer());
             content.list.swap_occurred();
+            purely_overlays = false;
         }
     
         //setup overlays
@@ -136,6 +141,20 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
 
         mir::Fd retire_fd(content.list.retirement_fence());
     }
+
+    /*
+     * Test results (how long can we sleep for without missing a frame?):
+     *   arale:   10ms  (TODO: Find out why arale is so slow)
+     *   mako:    15ms
+     *   krillin: 11ms  (to be fair, the display is 67Hz)
+     */
+    using namespace std;
+    recommend_sleep = purely_overlays ? 10ms : 0ms;
+}
+
+std::chrono::milliseconds mga::HwcDevice::recommended_sleep() const
+{
+    return recommend_sleep;
 }
 
 void mga::HwcDevice::content_cleared()

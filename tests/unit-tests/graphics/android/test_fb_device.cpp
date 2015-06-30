@@ -100,6 +100,9 @@ TEST_F(FBDevice, commits_frame)
     }, std::runtime_error);
 
     fbdev.commit({content});
+
+    // Predictive bypass not enabled in FBDevice
+    EXPECT_EQ(0, fbdev.recommended_sleep().count());
 }
 
 //not all fb devices provide a swap interval hook. make sure we don't explode if thats the case

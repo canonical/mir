@@ -65,6 +65,7 @@ public:
         std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
         std::shared_ptr<DisplayListener> const& display_listener,
         std::shared_ptr<CompositorReport> const& compositor_report,
+        std::chrono::milliseconds fixed_composite_delay,  // -1 = automatic
         bool compose_on_start);
     ~MultiThreadedCompositor();
 
@@ -86,6 +87,7 @@ private:
 
     std::mutex state_guard;
     CompositorState state;
+    std::chrono::milliseconds fixed_composite_delay;
     bool compose_on_start;
 
     void schedule_compositing(int number_composites);
