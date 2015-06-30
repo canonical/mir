@@ -23,15 +23,15 @@
 
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/fake_event_hub_server_configuration.h"
-#include "mir_test_framework/declarative_placement_strategy.h"
+#include "mir_test_framework/declarative_placement_window_manage_policy.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
-#include "mir_test_doubles/mock_egl.h"
+#include "mir/test/doubles/mock_egl.h"
 
-#include "mir_test/fake_shared.h"
-#include "mir_test/spin_wait.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/fake_event_hub.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/spin_wait.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/fake_event_hub.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -41,6 +41,8 @@
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mis = mir::input::synthesis;
+namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
 namespace mt = mir::test;
@@ -212,11 +214,18 @@ struct NamedCursorClient : CursorClient
 
 struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
 {
-    std::shared_ptr<mir::scene::PlacementStrategy> the_placement_strategy() override
+    auto the_window_manager_builder() -> msh::WindowManagerBuilder override
     {
-        return std::make_shared<mtf::DeclarativePlacementStrategy>(
-            FakeEventHubServerConfiguration::the_placement_strategy(),
-            client_geometries, client_depths);
+        using PlacementWindowManager = msh::BasicWindowManager<mtf::DeclarativePlacementWindowManagerPolicy, msh::CanonicalSessionInfo, msh::CanonicalSurfaceInfo>;
+
+        return [&](msh::FocusController* focus_controller)
+            {
+                return std::make_shared<PlacementWindowManager>(
+                    focus_controller,
+                    client_geometries,
+                    client_depths,
+                    the_shell_display_layout());
+            };
     }
 
     std::shared_ptr<mg::Cursor> the_cursor() override

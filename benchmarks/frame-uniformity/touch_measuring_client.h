@@ -21,7 +21,7 @@
 
 #include "touch_samples.h"
 
-#include "mir_test/barrier.h"
+#include "mir/test/barrier.h"
 
 #include <chrono>
 #include <memory>

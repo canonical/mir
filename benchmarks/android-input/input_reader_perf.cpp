@@ -20,7 +20,7 @@
 #include <InputReader.h>
 #include <android/keycodes.h>
 
-#include <mir_test/fake_event_hub.h>
+#include <mir/test/fake_event_hub.h>
 
 #include <chrono>
 #include <iostream>

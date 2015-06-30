@@ -18,9 +18,9 @@
  */
 
 #include "mir/compositor/recently_used_cache.h"
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_renderable.h"
-#include "mir_test_doubles/mock_gl.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_renderable.h"
+#include "mir/test/doubles/mock_gl.h"
 #include <gtest/gtest.h>
 
 namespace mtd=mir::test::doubles;

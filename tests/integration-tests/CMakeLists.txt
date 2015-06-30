@@ -17,7 +17,10 @@ protobuf_generate_cpp(
 
 set(
   INTEGRATION_TESTS_SRCS
+  test_focus_selection.cpp
+  test_touchspot_visualization.cpp
   test_surface_stack_with_compositor.cpp
+  test_buffer_scheduling.cpp
   test_client_screencast.cpp
   test_large_messages.cpp
   test_protobuf.cpp
@@ -33,7 +36,6 @@ set(
   test_swapinterval.cpp
   test_server_client_types.cpp
   test_server_shutdown.cpp
-  test_default_window_manager.cpp
   test_session.cpp
   session_management.cpp
   surface_composition.cpp
@@ -136,5 +138,5 @@ CMAKE_DEPENDENT_OPTION(
   OFF)
 
 if (MIR_RUN_INTEGRATION_TESTS)
-  mir_discover_tests(mir_integration_tests)
+  mir_discover_tests_with_fd_leak_detection(mir_integration_tests)
 endif (MIR_RUN_INTEGRATION_TESTS)

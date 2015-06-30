@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/egl_error.h"
-#include "mir_test_doubles/mock_egl.h"
+#include "mir/test/doubles/mock_egl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

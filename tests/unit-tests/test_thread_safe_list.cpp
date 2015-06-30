@@ -17,7 +17,7 @@
  */
 
 #include "mir/thread_safe_list.h"
-#include "mir_test/wait_condition.h"
+#include "mir/test/wait_condition.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

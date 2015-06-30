@@ -22,19 +22,19 @@
 #include "mir/graphics/platform.h"
 #include "mir/options/program_option.h"
 
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/stub_gl_program_factory.h"
-#include "mir_test_doubles/platform_factory.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
-#ifndef ANDROID
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_gbm.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/stub_gl_program_factory.h"
+#include "mir/test/doubles/platform_factory.h"
+#include "mir/graphics/default_display_configuration_policy.h"
+#ifdef MESA_KMS
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
-#else
-#include "mir_test_doubles/mock_android_hw.h"
-#include "mir_test_doubles/mock_display_device.h"
+#elif ANDROID
+#include "mir/test/doubles/mock_android_hw.h"
+#include "mir/test/doubles/mock_display_device.h"
 #endif
 
 #include <gtest/gtest.h>
@@ -42,7 +42,7 @@
 
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
-#ifndef ANDROID
+#ifdef MESA_KMS
 namespace mtf = mir_test_framework;
 #endif
 
@@ -61,7 +61,7 @@ public:
         mock_egl.provide_egl_extensions();
         mock_gl.provide_gles_extensions();
 
-#ifndef ANDROID
+#ifdef MESA_KMS
         fake_devices.add_standard_device("standard-drm-devices");
 #endif
     }
@@ -70,7 +70,7 @@ public:
     {
         auto const platform = mtd::create_platform_with_null_dependencies();
         return platform->create_display(
-            std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }
@@ -79,7 +79,7 @@ public:
     ::testing::NiceMock<mtd::MockGL> mock_gl;
 #ifdef ANDROID
     ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
-#else
+#elif MESA_KMS
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     mtf::UdevEnvironment fake_devices;

@@ -18,7 +18,7 @@
 
 #include "src/server/shell/graphics_display_layout.h"
 
-#include "mir_test_doubles/stub_display.h"
+#include "mir/test/doubles/stub_display.h"
 
 #include <vector>
 #include <tuple>

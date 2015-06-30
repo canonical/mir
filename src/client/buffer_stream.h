@@ -31,6 +31,7 @@
 
 #include <EGL/eglplatform.h>
 
+#include <queue>
 #include <memory>
 #include <mutex>
 
@@ -62,7 +63,7 @@ public:
         mir::protobuf::DisplayServer& server,
         BufferStreamMode mode,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
-        protobuf::BufferStream const& protobuf_bs,
+        mir::protobuf::BufferStream const& protobuf_bs,
         std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name);
     // For surfaceless buffer streams
@@ -104,6 +105,9 @@ public:
 
     frontend::BufferStreamId rpc_id() const override;
     bool valid() const override;
+    
+    void buffer_available(mir::protobuf::Buffer const& buffer) override;
+    
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
@@ -111,12 +115,19 @@ protected:
 private:
     void created(mir_buffer_stream_callback callback, void* context);
     void process_buffer(protobuf::Buffer const& buffer);
+    void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&);
     void next_buffer_received(
         std::function<void()> done);
     void on_configured();
     void release_cpu_region();
+    MirWaitHandle* exchange(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
+    MirWaitHandle* submit(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
 
     mutable std::mutex mutex; // Protects all members of *this
+
+    bool using_exchange_buffer = true;
+    std::function<void()> on_incoming_buffer;
+    std::queue<mir::protobuf::Buffer> incoming_buffers;
 
     MirConnection* connection;
     mir::protobuf::DisplayServer& display_server;
@@ -124,7 +135,7 @@ private:
     BufferStreamMode const mode;
     std::shared_ptr<ClientPlatform> const client_platform;
 
-    mir::protobuf::BufferStream protobuf_bs;
+    std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
     mir::client::ClientBufferDepository buffer_depository;
     
     int swap_interval_;
@@ -137,7 +148,7 @@ private:
     MirWaitHandle release_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;
-    mir::protobuf::Void protobuf_void;
+    std::unique_ptr<mir::protobuf::Void> protobuf_void;
     
     std::shared_ptr<MemoryRegion> secured_region;
     

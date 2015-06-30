@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir_test/cross_process_sync.h"
+#include "mir/test/cross_process_sync.h"
 
 #include <boost/exception/info.hpp>
 #include <system_error>

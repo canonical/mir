@@ -21,7 +21,7 @@ add_library(mirprotobuf SHARED
 
 target_link_libraries(
   mirprotobuf
-
+  dl
   ${PROTOBUF_LIBRARIES}
 )
 

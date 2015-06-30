@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir_test/fd_utils.h"
+#include "mir/test/fd_utils.h"
 
 ::testing::AssertionResult mir::test::std_call_succeeded(int retval)
 {

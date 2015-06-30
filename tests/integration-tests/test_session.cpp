@@ -21,7 +21,6 @@
 #include "mir/compositor/compositor.h"
 #include "src/server/scene/application_session.h"
 #include "src/server/scene/pixel_buffer.h"
-#include "mir/scene/placement_strategy.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/null_session_listener.h"
@@ -30,13 +29,13 @@
 #include "mir/compositor/renderer_factory.h"
 #include "mir/frontend/connector.h"
 
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/stub_buffer_stream_factory.h"
-#include "mir_test_doubles/stub_display.h"
-#include "mir_test_doubles/null_event_sink.h"
-#include "mir_test_doubles/stub_renderer.h"
-#include "mir_test_doubles/stub_surface_factory.h"
-#include "mir_test_doubles/null_pixel_buffer.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_buffer_stream_factory.h"
+#include "mir/test/doubles/stub_display.h"
+#include "mir/test/doubles/null_event_sink.h"
+#include "mir/test/doubles/stub_renderer.h"
+#include "mir/test/doubles/stub_surface_factory.h"
+#include "mir/test/doubles/null_pixel_buffer.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 
 #include <gtest/gtest.h>

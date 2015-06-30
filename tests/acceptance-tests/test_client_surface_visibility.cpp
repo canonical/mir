@@ -24,7 +24,7 @@
 #include "mir/shell/shell_wrapper.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
-#include "mir_test/wait_condition.h"
+#include "mir/test/wait_condition.h"
 
 #include <mutex>
 #include <condition_variable>

@@ -1,4 +1,4 @@
-list(APPEND UNIT_TEST_SOURCES
+add_library(unit_test_graphics_mesa_kms OBJECT
   ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_buffer.cpp
@@ -11,6 +11,10 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_guest_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_bypass.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_nested_authentication.cpp
+)
+
+list(APPEND UNIT_TEST_SOURCES
+  $<TARGET_OBJECTS:unit_test_graphics_mesa_kms>
   $<TARGET_OBJECTS:mirplatformgraphicsmesakmsobjects>
 )
 

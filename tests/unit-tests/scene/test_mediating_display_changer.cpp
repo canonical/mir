@@ -22,14 +22,14 @@
 #include "src/server/scene/broadcasting_session_event_sink.h"
 #include "mir/server_action_queue.h"
 
-#include "mir_test_doubles/mock_display.h"
-#include "mir_test_doubles/mock_compositor.h"
-#include "mir_test_doubles/null_display_configuration.h"
-#include "mir_test_doubles/stub_display_configuration.h"
-#include "mir_test_doubles/mock_scene_session.h"
-#include "mir_test_doubles/stub_scene_session.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/display_config_matchers.h"
+#include "mir/test/doubles/mock_display.h"
+#include "mir/test/doubles/mock_compositor.h"
+#include "mir/test/doubles/null_display_configuration.h"
+#include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/mock_scene_session.h"
+#include "mir/test/doubles/stub_scene_session.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/display_config_matchers.h"
 
 #include <mutex>
 

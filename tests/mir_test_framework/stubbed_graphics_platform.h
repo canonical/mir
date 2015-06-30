@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_FRAMEWORK_STUBBED_GRAPHICS_PLATFORM_H_
 #define MIR_TEST_FRAMEWORK_STUBBED_GRAPHICS_PLATFORM_H_
 
-#include "mir_test_doubles/null_platform.h"
+#include "mir/test/doubles/null_platform.h"
 
 namespace mir_test_framework
 {
