@@ -504,8 +504,11 @@ TEST_F(ClientBufferStreamTest, waiting_client_unblocks_on_shutdown)
 
     auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
     auto never_serviced_request = std::async(std::launch::async,[&] {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        started = true;
+        {
+            std::unique_lock<decltype(mutex)> lk(mutex);
+            started = true;
+            cv.notify_all();
+        }
         bs->request_and_wait_for_next_buffer();
     });
 
@@ -513,5 +516,6 @@ TEST_F(ClientBufferStreamTest, waiting_client_unblocks_on_shutdown)
     EXPECT_TRUE(cv.wait_for(lk, 4s, [&]{ return started; }));
 
     bs.reset();
+
     EXPECT_THAT(never_serviced_request.wait_for(4s), Ne(std::future_status::timeout));
 }

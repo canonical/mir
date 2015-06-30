@@ -162,6 +162,7 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
 
 mcl::BufferStream::~BufferStream()
 {
+    next_buffer_wait_handle.result_received();
 }
 
 void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
