@@ -122,7 +122,7 @@ struct ClientBufferStreamTest : public testing::Test
     testing::NiceMock<mtd::MockClientBufferFactory> mock_client_buffer_factory;
     mtd::StubClientBufferFactory stub_client_buffer_factory;
 
-    MockProtobufServer mock_protobuf_server;
+    testing::NiceMock<MockProtobufServer> mock_protobuf_server;
 
     MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
     MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
