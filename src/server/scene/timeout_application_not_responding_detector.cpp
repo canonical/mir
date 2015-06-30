@@ -65,8 +65,11 @@ ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDete
                           session_pair.second->flagged_as_unresponsive = true;
                           unresponsive_sessions_temporary.push_back(session_pair.first);
                       }
-                      session_pair.second->pinger();
-                      session_pair.second->replied_since_last_ping = false;
+                      else
+                      {
+                          session_pair.second->pinger();
+                          session_pair.second->replied_since_last_ping = false;
+                      }
                   }
               }
 
