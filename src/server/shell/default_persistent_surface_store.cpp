@@ -87,5 +87,14 @@ auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::S
 
 std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(Id const& id) const
 {
-    return (*store)[id];
+    try
+    {
+        return (*store)[id];
+    }
+    catch (std::out_of_range& err)
+    {
+        using namespace std::literals;
+        BOOST_THROW_EXCEPTION(std::out_of_range(
+            "Lookup for surface with ID: "s + id.serialize_to_string() + " failed."));
+    }
 }
