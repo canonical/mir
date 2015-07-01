@@ -86,6 +86,8 @@ TEST(TimeoutApplicationNotRespondingDetector, pings_repeatedly)
     for (int i = 0; i < expected_count ; ++i)
     {
         fake_alarms.advance_by(1001ms);
+        detector.pong_received(&session_one);
+        detector.pong_received(&session_two);
     }
 
     EXPECT_THAT(first_session_pinged, Eq(expected_count));
