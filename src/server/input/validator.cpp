@@ -154,7 +154,8 @@ mir::EventUPtr remove_old_releases_from(MirEvent const* ev)
         auto action = mir_touch_event_action(tev, i);
         if (action == mir_touch_action_up)
             continue;
-        mev::add_touch(*ret, mir_touch_event_id(tev, i), mir_touch_event_action(tev, i),
+        mev::add_touch(*ret,
+            mir_touch_event_id(tev, i), mir_touch_event_action(tev, i),
             mir_touch_event_tooltype(tev, i),
             mir_touch_event_axis_value(tev, i, mir_touch_axis_x),
             mir_touch_event_axis_value(tev, i, mir_touch_axis_y),
@@ -188,7 +189,8 @@ typedef std::unordered_set<MirTouchId> TouchSet;
 //     Now we check for found touch points which were not expected. If these show up with mir_touch_action_down
 // things are fine. On the other hand if they show up with mir_touch_action_change then a touch point
 // has appeared before its gone down and thus we must inject an event signifying this touch going down.
-void mi::Validator::ensure_stream_validity_locked(std::lock_guard<std::mutex> const&, MirTouchEvent const* ev, MirTouchEvent const* last_ev)
+void mi::Validator::ensure_stream_validity_locked(std::lock_guard<std::mutex> const&,
+    MirTouchEvent const* ev, MirTouchEvent const* last_ev)
 {
     TouchSet expected;
     for (size_t i = 0; i < mir_touch_event_point_count(last_ev); i++)
@@ -208,7 +210,8 @@ void mi::Validator::ensure_stream_validity_locked(std::lock_guard<std::mutex> co
 
     // Insert missing touch releases
     TouchSet missing;
-    auto last_ev_copy = remove_old_releases_from(reinterpret_cast<MirEvent const*>(last_ev));
+    auto last_ev_copy =
+        remove_old_releases_from(reinterpret_cast<MirEvent const*>(last_ev));
     for (auto const& expected_id : expected)
     {
         if (found.find(expected_id) == found.end())
@@ -223,7 +226,8 @@ void mi::Validator::ensure_stream_validity_locked(std::lock_guard<std::mutex> co
     for (size_t i = 0; i < mir_touch_event_point_count(ev); i++)
     {
         auto id = mir_touch_event_id(ev, i);
-        if (expected.find(id) == expected.end() && mir_touch_event_action(ev, i) != mir_touch_action_down)
+        if (expected.find(id) == expected.end() &&
+            mir_touch_event_action(ev, i) != mir_touch_action_down)
         {
             
             auto inject_ev = add_missing_down(last_ev_copy.get(), ev, id);
@@ -241,7 +245,9 @@ void mi::Validator::handle_touch_event(MirInputDeviceId id, MirTouchEvent const*
 
     auto it = last_event_by_device.find(id);
     MirTouchEvent const* last_ev = nullptr;
-    auto default_ev = mev::make_event(id, std::chrono::high_resolution_clock::now().time_since_epoch(), mir_input_event_modifier_none); 
+    auto default_ev = mev::make_event(id,
+        std::chrono::high_resolution_clock::now().time_since_epoch(),
+        mir_input_event_modifier_none); 
 
     if (it == last_event_by_device.end())
     {
