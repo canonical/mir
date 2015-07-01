@@ -217,6 +217,7 @@ extern "C" mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const&
 {
     auto const unparsed_arguments = options.unparsed_command_line();
     auto platform_option_used = false;
+
     for (auto const& token : unparsed_arguments)
     {
         if (token == (std::string("--") + vt_option_name))
