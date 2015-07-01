@@ -345,6 +345,8 @@ TEST_F(ClientBufferStreamTest, returns_correct_surface_parameters)
 TEST_F(ClientBufferStreamTest, returns_current_client_buffer)
 {
     using namespace ::testing;
+    ON_CALL(mock_protobuf_server, submit_buffer(_, _, _, _))
+        .WillByDefault(RunProtobufClosure());
 
     auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>();
     auto const client_buffer_2 = std::make_shared<mtd::NullClientBuffer>();
