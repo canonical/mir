@@ -416,6 +416,30 @@ void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t ou
 void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode);
 
 /**
+ * Request that the created surface be attached to a surface of a different client.
+ *
+ * This is restricted to input methods, which need to attach their suggestion surface
+ * to text entry widgets of other processes.
+ *
+ * \param [in] spec             Specification to mutate
+ * \param [in] parent           A MirPersistentId reference to the parent surface
+ * \param [in] attachment_rect  A rectangle specifying the region (in parent surface coordinates)
+ *                              that the created surface should be attached to.
+ * \param [in] edge             The preferred edge direction to attach to. Use
+ *                              mir_edge_attachment_any for no preference.
+ * \return                      False if the operation is invalid for this surface type.
+ *
+ * \note    If the parent surface becomes invalid before mir_surface_create() is processed,
+ *          it will return an invalid surface. If the parent surface is valid at the time
+ *          mir_surface_create() is called but is later closed, this surface will also receive
+ *          a close event.
+ */
+bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
+                                               MirPersistentId* parent,
+                                               MirRectangle* attachment_rect,
+                                               MirEdgeAttachment edge);
+
+/**
  * Set the requested state.
  * \param [in] spec    Specification to mutate
  * \param [in] mode    Requested state
@@ -709,6 +733,23 @@ bool mir_persistent_id_is_valid(MirPersistentId* id);
  *       object referred to by \arg id.
  */
 void mir_persistent_id_release(MirPersistentId* id);
+
+/**
+ * \brief Get a string representation of a MirSurfaceId
+ * \param [in] id  The ID to serialise
+ * \return A string representation of id. This string is owned by the MirSurfaceId,
+ *         and must not be freed by the caller.
+ *
+ * \see mir_surface_id_from_string
+ */
+char const* mir_persistent_id_as_string(MirPersistentId* id);
+
+/**
+ * \brief Deserialise a string representation of a MirSurfaceId
+ * \param [in] string_representation  Serialised representation of the ID
+ * \return The deserialised MirSurfaceId
+ */
+MirPersistentId* mir_persistent_id_from_string(char const* string_representation);
 
 #ifdef __cplusplus
 }
