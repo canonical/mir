@@ -196,9 +196,9 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     {
     case mir_pixel_format_rgb_565:
     case mir_pixel_format_argb_8888:
-    case mir_pixel_format_xrgb_8888: // FIXME: Fill the alpha channel
+    case mir_pixel_format_xrgb_8888:
     case mir_pixel_format_abgr_8888:
-    case mir_pixel_format_xbgr_8888: // FIXME: Fill the alpha channel
+    case mir_pixel_format_xbgr_8888:
         // Supported by ShmBuffer for OpenGL texture creation
         break;
     default:

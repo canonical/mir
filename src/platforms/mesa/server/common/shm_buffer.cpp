@@ -54,22 +54,37 @@ mgm::ShmBuffer::ShmBuffer(
             gl_type = GL_UNSIGNED_SHORT_5_6_5;
         }
         break;
+
+    // XXX mir_pixel_format_xrgb_8888: Historically we have always allowed
+    //     this, but it will look wrong if the client fails to fill the
+    //     X (alpha) bytes with 255.
+    //     We could fill it ourselves, but that would impair performance of
+    //     existing well-behaved clients too much.
+    // TODO: The right solution is probably to make the compositor ignore the
+    //     alpha channel on this.
+    case mir_pixel_format_xrgb_8888:
     case mir_pixel_format_argb_8888:
-    case mir_pixel_format_xrgb_8888: // TODO: tell compositor to ignore alpha?
         gl_format = little_endian ? GL_BGRA_EXT : GL_RGBA;
         gl_type = GL_UNSIGNED_BYTE;
         break;
+
+    // XXX mir_pixel_format_xbgr_8888: This will look wrong unless the client
+    //     has filled the X (alpha) bytes with 255.
+    // TODO: The right solution is probably to make the compositor ignore the
+    //     alpha channel on this.
+    case mir_pixel_format_xbgr_8888:
     case mir_pixel_format_abgr_8888:
-    case mir_pixel_format_xbgr_8888: // TODO: tell compositor to ignore alpha?
         gl_format = little_endian ? GL_RGBA : GL_BGRA_EXT;
         gl_type = GL_UNSIGNED_BYTE;
         break;
+
     /* This future format would also work:
     case mir_pixel_format_rgb_888:
         gl_format = RGB;
         gl_type = GL_UNSIGNED_BYTE;
         break;
     */
+
     default:
         break;
     }
