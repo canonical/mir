@@ -130,11 +130,16 @@ typedef enum MirPixelFormat
     mir_pixel_format_argb_8888,
     mir_pixel_format_xrgb_8888,
     mir_pixel_format_bgr_888,
+    mir_pixel_format_rgb_565,
+    mir_pixel_format_bgr_565,
     mir_pixel_formats
 } MirPixelFormat;
 
 /* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
-#define MIR_BYTES_PER_PIXEL(f) (((f) == mir_pixel_format_bgr_888) ? 3 : 4)
+#define MIR_BYTES_PER_PIXEL(f) ((f) == mir_pixel_format_bgr_888 ? 3 : \
+                                (f) == mir_pixel_format_rgb_565 ? 2 : \
+                                (f) == mir_pixel_format_bgr_565 ? 2 : \
+                                                                  4)
 
 /** Direction relative to the "natural" orientation of the display */
 typedef enum MirOrientation

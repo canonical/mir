@@ -179,6 +179,7 @@ double get_capture_rate_limit(MirDisplayConfiguration const& display_config, Mir
 std::string mir_pixel_format_to_string(MirPixelFormat format)
 {
     // Don't know of any big endian platform supported by mir
+    // TODO: This could come from a generalized lookup table (LP: #1236254)
     switch(format)
     {
     case mir_pixel_format_abgr_8888:
@@ -191,6 +192,10 @@ std::string mir_pixel_format_to_string(MirPixelFormat format)
         return "BGRX";
     case mir_pixel_format_bgr_888:
         return "RGB";
+    case mir_pixel_format_rgb_565:
+        return "RGB565";
+    case mir_pixel_format_bgr_565:
+        return "BGR565";
     default:
         throw std::logic_error("Invalid pixel format");
     }
