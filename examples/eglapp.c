@@ -238,8 +238,8 @@ static MirPixelFormat choose_pixel_format(MirConnection* conn,
     if (best_format == mir_pixel_format_invalid)
     {
         fprintf(stderr, "Mir does not have any pixel format that supports "
-                        "%d:%d:%d:%d\n",
-                        r, g, b, a);
+                        "%d:%d:%d:%d (%d bpp)\n",
+                        r, g, b, a, r+g+b+a);
     }
 
     return best_format;
