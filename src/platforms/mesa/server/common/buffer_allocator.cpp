@@ -214,8 +214,13 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 {
     static std::vector<MirPixelFormat> const pixel_formats{
+        mir_pixel_format_abgr_8888,
+        mir_pixel_format_xbgr_8888,
         mir_pixel_format_argb_8888,
-        mir_pixel_format_xrgb_8888
+        mir_pixel_format_xrgb_8888,
+        mir_pixel_format_bgr_888,
+        mir_pixel_format_rgb_565,
+        mir_pixel_format_bgr_565
     };
 
     return pixel_formats;
