@@ -96,6 +96,26 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
         }
         count = 0;
         break;
+    case mir_pixel_format_bgr_565:
+        for (n = 0; n < count; n++)
+        {
+            uint16_t *p = (uint16_t*)where + n;
+            *p = (uint16_t)(color->b >> 3) << 11 |
+                 (uint16_t)(color->g >> 2) << 5  |
+                 (uint16_t)(color->r >> 3);
+        }
+        count = 0;
+        break;
+    case mir_pixel_format_rgb_565:
+        for (n = 0; n < count; n++)
+        {
+            uint16_t *p = (uint16_t*)where + n;
+            *p = (uint16_t)(color->r >> 3) << 11 |
+                 (uint16_t)(color->g >> 2) << 5  |
+                 (uint16_t)(color->b >> 3);
+        }
+        count = 0;
+        break;
     default:
         count = 0;
         break;
