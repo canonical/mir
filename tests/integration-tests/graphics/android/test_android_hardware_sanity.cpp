@@ -236,7 +236,7 @@ TEST_F(AndroidHardwareSanity, display_can_post_overlay)
     });
 }
 
-TEST_F(AndroidHardwareSanity, allocator_can_create_sw_buffer)
+TEST_F(AndroidHardwareSanity, can_allocate_sw_buffer)
 {
     using namespace testing;
 
@@ -267,7 +267,7 @@ TEST_F(AndroidHardwareSanity, allocator_can_create_sw_buffer)
     EXPECT_TRUE(valid_content);
 }
 
-TEST_F(AndroidHardwareSanity, allocator_can_create_hw_buffer)
+TEST_F(AndroidHardwareSanity, can_allocate_hw_buffer)
 {
     using namespace testing;
 
