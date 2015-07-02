@@ -36,13 +36,20 @@ using namespace testing;
 
 namespace
 {
+enum class Access
+{
+    blocked,
+    unblocked
+};
+
 struct BufferEntry
 {
     mg::BufferID id;
     unsigned int age;
+    Access blockage;
     bool operator==(BufferEntry const& b) const
     {
-        return ((id == b.id) && (age == b.age));
+        return ((blockage == b.blockage) && (id == b.id) && (age == b.age));
     }
 };
 
@@ -86,16 +93,23 @@ struct BufferQueueProducer : ProducerSystem
     void produce()
     {
         mg::Buffer* b = nullptr;
+        if (can_produce())
         {
-            std::unique_lock<decltype(mutex)> lk(mutex);
-            b = buffer;
-            buffer = nullptr;
-            age++;
-            entries.emplace_back(BufferEntry{b->id(), age});
-            b->write(reinterpret_cast<unsigned char const*>(&age), sizeof(age));
+            {
+                std::unique_lock<decltype(mutex)> lk(mutex);
+                b = buffer;
+                buffer = nullptr;
+                age++;
+                entries.emplace_back(BufferEntry{b->id(), age, Access::unblocked});
+                b->write(reinterpret_cast<unsigned char const*>(&age), sizeof(age));
+            }
+            stream.swap_buffers(b,
+                std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
         }
-        stream.swap_buffers(b,
-            std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
+        else
+        {
+            entries.emplace_back(BufferEntry{mg::BufferID{2}, 0u, Access::blocked});
+        }
     }
 
     std::vector<BufferEntry> production_log()
@@ -112,7 +126,6 @@ struct BufferQueueProducer : ProducerSystem
     }
 private:
     mc::BufferStream& stream;
-    bool has_buffer;
     void buffer_ready(mg::Buffer* b)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
@@ -136,7 +149,7 @@ struct BufferQueueConsumer : ConsumerSystem
         auto b = stream.lock_compositor_buffer(this);
         last_size_ = b->size();
         b->read([this, b](unsigned char const* p) {
-            entries.emplace_back(BufferEntry{b->id(), *reinterpret_cast<unsigned int const*>(p)});
+            entries.emplace_back(BufferEntry{b->id(), *reinterpret_cast<unsigned int const*>(p), Access::unblocked});
         });
     }
 
@@ -185,6 +198,30 @@ void run_system(std::vector<ScheduleEntry>& schedule)
     }
 }
 
+void repeat_system_until(
+    std::vector<ScheduleEntry>& schedule,
+    std::function<bool()> const& predicate)
+{
+    std::sort(schedule.begin(), schedule.end(),
+        [](ScheduleEntry& a, ScheduleEntry& b)
+        {
+            return a.timestamp < b.timestamp;
+        });
+
+    auto entry_it = schedule.begin();
+    if (entry_it == schedule.end()) return;
+    while(predicate())
+    {
+        for(auto const& p : entry_it->producers)
+            p->produce();
+        for(auto const& c : entry_it->consumers)
+            c->consume();
+        entry_it++;
+        if (entry_it == schedule.end()) entry_it = schedule.begin();
+    }
+}
+
+
 //test infrastructure
 struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
 {
@@ -198,6 +235,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     mc::BufferStreamSurfaces stream{mt::fake_shared(queue)};
     BufferQueueProducer producer{stream};
     BufferQueueConsumer consumer{stream};
+    BufferQueueConsumer second_consumer{stream};
 };
 struct WithAnyNumberOfBuffers : BufferScheduling {};
 struct WithTwoOrMoreBuffers   : BufferScheduling {};
@@ -375,26 +413,23 @@ TEST_P(WithTwoOrMoreBuffers, compositor_doesnt_starve_from_slow_client)
 
 TEST_P(WithTwoOrMoreBuffers, multiple_consumers_are_in_sync)
 {
-    BufferQueueConsumer consumer1(stream); //ticks at 59hz
-    BufferQueueConsumer consumer2(stream); //ticks at 60hz
-
     std::vector<ScheduleEntry> schedule = {
         {0_t,     {&producer}, {}},
-        {1_t,     {},          {&consumer1}},
-        {60_t,    {},          {&consumer1, &consumer2}},
-        {119_t,   {},          {&consumer1}},
-        {120_t,   {},          {&consumer2}},
+        {1_t,     {},          {&consumer}},
+        {60_t,    {},          {&consumer, &second_consumer}},
+        {119_t,   {},          {&consumer}},
+        {120_t,   {},          {&second_consumer}},
         {130_t,   {&producer}, {}},
-        {178_t,   {},          {&consumer1}},
-        {180_t,   {},          {&consumer2}},
-        {237_t,   {},          {&consumer1}},
-        {240_t,   {},          {&consumer2}},
+        {178_t,   {},          {&consumer}},
+        {180_t,   {},          {&second_consumer}},
+        {237_t,   {},          {&consumer}},
+        {240_t,   {},          {&second_consumer}},
     };
     run_system(schedule);
 
     auto production_log = producer.production_log();
-    auto consumption_log_1 = consumer1.consumption_log();
-    auto consumption_log_2 = consumer2.consumption_log();
+    auto consumption_log_1 = consumer.consumption_log();
+    auto consumption_log_2 = second_consumer.consumption_log();
     ASSERT_THAT(consumption_log_1, SizeIs(5));
     ASSERT_THAT(consumption_log_2, SizeIs(4));
     ASSERT_THAT(production_log, SizeIs(2));
@@ -411,25 +446,21 @@ TEST_P(WithTwoOrMoreBuffers, multiple_consumers_are_in_sync)
 
 TEST_P(WithThreeOrMoreBuffers, multiple_fast_compositors_are_in_sync)
 { 
-    BufferQueueConsumer consumer1(stream); //ticks at 59hz
-    BufferQueueConsumer consumer2(stream); //ticks at 60hz
-
     std::vector<ScheduleEntry> schedule = {
         {0_t,     {&producer}, {}},
         {1_t,     {&producer}, {}},
-        {60_t,    {},          {&consumer1, &consumer2}},
-        {61_t,    {},          {&consumer1, &consumer2}},
+        {60_t,    {},          {&consumer, &second_consumer}},
+        {61_t,    {},          {&consumer, &second_consumer}},
     };
     run_system(schedule);
 
     auto production_log = producer.production_log();
-    auto consumption_log_1 = consumer1.consumption_log();
-    auto consumption_log_2 = consumer2.consumption_log();
+    auto consumption_log_1 = consumer.consumption_log();
+    auto consumption_log_2 = second_consumer.consumption_log();
     EXPECT_THAT(consumption_log_1, Eq(production_log));
     EXPECT_THAT(consumption_log_2, Eq(production_log));
 }
 
-//TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers)
 TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers)
 {
     queue.allow_framedropping(true);
@@ -449,21 +480,21 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers)
     EXPECT_THAT(production_log.size(), Ge(nbuffers)); //Ge is to accommodate overallocation
 }
 
-//TEST_P(WithTwoOrMoreBuffers, client_framerate_matches_compositor)
 TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rate)
 {
-    int const reps = 50;
-    int blocks = 0;
-    for(auto i = 0; i < reps; i++)
-    {
-        producer.produce();
-        if (!producer.can_produce()) blocks++;
-        consumer.consume();
-    }
-    EXPECT_THAT(blocks, Ge(reps - nbuffers));
+    unsigned int reps = 50;
+    auto const expected_blocks = reps - nbuffers;
+    std::vector<ScheduleEntry> schedule = {
+        {1_t,  {&producer, &producer}, {&consumer}},
+    };
+    repeat_system_until(schedule, [&reps]{ return --reps != 0; });
+
+    auto log = producer.production_log();
+    auto block_count = std::count_if(log.begin(), log.end(),
+        [](BufferEntry const& e) { return e.blockage == Access::blocked; });
+    EXPECT_THAT(block_count, Ge(expected_blocks));
 }
 
-//TEST_P(WithAnyNumberOfBuffers, resize_affects_client_acquires_immediately)
 TEST_P(WithAnyNumberOfBuffers, resize_affects_client_acquires_immediately)
 {
     unsigned int const sizes_to_test{4};
@@ -472,13 +503,13 @@ TEST_P(WithAnyNumberOfBuffers, resize_affects_client_acquires_immediately)
     {
         new_size = new_size * 2;
         queue.resize(new_size);
-        producer.produce();
-        consumer.consume();
+
+        std::vector<ScheduleEntry> schedule = {{1_t,  {&producer}, {&consumer}}};
+        run_system(schedule);
         EXPECT_THAT(producer.last_size(), Eq(new_size));
     }
 }
 
-//TEST_P(WithAnyNumberOfBuffers, compositor_acquires_resized_frames)
 TEST_P(WithAnyNumberOfBuffers, compositor_acquires_resized_frames)
 {
     unsigned int const sizes_to_test{4};
@@ -488,19 +519,24 @@ TEST_P(WithAnyNumberOfBuffers, compositor_acquires_resized_frames)
     {
         new_size = new_size * 2;
         queue.resize(new_size);
-        producer.produce();
-        consumer.consume();
-        producer.produce();
+
+        std::vector<ScheduleEntry> schedule = {
+            {1_t,  {&producer}, {}},
+            {2_t,  {}, {&consumer}},
+            {3_t,  {&producer}, {}},
+        };
+        run_system(schedule);
 
         int attempt_count = 0;
-        while((consumer.last_size() != new_size) && (attempt_count++ < attempt_limit))
-            consumer.consume();
+        schedule = {{2_t,  {}, {&consumer}}};
+        repeat_system_until(schedule, [&] {
+            return (consumer.last_size() != new_size) && (attempt_count++ < attempt_limit); });
+
         ASSERT_THAT(attempt_count, Lt(attempt_limit)) << "consumer never got the new size";
     }
 }
 
 // Regression test for LP: #1396006
-//TEST_P(WithTwoOrMoreBuffers, framedropping_policy_never_drops_newest_frame)
 TEST_P(WithTwoOrMoreBuffers, framedropping_policy_never_drops_newest_frame)
 {
     mtd::MockFrameDroppingPolicyFactory policy_factory;
@@ -508,22 +544,16 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_policy_never_drops_newest_frame)
     mc::BufferStreamSurfaces stream{mt::fake_shared(queue)};
     BufferQueueProducer producer(stream);
 
-    for(auto i = 0; i < nbuffers - 1; i++)
+    for(auto i = 0; i < nbuffers; i++)
         producer.produce();
-    EXPECT_FALSE(producer.can_produce());
-
     policy_factory.trigger_policies();
-
-    EXPECT_TRUE(producer.can_produce()); 
-
     producer.produce();
 
     auto production_log = producer.production_log();
-    ASSERT_THAT(production_log, SizeIs(nbuffers));
-    EXPECT_THAT(production_log[nbuffers - 1], Not(Eq(production_log[nbuffers - 2]))); 
+    ASSERT_THAT(production_log, SizeIs(nbuffers + 1));
+    EXPECT_THAT(production_log[nbuffers], Not(Eq(production_log[nbuffers - 1]))); 
 }
 
-//TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
 TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
 {
     mtd::MockFrameDroppingPolicyFactory policy_factory;
@@ -531,41 +561,33 @@ TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
     mc::BufferStreamSurfaces stream{mt::fake_shared(queue)};
     BufferQueueProducer producer(stream);
 
-    for (int i = 0; i < nbuffers - 1; i++)
+    for(auto i = 0; i < nbuffers; i++)
         producer.produce();
-
-    EXPECT_FALSE(producer.can_produce());
-
     policy_factory.trigger_policies();
+    producer.produce();
 
-    EXPECT_TRUE(producer.can_produce());
+    auto production_log = producer.production_log();
+    ASSERT_THAT(production_log, SizeIs(nbuffers + 1));
+    EXPECT_THAT(production_log[nbuffers - 1].blockage, Eq(Access::blocked));
+    EXPECT_THAT(production_log[nbuffers].blockage, Eq(Access::unblocked));
 }
-
-//TEST_P(WithTwoOrMoreBuffers, partially_composited_client_swaps_when_policy_triggered)
-//NOT TRANSLATED, no concept of 'queueing swaps'
 
 TEST_P(WithOneBuffer, with_single_buffer_compositor_acquires_resized_frames_eventually)
 {
-    unsigned int const attempts = 100;
+    unsigned int attempts = 100;
     geom::Size const new_size{123,456};
-
-    producer.produce();
-    consumer.consume();
     queue.resize(new_size);
 
-    bool eventually_resized = false;
-    for(auto i = 0u; i < attempts; i++)
-    {
-        producer.produce();
-        consumer.consume();
-        if (consumer.last_size() == new_size)
-        {
-            eventually_resized = true;
-            break;
-        }
-    } 
+    std::vector<ScheduleEntry> schedule = {
+        {1_t,  {&producer}, {&consumer}},
+    };
 
-    EXPECT_TRUE(eventually_resized);
+    repeat_system_until(schedule, [&]{
+        if (consumer.last_size() == new_size) return false;
+        if (--attempts == 0) return false;
+        return true;
+    });
+    EXPECT_THAT(attempts, Ne(0));
 }
 
 // Regression test for LP: #1319765
@@ -688,7 +710,6 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
     }
 }
 
-//TEST_P(WithAnyNumberOfBuffers, compositor_double_rate_of_slow_client)
 TEST_P(WithAnyNumberOfBuffers, compositor_inflates_ready_count_for_slow_clients)
 {
     for (int frame = 0; frame < 10; frame++)
@@ -722,7 +743,6 @@ TEST_P(WithThreeBuffers, gives_new_compositor_the_newest_buffer_after_dropping_o
 {
     producer.produce();
     consumer.consume();
-
     producer.produce();
     queue.drop_old_buffers();
 
