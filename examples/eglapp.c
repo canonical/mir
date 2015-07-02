@@ -231,7 +231,7 @@ static MirPixelFormat choose_pixel_format(MirConnection* conn,
                 best_format = fmt;
             break;
         default:
-            // TODO: More pixel formats - LP: #1469673 and LP: #1293950
+            /* TODO: More pixel formats - LP: #1469673 and LP: #1293950 */
             fprintf(stderr, "FIXME: Unknown pixel format %d available\n",
                             (int)fmt);
             break;
