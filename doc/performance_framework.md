@@ -13,10 +13,18 @@ Invoking tests
 To run a test, just execute the python3 script containing it.
 
 We need to ensure that the Mir performance framework can be found by python.
-To do so, add the directory containing the mir_perf_framework/ directory (i.e.,
-its parent directory) to the PYTHONPATH env. variable:
+If you have installed the Mir performance framework to one of the standard
+python3 library locations (e.g., with make install or a package installation),
+then the framework should be automatically detected. If you are using the
+framework from within the source tree you need to add the directory containing
+the mir_perf_framework/ directory (i.e., its parent directory) to the
+PYTHONPATH env. variable:
 
     sudo PYTHONPATH=/path/to/mir/benchmarks python3 testscript.py
+
+If you are using an Ubuntu system the framework comes pre-packaged in the
+python3-mir-perf-framework package, which, besides the framework itself,
+also installs a few interesting tests in /usr/share/mir-perf-framework/.
 
 Writing test scripts
 --------------------

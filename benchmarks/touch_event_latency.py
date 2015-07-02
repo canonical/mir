@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from mir_perf_framework import PerformanceTest, Server, Client
 import time
 import evdev
