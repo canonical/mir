@@ -27,6 +27,7 @@
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <memory>
+#include <string>
 
 namespace mir
 {
@@ -79,7 +80,9 @@ void invoke(
     }
     catch (std::exception const& x)
     {
-        result_message.set_error(boost::diagnostic_information(x));
+        using namespace std::literals::string_literals;
+        result_message.set_error("Error processing request: "s +
+            x.what() + "\nInternal error details: " + boost::diagnostic_information(x));
         self->send_response(invocation.id(), &result_message);
     }
 }
