@@ -238,7 +238,7 @@ static MirPixelFormat choose_pixel_format(MirConnection* conn,
     if (best_format == mir_pixel_format_invalid)
     {
         fprintf(stderr, "Mir does not have any pixel format that supports "
-                        "your chosen EGL config of %d:%d:%d:%d\n",
+                        "%d:%d:%d:%d\n",
                         r, g, b, a);
     }
 
