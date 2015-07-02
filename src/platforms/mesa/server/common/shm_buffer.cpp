@@ -47,10 +47,10 @@ mgm::ShmBuffer::ShmBuffer(
     bool const little_endian = true;  // TODO big endian platforms
     switch (pixel_format_)
     {
-    case mir_pixel_format_bgr_565:
+    case mir_pixel_format_rgb_565:
         if (little_endian)
         {
-            gl_format = GL_RGB565;
+            gl_format = GL_RGB;
             gl_type = GL_UNSIGNED_SHORT_5_6_5;
         }
         break;
