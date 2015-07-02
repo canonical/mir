@@ -227,8 +227,13 @@ static MirPixelFormat choose_pixel_format(MirConnection* conn,
             if (a == 0 && b == 8 && g == 8 && r == 8)
                 return fmt;  /* Perfect match */
             break;
+        case mir_pixel_format_rgb_565:
+        case mir_pixel_format_bgr_565:
+            if (a == 0 && r == 5 && g == 6 && b == 5)
+                return fmt;
+            break;
         default:
-            /* TODO: More pixel formats - LP: #1469673 and LP: #1293950 */
+            /* TODO: More pixel formats - LP: #1293950 */
             fprintf(stderr, "FIXME: Unknown pixel format %d available\n",
                             (int)fmt);
             break;
