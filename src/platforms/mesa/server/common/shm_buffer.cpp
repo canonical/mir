@@ -64,8 +64,11 @@ mgm::ShmBuffer::ShmBuffer(
     //     alpha channel on this.
     case mir_pixel_format_xrgb_8888:
     case mir_pixel_format_argb_8888:
-        gl_format = little_endian ? GL_BGRA_EXT : GL_RGBA;
-        gl_type = GL_UNSIGNED_BYTE;
+        if (little_endian)
+        {
+            gl_format = GL_BGRA_EXT;
+            gl_type = GL_UNSIGNED_BYTE;
+        }
         break;
 
     // XXX mir_pixel_format_xbgr_8888: This will look wrong unless the client
@@ -74,8 +77,11 @@ mgm::ShmBuffer::ShmBuffer(
     //     alpha channel on this.
     case mir_pixel_format_xbgr_8888:
     case mir_pixel_format_abgr_8888:
-        gl_format = little_endian ? GL_RGBA : GL_BGRA_EXT;
-        gl_type = GL_UNSIGNED_BYTE;
+        if (little_endian)
+        {
+            gl_format = GL_RGBA;
+            gl_type = GL_UNSIGNED_BYTE;
+        }
         break;
 
     /* This future format would also work:
