@@ -223,12 +223,9 @@ static MirPixelFormat choose_pixel_format(MirConnection* conn,
             break;
         case mir_pixel_format_xbgr_8888:
         case mir_pixel_format_xrgb_8888:
+        case mir_pixel_format_bgr_888:
             if (a == 0 && b == 8 && g == 8 && r == 8)
                 return fmt;  /* Perfect match */
-            break;
-        case mir_pixel_format_bgr_888:  /* least preferable */
-            if (a == 0 && b == 8 && g == 8 && r == 8)
-                best_format = fmt;
             break;
         default:
             /* TODO: More pixel formats - LP: #1469673 and LP: #1293950 */
