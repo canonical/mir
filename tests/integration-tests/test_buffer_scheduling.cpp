@@ -594,19 +594,14 @@ TEST_P(WithOneBuffer, with_single_buffer_compositor_acquires_resized_frames_even
 TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
 {
     producer.produce();
-
     auto a = queue.compositor_acquire(this);
-
     producer.produce();
-
     auto b = queue.compositor_acquire(this);
 
     ASSERT_NE(a.get(), b.get());
 
     queue.compositor_release(a);
-
     producer.produce();
-
     queue.compositor_release(b);
 
     /*
@@ -626,19 +621,14 @@ TEST_P(WithTwoBuffers, composite_on_demand_never_deadlocks)
     for (int i = 0; i < 100; ++i)
     {
         producer.produce();
-
         auto a = queue.compositor_acquire(this);
-
         producer.produce();
-
         auto b = queue.compositor_acquire(this);
     
         ASSERT_NE(a.get(), b.get());
     
         queue.compositor_release(a);
-
         producer.produce();
-    
         queue.compositor_release(b);
 
         /*
@@ -689,24 +679,28 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
 TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
 {
     const int nmonitors = 3;
-    int monitor[nmonitors];
+    std::array<std::shared_ptr<BufferQueueConsumer>, nmonitors> consumers {
+        std::make_shared<BufferQueueConsumer>(stream),
+        std::make_shared<BufferQueueConsumer>(stream),
+        std::make_shared<BufferQueueConsumer>(stream)
+    };
 
-    for (int m = 0; m < nmonitors; ++m)
-        EXPECT_EQ(0, queue.buffers_ready_for_compositor(&monitor[m]));
+    for (auto const& consumer : consumers)
+        EXPECT_EQ(0, queue.buffers_ready_for_compositor(consumer.get()));
 
     producer.produce();
 
-    for (int m = 0; m < nmonitors; ++m)
+    for (auto const& consumer : consumers)
     {
-        ASSERT_NE(0, queue.buffers_ready_for_compositor(&monitor[m]));
+        ASSERT_NE(0, queue.buffers_ready_for_compositor(consumer.get()));
 
         // Double consume to account for the +1 that
         // buffers_ready_for_compositor adds to do dynamic performance
         // detection.
-        queue.compositor_release(queue.compositor_acquire(&monitor[m]));
-        queue.compositor_release(queue.compositor_acquire(&monitor[m]));
+        consumer->consume();
+        consumer->consume();
 
-        ASSERT_EQ(0, queue.buffers_ready_for_compositor(&monitor[m]));
+        ASSERT_EQ(0, queue.buffers_ready_for_compositor(consumer.get()));
     }
 }
 
@@ -729,7 +723,7 @@ TEST_P(WithAnyNumberOfBuffers, compositor_inflates_ready_count_for_slow_clients)
 TEST_P(WithAnyNumberOfBuffers, first_user_is_recorded)
 {
     consumer.consume();
-    EXPECT_TRUE(queue.is_a_current_buffer_user(this));
+    EXPECT_TRUE(queue.is_a_current_buffer_user(&consumer));
 }
 
 TEST_P(WithThreeBuffers, gives_compositor_a_valid_buffer_after_dropping_old_buffers_without_clients)
