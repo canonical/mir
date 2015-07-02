@@ -37,8 +37,12 @@ void mga::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBu
 {
     std::unique_lock<decltype(guard)> lk(guard);
     for(auto const& db : dbs)
+    {
         if (db.second->power_mode() != mir_power_mode_off)
             f(*db.second);
+        printf("okay.\n");
+    }
+    printf("end.\n");
 }
 
 void mga::DisplayGroup::add(DisplayName name, std::unique_ptr<ConfigurableDisplayBuffer> buffer)
