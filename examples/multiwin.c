@@ -134,16 +134,21 @@ int main(int argc, char *argv[])
     MirConnection *conn;
     Window win[3];
     unsigned int f;
+    MirPixelFormat pixel_format = mir_pixel_format_invalid;
     int alpha = 0x50;
 
     int arg;
     opterr = 0;
-    while ((arg = getopt (argc, argv, "hm:a:")) != -1)
+    while ((arg = getopt (argc, argv, "hm:a:f:")) != -1)
     {
         switch (arg)
         {
         case 'a':
             alpha = atoi(optarg);
+            break;
+
+        case 'f':
+            pixel_format = (MirPixelFormat)atoi(optarg);
             break;
 
         case 'm':
@@ -156,8 +161,9 @@ int main(int argc, char *argv[])
             puts(argv[0]);
             puts("Usage:");
             puts("    -m <Mir server socket>");
-            puts("    -a Alpha for surfaces");
-            puts("    -h: this help text");
+            puts("    -a      Alpha for surfaces");
+            puts("    -f <N>  Force pixel format N");
+            puts("    -h      This help text");
             return -1;
         }
     }
@@ -169,26 +175,28 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    unsigned int const pf_size = 32;
-    MirPixelFormat formats[pf_size];
-    unsigned int valid_formats;
-    mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
-
-    MirPixelFormat pixel_format = mir_pixel_format_invalid;
-    for (f = 0; f < valid_formats; f++)
-    {
-        if (formats[f] == mir_pixel_format_abgr_8888 ||
-            formats[f] == mir_pixel_format_argb_8888)
-        {
-            pixel_format = formats[f];
-            break;
-        }
-    }
     if (pixel_format == mir_pixel_format_invalid)
     {
-        fprintf(stderr, "Could not find a fast 32-bit pixel format with "
-                        "alpha support. Blending won't work!.\n");
-        pixel_format = formats[0];
+        MirPixelFormat formats[mir_pixel_formats];
+        unsigned int valid_formats;
+        mir_connection_get_available_surface_formats(conn, formats,
+            mir_pixel_formats, &valid_formats);
+
+        for (f = 0; f < valid_formats; f++)
+        {
+            if (formats[f] == mir_pixel_format_abgr_8888 ||
+                formats[f] == mir_pixel_format_argb_8888)
+            {
+                pixel_format = formats[f];
+                break;
+            }
+        }
+        if (pixel_format == mir_pixel_format_invalid)
+        {
+            fprintf(stderr, "Could not find a fast 32-bit pixel format with "
+                            "alpha support. Blending won't work!.\n");
+            pixel_format = formats[0];
+        }
     }
 
     MirSurfaceSpec *spec =

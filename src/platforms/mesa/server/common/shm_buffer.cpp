@@ -40,8 +40,33 @@ mgm::ShmBuffer::ShmBuffer(
       size_{size},
       pixel_format_{pixel_format},
       stride_{MIR_BYTES_PER_PIXEL(pixel_format_) * size_.width.as_uint32_t()},
-      pixels{shm_file->base_ptr()}
+      pixels{shm_file->base_ptr()},
+      gl_format{GL_INVALID_ENUM},
+      gl_type{GL_INVALID_ENUM}
 {
+    bool const little_endian = true;  // TODO big endian platforms
+    switch (pixel_format_)
+    {
+    case mir_pixel_format_bgr_565:
+        if (little_endian)
+        {
+            gl_format = GL_RGB565;
+            gl_type = GL_UNSIGNED_SHORT_5_6_5;
+        }
+        break;
+    case mir_pixel_format_argb_8888:
+        gl_format = little_endian ? GL_BGRA_EXT : GL_RGBA;
+        gl_type = GL_UNSIGNED_BYTE;
+        break;
+    case mir_pixel_format_abgr_8888:
+        gl_format = little_endian ? GL_RGBA : GL_BGRA_EXT;
+        gl_type = GL_UNSIGNED_BYTE;
+        break;
+    default:
+        break;
+    }
+    
+    // XXX Throw on invalid GL formats or silently accept them?
 }
 
 mgm::ShmBuffer::~ShmBuffer() noexcept
@@ -65,9 +90,12 @@ MirPixelFormat mgm::ShmBuffer::pixel_format() const
 
 void mgm::ShmBuffer::gl_bind_to_texture()
 {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT,
+    if (gl_format == GL_INVALID_ENUM)
+        return;
+
+    glTexImage2D(GL_TEXTURE_2D, 0, gl_format,
                  size_.width.as_int(), size_.height.as_int(),
-                 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
+                 0, gl_format, gl_type,
                  pixels);
 }
 
