@@ -55,13 +55,21 @@ mgm::ShmBuffer::ShmBuffer(
         }
         break;
     case mir_pixel_format_argb_8888:
+    case mir_pixel_format_xrgb_8888: // TODO: tell compositor to ignore alpha?
         gl_format = little_endian ? GL_BGRA_EXT : GL_RGBA;
         gl_type = GL_UNSIGNED_BYTE;
         break;
     case mir_pixel_format_abgr_8888:
+    case mir_pixel_format_xbgr_8888: // TODO: tell compositor to ignore alpha?
         gl_format = little_endian ? GL_RGBA : GL_BGRA_EXT;
         gl_type = GL_UNSIGNED_BYTE;
         break;
+    /* This future format would also work:
+    case mir_pixel_format_rgb_888:
+        gl_format = RGB;
+        gl_type = GL_UNSIGNED_BYTE;
+        break;
+    */
     default:
         break;
     }
