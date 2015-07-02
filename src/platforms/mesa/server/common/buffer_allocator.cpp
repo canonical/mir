@@ -138,8 +138,8 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
 
     uint32_t const gbm_format = mgm::mir_format_to_gbm_format(buffer_properties.format);
 
-    if (!is_pixel_format_supported(buffer_properties.format) ||
-        gbm_format == mgm::invalid_gbm_format)
+    // AFAIK, GBM/DRM supports all pixel formats (although some GPUs might not)
+    if (gbm_format == mgm::invalid_gbm_format)
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error("Trying to create GBM buffer with unsupported pixel format"));
@@ -189,11 +189,24 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     BufferProperties const& buffer_properties)
 {
-    if (!is_pixel_format_supported(buffer_properties.format))
+    // See shm_buffer.cpp which limits which formats we can composite...
+    // As the limitation is really only imposed by the renderer we should
+    // not even be doing this check at all here... :/
+    switch (buffer_properties.format)
     {
+    case mir_pixel_format_rgb_565:
+    case mir_pixel_format_argb_8888:
+    case mir_pixel_format_xrgb_8888: // FIXME: Fill the alpha channel
+    case mir_pixel_format_abgr_8888:
+    case mir_pixel_format_xbgr_8888: // FIXME: Fill the alpha channel
+        // Supported by ShmBuffer for OpenGL texture creation
+        break;
+    default:
+        // Not supported with OpenGL but could be supported in other renderers
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
                 "Trying to create SHM buffer with unsupported pixel format"));
+        break;
     }
 
     auto const stride = geom::Stride{
@@ -213,6 +226,14 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
 
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 {
+    /*
+     * TODO: Abolish supported_pixel_formats() because it is unreliable.
+     *       On Mesa for example the list of supported formats is different
+     *       between software and hardware buffers (due to GLES upload
+     *       restrictions). And even amongst hardware buffers, DRM/GBM supports
+     *       any conceivable format in theory. Limitations are imposed
+     *       by the hardware in use and not the Mesa driver.
+     */
     static std::vector<MirPixelFormat> const pixel_formats{
         mir_pixel_format_abgr_8888,
         mir_pixel_format_xbgr_8888,
