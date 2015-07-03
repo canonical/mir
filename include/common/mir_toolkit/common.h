@@ -124,15 +124,16 @@ typedef enum MirPromptSessionState
  */
 typedef enum MirPixelFormat
 {
-    mir_pixel_format_invalid,
-    mir_pixel_format_abgr_8888,
-    mir_pixel_format_xbgr_8888,
-    mir_pixel_format_argb_8888,
-    mir_pixel_format_xrgb_8888,
-    mir_pixel_format_bgr_888,
-    mir_pixel_format_rgb_565,
-    mir_pixel_format_bgr_565,
-    mir_pixel_formats
+    mir_pixel_format_invalid = 0,
+    mir_pixel_format_abgr_8888 = 1,
+    mir_pixel_format_xbgr_8888 = 2,
+    mir_pixel_format_argb_8888 = 3,
+    mir_pixel_format_xrgb_8888 = 4,
+    mir_pixel_format_bgr_888 = 5,
+    //mir_pixel_format_rgb_888 = 6,  TODO: could be easily supported
+    mir_pixel_format_rgb_565 = 7,
+    mir_pixel_format_bgr_565 = 8,
+    mir_pixel_formats = 8
 } MirPixelFormat;
 
 /* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
