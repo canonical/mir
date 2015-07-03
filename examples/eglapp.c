@@ -189,9 +189,9 @@ static const MirDisplayOutput *find_active_output(
  * However that would require us implementing the EGL_NATIVE_VISUAL_ID
  * attribute on all Mir platforms first.
  *
- * Feel free to copy and paste this function into your own project. It can't
- * live in libmirclient due to libEGL linkage but we may publish it in some
- * helper library in future.
+ * It would be nice if we could share this function via a library. While it
+ * can't live in libmirclient due to libEGL linkage we may publish it in
+ * some helper library in future.
  */
 static MirPixelFormat choose_pixel_format(MirConnection* conn,
     EGLDisplay disp, EGLConfig conf)
