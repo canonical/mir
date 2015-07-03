@@ -134,7 +134,7 @@ typedef enum MirPixelFormat
     mir_pixel_format_rgb_565 = 7,
     mir_pixel_format_rgba_5551 = 8,
     mir_pixel_format_rgba_4444 = 9,
-    mir_pixel_formats = 9
+    mir_pixel_formats   // Note: This is always max format + 1
 } MirPixelFormat;
 
 /* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
