@@ -36,6 +36,7 @@ typedef struct
     const char * const name;
     GLenum gl_le_format, gl_type;  // Parameters for glTexImage2D
     unsigned int gbm_format, android_format;
+    // TODO: pixel writing/reading helper functions?
 } Detail;
 
 static const Detail detail[mir_pixel_formats] =
@@ -79,10 +80,12 @@ namespace mir { namespace graphics {
 
 bool is_valid(MirPixelFormat f)
 {
-    return (f > mir_pixel_format_invalid) && (f < mir_pixel_formats);
+    return (f > mir_pixel_format_invalid) &&
+           (f < mir_pixel_formats) &&
+           (detail[f].mir_format != mir_pixel_format_invalid);
 }
 
-MirPixelFormat android_pixel_format(unsigned int a)
+MirPixelFormat from_android_format(unsigned int a)
 {
     for (int i = 0; i < mir_pixel_formats; ++i)
         if (detail[i].android_format == a)
@@ -91,13 +94,23 @@ MirPixelFormat android_pixel_format(unsigned int a)
     return mir_pixel_format_invalid;
 }
 
-MirPixelFormat gbm_pixel_format(unsigned int g)
+unsigned int android_format(MirPixelFormat f)
+{
+    return is_valid(f) ? detail[f].android_format : 0;
+}
+
+MirPixelFormat from_gbm_format(unsigned int g)
 {
     for (int i = 0; i < mir_pixel_formats; ++i)
         if (detail[i].gbm_format == g)
             return detail[i].mir_format;
 
     return mir_pixel_format_invalid;
+}
+
+unsigned int gbm_format(MirPixelFormat f)
+{
+    return is_valid(f) ? detail[f].gbm_format : 0;
 }
 
 int bytes_per_pixel(MirPixelFormat f)
@@ -123,6 +136,21 @@ int blue_bits(MirPixelFormat f)
 int alpha_bits(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].alpha_bits : 0;
+}
+
+unsigned int gl_teximage_format(MirPixelFormat f)
+{
+    return is_valid(f) ? detail[f].gl_le_format : GL_INVALID_ENUM;
+}
+
+unsigned int gl_teximage_type(MirPixelFormat f)
+{
+    return is_valid(f) ? detail[f].gl_type : GL_INVALID_ENUM;
+}
+
+const char* pixel_format_name(MirPixelFormat f)
+{
+    return is_valid(f) ? detail[f].name : "unknown";
 }
 
 } } // namespace mir::graphics
