@@ -25,12 +25,6 @@ namespace mir { namespace graphics {
 
 bool is_valid(MirPixelFormat);
 
-MirPixelFormat from_android_format(unsigned int);
-unsigned int to_android_format(MirPixelFormat);
-
-MirPixelFormat from_drm_format(unsigned int);
-unsigned int to_drm_format(MirPixelFormat);
-
 unsigned int red_bits(MirPixelFormat);
 unsigned int green_bits(MirPixelFormat);
 unsigned int blue_bits(MirPixelFormat);
