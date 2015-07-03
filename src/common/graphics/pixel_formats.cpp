@@ -16,7 +16,6 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-// TODO: own header
 #include "mir/graphics/pixel_formats.h"
 #include "mir_toolkit/common.h"
 
