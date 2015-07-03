@@ -17,6 +17,7 @@
  */
 
 // TODO: own header
+#include "mir/graphics/pixel_formats.h"
 #include "mir_toolkit/common.h"
 
 // Use the headers but don't link to the libraries:
@@ -82,7 +83,7 @@ bool is_valid(MirPixelFormat f)
 {
     return (f > mir_pixel_format_invalid) &&
            (f < mir_pixel_formats) &&
-           (detail[f].mir_format != mir_pixel_format_invalid);
+           (detail[f].mir_format == f);
 }
 
 MirPixelFormat from_android_format(unsigned int a)
@@ -94,7 +95,7 @@ MirPixelFormat from_android_format(unsigned int a)
     return mir_pixel_format_invalid;
 }
 
-unsigned int android_format(MirPixelFormat f)
+unsigned int to_android_format(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].android_format : 0;
 }
@@ -108,47 +109,47 @@ MirPixelFormat from_gbm_format(unsigned int g)
     return mir_pixel_format_invalid;
 }
 
-unsigned int gbm_format(MirPixelFormat f)
+unsigned int to_gbm_format(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].gbm_format : 0;
 }
 
-int bytes_per_pixel(MirPixelFormat f)
+unsigned int bytes_per_pixel(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].bytes_per_pixel : 0;
 }
 
-int red_bits(MirPixelFormat f)
+unsigned int red_bits(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].red_bits : 0;
 }
 
-int green_bits(MirPixelFormat f)
+unsigned int green_bits(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].green_bits : 0;
 }
 
-int blue_bits(MirPixelFormat f)
+unsigned int blue_bits(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].blue_bits : 0;
 }
 
-int alpha_bits(MirPixelFormat f)
+unsigned int alpha_bits(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].alpha_bits : 0;
 }
 
-unsigned int gl_teximage_format(MirPixelFormat f)
+GLenum gl_teximage_format(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].gl_le_format : GL_INVALID_ENUM;
 }
 
-unsigned int gl_teximage_type(MirPixelFormat f)
+GLenum gl_teximage_type(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].gl_type : GL_INVALID_ENUM;
 }
 
-const char* pixel_format_name(MirPixelFormat f)
+const char* to_string(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].name : "unknown";
 }
