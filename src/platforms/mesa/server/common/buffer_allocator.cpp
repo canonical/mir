@@ -189,25 +189,12 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     BufferProperties const& buffer_properties)
 {
-    // See shm_buffer.cpp which limits which formats we can composite...
-    // As the limitation is really only imposed by the renderer we should
-    // not even be doing this check at all here... :/
-    switch (buffer_properties.format)
-    {
-    case mir_pixel_format_rgb_565:
-    case mir_pixel_format_argb_8888:
-    case mir_pixel_format_xrgb_8888:
-    case mir_pixel_format_abgr_8888:
-    case mir_pixel_format_xbgr_8888:
-        // Supported by ShmBuffer for OpenGL texture creation
-        break;
-    default:
-        // Not supported with OpenGL but could be supported in other renderers
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error(
-                "Trying to create SHM buffer with unsupported pixel format"));
-        break;
-    }
+    /*
+     * Note that we DO NOT check if buffer_properties.format is "supported"
+     * because doing so is meaningless and inaccurate. Depending on the
+     * renderer in use any format might be usable. And in our current
+     * OpenGL compositors all formats (except bgr_888 TODO) are usable.
+     */
 
     auto const stride = geom::Stride{
         MIR_BYTES_PER_PIXEL(buffer_properties.format) *
@@ -226,14 +213,6 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
 
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 {
-    /*
-     * TODO: Abolish supported_pixel_formats() because it is unreliable.
-     *       On Mesa for example the list of supported formats is different
-     *       between software and hardware buffers (due to GLES upload
-     *       restrictions). And even amongst hardware buffers, DRM/GBM supports
-     *       any conceivable format in theory. Limitations are imposed
-     *       by the hardware in use and not the Mesa driver.
-     */
     static std::vector<MirPixelFormat> const pixel_formats{
         mir_pixel_format_abgr_8888,
         mir_pixel_format_xbgr_8888,
@@ -241,7 +220,8 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
         mir_pixel_format_xrgb_8888,
         mir_pixel_format_bgr_888,
         mir_pixel_format_rgb_565,
-        mir_pixel_format_bgr_565
+        mir_pixel_format_rgba_5551,
+        mir_pixel_format_rgba_4444
     };
 
     return pixel_formats;

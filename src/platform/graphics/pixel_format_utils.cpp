@@ -26,7 +26,9 @@ namespace mg = mir::graphics;
 bool mg::contains_alpha(MirPixelFormat format)
 {
     return (format == mir_pixel_format_abgr_8888 ||
-            format == mir_pixel_format_argb_8888);
+            format == mir_pixel_format_argb_8888 ||
+            format == mir_pixel_format_rgba_5551 ||
+            format == mir_pixel_format_rgba_4444);
 }
 
 bool mg::valid_pixel_format(MirPixelFormat format)
@@ -37,33 +39,40 @@ bool mg::valid_pixel_format(MirPixelFormat format)
 
 int mg::red_channel_depth(MirPixelFormat format)
 {
-    if (format == mir_pixel_format_rgb_565 ||
-        format == mir_pixel_format_bgr_565)
-        return 5;
-
-    return valid_pixel_format(format) ? 8 : 0;
+    switch (format)
+    {
+    case mir_pixel_format_rgb_565:   return 5;
+    case mir_pixel_format_rgba_5551: return 5;
+    case mir_pixel_format_rgba_4444: return 4;
+    default:                         return valid_pixel_format(format) ? 8 : 0;
+    }
 }
 
 int mg::blue_channel_depth(MirPixelFormat format)
 {
-    if (format == mir_pixel_format_rgb_565 ||
-        format == mir_pixel_format_bgr_565)
-        return 5;
-
-    return valid_pixel_format(format) ? 8 : 0;
+    return red_channel_depth(format);
 }
 
 int mg::green_channel_depth(MirPixelFormat format)
 {
-    if (format == mir_pixel_format_rgb_565 ||
-        format == mir_pixel_format_bgr_565)
-        return 6;
-
-    return valid_pixel_format(format) ? 8 : 0;
+    switch (format)
+    {
+    case mir_pixel_format_rgb_565:   return 6;
+    case mir_pixel_format_rgba_5551: return 5;
+    case mir_pixel_format_rgba_4444: return 4;
+    default:                         return valid_pixel_format(format) ? 8 : 0;
+    }
 }
 
 int mg::alpha_channel_depth(MirPixelFormat format)
 {
-    return contains_alpha(format) ? 8 : 0;
+    switch (format)
+    {
+    case mir_pixel_format_abgr_8888: return 8;
+    case mir_pixel_format_argb_8888: return 8;
+    case mir_pixel_format_rgba_4444: return 4;
+    case mir_pixel_format_rgba_5551: return 1;
+    default:                         return 0;
+    }
 }
 

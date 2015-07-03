@@ -47,11 +47,19 @@ mgm::ShmBuffer::ShmBuffer(
     bool const little_endian = true;  // TODO big endian platforms
     switch (pixel_format_)
     {
-    case mir_pixel_format_rgb_565:  // Not endian sensitive as units are shorts
+    case mir_pixel_format_rgb_565:  // Not endian sensitive
         gl_format = GL_RGB;
         gl_type = GL_UNSIGNED_SHORT_5_6_5;
         break;
-    case mir_pixel_format_xrgb_8888: // Needs careful compositing (LP: #1423462)
+    case mir_pixel_format_rgba_5551:  // Not endian sensitive
+        gl_format = GL_RGBA;
+        gl_type = GL_UNSIGNED_SHORT_5_5_5_1;
+        break;
+    case mir_pixel_format_rgba_4444:  // Not endian sensitive
+        gl_format = GL_RGBA;
+        gl_type = GL_UNSIGNED_SHORT_4_4_4_4;
+        break;
+    case mir_pixel_format_xrgb_8888: // Careful compositing 'X' (LP: #1423462)
     case mir_pixel_format_argb_8888:
         if (little_endian)
         {
@@ -59,7 +67,7 @@ mgm::ShmBuffer::ShmBuffer(
             gl_type = GL_UNSIGNED_BYTE;
         }
         break;
-    case mir_pixel_format_xbgr_8888: // Needs careful compositing (LP: #1423462)
+    case mir_pixel_format_xbgr_8888: // Careful compositing 'X' (LP: #1423462)
     case mir_pixel_format_abgr_8888:
         if (little_endian)
         {

@@ -228,8 +228,15 @@ static MirPixelFormat choose_pixel_format(MirConnection* conn,
                 return fmt;  /* Perfect match */
             break;
         case mir_pixel_format_rgb_565:
-        case mir_pixel_format_bgr_565:
             if (a == 0 && r == 5 && g == 6 && b == 5)
+                return fmt;
+            break;
+        case mir_pixel_format_rgba_5551:
+            if (a == 1 && r == 5 && g == 5 && b == 5)
+                return fmt;
+            break;
+        case mir_pixel_format_rgba_4444:
+            if (a == 4 && r == 4 && g == 4 && b == 4)
                 return fmt;
             break;
         default:

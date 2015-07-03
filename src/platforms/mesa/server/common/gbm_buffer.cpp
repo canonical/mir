@@ -58,8 +58,11 @@ MirPixelFormat mgm::gbm_format_to_mir_format(uint32_t format)
     case GBM_FORMAT_RGB565:
         pf = mir_pixel_format_rgb_565;
         break;
-    case GBM_FORMAT_BGR565:
-        pf = mir_pixel_format_bgr_565;
+    case GBM_FORMAT_RGBA5551:
+        pf = mir_pixel_format_rgba_5551;
+        break;
+    case GBM_FORMAT_RGBA4444:
+        pf = mir_pixel_format_rgba_4444;
         break;
     default:
         pf = mir_pixel_format_invalid;
@@ -93,8 +96,11 @@ uint32_t mgm::mir_format_to_gbm_format(MirPixelFormat format)
     case mir_pixel_format_rgb_565:
         gbm_pf = GBM_FORMAT_RGB565;
         break;
-    case mir_pixel_format_bgr_565:
-        gbm_pf = GBM_FORMAT_BGR565;
+    case mir_pixel_format_rgba_5551:
+        gbm_pf = GBM_FORMAT_RGBA5551;
+        break;
+    case mir_pixel_format_rgba_4444:
+        gbm_pf = GBM_FORMAT_RGBA4444;
         break;
     default:
         gbm_pf = mgm::invalid_gbm_format;
