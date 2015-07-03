@@ -28,8 +28,8 @@ bool is_valid(MirPixelFormat);
 MirPixelFormat from_android_format(unsigned int);
 unsigned int to_android_format(MirPixelFormat);
 
-MirPixelFormat from_gbm_format(unsigned int);
-unsigned int to_gbm_format(MirPixelFormat);
+MirPixelFormat from_drm_format(unsigned int);
+unsigned int to_drm_format(MirPixelFormat);
 
 unsigned int red_bits(MirPixelFormat);
 unsigned int green_bits(MirPixelFormat);
