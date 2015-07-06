@@ -679,11 +679,11 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
 TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
 {
     const int nmonitors = 3;
-    std::array<std::shared_ptr<BufferQueueConsumer>, nmonitors> consumers {
+    std::array<std::shared_ptr<BufferQueueConsumer>, nmonitors> consumers { {
         std::make_shared<BufferQueueConsumer>(stream),
         std::make_shared<BufferQueueConsumer>(stream),
         std::make_shared<BufferQueueConsumer>(stream)
-    };
+    } };
 
     for (auto const& consumer : consumers)
         EXPECT_EQ(0, queue.buffers_ready_for_compositor(consumer.get()));
