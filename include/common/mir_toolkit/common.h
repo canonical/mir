@@ -122,11 +122,11 @@ typedef enum MirPromptSessionState
  * 32-bits-per-pixel formats.
  *
  * Another way to think about it is that mir_pixel_format_WXYZ always refers
- * to the literal memory order of the bytes: W,X,Y,Z. That makese sense
+ * to the literal memory order of the bytes: W,X,Y,Z. That makes sense
  * for both the 32-bit and 24-bit pixel formats.
  *
  * The 16-bits per pixel formats are actually simpler. Those should just be
- * interpreted as uint16_t all the time, with the colour components in
+ * interpreted as one uint16_t per pixel always, with the colour components in
  * high-to-low bit order.
  */
 typedef enum MirPixelFormat
