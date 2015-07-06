@@ -466,6 +466,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     MirPixelFormat pixel_format =
         choose_pixel_format(connection, egldisplay, eglconfig);
+    printf("Using pixel format %d\n", (int)pixel_format);
     MirSurfaceSpec *spec =
         mir_connection_create_spec_for_normal_surface(connection, *width, *height, pixel_format);
 
