@@ -17,7 +17,6 @@
  */
 
 #include "mir/graphics/pixel_format_utils.h"
-#include "mir_toolkit/common.h"
 
 namespace {
 
