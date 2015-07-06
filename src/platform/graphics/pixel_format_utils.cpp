@@ -21,14 +21,11 @@
 
 namespace {
 
-typedef struct
+const struct
 {
     MirPixelFormat mir_format;
     int red_bits, green_bits, blue_bits, alpha_bits;
-    // TODO: bytes_per_pixel, name string, etc.
-} Detail;
-
-static const Detail detail[mir_pixel_formats] =
+} detail[mir_pixel_formats] =
 {
     {mir_pixel_format_invalid,   0,0,0,0},
     {mir_pixel_format_abgr_8888, 8,8,8,8},
@@ -48,29 +45,29 @@ namespace mir { namespace graphics {
 
 bool valid_pixel_format(MirPixelFormat f)
 {
-    return (f > mir_pixel_format_invalid) &&
-           (f < mir_pixel_formats) &&
-           (detail[f].mir_format == f);
+    return f > mir_pixel_format_invalid &&
+           f < mir_pixel_formats &&
+           detail[f].mir_format == f;
 }
 
 int red_channel_depth(MirPixelFormat f)
 {
-    return is_valid(f) ? detail[f].red_bits : 0;
+    return valid_pixel_format(f) ? detail[f].red_bits : 0;
 }
 
 int green_channel_depth(MirPixelFormat f)
 {
-    return is_valid(f) ? detail[f].green_bits : 0;
+    return valid_pixel_format(f) ? detail[f].green_bits : 0;
 }
 
 int blue_channel_depth(MirPixelFormat f)
 {
-    return is_valid(f) ? detail[f].blue_bits : 0;
+    return valid_pixel_format(f) ? detail[f].blue_bits : 0;
 }
 
 int alpha_channel_depth(MirPixelFormat f)
 {
-    return is_valid(f) ? detail[f].alpha_bits : 0;
+    return valid_pixel_format(f) ? detail[f].alpha_bits : 0;
 }
 
 bool contains_alpha(MirPixelFormat format)

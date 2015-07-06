@@ -190,7 +190,7 @@ std::string mir_pixel_format_to_string(MirPixelFormat format)
     case mir_pixel_format_xrgb_8888:
         return "BGRX";
     case mir_pixel_format_bgr_888:
-        return "RGB";  // <-- possibly wrong.
+        return "BGR";
     case mir_pixel_format_rgb_888:
         return "RGB";
     case mir_pixel_format_rgb_565:
