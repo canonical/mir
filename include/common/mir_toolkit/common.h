@@ -130,11 +130,11 @@ typedef enum MirPixelFormat
     mir_pixel_format_argb_8888 = 3,
     mir_pixel_format_xrgb_8888 = 4,
     mir_pixel_format_bgr_888 = 5,
-    //mir_pixel_format_rgb_888 = 6,  TODO: could be easily supported
+    /* mir_pixel_format_rgb_888 = 6,  TODO: could be easily supported */
     mir_pixel_format_rgb_565 = 7,
     mir_pixel_format_rgba_5551 = 8,
     mir_pixel_format_rgba_4444 = 9,
-    mir_pixel_formats   // Note: This is always max format + 1
+    mir_pixel_formats   /* Note: This is always max format + 1 */
 } MirPixelFormat;
 
 /* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
