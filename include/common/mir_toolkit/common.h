@@ -115,11 +115,11 @@ typedef enum MirPromptSessionState
 
 /**
  * 32-bit pixel formats:
- * The order of components in a format enum matches the order of the components  * as they would be written in an integer representing a pixel value of that
- * format.
- * For example, abgr_8888 corresponds to 0xAABBGGRR, which will end up as
- * R,G,B,A in memory in a little endian system, and as A,B,G,R in memory in a
- * big endian system.
+ * The order of components in a format enum matches the order of the components
+ * as they would be written in an integer representing a pixel value of that
+ * format. For example; abgr_8888 corresponds to 0xAABBGGRR, which will end up
+ * as R,G,B,A in memory on a little endian system, and as A,B,G,R on a big
+ * endian system.
  *
  * 24-bit pixel formats:
  * These are in literal byte order, regardless of CPU architecture it's always
