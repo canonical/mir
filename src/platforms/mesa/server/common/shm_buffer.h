@@ -59,9 +59,6 @@ private:
     MirPixelFormat const pixel_format_;
     geometry::Stride const stride_;
     void* const pixels;
-
-    typedef unsigned int GLenum;
-    GLenum gl_format, gl_type;
 };
 
 }

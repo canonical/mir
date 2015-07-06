@@ -40,52 +40,8 @@ mgm::ShmBuffer::ShmBuffer(
       size_{size},
       pixel_format_{pixel_format},
       stride_{MIR_BYTES_PER_PIXEL(pixel_format_) * size_.width.as_uint32_t()},
-      pixels{shm_file->base_ptr()},
-      gl_format{GL_INVALID_ENUM},
-      gl_type{GL_INVALID_ENUM}
+      pixels{shm_file->base_ptr()}
 {
-    bool const little_endian = true;  // TODO big endian platforms
-    switch (pixel_format_)
-    {
-    case mir_pixel_format_rgb_565:  // Not endian sensitive
-        gl_format = GL_RGB;
-        gl_type = GL_UNSIGNED_SHORT_5_6_5;
-        break;
-    case mir_pixel_format_rgba_5551:  // Not endian sensitive
-        gl_format = GL_RGBA;
-        gl_type = GL_UNSIGNED_SHORT_5_5_5_1;
-        break;
-    case mir_pixel_format_rgba_4444:  // Not endian sensitive
-        gl_format = GL_RGBA;
-        gl_type = GL_UNSIGNED_SHORT_4_4_4_4;
-        break;
-    case mir_pixel_format_xrgb_8888: // Careful compositing 'X' (LP: #1423462)
-    case mir_pixel_format_argb_8888:
-        if (little_endian)
-        {
-            gl_format = GL_BGRA_EXT;
-            gl_type = GL_UNSIGNED_BYTE;
-        } // else big endian. Would require "mir_pixel_format_bgr[ax]_8888"
-        break;
-    case mir_pixel_format_xbgr_8888: // Careful compositing 'X' (LP: #1423462)
-    case mir_pixel_format_abgr_8888:
-        if (little_endian)
-        {
-            gl_format = GL_RGBA;
-            gl_type = GL_UNSIGNED_BYTE;
-        } // else big endian. Would require "mir_pixel_format_[ax]bgr_8888"
-        break;
-    case mir_pixel_format_rgb_888:
-        gl_format = GL_RGB;
-        gl_type = GL_UNSIGNED_BYTE;
-        break;
-    default:
-        // Not an error. GL compositing will just show all black.
-        // We may not be able to upload the ShmBuffer as a GL texture but
-        // future compositing methods other than OpenGL could still work.
-        // So the inability to upload a GL texture is not a hard error.
-        break;
-    }
 }
 
 mgm::ShmBuffer::~ShmBuffer() noexcept
@@ -109,11 +65,56 @@ MirPixelFormat mgm::ShmBuffer::pixel_format() const
 
 void mgm::ShmBuffer::gl_bind_to_texture()
 {
-    if (gl_format != GL_INVALID_ENUM && gl_type != GL_INVALID_ENUM)
+    GLenum format = GL_INVALID_ENUM, type = GL_INVALID_ENUM;
+
+    bool const little_endian = true;  // TODO big endian platforms
+    switch (pixel_format_)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, gl_format,
+    case mir_pixel_format_rgb_565:  // Not endian sensitive
+        format = GL_RGB;
+        type = GL_UNSIGNED_SHORT_5_6_5;
+        break;
+    case mir_pixel_format_rgba_5551:  // Not endian sensitive
+        format = GL_RGBA;
+        type = GL_UNSIGNED_SHORT_5_5_5_1;
+        break;
+    case mir_pixel_format_rgba_4444:  // Not endian sensitive
+        format = GL_RGBA;
+        type = GL_UNSIGNED_SHORT_4_4_4_4;
+        break;
+    case mir_pixel_format_xrgb_8888: // Careful compositing 'X' (LP: #1423462)
+    case mir_pixel_format_argb_8888:
+        if (little_endian)
+        {
+            format = GL_BGRA_EXT;
+            type = GL_UNSIGNED_BYTE;
+        } // else big endian. Would require "mir_pixel_format_bgr[ax]_8888"
+        break;
+    case mir_pixel_format_xbgr_8888: // Careful compositing 'X' (LP: #1423462)
+    case mir_pixel_format_abgr_8888:
+        if (little_endian)
+        {
+            format = GL_RGBA;
+            type = GL_UNSIGNED_BYTE;
+        } // else big endian. Would require "mir_pixel_format_[ax]bgr_8888"
+        break;
+    case mir_pixel_format_rgb_888:
+        format = GL_RGB;
+        type = GL_UNSIGNED_BYTE;
+        break;
+    default:
+        // Not an error. GL compositing will just show all black.
+        // We may not be able to upload the ShmBuffer as a GL texture but
+        // future compositing methods other than OpenGL could still work.
+        // So the inability to upload a GL texture is not a hard error.
+        break;
+    }
+
+    if (format != GL_INVALID_ENUM && type != GL_INVALID_ENUM)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, format,
                      size_.width.as_int(), size_.height.as_int(),
-                     0, gl_format, gl_type, pixels);
+                     0, format, type, pixels);
     }
 }
 
