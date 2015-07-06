@@ -224,6 +224,7 @@ static MirPixelFormat choose_pixel_format(MirConnection* conn,
         case mir_pixel_format_xbgr_8888:
         case mir_pixel_format_xrgb_8888:
         case mir_pixel_format_bgr_888:
+        case mir_pixel_format_rgb_888:
             if (a == 0 && b == 8 && g == 8 && r == 8)
                 return fmt;  /* Perfect match */
             break;

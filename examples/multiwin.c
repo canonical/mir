@@ -86,6 +86,16 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
             (uint32_t)color->g << 8  |
             (uint32_t)color->b;
         break;
+    case mir_pixel_format_rgb_888:
+        for (n = 0; n < count; n++)
+        {
+            uint8_t *p = (uint8_t*)where + n * 3;
+            p[0] = color->r;
+            p[1] = color->g;
+            p[2] = color->b;
+        }
+        count = 0;
+        break;
     case mir_pixel_format_bgr_888:
         for (n = 0; n < count; n++)
         {

@@ -193,7 +193,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
      * Note that we DO NOT check if buffer_properties.format is "supported"
      * because doing so is meaningless and inaccurate. Depending on the
      * renderer in use any format might be usable. And in our current
-     * OpenGL compositors all formats (except bgr_888 TODO) are usable.
+     * OpenGL compositors all formats (except bgr_888) are usable.
      */
 
     auto const stride = geom::Stride{
@@ -213,12 +213,17 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
 
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 {
+    /*
+     * In summary, all our platforms and renderers support all pixel formats
+     * except for BGR. While GBM/DRM supports BGR, OpenGL does not so we
+     * cannot composite it.
+     */
     static std::vector<MirPixelFormat> const pixel_formats{
         mir_pixel_format_abgr_8888,
         mir_pixel_format_xbgr_8888,
         mir_pixel_format_argb_8888,
         mir_pixel_format_xrgb_8888,
-        mir_pixel_format_bgr_888,
+        mir_pixel_format_rgb_888,
         mir_pixel_format_rgb_565,
         mir_pixel_format_rgba_5551,
         mir_pixel_format_rgba_4444

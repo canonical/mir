@@ -46,9 +46,9 @@ static const Detail detail[mir_pixel_formats] =
          GL_BGRA_EXT, GL_UNSIGNED_BYTE},
     {mir_pixel_format_xrgb_8888, 4, 8,8,8,8, "xrgb_8888",
          GL_BGRA_EXT, GL_UNSIGNED_BYTE},
-    {mir_pixel_format_bgr_888,   3, 8,8,8,0, "bgr_8888",
-         GL_INVALID_ENUM, GL_INVALID_ENUM},  /* No OpenGL support! */
-    {mir_pixel_format_invalid /* TODO */, 3, 8,8,8,8, "rgb_8888",
+    {mir_pixel_format_bgr_888,   3, 8,8,8,0, "bgr_888",
+         GL_INVALID_ENUM, GL_INVALID_ENUM},  // No OpenGL support for BGR!
+    {mir_pixel_format_rgb_888,   3, 8,8,8,8, "rgb_888",
          GL_RGB, GL_UNSIGNED_BYTE},
     {mir_pixel_format_rgb_565,   2, 5,6,5,0, "rgb_565",
          GL_RGB, GL_UNSIGNED_SHORT_5_6_5},
