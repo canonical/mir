@@ -139,8 +139,8 @@ typedef enum MirPixelFormat
     mir_pixel_format_rgba_5551 = 8,
     mir_pixel_format_rgba_4444 = 9,
     /*
-     * TODO: Big endian support would require additional types to match up
-     *       with GL_RGBA and GL_BGRA_EXT:
+     * TODO: Big endian support would require additional formats in order to
+     *       match up with GL_RGBA and GL_BGRA_EXT:
      *         mir_pixel_format_rgb[ax]_8888
      *         mir_pixel_format_bgr[ax]_8888
      */
