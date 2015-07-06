@@ -114,20 +114,20 @@ typedef enum MirPromptSessionState
 } MirPromptSessionState;
 
 /**
- * The order of components in a format enum matches the order of the components
- * as they would be written in an integer representing a pixel value of that
- * format. For example, abgr_8888 corresponds to 0xAABBGGRR, which will end up
- * as four bytes: R,G,B,A in memory on a little endian system, and as A,B,G,R
- * on a big endian system. However this rule only makes sense for the
- * 32-bits-per-pixel formats.
+ * 32-bit pixel formats:
+ * The order of components in a format enum matches the order of the components  * as they would be written in an integer representing a pixel value of that
+ * format.
+ * For example, abgr_8888 corresponds to 0xAABBGGRR, which will end up as
+ * R,G,B,A in memory in a little endian system, and as A,B,G,R in memory in a
+ * big endian system.
  *
- * Another way to think about it is that mir_pixel_format_WXYZ always refers
- * to the literal memory order of the bytes: W,X,Y,Z. That makes sense
- * for both the 32-bit and 24-bit pixel formats.
+ * 24-bit pixel formats:
+ * These are in literal byte order, regardless of CPU architecture it's always
+ * the same.
  *
- * The 16-bits per pixel formats are actually simpler. Those should just be
- * interpreted as one uint16_t per pixel always, with the colour components in
- * high-to-low bit order.
+ * 16-bit pixel formats:
+ * Always interpreted as one 16-bit integer per pixel with components in
+ * high-to-low bit order following the format name.
  */
 typedef enum MirPixelFormat
 {
