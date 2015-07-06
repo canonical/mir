@@ -114,17 +114,20 @@ typedef enum MirPromptSessionState
 } MirPromptSessionState;
 
 /**
- * The order of components in a format enum matches the
- * order of the components as they would be written in an
- * integer representing a pixel value of that format.
+ * The order of components in a format enum matches the order of the components
+ * as they would be written in an integer representing a pixel value of that
+ * format. For example, abgr_8888 corresponds to 0xAABBGGRR, which will end up
+ * as four bytes: R,G,B,A in memory on a little endian system, and as A,B,G,R
+ * on a big endian system. However this rule only makes sense for the
+ * 32-bits-per-pixel formats.
  *
- * For example, abgr_8888 corresponds to 0xAABBGGRR, which will
- * end up as R,G,B,A in memory in a little endian system, and
- * as A,B,G,R in memory in a big endian system.
+ * Another way to think about it is that mir_pixel_format_WXYZ always refers
+ * to the literal memory order of the bytes: W,X,Y,Z. That makese sense
+ * for both the 32-bit and 24-bit pixel formats.
  *
- * The exceptions to this rule are the 3-bytes-per-pixel formats of
- * bgr_888 and rgb_888. Those have a literal memory order that is
- * unchanged between big and little endian systems.
+ * The 16-bits per pixel formats are actually simpler. Those should just be
+ * interpreted as uint16_t all the time, with the colour components in
+ * high-to-low bit order.
  */
 typedef enum MirPixelFormat
 {
@@ -147,7 +150,7 @@ typedef enum MirPixelFormat
     mir_pixel_formats   /* Note: This is always max format + 1 */
 } MirPixelFormat;
 
-/** \deprecated  Please use <TODO> instead */
+/* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
 #define MIR_BYTES_PER_PIXEL(f) ((f) == mir_pixel_format_bgr_888   ? 3 : \
                                 (f) == mir_pixel_format_rgb_888   ? 3 : \
                                 (f) == mir_pixel_format_rgb_565   ? 2 : \

@@ -107,7 +107,7 @@ std::vector<MirPixelFormat> mga::AndroidGraphicBufferAllocator::supported_pixel_
     static std::vector<MirPixelFormat> const pixel_formats{
         mir_pixel_format_abgr_8888,
         mir_pixel_format_xbgr_8888,
-        mir_pixel_format_bgr_888,
+        mir_pixel_format_rgb_888,
         mir_pixel_format_rgb_565,
         mir_pixel_format_rgba_5551,
         mir_pixel_format_rgba_4444

@@ -80,16 +80,12 @@ mgm::ShmBuffer::ShmBuffer(
         gl_type = GL_UNSIGNED_BYTE;
         break;
     default:
+        // Not an error. GL compositing will just show all black.
+        // We may not be able to upload the ShmBuffer as a GL texture but
+        // future compositing methods other than OpenGL could still work.
+        // So the inability to upload a GL texture is not a hard error.
         break;
     }
-    
-    /*
-     * XXX Throw on formats that we can't composite in GL or accept them and
-     *     just show black when the texture upload is attempted? We presently
-     *     do the latter. Prior to now we crashed instead :)
-     *     I suggest just showing black is better because we should not always
-     *     assume GL is the only compositing method that might be used.
-     */
 }
 
 mgm::ShmBuffer::~ShmBuffer() noexcept
@@ -113,13 +109,12 @@ MirPixelFormat mgm::ShmBuffer::pixel_format() const
 
 void mgm::ShmBuffer::gl_bind_to_texture()
 {
-    if (gl_format == GL_INVALID_ENUM)
-        return;
-
-    glTexImage2D(GL_TEXTURE_2D, 0, gl_format,
-                 size_.width.as_int(), size_.height.as_int(),
-                 0, gl_format, gl_type,
-                 pixels);
+    if (gl_format != GL_INVALID_ENUM && gl_type != GL_INVALID_ENUM)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, gl_format,
+                     size_.width.as_int(), size_.height.as_int(),
+                     0, gl_format, gl_type, pixels);
+    }
 }
 
 std::shared_ptr<MirNativeBuffer> mgm::ShmBuffer::native_buffer_handle() const
