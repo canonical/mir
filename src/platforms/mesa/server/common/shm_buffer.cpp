@@ -65,7 +65,7 @@ mgm::ShmBuffer::ShmBuffer(
         {
             gl_format = GL_BGRA_EXT;
             gl_type = GL_UNSIGNED_BYTE;
-        }
+        } // else big endian. Would require "mir_pixel_format_bgr[ax]_8888"
         break;
     case mir_pixel_format_xbgr_8888: // Careful compositing 'X' (LP: #1423462)
     case mir_pixel_format_abgr_8888:
@@ -73,14 +73,12 @@ mgm::ShmBuffer::ShmBuffer(
         {
             gl_format = GL_RGBA;
             gl_type = GL_UNSIGNED_BYTE;
-        }
+        } // else big endian. Would require "mir_pixel_format_[ax]bgr_8888"
         break;
-    /* This future format would also work:
     case mir_pixel_format_rgb_888:
-        gl_format = RGB;
+        gl_format = GL_RGB;
         gl_type = GL_UNSIGNED_BYTE;
         break;
-    */
     default:
         break;
     }
