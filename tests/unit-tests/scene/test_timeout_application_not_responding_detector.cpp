@@ -234,3 +234,46 @@ TEST(TimeoutApplicationNotRespondingDetector, fiddling_with_sessions_from_callba
     detector.pong_received(&session_three);
     // And now session three sholud be morked as responsive, unregistering itself
 }
+
+TEST(TimeoutApplicationNotRespondingDetector, does_not_generate_signals_after_unregister)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::FakeAlarmFactory fake_alarms;
+
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
+
+    bool session_not_responding{false};
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    ON_CALL(*observer, session_unresponsive(_))
+        .WillByDefault(Invoke([&session_not_responding](auto /*session*/)
+    {
+        session_not_responding = true;
+    }));
+    detector.register_observer(observer);
+
+    NiceMock<mtd::MockSceneSession> session_one;
+
+    detector.register_session(&session_one, [](){});
+
+    fake_alarms.advance_by(1001ms);
+    // Should now have pung, but not marked as unresponsive
+    EXPECT_FALSE(session_not_responding);
+
+    // Now a full ping cycle has elapsed, should have marked as unresponsive
+    fake_alarms.advance_by(1001ms);
+    EXPECT_TRUE(session_not_responding);
+
+    // Mark session as responding
+    detector.pong_received(&session_one);
+    session_not_responding = false;
+
+    detector.unregister_observer(observer);
+
+    fake_alarms.advance_by(1001ms);
+    fake_alarms.advance_by(1001ms);
+
+    // Notification should not have been generated
+    EXPECT_FALSE(session_not_responding);
+}

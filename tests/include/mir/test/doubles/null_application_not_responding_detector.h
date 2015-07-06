@@ -42,6 +42,9 @@ public:
     void register_observer(std::shared_ptr<Observer> const&) override
     {
     }
+    void unregister_observer(std::shared_ptr<Observer> const&) override
+    {
+    }
 };
 }
 }

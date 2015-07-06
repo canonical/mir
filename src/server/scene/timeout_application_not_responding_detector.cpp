@@ -131,3 +131,9 @@ void ms::TimeoutApplicationNotRespondingDetector::register_observer(
 {
     observers.add(observer);
 }
+
+void ms::TimeoutApplicationNotRespondingDetector::unregister_observer(
+    std::shared_ptr<Observer> const& observer)
+{
+    observers.remove(observer);
+}

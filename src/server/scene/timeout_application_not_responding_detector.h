@@ -62,6 +62,7 @@ public:
     void pong_received(frontend::Session const* received_for) override;
 
     void register_observer(std::shared_ptr<Observer> const& observer) override;
+    void unregister_observer(std::shared_ptr<Observer> const& observer) override;
 private:
     struct ANRContext;
 
