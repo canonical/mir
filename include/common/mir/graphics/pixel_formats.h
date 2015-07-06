@@ -30,9 +30,8 @@ unsigned int green_bits(MirPixelFormat);
 unsigned int blue_bits(MirPixelFormat);
 unsigned int alpha_bits(MirPixelFormat);
 
-typedef unsigned int GLenum;
-mir::graphics::GLenum gl_teximage_format(MirPixelFormat);
-mir::graphics::GLenum gl_teximage_type(MirPixelFormat);
+unsigned int gl_teximage_format(MirPixelFormat);
+unsigned int gl_teximage_type(MirPixelFormat);
 
 const char* to_string(MirPixelFormat);
 

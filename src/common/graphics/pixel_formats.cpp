@@ -94,12 +94,12 @@ unsigned int alpha_bits(MirPixelFormat f)
     return is_valid(f) ? detail[f].alpha_bits : 0;
 }
 
-GLenum gl_teximage_format(MirPixelFormat f)
+unsigned int gl_teximage_format(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].gl_le_format : GL_INVALID_ENUM;
 }
 
-GLenum gl_teximage_type(MirPixelFormat f)
+unsigned int gl_teximage_type(MirPixelFormat f)
 {
     return is_valid(f) ? detail[f].gl_type : GL_INVALID_ENUM;
 }
