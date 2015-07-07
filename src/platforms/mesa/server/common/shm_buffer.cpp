@@ -32,6 +32,11 @@
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
+bool mgm::ShmBuffer::supports(MirPixelFormat format)
+{
+    return format != mir_pixel_format_bgr_888;
+}
+
 mgm::ShmBuffer::ShmBuffer(
     std::shared_ptr<ShmFile> const& shm_file,
     geom::Size const& size,

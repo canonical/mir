@@ -188,12 +188,12 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     BufferProperties const& buffer_properties)
 {
-    /*
-     * Note that we DO NOT check if buffer_properties.format is "supported"
-     * because doing so is meaningless and inaccurate. Depending on the
-     * renderer in use any format might be usable. And in our current
-     * OpenGL compositors all formats (except bgr_888) are usable.
-     */
+    if (!ShmBuffer::supports(buffer_properties.format))
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error(
+                "Trying to create SHM buffer with unsupported pixel format"));
+    }
 
     auto const stride = geom::Stride{
         MIR_BYTES_PER_PIXEL(buffer_properties.format) *

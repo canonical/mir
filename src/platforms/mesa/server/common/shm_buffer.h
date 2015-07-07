@@ -37,6 +37,8 @@ class ShmFile;
 class ShmBuffer : public BufferBasic
 {
 public:
+    static bool supports(MirPixelFormat);
+
     ShmBuffer(std::shared_ptr<ShmFile> const& shm_file,
               geometry::Size const& size,
               MirPixelFormat const& pixel_format);
