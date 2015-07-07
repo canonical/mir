@@ -27,6 +27,7 @@
 #include <vector>
 #include <future>
 #include <chrono>
+#include <atomic>
 
 namespace mir
 {
@@ -73,7 +74,8 @@ public:
     void stop();
 
 private:
-    void destroy_compositing_threads(std::unique_lock<std::mutex>& lock);
+    void create_compositing_threads();
+    void destroy_compositing_threads();
 
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<Scene> const scene;
@@ -84,8 +86,7 @@ private:
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
     std::vector<std::future<void>> futures;
 
-    std::mutex state_guard;
-    CompositorState state;
+    std::atomic<CompositorState> state;
     std::chrono::milliseconds fixed_composite_delay;
     bool compose_on_start;
 
