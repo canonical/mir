@@ -64,7 +64,14 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
     }
     void frame_posted(int) override
     {
-        // Frame posting wont trigger a cursor update
+        // The first frame posted will trigger a cursor update, since it
+        // changes the visibility status of the surface, and can thus affect
+        // the cursor.
+        if (!first_frame_posted)
+        {
+            first_frame_posted = true;
+            cursor_controller->update_cursor_image();
+        }
     }
     void alpha_set_to(float) override
     {
@@ -92,6 +99,7 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
     }
 
     mi::CursorController* const cursor_controller;
+    bool first_frame_posted = false;
 };
 
 struct UpdateCursorOnSceneChanges : ms::Observer
