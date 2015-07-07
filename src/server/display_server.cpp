@@ -31,7 +31,7 @@
 #include "mir/input/input_manager.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/log.h"
-#include "mir/try_but_revert_if_unwinding.h"
+#include "mir/unwind_helpers.h"
 
 #include <stdexcept>
 

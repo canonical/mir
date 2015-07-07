@@ -29,7 +29,7 @@
 #include "mir/scene/surface.h"
 #include "mir/terminate_with_current_exception.h"
 #include "mir/raii.h"
-#include "mir/try_but_revert_if_unwinding.h"
+#include "mir/unwind_helpers.h"
 #include "mir/thread_name.h"
 
 #include <thread>

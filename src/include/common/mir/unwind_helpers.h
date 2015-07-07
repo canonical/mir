@@ -16,8 +16,8 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_TRY_BUT_REVERT_IF_UNWINDING_H_
-#define MIR_TRY_BUT_REVERT_IF_UNWINDING_H_
+#ifndef MIR_UNWIND_HELPERS_H_
+#define MIR_UNWIND_HELPERS_H_
 
 #include <stdexcept>
 #include <iostream>
