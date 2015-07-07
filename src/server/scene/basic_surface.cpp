@@ -268,7 +268,6 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
     // Now the buffer stream has successfully resized, update the state second;
     {
         std::unique_lock<std::mutex> lock(guard);
-        custom_input_rectangles.clear();
         surface_rect.size = new_size;
     }
     observers.resized_to(new_size);
