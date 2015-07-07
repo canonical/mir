@@ -575,24 +575,6 @@ TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
     EXPECT_THAT(production_log[nbuffers].blockage, Eq(Access::unblocked));
 }
 
-TEST_P(WithOneBuffer, with_single_buffer_compositor_acquires_resized_frames_eventually)
-{
-    unsigned int attempts = 100;
-    geom::Size const new_size{123,456};
-    queue.resize(new_size);
-
-    std::vector<ScheduleEntry> schedule = {
-        {1_t,  {&producer}, {&consumer}},
-    };
-
-    repeat_system_until(schedule, [&]{
-        if (consumer.last_size() == new_size) return false;
-        if (--attempts == 0) return false;
-        return true;
-    });
-    EXPECT_THAT(attempts, Ne(0));
-}
-
 // Regression test for LP: #1319765
 TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
 {
