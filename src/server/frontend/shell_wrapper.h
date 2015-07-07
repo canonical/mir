@@ -59,6 +59,8 @@ public:
 
     std::string persistent_id_for(std::shared_ptr<Session> const& session, SurfaceId surface) override;
 
+    std::shared_ptr<scene::Surface> surface_for_id(std::string const& serialised_id) override;
+
     int set_surface_attribute(
         std::shared_ptr<Session> const& session,
         SurfaceId surface_id,
