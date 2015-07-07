@@ -320,7 +320,28 @@ void mc::MultiThreadedCompositor::start()
     scene->add_observer(observer);
     lk.lock();
 
-    create_compositing_threads();
+    /* Start the display buffer compositing threads */
+    display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
+    {
+        auto thread_functor = std::make_unique<mc::CompositingFunctor>(
+            display_buffer_compositor_factory, group, scene, display_listener,
+            fixed_composite_delay, report);
+
+        futures.push_back(thread_pool.run(std::ref(*thread_functor), &group));
+        thread_functors.push_back(std::move(thread_functor));
+    });
+
+    thread_pool.shrink();
+
+    for (auto& functor : thread_functors)
+    {
+        lk.unlock();  // Never wait while locked! (deadlock LP: #1471909)
+        // functor is read while unlocked. This is OK as it is unchanging.
+        functor->wait_until_started();
+        lk.lock();
+    }
+
+    state = CompositorState::started;
 
     /* Optional first render */
     if (compose_on_start)
@@ -358,27 +379,6 @@ void mc::MultiThreadedCompositor::stop()
     compose_on_start = true;
 }
 
-void mc::MultiThreadedCompositor::create_compositing_threads()
-{
-    /* Start the display buffer compositing threads */
-    display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
-    {
-        auto thread_functor = std::make_unique<mc::CompositingFunctor>(
-            display_buffer_compositor_factory, group, scene, display_listener,
-            fixed_composite_delay, report);
-
-        futures.push_back(thread_pool.run(std::ref(*thread_functor), &group));
-        thread_functors.push_back(std::move(thread_functor));
-    });
-
-    thread_pool.shrink();
-
-    for (auto& functor : thread_functors)
-        functor->wait_until_started();
-
-    state = CompositorState::started;
-}
-
 void mc::MultiThreadedCompositor::destroy_compositing_threads(std::unique_lock<std::mutex>& lock)
 {
     /* Could be called during unwinding,
@@ -391,7 +391,12 @@ void mc::MultiThreadedCompositor::destroy_compositing_threads(std::unique_lock<s
         f->stop();
 
     for (auto& f : futures)
-        f.wait();
+    {
+        auto g = std::move(f);
+        lock.unlock();  // Never wait while locked (deadlock LP: #1471909)
+        g.wait();
+        lock.lock();
+    }
 
     thread_functors.clear();
     futures.clear();
