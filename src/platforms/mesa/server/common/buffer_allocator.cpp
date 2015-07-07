@@ -138,13 +138,6 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
 
     uint32_t const gbm_format = mgm::mir_format_to_gbm_format(buffer_properties.format);
 
-    // AFAIK, GBM/DRM supports all pixel formats (although some GPUs might not)
-    if (gbm_format == mgm::invalid_gbm_format)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Trying to create GBM buffer with unsupported pixel format"));
-    }
-
     /*
      * Bypass is generally only beneficial to hardware buffers where the
      * blitting happens on the GPU. For software buffers it is slower to blit
@@ -162,6 +155,12 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
          buffer_properties.size.height.as_uint32_t() >= 600)
     {
         bo_flags |= GBM_BO_USE_SCANOUT;
+    }
+
+    if (!gbm_device_is_format_supported(device, gbm_format, bo_flags))
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Trying to create GBM buffer with unsupported pixel format"));
     }
 
     gbm_bo *bo_raw = gbm_bo_create(
@@ -214,31 +213,27 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 {
     /*
-     * In summary, all our platforms and renderers support all pixel formats
-     * except for BGR. While GBM/DRM supports BGR, OpenGL does not so we
-     * cannot composite it.
+     * supported_pixel_formats() is kind of a fudge. The right answer depends
+     * on whether you're using hardware or software, and it depends on
+     * the usage type (e.g. scanout), and it depends on the GPU at run-time.
+     *   For software buffer compositing we actually support ALL Mir pixel
+     * formats except for BGR (because OpenGL doesn't support it). For
+     * hardware buffers, we're more limited by GBM which claims to only
+     * support the first two in this list. So as a roughly accurate compromise
+     * we have this list... but I would rather supported_pixel_formats()
+     * did not exist at all. Because we clearly cannot give a totally
+     * accurate answer.
      */
     static std::vector<MirPixelFormat> const pixel_formats{
-        mir_pixel_format_abgr_8888,
-        mir_pixel_format_xbgr_8888,
-        mir_pixel_format_argb_8888,
-        mir_pixel_format_xrgb_8888,
-        mir_pixel_format_rgb_888,
-        mir_pixel_format_rgb_565,
-        mir_pixel_format_rgba_5551,
-        mir_pixel_format_rgba_4444
+        mir_pixel_format_xrgb_8888, // hardware or software
+        mir_pixel_format_argb_8888, // hardware or software
+        mir_pixel_format_rgb_888,   // software only
+        mir_pixel_format_rgb_565,   // software only
+        mir_pixel_format_rgba_5551, // software only
+        mir_pixel_format_rgba_4444  // software only
     };
 
     return pixel_formats;
-}
-
-bool mgm::BufferAllocator::is_pixel_format_supported(MirPixelFormat format)
-{
-    auto formats = supported_pixel_formats();
-
-    auto iter = std::find(formats.begin(), formats.end(), format);
-
-    return iter != formats.end();
 }
 
 std::unique_ptr<mg::Buffer> mgm::BufferAllocator::reconstruct_from(
