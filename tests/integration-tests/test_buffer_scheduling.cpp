@@ -377,6 +377,7 @@ TEST_P(WithTwoOrMoreBuffers, consumer_cycles_through_all_available_buffers)
 TEST_P(WithAnyNumberOfBuffers, compositor_can_always_get_a_buffer)
 {
     std::vector<ScheduleEntry> schedule = {
+        {0_t, {&producer}, {}},
         {1_t, {},          {&consumer}},
         {2_t, {},          {&consumer}},
         {3_t, {},          {&consumer}},
