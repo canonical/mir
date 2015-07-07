@@ -85,18 +85,28 @@ mf::SurfaceId ms::ApplicationSession::next_id()
 mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters const& the_params)
 {
     auto const id = next_id();
-    mf::BufferStreamId const stream_id(id.as_value());
+    mf::BufferStreamId const stream_id{the_params.content_id.is_set() ?
+        the_params.content_id.value().as_value() : id.as_value()};
 
     auto params = the_params;
 
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
-    mg::BufferProperties buffer_properties{params.size,
-                                           params.pixel_format,
-                                           params.buffer_usage};
 
     auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
-    auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
+
+    std::shared_ptr<compositor::BufferStream> buffer_stream;
+    if (params.content_id.is_set())
+    {
+        buffer_stream = checked_find(params.content_id.value())->second;
+    }
+    else
+    {
+        mg::BufferProperties buffer_properties{params.size,
+                                               params.pixel_format,
+                                               params.buffer_usage};
+        buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
+    }
     auto surface = surface_factory->create_surface(buffer_stream, params);
     surface_coordinator->add_surface(surface, params.depth, params.input_mode, this);
 

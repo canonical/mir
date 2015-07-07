@@ -588,6 +588,43 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
     }, std::runtime_error);
 }
 
+TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
+{
+    using namespace testing;
+
+    mtd::StubBufferStreamFactory bufferstream_factory;
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
+
+    geom::Size const buffer_size{geom::Width{1}, geom::Height{1}};
+
+    mg::BufferProperties properties(buffer_size, mir_pixel_format_argb_8888, mg::BufferUsage::software);
+
+    auto session = make_application_session(
+        mt::fake_shared(bufferstream_factory),
+        mt::fake_shared(mock_surface_factory));
+
+    auto id = session->create_buffer_stream(properties);
+
+    EXPECT_CALL(mock_surface_factory, create_surface(Eq(session->get_buffer_stream(id)),_))
+        .WillOnce(Invoke([&](auto bs, auto)
+    {
+        auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+        ON_CALL(*surface, primary_buffer_stream())
+            .WillByDefault(Return(bs));
+        return surface;
+    }));
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_name("Aardavks")
+        .of_type(mir_surface_type_normal)
+        .with_buffer_stream(id);
+
+    auto surface_id = session->create_surface(params);
+    auto surface = session->get_surface(surface_id);
+
+    EXPECT_THAT(surface->primary_buffer_stream(), Eq(session->get_buffer_stream(id)));
+}
+
 namespace
 {
 struct ApplicationSessionSender : public ApplicationSession

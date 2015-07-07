@@ -163,6 +163,19 @@ struct StubInputSurface : public mtd::StubSceneSurface
         observers.erase(it);
     }
 
+    void post_frame()
+    {
+        for (auto observer : observers)
+        {
+            observer->frame_posted(1);
+        }
+    }
+
+    void set_cursor_image_without_notifications(std::shared_ptr<mg::CursorImage> const& image)
+    {
+        cursor_image_ = image;
+    }
+
     geom::Rectangle const bounds;
     std::shared_ptr<mg::CursorImage> cursor_image_;
     
@@ -386,4 +399,34 @@ TEST_F(TestCursorController, cursor_image_not_reset_needlessly)
 
     targets.add_surface(mt::fake_shared(surface1));
     targets.add_surface(mt::fake_shared(surface2));
+}
+
+TEST_F(TestCursorController, updates_cursor_image_when_surface_posts_first_frame)
+{
+    using namespace ::testing;
+
+    StubInputSurface surface{rect_0_0_1_1,
+        std::make_shared<NamedCursorImage>(cursor_name_1)};
+    StubScene targets({mt::fake_shared(surface)});
+
+    // Cursor is set when we first create the controller
+    // because of the existing surface
+    EXPECT_CALL(cursor, show(CursorNamed(cursor_name_1))).Times(1);
+
+    mi::CursorController controller(mt::fake_shared(targets),
+        mt::fake_shared(cursor), default_cursor_image);
+
+    Mock::VerifyAndClearExpectations(&cursor);
+
+    surface.set_cursor_image_without_notifications(
+        std::make_shared<NamedCursorImage>(cursor_name_2));
+
+    // First post should lead to cursor update
+    EXPECT_CALL(cursor, show(CursorNamed(cursor_name_2))).Times(1);
+    surface.post_frame();
+    Mock::VerifyAndClearExpectations(&cursor);
+
+    // Second post should have no effect
+    EXPECT_CALL(cursor, show(_)).Times(0);
+    surface.post_frame();
 }
