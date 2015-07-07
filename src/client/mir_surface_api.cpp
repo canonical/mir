@@ -29,6 +29,7 @@
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <functional>
+#include <algorithm>
 
 namespace mcl = mir::client;
 
@@ -540,12 +541,7 @@ try
 {
     mir::require(spec);
 
-    std::vector<MirRectangle> copy;
-    for (auto i = 0u; i < n_rects; i++)
-    {
-        copy.push_back(rectangles[i]);
-    }
-    spec->input_shape = copy;
+    std::copy(rectangles, rectangles+n_rects, spec->input_shape.value().begin());
 }
 catch (std::exception const& ex)
 {
