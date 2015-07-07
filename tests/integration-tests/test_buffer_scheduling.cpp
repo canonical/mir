@@ -363,15 +363,18 @@ TEST_P(WithThreeOrMoreBuffers, consumers_dont_recycle_startup_buffer )
 
 TEST_P(WithTwoOrMoreBuffers, consumer_cycles_through_all_available_buffers)
 {
-    auto acquirable_buffers = nbuffers - 1;
     auto tick = 0_t;
     std::vector<ScheduleEntry> schedule;
-    for(auto i = 0; i < acquirable_buffers; i++)
-        schedule.emplace_back(ScheduleEntry{tick++, {&producer}, {}});
+    for(auto i = 0; i < nbuffers; i++)
+        schedule.emplace_back(ScheduleEntry{tick++, {&producer}, {&consumer}});
     run_system(schedule);
 
     auto production_log = producer.production_log();
-    EXPECT_THAT(production_log, SizeIs(acquirable_buffers));
+    std::sort(production_log.begin(), production_log.end(),
+        [](BufferEntry const& a, BufferEntry const& b) { return a.id.as_value() > b.id.as_value(); });
+    auto it = std::unique(production_log.begin(), production_log.end());
+    production_log.erase(it, production_log.end());
+    EXPECT_THAT(production_log, SizeIs(nbuffers));
 }
 
 TEST_P(WithAnyNumberOfBuffers, compositor_can_always_get_a_buffer)
@@ -462,18 +465,17 @@ TEST_P(WithThreeOrMoreBuffers, multiple_fast_compositors_are_in_sync)
     EXPECT_THAT(consumption_log_2, Eq(production_log));
 }
 
-TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers)
+TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers_and_dont_block)
 {
     queue.allow_framedropping(true);
-    std::vector<ScheduleEntry> schedule = {
-        {2_t,  {&producer}, {}},
-        {4_t,  {&producer}, {}},
-        {6_t,  {&producer}, {}},
-        {8_t,  {&producer}, {}},
-    };
+    std::vector<ScheduleEntry> schedule;
+    for (auto i = 0; i < nbuffers * 3; i++)
+        schedule.emplace_back(ScheduleEntry{1_t, {&producer}, {}}); 
     run_system(schedule);
-    auto production_log = producer.production_log();
 
+    auto production_log = producer.production_log();
+    std::sort(production_log.begin(), production_log.end(),
+        [](BufferEntry const& a, BufferEntry const& b) { return a.id.as_value() > b.id.as_value(); });
     auto last = std::unique(production_log.begin(), production_log.end(),
         [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; });
     production_log.erase(last, production_log.end());
