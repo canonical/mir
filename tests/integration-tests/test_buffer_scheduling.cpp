@@ -380,20 +380,24 @@ TEST_P(WithThreeOrMoreBuffers, consumers_dont_recycle_startup_buffer )
 
 TEST_P(WithTwoOrMoreBuffers, consumer_cycles_through_all_available_buffers)
 {
-    auto acquirable_buffers = nbuffers - 1;
     auto tick = 0_t;
     std::vector<ScheduleEntry> schedule;
-    for(auto i = 0; i < acquirable_buffers; i++)
-        schedule.emplace_back(ScheduleEntry{tick++, {&producer}, {}});
+    for(auto i = 0; i < nbuffers; i++)
+        schedule.emplace_back(ScheduleEntry{tick++, {&producer}, {&consumer}});
     run_system(schedule);
 
     auto production_log = producer.production_log();
-    EXPECT_THAT(production_log, SizeIs(acquirable_buffers));
+    std::sort(production_log.begin(), production_log.end(),
+        [](BufferEntry const& a, BufferEntry const& b) { return a.id.as_value() > b.id.as_value(); });
+    auto it = std::unique(production_log.begin(), production_log.end());
+    production_log.erase(it, production_log.end());
+    EXPECT_THAT(production_log, SizeIs(nbuffers));
 }
 
 TEST_P(WithAnyNumberOfBuffers, compositor_can_always_get_a_buffer)
 {
     std::vector<ScheduleEntry> schedule = {
+        {0_t, {&producer}, {}},
         {1_t, {},          {&consumer}},
         {2_t, {},          {&consumer}},
         {3_t, {},          {&consumer}},
@@ -478,18 +482,17 @@ TEST_P(WithThreeOrMoreBuffers, multiple_fast_compositors_are_in_sync)
     EXPECT_THAT(consumption_log_2, Eq(production_log));
 }
 
-TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers)
+TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers_and_dont_block)
 {
     queue.allow_framedropping(true);
-    std::vector<ScheduleEntry> schedule = {
-        {2_t,  {&producer}, {}},
-        {4_t,  {&producer}, {}},
-        {6_t,  {&producer}, {}},
-        {8_t,  {&producer}, {}},
-    };
+    std::vector<ScheduleEntry> schedule;
+    for (auto i = 0; i < nbuffers * 3; i++)
+        schedule.emplace_back(ScheduleEntry{1_t, {&producer}, {}}); 
     run_system(schedule);
-    auto production_log = producer.production_log();
 
+    auto production_log = producer.production_log();
+    std::sort(production_log.begin(), production_log.end(),
+        [](BufferEntry const& a, BufferEntry const& b) { return a.id.as_value() > b.id.as_value(); });
     auto last = std::unique(production_log.begin(), production_log.end(),
         [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; });
     production_log.erase(last, production_log.end());
@@ -587,24 +590,6 @@ TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
     ASSERT_THAT(production_log, SizeIs(nbuffers + 1));
     EXPECT_THAT(production_log[nbuffers - 1].blockage, Eq(Access::blocked));
     EXPECT_THAT(production_log[nbuffers].blockage, Eq(Access::unblocked));
-}
-
-TEST_P(WithOneBuffer, with_single_buffer_compositor_acquires_resized_frames_eventually)
-{
-    unsigned int attempts = 100;
-    geom::Size const new_size{123,456};
-    queue.resize(new_size);
-
-    std::vector<ScheduleEntry> schedule = {
-        {1_t,  {&producer}, {&consumer}},
-    };
-
-    repeat_system_until(schedule, [&]{
-        if (consumer.last_size() == new_size) return false;
-        if (--attempts == 0) return false;
-        return true;
-    });
-    EXPECT_THAT(attempts, Ne(0));
 }
 
 // Regression test for LP: #1319765
