@@ -762,7 +762,6 @@ TEST_P(WithThreeBuffers, gives_new_compositor_the_newest_buffer_after_dropping_o
     EXPECT_THAT(production_log[1].id, Eq(comp2->id()));
 }
 
-//-------------------------------------------------------
 TEST_P(WithTwoOrMoreBuffers, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
