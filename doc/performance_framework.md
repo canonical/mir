@@ -12,7 +12,7 @@ Invoking tests
 
 To run a test, just execute the python3 script containing it.
 
-You need to ensure that the Mir performance framework can be found by python.
+We need to ensure that the Mir performance framework can be found by python.
 To do so, add the directory containing the mir_perf_framework/ directory (i.e.,
 its parent directory) to the PYTHONPATH env. variable:
 
@@ -35,12 +35,15 @@ reports we want to enable for each one of them:
 ### Specifying the executable to run
 
 By default the servers use the 'mir_demo_server' executable and the clients the
-'mir_demo_client_egltriangle' executable. You can override this by using the
-'executable' option. You can also set custom command line arguments to use when
-invoking the executable (even the default ones):
+'mir_demo_client_egltriangle' executable. We can override this by using the
+'executable' option. We can also set custom command line arguments to use when
+invoking the executable (even the default ones). Finally we can set extra
+environment variables using the 'env' option, which is a dictionary of variable
+names and values.
 
      server = Server(executable=shutil.which("my_test_server"),
-                     options=["--window-manager", "fullscreen"])
+                     options=["--window-manager", "fullscreen"],
+                     env = {"MIR_SERVER_MY_OPTION": "on"})
 
 ### Specifying the host server a server should connect to
 
@@ -139,4 +142,5 @@ list.
     print(events[i].name) # Random access is OK too!
 
 This is the recommend way of accessing the events, unless you need some
-functionality offered only by the babeltrace APIs.
+functionality offered only by the babeltrace APIs. Note, however, that
+creating the list of events may incur a small delay.
