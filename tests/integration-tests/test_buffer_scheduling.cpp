@@ -238,6 +238,14 @@ void repeat_system_until(
     }
 }
 
+size_t unique_ids_in(std::vector<BufferEntry> log)
+{
+    std::sort(log.begin(), log.end(),
+        [](BufferEntry const& a, BufferEntry const& b) { return a.id < b.id; });
+    auto it = std::unique(log.begin(), log.end(),
+        [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; } );
+    return std::distance(log.begin(), it);
+}
 
 //test infrastructure
 struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
@@ -772,9 +780,8 @@ TEST_P(WithTwoOrMoreBuffers, overlapping_compositors_get_different_frames)
         compositor_resources[oldest] = consumer.consume_resource();
     }
 
-    auto log = consumer.consumption_log();
-
     // Two compositors acquired, and they're always different...
+    auto log = consumer.consumption_log();
     for(auto i = 0u; i < log.size() - 1; i++)
         EXPECT_THAT(log[i].id, Ne(log[i+1].id));
 }
@@ -816,20 +823,16 @@ TEST_P(WithThreeOrMoreBuffers, slow_client_framerate_matches_compositor)
     EXPECT_THAT(blockages, Le(1));
 }
 
+//regression test for LP: #1396006, LP: #1379685
 TEST_P(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
-{  // Second regression test for LP: #1396006, LP: #1379685
+{
     queue.allow_framedropping(true);
 
-    // Fill 'er up
-    std::vector<mg::Buffer*> order;
     for (int f = 0; f < nbuffers; ++f)
         producer.produce();
 
-    // Composite all but one
     for (int n = 0; n < nbuffers - 1; ++n)
-    {
         consumer.consume();
-    }
 
     // Ensure it's not the newest frame that gets dropped to satisfy the
     // client.
@@ -843,14 +846,8 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
     // if that happens...
     auto producer_log = producer.production_log();
     auto consumer_log = producer.production_log();
-    if (!producer.can_produce())
-        SUCCEED();
-    else
-    {
-        ASSERT_THAT(producer_log, SizeIs(Gt(1)));
-        ASSERT_THAT(consumer_log, SizeIs(Gt(1)));
-        EXPECT_THAT(producer_log.back(), Eq(consumer_log.back()));
-    }
+    EXPECT_TRUE(!producer.can_produce() || 
+        (!producer_log.empty() && !consumer_log.empty() && producer_log.back() == consumer_log.back()));
 }
 
 /* Regression test for LP: #1306464 */
@@ -872,9 +869,7 @@ TEST_P(WithThreeBuffers, framedropping_client_acquire_does_not_block_when_no_ava
 
     /* Let the compositor acquire all ready buffers */
     for (int i = 0; i < nbuffers; ++i)
-    {
         consumer.consume();
-    }
 
     /* At this point the queue has 0 free buffers and 0 ready buffers
      * so the next client request should not be satisfied until
@@ -932,13 +927,7 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
         consumers[0]->consume();
     }
 
-    auto log = producer.production_log();
-    std::sort(log.begin(), log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id < b.id; });
-    auto it = std::unique(log.begin(), log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; } );
-    log.erase(it, log.end());
-    EXPECT_THAT(log, SizeIs(nbuffers));
+    EXPECT_THAT(unique_ids_in(producer.production_log()), Eq(nbuffers));
 }
 
 // Test that dynamic queue scaling/throttling actually works
@@ -955,12 +944,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     // Expect double-buffers as the steady state for fast clients
     auto log = producer.production_log();
     log.erase(log.begin(), log.begin() + discard);
-    std::sort(log.begin(), log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id < b.id; });
-    auto it = std::unique(log.begin(), log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; } );
-    log.erase(it, log.end());
-    EXPECT_THAT(log, SizeIs(2));
+    EXPECT_THAT(unique_ids_in(log), Eq(2));
     producer.reset_log();
 
     // Now check what happens if the client becomes slow...
@@ -973,12 +957,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 
     log = producer.production_log();
     log.erase(log.begin(), log.begin() + discard);
-    std::sort(log.begin(), log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id < b.id; });
-    it = std::unique(log.begin(), log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; } );
-    log.erase(it, log.end());
-    EXPECT_THAT(log, SizeIs(Ge(3)));
+    EXPECT_THAT(unique_ids_in(log), Ge(3));
     producer.reset_log();
 
     // And what happens if the client becomes fast again?...
@@ -990,16 +969,11 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     // Expect double-buffers as the steady state for fast clients
     log = producer.production_log();
     log.erase(log.begin(), log.begin() + discard);
-    std::sort(log.begin(), log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id < b.id; });
-    it = std::unique(log.begin(), log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; } );
-    log.erase(it, log.end());
-    EXPECT_THAT(log, SizeIs(2));
+    EXPECT_THAT(unique_ids_in(log), Eq(2));
 }
 
 //NOTE: compositors need 2 buffers in overlay/bypass cases, as they 
-// briefly need to arrange the next buffer while the previous one is still held onscreen
+//briefly need to arrange the next buffer while the previous one is still held onscreen
 TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
 {
     /*
@@ -1016,13 +990,30 @@ TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
         producer.produce();
     }
 
-    auto log = producer.production_log();
-    std::sort(log.begin(), log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id < b.id; });
-    auto it = std::unique(log.begin(), log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; } );
-    log.erase(it, log.end());
-    EXPECT_THAT(log, SizeIs(3));
+    EXPECT_THAT(unique_ids_in(producer.production_log()), Eq(3));
+}
+
+MATCHER_P(BufferIdIs, val, "")
+{
+    if (!arg) return false;
+    return arg->id() == val;
+}
+
+TEST_P(WithAnyNumberOfBuffers, can_snapshot_repeatedly_without_blocking)
+{
+    producer.produce();
+    consumer.consume();
+    auto const num_snapshots = nbuffers * 2u;
+    std::vector<std::shared_ptr<mg::Buffer>> snaps(num_snapshots);
+    for(auto i = 0u; i < num_snapshots; i++)
+    {
+        snaps[i] = queue.snapshot_acquire();
+        queue.snapshot_release(snaps[i]);
+    }
+
+    auto production_log = producer.production_log();
+    ASSERT_THAT(production_log, SizeIs(1));
+    EXPECT_THAT(snaps, Each(BufferIdIs(production_log.back().id)));
 }
 
 int const max_buffers_to_test{5};
