@@ -25,6 +25,7 @@
 #include "display_name.h"
 #include <EGL/egl.h>
 #include <list>
+#include <chrono>
 
 namespace mir
 {
@@ -65,6 +66,8 @@ public:
 
     //notify the DisplayDevice that the screen content was cleared in a way other than the above fns
     virtual void content_cleared() = 0;
+
+    virtual std::chrono::milliseconds recommended_sleep() const = 0;
 
 protected:
     DisplayDevice() = default;

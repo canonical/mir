@@ -115,3 +115,8 @@ bool mga::FBDevice::compatible_renderlist(RenderableList const&)
 void mga::FBDevice::content_cleared()
 {
 }
+
+std::chrono::milliseconds mga::FBDevice::recommended_sleep() const
+{
+    return std::chrono::milliseconds::zero();
+}

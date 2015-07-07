@@ -46,6 +46,7 @@ public:
     bool compatible_renderlist(RenderableList const& renderlist) override;
     void commit(std::list<DisplayContents> const& contents) override;
     void content_cleared() override;
+    std::chrono::milliseconds recommended_sleep() const override;
 
 private:
     bool buffer_is_onscreen(Buffer const&) const;
@@ -53,6 +54,7 @@ private:
 
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<SyncFileOps> const sync_ops;
+    std::chrono::milliseconds recommend_sleep{0};
 };
 
 }

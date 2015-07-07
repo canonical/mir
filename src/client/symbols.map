@@ -78,6 +78,8 @@ MIR_CLIENT_9 {
     mir_omnidirectional_resize_cursor_name;
     mir_open_hand_cursor_name;
     mir_orientation_event_get_direction;
+    mir_persistent_id_as_string;
+    mir_persistent_id_from_string;
     mir_persistent_id_is_valid;
     mir_persistent_id_release;
     mir_platform_message_create;
@@ -130,6 +132,7 @@ MIR_CLIENT_9 {
     mir_surface_set_state;
     mir_surface_set_swapinterval;
     mir_surface_spec_release;
+    mir_surface_spec_attach_to_foreign_parent;
     mir_surface_spec_set_buffer_usage;
     mir_surface_spec_set_fullscreen_on_output;
     mir_surface_spec_set_height;

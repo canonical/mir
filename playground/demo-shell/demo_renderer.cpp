@@ -228,9 +228,12 @@ void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
     if (d != decor_map.end())
     {
         auto& decor = d->second;
-        tessellate_shadow(primitives, renderable, shadow_radius);
-        tessellate_frame(primitives, renderable, titlebar_height,
-                         decor->name.c_str());
+        if (decor->type != Decoration::Type::none)
+        {
+            tessellate_shadow(primitives, renderable, shadow_radius);
+            tessellate_frame(primitives, renderable, titlebar_height,
+                             decor->name.c_str());
+        }
     }
 }
 
