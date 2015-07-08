@@ -286,7 +286,7 @@ std::weak_ptr<mg::Platform> the_graphics_platform{};
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
 }
 
-std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::Rectangle> const& display_rects)
+extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::Rectangle> const& display_rects)
 {
     return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
 }
@@ -329,13 +329,13 @@ void add_graphics_platform_options(
 {
 }
 
-void set_next_display_rects(
+extern "C" void set_next_display_rects(
     std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects)
 {
     chosen_display_rects = std::move(display_rects);
 }
 
-void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display)
+extern "C" void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display)
 {
     display_preset = display;
 }
