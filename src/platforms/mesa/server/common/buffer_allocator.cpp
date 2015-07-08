@@ -225,8 +225,8 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
      * accurate answer.
      */
     static std::vector<MirPixelFormat> const pixel_formats{
-        mir_pixel_format_xrgb_8888, // hardware or software
         mir_pixel_format_argb_8888, // hardware or software
+        mir_pixel_format_xrgb_8888, // hardware or software
         mir_pixel_format_rgb_888,   // software only
         mir_pixel_format_rgb_565,   // software only
         mir_pixel_format_rgba_5551, // software only
