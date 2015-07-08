@@ -27,7 +27,7 @@
 namespace mcl = mir::client;
 namespace mcla = mcl::android;
 
-extern "C" std::shared_ptr<mcl::ClientPlatform>
+std::shared_ptr<mcl::ClientPlatform>
 create_client_platform(mcl::ClientContext* context)
 {
     MirPlatformPackage platform;
@@ -39,7 +39,7 @@ create_client_platform(mcl::ClientContext* context)
     return std::make_shared<mcla::AndroidClientPlatform>(context);
 }
 
-extern "C" bool
+bool
 is_appropriate_module(mcl::ClientContext* context)
 {
     MirPlatformPackage platform;
