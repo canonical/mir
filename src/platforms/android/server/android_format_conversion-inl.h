@@ -45,11 +45,6 @@ inline static int to_android_format(MirPixelFormat format)
             return HAL_PIXEL_FORMAT_RGB_888;
         case mir_pixel_format_rgb_565:
             return HAL_PIXEL_FORMAT_RGB_565;
-        // http://developer.android.com/reference/android/graphics/PixelFormat.html
-        case mir_pixel_format_rgba_5551:
-            return 6;
-        case mir_pixel_format_rgba_4444:
-            return 7;
         default:
             return 0;
     }
@@ -69,11 +64,6 @@ inline static MirPixelFormat to_mir_format(int format)
             return mir_pixel_format_rgb_888;
         case HAL_PIXEL_FORMAT_RGB_565:
             return mir_pixel_format_rgb_565;
-        // http://developer.android.com/reference/android/graphics/PixelFormat.html
-        case 6:
-            return mir_pixel_format_rgba_5551;
-        case 7:
-            return mir_pixel_format_rgba_4444;
         default:
             return mir_pixel_format_invalid;
     }

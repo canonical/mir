@@ -32,10 +32,6 @@ TEST(PixelFormatConversion, conversion_to_android_test)
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGB_888, mga::to_android_format(mir_pixel_format_rgb_888));
     EXPECT_EQ(0, mga::to_android_format(mir_pixel_format_bgr_888));
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGB_565, mga::to_android_format(mir_pixel_format_rgb_565));
-
-    // http://developer.android.com/reference/android/graphics/PixelFormat.html
-    EXPECT_EQ(6, mga::to_android_format(mir_pixel_format_rgba_5551));
-    EXPECT_EQ(7, mga::to_android_format(mir_pixel_format_rgba_4444));
 }
 
 TEST(PixelFormatConversion, conversion_to_mir_test)
@@ -45,6 +41,4 @@ TEST(PixelFormatConversion, conversion_to_mir_test)
     EXPECT_EQ(mir_pixel_format_argb_8888, mga::to_mir_format(HAL_PIXEL_FORMAT_BGRA_8888));
     EXPECT_EQ(mir_pixel_format_rgb_888, mga::to_mir_format(HAL_PIXEL_FORMAT_RGB_888));
     EXPECT_EQ(mir_pixel_format_rgb_565, mga::to_mir_format(HAL_PIXEL_FORMAT_RGB_565));
-    EXPECT_EQ(mir_pixel_format_rgba_5551, mga::to_mir_format(6));
-    EXPECT_EQ(mir_pixel_format_rgba_4444, mga::to_mir_format(7));
 }
