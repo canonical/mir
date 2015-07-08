@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
 
     int arg;
     opterr = 0;
-    while ((arg = getopt (argc, argv, "hm:a:f:")) != -1)
+    while ((arg = getopt (argc, argv, "hm:a:p:")) != -1)
     {
         switch (arg)
         {
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
             alpha = atoi(optarg);
             break;
 
-        case 'f':
+        case 'p':
             pixel_format = (MirPixelFormat)atoi(optarg);
             break;
 
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
             puts("Usage:");
             puts("    -m <Mir server socket>");
             puts("    -a      Alpha for surfaces");
-            puts("    -f <N>  Force pixel format N");
+            puts("    -p <N>  Force pixel format N");
             puts("    -h      This help text");
             return -1;
         }
