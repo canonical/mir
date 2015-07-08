@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <GLES2/gl2ext.h>
+#include <endian.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -157,44 +158,48 @@ TEST_F(ShmBufferTest, uploads_rgba_4444_correctly)
 
 TEST_F(ShmBufferTest, uploads_xrgb_8888_correctly)
 {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT,
                                       size.width.as_int(), size.height.as_int(),
                                       0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
                                       stub_shm_file->fake_mapping));
-
+#endif
     mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_xrgb_8888);
     buf.gl_bind_to_texture();
 }
 
 TEST_F(ShmBufferTest, uploads_argb_8888_correctly)
 {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT,
                                       size.width.as_int(), size.height.as_int(),
                                       0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
                                       stub_shm_file->fake_mapping));
-
+#endif
     mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_argb_8888);
     buf.gl_bind_to_texture();
 }
 
 TEST_F(ShmBufferTest, uploads_xbgr_8888_correctly)
 {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                                       size.width.as_int(), size.height.as_int(),
                                       0, GL_RGBA, GL_UNSIGNED_BYTE,
                                       stub_shm_file->fake_mapping));
-
+#endif
     mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_xbgr_8888);
     buf.gl_bind_to_texture();
 }
 
 TEST_F(ShmBufferTest, uploads_abgr_8888_correctly)
 {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                                       size.width.as_int(), size.height.as_int(),
                                       0, GL_RGBA, GL_UNSIGNED_BYTE,
                                       stub_shm_file->fake_mapping));
-
+#endif
     mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_abgr_8888);
     buf.gl_bind_to_texture();
 }
