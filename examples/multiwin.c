@@ -69,6 +69,7 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
         break;
     case mir_pixel_format_xbgr_8888:
         pixel = 
+            /* Not filling in the X byte is correct but buggy (LP: #1423462) */
             (uint32_t)color->b << 16 |
             (uint32_t)color->g << 8  |
             (uint32_t)color->r;
@@ -82,6 +83,7 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
         break;
     case mir_pixel_format_xrgb_8888:
         pixel = 
+            /* Not filling in the X byte is correct but buggy (LP: #1423462) */
             (uint32_t)color->r << 16 |
             (uint32_t)color->g << 8  |
             (uint32_t)color->b;
