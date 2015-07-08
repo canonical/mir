@@ -181,83 +181,6 @@ static const MirDisplayOutput *find_active_output(
     return output;
 }
 
-/**
- * Choose a Mir pixel format that supports the already chosen EGLConfig.
- * 
- * In an ideal world we'd probably like to instead just do:
- *    eglGetConfigAttrib(d, c, EGL_NATIVE_VISUAL_ID, &pixel_format);
- * However that would require us implementing the EGL_NATIVE_VISUAL_ID
- * attribute on all Mir platforms first.
- *
- * It would be nice if we could share this function via a library. While it
- * can't live in libmirclient due to libEGL linkage we may publish it in
- * some helper library in future.
- */
-static MirPixelFormat choose_pixel_format(MirConnection* conn,
-    EGLDisplay disp, EGLConfig conf)
-{
-    EGLint r = 0, g = 0, b = 0, a = 0;
-
-    eglGetConfigAttrib(disp, conf, EGL_RED_SIZE, &r);
-    eglGetConfigAttrib(disp, conf, EGL_GREEN_SIZE, &g);
-    eglGetConfigAttrib(disp, conf, EGL_BLUE_SIZE, &b);
-    eglGetConfigAttrib(disp, conf, EGL_ALPHA_SIZE, &a);
-
-    unsigned int supported_format[mir_pixel_formats];
-    unsigned int supported_formats = 0;
-
-    mir_connection_get_available_surface_formats(conn,
-        supported_format, mir_pixel_formats, &supported_formats);
-
-    MirPixelFormat best_format = mir_pixel_format_invalid;
-
-    for (unsigned int f = 0; f < supported_formats; f++)
-    {
-        MirPixelFormat fmt = supported_format[f];
-        switch (fmt)
-        {
-        case mir_pixel_format_abgr_8888:
-        case mir_pixel_format_argb_8888:
-            if (a == 8 && b == 8 && g == 8 && r == 8)
-                return fmt;  /* Perfect match */
-            break;
-        case mir_pixel_format_xbgr_8888:
-        case mir_pixel_format_xrgb_8888:
-        case mir_pixel_format_bgr_888:
-        case mir_pixel_format_rgb_888:
-            if (a == 0 && b == 8 && g == 8 && r == 8)
-                return fmt;  /* Perfect match */
-            break;
-        case mir_pixel_format_rgb_565:
-            if (a == 0 && r == 5 && g == 6 && b == 5)
-                return fmt;
-            break;
-        case mir_pixel_format_rgba_5551:
-            if (a == 1 && r == 5 && g == 5 && b == 5)
-                return fmt;
-            break;
-        case mir_pixel_format_rgba_4444:
-            if (a == 4 && r == 4 && g == 4 && b == 4)
-                return fmt;
-            break;
-        default:
-            /* TODO: More pixel formats - LP: #1293950 */
-            fprintf(stderr, "FIXME: Unknown pixel format %d available\n",
-                            (int)fmt);
-            break;
-        }
-    }
-
-    if (best_format == mir_pixel_format_invalid)
-    {
-        fprintf(stderr, "Mir does not have any pixel format that supports "
-                        "%d:%d:%d:%d (%d bpp)\n",
-                        r, g, b, a, r+g+b+a);
-    }
-
-    return best_format;
-}
-
 mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                                 unsigned int *width, unsigned int *height)
 {
@@ -416,28 +339,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     connection = mir_connect_sync(mir_socket, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
-    egldisplay = eglGetDisplay(
-                    mir_connection_get_egl_native_display(connection));
-    CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
-
-    ok = eglInitialize(egldisplay, NULL, NULL);
-    CHECK(ok, "Can't eglInitialize");
-
-    EGLint attribs[] =
-    {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
-        EGL_RED_SIZE, rgb_bits,
-        EGL_GREEN_SIZE, rgb_bits,
-        EGL_BLUE_SIZE, rgb_bits,
-        EGL_ALPHA_SIZE, mir_eglapp_background_opacity == 1.0f ? 0 : rgb_bits,
-        EGL_NONE
-    };
-    ok = eglChooseConfig(egldisplay, attribs, &eglconfig, 1, &neglconfigs);
-    CHECK(ok, "Could not eglChooseConfig");
-    CHECK(neglconfigs > 0, "No EGL config available");
-
     /* eglapps are interested in the screen size, so
        use mir_connection_create_display_config */
     MirDisplayConfiguration* display_config =
@@ -453,6 +354,27 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     const MirDisplayMode *mode = &output->modes[output->current_mode];
 
+    unsigned int format[mir_pixel_formats];
+    unsigned int nformats;
+
+    mir_connection_get_available_surface_formats(connection,
+        format, mir_pixel_formats, &nformats);
+
+    MirPixelFormat pixel_format = format[0];
+    for (unsigned int f = 0; f < nformats; f++)
+    {
+        const int opaque = (format[f] == mir_pixel_format_xbgr_8888 ||
+                            format[f] == mir_pixel_format_xrgb_8888 ||
+                            format[f] == mir_pixel_format_bgr_888);
+
+        if ((mir_eglapp_background_opacity == 1.0f && opaque) ||
+            (mir_eglapp_background_opacity < 1.0f && !opaque))
+        {
+            pixel_format = format[f];
+            break;
+        }
+    }
+
     printf("Current active output is %dx%d %+d%+d\n",
            mode->horizontal_resolution, mode->vertical_resolution,
            output->position_x, output->position_y);
@@ -464,9 +386,20 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     mir_display_config_destroy(display_config);
 
-    MirPixelFormat pixel_format =
-        choose_pixel_format(connection, egldisplay, eglconfig);
-    printf("Using pixel format %d\n", (int)pixel_format);
+    printf("Server supports %d of %d surface pixel formats. Using format: %d\n",
+        nformats, mir_pixel_formats, pixel_format);
+    EGLint attribs[] =
+    {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+        EGL_RED_SIZE, rgb_bits,
+        EGL_GREEN_SIZE, rgb_bits,
+        EGL_BLUE_SIZE, rgb_bits,
+        EGL_ALPHA_SIZE, mir_eglapp_background_opacity == 1.0f ? 0 : rgb_bits,
+        EGL_NONE
+    };
+
     MirSurfaceSpec *spec =
         mir_connection_create_spec_for_normal_surface(connection, *width, *height, pixel_format);
 
@@ -493,6 +426,17 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     MirCursorConfiguration *conf = mir_cursor_configuration_from_name(cursor_name);
     mir_surface_configure_cursor(surface, conf);
     mir_cursor_configuration_destroy(conf);
+
+    egldisplay = eglGetDisplay(
+                    mir_connection_get_egl_native_display(connection));
+    CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
+
+    ok = eglInitialize(egldisplay, NULL, NULL);
+    CHECK(ok, "Can't eglInitialize");
+
+    ok = eglChooseConfig(egldisplay, attribs, &eglconfig, 1, &neglconfigs);
+    CHECK(ok, "Could not eglChooseConfig");
+    CHECK(neglconfigs > 0, "No EGL config available");
 
     eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
         (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface)), NULL);
