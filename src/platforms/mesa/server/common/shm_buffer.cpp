@@ -138,9 +138,10 @@ void mgm::ShmBuffer::gl_bind_to_texture()
     {
         /*
          * All existing Mir logic assumes that strides are whole multiples of
-         * pixels. And OpenGL assumes rows are always multiples of 4 bytes.
-         * These assumptions always agreed when we only had 4-byte pixels
-         * but now we support 2/3-byte pixels we need to be more careful...
+         * pixels. And OpenGL defaults to expecting strides are multiples of
+         * 4 bytes. These assumptions used to be compatible when we only had
+         * 4-byte pixels but now we support 2/3-byte pixels we need to be more
+         * careful...
          */
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
