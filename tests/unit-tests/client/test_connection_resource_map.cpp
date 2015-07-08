@@ -54,6 +54,25 @@ TEST_F(ConnectionResourceMap, maps_surface_and_bufferstream_when_surface_inserte
     EXPECT_TRUE(stream_called);
 }
 
+TEST_F(ConnectionResourceMap, removes_surface_and_bufferstream_when_surface_removed)
+{
+    using namespace testing;
+    auto stream_called = false;
+    mcl::ConnectionSurfaceMap map;
+    map.insert(surface_id, &surface);
+    map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* stream) {
+        EXPECT_THAT(stream, Eq(surface.get_buffer_stream()));
+        stream_called = true;
+    });
+    EXPECT_TRUE(stream_called);
+
+    map.erase(surface_id);
+
+    EXPECT_THROW({
+        map.with_stream_do(stream_id, [](mcl::ClientBufferStream*){});
+    }, std::runtime_error);
+}
+
 TEST_F(ConnectionResourceMap, maps_streams)
 {
     using namespace testing;

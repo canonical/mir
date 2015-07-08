@@ -107,7 +107,8 @@ public:
     bool valid() const override;
     
     void buffer_available(mir::protobuf::Buffer const& buffer) override;
-    
+    void buffer_unavailable() override;
+ 
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
@@ -120,14 +121,13 @@ private:
         std::function<void()> done);
     void on_configured();
     void release_cpu_region();
-    MirWaitHandle* exchange(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
     MirWaitHandle* submit(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
 
     mutable std::mutex mutex; // Protects all members of *this
 
-    bool using_exchange_buffer = true;
     std::function<void()> on_incoming_buffer;
     std::queue<mir::protobuf::Buffer> incoming_buffers;
+    bool server_connection_lost {false};
 
     MirConnection* connection;
     mir::protobuf::DisplayServer& display_server;

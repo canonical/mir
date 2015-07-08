@@ -41,6 +41,8 @@ Build-Depends: cmake,
                abi-compliance-checker,
                libevdev-dev,
                uuid-dev,
+               python3,
+               dh-python,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
@@ -383,3 +385,20 @@ Description: Display server for Ubuntu - android driver metapackage
  .
  This package depends on a full set of graphics drivers for running Mir on top
  of an existing Android driver stack.
+
+Package: python3-mir-perf-framework
+Section: python
+Architecture: all
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${python3:Depends},
+         python3-evdev,
+         python3-babeltrace,
+         mir-demos
+Description: Display server for Ubuntu - performance testing framework
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package contains a python3 framework to facilitate writing performance
+ tests for Mir. It also contains a few interesting performance tests written
+ using the framework.
