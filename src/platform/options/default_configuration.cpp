@@ -130,7 +130,9 @@ mo::DefaultConfiguration::DefaultConfiguration(
     argv(argv),
     unparsed_arguments_handler{handler},
     program_options(std::make_shared<boost::program_options::options_description>(
-        description_text(argv[0], config_file)))
+        description_text(
+            (argc && argv)?argv[0]:"mir-server",
+            config_file)))
 {
     using namespace options;
     namespace po = boost::program_options;
