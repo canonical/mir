@@ -94,8 +94,6 @@ TEST_F(ShmBufferTest, cannot_be_used_for_bypass)
 
 TEST_F(ShmBufferTest, cant_upload_bgr_888)
 {
-    using namespace ::testing;
-
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, _,
                                       size.width.as_int(), size.height.as_int(),
                                       0, _, _,
