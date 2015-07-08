@@ -29,6 +29,7 @@ namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
+using namespace testing;
 
 namespace
 {
@@ -107,6 +108,7 @@ TEST_F(ShmBufferTest, cant_upload_bgr_888)
 
 TEST_F(ShmBufferTest, uploads_rgb_888_correctly)
 {
+    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
                                       size.width.as_int(), size.height.as_int(),
                                       0, GL_RGB, GL_UNSIGNED_BYTE,
@@ -118,6 +120,8 @@ TEST_F(ShmBufferTest, uploads_rgb_888_correctly)
 
 TEST_F(ShmBufferTest, uploads_rgb_565_correctly)
 {
+    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT,
+                                       AnyOf(Eq(1),Eq(2))));
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
                                       size.width.as_int(), size.height.as_int(),
                                       0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5,
@@ -129,6 +133,8 @@ TEST_F(ShmBufferTest, uploads_rgb_565_correctly)
 
 TEST_F(ShmBufferTest, uploads_rgba_5551_correctly)
 {
+    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT,
+                                       AnyOf(Eq(1),Eq(2))));
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                                       size.width.as_int(), size.height.as_int(),
                                       0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1,
@@ -140,6 +146,8 @@ TEST_F(ShmBufferTest, uploads_rgba_5551_correctly)
 
 TEST_F(ShmBufferTest, uploads_rgba_4444_correctly)
 {
+    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT,
+                                       AnyOf(Eq(1),Eq(2))));
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                                       size.width.as_int(), size.height.as_int(),
                                       0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4,
