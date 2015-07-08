@@ -197,6 +197,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     unsigned int output_id = mir_display_output_id_invalid;
     char *mir_socket = NULL;
     char const* cursor_name = mir_default_cursor_name;
+    unsigned int rgb_bits = 8;
 
     if (argc > 1)
     {
@@ -226,6 +227,21 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                         else
                         {
                             printf("Invalid opacity value: %s\n", arg);
+                            help = 1;
+                        }
+                    }
+                    break;
+                case 'e':
+                    {
+                        arg += 2;
+                        if (!arg[0] && i < argc-1)
+                        {
+                            ++i;
+                            arg = argv[i];
+                        }
+                        if (sscanf(arg, "%u", &rgb_bits) != 1)
+                        {
+                            printf("Invalid colour channel depth: %s\n", arg);
                             help = 1;
                         }
                     }
@@ -305,6 +321,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
             {
                 printf("Usage: %s [<options>]\n"
                        "  -b               Background opacity (0.0 - 1.0)\n"
+                       "  -e               EGL colour channel size in bits\n"
                        "  -h               Show this help text\n"
                        "  -f               Force full screen\n"
                        "  -o ID            Force placement on output monitor ID\n"
@@ -371,13 +388,15 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     printf("Server supports %d of %d surface pixel formats. Using format: %d\n",
         nformats, mir_pixel_formats, pixel_format);
-    unsigned int bpp = 8 * MIR_BYTES_PER_PIXEL(pixel_format);
     EGLint attribs[] =
     {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
-        EGL_BUFFER_SIZE, bpp,
+        EGL_RED_SIZE, rgb_bits,
+        EGL_GREEN_SIZE, rgb_bits,
+        EGL_BLUE_SIZE, rgb_bits,
+        EGL_ALPHA_SIZE, mir_eglapp_background_opacity == 1.0f ? 0 : rgb_bits,
         EGL_NONE
     };
 

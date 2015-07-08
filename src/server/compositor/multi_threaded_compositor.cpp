@@ -29,6 +29,7 @@
 #include "mir/scene/surface.h"
 #include "mir/terminate_with_current_exception.h"
 #include "mir/raii.h"
+#include "mir/unwind_helpers.h"
 #include "mir/thread_name.h"
 
 #include <thread>
@@ -41,32 +42,6 @@ using namespace std::literals::chrono_literals;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
-
-namespace
-{
-
-class ApplyIfUnwinding
-{
-public:
-    ApplyIfUnwinding(std::function<void()> const& apply)
-        : apply{apply}
-    {
-    }
-
-    ~ApplyIfUnwinding()
-    {
-        if (std::uncaught_exception())
-            apply();
-    }
-
-private:
-    ApplyIfUnwinding(ApplyIfUnwinding const&) = delete;
-    ApplyIfUnwinding& operator=(ApplyIfUnwinding const&) = delete;
-
-    std::function<void()> const apply;
-};
-
-}
 
 namespace mir
 {
@@ -118,12 +93,12 @@ public:
     void operator()() noexcept  // noexcept is important! (LP: #1237332)
     try
     {
-        ApplyIfUnwinding on_startup_failure{
+        auto on_startup_failure = on_unwind(
             [this]
             {
                 if (started_future.wait_for(0s) != std::future_status::ready)
                     started.set_exception(std::current_exception());
-            }};
+            });
 
         mir::set_thread_name("Mir/Comp");
 
@@ -307,8 +282,8 @@ void mc::MultiThreadedCompositor::start()
     report->started();
 
     /* To cleanup state if any code below throws */
-    ApplyIfUnwinding cleanup_if_unwinding{
-        [this]{ destroy_compositing_threads(); }};
+    auto cleanup_if_unwinding = on_unwind(
+        [this]{ destroy_compositing_threads(); });
 
     create_compositing_threads();
 
@@ -330,8 +305,8 @@ void mc::MultiThreadedCompositor::stop()
     state = CompositorState::stopping;
 
     /* To cleanup state if any code below throws */
-    ApplyIfUnwinding cleanup_if_unwinding{
-        [this]{ state = CompositorState::started; }};
+    auto cleanup_if_unwinding = on_unwind(
+        [this]{ state = CompositorState::started; });
 
     /* Remove the observer before destroying the compositing threads */
     scene->remove_observer(observer);
