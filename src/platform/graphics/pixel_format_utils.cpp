@@ -28,9 +28,9 @@ const struct
 {
     {mir_pixel_format_invalid,   0,0,0,0},
     {mir_pixel_format_abgr_8888, 8,8,8,8},
-    {mir_pixel_format_xbgr_8888, 8,8,8,8},
+    {mir_pixel_format_xbgr_8888, 8,8,8,0},
     {mir_pixel_format_argb_8888, 8,8,8,8},
-    {mir_pixel_format_xrgb_8888, 8,8,8,8},
+    {mir_pixel_format_xrgb_8888, 8,8,8,0},
     {mir_pixel_format_bgr_888,   8,8,8,0},
     {mir_pixel_format_rgb_888,   8,8,8,0},
     {mir_pixel_format_rgb_565,   5,6,5,0},
