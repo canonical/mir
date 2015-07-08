@@ -114,20 +114,22 @@ typedef enum MirPromptSessionState
 } MirPromptSessionState;
 
 /**
- * 32-bit pixel formats:
- * The order of components in a format enum matches the order of the components
+ * 32-bit pixel formats (8888):
+ * The order of components in the enum matches the order of the components
  * as they would be written in an integer representing a pixel value of that
- * format. For example; abgr_8888 corresponds to 0xAABBGGRR, which will end up
- * as R,G,B,A in memory on a little endian system, and as A,B,G,R on a big
- * endian system.
+ * format. For example; abgr_8888 should be coded as 0xAABBGGRR, which will
+ * end up as R,G,B,A in memory on a little endian system, and as A,B,G,R on a
+ * big endian system.
  *
- * 24-bit pixel formats:
+ * 24-bit pixel formats (888):
  * These are in literal byte order, regardless of CPU architecture it's always
- * the same.
+ * the same. Writing these 3-byte pixels is typically slower than other formats
+ * but uses less memory than 32-bit and is endian-independent.
  *
- * 16-bit pixel formats:
+ * 16-bit pixel formats (565/5551/4444):
  * Always interpreted as one 16-bit integer per pixel with components in
- * high-to-low bit order following the format name.
+ * high-to-low bit order following the format name. These are the fastest
+ * formats, however colour quality is visibly lower.
  */
 typedef enum MirPixelFormat
 {
@@ -143,7 +145,7 @@ typedef enum MirPixelFormat
     mir_pixel_format_rgba_4444 = 9,
     /*
      * TODO: Big endian support would require additional formats in order to
-     *       match up with GL_RGBA and GL_BGRA_EXT:
+     *       composite software surfaces using OpenGL (GL_RGBA/GL_BGRA_EXT):
      *         mir_pixel_format_rgb[ax]_8888
      *         mir_pixel_format_bgr[ax]_8888
      */
