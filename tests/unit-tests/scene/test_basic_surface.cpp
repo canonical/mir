@@ -965,19 +965,3 @@ TEST_F(BasicSurfaceTest, buffers_ready_correctly_reported)
     EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(0));
     EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(2));
 }
-
-TEST_F(BasicSurfaceTest, input_rectangles_reset_when_surface_resized)
-{
-    surface.resize({10, 10});
-    surface.move_to({0, 0});
-    
-    surface.set_input_region({geom::Rectangle{{0, 0},{1, 1}}} );
-    EXPECT_TRUE(surface.input_area_contains({0, 0}));
-    EXPECT_FALSE(surface.input_area_contains({1, 1}));
-    surface.resize({9, 9});
-    EXPECT_TRUE(surface.input_area_contains({0, 0}));
-    EXPECT_TRUE(surface.input_area_contains({1, 1}));
-    surface.set_input_region({geom::Rectangle{{0, 0},{1, 1}}} );
-    EXPECT_TRUE(surface.input_area_contains({0, 0}));
-    EXPECT_FALSE(surface.input_area_contains({1, 1}));
-}
