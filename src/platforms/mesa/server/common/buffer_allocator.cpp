@@ -213,18 +213,21 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 {
     /*
-     * supported_pixel_formats() is kind of a fudge. The right answer depends
+     * supported_pixel_formats() is kind of a kludge. The right answer depends
      * on whether you're using hardware or software, and it depends on
      * the usage type (e.g. scanout), and it depends on the GPU at run-time.
-     *   For software buffer compositing we actually support ALL Mir pixel
+     *   For software buffer compositing we actually support all Mir pixel
      * formats except for BGR (because OpenGL doesn't support it). For
      * hardware buffers, we're more limited by GBM which claims to only
      * support the first two in this list. So as a roughly accurate compromise
      * we have this list... but I would rather supported_pixel_formats()
      * did not exist at all. Because we clearly cannot give a totally
-     * accurate answer.
+     * accurate answer for all use cases.
      */
     static std::vector<MirPixelFormat> const pixel_formats{
+        // We would prefer xrgb to be first for performance. However presently
+        // argb is more convenient as it forces clients to fill in the alpha
+        // byte, which provides a nice workaround for LP: #1423462.
         mir_pixel_format_argb_8888, // hardware or software
         mir_pixel_format_xrgb_8888, // hardware or software
         mir_pixel_format_rgb_888,   // software only
