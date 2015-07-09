@@ -44,74 +44,78 @@ mir::Fd mix::XDispatchable::watch_fd() const
     return fd;
 }
 
-bool mix::XDispatchable::dispatch(md::FdEvents /*events*/)
+bool mix::XDispatchable::dispatch(md::FdEvents events)
 {
-    XEvent xev;
+	auto ret = true;
 
-    XNextEvent(x_display, &xev);
+    if (events & (md::FdEvent::remote_closed | md::FdEvent::error))
+        ret = false;
 
-    if (sink)
+    if (events & md::FdEvent::readable)
     {
-        switch (xev.type)
+        XEvent xev;
+
+        XNextEvent(x_display, &xev);
+
+        if (sink)
         {
-        case KeyPress:
-        case KeyRelease:
-        {
-        	MirEvent event;
-            XKeyEvent &xkev = (XKeyEvent &)xev;
-            static const int STRMAX = 32;
-            char str[STRMAX];
-            KeySym keysym;
+            switch (xev.type)
+            {
+            case KeyPress:
+            case KeyRelease:
+            {
+            	MirEvent event;
+                XKeyEvent &xkev = (XKeyEvent &)xev;
+                static const int STRMAX = 32;
+                char str[STRMAX];
+                KeySym keysym;
 
-            auto count = XLookupString(&xkev, str, STRMAX, &keysym, NULL);
+                auto count = XLookupString(&xkev, str, STRMAX, &keysym, NULL);
 
-            mir::log_info("Key event : type=%d, serial=%u, send_event=%d, display=%p, window=%p, root=%p, subwindow=%p, time=%d, x=%d, y=%d, x_root=%d, y_root=%d, state=%0X, keycode=%d, same_screen=%d",
-                xkev.type, xkev.serial, xkev.send_event, xkev.display, xkev.window, xkev.root, xkev.subwindow, xkev.time, xkev.x, xkev.y, xkev.x_root, xkev.y_root, xkev.state, xkev.keycode, xkev.same_screen);
+                mir::log_info("Key event : type=%d, serial=%u, send_event=%d, display=%p, window=%p, root=%p, subwindow=%p, time=%d, x=%d, y=%d, x_root=%d, y_root=%d, state=%0X, keycode=%d, same_screen=%d",
+                    xkev.type, xkev.serial, xkev.send_event, xkev.display, xkev.window, xkev.root, xkev.subwindow, xkev.time, xkev.x, xkev.y, xkev.x_root, xkev.y_root, xkev.state, xkev.keycode, xkev.same_screen);
 
-            event.key.type = mir_event_type_key;
-            event.key.device_id = 0;
-            event.key.source_id = 0;
-            event.key.action = xev.type == KeyPress ?
-                                   mir_keyboard_action_down : mir_keyboard_action_up;
-            event.key.modifiers = mir_input_event_modifier_none;
-            event.key.key_code = keysym;
-            event.key.scan_code = xkev.keycode-8;
+                event.key.type = mir_event_type_key;
+                event.key.device_id = 0;
+                event.key.source_id = 0;
+                event.key.action = xev.type == KeyPress ?
+                                       mir_keyboard_action_down : mir_keyboard_action_up;
+                event.key.modifiers = mir_input_event_modifier_none;
+                event.key.key_code = keysym;
+                event.key.scan_code = xkev.keycode-8;
 
-            // TODO: read time from xkev
-//            event.key.event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-//                                       std::chrono::system_clock::now().time_since_epoch()).count();
+                std::chrono::time_point<std::chrono::system_clock> tp;
+                std::chrono::milliseconds msec(xkev.time);
+                tp += msec;
+                event.key.event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch());
 
-            std::chrono::time_point<std::chrono::system_clock> tp;
-            std::chrono::milliseconds msec(xkev.time);
-            tp += msec;
-            event.key.event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch());
+                for (int i=0; i<count; i++)
+                    mir::log_info("buffer[%d]='%c', key_code=%d, scan_code=%d, event_time=%" PRId64, i, str[i], keysym, xkev.keycode-8, event.key.event_time);
 
-            for (int i=0; i<count; i++)
-                mir::log_info("buffer[%d]='%c', key_code=%d, scan_code=%d, event_time=%" PRId64, i, str[i], keysym, xkev.keycode-8, event.key.event_time);
+                sink->handle_input(event);
+                break;
+            }
 
-            sink->handle_input(event);
-            break;
-        }
+            case MappingNotify:
+                mir::log_info("Mapping changed at server. Refreshing the cache.");
+                XRefreshKeyboardMapping((XMappingEvent*)&xev);
+                break;
 
-        case MappingNotify:
-            mir::log_info("Mapping changed at server. Refreshing the cache.");
-        	XRefreshKeyboardMapping((XMappingEvent*)&xev);
-        	break;
-
-        default:
-            mir::log_info("Uninteresting event");
-            break;
+            default:
+                mir::log_info("Uninteresting event");
+                break;
         }
     }
     else
         mir::log_info("input event detected with no sink to handle it");
+    }
 
-    return true;
+    return ret;
 }
 
 md::FdEvents mix::XDispatchable::relevant_events() const
 {
-    return md::FdEvent::readable;
+    return md::FdEvent::readable | md::FdEvent::error | md::FdEvent::remote_closed;
 }
 
 void mix::XDispatchable::set_input_sink(mi::InputSink *input_sink)
