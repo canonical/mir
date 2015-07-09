@@ -541,7 +541,12 @@ try
 {
     mir::require(spec);
 
-    std::copy(rectangles, rectangles+n_rects, spec->input_shape.value().begin());
+    std::vector<MirRectangle> copy;
+    for (auto i = 0u; i < n_rects; i++)
+    {
+        copy.emplace_back(rectangles[i]);
+    }
+    spec->input_shape = copy;
 }
 catch (std::exception const& ex)
 {
