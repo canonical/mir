@@ -61,12 +61,13 @@ struct MockAlarmFactory : public mir::time::AlarmFactory
 struct KeyRepeatDispatcher : public testing::Test
 {
     KeyRepeatDispatcher()
-        : dispatcher(mock_next_dispatcher, mock_alarm_factory, true, repeat_time)
+        : dispatcher(mock_next_dispatcher, mock_alarm_factory, true, repeat_time, repeat_delay)
     {
     }
     std::shared_ptr<mtd::MockInputDispatcher> mock_next_dispatcher = std::make_shared<mtd::MockInputDispatcher>();
     std::shared_ptr<MockAlarmFactory> mock_alarm_factory = std::make_shared<MockAlarmFactory>();
-    std::chrono::milliseconds const repeat_time{1};
+    std::chrono::milliseconds const repeat_time{2};
+    std::chrono::milliseconds const repeat_delay{1};
     mi::KeyRepeatDispatcher dispatcher;
 };
 }
@@ -106,10 +107,10 @@ TEST_F(KeyRepeatDispatcher, schedules_alarm_to_repeat_key_down)
     EXPECT_CALL(*mock_alarm_factory, create_alarm_adapter(_)).Times(1).
         WillOnce(DoAll(SaveArg<0>(&alarm_function), Return(mock_alarm)));
     // Once for initial down and again when invoked
-    EXPECT_CALL(*mock_alarm, reschedule_in(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_alarm, reschedule_in(repeat_time)).Times(1).WillOnce(Return(true));
     EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyDownEvent())).Times(1);
     EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyRepeatEvent())).Times(1);
-    EXPECT_CALL(*mock_alarm, reschedule_in(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_alarm, reschedule_in(repeat_delay)).Times(1).WillOnce(Return(true));
     EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyUpEvent())).Times(1);
 
     // Schedule the repeat

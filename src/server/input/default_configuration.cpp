@@ -161,14 +161,15 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
     return input_dispatcher(
         [this]()
         {
-            std::chrono::milliseconds const key_repeat_timeout{20};
+            std::chrono::milliseconds const key_repeat_timeout{500};
+            std::chrono::milliseconds const key_repeat_delay{50};
 
             auto const options = the_options();
             auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
                 the_event_filter_chain_dispatcher(), the_main_loop(), enable_repeat,
-                key_repeat_timeout);
+                key_repeat_timeout, key_repeat_delay);
         });
 }
 
