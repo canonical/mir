@@ -16,6 +16,7 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
+#include "mir/options/program_option.h"
 #include "src/platforms/mesa/server/x11/platform.h"
 
 #include "mir/test/doubles/platform_factory.h"
@@ -90,31 +91,35 @@ TEST_F(X11GraphicsPlatformTest, failure_to_create_gbm_device_results_in_an_error
 TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_no_drm_udev_devices)
 {
     mtf::UdevEnvironment udev_environment;
+    mir::options::ProgramOption options;
 
     mir::SharedLibrary platform_lib{mtf::server_platform("server-mesa-x11")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::unsupported, probe());
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
 }
 
 TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_x_cannot_open_display)
 {
     using namespace ::testing;
 
+    mir::options::ProgramOption options;
+
     EXPECT_CALL(mock_x11, XOpenDisplay(_))
         .WillRepeatedly(Return(nullptr));
 
     mir::SharedLibrary platform_lib{mtf::server_platform("server-mesa-x11")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::unsupported, probe());
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
 }
 
 TEST_F(X11GraphicsPlatformTest, probe_returns_best_when_drm_render_nodes_exist)
 {
     mtf::UdevEnvironment udev_environment;
+    mir::options::ProgramOption options;
 
     udev_environment.add_standard_device("standard-drm-render-nodes");
 
     mir::SharedLibrary platform_lib{mtf::server_platform("server-mesa-x11")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::best, probe());
+    EXPECT_EQ(mg::PlatformPriority::best, probe(options));
 }
