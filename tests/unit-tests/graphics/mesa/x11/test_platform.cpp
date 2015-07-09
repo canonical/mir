@@ -44,7 +44,6 @@ public:
     {
         ::testing::Mock::VerifyAndClearExpectations(&mock_drm);
         ::testing::Mock::VerifyAndClearExpectations(&mock_gbm);
-//        fake_devices.add_standard_device("standard-drm-devices");
     }
 
     std::shared_ptr<mg::Platform> create_platform()
@@ -55,7 +54,6 @@ public:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockX11> mock_x11;
-//    mtf::UdevEnvironment fake_devices;
 };
 }
 
@@ -66,15 +64,7 @@ TEST_F(X11GraphicsPlatformTest, failure_to_open_x11_display_results_in_an_error)
     EXPECT_CALL(mock_x11, XOpenDisplay(_))
         .WillRepeatedly(Return(nullptr));
 
-    try
-    {
-        auto platform = create_platform();
-    } catch(...)
-    {
-        return;
-    }
-
-    FAIL() << "Expected an exception to be thrown.";
+    EXPECT_THROW({ create_platform(); }, std::exception);
 }
 
 TEST_F(X11GraphicsPlatformTest, failure_to_open_drm_results_in_an_error)
@@ -84,15 +74,7 @@ TEST_F(X11GraphicsPlatformTest, failure_to_open_drm_results_in_an_error)
     EXPECT_CALL(mock_drm, open(_,_,_))
             .WillRepeatedly(Return(-1));
 
-    try
-    {
-        auto platform = create_platform();
-    } catch(...)
-    {
-        return;
-    }
-
-    FAIL() << "Expected an exception to be thrown.";
+    EXPECT_THROW({ create_platform(); }, std::exception);
 }
 
 TEST_F(X11GraphicsPlatformTest, failure_to_create_gbm_device_results_in_an_error)
@@ -102,15 +84,7 @@ TEST_F(X11GraphicsPlatformTest, failure_to_create_gbm_device_results_in_an_error
     EXPECT_CALL(mock_gbm, gbm_create_device(mock_drm.fake_drm.fd()))
         .WillRepeatedly(Return(nullptr));
 
-    try
-    {
-        auto platform = create_platform();
-    } catch(...)
-    {
-        return;
-    }
-
-    FAIL() << "Expected an exception to be thrown.";
+    EXPECT_THROW({ create_platform(); }, std::exception);
 }
 
 TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_no_drm_udev_devices)
