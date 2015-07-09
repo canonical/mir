@@ -90,6 +90,7 @@ void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 {
     std::lock_guard<std::mutex> lk(guard);
     surfaces.erase(surface_id);
+    streams.erase(mf::BufferStreamId(surface_id.as_value()));
 }
 
 void mcl::ConnectionSurfaceMap::with_stream_do(
@@ -109,6 +110,13 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
         ss << __PRETTY_FUNCTION__ << "executed with non-existent stream ID " << stream_id;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+}
+
+void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBufferStream*)> const& fn) const
+{
+    std::unique_lock<std::mutex> lk(guard);
+    for(auto const& stream : streams)
+        fn(stream.second.stream);
 }
 
 void mcl::ConnectionSurfaceMap::insert(mf::BufferStreamId stream_id, ClientBufferStream* stream)

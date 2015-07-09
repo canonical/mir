@@ -53,6 +53,21 @@ void mrl::SessionMediatorReport::session_exchange_buffer_called(std::string cons
     log->log(ml::Severity::informational, "session_exchange_buffer_called(\"" + app_name + "\")", component);
 }
 
+void mrl::SessionMediatorReport::session_submit_buffer_called(std::string const& app_name)
+{
+    log->log(ml::Severity::informational, "session_submit_buffer_called(\"" + app_name + "\")", component);
+}
+
+void mrl::SessionMediatorReport::session_allocate_buffers_called(std::string const& app_name)
+{
+    log->log(ml::Severity::informational, "session_allocate_buffers_called(\"" + app_name + "\")", component);
+}
+
+void mrl::SessionMediatorReport::session_release_buffers_called(std::string const& app_name)
+{
+    log->log(ml::Severity::informational, "session_release_buffers_called(\"" + app_name + "\")", component);
+}
+
 void mrl::SessionMediatorReport::session_release_surface_called(std::string const& app_name)
 {
     log->log(ml::Severity::informational, "session_release_surface_called(\"" + app_name + "\")", component);
