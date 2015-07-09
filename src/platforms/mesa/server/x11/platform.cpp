@@ -115,7 +115,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
         {
             static_cast<void>(device);
 
-            return mg::PlatformPriority::supported;
+            return mg::PlatformPriority::best;
         }
     }
     return mg::PlatformPriority::unsupported;
