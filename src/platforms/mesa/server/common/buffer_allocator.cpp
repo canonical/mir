@@ -217,14 +217,14 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
      * on whether you're using hardware or software, and it depends on
      * the usage type (e.g. scanout). In the future it's also expected to
      * depend on the GPU model in use at runtime.
-     *   The formats listed here are known to be supported in both software
-     * and hardware buffers (GBM). Be aware however that additional formats
-     * not in this list may also work in surface creation, especially for
-     * software surfaces where we support all but one (BGR) pixel format.
-     *   This list is not (yet) detected at run-time due to undiagnosed issues
-     * with libgbm getting confused by other formats...
+     *   To be precise, ShmBuffer now supports OpenGL compositing of all
+     * but one MirPixelFormat (bgr_888). But GBM only supports [AX]RGB.
+     * So since we don't yet have an adequate API in place to query what the
+     * intended usage will be, we need to be conservative and report the
+     * intersection of ShmBuffer and GBM's pixel format support. That is
+     * just these two. Be aware however you can create a software surface
+     * with almost any pixel format and it will also work...
      */
-
     static std::vector<MirPixelFormat> const pixel_formats{
         mir_pixel_format_argb_8888,
         mir_pixel_format_xrgb_8888
