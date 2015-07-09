@@ -53,5 +53,5 @@ void ml::DumbConsoleLogger::log(ml::Severity severity,
         << component
         << ": "
         << message
-        << "\n";
+        << std::endl;
 }
