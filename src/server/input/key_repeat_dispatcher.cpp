@@ -33,11 +33,13 @@ mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
     std::shared_ptr<mi::InputDispatcher> const& next_dispatcher,
     std::shared_ptr<mir::time::AlarmFactory> const& factory,
     bool repeat_enabled,
-    std::chrono::milliseconds repeat_timeout)
+    std::chrono::milliseconds repeat_timeout,
+    std::chrono::milliseconds repeat_delay)
     : next_dispatcher(next_dispatcher),
       alarm_factory(factory),
       repeat_enabled(repeat_enabled),
-      repeat_timeout(repeat_timeout)
+      repeat_timeout(repeat_timeout),
+      repeat_delay(repeat_delay)
 {
 }
 
@@ -116,7 +118,7 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
                 ev.key.event_time = std::chrono::high_resolution_clock::now().time_since_epoch();
                 next_dispatcher->dispatch(ev);
 
-                capture_alarm->reschedule_in(repeat_timeout);
+                capture_alarm->reschedule_in(repeat_delay);
             });
         alarm->reschedule_in(repeat_timeout);
         device_state.repeat_alarms_by_scancode[scan_code] = {alarm};
