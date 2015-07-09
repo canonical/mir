@@ -182,7 +182,7 @@ mgm::BypassOption mgm::Platform::bypass_option() const
     return bypass_option_;
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_host_platform(
+std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::graphics::DisplayReport> const& report)
@@ -203,7 +203,7 @@ extern "C" std::shared_ptr<mg::Platform> create_host_platform(
         report, vt, *emergency_cleanup_registry, bypass_option);
 }
 
-extern "C" void add_graphics_platform_options(boost::program_options::options_description& config)
+void add_graphics_platform_options(boost::program_options::options_description& config)
 {
     config.add_options()
         (vt_option_name,
@@ -214,7 +214,7 @@ extern "C" void add_graphics_platform_options(boost::program_options::options_de
          "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
 }
 
-extern "C" mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
+mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 {
     auto const unparsed_arguments = options.unparsed_command_line();
     auto platform_option_used = false;
@@ -253,7 +253,7 @@ mir::ModuleProperties const description = {
     MIR_VERSION_MICRO
 };
 
-extern "C" mir::ModuleProperties const* describe_graphics_module()
+mir::ModuleProperties const* describe_graphics_module()
 {
     return &description;
 }

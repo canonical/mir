@@ -88,7 +88,7 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgm::GuestPlatform::create_buffer_al
     return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, mgm::BufferImportMethod::gbm_native_pixmap);
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
+std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {

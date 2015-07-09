@@ -203,6 +203,13 @@ void mf::SessionMediator::create_surface(
     if (request->has_parent_id())
         params.with_parent_id(SurfaceId{request->parent_id()});
 
+
+    if (request->has_parent_persistent_id())
+    {
+        auto persistent_id = request->parent_persistent_id().value();
+        params.parent = shell->surface_for_id(persistent_id);
+    }
+
     if (request->has_aux_rect())
     {
         params.with_aux_rect(geom::Rectangle{
@@ -348,6 +355,7 @@ void mf::SessionMediator::submit_buffer(
 
     auto const session = weak_session.lock();
     if (!session) BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    report->session_submit_buffer_called(session->name());
 
     auto stream = session->get_buffer_stream(stream_id);
     stream->swap_buffers(old_buffer,

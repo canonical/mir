@@ -26,7 +26,7 @@ class ProgramOption;
 }
 }
 
-extern "C" mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& /*options*/)
+mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& /*options*/)
 {
     return mir::graphics::supported;
 }
@@ -38,7 +38,7 @@ mir::ModuleProperties const description {
     MIR_VERSION_MICRO
 };
 
-extern "C" mir::ModuleProperties const* describe_graphics_module()
+mir::ModuleProperties const* describe_graphics_module()
 {
     return &description;
 }

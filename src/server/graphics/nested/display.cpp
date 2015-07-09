@@ -137,6 +137,14 @@ void mgn::detail::DisplaySyncGroup::post()
 {
 }
 
+std::chrono::milliseconds
+mgn::detail::DisplaySyncGroup::recommended_sleep() const
+{
+    // TODO: Might make sense in future with nested bypass. We could save
+    //       almost another frame of lag!
+    return std::chrono::milliseconds::zero();
+}
+
 mgn::Display::Display(
     std::shared_ptr<mg::Platform> const& platform,
     std::shared_ptr<HostConnection> const& connection,

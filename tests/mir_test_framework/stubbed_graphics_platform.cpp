@@ -291,7 +291,7 @@ extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::
     return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_host_platform(
+std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
@@ -311,7 +311,7 @@ extern "C" std::shared_ptr<mg::Platform> create_host_platform(
     return result;
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
+std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& context)
 {
@@ -324,7 +324,7 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     return std::make_shared<GuestPlatformAdapter>(context, graphics_platform);
 }
 
-extern "C" void add_graphics_platform_options(
+void add_graphics_platform_options(
     boost::program_options::options_description& /*config*/)
 {
 }

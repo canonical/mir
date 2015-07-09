@@ -42,7 +42,8 @@ public:
     KeyRepeatDispatcher(std::shared_ptr<InputDispatcher> const& next_dispatcher,
                         std::shared_ptr<time::AlarmFactory> const& factory,
 			bool repeat_enabled,
-                        std::chrono::milliseconds repeat_timeout);
+                        std::chrono::milliseconds repeat_timeout, /* timeout before sending first repeat */
+                        std::chrono::milliseconds repeat_delay /* delay between repeated keys */);
 
     // InputDispatcher
     bool dispatch(MirEvent const& event) override;
@@ -56,6 +57,7 @@ private:
     std::shared_ptr<time::AlarmFactory> const alarm_factory;
     bool const repeat_enabled;
     std::chrono::milliseconds repeat_timeout;
+    std::chrono::milliseconds repeat_delay;
 
     struct KeyboardState
     {

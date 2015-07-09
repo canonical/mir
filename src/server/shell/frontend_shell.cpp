@@ -25,6 +25,8 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/prompt_session.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell::detail;
@@ -74,6 +76,15 @@ mf::SurfaceId msh::FrontendShell::create_surface(std::shared_ptr<mf::Session> co
 
     auto populated_params = params;
 
+    // TODO: Fish out a policy verification object that enforces the various invariants
+    //       in the surface spec requirements (eg: regular surface has no parent,
+    //       dialog may have a parent, gloss must have a parent).
+    if (populated_params.parent.lock() &&
+        populated_params.type.value() != mir_surface_type_inputmethod)
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Foreign parents may only be set on surfaces of type mir_surface_type_inputmethod"));
+    }
+
     if (populated_params.parent_id.is_set())
         populated_params.parent = scene_session->surface(populated_params.parent_id.value());
 
@@ -105,6 +116,12 @@ std::string msh::FrontendShell::persistent_id_for(std::shared_ptr<mf::Session> c
     auto const surface = scene_session->surface(surface_id);
 
     return surface_store->id_for_surface(surface).serialize_to_string();
+}
+
+std::shared_ptr<ms::Surface> msh::FrontendShell::surface_for_id(std::string const& serialized_id)
+{
+    PersistentSurfaceStore::Id const id{serialized_id};
+    return surface_store->surface_for_id(id);
 }
 
 int msh::FrontendShell::set_surface_attribute(

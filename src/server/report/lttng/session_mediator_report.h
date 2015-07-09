@@ -37,6 +37,9 @@ public:
     void session_create_surface_called(std::string const& app_name) override;
     void session_next_buffer_called(std::string const& app_name) override;
     void session_exchange_buffer_called(std::string const& app_name) override;
+    void session_submit_buffer_called(std::string const& app_name) override;
+    void session_allocate_buffers_called(std::string const& app_name) override;
+    void session_release_buffers_called(std::string const& app_name) override;
     void session_release_surface_called(std::string const& app_name) override;
     void session_disconnect_called(std::string const& app_name) override;
     void session_drm_auth_magic_called(std::string const& app_name) override;

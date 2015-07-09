@@ -17,14 +17,16 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/android/sync_fence.h"
 #include "platform.h"
+
 #include "android_graphic_buffer_allocator.h"
 #include "resource_factory.h"
 #include "display.h"
 #include "hal_component_factory.h"
 #include "hwc_loggers.h"
 #include "ipc_operations.h"
+
+#include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/android/native_buffer.h"
@@ -133,7 +135,7 @@ EGLNativeDisplayType mga::Platform::egl_native_display() const
     return EGL_DEFAULT_DISPLAY;
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_host_platform(
+std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mir::graphics::DisplayReport> const& display_report)
@@ -149,7 +151,7 @@ extern "C" std::shared_ptr<mg::Platform> create_host_platform(
     return std::make_shared<mga::Platform>(component_factory, display_report, overlay_option, quirks);
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
+std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::NestedContext> const&)
 {
@@ -160,7 +162,7 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     return std::make_shared<mga::Platform>(nullptr, display_report, mga::OverlayOptimization::disabled, quirks);
 }
 
-extern "C" void add_graphics_platform_options(
+void add_graphics_platform_options(
     boost::program_options::options_description& config)
 {
     config.add_options()
@@ -173,7 +175,7 @@ extern "C" void add_graphics_platform_options(
     mga::DeviceQuirks::add_options(config);
 }
 
-extern "C" mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
+mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
 {
     int err;
     hw_module_t const* hw_module;
@@ -190,7 +192,7 @@ mir::ModuleProperties const description = {
     MIR_VERSION_MICRO
 };
 
-extern "C" mir::ModuleProperties const* describe_graphics_module()
+mir::ModuleProperties const* describe_graphics_module()
 {
     return &description;
 }
