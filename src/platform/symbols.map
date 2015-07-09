@@ -1,4 +1,4 @@
-MIRPLATFORM_7 {
+MIRPLATFORM_9 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -99,6 +99,8 @@ MIRPLATFORM_7 {
     mir::graphics::UserDisplayConfigurationOutput::extents*;
     mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
     mir::options::arw_server_socket_opt*;
+# Why are server-only options here in libmirplatform?...
+    mir::options::composite_delay_opt*; 
     mir::options::compositor_report_opt*;
     mir::options::Configuration::?Configuration*;
     mir::options::Configuration::Configuration*;
@@ -276,13 +278,3 @@ MIRPLATFORM_7 {
   };
  local: *;
 };
-
-# Why are server-only options here in libmirplatform?...
-MIRPLATFORM_7.1 {
-  global:
-    extern "C++" {
-      mir::options::composite_delay_opt*; 
-    };
-  local: *;
-} MIRPLATFORM_7;
-
