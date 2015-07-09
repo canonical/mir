@@ -127,7 +127,7 @@ typedef std::shared_ptr<mir::graphics::Platform>(*CreateGuestPlatform)(
 typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
 
-typedef mir::graphics::PlatformPriority(*PlatformProbe)(options::ProgramOption const& options);
+typedef mir::graphics::PlatformPriority(*PlatformProbe)(mir::options::ProgramOption const& options);
 
 typedef mir::ModuleProperties const*(*DescribeModule)();
 }
@@ -155,9 +155,9 @@ std::shared_ptr<mir::graphics::Platform> create_host_platform(
 
 /**
  * Function prototype used to return a new guest graphics platform. The guest graphics platform
- * exists alongside the host platform and do not output or control the physical displays 
+ * exists alongside the host platform and do not output or control the physical displays
  *
- * \param [in] nested_context the object that contains resources needed from the host platform 
+ * \param [in] nested_context the object that contains resources needed from the host platform
  * \param [in] report the object to use to report interesting events from the display subsystem
  *
  * This factory function needs to be implemented by each platform.
