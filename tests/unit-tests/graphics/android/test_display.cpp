@@ -852,3 +852,48 @@ TEST_F(Display, can_configure_positioning_of_dbs)
         EXPECT_THAT(disp_conf.top_left, Eq(another_new_location));
     });
 }
+
+//test for lp:1471858
+TEST_F(Display, applying_orientation_after_hotplug)
+{
+    using namespace testing;
+    std::function<void()> hotplug_fn = []{};
+    bool external_connected = false;
+    MirOrientation const orientation = mir_orientation_left;
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        ON_CALL(mock_config, active_config_for(mga::DisplayName::primary))
+            .WillByDefault(Return(mtd::StubDisplayConfigurationOutput{
+                mg::DisplayConfigurationOutputId{0}, {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, true}));
+        ON_CALL(mock_config, active_config_for(mga::DisplayName::external))
+            .WillByDefault(Invoke([&](mga::DisplayName)
+            {
+                return mtd::StubDisplayConfigurationOutput{mg::DisplayConfigurationOutputId{1},
+                    {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, external_connected};
+            }));
+        EXPECT_CALL(mock_config, subscribe_to_config_changes(_,_))
+            .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(std::make_shared<char>('2'))));
+    });
+
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    //hotplug external back 
+    external_connected = true;
+    hotplug_fn();
+
+    auto config = display.configuration();
+    config->for_each_output([orientation](mg::UserDisplayConfigurationOutput& output) {
+        output.orientation = orientation;
+    });
+    display.configure(*config);
+    display.for_each_display_sync_group([orientation](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([orientation](mg::DisplayBuffer& db) {
+            EXPECT_THAT(db.orientation(), Eq(orientation)); 
+        });
+    });
+}
