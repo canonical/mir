@@ -38,6 +38,7 @@ public:
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override;
     void post() override;
+    std::chrono::milliseconds recommended_sleep() const override;
 
 private:
     std::unique_ptr<DisplayBuffer> display_buffer;

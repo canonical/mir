@@ -35,3 +35,8 @@ void mgx::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBu
 void mgx::DisplayGroup::post()
 {
 }
+
+std::chrono::milliseconds mgx::DisplayGroup::recommended_sleep() const
+{
+    return std::chrono::milliseconds::zero();
+}

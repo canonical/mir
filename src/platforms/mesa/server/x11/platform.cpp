@@ -77,15 +77,15 @@ EGLNativeDisplayType mgx::Platform::egl_native_display() const
 // Platform module entry points below
 ////////////////////////////////////////////////////////////////////////////////////
 
-extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
+std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-    std::shared_ptr<DisplayReport> const& /*report*/)
+    std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
     return std::make_shared<mgx::Platform>();
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
+std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& /*report*/,
     std::shared_ptr<mg::NestedContext> const&)
 {
@@ -93,11 +93,11 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     return nullptr;
 }
 
-extern "C" void add_graphics_platform_options(boost::program_options::options_description& /*config*/)
+void add_graphics_platform_options(boost::program_options::options_description& /*config*/)
 {
 }
 
-extern "C" mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
+mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
 {
     auto dpy = XOpenDisplay(NULL);
     if (dpy)
@@ -128,7 +128,7 @@ mir::ModuleProperties const description = {
     MIR_VERSION_MICRO
 };
 
-extern "C" mir::ModuleProperties const* describe_graphics_module()
+mir::ModuleProperties const* describe_graphics_module()
 {
     return &description;
 }
