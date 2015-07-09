@@ -39,21 +39,11 @@ namespace geom=mir::geometry;
 mgx::Display::Display(::Display *dpy)
     : x_dpy{dpy}, display_width{1280}, display_height{1024}
 {
-    EGLint egl_major, egl_minor;
-    EGLConfig config;
-    EGLint num_configs;
-    EGLint vid;
-    Window root;
-    XVisualInfo *visInfo, visTemplate;
-    XSetWindowAttributes attr;
-    int num_visuals;
-    unsigned long mask;
-    char const * const title = "Mir On X";
-
     egl_dpy = eglGetDisplay(x_dpy);
     if (!egl_dpy)
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an egl display"));
 
+    EGLint egl_major, egl_minor;
     if (!eglInitialize(egl_dpy, &egl_major, &egl_minor))
         BOOST_THROW_EXCEPTION(mg::egl_error("eglInitialize failed"));
 
@@ -76,22 +66,28 @@ mgx::Display::Display(::Display *dpy)
        EGL_NONE
     };
 
-    root = XDefaultRootWindow(x_dpy);
+    auto root = XDefaultRootWindow(x_dpy);
 
+    EGLConfig config;
+    EGLint num_configs;
     if (!eglChooseConfig(egl_dpy, att, &config, 1, &num_configs))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an EGL config"));
 
     assert(config);
     assert(num_configs > 0);
 
+    EGLint vid;
     if (!eglGetConfigAttrib(egl_dpy, config, EGL_NATIVE_VISUAL_ID, &vid))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get config attrib"));
 
+    XVisualInfo visTemplate;
+    int num_visuals;
     visTemplate.visualid = vid;
-    visInfo = XGetVisualInfo(x_dpy, VisualIDMask, &visTemplate, &num_visuals);
+    auto visInfo = XGetVisualInfo(x_dpy, VisualIDMask, &visTemplate, &num_visuals);
     if (!visInfo)
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get visual info"));
 
+    XSetWindowAttributes attr;
     attr.background_pixel = 0;
     attr.border_pixel = 0;
     attr.colormap = XCreateColormap(x_dpy, root, visInfo->visual, AllocNone);
@@ -102,7 +98,7 @@ mgx::Display::Display(::Display *dpy)
                       ButtonPressMask     |
                       ButtonReleaseMask;
 
-    mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
+    auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
 
     win = XCreateWindow(x_dpy, root, 0, 0, 1280, 1024,
                         0, visInfo->depth, InputOutput,
@@ -116,6 +112,7 @@ mgx::Display::Display(::Display *dpy)
     pf = mir_pixel_format_bgr_888;
 
     {
+        char const * const title = "Mir On X";
         XSizeHints sizehints;
         sizehints.x = 0;
         sizehints.y = 0;
