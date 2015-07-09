@@ -17,7 +17,9 @@
  *
  */
 
+#include "mir/graphics/egl_error.h"
 #include "display_buffer.h"
+
 #include <boost/throw_exception.hpp>
 
 namespace mg=mir::graphics;
@@ -43,13 +45,13 @@ geom::Rectangle mgx::DisplayBuffer::view_area() const
 void mgx::DisplayBuffer::make_current()
 {
     if (!eglMakeCurrent(egl_dpy, egl_surf, egl_surf, egl_ctx))
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot make current"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot make current"));
 }
 
 void mgx::DisplayBuffer::release_current()
 {
     if (!eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot make uncurrent"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot make uncurrent"));
 }
 
 bool mgx::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& /*renderlist*/)
@@ -60,7 +62,7 @@ bool mgx::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& /
 void mgx::DisplayBuffer::gl_swap_buffers()
 {
     if (!eglSwapBuffers(egl_dpy, egl_surf))
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot swap"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 }
 
 MirOrientation mgx::DisplayBuffer::orientation() const

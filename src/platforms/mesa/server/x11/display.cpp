@@ -20,6 +20,7 @@
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/egl_resources.h"
+#include "mir/graphics/egl_error.h"
 #include "display.h"
 #include "display_buffer.h"
 #include "gl_context.h"
@@ -51,10 +52,10 @@ mgx::Display::Display(::Display *dpy)
 
     egl_dpy = eglGetDisplay(x_dpy);
     if (!egl_dpy)
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get an egl display"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an egl display"));
 
     if (!eglInitialize(egl_dpy, &egl_major, &egl_minor))
-        BOOST_THROW_EXCEPTION(std::logic_error("eglInitialize failed"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("eglInitialize failed"));
 
     mir::log_info("EGL Version %d.%d", egl_major, egl_minor);
 
@@ -78,18 +79,18 @@ mgx::Display::Display(::Display *dpy)
     root = XDefaultRootWindow(x_dpy);
 
     if (!eglChooseConfig(egl_dpy, att, &config, 1, &num_configs))
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get an EGL config"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an EGL config"));
 
     assert(config);
     assert(num_configs > 0);
 
     if (!eglGetConfigAttrib(egl_dpy, config, EGL_NATIVE_VISUAL_ID, &vid))
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get config attrib"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get config attrib"));
 
     visTemplate.visualid = vid;
     visInfo = XGetVisualInfo(x_dpy, VisualIDMask, &visTemplate, &num_visuals);
     if (!visInfo)
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot get visual info"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get visual info"));
 
     attr.background_pixel = 0;
     attr.border_pixel = 0;
@@ -128,11 +129,11 @@ mgx::Display::Display(::Display *dpy)
 
     egl_ctx = eglCreateContext(egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);
     if (!egl_ctx)
-        BOOST_THROW_EXCEPTION(std::logic_error("eglCreateContext failed"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("eglCreateContext failed"));
 
     egl_surf = eglCreateWindowSurface(egl_dpy, config, win, NULL);
     if (!egl_surf)
-        BOOST_THROW_EXCEPTION(std::logic_error("eglCreateWindowSurface failed"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("eglCreateWindowSurface failed"));
 
     /* sanity checks */
     {
