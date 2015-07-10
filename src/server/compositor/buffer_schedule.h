@@ -23,10 +23,13 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/compositor/compositor_id.h"
 #include <memory>
+#include <map>
+#include <mutex>
+#include <deque>
 
 namespace mir
 {
-namespace graphics { class Buffer; }
+namespace graphics { class Buffer; class GraphicBufferAllocator; class BufferProperties; }
 namespace frontend { class EventSink; }
 namespace compositor
 {
@@ -35,14 +38,35 @@ class BufferSchedule
 public:
     BufferSchedule(
         frontend::BufferStreamId id,
-        std::shared_ptr<frontend::EventSink> const& sink);
+        std::shared_ptr<frontend::EventSink> const& sink,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
-    void add_buffer(std::unique_ptr<graphics::Buffer> buffer);
+    void add_buffer(graphics::BufferProperties const& properties);
     void remove_buffer(graphics::BufferID id);
 
     void schedule_buffer(graphics::BufferID id);
 
-    std::shared_ptr<graphics::Buffer> lock_compositor_buffer(compositor::CompositorID id);
+    std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id);
+    void compositor_release(std::shared_ptr<graphics::Buffer> const&);
+private:
+    std::mutex mutable mutex;
+    frontend::BufferStreamId const stream_id;
+    std::shared_ptr<frontend::EventSink> const sink;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
+
+    typedef std::map<graphics::BufferID, std::shared_ptr<graphics::Buffer>> BufferMap;
+    //used to keep strong reference
+    BufferMap buffers;
+    BufferMap::iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&);
+
+    struct ScheduleEntry
+    {
+        std::shared_ptr<graphics::Buffer> buffer;
+        unsigned int use_count;
+        bool was_consumed;
+        bool dead;
+    };
+    std::deque<ScheduleEntry> schedule;
 };
 
 }
