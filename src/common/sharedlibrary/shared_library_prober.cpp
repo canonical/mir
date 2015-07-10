@@ -57,7 +57,7 @@ mir::libraries_for_path(std::string const& path, mir::SharedLibraryProberReport&
     boost::filesystem::directory_iterator iterator{path, ec};
     if (ec)
     {
-        std::system_error error{boost_to_std_error(ec)};
+        std::system_error error(boost_to_std_error(ec), path);
         report.probing_failed(path, error);
         throw error;
     }
