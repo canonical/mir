@@ -69,19 +69,20 @@ void mc::BufferSchedule::schedule_buffer(mg::BufferID id)
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = checked_buffers_find(id, lk);
 
-    if (!schedule.empty() && schedule.front().use_count == 0)
+    if (!schedule.empty() &&
+        schedule.front().was_consumed &&
+        schedule.front().use_count == 0)
     {
         sink->send_buffer(stream_id, *schedule.front().buffer, mg::BufferIpcMsgType::update_msg);
         schedule.pop_front();
     }
-    
+
     schedule.emplace_front(ScheduleEntry{it->second, 0, false, false});
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferSchedule::compositor_acquire(compositor::CompositorID)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    //might be better to take a buffer in the constructor and never have an empty schedule
     if (schedule.empty())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer scheduled"));
 

@@ -79,6 +79,7 @@ struct StartedBufferSchedule : BufferSchedule
         buffer1 = allocator.map[id1]; 
         buffer2 = allocator.map[id2]; 
     }
+
     std::vector<mg::BufferID> ids;
     mg::BufferID id1;
     mg::BufferID id2;
@@ -127,6 +128,7 @@ TEST_F(BufferSchedule, compositor_access)
     EXPECT_THAT(cbuffer->id(), Eq(buffer_id));
 }
 
+
 TEST_F(StartedBufferSchedule, compositor_release_sends_buffer_back)
 {
     EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*buffer1), mg::BufferIpcMsgType::update_msg));
@@ -163,7 +165,14 @@ TEST_F(StartedBufferSchedule, compositor_can_acquire_a_few_times_and_only_sends_
     schedule.compositor_release(cbuffer1);
 }
 
-TEST_F(StartedBufferSchedule, scheduling_can_send_buffer_if_no_compositors_still_have_it)
+TEST_F(StartedBufferSchedule, scheduling_wont_send_front_if_no_compositor_has_seen_buffer)
+{
+    EXPECT_CALL(mock_sink, send_buffer(_,_,_)).Times(0);
+    schedule.schedule_buffer(id1);
+    schedule.schedule_buffer(id2);
+}
+
+TEST_F(StartedBufferSchedule, scheduling_can_send_front_buffer_if_no_compositors_still_have_it)
 {
     schedule.schedule_buffer(id1);
     auto cbuffer1 = schedule.compositor_acquire(this);
@@ -189,6 +198,88 @@ TEST_F(StartedBufferSchedule, removal_of_the_compositor_buffer_happens_after_com
     schedule.schedule_buffer(id2);
     schedule.compositor_release(cbuffer);
 }
+
+//mc::BufferQueue's current approach, alternative approaches exist
+TEST_F(StartedBufferSchedule, compositor_buffer_syncs_to_fastest)
+{
+    int comp_id1{0};
+    int comp_id2{0};
+
+    schedule.schedule_buffer(id1);
+    auto cbuffer1 = schedule.compositor_acquire(&comp_id1); 
+    auto cbuffer2 = schedule.compositor_acquire(&comp_id2);
+
+    schedule.schedule_buffer(id2);
+    auto cbuffer3 = schedule.compositor_acquire(&comp_id1);
+
+    schedule.schedule_buffer(id1);
+    auto cbuffer4 = schedule.compositor_acquire(&comp_id1); 
+    auto cbuffer5 = schedule.compositor_acquire(&comp_id2);
+
+    schedule.schedule_buffer(id2);
+    auto cbuffer6 = schedule.compositor_acquire(&comp_id2);
+    auto cbuffer7 = schedule.compositor_acquire(&comp_id2);
+
+    EXPECT_THAT(cbuffer1, Eq(allocator.map[id1]));
+    EXPECT_THAT(cbuffer2, Eq(allocator.map[id1]));
+    EXPECT_THAT(cbuffer3, Eq(allocator.map[id2]));
+    EXPECT_THAT(cbuffer4, Eq(allocator.map[id1]));
+    EXPECT_THAT(cbuffer5, Eq(allocator.map[id1]));
+    EXPECT_THAT(cbuffer6, Eq(allocator.map[id2]));
+    EXPECT_THAT(cbuffer7, Eq(allocator.map[id2]));
+}
+
+TEST_F(StartedBufferSchedule, compositor_buffer_syncs_to_fastest_with_more_queueing)
+{
+    schedule.add_buffer(properties);
+    schedule.add_buffer(properties);
+    schedule.add_buffer(properties);
+    schedule.add_buffer(properties);
+    auto id2 = allocator.ids[2];
+    auto id3 = allocator.ids[3];
+    auto id4 = allocator.ids[4];
+    auto id5 = allocator.ids[5];
+    auto buffer2 = allocator.map[id2];
+    auto buffer3 = allocator.map[id3];
+    auto buffer4 = allocator.map[id4];
+    auto buffer5 = allocator.map[id5];
+
+    int comp_id1{0};
+    int comp_id2{0};
+
+    schedule.schedule_buffer(id1);
+    schedule.schedule_buffer(id2);
+    schedule.schedule_buffer(id3);
+    schedule.schedule_buffer(id4);
+    schedule.schedule_buffer(id5);
+
+    auto cbuffer1 = schedule.compositor_acquire(&comp_id1); //1
+    auto cbuffer2 = schedule.compositor_acquire(&comp_id2); //1
+
+    auto cbuffer3 = schedule.compositor_acquire(&comp_id1); //2
+
+    auto cbuffer4 = schedule.compositor_acquire(&comp_id1); //3
+    auto cbuffer5 = schedule.compositor_acquire(&comp_id2); //3
+
+    auto cbuffer6 = schedule.compositor_acquire(&comp_id2); //4
+
+    auto cbuffer7 = schedule.compositor_acquire(&comp_id2); //5
+    auto cbuffer8 = schedule.compositor_acquire(&comp_id1); //5
+
+    EXPECT_THAT(cbuffer1, Eq(allocator.map[id1]));
+    EXPECT_THAT(cbuffer2, Eq(allocator.map[id1]));
+
+    EXPECT_THAT(cbuffer3, Eq(allocator.map[id2]));
+
+
+    EXPECT_THAT(cbuffer4, Eq(allocator.map[id3]));
+    EXPECT_THAT(cbuffer5, Eq(allocator.map[id3]));
+
+    EXPECT_THAT(cbuffer6, Eq(allocator.map[id2]));
+    EXPECT_THAT(cbuffer7, Eq(allocator.map[id2]));
+}
+
+
 #if 0
 //good idea?
 TEST_F(BufferSchedule, submitted_buffer_can_be_ejected)
