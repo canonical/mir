@@ -161,7 +161,7 @@ function (mir_precompiled_header TARGET HEADER)
 endfunction()
 
 function (mir_add_wrapped_executable TARGET)
-  set(REAL_EXECUTABLE .${TARGET}-uninstalled)
+  set(REAL_EXECUTABLE ${TARGET}.bin)
 
   list(GET ARGN 0 modifier)
   if ("${modifier}" STREQUAL "NOINSTALL")
