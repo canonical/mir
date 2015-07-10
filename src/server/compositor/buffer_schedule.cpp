@@ -62,6 +62,11 @@ void mc::BufferSchedule::remove_buffer(mg::BufferID id)
         if (entry.buffer->id() == id)
             entry.dead = true;
     }
+    for (auto& entry : backlog)
+    {
+        if (entry.buffer->id() == id)
+            entry.dead = true;
+    }
 }
 
 void mc::BufferSchedule::schedule_buffer(mg::BufferID id)
@@ -69,6 +74,10 @@ void mc::BufferSchedule::schedule_buffer(mg::BufferID id)
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = checked_buffers_find(id, lk);
 
+/*
+ *  scheduler->schedule(it);
+ */
+#if 0
     if (!schedule.empty() &&
         schedule.front().was_consumed &&
         schedule.front().use_count == 0)
@@ -78,15 +87,36 @@ void mc::BufferSchedule::schedule_buffer(mg::BufferID id)
     }
 
     schedule.emplace_front(ScheduleEntry{it->second, 0, false, false});
+#endif
+    schedule.emplace_back(ScheduleEntry{it->second, 0, false, false});
 }
 
-std::shared_ptr<mg::Buffer> mc::BufferSchedule::compositor_acquire(compositor::CompositorID)
+void mc::BufferSchedule::advance_schedule()
+{
+    printf("ADVANCE!\n");
+/*  if(scheduler.anything_scheduled())
+ *      backlog.emplace_front(mg::Schedule{scheduler.pop_buffer(), 0, fales, false});
+ *  current_buffer_users.clear();
+ */
+    if (!schedule.empty())
+    {
+        backlog.emplace_front(schedule.front());
+        schedule.pop_front();
+    }
+    current_buffer_users.clear();
+}
+
+std::shared_ptr<mg::Buffer> mc::BufferSchedule::compositor_acquire(compositor::CompositorID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    if (schedule.empty())
-        BOOST_THROW_EXCEPTION(std::logic_error("no buffer scheduled"));
 
-    auto& last_entry = schedule.front();
+    if (backlog.empty() && schedule.empty())
+        BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give"));
+    if (current_buffer_users.find(id) != current_buffer_users.end() || backlog.empty())
+        advance_schedule();
+    current_buffer_users.insert(id);
+
+    auto& last_entry = backlog.front();
     last_entry.was_consumed = true;
     last_entry.use_count++;
     return last_entry.buffer;
@@ -96,19 +126,38 @@ void mc::BufferSchedule::compositor_release(std::shared_ptr<mg::Buffer> const& b
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
 
-    auto it = std::find_if(schedule.begin(), schedule.end(),
+    auto it = std::find_if(backlog.begin(), backlog.end(),
         [&buffer](ScheduleEntry const& s) { return s.buffer->id() == buffer->id(); });
     if (it == schedule.end())
         BOOST_THROW_EXCEPTION(std::logic_error("buffer not scheduled"));
-    auto& last_entry = *it;
-    last_entry.use_count--;
 
-    if ((last_entry.use_count == 0) &&
-         last_entry.was_consumed    &&
-        (schedule.front().buffer != buffer))
+    it->use_count--;;
+
+    clean_backlog();
+}
+
+void mc::BufferSchedule::clean_backlog()
+{
+    for(auto it = backlog.begin(); it != backlog.end();)
     {
-        if (!last_entry.dead)
-            sink->send_buffer(stream_id, *last_entry.buffer, mg::BufferIpcMsgType::update_msg);
-        schedule.erase(it);
+        if (it == backlog.begin() && schedule.empty()) //reserve the front for us
+        {
+            it++;
+            continue;
+        }
+
+        if ((it->use_count == 0) &&
+            (it->was_consumed))
+        {
+            if (!it->dead)
+            {
+                sink->send_buffer(stream_id, *it->buffer, mg::BufferIpcMsgType::update_msg);
+            }
+            it = backlog.erase(it);
+        }
+        else
+        {
+            it++;
+        } 
     }
 }

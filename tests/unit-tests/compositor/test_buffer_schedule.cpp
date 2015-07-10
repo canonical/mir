@@ -172,7 +172,8 @@ TEST_F(StartedBufferSchedule, scheduling_wont_send_front_if_no_compositor_has_se
     schedule.schedule_buffer(id2);
 }
 
-TEST_F(StartedBufferSchedule, scheduling_can_send_front_buffer_if_no_compositors_still_have_it)
+#if 0
+TEST_F(StartedBufferSchedule, scheduling_can_send_buffer_if_framedropping_and_no_compositors_still_have_it)
 {
     schedule.schedule_buffer(id1);
     auto cbuffer1 = schedule.compositor_acquire(this);
@@ -184,6 +185,7 @@ TEST_F(StartedBufferSchedule, scheduling_can_send_front_buffer_if_no_compositors
     schedule.compositor_release(cbuffer1);
     schedule.schedule_buffer(id2);
 }
+#endif
 
 TEST_F(StartedBufferSchedule, removal_of_the_compositor_buffer_happens_after_compositor_release)
 {
@@ -309,7 +311,7 @@ TEST_F(StartedBufferSchedule, compositor_buffer_syncs_to_fastest_with_more_queue
 
 }
 
-TEST_F(StartedBufferSchedule, compositor_buffer_syncs_to_fastest_with_more_queueing)
+TEST_F(StartedBufferSchedule, multimonitor_compositor_buffer_syncs_to_fastest_with_more_queueing)
 {
     schedule.add_buffer(properties);
     schedule.add_buffer(properties);
