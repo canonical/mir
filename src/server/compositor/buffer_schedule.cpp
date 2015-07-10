@@ -29,10 +29,12 @@ namespace mf = mir::frontend;
 mc::BufferSchedule::BufferSchedule(
     mf::BufferStreamId id,
     std::shared_ptr<mf::EventSink> const& sink,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator) :
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+    std::unique_ptr<Schedule> schedule) :
     stream_id(id),
     sink(sink),
-    allocator(allocator)
+    allocator(allocator),
+    schedule(std::move(schedule))
 {
 }
 
@@ -56,12 +58,10 @@ mc::BufferSchedule::BufferMap::iterator mc::BufferSchedule::checked_buffers_find
 void mc::BufferSchedule::remove_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    buffers.erase(checked_buffers_find(id, lk));
-    for (auto& entry : schedule)
-    {
-        if (entry.buffer->id() == id)
-            entry.dead = true;
-    }
+    auto buffer_it = checked_buffers_find(id, lk);
+    schedule->remove(buffer_it->second);
+    buffers.erase(buffer_it);
+
     for (auto& entry : backlog)
     {
         if (entry.buffer->id() == id)
@@ -73,47 +73,22 @@ void mc::BufferSchedule::schedule_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = checked_buffers_find(id, lk);
-
-/*
- *  scheduler->schedule(it);
- */
-#if 0
-    if (!schedule.empty() &&
-        schedule.front().was_consumed &&
-        schedule.front().use_count == 0)
-    {
-        sink->send_buffer(stream_id, *schedule.front().buffer, mg::BufferIpcMsgType::update_msg);
-        schedule.pop_front();
-    }
-
-    schedule.emplace_front(ScheduleEntry{it->second, 0, false, false});
-#endif
-    schedule.emplace_back(ScheduleEntry{it->second, 0, false, false});
-}
-
-void mc::BufferSchedule::advance_schedule()
-{
-    printf("ADVANCE!\n");
-/*  if(scheduler.anything_scheduled())
- *      backlog.emplace_front(mg::Schedule{scheduler.pop_buffer(), 0, fales, false});
- *  current_buffer_users.clear();
- */
-    if (!schedule.empty())
-    {
-        backlog.emplace_front(schedule.front());
-        schedule.pop_front();
-    }
-    current_buffer_users.clear();
+    schedule->schedule(it->second);
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferSchedule::compositor_acquire(compositor::CompositorID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
 
-    if (backlog.empty() && schedule.empty())
+    if (backlog.empty() && !schedule->anything_scheduled())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give"));
+
     if (current_buffer_users.find(id) != current_buffer_users.end() || backlog.empty())
-        advance_schedule();
+    {
+        if (schedule->anything_scheduled())
+            backlog.emplace_front(ScheduleEntry{schedule->next_buffer(), 0, false, false});
+        current_buffer_users.clear();
+    }
     current_buffer_users.insert(id);
 
     auto& last_entry = backlog.front();
@@ -128,7 +103,7 @@ void mc::BufferSchedule::compositor_release(std::shared_ptr<mg::Buffer> const& b
 
     auto it = std::find_if(backlog.begin(), backlog.end(),
         [&buffer](ScheduleEntry const& s) { return s.buffer->id() == buffer->id(); });
-    if (it == schedule.end())
+    if (it == backlog.end())
         BOOST_THROW_EXCEPTION(std::logic_error("buffer not scheduled"));
 
     it->use_count--;;
@@ -140,7 +115,7 @@ void mc::BufferSchedule::clean_backlog()
 {
     for(auto it = backlog.begin(); it != backlog.end();)
     {
-        if (it == backlog.begin() && schedule.empty()) //reserve the front for us
+        if (it == backlog.begin() && !schedule->anything_scheduled()) //reserve the front for us
         {
             it++;
             continue;
@@ -160,4 +135,66 @@ void mc::BufferSchedule::clean_backlog()
             it++;
         } 
     }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////MOVE TO OWN FILE
+void mc::QueueingSchedule::remove(std::shared_ptr<mg::Buffer> const& buffer)
+{
+    auto it = std::find(queue.begin(), queue.end(), buffer);
+    if (it != queue.end()) queue.erase(it);
+}
+
+void mc::QueueingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
+{
+
+/*
+ *  scheduler->schedule(it);
+ */
+#if 0
+    if (!schedule.empty() &&
+        schedule.front().was_consumed &&
+        schedule.front().use_count == 0)
+    {
+        sink->send_buffer(stream_id, *schedule.front().buffer, mg::BufferIpcMsgType::update_msg);
+        schedule.pop_front();
+    }
+
+    schedule.emplace_front(ScheduleEntry{it->second, 0, false, false});
+#endif
+    queue.emplace_back(buffer);
+}
+
+bool mc::QueueingSchedule::anything_scheduled()
+{
+    return !queue.empty();
+}
+
+std::shared_ptr<mg::Buffer> mc::QueueingSchedule::next_buffer()
+{
+    auto buffer = queue.front();
+    queue.pop_front();
+    return buffer;
 }

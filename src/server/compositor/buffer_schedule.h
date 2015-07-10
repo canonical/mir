@@ -122,19 +122,42 @@ class TimeoutQueueingSchedule : PerfectQueueingSchedule
 //    TimedSchedule(std::shared_ptr<time::Clock> const&);
 //};
 
-enum class OverproductionGuarantee
-{
-    queue, //formerly framedropping == false, every submitted buffer will be consumed
-    framedrop //formerly framedropping == true, a submitted buffer may be discarded
-};
 #endif
+
+class Schedule
+{
+public:
+    virtual void schedule(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
+    virtual void remove(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
+    virtual bool anything_scheduled() = 0;
+    virtual std::shared_ptr<graphics::Buffer> next_buffer() = 0;
+
+    virtual ~Schedule() = default;
+    Schedule() = default;
+    Schedule(Schedule const&) = delete;
+    Schedule& operator=(Schedule const&) = delete;
+};
+
+class QueueingSchedule : public Schedule
+{
+public:
+    QueueingSchedule(){}
+    void schedule(std::shared_ptr<graphics::Buffer> const& buffer) override;
+    void remove(std::shared_ptr<graphics::Buffer> const& buffer) override;
+    bool anything_scheduled() override;
+    std::shared_ptr<graphics::Buffer> next_buffer() override;
+private:
+    std::deque<std::shared_ptr<graphics::Buffer>> queue;
+};
+
 class BufferSchedule
 {
 public:
     BufferSchedule(
         frontend::BufferStreamId id,
         std::shared_ptr<frontend::EventSink> const& sink,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::unique_ptr<Schedule> schedule);
 
     void add_buffer(graphics::BufferProperties const& properties);
     void remove_buffer(graphics::BufferID id);
@@ -162,11 +185,12 @@ private:
         bool was_consumed;
         bool dead;
     };
-    std::deque<ScheduleEntry> schedule;
     std::deque<ScheduleEntry> backlog;
 
     std::set<compositor::CompositorID> current_buffer_users;
-    void advance_schedule();
+
+    std::unique_ptr<Schedule> const schedule;
+
     void clean_backlog();
 };
 
