@@ -229,6 +229,86 @@ TEST_F(StartedBufferSchedule, compositor_buffer_syncs_to_fastest)
     EXPECT_THAT(cbuffer7, Eq(allocator.map[id2]));
 }
 
+TEST_F(StartedBufferSchedule, compositor_buffer_syncs_to_fastest_with_more_queueing_composite)
+{
+    schedule.add_buffer(properties);
+    schedule.add_buffer(properties);
+    schedule.add_buffer(properties);
+    schedule.add_buffer(properties);
+    auto id2 = allocator.ids[2];
+    auto id3 = allocator.ids[3];
+    auto id4 = allocator.ids[4];
+    auto id5 = allocator.ids[5];
+    auto buffer2 = allocator.map[id2];
+    auto buffer3 = allocator.map[id3];
+    auto buffer4 = allocator.map[id4];
+    auto buffer5 = allocator.map[id5];
+
+    schedule.schedule_buffer(id1);
+    schedule.schedule_buffer(id2);
+    schedule.schedule_buffer(id3);
+    schedule.schedule_buffer(id4);
+    schedule.schedule_buffer(id5);
+
+    auto cbuffer1 = schedule.compositor_acquire(this);
+    schedule.compositor_release(cbuffer1);
+    auto cbuffer2 = schedule.compositor_acquire(this);
+    schedule.compositor_release(cbuffer2);
+    auto cbuffer3 = schedule.compositor_acquire(this);
+    schedule.compositor_release(cbuffer3);
+    auto cbuffer4 = schedule.compositor_acquire(this);
+    schedule.compositor_release(cbuffer4);
+    auto cbuffer5 = schedule.compositor_acquire(this);
+    schedule.compositor_release(cbuffer5);
+
+    EXPECT_THAT(cbuffer1, Eq(allocator.map[id1]));
+    EXPECT_THAT(cbuffer2, Eq(allocator.map[id2]));
+    EXPECT_THAT(cbuffer3, Eq(allocator.map[id3]));
+    EXPECT_THAT(cbuffer4, Eq(allocator.map[id4]));
+    EXPECT_THAT(cbuffer5, Eq(allocator.map[id5]));
+
+}
+
+TEST_F(StartedBufferSchedule, compositor_buffer_syncs_to_fastest_with_more_queueing_direct)
+{
+    schedule.add_buffer(properties);
+    schedule.add_buffer(properties);
+    schedule.add_buffer(properties);
+    schedule.add_buffer(properties);
+    auto id2 = allocator.ids[2];
+    auto id3 = allocator.ids[3];
+    auto id4 = allocator.ids[4];
+    auto id5 = allocator.ids[5];
+    auto buffer2 = allocator.map[id2];
+    auto buffer3 = allocator.map[id3];
+    auto buffer4 = allocator.map[id4];
+    auto buffer5 = allocator.map[id5];
+
+    schedule.schedule_buffer(id1);
+    schedule.schedule_buffer(id2);
+    schedule.schedule_buffer(id3);
+    schedule.schedule_buffer(id4);
+    schedule.schedule_buffer(id5);
+
+    auto cbuffer1 = schedule.compositor_acquire(this);
+    auto cbuffer2 = schedule.compositor_acquire(this);
+    schedule.compositor_release(cbuffer1);
+    auto cbuffer3 = schedule.compositor_acquire(this);
+    schedule.compositor_release(cbuffer2);
+    auto cbuffer4 = schedule.compositor_acquire(this);
+    schedule.compositor_release(cbuffer3);
+    auto cbuffer5 = schedule.compositor_acquire(this);
+    schedule.compositor_release(cbuffer4);
+    schedule.compositor_release(cbuffer5);
+
+    EXPECT_THAT(cbuffer1, Eq(allocator.map[id1]));
+    EXPECT_THAT(cbuffer2, Eq(allocator.map[id2]));
+    EXPECT_THAT(cbuffer3, Eq(allocator.map[id3]));
+    EXPECT_THAT(cbuffer4, Eq(allocator.map[id4]));
+    EXPECT_THAT(cbuffer5, Eq(allocator.map[id5]));
+
+}
+
 TEST_F(StartedBufferSchedule, compositor_buffer_syncs_to_fastest_with_more_queueing)
 {
     schedule.add_buffer(properties);
@@ -271,12 +351,13 @@ TEST_F(StartedBufferSchedule, compositor_buffer_syncs_to_fastest_with_more_queue
 
     EXPECT_THAT(cbuffer3, Eq(allocator.map[id2]));
 
-
     EXPECT_THAT(cbuffer4, Eq(allocator.map[id3]));
     EXPECT_THAT(cbuffer5, Eq(allocator.map[id3]));
 
-    EXPECT_THAT(cbuffer6, Eq(allocator.map[id2]));
-    EXPECT_THAT(cbuffer7, Eq(allocator.map[id2]));
+    EXPECT_THAT(cbuffer6, Eq(allocator.map[id4]));
+
+    EXPECT_THAT(cbuffer7, Eq(allocator.map[id5]));
+    EXPECT_THAT(cbuffer8, Eq(allocator.map[id5]));
 }
 
 
