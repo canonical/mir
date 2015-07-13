@@ -179,8 +179,23 @@ MirNativeBuffer* mclm::ClientPlatform::convert_native_buffer(graphics::NativeBuf
 }
 
 MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
-    EGLDisplay, EGLConfig) const
+    EGLDisplay disp, EGLConfig conf) const
 {
-    // TODO
-    return mir_pixel_format_argb_8888;
+    MirPixelFormat mir_format = mir_pixel_format_invalid;
+
+    /*
+     * This is based on gbm_dri_is_format_supported() however we can't call it
+     * via the public API gbm_device_is_format_supported because that is
+     * too buggy right now (LP: #1473901).
+     */
+    EGLint alpha_size = 0;
+    if (eglGetConfigAttrib(disp, conf, EGL_ALPHA_SIZE, &alpha_size))
+    {
+        if (alpha_size == 8)
+            mir_format = mir_pixel_format_argb_8888;
+        else if (alpha_size == 0)
+            mir_format = mir_pixel_format_xrgb_8888;
+    }
+
+    return mir_format;
 }
