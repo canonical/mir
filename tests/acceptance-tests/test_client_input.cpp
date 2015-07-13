@@ -674,6 +674,13 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
     mir_surface_spec_set_input_shape(spec, input_rects, 1);
     mir_surface_apply_spec(client.surface, spec);
 
+    // There is no way for us to wait on the result of mir_surface_apply_spec.
+    // In order to avoid strange bespoke server objects to perform this synchronizastion
+    // we simply wait on the result of another IPC call and rely on the serialization
+    // in the frontend.
+    mir_buffer_stream_swap_buffers_sync(
+        mir_surface_get_buffer_stream(client.surface));
+
     // We verify that we don't receive the first shaped out button event.
     EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
     EXPECT_CALL(client, handle_input(mt::PointerEventWithPosition(1, 1)));
