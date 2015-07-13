@@ -34,38 +34,6 @@ mc::BufferSchedule::BufferSchedule(
 {
 }
 
-#if 0
-void mc::BufferSchedule::add_buffer(graphics::BufferProperties const& properties)
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    auto buffer = allocator->alloc_buffer(properties);
-    buffers[buffer->id()] = buffer;
-    sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::full_msg);
-}
-
-mc::BufferSchedule::BufferMap::iterator mc::BufferSchedule::checked_buffers_find(
-    mg::BufferID id, std::unique_lock<std::mutex> const&)
-{
-    auto it = buffers.find(id);
-    if (it == buffers.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("cannot find buffer by id"));
-    return it;
-}
-
-void mc::BufferSchedule::remove_buffer(mg::BufferID id)
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    auto buffer_it = checked_buffers_find(id, lk);
-    schedule->remove(buffer_it->second);
-    buffers.erase(buffer_it);
-
-    for (auto& entry : backlog)
-    {
-        if (entry.buffer->id() == id)
-            entry.dead = true;
-    }
-}
-#endif
 void mc::BufferSchedule::schedule_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
@@ -84,7 +52,7 @@ std::shared_ptr<mg::Buffer> mc::BufferSchedule::compositor_acquire(compositor::C
     if (current_buffer_users.find(id) != current_buffer_users.end() || backlog.empty())
     {
         if (schedule->anything_scheduled())
-            backlog.emplace_front(ScheduleEntry{schedule->next_buffer(), 0, false, false});
+            backlog.emplace_front(ScheduleEntry{schedule->next_buffer(), 0, false});
         current_buffer_users.clear();
     }
     current_buffer_users.insert(id);
@@ -122,12 +90,6 @@ void mc::BufferSchedule::clean_backlog()
         if ((it->use_count == 0) &&
             (it->was_consumed))
         {
-            //if (map->exists(it->buffer->id())
-            //  sink->send_buffer()
-//            if (!it->dead)
-//            {
-//                sink->send_buffer(stream_id, *it->buffer, mg::BufferIpcMsgType::update_msg);
-//            }
             map->send_buffer(it->buffer->id());
             it = backlog.erase(it);
         }
@@ -231,22 +193,53 @@ mc::BufferMap::BufferMap(
 
 void mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
 {
-    (void) properties;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    auto buffer = allocator->alloc_buffer(properties);
+    buffers[buffer->id()] = buffer;
+    sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::full_msg);
 }
 
 void mc::BufferMap::remove_buffer(mg::BufferID id)
 {
-    (void) id;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    buffers.erase(checked_buffers_find(id, lk));
 }
 
 void mc::BufferMap::send_buffer(mg::BufferID id)
 {
-    (void) id;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    auto it = buffers.find(id);
+    if (it != buffers.end())
+        sink->send_buffer(stream_id, *it->second, mg::BufferIpcMsgType::update_msg);
 }
 
 std::shared_ptr<mg::Buffer>& mc::BufferMap::operator[](mg::BufferID id)
 {
-    (void) id;
-    static std::shared_ptr<mg::Buffer> b;
-    return b;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    return checked_buffers_find(id, lk)->second;
 }
+
+mc::BufferMap::Map::iterator mc::BufferMap::checked_buffers_find(
+    mg::BufferID id, std::unique_lock<std::mutex> const&)
+{
+    auto it = buffers.find(id);
+    if (it == buffers.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("cannot find buffer by id"));
+    return it;
+}
+
+#if 0
+void mc::BufferSchedule::remove_buffer(mg::BufferID id)
+{
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    auto buffer_it = checked_buffers_find(id, lk);
+    schedule->remove(buffer_it->second);
+    buffers.erase(buffer_it);
+
+    for (auto& entry : backlog)
+    {
+        if (entry.buffer->id() == id)
+            entry.dead = true;
+    }
+}
+#endif

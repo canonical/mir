@@ -178,6 +178,8 @@ public:
     void send_buffer(graphics::BufferID id);
     std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID);
 
+private:
+    std::mutex mutable mutex;
     typedef std::map<graphics::BufferID, std::shared_ptr<graphics::Buffer>> Map;
     //used to keep strong reference
     Map buffers;
@@ -212,7 +214,6 @@ private:
         std::shared_ptr<graphics::Buffer> buffer;
         unsigned int use_count;
         bool was_consumed;
-        bool dead;
     };
     std::deque<ScheduleEntry> backlog;
 
