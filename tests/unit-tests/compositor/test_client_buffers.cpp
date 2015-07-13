@@ -20,6 +20,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "src/server/compositor/buffer_map.h"
+#include "mir/graphics/display_configuration.h"
 
 #include <gtest/gtest.h>
 using namespace testing;
@@ -66,7 +67,6 @@ struct ClientBuffers : public Test
     mc::BufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(stub_allocator)};
 };
 
-#if 0
 TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
 {
     auto stub_buffer = std::make_shared<mtd::StubBuffer>();
@@ -75,6 +75,14 @@ TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
     EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*stub_buffer), mg::BufferIpcMsgType::full_msg));
     mc::BufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
     map.add_buffer(properties);
+}
+
+TEST_F(ClientBuffers, access_of_nonexistent_buffer_throws)
+{
+    auto stub_buffer = std::make_unique<mtd::StubBuffer>();
+    EXPECT_THROW({
+        auto buffer = map[stub_buffer->id()];
+    }, std::logic_error);
 }
 
 TEST_F(ClientBuffers, removal_of_nonexistent_buffer_throws)
@@ -115,4 +123,3 @@ TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
     map.remove_buffer(stub_allocator.ids[0]);
     map.send_buffer(stub_allocator.ids[0]);
 }
-#endif

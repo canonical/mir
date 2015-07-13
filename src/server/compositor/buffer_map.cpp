@@ -71,4 +71,3 @@ mc::BufferMap::Map::iterator mc::BufferMap::checked_buffers_find(
         BOOST_THROW_EXCEPTION(std::logic_error("cannot find buffer by id"));
     return it;
 }
-
