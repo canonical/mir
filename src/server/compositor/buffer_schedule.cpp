@@ -124,6 +124,8 @@ void mc::BufferSchedule::clean_backlog()
         if ((it->use_count == 0) &&
             (it->was_consumed))
         {
+            //if (map->exists(it->buffer->id())
+            //  sink->send_buffer()
             if (!it->dead)
             {
                 sink->send_buffer(stream_id, *it->buffer, mg::BufferIpcMsgType::update_msg);
