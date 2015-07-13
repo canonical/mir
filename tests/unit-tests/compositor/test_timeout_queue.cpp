@@ -41,6 +41,14 @@ struct TimeoutQueue : Test
 };
 }
 
+TEST_F(TimeoutQueue, throws_if_no_buffers)
+{
+    EXPECT_FALSE(schedule.anything_scheduled());
+    EXPECT_THROW({
+        schedule.next_buffer();
+    }, std::logic_error);
+}
+
 TEST_F(TimeoutQueue, queues_buffers_up)
 {
     EXPECT_FALSE(schedule.anything_scheduled());
@@ -59,4 +67,32 @@ TEST_F(TimeoutQueue, queues_buffers_up)
     }
 
     EXPECT_FALSE(schedule.anything_scheduled());
+}
+
+TEST_F(TimeoutQueue, queuing_the_same_buffer_moves_it_to_front_of_queue)
+{
+    for(auto i = 0u; i < num_buffers; i++)
+        schedule.schedule(buffers[i]);
+    schedule.schedule(buffers[0]);
+
+    std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers;
+    while(schedule.anything_scheduled())
+        scheduled_buffers.emplace_back(schedule.next_buffer());
+
+    EXPECT_THAT(scheduled_buffers,
+        ElementsAre(buffers[1], buffers[2], buffers[3], buffers[4], buffers[0]));
+}
+
+TEST_F(TimeoutQueue, cancelling_a_buffer_removes_it_from_queue)
+{
+    for(auto i = 0u; i < num_buffers; i++)
+        schedule.schedule(buffers[i]);
+    schedule.cancel(buffers[2]);
+
+    std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers;
+    while(schedule.anything_scheduled())
+        scheduled_buffers.emplace_back(schedule.next_buffer());
+
+    EXPECT_THAT(scheduled_buffers,
+        ElementsAre(buffers[0], buffers[1], buffers[3], buffers[4]));
 }
