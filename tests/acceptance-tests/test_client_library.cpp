@@ -39,6 +39,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <atomic>
 #include <chrono>
 #include <thread>
 #include <cstring>
@@ -60,7 +61,7 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     std::set<MirSurface*> surfaces;
     MirConnection* connection = nullptr;
     MirSurface* surface  = nullptr;
-    int buffers = 0;
+    std::atomic<int> buffers{0};
 
     static void connection_callback(MirConnection* connection, void* context)
     {

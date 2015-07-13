@@ -18,6 +18,7 @@ set(
   buffer_queue.cpp
   recently_used_cache.cpp
   buffer_schedule.cpp
+  buffer_map.cpp
 )
 
 ADD_LIBRARY(

@@ -27,12 +27,12 @@
 namespace mtf = mir_test_framework;
 namespace mcl = mir::client;
 
-extern "C" std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
+std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
 {
     return mtf::StubClientPlatformFactory{}.create_client_platform(context);
 }
 
-extern "C" bool is_appropriate_module(mcl::ClientContext* context)
+bool is_appropriate_module(mcl::ClientContext* context)
 {
     using namespace testing;
     MirPlatformPackage package;
