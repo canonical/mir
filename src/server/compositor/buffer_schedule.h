@@ -31,7 +31,7 @@
 namespace mir
 {
 namespace graphics { class Buffer; class GraphicBufferAllocator; class BufferProperties; }
-namespace frontend { class EventSink; }
+namespace frontend { class ClientBuffers; }
 namespace compositor
 {
 
@@ -150,50 +150,11 @@ private:
     std::deque<std::shared_ptr<graphics::Buffer>> queue;
 };
 
-class ClientBufferMap
+class MultiMonitorArbiter
 {
 public:
-    virtual void add_buffer(graphics::BufferProperties const& properties) = 0;
-    virtual void remove_buffer(graphics::BufferID id) = 0;
-    virtual std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) = 0;
-    virtual void send_buffer(graphics::BufferID id) = 0;
-
-    ClientBufferMap(ClientBufferMap const&) = delete;
-    ClientBufferMap& operator=(ClientBufferMap const&) = delete;
-    virtual ~ClientBufferMap() = default;
-    ClientBufferMap() = default;
-};
-
-class BufferMap : ClientBufferMap
-{
-public:
-    BufferMap(
-        frontend::BufferStreamId id,
-        std::shared_ptr<frontend::EventSink> const& sink,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
-
-    void add_buffer(graphics::BufferProperties const& properties);
-    void remove_buffer(graphics::BufferID id);
-    void send_buffer(graphics::BufferID id);
-    std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID);
-
-private:
-    std::mutex mutable mutex;
-    typedef std::map<graphics::BufferID, std::shared_ptr<graphics::Buffer>> Map;
-    //used to keep strong reference
-    Map buffers;
-    Map::iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&);
-
-    frontend::BufferStreamId const stream_id;
-    std::shared_ptr<frontend::EventSink> const sink;
-    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
-};
-
-class BufferSchedule
-{
-public:
-    BufferSchedule(
-        std::shared_ptr<compositor::ClientBufferMap> const& map,
+    MultiMonitorArbiter(
+        std::shared_ptr<frontend::ClientBuffers> const& map,
         std::unique_ptr<Schedule> schedule);
 
     void schedule_buffer(graphics::BufferID id);
@@ -203,7 +164,7 @@ public:
 
 private:
     std::mutex mutable mutex;
-    std::shared_ptr<compositor::ClientBufferMap> const map;
+    std::shared_ptr<frontend::ClientBuffers> const map;
 
     struct ScheduleEntry
     {

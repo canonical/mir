@@ -41,9 +41,9 @@ struct MockBufferMap : mf::ClientBuffers
     std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id) { return at(id); }
 };
 
-struct MonitorSchedule : Test
+struct ConsumptionArbiter : Test
 {
-    MonitorSchedule()
+    ConsumptionArbiter()
     {
         for(auto i = 0u; i < num_buffers; i++)
             buffers.emplace_back(std::make_shared<mtd::StubBuffer>());
@@ -58,12 +58,12 @@ struct MonitorSchedule : Test
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     std::vector<mg::BufferID> ids;
     NiceMock<MockBufferMap> mock_map;
-    mc::BufferSchedule schedule{
+    mc::MultiMonitorArbiter schedule{
         mt::fake_shared(mock_map), std::make_unique<mc::QueueingSchedule>()};
 };
 }
 
-TEST_F(MonitorSchedule, compositor_access_before_any_submission_throws)
+TEST_F(ConsumptionArbiter, compositor_access_before_any_submission_throws)
 {
     //nothing owned
     EXPECT_THROW({
@@ -76,14 +76,14 @@ TEST_F(MonitorSchedule, compositor_access_before_any_submission_throws)
     schedule.compositor_acquire(this);
 }
 
-TEST_F(MonitorSchedule, compositor_access)
+TEST_F(ConsumptionArbiter, compositor_access)
 {
     schedule.schedule_buffer(ids[0]);
     auto cbuffer = schedule.compositor_acquire(this);
     EXPECT_THAT(cbuffer->id(), Eq(ids[0]));
 }
 
-TEST_F(MonitorSchedule, compositor_release_sends_buffer_back)
+TEST_F(ConsumptionArbiter, compositor_release_sends_buffer_back)
 {
     EXPECT_CALL(mock_map, send_buffer(ids[0]));
 
@@ -94,7 +94,7 @@ TEST_F(MonitorSchedule, compositor_release_sends_buffer_back)
     schedule.compositor_release(cbuffer);
 }
 
-TEST_F(MonitorSchedule, compositor_can_acquire_different_buffers_if_submission_happens)
+TEST_F(ConsumptionArbiter, compositor_can_acquire_different_buffers_if_submission_happens)
 {
     EXPECT_CALL(mock_map, send_buffer(ids[0]));
 
@@ -107,7 +107,7 @@ TEST_F(MonitorSchedule, compositor_can_acquire_different_buffers_if_submission_h
     schedule.compositor_release(cbuffer1);
 }
 
-TEST_F(MonitorSchedule, compositor_can_acquire_a_few_times_and_only_sends_on_the_last_release)
+TEST_F(ConsumptionArbiter, compositor_can_acquire_a_few_times_and_only_sends_on_the_last_release)
 {
     schedule.schedule_buffer(ids[0]);
     auto cbuffer1 = schedule.compositor_acquire(this);
@@ -119,7 +119,7 @@ TEST_F(MonitorSchedule, compositor_can_acquire_a_few_times_and_only_sends_on_the
     schedule.compositor_release(cbuffer1);
 }
 
-TEST_F(MonitorSchedule, compositor_buffer_syncs_to_fastest_compositor)
+TEST_F(ConsumptionArbiter, compositor_buffer_syncs_to_fastest_compositor)
 {
     int comp_id1{0};
     int comp_id2{0};
@@ -148,7 +148,7 @@ TEST_F(MonitorSchedule, compositor_buffer_syncs_to_fastest_compositor)
     EXPECT_THAT(cbuffer7, Eq(buffers[1]));
 }
 
-TEST_F(MonitorSchedule, compositor_consumes_all_buffers_when_operating_as_a_composited_scene_would)
+TEST_F(ConsumptionArbiter, compositor_consumes_all_buffers_when_operating_as_a_composited_scene_would)
 {
     schedule.schedule_buffer(ids[0]);
     schedule.schedule_buffer(ids[1]);
@@ -174,7 +174,7 @@ TEST_F(MonitorSchedule, compositor_consumes_all_buffers_when_operating_as_a_comp
     EXPECT_THAT(cbuffer5, Eq(buffers[4]));
 }
 
-TEST_F(MonitorSchedule, compositor_consumes_all_buffers_when_operating_as_a_bypassed_buffer_would)
+TEST_F(ConsumptionArbiter, compositor_consumes_all_buffers_when_operating_as_a_bypassed_buffer_would)
 {
     schedule.schedule_buffer(ids[0]);
     schedule.schedule_buffer(ids[1]);
@@ -200,7 +200,7 @@ TEST_F(MonitorSchedule, compositor_consumes_all_buffers_when_operating_as_a_bypa
     EXPECT_THAT(cbuffer5, Eq(buffers[4]));
 }
 
-TEST_F(MonitorSchedule, multimonitor_compositor_buffer_syncs_to_fastest_with_more_queueing)
+TEST_F(ConsumptionArbiter, multimonitor_compositor_buffer_syncs_to_fastest_with_more_queueing)
 {
     int comp_id1{0};
     int comp_id2{0};
@@ -239,7 +239,7 @@ TEST_F(MonitorSchedule, multimonitor_compositor_buffer_syncs_to_fastest_with_mor
 }
 
 #if 0 //evaluate on monday if this is valid after teasing out
-TEST_F(MonitorSchedule, scheduling_can_send_buffer_if_framedropping_and_no_compositors_still_have_it)
+TEST_F(ConsumptionArbiter, scheduling_can_send_buffer_if_framedropping_and_no_compositors_still_have_it)
 {
     schedule.schedule_buffer(id1);
     auto cbuffer1 = schedule.compositor_acquire(this);
@@ -252,7 +252,7 @@ TEST_F(MonitorSchedule, scheduling_can_send_buffer_if_framedropping_and_no_compo
     schedule.schedule_buffer(id2);
 }
 
-TEST_F(MonitorSchedule, removal_of_the_compositor_buffer_happens_after_compositor_release)
+TEST_F(ConsumptionArbiter, removal_of_the_compositor_buffer_happens_after_compositor_release)
 {
     EXPECT_CALL(mock_sink, send_buffer(_,_,mg::BufferIpcMsgType::update_msg))
         .Times(0);
@@ -270,7 +270,7 @@ TEST_F(MonitorSchedule, removal_of_the_compositor_buffer_happens_after_composito
 
 #if 0
 //good idea?
-TEST_F(BufferSchedule, submitted_buffer_can_be_ejected)
+TEST_F(MultiMonitorArbiter, submitted_buffer_can_be_ejected)
 {
     schedule.schedule_buffer(buffer2);
     schedule.schedule_buffer(buffer1);
@@ -280,7 +280,7 @@ TEST_F(BufferSchedule, submitted_buffer_can_be_ejected)
 }
 #endif
 #if 0
-TEST_F(MonitorSchedule, scheduling_wont_send_front_if_no_compositor_has_seen_buffer)
+TEST_F(ConsumptionArbiter, scheduling_wont_send_front_if_no_compositor_has_seen_buffer)
 {
     EXPECT_CALL(mock_sink, send_buffer(_,_,_)).Times(0);
     schedule.schedule_buffer(id1);

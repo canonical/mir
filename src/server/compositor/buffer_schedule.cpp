@@ -19,6 +19,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/frontend/client_buffers.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 
@@ -26,21 +27,21 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 
-mc::BufferSchedule::BufferSchedule(
-    std::shared_ptr<compositor::ClientBufferMap> const& map,
+mc::MultiMonitorArbiter::MultiMonitorArbiter(
+    std::shared_ptr<frontend::ClientBuffers> const& map,
     std::unique_ptr<Schedule> schedule) :
     map(map),
     schedule(std::move(schedule))
 {
 }
 
-void mc::BufferSchedule::schedule_buffer(mg::BufferID id)
+void mc::MultiMonitorArbiter::schedule_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     schedule->schedule((*map)[id]); 
 }
 
-std::shared_ptr<mg::Buffer> mc::BufferSchedule::compositor_acquire(compositor::CompositorID id)
+std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
 
@@ -63,7 +64,7 @@ std::shared_ptr<mg::Buffer> mc::BufferSchedule::compositor_acquire(compositor::C
     return last_entry.buffer;
 }
 
-void mc::BufferSchedule::compositor_release(std::shared_ptr<mg::Buffer> const& buffer)
+void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> const& buffer)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
 
@@ -77,7 +78,7 @@ void mc::BufferSchedule::compositor_release(std::shared_ptr<mg::Buffer> const& b
     clean_backlog();
 }
 
-void mc::BufferSchedule::clean_backlog()
+void mc::MultiMonitorArbiter::clean_backlog()
 {
     for(auto it = backlog.begin(); it != backlog.end();)
     {
