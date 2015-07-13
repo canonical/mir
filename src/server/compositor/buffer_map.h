@@ -20,7 +20,7 @@
 #define MIR_COMPOSITOR_BUFFER_MAP_H_
 
 #include "mir/frontend/buffer_stream_id.h"
-#include "client_buffers.h"
+#include "mir/frontend/client_buffers.h"
 #include <mutex>
 #include <map>
 
@@ -30,7 +30,7 @@ namespace graphics { class GraphicBufferAllocator; }
 namespace frontend { class EventSink; }
 namespace compositor
 {
-class BufferMap : ClientBuffers
+class BufferMap : public frontend::ClientBuffers
 {
 public:
     BufferMap(

@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_CLIENT_BUFFERS_H_
-#define MIR_COMPOSITOR_CLIENT_BUFFERS_H_
+#ifndef MIR_FRONTEND_CLIENT_BUFFERS_H_
+#define MIR_FRONTEND_CLIENT_BUFFERS_H_
 
 #include "mir/graphics/buffer_id.h"
 #include <memory>
@@ -25,7 +25,7 @@
 namespace mir
 {
 namespace graphics { class Buffer; class BufferProperties; }
-namespace compositor
+namespace frontend
 {
 class ClientBuffers
 {
@@ -42,4 +42,4 @@ public:
 };
 }
 }
-#endif /* MIR_COMPOSITOR_CLIENT_BUFFERS_H_ */
+#endif /* MIR_FRONTEND_CLIENT_BUFFERS_H_ */
