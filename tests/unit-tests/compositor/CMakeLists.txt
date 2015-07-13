@@ -12,6 +12,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_compositing_screencast.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_timeout_frame_dropping_policy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_buffers.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_framedrop_schedule.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
