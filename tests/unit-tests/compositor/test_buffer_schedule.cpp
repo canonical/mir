@@ -56,39 +56,63 @@ struct StubBufferAllocator : public mg::GraphicBufferAllocator
 };
 }
 
-struct ClientBufferMap : public Test
+struct BufferMap : public Test
 {
     testing::NiceMock<mtd::MockEventSink> mock_sink;
     mf::BufferStreamId stream_id{44};
     mg::BufferProperties properties{geom::Size{42,43}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     MockBufferAllocator mock_allocator;
     StubBufferAllocator stub_allocator;
-    mc::ClientBufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(stub_allocator)};
+    mc::BufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(stub_allocator)};
 };
 
-TEST_F(ClientBufferMap, sends_full_buffer_on_allocation)
+TEST_F(BufferMap, sends_full_buffer_on_allocation)
 {
     auto stub_buffer = std::make_shared<mtd::StubBuffer>();
     EXPECT_CALL(mock_allocator, alloc_buffer(Ref(properties)))
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*stub_buffer), mg::BufferIpcMsgType::full_msg));
-    mc::ClientBufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
+    mc::BufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
     map.add_buffer(properties);
 }
 
-TEST_F(ClientBufferMap, removal_of_nonexistent_buffer_throws)
+TEST_F(BufferMap, removal_of_nonexistent_buffer_throws)
 {
     auto stub_buffer = std::make_unique<mtd::StubBuffer>();
     EXPECT_THROW({
-        schedule.remove_buffer(stub_buffer->id());
+        map.remove_buffer(stub_buffer->id());
     }, std::logic_error);
 }
 
-TEST_F(ClientBufferMap, can_access_once_added)
+TEST_F(BufferMap, can_access_once_added)
 {
     map.add_buffer(properties);
-    auto buffer = map[stub_allocator.last_id()];
-    EXPECT_THAT(buffer, Eq(stub_allocator.last_buffer));
+    ASSERT_THAT(stub_allocator.map, SizeIs(1));
+    ASSERT_THAT(stub_allocator.ids, SizeIs(1));
+    auto buffer = map[stub_allocator.ids[0]];
+    EXPECT_THAT(buffer, Eq(stub_allocator.map[stub_allocator.ids[0]]));
+}
+
+TEST_F(BufferMap, sends_update_msg_to_send_buffer)
+{
+    map.add_buffer(properties);
+    ASSERT_THAT(stub_allocator.map, SizeIs(1));
+    ASSERT_THAT(stub_allocator.ids, SizeIs(1));
+    auto buffer = map[stub_allocator.ids[0]];
+    EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*buffer), mg::BufferIpcMsgType::update_msg));
+    map.send_buffer(stub_allocator.ids[0]);
+}
+
+TEST_F(BufferMap, sends_no_update_msg_if_buffer_is_not_around)
+{
+    map.add_buffer(properties);
+    ASSERT_THAT(stub_allocator.map, SizeIs(1));
+    ASSERT_THAT(stub_allocator.ids, SizeIs(1));
+    auto buffer = map[stub_allocator.ids[0]];
+    EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*buffer), mg::BufferIpcMsgType::update_msg))
+        .Times(0);
+    map.remove_buffer(stub_allocator.ids[0]);
+    map.send_buffer(stub_allocator.ids[0]);
 }
 
 #if 0
@@ -136,41 +160,26 @@ TEST_F(ClientBufferMap, compositor_access)
 
 
 
-
-
-
-struct StartedBufferSchedule : BufferSchedule
+#if 0
+struct MockBufferMap : mc::BufferMap
 {
-    StartedBufferSchedule()
-    {
-        schedule.add_buffer(properties);
-        schedule.add_buffer(properties);
-        Mock::VerifyAndClearExpectations(&mock_sink);
-
-        for(auto& pair : allocator.map)
-            ids.push_back(pair.first);
-        id1 = ids[0]; 
-        id2 = ids[1];
-        buffer1 = allocator.map[id1]; 
-        buffer2 = allocator.map[id2]; 
-    }
-
-    testing::NiceMock<mtd::MockEventSink> mock_sink;
-    mf::BufferStreamId stream_id{44};
-    mg::BufferProperties properties{geom::Size{42,43}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-    StubBufferAllocator allocator;
-    mc::BufferSchedule schedule{
-        stream_id, mt::fake_shared(mock_sink), mt::fake_shared(allocator), std::make_unique<mc::QueueingSchedule>()};
-    std::vector<mg::BufferID> ids;
-    mg::BufferID id1;
-    mg::BufferID id2;
-    std::shared_ptr<mg::Buffer> buffer1;
-    std::shared_ptr<mg::Buffer> buffer2;
+    MOCK_METHOD1(add_buffer, void(mg::BufferProperties const&));
+    MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
+    MOCK_METHOD1(send_buffer, void(mg::BufferID id));
+    std::shared_ptr<mg::Buffer>& operator[](mg::BufferID) { return buffer; }
+    std::shared_ptr<mg::Buffer> buffer;
 };
 
-TEST_F(StartedBufferSchedule, compositor_release_sends_buffer_back)
+struct MonitorSchedule : Test
 {
-    EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*buffer1), mg::BufferIpcMsgType::update_msg));
+    MockBufferMap mock_map;
+    mc::BufferSchedule schedule{
+        mt::fake_shared(mock_map), std::make_unique<mc::QueueingSchedule>()};
+};
+
+TEST_F(MonitorSchedule, compositor_release_sends_buffer_back)
+{
+    EXPECT_CALL(mock_map, send_buffer(_));
 
     schedule.schedule_buffer(id1);
 
@@ -178,6 +187,9 @@ TEST_F(StartedBufferSchedule, compositor_release_sends_buffer_back)
     schedule.schedule_buffer(id2);
     schedule.compositor_release(cbuffer);
 }
+
+
+
 
 TEST_F(StartedBufferSchedule, compositor_can_acquire_different_buffers_if_submission_happens)
 {
@@ -210,7 +222,7 @@ TEST_F(StartedBufferSchedule, scheduling_wont_send_front_if_no_compositor_has_se
     schedule.schedule_buffer(id1);
     schedule.schedule_buffer(id2);
 }
-
+#endif
 #if 0
 TEST_F(StartedBufferSchedule, scheduling_can_send_buffer_if_framedropping_and_no_compositors_still_have_it)
 {
@@ -242,6 +254,8 @@ TEST_F(StartedBufferSchedule, removal_of_the_compositor_buffer_happens_after_com
 }
 #endif
 
+
+#if 0
 //mc::BufferQueue's current approach, alternative approaches exist
 TEST_F(StartedBufferSchedule, compositor_buffer_syncs_to_fastest)
 {
@@ -402,7 +416,7 @@ TEST_F(StartedBufferSchedule, multimonitor_compositor_buffer_syncs_to_fastest_wi
     EXPECT_THAT(cbuffer7, Eq(allocator.map[id5]));
     EXPECT_THAT(cbuffer8, Eq(allocator.map[id5]));
 }
-
+#endif
 
 #if 0
 //good idea?

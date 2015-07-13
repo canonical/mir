@@ -27,17 +27,14 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 
 mc::BufferSchedule::BufferSchedule(
-    mf::BufferStreamId id,
-    std::shared_ptr<mf::EventSink> const& sink,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<compositor::ClientBufferMap> const& map,
     std::unique_ptr<Schedule> schedule) :
-    stream_id(id),
-    sink(sink),
-    allocator(allocator),
+    map(map),
     schedule(std::move(schedule))
 {
 }
 
+#if 0
 void mc::BufferSchedule::add_buffer(graphics::BufferProperties const& properties)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
@@ -68,12 +65,13 @@ void mc::BufferSchedule::remove_buffer(mg::BufferID id)
             entry.dead = true;
     }
 }
-
+#endif
 void mc::BufferSchedule::schedule_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    auto it = checked_buffers_find(id, lk);
-    schedule->schedule(it->second);
+    auto buffer = (*map)[id];
+//    auto it = checked_buffers_find(id, lk);
+//    schedule->schedule(it->second);
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferSchedule::compositor_acquire(compositor::CompositorID id)
@@ -126,10 +124,11 @@ void mc::BufferSchedule::clean_backlog()
         {
             //if (map->exists(it->buffer->id())
             //  sink->send_buffer()
-            if (!it->dead)
-            {
-                sink->send_buffer(stream_id, *it->buffer, mg::BufferIpcMsgType::update_msg);
-            }
+//            if (!it->dead)
+//            {
+//                sink->send_buffer(stream_id, *it->buffer, mg::BufferIpcMsgType::update_msg);
+//            }
+            map->send_buffer(it->buffer->id());
             it = backlog.erase(it);
         }
         else
@@ -199,4 +198,55 @@ std::shared_ptr<mg::Buffer> mc::QueueingSchedule::next_buffer()
     auto buffer = queue.front();
     queue.pop_front();
     return buffer;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mc::BufferMap::BufferMap(
+    mf::BufferStreamId id,
+    std::shared_ptr<mf::EventSink> const& sink,
+    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
+    stream_id(id),
+    sink(sink),
+    allocator(allocator)
+{
+}
+
+void mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
+{
+    (void) properties;
+}
+
+void mc::BufferMap::remove_buffer(mg::BufferID id)
+{
+    (void) id;
+}
+
+void mc::BufferMap::send_buffer(mg::BufferID id)
+{
+    (void) id;
+}
+
+std::shared_ptr<mg::Buffer>& mc::BufferMap::operator[](mg::BufferID id)
+{
+    (void) id;
+    static std::shared_ptr<mg::Buffer> b;
+    return b;
 }
