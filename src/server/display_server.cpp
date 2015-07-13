@@ -31,6 +31,7 @@
 #include "mir/input/input_manager.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/log.h"
+#include "mir/unwind_helpers.h"
 
 #include <stdexcept>
 
@@ -39,34 +40,6 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace msh = mir::shell;
-
-namespace
-{
-
-class TryButRevertIfUnwinding
-{
-public:
-    TryButRevertIfUnwinding(std::function<void()> const& apply,
-                            std::function<void()> const& revert)
-        : revert{revert}
-    {
-        apply();
-    }
-
-    ~TryButRevertIfUnwinding()
-    {
-        if (std::uncaught_exception())
-            revert();
-    }
-
-private:
-    TryButRevertIfUnwinding(TryButRevertIfUnwinding const&) = delete;
-    TryButRevertIfUnwinding& operator=(TryButRevertIfUnwinding const&) = delete;
-
-    std::function<void()> const revert;
-};
-
-}
 
 struct mir::DisplayServer::Private
 {
@@ -97,29 +70,29 @@ struct mir::DisplayServer::Private
     {
         try
         {
-            TryButRevertIfUnwinding comm{
+            auto comm = try_but_revert_if_unwinding(
                 [this] { connector->stop(); },
-                [this] { connector->start(); }};
+                [this] { connector->start(); });
 
-            TryButRevertIfUnwinding prompt{
+            auto prompt = try_but_revert_if_unwinding(
                 [this] { prompt_connector->stop(); },
-                [this] { prompt_connector->start(); }};
+                [this] { prompt_connector->start(); });
 
-            TryButRevertIfUnwinding dispatcher{
+            auto dispatcher = try_but_revert_if_unwinding(
                 [this] { input_dispatcher->stop(); },
-                [this] { input_dispatcher->start(); }};
+                [this] { input_dispatcher->start(); });
 
-            TryButRevertIfUnwinding input{
+            auto input = try_but_revert_if_unwinding(
                 [this] { input_manager->stop(); },
-                [this] { input_manager->start(); }};
+                [this] { input_manager->start(); });
 
-            TryButRevertIfUnwinding display_config_processing{
+            auto display_config_processing = try_but_revert_if_unwinding(
                 [this] { display_changer->pause_display_config_processing(); },
-                [this] { display_changer->resume_display_config_processing(); }};
+                [this] { display_changer->resume_display_config_processing(); });
 
-            TryButRevertIfUnwinding comp{
+            auto comp = try_but_revert_if_unwinding(
                 [this] { compositor->stop(); },
-                [this] { compositor->start(); }};
+                [this] { compositor->start(); });
 
             display->pause();
         }
@@ -137,29 +110,29 @@ struct mir::DisplayServer::Private
     {
         try
         {
-            TryButRevertIfUnwinding disp{
+            auto disp = try_but_revert_if_unwinding(
                 [this] { display->resume(); },
-                [this] { display->pause(); }};
+                [this] { display->pause(); });
 
-            TryButRevertIfUnwinding comp{
+            auto comp = try_but_revert_if_unwinding(
                 [this] { compositor->start(); },
-                [this] { compositor->stop(); }};
+                [this] { compositor->stop(); });
 
-            TryButRevertIfUnwinding display_config_processing{
+            auto display_config_processing = try_but_revert_if_unwinding(
                 [this] { display_changer->resume_display_config_processing(); },
-                [this] { display_changer->pause_display_config_processing(); }};
+                [this] { display_changer->pause_display_config_processing(); });
 
-            TryButRevertIfUnwinding input{
+            auto input = try_but_revert_if_unwinding(
                 [this] { input_manager->start(); },
-                [this] { input_manager->stop(); }};
+                [this] { input_manager->stop(); });
 
-            TryButRevertIfUnwinding dispatcher{
+            auto dispatcher = try_but_revert_if_unwinding(
                 [this] { input_dispatcher->start(); },
-                [this] { input_dispatcher->stop(); }};
+                [this] { input_dispatcher->stop(); });
 
-            TryButRevertIfUnwinding prompt{
+            auto prompt = try_but_revert_if_unwinding(
                 [this] { prompt_connector->start(); },
-                [this] { prompt_connector->stop(); }};
+                [this] { prompt_connector->stop(); });
 
             connector->start();
         }

@@ -42,6 +42,12 @@ public:
 
     virtual void session_exchange_buffer_called(std::string const& app_name) = 0;
 
+    virtual void session_submit_buffer_called(std::string const& app_name) = 0;
+
+    virtual void session_allocate_buffers_called(std::string const& app_name) = 0;
+
+    virtual void session_release_buffers_called(std::string const& app_name) = 0;
+
     virtual void session_release_surface_called(std::string const& app_name) = 0;
 
     virtual void session_disconnect_called(std::string const& app_name) = 0;
