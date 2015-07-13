@@ -20,6 +20,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "src/server/compositor/buffer_schedule.h"
+#include "mir/frontend/client_buffers.h"
 
 #include <gtest/gtest.h>
 using namespace testing;
@@ -28,117 +29,10 @@ namespace mtd = mir::test::doubles;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
-namespace geom = mir::geometry;
 
 namespace
 {
-struct MockBufferAllocator : public mg::GraphicBufferAllocator
-{
-    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
-    MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
-};
-
-struct StubBufferAllocator : public mg::GraphicBufferAllocator
-{
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        auto b = std::make_shared<mtd::StubBuffer>();
-        map[b->id()] = b;
-        ids.push_back(b->id());
-        return b;
-    }
-    std::vector<MirPixelFormat> supported_pixel_formats()
-    {
-        return {};
-    }
-    std::map<mg::BufferID, std::shared_ptr<mg::Buffer>> map;
-    std::vector<mg::BufferID> ids;
-};
-}
-
-struct BufferMap : public Test
-{
-    testing::NiceMock<mtd::MockEventSink> mock_sink;
-    mf::BufferStreamId stream_id{44};
-    mg::BufferProperties properties{geom::Size{42,43}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-    MockBufferAllocator mock_allocator;
-    StubBufferAllocator stub_allocator;
-    mc::BufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(stub_allocator)};
-};
-
-TEST_F(BufferMap, sends_full_buffer_on_allocation)
-{
-    auto stub_buffer = std::make_shared<mtd::StubBuffer>();
-    EXPECT_CALL(mock_allocator, alloc_buffer(Ref(properties)))
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*stub_buffer), mg::BufferIpcMsgType::full_msg));
-    mc::BufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
-    map.add_buffer(properties);
-}
-
-TEST_F(BufferMap, removal_of_nonexistent_buffer_throws)
-{
-    auto stub_buffer = std::make_unique<mtd::StubBuffer>();
-    EXPECT_THROW({
-        map.remove_buffer(stub_buffer->id());
-    }, std::logic_error);
-}
-
-TEST_F(BufferMap, can_access_once_added)
-{
-    map.add_buffer(properties);
-    ASSERT_THAT(stub_allocator.map, SizeIs(1));
-    ASSERT_THAT(stub_allocator.ids, SizeIs(1));
-    auto buffer = map[stub_allocator.ids[0]];
-    EXPECT_THAT(buffer, Eq(stub_allocator.map[stub_allocator.ids[0]]));
-}
-
-TEST_F(BufferMap, sends_update_msg_to_send_buffer)
-{
-    map.add_buffer(properties);
-    ASSERT_THAT(stub_allocator.map, SizeIs(1));
-    ASSERT_THAT(stub_allocator.ids, SizeIs(1));
-    auto buffer = map[stub_allocator.ids[0]];
-    EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*buffer), mg::BufferIpcMsgType::update_msg));
-    map.send_buffer(stub_allocator.ids[0]);
-}
-
-TEST_F(BufferMap, sends_no_update_msg_if_buffer_is_not_around)
-{
-    map.add_buffer(properties);
-    ASSERT_THAT(stub_allocator.map, SizeIs(1));
-    ASSERT_THAT(stub_allocator.ids, SizeIs(1));
-    auto buffer = map[stub_allocator.ids[0]];
-    EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*buffer), mg::BufferIpcMsgType::update_msg))
-        .Times(0);
-    map.remove_buffer(stub_allocator.ids[0]);
-    map.send_buffer(stub_allocator.ids[0]);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-struct MockBufferMap : mc::ClientBufferMap
+struct MockBufferMap : mf::ClientBuffers
 {
     MOCK_METHOD1(add_buffer, void(mg::BufferProperties const&));
     MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
@@ -167,6 +61,7 @@ struct MonitorSchedule : Test
     mc::BufferSchedule schedule{
         mt::fake_shared(mock_map), std::make_unique<mc::QueueingSchedule>()};
 };
+}
 
 TEST_F(MonitorSchedule, compositor_access_before_any_submission_throws)
 {

@@ -180,53 +180,6 @@ std::shared_ptr<mg::Buffer> mc::QueueingSchedule::next_buffer()
 
 
 
-mc::BufferMap::BufferMap(
-    mf::BufferStreamId id,
-    std::shared_ptr<mf::EventSink> const& sink,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
-    stream_id(id),
-    sink(sink),
-    allocator(allocator)
-{
-}
-
-void mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    auto buffer = allocator->alloc_buffer(properties);
-    buffers[buffer->id()] = buffer;
-    sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::full_msg);
-}
-
-void mc::BufferMap::remove_buffer(mg::BufferID id)
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    buffers.erase(checked_buffers_find(id, lk));
-}
-
-void mc::BufferMap::send_buffer(mg::BufferID id)
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    auto it = buffers.find(id);
-    if (it != buffers.end())
-        sink->send_buffer(stream_id, *it->second, mg::BufferIpcMsgType::update_msg);
-}
-
-std::shared_ptr<mg::Buffer>& mc::BufferMap::operator[](mg::BufferID id)
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    return checked_buffers_find(id, lk)->second;
-}
-
-mc::BufferMap::Map::iterator mc::BufferMap::checked_buffers_find(
-    mg::BufferID id, std::unique_lock<std::mutex> const&)
-{
-    auto it = buffers.find(id);
-    if (it == buffers.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("cannot find buffer by id"));
-    return it;
-}
-
 #if 0
 void mc::BufferSchedule::remove_buffer(mg::BufferID id)
 {
