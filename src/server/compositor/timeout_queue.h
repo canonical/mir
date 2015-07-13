@@ -19,6 +19,8 @@
 #ifndef MIR_COMPOSITOR_TIMEOUT_QUEUE_H_
 #define MIR_COMPOSITOR_TIMEOUT_QUEUE_H_
 #include <memory>
+#include <deque>
+#include <mutex>
 
 namespace mir
 {
@@ -32,6 +34,10 @@ public:
     void cancel(std::shared_ptr<graphics::Buffer> const& buffer);
     bool anything_scheduled();
     std::shared_ptr<graphics::Buffer> next_buffer();
+
+private:
+    std::mutex mutable mutex;
+    std::deque<std::shared_ptr<graphics::Buffer>> queue;
 };
 }
 }

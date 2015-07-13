@@ -17,25 +17,41 @@
  */
 
 #include "timeout_queue.h"
+#include <boost/throw_exception.hpp>
+#include <algorithm>
+
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 void mc::TimeoutQueue::schedule(std::shared_ptr<graphics::Buffer> const& buffer)
 {
-    (void) buffer;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    auto it = std::find(queue.begin(), queue.end(), buffer);
+    if (it != queue.end())
+        queue.erase(it);
+    queue.emplace_back(buffer);
 }
 
 void mc::TimeoutQueue::cancel(std::shared_ptr<graphics::Buffer> const& buffer)
 {
-    (void) buffer;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    auto it = std::find(queue.begin(), queue.end(), buffer);
+    if (it != queue.end())
+        queue.erase(it);
 }
 
 bool mc::TimeoutQueue::anything_scheduled()
 {
-    return false;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    return !queue.empty();
 }
 
 std::shared_ptr<mg::Buffer> mc::TimeoutQueue::next_buffer()
 {
-    return nullptr;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    if (queue.empty())
+        BOOST_THROW_EXCEPTION(std::logic_error("no buffer scheduled"));
+    auto buffer = queue.front();
+    queue.pop_front();
+    return buffer;
 }

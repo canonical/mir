@@ -38,6 +38,13 @@ struct TimeoutQueue : Test
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
 
     mc::TimeoutQueue schedule;
+    std::vector<std::shared_ptr<mg::Buffer>> drain_queue()
+    {
+        std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers;
+        while(schedule.anything_scheduled())
+            scheduled_buffers.emplace_back(schedule.next_buffer());
+        return scheduled_buffers;
+    }
 };
 }
 
@@ -60,11 +67,8 @@ TEST_F(TimeoutQueue, queues_buffers_up)
 
     EXPECT_TRUE(schedule.anything_scheduled());
 
-    for(auto i = 0u; i < num_buffers; i++)
-    {
-        auto buffer = schedule.next_buffer();
-        EXPECT_THAT(buffer, Eq(buffers[i]));
-    }
+    EXPECT_THAT(drain_queue(),
+        ElementsAre(buffers[1], buffers[3], buffers[0], buffers[2], buffers[4]));
 
     EXPECT_FALSE(schedule.anything_scheduled());
 }
@@ -75,11 +79,7 @@ TEST_F(TimeoutQueue, queuing_the_same_buffer_moves_it_to_front_of_queue)
         schedule.schedule(buffers[i]);
     schedule.schedule(buffers[0]);
 
-    std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers;
-    while(schedule.anything_scheduled())
-        scheduled_buffers.emplace_back(schedule.next_buffer());
-
-    EXPECT_THAT(scheduled_buffers,
+    EXPECT_THAT(drain_queue(),
         ElementsAre(buffers[1], buffers[2], buffers[3], buffers[4], buffers[0]));
 }
 
@@ -89,10 +89,6 @@ TEST_F(TimeoutQueue, cancelling_a_buffer_removes_it_from_queue)
         schedule.schedule(buffers[i]);
     schedule.cancel(buffers[2]);
 
-    std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers;
-    while(schedule.anything_scheduled())
-        scheduled_buffers.emplace_back(schedule.next_buffer());
-
-    EXPECT_THAT(scheduled_buffers,
+    EXPECT_THAT(drain_queue(),
         ElementsAre(buffers[0], buffers[1], buffers[3], buffers[4]));
 }
