@@ -41,9 +41,7 @@ bool get_gl_pixel_format(MirPixelFormat mir_format,
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     GLenum const argb = GL_BGRA_EXT;
     GLenum const abgr = GL_RGBA;
-#endif
-
-#if __BYTE_ORDER == __BIG_ENDIAN
+#elif __BYTE_ORDER == __BIG_ENDIAN
     // TODO: Big endian support
     GLenum const argb = GL_INVALID_ENUM;
     GLenum const abgr = GL_INVALID_ENUM;
