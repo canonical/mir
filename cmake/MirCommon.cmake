@@ -67,7 +67,7 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
     # TSan does not support multi-threaded fork
     # TSan may open fds so "surface_creation_does_not_leak_fds" will not work as written
     # TSan deadlocks when running StreamTransportTest/0.SendsFullMessagesWhenInterrupted - disable it until understood
-    set(test_exclusion_filter "UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds:StreamTransportTest/0.SendsFullMessagesWhenInterrupted")
+    set(test_exclusion_filter "UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds:StreamTransportTest/0.SendsFullMessagesWhenInterrupted:BufferQueue/WithTwoOrMoreBuffers.client_framerate_matches_compositor*:BufferQueue/WithThreeOrMoreBuffers.slow_client_framerate_matches_compositor*:BufferQueue/WithThreeOrMoreBuffers.queue_size_scales_with_client_performance*")
   endif()
 
   # Final commands
