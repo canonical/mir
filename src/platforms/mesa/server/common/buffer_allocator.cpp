@@ -224,6 +224,9 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
      * intersection of ShmBuffer and GBM's pixel format support. That is
      * just these two. Be aware however you can create a software surface
      * with almost any pixel format and it will also work...
+     *   TODO: Convert this to a loop that just queries the intersection of
+     * gbm_device_is_format_supported and ShmBuffer::supports(), however not
+     * yet while the former is buggy. (FIXME: LP: #1473901)
      */
     static std::vector<MirPixelFormat> const pixel_formats{
         mir_pixel_format_argb_8888,
