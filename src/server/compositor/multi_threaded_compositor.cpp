@@ -29,6 +29,7 @@
 #include "mir/scene/surface.h"
 #include "mir/terminate_with_current_exception.h"
 #include "mir/raii.h"
+#include "mir/unwind_helpers.h"
 #include "mir/thread_name.h"
 
 #include <thread>
@@ -41,32 +42,6 @@ using namespace std::literals::chrono_literals;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
-
-namespace
-{
-
-class ApplyIfUnwinding
-{
-public:
-    ApplyIfUnwinding(std::function<void()> const& apply)
-        : apply{apply}
-    {
-    }
-
-    ~ApplyIfUnwinding()
-    {
-        if (std::uncaught_exception())
-            apply();
-    }
-
-private:
-    ApplyIfUnwinding(ApplyIfUnwinding const&) = delete;
-    ApplyIfUnwinding& operator=(ApplyIfUnwinding const&) = delete;
-
-    std::function<void()> const apply;
-};
-
-}
 
 namespace mir
 {
@@ -118,12 +93,12 @@ public:
     void operator()() noexcept  // noexcept is important! (LP: #1237332)
     try
     {
-        ApplyIfUnwinding on_startup_failure{
+        auto on_startup_failure = on_unwind(
             [this]
             {
                 if (started_future.wait_for(0s) != std::future_status::ready)
                     started.set_exception(std::current_exception());
-            }};
+            });
 
         mir::set_thread_name("Mir/Comp");
 
@@ -292,8 +267,6 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 
 void mc::MultiThreadedCompositor::schedule_compositing(int num)
 {
-    std::unique_lock<std::mutex> lk(state_guard);
-
     report->scheduled();
     for (auto& f : thread_functors)
         f->schedule_compositing(num);
@@ -301,57 +274,44 @@ void mc::MultiThreadedCompositor::schedule_compositing(int num)
 
 void mc::MultiThreadedCompositor::start()
 {
-    std::unique_lock<std::mutex> lk(state_guard);
-    if (state != CompositorState::stopped)
-    {
+    auto stopped = CompositorState::stopped;
+    
+    if (!state.compare_exchange_strong(stopped, CompositorState::starting))
         return;
-    }
 
-    state = CompositorState::starting;
     report->started();
 
     /* To cleanup state if any code below throws */
-    ApplyIfUnwinding cleanup_if_unwinding{
-        [this, &lk]{
-            destroy_compositing_threads(lk);
-        }};
-
-    lk.unlock();
-    scene->add_observer(observer);
-    lk.lock();
+    auto cleanup_if_unwinding = on_unwind(
+        [this]{ destroy_compositing_threads(); });
 
     create_compositing_threads();
 
+    /* Add the observer after we have created the compositing threads */
+    scene->add_observer(observer);
+
     /* Optional first render */
     if (compose_on_start)
-    {
-        lk.unlock();
         schedule_compositing(1);
-    }
 }
 
 void mc::MultiThreadedCompositor::stop()
 {
-    std::unique_lock<std::mutex> lk(state_guard);
-    if (state != CompositorState::started)
-    {
+    auto started = CompositorState::started;
+
+    if (!state.compare_exchange_strong(started, CompositorState::stopping))
         return;
-    }
 
     state = CompositorState::stopping;
 
     /* To cleanup state if any code below throws */
-    ApplyIfUnwinding cleanup_if_unwinding{
-        [this, &lk]{
-            if(!lk.owns_lock()) lk.lock();
-            state = CompositorState::started;
-        }};
+    auto cleanup_if_unwinding = on_unwind(
+        [this]{ state = CompositorState::started; });
 
-    lk.unlock();
+    /* Remove the observer before destroying the compositing threads */
     scene->remove_observer(observer);
-    lk.lock();
 
-    destroy_compositing_threads(lk);
+    destroy_compositing_threads();
 
     // If the compositor is restarted we've likely got clients blocked
     // so we will need to schedule compositing immediately
@@ -379,14 +339,8 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     state = CompositorState::started;
 }
 
-void mc::MultiThreadedCompositor::destroy_compositing_threads(std::unique_lock<std::mutex>& lock)
+void mc::MultiThreadedCompositor::destroy_compositing_threads()
 {
-    /* Could be called during unwinding,
-     * ensure the lock is held before changing state
-     */
-    if(!lock.owns_lock())
-        lock.lock();
-
     for (auto& f : thread_functors)
         f->stop();
 
