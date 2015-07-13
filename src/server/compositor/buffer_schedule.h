@@ -155,9 +155,7 @@ class MultiMonitorArbiter
 public:
     MultiMonitorArbiter(
         std::shared_ptr<frontend::ClientBuffers> const& map,
-        std::unique_ptr<Schedule> schedule);
-
-    void schedule_buffer(graphics::BufferID id);
+        std::shared_ptr<Schedule> const& schedule);
 
     std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id);
     void compositor_release(std::shared_ptr<graphics::Buffer> const&);
@@ -176,7 +174,7 @@ private:
 
     std::set<compositor::CompositorID> current_buffer_users;
 
-    std::unique_ptr<Schedule> const schedule;
+    std::shared_ptr<Schedule> const schedule;
 
     void clean_backlog();
 };

@@ -29,17 +29,20 @@ namespace mf = mir::frontend;
 
 mc::MultiMonitorArbiter::MultiMonitorArbiter(
     std::shared_ptr<frontend::ClientBuffers> const& map,
-    std::unique_ptr<Schedule> schedule) :
+    std::shared_ptr<Schedule> const& schedule) :
     map(map),
-    schedule(std::move(schedule))
+    schedule(schedule)
 {
 }
 
+#if 0
+    void schedule_buffer(graphics::BufferID id);
 void mc::MultiMonitorArbiter::schedule_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     schedule->schedule((*map)[id]); 
 }
+#endif
 
 std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
 {
