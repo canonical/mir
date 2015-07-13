@@ -82,6 +82,11 @@ struct StubClientPlatform : public mcl::ClientPlatform
 #endif
     }
 
+    MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override
+    {
+        return mir_pixel_format_argb_8888;
+    }
+
     mcl::ClientContext* const context;
 };
 }

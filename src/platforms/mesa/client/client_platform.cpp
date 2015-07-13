@@ -177,3 +177,10 @@ MirNativeBuffer* mclm::ClientPlatform::convert_native_buffer(graphics::NativeBuf
     //MirNativeBuffer is type-compatible with the MirNativeBuffer
     return buf;
 }
+
+MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
+    EGLDisplay, EGLConfig) const
+{
+    // TODO
+    return mir_pixel_format_argb_8888;
+}
