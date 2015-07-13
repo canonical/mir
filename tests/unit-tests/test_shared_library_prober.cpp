@@ -84,6 +84,23 @@ TEST_F(SharedLibraryProber, raises_exception_for_nonexistent_path)
                  std::system_error);
 }
 
+TEST_F(SharedLibraryProber, exception_mentions_missing_path_name)
+{
+    bool thrown = false;
+
+    try
+    {
+        mir::libraries_for_path("/panacea", null_report);
+    }
+    catch (std::system_error& err)
+    {
+        thrown = true;
+        EXPECT_THAT(err.what(), testing::HasSubstr("/panacea"));
+    }
+
+    EXPECT_TRUE(thrown);
+}
+
 TEST_F(SharedLibraryProber, non_existent_path_raises_ENOENT_error)
 {
     try

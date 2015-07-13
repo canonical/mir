@@ -26,5 +26,5 @@ int main(int argc, char* argv[])
     // Override this standard gtest message
     std::cout << "Running main() from " << basename(__FILE__) << std::endl;
 
-    mir_test_framework::main(argc, argv);
+    return mir_test_framework::main(argc, argv);
 }
