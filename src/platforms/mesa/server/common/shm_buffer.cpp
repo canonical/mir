@@ -38,54 +38,48 @@ namespace {
 bool get_gl_pixel_format(MirPixelFormat mir_format,
                          GLenum& gl_format, GLenum& gl_type)
 {
-    gl_format = GL_INVALID_ENUM;
-    gl_type = GL_INVALID_ENUM;
-
-    switch (mir_format)
-    {
-    case mir_pixel_format_rgb_565:
-        gl_format = GL_RGB;
-        gl_type = GL_UNSIGNED_SHORT_5_6_5;
-        break;
-    case mir_pixel_format_rgba_5551:
-        gl_format = GL_RGBA;
-        gl_type = GL_UNSIGNED_SHORT_5_5_5_1;
-        break;
-    case mir_pixel_format_rgba_4444:
-        gl_format = GL_RGBA;
-        gl_type = GL_UNSIGNED_SHORT_4_4_4_4;
-        break;
-    case mir_pixel_format_rgb_888:
-        gl_format = GL_RGB;
-        gl_type = GL_UNSIGNED_BYTE;
-        break;
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-    case mir_pixel_format_xrgb_8888: // Careful compositing 'X' (LP: #1423462)
-    case mir_pixel_format_argb_8888:
-        gl_format = GL_BGRA_EXT;
-        gl_type = GL_UNSIGNED_BYTE;
-        break;
-    case mir_pixel_format_xbgr_8888: // Careful compositing 'X' (LP: #1423462)
-    case mir_pixel_format_abgr_8888:
-        gl_format = GL_RGBA;
-        gl_type = GL_UNSIGNED_BYTE;
-        break;
+    GLenum const argb = GL_BGRA_EXT;
+    GLenum const abgr = GL_RGBA;
 #endif
+
 #if __BYTE_ORDER == __BIG_ENDIAN
-#   error "Big endian support not implemented yet"
-    case mir_pixel_format_bgrx_8888:
-    case mir_pixel_format_bgra_8888:
-        gl_format = GL_BGRA_EXT;
-        gl_type = GL_UNSIGNED_BYTE;
-        break;
-    case mir_pixel_format_rgbx_8888:
-    case mir_pixel_format_rgba_8888:
-        gl_format = GL_RGBA;
-        gl_type = GL_UNSIGNED_BYTE;
-        break;
+    // TODO: Big endian support
+    GLenum const argb = GL_INVALID_ENUM;
+    GLenum const abgr = GL_INVALID_ENUM;
+    GLenum const rgba = GL_RGBA;
+    GLenum const bgra = GL_BGRA_EXT;
 #endif
-    default:
-        break;
+
+    static const struct
+    {
+        MirPixelFormat mir_format;
+        GLenum gl_format, gl_type;
+    } mapping[mir_pixel_formats] =
+    {
+        {mir_pixel_format_invalid,   GL_INVALID_ENUM, GL_INVALID_ENUM},
+        {mir_pixel_format_abgr_8888, abgr,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_xbgr_8888, abgr,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_argb_8888, argb,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_xrgb_8888, argb,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_bgr_888,   GL_INVALID_ENUM, GL_INVALID_ENUM},
+        {mir_pixel_format_rgb_888,   GL_RGB,          GL_UNSIGNED_BYTE},
+        {mir_pixel_format_rgb_565,   GL_RGB,          GL_UNSIGNED_SHORT_5_6_5},
+        {mir_pixel_format_rgba_5551, GL_RGBA,         GL_UNSIGNED_SHORT_5_5_5_1},
+        {mir_pixel_format_rgba_4444, GL_RGBA,         GL_UNSIGNED_SHORT_4_4_4_4},
+    };
+
+    if (mir_format > mir_pixel_format_invalid &&
+        mir_format < mir_pixel_formats &&
+        mapping[mir_format].mir_format == mir_format) // just a sanity check
+    {
+        gl_format = mapping[mir_format].gl_format;
+        gl_type = mapping[mir_format].gl_type;
+    }
+    else
+    {
+        gl_format = GL_INVALID_ENUM;
+        gl_type = GL_INVALID_ENUM;
     }
 
     return gl_format != GL_INVALID_ENUM && gl_type != GL_INVALID_ENUM;
