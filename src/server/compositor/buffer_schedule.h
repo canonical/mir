@@ -174,7 +174,6 @@ public:
 
     void add_buffer(graphics::BufferProperties const& properties);
     void remove_buffer(graphics::BufferID id);
-
     void send_buffer(graphics::BufferID id);
     std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID);
 
@@ -196,9 +195,6 @@ public:
     BufferSchedule(
         std::shared_ptr<compositor::ClientBufferMap> const& map,
         std::unique_ptr<Schedule> schedule);
-
-    void add_buffer(graphics::BufferProperties const& properties);
-    void remove_buffer(graphics::BufferID id);
 
     void schedule_buffer(graphics::BufferID id);
 

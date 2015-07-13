@@ -37,9 +37,7 @@ mc::BufferSchedule::BufferSchedule(
 void mc::BufferSchedule::schedule_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    auto buffer = (*map)[id];
-//    auto it = checked_buffers_find(id, lk);
-//    schedule->schedule(it->second);
+    schedule->schedule((*map)[id]); 
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferSchedule::compositor_acquire(compositor::CompositorID id)
@@ -52,7 +50,9 @@ std::shared_ptr<mg::Buffer> mc::BufferSchedule::compositor_acquire(compositor::C
     if (current_buffer_users.find(id) != current_buffer_users.end() || backlog.empty())
     {
         if (schedule->anything_scheduled())
+        {
             backlog.emplace_front(ScheduleEntry{schedule->next_buffer(), 0, false});
+        }
         current_buffer_users.clear();
     }
     current_buffer_users.insert(id);
@@ -132,7 +132,6 @@ void mc::QueueingSchedule::remove(std::shared_ptr<mg::Buffer> const& buffer)
 
 void mc::QueueingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
 {
-
 /*
  *  scheduler->schedule(it);
  */
