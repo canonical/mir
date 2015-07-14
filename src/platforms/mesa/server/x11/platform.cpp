@@ -35,7 +35,7 @@ mgx::Platform::Platform()
     : udev{std::make_shared<mir::udev::Context>()},
        drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render_node)}
 {
-   x_dpy = XOpenDisplay(NULL);
+   x_dpy = XOpenDisplay(nullptr);
    if (!x_dpy)
        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot open X display"));
    x_display = x_dpy;
@@ -99,7 +99,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
 
 mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
 {
-    auto dpy = XOpenDisplay(NULL);
+    auto dpy = XOpenDisplay(nullptr);
     if (dpy)
     {
         XCloseDisplay(dpy);
