@@ -35,10 +35,13 @@ mgx::Platform::Platform()
     : udev{std::make_shared<mir::udev::Context>()},
        drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render_node)}
 {
-   x_dpy = XOpenDisplay(nullptr);
-   if (!x_dpy)
-       BOOST_THROW_EXCEPTION(std::runtime_error("Cannot open X display"));
-   x_display = x_dpy;
+    if (x_display)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot create x11 platform more than once"));
+
+    x_display = XOpenDisplay(nullptr);
+
+    if (!x_display)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot open x11 display"));
 
    drm->setup(udev);
    gbm.setup(*drm);
@@ -46,7 +49,7 @@ mgx::Platform::Platform()
 
 mgx::Platform::~Platform()
 {
-    XCloseDisplay(x_dpy);
+    XCloseDisplay(x_display);
     x_display = nullptr;
 }
 
@@ -60,7 +63,7 @@ std::shared_ptr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<GLProgramFactory> const&,
     std::shared_ptr<GLConfig> const& /*gl_config*/)
 {
-    return std::make_shared<mgx::Display>(x_dpy);
+    return std::make_shared<mgx::Display>(x_display);
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
@@ -70,7 +73,7 @@ std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() 
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
-    return eglGetDisplay(x_dpy);
+    return eglGetDisplay(x_display);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

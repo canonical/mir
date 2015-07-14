@@ -36,10 +36,7 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
 {
-    int width = size.width.as_int();
-    int height = size.height.as_int();
-
-    return {{0,0}, {width,height}};
+    return {{0,0}, size};
 }
 
 void mgx::DisplayBuffer::make_current()

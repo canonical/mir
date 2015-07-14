@@ -112,7 +112,7 @@ mgx::Display::Display(::Display *dpy)
 
     auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
 
-    win = XCreateWindow(x_dpy, root, 0, 0, 1280, 1024,
+    win = XCreateWindow(x_dpy, root, 0, 0, display_width, display_height,
                         0, visInfo->depth, InputOutput,
                         visInfo->visual, mask, &attr);
 

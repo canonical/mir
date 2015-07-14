@@ -26,7 +26,7 @@ namespace geom = mir::geometry;
 
 mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, int width, int height) :
     configuration{
-            mg::DisplayConfigurationOutputId{0},
+            mg::DisplayConfigurationOutputId{1},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::unknown,
             {pf},

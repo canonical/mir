@@ -38,14 +38,14 @@ namespace mgm = mir::graphics::mesa;
 
 namespace
 {
-struct DefaultPlatformIPCPackage : public mg::PlatformIPCPackage
+struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 {
-    DefaultPlatformIPCPackage(int drm_auth_fd)
+    MesaPlatformIPCPackage(int drm_auth_fd)
     {
         ipc_fds.push_back(drm_auth_fd);
     }
 
-    ~DefaultPlatformIPCPackage()
+    ~MesaPlatformIPCPackage()
     {
         if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
             mgm::drm_close_threadsafe(ipc_fds[0]);
@@ -139,5 +139,5 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
 {
-    return std::make_shared<DefaultPlatformIPCPackage>(drm->authenticated_fd());
+    return std::make_shared<MesaPlatformIPCPackage>(drm->authenticated_fd());
 }

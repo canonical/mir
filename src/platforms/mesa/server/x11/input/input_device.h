@@ -19,7 +19,6 @@
 #ifndef MIR_INPUT_X_INPUT_DEVICE_H_
 #define MIR_INPUT_X_INPUT_DEVICE_H_
 
-#include "mir/input/input_device_info.h"
 #include "mir/input/input_device.h"
 
 #include <X11/Xlib.h>
@@ -34,7 +33,6 @@ class Dispatchable;
 
 namespace input
 {
-class InputDeviceInfo;
 
 namespace X
 {
@@ -58,10 +56,10 @@ protected:
 private:
     int fd;
     std::shared_ptr<XDispatchable> x_dispatchable;
-    InputDeviceInfo info;
 };
 
 }
+
 }
 }
 

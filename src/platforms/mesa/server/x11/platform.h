@@ -53,7 +53,6 @@ private:
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<mesa::helpers::DRMHelper> const drm;
     mesa::helpers::GBMHelper gbm;
-    ::Display *x_dpy;
 };
 
 }

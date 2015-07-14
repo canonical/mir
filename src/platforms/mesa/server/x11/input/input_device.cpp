@@ -16,6 +16,7 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
+#include "mir/input/input_device_info.h"
 #include "input_device.h"
 #include "dispatchable.h"
 
@@ -47,5 +48,5 @@ void mix::XInputDevice::stop()
 
 mi::InputDeviceInfo mix::XInputDevice::get_device_info()
 {
-    return info;
+    return mi::InputDeviceInfo{0,"x11-keyboard-device","x11-key-dev-1", mi::DeviceCapability::keyboard};
 }

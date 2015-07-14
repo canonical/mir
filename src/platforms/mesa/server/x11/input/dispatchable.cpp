@@ -46,7 +46,7 @@ mir::Fd mix::XDispatchable::watch_fd() const
 
 bool mix::XDispatchable::dispatch(md::FdEvents events)
 {
-	auto ret = true;
+    auto ret = true;
 
     if (events & (md::FdEvent::remote_closed | md::FdEvent::error))
         ret = false;
