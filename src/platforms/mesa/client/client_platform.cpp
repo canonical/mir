@@ -191,7 +191,7 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
      * Ideally Mesa should implement EGL_NATIVE_VISUAL_ID for all platforms
      * to explicitly return the exact GBM pixel format. But it doesn't do that
      * yet (for most platforms). It does however successfully return zero for
-     * EGL_NATIVE_VISUAL_ID so ignored that and beware.
+     * EGL_NATIVE_VISUAL_ID, so ignore that for now.
      */
     EGLint alpha_size = 0;
     if (eglGetConfigAttrib(disp, conf, EGL_ALPHA_SIZE, &alpha_size))
