@@ -22,6 +22,7 @@
 #include <vector>
 #include <memory>
 #include "mir/shared_library.h"
+#include "mir/options/program_option.h"
 
 namespace mir
 {
@@ -29,7 +30,9 @@ namespace graphics
 {
 class Platform;
 
-std::shared_ptr<SharedLibrary> module_for_device(std::vector<std::shared_ptr<SharedLibrary>> const& modules);
+std::shared_ptr<SharedLibrary> module_for_device(
+         std::vector<std::shared_ptr<SharedLibrary>> const& modules,
+         options::ProgramOption const& options);
 
 }
 }
