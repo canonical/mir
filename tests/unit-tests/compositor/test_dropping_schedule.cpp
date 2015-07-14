@@ -16,15 +16,18 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/compositor/dropping_queue.h"
+#include "mir/frontend/client_buffers.h"
+#include "src/server/compositor/dropping_schedule.h"
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/fake_shared.h"
 #include <gtest/gtest.h>
 
 using namespace testing;
 namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-
+namespace mf = mir::frontend;
 namespace
 {
 
@@ -37,9 +40,9 @@ struct MockBufferMap : mf::ClientBuffers
     std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id) { return at(id); }
 };
 
-struct DroppingQueue : Test
+struct DroppingSchedule : Test
 {
-    DroppingQueue()
+    DroppingSchedule()
     {
         for(auto i = 0u; i < num_buffers; i++)
             buffers.emplace_back(std::make_shared<mtd::StubBuffer>());
@@ -47,8 +50,8 @@ struct DroppingQueue : Test
     unsigned int const num_buffers{5};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
 
-    MockBufferMap mock_client_buffers;;
-    mc::DroppingQueue schedule(mt::fake_shared(mock_client_buffers));
+    MockBufferMap mock_client_buffers;
+    mc::DroppingSchedule schedule{mt::fake_shared(mock_client_buffers)};
     std::vector<std::shared_ptr<mg::Buffer>> drain_queue()
     {
         std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers;
@@ -59,7 +62,7 @@ struct DroppingQueue : Test
 };
 }
 
-TEST_F(ClientQueue, throws_if_no_buffers)
+TEST_F(DroppingSchedule, throws_if_no_buffers)
 {
     EXPECT_FALSE(schedule.anything_scheduled());
     EXPECT_THROW({
@@ -67,7 +70,7 @@ TEST_F(ClientQueue, throws_if_no_buffers)
     }, std::logic_error);
 }
 
-TEST_F(ClientQueue, queues_drops_excess_buffers)
+TEST_F(DroppingSchedule, queues_drops_excess_buffers)
 {
     InSequence seq;
     EXPECT_CALL(mock_client_buffers, send_buffer(buffers[0]->id()));
@@ -83,7 +86,7 @@ TEST_F(ClientQueue, queues_drops_excess_buffers)
     EXPECT_THAT(queue[0]->id(), Eq(buffers[4]->id()));
 }
 
-TEST_F(ClientQueue, queueing_same_buffer_many_times_doesnt_drop)
+TEST_F(DroppingSchedule, queueing_same_buffer_many_times_doesnt_drop)
 {
     EXPECT_CALL(mock_client_buffers, send_buffer(_)).Times(0);
  
@@ -96,7 +99,7 @@ TEST_F(ClientQueue, queueing_same_buffer_many_times_doesnt_drop)
     EXPECT_THAT(queue[0]->id(), Eq(buffers[2]->id()));
 }
 
-TEST_F(ClientQueue, can_cancel_buffer)
+TEST_F(DroppingSchedule, can_cancel_buffer)
 {
     schedule.schedule(buffers[0]);
     EXPECT_TRUE(schedule.anything_scheduled());
