@@ -45,7 +45,10 @@ mgx::Display::Display(::Display *dpy)
 
     EGLint egl_major, egl_minor;
     if (!eglInitialize(egl_dpy, &egl_major, &egl_minor))
+    {
+        eglTerminate(egl_dpy);
         BOOST_THROW_EXCEPTION(mg::egl_error("eglInitialize failed"));
+    }
 
     mir::log_info("EGL Version %d.%d", egl_major, egl_minor);
 
@@ -71,21 +74,30 @@ mgx::Display::Display(::Display *dpy)
     EGLConfig config;
     EGLint num_configs;
     if (!eglChooseConfig(egl_dpy, att, &config, 1, &num_configs))
+    {
+        eglTerminate(egl_dpy);
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an EGL config"));
+    }
 
     assert(config);
     assert(num_configs > 0);
 
     EGLint vid;
     if (!eglGetConfigAttrib(egl_dpy, config, EGL_NATIVE_VISUAL_ID, &vid))
+    {
+        eglTerminate(egl_dpy);
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get config attrib"));
+    }
 
     XVisualInfo visTemplate;
     int num_visuals;
     visTemplate.visualid = vid;
     auto visInfo = XGetVisualInfo(x_dpy, VisualIDMask, &visTemplate, &num_visuals);
     if (!visInfo)
+    {
+        eglTerminate(egl_dpy);
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get visual info"));
+    }
 
     XSetWindowAttributes attr;
     attr.background_pixel = 0;
@@ -116,9 +128,13 @@ mgx::Display::Display(::Display *dpy)
         XSizeHints sizehints;
         sizehints.x = 0;
         sizehints.y = 0;
-        sizehints.width  = display_width;
-        sizehints.height = display_height;
-        sizehints.flags = USSize | USPosition;
+        sizehints.base_width = display_width;
+        sizehints.base_height = display_height;
+        sizehints.min_width  = display_width;
+        sizehints.min_height = display_height;
+        sizehints.max_width = display_width;
+        sizehints.max_height = display_height;
+        sizehints.flags = USSize | USPosition | PMinSize | PMaxSize;
         XSetNormalHints(x_dpy, win, &sizehints);
         XSetStandardProperties(x_dpy, win, title, title,
                                None, (char **)NULL, 0, &sizehints);
@@ -126,11 +142,20 @@ mgx::Display::Display(::Display *dpy)
 
     egl_ctx = eglCreateContext(egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);
     if (!egl_ctx)
+    {
+        eglTerminate(egl_dpy);
+        XDestroyWindow(x_dpy, win);
         BOOST_THROW_EXCEPTION(mg::egl_error("eglCreateContext failed"));
+    }
 
     egl_surf = eglCreateWindowSurface(egl_dpy, config, win, NULL);
     if (!egl_surf)
+    {
+        eglDestroyContext(egl_dpy, egl_ctx);
+        eglTerminate(egl_dpy);
+        XDestroyWindow(x_dpy, win);
         BOOST_THROW_EXCEPTION(mg::egl_error("eglCreateWindowSurface failed"));
+    }
 
     /* sanity checks */
     {

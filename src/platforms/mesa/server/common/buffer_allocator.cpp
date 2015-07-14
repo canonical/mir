@@ -104,19 +104,19 @@ private:
                 {
                     EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
 
-                    EGL_WIDTH, (const EGLint)gbm_bo_get_width(bo_raw),
-                    EGL_HEIGHT, (const EGLint)gbm_bo_get_height(bo_raw),
-                    EGL_LINUX_DRM_FOURCC_EXT, (const EGLint)gbm_bo_get_format(bo_raw),
+                    EGL_WIDTH, static_cast<const EGLint>(gbm_bo_get_width(bo_raw)),
+                    EGL_HEIGHT, static_cast<const EGLint>(gbm_bo_get_height(bo_raw)),
+                    EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(gbm_bo_get_format(bo_raw)),
                     EGL_DMA_BUF_PLANE0_FD_EXT, prime_fd,
                     EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
-                    EGL_DMA_BUF_PLANE0_PITCH_EXT, (const EGLint)gbm_bo_get_stride(bo_raw),
+                    EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(gbm_bo_get_stride(bo_raw)),
                     EGL_NONE
                 };
 
                 egl_image = egl_extensions->eglCreateImageKHR(egl_display,
                                                               EGL_NO_CONTEXT,
                                                               EGL_LINUX_DMA_BUF_EXT,
-                                                              (EGLClientBuffer)NULL,
+                                                              static_cast<EGLClientBuffer>(nullptr),
                                                               image_attrs_X);
             }
             else
