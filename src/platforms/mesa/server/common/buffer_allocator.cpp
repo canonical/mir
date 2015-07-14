@@ -57,7 +57,6 @@ public:
         : bo{gbm_bo},
           egl_extensions{egl_extensions},
           egl_image{EGL_NO_IMAGE_KHR},
-          prime_fd{-1},
           buffer_import_method{buffer_import_method}
     {
     }
@@ -66,8 +65,6 @@ public:
     {
         if (egl_image != EGL_NO_IMAGE_KHR)
             egl_extensions->eglDestroyImageKHR(egl_display, egl_image);
-        if (prime_fd > -1)
-            close(prime_fd);
     }
 
 
@@ -91,8 +88,10 @@ private:
                 auto device = gbm_bo_get_device(bo_raw);
                 auto gem_handle = gbm_bo_get_handle(bo_raw).u32;
                 auto drm_fd = gbm_device_get_fd(device);
+                int raw_fd = -1;
 
-                auto ret = drmPrimeHandleToFD(drm_fd, gem_handle, DRM_CLOEXEC, &prime_fd);
+                auto ret = drmPrimeHandleToFD(drm_fd, gem_handle, DRM_CLOEXEC, &raw_fd);
+                prime_fd = mir::Fd{raw_fd};
                 if (ret)
                 {
                     std::string const msg("Failed to get PRIME fd from gbm bo");
@@ -144,7 +143,7 @@ private:
     std::shared_ptr<mg::EGLExtensions> const egl_extensions;
     EGLDisplay egl_display;
     EGLImageKHR egl_image;
-    int prime_fd;
+    mir::Fd prime_fd;
     mgm::BufferImportMethod const buffer_import_method;
 };
 
