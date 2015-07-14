@@ -166,6 +166,12 @@ MIR_CLIENT_9 {
  local: *;
 };
 
+MIR_CLIENT_9.1 {  # New functions in Mir 0.15
+  global:
+    mir_connection_get_egl_pixel_format;
+  local: *;
+} MIR_CLIENT_9;
+
 MIR_CLIENT_DETAIL_9 {
   global:
     extern "C++" { 

@@ -517,6 +517,12 @@ EGLNativeDisplayType MirConnection::egl_native_display()
     return *native_display;
 }
 
+MirPixelFormat MirConnection::egl_pixel_format(EGLDisplay disp, EGLConfig conf) const
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    return platform->get_egl_pixel_format(disp, conf);
+}
+
 void MirConnection::on_stream_created(int id, mcl::ClientBufferStream* stream)
 {
     surface_map->insert(mf::BufferStreamId(id), stream);
