@@ -673,6 +673,7 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
     auto spec = mir_connection_create_spec_for_changes(client.connection);
     mir_surface_spec_set_input_shape(spec, input_rects, 1);
     mir_surface_apply_spec(client.surface, spec);
+    mir_surface_spec_release(spec);
 
     // There is no way for us to wait on the result of mir_surface_apply_spec.
     // In order to avoid strange bespoke server objects to perform this synchronizastion
