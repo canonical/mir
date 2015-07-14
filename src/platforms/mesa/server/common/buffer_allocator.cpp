@@ -52,12 +52,10 @@ class EGLImageBufferTextureBinder : public mgm::BufferTextureBinder
 {
 public:
     EGLImageBufferTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
-                                std::shared_ptr<mg::EGLExtensions> const& egl_extensions,
-                                mgm::BufferImportMethod const buffer_import_method)
+                                std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
         : bo{gbm_bo},
           egl_extensions{egl_extensions},
-          egl_image{EGL_NO_IMAGE_KHR},
-          buffer_import_method{buffer_import_method}
+          egl_image{EGL_NO_IMAGE_KHR}
     {
     }
 
@@ -75,6 +73,24 @@ public:
         egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
     }
 
+protected:
+    virtual void ensure_egl_image() = 0;
+
+    std::shared_ptr<gbm_bo> const bo;
+    std::shared_ptr<mg::EGLExtensions> const egl_extensions;
+    EGLDisplay egl_display;
+    EGLImageKHR egl_image;
+};
+
+class NativePixmapTextureBinder : public EGLImageBufferTextureBinder
+{
+public:
+	NativePixmapTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
+                              std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
+        : EGLImageBufferTextureBinder(gbm_bo, egl_extensions)
+    {
+    }
+
 private:
     void ensure_egl_image()
     {
@@ -83,68 +99,80 @@ private:
             egl_display = eglGetCurrentDisplay();
             gbm_bo* bo_raw{bo.get()};
 
-            if (buffer_import_method == mgm::BufferImportMethod::dma_buf)
+            const EGLint image_attrs[] =
             {
-                auto device = gbm_bo_get_device(bo_raw);
-                auto gem_handle = gbm_bo_get_handle(bo_raw).u32;
-                auto drm_fd = gbm_device_get_fd(device);
-                int raw_fd = -1;
+                EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
 
-                auto ret = drmPrimeHandleToFD(drm_fd, gem_handle, DRM_CLOEXEC, &raw_fd);
-                prime_fd = mir::Fd{raw_fd};
-                if (ret)
-                {
-                    std::string const msg("Failed to get PRIME fd from gbm bo");
-                    BOOST_THROW_EXCEPTION(
-                        boost::enable_error_info(
-                            std::runtime_error(msg)) << boost::errinfo_errno(errno));
-                }
+                EGL_NONE
+            };
 
-                const EGLint image_attrs_X[] =
-                {
-                    EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+            egl_image = egl_extensions->eglCreateImageKHR(egl_display,
+                                                          EGL_NO_CONTEXT,
+                                                          EGL_NATIVE_PIXMAP_KHR,
+                                                          reinterpret_cast<void*>(bo_raw),
+                                                          image_attrs);
+            if (egl_image == EGL_NO_IMAGE_KHR)
+                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
+        }
+    }
+};
 
-                    EGL_WIDTH, static_cast<const EGLint>(gbm_bo_get_width(bo_raw)),
-                    EGL_HEIGHT, static_cast<const EGLint>(gbm_bo_get_height(bo_raw)),
-                    EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(gbm_bo_get_format(bo_raw)),
-                    EGL_DMA_BUF_PLANE0_FD_EXT, prime_fd,
-                    EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
-                    EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(gbm_bo_get_stride(bo_raw)),
-                    EGL_NONE
-                };
+class DMABufTextureBinder : public EGLImageBufferTextureBinder
+{
+public:
+	DMABufTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
+                        std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
+        : EGLImageBufferTextureBinder(gbm_bo, egl_extensions)
+    {
+    }
 
-                egl_image = egl_extensions->eglCreateImageKHR(egl_display,
-                                                              EGL_NO_CONTEXT,
-                                                              EGL_LINUX_DMA_BUF_EXT,
-                                                              static_cast<EGLClientBuffer>(nullptr),
-                                                              image_attrs_X);
-            }
-            else
+private:
+    void ensure_egl_image()
+    {
+        if (egl_image == EGL_NO_IMAGE_KHR)
+        {
+            egl_display = eglGetCurrentDisplay();
+            gbm_bo* bo_raw{bo.get()};
+
+            auto device = gbm_bo_get_device(bo_raw);
+            auto gem_handle = gbm_bo_get_handle(bo_raw).u32;
+            auto drm_fd = gbm_device_get_fd(device);
+            int raw_fd = -1;
+
+            auto ret = drmPrimeHandleToFD(drm_fd, gem_handle, DRM_CLOEXEC, &raw_fd);
+            prime_fd = mir::Fd{raw_fd};
+            if (ret)
             {
-                const EGLint image_attrs[] =
-                {
-                    EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-
-                    EGL_NONE
-                };
-
-                egl_image = egl_extensions->eglCreateImageKHR(egl_display, EGL_NO_CONTEXT,
-                                                              EGL_NATIVE_PIXMAP_KHR,
-                                                              reinterpret_cast<void*>(bo_raw),
-                                                              image_attrs);
+                std::string const msg("Failed to get PRIME fd from gbm bo");
+                BOOST_THROW_EXCEPTION(
+                    boost::enable_error_info(
+                        std::runtime_error(msg)) << boost::errinfo_errno(errno));
             }
 
+            const EGLint image_attrs_X[] =
+            {
+                EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+
+                EGL_WIDTH, static_cast<const EGLint>(gbm_bo_get_width(bo_raw)),
+                EGL_HEIGHT, static_cast<const EGLint>(gbm_bo_get_height(bo_raw)),
+                EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(gbm_bo_get_format(bo_raw)),
+                EGL_DMA_BUF_PLANE0_FD_EXT, prime_fd,
+                EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
+                EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(gbm_bo_get_stride(bo_raw)),
+                EGL_NONE
+            };
+
+            egl_image = egl_extensions->eglCreateImageKHR(egl_display,
+                                                          EGL_NO_CONTEXT,
+                                                          EGL_LINUX_DMA_BUF_EXT,
+                                                          static_cast<EGLClientBuffer>(nullptr),
+                                                          image_attrs_X);
             if (egl_image == EGL_NO_IMAGE_KHR)
                 BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
         }
     }
 
-    std::shared_ptr<gbm_bo> const bo;
-    std::shared_ptr<mg::EGLExtensions> const egl_extensions;
-    EGLDisplay egl_display;
-    EGLImageKHR egl_image;
     mir::Fd prime_fd;
-    mgm::BufferImportMethod const buffer_import_method;
 };
 
 struct GBMBODeleter
@@ -230,7 +258,10 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
     std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
 
     std::unique_ptr<EGLImageBufferTextureBinder> texture_binder{
-        new EGLImageBufferTextureBinder{bo, egl_extensions, buffer_import_method}};
+        buffer_import_method == mgm::BufferImportMethod::dma_buf ?
+            dynamic_cast<EGLImageBufferTextureBinder*>(new DMABufTextureBinder{bo, egl_extensions}) :
+            dynamic_cast<EGLImageBufferTextureBinder*>(new NativePixmapTextureBinder{bo, egl_extensions})
+        };
 
     /* Create the GBMBuffer */
     auto const buffer =
@@ -310,5 +341,5 @@ std::unique_ptr<mg::Buffer> mgm::BufferAllocator::reconstruct_from(
     return std::make_unique<mgm::GBMBuffer>(
         bo,
         package->flags,
-        std::make_unique<EGLImageBufferTextureBinder>(bo, egl_extensions, buffer_import_method));
+        std::make_unique<NativePixmapTextureBinder>(bo, egl_extensions));
 }
