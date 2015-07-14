@@ -17,6 +17,7 @@
  */
 
 #include "dispatchable.h"
+#include "../xserver_connection.h"
 #include "mir/events/event_private.h"
 
 #include <chrono>
@@ -31,8 +32,9 @@
 namespace mi = mir::input;
 namespace mix = mi::X;
 namespace md = mir::dispatch;
+namespace mx = mir::X;
 
-extern ::Display *x_display;
+extern std::shared_ptr<mx::X11Connection> x11_connection;
 
 mix::XDispatchable::XDispatchable(int raw_fd)
     : fd(raw_fd), sink(nullptr)
@@ -55,7 +57,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
     {
         XEvent xev;
 
-        XNextEvent(x_display, &xev);
+        XNextEvent(x11_connection->dpy, &xev);
 
         if (sink)
         {

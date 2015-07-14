@@ -20,6 +20,7 @@
 #include "display.h"
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
+#include "xserver_connection.h"
 #include "mir/udev/wrapper.h"
 
 #include <boost/throw_exception.hpp>
@@ -28,29 +29,24 @@ namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 namespace mgx = mg::X;
 namespace mo = mir::options;
+namespace mx = mir::X;
 
-::Display *x_display = nullptr;
+std::shared_ptr<mx::X11Connection> x11_connection;
 
 mgx::Platform::Platform()
     : udev{std::make_shared<mir::udev::Context>()},
        drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render_node)}
 {
-    if (x_display)
+    if (x11_connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Cannot create x11 platform more than once"));
 
-    x_display = XOpenDisplay(nullptr);
+    x11_connection.reset(new mx::X11Connection());
 
-    if (!x_display)
+    if (!x11_connection->dpy)
         BOOST_THROW_EXCEPTION(std::runtime_error("Cannot open x11 display"));
 
-   drm->setup(udev);
-   gbm.setup(*drm);
-}
-
-mgx::Platform::~Platform()
-{
-    XCloseDisplay(x_display);
-    x_display = nullptr;
+    drm->setup(udev);
+    gbm.setup(*drm);
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator()
@@ -63,7 +59,7 @@ std::shared_ptr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<GLProgramFactory> const&,
     std::shared_ptr<GLConfig> const& /*gl_config*/)
 {
-    return std::make_shared<mgx::Display>(x_display);
+    return std::make_shared<mgx::Display>(x11_connection->dpy);
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
@@ -73,7 +69,7 @@ std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() 
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
-    return eglGetDisplay(x_display);
+    return eglGetDisplay(x11_connection->dpy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

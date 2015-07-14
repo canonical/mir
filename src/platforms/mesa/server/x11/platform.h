@@ -36,7 +36,7 @@ class Platform : public graphics::Platform
 {
 public:
     explicit Platform();
-    virtual ~Platform();
+    ~Platform() = default;
 
     /* From Platform */
     std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
