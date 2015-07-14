@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_TIMEOUT_QUEUE_H_
-#define MIR_COMPOSITOR_TIMEOUT_QUEUE_H_
+#ifndef MIR_COMPOSITOR_CLIENT_QUEUE_H_
+#define MIR_COMPOSITOR_CLIENT_QUEUE_H_
 #include <memory>
 #include <deque>
 #include <mutex>
@@ -27,7 +27,7 @@ namespace mir
 namespace graphics { class Buffer; }
 namespace compositor
 {
-class TimeoutQueue
+class ClientQueue
 {
 public:
     void schedule(std::shared_ptr<graphics::Buffer> const& buffer);
@@ -41,4 +41,4 @@ private:
 };
 }
 }
-#endif /* MIR_COMPOSITOR_TIMEOUT_QUEUE_H_ */
+#endif /* MIR_COMPOSITOR_CLIENT_QUEUE_H_ */

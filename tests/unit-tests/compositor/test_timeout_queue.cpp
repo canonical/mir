@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/compositor/timeout_queue.h"
+#include "src/server/compositor/client_queue.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include <gtest/gtest.h>
 
@@ -27,9 +27,9 @@ namespace mc = mir::compositor;
 
 namespace
 {
-struct TimeoutQueue : Test
+struct ClientQueue : Test
 {
-    TimeoutQueue()
+    ClientQueue()
     {
         for(auto i = 0u; i < num_buffers; i++)
             buffers.emplace_back(std::make_shared<mtd::StubBuffer>());
@@ -37,7 +37,7 @@ struct TimeoutQueue : Test
     unsigned int const num_buffers{5};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
 
-    mc::TimeoutQueue schedule;
+    mc::ClientQueue schedule;
     std::vector<std::shared_ptr<mg::Buffer>> drain_queue()
     {
         std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers;
@@ -48,7 +48,7 @@ struct TimeoutQueue : Test
 };
 }
 
-TEST_F(TimeoutQueue, throws_if_no_buffers)
+TEST_F(ClientQueue, throws_if_no_buffers)
 {
     EXPECT_FALSE(schedule.anything_scheduled());
     EXPECT_THROW({
@@ -56,7 +56,7 @@ TEST_F(TimeoutQueue, throws_if_no_buffers)
     }, std::logic_error);
 }
 
-TEST_F(TimeoutQueue, queues_buffers_up)
+TEST_F(ClientQueue, queues_buffers_up)
 {
     EXPECT_FALSE(schedule.anything_scheduled());
 
@@ -73,7 +73,7 @@ TEST_F(TimeoutQueue, queues_buffers_up)
     EXPECT_FALSE(schedule.anything_scheduled());
 }
 
-TEST_F(TimeoutQueue, queuing_the_same_buffer_moves_it_to_front_of_queue)
+TEST_F(ClientQueue, queuing_the_same_buffer_moves_it_to_front_of_queue)
 {
     for(auto i = 0u; i < num_buffers; i++)
         schedule.schedule(buffers[i]);
@@ -83,7 +83,7 @@ TEST_F(TimeoutQueue, queuing_the_same_buffer_moves_it_to_front_of_queue)
         ElementsAre(buffers[1], buffers[2], buffers[3], buffers[4], buffers[0]));
 }
 
-TEST_F(TimeoutQueue, cancelling_a_buffer_removes_it_from_queue)
+TEST_F(ClientQueue, cancelling_a_buffer_removes_it_from_queue)
 {
     for(auto i = 0u; i < num_buffers; i++)
         schedule.schedule(buffers[i]);

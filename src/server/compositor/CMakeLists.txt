@@ -18,7 +18,7 @@ set(
   buffer_queue.cpp
   recently_used_cache.cpp
   buffer_map.cpp
-  timeout_queue.cpp
+  client_queue.cpp
 )
 
 ADD_LIBRARY(

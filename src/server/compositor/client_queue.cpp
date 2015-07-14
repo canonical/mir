@@ -16,14 +16,14 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "timeout_queue.h"
+#include "client_queue.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
-void mc::TimeoutQueue::schedule(std::shared_ptr<graphics::Buffer> const& buffer)
+void mc::ClientQueue::schedule(std::shared_ptr<graphics::Buffer> const& buffer)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = std::find(queue.begin(), queue.end(), buffer);
@@ -32,7 +32,7 @@ void mc::TimeoutQueue::schedule(std::shared_ptr<graphics::Buffer> const& buffer)
     queue.emplace_back(buffer);
 }
 
-void mc::TimeoutQueue::cancel(std::shared_ptr<graphics::Buffer> const& buffer)
+void mc::ClientQueue::cancel(std::shared_ptr<graphics::Buffer> const& buffer)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = std::find(queue.begin(), queue.end(), buffer);
@@ -40,13 +40,13 @@ void mc::TimeoutQueue::cancel(std::shared_ptr<graphics::Buffer> const& buffer)
         queue.erase(it);
 }
 
-bool mc::TimeoutQueue::anything_scheduled()
+bool mc::ClientQueue::anything_scheduled()
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     return !queue.empty();
 }
 
-std::shared_ptr<mg::Buffer> mc::TimeoutQueue::next_buffer()
+std::shared_ptr<mg::Buffer> mc::ClientQueue::next_buffer()
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     if (queue.empty())
