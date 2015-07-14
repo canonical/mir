@@ -19,7 +19,8 @@
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
-#include "src/server/compositor/buffer_schedule.h"
+#include "src/server/compositor/multi_monitor_arbiter.h"
+#include "src/server/compositor/schedule.h"
 #include "mir/frontend/client_buffers.h"
 
 #include <gtest/gtest.h>
@@ -41,96 +42,124 @@ struct MockBufferMap : mf::ClientBuffers
     std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id) { return at(id); }
 };
 
-struct ConsumptionArbiter : Test
+struct FixedSchedule : mc::Schedule
 {
-    ConsumptionArbiter()
+    void schedule(std::shared_ptr<mg::Buffer> const&)
+    {
+        throw std::runtime_error("this stub doesnt support this");
+    }
+    void cancel(std::shared_ptr<mg::Buffer> const&)
+    {
+        throw std::runtime_error("this stub doesnt support this");
+    }
+    bool anything_scheduled()
+    {
+        return current != sched.size();
+    }
+    std::shared_ptr<mg::Buffer> next_buffer()
+    {
+        if (sched.empty() || current == sched.size())
+            throw std::runtime_error("no buffer scheduled");
+        return sched[current++];
+    }
+    void set_schedule(std::vector<std::shared_ptr<mg::Buffer>> s)
+    {
+        current = 0;
+        sched = s;
+    }
+private:
+    unsigned int current{0};
+    std::vector<std::shared_ptr<mg::Buffer>> sched;
+};
+
+struct MultiMonitorArbiter : Test
+{
+    MultiMonitorArbiter()
     {
         for(auto i = 0u; i < num_buffers; i++)
             buffers.emplace_back(std::make_shared<mtd::StubBuffer>());
     }
-
     unsigned int const num_buffers{6u};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     NiceMock<MockBufferMap> mock_map;
-    mc::QueueingSchedule schedule;
-    mc::MultiMonitorArbiter arbiter{
-        mt::fake_shared(mock_map), mt::fake_shared(schedule)};
+    FixedSchedule schedule;
+    mc::MultiMonitorArbiter arbiter{mt::fake_shared(mock_map), mt::fake_shared(schedule)};
 };
 }
 
-TEST_F(ConsumptionArbiter, compositor_access_before_any_submission_throws)
+TEST_F(MultiMonitorArbiter, compositor_access_before_any_submission_throws)
 {
     //nothing owned
     EXPECT_THROW({
         arbiter.compositor_acquire(this);
     }, std::logic_error);
 
-    schedule.schedule(buffers[0]);
+    schedule.set_schedule({buffers[0]});
 
     //something scheduled, should be ok
     arbiter.compositor_acquire(this);
 }
 
-TEST_F(ConsumptionArbiter, compositor_access)
+TEST_F(MultiMonitorArbiter, compositor_access)
 {
-    schedule.schedule(buffers[0]);
+    schedule.set_schedule({buffers[0]});
     auto cbuffer = arbiter.compositor_acquire(this);
     EXPECT_THAT(cbuffer, Eq(buffers[0]));
 }
 
-TEST_F(ConsumptionArbiter, compositor_release_sends_buffer_back)
+TEST_F(MultiMonitorArbiter, compositor_release_sends_buffer_back)
 {
     EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
 
-    schedule.schedule(buffers[0]);
+    schedule.set_schedule({buffers[0]});
 
     auto cbuffer = arbiter.compositor_acquire(this);
-    schedule.schedule(buffers[1]);
+    schedule.set_schedule({buffers[1]});
     arbiter.compositor_release(cbuffer);
 }
 
-TEST_F(ConsumptionArbiter, compositor_can_acquire_different_buffers_if_submission_happens)
+TEST_F(MultiMonitorArbiter, compositor_can_acquire_different_buffers_if_submission_happens)
 {
     EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
 
-    schedule.schedule(buffers[0]);
+    schedule.set_schedule({buffers[0]});
     auto cbuffer1 = arbiter.compositor_acquire(this);
-    schedule.schedule(buffers[1]);
+    schedule.set_schedule({buffers[1]});
     auto cbuffer2 = arbiter.compositor_acquire(this);
     EXPECT_THAT(cbuffer1, Ne(cbuffer2));
     arbiter.compositor_release(cbuffer2);
     arbiter.compositor_release(cbuffer1);
 }
 
-TEST_F(ConsumptionArbiter, compositor_can_acquire_a_few_times_and_only_sends_on_the_last_release)
+TEST_F(MultiMonitorArbiter, compositor_can_acquire_a_few_times_and_only_sends_on_the_last_release)
 {
-    schedule.schedule(buffers[0]);
+    schedule.set_schedule({buffers[0]});
     auto cbuffer1 = arbiter.compositor_acquire(this);
     auto cbuffer2 = arbiter.compositor_acquire(this);
     EXPECT_THAT(cbuffer1, Eq(cbuffer2));
     EXPECT_CALL(mock_map, send_buffer(buffers[0]->id())).Times(Exactly(1));
-    schedule.schedule(buffers[1]);
+    schedule.set_schedule({buffers[1]});
     arbiter.compositor_release(cbuffer2);
     arbiter.compositor_release(cbuffer1);
 }
 
-TEST_F(ConsumptionArbiter, compositor_buffer_syncs_to_fastest_compositor)
+TEST_F(MultiMonitorArbiter, compositor_buffer_syncs_to_fastest_compositor)
 {
     int comp_id1{0};
     int comp_id2{0};
 
-    schedule.schedule(buffers[0]);
+    schedule.set_schedule({buffers[0]});
     auto cbuffer1 = arbiter.compositor_acquire(&comp_id1); 
     auto cbuffer2 = arbiter.compositor_acquire(&comp_id2);
 
-    schedule.schedule(buffers[1]);
+    schedule.set_schedule({buffers[1]});
     auto cbuffer3 = arbiter.compositor_acquire(&comp_id1);
 
-    schedule.schedule(buffers[0]);
+    schedule.set_schedule({buffers[0]});
     auto cbuffer4 = arbiter.compositor_acquire(&comp_id1); 
     auto cbuffer5 = arbiter.compositor_acquire(&comp_id2);
 
-    schedule.schedule(buffers[1]);
+    schedule.set_schedule({buffers[1]});
     auto cbuffer6 = arbiter.compositor_acquire(&comp_id2);
     auto cbuffer7 = arbiter.compositor_acquire(&comp_id2);
 
@@ -143,13 +172,9 @@ TEST_F(ConsumptionArbiter, compositor_buffer_syncs_to_fastest_compositor)
     EXPECT_THAT(cbuffer7, Eq(buffers[1]));
 }
 
-TEST_F(ConsumptionArbiter, compositor_consumes_all_buffers_when_operating_as_a_composited_scene_would)
+TEST_F(MultiMonitorArbiter, compositor_consumes_all_buffers_when_operating_as_a_composited_scene_would)
 {
-    schedule.schedule(buffers[0]);
-    schedule.schedule(buffers[1]);
-    schedule.schedule(buffers[2]);
-    schedule.schedule(buffers[3]);
-    schedule.schedule(buffers[4]);
+    schedule.set_schedule({buffers[0],buffers[1],buffers[2],buffers[3],buffers[4]});
 
     auto cbuffer1 = arbiter.compositor_acquire(this);
     arbiter.compositor_release(cbuffer1);
@@ -169,13 +194,9 @@ TEST_F(ConsumptionArbiter, compositor_consumes_all_buffers_when_operating_as_a_c
     EXPECT_THAT(cbuffer5, Eq(buffers[4]));
 }
 
-TEST_F(ConsumptionArbiter, compositor_consumes_all_buffers_when_operating_as_a_bypassed_buffer_would)
+TEST_F(MultiMonitorArbiter, compositor_consumes_all_buffers_when_operating_as_a_bypassed_buffer_would)
 {
-    schedule.schedule(buffers[0]);
-    schedule.schedule(buffers[1]);
-    schedule.schedule(buffers[2]);
-    schedule.schedule(buffers[3]);
-    schedule.schedule(buffers[4]);
+    schedule.set_schedule({buffers[0],buffers[1],buffers[2],buffers[3],buffers[4]});
 
     auto cbuffer1 = arbiter.compositor_acquire(this);
     auto cbuffer2 = arbiter.compositor_acquire(this);
@@ -195,16 +216,12 @@ TEST_F(ConsumptionArbiter, compositor_consumes_all_buffers_when_operating_as_a_b
     EXPECT_THAT(cbuffer5, Eq(buffers[4]));
 }
 
-TEST_F(ConsumptionArbiter, multimonitor_compositor_buffer_syncs_to_fastest_with_more_queueing)
+TEST_F(MultiMonitorArbiter, multimonitor_compositor_buffer_syncs_to_fastest_with_more_queueing)
 {
     int comp_id1{0};
     int comp_id2{0};
 
-    schedule.schedule(buffers[0]);
-    schedule.schedule(buffers[1]);
-    schedule.schedule(buffers[2]);
-    schedule.schedule(buffers[3]);
-    schedule.schedule(buffers[4]);
+    schedule.set_schedule({buffers[0],buffers[1],buffers[2],buffers[3],buffers[4]});
 
     auto cbuffer1 = arbiter.compositor_acquire(&comp_id1); //1
     auto cbuffer2 = arbiter.compositor_acquire(&comp_id2); //1
@@ -232,55 +249,3 @@ TEST_F(ConsumptionArbiter, multimonitor_compositor_buffer_syncs_to_fastest_with_
     EXPECT_THAT(cbuffer7, Eq(buffers[4]));
     EXPECT_THAT(cbuffer8, Eq(buffers[4]));
 }
-
-
-#if 0 //evaluate on monday if this is valid after teasing out
-TEST_F(ConsumptionArbiter, scheduling_can_send_buffer_if_framedropping_and_no_compositors_still_have_it)
-{
-    schedule.schedule(id1);
-    auto cbuffer1 = schedule.compositor_acquire(this);
-    auto cbuffer2 = schedule.compositor_acquire(this);
-    EXPECT_THAT(cbuffer1, Eq(cbuffer2));
-
-    EXPECT_CALL(mock_map, send_buffer(id1));
-    schedule.compositor_release(cbuffer2);
-    schedule.compositor_release(cbuffer1);
-    schedule.schedule(id2);
-}
-
-TEST_F(ConsumptionArbiter, removal_of_the_compositor_buffer_happens_after_compositor_release)
-{
-    EXPECT_CALL(mock_sink, send_buffer(_,_,mg::BufferIpcMsgType::update_msg))
-        .Times(0);
-
-    schedule.schedule(id1);
-    schedule.remove_buffer(id1);
-
-    auto cbuffer = schedule.compositor_acquire(this); 
-    EXPECT_THAT(cbuffer->id(), Eq(id1));
-    schedule.schedule(id2);
-    schedule.compositor_release(cbuffer);
-}
-#endif
-
-
-#if 0
-//good idea?
-TEST_F(MultiMonitorArbiter, submitted_buffer_can_be_ejected)
-{
-    schedule.schedule(buffer2);
-    schedule.schedule(buffer1);
-    schedule.eject(buffer1);
-
-    EXPECT_THAT(schedule.compositor_acquire(id), Eq(buffer2));
-}
-#endif
-#if 0
-TEST_F(ConsumptionArbiter, scheduling_wont_send_front_if_no_compositor_has_seen_buffer)
-{
-    EXPECT_CALL(mock_sink, send_buffer(_,_,_)).Times(0);
-    schedule.schedule(id1);
-    schedule.schedule(id2);
-}
-#endif
-

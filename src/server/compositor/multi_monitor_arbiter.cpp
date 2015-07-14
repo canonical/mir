@@ -15,11 +15,12 @@
  *
  */
 
-#include "buffer_schedule.h"
+#include "multi_monitor_arbiter.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/client_buffers.h"
+#include "schedule.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 
@@ -34,15 +35,6 @@ mc::MultiMonitorArbiter::MultiMonitorArbiter(
     schedule(schedule)
 {
 }
-
-#if 0
-    void schedule_buffer(graphics::BufferID id);
-void mc::MultiMonitorArbiter::schedule_buffer(mg::BufferID id)
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    schedule->schedule((*map)[id]); 
-}
-#endif
 
 std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
 {
@@ -103,99 +95,3 @@ void mc::MultiMonitorArbiter::clean_backlog()
         } 
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-////MOVE TO OWN FILE
-void mc::QueueingSchedule::remove(std::shared_ptr<mg::Buffer> const& buffer)
-{
-    auto it = std::find(queue.begin(), queue.end(), buffer);
-    if (it != queue.end()) queue.erase(it);
-}
-
-void mc::QueueingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
-{
-/*
- *  scheduler->schedule(it);
- */
-#if 0
-    if (!schedule.empty() &&
-        schedule.front().was_consumed &&
-        schedule.front().use_count == 0)
-    {
-        sink->send_buffer(stream_id, *schedule.front().buffer, mg::BufferIpcMsgType::update_msg);
-        schedule.pop_front();
-    }
-
-    schedule.emplace_front(ScheduleEntry{it->second, 0, false, false});
-#endif
-    queue.emplace_back(buffer);
-}
-
-bool mc::QueueingSchedule::anything_scheduled()
-{
-    return !queue.empty();
-}
-
-std::shared_ptr<mg::Buffer> mc::QueueingSchedule::next_buffer()
-{
-    auto buffer = queue.front();
-    queue.pop_front();
-    return buffer;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#if 0
-void mc::BufferSchedule::remove_buffer(mg::BufferID id)
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    auto buffer_it = checked_buffers_find(id, lk);
-    schedule->remove(buffer_it->second);
-    buffers.erase(buffer_it);
-
-    for (auto& entry : backlog)
-    {
-        if (entry.buffer->id() == id)
-            entry.dead = true;
-    }
-}
-#endif
