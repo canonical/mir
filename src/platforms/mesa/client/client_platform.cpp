@@ -193,13 +193,18 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
      * yet (for most platforms). It does however successfully return zero for
      * EGL_NATIVE_VISUAL_ID, so ignore that for now.
      */
-    EGLint alpha_size = 0;
-    if (eglGetConfigAttrib(disp, conf, EGL_ALPHA_SIZE, &alpha_size))
+    EGLint r = 0, g = 0, b = 0, a = 0;
+    eglGetConfigAttrib(disp, conf, EGL_RED_SIZE, &r);
+    eglGetConfigAttrib(disp, conf, EGL_GREEN_SIZE, &g);
+    eglGetConfigAttrib(disp, conf, EGL_BLUE_SIZE, &b);
+    eglGetConfigAttrib(disp, conf, EGL_ALPHA_SIZE, &a);
+
+    if (r == 8 && g == 8 && b == 8)
     {
         // GBM is very limited, which at least makes this simple...
-        if (alpha_size == 8)
+        if (a == 8)
             mir_format = mir_pixel_format_argb_8888;
-        else if (alpha_size == 0)
+        else if (a == 0)
             mir_format = mir_pixel_format_xrgb_8888;
     }
 
