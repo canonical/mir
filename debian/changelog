@@ -24,8 +24,6 @@ mir (0.14.0-0ubuntu1) UNRELEASED; urgency=medium
       . Persistent id request for surfaces added
       . Integration-tests cleaning: switch tests to in-process server
       . A first end-to-end input test added in privileged-tests
-      . [performance] Restore support for double-buffering by default  
-        (LP: #1240909)
       . "mesa" platform renamed to "mesa-kms" (LP: #1381330)
       . [enhancement] Mir servers should allow client connections only after
         server start-up has finished  (LP: #1451844)
