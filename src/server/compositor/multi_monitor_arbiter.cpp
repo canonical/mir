@@ -95,3 +95,12 @@ void mc::MultiMonitorArbiter::clean_backlog()
         } 
     }
 }
+
+std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("not yet implemented"));
+}
+
+void mc::MultiMonitorArbiter::snapshot_release(std::shared_ptr<mg::Buffer> const&)
+{
+}
