@@ -39,12 +39,12 @@ public:
     }
 };
 
-struct MockBufferAcquisition// : mc::BufferAcquisition
+struct MockBufferAcquisition : mc::BufferAcquisition
 {
-    MOCK_METHOD1(compositor_acquire, std::shared_ptr<graphics::Buffer>(void const*));
-    MOCK_METHOD1(compositor_release, void(std::shared_ptr<graphics::Buffer> const&));
-    MOCK_METHOD0(snapshot_acquire, std::shared_ptr<graphics::Buffer>());
-    MOCK_METHOD1(snapshot_release, void(std::shared_ptr<graphics::Buffer> const&));
+    MOCK_METHOD1(compositor_acquire, std::shared_ptr<mg::Buffer>(void const*));
+    MOCK_METHOD1(compositor_release, void(std::shared_ptr<mg::Buffer> const&));
+    MOCK_METHOD0(snapshot_acquire, std::shared_ptr<mg::Buffer>());
+    MOCK_METHOD1(snapshot_release, void(std::shared_ptr<mg::Buffer> const&));
 };
 
 class TemporaryBuffersTest : public ::testing::Test
@@ -56,7 +56,7 @@ public:
           buffer_pixel_format{mir_pixel_format_abgr_8888},
           mock_buffer{std::make_shared<testing::NiceMock<mtd::MockBuffer>>(
                           buffer_size, buffer_stride, buffer_pixel_format)},
-          mock_acquisition{std::make_shared<testing::NiceMock<mtd::MockBufferAcquisition>>()}
+          mock_acquisition{std::make_shared<testing::NiceMock<MockBufferAcquisition>>()}
     {
         using namespace testing;
         ON_CALL(*mock_acquisition, compositor_acquire(_))
@@ -67,7 +67,7 @@ public:
     geom::Stride const buffer_stride;
     MirPixelFormat const buffer_pixel_format;
     std::shared_ptr<mtd::MockBuffer> const mock_buffer;
-    std::shared_ptr<mtd::MockBufferBundle> mock_acquisition;
+    std::shared_ptr<MockBufferAcquisition> mock_acquisition;
 };
 }
 
