@@ -101,21 +101,32 @@ TEST_F(StreamTest, transitions_from_queuing_to_framedropping)
     for(auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
     stream.allow_framedropping(true);
+
+    std::vector<std::shared_ptr<mg::Buffer>> cbuffers;
+    while(stream.buffers_ready_for_compositor(this))
+        cbuffers.push_back(stream.lock_compositor_buffer(this));
+    ASSERT_THAT(cbuffers, SizeIs(1));
+    EXPECT_THAT(cbuffers[0], Eq(buffers.back()));
+
 }
 
 TEST_F(StreamTest, transitions_from_framedropping_to_queuing)
 {
-    EXPECT_CALL(mock_sink, send_buffer(_,_,_)).Times(buffers.size() * 2 - 1);
-    for(auto& buffer : buffers)
-        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
     stream.allow_framedropping(true);
+    Mock::VerifyAndClearExpectations(&mock_sink);
 
+    EXPECT_CALL(mock_sink, send_buffer(_,_,_)).Times(buffers.size() - 1);
     for(auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
 
     stream.allow_framedropping(false);
     for(auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+
+    std::vector<std::shared_ptr<mg::Buffer>> cbuffers;
+    while(stream.buffers_ready_for_compositor(this))
+        cbuffers.push_back(stream.lock_compositor_buffer(this));
+    EXPECT_THAT(cbuffers, ContainerEq(buffers));
 }
 
 TEST_F(StreamTest, flubs_buffers_ready_for_queueing)

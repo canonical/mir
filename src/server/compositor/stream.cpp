@@ -93,13 +93,13 @@ void mc::Stream::allow_framedropping(bool dropping)
 {
     if (dropping && schedule_mode == ScheduleMode::Queueing)
     {
-        printf("TO DROPPING.\n");
         transition_schedule(std::make_shared<mc::DroppingSchedule>(buffers));
+        schedule_mode = ScheduleMode::Dropping;
     }
     else if (!dropping && schedule_mode == ScheduleMode::Dropping)
     {
-        printf("TO QING.\n");
         transition_schedule(std::make_shared<mc::ClientQueue>());
+        schedule_mode = ScheduleMode::Queueing;
     }
 }
 
@@ -108,7 +108,6 @@ void mc::Stream::transition_schedule(std::shared_ptr<mc::Schedule>&& new_schedul
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     while(schedule->anything_scheduled())
     {
-        printf("POP!\n");
         buffers.emplace_back(schedule->next_buffer());
     }
     for(auto& buffer : buffers)

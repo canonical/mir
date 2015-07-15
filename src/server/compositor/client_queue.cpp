@@ -25,10 +25,14 @@ namespace mg = mir::graphics;
 
 void mc::ClientQueue::schedule(std::shared_ptr<graphics::Buffer> const& buffer)
 {
+    printf("POPIN\n");
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = std::find(queue.begin(), queue.end(), buffer);
     if (it != queue.end())
+    {
+        printf("A REPLACE?\n");
         queue.erase(it);
+    }
     queue.emplace_back(buffer);
 }
 
@@ -43,6 +47,7 @@ void mc::ClientQueue::cancel(std::shared_ptr<graphics::Buffer> const& buffer)
 bool mc::ClientQueue::anything_scheduled()
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
+    printf("QUEUE SIZE %i\n", (int) queue.size());
     return !queue.empty();
 }
 
