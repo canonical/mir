@@ -19,6 +19,8 @@
 
 #include "stream.h"
 #include "client_queue.h"
+#include "dropping_schedule.h"
+#include "temporary_buffers.h"
 #include "mir/frontend/client_buffers.h"
 #include "mir/graphics/buffer.h"
 
@@ -27,15 +29,21 @@ namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 
+enum class mc::Stream::ScheduleMode {
+    Queueing,
+    Dropping
+};
+
 mc::Stream::Stream(std::unique_ptr<frontend::ClientBuffers> map) :
+    schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::ClientQueue>()),
     buffers(std::move(map)),
-    arbiter(buffers, schedule),
+    arbiter(std::make_shared<mc::MultiMonitorArbiter>(buffers, schedule)),
     first_frame_posted(false)
 {
 }
 
-void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer* new_buffer)>)
+void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer* new_buffer)> fn)
 {
     if (!buffer) return;
     std::lock_guard<decltype(mutex)> lk(mutex); 
@@ -43,6 +51,8 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
     observers.frame_posted(1);
 
     schedule->schedule((*buffers)[buffer->id()]);
+
+    fn(nullptr); //bit of legacy support
 }
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const&)
@@ -65,9 +75,9 @@ void mc::Stream::remove_observer(std::weak_ptr<ms::SurfaceObserver> const& obser
         observers.remove(o);
 }
 
-std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const*)
+std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
 {
-    return nullptr;
+    return std::make_shared<mc::TemporaryCompositorBuffer>(arbiter, id);
 }
 
 geom::Size mc::Stream::stream_size()
@@ -79,17 +89,43 @@ void mc::Stream::resize(geom::Size const&)
 {
 }
 
-void mc::Stream::allow_framedropping(bool)
+void mc::Stream::allow_framedropping(bool dropping)
 {
+    if (dropping && schedule_mode == ScheduleMode::Queueing)
+    {
+        printf("TO DROPPING.\n");
+        transition_schedule(std::make_shared<mc::DroppingSchedule>(buffers));
+    }
+    else if (!dropping && schedule_mode == ScheduleMode::Dropping)
+    {
+        printf("TO QING.\n");
+        transition_schedule(std::make_shared<mc::ClientQueue>());
+    }
+}
+
+void mc::Stream::transition_schedule(std::shared_ptr<mc::Schedule>&& new_schedule)
+{
+    std::vector<std::shared_ptr<mg::Buffer>> buffers;
+    while(schedule->anything_scheduled())
+    {
+        printf("POP!\n");
+        buffers.emplace_back(schedule->next_buffer());
+    }
+    for(auto& buffer : buffers)
+        new_schedule->schedule(buffer);
+    schedule = new_schedule;
 }
 
 void mc::Stream::force_requests_to_complete()
 {
+    //we dont block any requests in this system, nothing to force
 }
 
 int mc::Stream::buffers_ready_for_compositor(void const*) const
 {
-    return 8;
+    if (schedule->anything_scheduled())
+        return 1;
+    return 0;
 }
 
 void mc::Stream::drop_old_buffers()

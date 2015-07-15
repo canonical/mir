@@ -55,10 +55,14 @@ public:
     bool has_submitted_buffer() const override;
 
 private:
+    enum class ScheduleMode;
+    void transition_schedule(std::shared_ptr<Schedule>&& new_schedule);
+
     std::mutex mutable mutex;
+    ScheduleMode schedule_mode;
     std::shared_ptr<Schedule> schedule;
     std::shared_ptr<frontend::ClientBuffers> buffers;
-    MultiMonitorArbiter arbiter; 
+    std::shared_ptr<MultiMonitorArbiter> arbiter; 
    
     bool first_frame_posted;
 
