@@ -114,27 +114,51 @@ typedef enum MirPromptSessionState
 } MirPromptSessionState;
 
 /**
- * The order of components in a format enum matches the
- * order of the components as they would be written in an
- *  integer representing a pixel value of that format.
+ * 32-bit pixel formats (8888):
+ * The order of components in the enum matches the order of the components
+ * as they would be written in an integer representing a pixel value of that
+ * format. For example; abgr_8888 should be coded as 0xAABBGGRR, which will
+ * end up as R,G,B,A in memory on a little endian system, and as A,B,G,R on a
+ * big endian system.
  *
- * For example, abgr_8888 corresponds to 0xAABBGGRR, which will
- * end up as R,G,B,A in memory in a little endian system, and
- * as A,B,G,R in memory in a big endian system.
+ * 24-bit pixel formats (888):
+ * These are in literal byte order, regardless of CPU architecture it's always
+ * the same. Writing these 3-byte pixels is typically slower than other formats
+ * but uses less memory than 32-bit and is endian-independent.
+ *
+ * 16-bit pixel formats (565/5551/4444):
+ * Always interpreted as one 16-bit integer per pixel with components in
+ * high-to-low bit order following the format name. These are the fastest
+ * formats, however colour quality is visibly lower.
  */
 typedef enum MirPixelFormat
 {
-    mir_pixel_format_invalid,
-    mir_pixel_format_abgr_8888,
-    mir_pixel_format_xbgr_8888,
-    mir_pixel_format_argb_8888,
-    mir_pixel_format_xrgb_8888,
-    mir_pixel_format_bgr_888,
-    mir_pixel_formats
+    mir_pixel_format_invalid = 0,
+    mir_pixel_format_abgr_8888 = 1,
+    mir_pixel_format_xbgr_8888 = 2,
+    mir_pixel_format_argb_8888 = 3,
+    mir_pixel_format_xrgb_8888 = 4,
+    mir_pixel_format_bgr_888 = 5,
+    mir_pixel_format_rgb_888 = 6,
+    mir_pixel_format_rgb_565 = 7,
+    mir_pixel_format_rgba_5551 = 8,
+    mir_pixel_format_rgba_4444 = 9,
+    /*
+     * TODO: Big endian support would require additional formats in order to
+     *       composite software surfaces using OpenGL (GL_RGBA/GL_BGRA_EXT):
+     *         mir_pixel_format_rgb[ax]_8888
+     *         mir_pixel_format_bgr[ax]_8888
+     */
+    mir_pixel_formats   /* Note: This is always max format + 1 */
 } MirPixelFormat;
 
 /* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
-#define MIR_BYTES_PER_PIXEL(f) (((f) == mir_pixel_format_bgr_888) ? 3 : 4)
+#define MIR_BYTES_PER_PIXEL(f) ((f) == mir_pixel_format_bgr_888   ? 3 : \
+                                (f) == mir_pixel_format_rgb_888   ? 3 : \
+                                (f) == mir_pixel_format_rgb_565   ? 2 : \
+                                (f) == mir_pixel_format_rgba_5551 ? 2 : \
+                                (f) == mir_pixel_format_rgba_4444 ? 2 : \
+                                                                    4)
 
 /** Direction relative to the "natural" orientation of the display */
 typedef enum MirOrientation
