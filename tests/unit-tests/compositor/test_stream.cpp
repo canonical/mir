@@ -16,12 +16,28 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_event_sink.h"
+#include "mir/test/fake_shared.h"
+#include "src/server/compositor/stream.h"
+#include "mir/scene/null_surface_observer.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 using namespace testing;
+namespace mf = mir::frontend;
+namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
+namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
 namespace
 {
+struct MockSurfaceObserver : mir::scene::NullSurfaceObserver
+{
+    MOCK_METHOD1(frame_posted, void(int));
+};
+
 struct StreamTest : Test
 {
     StreamTest() :
@@ -34,7 +50,7 @@ struct StreamTest : Test
 
     mf::BufferStreamId id;
     mtd::MockEventSink mock_sink;
-    mc::Stream stream{id, mt::fake_shared(sink)};
+    mc::Stream stream{id, mt::fake_shared(mock_sink)};
 
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
 };
@@ -75,10 +91,10 @@ TEST_F(StreamTest, flubs_buffers_ready_for_queueing)
     for(auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
 
-    for(auto& buffer : buffers)
+    for(auto i = 0u; i < buffers.size(); i++)
     {
         EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(1));
-        stream.lock_compositor_buffer();
+        stream.lock_compositor_buffer(this);
     }
 
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
@@ -92,24 +108,25 @@ TEST_F(StreamTest, flubs_buffers_ready_for_dropping)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
 
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(1));
-    stream.lock_compositor_buffer();
+    stream.lock_compositor_buffer(this);
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
 }
 
 TEST_F(StreamTest, tracks_has_buffer)
 {
     EXPECT_FALSE(stream.has_submitted_buffer());
-    stream.swap_buffers(buffer[0].get(), [](mg::Buffer*){});
+    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
     EXPECT_TRUE(stream.has_submitted_buffer());
 }
 
 TEST_F(StreamTest, calls_observers_on_submissions)
 {
-    EXPECT_CALL(observer, frame_posted(1));
+    auto observer = std::make_shared<MockSurfaceObserver>();
+    EXPECT_CALL(*observer, frame_posted(1));
     stream.add_observer(observer);
-    stream.swap_buffers(buffer[0].get(), [](mg::Buffer*){});
+    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
     stream.remove_observer(observer);
-    stream.swap_buffers(buffer[0].get(), [](mg::Buffer*){});
+    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
 }
 
 TEST_F(StreamTest, flattens_queue)
