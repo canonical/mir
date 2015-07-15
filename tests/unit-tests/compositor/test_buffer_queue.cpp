@@ -151,44 +151,13 @@ mg::Buffer* client_acquire_sync(mc::BufferQueue& q)
     return handle->buffer();
 }
 
-void unthrottled_compositor_thread(mc::BufferQueue &bundle,
-                                   std::atomic<bool> &done)
+void compositor_thread(mc::BufferQueue &bundle, std::atomic<bool> &done)
 {
    while (!done)
    {
        bundle.compositor_release(bundle.compositor_acquire(nullptr));
        std::this_thread::yield();
    }
-}
-
-std::chrono::milliseconds const throttled_compositor_rate(10);
-void throttled_compositor_thread(mc::BufferQueue &bundle,
-                                 std::atomic<bool> &done)
-{
-   while (!done)
-   {
-       bundle.compositor_release(bundle.compositor_acquire(nullptr));
-       std::this_thread::sleep_for(throttled_compositor_rate);
-   }
-}
-
-void overlapping_compositor_thread(mc::BufferQueue &bundle,
-                                   std::atomic<bool> &done)
-{
-   std::shared_ptr<mg::Buffer> b[2];
-   int i = 0;
-
-   b[0] = bundle.compositor_acquire(nullptr);
-   while (!done)
-   {
-       b[i^1] = bundle.compositor_acquire(nullptr);
-       bundle.compositor_release(b[i]);
-       std::this_thread::sleep_for(throttled_compositor_rate);
-       i ^= 1;
-   }
-
-   if (b[i])
-       bundle.compositor_release(b[i]);
 }
 
 void snapshot_thread(mc::BufferQueue &bundle,
@@ -451,13 +420,10 @@ TEST_F(BufferQueueTest, async_client_cycles_through_all_buffers)
     {
         mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
-        // This test is technically not valid with dynamic queue scaling on
-        q.set_scaling_delay(-1);
-
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
         mt::AutoUnblockThread compositor(unblock,
-            unthrottled_compositor_thread, std::ref(q), std::ref(done));
+            compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<uint32_t> ids_acquired;
         int const max_ownable_buffers = nbuffers - 1;
@@ -571,7 +537,8 @@ TEST_F(BufferQueueTest, compositor_acquires_frames_in_order)
         {
             std::deque<mg::BufferID> client_release_sequence;
             std::vector<mg::Buffer *> buffers;
-            for (int i = 0; i < q.buffers_free_for_client(); ++i)
+            int const max_ownable_buffers = nbuffers - 1;
+            for (int i = 0; i < max_ownable_buffers; ++i)
             {
                 auto handle = client_acquire_async(q);
                 ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -837,7 +804,7 @@ TEST_F(BufferQueueTest, stress)
 
         auto unblock = [&done]{ done = true;};
 
-        mt::AutoUnblockThread compositor(unblock, unthrottled_compositor_thread,
+        mt::AutoUnblockThread compositor(unblock, compositor_thread,
                                          std::ref(q),
                                          std::ref(done));
         mt::AutoUnblockThread snapshotter1(unblock, snapshot_thread,
@@ -1426,14 +1393,8 @@ TEST_F(BufferQueueTest, buffers_ready_eventually_reaches_zero)
         // Consume
         for (int m = 0; m < nmonitors; ++m)
         {
-            ASSERT_NE(0, q.buffers_ready_for_compositor(&monitor[m]));
-
-            // Double consume to account for the +1 that
-            // buffers_ready_for_compositor adds to do dynamic performance
-            // detection.
+            ASSERT_EQ(1, q.buffers_ready_for_compositor(&monitor[m]));
             q.compositor_release(q.compositor_acquire(&monitor[m]));
-            q.compositor_release(q.compositor_acquire(&monitor[m]));
-
             ASSERT_EQ(0, q.buffers_ready_for_compositor(&monitor[m]));
         }
     }
@@ -1505,7 +1466,7 @@ TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
         std::atomic<bool> done(false);
 
         auto unblock = [&done]{ done = true; };
-        mt::AutoUnblockThread unthrottled_compositor_thread(unblock, [&]
+        mt::AutoUnblockThread compositor_thread(unblock, [&]
         {
             while (!done)
             {
@@ -1591,9 +1552,6 @@ TEST_F(BufferQueueTest, buffers_are_not_lost)
     {
         mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
-        // This test is technically not valid with dynamic queue scaling on
-        q.set_scaling_delay(-1);
-
         void const* main_compositor = reinterpret_cast<void const*>(0);
         void const* second_compositor = reinterpret_cast<void const*>(1);
 
@@ -1621,7 +1579,7 @@ TEST_F(BufferQueueTest, buffers_are_not_lost)
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
         mt::AutoUnblockThread compositor(unblock,
-           unthrottled_compositor_thread, std::ref(q), std::ref(done));
+           compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<mg::Buffer *> unique_buffers_acquired;
         int const max_ownable_buffers = nbuffers - 1;
@@ -1648,131 +1606,32 @@ TEST_F(BufferQueueTest, buffers_are_not_lost)
     }
 }
 
-// Test that dynamic queue scaling/throttling actually works
-TEST_F(BufferQueueTest, queue_size_scales_with_client_performance)
-{
-    for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
-    {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
-        q.allow_framedropping(false);
-
-        std::atomic<bool> done(false);
-        auto unblock = [&done] { done = true; };
-
-        // To emulate a "fast" client we use a "slow" compositor
-        mt::AutoUnblockThread compositor(unblock,
-           throttled_compositor_thread, std::ref(q), std::ref(done));
-
-        std::unordered_set<mg::Buffer *> buffers_acquired;
-
-        int const delay = q.scaling_delay();
-        EXPECT_EQ(3, delay);  // expect a sane default
-
-        for (int frame = 0; frame < 10; frame++)
-        {
-            auto handle = client_acquire_async(q);
-            handle->wait_for(std::chrono::seconds(1));
-            ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-
-            if (frame > delay)
-                buffers_acquired.insert(handle->buffer());
-            handle->release_buffer();
-        }
-        // Expect double-buffers for fast clients
-        EXPECT_THAT(buffers_acquired.size(), Eq(2));
-
-        // Now check what happens if the client becomes slow...
-        buffers_acquired.clear();
-        for (int frame = 0; frame < 10; frame++)
-        {
-            auto handle = client_acquire_async(q);
-            handle->wait_for(std::chrono::seconds(1));
-            ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-
-            if (frame > delay)
-                buffers_acquired.insert(handle->buffer());
-
-            // Client is just too slow to keep up:
-            std::this_thread::sleep_for(throttled_compositor_rate * 1.5);
-
-            handle->release_buffer();
-        }
-        // Expect at least triple buffers for sluggish clients
-        EXPECT_THAT(buffers_acquired.size(), Ge(3));
-
-        // And what happens if the client becomes fast again?...
-        buffers_acquired.clear();
-        for (int frame = 0; frame < 10; frame++)
-        {
-            auto handle = client_acquire_async(q);
-            handle->wait_for(std::chrono::seconds(1));
-            ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-
-            if (frame > delay)
-                buffers_acquired.insert(handle->buffer());
-            handle->release_buffer();
-        }
-        // Expect double-buffers for fast clients
-        EXPECT_THAT(buffers_acquired.size(), Eq(2));
-    }
-}
-
-TEST_F(BufferQueueTest, greedy_compositors_need_triple_buffers)
-{
-    /*
-     * "Greedy" compositors means those that can hold multiple buffers from
-     * the same client simultaneously or a single buffer for a long time.
-     * This usually means bypass/overlays, but can also mean multi-monitor.
-     */
-    for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
-    {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
-        q.allow_framedropping(false);
-
-        std::atomic<bool> done(false);
-        auto unblock = [&done] { done = true; };
-
-        mt::AutoUnblockThread compositor(unblock,
-           overlapping_compositor_thread, std::ref(q), std::ref(done));
-
-        std::unordered_set<mg::Buffer *> buffers_acquired;
-        int const delay = q.scaling_delay();
-
-        for (int frame = 0; frame < 10; frame++)
-        {
-            auto handle = client_acquire_async(q);
-            handle->wait_for(std::chrono::seconds(1));
-            ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-
-            if (frame > delay)
-                buffers_acquired.insert(handle->buffer());
-            handle->release_buffer();
-        }
-        // Expect triple buffers for the whole time
-        EXPECT_THAT(buffers_acquired.size(), Ge(3));
-    }
-}
-
-TEST_F(BufferQueueTest, compositor_double_rate_of_slow_client)
+/* FIXME (enabling this optimization breaks timing tests) */
+TEST_F(BufferQueueTest, DISABLED_synchronous_clients_only_get_two_real_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         q.allow_framedropping(false);
 
-        for (int frame = 0; frame < 10; frame++)
-        {
-            ASSERT_EQ(0, q.buffers_ready_for_compositor(this));
-            q.client_release(client_acquire_sync(q));
+        std::atomic<bool> done(false);
+        auto unblock = [&done] { done = true; };
+        mt::AutoUnblockThread compositor(unblock,
+           compositor_thread, std::ref(q), std::ref(done));
 
-            // Detecting a slow client requires scheduling at least one extra
-            // frame...
-            int nready = q.buffers_ready_for_compositor(this);
-            ASSERT_EQ(2, nready);
-            for (int i = 0; i < nready; ++i)
-                q.compositor_release(q.compositor_acquire(this));
-            ASSERT_EQ(0, q.buffers_ready_for_compositor(this));
+        std::unordered_set<mg::Buffer *> buffers_acquired;
+
+        for (int frame = 0; frame < 100; frame++)
+        {
+            auto handle = client_acquire_async(q);
+            handle->wait_for(std::chrono::seconds(1));
+            ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+
+            buffers_acquired.insert(handle->buffer());
+            handle->release_buffer();
         }
+
+        EXPECT_THAT(buffers_acquired.size(), Eq(2));
     }
 }
 

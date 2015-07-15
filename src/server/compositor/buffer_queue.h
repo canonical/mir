@@ -65,15 +65,6 @@ public:
     void drop_old_buffers() override;
     void drop_client_requests() override;
 
-    /**
-     * Set the minimum number of smooth frames the client must keep up with
-     * the compositor for in order to qualify for queue scaling (dynamic
-     * double buffering for reduced latency). A negative value means never
-     * but it's recommended that you never change this.
-     */
-    void set_scaling_delay(int nframes);
-    int scaling_delay() const;
-
 private:
     class LockableCallback;
     enum SnapshotWait
@@ -103,12 +94,7 @@ private:
 
     std::deque<Callback> pending_client_notifications;
 
-    bool client_ahead_of_compositor() const;
-    graphics::Buffer* get_a_free_buffer();
-
     int nbuffers;
-    int frame_deadlines_threshold;
-    int frame_deadlines_met;
     bool frame_dropping_enabled;
     bool current_compositor_buffer_valid;
     graphics::BufferProperties the_properties;

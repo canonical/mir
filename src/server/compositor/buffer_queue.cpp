@@ -137,8 +137,6 @@ mc::BufferQueue::BufferQueue(
     graphics::BufferProperties const& props,
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
-      frame_deadlines_threshold{3},
-      frame_deadlines_met{0},
       frame_dropping_enabled{false},
       current_compositor_buffer_valid{false},
       the_properties{props},
@@ -170,63 +168,30 @@ mc::BufferQueue::BufferQueue(
         std::make_shared<BufferQueue::LockableCallback>(this));
 }
 
-void mc::BufferQueue::set_scaling_delay(int nframes)
-{
-    std::unique_lock<decltype(guard)> lock(guard);
-    frame_deadlines_threshold = nframes;
-}
-
-int mc::BufferQueue::scaling_delay() const
-{
-    std::unique_lock<decltype(guard)> lock(guard);
-    return frame_deadlines_threshold;
-}
-
-bool mc::BufferQueue::client_ahead_of_compositor() const
-{
-    return nbuffers > 1 &&
-           !frame_dropping_enabled &&  // Never throttle frame droppers
-           frame_deadlines_threshold >= 0 &&  // Queue scaling enabled
-           !ready_to_composite_queue.empty() &&  // At least one frame is ready
-           frame_deadlines_met >= frame_deadlines_threshold;  // Is smooth
-}
-
-mg::Buffer* mc::BufferQueue::get_a_free_buffer()
-{
-    mg::Buffer* buf = nullptr;
-
-    if (!free_buffers.empty())
-    {
-        buf = free_buffers.back();
-        free_buffers.pop_back();
-    }
-    else if (static_cast<int>(buffers.size()) < nbuffers)
-    {
-        auto const& buffer = gralloc->alloc_buffer(the_properties);
-        buffers.push_back(buffer);
-        buf = buffer.get();
-    }
-
-    return buf;
-}
-
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
 {
     std::unique_lock<decltype(guard)> lock(guard);
 
     pending_client_notifications.push_back(std::move(complete));
 
-    /*
-     * Fast clients that can be safely throttled should be. This keeps the
-     * number of prefilled buffers limited to one (equivalent to double-
-     * buffering) for minimal latency.
-     */
-    if (client_ahead_of_compositor())
-        return;
-
-    if (auto buf = get_a_free_buffer())
+    if (!free_buffers.empty())
     {
-        give_buffer_to_client(buf, lock);
+        auto const buffer = free_buffers.back();
+        free_buffers.pop_back();
+        give_buffer_to_client(buffer, lock);
+        return;
+    }
+
+    /* No empty buffers, attempt allocating more
+     * TODO: need a good heuristic to switch
+     * between double-buffering to n-buffering
+     */
+    int const allocated_buffers = buffers.size();
+    if (allocated_buffers < nbuffers)
+    {
+        auto const& buffer = gralloc->alloc_buffer(the_properties);
+        buffers.push_back(buffer);
+        give_buffer_to_client(buffer.get(), lock);
         return;
     }
 
@@ -270,14 +235,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     std::unique_lock<decltype(guard)> lock(guard);
 
     bool use_current_buffer = false;
-    if (is_a_current_buffer_user(user_id))   // Primary/fastest display
-    {
-        if (ready_to_composite_queue.empty())
-            frame_deadlines_met = 0;
-        else if (frame_deadlines_met < frame_deadlines_threshold)
-            ++frame_deadlines_met;
-    }
-    else   // Second and subsequent displays sync to the primary one
+    if (!is_a_current_buffer_user(user_id))
     {
         use_current_buffer = true;
         current_buffer_users.push_back(user_id);
@@ -309,15 +267,6 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_buffer_users.push_back(user_id);
         current_compositor_buffer = pop(ready_to_composite_queue);
         current_compositor_buffer_valid = true;
-
-        /*
-         * If we just emptied the ready queue above and hold this compositor
-         * buffer for very long (e.g. bypass) then there's a chance the client
-         * would starve and miss a frame. Make sure that can't happen, by
-         * using more than double buffers...
-         */
-        if (!buffer_to_release && !client_ahead_of_compositor())
-            buffer_to_release = get_a_free_buffer();
     }
     else if (current_buffer_users.empty())
     {   // current_buffer_users and ready_to_composite_queue both empty
@@ -426,40 +375,14 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
         ++count;
     }
 
-    /*
-     * Intentionally schedule one more frame than we need, and for good
-     * reason... We can only accurately detect frame_deadlines_met in
-     * compositor_acquire if compositor_acquire is still waking up at full
-     * frame rate even with a slow client. This is crucial to scaling the
-     * queue performance dynamically in "client_ahead_of_compositor".
-     *   But don't be concerned; very little is lost by over-scheduling. Under
-     * normal smooth rendering conditions all frames are used (not wasted).
-     * And under sluggish client rendering conditions the extra frame has a
-     * critical role in providing a sample point in which we detect if the
-     * client is keeping up. Only when the compositor changes from active to
-     * idle is the extra frame wasted. Sounds like a reasonable price to pay
-     * for dynamic performance monitoring.
-     */
-    if (count && frame_deadlines_threshold >= 0)
-        ++count;
-
     return count;
 }
 
-/*
- * This function is a kludge used in tests only. It attempts to predict how
- * many calls to client_acquire you can make before it blocks.
- * Future tests should not use it.
- */
 int mc::BufferQueue::buffers_free_for_client() const
 {
     std::lock_guard<decltype(guard)> lock(guard);
     int ret = 1;
-    if (nbuffers == 1)
-        ret = 1;
-    else if (client_ahead_of_compositor())  // client_acquire will block
-        ret = 0;
-    else
+    if (nbuffers > 1)
     {
         int nfree = free_buffers.size();
         int future_growth = nbuffers - buffers.size();
@@ -533,7 +456,7 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
-    if (!pending_client_notifications.empty() && !client_ahead_of_compositor())
+    if (!pending_client_notifications.empty())
     {
         framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, lock);
