@@ -51,7 +51,6 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
     observers.frame_posted(1);
 
     schedule->schedule((*buffers)[buffer->id()]);
-
     fn(nullptr); //bit of legacy support
 }
 
@@ -91,26 +90,26 @@ void mc::Stream::resize(geom::Size const&)
 
 void mc::Stream::allow_framedropping(bool dropping)
 {
+    std::lock_guard<decltype(mutex)> lk(mutex); 
     if (dropping && schedule_mode == ScheduleMode::Queueing)
     {
-        transition_schedule(std::make_shared<mc::DroppingSchedule>(buffers));
+        transition_schedule(std::make_shared<mc::DroppingSchedule>(buffers), lk);
         schedule_mode = ScheduleMode::Dropping;
     }
     else if (!dropping && schedule_mode == ScheduleMode::Dropping)
     {
-        transition_schedule(std::make_shared<mc::QueueingSchedule>());
+        transition_schedule(std::make_shared<mc::QueueingSchedule>(), lk);
         schedule_mode = ScheduleMode::Queueing;
     }
 }
 
-void mc::Stream::transition_schedule(std::shared_ptr<mc::Schedule>&& new_schedule)
+void mc::Stream::transition_schedule(
+    std::shared_ptr<mc::Schedule>&& new_schedule, std::lock_guard<std::mutex> const&)
 {
-    std::vector<std::shared_ptr<mg::Buffer>> buffers;
+    std::vector<std::shared_ptr<mg::Buffer>> transferred_buffers;
     while(schedule->anything_scheduled())
-    {
-        buffers.emplace_back(schedule->next_buffer());
-    }
-    for(auto& buffer : buffers)
+        transferred_buffers.emplace_back(schedule->next_buffer());
+    for(auto& buffer : transferred_buffers)
         new_schedule->schedule(buffer);
     schedule = new_schedule;
     arbiter->set_schedule(schedule);
@@ -130,6 +129,12 @@ int mc::Stream::buffers_ready_for_compositor(void const*) const
 
 void mc::Stream::drop_old_buffers()
 {
+    std::lock_guard<decltype(mutex)> lk(mutex); 
+    std::vector<std::shared_ptr<mg::Buffer>> transferred_buffers;
+    while(schedule->anything_scheduled())
+        transferred_buffers.emplace_back(schedule->next_buffer());
+    if (!transferred_buffers.empty())
+        schedule->schedule(transferred_buffers.front());
 }
 
 bool mc::Stream::has_submitted_buffer() const

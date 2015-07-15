@@ -83,7 +83,7 @@ struct StreamTest : Test
     }
     
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
-    mtd::MockEventSink mock_sink;
+    NiceMock<mtd::MockEventSink> mock_sink;
     mc::Stream stream{std::make_unique<StubBufferMap>(mock_sink, buffers)};
 };
 }
@@ -181,6 +181,7 @@ TEST_F(StreamTest, flattens_queue)
 
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(1));
     stream.drop_old_buffers();
+    stream.lock_compositor_buffer(this);
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
 }
 

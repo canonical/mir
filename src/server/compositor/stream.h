@@ -56,7 +56,7 @@ public:
 
 private:
     enum class ScheduleMode;
-    void transition_schedule(std::shared_ptr<Schedule>&& new_schedule);
+    void transition_schedule(std::shared_ptr<Schedule>&& new_schedule, std::lock_guard<std::mutex> const&);
 
     std::mutex mutable mutex;
     ScheduleMode schedule_mode;
