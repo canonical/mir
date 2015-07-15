@@ -43,6 +43,7 @@ public:
     void compositor_release(std::shared_ptr<graphics::Buffer> const&) override;
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
     void snapshot_release(std::shared_ptr<graphics::Buffer> const&) override;
+    void set_schedule(std::shared_ptr<Schedule> const& schedule);
 
 private:
     void clean_backlog();
@@ -57,8 +58,7 @@ private:
     };
     std::deque<ScheduleEntry> backlog;
     std::set<compositor::CompositorID> current_buffer_users;
-    std::shared_ptr<Schedule> const schedule;
-
+    std::shared_ptr<Schedule> schedule;
 };
 
 }

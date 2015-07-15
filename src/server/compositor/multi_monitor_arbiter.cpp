@@ -104,3 +104,9 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
 void mc::MultiMonitorArbiter::snapshot_release(std::shared_ptr<mg::Buffer> const&)
 {
 }
+
+void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_schedule)
+{
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    schedule = new_schedule;
+}
