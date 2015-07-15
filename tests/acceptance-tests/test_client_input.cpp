@@ -239,6 +239,23 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
     first_client.all_events_received.wait_for_at_most_seconds(120);
 }
 
+TEST_F(TestClientInput, clients_receive_relative_pointer_events)
+{
+    positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
+    Client first_client(new_connection(), first);
+
+    InSequence seq;
+    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(2, 2), mt::PointerEventWithDiff(1, 1))))
+        .WillOnce(mt::WakeUp(&first_client.all_events_received));
+
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
+
+    first_client.all_events_received.wait_for_at_most_seconds(120);
+}
+
 TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 {
     Client first_client(new_connection(), first);
