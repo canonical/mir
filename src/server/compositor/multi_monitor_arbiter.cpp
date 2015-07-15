@@ -96,6 +96,8 @@ void mc::MultiMonitorArbiter::clean_backlog()
     }
 }
 
-void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const&)
+void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_schedule)
 {
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    schedule = new_schedule;
 }

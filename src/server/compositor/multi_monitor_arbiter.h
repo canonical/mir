@@ -55,8 +55,7 @@ private:
     };
     std::deque<ScheduleEntry> backlog;
     std::set<compositor::CompositorID> current_buffer_users;
-    std::shared_ptr<Schedule> const schedule;
-
+    std::shared_ptr<Schedule> schedule;
 };
 
 }
