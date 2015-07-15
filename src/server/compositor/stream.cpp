@@ -20,6 +20,7 @@
 #include "stream.h"
 #include "client_queue.h"
 #include "mir/frontend/client_buffers.h"
+#include "mir/graphics/buffer.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -29,6 +30,7 @@ namespace ms = mir::scene;
 mc::Stream::Stream(std::unique_ptr<frontend::ClientBuffers> map) :
     schedule(std::make_shared<mc::ClientQueue>()),
     buffers(std::move(map)),
+    arbiter(buffers, schedule),
     first_frame_posted(false)
 {
 }
@@ -40,7 +42,7 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
     first_frame_posted = true;
     observers.frame_posted(1);
 
-    //schedule->schedule(map[buffer->id()]);
+    schedule->schedule((*buffers)[buffer->id()]);
 }
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const&)

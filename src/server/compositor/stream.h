@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/surface_observers.h"
 #include "mir/frontend/buffer_stream_id.h"
+#include "multi_monitor_arbiter.h"
 #include <mutex>
 #include <memory>
 
@@ -57,7 +58,8 @@ private:
     std::mutex mutable mutex;
     std::shared_ptr<Schedule> schedule;
     std::shared_ptr<frontend::ClientBuffers> buffers;
-    
+    MultiMonitorArbiter arbiter; 
+   
     bool first_frame_posted;
 
     scene::SurfaceObservers observers;
