@@ -23,13 +23,17 @@ namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 
-mc::Stream::Stream(frontend::BufferStreamId, std::shared_ptr<frontend::EventSink> const&)
+mc::Stream::Stream(frontend::BufferStreamId, std::shared_ptr<frontend::EventSink> const&) :
+    first_frame_posted(false)
 {
 }
 
-void mc::Stream::swap_buffers(
-    mg::Buffer*, std::function<void(mg::Buffer* new_buffer)>)
+void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer* new_buffer)>)
 {
+    if (!buffer) return;
+    std::lock_guard<decltype(mutex)> lk(mutex); 
+    first_frame_posted = true;
+    observers.frame_posted(1);
 }
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const&)
@@ -41,20 +45,15 @@ MirPixelFormat mc::Stream::pixel_format() const
     return mir_pixel_format_abgr_8888;
 }
 
-void mc::Stream::add_observer(std::shared_ptr<ms::SurfaceObserver> const&)
+void mc::Stream::add_observer(std::shared_ptr<ms::SurfaceObserver> const& observer)
 {
+    observers.add(observer);
 }
 
-void mc::Stream::remove_observer(std::weak_ptr<ms::SurfaceObserver> const&)
+void mc::Stream::remove_observer(std::weak_ptr<ms::SurfaceObserver> const& observer)
 {
-}
-
-void mc::Stream::acquire_client_buffer(std::function<void(mg::Buffer* buffer)>)
-{
-}
-
-void mc::Stream::release_client_buffer(mg::Buffer*)
-{
+    if (auto o = observer.lock())
+        observers.remove(o);
 }
 
 std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const*)
@@ -90,5 +89,6 @@ void mc::Stream::drop_old_buffers()
 
 bool mc::Stream::has_submitted_buffer() const
 {
-    return false;
+    std::lock_guard<decltype(mutex)> lk(mutex); 
+    return first_frame_posted;
 }

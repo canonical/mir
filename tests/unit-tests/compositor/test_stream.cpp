@@ -138,3 +138,12 @@ TEST_F(StreamTest, flattens_queue)
     stream.drop_old_buffers();
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
 }
+
+TEST_F(StreamTest, ignores_nullptr_submissions) //legacy behavior
+{
+    auto observer = std::make_shared<MockSurfaceObserver>();
+    EXPECT_CALL(*observer, frame_posted(_)).Times(0);
+    stream.add_observer(observer);
+    stream.swap_buffers(nullptr, [](mg::Buffer*){});
+    EXPECT_FALSE(stream.has_submitted_buffer());
+}
