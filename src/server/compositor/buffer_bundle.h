@@ -64,12 +64,6 @@ public:
     virtual void client_acquire(std::function<void(graphics::Buffer* buffer)> complete) = 0;
     virtual void client_release(graphics::Buffer*) = 0;
 
-    virtual std::shared_ptr<graphics::Buffer>
-        compositor_acquire(void const* user_id) = 0;
-    virtual void compositor_release(std::shared_ptr<graphics::Buffer> const&) = 0;
-    virtual std::shared_ptr<graphics::Buffer> snapshot_acquire() = 0;
-    virtual void snapshot_release(std::shared_ptr<graphics::Buffer> const&) = 0;
-
     virtual graphics::BufferProperties properties() const = 0;
     virtual void allow_framedropping(bool dropping_allowed) = 0;
     virtual void force_requests_to_complete() = 0;
