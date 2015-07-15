@@ -113,6 +113,7 @@ void mc::Stream::transition_schedule(std::shared_ptr<mc::Schedule>&& new_schedul
     for(auto& buffer : buffers)
         new_schedule->schedule(buffer);
     schedule = new_schedule;
+    arbiter->set_schedule(schedule);
 }
 
 void mc::Stream::force_requests_to_complete()

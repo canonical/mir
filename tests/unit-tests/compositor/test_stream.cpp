@@ -106,7 +106,7 @@ TEST_F(StreamTest, transitions_from_queuing_to_framedropping)
     while(stream.buffers_ready_for_compositor(this))
         cbuffers.push_back(stream.lock_compositor_buffer(this));
     ASSERT_THAT(cbuffers, SizeIs(1));
-    EXPECT_THAT(cbuffers[0], Eq(buffers.back()));
+    EXPECT_THAT(cbuffers[0]->id(), Eq(buffers.back()->id()));
 
 }
 
@@ -123,10 +123,12 @@ TEST_F(StreamTest, transitions_from_framedropping_to_queuing)
     for(auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
 
+    Mock::VerifyAndClearExpectations(&mock_sink);
+
     std::vector<std::shared_ptr<mg::Buffer>> cbuffers;
     while(stream.buffers_ready_for_compositor(this))
         cbuffers.push_back(stream.lock_compositor_buffer(this));
-    EXPECT_THAT(cbuffers, ContainerEq(buffers));
+    EXPECT_THAT(cbuffers, SizeIs(buffers.size()));
 }
 
 TEST_F(StreamTest, flubs_buffers_ready_for_queueing)
