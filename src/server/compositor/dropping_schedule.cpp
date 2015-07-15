@@ -17,30 +17,46 @@
  */
 
 #include "dropping_schedule.h"
+#include "mir/frontend/client_buffers.h"
+#include "mir/graphics/buffer.h"
+
+#include <boost/throw_exception.hpp>
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 
-mc::DroppingSchedule::DroppingSchedule(std::shared_ptr<mf::ClientBuffers> const&)
+mc::DroppingSchedule::DroppingSchedule(std::shared_ptr<mf::ClientBuffers> const& client_buffers) :
+    sender(client_buffers)
 {
 }
 
 void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    (void) buffer;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    if ((the_only_buffer != buffer) && the_only_buffer)
+        sender->send_buffer(the_only_buffer->id());
+    the_only_buffer = buffer;
 }
 
 void mc::DroppingSchedule::cancel(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    (void) buffer;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    if (the_only_buffer == buffer)
+        the_only_buffer = nullptr;
 }
 
 bool mc::DroppingSchedule::anything_scheduled()
 {
-    return false;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    return static_cast<bool>(the_only_buffer);
 }
 
 std::shared_ptr<mg::Buffer> mc::DroppingSchedule::next_buffer()
 {
-    return nullptr;
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    if (!the_only_buffer)
+        BOOST_THROW_EXCEPTION(std::logic_error("no buffer scheduled"));
+    auto buffer = the_only_buffer;
+    the_only_buffer = nullptr;
+    return buffer;
 }
