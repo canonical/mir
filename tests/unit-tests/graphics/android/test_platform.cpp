@@ -240,21 +240,23 @@ TEST(AndroidGraphicsPlatform, probe_returns_unsupported_when_no_hwaccess)
 {
     using namespace testing;
     NiceMock<mtd::HardwareAccessMock> hwaccess;
+    mir::options::ProgramOption options;
 
     ON_CALL(hwaccess, hw_get_module(_,_)).WillByDefault(Return(-1));
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-android")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::unsupported, probe());
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
 }
 
 TEST(AndroidGraphicsPlatform, probe_returns_best_when_hwaccess_succeeds)
 {
     testing::NiceMock<mtd::HardwareAccessMock> hwaccess;
+    mir::options::ProgramOption options;
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-android")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::best, probe());
+    EXPECT_EQ(mg::PlatformPriority::best, probe(options));
 }
 
 TEST(NestedPlatformCreation, doesnt_access_display_hardware)

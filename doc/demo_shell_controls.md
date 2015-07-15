@@ -48,4 +48,6 @@ touch alternatives for phones/tablets:
  - Adjust window opacity/alpha: *Alt-mousewheel*
  - Zoom in/out: *Super-mousewheel*
 
+*Super* means the Windows key on a PC, or the search key on a Chromebook.
+
 Want more? Log your requests at: https://bugs.launchpad.net/mir/+filebug
