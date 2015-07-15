@@ -70,15 +70,23 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
     for(auto const& it : elements)
     {
         auto const& renderable = it->renderable();
-        auto embellished = renderer.would_embellish(*renderable, viewport);
-        auto any_part_drawn = (viewport.overlaps(renderable->screen_position()) || embellished);
         
+        bool embellished = false;
         if (auto decor = it->decoration())
+        {
+            embellished = decor->type != mc::Decoration::Type::none;
             decorated[renderable->id()] = std::move(decor);
-        if (any_part_drawn)
+        }
+
+        if (embellished || viewport.overlaps(renderable->screen_position()))
         {
             renderable_list.push_back(renderable);
 
+            /*
+             * TODO: This logic could be replaced more cleanly in future by
+             *       the surface stack logic setting decoration status more
+             *       accurately for fullscreen surfaces.
+             */
             // Fullscreen and opaque? Definitely no embellishment
             if (renderable->screen_position() == viewport &&
                 renderable->alpha() == 1.0f &&
