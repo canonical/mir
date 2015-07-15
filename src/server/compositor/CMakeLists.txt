@@ -21,7 +21,7 @@ set(
   multi_monitor_arbiter.cpp
   buffer_map.cpp
   dropping_schedule.cpp
-  client_queue.cpp
+  queueing_schedule.cpp
 )
 
 ADD_LIBRARY(

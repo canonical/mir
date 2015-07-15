@@ -18,7 +18,7 @@
  */
 
 #include "stream.h"
-#include "client_queue.h"
+#include "queueing_schedule.h"
 #include "dropping_schedule.h"
 #include "temporary_buffers.h"
 #include "mir/frontend/client_buffers.h"
@@ -36,7 +36,7 @@ enum class mc::Stream::ScheduleMode {
 
 mc::Stream::Stream(std::unique_ptr<frontend::ClientBuffers> map) :
     schedule_mode(ScheduleMode::Queueing),
-    schedule(std::make_shared<mc::ClientQueue>()),
+    schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(std::move(map)),
     arbiter(std::make_shared<mc::MultiMonitorArbiter>(buffers, schedule)),
     first_frame_posted(false)
@@ -98,7 +98,7 @@ void mc::Stream::allow_framedropping(bool dropping)
     }
     else if (!dropping && schedule_mode == ScheduleMode::Dropping)
     {
-        transition_schedule(std::make_shared<mc::ClientQueue>());
+        transition_schedule(std::make_shared<mc::QueueingSchedule>());
         schedule_mode = ScheduleMode::Queueing;
     }
 }
