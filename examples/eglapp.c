@@ -194,7 +194,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     EGLContext eglctx;
     EGLBoolean ok;
     EGLint swapinterval = 1;
-    MirPixelFormat pixel_format = mir_pixel_format_invalid;
     unsigned int output_id = mir_display_output_id_invalid;
     char *mir_socket = NULL;
     char const* cursor_name = mir_default_cursor_name;
@@ -274,23 +273,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                     *width = 0;
                     *height = 0;
                     break;
-                case 'p':
-                    {
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            ++i;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%u", &pixel_format) != 1 ||
-                            pixel_format == mir_pixel_format_invalid ||
-                            pixel_format >= mir_pixel_formats)
-                        {
-                            printf("Invalid pixel format: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
                 case 's':
                     {
                         unsigned int w, h;
@@ -343,8 +325,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                        "  -h               Show this help text\n"
                        "  -f               Force full screen\n"
                        "  -o ID            Force placement on output monitor ID\n"
-                       // TODO: Deprecate -p soon. It's now automatic.
-                       "  -p pixelformat   Force a pixel format (integer)\n"
                        "  -n               Don't sync to vblank\n"
                        "  -m socket        Mir server socket\n"
                        "  -s WIDTHxHEIGHT  Force surface size\n"
@@ -371,7 +351,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
-        // TODO: Improve this to automatically match pixel_format
         EGL_RED_SIZE, rgb_bits,
         EGL_GREEN_SIZE, rgb_bits,
         EGL_BLUE_SIZE, rgb_bits,
@@ -383,11 +362,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     CHECK(ok, "Could not eglChooseConfig");
     CHECK(neglconfigs > 0, "No EGL config available");
 
-    if (pixel_format == mir_pixel_format_invalid)
-    {
-        pixel_format = mir_connection_get_egl_pixel_format(connection,
-                                                       egldisplay, eglconfig);
-    }
+    MirPixelFormat pixel_format =
+        mir_connection_get_egl_pixel_format(connection, egldisplay, eglconfig);
 
     printf("Using Mir pixel format %d.\n", pixel_format);
 
