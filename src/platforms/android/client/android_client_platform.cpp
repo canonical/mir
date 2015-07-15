@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/android/mir_native_window.h"
-#include "../server/android_format_conversion-inl.h" // TODO move this
+#include "android_format_conversion-inl.h"
 #include "mir/client_context.h"
 #include "android_client_platform.h"
 #include "gralloc_registrar.h"

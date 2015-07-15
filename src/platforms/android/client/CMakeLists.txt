@@ -1,4 +1,4 @@
-include_directories(${client_common_include_dirs})
+include_directories(${client_common_include_dirs} ..)
 include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 add_definitions(-DANDROID)
 
