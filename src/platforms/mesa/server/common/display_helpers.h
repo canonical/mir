@@ -50,8 +50,8 @@ namespace helpers
 
 enum class DRMNodeToUse
 {
-    render_node,
-    card_node
+    render,
+    card
 };
 
 class DRMHelper : public DRMAuthentication

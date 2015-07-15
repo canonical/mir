@@ -35,7 +35,7 @@ std::shared_ptr<mx::X11Connection> x11_connection;
 
 mgx::Platform::Platform()
     : udev{std::make_shared<mir::udev::Context>()},
-       drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render_node)}
+       drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)}
 {
     if (x11_connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Cannot create x11 platform more than once"));

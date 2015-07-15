@@ -203,6 +203,7 @@ std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 
 void mgx::Display::configure(mg::DisplayConfiguration const& /*new_configuration*/)
 {
+    BOOST_THROW_EXCEPTION(std::runtime_error("'Display::configure()' not yet supported on x11 platform"));
 }
 
 void mgx::Display::register_configuration_change_handler(
@@ -220,10 +221,12 @@ void mgx::Display::register_pause_resume_handlers(
 
 void mgx::Display::pause()
 {
+    BOOST_THROW_EXCEPTION(std::runtime_error("'Display::pause()' not yet supported on x11 platform"));
 }
 
 void mgx::Display::resume()
 {
+    BOOST_THROW_EXCEPTION(std::runtime_error("'Display::resume()' not yet supported on x11 platform"));
 }
 
 auto mgx::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial_image */) -> std::shared_ptr<Cursor>

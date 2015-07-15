@@ -106,10 +106,10 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
             default:
                 mir::log_info("Uninteresting event");
                 break;
+            }
         }
-    }
-    else
-        mir::log_info("input event detected with no sink to handle it");
+        else
+            mir::log_info("input event detected with no sink to handle it");
     }
 
     return ret;
