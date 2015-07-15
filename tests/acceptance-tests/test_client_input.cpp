@@ -251,7 +251,6 @@ TEST_F(TestClientInput, clients_receive_relative_pointer_events)
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
-    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
 
     first_client.all_events_received.wait_for_at_most_seconds(120);
 }
