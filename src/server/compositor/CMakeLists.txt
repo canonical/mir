@@ -17,6 +17,7 @@ set(
   timeout_frame_dropping_policy_factory.cpp
   buffer_queue.cpp
   recently_used_cache.cpp
+  buffer_map.cpp
 )
 
 ADD_LIBRARY(

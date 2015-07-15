@@ -121,7 +121,7 @@ TEST_F(GLibMainLoopTest, stops_from_outside_handler)
 
     ml.stop();
 
-    EXPECT_TRUE(loop_finished.wait_for(std::chrono::seconds{20}));
+    EXPECT_TRUE(loop_finished.wait_for(std::chrono::seconds{30}));
 }
 
 TEST_F(GLibMainLoopTest, ignores_handler_added_after_stop)
