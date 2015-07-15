@@ -20,6 +20,7 @@ set(
   stream.cpp
   buffer_map.cpp
   dropping_schedule.cpp
+  client_queue.cpp
 )
 
 ADD_LIBRARY(
