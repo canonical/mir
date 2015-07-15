@@ -37,7 +37,6 @@ class Surface;
 namespace options
 {
 class Option;
-class ProgramOption;
 }
 
 /// Graphics subsystem. Mediates interaction between core system and
@@ -127,7 +126,7 @@ typedef std::shared_ptr<mir::graphics::Platform>(*CreateGuestPlatform)(
 typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
 
-typedef mir::graphics::PlatformPriority(*PlatformProbe)(mir::options::ProgramOption const& options);
+typedef mir::graphics::PlatformPriority(*PlatformProbe)();
 
 typedef mir::ModuleProperties const*(*DescribeModule)();
 }
@@ -155,9 +154,9 @@ std::shared_ptr<mir::graphics::Platform> create_host_platform(
 
 /**
  * Function prototype used to return a new guest graphics platform. The guest graphics platform
- * exists alongside the host platform and do not output or control the physical displays
+ * exists alongside the host platform and do not output or control the physical displays 
  *
- * \param [in] nested_context the object that contains resources needed from the host platform
+ * \param [in] nested_context the object that contains resources needed from the host platform 
  * \param [in] report the object to use to report interesting events from the display subsystem
  *
  * This factory function needs to be implemented by each platform.
@@ -183,7 +182,7 @@ void add_graphics_platform_options(
 // TODO: We actually need to be more granular here; on a device with more
 //       than one graphics system we may need a different platform per GPU,
 //       so we should be associating platforms with graphics devices in some way
-mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& options);
+mir::graphics::PlatformPriority probe_graphics_platform();
 
 mir::ModuleProperties const* describe_graphics_module();
 }

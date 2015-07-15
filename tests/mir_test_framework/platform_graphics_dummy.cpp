@@ -18,15 +18,7 @@
 
 #include "mir/graphics/platform.h"
 
-namespace mir
-{
-namespace options
-{
-class ProgramOption;
-}
-}
-
-mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& /*options*/)
+mir::graphics::PlatformPriority probe_graphics_platform()
 {
     return mir::graphics::supported;
 }
