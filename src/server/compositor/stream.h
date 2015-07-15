@@ -28,13 +28,14 @@
 
 namespace mir
 {
-namespace frontend { class EventSink; }
+namespace frontend { class ClientBuffers; }
 namespace compositor
 {
+class Schedule;
 class Stream : public BufferStream
 {
 public:
-    Stream(frontend::BufferStreamId, std::shared_ptr<frontend::EventSink> const& sink);
+    Stream(std::unique_ptr<frontend::ClientBuffers>);
 
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
@@ -54,8 +55,12 @@ public:
 
 private:
     std::mutex mutable mutex;
-    scene::SurfaceObservers observers;
+    std::shared_ptr<Schedule> schedule;
+    std::shared_ptr<frontend::ClientBuffers> buffers;
+    
     bool first_frame_posted;
+
+    scene::SurfaceObservers observers;
 };
 }
 }

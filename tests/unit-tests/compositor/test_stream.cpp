@@ -17,10 +17,12 @@
  */
 
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/fake_shared.h"
 #include "src/server/compositor/stream.h"
 #include "mir/scene/null_surface_observer.h"
+#include "mir/frontend/client_buffers.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -38,6 +40,38 @@ struct MockSurfaceObserver : mir::scene::NullSurfaceObserver
     MOCK_METHOD1(frame_posted, void(int));
 };
 
+struct StubBufferMap : mf::ClientBuffers
+{
+    StubBufferMap(mf::EventSink& sink, std::vector<std::shared_ptr<mg::Buffer>>& buffers) :
+        buffers{buffers},
+        sink{sink}
+    {
+    }
+    void add_buffer(mg::BufferProperties const&)
+    {
+    }
+    void remove_buffer(mg::BufferID)
+    {
+    }
+    void send_buffer(mg::BufferID id)
+    {
+        sink.send_buffer(mf::BufferStreamId{33}, *operator[](id), mg::BufferIpcMsgType::update_msg);
+    }
+    std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id)
+    {
+        auto it = std::find_if(buffers.begin(), buffers.end(),
+            [id](std::shared_ptr<mg::Buffer> const& b)
+            {
+                return b->id() == id;
+            });
+        if (it == buffers.end())
+            throw std::logic_error("cannot find buffer in map");
+        return *it;
+    }
+    std::vector<std::shared_ptr<mg::Buffer>>& buffers;
+    mf::EventSink& sink;
+};
+
 struct StreamTest : Test
 {
     StreamTest() :
@@ -47,12 +81,10 @@ struct StreamTest : Test
             std::make_shared<mtd::StubBuffer>()}
     {
     }
-
-    mf::BufferStreamId id;
-    mtd::MockEventSink mock_sink;
-    mc::Stream stream{id, mt::fake_shared(mock_sink)};
-
+    
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
+    mtd::MockEventSink mock_sink;
+    mc::Stream stream{std::make_unique<StubBufferMap>(mock_sink, buffers)};
 };
 }
 

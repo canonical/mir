@@ -22,6 +22,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/events/event_private.h"
+#include "mir/graphics/display_configuration.h"
 
 #include <gmock/gmock.h>
 

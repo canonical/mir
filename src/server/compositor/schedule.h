@@ -13,33 +13,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_CLIENT_QUEUE_H_
-#define MIR_COMPOSITOR_CLIENT_QUEUE_H_
-#include "schedule.h"
+#ifndef MIR_COMPOSITOR_SCHEDULE_H_
+#define MIR_COMPOSITOR_SCHEDULE_H_
+
 #include <memory>
-#include <deque>
-#include <mutex>
 
 namespace mir
 {
 namespace graphics { class Buffer; }
 namespace compositor
 {
-class ClientQueue : public Schedule
+
+class Schedule
 {
 public:
-    void schedule(std::shared_ptr<graphics::Buffer> const& buffer);
-    void cancel(std::shared_ptr<graphics::Buffer> const& buffer);
-    bool anything_scheduled();
-    std::shared_ptr<graphics::Buffer> next_buffer();
+    virtual void schedule(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
+    virtual void cancel(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
+    virtual bool anything_scheduled() = 0;
+    virtual std::shared_ptr<graphics::Buffer> next_buffer() = 0;
 
-private:
-    std::mutex mutable mutex;
-    std::deque<std::shared_ptr<graphics::Buffer>> queue;
+    virtual ~Schedule() = default;
+    Schedule() = default;
+    Schedule(Schedule const&) = delete;
+    Schedule& operator=(Schedule const&) = delete;
 };
+
 }
 }
-#endif /* MIR_COMPOSITOR_CLIENT_QUEUE_H_ */
+#endif /* MIR_COMPOSITOR_SCHEDULE_H_ */
