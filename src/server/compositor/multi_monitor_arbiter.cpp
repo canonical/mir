@@ -95,3 +95,7 @@ void mc::MultiMonitorArbiter::clean_backlog()
         } 
     }
 }
+
+void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const&)
+{
+}

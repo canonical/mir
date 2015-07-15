@@ -40,6 +40,7 @@ public:
 
     std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id);
     void compositor_release(std::shared_ptr<graphics::Buffer> const&);
+    void set_schedule(std::shared_ptr<Schedule> const& schedule);
 
 private:
     void clean_backlog();
