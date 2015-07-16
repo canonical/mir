@@ -25,6 +25,7 @@
 #include <EGL/egl.h>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 using namespace testing;
 using namespace mir::client;
@@ -36,10 +37,6 @@ struct AndroidClientPlatformTest : public Test
 {
     AndroidClientPlatformTest()
         : platform{create_android_client_platform()}
-    {
-    }
-
-    void SetUp()
     {
     }
 
@@ -68,15 +65,11 @@ TEST_F(AndroidClientPlatformTest, egl_pixel_format_asks_the_driver)
     auto const d = reinterpret_cast<EGLDisplay>(0x1234);
     auto const c = reinterpret_cast<EGLConfig>(0x5678);
 
-    /*
-     * We can't verify the driver is giving the right answer here, because
-     * firstly there is no driver (it's mocked and/or a could be headless) and
-     * secondly EGLConfig is opaque so we can't construct proper input.
-     * What we can verify is that we're calling the right extension, but
-     * that's arguably not a very strong test...
-     */
+    // Verify Android is using:
+    // https://www.khronos.org/registry/egl/extensions/KHR/EGL_KHR_platform_android.txt
+    // and that's all we can hope for.
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(d, c, EGL_NATIVE_VISUAL_ID, _))
+        .WillOnce(Return(EGL_TRUE));
 
-    // TODO
-    auto pf = platform->get_egl_pixel_format(d, c);
-    (void)pf;
+    platform->get_egl_pixel_format(d, c);
 }
