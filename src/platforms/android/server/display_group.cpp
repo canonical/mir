@@ -86,3 +86,7 @@ std::chrono::milliseconds mga::DisplayGroup::recommended_sleep() const
 {
     return device->recommended_sleep();
 }
+
+void mga::DisplayGroup::set_hotplugging(bool)
+{
+}

@@ -50,6 +50,7 @@ public:
     void remove(DisplayName name);
     void configure(DisplayName name, MirPowerMode, MirOrientation, geometry::Displacement);
     bool display_present(DisplayName name) const;
+    void set_hotplugging(bool);
 
 private:
     std::mutex mutable guard;
