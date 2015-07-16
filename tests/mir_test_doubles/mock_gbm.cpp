@@ -45,6 +45,9 @@ mtd::MockGBM::MockGBM()
     ON_CALL(*this, gbm_create_device(_))
     .WillByDefault(Return(fake_gbm.device));
 
+    ON_CALL(*this, gbm_device_is_format_supported(_,_,_))
+    .WillByDefault(Return(1));
+
     ON_CALL(*this, gbm_surface_create(fake_gbm.device,_,_,_,_))
     .WillByDefault(Return(fake_gbm.surface));
 
@@ -87,6 +90,12 @@ void gbm_device_destroy(struct gbm_device *gbm)
 int gbm_device_get_fd(struct gbm_device *gbm)
 {
     return global_mock->gbm_device_get_fd(gbm);
+}
+
+int gbm_device_is_format_supported(struct gbm_device *gbm,
+                                   uint32_t format, uint32_t usage)
+{
+    return global_mock->gbm_device_is_format_supported(gbm, format, usage);
 }
 
 struct gbm_surface *gbm_surface_create(struct gbm_device *gbm,

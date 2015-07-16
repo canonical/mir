@@ -64,6 +64,6 @@ TEST_F(SurfaceSwapBuffers, does_not_block_when_surface_is_not_composited)
          * ASSERT instead of EXPECT, since if we continue we will block in future
          * mir client calls (e.g mir_connection_release).
          */
-        ASSERT_TRUE(buffers_swapped.wait_for(std::chrono::seconds{5}));
+        ASSERT_TRUE(buffers_swapped.wait_for(std::chrono::seconds{20}));
     }
 }
