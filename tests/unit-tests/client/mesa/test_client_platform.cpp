@@ -135,11 +135,11 @@ TEST_F(MesaClientPlatformTest, returns_gbm_compatible_pixel_formats_only)
     auto const d = reinterpret_cast<EGLDisplay>(0x1234);
     auto const c = reinterpret_cast<EGLConfig>(0x5678);
 
-    EXPECT_CALL(mock_egl, eglGetConfigAttrib(_, _, EGL_RED_SIZE, _))
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(d, c, EGL_RED_SIZE, _))
         .WillRepeatedly(DoAll(SetArgPointee<3>(8), Return(EGL_TRUE)));
-    EXPECT_CALL(mock_egl, eglGetConfigAttrib(_, _, EGL_GREEN_SIZE, _))
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(d, c, EGL_GREEN_SIZE, _))
         .WillRepeatedly(DoAll(SetArgPointee<3>(8), Return(EGL_TRUE)));
-    EXPECT_CALL(mock_egl, eglGetConfigAttrib(_, _, EGL_BLUE_SIZE, _))
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(d, c, EGL_BLUE_SIZE, _))
         .WillRepeatedly(DoAll(SetArgPointee<3>(8), Return(EGL_TRUE)));
 
     EXPECT_CALL(mock_egl, eglGetConfigAttrib(d, c, EGL_ALPHA_SIZE, _))
