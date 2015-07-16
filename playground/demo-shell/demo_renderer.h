@@ -51,11 +51,6 @@ public:
     ~DemoRenderer();
 
     void begin(DecorMap&&) const;
-    
-    bool would_embellish(
-        graphics::Renderable const& renderable,
-        geometry::Rectangle const&) const;
-
     void set_colour_effect(ColourEffect);
 
 protected:

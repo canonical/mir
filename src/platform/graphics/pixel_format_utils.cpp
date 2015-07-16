@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,42 +13,65 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include "mir/graphics/pixel_format_utils.h"
 
-namespace mg = mir::graphics;
+namespace {
 
-bool mg::contains_alpha(MirPixelFormat format)
+const struct
 {
-    return (format == mir_pixel_format_abgr_8888 ||
-            format == mir_pixel_format_argb_8888);
+    MirPixelFormat mir_format;
+    int red_bits, green_bits, blue_bits, alpha_bits;
+} detail[mir_pixel_formats] =
+{
+    {mir_pixel_format_invalid,   0,0,0,0},
+    {mir_pixel_format_abgr_8888, 8,8,8,8},
+    {mir_pixel_format_xbgr_8888, 8,8,8,0},
+    {mir_pixel_format_argb_8888, 8,8,8,8},
+    {mir_pixel_format_xrgb_8888, 8,8,8,0},
+    {mir_pixel_format_bgr_888,   8,8,8,0},
+    {mir_pixel_format_rgb_888,   8,8,8,0},
+    {mir_pixel_format_rgb_565,   5,6,5,0},
+    {mir_pixel_format_rgba_5551, 5,5,5,1},
+    {mir_pixel_format_rgba_4444, 4,4,4,4},
+};
+
+} // anonymous namespace
+
+namespace mir { namespace graphics {
+
+bool valid_pixel_format(MirPixelFormat f)
+{
+    return f > mir_pixel_format_invalid &&
+           f < mir_pixel_formats &&
+           detail[f].mir_format == f;
 }
 
-bool mg::valid_pixel_format(MirPixelFormat format)
+int red_channel_depth(MirPixelFormat f)
 {
-    return (format > mir_pixel_format_invalid &&
-            format < mir_pixel_formats);
+    return valid_pixel_format(f) ? detail[f].red_bits : 0;
 }
 
-int mg::red_channel_depth(MirPixelFormat format)
+int green_channel_depth(MirPixelFormat f)
 {
-    return valid_pixel_format(format) ? 8 : 0;
+    return valid_pixel_format(f) ? detail[f].green_bits : 0;
 }
 
-int mg::blue_channel_depth(MirPixelFormat format)
+int blue_channel_depth(MirPixelFormat f)
 {
-    return valid_pixel_format(format) ? 8 : 0;
+    return valid_pixel_format(f) ? detail[f].blue_bits : 0;
 }
 
-int mg::green_channel_depth(MirPixelFormat format)
+int alpha_channel_depth(MirPixelFormat f)
 {
-    return valid_pixel_format(format) ? 8 : 0;
+    return valid_pixel_format(f) ? detail[f].alpha_bits : 0;
 }
 
-int mg::alpha_channel_depth(MirPixelFormat format)
+bool contains_alpha(MirPixelFormat format)
 {
-    return contains_alpha(format) ? 8 : 0;
+    return alpha_channel_depth(format);
 }
 
+} } // namespace mir::graphics

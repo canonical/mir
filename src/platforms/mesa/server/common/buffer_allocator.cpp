@@ -138,13 +138,6 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
 
     uint32_t const gbm_format = mgm::mir_format_to_gbm_format(buffer_properties.format);
 
-    if (!is_pixel_format_supported(buffer_properties.format) ||
-        gbm_format == mgm::invalid_gbm_format)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Trying to create GBM buffer with unsupported pixel format"));
-    }
-
     /*
      * Bypass is generally only beneficial to hardware buffers where the
      * blitting happens on the GPU. For software buffers it is slower to blit
@@ -162,6 +155,12 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
          buffer_properties.size.height.as_uint32_t() >= 600)
     {
         bo_flags |= GBM_BO_USE_SCANOUT;
+    }
+
+    if (!gbm_device_is_format_supported(device, gbm_format, bo_flags))
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Trying to create GBM buffer with unsupported pixel format"));
     }
 
     gbm_bo *bo_raw = gbm_bo_create(
@@ -189,7 +188,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     BufferProperties const& buffer_properties)
 {
-    if (!is_pixel_format_supported(buffer_properties.format))
+    if (!ShmBuffer::supports(buffer_properties.format))
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
@@ -213,21 +212,28 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
 
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 {
+    /*
+     * supported_pixel_formats() is kind of a kludge. The right answer depends
+     * on whether you're using hardware or software, and it depends on
+     * the usage type (e.g. scanout). In the future it's also expected to
+     * depend on the GPU model in use at runtime.
+     *   To be precise, ShmBuffer now supports OpenGL compositing of all
+     * but one MirPixelFormat (bgr_888). But GBM only supports [AX]RGB.
+     * So since we don't yet have an adequate API in place to query what the
+     * intended usage will be, we need to be conservative and report the
+     * intersection of ShmBuffer and GBM's pixel format support. That is
+     * just these two. Be aware however you can create a software surface
+     * with almost any pixel format and it will also work...
+     *   TODO: Convert this to a loop that just queries the intersection of
+     * gbm_device_is_format_supported and ShmBuffer::supports(), however not
+     * yet while the former is buggy. (FIXME: LP: #1473901)
+     */
     static std::vector<MirPixelFormat> const pixel_formats{
         mir_pixel_format_argb_8888,
         mir_pixel_format_xrgb_8888
     };
 
     return pixel_formats;
-}
-
-bool mgm::BufferAllocator::is_pixel_format_supported(MirPixelFormat format)
-{
-    auto formats = supported_pixel_formats();
-
-    auto iter = std::find(formats.begin(), formats.end(), format);
-
-    return iter != formats.end();
 }
 
 std::unique_ptr<mg::Buffer> mgm::BufferAllocator::reconstruct_from(

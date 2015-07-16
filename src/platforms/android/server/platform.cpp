@@ -175,7 +175,7 @@ void add_graphics_platform_options(
     mga::DeviceQuirks::add_options(config);
 }
 
-mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
+mg::PlatformPriority probe_graphics_platform()
 {
     int err;
     hw_module_t const* hw_module;
