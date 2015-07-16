@@ -78,9 +78,13 @@ void mga::DisplayGroup::post()
 try
 {
     std::list<DisplayContents> contents;
-    std::unique_lock<decltype(guard)> lk(guard);
-    for(auto const& db : dbs)
-        contents.emplace_back(db.second->contents());
+    {
+        std::unique_lock<decltype(guard)> lk(guard);
+        for(auto const& db : dbs)
+            contents.emplace_back(db.second->contents());
+        hotplugging = false;
+    }
+
     device->commit(contents); 
 }
 catch (std::runtime_error& e)
@@ -95,8 +99,8 @@ std::chrono::milliseconds mga::DisplayGroup::recommended_sleep() const
     return device->recommended_sleep();
 }
 
-void mga::DisplayGroup::set_hotplugging(bool h)
+void mga::DisplayGroup::hotplug_occurred()
 {
-    std::unique_lock<decltype(hotplugging_guard)> lk(hotplugging_guard);
-    hotplugging = h;
+    std::unique_lock<decltype(guard)> lk(guard);
+    hotplugging = true;
 }
