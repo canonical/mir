@@ -278,6 +278,7 @@ void mga::Display::on_hotplug()
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     configuration_dirty = true;
+    displays->set_hotplugging(true);
     display_change_pipe->notify_change();
 }
 
@@ -292,6 +293,7 @@ void mga::Display::register_configuration_change_handler(
 {
     event_handler.register_fd_handler({display_change_pipe->read_pipe}, this, [change_handler, this](int){
         change_handler();
+        displays->set_hotplugging(false);
         display_change_pipe->ack_change();
     });
 }

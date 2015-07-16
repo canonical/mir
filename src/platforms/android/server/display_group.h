@@ -56,6 +56,8 @@ private:
     std::mutex mutable guard;
     std::shared_ptr<DisplayDevice> const device;
     std::map<DisplayName, std::unique_ptr<ConfigurableDisplayBuffer>> dbs;
+    std::mutex mutable hotplugging_guard;
+    bool hotplugging;
 };
 
 }
