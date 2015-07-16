@@ -54,6 +54,9 @@ public:
     MOCK_METHOD1(gbm_create_device, struct gbm_device*(int fd));
     MOCK_METHOD1(gbm_device_destroy, void(struct gbm_device *gbm));
     MOCK_METHOD1(gbm_device_get_fd, int(struct gbm_device *gbm));
+    MOCK_METHOD3(gbm_device_is_format_supported, int(struct gbm_device *gbm,
+                                                     uint32_t format,
+                                                     uint32_t usage));
 
     MOCK_METHOD5(gbm_surface_create, struct gbm_surface*(struct gbm_device *gbm,
                                                          uint32_t width, uint32_t height,

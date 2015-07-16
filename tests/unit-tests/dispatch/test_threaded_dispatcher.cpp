@@ -364,7 +364,7 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
             }
         });
 
-    auto const result = child->wait_for_termination(10s);
+    auto const result = child->wait_for_termination(30s);
     EXPECT_TRUE(result.succeeded());
 }
 
