@@ -194,6 +194,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     EGLContext eglctx;
     EGLBoolean ok;
     EGLint swapinterval = 1;
+    MirPixelFormat pixel_format = mir_pixel_format_invalid;
     unsigned int output_id = mir_display_output_id_invalid;
     char *mir_socket = NULL;
     char const* cursor_name = mir_default_cursor_name;
@@ -273,6 +274,23 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                     *width = 0;
                     *height = 0;
                     break;
+                case 'p':
+                    {
+                        arg += 2;
+                        if (!arg[0] && i < argc-1)
+                        {
+                            ++i;
+                            arg = argv[i];
+                        }
+                        if (sscanf(arg, "%u", &pixel_format) != 1 ||
+                            pixel_format == mir_pixel_format_invalid ||
+                            pixel_format >= mir_pixel_formats)
+                        {
+                            printf("Invalid pixel format: %s\n", arg);
+                            help = 1;
+                        }
+                    }
+                    break;
                 case 's':
                     {
                         unsigned int w, h;
@@ -325,6 +343,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                        "  -h               Show this help text\n"
                        "  -f               Force full screen\n"
                        "  -o ID            Force placement on output monitor ID\n"
+                       "  -p pixelformat   Force a pixel format (integer)\n"
                        "  -n               Don't sync to vblank\n"
                        "  -m socket        Mir server socket\n"
                        "  -s WIDTHxHEIGHT  Force surface size\n"
@@ -338,6 +357,36 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     connection = mir_connect_sync(mir_socket, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
+
+    if (pixel_format == mir_pixel_format_invalid)
+    {
+        unsigned int format[mir_pixel_formats];
+        unsigned int nformats;
+
+        mir_connection_get_available_surface_formats(connection,
+            format, mir_pixel_formats, &nformats);
+
+        pixel_format = format[0];
+        for (unsigned int f = 0; f < nformats; f++)
+        {
+            const int opaque = (format[f] == mir_pixel_format_xbgr_8888 ||
+                                format[f] == mir_pixel_format_xrgb_8888 ||
+                                format[f] == mir_pixel_format_rgb_565 ||
+                                format[f] == mir_pixel_format_rgb_888 ||
+                                format[f] == mir_pixel_format_bgr_888);
+
+            if ((mir_eglapp_background_opacity == 1.0f && opaque) ||
+                (mir_eglapp_background_opacity < 1.0f && !opaque))
+            {
+                pixel_format = format[f];
+                break;
+            }
+        }
+
+        printf("Server supports %d of %d surface pixel formats. "
+               "Using format: %d\n",
+               nformats, mir_pixel_formats, pixel_format);
+    }
 
     /* eglapps are interested in the screen size, so
        use mir_connection_create_display_config */
@@ -354,27 +403,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     const MirDisplayMode *mode = &output->modes[output->current_mode];
 
-    unsigned int format[mir_pixel_formats];
-    unsigned int nformats;
-
-    mir_connection_get_available_surface_formats(connection,
-        format, mir_pixel_formats, &nformats);
-
-    MirPixelFormat pixel_format = format[0];
-    for (unsigned int f = 0; f < nformats; f++)
-    {
-        const int opaque = (format[f] == mir_pixel_format_xbgr_8888 ||
-                            format[f] == mir_pixel_format_xrgb_8888 ||
-                            format[f] == mir_pixel_format_bgr_888);
-
-        if ((mir_eglapp_background_opacity == 1.0f && opaque) ||
-            (mir_eglapp_background_opacity < 1.0f && !opaque))
-        {
-            pixel_format = format[f];
-            break;
-        }
-    }
-
     printf("Current active output is %dx%d %+d%+d\n",
            mode->horizontal_resolution, mode->vertical_resolution,
            output->position_x, output->position_y);
@@ -386,13 +414,12 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     mir_display_config_destroy(display_config);
 
-    printf("Server supports %d of %d surface pixel formats. Using format: %d\n",
-        nformats, mir_pixel_formats, pixel_format);
     EGLint attribs[] =
     {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+        // TODO: Improve this to automatically match pixel_format
         EGL_RED_SIZE, rgb_bits,
         EGL_GREEN_SIZE, rgb_bits,
         EGL_BLUE_SIZE, rgb_bits,
