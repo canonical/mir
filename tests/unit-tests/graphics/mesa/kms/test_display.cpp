@@ -726,6 +726,7 @@ TEST_F(MesaDisplayTest, configuration_change_registers_video_devices_handler)
 TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 {
     using namespace testing;
+    using namespace std::chrono_literals;
 
     auto display = create_display(create_platform());
 
@@ -747,16 +748,13 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
             }
         });
 
-    auto mainloop_started = std::make_shared<mt::Signal>();
 
-    auto fire_on_mainloop_start = ml.create_alarm([mainloop_started]()
-    {
-        mainloop_started->raise();
-    });
-    fire_on_mainloop_start->reschedule_in(std::chrono::milliseconds{0});
+    int const owner{0};
+    mt::Signal mainloop_started;
+    ml.enqueue(&owner, [&] { mainloop_started.raise(); });
 
     mt::AutoUnblockThread mainLoopThread([&ml]{ml.stop();}, [&ml]{ml.run();});
-    ASSERT_TRUE(mainloop_started->wait_for(std::chrono::milliseconds{100}));
+    ASSERT_TRUE(mainloop_started.wait_for(10s));
 
     auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
 
@@ -767,7 +765,7 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
         fake_devices.emit_device_changed(syspath);
     }
 
-    done.wait_for(std::chrono::seconds{10});
+    done.wait_for(20s);
     EXPECT_EQ(expected_call_count, call_count);
 }
 
