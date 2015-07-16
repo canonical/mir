@@ -250,12 +250,23 @@ TEST_F(TestClientInput, clients_receive_relative_pointer_events)
     EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(1, 1), mt::PointerEventWithDiff(1, 1))));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(2, 2), mt::PointerEventWithDiff(1, 1))));
-    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(3, 3), mt::PointerEventWithDiff(1, 1))))
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(3, 3), mt::PointerEventWithDiff(1, 1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(2, 2), mt::PointerEventWithDiff(-1, -1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(1, 1), mt::PointerEventWithDiff(-1, -1))));
+    // Ensure we continue to receive relative moement even when absolute movement is constrained.
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(0, 0), mt::PointerEventWithDiff(-1, -1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(0, 0), mt::PointerEventWithDiff(-1, -1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(0, 0), mt::PointerEventWithDiff(-1, -1))))
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
 
     first_client.all_events_received.wait_for_at_most_seconds(120);
 }
