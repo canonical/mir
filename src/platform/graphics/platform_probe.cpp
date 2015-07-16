@@ -23,7 +23,7 @@
 #include <boost/throw_exception.hpp>
 
 std::shared_ptr<mir::SharedLibrary>
-mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> const& modules)
+mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> const& modules, mir::options::ProgramOption const& options)
 {
     mir::graphics::PlatformPriority best_priority_so_far = mir::graphics::unsupported;
     std::shared_ptr<mir::SharedLibrary> best_module_so_far;
@@ -35,7 +35,7 @@ mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> con
                  "probe_graphics_platform",
                  MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
-            auto module_priority = probe();
+            auto module_priority = probe(options);
             if (module_priority > best_priority_so_far)
             {
                 best_priority_so_far = module_priority;

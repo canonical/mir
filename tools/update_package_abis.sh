@@ -204,17 +204,13 @@ report_unknown_package()
 
 check_for_unknown_packages()
 {
-    local control_pkgs="$(grep "Package:" debian/control | cut -d ":" -f 2 | grep "[[:digit:]]" | tr -d ' [0-9]' | tr '\n' ' ')"
+    local control_pkgs="$(grep "Package:" debian/control | cut -d ":" -f 2 | grep "[[:digit:]]$" | tr -d ' [0-9]' | tr '\n' ' ')"
     for p in $control_pkgs;
     do
         local result="$(echo "${packages}" | grep -v "\b${p}:")"
         if [ -n "$result" ];
         then
-            local replaces_pkgs="$(grep "Replaces:" debian/control | cut -d ":" -f 2 | cut -d " " -f 2 | grep "[[:digit:]]" | tr -d ' [0-9]')"
-            if [ -z "$replaces_pkgs" ];
-            then
-                report_unknown_package "debian/control contains versioned package ${p} but it is unknown to this script"
-            fi
+            report_unknown_package "debian/control contains versioned package ${p} but it is unknown to this script"
         fi
     done
 
