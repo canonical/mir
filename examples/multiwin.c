@@ -69,6 +69,7 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
         break;
     case mir_pixel_format_xbgr_8888:
         pixel = 
+            /* Not filling in the X byte is correct but buggy (LP: #1423462) */
             (uint32_t)color->b << 16 |
             (uint32_t)color->g << 8  |
             (uint32_t)color->r;
@@ -82,9 +83,20 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
         break;
     case mir_pixel_format_xrgb_8888:
         pixel = 
+            /* Not filling in the X byte is correct but buggy (LP: #1423462) */
             (uint32_t)color->r << 16 |
             (uint32_t)color->g << 8  |
             (uint32_t)color->b;
+        break;
+    case mir_pixel_format_rgb_888:
+        for (n = 0; n < count; n++)
+        {
+            uint8_t *p = (uint8_t*)where + n * 3;
+            p[0] = color->r;
+            p[1] = color->g;
+            p[2] = color->b;
+        }
+        count = 0;
         break;
     case mir_pixel_format_bgr_888:
         for (n = 0; n < count; n++)
@@ -93,6 +105,38 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
             p[0] = color->b;
             p[1] = color->g;
             p[2] = color->r;
+        }
+        count = 0;
+        break;
+    case mir_pixel_format_rgb_565:
+        for (n = 0; n < count; n++)
+        {
+            uint16_t *p = (uint16_t*)where + n;
+            *p = (uint16_t)(color->r >> 3) << 11 |
+                 (uint16_t)(color->g >> 2) << 5  |
+                 (uint16_t)(color->b >> 3);
+        }
+        count = 0;
+        break;
+    case mir_pixel_format_rgba_5551:
+        for (n = 0; n < count; n++)
+        {
+            uint16_t *p = (uint16_t*)where + n;
+            *p = (uint16_t)(color->r >> 3) << 11 |
+                 (uint16_t)(color->g >> 3) << 6  |
+                 (uint16_t)(color->b >> 3) << 1  |
+                 (uint16_t)(color->a ? 1 : 0);
+        }
+        count = 0;
+        break;
+    case mir_pixel_format_rgba_4444:
+        for (n = 0; n < count; n++)
+        {
+            uint16_t *p = (uint16_t*)where + n;
+            *p = (uint16_t)(color->r >> 4) << 12 |
+                 (uint16_t)(color->g >> 4) << 8  |
+                 (uint16_t)(color->b >> 4) << 4  |
+                 (uint16_t)(color->a >> 4);
         }
         count = 0;
         break;
@@ -134,16 +178,21 @@ int main(int argc, char *argv[])
     MirConnection *conn;
     Window win[3];
     unsigned int f;
+    MirPixelFormat pixel_format = mir_pixel_format_invalid;
     int alpha = 0x50;
 
     int arg;
     opterr = 0;
-    while ((arg = getopt (argc, argv, "hm:a:")) != -1)
+    while ((arg = getopt (argc, argv, "hm:a:p:")) != -1)
     {
         switch (arg)
         {
         case 'a':
             alpha = atoi(optarg);
+            break;
+
+        case 'p':
+            pixel_format = (MirPixelFormat)atoi(optarg);
             break;
 
         case 'm':
@@ -156,8 +205,9 @@ int main(int argc, char *argv[])
             puts(argv[0]);
             puts("Usage:");
             puts("    -m <Mir server socket>");
-            puts("    -a Alpha for surfaces");
-            puts("    -h: this help text");
+            puts("    -a      Alpha for surfaces");
+            puts("    -p <N>  Force pixel format N");
+            puts("    -h      This help text");
             return -1;
         }
     }
@@ -169,26 +219,28 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    unsigned int const pf_size = 32;
-    MirPixelFormat formats[pf_size];
-    unsigned int valid_formats;
-    mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
-
-    MirPixelFormat pixel_format = mir_pixel_format_invalid;
-    for (f = 0; f < valid_formats; f++)
-    {
-        if (formats[f] == mir_pixel_format_abgr_8888 ||
-            formats[f] == mir_pixel_format_argb_8888)
-        {
-            pixel_format = formats[f];
-            break;
-        }
-    }
     if (pixel_format == mir_pixel_format_invalid)
     {
-        fprintf(stderr, "Could not find a fast 32-bit pixel format with "
-                        "alpha support. Blending won't work!.\n");
-        pixel_format = formats[0];
+        MirPixelFormat formats[mir_pixel_formats];
+        unsigned int valid_formats;
+        mir_connection_get_available_surface_formats(conn, formats,
+            mir_pixel_formats, &valid_formats);
+
+        for (f = 0; f < valid_formats; f++)
+        {
+            if (formats[f] == mir_pixel_format_abgr_8888 ||
+                formats[f] == mir_pixel_format_argb_8888)
+            {
+                pixel_format = formats[f];
+                break;
+            }
+        }
+        if (pixel_format == mir_pixel_format_invalid)
+        {
+            fprintf(stderr, "Could not find a fast 32-bit pixel format with "
+                            "alpha support. Blending won't work!.\n");
+            pixel_format = formats[0];
+        }
     }
 
     MirSurfaceSpec *spec =
