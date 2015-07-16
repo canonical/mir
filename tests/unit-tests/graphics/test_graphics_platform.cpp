@@ -59,6 +59,8 @@ public:
         ON_CALL(mock_gbm, gbm_bo_get_height(_))
         .WillByDefault(Return(240));
 
+        // FIXME: This format needs to match Mesa's first supported pixel
+        //        format or tests will fail. The coupling is presently loose.
         ON_CALL(mock_gbm, gbm_bo_get_format(_))
         .WillByDefault(Return(GBM_FORMAT_ARGB8888));
 

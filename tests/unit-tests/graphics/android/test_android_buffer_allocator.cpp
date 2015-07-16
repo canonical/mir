@@ -73,9 +73,19 @@ TEST_F(AndroidGraphicBufferAllocatorTest, supported_pixel_formats_contain_common
                                     supported_pixel_formats.end(),
                                     mir_pixel_format_bgr_888);
 
+    auto rgb_888_count = std::count(supported_pixel_formats.begin(),
+                                    supported_pixel_formats.end(),
+                                    mir_pixel_format_rgb_888);
+
+    auto rgb_565_count = std::count(supported_pixel_formats.begin(),
+                                    supported_pixel_formats.end(),
+                                    mir_pixel_format_rgb_565);
+
     EXPECT_EQ(1, abgr_8888_count);
     EXPECT_EQ(1, xbgr_8888_count);
-    EXPECT_EQ(1, bgr_888_count);
+    EXPECT_EQ(0, bgr_888_count);
+    EXPECT_EQ(1, rgb_888_count);
+    EXPECT_EQ(1, rgb_565_count);
 }
 
 TEST_F(AndroidGraphicBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_first_position)
