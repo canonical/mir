@@ -21,9 +21,8 @@
 #include "mir/test/doubles/mock_egl_native_surface.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir_test_framework/client_platform_factory.h"
-
+#include <android/system/graphics.h>
 #include <EGL/egl.h>
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -65,11 +64,18 @@ TEST_F(AndroidClientPlatformTest, egl_pixel_format_asks_the_driver)
     auto const d = reinterpret_cast<EGLDisplay>(0x1234);
     auto const c = reinterpret_cast<EGLConfig>(0x5678);
 
-    // Verify Android is using:
-    // https://www.khronos.org/registry/egl/extensions/KHR/EGL_KHR_platform_android.txt
-    // and that's all we can hope for.
     EXPECT_CALL(mock_egl, eglGetConfigAttrib(d, c, EGL_NATIVE_VISUAL_ID, _))
-        .WillOnce(Return(EGL_TRUE));
+        .WillOnce(DoAll(SetArgPointee<3>(HAL_PIXEL_FORMAT_RGB_565),
+                        Return(EGL_TRUE)))
+        .WillOnce(DoAll(SetArgPointee<3>(HAL_PIXEL_FORMAT_RGB_888),
+                        Return(EGL_TRUE)))
+        .WillOnce(DoAll(SetArgPointee<3>(HAL_PIXEL_FORMAT_BGRA_8888),
+                        Return(EGL_TRUE)))
+        .WillOnce(DoAll(SetArgPointee<3>(0),
+                        Return(EGL_FALSE)));
 
-    platform->get_egl_pixel_format(d, c);
+    EXPECT_EQ(mir_pixel_format_rgb_565, platform->get_egl_pixel_format(d, c));
+    EXPECT_EQ(mir_pixel_format_rgb_888, platform->get_egl_pixel_format(d, c));
+    EXPECT_EQ(mir_pixel_format_argb_8888, platform->get_egl_pixel_format(d, c));
+    EXPECT_EQ(mir_pixel_format_invalid, platform->get_egl_pixel_format(d, c));
 }
