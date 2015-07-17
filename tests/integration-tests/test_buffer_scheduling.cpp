@@ -844,7 +844,7 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
     // latest frame. Because the screen could be indefinitely out of date
     // if that happens...
     auto producer_log = producer.production_log();
-    auto consumer_log = producer.production_log();
+    auto consumer_log = consumer.consumption_log();
     EXPECT_TRUE(!producer.can_produce() || 
         (!producer_log.empty() && !consumer_log.empty() && producer_log.back() == consumer_log.back()));
 }
