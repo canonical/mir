@@ -3,3 +3,5 @@ race:libgio*
 race:testing::internal::FunctionMockerBase
 race:~posix_event
 race:boost::asio::detail::posix_event::signal_and_unlock
+#Suppress false positive when deleting main loop shared_ptr
+race:std::__shared_ptr<mir::MainLoop, (__gnu_cxx::_Lock_policy)2>::operator->()
