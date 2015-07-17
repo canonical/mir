@@ -42,7 +42,7 @@ void add_input_platform_options(
 mi::PlatformPriority probe_input_platform(
     mo::Option const& /*options*/)
 {
-    return mi::PlatformPriority::supported;
+    return mi::PlatformPriority::dummy;
 }
 
 namespace

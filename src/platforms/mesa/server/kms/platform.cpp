@@ -240,7 +240,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
         if (platform_option_used)
             return mg::PlatformPriority::best;
         else
-            return mg::PlatformPriority::better;
+            return mg::PlatformPriority::supported;
     }
 
     return mg::PlatformPriority::unsupported;

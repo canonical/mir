@@ -28,7 +28,7 @@ class ProgramOption;
 
 mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& /*options*/)
 {
-    return mir::graphics::PlatformPriority::supported;
+    return mir::graphics::PlatformPriority::dummy;
 }
 
 mir::ModuleProperties const description {
