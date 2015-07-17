@@ -33,6 +33,7 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 
 mc::BufferStreamFactory::BufferStreamFactory(
     std::shared_ptr<mg::GraphicBufferAllocator> const& gralloc,
@@ -50,14 +51,17 @@ mc::BufferStreamFactory::BufferStreamFactory(
 
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
+    mf::BufferStreamId id, std::shared_ptr<mf::EventSink> const& sink,
     mg::BufferProperties const& buffer_properties)
 {
-    return create_buffer_stream(nbuffers, buffer_properties);
+    return create_buffer_stream(id, sink, nbuffers, buffer_properties);
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
+    mf::BufferStreamId id, std::shared_ptr<mf::EventSink> const& sink,
     int nbuffers, mg::BufferProperties const& buffer_properties)
 {
+    (void) id; (void) sink;
     auto switching_bundle = std::make_shared<mc::BufferQueue>(
         nbuffers, gralloc, buffer_properties, *policy_factory);
     return std::make_shared<mc::BufferStreamSurfaces>(switching_bundle);
