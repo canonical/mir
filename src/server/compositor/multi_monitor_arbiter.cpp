@@ -13,6 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "multi_monitor_arbiter.h"
@@ -40,20 +41,18 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
 
-    if (backlog.empty() && !schedule->anything_scheduled())
+    if (onscreen_buffers.empty() && !schedule->anything_scheduled())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give"));
 
-    if (current_buffer_users.find(id) != current_buffer_users.end() || backlog.empty())
+    if (current_buffer_users.find(id) != current_buffer_users.end() || onscreen_buffers.empty())
     {
         if (schedule->anything_scheduled())
-        {
-            backlog.emplace_front(ScheduleEntry{schedule->next_buffer(), 0, false});
-        }
+            onscreen_buffers.emplace_front(ScheduleEntry{schedule->next_buffer(), 0, false});
         current_buffer_users.clear();
     }
     current_buffer_users.insert(id);
 
-    auto& last_entry = backlog.front();
+    auto& last_entry = onscreen_buffers.front();
     last_entry.was_consumed = true;
     last_entry.use_count++;
     return last_entry.buffer;
@@ -63,31 +62,26 @@ void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> con
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
 
-    auto it = std::find_if(backlog.begin(), backlog.end(),
+    auto it = std::find_if(onscreen_buffers.begin(), onscreen_buffers.end(),
         [&buffer](ScheduleEntry const& s) { return s.buffer->id() == buffer->id(); });
-    if (it == backlog.end())
+    if (it == onscreen_buffers.end())
         BOOST_THROW_EXCEPTION(std::logic_error("buffer not scheduled"));
 
-    it->use_count--;;
+    it->use_count--;
 
-    clean_backlog();
+    clean_onscreen_buffers(lk);
 }
 
-void mc::MultiMonitorArbiter::clean_backlog()
+void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::unique_lock<std::mutex> const&)
 {
-    for(auto it = backlog.begin(); it != backlog.end();)
+    for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
     {
-        if (it == backlog.begin() && !schedule->anything_scheduled()) //reserve the front for us
-        {
-            it++;
-            continue;
-        }
-
         if ((it->use_count == 0) &&
-            (it->was_consumed))
+            (it->was_consumed) && 
+            (it != onscreen_buffers.begin() || schedule->anything_scheduled())) //ensure monitors always have a buffer
         {
             map->send_buffer(it->buffer->id());
-            it = backlog.erase(it);
+            it = onscreen_buffers.erase(it);
         }
         else
         {
