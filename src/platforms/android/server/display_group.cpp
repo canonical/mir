@@ -89,7 +89,7 @@ try
 }
 catch (std::runtime_error& e)
 {
-    std::unique_lock<decltype(hotplugging_guard)> lk(hotplugging_guard);
+    std::unique_lock<decltype(guard)> lk(guard);
     if (!hotplugging)
         throw e;
 }
