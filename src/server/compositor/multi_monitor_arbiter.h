@@ -46,7 +46,7 @@ public:
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
 
 private:
-    void clean_backlog();
+    void clean_onscreen_buffers(std::unique_lock<std::mutex> const&);
 
     std::mutex mutable mutex;
     std::shared_ptr<frontend::ClientBuffers> const map;
@@ -54,9 +54,8 @@ private:
     {
         std::shared_ptr<graphics::Buffer> buffer;
         unsigned int use_count;
-        bool was_consumed;
     };
-    std::deque<ScheduleEntry> backlog;
+    std::deque<ScheduleEntry> onscreen_buffers;
     std::set<compositor::CompositorID> current_buffer_users;
     std::shared_ptr<Schedule> schedule;
 };
