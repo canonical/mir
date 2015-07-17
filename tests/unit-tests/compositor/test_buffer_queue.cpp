@@ -1136,7 +1136,7 @@ TEST_P(WithTwoOrMoreBuffers, scaled_queue_still_follows_dropping_policy)
     int const nframes = 100;
     auto& policy = *policy_factory.policies.begin();
     EXPECT_CALL(*policy, swap_now_blocking())
-        .Times(nframes);
+        .Times(AtLeast(nframes-1));
 
     q.set_scaling_delay(0);
     for (int i = 0; i < nframes; i++)
