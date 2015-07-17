@@ -40,7 +40,7 @@ public:
 
 private:
     struct Private;
-    std::unique_ptr<Private> p;
+    std::unique_ptr<Private> const p;
 
     DisplayServer() = delete;
     DisplayServer(const DisplayServer&) = delete;

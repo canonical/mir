@@ -29,6 +29,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include <future>
 #include <atomic>
 
 namespace mp = mir::protobuf;
@@ -121,7 +122,7 @@ struct ClientBufferStreamTest : public testing::Test
     testing::NiceMock<mtd::MockClientBufferFactory> mock_client_buffer_factory;
     mtd::StubClientBufferFactory stub_client_buffer_factory;
 
-    MockProtobufServer mock_protobuf_server;
+    testing::NiceMock<MockProtobufServer> mock_protobuf_server;
 
     MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
     MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
@@ -145,11 +146,8 @@ struct ClientBufferStreamTest : public testing::Test
  // Just ensure we have a unique ID in order to not confuse the buffer depository caching logic...
 std::atomic<int> unique_buffer_id{1};
 
-void fill_protobuf_buffer_stream_from_package(mp::BufferStream &protobuf_bs, MirBufferPackage const& buffer_package)
+void fill_protobuf_buffer_from_package(mp::Buffer* mb, MirBufferPackage const& buffer_package)
 {
-
-    auto mb = protobuf_bs.mutable_buffer();
-    
     mb->set_buffer_id(unique_buffer_id++);
 
     /* assemble buffers */
@@ -194,7 +192,7 @@ mp::BufferStream a_protobuf_buffer_stream(MirPixelFormat format, MirBufferUsage 
 
     protobuf_bs.set_pixel_format(format);
     protobuf_bs.set_buffer_usage(usage);
-    fill_protobuf_buffer_stream_from_package(protobuf_bs, package);
+    fill_protobuf_buffer_from_package(protobuf_bs.mutable_buffer(), package);
     return protobuf_bs;
 }
 
@@ -276,14 +274,14 @@ TEST_F(ClientBufferStreamTest, uses_buffer_message_from_server)
     auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
 }
 
-TEST_F(ClientBufferStreamTest, producer_streams_call_exchange_buffer_on_next_buffer)
+TEST_F(ClientBufferStreamTest, producer_streams_call_submit_buffer_on_next_buffer)
 {
     using namespace ::testing;
 
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
         a_buffer_package());
 
-    EXPECT_CALL(mock_protobuf_server, exchange_buffer(_,_,_,_))
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
         .WillOnce(RunProtobufClosure());
 
     auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Producer);
@@ -313,10 +311,12 @@ TEST_F(ClientBufferStreamTest, invokes_callback_on_next_buffer)
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
         a_buffer_package());
 
-    EXPECT_CALL(mock_protobuf_server, exchange_buffer(_,_,_,_))
-        .WillOnce(RunProtobufClosure());
-
+    mp::Buffer buffer;
     auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Producer);
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+        .WillOnce(DoAll(
+            RunProtobufClosure(),
+            InvokeWithoutArgs([&bs, &buffer]{ bs->buffer_available(buffer);})));
 
     bool callback_invoked = false;
     bs->next_buffer([&callback_invoked](){ callback_invoked = true; })->wait_for_all();
@@ -345,17 +345,19 @@ TEST_F(ClientBufferStreamTest, returns_correct_surface_parameters)
 TEST_F(ClientBufferStreamTest, returns_current_client_buffer)
 {
     using namespace ::testing;
+    ON_CALL(mock_protobuf_server, submit_buffer(_, _, _, _))
+        .WillByDefault(RunProtobufClosure());
 
-    auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>(),
-        client_buffer_2 = std::make_shared<mtd::NullClientBuffer>();
-
+    auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>();
+    auto const client_buffer_2 = std::make_shared<mtd::NullClientBuffer>();
     auto buffer_package_1 = a_buffer_package();
     auto buffer_package_2 = a_buffer_package();
+    mp::Buffer protobuf_buffer_1;
+    mp::Buffer protobuf_buffer_2;
+    fill_protobuf_buffer_from_package(&protobuf_buffer_1, buffer_package_1);
+    fill_protobuf_buffer_from_package(&protobuf_buffer_2, buffer_package_2);
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
         buffer_package_1);
-    
-    EXPECT_CALL(mock_protobuf_server, exchange_buffer(_, _, _, _))
-        .WillOnce(DoAll(SetBufferInfoFromPackage(buffer_package_2), RunProtobufClosure()));
     
     {
         InSequence seq;
@@ -366,8 +368,8 @@ TEST_F(ClientBufferStreamTest, returns_current_client_buffer)
     }
 
     auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
-
     EXPECT_EQ(client_buffer_1, bs->get_current_buffer());
+    bs->buffer_available(protobuf_buffer_2);
     bs->next_buffer([]{});
     EXPECT_EQ(client_buffer_2, bs->get_current_buffer());
 }
@@ -383,11 +385,12 @@ TEST_F(ClientBufferStreamTest, caches_width_and_height_in_case_of_partial_update
     auto buffer_package_2 = a_buffer_package();
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
         buffer_package_1);
+    mp::Buffer protobuf_buffer_2;
+    fill_protobuf_buffer_from_package(&protobuf_buffer_2, buffer_package_2);
         
-    // Here we us SetPartialBufferInfoFromPackage and do not fill in width
-    // and height
-    EXPECT_CALL(mock_protobuf_server, exchange_buffer(_, _, _, _))
-        .WillOnce(DoAll(SetPartialBufferInfoFromPackage(buffer_package_2), RunProtobufClosure()));
+    // Here we us SetPartialBufferInfoFromPackage and do not fill in width and height
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_, _, _, _))
+        .WillOnce(RunProtobufClosure());
 
     auto expected_size = geom::Size{buffer_package_1.width, buffer_package_1.height};
 
@@ -402,6 +405,7 @@ TEST_F(ClientBufferStreamTest, caches_width_and_height_in_case_of_partial_update
     auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
 
     EXPECT_EQ(client_buffer_1, bs->get_current_buffer());
+    bs->buffer_available(protobuf_buffer_2);
     bs->next_buffer([]{});
     EXPECT_EQ(client_buffer_2, bs->get_current_buffer());
 }
@@ -484,34 +488,40 @@ TEST_F(ClientBufferStreamTest, receives_unsolicited_buffer)
     EXPECT_THAT(bs->get_current_buffer_id(), Eq(id));
 }
 
-//useful only in transitioning from exchange to async
-TEST_F(ClientBufferStreamTest, after_receiving_an_unsolicited_buffer_exchange_buffer_return_are_ignored)
+TEST_F(ClientBufferStreamTest, waiting_client_can_unblock_on_shutdown)
 {
     using namespace ::testing;
-    int id = 88;
+    using namespace std::literals::chrono_literals;
     MockClientBuffer mock_client_buffer;
-    MockClientBuffer second_mock_client_buffer;
     MirBufferPackage buffer_package = a_buffer_package();
-    mir::protobuf::Buffer another_buffer_package;
-    another_buffer_package.set_buffer_id(id);
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
-    ON_CALL(mock_client_buffer_factory, create_buffer(_,_,_))
+    ON_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
+    ON_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+        .WillByDefault(RunProtobufClosure());
+
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool started{false};
+
     auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
+    auto never_serviced_request = std::async(std::launch::async,[&] {
+        {
+            std::unique_lock<decltype(mutex)> lk(mutex);
+            started = true;
+            cv.notify_all();
+        }
+        bs->request_and_wait_for_next_buffer();
+    });
 
-    int a_few_times = 11;
-    EXPECT_CALL(mock_protobuf_server, exchange_buffer(_,_,_,_))
-        .Times(a_few_times)
-        .WillRepeatedly(RunProtobufClosure());
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
-        .Times(a_few_times)
-        .WillRepeatedly(RunProtobufClosure());
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    EXPECT_TRUE(cv.wait_for(lk, 4s, [&]{ return started; }));
 
-    for(auto i = 0; i < a_few_times; i++) 
-        bs->next_buffer([]{});
+    bs->buffer_unavailable();
 
-    bs->buffer_available(another_buffer_package);
+    EXPECT_THAT(never_serviced_request.wait_for(4s), Ne(std::future_status::timeout));
 
-    for(auto i = 0; i < a_few_times; i++) 
-        bs->next_buffer([]{});
+    EXPECT_THROW({
+        bs->request_and_wait_for_next_buffer();
+    }, std::runtime_error);
 }

@@ -388,6 +388,46 @@ TEST(MultiThreadedCompositor, compositing_happens_in_different_threads)
     EXPECT_TRUE(db_compositor_factory->buffers_rendered_in_different_threads());
 }
 
+TEST(MultiThreadedCompositor, does_not_deadlock_itself)
+{   // Regression test for LP: #1471909
+    auto scene = std::make_shared<StubScene>();
+
+    class ReentrantDisplayListener : public mc::DisplayListener
+    {
+    public:
+        ReentrantDisplayListener(std::shared_ptr<StubScene> const& scene)
+            : scene{scene}
+        {
+        }
+        void add_display(geom::Rectangle const&) override
+        {
+            scene->emit_change_event();
+        }
+        void remove_display(geom::Rectangle const&) override
+        {
+        }
+    private:
+        std::shared_ptr<StubScene> const scene;
+    };
+
+    mc::MultiThreadedCompositor compositor{
+        std::make_shared<mtd::StubDisplay>(3),
+        scene,
+        std::make_shared<mtd::NullDisplayBufferCompositorFactory>(),
+        std::make_shared<ReentrantDisplayListener>(scene),
+        null_report,
+        default_delay,
+        true
+    };
+
+    for (int i = 0; i < 1000; ++i)
+    {
+        compositor.start();
+        compositor.stop();
+        std::this_thread::yield();
+    }
+}
+
 TEST(MultiThreadedCompositor, reports_in_the_right_places)
 {
     using namespace testing;

@@ -87,6 +87,7 @@ GLCache::Entry const& GLCache::get(char const* str)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, img.align);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA,
                          img.width, img.height, 0, GL_ALPHA,
                          GL_UNSIGNED_BYTE, img.buf);

@@ -921,7 +921,7 @@ TEST_P(WithThreeOrMoreBuffers, slow_client_framerate_matches_compositor)
     monitor1.stop();
 
     // Roughly compose_frames == client_frames within 20%
-    ASSERT_THAT(client_frames, Gt(compose_frames * 0.8f));
+    ASSERT_THAT(client_frames, Gt(compose_frames * 0.80f));
     ASSERT_THAT(client_frames, Lt(compose_frames * 1.2f));
 }
 

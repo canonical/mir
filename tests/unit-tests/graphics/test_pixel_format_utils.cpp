@@ -26,10 +26,14 @@ TEST(MirPixelFormatUtils, contains_alpha)
 {
     EXPECT_FALSE(contains_alpha(mir_pixel_format_xbgr_8888));
     EXPECT_FALSE(contains_alpha(mir_pixel_format_bgr_888));
+    EXPECT_FALSE(contains_alpha(mir_pixel_format_rgb_888));
     EXPECT_FALSE(contains_alpha(mir_pixel_format_xrgb_8888));
     EXPECT_FALSE(contains_alpha(mir_pixel_format_xbgr_8888));
+    EXPECT_FALSE(contains_alpha(mir_pixel_format_rgb_565));
     EXPECT_TRUE(contains_alpha(mir_pixel_format_argb_8888));
     EXPECT_TRUE(contains_alpha(mir_pixel_format_abgr_8888));
+    EXPECT_TRUE(contains_alpha(mir_pixel_format_rgba_5551));
+    EXPECT_TRUE(contains_alpha(mir_pixel_format_rgba_4444));
     EXPECT_FALSE(contains_alpha(mir_pixel_format_invalid));
     EXPECT_FALSE(contains_alpha(mir_pixel_formats));
 }
@@ -38,10 +42,14 @@ TEST(MirPixelFormatUtils, red_channel_depths)
 {
     EXPECT_EQ(8, red_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(8, red_channel_depth(mir_pixel_format_bgr_888));
+    EXPECT_EQ(8, red_channel_depth(mir_pixel_format_rgb_888));
     EXPECT_EQ(8, red_channel_depth(mir_pixel_format_xrgb_8888));
     EXPECT_EQ(8, red_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(8, red_channel_depth(mir_pixel_format_argb_8888));
     EXPECT_EQ(8, red_channel_depth(mir_pixel_format_abgr_8888));
+    EXPECT_EQ(5, red_channel_depth(mir_pixel_format_rgb_565));
+    EXPECT_EQ(5, red_channel_depth(mir_pixel_format_rgba_5551));
+    EXPECT_EQ(4, red_channel_depth(mir_pixel_format_rgba_4444));
     EXPECT_EQ(0, red_channel_depth(mir_pixel_format_invalid));
     EXPECT_EQ(0, red_channel_depth(mir_pixel_formats));
 }
@@ -50,10 +58,14 @@ TEST(MirPixelFormatUtils, blue_channel_depths)
 {
     EXPECT_EQ(8, blue_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(8, blue_channel_depth(mir_pixel_format_bgr_888));
+    EXPECT_EQ(8, blue_channel_depth(mir_pixel_format_rgb_888));
     EXPECT_EQ(8, blue_channel_depth(mir_pixel_format_xrgb_8888));
     EXPECT_EQ(8, blue_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(8, blue_channel_depth(mir_pixel_format_argb_8888));
     EXPECT_EQ(8, blue_channel_depth(mir_pixel_format_abgr_8888));
+    EXPECT_EQ(5, blue_channel_depth(mir_pixel_format_rgb_565));
+    EXPECT_EQ(5, blue_channel_depth(mir_pixel_format_rgba_5551));
+    EXPECT_EQ(4, blue_channel_depth(mir_pixel_format_rgba_4444));
     EXPECT_EQ(0, blue_channel_depth(mir_pixel_format_invalid));
     EXPECT_EQ(0, blue_channel_depth(mir_pixel_formats));
 }
@@ -62,10 +74,14 @@ TEST(MirPixelFormatUtils, green_channel_depths)
 {
     EXPECT_EQ(8, green_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(8, green_channel_depth(mir_pixel_format_bgr_888));
+    EXPECT_EQ(8, green_channel_depth(mir_pixel_format_rgb_888));
     EXPECT_EQ(8, green_channel_depth(mir_pixel_format_xrgb_8888));
     EXPECT_EQ(8, green_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(8, green_channel_depth(mir_pixel_format_argb_8888));
     EXPECT_EQ(8, green_channel_depth(mir_pixel_format_abgr_8888));
+    EXPECT_EQ(6, green_channel_depth(mir_pixel_format_rgb_565));
+    EXPECT_EQ(5, green_channel_depth(mir_pixel_format_rgba_5551));
+    EXPECT_EQ(4, green_channel_depth(mir_pixel_format_rgba_4444));
     EXPECT_EQ(0, green_channel_depth(mir_pixel_format_invalid));
     EXPECT_EQ(0, green_channel_depth(mir_pixel_formats));
 }
@@ -75,10 +91,14 @@ TEST(MirPixelFormatUtils, alpha_channel_depths)
 {
     EXPECT_EQ(0, alpha_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(0, alpha_channel_depth(mir_pixel_format_bgr_888));
+    EXPECT_EQ(0, alpha_channel_depth(mir_pixel_format_rgb_888));
     EXPECT_EQ(0, alpha_channel_depth(mir_pixel_format_xrgb_8888));
     EXPECT_EQ(0, alpha_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(8, alpha_channel_depth(mir_pixel_format_argb_8888));
     EXPECT_EQ(8, alpha_channel_depth(mir_pixel_format_abgr_8888));
+    EXPECT_EQ(0, alpha_channel_depth(mir_pixel_format_rgb_565));
+    EXPECT_EQ(1, alpha_channel_depth(mir_pixel_format_rgba_5551));
+    EXPECT_EQ(4, alpha_channel_depth(mir_pixel_format_rgba_4444));
     EXPECT_EQ(0, alpha_channel_depth(mir_pixel_format_invalid));
     EXPECT_EQ(0, alpha_channel_depth(mir_pixel_formats));
 }
@@ -87,10 +107,14 @@ TEST(MirPixelFormatUtils, valid_mir_pixel_format)
 {
     EXPECT_TRUE(valid_pixel_format(mir_pixel_format_xbgr_8888));
     EXPECT_TRUE(valid_pixel_format(mir_pixel_format_bgr_888));
+    EXPECT_TRUE(valid_pixel_format(mir_pixel_format_rgb_888));
     EXPECT_TRUE(valid_pixel_format(mir_pixel_format_xrgb_8888));
     EXPECT_TRUE(valid_pixel_format(mir_pixel_format_xbgr_8888));
     EXPECT_TRUE(valid_pixel_format(mir_pixel_format_argb_8888));
     EXPECT_TRUE(valid_pixel_format(mir_pixel_format_abgr_8888));
+    EXPECT_TRUE(valid_pixel_format(mir_pixel_format_rgb_565));
+    EXPECT_TRUE(valid_pixel_format(mir_pixel_format_rgba_5551));
+    EXPECT_TRUE(valid_pixel_format(mir_pixel_format_rgba_4444));
     EXPECT_FALSE(valid_pixel_format(mir_pixel_format_invalid));
     EXPECT_FALSE(valid_pixel_format(mir_pixel_formats));
 }

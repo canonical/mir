@@ -121,7 +121,7 @@ TEST_F(GLibMainLoopTest, stops_from_outside_handler)
 
     ml.stop();
 
-    EXPECT_TRUE(loop_finished.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(loop_finished.wait_for(std::chrono::seconds{30}));
 }
 
 TEST_F(GLibMainLoopTest, ignores_handler_added_after_stop)
@@ -1107,7 +1107,7 @@ TEST_F(GLibMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
         auto alarm = ml.create_alarm([&]{ notification_called.raise(); });
         alarm->reschedule_in(std::chrono::milliseconds{0});
 
-        EXPECT_TRUE(notification_called.wait_for(std::chrono::seconds{5}));
+        EXPECT_TRUE(notification_called.wait_for(std::chrono::seconds{15}));
     }
 }
 

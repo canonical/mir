@@ -43,6 +43,8 @@
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/auto_unblock_thread.h"
+#include "mir/test/signal.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -59,6 +61,7 @@ namespace mrl=mir::report::logging;
 namespace mtd=mir::test::doubles;
 namespace mtf=mir_test_framework;
 namespace mr=mir::report;
+namespace mt=mir::test;
 
 namespace
 {
@@ -723,57 +726,46 @@ TEST_F(MesaDisplayTest, configuration_change_registers_video_devices_handler)
 TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 {
     using namespace testing;
+    using namespace std::chrono_literals;
 
     auto display = create_display(create_platform());
 
     mir::GLibMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
-    std::condition_variable done;
+    mir::test::Signal done;
 
     int const device_add_count{1};
     int const device_change_count{10};
     int const expected_call_count{device_add_count + device_change_count};
-    int call_count{0};
-    std::mutex m;
+    std::atomic<int> call_count{0};
 
     display->register_configuration_change_handler(
         ml,
-        [&call_count, &ml, &done, &m]()
+        [&call_count, &ml, &done]()
         {
-            std::unique_lock<std::mutex> lock(m);
             if (++call_count == expected_call_count)
             {
-                ml.stop();
-                done.notify_all();
+                done.raise();
             }
         });
 
-    std::thread t{
-        [this]
-        {
-            auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
 
-            for (int i = 0; i != device_change_count; ++i)
-            {
-                // sleeping between calls to fake_devices hides race conditions
-                std::this_thread::sleep_for(std::chrono::microseconds{500});
-                fake_devices.emit_device_changed(syspath);
-            }
-        }};
+    int const owner{0};
+    mt::Signal mainloop_started;
+    ml.enqueue(&owner, [&] { mainloop_started.raise(); });
 
-    std::thread watchdog{
-        [this, &done, &m, &ml, &call_count]
-        {
-            std::unique_lock<std::mutex> lock(m);
-            if (!done.wait_for(lock, std::chrono::seconds{1}, [&call_count]() { return call_count == expected_call_count; }))
-                ml.stop();
-        }
-    };
+    mt::AutoUnblockThread mainLoopThread([&ml]{ml.stop();}, [&ml]{ml.run();});
+    ASSERT_TRUE(mainloop_started.wait_for(10s));
 
-    ml.run();
+    auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
 
-    t.join();
-    watchdog.join();
+    for (int i = 0; i != device_change_count; ++i)
+    {
+        // sleeping between calls to fake_devices hides race conditions
+        std::this_thread::sleep_for(std::chrono::microseconds{500});
+        fake_devices.emit_device_changed(syspath);
+    }
 
+    done.wait_for(20s);
     EXPECT_EQ(expected_call_count, call_count);
 }
 
