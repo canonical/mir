@@ -47,13 +47,12 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
     if (current_buffer_users.find(id) != current_buffer_users.end() || onscreen_buffers.empty())
     {
         if (schedule->anything_scheduled())
-            onscreen_buffers.emplace_front(ScheduleEntry{schedule->next_buffer(), 0, false});
+            onscreen_buffers.emplace_front(ScheduleEntry{schedule->next_buffer(), 0});
         current_buffer_users.clear();
     }
     current_buffer_users.insert(id);
 
     auto& last_entry = onscreen_buffers.front();
-    last_entry.was_consumed = true;
     last_entry.use_count++;
     return last_entry.buffer;
 }
@@ -77,7 +76,6 @@ void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::unique_lock<std::mutex
     for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
     {
         if ((it->use_count == 0) &&
-            (it->was_consumed) && 
             (it != onscreen_buffers.begin() || schedule->anything_scheduled())) //ensure monitors always have a buffer
         {
             map->send_buffer(it->buffer->id());

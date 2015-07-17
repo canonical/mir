@@ -51,7 +51,6 @@ private:
     {
         std::shared_ptr<graphics::Buffer> buffer;
         unsigned int use_count;
-        bool was_consumed;
     };
     std::deque<ScheduleEntry> onscreen_buffers;
     std::set<compositor::CompositorID> current_buffer_users;
