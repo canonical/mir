@@ -1,6 +1,9 @@
 include(CMakeDependentOption)
 
-add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
+add_definitions(
+  -DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/"
+  -DMIR_CLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}"
+)
 
 if (MIR_BUILD_PLATFORM_ANDROID)
   add_definitions(-DMIR_BUILD_PLATFORM_ANDROID)
