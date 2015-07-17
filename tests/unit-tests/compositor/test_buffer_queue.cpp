@@ -1114,6 +1114,38 @@ TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
     EXPECT_TRUE(handle->has_acquired_buffer());
 }
 
+TEST_P(WithTwoOrMoreBuffers, scaled_queue_still_follows_dropping_policy)
+{   // Regression test for LP: #1475120
+    mtd::MockFrameDroppingPolicyFactory policy_factory;
+    mc::BufferQueue q(nbuffers,
+                      allocator,
+                      basic_properties,
+                      policy_factory);
+    
+    std::atomic_bool running{true};
+
+    std::thread compositor_with_screen_turned_off([&]()
+    {
+        while (running)
+        {
+            policy_factory.trigger_policies();
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    });
+
+    int const nframes = 100;
+    auto& policy = *policy_factory.policies.begin();
+    EXPECT_CALL(*policy, swap_now_blocking())
+        .Times(nframes);
+
+    q.set_scaling_delay(0);
+    for (int i = 0; i < nframes; i++)
+        q.client_release(client_acquire_sync(q));
+
+    running = false;
+    compositor_with_screen_turned_off.join();
+}
+
 TEST_P(WithTwoOrMoreBuffers, partially_composited_client_swaps_when_policy_triggered)
 {
     mtd::MockFrameDroppingPolicyFactory policy_factory;
