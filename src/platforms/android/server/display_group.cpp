@@ -75,7 +75,6 @@ void mga::DisplayGroup::configure(
 }
 
 void mga::DisplayGroup::post()
-try
 {
     std::list<DisplayContents> contents;
     {
@@ -85,13 +84,16 @@ try
         hotplugging = false;
     }
 
-    device->commit(contents); 
-}
-catch (std::runtime_error& e)
-{
-    std::unique_lock<decltype(guard)> lk(guard);
-    if (!hotplugging)
-        throw e;
+    try
+    {
+        device->commit(contents);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::unique_lock<decltype(guard)> lk(guard);
+        if (!hotplugging)
+            throw e;
+    }
 }
 
 std::chrono::milliseconds mga::DisplayGroup::recommended_sleep() const
