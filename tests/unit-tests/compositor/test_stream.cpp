@@ -107,7 +107,6 @@ TEST_F(StreamTest, transitions_from_queuing_to_framedropping)
         cbuffers.push_back(stream.lock_compositor_buffer(this));
     ASSERT_THAT(cbuffers, SizeIs(1));
     EXPECT_THAT(cbuffers[0]->id(), Eq(buffers.back()->id()));
-
 }
 
 TEST_F(StreamTest, transitions_from_framedropping_to_queuing)
