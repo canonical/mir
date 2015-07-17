@@ -70,7 +70,6 @@ MIR_CLIENT_9 {
     mir_input_event_get_touch_event;
     mir_input_event_get_type;
     mir_keyboard_event_action;
-    mir_keyboard_event_input_event;
     mir_keyboard_event_key_code;
     mir_keyboard_event_modifiers;
     mir_keyboard_event_scan_code;
@@ -78,8 +77,6 @@ MIR_CLIENT_9 {
     mir_omnidirectional_resize_cursor_name;
     mir_open_hand_cursor_name;
     mir_orientation_event_get_direction;
-    mir_persistent_id_as_string;
-    mir_persistent_id_from_string;
     mir_persistent_id_is_valid;
     mir_persistent_id_release;
     mir_platform_message_create;
@@ -93,7 +90,6 @@ MIR_CLIENT_9 {
     mir_pointer_event_axis_value;
     mir_pointer_event_buttons;
     mir_pointer_event_button_state;
-    mir_pointer_event_input_event;
     mir_pointer_event_modifiers;
     mir_pointing_hand_cursor_name;
     mir_prompt_session_error_message;
@@ -132,7 +128,6 @@ MIR_CLIENT_9 {
     mir_surface_set_state;
     mir_surface_set_swapinterval;
     mir_surface_spec_release;
-    mir_surface_spec_attach_to_foreign_parent;
     mir_surface_spec_set_buffer_usage;
     mir_surface_spec_set_fullscreen_on_output;
     mir_surface_spec_set_height;
@@ -155,7 +150,6 @@ MIR_CLIENT_9 {
     mir_touch_event_action;
     mir_touch_event_axis_value;
     mir_touch_event_id;
-    mir_touch_event_input_event;
     mir_touch_event_modifiers;
     mir_touch_event_point_count;
     mir_touch_event_tooltype;
@@ -165,6 +159,17 @@ MIR_CLIENT_9 {
     mir_wait_for_one;
  local: *;
 };
+
+MIR_CLIENT_9.1 {  # New functions in Mir 0.15
+  global:
+    mir_keyboard_event_input_event;
+    mir_persistent_id_as_string;
+    mir_persistent_id_from_string;
+    mir_pointer_event_input_event;
+    mir_touch_event_input_event;
+    mir_surface_spec_attach_to_foreign_parent;
+  local: *;
+} MIR_CLIENT_9;
 
 MIR_CLIENT_DETAIL_9 {
   global:
