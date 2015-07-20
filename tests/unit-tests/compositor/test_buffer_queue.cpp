@@ -1122,35 +1122,32 @@ TEST_P(WithTwoOrMoreBuffers, scaled_queue_still_follows_dropping_policy)
     using namespace std::literals::chrono_literals;
 
     auto clock = std::make_shared<mt::FakeClock>();
+    auto constexpr framedrop_timeout = 10ms;
 
     mc::TimeoutFrameDroppingPolicyFactory policy_factory{
         std::make_shared<mtd::FakeTimer>(clock),
-        10ms};
+        framedrop_timeout};
 
     mc::BufferQueue q(nbuffers,
                       allocator,
                       basic_properties,
                       policy_factory);
     
-    std::atomic<bool> running{true};
-
-    std::thread compositor_with_screen_turned_off([&]()
-    {
-        while (running)
-        {
-            clock->advance_time(1ms);
-            std::this_thread::yield();
-        }
-    });
-
     int const nframes = 100;
 
     q.set_scaling_delay(0);
     for (int i = 0; i < nframes; i++)
-        q.client_release(client_acquire_sync(q));
+    {
+        auto handle = client_acquire_async(q);
 
-    running = false;
-    compositor_with_screen_turned_off.join();
+        // Advance time past the framedrop timeout.
+        clock->advance_time(framedrop_timeout);
+        clock->advance_time(1ms);
+
+        // If we fail once we don't need to run the rest of the 100 iterations...
+        ASSERT_TRUE(handle->has_acquired_buffer());
+        handle->release_buffer();
+    }
 }
 
 TEST_P(WithTwoOrMoreBuffers, partially_composited_client_swaps_when_policy_triggered)
