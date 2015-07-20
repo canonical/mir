@@ -26,6 +26,7 @@
 #include "mir/test/validity_matchers.h"
 
 #include <thread>
+#include <atomic>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -201,7 +202,7 @@ namespace
 {
 void ping_counting_blackhole_pong(MirConnection*, int32_t, void* ctx)
 {
-    auto count = reinterpret_cast<int*>(ctx);
+    auto count = reinterpret_cast<std::atomic<int>*>(ctx);
     (*count)++;
 }
 }
@@ -213,7 +214,7 @@ TEST_F(ApplicationNotRespondingDetection, unresponsive_client_stops_receiving_pi
 
     complete_setup();
 
-    int count{0};
+    std::atomic<int> count{0};
     mir_connection_set_ping_event_callback(connection, &ping_counting_blackhole_pong, &count);
 
     auto responsive_connection = mir_connect_sync(new_connection().c_str(), "Aardvarks");
