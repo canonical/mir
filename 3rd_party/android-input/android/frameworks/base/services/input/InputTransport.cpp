@@ -61,16 +61,6 @@ inline static float lerp(float a, float b, float alpha) {
     return a + alpha * (b - a);
 }
 
-namespace
-{
-bool source_is_cursor(int32_t source)
-{
-    return source == AINPUT_SOURCE_MOUSE || source == AINPUT_SOURCE_TRACKBALL || source == AINPUT_SOURCE_TOUCHPAD;
-}
-}
-
-
-
 // --- InputMessage ---
 
 InputMessage::InputMessage()
@@ -473,8 +463,7 @@ status_t InputConsumer::consume(InputEventFactoryInterface* factory,
 
             // Start a new batch if needed.
             if (mMsg.body.motion.action == AMOTION_EVENT_ACTION_MOVE
-                    || mMsg.body.motion.action == AMOTION_EVENT_ACTION_HOVER_MOVE
-                && !source_is_cursor(mMsg.body.motion.source)) {
+                    || mMsg.body.motion.action == AMOTION_EVENT_ACTION_HOVER_MOVE) {
                 mBatches.push();
                 Batch& batch = mBatches.editTop();
                 batch.samples.push(mMsg);
