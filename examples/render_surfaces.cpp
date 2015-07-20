@@ -366,42 +366,35 @@ public:
                 .of_buffer_usage(mg::BufferUsage::hardware);
             mg::BufferProperties properties{params.size, params.pixel_format, params.buffer_usage};
 
+            //not needed yet
             struct BufferSink : mf::BufferSink
             {
-                BufferSink() : last_buffer(nullptr) {}
-                void send_buffer(mf::BufferStreamId, mg::Buffer& buffer, mg::BufferIpcMsgType)
-                {
-                    last_buffer = &buffer;
-                }
-
-                void with_last_buffer(std::function<void(mg::Buffer&)> const& fn)
-                {
-                    if (!last_buffer)
-                        BOOST_THROW_EXCEPTION(std::logic_error("no buffer"));
-                    fn(*last_buffer);
-                }
-                mg::Buffer* last_buffer; 
+                void send_buffer(mf::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType) override {}
             };
 
-            auto sink = std::make_shared<BufferSink>();
             auto const stream = buffer_stream_factory->create_buffer_stream(
-                mf::BufferStreamId{0}, sink, properties);
+                mf::BufferStreamId{0}, std::make_shared<BufferSink>(), properties);
             auto const surface = surface_factory->create_surface(stream, params);
             surface_coordinator->add_surface(surface, params.depth, params.input_mode, nullptr);
 
-            //legacy, startup
-            surface->primary_buffer_stream()->swap_buffers(nullptr, [](mg::Buffer*){});
-            sink->with_last_buffer([&](mg::Buffer& buffer) {
-                gl_context->make_current();
-                mt::ImageRenderer img_renderer{mir_image.pixel_data,
-                               geom::Size{mir_image.width, mir_image.height},
-                               mir_image.bytes_per_pixel};
-                mt::BufferRenderTarget brt{buffer};
-                brt.make_current();
-                img_renderer.render();
-                gl_context->release_current();
-                surface->primary_buffer_stream()->swap_buffers(&buffer, [](mg::Buffer*){});
-            });
+            {
+                mg::Buffer* buffer{nullptr};
+                auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
+                surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Fetch buffer for rendering
+                {
+                    gl_context->make_current();
+
+                    mt::ImageRenderer img_renderer{mir_image.pixel_data,
+                                   geom::Size{mir_image.width, mir_image.height},
+                                   mir_image.bytes_per_pixel};
+                    mt::BufferRenderTarget brt{*buffer};
+                    brt.make_current();
+                    img_renderer.render();
+
+                    gl_context->release_current();
+                }
+                surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Post rendered buffer
+            }
 
             /*
              * Place each surface at a different starting location and give it a
