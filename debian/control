@@ -294,7 +294,7 @@ Description: transitional dummy package
  This is a transitional dummy package created due to package renaming.
  It can safely be removed.
 
-Package: mir-platform-graphics-android2
+Package: mir-platform-graphics-android3
 Section: libs
 Architecture: i386 amd64 armhf
 Multi-Arch: same
