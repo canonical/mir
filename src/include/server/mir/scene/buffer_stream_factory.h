@@ -28,7 +28,7 @@ namespace mir
 {
 namespace compositor { class BufferStream; }
 namespace graphics { struct BufferProperties; }
-namespace frontend { class EventSink; }
+namespace frontend { class BufferSink; }
 namespace scene
 {
 class BufferStreamFactory
@@ -37,10 +37,10 @@ public:
     virtual ~BufferStreamFactory() = default;
 
     virtual std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId, std::shared_ptr<frontend::EventSink> const& sink,
+        frontend::BufferStreamId, std::shared_ptr<frontend::BufferSink> const& sink,
         int nbuffers, graphics::BufferProperties const& buffer_properties) = 0;
     virtual std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId, std::shared_ptr<frontend::EventSink> const& sink,
+        frontend::BufferStreamId, std::shared_ptr<frontend::BufferSink> const& sink,
         graphics::BufferProperties const& buffer_properties) = 0;
 
 protected:

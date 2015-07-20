@@ -364,6 +364,13 @@ public:
                 .of_pixel_format(surface_pf)
                 .of_buffer_usage(mg::BufferUsage::hardware);
             mg::BufferProperties properties{params.size, params.pixel_format, params.buffer_usage};
+
+            struct BufferSink : mf::EventSink
+            {
+            };
+
+
+
             auto const stream = buffer_stream_factory->create_buffer_stream(
                 mf::BufferStreamId{0}, nullptr, properties);
 

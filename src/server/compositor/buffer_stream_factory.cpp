@@ -51,14 +51,14 @@ mc::BufferStreamFactory::BufferStreamFactory(
 
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId id, std::shared_ptr<mf::EventSink> const& sink,
+    mf::BufferStreamId id, std::shared_ptr<mf::BufferSink> const& sink,
     mg::BufferProperties const& buffer_properties)
 {
     return create_buffer_stream(id, sink, nbuffers, buffer_properties);
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId id, std::shared_ptr<mf::EventSink> const& sink,
+    mf::BufferStreamId id, std::shared_ptr<mf::BufferSink> const& sink,
     int nbuffers, mg::BufferProperties const& buffer_properties)
 {
     (void) id; (void) sink;
