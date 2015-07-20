@@ -365,15 +365,13 @@ public:
                 .of_pixel_format(surface_pf)
                 .of_buffer_usage(mg::BufferUsage::hardware);
             mg::BufferProperties properties{params.size, params.pixel_format, params.buffer_usage};
-
-            //not needed yet
-            struct BufferSink : mf::BufferSink
+            struct NullBufferSink : mf::BufferSink
             {
                 void send_buffer(mf::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType) override {}
             };
 
             auto const stream = buffer_stream_factory->create_buffer_stream(
-                mf::BufferStreamId{0}, std::make_shared<BufferSink>(), properties);
+                mf::BufferStreamId{}, std::make_shared<NullBufferSink>(), properties);
             auto const surface = surface_factory->create_surface(stream, params);
             surface_coordinator->add_surface(surface, params.depth, params.input_mode, nullptr);
 

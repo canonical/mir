@@ -42,4 +42,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_FRONTEND_EVENT_SINK_H_
+#endif // MIR_FRONTEND_BUFFER_SINK_H_

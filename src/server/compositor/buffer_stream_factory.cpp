@@ -58,10 +58,9 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId id, std::shared_ptr<mf::BufferSink> const& sink,
+    mf::BufferStreamId, std::shared_ptr<mf::BufferSink> const&,
     int nbuffers, mg::BufferProperties const& buffer_properties)
 {
-    (void) id; (void) sink;
     auto switching_bundle = std::make_shared<mc::BufferQueue>(
         nbuffers, gralloc, buffer_properties, *policy_factory);
     return std::make_shared<mc::BufferStreamSurfaces>(switching_bundle);
