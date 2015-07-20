@@ -242,6 +242,8 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
 TEST_F(TestClientInput, clients_receive_relative_pointer_events)
 {
     using namespace ::testing;
+
+    mtf::TemporaryEnvironmentValue disable_batching("MIR_CLIENT_INPUT_RATE", "0");
     
     positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     Client first_client(new_connection(), first);
