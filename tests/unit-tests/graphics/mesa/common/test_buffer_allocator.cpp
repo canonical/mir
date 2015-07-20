@@ -271,20 +271,6 @@ TEST_F(MesaBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_fir
     EXPECT_EQ(mir_pixel_format_argb_8888, supported_pixel_formats[0]);
 }
 
-TEST_F(MesaBufferAllocatorTest, alloc_with_unsupported_pixel_format_throws)
-{
-    using namespace testing;
-
-    /* We shouldn't try to create a buffer with an unsupported format */
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_)).Times(0);
-    EXPECT_CALL(mock_gbm, gbm_device_is_format_supported(_,_,_))
-        .WillOnce(Return(0));
-
-    EXPECT_THROW({
-        allocator->alloc_buffer(mg::BufferProperties{size, mir_pixel_format_abgr_8888, usage});
-    }, std::runtime_error);
-}
-
 MATCHER_P(GbmImportMatch, value, "import data matches")
 {
     using namespace testing;
