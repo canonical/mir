@@ -227,7 +227,7 @@ void mo::DefaultConfiguration::add_platform_options()
             mir::logging::NullSharedLibraryProberReport null_report;
             auto const plugin_path = env_libpath ? env_libpath : options.get<std::string>(platform_path);
             auto plugins = mir::libraries_for_path(plugin_path, null_report);
-            platform_graphics_library = mir::graphics::module_for_device(plugins);
+            platform_graphics_library = mir::graphics::module_for_device(plugins, options);
         }
 
         auto add_platform_options = platform_graphics_library->load_function<mir::graphics::AddPlatformOptions>("add_graphics_platform_options", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);

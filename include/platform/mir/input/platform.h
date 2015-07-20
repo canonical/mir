@@ -48,6 +48,7 @@ class InputPlatformPolicy;
 enum class PlatformPriority : uint32_t
 {
     unsupported = 0,
+    dummy = 1,
     supported = 128,
     best = 256,
 };

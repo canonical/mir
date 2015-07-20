@@ -1,4 +1,4 @@
-MIR_GRAPHICS_PLATFORM_2 {
+MIR_GRAPHICS_PLATFORM_3 {
   global:
     add_graphics_platform_options;
     create_host_platform;

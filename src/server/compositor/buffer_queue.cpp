@@ -222,7 +222,10 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
      * buffering) for minimal latency.
      */
     if (client_ahead_of_compositor())
+    {
+        framedrop_policy->swap_now_blocking();
         return;
+    }
 
     if (auto buf = get_a_free_buffer())
     {
