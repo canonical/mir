@@ -39,17 +39,15 @@ struct X11DispatchableTest : ::testing::Test
 {
 	X11DispatchableTest()
 	{
-	    conn = new mir::X::X11Connection();
-        x11_connection.reset(conn);
+	    // X11Connection freed in the (external) shared_ptr destruction.
+        x11_connection.reset(new mir::X::X11Connection());
 	}
 
     ~X11DispatchableTest()
     {
         x11_connection.reset();
-        delete conn;
     }
 
-    mir::X::X11Connection *conn;
     mir::input::X::XDispatchable x11_dispatchable{0};
     NiceMock<mtd::MockInputSink> mock_input_sink;
     NiceMock<mtd::MockX11> mock_x11;
