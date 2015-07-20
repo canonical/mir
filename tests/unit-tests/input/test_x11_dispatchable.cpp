@@ -19,17 +19,18 @@
 #include "mir/events/event_private.h"
 #include "mir_toolkit/event.h"
 #include "src/platforms/mesa/server/x11/input/dispatchable.h"
+#include "src/platforms/mesa/server/x11/xserver_connection.h"
 #include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/doubles/mock_x11.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mi = mir::input;
-namespace mix = mi::X;
 namespace mtd = mir::test::doubles;
 
 using namespace ::testing;
+
+extern std::shared_ptr<mir::X::X11Connection> x11_connection;
 
 namespace
 {
@@ -38,9 +39,18 @@ struct X11DispatchableTest : ::testing::Test
 {
 	X11DispatchableTest()
 	{
+	    conn = new mir::X::X11Connection();
+        x11_connection.reset(conn);
 	}
 
-    mix::XDispatchable x11_dispatchable{0};
+    ~X11DispatchableTest()
+    {
+        x11_connection.reset();
+        delete conn;
+    }
+
+    mir::X::X11Connection *conn;
+    mir::input::X::XDispatchable x11_dispatchable{0};
     NiceMock<mtd::MockInputSink> mock_input_sink;
     NiceMock<mtd::MockX11> mock_x11;
 };
@@ -56,5 +66,5 @@ TEST_F(X11DispatchableTest, dispatches_input_events_to_sink)
     EXPECT_CALL(mock_input_sink, handle_input(_));
 
     x11_dispatchable.set_input_sink(&mock_input_sink);
-    x11_dispatchable.dispatch(0);
+    x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
 }

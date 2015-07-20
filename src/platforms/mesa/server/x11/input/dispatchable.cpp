@@ -20,6 +20,7 @@
 #include "../xserver_connection.h"
 #include "mir/events/event_private.h"
 
+#include <boost/throw_exception.hpp>
 #include <chrono>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
