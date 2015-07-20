@@ -38,7 +38,6 @@ Build-Depends: cmake,
                valgrind [amd64 i386 armhf],
                libglib2.0-dev,
                libfreetype6-dev,
-               abi-compliance-checker,
                libevdev-dev,
                uuid-dev,
 Standards-Version: 3.9.4
