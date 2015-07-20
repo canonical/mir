@@ -18,10 +18,13 @@
  */
 
 #include "src/server/compositor/buffer_queue.h"
+#include "src/server/compositor/timeout_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/mock_frame_dropping_policy_factory.h"
+#include "mir/test/fake_clock.h"
+#include "mir/test/doubles/mock_timer.h"
 #include "mir/test/signal.h"
 #include "mir/test/auto_unblock_thread.h"
 
@@ -1116,27 +1119,31 @@ TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
 
 TEST_P(WithTwoOrMoreBuffers, scaled_queue_still_follows_dropping_policy)
 {   // Regression test for LP: #1475120
-    mtd::MockFrameDroppingPolicyFactory policy_factory;
+    using namespace std::literals::chrono_literals;
+
+    auto clock = std::make_shared<mt::FakeClock>();
+
+    mc::TimeoutFrameDroppingPolicyFactory policy_factory{
+        std::make_shared<mtd::FakeTimer>(clock),
+        10ms};
+
     mc::BufferQueue q(nbuffers,
                       allocator,
                       basic_properties,
                       policy_factory);
     
-    std::atomic_bool running{true};
+    std::atomic<bool> running{true};
 
     std::thread compositor_with_screen_turned_off([&]()
     {
         while (running)
         {
-            policy_factory.trigger_policies();
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            clock->advance_time(1ms);
+            std::this_thread::yield();
         }
     });
 
     int const nframes = 100;
-    auto& policy = *policy_factory.policies.begin();
-    EXPECT_CALL(*policy, swap_now_blocking())
-        .Times(AtLeast(nframes-1));
 
     q.set_scaling_delay(0);
     for (int i = 0; i < nframes; i++)
