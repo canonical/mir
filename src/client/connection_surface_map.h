@@ -44,6 +44,7 @@ public:
     void erase(frontend::SurfaceId surface_id);
 
     void with_stream_do(frontend::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const override;
+    void with_all_streams_do(std::function<void(ClientBufferStream*)> const&) const override;
     void insert(frontend::BufferStreamId stream_id, ClientBufferStream* stream);
     void erase(frontend::BufferStreamId surface_id);
 

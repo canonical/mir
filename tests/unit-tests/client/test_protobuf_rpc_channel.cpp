@@ -28,6 +28,7 @@
 #include "mir_protobuf_wire.pb.h"
 
 #include "mir/test/doubles/null_client_event_sink.h"
+#include "mir/test/doubles/mock_client_buffer_stream.h"
 #include "mir/test/fd_utils.h"
 
 #include <list>
@@ -52,6 +53,16 @@ namespace mt = mir::test;
 namespace
 {
 
+struct MockSurfaceMap : mcl::SurfaceMap
+{
+    MOCK_CONST_METHOD2(with_surface_do,
+        void(mir::frontend::SurfaceId, std::function<void(MirSurface*)> const&));
+    MOCK_CONST_METHOD2(with_stream_do,
+        void(mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&));
+    MOCK_CONST_METHOD1(with_all_streams_do,
+        void(std::function<void(mcl::ClientBufferStream*)> const&));
+}; 
+ 
 class StubSurfaceMap : public mcl::SurfaceMap
 {
 public:
@@ -61,6 +72,9 @@ public:
     }
     void with_stream_do(
         mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&) const override
+    {
+    }
+    void with_all_streams_do(std::function<void(mcl::ClientBufferStream*)> const&) const override
     {
     }
 };
@@ -343,6 +357,25 @@ TEST_F(MirProtobufRpcChannelTest, reads_fds)
         EXPECT_EQ(reply.fd(i), fd);
         ++i;
     }
+}
+
+TEST_F(MirProtobufRpcChannelTest, notifies_streams_of_disconnect)
+{
+    using namespace testing;
+    auto stream_map = std::make_shared<MockSurfaceMap>();
+    mtd::MockClientBufferStream stream;
+    EXPECT_CALL(stream, buffer_unavailable());
+    EXPECT_CALL(*stream_map, with_all_streams_do(_))
+       .WillOnce(InvokeArgument<0>(&stream));
+ 
+    mclr::MirProtobufRpcChannel channel{
+                  std::make_unique<NiceMock<MockStreamTransport>>(),
+                  stream_map,
+                  std::make_shared<mcl::DisplayConfiguration>(),
+                  std::make_shared<mclr::NullRpcReport>(),
+                  lifecycle,
+                  std::make_shared<mtd::NullClientEventSink>()};
+    channel.on_disconnected();
 }
 
 TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_on_write_error)

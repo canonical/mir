@@ -72,7 +72,6 @@ add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(android_input/)
 add_subdirectory(scene/)
-add_subdirectory(examples/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
 

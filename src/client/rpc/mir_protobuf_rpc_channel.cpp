@@ -87,6 +87,10 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
         (*lifecycle_control)(mir_lifecycle_connection_lost);
     }
     pending_calls.force_completion();
+    surface_map->with_all_streams_do(
+        [](mcl::ClientBufferStream* stream) {
+            if (stream) stream->buffer_unavailable();
+        });
 }
 
 template<class MessageType>

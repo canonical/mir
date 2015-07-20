@@ -43,6 +43,14 @@ public:
     virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index) = 0;
     virtual geometry::Size size() const = 0;
 
+    /**
+     * Approximate maximum refresh rate of this output to within 1Hz.
+     * Typically the rate is fixed (e.g. 60Hz) but it may also be variable as
+     * in Nvidia G-Sync/AMD FreeSync/VESA Adaptive Sync. So this function
+     * returns the maximum rate to expect.
+     */
+    virtual int max_refresh_rate() const = 0;
+
     virtual bool set_crtc(uint32_t fb_id) = 0;
     virtual void clear_crtc() = 0;
     virtual bool schedule_page_flip(uint32_t fb_id) = 0;

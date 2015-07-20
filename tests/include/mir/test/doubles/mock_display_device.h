@@ -40,6 +40,7 @@ public:
     MOCK_METHOD1(commit, void(std::list<graphics::android::DisplayContents> const&));
     MOCK_METHOD1(compatible_renderlist, bool(
         graphics::RenderableList const&));
+    MOCK_CONST_METHOD0(recommended_sleep, std::chrono::milliseconds());
 };
 }
 }

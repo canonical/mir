@@ -1,5 +1,5 @@
 # We need MIRPLATFORM_ABI in both libmirplatform and the platform implementations.
-set(MIRPLATFORM_ABI 8)
+set(MIRPLATFORM_ABI 9)
 
 # We need MIR_CLIENT_PLATFORM_PATH in both libmirclient and the platform
 # implementations
@@ -24,7 +24,7 @@ add_subdirectory(utils/)
 
 add_executable(wrapper wrapper.c)
 set_property(TARGET wrapper
-             APPEND_STRING PROPERTY COMPILE_FLAGS " -DEXECUTABLE_FORMAT=\\\".%s-uninstalled\\\"")
+             APPEND_STRING PROPERTY COMPILE_FLAGS " -DEXECUTABLE_FORMAT=\\\"%s.bin\\\"")
 set_property(TARGET wrapper
              APPEND_STRING PROPERTY COMPILE_FLAGS " -D_DEFAULT_SOURCE -D_BSD_SOURCE")
 

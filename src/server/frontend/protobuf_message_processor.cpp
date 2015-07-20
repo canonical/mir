@@ -138,7 +138,9 @@ void invoke(
     }
     catch (std::exception const& x)
     {
-        result_message->set_error(boost::diagnostic_information(x));
+        using namespace std::literals;
+        result_message->set_error("Error processing request: "s +
+            x.what() + "\nInternal error details: " + boost::diagnostic_information(x));
         callback->Run();
     }
 }

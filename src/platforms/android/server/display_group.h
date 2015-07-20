@@ -44,6 +44,7 @@ public:
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override;
     void post() override;
+    std::chrono::milliseconds recommended_sleep() const override;
 
     void add(DisplayName name, std::unique_ptr<ConfigurableDisplayBuffer> buffer);
     void remove(DisplayName name);

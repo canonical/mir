@@ -68,14 +68,14 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
     # TSan does not support multi-threaded fork
     # TSan may open fds so "surface_creation_does_not_leak_fds" will not work as written
     # TSan deadlocks when running StreamTransportTest/0.SendsFullMessagesWhenInterrupted - disable it until understood
-    set(test_exclusion_filter "UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds:StreamTransportTest/0.SendsFullMessagesWhenInterrupted")
+    set(test_exclusion_filter "UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds:StreamTransportTest/0.SendsFullMessagesWhenInterrupted:BufferQueue/WithTwoOrMoreBuffers.client_framerate_matches_compositor*:BufferQueue/WithThreeOrMoreBuffers.slow_client_framerate_matches_compositor*:BufferQueue/WithThreeOrMoreBuffers.queue_size_scales_with_client_performance*")
   endif()
 
   # Final commands
   set(test_cmd "${test_cmd}" "--gtest_filter=-${test_no_memcheck_filter}:${test_exclusion_filter}")
   set(test_cmd_no_memcheck "${test_cmd_no_memcheck}" "--gtest_filter=${test_no_memcheck_filter}:-${test_exclusion_filter}")
   if(DETECT_FD_LEAKS)
-    set(test_cmd ${CMAKE_SOURCE_DIR}/tools/detect_fd_leaks.sh ${test_cmd})
+    set(test_cmd ${CMAKE_SOURCE_DIR}/tools/detect_fd_leaks.bash ${test_cmd})
   endif()
 
   # Normal
@@ -120,12 +120,12 @@ function (mir_add_detect_fd_leaks_test)
   if (ENABLE_MEMCHECK_OPTION)
     add_custom_target(detect_fd_leaks_catches_fd_leak_test ALL)
     mir_add_test(NAME "detect-fd-leaks-catches-fd-leak"
-      COMMAND ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${CMAKE_SOURCE_DIR}/tools/detect_fd_leaks.sh ${VALGRIND_CMD} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_fd_leak)
+      COMMAND ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${CMAKE_SOURCE_DIR}/tools/detect_fd_leaks.bash ${VALGRIND_CMD} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_fd_leak)
     add_dependencies(detect_fd_leaks_catches_fd_leak_test mir_test_fd_leak)
 
     add_custom_target(detect_fd_leaks_propagates_test_failure_test ALL)
     mir_add_test(NAME "detect-fd-leaks-propagates-test-failure"
-      COMMAND ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${CMAKE_SOURCE_DIR}/tools/detect_fd_leaks.sh ${VALGRIND_CMD} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error)
+      COMMAND ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${CMAKE_SOURCE_DIR}/tools/detect_fd_leaks.bash ${VALGRIND_CMD} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error)
     add_dependencies(detect_fd_leaks_propagates_test_failure_test mir_test_memory_error)
   endif()
 endfunction()
@@ -162,7 +162,7 @@ function (mir_precompiled_header TARGET HEADER)
 endfunction()
 
 function (mir_add_wrapped_executable TARGET)
-  set(REAL_EXECUTABLE .${TARGET}-uninstalled)
+  set(REAL_EXECUTABLE ${TARGET}.bin)
 
   list(GET ARGN 0 modifier)
   if ("${modifier}" STREQUAL "NOINSTALL")

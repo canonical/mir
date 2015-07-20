@@ -85,6 +85,7 @@ public:
     MOCK_METHOD1(glGetString, const GLubyte*(GLenum));
     MOCK_METHOD2(glGetUniformLocation, GLint(GLuint, const GLchar *));
     MOCK_METHOD1(glLinkProgram, void(GLuint));
+    MOCK_METHOD2(glPixelStorei, void(GLenum, GLint));
     MOCK_METHOD7(glReadPixels,
                  void(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum,
                       GLvoid*));
