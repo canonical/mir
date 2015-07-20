@@ -374,6 +374,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_streams_of_disconnect)
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
+                  std::make_shared<mir::client::PingHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()};
     channel.on_disconnected();
 }
