@@ -17,10 +17,10 @@
  */
 
 #include "mir/graphics/platform.h"
-#include "display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/egl_resources.h"
 #include "mir/graphics/egl_error.h"
+#include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
 #include "gl_context.h"
@@ -45,10 +45,7 @@ mgx::Display::Display(::Display *dpy)
 
     EGLint egl_major, egl_minor;
     if (!eglInitialize(egl_dpy, &egl_major, &egl_minor))
-    {
-        eglTerminate(egl_dpy);
         BOOST_THROW_EXCEPTION(mg::egl_error("eglInitialize failed"));
-    }
 
     mir::log_info("EGL Version %d.%d", egl_major, egl_minor);
 
