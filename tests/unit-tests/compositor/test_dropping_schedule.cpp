@@ -70,7 +70,7 @@ TEST_F(DroppingSchedule, throws_if_no_buffers)
     }, std::logic_error);
 }
 
-TEST_F(DroppingSchedule, queues_drops_excess_buffers)
+TEST_F(DroppingSchedule, drops_excess_buffers)
 {
     InSequence seq;
     EXPECT_CALL(mock_client_buffers, send_buffer(buffers[0]->id()));
