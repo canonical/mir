@@ -145,14 +145,12 @@ private:
             {
                 std::string const msg("Failed to get PRIME fd from gbm bo");
                 BOOST_THROW_EXCEPTION(
-                    boost::enable_error_info(
-                        std::runtime_error(msg)) << boost::errinfo_errno(errno));
+                    std::system_error(errno, std::system_category(), "Failed to get PRIME fd from gbm bo"));
             }
 
             const EGLint image_attrs_X[] =
             {
                 EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-
                 EGL_WIDTH, static_cast<const EGLint>(gbm_bo_get_width(bo_raw)),
                 EGL_HEIGHT, static_cast<const EGLint>(gbm_bo_get_height(bo_raw)),
                 EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(gbm_bo_get_format(bo_raw)),
@@ -183,6 +181,11 @@ struct GBMBODeleter
             gbm_bo_destroy(handle);
     }
 };
+
+template<typename T,typename V>
+T up_cast(V x) {
+        return x;
+}
 
 }
 
@@ -256,11 +259,12 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
 
     std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
 
+    // To see why up_cast is needed, see
+    // http://stackoverflow.com/questions/6179314/casting-pointers-and-the-ternary-operator-have-i-reinvented-the-wheel
     std::unique_ptr<EGLImageBufferTextureBinder> texture_binder{
         buffer_import_method == mgm::BufferImportMethod::dma_buf ?
-            dynamic_cast<EGLImageBufferTextureBinder*>(new DMABufTextureBinder{bo, egl_extensions}) :
-            dynamic_cast<EGLImageBufferTextureBinder*>(new NativePixmapTextureBinder{bo, egl_extensions})
-        };
+            up_cast<EGLImageBufferTextureBinder*>(new DMABufTextureBinder{bo, egl_extensions}) :
+            up_cast<EGLImageBufferTextureBinder*>(new NativePixmapTextureBinder{bo, egl_extensions})};
 
     /* Create the GBMBuffer */
     auto const buffer =

@@ -32,10 +32,6 @@ struct XDispatchable : public dispatch::Dispatchable
 {
 public:
     XDispatchable(int raw_fd);
-    ~XDispatchable() = default;
-
-    XDispatchable(XDispatchable const&) = delete;
-    XDispatchable& operator=(XDispatchable const&) = delete;
 
     mir::Fd watch_fd() const override;
     bool dispatch(dispatch::FdEvents events) override;
