@@ -182,9 +182,16 @@ struct GBMBODeleter
     }
 };
 
-template<typename T,typename V>
-T up_cast(V x) {
-        return x;
+auto make_texture_binder(
+    mgm::BufferImportMethod const buffer_import_method,
+    std::shared_ptr<gbm_bo> const& bo,
+    std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
+-> std::unique_ptr<EGLImageBufferTextureBinder>
+{
+    if (buffer_import_method == mgm::BufferImportMethod::dma_buf)
+        return std::make_unique<DMABufTextureBinder>(bo, egl_extensions);
+    else
+        return std::make_unique<NativePixmapTextureBinder>(bo, egl_extensions);
 }
 
 }
@@ -259,16 +266,9 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
 
     std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
 
-    // To see why up_cast is needed, see
-    // http://stackoverflow.com/questions/6179314/casting-pointers-and-the-ternary-operator-have-i-reinvented-the-wheel
-    std::unique_ptr<EGLImageBufferTextureBinder> texture_binder{
-        buffer_import_method == mgm::BufferImportMethod::dma_buf ?
-            up_cast<EGLImageBufferTextureBinder*>(new DMABufTextureBinder{bo, egl_extensions}) :
-            up_cast<EGLImageBufferTextureBinder*>(new NativePixmapTextureBinder{bo, egl_extensions})};
-
     /* Create the GBMBuffer */
     auto const buffer =
-        std::make_shared<GBMBuffer>(bo, bo_flags, std::move(texture_binder));
+        std::make_shared<GBMBuffer>(bo, bo_flags, make_texture_binder(buffer_import_method, bo, egl_extensions));
 
     return buffer;
 }
