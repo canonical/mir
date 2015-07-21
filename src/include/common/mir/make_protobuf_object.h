@@ -16,12 +16,10 @@
  * Authored by: Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
-#ifndef MIR_CLIENT_MAKE_PROTOBUF_OBJECT_
-#define MIR_CLIENT_MAKE_PROTOBUF_OBJECT_
+#ifndef MIR_MAKE_PROTOBUF_OBJECT_
+#define MIR_MAKE_PROTOBUF_OBJECT_
 
 namespace mir
-{
-namespace client
 {
 template <typename ProtobufType>
 auto make_protobuf_object()
@@ -35,7 +33,6 @@ auto make_protobuf_object(ProtobufType const& from)
     auto object = make_protobuf_object<ProtobufType>();
     object->CopyFrom(from);
     return object;
-}
 }
 }
 

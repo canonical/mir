@@ -18,8 +18,8 @@
 
 #include "mir_screencast.h"
 #include "mir_connection.h"
-#include "make_protobuf_object.h"
 #include "client_buffer_stream.h"
+#include "mir/make_protobuf_object.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir/egl_native_window_factory.h"
@@ -40,8 +40,8 @@ MirScreencast::MirScreencast(
     : server(server),
       connection{connection},
       output_size{size},
-      protobuf_screencast{mcl::make_protobuf_object<mir::protobuf::Screencast>()},
-      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
+      protobuf_screencast{mir::make_protobuf_object<mir::protobuf::Screencast>()},
+      protobuf_void{mir::make_protobuf_object<mir::protobuf::Void>()}
 {
     if (output_size.width.as_int()  == 0 ||
         output_size.height.as_int() == 0 ||
@@ -53,7 +53,7 @@ MirScreencast::MirScreencast(
     }
     protobuf_screencast->set_error("Not initialized");
 
-    auto parameters = mcl::make_protobuf_object<mir::protobuf::ScreencastParameters>();
+    auto parameters = mir::make_protobuf_object<mir::protobuf::ScreencastParameters>();
 
     parameters->mutable_region()->set_left(region.top_left.x.as_int());
     parameters->mutable_region()->set_top(region.top_left.y.as_int());
@@ -86,7 +86,7 @@ bool MirScreencast::valid()
 MirWaitHandle* MirScreencast::release(
         mir_screencast_callback callback, void* context)
 {
-    auto screencast_id = mcl::make_protobuf_object<mir::protobuf::ScreencastId>();
+    auto screencast_id = mir::make_protobuf_object<mir::protobuf::ScreencastId>();
     screencast_id->set_value(protobuf_screencast->screencast_id().value());
     
     release_wait_handle.expect_result();

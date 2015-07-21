@@ -16,16 +16,17 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "event_sender.h"
+#include "message_sender.h"
+#include "protobuf_buffer_packer.h"
+#include "mir_protobuf_wire.pb.h"
+#include "mir_protobuf.pb.h"
+
+#include "mir/make_protobuf_object.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/variable_length_array.h"
-#include "event_sender.h"
 #include "mir/events/event_private.h"
-#include "message_sender.h"
-#include "protobuf_buffer_packer.h"
-
-#include "mir_protobuf_wire.pb.h"
-#include "mir_protobuf.pb.h"
 
 namespace mg = mir::graphics;
 namespace mfd = mir::frontend::detail;
@@ -43,34 +44,34 @@ void mfd::EventSender::handle_event(MirEvent const& e)
     {
         // In future we might send multiple events, or insert them into messages
         // containing other responses, but for now we send them individually.
-        mp::EventSequence seq;
-        mp::Event *ev = seq.add_event();
+        auto seq = mir::make_protobuf_object<mp::EventSequence>();
+        mp::Event *ev = seq->add_event();
         ev->set_raw(&e, sizeof(MirEvent));
 
-        send_event_sequence(seq);
+        send_event_sequence(*seq);
     }
 }
 
 void mfd::EventSender::handle_display_config_change(
     graphics::DisplayConfiguration const& display_config)
 {
-    mp::EventSequence seq;
+    auto seq = mir::make_protobuf_object<mp::EventSequence>();
 
-    auto protobuf_config = seq.mutable_display_configuration();
+    auto protobuf_config = seq->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, display_config);
 
-    send_event_sequence(seq);
+    send_event_sequence(*seq);
 }
 
 void mfd::EventSender::handle_lifecycle_event(
     MirLifecycleState state)
 {
-    mp::EventSequence seq;
+    auto seq = mir::make_protobuf_object<mp::EventSequence>();
 
-    auto protobuf_life_event = seq.mutable_lifecycle_event();
+    auto protobuf_life_event = seq->mutable_lifecycle_event();
     protobuf_life_event->set_new_state(state);
 
-    send_event_sequence(seq);
+    send_event_sequence(*seq);
 }
 
 void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
@@ -80,10 +81,10 @@ void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
 
     seq.SerializeWithCachedSizesToArray(send_buffer.data());
 
-    mir::protobuf::wire::Result result;
-    result.add_events(send_buffer.data(), send_buffer.size());
-    send_buffer.resize(result.ByteSize());
-    result.SerializeWithCachedSizesToArray(send_buffer.data());
+    auto result = mir::make_protobuf_object<mir::protobuf::wire::Result>();
+    result->add_events(send_buffer.data(), send_buffer.size());
+    send_buffer.resize(result->ByteSize());
+    result->SerializeWithCachedSizesToArray(send_buffer.data());
 
     try
     {

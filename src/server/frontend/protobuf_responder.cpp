@@ -19,9 +19,12 @@
 #include "protobuf_responder.h"
 #include "resource_cache.h"
 #include "message_sender.h"
+#include "socket_messenger.h"
+
+#include "mir/make_protobuf_object.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/variable_length_array.h"
-#include "socket_messenger.h"
+
 
 namespace mfd = mir::frontend::detail;
 
@@ -29,7 +32,8 @@ mfd::ProtobufResponder::ProtobufResponder(
     std::shared_ptr<MessageSender> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     sender(sender),
-    resource_cache(resource_cache)
+    resource_cache(resource_cache),
+    send_response_result(make_protobuf_object<mir::protobuf::wire::Result>())
 {
 }
 
@@ -46,11 +50,11 @@ void mfd::ProtobufResponder::send_response(
     {
         std::lock_guard<decltype(result_guard)> lock{result_guard};
 
-        send_response_result.set_id(id);
-        send_response_result.set_response(send_response_buffer.data(), send_response_buffer.size());
+        send_response_result->set_id(id);
+        send_response_result->set_response(send_response_buffer.data(), send_response_buffer.size());
 
-        send_response_buffer.resize(send_response_result.ByteSize());
-        send_response_result.SerializeWithCachedSizesToArray(send_response_buffer.data());
+        send_response_buffer.resize(send_response_result->ByteSize());
+        send_response_result->SerializeWithCachedSizesToArray(send_response_buffer.data());
     }
 
     sender->send(reinterpret_cast<char*>(send_response_buffer.data()), send_response_buffer.size(), fd_sets);

@@ -22,6 +22,7 @@
 #include "mir/frontend/protobuf_message_sender.h"
 #include "mir/frontend/template_protobuf_message_processor.h"
 #include "mir/frontend/unsupported_feature_exception.h"
+#include "mir/make_protobuf_object.h"
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -68,10 +69,10 @@ template<> struct result_ptr_t<mir::protobuf::PlatformOperationMessage> { typede
 //The exchange_buffer and next_buffer calls can complete on a different thread than the
 //one the invocation was called on. Make sure to preserve the result resource. 
 template<class ParameterMessage>
-ParameterMessage parse_parameter(Invocation const& invocation)
+auto parse_parameter(Invocation const& invocation)
 {
-    ParameterMessage request;
-    if (!request.ParseFromString(invocation.parameters()))
+    auto request = mir::make_protobuf_object<ParameterMessage>();
+    if (!request->ParseFromString(invocation.parameters()))
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to parse message parameters!"));
     return request;
 }
@@ -208,15 +209,15 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("next_buffer" == invocation.method_name())
         {
             auto request = parse_parameter<mir::protobuf::SurfaceId>(invocation);
-            invoke(shared_from_this(), display_server.get(), &DisplayServer::next_buffer, invocation.id(), &request);
+            invoke(shared_from_this(), display_server.get(), &DisplayServer::next_buffer, invocation.id(), request.get());
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
             auto request = parse_parameter<mir::protobuf::BufferRequest>(invocation);
-            request.mutable_buffer()->clear_fd();
+            request->mutable_buffer()->clear_fd();
             for (auto& fd : side_channel_fds)
-                request.mutable_buffer()->add_fd(fd);
-            invoke(shared_from_this(), display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), &request);
+                request->mutable_buffer()->add_fd(fd);
+            invoke(shared_from_this(), display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), request.get());
         }
         else if ("submit_buffer" == invocation.method_name())
         {
@@ -242,12 +243,12 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             auto request = parse_parameter<mir::protobuf::PlatformOperationMessage>(invocation);
 
-            request.clear_fd();
+            request->clear_fd();
             for (auto& fd : side_channel_fds)
-                request.add_fd(fd);
+                request->add_fd(fd);
 
             invoke(shared_from_this(), display_server.get(), &DisplayServer::platform_operation,
-                   invocation.id(), &request);
+                   invocation.id(), request.get());
         }
         else if ("configure_display" == invocation.method_name())
         {

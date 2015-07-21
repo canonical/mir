@@ -70,12 +70,6 @@ message SurfaceSpecification {
   repeated StreamConfiguration stream = 21; 
 }
 
-message StreamConfiguration {
-  optional BufferStreamId id = 1;
-  optional int32 displacement_x = 2;
-  optional int32 displacement_y = 3;
-};
-
 message SurfaceModifications {
   required SurfaceId surface_id = 1;
   required SurfaceSpecification surface_specification = 2;
@@ -83,12 +77,6 @@ message SurfaceModifications {
 
 message SurfaceId {
   required int32 value = 1;
-};
-
-message PersistentSurfaceId {
-  optional string value = 1;
-
-  optional string error = 127;
 };
 
 message BufferStreamId {
@@ -100,15 +88,6 @@ message BufferStreamParameters {
     required int32 height = 2;
     required int32 pixel_format = 3;
     required int32 buffer_usage = 4;
-};
-
-message BufferAllocation {
-  optional BufferStreamId id = 1;
-  repeated BufferStreamParameters buffer_requests = 2;  
-};
-
-message BufferRelease {
-  repeated Buffer buffers = 1;  
 };
 
 message BufferRequest {
@@ -245,6 +224,7 @@ message EventSequence {
   repeated Event event = 1;
   optional DisplayConfiguration display_configuration = 2;
   optional LifecycleEvent lifecycle_event = 3;
+
   optional string error = 127;
 }
 
@@ -360,3 +340,24 @@ message CoordinateTranslationResponse {
 service Debug {
   rpc translate_surface_to_screen(CoordinateTranslationRequest) returns (CoordinateTranslationResponse);
 }
+
+message StreamConfiguration {
+  optional BufferStreamId id = 1;
+  optional int32 displacement_x = 2;
+  optional int32 displacement_y = 3;
+};
+
+message PersistentSurfaceId {
+  optional string value = 1;
+
+  optional string error = 127;
+};
+
+message BufferAllocation {
+  optional BufferStreamId id = 1;
+  repeated BufferStreamParameters buffer_requests = 2;  
+};
+
+message BufferRelease {
+  repeated Buffer buffers = 1;  
+};

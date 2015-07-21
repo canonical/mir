@@ -20,10 +20,10 @@
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
 #include "default_client_buffer_stream_factory.h"
-#include "make_protobuf_object.h"
 #include "mir_toolkit/mir_platform_message.h"
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
+#include "mir/make_protobuf_object.h"
 #include "rpc/mir_basic_rpc_channel.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
@@ -108,13 +108,13 @@ MirConnection::MirConnection(
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         debug(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         logger(conf.the_logger()),
-        void_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
-        connect_result{mcl::make_protobuf_object<mir::protobuf::Connection>()},
+        void_response{mir::make_protobuf_object<mir::protobuf::Void>()},
+        connect_result{mir::make_protobuf_object<mir::protobuf::Connection>()},
         connect_done{false},
-        ignored{mcl::make_protobuf_object<mir::protobuf::Void>()},
-        connect_parameters{mcl::make_protobuf_object<mir::protobuf::ConnectParameters>()},
-        platform_operation_reply{mcl::make_protobuf_object<mir::protobuf::PlatformOperationMessage>()},
-        display_configuration_response{mcl::make_protobuf_object<mir::protobuf::DisplayConfiguration>()},
+        ignored{mir::make_protobuf_object<mir::protobuf::Void>()},
+        connect_parameters{mir::make_protobuf_object<mir::protobuf::ConnectParameters>()},
+        platform_operation_reply{mir::make_protobuf_object<mir::protobuf::PlatformOperationMessage>()},
+        display_configuration_response{mir::make_protobuf_object<mir::protobuf::DisplayConfiguration>()},
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
@@ -227,7 +227,7 @@ MirWaitHandle* MirConnection::release_surface(
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
 
-    auto message = mcl::make_protobuf_object<mir::protobuf::SurfaceId>();
+    auto message = mir::make_protobuf_object<mir::protobuf::SurfaceId>();
     message->set_value(surface->id());
 
     {
@@ -386,7 +386,7 @@ MirWaitHandle* MirConnection::platform_operation(
         return nullptr;
     }
 
-    auto protobuf_request = mcl::make_protobuf_object<mir::protobuf::PlatformOperationMessage>();
+    auto protobuf_request = mir::make_protobuf_object<mir::protobuf::PlatformOperationMessage>();
 
     protobuf_request->set_opcode(mir_platform_message_get_opcode(request));
     auto const request_data = mir_platform_message_get_data(request);
@@ -495,7 +495,7 @@ mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
     mir_buffer_stream_callback callback,
     void *context)
 {
-    auto params = mcl::make_protobuf_object<mir::protobuf::BufferStreamParameters>();
+    auto params = mir::make_protobuf_object<mir::protobuf::BufferStreamParameters>();
     params->set_width(width);
     params->set_height(height);
     params->set_pixel_format(format);
@@ -581,7 +581,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         return NULL;
     }
 
-    auto request = mcl::make_protobuf_object<mir::protobuf::DisplayConfiguration>();
+    auto request = mir::make_protobuf_object<mir::protobuf::DisplayConfiguration>();
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -626,7 +626,7 @@ MirWaitHandle* MirConnection::release_buffer_stream(
 
     StreamRelease stream_release{stream, new_wait_handle, callback, context};
 
-    auto buffer_stream_id = mcl::make_protobuf_object<mir::protobuf::BufferStreamId>();
+    auto buffer_stream_id = mir::make_protobuf_object<mir::protobuf::BufferStreamId>();
     buffer_stream_id->set_value(stream->rpc_id().as_value());
 
     {

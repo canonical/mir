@@ -19,9 +19,9 @@
 #define MIR_LOG_COMPONENT "MirBufferStream"
 
 #include "buffer_stream.h"
-#include "make_protobuf_object.h"
 
 #include "mir_connection.h"
+#include "mir/make_protobuf_object.h"
 #include "mir/frontend/client_constants.h"
 
 #include "mir/log.h"
@@ -98,11 +98,11 @@ mcl::BufferStream::BufferStream(
       display_server(server),
       mode(mode),
       client_platform(client_platform),
-      protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(protobuf_bs)},
+      protobuf_bs{mir::make_protobuf_object<mir::protobuf::BufferStream>(protobuf_bs)},
       buffer_depository{client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size},
       swap_interval_(1),
       perf_report(perf_report),
-      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
+      protobuf_void{mir::make_protobuf_object<mir::protobuf::Void>()}
 {
     created(nullptr, nullptr);
     perf_report->name_surface(surface_name.c_str());
@@ -120,11 +120,11 @@ mcl::BufferStream::BufferStream(
       display_server(server),
       mode(BufferStreamMode::Producer),
       client_platform(client_platform),
-      protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
+      protobuf_bs{mir::make_protobuf_object<mir::protobuf::BufferStream>()},
       buffer_depository{client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size},
       swap_interval_(1),
       perf_report(perf_report),
-      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
+      protobuf_void{mir::make_protobuf_object<mir::protobuf::Void>()}
 {
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
@@ -206,7 +206,7 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     // of buffer stream which generalizes and clarifies the server side logic.
     if (mode == mcl::BufferStreamMode::Producer)
     {
-        auto request = mcl::make_protobuf_object<mp::BufferRequest>();
+        auto request = mir::make_protobuf_object<mp::BufferRequest>();
         request->mutable_id()->set_value(protobuf_bs->id().value());
         request->mutable_buffer()->set_buffer_id(protobuf_bs->buffer().buffer_id());
 
@@ -223,7 +223,7 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     }
     else
     {
-        auto screencast_id = mcl::make_protobuf_object<mp::ScreencastId>();
+        auto screencast_id = mir::make_protobuf_object<mp::ScreencastId>();
         screencast_id->set_value(protobuf_bs->id().value());
 
         lock.unlock();
@@ -318,8 +318,8 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
     }
 
-    auto setting = mcl::make_protobuf_object<mp::SurfaceSetting>();
-    auto result = mcl::make_protobuf_object<mp::SurfaceSetting>();
+    auto setting = mir::make_protobuf_object<mp::SurfaceSetting>();
+    auto result = mir::make_protobuf_object<mp::SurfaceSetting>();
     setting->mutable_surfaceid()->set_value(protobuf_bs->id().value());
     setting->set_attrib(attrib);
     setting->set_ivalue(value);
