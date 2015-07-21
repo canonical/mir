@@ -1,4 +1,11 @@
-mir (0.14.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.14.0+15.10.20150715-0ubuntu2) UNRELEASED; urgency=medium
+
+  * Fix missing ABI renaming in Mirplatform
+  * Bump Mirserver platform graphics to 3
+
+ -- Andreas Pokorny <andreas.pokorny@canonical.com>  Tue, 21 Jul 2015 10:14:21 +0200
+
+mir (0.14.0+15.10.20150715-0ubuntu1) wily; urgency=medium
 
   [ Andreas Pokorny ]
   * New upstream release 0.14.0 (https://launchpad.net/mir/+milestone/0.14.0)
@@ -72,7 +79,7 @@ mir (0.14.0-0ubuntu1) UNRELEASED; urgency=medium
       . Loading libmirclient.so twice leads to a segfault in libmirprotobuf.so
         (LP: #1391976)
 
- -- Andreas Pokorny <andreas.pokorny@canonical.com>  Tue, 02 Jun 2015 16:25:59 +0800
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 15 Jul 2015 12:05:19 +0000
 
 mir (0.13.3+15.10.20150617-0ubuntu1) wily; urgency=medium
 
