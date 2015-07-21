@@ -32,7 +32,7 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-
+namespace geom = mir::geometry;
 namespace
 {
 struct MockSurfaceObserver : mir::scene::NullSurfaceObserver
@@ -84,7 +84,8 @@ struct StreamTest : Test
     
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     NiceMock<mtd::MockEventSink> mock_sink;
-    mc::Stream stream{std::make_unique<StubBufferMap>(mock_sink, buffers)};
+    geom::Size initial_size{44,2};
+    mc::Stream stream{std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size};
 };
 }
 
@@ -191,4 +192,14 @@ TEST_F(StreamTest, ignores_nullptr_submissions) //legacy behavior
     stream.add_observer(observer);
     stream.swap_buffers(nullptr, [](mg::Buffer*){});
     EXPECT_FALSE(stream.has_submitted_buffer());
+}
+
+//it doesnt quite make sense that the stream has a size, esp given that there could be different-sized buffers
+//in the stream, and the surface has the onscreen size info
+TEST_F(StreamTest, reports_size)
+{
+    geom::Size new_size{333,139};
+    EXPECT_THAT(stream.stream_size(), Eq(initial_size));
+    stream.resize(new_size);
+    EXPECT_THAT(stream.stream_size(), Eq(new_size));
 }

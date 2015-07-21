@@ -28,17 +28,19 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
+namespace geom = mir::geometry;
 
 enum class mc::Stream::ScheduleMode {
     Queueing,
     Dropping
 };
 
-mc::Stream::Stream(std::unique_ptr<frontend::ClientBuffers> map) :
+mc::Stream::Stream(std::unique_ptr<frontend::ClientBuffers> map, geom::Size size) :
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(std::move(map)),
     arbiter(std::make_shared<mc::MultiMonitorArbiter>(buffers, schedule)),
+    size(size),
     first_frame_posted(false)
 {
 }
@@ -81,11 +83,14 @@ std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
 
 geom::Size mc::Stream::stream_size()
 {
-    return {0,0};
+    return size;
 }
 
-void mc::Stream::resize(geom::Size const&)
+void mc::Stream::resize(geom::Size const& new_size)
 {
+    //obviously resize isn't fully implemented yet
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    size = new_size; 
 }
 
 void mc::Stream::allow_framedropping(bool dropping)

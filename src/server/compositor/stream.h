@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/surface_observers.h"
 #include "mir/frontend/buffer_stream_id.h"
+#include "mir/geometry/size.h"
 #include "multi_monitor_arbiter.h"
 #include <mutex>
 #include <memory>
@@ -36,7 +37,7 @@ class Schedule;
 class Stream : public BufferStream
 {
 public:
-    Stream(std::unique_ptr<frontend::ClientBuffers>);
+    Stream(std::unique_ptr<frontend::ClientBuffers>, geometry::Size sz);
 
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
@@ -62,8 +63,8 @@ private:
     ScheduleMode schedule_mode;
     std::shared_ptr<Schedule> schedule;
     std::shared_ptr<frontend::ClientBuffers> buffers;
-    std::shared_ptr<MultiMonitorArbiter> arbiter; 
-   
+    std::shared_ptr<MultiMonitorArbiter> arbiter;
+    geometry::Size size; 
     bool first_frame_posted;
 
     scene::SurfaceObservers observers;
