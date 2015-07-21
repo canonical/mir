@@ -60,15 +60,16 @@ TEST_F(QueueingSchedule, queues_buffers_up)
 {
     EXPECT_FALSE(schedule.anything_scheduled());
 
-    for(auto i = 0u; i < num_buffers; i++)
-        if (i & 1) schedule.schedule(buffers[i]);
-    for(auto i = 0u; i < num_buffers; i++)
-        if (!(i & 1)) schedule.schedule(buffers[i]);
+    std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers {
+        buffers[1], buffers[3], buffers[0], buffers[2], buffers[4]
+    };
+
+    for (auto& buffer : scheduled_buffers)
+        schedule.schedule(buffer);
 
     EXPECT_TRUE(schedule.anything_scheduled());
 
-    EXPECT_THAT(drain_queue(),
-        ElementsAre(buffers[1], buffers[3], buffers[0], buffers[2], buffers[4]));
+    EXPECT_THAT(drain_queue(), ContainerEq(scheduled_buffers));
 
     EXPECT_FALSE(schedule.anything_scheduled());
 }
