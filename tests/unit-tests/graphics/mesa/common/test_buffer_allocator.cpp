@@ -271,18 +271,22 @@ TEST_F(MesaBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_fir
     EXPECT_EQ(mir_pixel_format_argb_8888, supported_pixel_formats[0]);
 }
 
-TEST_F(MesaBufferAllocatorTest, is_format_supported_not_called)
-{
+TEST_F(MesaBufferAllocatorTest, screencast_can_create_buffer)
+{   // Regression test for LP: #1475571
     using namespace testing;
 
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_))
-        .WillOnce(Return(nullptr));
-    EXPECT_CALL(mock_gbm, gbm_device_is_format_supported(_,_,_))
-        .Times(0);  // or checking the last arg is zero would be OK too
+    // Not expected to be called any more, but if it is...
+    ON_CALL(mock_gbm, gbm_device_is_format_supported(_,_,GBM_BO_USE_SCANOUT))
+        .WillByDefault(Return(0));
 
-    EXPECT_THROW({
-        allocator->alloc_buffer(mg::BufferProperties{size, mir_pixel_format_abgr_8888, usage});
-    }, std::runtime_error);
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
+
+    EXPECT_NO_THROW({
+        allocator->alloc_buffer(
+            mg::BufferProperties{{1920,1080},
+                                 mir_pixel_format_abgr_8888,
+                                 mg::BufferUsage::hardware});
+    });
 }
 
 MATCHER_P(GbmImportMatch, value, "import data matches")
