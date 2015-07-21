@@ -41,3 +41,10 @@ shutdown_google_protobuf()
     google::protobuf::ShutdownProtobufLibrary();
     return 0;
 }
+
+// Preserve ABI
+namespace mir { namespace protobuf { void google_protobuf_guard(); }}
+
+void mir::protobuf::google_protobuf_guard()
+{
+}
