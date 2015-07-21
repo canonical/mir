@@ -32,7 +32,7 @@ mc::DroppingSchedule::DroppingSchedule(std::shared_ptr<mf::ClientBuffers> const&
 
 void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     if ((the_only_buffer != buffer) && the_only_buffer)
         sender->send_buffer(the_only_buffer->id());
     the_only_buffer = buffer;
@@ -40,20 +40,20 @@ void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
 
 void mc::DroppingSchedule::cancel(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     if (the_only_buffer == buffer)
         the_only_buffer = nullptr;
 }
 
 bool mc::DroppingSchedule::anything_scheduled()
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     return static_cast<bool>(the_only_buffer);
 }
 
 std::shared_ptr<mg::Buffer> mc::DroppingSchedule::next_buffer()
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     if (!the_only_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer scheduled"));
     auto buffer = the_only_buffer;
