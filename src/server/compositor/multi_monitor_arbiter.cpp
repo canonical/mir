@@ -39,7 +39,7 @@ mc::MultiMonitorArbiter::MultiMonitorArbiter(
 
 std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
 
     if (onscreen_buffers.empty() && !schedule->anything_scheduled())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give"));
@@ -59,7 +59,7 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 
 void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
 
     auto it = std::find_if(onscreen_buffers.begin(), onscreen_buffers.end(),
         [&buffer](ScheduleEntry const& s) { return s.buffer->id() == buffer->id(); });
@@ -71,7 +71,7 @@ void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> con
     clean_onscreen_buffers(lk);
 }
 
-void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::unique_lock<std::mutex> const&)
+void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::lock_guard<std::mutex> const&)
 {
     for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
     {
@@ -99,6 +99,6 @@ void mc::MultiMonitorArbiter::snapshot_release(std::shared_ptr<mg::Buffer> const
 
 void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_schedule)
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     schedule = new_schedule;
 }

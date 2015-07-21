@@ -46,7 +46,7 @@ public:
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
 
 private:
-    void clean_onscreen_buffers(std::unique_lock<std::mutex> const&);
+    void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);
 
     std::mutex mutable mutex;
     std::shared_ptr<frontend::ClientBuffers> const map;
