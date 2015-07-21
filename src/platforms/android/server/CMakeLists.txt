@@ -1,6 +1,5 @@
 include_directories(
     ${server_common_include_dirs}
-    ..
 )
 
 include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
