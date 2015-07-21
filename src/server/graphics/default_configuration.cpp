@@ -92,7 +92,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                     auto msg = "Failed to find any platform plugins in: " + path;
                     throw std::runtime_error(msg.c_str());
                 }
-                platform_library = mir::graphics::module_for_device(platforms);
+                platform_library = mir::graphics::module_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()));
             }
             auto create_host_platform = platform_library->load_function<mg::CreateHostPlatform>(
                 "create_host_platform",

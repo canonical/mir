@@ -66,7 +66,9 @@ struct ProducerSystem
 
 struct ConsumerSystem
 {
-    virtual void consume() = 0;
+    virtual void consume() { consume_resource(); }
+    virtual std::shared_ptr<mg::Buffer> consume_resource() = 0;
+
     virtual std::vector<BufferEntry> consumption_log() = 0;
     ConsumerSystem() = default;
     virtual ~ConsumerSystem() = default;
@@ -88,6 +90,14 @@ struct BufferQueueProducer : ProducerSystem
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         return buffer;
+    }
+
+    mg::BufferID current_id()
+    {
+        if (buffer)
+            return buffer->id();
+        else
+            return mg::BufferID{INT_MAX};
     }
 
     void produce()
@@ -124,6 +134,12 @@ struct BufferQueueProducer : ProducerSystem
             return buffer->size();
         return geom::Size{};
     }
+
+    void reset_log()
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        return entries.clear();
+    }
 private:
     mc::BufferStream& stream;
     void buffer_ready(mg::Buffer* b)
@@ -144,13 +160,14 @@ struct BufferQueueConsumer : ConsumerSystem
     {
     }
 
-    void consume()
+    std::shared_ptr<mg::Buffer> consume_resource() override
     {
         auto b = stream.lock_compositor_buffer(this);
         last_size_ = b->size();
         b->read([this, b](unsigned char const* p) {
             entries.emplace_back(BufferEntry{b->id(), *reinterpret_cast<unsigned int const*>(p), Access::unblocked});
         });
+        return b;
     }
 
     std::vector<BufferEntry> consumption_log()
@@ -221,6 +238,14 @@ void repeat_system_until(
     }
 }
 
+size_t unique_ids_in(std::vector<BufferEntry> log)
+{
+    std::sort(log.begin(), log.end(),
+        [](BufferEntry const& a, BufferEntry const& b) { return a.id < b.id; });
+    auto it = std::unique(log.begin(), log.end(),
+        [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; } );
+    return std::distance(log.begin(), it);
+}
 
 //test infrastructure
 struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
@@ -735,6 +760,259 @@ TEST_P(WithThreeBuffers, gives_new_compositor_the_newest_buffer_after_dropping_o
 
     EXPECT_THAT(production_log[0], Eq(consumption_log[0]));
     EXPECT_THAT(production_log[1].id, Eq(comp2->id()));
+}
+
+TEST_P(WithTwoOrMoreBuffers, overlapping_compositors_get_different_frames)
+{
+    // This test simulates bypass behaviour
+    // overlay/bypass code will need to acquire two buffers at once, as there's a brief period of time where a buffer 
+    // is onscreen, and the compositor has to arrange for the next buffer to swap in.
+    auto const num_simultaneous_consumptions = 2u;
+    auto num_iterations = 20u;
+    std::array<std::shared_ptr<mg::Buffer>, num_simultaneous_consumptions> compositor_resources;
+    for (auto i = 0u; i < num_iterations; i++)
+    {
+        // One of the compositors (the oldest one) gets a new buffer...
+        int oldest = i & 1;
+        compositor_resources[oldest].reset();
+        producer.produce();
+        compositor_resources[oldest] = consumer.consume_resource();
+    }
+
+    // Two compositors acquired, and they're always different...
+    auto log = consumer.consumption_log();
+    for(auto i = 0u; i < log.size() - 1; i++)
+        EXPECT_THAT(log[i].id, Ne(log[i+1].id));
+}
+
+// Regression test LP: #1241369 / LP: #1241371
+// Test that a triple buffer or higher client can always provide a relatively up-to-date frame
+// when its producing the buffer around the frame deadline
+TEST_P(WithThreeOrMoreBuffers, slow_client_framerate_matches_compositor)
+{
+    // BufferQueue can only satify this for nbuffers >= 3
+    // since a client can only own up to nbuffers - 1 at any one time
+    auto const iterations = 10u;
+    queue.allow_framedropping(false);
+
+    //fill up queue at first
+    for(auto i = 0; i < nbuffers - 1; i++)
+        producer.produce();
+
+    //a schedule that would block once per iteration for double buffering, but only once for >3 buffers
+    std::vector<ScheduleEntry> schedule = {
+        {0_t,  {}, {&consumer}},
+        {59_t,  {&producer}, {}},
+        {60_t,  {}, {&consumer}},
+        {120_t,  {}, {&consumer}},
+        {121_t,  {&producer}, {}},
+        {179_t,  {&producer}, {}},
+        {180_t,  {}, {&consumer}},
+        {240_t,  {}, {&consumer}},
+        {241_t,  {&producer}, {}},
+        {300_t,  {}, {&consumer}},
+    };
+
+    auto count = 0u;
+    repeat_system_until(schedule, [&]{ return count++ < schedule.size() * iterations; });
+
+    auto log = producer.production_log();
+    auto blockages = std::count_if(log.begin(), log.end(),
+        [](BufferEntry const& e){ return e.blockage == Access::blocked; });
+    EXPECT_THAT(blockages, Le(1));
+}
+
+//regression test for LP: #1396006, LP: #1379685
+TEST_P(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
+{
+    queue.allow_framedropping(true);
+
+    for (int f = 0; f < nbuffers; ++f)
+        producer.produce();
+
+    for (int n = 0; n < nbuffers - 1; ++n)
+        consumer.consume();
+
+    // Ensure it's not the newest frame that gets dropped to satisfy the
+    // client.
+    producer.produce();
+    consumer.consume();
+
+    // The queue could solve this problem a few ways. It might choose to
+    // defer framedropping till it's safe, or even allocate additional
+    // buffers. We don't care which, just verify it's not losing the
+    // latest frame. Because the screen could be indefinitely out of date
+    // if that happens...
+    auto producer_log = producer.production_log();
+    auto consumer_log = consumer.consumption_log();
+    EXPECT_TRUE(!producer.can_produce() || 
+        (!producer_log.empty() && !consumer_log.empty() && producer_log.back() == consumer_log.back()));
+}
+
+/* Regression test for LP: #1306464 */
+TEST_P(WithThreeBuffers, framedropping_client_acquire_does_not_block_when_no_available_buffers)
+{
+    queue.allow_framedropping(true);
+
+    /* The client can never own this acquired buffer */
+    auto comp_buffer = consumer.consume_resource();
+
+    /* Let client release all possible buffers so they go into
+     * the ready queue
+     */
+    for (int i = 0; i < nbuffers; ++i)
+    {
+        producer.produce();
+        EXPECT_THAT(comp_buffer->id(), Ne(producer.current_id()));
+    }
+
+    /* Let the compositor acquire all ready buffers */
+    for (int i = 0; i < nbuffers; ++i)
+        consumer.consume();
+
+    /* At this point the queue has 0 free buffers and 0 ready buffers
+     * so the next client request should not be satisfied until
+     * a compositor releases its buffers */
+    /* ... unless the BufferQueue is overallocating. In that case it will
+     * have succeeding in acquiring immediately.
+     */
+    EXPECT_TRUE(producer.can_produce());
+}
+
+TEST_P(WithTwoOrMoreBuffers, client_never_owns_compositor_buffers_and_vice_versa)
+{
+    for (int i = 0; i < 100; ++i)
+    {
+        auto buffer = consumer.consume_resource();
+        producer.produce();
+        EXPECT_THAT(buffer->id(), Ne(producer.current_id()));
+    }
+}
+
+/* Regression test for an issue brought up at:
+ * http://code.launchpad.net/~albaguirre/mir/
+ * alternative-switching-bundle-implementation/+merge/216606/comments/517048
+ */
+TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
+{
+    // This test is technically not valid with dynamic queue scaling on
+    // BufferQueue specific setup
+    queue.set_scaling_delay(-1);
+
+    const int nmonitors = 2;
+    std::array<std::shared_ptr<BufferQueueConsumer>, nmonitors> consumers { {
+        std::make_shared<BufferQueueConsumer>(stream),
+        std::make_shared<BufferQueueConsumer>(stream)
+    } };
+
+    /* Hold a reference to current compositor buffer*/
+    auto comp_buffer1 = consumers[0]->consume_resource();
+
+    while (producer.can_produce())
+        producer.produce();
+
+    /* Have a second compositor advance the current compositor buffer at least twice */
+    for (int acquires = 0; acquires < nbuffers; ++acquires)
+        consumers[1]->consume();
+
+    comp_buffer1.reset();
+
+    /* An async client should still be able to cycle through all the available buffers */
+    int const max_ownable_buffers = nbuffers - 1;
+    producer.reset_log();
+    for (int frame = 0; frame < max_ownable_buffers * 2; frame++)
+    {
+        producer.produce();
+        consumers[0]->consume();
+    }
+
+    EXPECT_THAT(unique_ids_in(producer.production_log()), Eq(nbuffers));
+}
+
+// Test that dynamic queue scaling/throttling actually works
+TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
+{
+    //BufferQueue specific for now
+    auto discard = queue.scaling_delay();
+
+    for (int frame = 0; frame < 20; frame++)
+    {
+        producer.produce();
+        consumer.consume();
+    }
+    // Expect double-buffers as the steady state for fast clients
+    auto log = producer.production_log();
+    log.erase(log.begin(), log.begin() + discard);
+    EXPECT_THAT(unique_ids_in(log), Eq(2));
+    producer.reset_log();
+
+    // Now check what happens if the client becomes slow...
+    for (int frame = 0; frame < 20; frame++)
+    {
+        producer.produce();
+        consumer.consume();
+        consumer.consume();
+    }
+
+    log = producer.production_log();
+    log.erase(log.begin(), log.begin() + discard);
+    EXPECT_THAT(unique_ids_in(log), Ge(3));
+    producer.reset_log();
+
+    // And what happens if the client becomes fast again?...
+    for (int frame = 0; frame < 20; frame++)
+    {
+        producer.produce();
+        consumer.consume();
+    }
+    // Expect double-buffers as the steady state for fast clients
+    log = producer.production_log();
+    log.erase(log.begin(), log.begin() + discard);
+    EXPECT_THAT(unique_ids_in(log), Eq(2));
+}
+
+//NOTE: compositors need 2 buffers in overlay/bypass cases, as they 
+//briefly need to arrange the next buffer while the previous one is still held onscreen
+TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
+{
+    /*
+     * "Greedy" compositors means those that can hold multiple buffers from
+     * the same client simultaneously or a single buffer for a long time.
+     * This usually means bypass/overlays, but can also mean multi-monitor.
+     */
+    queue.allow_framedropping(false);
+
+    for (auto i = 0u; i < 20u; i++)
+    {
+        auto first = consumer.consume_resource();
+        auto second = consumer.consume_resource();
+        producer.produce();
+    }
+
+    EXPECT_THAT(unique_ids_in(producer.production_log()), Eq(3));
+}
+
+MATCHER_P(BufferIdIs, val, "")
+{
+    if (!arg) return false;
+    return arg->id() == val;
+}
+
+TEST_P(WithAnyNumberOfBuffers, can_snapshot_repeatedly_without_blocking)
+{
+    producer.produce();
+    consumer.consume();
+    auto const num_snapshots = nbuffers * 2u;
+    std::vector<std::shared_ptr<mg::Buffer>> snaps(num_snapshots);
+    for(auto i = 0u; i < num_snapshots; i++)
+    {
+        snaps[i] = queue.snapshot_acquire();
+        queue.snapshot_release(snaps[i]);
+    }
+
+    auto production_log = producer.production_log();
+    ASSERT_THAT(production_log, SizeIs(1));
+    EXPECT_THAT(snaps, Each(BufferIdIs(production_log.back().id)));
 }
 
 int const max_buffers_to_test{5};

@@ -25,7 +25,7 @@ namespace mg = mir::graphics;
 
 void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buffer)
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     auto it = std::find(queue.begin(), queue.end(), buffer);
     if (it != queue.end())
         queue.erase(it);
@@ -34,7 +34,7 @@ void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buf
 
 void mc::QueueingSchedule::cancel(std::shared_ptr<graphics::Buffer> const& buffer)
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     auto it = std::find(queue.begin(), queue.end(), buffer);
     if (it != queue.end())
         queue.erase(it);
@@ -42,13 +42,13 @@ void mc::QueueingSchedule::cancel(std::shared_ptr<graphics::Buffer> const& buffe
 
 bool mc::QueueingSchedule::anything_scheduled()
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     return !queue.empty();
 }
 
 std::shared_ptr<mg::Buffer> mc::QueueingSchedule::next_buffer()
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     if (queue.empty())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer scheduled"));
     auto buffer = queue.front();
