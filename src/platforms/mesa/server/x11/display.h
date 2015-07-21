@@ -34,6 +34,33 @@ namespace graphics
 namespace X
 {
 
+class X11EGLDisplay
+{
+public:
+    X11EGLDisplay(::Display *x_dpy);
+    ~X11EGLDisplay();
+
+    operator EGLDisplay() const;
+
+private:
+    EGLDisplay const egl_dpy;
+};
+
+class X11Window
+{
+public:
+    X11Window(::Display* const x_dpy, EGLDisplay egl_dpy, int width, int height);
+    ~X11Window();
+
+    operator Window() const;
+    EGLConfig egl_config() const;
+
+private:
+    ::Display* const x_dpy;
+    Window win;
+    EGLConfig config;
+};
+
 class Display : public graphics::Display
 {
 public:
@@ -61,14 +88,14 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
-    ::Display     *x_dpy;
-    EGLDisplay     egl_dpy;
-    EGLContext     egl_ctx;
-    EGLSurface     egl_surf;
-    Window         win;
+    ::Display *x_dpy;
+    X11EGLDisplay const egl_display;
+    int const display_width;
+    int const display_height;
+    X11Window const win;
+    EGLContext egl_ctx;
+    EGLSurface egl_surf;
     MirPixelFormat pf;
-    int const      display_width;
-    int const      display_height;
     std::unique_ptr<DisplayGroup> display_group;
 };
 

@@ -36,10 +36,9 @@ namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-mgx::Display::Display(::Display *dpy)
-    : x_dpy{dpy}, display_width{1280}, display_height{1024}
+mgx::X11EGLDisplay::X11EGLDisplay(::Display *x_dpy)
+    : egl_dpy{eglGetDisplay(x_dpy)}
 {
-    egl_dpy = eglGetDisplay(x_dpy);
     if (!egl_dpy)
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an egl display"));
 
@@ -48,7 +47,21 @@ mgx::Display::Display(::Display *dpy)
         BOOST_THROW_EXCEPTION(mg::egl_error("eglInitialize failed"));
 
     mir::log_info("EGL Version %d.%d", egl_major, egl_minor);
+}
 
+mgx::X11EGLDisplay::~X11EGLDisplay()
+{
+    eglTerminate(egl_dpy);
+}
+
+mgx::X11EGLDisplay::operator EGLDisplay() const
+{
+    return egl_dpy;
+}
+
+mgx::X11Window::X11Window(::Display *x_dpy, EGLDisplay egl_dpy, int width, int height)
+    : x_dpy{x_dpy}
+{
     EGLint const att[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RED_SIZE, 5,
@@ -61,40 +74,25 @@ mgx::Display::Display(::Display *dpy)
         EGL_NONE
     };
 
-    static const EGLint ctx_attribs[] = {
-       EGL_CONTEXT_CLIENT_VERSION, 2,
-       EGL_NONE
-    };
-
     auto root = XDefaultRootWindow(x_dpy);
 
-    EGLConfig config;
     EGLint num_configs;
     if (!eglChooseConfig(egl_dpy, att, &config, 1, &num_configs))
-    {
-        eglTerminate(egl_dpy);
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an EGL config"));
-    }
 
     assert(config);
     assert(num_configs > 0);
 
     EGLint vid;
     if (!eglGetConfigAttrib(egl_dpy, config, EGL_NATIVE_VISUAL_ID, &vid))
-    {
-        eglTerminate(egl_dpy);
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get config attrib"));
-    }
 
     XVisualInfo visTemplate;
     int num_visuals;
     visTemplate.visualid = vid;
     auto visInfo = XGetVisualInfo(x_dpy, VisualIDMask, &visTemplate, &num_visuals);
     if (!visInfo)
-    {
-        eglTerminate(egl_dpy);
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get visual info"));
-    }
 
     XSetWindowAttributes attr;
     attr.background_pixel = 0;
@@ -109,7 +107,7 @@ mgx::Display::Display(::Display *dpy)
 
     auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
 
-    win = XCreateWindow(x_dpy, root, 0, 0, display_width, display_height,
+    win = XCreateWindow(x_dpy, root, 0, 0, width, height,
                         0, visInfo->depth, InputOutput,
                         visInfo->visual, mask, &attr);
 
@@ -118,6 +116,36 @@ mgx::Display::Display(::Display *dpy)
     //TODO: handle others
     assert(visInfo->depth==24);
 
+    XFree(visInfo);
+
+    XMapWindow(x_dpy, win);
+}
+
+mgx::X11Window::~X11Window()
+{
+    XDestroyWindow(x_dpy, win);
+}
+
+mgx::X11Window::operator Window() const
+{
+    return win;
+}
+
+EGLConfig mgx::X11Window::egl_config() const
+{
+    return config;
+}
+
+mgx::Display::Display(::Display *dpy)
+    : x_dpy{dpy},
+      egl_display{X11EGLDisplay(dpy)},
+      display_width{1280},
+      display_height{1024},
+      win{X11Window(dpy,
+                    egl_display,
+                    display_width,
+                    display_height)}
+{
     pf = mir_pixel_format_bgr_888;
 
     {
@@ -137,55 +165,47 @@ mgx::Display::Display(::Display *dpy)
                                None, (char **)NULL, 0, &sizehints);
     }
 
-    egl_ctx = eglCreateContext(egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);
-    if (!egl_ctx)
-    {
-        eglTerminate(egl_dpy);
-        XDestroyWindow(x_dpy, win);
-        BOOST_THROW_EXCEPTION(mg::egl_error("eglCreateContext failed"));
-    }
+    static const EGLint ctx_attribs[] = {
+       EGL_CONTEXT_CLIENT_VERSION, 2,
+       EGL_NONE
+    };
 
-    egl_surf = eglCreateWindowSurface(egl_dpy, config, win, NULL);
+    egl_ctx = eglCreateContext(egl_display, win.egl_config(), EGL_NO_CONTEXT, ctx_attribs);
+    if (!egl_ctx)
+        BOOST_THROW_EXCEPTION(mg::egl_error("eglCreateContext failed"));
+
+    egl_surf = eglCreateWindowSurface(egl_display, win.egl_config(), win, NULL);
     if (!egl_surf)
     {
-        eglDestroyContext(egl_dpy, egl_ctx);
-        eglTerminate(egl_dpy);
-        XDestroyWindow(x_dpy, win);
+        eglDestroyContext(egl_display, egl_ctx);
         BOOST_THROW_EXCEPTION(mg::egl_error("eglCreateWindowSurface failed"));
     }
 
     /* sanity checks */
     {
        EGLint val;
-       eglQueryContext(egl_dpy, egl_ctx, EGL_CONTEXT_CLIENT_VERSION, &val);
+       eglQueryContext(egl_display, egl_ctx, EGL_CONTEXT_CLIENT_VERSION, &val);
        assert(val == 2);
-       eglQuerySurface(egl_dpy, egl_surf, EGL_WIDTH, &val);
+       eglQuerySurface(egl_display, egl_surf, EGL_WIDTH, &val);
        assert(val == display_width);
-       eglQuerySurface(egl_dpy, egl_surf, EGL_HEIGHT, &val);
+       eglQuerySurface(egl_display, egl_surf, EGL_HEIGHT, &val);
        assert(val == display_height);
-       assert(eglGetConfigAttrib(egl_dpy, config, EGL_SURFACE_TYPE, &val));
+       assert(eglGetConfigAttrib(egl_display, win.egl_config(), EGL_SURFACE_TYPE, &val));
        assert(val & EGL_WINDOW_BIT);
     }
 
-    XFree(visInfo);
-
-    XMapWindow(x_dpy, win);
-
     display_group = std::make_unique<mgx::DisplayGroup>(
         std::make_unique<mgx::DisplayBuffer>(geom::Size{display_width, display_height},
-                                             egl_dpy,
+                                             egl_display,
                                              egl_surf,
                                              egl_ctx));
 }
 
 mgx::Display::~Display() noexcept
 {
-    eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroyContext(egl_dpy, egl_ctx);
-    eglDestroySurface(egl_dpy, egl_surf);
-    eglTerminate(egl_dpy);
-
-    XDestroyWindow(x_dpy, win);
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    eglDestroyContext(egl_display, egl_ctx);
+    eglDestroySurface(egl_display, egl_surf);
 }
 
 void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
@@ -233,5 +253,5 @@ auto mgx::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
 
 std::unique_ptr<mg::GLContext> mgx::Display::create_gl_context()
 {
-    return std::make_unique<mgx::XGLContext>(egl_dpy, egl_surf, egl_ctx);
+    return std::make_unique<mgx::XGLContext>(egl_display, egl_surf, egl_ctx);
 }
