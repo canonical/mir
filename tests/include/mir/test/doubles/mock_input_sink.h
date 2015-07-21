@@ -32,9 +32,9 @@ namespace doubles
 
 struct MockInputSink : mir::input::InputSink
 {
-	MOCK_METHOD1(handle_input, void(MirEvent&));
-	MOCK_METHOD1(confine_pointer, void(mir::geometry::Point&));
-	MOCK_CONST_METHOD0(bounding_rectangle, mir::geometry::Rectangle());
+    MOCK_METHOD1(handle_input, void(MirEvent&));
+    MOCK_METHOD1(confine_pointer, void(mir::geometry::Point&));
+    MOCK_CONST_METHOD0(bounding_rectangle, mir::geometry::Rectangle());
 };
 
 }

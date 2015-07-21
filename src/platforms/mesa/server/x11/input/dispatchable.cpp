@@ -67,7 +67,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
             case KeyPress:
             case KeyRelease:
             {
-            	MirEvent event;
+                MirEvent event;
                 XKeyEvent &xkev = (XKeyEvent &)xev;
                 static const int STRMAX = 32;
                 char str[STRMAX];
