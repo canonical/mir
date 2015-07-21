@@ -83,3 +83,29 @@ TEST(DisplayGroup, db_additions_and_removals)
     group.remove(mga::DisplayName::external);
     group.post();
 }
+
+//lp: 1474891: If the driver is processing the external display in set,
+//and it gets a hotplug event removing the external display, set() will throw, which we should ignore
+TEST(DisplayGroup, group_ignores_throws_during_hotplug)
+{
+    using namespace testing;
+    NiceMock<mtd::MockDisplayDevice> mock_device;
+    mga::DisplayGroup group(mt::fake_shared(mock_device), std::make_unique<StubConfigurableDB>());
+    EXPECT_CALL(mock_device, commit(_))
+        .WillOnce(Throw(std::runtime_error("")))
+        .WillOnce(InvokeWithoutArgs([&]{
+            group.hotplug_occurred();
+            throw std::runtime_error("");
+        }))
+        .WillOnce(Throw(std::runtime_error("")));
+
+    EXPECT_THROW({
+        group.post();
+    }, std::runtime_error);
+
+    EXPECT_NO_THROW({group.post();});
+
+    EXPECT_THROW({
+        group.post();
+    }, std::runtime_error);
+}
