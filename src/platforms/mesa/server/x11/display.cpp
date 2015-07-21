@@ -181,7 +181,7 @@ mgx::Display::Display(::Display *dpy)
 mgx::Display::~Display() noexcept
 {
     eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-	eglDestroyContext(egl_dpy, egl_ctx);
+    eglDestroyContext(egl_dpy, egl_ctx);
     eglDestroySurface(egl_dpy, egl_surf);
     eglTerminate(egl_dpy);
 

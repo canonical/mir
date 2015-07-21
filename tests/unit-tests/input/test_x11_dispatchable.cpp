@@ -37,11 +37,11 @@ namespace
 
 struct X11DispatchableTest : ::testing::Test
 {
-	X11DispatchableTest()
-	{
-	    // X11Connection freed in the (external) shared_ptr destruction.
+    X11DispatchableTest()
+    {
+        // X11Connection freed in the (external) shared_ptr destruction.
         x11_connection.reset(new mir::X::X11Connection());
-	}
+    }
 
     ~X11DispatchableTest()
     {

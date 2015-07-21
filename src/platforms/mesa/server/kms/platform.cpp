@@ -129,7 +129,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         EmergencyCleanupRegistry& emergency_cleanup_registry,
                         BypassOption bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
-      drm{std::make_shared<helpers::DRMHelper>(helpers::DRMNodeToUse::card)},
+      drm{std::make_shared<mgmh::DRMHelper>(mgmh::DRMNodeToUse::card)},
       listener{listener},
       vt{vt},
       bypass_option_{bypass_option}
@@ -138,7 +138,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
     gbm.setup(*drm);
 
     std::weak_ptr<VirtualTerminal> weak_vt = vt;
-    std::weak_ptr<helpers::DRMHelper> weak_drm = drm;
+    std::weak_ptr<mgmh::DRMHelper> weak_drm = drm;
     emergency_cleanup_registry.add(
         [weak_vt,weak_drm]
         {
@@ -185,7 +185,7 @@ mgm::BypassOption mgm::Platform::bypass_option() const
 std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report)
+    std::shared_ptr<mg::DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
@@ -218,6 +218,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 {
     auto const unparsed_arguments = options.unparsed_command_line();
     auto platform_option_used = false;
+
     for (auto const& token : unparsed_arguments)
     {
         if (token == (std::string("--") + vt_option_name))

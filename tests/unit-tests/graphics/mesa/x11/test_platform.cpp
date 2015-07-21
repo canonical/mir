@@ -73,7 +73,7 @@ TEST_F(X11GraphicsPlatformTest, failure_to_open_drm_results_in_an_error)
     using namespace ::testing;
 
     EXPECT_CALL(mock_drm, open(_,_,_))
-            .WillRepeatedly(Return(-1));
+        .WillRepeatedly(Return(-1));
 
     EXPECT_THROW({ create_platform(); }, std::exception);
 }

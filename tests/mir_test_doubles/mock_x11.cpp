@@ -69,17 +69,17 @@ int XCloseDisplay(Display *display)
 
 XVisualInfo *XGetVisualInfo(Display *display, long vinfo_mask, XVisualInfo *vinfo_template, int *nitems_return)
 {
-	return global_mock->XGetVisualInfo(display, vinfo_mask, vinfo_template, nitems_return);
+    return global_mock->XGetVisualInfo(display, vinfo_mask, vinfo_template, nitems_return);
 }
 
 Colormap XCreateColormap(Display *display, Window w, Visual *visual, int alloc)
 {
-	return global_mock->XCreateColormap(display, w, visual, alloc);
+    return global_mock->XCreateColormap(display, w, visual, alloc);
 }
 
 Window XCreateWindow(Display * display, Window parent, int /*x*/, int /*y*/, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int clss, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes)
 {
-	return global_mock->XCreateWindow_wrapper(display, parent, width, height, border_width, depth, clss, visual, valuemask, attributes);
+    return global_mock->XCreateWindow_wrapper(display, parent, width, height, border_width, depth, clss, visual, valuemask, attributes);
 }
 
 int XSetNormalHints(Display *display, Window w, XSizeHints *hints)

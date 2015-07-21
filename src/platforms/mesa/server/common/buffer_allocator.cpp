@@ -85,7 +85,7 @@ protected:
 class NativePixmapTextureBinder : public EGLImageBufferTextureBinder
 {
 public:
-	NativePixmapTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
+    NativePixmapTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
                               std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
         : EGLImageBufferTextureBinder(gbm_bo, egl_extensions)
     {
@@ -102,7 +102,6 @@ private:
             const EGLint image_attrs[] =
             {
                 EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-
                 EGL_NONE
             };
 
@@ -120,7 +119,7 @@ private:
 class DMABufTextureBinder : public EGLImageBufferTextureBinder
 {
 public:
-	DMABufTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
+    DMABufTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
                         std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
         : EGLImageBufferTextureBinder(gbm_bo, egl_extensions)
     {

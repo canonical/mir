@@ -29,7 +29,7 @@ namespace X
 
 struct X11Connection
 {
-	X11Connection()
+    X11Connection()
     {
         dpy = XOpenDisplay(nullptr);
     }
