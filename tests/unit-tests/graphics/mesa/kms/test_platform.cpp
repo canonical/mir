@@ -24,6 +24,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/shared_library.h"
+#include "mir/options/program_option.h"
 
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/mock_buffer_ipc_message.h"
@@ -303,19 +304,37 @@ TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
 TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)
 {
     mtf::UdevEnvironment udev_environment;
+    mir::options::ProgramOption options;
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::unsupported, probe());
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
 }
 
-TEST_F(MesaGraphicsPlatform, probe_returns_best_when_drm_devices_exist)
+TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_drm_devices_exist)
 {
     mtf::UdevEnvironment udev_environment;
+    boost::program_options::options_description po;
+    mir::options::ProgramOption options;
 
     udev_environment.add_standard_device("standard-drm-devices");
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::best, probe());
+    EXPECT_EQ(mg::PlatformPriority::supported, probe(options));
+}
+
+TEST_F(MesaGraphicsPlatform, probe_returns_best_when_drm_devices_vt_option_exist)
+{
+    mtf::UdevEnvironment udev_environment;
+    boost::program_options::options_description po;
+    mir::options::ProgramOption options;
+    const char *argv[] = {"dummy", "--vt"};
+    options.parse_arguments(po, 2, argv);
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    EXPECT_EQ(mg::PlatformPriority::best, probe(options));
 }
