@@ -18,10 +18,13 @@
  */
 
 #include "src/server/compositor/buffer_queue.h"
+#include "src/server/compositor/timeout_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/mock_frame_dropping_policy_factory.h"
+#include "mir/test/fake_clock.h"
+#include "mir/test/doubles/mock_timer.h"
 #include "mir/test/signal.h"
 #include "mir/test/auto_unblock_thread.h"
 
@@ -1112,6 +1115,39 @@ TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
 
     policy_factory.trigger_policies();
     EXPECT_TRUE(handle->has_acquired_buffer());
+}
+
+TEST_P(WithTwoOrMoreBuffers, scaled_queue_still_follows_dropping_policy)
+{   // Regression test for LP: #1475120
+    using namespace std::literals::chrono_literals;
+
+    auto clock = std::make_shared<mt::FakeClock>();
+    auto constexpr framedrop_timeout = 10ms;
+
+    mc::TimeoutFrameDroppingPolicyFactory policy_factory{
+        std::make_shared<mtd::FakeTimer>(clock),
+        framedrop_timeout};
+
+    mc::BufferQueue q(nbuffers,
+                      allocator,
+                      basic_properties,
+                      policy_factory);
+    
+    int const nframes = 100;
+
+    q.set_scaling_delay(0);
+    for (int i = 0; i < nframes; i++)
+    {
+        auto handle = client_acquire_async(q);
+
+        // Advance time past the framedrop timeout.
+        clock->advance_time(framedrop_timeout);
+        clock->advance_time(1ms);
+
+        // If we fail once we don't need to run the rest of the 100 iterations...
+        ASSERT_TRUE(handle->has_acquired_buffer());
+        handle->release_buffer();
+    }
 }
 
 TEST_P(WithTwoOrMoreBuffers, partially_composited_client_swaps_when_policy_triggered)
