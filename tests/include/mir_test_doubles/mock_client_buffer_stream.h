@@ -45,7 +45,6 @@ struct MockClientBufferStream : public client::ClientBufferStream
     MOCK_METHOD0(get_create_wait_handle, MirWaitHandle*(void));
     MOCK_CONST_METHOD0(rpc_id, frontend::BufferStreamId(void));
     MOCK_CONST_METHOD0(valid, bool(void));
-    MOCK_METHOD1(buffer_available, void(mir::protobuf::Buffer const&));
 };
 
 }

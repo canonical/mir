@@ -50,11 +50,6 @@ struct MockProtobufServer : public mp::DisplayServer
                       mp::ScreencastId const* /*request*/,
                       mp::Buffer* /*response*/,
                       google::protobuf::Closure* /*done*/));
-    MOCK_METHOD4(submit_buffer,
-                 void(google::protobuf::RpcController* /*controller*/,
-                      mp::BufferRequest const* /*request*/,
-                      mp::Void* /*response*/,
-                      google::protobuf::Closure* /*done*/));
     MOCK_METHOD4(exchange_buffer,
                  void(google::protobuf::RpcController* /*controller*/,
                       mp::BufferRequest const* /*request*/,
@@ -118,7 +113,7 @@ EGLNativeWindowType StubClientPlatform::egl_native_window{
 
 struct ClientBufferStreamTest : public testing::Test
 {
-    testing::NiceMock<mtd::MockClientBufferFactory> mock_client_buffer_factory;
+    mtd::MockClientBufferFactory mock_client_buffer_factory;
     mtd::StubClientBufferFactory stub_client_buffer_factory;
 
     MockProtobufServer mock_protobuf_server;
@@ -288,7 +283,7 @@ TEST_F(ClientBufferStreamTest, producer_streams_call_exchange_buffer_on_next_buf
 
     auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Producer);
     
-    bs->next_buffer([]{});
+    bs->next_buffer([](){});
 }
 
 TEST_F(ClientBufferStreamTest, consumer_streams_call_screencast_buffer_on_next_buffer)
@@ -303,7 +298,7 @@ TEST_F(ClientBufferStreamTest, consumer_streams_call_screencast_buffer_on_next_b
 
     auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Consumer);
     
-    bs->next_buffer([]{});
+    bs->next_buffer([](){});
 }
 
 TEST_F(ClientBufferStreamTest, invokes_callback_on_next_buffer)
@@ -368,7 +363,7 @@ TEST_F(ClientBufferStreamTest, returns_current_client_buffer)
     auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
 
     EXPECT_EQ(client_buffer_1, bs->get_current_buffer());
-    bs->next_buffer([]{});
+    bs->next_buffer([](){});
     EXPECT_EQ(client_buffer_2, bs->get_current_buffer());
 }
 
@@ -402,7 +397,7 @@ TEST_F(ClientBufferStreamTest, caches_width_and_height_in_case_of_partial_update
     auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
 
     EXPECT_EQ(client_buffer_1, bs->get_current_buffer());
-    bs->next_buffer([]{});
+    bs->next_buffer([](){});
     EXPECT_EQ(client_buffer_2, bs->get_current_buffer());
 }
 
@@ -457,61 +452,4 @@ TEST_F(ClientBufferStreamTest, passes_name_to_perf_report)
         nullptr, mock_protobuf_server, mcl::BufferStreamMode::Producer,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_client_buffer_factory)),
         protobuf_bs, mt::fake_shared(mock_perf_report), name);
-}
-
-TEST_F(ClientBufferStreamTest, receives_unsolicited_buffer)
-{
-    using namespace ::testing;
-    int id = 88;
-    MockClientBuffer mock_client_buffer;
-    MockClientBuffer second_mock_client_buffer;
-    MirBufferPackage buffer_package = a_buffer_package();
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
-    EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
-        .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
-    auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
-
-    mir::protobuf::Buffer another_buffer_package;
-    another_buffer_package.set_buffer_id(id);
-    EXPECT_CALL(mock_client_buffer_factory, create_buffer(_,_,_))
-        .WillOnce(Return(mt::fake_shared(second_mock_client_buffer)));
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
-        .WillOnce(RunProtobufClosure());
-    bs->buffer_available(another_buffer_package);
-    bs->next_buffer([]{});
-
-    EXPECT_THAT(bs->get_current_buffer().get(), Eq(&second_mock_client_buffer));
-    EXPECT_THAT(bs->get_current_buffer_id(), Eq(id));
-}
-
-//useful only in transitioning from exchange to async
-TEST_F(ClientBufferStreamTest, after_receiving_an_unsolicited_buffer_exchange_buffer_return_are_ignored)
-{
-    using namespace ::testing;
-    int id = 88;
-    MockClientBuffer mock_client_buffer;
-    MockClientBuffer second_mock_client_buffer;
-    MirBufferPackage buffer_package = a_buffer_package();
-    mir::protobuf::Buffer another_buffer_package;
-    another_buffer_package.set_buffer_id(id);
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
-    ON_CALL(mock_client_buffer_factory, create_buffer(_,_,_))
-        .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
-    auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
-
-    int a_few_times = 11;
-    EXPECT_CALL(mock_protobuf_server, exchange_buffer(_,_,_,_))
-        .Times(a_few_times)
-        .WillRepeatedly(RunProtobufClosure());
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
-        .Times(a_few_times)
-        .WillRepeatedly(RunProtobufClosure());
-
-    for(auto i = 0; i < a_few_times; i++) 
-        bs->next_buffer([]{});
-
-    bs->buffer_available(another_buffer_package);
-
-    for(auto i = 0; i < a_few_times; i++) 
-        bs->next_buffer([]{});
 }
