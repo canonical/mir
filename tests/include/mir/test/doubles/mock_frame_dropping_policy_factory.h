@@ -75,12 +75,11 @@ public:
 
     void trigger_policies() const;
 
-    mutable std::unordered_set<MockFrameDroppingPolicy*> policies;
-
 private:
     friend class MockFrameDroppingPolicy;
 
     void policy_destroyed(MockFrameDroppingPolicy* policy) const;
+    mutable std::unordered_set<MockFrameDroppingPolicy*> policies;
 };
 
 class FrameDroppingPolicyFactoryMock : public mc::FrameDroppingPolicyFactory
