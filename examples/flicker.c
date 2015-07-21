@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 
     puts("Starting");
 
-    connection = mir_connect_sync(socket_file, __PRETTY_FUNCTION__);
+    connection = mir_connect_sync(socket_file, __FILE__);
     assert(connection != NULL);
     assert(mir_connection_is_valid(connection));
     assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
     MirSurfaceSpec *spec =
         mir_connection_create_spec_for_normal_surface(connection, 640, 480, pixel_format);
     assert(spec != NULL);
-    mir_surface_spec_set_name(spec, __PRETTY_FUNCTION__);
+    mir_surface_spec_set_name(spec, __FILE__);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
     surface = mir_surface_create_sync(spec);
