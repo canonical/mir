@@ -61,6 +61,32 @@ private:
     EGLConfig config;
 };
 
+class X11EGLContext
+{
+public:
+    X11EGLContext(EGLDisplay egl_dpy, EGLConfig config);
+    ~X11EGLContext();
+
+    operator EGLContext() const;
+
+private:
+    EGLContext egl_ctx;
+    EGLDisplay const egl_dpy;
+};
+
+class X11EGLSurface
+{
+public:
+    X11EGLSurface(EGLDisplay egl_dpy, EGLConfig config, Window win);
+    ~X11EGLSurface();
+
+    operator EGLSurface() const;
+
+private:
+    EGLDisplay const egl_dpy;
+    EGLSurface const egl_surf;
+};
+
 class Display : public graphics::Display
 {
 public:
@@ -93,8 +119,8 @@ private:
     int const display_width;
     int const display_height;
     X11Window const win;
-    EGLContext egl_ctx;
-    EGLSurface egl_surf;
+    X11EGLContext egl_context;
+    X11EGLSurface egl_surface;
     MirPixelFormat pf;
     std::unique_ptr<DisplayGroup> display_group;
 };
