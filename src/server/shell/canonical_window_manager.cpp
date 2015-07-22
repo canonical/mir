@@ -465,6 +465,9 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
         apply_resize(surface, top_left, new_size);
     }
+
+    if (modifications.input_shape.is_set())
+        surface->set_input_region(modifications.input_shape.value());
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
