@@ -31,6 +31,8 @@ namespace mgx = mg::X;
 namespace mo = mir::options;
 namespace mx = mir::X;
 
+//TODO: Remove this global by allowing input and graphics drivers to share
+//     some context like the x11 display handle.
 std::shared_ptr<mx::X11Connection> x11_connection;
 
 mgx::Platform::Platform()
