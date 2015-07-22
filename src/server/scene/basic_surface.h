@@ -22,6 +22,7 @@
 #include "mir/scene/surface.h"
 #include "mir/basic_observers.h"
 #include "mir/scene/surface_observers.h"
+#include "mir/input/validator.h"
 
 #include "mir/geometry/rectangle.h"
 
@@ -184,6 +185,8 @@ private:
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
 
     std::unique_ptr<CursorStreamImageAdapter> cursor_stream_adapter;
+
+    input::Validator input_validator;
 };
 
 }

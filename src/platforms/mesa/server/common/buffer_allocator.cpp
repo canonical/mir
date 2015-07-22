@@ -247,12 +247,6 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
         bo_flags |= GBM_BO_USE_SCANOUT;
     }
 
-    if (!gbm_device_is_format_supported(device, gbm_format, bo_flags))
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Trying to create GBM buffer with unsupported pixel format"));
-    }
-
     gbm_bo *bo_raw = gbm_bo_create(
         device,
         buffer_properties.size.width.as_uint32_t(),
