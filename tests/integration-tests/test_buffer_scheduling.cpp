@@ -721,10 +721,9 @@ TEST_P(WithAnyNumberOfBuffers, compositor_inflates_ready_count_for_slow_clients)
         ASSERT_EQ(0, queue.buffers_ready_for_compositor(&consumer));
         producer.produce();
 
-        // Detecting a slow client requires scheduling at least one extra
-        // frame...
+        // Detecting a slow client requires scheduling extra frames
         int nready = queue.buffers_ready_for_compositor(&consumer);
-        ASSERT_EQ(2, nready);
+        ASSERT_THAT(nready, Ge(2));
         for (int i = 0; i < nready; ++i)
             consumer.consume();
     }
