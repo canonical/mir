@@ -1747,10 +1747,9 @@ TEST_P(WithTwoOrMoreBuffers, compositor_double_rate_of_slow_client)
         ASSERT_EQ(0, q.buffers_ready_for_compositor(this));
         q.client_release(client_acquire_sync(q));
 
-        // Detecting a slow client requires scheduling at least one extra
-        // frame...
+        // Detecting a slow client requires scheduling extra frames
         int nready = q.buffers_ready_for_compositor(this);
-        ASSERT_EQ(2, nready);
+        ASSERT_THAT(nready, Ge(2));
         for (int i = 0; i < nready; ++i)
             q.compositor_release(q.compositor_acquire(this));
         ASSERT_EQ(0, q.buffers_ready_for_compositor(this));
