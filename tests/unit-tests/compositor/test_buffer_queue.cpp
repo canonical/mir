@@ -1326,6 +1326,32 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
     q.compositor_release(c);
 }
 
+TEST_P(WithTwoOrMoreBuffers, buffers_ready_count_tapers_off)
+{  // Another test related to QtMir's style of doing things (LP: #1476201)
+    mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
+
+    ASSERT_TRUE(q.scaling_delay() > 0);
+    ASSERT_THAT(q.buffers_ready_for_compositor(this), Eq(0));
+
+    // Produce one frame
+    q.client_release(client_acquire_sync(q));
+
+    // Ensure we're told multiple frames are ready to facilitate the
+    // compositor detecting a slow client that misses the second one.
+    ASSERT_THAT(q.buffers_ready_for_compositor(this), Ge(2));
+
+    // Consume one frame
+    q.compositor_release(q.compositor_acquire(this));
+
+    // Finally verify the count is tapering off instead of dropping off
+    ASSERT_THAT(q.buffers_ready_for_compositor(this), Ge(1));
+
+    for (int flush = 0; flush < q.scaling_delay(); ++flush)
+        q.compositor_release(q.compositor_acquire(this));
+
+    ASSERT_THAT(q.buffers_ready_for_compositor(this), Eq(0));
+}
+
 TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
 {
     mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
