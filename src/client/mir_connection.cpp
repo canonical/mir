@@ -546,7 +546,7 @@ void MirConnection::pong(int32_t serial)
 {
     auto pong = mcl::make_protobuf_object<mir::protobuf::PingEvent>();
     pong->set_serial(serial);
-    server.pong(0, pong.get(), ignored.get(), google::protobuf::NewCallback(&google::protobuf::DoNothing));
+    server.pong(0, pong.get(), void_response.get(), google::protobuf::NewCallback(&google::protobuf::DoNothing));
 }
 
 void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)
