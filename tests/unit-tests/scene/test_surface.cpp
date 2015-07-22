@@ -408,7 +408,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
                                      mir_keyboard_action_down, 0, 0, mir_input_event_modifier_none);
     auto touch_event = mev::make_event(MirInputDeviceId(0), std::chrono::nanoseconds(0),
                                        mir_input_event_modifier_none);
-    mev::add_touch(*touch_event, 0, mir_touch_action_change, mir_touch_tooltype_finger, 0, 0,
+    mev::add_touch(*touch_event, 0, mir_touch_action_down, mir_touch_tooltype_finger, 0, 0,
         0, 0, 0, 0);
 
     EXPECT_CALL(mock_sender, send_event(mt::MirKeyEventMatches(*key_event), _)).Times(1);
