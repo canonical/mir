@@ -264,7 +264,6 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
             std::logic_error("client released out of sequence"));
     }
 
-
     auto const buffer = pop(buffers_owned_by_client);
     ready_to_composite_queue.push_back(buffer);
 
