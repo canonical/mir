@@ -148,7 +148,8 @@ ms::BasicSurface::BasicSurface(
     cursor_image_(cursor_image),
     report(report),
     parent_(parent),
-    layers({StreamInfo{buffer_stream, {0,0}}})
+    layers({StreamInfo{buffer_stream, {0,0}}}),
+    input_validator([this](MirEvent const& ev) { this->input_sender->send_event(ev, server_input_channel); })
 {
     report->surface_created(this, surface_name);
 }
@@ -823,7 +824,7 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 
 void ms::BasicSurface::consume(MirEvent const& event)
 {
-    input_sender->send_event(event, server_input_channel);
+    input_validator.validate_and_dispatch(event);
 }
 
 void ms::BasicSurface::set_keymap(xkb_rule_names const& rules)

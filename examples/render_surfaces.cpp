@@ -32,6 +32,7 @@
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/scene/surface_factory.h"
+#include "mir/frontend/buffer_sink.h"
 #include "mir/server.h"
 #include "mir/report_exception.h"
 
@@ -364,7 +365,13 @@ public:
                 .of_pixel_format(surface_pf)
                 .of_buffer_usage(mg::BufferUsage::hardware);
             mg::BufferProperties properties{params.size, params.pixel_format, params.buffer_usage};
-            auto const stream = buffer_stream_factory->create_buffer_stream(properties); 
+            struct NullBufferSink : mf::BufferSink
+            {
+                void send_buffer(mf::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType) override {}
+            };
+
+            auto const stream = buffer_stream_factory->create_buffer_stream(
+                mf::BufferStreamId{}, std::make_shared<NullBufferSink>(), properties);
             auto const surface = surface_factory->create_surface(stream, params);
             surface_coordinator->add_surface(surface, params.depth, params.input_mode, nullptr);
 

@@ -286,7 +286,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
 using ClientLibraryErrorsDeathTest = ClientLibraryErrors;
 
 
-TEST_F(ClientLibraryErrorsDeathTest, createing_surface_on_garbage_connection_is_fatal)
+TEST_F(ClientLibraryErrorsDeathTest, creating_surface_on_garbage_connection_is_fatal)
 {
     mtf::UsingStubClientPlatform stubby;
 
