@@ -194,14 +194,36 @@ void unthrottled_compositor_thread(mc::BufferQueue &bundle,
    }
 }
 
-std::chrono::milliseconds const throttled_compositor_rate(10);
+std::chrono::milliseconds const throttled_compositor_frametime(10);
 void throttled_compositor_thread(mc::BufferQueue &bundle,
                                  std::atomic<bool> &done)
 {
    while (!done)
    {
        bundle.compositor_release(bundle.compositor_acquire(nullptr));
-       std::this_thread::sleep_for(throttled_compositor_rate);
+       std::this_thread::sleep_for(throttled_compositor_frametime);
+   }
+}
+
+std::chrono::milliseconds const conditional_compositor_frametime(10);
+void conditional_compositor_thread(mc::BufferQueue &bundle,
+                                   std::atomic<bool> &done)
+{
+   while (!done)
+   {
+       void *const id = nullptr;
+
+       /*
+        * buffers_ready_for_compositor()
+        * You can take the result of this function and add it to your own
+        * accumulator (like MultiThreadedCompositor does), or you can treat it
+        * as an instantaneous boolean, much like QtMir does (LP: #1476201).
+        * Here we use the latter approach, which is a stronger test of
+        * whether it's always giving you an adequate answer...
+        */
+       if (bundle.buffers_ready_for_compositor(id) > 0)
+           bundle.compositor_release(bundle.compositor_acquire(id));
+       std::this_thread::sleep_for(conditional_compositor_frametime);
    }
 }
 
@@ -216,7 +238,7 @@ void overlapping_compositor_thread(mc::BufferQueue &bundle,
    {
        b[i^1] = bundle.compositor_acquire(nullptr);
        bundle.compositor_release(b[i]);
-       std::this_thread::sleep_for(throttled_compositor_rate);
+       std::this_thread::sleep_for(throttled_compositor_frametime);
        i ^= 1;
    }
 
@@ -1568,7 +1590,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
             buffers_acquired.insert(handle->buffer());
 
         // Client is just too slow to keep up:
-        std::this_thread::sleep_for(throttled_compositor_rate * 1.5);
+        std::this_thread::sleep_for(throttled_compositor_frametime * 1.5);
 
         handle->release_buffer();
     }
@@ -1578,6 +1600,72 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     // And what happens if the client becomes fast again?...
     buffers_acquired.clear();
     for (int frame = 0; frame < 10; frame++)
+    {
+        auto handle = client_acquire_async(q);
+        handle->wait_for(std::chrono::seconds(1));
+        ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+
+        if (frame > delay)
+            buffers_acquired.insert(handle->buffer());
+        handle->release_buffer();
+    }
+    // Expect double-buffers for fast clients
+    EXPECT_THAT(buffers_acquired.size(), Eq(2));
+}
+
+// Another test that dynamic queue scaling/throttling actually works
+// This one uses a slightly different compositor algorithm to the above
+// test, designed to mimic QtMir. (LP: #1476201)
+TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance2)
+{
+    q.allow_framedropping(false);
+
+    std::atomic<bool> done(false);
+    auto unblock = [&done] { done = true; };
+
+    // To emulate a "fast" client we use a "slow" compositor
+    mt::AutoUnblockThread compositor(unblock,
+       conditional_compositor_thread, std::ref(q), std::ref(done));
+
+    std::unordered_set<mg::Buffer *> buffers_acquired;
+
+    int const delay = q.scaling_delay();
+
+    for (int frame = 0; frame < delay*3; frame++)
+    {
+        auto handle = client_acquire_async(q);
+        handle->wait_for(std::chrono::seconds(1));
+        ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+
+        if (frame > delay)
+            buffers_acquired.insert(handle->buffer());
+        handle->release_buffer();
+    }
+    // Expect double-buffers for fast clients
+    EXPECT_THAT(buffers_acquired.size(), Eq(2));
+
+    // Now check what happens if the client becomes slow...
+    buffers_acquired.clear();
+    for (int frame = 0; frame < delay*3; frame++)
+    {
+        auto handle = client_acquire_async(q);
+        handle->wait_for(std::chrono::seconds(1));
+        ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+
+        if (frame > delay)
+            buffers_acquired.insert(handle->buffer());
+
+        // Client is just too slow to keep up:
+        std::this_thread::sleep_for(conditional_compositor_frametime * 1.5);
+
+        handle->release_buffer();
+    }
+    // Expect at least triple buffers for sluggish clients
+    EXPECT_THAT(buffers_acquired.size(), Ge(3));
+
+    // And what happens if the client becomes fast again?...
+    buffers_acquired.clear();
+    for (int frame = 0; frame < delay*3; frame++)
     {
         auto handle = client_acquire_async(q);
         handle->wait_for(std::chrono::seconds(1));
