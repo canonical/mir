@@ -139,6 +139,7 @@ mc::BufferQueue::BufferQueue(
     : nbuffers{nbuffers},
       frame_deadlines_threshold{3},
       frame_deadlines_met{0},
+      scheduled_ghost_frames{0},
       frame_dropping_enabled{false},
       current_compositor_buffer_valid{false},
       the_properties{props},
@@ -263,8 +264,17 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
             std::logic_error("client released out of sequence"));
     }
 
+
     auto const buffer = pop(buffers_owned_by_client);
     ready_to_composite_queue.push_back(buffer);
+
+    /*
+     * Timerless client performance detection:
+     * Over-schedule the compositor so that it can detect if the client
+     * is falling behind. Otherwise the compositor itself goes to sleep
+     * and wouldn't be able to tell a slow client from a fast one.
+     */
+    scheduled_ghost_frames = frame_deadlines_threshold - 1;
 }
 
 std::shared_ptr<mg::Buffer>
@@ -430,21 +440,31 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
     }
 
     /*
-     * Intentionally schedule one more frame than we need, and for good
+     * Intentionally schedule more frames than we need, and for good
      * reason... We can only accurately detect frame_deadlines_met in
      * compositor_acquire if compositor_acquire is still waking up at full
      * frame rate even with a slow client. This is crucial to scaling the
      * queue performance dynamically in "client_ahead_of_compositor".
      *   But don't be concerned; very little is lost by over-scheduling. Under
      * normal smooth rendering conditions all frames are used (not wasted).
-     * And under sluggish client rendering conditions the extra frame has a
+     * And under sluggish client rendering conditions the extra frames have a
      * critical role in providing a sample point in which we detect if the
      * client is keeping up. Only when the compositor changes from active to
      * idle is the extra frame wasted. Sounds like a reasonable price to pay
      * for dynamic performance monitoring.
      */
-    if (count && frame_deadlines_threshold >= 0)
-        ++count;
+    if (frame_deadlines_threshold >= 0 && scheduled_ghost_frames)
+    {
+        count += scheduled_ghost_frames;
+
+        /*
+         * Yes I know different compositor user_ids will get different
+         * results with this but that's OK, and actually more efficient.
+         * We only need to overschedule one display at most for the
+         * slow client detection to work.
+         */
+        --scheduled_ghost_frames;
+    }
 
     return count;
 }
