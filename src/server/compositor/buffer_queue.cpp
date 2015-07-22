@@ -654,6 +654,8 @@ void mc::BufferQueue::drop_old_buffers()
        std::unique_lock<decltype(guard)> lock{guard};
        release(buffer, std::move(lock));
     }
+
+    scheduled_ghost_frames = 0;
 }
 
 void mc::BufferQueue::drop_client_requests()
