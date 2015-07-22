@@ -19,7 +19,6 @@
 #include "mir_protobuf_rpc_channel.h"
 #include "rpc_report.h"
 
-#include "mir/protobuf/google_protobuf_guard.h"
 #include "../surface_map.h"
 #include "../mir_surface.h"
 #include "../display_configuration.h"

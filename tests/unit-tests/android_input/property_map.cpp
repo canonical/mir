@@ -36,7 +36,7 @@ struct AndroidInputPropertyMap : public ::testing::Test
 
     static void SetUpTestCase()
     {
-        ASSERT_TRUE(std::ofstream(test_file) <<
+        ASSERT_TRUE((std::ofstream(test_file) <<
             "test.string=a_string\n"
             "#test.bool.true=true\n"
             "test.bool.true=1\n"
@@ -45,7 +45,7 @@ struct AndroidInputPropertyMap : public ::testing::Test
             "# a comment\n"
             "#test.int.ignored=1\n"
             "test.int_32=123\n"
-            "test.float=0.5\n");
+            "test.float=0.5\n").good());
     }
 
     void SetUp()

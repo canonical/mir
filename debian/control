@@ -286,7 +286,7 @@ Description: Display server for Ubuntu - shared library
  Contains the shared libraries required for the Mir server and client.
 
 # Longer-term these drivers should move out-of-tree
-Package: mir-platform-graphics-mesa-kms3
+Package: mir-platform-graphics-mesa-kms4
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -300,7 +300,7 @@ Description: Display server for Ubuntu - platform library for KMS Mesa
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Mesa drivers.
 
-Package: mir-platform-graphics-android3
+Package: mir-platform-graphics-android4
 Section: libs
 Architecture: i386 amd64 armhf
 Multi-Arch: same
@@ -362,7 +362,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-mesa-kms3,
+         mir-platform-graphics-mesa-kms4,
          mir-client-platform-mesa2,
 Description: Display server for Ubuntu - desktop driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -377,7 +377,7 @@ Architecture: i386 amd64 armhf
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-android3,
+         mir-platform-graphics-android4,
          mir-client-platform-android2,
 Description: Display server for Ubuntu - android driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,

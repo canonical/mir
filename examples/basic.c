@@ -91,7 +91,7 @@ int demo_client(const char* server, int buffer_swap_count)
 
     ///\internal [connect_tag]
     // Call mir_connect and wait for callback to complete.
-    mir_wait_for(mir_connect(server, __PRETTY_FUNCTION__, connection_callback, &mcd));
+    mir_wait_for(mir_connect(server, __FILE__, connection_callback, &mcd));
     puts("Connected");
     ///\internal [connect_tag]
 
@@ -125,7 +125,7 @@ int demo_client(const char* server, int buffer_swap_count)
     MirSurfaceSpec *spec =
         mir_connection_create_spec_for_normal_surface(mcd.connection, 640, 480, pixel_format);
     assert(spec != NULL);
-    mir_surface_spec_set_name(spec, __PRETTY_FUNCTION__);
+    mir_surface_spec_set_name(spec, __FILE__);
 
     ///\internal [surface_create_tag]
     // ...we create a surface using that format and wait for callback to complete.
