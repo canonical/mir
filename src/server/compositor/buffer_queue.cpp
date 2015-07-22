@@ -285,6 +285,15 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     bool use_current_buffer = false;
     if (is_a_current_buffer_user(user_id))   // Primary/fastest display
     {
+        /*
+         * Yes I know different compositor user_ids will get different
+         * results with this but that's OK, and actually more efficient.
+         * We only need to overschedule one display at most for the
+         * slow client detection to work.
+         */
+        if (scheduled_ghost_frames > 0)
+            --scheduled_ghost_frames;
+
         if (ready_to_composite_queue.empty())
             frame_deadlines_met = 0;
         else if (frame_deadlines_met < frame_deadlines_threshold)
@@ -453,18 +462,8 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
      * idle is the extra frame wasted. Sounds like a reasonable price to pay
      * for dynamic performance monitoring.
      */
-    if (frame_deadlines_threshold >= 0 && scheduled_ghost_frames)
-    {
+    if (frame_deadlines_threshold >= 0 && scheduled_ghost_frames > 0)
         count += scheduled_ghost_frames;
-
-        /*
-         * Yes I know different compositor user_ids will get different
-         * results with this but that's OK, and actually more efficient.
-         * We only need to overschedule one display at most for the
-         * slow client detection to work.
-         */
-        --scheduled_ghost_frames;
-    }
 
     return count;
 }

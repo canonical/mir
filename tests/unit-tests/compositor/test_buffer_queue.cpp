@@ -1372,11 +1372,11 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
     {
         ASSERT_NE(0, q.buffers_ready_for_compositor(&monitor[m]));
 
-        // Double consume to account for the +1 that
+        // Extra consume to account for the additional frames that
         // buffers_ready_for_compositor adds to do dynamic performance
         // detection.
-        q.compositor_release(q.compositor_acquire(&monitor[m]));
-        q.compositor_release(q.compositor_acquire(&monitor[m]));
+        for (int flush = 0; flush < q.scaling_delay(); ++flush)
+            q.compositor_release(q.compositor_acquire(&monitor[m]));
 
         ASSERT_EQ(0, q.buffers_ready_for_compositor(&monitor[m]));
     }
