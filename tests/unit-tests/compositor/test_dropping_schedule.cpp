@@ -98,11 +98,3 @@ TEST_F(DroppingSchedule, queueing_same_buffer_many_times_doesnt_drop)
     ASSERT_THAT(queue, SizeIs(1));
     EXPECT_THAT(queue[0]->id(), Eq(buffers[2]->id()));
 }
-
-TEST_F(DroppingSchedule, can_cancel_buffer)
-{
-    schedule.schedule(buffers[0]);
-    EXPECT_TRUE(schedule.anything_scheduled());
-    schedule.cancel(buffers[0]);
-    EXPECT_FALSE(schedule.anything_scheduled());
-}
