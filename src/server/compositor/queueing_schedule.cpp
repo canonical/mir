@@ -32,14 +32,6 @@ void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buf
     queue.emplace_back(buffer);
 }
 
-void mc::QueueingSchedule::cancel(std::shared_ptr<graphics::Buffer> const& buffer)
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    auto it = std::find(queue.begin(), queue.end(), buffer);
-    if (it != queue.end())
-        queue.erase(it);
-}
-
 bool mc::QueueingSchedule::anything_scheduled()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
