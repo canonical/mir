@@ -39,6 +39,7 @@ Build-Depends: cmake,
                libglib2.0-dev,
                libfreetype6-dev,
                libevdev-dev,
+               abi-compliance-checker,
                uuid-dev,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
