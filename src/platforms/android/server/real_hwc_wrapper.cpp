@@ -119,7 +119,7 @@ void mga::RealHwcWrapper::set(
         const_cast<hwc_display_contents_1**>(displays.data())))
     {
         std::stringstream ss;
-        ss << "error during hwc prepare(). rc = " << std::hex << rc;
+        ss << "error during hwc set(). rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
     report->report_set_done(displays);

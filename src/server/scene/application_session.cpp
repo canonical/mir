@@ -105,7 +105,8 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
         mg::BufferProperties buffer_properties{params.size,
                                                params.pixel_format,
                                                params.buffer_usage};
-        buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
+        buffer_stream = buffer_stream_factory->create_buffer_stream(
+            stream_id, event_sink, buffer_properties);
     }
     auto surface = surface_factory->create_surface(buffer_stream, params);
     surface_coordinator->add_surface(surface, params.depth, params.input_mode, this);
@@ -321,7 +322,7 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
 mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
 {
     auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
-    auto stream = buffer_stream_factory->create_buffer_stream(props);
+    auto stream = buffer_stream_factory->create_buffer_stream(id, event_sink, props);
     stream->allow_framedropping(true);
     
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
