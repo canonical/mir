@@ -103,7 +103,7 @@ public:
     float test_y_coord[2] = {17, 9};
     
     AndroidInputSender()
-        : key_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), mir_keyboard_action_down,
+       : key_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), mir_keyboard_action_down,
                                     7, test_scan_code, mir_input_event_modifier_none)),
           motion_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(-1), mir_input_event_modifier_none))
     {

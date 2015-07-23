@@ -68,6 +68,8 @@ typedef struct
     int id;
     float x;
     float y;
+    float dx;
+    float dy;
     float touch_major;
     float touch_minor;
     float size;

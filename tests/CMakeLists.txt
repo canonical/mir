@@ -33,6 +33,10 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
   add_definitions(-DMESA_KMS)
 endif()
 
+if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
+  add_definitions(-DMESA_X11)
+endif()
+
 if (MIR_BUILD_PLATFORM_ANDROID)
   #avoid complaints about poor quality android headers
   include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})

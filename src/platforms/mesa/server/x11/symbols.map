@@ -1,0 +1,18 @@
+MIR_GRAPHICS_PLATFORM_4 {
+  global: 
+   add_graphics_platform_options;
+   probe_graphics_platform;
+   create_host_platform;
+   create_guest_platform;
+   describe_graphics_module;
+  local: *;
+};
+
+MIR_INPUT_PLATFORM_1 {
+  global: 
+   add_input_platform_options;
+   create_input_platform;
+   probe_input_platform;
+   describe_input_module;
+  local: *;
+};

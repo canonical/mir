@@ -143,6 +143,7 @@ public:
     static bool is_valid(MirConnection *connection);
 
     EGLNativeDisplayType egl_native_display();
+    MirPixelFormat       egl_pixel_format(EGLDisplay, EGLConfig) const;
 
     void on_surface_created(int id, MirSurface* surface);
     void on_stream_created(int id, mir::client::ClientBufferStream* stream);
@@ -168,7 +169,7 @@ private:
     // from a shared library, e.g., the ClientPlatform* objects.
     std::shared_ptr<mir::SharedLibrary> const platform_library;
 
-    std::mutex mutex; // Protects all members of *this (except release_wait_handles)
+    mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
     std::shared_ptr<google::protobuf::RpcChannel> const channel;
     mir::protobuf::DisplayServer::Stub server;
