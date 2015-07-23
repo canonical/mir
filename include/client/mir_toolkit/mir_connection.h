@@ -155,6 +155,17 @@ MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, Mi
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection);
 
 /**
+ * Get the exact MirPixelFormat to use in creating a surface for a chosen
+ * EGLConfig.
+ *   \param [in] connection  The connection
+ *   \param [in] egldisplay  The EGLDisplay for the given config
+ *   \param [in] eglconfig   The EGLConfig you have chosen to use
+ *   \return                 The MirPixelFormat to use in surface creation
+ */
+MirPixelFormat mir_connection_get_egl_pixel_format(
+    MirConnection *connection, void *egldisplay, void *eglconfig);
+
+/**
  * Get the list of possible formats that a surface can be created with.
  *   \param [in] connection         The connection
  *   \param [out] formats           List of valid formats to create surfaces with
