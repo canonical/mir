@@ -39,6 +39,7 @@
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
+namespace mgmh = mgm::helpers;
 namespace mo = mir::options;
 
 namespace
@@ -128,7 +129,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         EmergencyCleanupRegistry& emergency_cleanup_registry,
                         BypassOption bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
-      drm{std::make_shared<helpers::DRMHelper>()},
+      drm{std::make_shared<mgmh::DRMHelper>(mgmh::DRMNodeToUse::card)},
       listener{listener},
       vt{vt},
       bypass_option_{bypass_option}
@@ -137,7 +138,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
     gbm.setup(*drm);
 
     std::weak_ptr<VirtualTerminal> weak_vt = vt;
-    std::weak_ptr<helpers::DRMHelper> weak_drm = drm;
+    std::weak_ptr<mgmh::DRMHelper> weak_drm = drm;
     emergency_cleanup_registry.add(
         [weak_vt,weak_drm]
         {
@@ -151,7 +152,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, bypass_option_);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, bypass_option_, mgm::BufferImportMethod::gbm_native_pixmap);
 }
 
 std::shared_ptr<mg::Display> mgm::Platform::create_display(
@@ -184,7 +185,7 @@ mgm::BypassOption mgm::Platform::bypass_option() const
 std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report)
+    std::shared_ptr<mg::DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});

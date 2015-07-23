@@ -1,6 +1,4 @@
 add_library(unit_test_graphics_mesa_common OBJECT
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_allocator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_anonymous_shm_file.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_shm_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_drm_helper.cpp

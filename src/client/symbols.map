@@ -168,6 +168,8 @@ MIR_CLIENT_9.1 {  # New functions in Mir 0.15
     mir_pointer_event_input_event;
     mir_touch_event_input_event;
     mir_surface_spec_attach_to_foreign_parent;
+    mir_surface_spec_set_input_shape;
+    mir_connection_get_egl_pixel_format;
   local: *;
 } MIR_CLIENT_9;
 

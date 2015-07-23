@@ -43,10 +43,11 @@ private:
 class NormalSurface
 {
 public:
-    NormalSurface(Connection& connection, unsigned int width, unsigned int height);
+    NormalSurface(Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha = false);
+    
     operator MirSurface*() const;
 private:
-    MirSurface* create_surface(MirConnection* connection, unsigned int width, unsigned int height);
+    MirSurface* create_surface(MirConnection* connection, unsigned int width, unsigned int height, bool prefers_alpha);
     std::function<void(MirSurface*)> const surface_deleter{
         [](MirSurface* surface) { mir_surface_release_sync(surface); }
     };

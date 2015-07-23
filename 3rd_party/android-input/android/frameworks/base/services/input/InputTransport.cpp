@@ -462,8 +462,9 @@ status_t InputConsumer::consume(InputEventFactoryInterface* factory,
             }
 
             // Start a new batch if needed.
-            if (mMsg.body.motion.action == AMOTION_EVENT_ACTION_MOVE
-                    || mMsg.body.motion.action == AMOTION_EVENT_ACTION_HOVER_MOVE) {
+            if ((mMsg.body.motion.action == AMOTION_EVENT_ACTION_MOVE
+                 || mMsg.body.motion.action == AMOTION_EVENT_ACTION_HOVER_MOVE)
+                && frameTime.count() >= 0) {
                 mBatches.push();
                 Batch& batch = mBatches.editTop();
                 batch.samples.push(mMsg);

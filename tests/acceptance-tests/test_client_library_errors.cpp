@@ -104,6 +104,10 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
         BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         return nullptr;
     }
+    MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override
+    {
+        return mir_pixel_format_invalid;
+    }
 };
 
 template<Method failure_set>
@@ -282,7 +286,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
 using ClientLibraryErrorsDeathTest = ClientLibraryErrors;
 
 
-TEST_F(ClientLibraryErrorsDeathTest, createing_surface_on_garbage_connection_is_fatal)
+TEST_F(ClientLibraryErrorsDeathTest, creating_surface_on_garbage_connection_is_fatal)
 {
     mtf::UsingStubClientPlatform stubby;
 

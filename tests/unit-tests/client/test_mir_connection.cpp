@@ -136,6 +136,8 @@ struct MockClientPlatform : public mcl::ClientPlatform
     MOCK_METHOD0(create_buffer_factory, std::shared_ptr<mcl::ClientBufferFactory>());
     MOCK_METHOD1(create_egl_native_window, std::shared_ptr<EGLNativeWindowType>(mcl::EGLNativeSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
+    MOCK_CONST_METHOD2(get_egl_pixel_format,
+        MirPixelFormat(EGLDisplay, EGLConfig));
 
     mcl::ClientContext* client_context = nullptr;
 };

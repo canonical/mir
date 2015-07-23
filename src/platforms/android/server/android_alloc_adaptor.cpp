@@ -19,8 +19,8 @@
 
 #include "mir/graphics/android/android_native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/android/android_format_conversion-inl.h"
 #include "android_alloc_adaptor.h"
-#include "android_format_conversion-inl.h"
 #include "device_quirks.h"
 
 #include <boost/throw_exception.hpp>
