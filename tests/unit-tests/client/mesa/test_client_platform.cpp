@@ -21,6 +21,7 @@
 #include "mir/raii.h"
 #include "src/platforms/mesa/client/mesa_native_display_container.h"
 #include "mir_test_framework/client_platform_factory.h"
+#include "mir/test/doubles/mock_egl.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mesa/native_display.h"
@@ -64,6 +65,7 @@ struct MesaClientPlatformTest : testing::Test
     StubClientContext client_context;
     std::shared_ptr<mir::client::ClientPlatform> platform =
         mtf::create_mesa_client_platform(&client_context);
+    mir::test::doubles::MockEGL mock_egl;
 };
 
 }
@@ -124,4 +126,28 @@ TEST_F(MesaClientPlatformTest, appends_gbm_device_to_platform_package)
                 sizeof(device_in_package));
 
     EXPECT_THAT(device_in_package, Eq(gbm_dev_dummy));
+}
+
+TEST_F(MesaClientPlatformTest, returns_gbm_compatible_pixel_formats_only)
+{
+    using namespace testing;
+
+    auto const d = reinterpret_cast<EGLDisplay>(0x1234);
+    auto const c = reinterpret_cast<EGLConfig>(0x5678);
+
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(d, c, EGL_RED_SIZE, _))
+        .WillRepeatedly(DoAll(SetArgPointee<3>(8), Return(EGL_TRUE)));
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(d, c, EGL_GREEN_SIZE, _))
+        .WillRepeatedly(DoAll(SetArgPointee<3>(8), Return(EGL_TRUE)));
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(d, c, EGL_BLUE_SIZE, _))
+        .WillRepeatedly(DoAll(SetArgPointee<3>(8), Return(EGL_TRUE)));
+
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(d, c, EGL_ALPHA_SIZE, _))
+        .WillOnce(DoAll(SetArgPointee<3>(8), Return(EGL_TRUE)))
+        .WillOnce(DoAll(SetArgPointee<3>(0), Return(EGL_TRUE)))
+        .WillOnce(DoAll(SetArgPointee<3>(666), Return(EGL_FALSE)));
+
+    EXPECT_EQ(mir_pixel_format_argb_8888, platform->get_egl_pixel_format(d, c));
+    EXPECT_EQ(mir_pixel_format_xrgb_8888, platform->get_egl_pixel_format(d, c));
+    EXPECT_EQ(mir_pixel_format_invalid, platform->get_egl_pixel_format(d, c));
 }

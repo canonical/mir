@@ -19,7 +19,7 @@
 #include "hwc_configuration.h"
 #include "hwc_wrapper.h"
 #include "mir/raii.h"
-#include "android_format_conversion-inl.h"
+#include "mir/graphics/android/android_format_conversion-inl.h"
 #include "mir/geometry/length.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>

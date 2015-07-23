@@ -62,7 +62,7 @@ public:
           existing_library{mtf::client_platform("dummy.so")},
           nonexistent_function{"yo_dawg"},
           existing_function{"create_client_platform"},
-          existent_version{"MIR_CLIENT_PLATFORM_2"},
+          existent_version{MIR_CLIENT_PLATFORM_VERSION},
           nonexistent_version{"GOATS_ON_THE_GREEN"}
     {
     }
