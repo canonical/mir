@@ -37,6 +37,7 @@ message SurfaceParameters {
   optional SurfaceAspectRatio max_aspect = 20;
 
   optional PersistentSurfaceId parent_persistent_id = 21;
+  repeated Rectangle input_shape = 22;
 }
 
 message SurfaceAspectRatio
@@ -74,6 +75,7 @@ message SurfaceSpecification {
   repeated StreamConfiguration stream = 21; 
 
   optional PersistentSurfaceId parent_persistent_id = 22;
+  repeated Rectangle input_shape = 23;
 }
 
 message StreamConfiguration {

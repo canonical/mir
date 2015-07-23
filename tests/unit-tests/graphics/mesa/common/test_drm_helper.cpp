@@ -50,7 +50,7 @@ public:
 protected:       
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     mtf::UdevEnvironment fake_devices;
-    mgm::helpers::DRMHelper drm_helper;
+    mgm::helpers::DRMHelper drm_helper{mgm::helpers::DRMNodeToUse::card};
 };
 
 }

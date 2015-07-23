@@ -117,6 +117,8 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
         surface->configure(mir_surface_attrib_type, params.type.value());
     if (params.preferred_orientation.is_set())
         surface->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation.value());
+    if (params.input_shape.is_set())
+        surface->set_input_region(params.input_shape.value());
 
     surface->add_observer(observer);
 
