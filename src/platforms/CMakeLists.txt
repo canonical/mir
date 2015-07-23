@@ -52,8 +52,8 @@ set(client_common_include_dirs
 
 add_subdirectory(common/)
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
-  add_subdirectory(mesa/)
+if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
+    add_subdirectory(mesa/)
 endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)

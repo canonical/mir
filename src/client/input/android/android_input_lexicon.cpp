@@ -57,7 +57,9 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
                                        mia::mir_pointer_buttons_from_android(mev->getButtonState()),
                                        mev->getX(0), mev->getY(0),
                                        mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, 0),
-                                       mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0));
+                                       mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0),
+                                       mev->getRawAxisValue(AMOTION_EVENT_AXIS_RX, 0),
+                                       mev->getRawAxisValue(AMOTION_EVENT_AXIS_RY, 0));
             }
             else
             {

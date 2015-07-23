@@ -112,14 +112,18 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
 
     if (mia::android_source_id_is_pointer_device(args->source))
     {
+        auto const& pc = args->pointerCoords[0];
         auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
-                                    args->eventTime,
-                                    mia::mir_modifiers_from_android(args->metaState),
-                                    mia::mir_pointer_action_from_masked_android(args->action & AMOTION_EVENT_ACTION_MASK),
-                                    mia::mir_pointer_buttons_from_android(args->buttonState),
-                                    args->pointerCoords[0].getX(), args->pointerCoords[0].getY(),
-                                    args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_HSCROLL),
-                                    args->pointerCoords[0].getAxisValue(AMOTION_EVENT_AXIS_VSCROLL));
+            args->eventTime,
+            mia::mir_modifiers_from_android(args->metaState),
+            mia::mir_pointer_action_from_masked_android(args->action & AMOTION_EVENT_ACTION_MASK),
+            mia::mir_pointer_buttons_from_android(args->buttonState),
+            pc.getX(), pc.getY(),
+            pc.getAxisValue(AMOTION_EVENT_AXIS_HSCROLL),
+            pc.getAxisValue(AMOTION_EVENT_AXIS_VSCROLL),
+            pc.getAxisValue(AMOTION_EVENT_AXIS_RX),
+            pc.getAxisValue(AMOTION_EVENT_AXIS_RY)
+        );
 
         if (!valid_motion_event(mir_event->motion))
             return;

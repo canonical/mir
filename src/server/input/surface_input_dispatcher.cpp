@@ -225,7 +225,9 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
         mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
         mir_pointer_event_axis_value(pev,mir_pointer_axis_y),
         mir_pointer_event_axis_value(pev,mir_pointer_axis_hscroll),
-        mir_pointer_event_axis_value(pev,mir_pointer_axis_vscroll)));
+        mir_pointer_event_axis_value(pev,mir_pointer_axis_vscroll),
+        mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
+        mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y)));
 }
 
 mi::SurfaceInputDispatcher::PointerInputState& mi::SurfaceInputDispatcher::ensure_pointer_state(MirInputDeviceId id)
@@ -299,7 +301,6 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointe
         {
             pointer_state.gesture_owner = target;
         }
-
         deliver(target, pev);
         return true;
     }

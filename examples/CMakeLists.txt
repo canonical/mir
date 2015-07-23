@@ -100,7 +100,12 @@ target_link_libraries(mir_demo_client_touch_validator
 
 mir_add_wrapped_executable(mir_demo_client_basic
   basic.c
-)
+  )
+
+mir_add_wrapped_executable(mir_demo_client_input_shapes
+  input_shapes.cpp
+  )
+target_link_libraries(mir_demo_client_input_shapes eglapp)
 
 target_link_libraries(mir_demo_client_basic
   mirclient

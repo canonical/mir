@@ -249,6 +249,8 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
                 << mir_pointer_event_action(pointer_event) << ", button_state=" << button_state
                 << ", x=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)
                 << ", y=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)
+                << ", dx=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_relative_x)
+                << ", dy=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_relative_y)
                 << ", vscroll=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_vscroll)
                 << ", hscroll=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_hscroll)
                 << ", modifiers=" << mir_pointer_event_modifiers(pointer_event) << ')';

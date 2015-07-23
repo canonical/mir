@@ -15,6 +15,12 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_validator.cpp
 )
 
+if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
+  list(APPEND UNIT_TEST_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_dispatchable.cpp
+  )
+endif()
+
 set(
   UNIT_TEST_SOURCES
   ${UNIT_TEST_SOURCES}

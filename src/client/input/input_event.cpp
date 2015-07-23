@@ -399,6 +399,10 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
        return old_mev.pointer_coordinates[0].x;
    case mir_pointer_axis_y:
        return old_mev.pointer_coordinates[0].y;
+   case mir_pointer_axis_relative_x:
+       return old_mev.pointer_coordinates[0].dx;
+   case mir_pointer_axis_relative_y:
+       return old_mev.pointer_coordinates[0].dy;
    case mir_pointer_axis_vscroll:
        return old_mev.pointer_coordinates[0].vscroll;
    case mir_pointer_axis_hscroll:
