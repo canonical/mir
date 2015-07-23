@@ -33,29 +33,37 @@ detect_fd_leaks()
 {
     local exit_rc=0
     local openfd=""
+    local test_process_exiting=false
 
     while read LINE;
     do
+        if [[ ${LINE} =~ ^\[==========\]\ [0-9]+\ test.* ]];
+        then
+            test_process_exiting=true
+        fi
+
         if [ -n "$openfd" ];
         then
-            local leak_status=$(process_fd_leak_backtrace_line "${LINE}")
-            case "$leak_status" in
-                "noleak")
-                    openfd=""
-                    ;;
-                "ignore")
-                    echo "[ WARNING ] FD leak was detected and ignored"
-                    openfd=""
-                    ;;
-                "leak")
-                    echo "[ FAILED ] FD leak was detected"
-                    exit_rc=1
-                    openfd=""
-                    ;;
-            esac
-        else
-            openfd=$(echo ${LINE} | grep "Open file descriptor\|Open \w\+ socket")
+            if [ "$test_process_exiting" == true ];
+            then
+                local leak_status=$(process_fd_leak_backtrace_line "${LINE}")
+                case "$leak_status" in
+                    "noleak")
+                        ;;
+                    "ignore")
+                        echo "[ WARNING ] FD leak was detected and ignored"
+                        ;;
+                    "leak")
+                        echo "[ FAILED ] FD leak was detected"
+                        exit_rc=1
+                        ;;
+                    "unsure")
+                        continue
+                        ;;
+                esac
+            fi
         fi
+        openfd=$(echo ${LINE} | grep "Open file descriptor\|Open \w\+ socket")
         echo ${LINE}
     done
 
