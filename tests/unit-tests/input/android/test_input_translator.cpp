@@ -167,13 +167,19 @@ TEST_F(InputTranslator, forwards_pointer_positions)
 
     const float x_pos = 12.0f;
     const float y_pos = 30.0f;
-    EXPECT_CALL(dispatcher, dispatch(mt::PointerEventWithPosition(x_pos, y_pos))).Times(1);
+    const float dx = 7.0f;
+    const float dy = 9.3f;
+    EXPECT_CALL(dispatcher, dispatch(AllOf(
+        mt::PointerEventWithPosition(x_pos, y_pos),
+        mt::PointerEventWithDiff(dx, dy)))).Times(1);
 
     const uint32_t one_pointer = 1;
 
     properties[0].id = 23;
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_X, x_pos);
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_Y, y_pos);
+    coords[0].setAxisValue(AMOTION_EVENT_AXIS_RX, dx);
+    coords[0].setAxisValue(AMOTION_EVENT_AXIS_RY, dy);
     
     droidinput::NotifyMotionArgs motion(some_time, device_id, AINPUT_SOURCE_MOUSE, 0, motion_action, no_flags,
                                         meta_state, button_state, edge_flags, one_pointer, properties, coords,

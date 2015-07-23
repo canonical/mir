@@ -60,11 +60,19 @@ void add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     float pressure_value, float touch_major_value, float touch_minor_value, float size_value);
 
 // Pointer event
+// Deprecated version without relative axis
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers, MirPointerAction action,
     MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value);
+
+EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    MirInputEventModifiers modifiers, MirPointerAction action,
+    MirPointerButtons buttons_pressed,
+    float x_axis_value, float y_axis_value,
+    float hscroll_value, float vscroll_value,
+    float relative_x_value, float relative_y_value);
 
 // Input configuration event
 EventUPtr make_event(MirInputConfigurationAction action,
