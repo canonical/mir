@@ -37,6 +37,8 @@ detect_fd_leaks()
 
     while read LINE;
     do
+        echo ${LINE}
+
         if [[ ${LINE} =~ ^\[==========\]\ [0-9]+\ test.* ]];
         then
             test_process_exiting=true
@@ -64,7 +66,6 @@ detect_fd_leaks()
             fi
         fi
         openfd=$(echo ${LINE} | grep "Open file descriptor\|Open \w\+ socket")
-        echo ${LINE}
     done
 
     exit $exit_rc
