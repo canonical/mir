@@ -1,11 +1,15 @@
-mir (0.14.0+15.10.20150715-0ubuntu2) UNRELEASED; urgency=medium
+mir (0.14.0+15.10.20150723.1-0ubuntu1) wily; urgency=medium
 
+  [ Andreas Pokorny ]
   * Fix missing ABI renaming in Mirplatform
   * Bump Mirserver platform graphics to 3
   * Fix mirprotobuf ABI break
   * Fix g++-5.0 compilation (LP: #1475994)
 
- -- Andreas Pokorny <andreas.pokorny@canonical.com>  Tue, 21 Jul 2015 10:14:21 +0200
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 23 Jul 2015 16:33:09 +0000
 
 mir (0.14.0+15.10.20150715-0ubuntu1) wily; urgency=medium
 
