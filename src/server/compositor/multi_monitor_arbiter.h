@@ -49,6 +49,11 @@ private:
     std::shared_ptr<frontend::ClientBuffers> const map;
     struct ScheduleEntry
     {
+        ScheduleEntry(std::shared_ptr<graphics::Buffer> const& buffer, unsigned int use_count) :
+            buffer(buffer),
+            use_count(use_count)
+        {
+        }
         std::shared_ptr<graphics::Buffer> buffer;
         unsigned int use_count;
     };
