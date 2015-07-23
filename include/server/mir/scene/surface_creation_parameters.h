@@ -102,6 +102,8 @@ struct SurfaceCreationParameters
     mir::optional_value<geometry::DeltaY> height_inc;
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
+
+    mir::optional_value<std::vector<geometry::Rectangle>> input_shape;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

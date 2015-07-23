@@ -18,7 +18,7 @@
 
 #include "src/platforms/android/server/display_buffer.h"
 #include "src/platforms/android/server/gl_context.h"
-#include "src/platforms/android/server/android_format_conversion-inl.h"
+#include "src/include/common/mir/graphics/android/android_format_conversion-inl.h"
 #include "mir/test/doubles/mock_display_device.h"
 #include "mir/test/doubles/mock_display_report.h"
 #include "mir/test/doubles/stub_renderable.h"

@@ -17,7 +17,7 @@
  */
 
 #include "src/platforms/android/server/hal_component_factory.h"
-#include "src/platforms/android/server/android_format_conversion-inl.h"
+#include "src/include/common/mir/graphics/android/android_format_conversion-inl.h"
 #include "src/platforms/android/server/resource_factory.h"
 #include "src/platforms/android/server/graphic_buffer_allocator.h"
 #include "src/platforms/android/server/hwc_loggers.h"

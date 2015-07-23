@@ -48,10 +48,16 @@ typedef std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>> GBMSurfac
 namespace helpers
 {
 
+enum class DRMNodeToUse
+{
+    render,
+    card
+};
+
 class DRMHelper : public DRMAuthentication
 {
 public:
-    DRMHelper() : fd{-1} {}
+    DRMHelper(DRMNodeToUse const node_to_use) : fd{-1}, node_to_use{node_to_use} {}
     ~DRMHelper();
 
     DRMHelper(const DRMHelper &) = delete;
@@ -65,6 +71,7 @@ public:
     void set_master() const;
 
     int fd;
+    DRMNodeToUse const node_to_use;
 
 private:
     // TODO: This herustic is temporary; should be replaced with

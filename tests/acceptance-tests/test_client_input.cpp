@@ -239,6 +239,40 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
     first_client.all_events_received.wait_for_at_most_seconds(120);
 }
 
+TEST_F(TestClientInput, clients_receive_relative_pointer_events)
+{
+    using namespace ::testing;
+
+    mtf::TemporaryEnvironmentValue disable_batching("MIR_CLIENT_INPUT_RATE", "0");
+    
+    positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
+    Client first_client(new_connection(), first);
+
+    InSequence seq;
+    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(1, 1), mt::PointerEventWithDiff(1, 1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(2, 2), mt::PointerEventWithDiff(1, 1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(3, 3), mt::PointerEventWithDiff(1, 1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(2, 2), mt::PointerEventWithDiff(-1, -1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(1, 1), mt::PointerEventWithDiff(-1, -1))));
+    // Ensure we continue to receive relative moement even when absolute movement is constrained.
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(0, 0), mt::PointerEventWithDiff(-1, -1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(0, 0), mt::PointerEventWithDiff(-1, -1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(0, 0), mt::PointerEventWithDiff(-1, -1))))
+        .WillOnce(mt::WakeUp(&first_client.all_events_received));
+
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
+
+    first_client.all_events_received.wait_for_at_most_seconds(120);
+}
+
 TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 {
     Client first_client(new_connection(), first);
@@ -655,9 +689,46 @@ TEST_F(TestClientInputKeyRepeat, keys_are_repeated_to_clients)
     // Extra repeats before we shut down.
     EXPECT_CALL(first_client, handle_input(mt::KeyRepeatEvent())).Times(AnyNumber());
 
-    first_client.ready_to_accept_events.wait_for_at_most_seconds(5);
-
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
 
     first_client.all_events_received.wait_for_at_most_seconds(10);
 }
+
+TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client)
+{
+    using namespace testing;
+
+    positions[first] = {{0, 0}, {10, 10}};
+    
+    Client client(new_connection(), first);
+
+    MirRectangle input_rects[] = {{1, 1, 10, 10}};
+
+    auto spec = mir_connection_create_spec_for_changes(client.connection);
+    mir_surface_spec_set_input_shape(spec, input_rects, 1);
+    mir_surface_apply_spec(client.surface, spec);
+    mir_surface_spec_release(spec);
+
+    // There is no way for us to wait on the result of mir_surface_apply_spec.
+    // In order to avoid strange bespoke server objects to perform this synchronizastion
+    // we simply wait on the result of another IPC call and rely on the serialization
+    // in the frontend.
+    mir_buffer_stream_swap_buffers_sync(
+        mir_surface_get_buffer_stream(client.surface));
+
+    // We verify that we don't receive the first shaped out button event.
+    EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
+    EXPECT_CALL(client, handle_input(mt::PointerEventWithPosition(1, 1)));
+    EXPECT_CALL(client, handle_input(mt::ButtonDownEvent(1, 1)))
+        .WillOnce(mt::WakeUp(&client.all_events_received));
+    
+
+    fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+    fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT).with_action(mis::EventAction::Up));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
+    fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT));
+
+    client.all_events_received.wait_for_at_most_seconds(10);
+}
+
+

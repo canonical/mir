@@ -308,6 +308,20 @@ MATCHER_P2(PointerEventWithPosition, x, y, "")
     return true;
 }
 
+MATCHER_P2(PointerEventWithDiff, dx, dy, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    if (pev == nullptr)
+        return false;
+    if (mir_pointer_event_action(pev) != mir_pointer_action_motion)
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x) != dx)
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y) != dy)
+        return false;
+    return true;
+}
+
 MATCHER_P4(TouchEventInDirection, x0, y0, x1, y1, "")
 {
     auto tev = maybe_touch_event(to_address(arg));

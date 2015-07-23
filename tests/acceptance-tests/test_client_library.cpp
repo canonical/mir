@@ -421,7 +421,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 }
 #endif
 
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MESA_X11)
 // Mir's Android test infrastructure isn't quite ready for this yet.
 TEST_F(ClientLibrary, DISABLED_gets_buffer_dimensions)
 #else
@@ -646,10 +646,10 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
  * trying to marshall stub buffers causes crashes.
  */
 
-#ifndef ANDROID
-TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
-#else
+#if defined(ANDROID) || defined(MESA_X11)
 TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec)
+#else
+TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
 #endif
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -677,10 +677,10 @@ TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec)
     mir_connection_release(connection);
 }
 
-#ifndef ANDROID
-TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
-#else
+#if defined(ANDROID) || defined(MESA_X11)
 TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec_async)
+#else
+TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
 #endif
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -744,10 +744,10 @@ TEST_F(ClientLibrary, DISABLED_can_specify_all_normal_surface_parameters_from_sp
     mir_connection_release(connection);
 }
 
-#ifndef ANDROID
-TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
-#else
+#if defined(ANDROID) || defined(MESA_X11)
 TEST_F(ClientLibrary, DISABLED_set_fullscreen_on_output_makes_fullscreen_surface)
+#else
+TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
 #endif
 {
     using namespace testing;

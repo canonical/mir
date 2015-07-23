@@ -471,12 +471,28 @@ void mir_surface_spec_release(MirSurfaceSpec* spec);
  *          behavior as to what happens to an out-of-bound stream.
  * 
  * \param [in] spec        The spec to accumulate the request in.
- * \param [in] streams     The an array of non-null streams info.
+ * \param [in] streams     An array of non-null streams info.
  * \param [in] num_streams The number of elements in the streams array.
  */
 void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
                                   MirBufferStreamInfo* streams,
                                   unsigned int num_streams);
+
+/**
+ * Set a collection of input rectangles assosciated with the spec.
+ * Rectangles are specified as a list of regions relative to the top left
+ * of the specified surface. If the server applies this specification
+ * to a surface input which would normally go to the surface but is not
+ * contained within any of the input rectangles instead passes
+ * on to the next client.
+ *
+ * \param [in] spec The spec to accumulate the request in.
+ * \param [in] rectangles An array of MirRectangles specifying the input shape.
+ * \param [in] num_streams The number of elements in the rectangles array.
+ */
+void mir_surface_spec_set_input_shape(MirSurfaceSpec* spec,
+                                      MirRectangle const *rectangles,
+                                      size_t n_rects);
 
 /**
  * Set the event handler to be called when events arrive for a surface.

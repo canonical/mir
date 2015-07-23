@@ -2445,6 +2445,9 @@ void CursorInputMapper::sync(std::chrono::nanoseconds when) {
 
     mPointerVelocityControl.move(when, &deltaX, &deltaY);
 
+    pointerCoords.setAxisValue(AMOTION_EVENT_AXIS_RX, deltaX);
+    pointerCoords.setAxisValue(AMOTION_EVENT_AXIS_RY, deltaY);
+
     if (mPointerController != NULL) {
         if (moved || scrolled || buttonsChanged) {
             mPointerController->setPresentation(
